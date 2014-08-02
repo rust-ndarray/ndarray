@@ -1,0 +1,10 @@
+[package]
+
+name = "ndarray"
+version = "0.0.1"
+authors = []
+
+[dependencies.itertools]
+
+git = "https://github.com/bluss/rust-itertools"
+
