@@ -26,7 +26,7 @@ fn main()
     println!("{}", rm);
     println!("{}", rm.slice([Slice(0, None, -1), Slice(0, None, 2)]));
     println!("{}", mm);
-    println!("{}", rm.diag());
+    println!("Diagonal={}", rm.diag());
     rm.iadd(&mm);
     println!("Added=\n{}", rm);
     let snd = rm.slice([C, Slice(1, None, 1)]);

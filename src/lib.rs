@@ -424,13 +424,26 @@ impl<A, D: Dimension> Array<A, D>
         }
     }
 
-    pub fn diag<'a>(&'a self) -> it::Stride<'a, A> {
+    pub fn diag_iter<'a>(&'a self) -> it::Stride<'a, A> {
         let len = self.dim.shape().iter().map(|x| *x).min().unwrap_or(0);
         let stride = self.strides.shape().iter()
                         .map(|x| *x as int)
                         .fold(0i, |s, a| s + a);
         unsafe {
             stride_new(self.ptr as *const _, len, stride as int)
+        }
+    }
+
+    pub fn diag(&self) -> Array<A, uint> {
+        let len = self.dim.shape().iter().map(|x| *x).min().unwrap_or(0);
+        let stride = self.strides.shape().iter()
+                        .map(|x| *x as int)
+                        .fold(0i, |s, a| s + a);
+        Array {
+            data: self.data.clone(),
+            ptr: self.ptr,
+            dim: len,
+            strides: stride as uint,
         }
     }
 }
