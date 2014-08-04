@@ -64,4 +64,13 @@ fn main()
 
     let ar = Array::from_iter(range(0.0f32, 32.)).reshape((2u,4u,4u));
     println!("{},\n{}", ar, ar * ar);
+    println!("{}", ar.collapse(0, 1).reshape((4u,4u)));
+    let sub = ar.sub(2, 1);
+    println!("sub shape={}, sub={}", sub.shape(), sub);
+    let mut mat = Array::from_iter(range(0.0f32, 16.0)).reshape((2u, 4u, 2u));
+    println!("{}", mat);
+    //println!("{}", mat.sub(0,0));
+    //println!("{}", mat.sub(0,1));
+    println!("{}", mat.sub(1,1).sub(0,1));
+    
 }

@@ -198,6 +198,28 @@ impl_dimension!(10u, (uint, uint, uint, uint, uint, uint, uint, uint, uint, uint
 impl_dimension!(11u, (uint, uint, uint, uint, uint, uint, uint, uint, uint, uint, uint))
 impl_dimension!(12u, (uint, uint, uint, uint, uint, uint, uint, uint, uint, uint, uint, uint))
 
+/// Define a sub-dimension hierarchy
+trait Shrink<T: Dimension> : Dimension {
+    fn from_slice(&self, ignored: uint) -> T {
+        let mut tup: T = Default::default();
+        {
+            let mut it = tup.shape_mut().mut_iter();
+            for (i, &d) in self.shape().iter().enumerate() {
+                if i == ignored {
+                    continue;
+                }
+                *it.next().unwrap() = d;
+            }
+        }
+        tup
+    }
+}
+
+impl Shrink<()> for uint { }
+impl Shrink<uint> for (uint, uint) { }
+impl Shrink<(uint, uint)> for (uint, uint, uint) { }
+impl Shrink<(uint, uint, uint)> for (uint, uint, uint, uint) { }
+
 unsafe fn to_ref<A>(ptr: *const A) -> &'static A {
     mem::transmute(ptr)
 }
@@ -331,6 +353,37 @@ impl<A, D: Dimension> Array<A, D>
             index: Some(Default::default()),
             life: kinds::marker::ContravariantLifetime,
         }
+    }
+
+    /// Collapse dimension `axis` into length one,
+    /// and select the subview of `index` along that axis.
+    pub fn collapse(&self, axis: uint, index: uint) -> Array<A, D>
+    {
+        let mut res = self.clone();
+        res.icollapse(axis, index);
+        res
+    }
+
+    pub fn icollapse(&mut self, axis: uint, index: uint)
+    {
+        let dim = self.dim.shape()[axis];
+        let stride = self.strides.shape()[axis] as int;
+        assert!(index < dim);
+        self.dim.shape_mut()[axis] = 1;
+        let off = stride * index as int;
+        unsafe {
+            self.ptr = self.ptr.offset(off);
+        }
+    }
+}
+
+impl<A: Clone, E: Dimension, D: Dimension + Shrink<E>> Array<A, D> {
+    /// Like collapse, but return a subarray one dimension smaller
+    pub fn sub(&self, axis: uint, index: uint) -> Array<A, E>
+    {
+        let mut res = self.clone();
+        res.icollapse(axis, index);
+        res.reshape(res.dim.from_slice(axis))
     }
 }
 
@@ -980,4 +1033,18 @@ fn test_cow()
     assert_eq!(before[1], 3);
     assert_eq!(before[2], 2);
     assert_eq!(before[3], 1);
+}
+
+#[test]
+fn test_sub()
+{
+    let mat = Array::from_iter(range(0.0f32, 16.0)).reshape((2u, 4u, 2u));
+    let s1 = mat.sub(0,0);
+    let s2 = mat.sub(0,1);
+    assert_eq!(s1.shape(), &[4, 2]);
+    assert_eq!(s2.shape(), &[4, 2]);
+    let n = Array::from_iter(range(8.0f32, 16.0)).reshape((4u,2u));
+    assert_eq!(n, s2);
+    let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape((2u, 2u));
+    assert_eq!(m, mat.sub(1, 1));
 }
