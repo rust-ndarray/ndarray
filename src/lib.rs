@@ -479,7 +479,6 @@ fn write_rc_array<A: fmt::Show, D: Dimension>
         }
         if !first {
             try!(write!(f, "\n"));
-            first = false;
         }
         /* Print out this view */
         for (i, elt) in view.slice_iter(slices.as_slice()).enumerate() {
@@ -495,6 +494,7 @@ fn write_rc_array<A: fmt::Show, D: Dimension>
                 try!(write!(f, "]"));
             }
         }
+        first = false;
         try!(write!(f, "]"));
         let mut done = true;
         for (fidx, &dim) in fixed.mut_iter().zip(view.dim.shape().iter()) {
