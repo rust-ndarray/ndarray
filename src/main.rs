@@ -51,4 +51,10 @@ fn main()
 
     //x[0] = 1.0;
     println!("{}", x);
+
+    let mut m = Array::<f32,_>::zeros(());
+    m[()] = 1729.0;
+    println!("{}", m);
+    println!("{}", m.reshape(1u));
+    println!("{}", m + m);
 }

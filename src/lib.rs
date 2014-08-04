@@ -68,6 +68,12 @@ trait Dimension : Default + Clone + Eq {
     }
 }
 
+impl Dimension for () {
+    // empty product is 1 -> size is 1
+    fn shape(&self) -> &[uint] { &[] }
+    fn shape_mut(&mut self) -> &mut [uint] { &mut [] }
+}
+
 impl Dimension for uint {
     fn shape<'a>(&'a self) -> &'a [uint] {
         std::slice::ref_slice(self)
@@ -434,9 +440,9 @@ impl<A, D: Dimension> Array<A, D>
 fn write_rc_array<A: fmt::Show, D: fmt::Show + Dimension>
     (view: &Array<A, D>, f: &mut fmt::Formatter) -> fmt::Result {
     let mut slices = Vec::from_elem(view.dim.shape().len(), C);
+    assert!(slices.len() >= 2);
     let n_loops = slices.len() - 2;
     let mut fixed = Vec::from_elem(n_loops, 0u);
-    assert!(slices.len() >= 2);
     loop {
         /* Use fixed indices to make a slice*/
         for (fidx, slc) in fixed.iter().zip(slices.mut_iter()) {
@@ -483,6 +489,9 @@ fmt::Show for Array<A, D>
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
         match self.dim.shape() {
+            [] => {
+                write!(f, "{}", self.iter().next().unwrap())
+            }
             [_] => {
                 try!(write!(f, "["));
                 for (i, elt) in self.iter().enumerate() {
