@@ -28,11 +28,15 @@ fn main()
     println!("{}", mm);
     println!("{}", rm.diag());
     rm.iadd(&mm);
+    println!("Added=\n{}", rm);
+    let snd = rm.slice([C, Slice(1, None, 1)]);
+    println!("Snd=\n{}", snd);
+    println!("Snd Reshape={}", snd.reshape(4u));
 
     let sl = rm.slice([Slice(0, None, -1), Slice(0, None, -1)]);
     //println!("{}", rm);
     let mut tm = sl.reshape((3u, 2u));
-    println!("{}{}", sl, tm);
+    println!("sl={}, tm={}", sl, tm);
     //println!("{}, {}", sl.data, tm.data);
 
 

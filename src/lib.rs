@@ -247,8 +247,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 
     pub fn make_unique<'a>(&'a mut self) {
-        println!("make_unique, needs clone={}",
-            !std::rc::is_unique(&self.data));
+        //println!("make_unique, needs clone={}", !std::rc::is_unique(&self.data));
         let our_off = (self.ptr as int - self.data.as_ptr() as int)
             / mem::size_of::<A>() as int;
         let rvec = self.data.make_unique();
@@ -437,21 +436,26 @@ impl<A, D: Dimension> Array<A, D>
 }
 
 
-fn write_rc_array<A: fmt::Show, D: fmt::Show + Dimension>
+fn write_rc_array<A: fmt::Show, D: Dimension>
     (view: &Array<A, D>, f: &mut fmt::Formatter) -> fmt::Result {
     let mut slices = Vec::from_elem(view.dim.shape().len(), C);
     assert!(slices.len() >= 2);
     let n_loops = slices.len() - 2;
+    let row_width = view.dim.shape()[slices.len() - 1];
     let mut fixed = Vec::from_elem(n_loops, 0u);
+    let mut first = true;
     loop {
         /* Use fixed indices to make a slice*/
         for (fidx, slc) in fixed.iter().zip(slices.mut_iter()) {
             *slc = Slice(*fidx as int, Some(*fidx as int + 1), 1);
         }
-        let width = view.dim.shape()[n_loops+1];
+        if !first {
+            try!(write!(f, "\n"));
+            first = false;
+        }
         /* Print out this view */
         for (i, elt) in view.slice_iter(slices.as_slice()).enumerate() {
-            if i % width != 0 {
+            if i % row_width != 0 {
                 try!(write!(f, ", "));
             } else if i != 0 {
                 try!(write!(f, "\n ["));
@@ -459,12 +463,11 @@ fn write_rc_array<A: fmt::Show, D: fmt::Show + Dimension>
                 try!(write!(f, "[["));
             }
             try!(write!(f, "{:4}", elt));
-            if i != 0 && (i+1) % width == 0 {
+            if i != 0 && (i+1) % row_width == 0 {
                 try!(write!(f, "]"));
             }
         }
-        try!(write!(f, "]\n"));
-        //println!("thisvi shape={}", thisvi.dim.shape());
+        try!(write!(f, "]"));
         let mut done = true;
         for (fidx, &dim) in fixed.mut_iter().zip(view.dim.shape().iter()) {
             *fidx += 1;
