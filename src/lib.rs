@@ -242,7 +242,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     pub fn new(dim: D, elem: A) -> Array<A, D> {
         let v = Vec::from_elem(dim.size(), elem);
         unsafe {
-            Array::from_vec(dim, v)
+            Array::from_vec_dim(dim, v)
         }
     }
 
@@ -257,10 +257,25 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 }
 
+impl<A> Array<A, uint>
+{
+    /// Create a one-dimensional array from a vector (no allocation needed)
+    pub fn from_vec(v: Vec<A>) -> Array<A, uint> {
+        unsafe {
+            Array::from_vec_dim(v.len(), v)
+        }
+    }
+
+    /// Create a one-dimensional array from an iterator
+    pub fn from_iter<I: Iterator<A>>(mut it: I) -> Array<A, uint> {
+        Array::from_vec(it.collect())
+    }
+}
+
 impl<A, D: Dimension> Array<A, D>
 {
     /// Unsafe because dimension is unchecked
-    unsafe fn from_vec(dim: D, mut v: Vec<A>) -> Array<A, D> {
+    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D> {
         let ptr = v.as_mut_ptr();
         Array{
             data: std::rc::Rc::new(v),
@@ -382,7 +397,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
         } else {
             let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
             unsafe {
-                Array::from_vec(shape, v)
+                Array::from_vec_dim(shape, v)
             }
         }
     }
@@ -780,7 +795,7 @@ impl<'a, A: Clone + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (uint, uint)>
         unsafe {
             res_elems.set_len(m * n);
         }
-        let mut res_matrix = unsafe { Array::from_vec((m, n), res_elems) };
+        let mut res_matrix = unsafe { Array::from_vec_dim((m, n), res_elems) };
         for i in range(0, m) {
             for j in range(0, n) {
                 let row = self.iter1d(1, &(i, 0));
@@ -815,7 +830,7 @@ fn test_matmul_rcarray()
     println!("B = \n{}", B);
     println!("A x B = \n{}", c);
     unsafe {
-        let result = Array::from_vec((2u, 4u), vec![20u, 23, 26, 29, 56, 68, 80, 92]);
+        let result = Array::from_vec_dim((2u, 4u), vec![20u, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);

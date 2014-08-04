@@ -61,4 +61,7 @@ fn main()
     println!("{}", m);
     println!("{}", m.reshape(1u));
     println!("{}", m + m);
+
+    let ar = Array::from_iter(range(0.0f32, 16.)).reshape((4u,4u));
+    println!("{}", ar);
 }
