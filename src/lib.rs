@@ -233,9 +233,14 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 /// A reference counted array with Copy-on-write mutability
 pub struct Array<A, D> {
     // FIXME: Unsafecell around vec needed?
+    /// Rc data when used as view, Uniquely held data when being mutated
     data: std::rc::Rc<Vec<A>>,
+    /// A pointer into the buffer held by data, may point anywhere
+    /// in its range.
     ptr: *mut A,
+    /// The size of each dimension
     dim: D,
+    /// The element count stride per dimension. To be parsed as `int`.
     strides: D,
 }
 
@@ -291,6 +296,23 @@ impl<A> Array<A, uint>
     /// Create a one-dimensional array from an iterator
     pub fn from_iter<I: Iterator<A>>(mut it: I) -> Array<A, uint> {
         Array::from_vec(it.collect())
+    }
+}
+
+/// Collapse axis `axis` and shift so that only subarray `index` is
+/// available.
+///
+/// Fails if `index` is larger than the size of the axis
+fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
+                           axis: uint, index: uint)
+{
+    let dim = dims.shape()[axis];
+    let stride = strides.shape()[axis] as int;
+    assert!(index < dim);
+    dims.shape_mut()[axis] = 1;
+    let off = stride * index as int;
+    unsafe {
+        *ptr = ptr.offset(off);
     }
 }
 
@@ -357,6 +379,8 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Collapse dimension `axis` into length one,
     /// and select the subview of `index` along that axis.
+    ///
+    /// Fail if `index` is past the length of the axis
     pub fn collapse(&self, axis: uint, index: uint) -> Array<A, D>
     {
         let mut res = self.clone();
@@ -366,25 +390,40 @@ impl<A, D: Dimension> Array<A, D>
 
     pub fn icollapse(&mut self, axis: uint, index: uint)
     {
-        let dim = self.dim.shape()[axis];
-        let stride = self.strides.shape()[axis] as int;
-        assert!(index < dim);
-        self.dim.shape_mut()[axis] = 1;
-        let off = stride * index as int;
-        unsafe {
-            self.ptr = self.ptr.offset(off);
-        }
+        do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
 }
 
-impl<A: Clone, E: Dimension, D: Dimension + Shrink<E>> Array<A, D> {
+impl<A, E: Dimension, D: Dimension + Shrink<E>> Array<A, D> {
     /// Like collapse, but return a subarray one dimension smaller
     pub fn sub(&self, axis: uint, index: uint) -> Array<A, E>
     {
         let mut res = self.clone();
         res.icollapse(axis, index);
-        res.reshape(res.dim.from_slice(axis))
+        // don't use reshape -- we always know it will fit the size,
+        // and we can use from_slice on the strides as well
+        Array{
+            data: res.data,
+            ptr: res.ptr,
+            dim: res.dim.from_slice(axis),
+            strides: res.strides.from_slice(axis),
+        }
     }
+
+    /*
+    pub fn sub_iter<'a>(&'a self, axis: uint, index: uint) -> Elements<'a, A, E>
+    {
+        let mut it = self.iter();
+        do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
+        Elements {
+            ptr: it.ptr,
+            dim: it.dim.from_slice(axis),
+            strides: it.strides.from_slice(axis),
+            index: Some(Default::default()),
+            life: it.life,
+        }
+    }
+    */
 }
 
 impl<'a, A, D: Dimension> Index<D, A> for Array<A, D>

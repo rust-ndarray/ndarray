@@ -71,6 +71,9 @@ fn main()
     println!("{}", mat);
     //println!("{}", mat.sub(0,0));
     //println!("{}", mat.sub(0,1));
+    println!("{} times \n{},=\n{}", mat.sub(2, 1), mat.sub(0, 1), mat.sub(2,1).mat_mul(&mat.sub(0,1)));
     println!("{}", mat.sub(1,1).sub(0,1));
-    
+
+    let u = Array::from_iter(range(0,10i)).slice([Slice(0,None,-2)]);
+    println!("{}", u);
 }
