@@ -313,9 +313,9 @@ impl<A, D: Dimension> Array<A, D>
     pub fn slice_iter<'a>(&'a self, indexes: &[Slice]) -> Elements<'a, A, D>
     {
         let mut it = self.iter();
-        let offset = do_slices(&mut it.dim, &mut it.strides, indexes);
+        let offset = do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
         unsafe {
-            it.ptr = it.ptr.offset(offset);
+            it.inner.ptr = it.inner.ptr.offset(offset);
         }
         it
     }
@@ -327,15 +327,21 @@ impl<A, D: Dimension> Array<A, D>
             })
     }
 
-    pub fn iter<'a>(&'a self) -> Elements<'a, A, D>
+    /// Return a protoiterator
+    fn base_iter<'a>(&'a self) -> Baseiter<'a, A, D>
     {
-        Elements {
-            ptr: self.ptr as *const _,
+        Baseiter {
+            ptr: self.ptr,
             dim: self.dim.clone(),
             strides: self.strides.clone(),
             index: Some(Default::default()),
             life: kinds::marker::ContravariantLifetime,
         }
+    }
+
+    pub fn iter<'a>(&'a self) -> Elements<'a, A, D>
+    {
+        Elements { inner: self.base_iter() }
     }
 
     /// Collapse dimension `axis` into length one,
@@ -401,9 +407,9 @@ impl<A: Clone, D: Dimension> Array<A, D>
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Slice]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
-        let offset = do_slices(&mut it.dim, &mut it.strides, indexes);
+        let offset = do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
         unsafe {
-            it.ptr = it.ptr.offset(offset);
+            it.inner.ptr = it.inner.ptr.offset(offset);
         }
         it
     }
@@ -419,13 +425,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
     {
         self.make_unique();
-        ElementsMut {
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
-            index: Some(Default::default()),
-            life: kinds::marker::ContravariantLifetime,
-        }
+        ElementsMut { inner: self.base_iter() }
     }
 
     /// Transform the array into `shape`, must correspond
@@ -660,21 +660,20 @@ Neg<Array<A, D>> for Array<A, D>
         res
     }
 }
-
-/// Array iterator
+/// Base for array iterators
 ///
 /// Iterator element type is `&'a A`
-pub struct Elements<'a, A, D> {
-    ptr: *const A,
+struct Baseiter<'a, A, D> {
+    ptr: *mut A,
     dim: D,
     strides: D,
     index: Option<D>,
     life: kinds::marker::ContravariantLifetime<'a>,
 }
 
-impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
+impl<'a, A, D: Dimension> Baseiter<'a, A, D>
 {
-    fn next(&mut self) -> Option<&'a A>
+    fn next(&mut self) -> Option<*mut A>
     {
         let index = match self.index {
             None => return None,
@@ -683,7 +682,24 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
         let offset = stride_offset(&self.strides, &index);
         self.index = self.dim.next_for(index);
         unsafe {
-            Some(to_ref(self.ptr.offset(offset)))
+            Some(self.ptr.offset(offset))
+        }
+    }
+}
+
+/// Array iterator
+///
+/// Iterator element type is `&'a A`
+pub struct Elements<'a, A, D> {
+    inner: Baseiter<'a, A, D>,
+}
+
+impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
+{
+    fn next(&mut self) -> Option<&'a A>
+    {
+        unsafe {
+            self.inner.next().map(|p| to_ref(p as *const _))
         }
     }
 }
@@ -692,25 +708,15 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
 ///
 /// Iterator element type is `&'a mut A`
 pub struct ElementsMut<'a, A, D> {
-    ptr: *mut A,
-    dim: D,
-    strides: D,
-    index: Option<D>,
-    life: kinds::marker::ContravariantLifetime<'a>,
+    inner: Baseiter<'a, A, D>,
 }
 
 impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
 {
     fn next(&mut self) -> Option<&'a mut A>
     {
-        let index = match self.index {
-            None => return None,
-            Some(ref ix) => ix.clone(),
-        };
-        let offset = stride_offset(&self.strides, &index);
-        self.index = self.dim.next_for(index);
         unsafe {
-            Some(to_ref_mut(self.ptr.offset(offset)))
+            self.inner.next().map(|p| to_ref_mut(p))
         }
     }
 }
