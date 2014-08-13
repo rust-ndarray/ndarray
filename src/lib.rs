@@ -307,6 +307,10 @@ impl<A, D: Dimension> Array<A, D>
         }
     }
 
+    pub fn dim(&self) -> D {
+        self.dim.clone()
+    }
+
     pub fn shape(&self) -> &[uint] {
         self.dim.shape()
     }
