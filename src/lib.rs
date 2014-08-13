@@ -4,6 +4,10 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
+//! The `ndarray` crate provides the `Array` type, an n-dimensional
+//! numerical container similar to numpy's ndarray.
+//!
+
 #[phase(plugin, link)] extern crate itertools;
 
 // NOTE: Numpy claims it does broadcasting by
@@ -189,9 +193,20 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
     mem::transmute(ptr)
 }
 
-/// N-dimensional array
+/// N-dimensional array.
 ///
-/// A reference counted array with Copy-on-write mutability
+/// A reference counted array with copy-on-write mutability.
+///
+/// The n-dimensional array is a container of numerical use, supporting
+/// all mathematical operators by applying them elementwise.
+///
+/// The array is both a view and a shared owner of its data. Some methods
+/// like `slice` merely change the view of the data, while methods like `iadd()`
+/// or `iter_mut()` allow mutating the element values.
+///
+/// Calling a method for mutating elements, like for example `iadd()`,
+/// `at_mut()` or `iter_mut()` will break sharing and require a clone of the
+/// data (if it is not uniquely held).
 pub struct Array<A, D> {
     // FIXME: Unsafecell around vec needed?
     /// Rc data when used as view, Uniquely held data when being mutated
@@ -199,9 +214,9 @@ pub struct Array<A, D> {
     /// A pointer into the buffer held by data, may point anywhere
     /// in its range.
     ptr: *mut A,
-    /// The size of each dimension
+    /// The size of each axis
     dim: D,
-    /// The element count stride per dimension. To be parsed as `int`.
+    /// The element count stride per axis. To be parsed as `int`.
     strides: D,
 }
 
@@ -298,7 +313,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Return a sliced array.
     ///
-    /// `indexes` must have one element per array dimension.
+    /// `indexes` must have one element per array axis.
     pub fn slice(&self, indexes: &[Slice]) -> Array<A, D>
     {
         let mut arr = self.clone();
@@ -778,13 +793,24 @@ fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Optio
 // [:,0] -- first column of matrix
 
 #[deriving(Clone, PartialEq, Eq, Hash, Show)]
-/// Description of a range of an Array dimension.
+/// Description of a range of an Array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
 /// negative `begin` or `end` indexes are counted from the back
-/// of the dimension.
+/// of the axis.
 ///
-/// If `end` is `None`, it is taken as the last index.
+/// If `end` is `None`, the slice extends to the end of the axis.
+///
+/// ## Examples
+///
+/// `Slice(0, None, 1)` is the full range of an axis.
+/// Python equivalent is `[:]`.
+///
+/// `Slice(a, Some(b), 2)` is every second element from `a` until `b`.
+/// Python equivalent is `[a:b:2]`.
+///
+/// `Slice(a, None, -1)` is every element, in reverse order, from `a`
+/// until the end. Python equivalent is `[a::-1]`
 pub struct Slice(pub int, pub Option<int>, pub int);
 
 /// Full range as slice.
