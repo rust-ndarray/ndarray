@@ -273,7 +273,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
         }
     }
 
-    pub fn make_unique<'a>(&'a mut self) {
+    fn make_unique<'a>(&'a mut self) {
         //println!("make_unique, needs clone={}", !std::rc::is_unique(&self.data));
         let our_off = (self.ptr as int - self.data.as_ptr() as int)
             / mem::size_of::<A>() as int;
