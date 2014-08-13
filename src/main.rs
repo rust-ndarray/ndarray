@@ -1,7 +1,10 @@
 
 extern crate ndarray;
+extern crate debug;
 
 use ndarray::{Array, Slice, C};
+
+use ndarray::Dimension;
 
 fn main()
 {
@@ -76,4 +79,19 @@ fn main()
 
     let u = Array::from_iter(range(0,10i)).slice([Slice(0,None,-2)]);
     println!("{}", u);
+
+    type D3 = (uint, uint, uint);
+    let a_dim = (2u, 4u, 2u, 2u);
+    let b_dim = (2u, 1u, 2u, 1u);
+    let mut a = Array::from_iter(range(0.0, a_dim.size() as f32)).reshape(a_dim);
+    let b = Array::from_iter(range(0.0, b_dim.size() as f32)).reshape(b_dim);
+
+    println!("{}\n{}", a, b);
+    println!("{:?}\n{:?}\n{:?}\n{:?}", a, b, b.iter(), b.broadcast_iter(a.dim()).unwrap());
+    let ad = a.dim();
+    for (x, y) in a.iter_mut().zip(b.broadcast_iter(ad).unwrap()) {
+        println!("{}", (*x, *y));
+        *x *= *y;
+    }
+    println!("{}\n{}", a, b);
 }
