@@ -772,10 +772,16 @@ fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Optio
 // [:,0] -- first column of matrix
 
 #[deriving(Clone, PartialEq, Eq, Hash, Show)]
-/// start, end, step
+/// Description of a range of an Array dimension.
+///
+/// Fields are `begin`, `end` and `stride`, where
+/// negative `begin` or `end` indexes are counted from the back
+/// of the dimension.
+///
+/// If `end` is `None`, it is taken as the last index.
 pub struct Slice(pub int, pub Option<int>, pub int);
 
-/// Full column slice
+/// Full range as slice.
 pub static C: Slice = Slice(0, None, 1);
 
 #[cfg(test)]
