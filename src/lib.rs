@@ -25,6 +25,7 @@ use std::default::Default;
 
 pub type Ix = uint;
 
+/// Trait for the shape and index types of arrays.
 pub trait Dimension : Default + Clone + Eq {
     fn ndim(&self) -> uint;
     fn shape<'a>(&'a self) -> &'a [Ix] {
@@ -156,7 +157,7 @@ impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> 
 impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 11 } }
 impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 12 } }
 
-/// Define a sub-dimension hierarchy
+/// Helper trait to define a smaller-than relation for array shapes.
 trait Shrink<T: Dimension> : Dimension {
     fn from_slice(&self, ignored: uint) -> T {
         let mut tup: T = Default::default();
@@ -351,7 +352,7 @@ fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strid
 
 impl<A, D: Dimension> Array<A, D>
 {
-    /// Unsafe because dimension is unchecked
+    /// Unsafe because dimension is unchecked.
     pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D> {
         let ptr = v.as_mut_ptr();
         Array{
@@ -400,6 +401,8 @@ impl<A, D: Dimension> Array<A, D>
         it
     }
 
+    /// Return a reference to the element at `index`, or return `None`
+    /// if the index is out of bounds.
     pub fn at<'a>(&'a self, index: D) -> Option<&'a A> {
         stride_offset_checked(&self.dim, &self.strides, &index)
             .map(|offset| unsafe {
@@ -419,6 +422,9 @@ impl<A, D: Dimension> Array<A, D>
         }
     }
 
+    /// Return an iterator of references to the elements of the Array
+    ///
+    /// Iterator element type is `&'a A`
     pub fn iter<'a>(&'a self) -> Elements<'a, A, D>
     {
         Elements { inner: self.base_iter() }
@@ -514,7 +520,8 @@ impl<A, D: Dimension> Array<A, D>
     }
 }
 
-impl<A, E: Dimension, D: Dimension + Shrink<E>> Array<A, D> {
+impl<A, E: Dimension, D: Dimension + Shrink<E>> Array<A, D>
+{
     /// Select the subview `index` along `axis` and return the reduced
     /// dimension array.
     pub fn at_sub(&self, axis: uint, index: uint) -> Array<A, E>
@@ -557,7 +564,29 @@ impl<'a, A, D: Dimension> Index<D, A> for Array<A, D>
 
 impl<A: Clone, D: Dimension> Array<A, D>
 {
-    /// Iterate over the sliced view
+    /// Return a mutable reference to the element at `index`, or return `None`
+    /// if the index is out of bounds.
+    pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> {
+        self.make_unique();
+        stride_offset_checked(&self.dim, &self.strides, &index)
+            .map(|offset| unsafe {
+                to_ref_mut(self.ptr.offset(offset))
+            })
+    }
+
+    /// Return an iterator of mutable references to the elements of the Array
+    ///
+    /// Iterator element type is `&'a mut A`
+    pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
+    {
+        self.make_unique();
+        ElementsMut { inner: self.base_iter(), nocopy: kinds::marker::NoCopy }
+    }
+
+    /// Return an iterator of mutable references into the sliced view
+    /// of the array.
+    ///
+    /// Iterator element type is `&'a mut A`
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Slice]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
@@ -568,18 +597,17 @@ impl<A: Clone, D: Dimension> Array<A, D>
         it
     }
 
-    pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> {
-        self.make_unique();
-        stride_offset_checked(&self.dim, &self.strides, &index)
-            .map(|offset| unsafe {
-                to_ref_mut(self.ptr.offset(offset))
-            })
-    }
 
-    pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
+    /// Select the subview `index` along `axis` and return an iterator
+    /// of the subview.
+    ///
+    /// Iterator element type is `&'a mut A`
+    pub fn sub_iter_mut<'a>(&'a mut self, axis: uint, index: uint)
+        -> ElementsMut<'a, A, D>
     {
-        self.make_unique();
-        ElementsMut { inner: self.base_iter() }
+        let mut it = self.iter_mut();
+        do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
+        it
     }
 
     /// Transform the array into `shape`, must correspond
@@ -893,7 +921,22 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
     }
 }
 
-/// Array iterator
+impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D>
+{
+    fn clone(&self) -> Baseiter<'a, A, D>
+    {
+        Baseiter {
+            ptr: self.ptr,
+            dim: self.dim.clone(),
+            strides: self.strides.clone(),
+            index: self.index.clone(),
+            life: self.life
+        }
+    }
+}
+
+#[deriving(Clone)]
+/// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a A`
 pub struct Elements<'a, A, D> {
@@ -910,11 +953,12 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
     }
 }
 
-/// Array iterator
+/// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a mut A`
 pub struct ElementsMut<'a, A, D> {
     inner: Baseiter<'a, A, D>,
+    nocopy: kinds::marker::NoCopy,
 }
 
 impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
@@ -958,7 +1002,7 @@ fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Optio
 // [:,0] -- first column of matrix
 
 #[deriving(Clone, PartialEq, Eq, Hash, Show)]
-/// Description of a range of an Array axis.
+/// Description of a range of an array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
 /// negative `begin` or `end` indexes are counted from the back
