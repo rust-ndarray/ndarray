@@ -14,6 +14,7 @@
 // setting up iterators with inflated shapes and several 0-stride
 // dimensions.
 
+use itertools::ItertoolsClonable;
 use it = itertools;
 
 use std::fmt;
@@ -207,6 +208,22 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 /// Calling a method for mutating elements, like for example `iadd()`,
 /// `at_mut()` or `iter_mut()` will break sharing and require a clone of the
 /// data (if it is not uniquely held).
+///
+/// Arrays support limited *broadcasting*, where arithmetic operations with
+/// array operands of different sizes can be carried out by repeating the
+/// elements of the smaller dimension array.
+///
+/// ```
+/// use ndarray::Array;
+///
+/// let a = Array::from_slices([[1, 2],
+///                             [3, 4i]]);
+/// let b = Array::from_slice([0, 1i]);
+/// let c = Array::from_slices([[1, 3],
+///                             [3, 5i]]);
+/// assert!(c == a + b);
+/// ```
+///
 pub struct Array<A, D> {
     // FIXME: Unsafecell around vec needed?
     /// Rc data when used as view, Uniquely held data when being mutated
@@ -274,6 +291,44 @@ impl<A> Array<A, uint>
     /// Create a one-dimensional array from an iterator
     pub fn from_iter<I: Iterator<A>>(mut it: I) -> Array<A, uint> {
         Array::from_vec(it.collect())
+    }
+
+}
+
+impl<A: Clone> Array<A, uint>
+{
+    /// Create a one-dimensional array from a slice
+    pub fn from_slice(s: &[A]) -> Array<A, uint>
+    {
+        Array::from_vec(s.to_vec())
+    }
+}
+
+impl<A: Clone> Array<A, (uint, uint)>
+{
+    /// Create a two-dimensional array from a slice
+    ///
+    /// Fail if slices are not all of the same length
+    ///
+    /// ```
+    /// use ndarray::Array;
+    /// let a = Array::from_slices([[1, 2, 3],
+    ///                             [4, 5, 6i]]);
+    /// assert!(a.dim() == (2, 3));
+    /// ```
+    pub fn from_slices(s: &[&[A]]) -> Array<A, (uint, uint)>
+    {
+        unsafe {
+            match s.get(0).map(|t| t.len()) {
+                None => Array::from_vec_dim((0u, 0u), Vec::new()),
+                Some(n) => {
+                    assert!(s.iter().all(|l| l.len() == n));
+                    let m = s.len();
+                    let v = s.iter().flat_map(|l| l.iter()).clones().collect::<Vec<A>>();
+                    Array::from_vec_dim((m, n), v)
+                }
+            }
+        }
     }
 }
 
@@ -378,10 +433,26 @@ impl<A, D: Dimension> Array<A, D>
         do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
 
-    /// Act like a larger size and / or dimension Array by *broadcasting*
-    /// into a larger shape, if compatible.
+    /// Act like a larger size and/or dimension Array by *broadcasting*
+    /// into a larger shape, if possible.
     ///
-    /// Return None if not compatible
+    /// Return `None` if not compatible.
+    ///
+    /// ## Background
+    ///
+    ///  * Two axes are compatible if they are equal, or one of them is 1.
+    ///  * In this instance, only the axes of the smaller side (self) can be 1.
+    ///
+    /// Compare axes beginning with the *last* axis of each shape.
+    ///
+    /// For example (1, 2, 4) can be broadcast into (7, 6, 2, 4)
+    /// because its axes are either equal or 1 (or missing);
+    /// while (2, 2) can *not* be broadcast into (2, 4).
+    ///
+    /// The implementation creates an iterator with strides set to 0 for the
+    /// axes that are to be repeated.
+    ///
+    /// See broadcasting documentation for Numpy for more information.
     pub fn broadcast_iter<'a, E: Dimension>(&'a self, dim: E)
         -> Option<Elements<'a, A, E>>
     {
@@ -716,22 +787,45 @@ PartialEq for Array<A, D>
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident) => (
-impl<A: Clone + $trt<A, A>, D: Dimension> Array<A, D>
+impl<A: Clone + $trt<A, A>, D: Dimension, E: Dimension>
+Array<A, D>
 {
-    pub fn $imethod (&mut self, other: &Array<A, D>)
+    /// Perform an elementwise arithmetic operation between `self` and `other`,
+    /// *in place*.
+    ///
+    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// Fails if broadcasting isn't possible.
+    pub fn $imethod (&mut self, other: &Array<A, E>)
     {
-        assert!(self.shape() == other.shape());
-        for (x, y) in self.iter_mut().zip(other.iter()) {
-            *x = (*x). $mth (y);
+        if self.dim.ndim() == other.dim.ndim() &&
+            self.shape() == other.shape() {
+            for (x, y) in self.iter_mut().zip(other.iter()) {
+                *x = (*x). $mth (y);
+            }
+        } else {
+            let other_iter = match other.broadcast_iter(self.dim()) {
+                Some(it) => it,
+                None => fail!("Could not broadcast array from shape {} into: {}",
+                              other.shape(), self.shape())
+            };
+            for (x, y) in self.iter_mut().zip(other_iter) {
+                *x = (*x). $mth (y);
+            }
         }
     }
 }
 
-impl<A: Clone + $trt<A, A>, D: Dimension>
-$trt<Array<A, D>, Array<A, D>> for Array<A, D>
+impl<A: Clone + $trt<A, A>, D: Dimension, E: Dimension>
+$trt<Array<A, E>, Array<A, D>> for Array<A, D>
 {
-    fn $mth (&self, other: &Array<A, D>) -> Array<A, D>
+    /// Perform an elementwise arithmetic operation between `self` and `other`,
+    /// and return the result.
+    ///
+    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// Fails if broadcasting isn't possible.
+    fn $mth (&self, other: &Array<A, E>) -> Array<A, D>
     {
+        // FIXME: Can we co-broadcast arrays here? And how?
         let mut res = self.clone();
         res.$imethod (other);
         res
@@ -752,6 +846,7 @@ impl_binary_op!(BitXor, bitxor, ibitxor)
 impl<A: Clone + Neg<A>, D: Dimension>
 Array<A, D>
 {
+    /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
     {
         for elt in self.iter_mut() {
@@ -763,6 +858,7 @@ Array<A, D>
 impl<A: Clone + Neg<A>, D: Dimension>
 Neg<Array<A, D>> for Array<A, D>
 {
+    /// Perform an elementwise negation of `self` and return the result.
     fn neg(&self) -> Array<A, D>
     {
         let mut res = self.clone();
