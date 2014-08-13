@@ -296,19 +296,23 @@ impl<A, D: Dimension> Array<A, D>
         self.dim.shape()
     }
 
-    pub fn apply_slice(&mut self, indexes: &[Slice])
+    /// Return a sliced array.
+    ///
+    /// `indexes` must have one element per array dimension.
+    pub fn slice(&self, indexes: &[Slice]) -> Array<A, D>
+    {
+        let mut arr = self.clone();
+        arr.islice(indexes);
+        arr
+    }
+
+    /// Like `slice`, except this array's view is mutated in place
+    pub fn islice(&mut self, indexes: &[Slice])
     {
         let offset = do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }
-    }
-
-    pub fn slice(&self, indexes: &[Slice]) -> Array<A, D>
-    {
-        let mut arr = self.clone();
-        arr.apply_slice(indexes);
-        arr
     }
 
     /// Iterate over the sliced view
