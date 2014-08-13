@@ -3,6 +3,14 @@ extern crate ndarray;
 
 use ndarray::Array;
 
+#[test]
+fn char_array()
+{
+    // test compilation & basics of non-numerical array
+    let cc = Array::from_iter("alphabet".chars()).reshape((4u, 2u));
+    assert!(cc.at_sub(1, 0) == Array::from_iter("apae".chars()));
+}
+
 #[bench]
 fn time_matmul(b: &mut test::Bencher)
 {
