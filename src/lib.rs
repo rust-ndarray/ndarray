@@ -18,12 +18,30 @@ use std::mem;
 use std::num;
 use std::default::Default;
 
+pub type Ix = uint;
+
 trait Dimension : Default + Clone + Eq {
-    fn shape<'a>(&'a self) -> &'a [uint];
-    fn shape_mut<'a>(&'a mut self) -> &'a mut [uint];
+    fn ndim(&self) -> uint;
+    fn shape<'a>(&'a self) -> &'a [Ix] {
+        unsafe {
+            std::mem::transmute(std::raw::Slice {
+                data: self as *const _ as *const Ix,
+                len: self.ndim(),
+            })
+        }
+    }
+
+    fn shape_mut<'a>(&'a mut self) -> &'a mut [Ix] {
+        unsafe {
+            std::mem::transmute(std::raw::Slice {
+                data: self as *mut _ as *const Ix,
+                len: self.ndim(),
+            })
+        }
+    }
 
     fn size(&self) -> uint {
-        self.shape().iter().fold(1, |s, &a| s * a)
+        self.shape().iter().fold(1u, |s, &a| s * a as uint)
     }
 
     fn default_strides(&self) -> Self {
@@ -70,18 +88,14 @@ trait Dimension : Default + Clone + Eq {
 
 impl Dimension for () {
     // empty product is 1 -> size is 1
-    fn shape(&self) -> &[uint] { &[] }
-    fn shape_mut(&mut self) -> &mut [uint] { &mut [] }
+    fn ndim(&self) -> uint { 0 }
+    fn shape(&self) -> &[Ix] { &[] }
+    fn shape_mut(&mut self) -> &mut [Ix] { &mut [] }
 }
 
-impl Dimension for uint {
-    fn shape<'a>(&'a self) -> &'a [uint] {
-        std::slice::ref_slice(self)
-    }
-    fn shape_mut<'a>(&'a mut self) -> &'a mut [uint] {
-        std::slice::mut_ref_slice(self)
-    }
-    fn next_for(&self, mut index: uint) -> Option<uint> {
+impl Dimension for Ix {
+    fn ndim(&self) -> uint { 1 }
+    fn next_for(&self, mut index: Ix) -> Option<Ix> {
         index += 1;
         if index < *self {
             Some(index)
@@ -89,32 +103,16 @@ impl Dimension for uint {
     }
 }
 
-impl Dimension for (uint, uint) {
-    fn shape<'a>(&'a self) -> &'a [uint] {
-        unsafe {
-            std::mem::transmute(std::raw::Slice {
-                data: self as *const _ as *const uint,
-                len: 2,
-            })
-        }
-    }
-
-    fn shape_mut<'a>(&'a mut self) -> &'a mut [uint] {
-        unsafe {
-            std::mem::transmute(std::raw::Slice {
-                data: self as *mut _ as *const uint,
-                len: 2,
-            })
-        }
-    }
-
-    fn next_for(&self, index: (uint, uint)) -> Option<(uint, uint)> {
+impl Dimension for (Ix, Ix) {
+    fn ndim(&self) -> uint { 2 }
+    fn next_for(&self, index: (Ix, Ix)) -> Option<(Ix, Ix)> {
         let (mut i, mut j) = index;
+        let (imax, jmax) = *self;
         j += 1;
-        if j == self.val1() {
+        if j == jmax {
             j = 0;
             i += 1;
-            if i == self.val0() {
+            if i == imax {
                 return None;
             }
         }
@@ -122,81 +120,36 @@ impl Dimension for (uint, uint) {
     }
 }
 
-/*
-impl Dimension for (uint, uint, uint) {
-    fn shape<'a>(&'a self) -> &'a [uint] {
-        unsafe {
-            std::mem::transmute(std::raw::Slice {
-                data: self as *const _ as *const uint,
-                len: 3,
-            })
-        }
-    }
-
-    fn shape_mut<'a>(&'a mut self) -> &'a mut [uint] {
-        unsafe {
-            std::mem::transmute(std::raw::Slice {
-                data: self as *mut _ as *const uint,
-                len: 3,
-            })
-        }
-    }
-
-    /*
-    fn next_for(&self, index: (uint, uint, uint)) -> Option<(uint, uint, uint)> {
+impl Dimension for (Ix, Ix, Ix) {
+    fn ndim(&self) -> uint { 3 }
+    fn next_for(&self, index: (Ix, Ix, Ix)) -> Option<(Ix, Ix, Ix)> {
         let (mut i, mut j, mut k) = index;
+        let (imax, jmax, kmax) = *self;
         k += 1;
-        if k == self.val2() {
+        if k == kmax {
             k = 0;
             j += 1;
-            if j == self.val1() {
+            if j == jmax {
                 j = 0;
                 i += 1;
-                if i == self.val0() {
+                if i == imax {
                     return None;
                 }
             }
         }
         Some((i, j, k))
     }
-    */
 }
-*/
 
-macro_rules! impl_dimension(
-    ($n:expr, $tuple:ty) => (
-impl Dimension for $tuple {
-    fn shape<'a>(&'a self) -> &'a [uint] {
-        unsafe {
-            std::mem::transmute(std::raw::Slice {
-                data: self as *const _ as *const uint,
-                len: $n,
-            })
-        }
-    }
-
-    fn shape_mut<'a>(&'a mut self) -> &'a mut [uint] {
-        unsafe {
-            std::mem::transmute(std::raw::Slice {
-                data: self as *mut _ as *const uint,
-                len: $n,
-            })
-        }
-    }
-}
-    );
-)
-
-impl_dimension!(3u, (uint, uint, uint))
-impl_dimension!(4u, (uint, uint, uint, uint))
-impl_dimension!(5u, (uint, uint, uint, uint, uint))
-impl_dimension!(6u, (uint, uint, uint, uint, uint, uint))
-impl_dimension!(7u, (uint, uint, uint, uint, uint, uint, uint))
-impl_dimension!(8u, (uint, uint, uint, uint, uint, uint, uint, uint))
-impl_dimension!(9u, (uint, uint, uint, uint, uint, uint, uint, uint, uint))
-impl_dimension!(10u, (uint, uint, uint, uint, uint, uint, uint, uint, uint, uint))
-impl_dimension!(11u, (uint, uint, uint, uint, uint, uint, uint, uint, uint, uint, uint))
-impl_dimension!(12u, (uint, uint, uint, uint, uint, uint, uint, uint, uint, uint, uint, uint))
+impl Dimension for (Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 4 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 5 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 6 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 7 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 8 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 9 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 10 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 11 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 12 } }
 
 /// Define a sub-dimension hierarchy
 trait Shrink<T: Dimension> : Dimension {
@@ -215,10 +168,18 @@ trait Shrink<T: Dimension> : Dimension {
     }
 }
 
-impl Shrink<()> for uint { }
-impl Shrink<uint> for (uint, uint) { }
-impl Shrink<(uint, uint)> for (uint, uint, uint) { }
-impl Shrink<(uint, uint, uint)> for (uint, uint, uint, uint) { }
+impl Shrink<()> for Ix { }
+impl Shrink<Ix> for (Ix, Ix) { }
+impl Shrink<(Ix, Ix)> for (Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
+impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
 
 unsafe fn to_ref<A>(ptr: *const A) -> &'static A {
     mem::transmute(ptr)
