@@ -24,7 +24,7 @@ use std::default::Default;
 
 pub type Ix = uint;
 
-trait Dimension : Default + Clone + Eq {
+pub trait Dimension : Default + Clone + Eq {
     fn ndim(&self) -> uint;
     fn shape<'a>(&'a self) -> &'a [Ix] {
         unsafe {
@@ -608,7 +608,7 @@ fn write_rc_array<A: fmt::Show, D: Dimension>
     Ok(())
 }
 
-impl<'a, A: fmt::Show, D: fmt::Show + Dimension>
+impl<'a, A: fmt::Show, D: Dimension>
 fmt::Show for Array<A, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
@@ -676,6 +676,7 @@ impl_binary_op!(Add, add, iadd)
 impl_binary_op!(Sub, sub, isub)
 impl_binary_op!(Mul, mul, imul)
 impl_binary_op!(Div, div, idiv)
+impl_binary_op!(Rem, rem, irem)
 impl_binary_op!(BitAnd, bitand, ibitand)
 impl_binary_op!(BitOr, bitor, ibitor)
 impl_binary_op!(BitXor, bitxor, ibitxor)
