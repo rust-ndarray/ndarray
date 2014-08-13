@@ -478,6 +478,32 @@ unsafe fn stride_new<A>(ptr: *const A, len: uint, stride: int) -> it::Stride<'st
     it::Stride::from_ptrs(begin, end, stride)
 }
 
+
+impl<A> Array<A, (Ix, Ix)>
+{
+    pub fn row_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
+    {
+        let (m, n) = self.dim;
+        let (sr, sc) = self.strides;
+        let (sr, sc) = (sr as int, sc as int);
+        assert!(index < m);
+        unsafe {
+            stride_new(self.ptr.offset(sr * index as int) as *const A, n, sc)
+        }
+    }
+
+    pub fn col_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
+    {
+        let (m, n) = self.dim;
+        let (sr, sc) = self.strides;
+        let (sr, sc) = (sr as int, sc as int);
+        assert!(index < n);
+        unsafe {
+            stride_new(self.ptr.offset(sc * index as int) as *const A, m, sr)
+        }
+    }
+}
+
 impl<A, D: Dimension> Array<A, D>
 {
     pub fn iter1d<'b>(&'b self, axis: uint, from: &D) -> it::Stride<'b, A> {
@@ -842,32 +868,46 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Slice]) -> in
 }
 
 
-impl<'a, A: Clone + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (uint, uint)>
+// Matrix multiplication only defined for Primitive to
+// avoid trouble with failing + and *
+impl<'a, A: Primitive> Array<A, (Ix, Ix)>
 {
-    pub fn mat_mul(&self, other: &Array<A, (uint, uint)>) -> Array<A, (uint, uint)>
+    /// Matrix multiplication of arrays `self` and `other`
+    ///
+    /// The array sizes must agree in the way that
+    /// `self` is M x N  and `other` is N x K, the result then being
+    /// size M x K
+    pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
     {
         let ((m, a), (b, n)) = (self.dim, other.dim);
-        assert!(a == b);
+        let (self_columns, other_rows) = (a, b);
+        assert!(self_columns == other_rows);
 
         // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::with_capacity(m * n);
+        let mut res_elems = Vec::<A>::with_capacity(m * n);
         unsafe {
             res_elems.set_len(m * n);
         }
-        let mut res_matrix = unsafe { Array::from_vec_dim((m, n), res_elems) };
-        for i in range(0, m) {
-            for j in range(0, n) {
-                let row = self.iter1d(1, &(i, 0));
-                let col = other.iter1d(0, &(0, j));
-                let dot = row.zip(col).fold(num::zero(), |s: A, (a, b)| {
-                            s + *a * *b
-                        });
-                unsafe {
-                    std::ptr::write(&mut res_matrix[(i, j)], dot);
-                }
+        let mut i = 0;
+        let mut j = 0;
+        for rr in res_elems.mut_iter() {
+            let row = self.row_iter(i);
+            let col = other.col_iter(j);
+            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
+                    s + *x * *y
+                });
+            unsafe {
+                std::ptr::write(rr, dot);
+            }
+            j += 1;
+            if j == n {
+                j = 0;
+                i += 1;
             }
         }
-        res_matrix
+        unsafe {
+            Array::from_vec_dim((m, n), res_elems)
+        }
     }
 }
 
