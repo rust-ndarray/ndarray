@@ -10,10 +10,6 @@
 
 #[phase(plugin, link)] extern crate itertools;
 
-// NOTE: Numpy claims it does broadcasting by
-// setting up iterators with inflated shapes and several 0-stride
-// dimensions.
-
 use itertools::ItertoolsClonable;
 use it = itertools;
 
@@ -213,6 +209,13 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 /// `at_mut()` or `iter_mut()` will break sharing and require a clone of the
 /// data (if it is not uniquely held).
 ///
+/// ## Method Conventions
+///
+/// Methods mutating the view or array elements in place use an *i* prefix,
+/// for example `slice` vs. `islice` and `add` vs `iadd`.
+///
+/// ## Broadcasting
+///
 /// Arrays support limited *broadcasting*, where arithmetic operations with
 /// array operands of different sizes can be carried out by repeating the
 /// elements of the smaller dimension array.
@@ -220,11 +223,12 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 /// ```
 /// use ndarray::Array;
 ///
-/// let a = Array::from_slices([[1, 2],
-///                             [3, 4i]]);
-/// let b = Array::from_slice([0, 1i]);
-/// let c = Array::from_slices([[1, 3],
-///                             [3, 5i]]);
+/// let a = Array::from_slices([[1., 2.],
+///                             [3., 4.0_f32]]);
+/// let b = Array::from_slice([0., 1.0_f32]);
+///
+/// let c = Array::from_slices([[1., 3.],
+///                             [3., 5.0_f32]]);
 /// assert!(c == a + b);
 /// ```
 ///
