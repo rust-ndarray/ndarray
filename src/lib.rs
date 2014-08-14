@@ -1149,33 +1149,6 @@ pub struct Slice(pub int, pub Option<int>, pub int);
 /// Full range as slice.
 pub static C: Slice = Slice(0, None, 1);
 
-#[cfg(test)]
-/// Parse python slice notation into `Slice`,
-/// including `a:b`, `a:b:c`, `::s`, `1:`
-fn parse_slice_str(s: &str) -> Slice {
-    let mut sp = s.split(':');
-    let fst = sp.next();
-    let snd = sp.next();
-    let step = sp.next();
-    assert!(sp.next().is_none());
-    assert!(fst.is_some() && snd.is_some());
-
-    let a = match fst.unwrap().trim() {
-        "" => 0i,
-        s => from_str::<int>(s).unwrap(),
-    };
-    let b = match snd.unwrap().trim() {
-        "" => None,
-        s => Some(from_str::<int>(s).unwrap()),
-    };
-    let c = match step.map(|x| x.trim()) {
-        None | Some("") => 1,
-        Some(s) => from_str::<int>(s).unwrap(),
-    };
-    Slice(a, b, c)
-}
-
-
 fn abs_index(len: int, index: int) -> uint {
     if index < 0 {
         (len + index) as uint
@@ -1275,13 +1248,3 @@ impl<'a, A: Primitive> Array<A, (Ix, Ix)>
         }
     }
 }
-
-#[test]
-fn test_parse()
-{
-    let slice_strings = ["1:2:3", "::", "1:", "::-1", "::2"];
-    for s in slice_strings.iter() {
-        println!("Parse {} \t=> {}", *s, parse_slice_str(*s));
-    }
-}
-
