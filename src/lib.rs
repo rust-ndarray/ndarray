@@ -652,6 +652,28 @@ impl<A: Clone, D: Dimension> Array<A, D>
             }
         }
     }
+
+    /// Perform an elementwise assigment to `self` from `other`.
+    ///
+    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// Fails if broadcasting isn't possible.
+    pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
+    {
+        if self.shape() == other.shape() {
+            for (x, y) in self.iter_mut().zip(other.iter()) {
+                *x = y.clone();
+            }
+        } else {
+            let other_iter = match other.broadcast_iter(self.dim()) {
+                Some(it) => it,
+                None => fail!("{}: Could not broadcast array from shape {} into: {}",
+                              "assign", other.shape(), self.shape())
+            };
+            for (x, y) in self.iter_mut().zip(other_iter) {
+                *x = y.clone();
+            }
+        }
+    }
 }
 
 impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>

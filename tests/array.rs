@@ -27,3 +27,16 @@ fn swapaxes()
     a.swap_axes(1, 1);
     assert_eq!(a, b);
 }
+
+#[test]
+fn assign()
+{
+    let mut a = Array::from_slices([[1., 2.], [3., 4.0f32]]);
+    let     b = Array::from_slices([[1., 3.], [2., 4.0f32]]);
+    a.assign(&b);
+    assert_eq!(a, b);
+
+    /* Test broadcasting */
+    a.assign(&Array::zeros(1u));
+    assert_eq!(a, Array::zeros((2u, 2u)));
+}
