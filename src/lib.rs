@@ -379,6 +379,17 @@ impl<A, D: Dimension> Array<A, D>
         self.dim.shape()
     }
 
+    /// Return `true` if the array data is laid out in
+    /// contiguous “C order” where the last index is the most rapidly
+    /// varying.
+    ///
+    /// Return `false` otherwise, i.e the array is possibly not
+    /// contiguous in memory, it has custom strides, etc.
+    pub fn is_standard_layout(&self) -> bool
+    {
+        self.strides == self.dim.default_strides()
+    }
+
     /// Return a slice of the array's backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -660,9 +671,8 @@ impl<A: Clone, D: Dimension> Array<A, D>
             fail!("Incompatible sizes in reshape, attempted from: {}, to: {}",
                   self.dim.shape(), shape.shape())
         }
-        // FIXME: Check if contiguous,
-        // if not => copy all, else just adapt strides
-        if self.strides == self.dim.default_strides() {
+        // Check if contiguous, if not => copy all, else just adapt strides
+        if self.is_standard_layout() {
             let cl = self.clone();
             Array{
                 data: cl.data,

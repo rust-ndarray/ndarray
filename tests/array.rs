@@ -31,6 +31,21 @@ fn swapaxes()
 }
 
 #[test]
+fn standard_layout()
+{
+    let mut a = Array::from_slices([[1., 2.], [3., 4.0f32]]);
+    assert!(a.is_standard_layout());
+    a.swap_axes(0, 1);
+    assert!(!a.is_standard_layout());
+    a.swap_axes(0, 1);
+    assert!(a.is_standard_layout());
+    let x1 = a.subview(0, 0);
+    assert!(x1.is_standard_layout());
+    let x2 = a.subview(1, 0);
+    assert!(!x2.is_standard_layout());
+}
+
+#[test]
 fn assign()
 {
     let mut a = Array::from_slices([[1., 2.], [3., 4.0f32]]);
