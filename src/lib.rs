@@ -276,14 +276,15 @@ impl<A: Clone, D: Dimension> Array<A, D>
         }
     }
 
-    fn make_unique<'a>(&'a mut self) {
-        //println!("make_unique, needs clone={}", !std::rc::is_unique(&self.data));
+    fn make_unique<'a>(&'a mut self) -> &'a mut Vec<A>
+    {
         let our_off = (self.ptr as int - self.data.as_ptr() as int)
             / mem::size_of::<A>() as int;
         let rvec = self.data.make_unique();
         unsafe {
             self.ptr = rvec.as_mut_ptr().offset(our_off);
         }
+        rvec
     }
 }
 
@@ -376,6 +377,16 @@ impl<A, D: Dimension> Array<A, D>
 
     pub fn shape(&self) -> &[uint] {
         self.dim.shape()
+    }
+
+    /// Return a slice of the array's backing data in memory order.
+    ///
+    /// **Note:** Data memory order may not correspond to the index order
+    /// of the array. Neither is the raw data slice is restricted to just the
+    /// Array's view.
+    pub fn raw_data<'a>(&'a self) -> &'a [A]
+    {
+        self.data.as_slice()
     }
 
     /// Return a sliced array.
@@ -475,7 +486,7 @@ impl<A, D: Dimension> Array<A, D>
         /// to repeat are in axes with 0 stride, so that several indexes point
         /// to the same element.
         ///
-        /// NOTE: Cannot be used for mutable iterators, since repeating
+        /// **Note:** Cannot be used for mutable iterators, since repeating
         /// elements would create aliasing pointers.
         fn upcast<D: Dimension, E: Dimension>(to: D, from: E, stride: E) -> Option<D> {
             let mut new_stride = to.clone();
@@ -625,6 +636,20 @@ impl<A: Clone, D: Dimension> Array<A, D>
         do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
         it
     }
+
+    /// Return a mutable slice of the array's backing data in memory order.
+    ///
+    /// **Note:** Data memory order may not correspond to the index order
+    /// of the array. Neither is the raw data slice is restricted to just the
+    /// Array's view.
+    ///
+    /// **Note:** The data is uniquely held and nonaliased
+    /// while it is mutably borrowed.
+    pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
+    {
+        self.make_unique().as_mut_slice()
+    }
+
 
     /// Transform the array into `shape`, must correspond
     /// to the same number of elements.

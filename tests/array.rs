@@ -26,6 +26,8 @@ fn swapaxes()
     assert_eq!(a, b);
     a.swap_axes(1, 1);
     assert_eq!(a, b);
+    assert_eq!(a.raw_data(), &[1., 2., 3., 4.]);
+    assert_eq!(b.raw_data(), &[1., 3., 2., 4.]);
 }
 
 #[test]
