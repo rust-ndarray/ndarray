@@ -525,6 +525,15 @@ impl<A, D: Dimension> Array<A, D>
         };
         Some(Elements{inner: base})
     }
+
+    /// Swap axes `ax` and `bx`.
+    ///
+    /// Fail if the axes are out of bounds.
+    pub fn swap_axes(&mut self, ax: uint, bx: uint)
+    {
+        self.dim.shape_mut().swap(ax, bx);
+        self.strides.shape_mut().swap(ax, bx);
+    }
 }
 
 impl<A, E: Dimension, D: Dimension + Shrink<E>> Array<A, D>
