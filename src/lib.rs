@@ -167,7 +167,10 @@ trait Shrink<T: Dimension> : Dimension {
                 if i == ignored {
                     continue;
                 }
-                *it.next().unwrap() = d;
+                for rr in it {
+                    *rr = d;
+                    break
+                }
             }
         }
         tup
