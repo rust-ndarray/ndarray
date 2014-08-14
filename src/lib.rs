@@ -822,9 +822,29 @@ impl<A, D: Dimension> Array<A, D>
     }
 }
 
-
-fn write_rc_array<A: fmt::Show, D: Dimension>
-    (view: &Array<A, D>, f: &mut fmt::Formatter) -> fmt::Result {
+fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
+                                 format: |&mut fmt::Formatter, &A| -> fmt::Result)
+                                -> fmt::Result
+{
+    if f.width.is_none() {
+        f.width = Some(4)
+    }
+    match view.dim.shape() {
+        [] => {
+            return format(f, view.iter().next().unwrap());
+        }
+        [_] => {
+            try!(write!(f, "["));
+            for (i, elt) in view.iter().enumerate() {
+                if i != 0 {
+                    try!(write!(f, ", "));
+                }
+                try!(format(f, elt));
+            }
+            return write!(f, "]");
+        }
+        _ => /* fallthrough */ {}
+    }
     let mut slices = Vec::from_elem(view.dim.shape().len(), C);
     assert!(slices.len() >= 2);
     let n_loops = slices.len() - 2;
@@ -848,7 +868,8 @@ fn write_rc_array<A: fmt::Show, D: Dimension>
             } else {
                 try!(write!(f, "[["));
             }
-            try!(write!(f, "{:4}", elt));
+            //try!(write!(f, "{:4}", elt));
+            try!(format(f, elt));
             if i != 0 && (i+1) % row_width == 0 {
                 try!(write!(f, "]"));
             }
@@ -873,29 +894,11 @@ fn write_rc_array<A: fmt::Show, D: Dimension>
     Ok(())
 }
 
-impl<'a, A: fmt::Show, D: Dimension>
-fmt::Show for Array<A, D>
+// NOTE: We can impl other fmt traits here
+impl<'a, A: fmt::Show, D: Dimension> fmt::Show for Array<A, D>
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
-    {
-        match self.dim.shape() {
-            [] => {
-                write!(f, "{}", self.iter().next().unwrap())
-            }
-            [_] => {
-                try!(write!(f, "["));
-                for (i, elt) in self.iter().enumerate() {
-                    if i != 0 {
-                        try!(write!(f, ", "));
-                    }
-                    try!(write!(f, "{}", elt));
-                }
-                write!(f, "]")
-            }
-            _ => {
-                write_rc_array(self, f)
-            }
-        }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        format_array(self, f, |f, elt| elt.fmt(f))
     }
 }
 
