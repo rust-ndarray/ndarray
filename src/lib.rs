@@ -22,7 +22,7 @@ use std::default::Default;
 pub type Ix = uint;
 
 /// Trait for the shape and index types of arrays.
-pub trait Dimension : Default + Clone + Eq {
+pub trait Dimension : Clone + Eq {
     fn ndim(&self) -> uint;
     fn shape<'a>(&'a self) -> &'a [Ix] {
         unsafe {
@@ -64,6 +64,15 @@ pub trait Dimension : Default + Clone + Eq {
             }
         }
         strides
+    }
+
+    fn first_index(&self) -> Self
+    {
+        let mut index = self.clone();
+        for rr in index.shape_mut().mut_iter() {
+            *rr = 0;
+        }
+        index
     }
 
     /// Iteration -- Use self as size, and return next index after `index`
@@ -153,8 +162,19 @@ impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> 
 impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 11 } }
 impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 12 } }
 
+// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
+// and memory wasteful, but it allows an arbitrary number of dimensions.
+//
+// NOTE: No Shrink impl for Vec<Ix> yet.
+impl Dimension for Vec<Ix>
+{
+    fn ndim(&self) -> uint { self.len() }
+    fn shape(&self) -> &[Ix] { self.as_slice() }
+    fn shape_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
+}
+
 /// Helper trait to define a smaller-than relation for array shapes.
-trait Shrink<T: Dimension> : Dimension {
+trait Shrink<T: Dimension + Default> : Dimension {
     fn from_slice(&self, ignored: uint) -> T {
         let mut tup: T = Default::default();
         {
@@ -446,7 +466,7 @@ impl<A, D: Dimension> Array<A, D>
             ptr: self.ptr,
             dim: self.dim.clone(),
             strides: self.strides.clone(),
-            index: Some(Default::default()),
+            index: Some(self.dim.first_index()),
             life: kinds::marker::ContravariantLifetime,
         }
     }
@@ -540,9 +560,9 @@ impl<A, D: Dimension> Array<A, D>
             };
         let base = Baseiter {
             ptr: self.ptr,
-            dim: dim,
             strides: broadcast_strides,
-            index: Some(Default::default()),
+            index: Some(dim.first_index()),
+            dim: dim,
             life: kinds::marker::ContravariantLifetime,
         };
         Some(Elements{inner: base})
@@ -558,7 +578,7 @@ impl<A, D: Dimension> Array<A, D>
     }
 }
 
-impl<A, E: Dimension, D: Dimension + Shrink<E>> Array<A, D>
+impl<A, E: Dimension + Default, D: Dimension + Shrink<E>> Array<A, D>
 {
     /// Select the subview `index` along `axis` and return the reduced
     /// dimension array.

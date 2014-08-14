@@ -57,3 +57,16 @@ fn assign()
     a.assign(&Array::zeros(1u));
     assert_eq!(a, Array::zeros((2u, 2u)));
 }
+
+#[test]
+fn dyn_dimension()
+{
+    let a = Array::from_slices([[1., 2.], [3., 4.0f32]]).reshape(vec![2u, 2]);
+    assert_eq!(a - a, Array::zeros(vec![2u,2u]));
+
+    let mut dim = Vec::from_elem(1024, 1u);
+    dim.as_mut_slice()[16] = 4;
+    dim.as_mut_slice()[17] = 3;
+    let z = Array::<f32, Vec<uint>>::zeros(dim.clone());
+    assert_eq!(z.shape(), dim.as_slice());
+}
