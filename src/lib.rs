@@ -441,7 +441,7 @@ impl<A, D: Dimension> Array<A, D>
     /// and select the subview of `index` along that axis.
     ///
     /// Fail if `index` is past the length of the axis
-    pub fn iat_sub(&mut self, axis: uint, index: uint)
+    pub fn isubview(&mut self, axis: uint, index: uint)
     {
         do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
@@ -540,10 +540,10 @@ impl<A, E: Dimension, D: Dimension + Shrink<E>> Array<A, D>
 {
     /// Select the subview `index` along `axis` and return the reduced
     /// dimension array.
-    pub fn at_sub(&self, axis: uint, index: uint) -> Array<A, E>
+    pub fn subview(&self, axis: uint, index: uint) -> Array<A, E>
     {
         let mut res = self.clone();
-        res.iat_sub(axis, index);
+        res.isubview(axis, index);
         // don't use reshape -- we always know it will fit the size,
         // and we can use from_slice on the strides as well
         Array{
@@ -1396,12 +1396,12 @@ fn test_cow()
 fn test_sub()
 {
     let mat = Array::from_iter(range(0.0f32, 16.0)).reshape((2u, 4u, 2u));
-    let s1 = mat.at_sub(0,0);
-    let s2 = mat.at_sub(0,1);
+    let s1 = mat.subview(0,0);
+    let s2 = mat.subview(0,1);
     assert_eq!(s1.shape(), &[4, 2]);
     assert_eq!(s2.shape(), &[4, 2]);
     let n = Array::from_iter(range(8.0f32, 16.0)).reshape((4u,2u));
     assert_eq!(n, s2);
     let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape((2u, 2u));
-    assert_eq!(m, mat.at_sub(1, 1));
+    assert_eq!(m, mat.subview(1, 1));
 }

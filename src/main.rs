@@ -67,15 +67,15 @@ fn main()
 
     let ar = Array::from_iter(range(0.0f32, 32.)).reshape((2u,4u,4u));
     println!("{},\n{}", ar, ar * ar);
-    println!("{}", ar.at_sub(0, 1));
-    let sub = ar.at_sub(2, 1);
+    println!("{}", ar.subview(0, 1));
+    let sub = ar.subview(2, 1);
     println!("sub shape={}, sub={}", sub.shape(), sub);
     let mut mat = Array::from_iter(range(0.0f32, 16.0)).reshape((2u, 4u, 2u));
     println!("{}", mat);
-    //println!("{}", mat.at_sub(0,0));
-    //println!("{}", mat.at_sub(0,1));
-    println!("{} times \n{},=\n{}", mat.at_sub(2, 1), mat.at_sub(0, 1), mat.at_sub(2,1).mat_mul(&mat.at_sub(0,1)));
-    println!("{}", mat.at_sub(1,1).at_sub(0,1));
+    //println!("{}", mat.subview(0,0));
+    //println!("{}", mat.subview(0,1));
+    println!("{} times \n{},=\n{}", mat.subview(2, 1), mat.subview(0, 1), mat.subview(2,1).mat_mul(&mat.subview(0,1)));
+    println!("{}", mat.subview(1,1).subview(0,1));
 
     let u = Array::from_iter(range(0,10i)).slice([Slice(0,None,-2)]);
     println!("{}", u);
