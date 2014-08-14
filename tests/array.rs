@@ -6,6 +6,7 @@ extern crate test;
 extern crate ndarray;
 
 use ndarray::{Array, C, Slice};
+use ndarray::{arr0, arr1, arr2};
 
 #[test]
 fn test_matmul_rcarray()
@@ -248,4 +249,15 @@ fn dyn_dimension()
     dim.as_mut_slice()[17] = 3;
     let z = Array::<f32, Vec<uint>>::zeros(dim.clone());
     assert_eq!(z.shape(), dim.as_slice());
+}
+
+#[test]
+fn sum_mean()
+{
+    let a = arr2([[1., 2.], [3., 4.0_f32]]);
+    assert_eq!(a.sum(0), arr1([4., 6.]));
+    assert_eq!(a.sum(1), arr1([3., 7.]));
+    assert_eq!(a.mean(0), arr1([2., 3.]));
+    assert_eq!(a.mean(1), arr1([1.5, 3.5]));
+    assert_eq!(a.sum(1).sum(0), arr0(10.));
 }

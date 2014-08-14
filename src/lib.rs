@@ -241,14 +241,14 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 /// elements of the smaller dimension array.
 ///
 /// ```
-/// use ndarray::Array;
+/// use ndarray::arr2;
 ///
-/// let a = Array::from_slices([[1., 2.],
-///                             [3., 4.0_f32]]);
-/// let b = Array::from_slice([0., 1.0_f32]);
+/// let a = arr2::<f32>([[1., 2.],
+///                      [3., 4.]]);
+/// let b = arr2::<f32>([[0., 1.]]);
 ///
-/// let c = Array::from_slices([[1., 3.],
-///                             [3., 5.0_f32]]);
+/// let c = arr2::<f32>([[1., 3.],
+///                      [3., 5.]]);
 /// assert!(c == a + b);
 /// ```
 ///
@@ -337,7 +337,7 @@ impl<A: Clone> Array<A, (uint, uint)>
 {
     /// Create a two-dimensional array from a slice
     ///
-    /// Fail if slices are not all of the same length
+    /// Fail if the slices are not all of the same length.
     ///
     /// ```
     /// use ndarray::Array;
@@ -819,6 +819,71 @@ impl<A, D: Dimension> Array<A, D>
             dim: len,
             strides: stride as uint,
         }
+    }
+}
+
+/// Return a zero-dimensional array with the element `x`.
+pub fn arr0<A>(x: A) -> Array<A, ()>
+{
+    let mut v = Vec::with_capacity(1);
+    v.push(x);
+    unsafe { Array::from_vec_dim((), v) }
+}
+
+/// Return a one-dimensional array with elements from `xs`.
+pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
+{
+    Array::from_slice(xs)
+}
+
+/// Return a two-dimensional array with elements from `xs`.
+///
+/// Fail if the slices are not all of the same length.
+pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
+{
+    Array::from_slices(xs)
+}
+
+impl<A: Clone + Num,
+     E: Dimension + Default, D: Dimension + Shrink<E>>
+    Array<A, D>
+{
+    /// Return sum along `axis`
+    ///
+    /// ```
+    /// use ndarray::{arr0, arr1, arr2};
+    ///
+    /// let a = arr2::<f32>([[1., 2.],
+    ///                      [3., 4.]]);
+    /// assert_eq!(a.sum(0), arr1([4., 6.]));
+    /// assert_eq!(a.sum(1), arr1([3., 7.]));
+    ///
+    /// assert_eq!(a.sum(0).sum(0), arr0(10.));
+    /// ```
+    pub fn sum(&self, axis: uint) -> Array<A, E>
+    {
+        let n = self.shape()[axis];
+        let mut res = self.subview(axis, 0);
+        for i in range(1, n) {
+            res.iadd(&self.subview(axis, i))
+        }
+        res
+    }
+
+    /// Return mean along `axis`
+    pub fn mean(&self, axis: uint) -> Array<A, E>
+    {
+        let n = self.shape()[axis];
+        let mut sum = self.sum(axis);
+        let one = num::one::<A>();
+        let mut cnt = one.clone();
+        for i in range(1, n) {
+            cnt = cnt + one;
+        }
+        for elt in sum.iter_mut() {
+            *elt = *elt / cnt;
+        }
+        sum
     }
 }
 
