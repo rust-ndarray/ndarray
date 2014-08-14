@@ -1,5 +1,4 @@
 #![feature(macro_rules)]
-#![feature(phase)]
 #![allow(uppercase_variables)]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
@@ -8,7 +7,7 @@
 //! numerical container similar to numpy's ndarray.
 //!
 
-#[phase(plugin, link)] extern crate itertools;
+extern crate itertools;
 
 use itertools::ItertoolsClonable;
 use it = itertools;
@@ -1099,8 +1098,8 @@ impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
 fn stride_offset<D: Dimension>(strides: &D, index: &D) -> int
 {
     let mut offset = 0;
-    for (&i, &s) in izip!(index.shape().iter(),
-                          strides.shape().iter()) {
+    for (&i, &s) in index.shape().iter()
+                        .zip(strides.shape().iter()) {
         offset += i as int * s as int;
     }
     offset
@@ -1109,9 +1108,9 @@ fn stride_offset<D: Dimension>(strides: &D, index: &D) -> int
 fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Option<int>
 {
     let mut offset = 0;
-    for (&d, (&i, &s)) in   dim.shape().iter().zip(
-                            index.shape().iter().zip(
-                            strides.shape().iter()))
+    for ((&d, &i), &s) in dim.shape().iter()
+                            .zip(index.shape().iter())
+                            .zip(strides.shape().iter())
     {
         if i >= d {
             return None;
@@ -1188,9 +1187,9 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Slice]) -> in
 {
     let mut offset = 0;
     assert!(slices.len() == dim.shape().len());
-    for (dr, sr, &slc) in izip!(dim.shape_mut().mut_iter(),
-                                strides.shape_mut().mut_iter(),
-                                slices.iter())
+    for ((dr, sr), &slc) in dim.shape_mut().mut_iter()
+                            .zip(strides.shape_mut().mut_iter())
+                            .zip(slices.iter())
     {
         let m = *dr;
         let mi = m as int;
