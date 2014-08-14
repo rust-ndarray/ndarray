@@ -836,8 +836,8 @@ Array<A, D>
         } else {
             let other_iter = match other.broadcast_iter(self.dim()) {
                 Some(it) => it,
-                None => fail!("Could not broadcast array from shape {} into: {}",
-                              other.shape(), self.shape())
+                None => fail!("{}: Could not broadcast array from shape {} into: {}",
+                              stringify!($imethod), other.shape(), self.shape())
             };
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = (*x). $mth (y);
