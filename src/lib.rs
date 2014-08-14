@@ -882,6 +882,8 @@ impl_binary_op!(Rem, rem, irem)
 impl_binary_op!(BitAnd, bitand, ibitand)
 impl_binary_op!(BitOr, bitor, ibitor)
 impl_binary_op!(BitXor, bitxor, ibitxor)
+impl_binary_op!(Shl, shl, ishl)
+impl_binary_op!(Shr, shr, ishr)
 
 impl<A: Clone + Neg<A>, D: Dimension>
 Array<A, D>
@@ -906,6 +908,31 @@ Neg<Array<A, D>> for Array<A, D>
         res
     }
 }
+
+impl<A: Clone + Not<A>, D: Dimension>
+Array<A, D>
+{
+    /// Perform an elementwise unary not of `self`, *in place*.
+    pub fn inot(&mut self)
+    {
+        for elt in self.iter_mut() {
+            *elt = (*elt).not()
+        }
+    }
+}
+
+impl<A: Clone + Not<A>, D: Dimension>
+Not<Array<A, D>> for Array<A, D>
+{
+    /// Perform an elementwise unary not of `self` and return the result.
+    fn not(&self) -> Array<A, D>
+    {
+        let mut res = self.clone();
+        res.inot();
+        res
+    }
+}
+
 /// Base for array iterators
 ///
 /// Iterator element type is `&'a A`
