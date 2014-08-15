@@ -3,7 +3,7 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
-//! The `ndarray` crate provides the `Array` type, an n-dimensional
+//! The **ndarray** crate provides the **Array** type, an n-dimensional
 //! numerical container similar to numpy's ndarray.
 //!
 
@@ -19,6 +19,7 @@ use std::mem;
 use std::num;
 use std::default::Default;
 
+/// Array index type
 pub type Ix = uint;
 
 /// Trait for the shape and index types of arrays.
@@ -214,25 +215,27 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
     mem::transmute(ptr)
 }
 
-/// N-dimensional array.
+/// The **Array** type is an *N-dimensional array*.
 ///
 /// A reference counted array with copy-on-write mutability.
 ///
-/// The n-dimensional array is a container of numerical use, supporting
+/// The array is a container of numerical use, supporting
 /// all mathematical operators by applying them elementwise.
 ///
-/// The array is both a view and a shared owner of its data. Some methods
-/// like `slice` merely change the view of the data, while methods like `iadd()`
-/// or `iter_mut()` allow mutating the element values.
+/// The array is both a view and a shared owner of its data. Some methods,
+/// for example [*slice()*](#method.slice), merely change the view of the data,
+/// while methods like [*iadd()*](#method.iadd) allow mutating the element
+/// values.
 ///
-/// Calling a method for mutating elements, like for example `iadd()`,
-/// `at_mut()` or `iter_mut()` will break sharing and require a clone of the
-/// data (if it is not uniquely held).
+/// Calling a method for mutating elements, for example 
+/// [*at_mut()*](#method.at_mut), [*iadd()*](#method.iadd) or
+/// [*iter_mut()*](#method.iter_mut) will break sharing and require a clone of
+/// the data (if it is not uniquely held).
 ///
 /// ## Method Conventions
 ///
 /// Methods mutating the view or array elements in place use an *i* prefix,
-/// for example `slice` vs. `islice` and `add` vs `iadd`.
+/// for example *slice* vs. *islice* and *add* vs *iadd*.
 ///
 /// ## Broadcasting
 ///
