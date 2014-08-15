@@ -21,6 +21,8 @@ use std::default::Default;
 
 /// Array index type
 pub type Ix = uint;
+/// Array index type (signed)
+pub type Ixs = int;
 
 /// Trait for the shape and index types of arrays.
 pub trait Dimension : Clone + Eq {
@@ -221,7 +223,7 @@ impl Dimension for Vec<Ix>
 }
 
 /// Helper trait to define a smaller-than relation for array shapes.
-trait Shrink<T: Dimension + Default> : Dimension {
+pub trait Shrink<T: Dimension + Default> : Dimension {
     fn from_slice(&self, ignored: uint) -> T {
         let mut tup: T = Default::default();
         {
@@ -357,32 +359,32 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 }
 
-impl<A> Array<A, uint>
+impl<A> Array<A, Ix>
 {
     /// Create a one-dimensional array from a vector (no allocation needed)
-    pub fn from_vec(v: Vec<A>) -> Array<A, uint> {
+    pub fn from_vec(v: Vec<A>) -> Array<A, Ix> {
         unsafe {
             Array::from_vec_dim(v.len(), v)
         }
     }
 
     /// Create a one-dimensional array from an iterator
-    pub fn from_iter<I: Iterator<A>>(mut it: I) -> Array<A, uint> {
+    pub fn from_iter<I: Iterator<A>>(mut it: I) -> Array<A, Ix> {
         Array::from_vec(it.collect())
     }
 
 }
 
-impl<A: Clone> Array<A, uint>
+impl<A: Clone> Array<A, Ix>
 {
     /// Create a one-dimensional array from a slice
-    pub fn from_slice(s: &[A]) -> Array<A, uint>
+    pub fn from_slice(xs: &[A]) -> Array<A, Ix>
     {
-        Array::from_vec(s.to_vec())
+        Array::from_vec(xs.to_vec())
     }
 }
 
-impl<A: Clone> Array<A, (uint, uint)>
+impl<A: Clone> Array<A, (Ix, Ix)>
 {
     /// Create a two-dimensional array from a slice
     ///
@@ -392,20 +394,19 @@ impl<A: Clone> Array<A, (uint, uint)>
     /// use ndarray::Array;
     /// let a = Array::from_slices([[1, 2, 3],
     ///                             [4, 5, 6i]]);
-    /// assert!(a.dim() == (2, 3));
+    /// assert!(a.shape() == &[2, 3]);
     /// ```
-    pub fn from_slices(s: &[&[A]]) -> Array<A, (uint, uint)>
+    pub fn from_slices(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
     {
         unsafe {
-            match s.get(0).map(|t| t.len()) {
-                None => Array::from_vec_dim((0u, 0u), Vec::new()),
-                Some(n) => {
-                    assert!(s.iter().all(|l| l.len() == n));
-                    let m = s.len();
-                    let v = s.iter().flat_map(|l| l.iter()).clones().collect::<Vec<A>>();
-                    Array::from_vec_dim((m, n), v)
-                }
+            let (m, n) = (xs.len(), xs.get(0).map_or(0, |snd| snd.len()));
+            let dim = (m, n);
+            let mut result = Vec::<A>::with_capacity(dim.size());
+            for &snd in xs.iter() {
+                assert!(snd.len() == n);
+                result.extend(snd.iter().clones())
             }
+            Array::from_vec_dim(dim, result)
         }
     }
 }
@@ -444,7 +445,7 @@ impl<A, D: Dimension> Array<A, D>
         self.dim.clone()
     }
 
-    pub fn shape(&self) -> &[uint] {
+    pub fn shape(&self) -> &[Ix] {
         self.dim.shape()
     }
 
@@ -860,13 +861,13 @@ impl<A, D: Dimension> Array<A, D>
         }
     }
 
-    pub fn diag(&self) -> Array<A, uint> {
+    pub fn diag(&self) -> Array<A, Ix> {
         let (len, stride) = self.diag_params();
         Array {
             data: self.data.clone(),
             ptr: self.ptr,
             dim: len,
-            strides: stride as uint,
+            strides: stride as Ix,
         }
     }
 }
@@ -1291,10 +1292,10 @@ pub struct Si(pub int, pub Option<int>, pub int);
 /// Slice value for the full range of an axis.
 pub static S: Si = Si(0, None, 1);
 
-fn abs_index(len: int, index: int) -> uint {
+fn abs_index(len: Ixs, index: Ixs) -> Ix {
     if index < 0 {
-        (len + index) as uint
-    } else { index as uint }
+        (len + index) as Ix
+    } else { index as Ix }
 }
 
 /// Modify dimension, strides and return data pointer offset
