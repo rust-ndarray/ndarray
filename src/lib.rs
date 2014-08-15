@@ -1082,7 +1082,7 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + $trt<A, A>, D: Dimension, E: Dimension>
+impl<A: $trt<A, A>, D: Dimension, E: Dimension>
 $trt<Array<A, E>, Array<A, D>> for Array<A, D>
 {
     /// Perform an elementwise arithmetic operation between `self` and `other`,
@@ -1093,9 +1093,24 @@ $trt<Array<A, E>, Array<A, D>> for Array<A, D>
     fn $mth (&self, other: &Array<A, E>) -> Array<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        let mut res = self.clone();
-        res.$imethod (other);
-        res
+        let mut result = Vec::<A>::with_capacity(self.dim.size());
+        if self.shape() == other.shape() {
+            for (x, y) in self.iter().zip(other.iter()) {
+                result.push((*x). $mth (y));
+            }
+        } else {
+            let other_iter = match other.broadcast_iter(self.dim()) {
+                Some(it) => it,
+                None => fail!("{}: Could not broadcast array from shape {} into: {}",
+                              stringify!($mth), other.shape(), self.shape())
+            };
+            for (x, y) in self.iter().zip(other_iter) {
+                result.push((*x). $mth (y));
+            }
+        }
+        unsafe {
+            Array::from_vec_dim(self.dim.clone(), result)
+        }
     }
 }
     );
