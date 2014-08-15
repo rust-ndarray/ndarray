@@ -98,6 +98,18 @@ pub trait Dimension : Clone + Eq {
             Some(index)
         } else { None }
     }
+
+    /// Return stride offset for index.
+    fn stride_offset(index: &Self, strides: &Self) -> int
+    {
+        let mut offset = 0;
+        for (&i, &s) in index.shape().iter()
+                            .zip(strides.shape().iter()) {
+            offset += i as int * s as int;
+        }
+        offset
+    }
+
 }
 
 impl Dimension for () {
@@ -118,6 +130,13 @@ impl Dimension for Ix {
             Some(index)
         } else { None }
     }
+
+    /// Self is an index, return the stride offset
+    #[inline]
+    fn stride_offset(index: &Ix, strides: &Ix) -> int
+    {
+        *index as int * (*strides) as int
+    }
 }
 
 impl Dimension for (Ix, Ix) {
@@ -136,6 +155,15 @@ impl Dimension for (Ix, Ix) {
             }
         }
         Some((i, j))
+    }
+
+    /// Self is an index, return the stride offset
+    #[inline]
+    fn stride_offset(index: &(Ix, Ix), strides: &(Ix, Ix)) -> int
+    {
+        let (i, j) = *index;
+        let (s, t) = *strides;
+        (i as int * s as int) + (j as int * t as int)
     }
 }
 
@@ -159,6 +187,15 @@ impl Dimension for (Ix, Ix, Ix) {
             }
         }
         Some((i, j, k))
+    }
+
+    /// Self is an index, return the stride offset
+    #[inline]
+    fn stride_offset(index: &(Ix, Ix, Ix), strides: &(Ix, Ix, Ix)) -> int
+    {
+        let (i, j, k) = *index;
+        let (s, t, u) = *strides;
+        (i as int * s as int) + (j as int * t as int) + (k as int * u as int)
     }
 }
 
@@ -1125,7 +1162,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        let offset = stride_offset(&self.strides, &index);
+        let offset = Dimension::stride_offset(&index, &self.strides);
         self.index = self.dim.next_for(index);
         unsafe {
             Some(self.ptr.offset(offset))
@@ -1208,16 +1245,6 @@ impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
         let len = self.inner.size_hint();
         (len, Some(len))
     }
-}
-
-fn stride_offset<D: Dimension>(strides: &D, index: &D) -> int
-{
-    let mut offset = 0;
-    for (&i, &s) in index.shape().iter()
-                        .zip(strides.shape().iter()) {
-        offset += i as int * s as int;
-    }
-    offset
 }
 
 fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Option<int>
