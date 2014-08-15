@@ -67,6 +67,7 @@ pub trait Dimension : Clone + Eq {
         strides
     }
 
+    #[inline]
     fn first_index(&self) -> Self
     {
         let mut index = self.clone();
@@ -78,6 +79,7 @@ pub trait Dimension : Clone + Eq {
 
     /// Iteration -- Use self as size, and return next index after `index`
     /// or None if there are no more.
+    #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut index = index;
         let mut done = false;
@@ -100,13 +102,16 @@ pub trait Dimension : Clone + Eq {
 
 impl Dimension for () {
     // empty product is 1 -> size is 1
+    #[inline]
     fn ndim(&self) -> uint { 0 }
     fn shape(&self) -> &[Ix] { &[] }
     fn shape_mut(&mut self) -> &mut [Ix] { &mut [] }
 }
 
 impl Dimension for Ix {
+    #[inline]
     fn ndim(&self) -> uint { 1 }
+    #[inline]
     fn next_for(&self, mut index: Ix) -> Option<Ix> {
         index += 1;
         if index < *self {
@@ -116,7 +121,9 @@ impl Dimension for Ix {
 }
 
 impl Dimension for (Ix, Ix) {
+    #[inline]
     fn ndim(&self) -> uint { 2 }
+    #[inline]
     fn next_for(&self, index: (Ix, Ix)) -> Option<(Ix, Ix)> {
         let (mut i, mut j) = index;
         let (imax, jmax) = *self;
@@ -133,7 +140,9 @@ impl Dimension for (Ix, Ix) {
 }
 
 impl Dimension for (Ix, Ix, Ix) {
+    #[inline]
     fn ndim(&self) -> uint { 3 }
+    #[inline]
     fn next_for(&self, index: (Ix, Ix, Ix)) -> Option<(Ix, Ix, Ix)> {
         let (mut i, mut j, mut k) = index;
         let (imax, jmax, kmax) = *self;
@@ -1109,6 +1118,7 @@ struct Baseiter<'a, A, D> {
 
 impl<'a, A, D: Dimension> Baseiter<'a, A, D>
 {
+    #[inline]
     fn next(&mut self) -> Option<*mut A>
     {
         let index = match self.index {
@@ -1119,6 +1129,19 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
         self.index = self.dim.next_for(index);
         unsafe {
             Some(self.ptr.offset(offset))
+        }
+    }
+
+    fn size_hint(&self) -> uint
+    {
+        match self.index {
+            None => 0,
+            Some(ref ix) => {
+                let gone = self.dim.default_strides().shape().iter()
+                            .zip(ix.shape().iter())
+                                 .fold(0u, |s, (&a, &b)| s + a * b);
+                self.dim.size() - gone
+            }
         }
     }
 }
@@ -1147,11 +1170,18 @@ pub struct Elements<'a, A, D> {
 
 impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
 {
+    #[inline]
     fn next(&mut self) -> Option<&'a A>
     {
         unsafe {
             self.inner.next().map(|p| to_ref(p as *const _))
         }
+    }
+
+    fn size_hint(&self) -> (uint, Option<uint>)
+    {
+        let len = self.inner.size_hint();
+        (len, Some(len))
     }
 }
 
@@ -1165,11 +1195,18 @@ pub struct ElementsMut<'a, A, D> {
 
 impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
 {
+    #[inline]
     fn next(&mut self) -> Option<&'a mut A>
     {
         unsafe {
             self.inner.next().map(|p| to_ref_mut(p))
         }
+    }
+
+    fn size_hint(&self) -> (uint, Option<uint>)
+    {
+        let len = self.inner.size_hint();
+        (len, Some(len))
     }
 }
 

@@ -254,10 +254,46 @@ fn dyn_dimension()
 #[test]
 fn sum_mean()
 {
-    let a = arr2([[1., 2.], [3., 4.0_f32]]);
+    let a = arr2::<f32>([[1., 2.], [3., 4.]]);
     assert_eq!(a.sum(0), arr1([4., 6.]));
     assert_eq!(a.sum(1), arr1([3., 7.]));
     assert_eq!(a.mean(0), arr1([2., 3.]));
     assert_eq!(a.mean(1), arr1([1.5, 3.5]));
     assert_eq!(a.sum(1).sum(0), arr0(10.));
+}
+
+#[test]
+fn iter_size_hint()
+{
+    let mut a = arr2::<f32>([[1., 2.], [3., 4.]]);
+    {
+        let mut it = a.iter();
+        assert_eq!(it.size_hint(), (4, Some(4)));
+        it.next();
+        assert_eq!(it.size_hint().val0(), 3);
+        it.next();
+        assert_eq!(it.size_hint().val0(), 2);
+        it.next();
+        assert_eq!(it.size_hint().val0(), 1);
+        it.next();
+        assert_eq!(it.size_hint().val0(), 0);
+        assert!(it.next().is_none());
+        assert_eq!(it.size_hint().val0(), 0);
+    }
+
+    a.swap_axes(0, 1);
+    {
+        let mut it = a.iter();
+        assert_eq!(it.size_hint(), (4, Some(4)));
+        it.next();
+        assert_eq!(it.size_hint().val0(), 3);
+        it.next();
+        assert_eq!(it.size_hint().val0(), 2);
+        it.next();
+        assert_eq!(it.size_hint().val0(), 1);
+        it.next();
+        assert_eq!(it.size_hint().val0(), 0);
+        assert!(it.next().is_none());
+        assert_eq!(it.size_hint().val0(), 0);
+    }
 }
