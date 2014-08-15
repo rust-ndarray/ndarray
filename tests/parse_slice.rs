@@ -1,12 +1,12 @@
 
 extern crate ndarray;
 
-use ndarray::Slice;
+use ndarray::Si;
 
 #[cfg(test)]
-/// Parse python slice notation into `Slice`,
+/// Parse python slice notation into `Si`,
 /// including `a:b`, `a:b:c`, `::s`, `1:`
-fn parse_slice_str(s: &str) -> Slice {
+fn parse_slice_str(s: &str) -> Si {
     let mut sp = s.split(':');
     let fst = sp.next();
     let snd = sp.next();
@@ -26,7 +26,7 @@ fn parse_slice_str(s: &str) -> Slice {
         None | Some("") => 1,
         Some(s) => from_str::<int>(s).unwrap(),
     };
-    Slice(a, b, c)
+    Si(a, b, c)
 }
 
 

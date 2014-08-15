@@ -435,7 +435,7 @@ impl<A, D: Dimension> Array<A, D>
     /// Return a sliced array.
     ///
     /// `indexes` must have one element per array axis.
-    pub fn slice(&self, indexes: &[Slice]) -> Array<A, D>
+    pub fn slice(&self, indexes: &[Si]) -> Array<A, D>
     {
         let mut arr = self.clone();
         arr.islice(indexes);
@@ -443,7 +443,7 @@ impl<A, D: Dimension> Array<A, D>
     }
 
     /// Like `slice`, except this array's view is mutated in place
-    pub fn islice(&mut self, indexes: &[Slice])
+    pub fn islice(&mut self, indexes: &[Si])
     {
         let offset = do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
@@ -452,7 +452,7 @@ impl<A, D: Dimension> Array<A, D>
     }
 
     /// Iterate over the sliced view
-    pub fn slice_iter<'a>(&'a self, indexes: &[Slice]) -> Elements<'a, A, D>
+    pub fn slice_iter<'a>(&'a self, indexes: &[Si]) -> Elements<'a, A, D>
     {
         let mut it = self.iter();
         let offset = do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
@@ -657,7 +657,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// of the array.
     ///
     /// Iterator element type is `&'a mut A`
-    pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Slice]) -> ElementsMut<'a, A, D>
+    pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
         let offset = do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
@@ -922,7 +922,7 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
         }
         _ => /* fallthrough */ {}
     }
-    let mut slices = Vec::from_elem(view.dim.shape().len(), C);
+    let mut slices = Vec::from_elem(view.dim.shape().len(), S);
     assert!(slices.len() >= 2);
     let n_loops = slices.len() - 2;
     let row_width = view.dim.shape()[slices.len() - 1];
@@ -931,7 +931,7 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
     loop {
         /* Use fixed indices to make a slice*/
         for (fidx, slc) in fixed.iter().zip(slices.mut_iter()) {
-            *slc = Slice(*fidx as int, Some(*fidx as int + 1), 1);
+            *slc = Si(*fidx as int, Some(*fidx as int + 1), 1);
         }
         if !first {
             try!(write!(f, "\n"));
@@ -1241,7 +1241,7 @@ fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Optio
 // [:,0] -- first column of matrix
 
 #[deriving(Clone, PartialEq, Eq, Hash, Show)]
-/// Description of a range of an array axis.
+/// A slice, a description of a range of an array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
 /// negative `begin` or `end` indexes are counted from the back
@@ -1251,18 +1251,18 @@ fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Optio
 ///
 /// ## Examples
 ///
-/// `Slice(0, None, 1)` is the full range of an axis.
+/// `Si(0, None, 1)` is the full range of an axis.
 /// Python equivalent is `[:]`.
 ///
-/// `Slice(a, Some(b), 2)` is every second element from `a` until `b`.
+/// `Si(a, Some(b), 2)` is every second element from `a` until `b`.
 /// Python equivalent is `[a:b:2]`.
 ///
-/// `Slice(a, None, -1)` is every element, in reverse order, from `a`
+/// `Si(a, None, -1)` is every element, in reverse order, from `a`
 /// until the end. Python equivalent is `[a::-1]`
-pub struct Slice(pub int, pub Option<int>, pub int);
+pub struct Si(pub int, pub Option<int>, pub int);
 
-/// Full range as slice.
-pub static C: Slice = Slice(0, None, 1);
+/// Slice value for the full range of an axis.
+pub static S: Si = Si(0, None, 1);
 
 fn abs_index(len: int, index: int) -> uint {
     if index < 0 {
@@ -1271,7 +1271,7 @@ fn abs_index(len: int, index: int) -> uint {
 }
 
 /// Modify dimension, strides and return data pointer offset
-fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Slice]) -> int
+fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
 {
     let mut offset = 0;
     assert!(slices.len() == dim.shape().len());
@@ -1281,7 +1281,7 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Slice]) -> in
     {
         let m = *dr;
         let mi = m as int;
-        let Slice(b1, opt_e1, s1) = slc;
+        let Si(b1, opt_e1, s1) = slc;
         let e1 = opt_e1.unwrap_or(mi);
 
         let b1 = abs_index(mi, b1);

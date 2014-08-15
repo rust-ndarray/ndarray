@@ -5,7 +5,7 @@
 extern crate test;
 extern crate ndarray;
 
-use ndarray::{Array, C, Slice};
+use ndarray::{Array, S, Si};
 use ndarray::{arr0, arr1, arr2};
 
 use test::black_box;
