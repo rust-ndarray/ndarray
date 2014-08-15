@@ -415,6 +415,7 @@ impl<A: Clone> Array<A, (Ix, Ix)>
 /// available.
 ///
 /// Fails if `index` is larger than the size of the axis
+// FIXME: Move to Dimension trait
 fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
                            axis: uint, index: uint)
 {
@@ -1280,6 +1281,7 @@ impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
     }
 }
 
+// FIXME: Move to Dimension trait
 fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Option<int>
 {
     let mut offset = 0;
@@ -1331,6 +1333,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 }
 
 /// Modify dimension, strides and return data pointer offset
+// FIXME: Move to Dimension trait
 fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
 {
     let mut offset = 0;
