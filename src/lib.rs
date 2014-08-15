@@ -779,6 +779,14 @@ impl<A: Clone, D: Dimension> Array<A, D>
             }
         }
     }
+
+    /// Perform an elementwise assigment to `self` from scalar `x`.
+    pub fn assign_scalar(&mut self, x: &A)
+    {
+        for elt in self.iter_mut() {
+            *elt = x.clone();
+        }
+    }
 }
 
 impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
@@ -1036,8 +1044,8 @@ impl<A: Eq, D: Dimension>
 Eq for Array<A, D> {}
 
 macro_rules! impl_binary_op(
-    ($trt:ident, $mth:ident, $imethod:ident) => (
-impl<A: Clone + $trt<A, A>, D: Dimension, E: Dimension>
+    ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
+impl<A: Clone + $trt<A, A>, D: Dimension>
 Array<A, D>
 {
     /// Perform an elementwise arithmetic operation between `self` and `other`,
@@ -1045,7 +1053,7 @@ Array<A, D>
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
     /// Fails if broadcasting isn't possible.
-    pub fn $imethod (&mut self, other: &Array<A, E>)
+    pub fn $imethod <E: Dimension> (&mut self, other: &Array<A, E>)
     {
         if self.dim.ndim() == other.dim.ndim() &&
             self.shape() == other.shape() {
@@ -1061,6 +1069,15 @@ Array<A, D>
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = (*x). $mth (y);
             }
+        }
+    }
+
+    /// Perform an elementwise arithmetic operation between `self` and the scalar `x`,
+    /// *in place*.
+    pub fn $imth_scalar (&mut self, x: &A)
+    {
+        for elt in self.iter_mut() {
+            *elt = elt. $mth (x);
         }
     }
 }
@@ -1084,16 +1101,16 @@ $trt<Array<A, E>, Array<A, D>> for Array<A, D>
     );
 )
 
-impl_binary_op!(Add, add, iadd)
-impl_binary_op!(Sub, sub, isub)
-impl_binary_op!(Mul, mul, imul)
-impl_binary_op!(Div, div, idiv)
-impl_binary_op!(Rem, rem, irem)
-impl_binary_op!(BitAnd, bitand, ibitand)
-impl_binary_op!(BitOr, bitor, ibitor)
-impl_binary_op!(BitXor, bitxor, ibitxor)
-impl_binary_op!(Shl, shl, ishl)
-impl_binary_op!(Shr, shr, ishr)
+impl_binary_op!(Add, add, iadd, iadd_scalar)
+impl_binary_op!(Sub, sub, isub, isub_scalar)
+impl_binary_op!(Mul, mul, imul, imul_scalar)
+impl_binary_op!(Div, div, idiv, idiv_scalar)
+impl_binary_op!(Rem, rem, irem, irem_scalar)
+impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar)
+impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar)
+impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar)
+impl_binary_op!(Shl, shl, ishl, ishl_scalar)
+impl_binary_op!(Shr, shr, ishr, ishr_scalar)
 
 impl<A: Clone + Neg<A>, D: Dimension>
 Array<A, D>
