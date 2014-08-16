@@ -73,7 +73,9 @@ pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     x_lstsq
 }
 
-/// Factor *A = L L.T*.
+/// Factor *a = L L.T*.
+///
+/// *a* should be hermitian and positive definite.
 ///
 /// https://en.wikipedia.org/wiki/Cholesky_decomposition
 ///
@@ -99,8 +101,14 @@ pub fn cholesky<A: Float>(a: &Mat<A>) -> Mat<A>
             // L_2,1 L_1,1  L²_2,1 + L²_2,2
             // L_3,1 L_1,1  L_3,1 L_2,1 + L_3,2 L_2,2  L²_3,1 + L²_3,2 + L²_3,3
             let mut lik_ljk_sum = z.clone();
-            for k in range(0, j) {
-                lik_ljk_sum = lik_ljk_sum + L[(i, k)] * L[(j, k)];
+            {
+                // L[(i, k)] for k = 0 .. j
+                // L[(j, k)] for k = 0 .. j
+                let Lik = L.row_iter(i);
+                let Ljk = L.row_iter(j);
+                for (&lik, &ljk) in Lik.zip(Ljk).take(j) {
+                    lik_ljk_sum = lik_ljk_sum + lik * ljk;
+                }
             }
 
             L[(i, j)] = (a[(i, j)] - lik_ljk_sum) / L[(j, j)];
@@ -109,8 +117,8 @@ pub fn cholesky<A: Float>(a: &Mat<A>) -> Mat<A>
         // L_j,j = Sqrt[A_j,j - Sum_k=1 to (j-1) L²_j,k ]
         let j = i;
         let mut ljk_sum = z.clone();
-        for k in range(0, j) {
-            let ljk = L[(j, k)];
+        // L[(j, k)] for k = 0 .. j
+        for &ljk in L.row_iter(j).take(j) {
             ljk_sum = ljk_sum + ljk * ljk;
         }
         L[(j, j)] = (a[(j, j)] - ljk_sum).sqrt();
@@ -124,15 +132,16 @@ pub fn subst_fw<A: Num + Clone>(l: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = l.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut res = Array::zeros(m);
-    for i in range(0, m) {
-        let mut b_lx_sum = b[i].clone();
-        for j in range(0, i) {
-            b_lx_sum = b_lx_sum - l[(i, j)] * res[j];
+    let mut x = Vec::from_elem(m, zero::<A>());
+    for (i, bi) in b.iter().enumerate() {
+        // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
+        let mut b_lx_sum = bi.clone();
+        for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i) {
+            b_lx_sum = b_lx_sum - (*lij) * (*xj)
         }
-        res[i] = b_lx_sum / l[(i, i)];
+        x.as_mut_slice()[i] = b_lx_sum / l[(i, i)];
     }
-    res
+    Array::from_vec(x)
 }
 
 /// Solve *U x = b* where *U* is an upper triangular matrix.
@@ -141,13 +150,14 @@ pub fn subst_bw<A: Num + Clone>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = u.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut res = Array::zeros(m);
+    let mut x = Vec::from_elem(m, zero::<A>());
     for i in range(0, m).rev() {
-        let mut b_lx_sum = b[i].clone();
-        for j in range(i, m).rev() {
-            b_lx_sum = b_lx_sum - u[(i, j)] * res[j];
+        // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
+        let mut b_ux_sum = b[i].clone();
+        for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take(m - i - 1) {
+            b_ux_sum = b_ux_sum - (*uij) * (*xj);
         }
-        res[i] = b_lx_sum / u[(i, i)];
+        x.as_mut_slice()[i] = b_ux_sum / u[(i, i)];
     }
-    res
+    Array::from_vec(x)
 }
