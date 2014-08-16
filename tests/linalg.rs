@@ -4,7 +4,7 @@ extern crate test;
 extern crate ndarray;
 
 use ndarray::{Array, Dimension};
-use ndarray::{arr2};
+use ndarray::{arr1, arr2};
 
 pub fn allclose<A: Signed + PartialOrd, D: Dimension>
     (a: &Array<A, D>, b: &Array<A, D>, lim: A) -> bool
@@ -62,4 +62,17 @@ fn chol()
                            [ 1.00774829,  0.30044197,  0.        ],
                            [ 0.44468348, -0.2285419 ,  0.95499557]]);
     assert!(allclose(&ans, &chol, 0.001));
+}
+
+#[test]
+fn subst()
+{
+    let lll = arr2::<f32>([[ 0.22805704,  0.        ,  0.        ],
+                           [ 1.00774829,  0.30044197,  0.        ],
+                           [ 0.44468348, -0.2285419 ,  0.95499557]]);
+    let ans = arr1::<f32>([4.384868, -8.050947, -0.827078]);
+
+    assert!(allclose(&ans,
+                     &ndarray::linalg::subst_fw(&lll, &arr1([1., 2., 3.])),
+                     0.001));
 }

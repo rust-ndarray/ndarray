@@ -6,6 +6,9 @@ use std::num::{zero, one};
 
 use super::{Array, Dimension, Ix};
 
+/// Column vector.
+pub type Col<A> = Array<A, Ix>;
+/// Rectangular matrix.
 pub type Mat<A> = Array<A, (Ix, Ix)>;
 
 
@@ -37,7 +40,7 @@ pub fn least_squares<A: Primitive>(a: &Array<A, (Ix, Ix)>, b: &Array<A, Ix>) -> 
     fail!()
 }
 
-/// Factor A = L L*.
+/// Factor *A = L L.T*.
 ///
 /// https://en.wikipedia.org/wiki/Cholesky_decomposition
 ///
@@ -80,4 +83,38 @@ pub fn cholesky<A: Float>(a: &Mat<A>) -> Mat<A>
         L[(j, j)] = (a[(j, j)] - ljk_sum).sqrt();
     }
     L
+}
+
+/// Solve *L x = b* where *L* is a lower triangular matrix.
+pub fn subst_fw<A: Num + Clone>(l: &Mat<A>, b: &Col<A>) -> Col<A>
+{
+    let (m, n) = l.dim();
+    assert!(m == n);
+    assert!(m == b.dim());
+    let mut res = Array::zeros(m);
+    for i in range(0, m) {
+        let mut b_lx_sum = b[i].clone();
+        for j in range(0, i) {
+            b_lx_sum = b_lx_sum - l[(i, j)] * res[j];
+        }
+        res[i] = b_lx_sum / l[(i, i)];
+    }
+    res
+}
+
+/// Solve *U x = b* where *U* is an upper triangular matrix.
+pub fn subst_bw<A: Num + Clone>(u: &Mat<A>, b: &Col<A>) -> Col<A>
+{
+    let (m, n) = u.dim();
+    assert!(m == n);
+    assert!(m == b.dim());
+    let mut res = Array::zeros(m);
+    for i in range(0, m).rev() {
+        let mut b_lx_sum = b[i].clone();
+        for j in range(i, m).rev() {
+            b_lx_sum = b_lx_sum - u[(i, j)] * res[j];
+        }
+        res[i] = b_lx_sum / u[(i, i)];
+    }
+    res
 }
