@@ -19,6 +19,8 @@ use std::mem;
 use std::num;
 use std::default::Default;
 
+pub mod linalg;
+
 /// Array index type
 pub type Ix = uint;
 /// Array index type (signed)
