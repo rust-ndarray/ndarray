@@ -388,7 +388,7 @@ impl<A: Clone> Array<A, (Ix, Ix)>
 {
     /// Create a two-dimensional array from a slice
     ///
-    /// Fail if the slices are not all of the same length.
+    /// **Fail** if the slices are not all of the same length.
     ///
     /// ```
     /// use ndarray::Array;
@@ -414,7 +414,7 @@ impl<A: Clone> Array<A, (Ix, Ix)>
 /// Collapse axis `axis` and shift so that only subarray `index` is
 /// available.
 ///
-/// Fails if `index` is larger than the size of the axis
+/// **Fail** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
 fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
                            axis: uint, index: uint)
@@ -431,21 +431,24 @@ fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strid
 
 impl<A, D: Dimension> Array<A, D>
 {
-    /// Unsafe because dimension is unchecked.
+    /// Create an array from a vector (with no allocation needed).
+    ///
+    /// Unsafe because dimension is unchecked, and must be correct.
     pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D> {
-        let ptr = v.as_mut_ptr();
-        Array{
+        Array {
+            ptr: v.as_mut_ptr(),
             data: std::rc::Rc::new(v),
-            ptr: ptr,
             strides: dim.default_strides(),
             dim: dim
         }
     }
 
+    /// Return the shape of the array.
     pub fn dim(&self) -> D {
         self.dim.clone()
     }
 
+    /// Return the shape of the array as a slice.
     pub fn shape(&self) -> &[Ix] {
         self.dim.shape()
     }
@@ -473,7 +476,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Return a sliced array.
     ///
-    /// `indexes` must have one element per array axis.
+    /// **Fail** if `indexes` does not match the number of array axes.
     pub fn slice(&self, indexes: &[Si]) -> Array<A, D>
     {
         let mut arr = self.clone();
@@ -481,7 +484,9 @@ impl<A, D: Dimension> Array<A, D>
         arr
     }
 
-    /// Like `slice`, except this array's view is mutated in place
+    /// Slice the array's view in place.
+    ///
+    /// **Fail** if `indexes` does not match the number of array axes.
     pub fn islice(&mut self, indexes: &[Si])
     {
         let offset = do_slices(&mut self.dim, &mut self.strides, indexes);
@@ -490,7 +495,9 @@ impl<A, D: Dimension> Array<A, D>
         }
     }
 
-    /// Iterate over the sliced view
+    /// Return an iterator over a sliced view.
+    ///
+    /// **Fail** if `indexes` does not match the number of array axes.
     pub fn slice_iter<'a>(&'a self, indexes: &[Si]) -> Elements<'a, A, D>
     {
         let mut it = self.iter();
@@ -524,7 +531,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Return an iterator of references to the elements of the Array
     ///
-    /// Iterator element type is `&'a A`
+    /// Iterator element type is `&'a A`.
     pub fn iter<'a>(&'a self) -> Elements<'a, A, D>
     {
         Elements { inner: self.base_iter() }
@@ -533,7 +540,7 @@ impl<A, D: Dimension> Array<A, D>
     /// Collapse dimension `axis` into length one,
     /// and select the subview of `index` along that axis.
     ///
-    /// Fail if `index` is past the length of the axis
+    /// **Fail** if `index` is past the length of the axis.
     pub fn isubview(&mut self, axis: uint, index: uint)
     {
         do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
@@ -542,7 +549,7 @@ impl<A, D: Dimension> Array<A, D>
     /// Act like a larger size and/or dimension Array by *broadcasting*
     /// into a larger shape, if possible.
     ///
-    /// Return `None` if not compatible.
+    /// Return `None` if shapes can not be broadcast together.
     ///
     /// ## Background
     ///
@@ -621,7 +628,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Swap axes `ax` and `bx`.
     ///
-    /// Fail if the axes are out of bounds.
+    /// **Fail** if the axes are out of bounds.
     pub fn swap_axes(&mut self, ax: uint, bx: uint)
     {
         self.dim.shape_mut().swap(ax, bx);
@@ -633,6 +640,8 @@ impl<A, E: Dimension + Default, D: Dimension + Shrink<E>> Array<A, D>
 {
     /// Select the subview `index` along `axis` and return the reduced
     /// dimension array.
+    ///
+    /// **Fail** if `index` is past the length of the axis.
     pub fn subview(&self, axis: uint, index: uint) -> Array<A, E>
     {
         let mut res = self.clone();
@@ -685,7 +694,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
 
     /// Return an iterator of mutable references to the elements of the Array
     ///
-    /// Iterator element type is `&'a mut A`
+    /// Iterator element type is `&'a mut A`.
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
     {
         self.make_unique();
@@ -695,7 +704,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Return an iterator of mutable references into the sliced view
     /// of the array.
     ///
-    /// Iterator element type is `&'a mut A`
+    /// Iterator element type is `&'a mut A`.
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
@@ -710,7 +719,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Select the subview `index` along `axis` and return an iterator
     /// of the subview.
     ///
-    /// Iterator element type is `&'a mut A`
+    /// Iterator element type is `&'a mut A`.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: uint, index: uint)
         -> ElementsMut<'a, A, D>
     {
@@ -733,10 +742,10 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 
 
-    /// Transform the array into `shape`, must correspond
-    /// to the same number of elements.
+    /// Transform the array into `shape`; any other shape
+    /// with the same number of elements is accepted.
     ///
-    /// fail on incompatible size.
+    /// Fail on incompatible size.
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {
             fail!("Incompatible sizes in reshape, attempted from: {}, to: {}",
@@ -762,7 +771,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Perform an elementwise assigment to `self` from `other`.
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
-    /// Fails if broadcasting isn't possible.
+    /// **Fail** if broadcasting isn't possible.
     pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
     {
         if self.shape() == other.shape() {
@@ -897,7 +906,7 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 
 /// Return a two-dimensional array with elements from `xs`.
 ///
-/// Fail if the slices are not all of the same length.
+/// **Fail** if the slices are not all of the same length.
 pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
 {
     Array::from_slices(xs)
@@ -907,7 +916,7 @@ impl<A: Clone + Num,
      E: Dimension + Default, D: Dimension + Shrink<E>>
     Array<A, D>
 {
-    /// Return sum along `axis`
+    /// Return sum along `axis`.
     ///
     /// ```
     /// use ndarray::{arr0, arr1, arr2};
@@ -929,7 +938,7 @@ impl<A: Clone + Num,
         res
     }
 
-    /// Return mean along `axis`
+    /// Return mean along `axis`.
     pub fn mean(&self, axis: uint) -> Array<A, E>
     {
         let n = self.shape()[axis];
@@ -1033,7 +1042,7 @@ PartialEq for Array<A, D>
 {
     /// Return `true` if all elements of `self` and `other` are equal.
     ///
-    /// Fail if shapes are not equal.
+    /// **Fail** if shapes are not equal.
     fn eq(&self, other: &Array<A, D>) -> bool
     {
         assert!(self.shape() == other.shape());
@@ -1053,7 +1062,8 @@ Array<A, D>
     /// *in place*.
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
-    /// Fails if broadcasting isn't possible.
+    ///
+    /// **Fail** if broadcasting isn't possible.
     pub fn $imethod <E: Dimension> (&mut self, other: &Array<A, E>)
     {
         if self.dim.ndim() == other.dim.ndim() &&
@@ -1090,7 +1100,8 @@ $trt<Array<A, E>, Array<A, D>> for Array<A, D>
     /// and return the result.
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
-    /// Fails if broadcasting isn't possible.
+    ///
+    /// **Fail** if broadcasting isn't possible.
     fn $mth (&self, other: &Array<A, E>) -> Array<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
@@ -1178,7 +1189,7 @@ Not<Array<A, D>> for Array<A, D>
 
 /// Base for array iterators
 ///
-/// Iterator element type is `&'a A`
+/// Iterator element type is `&'a A`.
 struct Baseiter<'a, A, D> {
     ptr: *mut A,
     dim: D,
@@ -1234,7 +1245,7 @@ impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D>
 #[deriving(Clone)]
 /// An iterator over the elements of an array.
 ///
-/// Iterator element type is `&'a A`
+/// Iterator element type is `&'a A`.
 pub struct Elements<'a, A, D> {
     inner: Baseiter<'a, A, D>,
 }
@@ -1258,7 +1269,7 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
 
 /// An iterator over the elements of an array.
 ///
-/// Iterator element type is `&'a mut A`
+/// Iterator element type is `&'a mut A`.
 pub struct ElementsMut<'a, A, D> {
     inner: Baseiter<'a, A, D>,
     nocopy: kinds::marker::NoCopy,
