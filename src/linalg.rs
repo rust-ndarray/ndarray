@@ -22,22 +22,55 @@ pub fn eye<A: Num + Clone>(n: Ix) -> Mat<A>
     eye
 }
 
+/*
 /// Return the inverse matrix of square matrix `a`.
 pub fn inverse<A: Primitive>(a: &Mat<A>) -> Mat<A>
 {
     fail!()
 }
+*/
 
-/// Solve `a x = b` for matrices
+/// Solve *a x = b* with linear least squares approximation.
 ///
-/// Using transpose: aT a x = aT b;  aT a being square gives
-/// x_leastsq = inv(aT a) aT b
+/// It is used to find the best fit for an overdetermined system,
+/// i.e. the number of rows in *a* is larger than the number of
+/// unknowns *x*.
 ///
-/// More efficient by Cholesky decomposition
-///
-pub fn least_squares<A: Primitive>(a: &Array<A, (Ix, Ix)>, b: &Array<A, Ix>) -> Array<A, Ix>
+/// Return best fit for *x*.
+pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 {
-    fail!()
+    // Using transpose: a.T a x = a.T b;
+    // a.T a being square gives naive solution
+    // x_lstsq = inv(a.T a) a.T b
+    //
+    // Solve using cholesky decomposition
+    // aT a x = aT b
+    //
+    // Factor aT a into L L.T
+    //
+    // L L.T x = aT b
+    //
+    // => L z = aT b 
+    //  fw subst for z
+    // => L.T x = z
+    //  bw subst for x estimate
+    // 
+    let (m, n) = a.dim();
+
+    let mut aT = a.clone();
+    aT.swap_axes(0, 1);
+
+    let aT_a = aT.mat_mul(a);
+    let mut L = cholesky(&aT_a);
+    let rhs = aT.mat_mul(&b.reshape((m, 1))).reshape(n);
+
+    // Solve L z = aT b
+    let z = subst_fw(&L, &rhs);
+
+    // Solve L.T x = z
+    L.swap_axes(0, 1);
+    let x_lstsq = subst_bw(&L, &z);
+    x_lstsq
 }
 
 /// Factor *A = L L.T*.

@@ -76,3 +76,16 @@ fn subst()
                      &ndarray::linalg::subst_fw(&lll, &arr1([1., 2., 3.])),
                      0.001));
 }
+
+#[test]
+fn lst_squares()
+{
+    let xs = arr2::<f32>([[ 2.,  3.],
+                          [-2., -1.],
+                          [ 1.,  5.],
+                          [-1.,  2.]]);
+    let b = arr1([1., -1., 2., 1.]);
+    let x_lstsq = ndarray::linalg::least_squares(&xs, &b);
+    let ans = arr1([0.070632, 0.390335]);
+    assert!(allclose(&x_lstsq, &ans, 0.001));
+}
