@@ -73,7 +73,7 @@ pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     x_lstsq
 }
 
-/// Factor *a = L L.T*.
+/// Factor *a = L L<sup>T</sup>*.
 ///
 /// *a* should be hermitian and positive definite.
 ///
