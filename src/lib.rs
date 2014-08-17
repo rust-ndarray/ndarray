@@ -730,6 +730,15 @@ impl<A: Clone, D: Dimension> Array<A, D>
         it
     }
 
+    /// Return an iterator over the diagonal elements of the array.
+    pub fn diag_iter_mut<'a>(&'a mut self) -> it::StrideMut<'a, A> {
+        self.make_unique();
+        let (len, stride) = self.diag_params();
+        unsafe {
+            stride_mut(self.ptr, len, stride)
+        }
+    }
+
     /// Return a mutable slice of the array's backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -817,10 +826,25 @@ unsafe fn stride_new<A>(ptr: *const A, len: uint, stride: int) -> it::Stride<'st
         begin = ptr as *const _;
         end = begin.offset((len - 1) as int * stride);
     } else {
-        begin = std::ptr::null();
-        end = std::ptr::null();
+        begin = RawPtr::null();
+        end = RawPtr::null();
     }
     it::Stride::from_ptrs(begin, end, stride)
+}
+
+// NOTE: lifetime
+unsafe fn stride_mut<A>(ptr: *mut A, len: uint, stride: int) -> it::StrideMut<'static, A>
+{
+    let begin;
+    let end;
+    if len != 0 {
+        begin = ptr;
+        end = begin.offset((len - 1) as int * stride);
+    } else {
+        begin = RawPtr::null();
+        end = RawPtr::null();
+    }
+    it::StrideMut::from_ptrs(begin, end, stride)
 }
 
 

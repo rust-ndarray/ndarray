@@ -2,10 +2,9 @@
 
 //! A few linear algebra operations on two-dimensional arrays.
 
-use std::num::{zero, one};
-use std::num::{Zero, One};
+use std::num::{zero, one, Zero, One};
 
-use super::{Array, Dimension, Ix};
+use super::{Array, Ix};
 
 /// Column vector.
 pub type Col<A> = Array<A, Ix>;
@@ -17,8 +16,8 @@ pub type Mat<A> = Array<A, (Ix, Ix)>;
 pub fn eye<A: Zero + One + Clone>(n: Ix) -> Mat<A>
 {
     let mut eye = Array::zeros((n, n));
-    for i in range(0, n) {
-        eye[(i, i)] = one::<A>();
+    for a_ii in eye.diag_iter_mut() {
+        *a_ii = one::<A>();
     }
     eye
 }
