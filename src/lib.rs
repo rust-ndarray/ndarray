@@ -756,7 +756,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Transform the array into `shape`; any other shape
     /// with the same number of elements is accepted.
     ///
-    /// Fail on incompatible size.
+    /// **Fail** if sizes are incompatible.
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {
             fail!("Incompatible sizes in reshape, attempted from: {}, to: {}",
@@ -782,6 +782,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Perform an elementwise assigment to `self` from `other`.
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    ///
     /// **Fail** if broadcasting isn't possible.
     pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
     {
