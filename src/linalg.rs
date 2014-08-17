@@ -55,14 +55,12 @@ pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     // => L.T x = z
     //  bw subst for x estimate
     // 
-    let (m, n) = a.dim();
-
     let mut aT = a.clone();
     aT.swap_axes(0, 1);
 
     let aT_a = aT.mat_mul(a);
     let mut L = cholesky(&aT_a);
-    let rhs = aT.mat_mul(&b.reshape((m, 1))).reshape(n);
+    let rhs = aT.mat_mul_col(b);
 
     // Solve L z = aT b
     let z = subst_fw(&L, &rhs);

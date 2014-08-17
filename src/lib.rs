@@ -1619,11 +1619,12 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
 // avoid trouble with failing + and *, and destructors
 impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
 {
-    /// Matrix multiplication of arrays `self` and `other`
+    /// Perform matrix multiplication of rectangular arrays `self` and `other`.
     ///
     /// The array sizes must agree in the way that
-    /// `self` is M x N  and `other` is N x K, the result then being
-    /// size M x K
+    /// if `self` is *M* x *N*, then `other` is *N* x *K*.
+    ///
+    /// Return a result array with shape *M* x *K*.
     pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
     {
         let ((m, a), (b, n)) = (self.dim, other.dim);
@@ -1654,6 +1655,42 @@ impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
         }
         unsafe {
             Array::from_vec_dim((m, n), res_elems)
+        }
+    }
+
+    /// Perform the matrix multiplication of the rectangular array `self` and
+    /// column vector `other`.
+    ///
+    /// The array sizes must agree in the way that
+    /// if `self` is *M* x *N*, then `other` is *N*.
+    ///
+    /// Return a result array with shape *M*.
+    pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
+    {
+        let ((m, a), n) = (self.dim, other.dim);
+        let (self_columns, other_rows) = (a, n);
+        assert!(self_columns == other_rows);
+
+        // Avoid initializing the memory in vec -- set it during iteration
+        let mut res_elems = Vec::<A>::with_capacity(m);
+        unsafe {
+            res_elems.set_len(m);
+        }
+        let mut i = 0;
+        let col_itr = other.iter();
+        for rr in res_elems.mut_iter() {
+            let row = self.row_iter(i);
+            let col = col_itr.clone();
+            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
+                    s + *x * *y
+                });
+            unsafe {
+                std::ptr::write(rr, dot);
+            }
+            i += 1;
+        }
+        unsafe {
+            Array::from_vec_dim(m, res_elems)
         }
     }
 }
