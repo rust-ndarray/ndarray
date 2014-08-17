@@ -1397,9 +1397,9 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
 }
 
 
-// Matrix multiplication only defined for Primitive to
-// avoid trouble with failing + and *
-impl<'a, A: Primitive> Array<A, (Ix, Ix)>
+// Matrix multiplication only defined for simple types to
+// avoid trouble with failing + and *, and destructors
+impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
 {
     /// Matrix multiplication of arrays `self` and `other`
     ///

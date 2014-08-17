@@ -3,6 +3,7 @@
 //! A few linear algebra operations on two-dimensional arrays.
 
 use std::num::{zero, one};
+use std::num::{Zero, One};
 
 use super::{Array, Dimension, Ix};
 
@@ -13,7 +14,7 @@ pub type Mat<A> = Array<A, (Ix, Ix)>;
 
 
 /// Return the identity matrix of dimension *n*.
-pub fn eye<A: Num + Clone>(n: Ix) -> Mat<A>
+pub fn eye<A: Zero + One + Clone>(n: Ix) -> Mat<A>
 {
     let mut eye = Array::zeros((n, n));
     for i in range(0, n) {
