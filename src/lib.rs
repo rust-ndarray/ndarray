@@ -129,6 +129,8 @@ impl Dimension for Ix {
     #[inline]
     fn ndim(&self) -> uint { 1 }
     #[inline]
+    fn size(&self) -> uint { *self }
+    #[inline]
     fn next_for(&self, mut index: Ix) -> Option<Ix> {
         index += 1;
         if index < *self {
@@ -147,6 +149,8 @@ impl Dimension for Ix {
 impl Dimension for (Ix, Ix) {
     #[inline]
     fn ndim(&self) -> uint { 2 }
+    #[inline]
+    fn size(&self) -> uint { let (m, n) = *self; m * n }
     #[inline]
     fn next_for(&self, index: (Ix, Ix)) -> Option<(Ix, Ix)> {
         let (mut i, mut j) = index;
@@ -175,6 +179,8 @@ impl Dimension for (Ix, Ix) {
 impl Dimension for (Ix, Ix, Ix) {
     #[inline]
     fn ndim(&self) -> uint { 3 }
+    #[inline]
+    fn size(&self) -> uint { let (m, n, o) = *self; m * n * o }
     #[inline]
     fn next_for(&self, index: (Ix, Ix, Ix)) -> Option<(Ix, Ix, Ix)> {
         let (mut i, mut j, mut k) = index;
