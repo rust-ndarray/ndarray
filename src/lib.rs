@@ -1314,12 +1314,16 @@ impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D>
     }
 }
 
-#[deriving(Clone)]
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a A`.
 pub struct Elements<'a, A, D> {
     inner: Baseiter<'a, A, D>,
+}
+
+impl<'a, A, D: Clone> Clone for Elements<'a, A, D>
+{
+    fn clone(&self) -> Elements<'a, A, D> { Elements{inner: self.inner.clone()} }
 }
 
 impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
@@ -1352,12 +1356,18 @@ impl<'a, A> DoubleEndedIterator<&'a A> for Elements<'a, A, Ix>
 
 impl<'a, A> ExactSize<&'a A> for Elements<'a, A, Ix> { }
 
-#[deriving(Clone)]
 /// An iterator over the indexes and elements of an array.
 ///
 /// Iterator element type is `(D, &'a A)`.
 pub struct IndexedElements<'a, A, D> {
     inner: Baseiter<'a, A, D>,
+}
+
+impl<'a, A, D: Clone> Clone for IndexedElements<'a, A, D>
+{
+    fn clone(&self) -> IndexedElements<'a, A, D> {
+        IndexedElements{inner: self.inner.clone()}
+    }
 }
 
 impl<'a, A, D: Dimension> Iterator<(D, &'a A)> for IndexedElements<'a, A, D>
