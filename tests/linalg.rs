@@ -33,7 +33,7 @@ fn chol()
     let _ = arr2::<f32>([[1., 2.], [3., 4.]]); // not pos. def.
     let a = arr2::<f32>([[10., 14.], [14., 20.]]); // aT a is pos def
 
-    let chol = ndarray::linalg::cholesky(&a);
+    let chol = ndarray::linalg::cholesky(a);
     let ans = arr2::<f32>([[3.16227770, 0.00000000],
                            [4.42718887, 0.63245525]]);
 
@@ -45,7 +45,7 @@ fn chol()
     bt.swap_axes(0, 1);
     let bpd = bt.mat_mul(&b);
     println!("bpd=\n{}", bpd);
-    let chol = ndarray::linalg::cholesky(&bpd);
+    let chol = ndarray::linalg::cholesky(bpd);
     println!("chol=\n{:.8}", chol);
 
     let ans = arr2::<f32>([[6.70820379, 0.00000000, 0.00000000],
@@ -56,7 +56,7 @@ fn chol()
     let a = arr2::<f32>([[ 0.05201001,  0.22982409,  0.1014132 ],
                          [ 0.22982409,  1.105822  ,  0.37946544],
                          [ 0.1014132 ,  0.37946544,  1.16199134]]);
-    let chol = ndarray::linalg::cholesky(&a);
+    let chol = ndarray::linalg::cholesky(a);
 
     let ans = arr2::<f32>([[ 0.22805704,  0.        ,  0.        ],
                            [ 1.00774829,  0.30044197,  0.        ],
