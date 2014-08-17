@@ -133,7 +133,7 @@ pub fn subst_fw<A: Num + Clone>(l: &Mat<A>, b: &Col<A>) -> Col<A>
     assert!(m == n);
     assert!(m == b.dim());
     let mut x = Vec::from_elem(m, zero::<A>());
-    for (i, bi) in b.iter().enumerate() {
+    for (i, bi) in b.indexed_iter() {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
         let mut b_lx_sum = bi.clone();
         for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i) {
