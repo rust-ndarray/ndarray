@@ -1254,6 +1254,27 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
     }
 }
 
+impl<'a, A> Baseiter<'a, A, Ix>
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<*mut A>
+    {
+        let index = match self.index {
+            None => return None,
+            Some(ref ix) => ix.clone(),
+        };
+        self.dim -= 1;
+        let offset = Dimension::stride_offset(&self.dim, &self.strides);
+        if index == self.dim {
+            self.index = None;
+        }
+
+        unsafe {
+            Some(self.ptr.offset(offset))
+        }
+    }
+}
+
 impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D>
 {
     fn clone(&self) -> Baseiter<'a, A, D>
@@ -1293,6 +1314,19 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
     }
 }
 
+impl<'a, A> DoubleEndedIterator<&'a A> for Elements<'a, A, Ix>
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<&'a A>
+    {
+        unsafe {
+            self.inner.next_back().map(|p| to_ref(p as *const _))
+        }
+    }
+}
+
+impl<'a, A> ExactSize<&'a A> for Elements<'a, A, Ix> { }
+
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a mut A`.
@@ -1315,6 +1349,17 @@ impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
     {
         let len = self.inner.size_hint();
         (len, Some(len))
+    }
+}
+
+impl<'a, A> DoubleEndedIterator<&'a mut A> for ElementsMut<'a, A, Ix>
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<&'a mut A>
+    {
+        unsafe {
+            self.inner.next_back().map(|p| to_ref_mut(p))
+        }
     }
 }
 
