@@ -1132,70 +1132,54 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
                                  format: |&mut fmt::Formatter, &A| -> fmt::Result)
                                 -> fmt::Result
 {
-    if f.width.is_none() {
+    let sz = view.dim.shape().len();
+    if sz > 0 && f.width.is_none() {
         f.width = Some(4)
     }
-    match view.dim.shape() {
-        [] => {
-            return format(f, view.iter().next().unwrap());
-        }
-        [_] => {
-            try!(write!(f, "["));
-            for (i, elt) in view.iter().enumerate() {
-                if i != 0 {
-                    try!(write!(f, ", "));
-                }
-                try!(format(f, elt));
-            }
-            return write!(f, "]");
-        }
-        _ => /* fallthrough */ {}
+    let mut last_index = view.dim.first_index();
+    for _ in range(0, sz) {
+        try!(write!(f, "["));
     }
-    let mut slices = Vec::from_elem(view.dim.shape().len(), S);
-    assert!(slices.len() >= 2);
-    let n_loops = slices.len() - 2;
-    let row_width = view.dim.shape()[slices.len() - 1];
-    let mut fixed = Vec::from_elem(n_loops, 0u);
     let mut first = true;
-    loop {
-        /* Use fixed indices to make a slice*/
-        for (fidx, slc) in fixed.iter().zip(slices.mut_iter()) {
-            *slc = Si(*fidx as int, Some(*fidx as int + 1), 1);
-        }
-        if !first {
-            try!(write!(f, "\n"));
-        }
-        /* Print out this view */
-        for (i, elt) in view.slice_iter(slices.as_slice()).enumerate() {
-            if i % row_width != 0 {
-                try!(write!(f, ", "));
-            } else if i != 0 {
-                try!(write!(f, "\n ["));
-            } else {
-                try!(write!(f, "[["));
-            }
-            //try!(write!(f, "{:4}", elt));
-            try!(format(f, elt));
-            if i != 0 && (i+1) % row_width == 0 {
-                try!(write!(f, "]"));
-            }
-        }
-        first = false;
-        try!(write!(f, "]"));
-        let mut done = true;
-        for (fidx, &dim) in fixed.mut_iter().zip(view.dim.shape().iter()) {
-            *fidx += 1;
-            if *fidx == dim {
-                *fidx = 0;
-                continue;
-            } else {
-                done = false;
+    // Simply use the indexed iterator, and take the index wraparounds
+    // as cues for when to add []'s and how many to add.
+    for (index, elt) in view.indexed_iter() {
+        let mut update_index = false;
+        for (i, (a, b)) in index.shape().iter().take(sz-1)
+                        .zip(last_index.shape().iter())
+                        .enumerate()
+        {
+            if a != b {
+                // New row.
+                // # of ['s needed
+                let n = sz - i - 1;
+                for _ in range(0, n) {
+                    try!(write!(f, "]"));
+                }
+                try!(write!(f, ",\n"));
+                for _ in range(0, sz - n) {
+                    try!(write!(f, " "));
+                }
+                for _ in range(0, n) {
+                    try!(write!(f, "["));
+                }
+                first = true;
+                update_index = true;
                 break;
             }
         }
-        if done {
-            break
+        if !first {
+            try!(write!(f, ", "));
         }
+        first = false;
+        try!(format(f, elt));
+
+        if update_index {
+            last_index = index;
+        }
+    }
+    for _ in range(0, sz) {
+        try!(write!(f, "]"));
     }
     Ok(())
 }
