@@ -1736,7 +1736,7 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
     offset
 }
 
-impl<A: Clone> FromIterator<A> for Array<A, Ix>
+impl<A> FromIterator<A> for Array<A, Ix>
 {
     fn from_iter<I: Iterator<A>>(it: I) -> Array<A, Ix>
     {
