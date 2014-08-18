@@ -43,3 +43,16 @@ fn bench_std_iter_2d(bench: &mut test::Bencher)
                          [5., 6., 6.]]);
     bench.iter(|| for elt in a.iter() { black_box(elt) })
 }
+
+#[bench]
+fn bench_mat_mul(bench: &mut test::Bencher)
+{
+    let a = arr2::<f32>([[1., 2., 2.],
+                         [3., 4., 4.],
+                         [3., 4., 4.],
+                         [3., 4., 4.],
+                         [5., 6., 6.]]);
+    let mut at = a.clone();
+    at.swap_axes(0, 1);
+    bench.iter(|| at.mat_mul(&a));
+}
