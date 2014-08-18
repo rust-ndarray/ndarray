@@ -11,9 +11,21 @@ pub type Col<A> = Array<A, Ix>;
 /// Rectangular matrix.
 pub type Mat<A> = Array<A, (Ix, Ix)>;
 
+/// Trait union for an additive group.
+pub trait AddGroup : Clone + Zero + Add<Self, Self> + Sub<Self, Self> { }
+impl<A: Clone + Zero + Add<A, A> + Sub<A, A>> AddGroup for A { }
+
+/// Trait union for a commutative ring with 1.
+pub trait Ring : AddGroup + One + Mul<Self, Self> { }
+impl<A: AddGroup + One + Mul<A, A>> Ring for A { }
+
+/// Trait union for a field.
+pub trait Field : Ring + Div<Self, Self> { }
+impl<A: Ring + Div<A, A>> Field for A { }
+
 
 /// Return the identity matrix of dimension *n*.
-pub fn eye<A: Zero + One + Clone>(n: Ix) -> Mat<A>
+pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A>
 {
     let mut eye = Array::zeros((n, n));
     for a_ii in eye.diag_iter_mut() {
@@ -136,7 +148,7 @@ pub fn cholesky<A: Float>(a: Mat<A>) -> Mat<A>
 }
 
 /// Solve *L x = b* where *L* is a lower triangular matrix.
-pub fn subst_fw<A: Num + Clone>(l: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn subst_fw<A: Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 {
     let (m, n) = l.dim();
     assert!(m == n);
@@ -154,7 +166,7 @@ pub fn subst_fw<A: Num + Clone>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 }
 
 /// Solve *U x = b* where *U* is an upper triangular matrix.
-pub fn subst_bw<A: Num + Clone>(u: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn subst_bw<A: Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
 {
     let (m, n) = u.dim();
     assert!(m == n);

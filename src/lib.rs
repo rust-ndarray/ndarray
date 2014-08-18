@@ -963,7 +963,7 @@ pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
     Array::from_slices(xs)
 }
 
-impl<A: Clone + Num,
+impl<A: Clone + linalg::Field,
      E: Dimension + Default, D: Dimension + Shrink<E>>
     Array<A, D>
 {
@@ -1617,7 +1617,7 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
 
 // Matrix multiplication only defined for simple types to
 // avoid trouble with failing + and *, and destructors
-impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
+impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
 {
     /// Perform matrix multiplication of rectangular arrays `self` and `other`.
     ///
