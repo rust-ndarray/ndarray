@@ -358,15 +358,24 @@ impl<A: Clone, D: Dimension> Array<A, D>
         }
     }
 
-    fn make_unique<'a>(&'a mut self) -> &'a mut Vec<A>
+    fn make_unique<'a>(&'a mut self)
     {
+        if std::rc::is_unique(&self.data) {
+            return
+        }
+        if self.dim.size() <= self.data.len() / 2 {
+            unsafe {
+                *self = Array::from_vec_dim(self.dim.clone(),
+                                            self.iter().clones().collect());
+            }
+            return;
+        }
         let our_off = (self.ptr as int - self.data.as_ptr() as int)
             / mem::size_of::<A>() as int;
         let rvec = self.data.make_unique();
         unsafe {
             self.ptr = rvec.as_mut_ptr().offset(our_off);
         }
-        rvec
     }
 }
 
@@ -830,7 +839,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// while it is mutably borrowed.
     pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
     {
-        self.make_unique().as_mut_slice()
+        self.data.make_unique().as_mut_slice()
     }
 
 
