@@ -186,11 +186,11 @@ fn test_sub()
 #[test]
 fn diag()
 {
-    let d = Array::from_slices([[1., 2., 3.0f32]]).diag();
+    let d = arr2::<f32>([[1., 2., 3.0f32]]).diag();
     assert_eq!(d.shape(), &[1]);
-    let d = Array::from_slices([[1., 2., 3.0f32], [0., 0., 0.]]).diag();
+    let d = arr2::<f32>([[1., 2., 3.0f32], [0., 0., 0.]]).diag();
     assert_eq!(d.shape(), &[2]);
-    let d = Array::<f32>::from_slices([]).diag();
+    let d = arr2::<f32>([]).diag();
     assert_eq!(d.shape(), &[0]);
     let d = Array::<f32, _>::zeros(()).diag();
     assert_eq!(d.shape(), &[1]);
@@ -199,8 +199,8 @@ fn diag()
 #[test]
 fn swapaxes()
 {
-    let mut a = Array::from_slices([[1., 2.], [3., 4.0f32]]);
-    let     b = Array::from_slices([[1., 3.], [2., 4.0f32]]);
+    let mut a = arr2::<f32>([[1., 2.], [3., 4.0f32]]);
+    let     b = arr2::<f32>([[1., 3.], [2., 4.0f32]]);
     assert!(a != b);
     a.swap_axes(0, 1);
     assert_eq!(a, b);
@@ -213,7 +213,7 @@ fn swapaxes()
 #[test]
 fn standard_layout()
 {
-    let mut a = Array::from_slices([[1., 2.], [3., 4.0f32]]);
+    let mut a = arr2::<f32>([[1., 2.], [3., 4.0]]);
     assert!(a.is_standard_layout());
     a.swap_axes(0, 1);
     assert!(!a.is_standard_layout());
@@ -228,8 +228,8 @@ fn standard_layout()
 #[test]
 fn assign()
 {
-    let mut a = Array::from_slices([[1., 2.], [3., 4.0f32]]);
-    let     b = Array::from_slices([[1., 3.], [2., 4.0f32]]);
+    let mut a = arr2::<f32>([[1., 2.], [3., 4.]]);
+    let     b = arr2::<f32>([[1., 3.], [2., 4.]]);
     a.assign(&b);
     assert_eq!(a, b);
 
@@ -241,7 +241,7 @@ fn assign()
 #[test]
 fn dyn_dimension()
 {
-    let a = Array::from_slices([[1., 2.], [3., 4.0f32]]).reshape(vec![2u, 2]);
+    let a = arr2::<f32>([[1., 2.], [3., 4.0]]).reshape(vec![2u, 2]);
     assert_eq!(a - a, Array::zeros(vec![2u,2u]));
 
     let mut dim = Vec::from_elem(1024, 1u);
