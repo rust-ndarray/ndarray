@@ -1552,7 +1552,7 @@ fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Optio
 ///
 /// `Si(a, None, -1)` is every element, in reverse order, from `a`
 /// until the end. Python equivalent is `[a::-1]`
-pub struct Si(pub int, pub Option<int>, pub int);
+pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
 /// Slice value for the full range of an axis.
 pub static S: Si = Si(0, None, 1);
@@ -1695,9 +1695,9 @@ impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
     }
 }
 
-impl<A: Clone> FromIterator<A> for Array<A, uint>
+impl<A: Clone> FromIterator<A> for Array<A, Ix>
 {
-    fn from_iter<I: Iterator<A>>(it: I) -> Array<A, uint>
+    fn from_iter<I: Iterator<A>>(it: I) -> Array<A, Ix>
     {
         Array::from_iter(it)
     }
