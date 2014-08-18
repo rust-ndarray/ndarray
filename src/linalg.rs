@@ -3,6 +3,8 @@
 //! A few linear algebra operations on two-dimensional arrays.
 
 use std::num::{zero, one, Zero, One};
+#[cfg(complex)]
+use num::Complex;
 
 use super::{Array, Ix};
 
@@ -23,6 +25,37 @@ impl<A: AddGroup + One + Mul<A, A>> Ring for A { }
 pub trait Field : Ring + Div<Self, Self> { }
 impl<A: Ring + Div<A, A>> Field for A { }
 
+/// A real or complex number.
+pub trait ComplexField : Copy + Field
+{
+    #[inline]
+    fn conjugate(self) -> Self { self }
+    fn sqrt_real(self) -> Self;
+    #[inline]
+    fn is_complex(_mark: Option<Self>) -> bool { false }
+}
+
+impl ComplexField for f32
+{
+    #[inline]
+    fn sqrt_real(self) -> f32 { self.sqrt() }
+}
+
+impl ComplexField for f64
+{
+    #[inline]
+    fn sqrt_real(self) -> f64 { self.sqrt() }
+}
+
+#[cfg(complex)]
+impl<A: Float> ComplexField for Complex<A>
+{
+    #[inline]
+    fn conjugate(self) -> Complex<A> { self.conj() }
+    fn sqrt_real(self) -> Complex<A> { Complex::new(self.re.sqrt(), zero()) }
+    #[inline]
+    fn is_complex(_mark: Option<Complex<A>>) -> bool { true }
+}
 
 /// Return the identity matrix of dimension *n*.
 pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A>
@@ -49,7 +82,7 @@ pub fn inverse<A: Primitive>(a: &Mat<A>) -> Mat<A>
 /// unknowns *x*.
 ///
 /// Return best fit for *x*.
-pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 {
     // Using transpose: a.T a x = a.T b;
     // a.T a being square gives naive solution
@@ -69,6 +102,12 @@ pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     // 
     let mut aT = a.clone();
     aT.swap_axes(0, 1);
+    if ComplexField::is_complex(None::<A>) {
+        // conjugate transpose
+        for elt in aT.iter_mut() {
+            *elt = elt.conjugate();
+        }
+    }
 
     let aT_a = aT.mat_mul(a);
     let mut L = cholesky(aT_a);
@@ -78,9 +117,21 @@ pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     let z = subst_fw(&L, &rhs);
 
     // Solve L.T x = z
+    if ComplexField::is_complex(None::<A>) {
+        // conjugate transpose
+        // only elements below the diagonal have imag part
+        let (m, _) = L.dim();
+        for i in range(1, m) {
+            for j in range(0, i) {
+                let elt = &mut L[(i, j)];
+                *elt = elt.conjugate();
+            }
+        }
+    }
     L.swap_axes(0, 1);
-    let x_lstsq = subst_bw(&L, &z);
-    x_lstsq
+
+    // => x_lstsq
+    subst_bw(&L, &z)
 }
 
 /// Factor *a = L L<sup>T</sup>*.
@@ -98,7 +149,7 @@ pub fn least_squares<A: Float>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 /// substitution.”
 ///
 /// Return L.
-pub fn cholesky<A: Float>(a: Mat<A>) -> Mat<A>
+pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 {
     let z = zero::<A>();
     let (m, n) = a.dim();
@@ -120,7 +171,7 @@ pub fn cholesky<A: Float>(a: Mat<A>) -> Mat<A>
                 let Lik = L.row_iter(i);
                 let Ljk = L.row_iter(j);
                 for (&lik, &ljk) in Lik.zip(Ljk).take(j) {
-                    lik_ljk_sum = lik_ljk_sum + lik * ljk;
+                    lik_ljk_sum = lik_ljk_sum + lik * ljk.conjugate();
                 }
             }
 
@@ -134,9 +185,9 @@ pub fn cholesky<A: Float>(a: Mat<A>) -> Mat<A>
         let mut ljk_sum = z.clone();
         // L_jk for k = 0 .. j
         for &ljk in L.row_iter(j).take(j) {
-            ljk_sum = ljk_sum + ljk * ljk;
+            ljk_sum = ljk_sum + ljk * ljk.conjugate();
         }
-        L[(j, j)] = (L[(j, j)] - ljk_sum).sqrt();
+        L[(j, j)] = (L[(j, j)] - ljk_sum).sqrt_real();
 
         // After the diagonal
         // L_ij = 0 for j > i

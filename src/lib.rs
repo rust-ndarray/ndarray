@@ -8,6 +8,8 @@
 //!
 
 extern crate itertools;
+#[cfg(complex)]
+extern crate num;
 
 use itertools::ItertoolsClonable;
 use it = itertools;
