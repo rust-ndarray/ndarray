@@ -1622,9 +1622,9 @@ impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
     /// Perform matrix multiplication of rectangular arrays `self` and `other`.
     ///
     /// The array sizes must agree in the way that
-    /// if `self` is *M* x *N*, then `other` is *N* x *K*.
+    /// if `self` is *M* × *N*, then `other` is *N* × *K*.
     ///
-    /// Return a result array with shape *M* x *K*.
+    /// Return a result array with shape *M* × *K*.
     pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
     {
         let ((m, a), (b, n)) = (self.dim, other.dim);
@@ -1662,7 +1662,7 @@ impl<'a, A: Copy + Add<A, A> + Mul<A, A> + num::Zero> Array<A, (Ix, Ix)>
     /// column vector `other`.
     ///
     /// The array sizes must agree in the way that
-    /// if `self` is *M* x *N*, then `other` is *N*.
+    /// if `self` is *M* × *N*, then `other` is *N*.
     ///
     /// Return a result array with shape *M*.
     pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
