@@ -911,31 +911,13 @@ impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
 
 unsafe fn stride_new<A>(ptr: *const A, len: uint, stride: int) -> it::Stride<'static, A>
 {
-    let begin;
-    let end;
-    if len != 0 {
-        begin = ptr as *const _;
-        end = begin.offset((len - 1) as int * stride);
-    } else {
-        begin = RawPtr::null();
-        end = RawPtr::null();
-    }
-    it::Stride::from_ptrs(begin, end, stride)
+    it::Stride::from_ptr_len(ptr, len, stride)
 }
 
 // NOTE: lifetime
 unsafe fn stride_mut<A>(ptr: *mut A, len: uint, stride: int) -> it::StrideMut<'static, A>
 {
-    let begin;
-    let end;
-    if len != 0 {
-        begin = ptr;
-        end = begin.offset((len - 1) as int * stride);
-    } else {
-        begin = RawPtr::null();
-        end = RawPtr::null();
-    }
-    it::StrideMut::from_ptrs(begin, end, stride)
+    it::StrideMut::from_ptr_len(ptr, len, stride)
 }
 
 /// Return a zero-dimensional array with the element `x`.
