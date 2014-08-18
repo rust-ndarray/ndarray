@@ -112,7 +112,7 @@ pub fn cholesky<A: Float>(a: Mat<A>) -> Mat<A>
                 }
             }
 
-            // L_ij = A_ij - Sum(k = 1 .. j) L_ik L_jk
+            // L_ij = [ A_ij - Sum(k = 1 .. j) L_ik L_jk ] / L_jj
             L[(i, j)] = (L[(i, j)] - lik_ljk_sum) / L[(j, j)];
         }
 
