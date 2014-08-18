@@ -653,14 +653,65 @@ impl<A, D: Dimension> Array<A, D>
         self.dim.shape_mut().swap(ax, bx);
         self.strides.shape_mut().swap(ax, bx);
     }
+
+    pub fn iter1d<'b>(&'b self, axis: uint, from: &D) -> it::Stride<'b, A> {
+        let dim = self.dim.shape()[axis];
+        let stride = self.strides.shape()[axis];
+        let off = stride_offset_checked(&self.dim, &self.strides, from).unwrap();
+        let ptr = unsafe {
+            self.ptr.offset(off)
+        };
+        unsafe {
+            stride_new(ptr as *const _, dim, stride as int)
+        }
+    }
+
+    // Return (length, stride) for diagonal
+    fn diag_params(&self) -> (uint, int)
+    {
+        /* empty shape has len 1 */
+        let len = self.dim.shape().iter().clones().min().unwrap_or(1);
+        let stride = self.strides.shape().iter()
+                        .map(|x| *x as int)
+                        .fold(0i, |s, a| s + a);
+        return (len, stride)
+    }
+
+    /// Return an iterator over the diagonal elements of the array.
+    pub fn diag_iter<'a>(&'a self) -> it::Stride<'a, A> {
+        let (len, stride) = self.diag_params();
+        unsafe {
+            stride_new(self.ptr as *const _, len, stride)
+        }
+    }
+
+    /// Return the diagonal as a one-dimensional array.
+    pub fn diag(&self) -> Array<A, Ix> {
+        let (len, stride) = self.diag_params();
+        Array {
+            data: self.data.clone(),
+            ptr: self.ptr,
+            dim: len,
+            strides: stride as Ix,
+        }
+    }
 }
 
 impl<A, E: Dimension + Default, D: Dimension + Shrink<E>> Array<A, D>
 {
-    /// Select the subview `index` along `axis` and return the reduced
+    /// Select the subview `index` along `axis` and return a reduced
     /// dimension array.
     ///
     /// **Fail** if `index` is past the length of the axis.
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr2};
+    ///
+    /// let a = arr2::<f32>([[1., 2.],
+    ///                      [3., 4.]]);
+    /// assert_eq!(a.subview(0, 0), arr1([1., 2.]));
+    /// assert_eq!(a.subview(1, 1), arr1([2., 4.]));
+    /// ```
     pub fn subview(&self, axis: uint, index: uint) -> Array<A, E>
     {
         let mut res = self.clone();
@@ -733,6 +784,8 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// of the array.
     ///
     /// Iterator element type is `&'a mut A`.
+    ///
+    /// **Fail** if `indexes` does not match the number of array axes.
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
@@ -748,6 +801,8 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// of the subview.
     ///
     /// Iterator element type is `&'a mut A`.
+    ///
+    /// **Fail** if `axis` or `index` is out of bounds.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: uint, index: uint)
         -> ElementsMut<'a, A, D>
     {
@@ -874,75 +929,6 @@ unsafe fn stride_mut<A>(ptr: *mut A, len: uint, stride: int) -> it::StrideMut<'s
     it::StrideMut::from_ptrs(begin, end, stride)
 }
 
-
-impl<A> Array<A, (Ix, Ix)>
-{
-    pub fn row_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
-    {
-        let (m, n) = self.dim;
-        let (sr, sc) = self.strides;
-        let (sr, sc) = (sr as int, sc as int);
-        assert!(index < m);
-        unsafe {
-            stride_new(self.ptr.offset(sr * index as int) as *const A, n, sc)
-        }
-    }
-
-    pub fn col_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
-    {
-        let (m, n) = self.dim;
-        let (sr, sc) = self.strides;
-        let (sr, sc) = (sr as int, sc as int);
-        assert!(index < n);
-        unsafe {
-            stride_new(self.ptr.offset(sc * index as int) as *const A, m, sr)
-        }
-    }
-}
-
-impl<A, D: Dimension> Array<A, D>
-{
-    pub fn iter1d<'b>(&'b self, axis: uint, from: &D) -> it::Stride<'b, A> {
-        let dim = self.dim.shape()[axis];
-        let stride = self.strides.shape()[axis];
-        let off = stride_offset_checked(&self.dim, &self.strides, from).unwrap();
-        let ptr = unsafe {
-            self.ptr.offset(off)
-        };
-        unsafe {
-            stride_new(ptr as *const _, dim, stride as int)
-        }
-    }
-
-    // Return (length, stride) for diagonal
-    fn diag_params(&self) -> (uint, int)
-    {
-        /* empty shape has len 1 */
-        let len = self.dim.shape().iter().clones().min().unwrap_or(1);
-        let stride = self.strides.shape().iter()
-                        .map(|x| *x as int)
-                        .fold(0i, |s, a| s + a);
-        return (len, stride)
-    }
-
-    pub fn diag_iter<'a>(&'a self) -> it::Stride<'a, A> {
-        let (len, stride) = self.diag_params();
-        unsafe {
-            stride_new(self.ptr as *const _, len, stride)
-        }
-    }
-
-    pub fn diag(&self) -> Array<A, Ix> {
-        let (len, stride) = self.diag_params();
-        Array {
-            data: self.data.clone(),
-            ptr: self.ptr,
-            dim: len,
-            strides: stride as Ix,
-        }
-    }
-}
-
 /// Return a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array<A, ()>
 {
@@ -981,6 +967,8 @@ impl<A: Clone + linalg::Field,
     ///
     /// assert_eq!(a.sum(0).sum(0), arr0(10.));
     /// ```
+    ///
+    /// **Fail** if `axis` is out of bounds.
     pub fn sum(&self, axis: uint) -> Array<A, E>
     {
         let n = self.shape()[axis];
@@ -992,6 +980,8 @@ impl<A: Clone + linalg::Field,
     }
 
     /// Return mean along `axis`.
+    ///
+    /// **Fail** if `axis` is out of bounds.
     pub fn mean(&self, axis: uint) -> Array<A, E>
     {
         let n = self.shape()[axis];
@@ -1007,6 +997,136 @@ impl<A: Clone + linalg::Field,
         sum
     }
 }
+
+impl<A> Array<A, (Ix, Ix)>
+{
+    /// Return an iterator over the elements of row `index`.
+    ///
+    /// **Fail** if `index` is out of bounds.
+    pub fn row_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
+    {
+        let (m, n) = self.dim;
+        let (sr, sc) = self.strides;
+        let (sr, sc) = (sr as int, sc as int);
+        assert!(index < m);
+        unsafe {
+            stride_new(self.ptr.offset(sr * index as int) as *const A, n, sc)
+        }
+    }
+
+    /// Return an iterator over the elements of column `index`.
+    ///
+    /// **Fail** if `index` is out of bounds.
+    pub fn col_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
+    {
+        let (m, n) = self.dim;
+        let (sr, sc) = self.strides;
+        let (sr, sc) = (sr as int, sc as int);
+        assert!(index < n);
+        unsafe {
+            stride_new(self.ptr.offset(sc * index as int) as *const A, m, sr)
+        }
+    }
+}
+
+
+// Matrix multiplication only defined for simple types to
+// avoid trouble with failing + and *, and destructors
+impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
+{
+    /// Perform matrix multiplication of rectangular arrays `self` and `other`.
+    ///
+    /// The array sizes must agree in the way that
+    /// if `self` is *M* × *N*, then `other` is *N* × *K*.
+    ///
+    /// Return a result array with shape *M* × *K*.
+    ///
+    /// **Fail** if sizes are incompatible.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2::<f32>([[1., 2.],
+    ///                      [0., 1.]]);
+    /// let b = arr2::<f32>([[1., 2.],
+    ///                      [2., 3.]]);
+    /// assert_eq!(a.mat_mul(&b), arr2([[5., 8.],
+    ///                                 [2., 3.]]));
+    /// ```
+    ///
+    pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
+    {
+        let ((m, a), (b, n)) = (self.dim, other.dim);
+        let (self_columns, other_rows) = (a, b);
+        assert!(self_columns == other_rows);
+
+        // Avoid initializing the memory in vec -- set it during iteration
+        let mut res_elems = Vec::<A>::with_capacity(m * n);
+        unsafe {
+            res_elems.set_len(m * n);
+        }
+        let mut i = 0;
+        let mut j = 0;
+        for rr in res_elems.mut_iter() {
+            let row = self.row_iter(i);
+            let col = other.col_iter(j);
+            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
+                    s + *x * *y
+                });
+            unsafe {
+                std::ptr::write(rr, dot);
+            }
+            j += 1;
+            if j == n {
+                j = 0;
+                i += 1;
+            }
+        }
+        unsafe {
+            Array::from_vec_dim((m, n), res_elems)
+        }
+    }
+
+    /// Perform the matrix multiplication of the rectangular array `self` and
+    /// column vector `other`.
+    ///
+    /// The array sizes must agree in the way that
+    /// if `self` is *M* × *N*, then `other` is *N*.
+    ///
+    /// Return a result array with shape *M*.
+    ///
+    /// **Fail** if sizes are incompatible.
+    pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
+    {
+        let ((m, a), n) = (self.dim, other.dim);
+        let (self_columns, other_rows) = (a, n);
+        assert!(self_columns == other_rows);
+
+        // Avoid initializing the memory in vec -- set it during iteration
+        let mut res_elems = Vec::<A>::with_capacity(m);
+        unsafe {
+            res_elems.set_len(m);
+        }
+        let mut i = 0;
+        let col_itr = other.iter();
+        for rr in res_elems.mut_iter() {
+            let row = self.row_iter(i);
+            let col = col_itr.clone();
+            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
+                    s + *x * *y
+                });
+            unsafe {
+                std::ptr::write(rr, dot);
+            }
+            i += 1;
+        }
+        unsafe {
+            Array::from_vec_dim(m, res_elems)
+        }
+    }
+}
+
+
 
 fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
                                  format: |&mut fmt::Formatter, &A| -> fmt::Result)
@@ -1614,87 +1734,6 @@ fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
         *sr = s_prim as uint;
     }
     offset
-}
-
-
-// Matrix multiplication only defined for simple types to
-// avoid trouble with failing + and *, and destructors
-impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
-{
-    /// Perform matrix multiplication of rectangular arrays `self` and `other`.
-    ///
-    /// The array sizes must agree in the way that
-    /// if `self` is *M* × *N*, then `other` is *N* × *K*.
-    ///
-    /// Return a result array with shape *M* × *K*.
-    pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
-    {
-        let ((m, a), (b, n)) = (self.dim, other.dim);
-        let (self_columns, other_rows) = (a, b);
-        assert!(self_columns == other_rows);
-
-        // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::<A>::with_capacity(m * n);
-        unsafe {
-            res_elems.set_len(m * n);
-        }
-        let mut i = 0;
-        let mut j = 0;
-        for rr in res_elems.mut_iter() {
-            let row = self.row_iter(i);
-            let col = other.col_iter(j);
-            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
-                    s + *x * *y
-                });
-            unsafe {
-                std::ptr::write(rr, dot);
-            }
-            j += 1;
-            if j == n {
-                j = 0;
-                i += 1;
-            }
-        }
-        unsafe {
-            Array::from_vec_dim((m, n), res_elems)
-        }
-    }
-
-    /// Perform the matrix multiplication of the rectangular array `self` and
-    /// column vector `other`.
-    ///
-    /// The array sizes must agree in the way that
-    /// if `self` is *M* × *N*, then `other` is *N*.
-    ///
-    /// Return a result array with shape *M*.
-    pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
-    {
-        let ((m, a), n) = (self.dim, other.dim);
-        let (self_columns, other_rows) = (a, n);
-        assert!(self_columns == other_rows);
-
-        // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::<A>::with_capacity(m);
-        unsafe {
-            res_elems.set_len(m);
-        }
-        let mut i = 0;
-        let col_itr = other.iter();
-        for rr in res_elems.mut_iter() {
-            let row = self.row_iter(i);
-            let col = col_itr.clone();
-            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
-                    s + *x * *y
-                });
-            unsafe {
-                std::ptr::write(rr, dot);
-            }
-            i += 1;
-        }
-        unsafe {
-            Array::from_vec_dim(m, res_elems)
-        }
-    }
 }
 
 impl<A: Clone> FromIterator<A> for Array<A, Ix>
