@@ -1126,12 +1126,10 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         let mut i = 0;
         let mut j = 0;
         for rr in res_elems.mut_iter() {
-            let row = self.row_iter(i);
-            let col = other.col_iter(j);
-            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
-                    s + *x * *y
-                });
             unsafe {
+                let dot = range(0, a).fold(num::zero::<A>(),
+                    |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at((k, j))
+                );
                 std::ptr::write(rr, dot);
             }
             j += 1;
@@ -1166,14 +1164,11 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
             res_elems.set_len(m);
         }
         let mut i = 0;
-        let col_itr = other.iter();
         for rr in res_elems.mut_iter() {
-            let row = self.row_iter(i);
-            let col = col_itr.clone();
-            let dot = row.zip(col).fold(num::zero(), |s: A, (x, y)| {
-                    s + *x * *y
-                });
             unsafe {
+                let dot = range(0, a).fold(num::zero::<A>(),
+                    |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at(k)
+                );
                 std::ptr::write(rr, dot);
             }
             i += 1;
