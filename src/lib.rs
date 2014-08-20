@@ -395,26 +395,6 @@ impl<A: Clone, D: Dimension> Array<A, D>
             Array::from_vec_dim(dim, v)
         }
     }
-
-    fn make_unique<'a>(&'a mut self)
-    {
-        if std::rc::is_unique(&self.data) {
-            return
-        }
-        if self.dim.size() <= self.data.len() / 2 {
-            unsafe {
-                *self = Array::from_vec_dim(self.dim.clone(),
-                                            self.iter().clones().collect());
-            }
-            return;
-        }
-        let our_off = (self.ptr as int - self.data.as_ptr() as int)
-            / mem::size_of::<A>() as int;
-        let rvec = self.data.make_unique();
-        unsafe {
-            self.ptr = rvec.as_mut_ptr().offset(our_off);
-        }
-    }
 }
 
 impl<A> Array<A, Ix>
@@ -573,6 +553,18 @@ impl<A, D: Dimension> Array<A, D>
             .map(|offset| unsafe {
                 to_ref(self.ptr.offset(offset) as *const _)
             })
+    }
+
+    /// Perform *unchecked* array indexing.
+    ///
+    /// Return a reference to the element at `index`.
+    ///
+    /// **Note:** only unchecked for non-debug builds of ndarray.
+    #[inline]
+    pub unsafe fn uchk_at<'a>(&'a self, index: D) -> &'a A {
+        debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
+        let off = Dimension::stride_offset(&index, &self.strides);
+        to_ref(self.ptr.offset(off) as *const _)
     }
 
     /// Return a protoiterator
@@ -799,14 +791,51 @@ impl<'a, A, D: Dimension> Index<D, A> for Array<A, D>
 
 impl<A: Clone, D: Dimension> Array<A, D>
 {
+    /// Make the Array unshared.
+    ///
+    /// This method is mostly only useful with unsafe code.
+    pub fn ensure_unique(&mut self)
+    {
+        if std::rc::is_unique(&self.data) {
+            return
+        }
+        if self.dim.size() <= self.data.len() / 2 {
+            unsafe {
+                *self = Array::from_vec_dim(self.dim.clone(),
+                                            self.iter().clones().collect());
+            }
+            return;
+        }
+        let our_off = (self.ptr as int - self.data.as_ptr() as int)
+            / mem::size_of::<A>() as int;
+        let rvec = self.data.make_unique();
+        unsafe {
+            self.ptr = rvec.as_mut_ptr().offset(our_off);
+        }
+    }
+
     /// Return a mutable reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
     pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> {
-        self.make_unique();
+        self.ensure_unique();
         self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
                 to_ref_mut(self.ptr.offset(offset))
             })
+    }
+
+    /// Perform *unchecked* array indexing.
+    ///
+    /// Return a reference to the element at `index`.
+    ///
+    /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
+    /// **Note:** The array must be uniquely held when mutating it.
+    #[inline]
+    pub unsafe fn uchk_at_mut<'a>(&'a mut self, index: D) -> &'a mut A {
+        debug_assert!(std::rc::is_unique(&self.data));
+        debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
+        let off = Dimension::stride_offset(&index, &self.strides);
+        to_ref_mut(self.ptr.offset(off))
     }
 
     /// Return an iterator of mutable references to the elements of the Array.
@@ -814,7 +843,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Iterator element type is `&'a mut A`.
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
     {
-        self.make_unique();
+        self.ensure_unique();
         ElementsMut { inner: self.base_iter(), nocopy: kinds::marker::NoCopy }
     }
 
@@ -823,7 +852,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Iterator element type is `(D, &'a mut A)`.
     pub fn indexed_iter_mut<'a>(&'a mut self) -> IndexedElementsMut<'a, A, D>
     {
-        self.make_unique();
+        self.ensure_unique();
         IndexedElementsMut { inner: self.base_iter(), nocopy: kinds::marker::NoCopy }
     }
 
@@ -860,7 +889,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
 
     /// Return an iterator over the diagonal elements of the array.
     pub fn diag_iter_mut<'a>(&'a mut self) -> it::StrideMut<'a, A> {
-        self.make_unique();
+        self.ensure_unique();
         let (len, stride) = self.diag_params();
         unsafe {
             stride_mut(self.ptr, len, stride)
