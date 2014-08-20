@@ -12,7 +12,7 @@ extern crate itertools;
 extern crate num;
 
 use itertools::ItertoolsClonable;
-use it = itertools;
+use itertools as it;
 
 use std::fmt;
 use std::hash;
