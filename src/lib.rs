@@ -117,6 +117,21 @@ pub trait Dimension : Clone + Eq {
         offset
     }
 
+    /// Return stride offset for this dimension and index.
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<int>
+    {
+        let mut offset = 0;
+        for ((&d, &i), &s) in self.shape().iter()
+                                .zip(index.shape().iter())
+                                .zip(strides.shape().iter())
+        {
+            if i >= d {
+                return None;
+            }
+            offset += i as int * s as int;
+        }
+        Some(offset)
+    }
 }
 
 impl Dimension for () {
@@ -142,9 +157,19 @@ impl Dimension for Ix {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &Ix, strides: &Ix) -> int
+    fn stride_offset(index: &Ix, stride: &Ix) -> int
     {
-        *index as int * (*strides) as int
+        *index as int * (*stride) as int
+    }
+
+    /// Return stride offset for this dimension and index.
+    fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<int>
+    {
+        if *index < *self {
+            Some(*index as int * *stride as int)
+        } else {
+            None
+        }
     }
 }
 
@@ -175,6 +200,19 @@ impl Dimension for (Ix, Ix) {
         let (i, j) = *index;
         let (s, t) = *strides;
         (i as int * s as int) + (j as int * t as int)
+    }
+
+    /// Return stride offset for this dimension and index.
+    fn stride_offset_checked(&self, strides: &(Ix, Ix), index: &(Ix, Ix)) -> Option<int>
+    {
+        let (m, n) = *self;
+        let (i, j) = *index;
+        let (s, t) = *strides;
+        if i < m && j < n {
+            Some((i as int * s as int) + (j as int * t as int))
+        } else {
+            None
+        }
     }
 }
 
@@ -531,7 +569,7 @@ impl<A, D: Dimension> Array<A, D>
     /// Return a reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
     pub fn at<'a>(&'a self, index: D) -> Option<&'a A> {
-        stride_offset_checked(&self.dim, &self.strides, &index)
+        self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
                 to_ref(self.ptr.offset(offset) as *const _)
             })
@@ -666,7 +704,7 @@ impl<A, D: Dimension> Array<A, D>
     pub fn iter1d<'b>(&'b self, axis: uint, from: &D) -> it::Stride<'b, A> {
         let dim = self.dim.shape()[axis];
         let stride = self.strides.shape()[axis];
-        let off = stride_offset_checked(&self.dim, &self.strides, from).unwrap();
+        let off = self.dim.stride_offset_checked(&self.strides, from).unwrap();
         let ptr = unsafe {
             self.ptr.offset(off)
         };
@@ -765,7 +803,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// if the index is out of bounds.
     pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> {
         self.make_unique();
-        stride_offset_checked(&self.dim, &self.strides, &index)
+        self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
                 to_ref_mut(self.ptr.offset(offset))
             })
@@ -1608,23 +1646,6 @@ impl<D: Dimension> Iterator<D> for Indexes<D>
         (l, Some(l))
     }
 }
-
-// FIXME: Move to Dimension trait
-fn stride_offset_checked<D: Dimension>(dim: &D, strides: &D, index: &D) -> Option<int>
-{
-    let mut offset = 0;
-    for ((&d, &i), &s) in dim.shape().iter()
-                            .zip(index.shape().iter())
-                            .zip(strides.shape().iter())
-    {
-        if i >= d {
-            return None;
-        }
-        offset += i as int * s as int;
-    }
-    Some(offset)
-}
-
 
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix

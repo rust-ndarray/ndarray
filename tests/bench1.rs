@@ -56,3 +56,14 @@ fn bench_mat_mul(bench: &mut test::Bencher)
     at.swap_axes(0, 1);
     bench.iter(|| at.mat_mul(&a));
 }
+
+#[bench]
+fn lst_squares(bench: &mut test::Bencher)
+{
+    let xs = arr2::<f32>([[ 2.,  3.],
+                          [-2., -1.],
+                          [ 1.,  5.],
+                          [-1.,  2.]]);
+    let b = arr1([1., -1., 2., 1.]);
+    bench.iter(|| ndarray::linalg::least_squares(&xs, &b));
+}
