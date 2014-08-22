@@ -184,10 +184,10 @@ impl<A: Clone> Array<A, (Ix, Ix)>
 fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
                            axis: uint, index: uint)
 {
-    let dim = dims.shape()[axis];
-    let stride = strides.shape()[axis] as int;
+    let dim = dims.slice()[axis];
+    let stride = strides.slice()[axis] as int;
     assert!(index < dim);
-    dims.shape_mut()[axis] = 1;
+    dims.slice_mut()[axis] = 1;
     let off = stride * index as int;
     unsafe {
         *ptr = ptr.offset(off);
@@ -215,7 +215,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Return the shape of the array as a slice.
     pub fn shape(&self) -> &[Ix] {
-        self.dim.shape()
+        self.dim.slice()
     }
 
     /// Return `true` if the array data is laid out in
@@ -380,14 +380,14 @@ impl<A, D: Dimension> Array<A, D>
             let mut new_stride = to.clone();
             // begin at the back (the least significant dimension)
             // size of the axis has to either agree or `from` has to be 1
-            if to.shape().len() < from.shape().len() {
+            if to.ndim() < from.ndim() {
                 return None
             }
 
             {
-                let mut new_stride_iter = new_stride.shape_mut().mut_iter().rev();
-                for ((er, es), dr) in from.shape().iter().rev()
-                                        .zip(stride.shape().iter().rev())
+                let mut new_stride_iter = new_stride.slice_mut().mut_iter().rev();
+                for ((er, es), dr) in from.slice().iter().rev()
+                                        .zip(stride.slice().iter().rev())
                                         .zip(new_stride_iter.by_ref())
                 {
                     /* update strides */
@@ -430,13 +430,13 @@ impl<A, D: Dimension> Array<A, D>
     /// **Fail** if the axes are out of bounds.
     pub fn swap_axes(&mut self, ax: uint, bx: uint)
     {
-        self.dim.shape_mut().swap(ax, bx);
-        self.strides.shape_mut().swap(ax, bx);
+        self.dim.slice_mut().swap(ax, bx);
+        self.strides.slice_mut().swap(ax, bx);
     }
 
     pub fn iter1d<'b>(&'b self, axis: uint, from: &D) -> it::Stride<'b, A> {
-        let dim = self.dim.shape()[axis];
-        let stride = self.strides.shape()[axis];
+        let dim = self.dim.slice()[axis];
+        let stride = self.strides.slice()[axis];
         let off = self.dim.stride_offset_checked(&self.strides, from).unwrap();
         let ptr = unsafe {
             self.ptr.offset(off)
@@ -450,8 +450,8 @@ impl<A, D: Dimension> Array<A, D>
     fn diag_params(&self) -> (uint, int)
     {
         /* empty shape has len 1 */
-        let len = self.dim.shape().iter().clones().min().unwrap_or(1);
-        let stride = self.strides.shape().iter()
+        let len = self.dim.slice().iter().clones().min().unwrap_or(1);
+        let stride = self.strides.slice().iter()
                         .map(|x| *x as int)
                         .fold(0i, |s, a| s + a);
         return (len, stride)
@@ -644,7 +644,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {
             fail!("Incompatible sizes in reshape, attempted from: {}, to: {}",
-                  self.dim.shape(), shape.shape())
+                  self.dim.slice(), shape.slice())
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -912,7 +912,7 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
                                  format: |&mut fmt::Formatter, &A| -> fmt::Result)
                                 -> fmt::Result
 {
-    let sz = view.dim.shape().len();
+    let sz = view.dim.slice().len();
     if sz > 0 && f.width.is_none() {
         f.width = Some(4)
     }
@@ -925,8 +925,8 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
     // as cues for when to add []'s and how many to add.
     for (index, elt) in view.indexed_iter() {
         let mut update_index = false;
-        for (i, (a, b)) in index.shape().iter().take(sz-1)
-                        .zip(last_index.shape().iter())
+        for (i, (a, b)) in index.slice().iter().take(sz-1)
+                        .zip(last_index.slice().iter())
                         .enumerate()
         {
             if a != b {
@@ -1156,8 +1156,8 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
         match self.index {
             None => 0,
             Some(ref ix) => {
-                let gone = self.dim.default_strides().shape().iter()
-                            .zip(ix.shape().iter())
+                let gone = self.dim.default_strides().slice().iter()
+                            .zip(ix.slice().iter())
                                  .fold(0u, |s, (&a, &b)| s + a * b);
                 self.dim.size() - gone
             }
@@ -1388,8 +1388,8 @@ impl<D: Dimension> Iterator<D> for Indexes<D>
         let l = match self.index {
             None => 0,
             Some(ref ix) => {
-                let gone = self.dim.default_strides().shape().iter()
-                            .zip(ix.shape().iter())
+                let gone = self.dim.default_strides().slice().iter()
+                            .zip(ix.slice().iter())
                                  .fold(0u, |s, (&a, &b)| s + a * b);
                 self.dim.size() - gone
             }
@@ -1437,9 +1437,9 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
 {
     let mut offset = 0;
-    assert!(slices.len() == dim.shape().len());
-    for ((dr, sr), &slc) in dim.shape_mut().mut_iter()
-                            .zip(strides.shape_mut().mut_iter())
+    assert!(slices.len() == dim.slice().len());
+    for ((dr, sr), &slc) in dim.slice_mut().mut_iter()
+                            .zip(strides.slice_mut().mut_iter())
                             .zip(slices.iter())
     {
         let m = *dr;

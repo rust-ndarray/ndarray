@@ -7,7 +7,7 @@ use super::Ix;
 /// Trait for the shape and index types of arrays.
 pub trait Dimension : Clone + Eq {
     fn ndim(&self) -> uint;
-    fn shape<'a>(&'a self) -> &'a [Ix] {
+    fn slice<'a>(&'a self) -> &'a [Ix] {
         unsafe {
             mem::transmute(raw::Slice {
                 data: self as *const _ as *const Ix,
@@ -16,7 +16,7 @@ pub trait Dimension : Clone + Eq {
         }
     }
 
-    fn shape_mut<'a>(&'a mut self) -> &'a mut [Ix] {
+    fn slice_mut<'a>(&'a mut self) -> &'a mut [Ix] {
         unsafe {
             mem::transmute(raw::Slice {
                 data: self as *mut _ as *const Ix,
@@ -26,7 +26,7 @@ pub trait Dimension : Clone + Eq {
     }
 
     fn size(&self) -> uint {
-        self.shape().iter().fold(1u, |s, &a| s * a as uint)
+        self.slice().iter().fold(1u, |s, &a| s * a as uint)
     }
 
     fn default_strides(&self) -> Self {
@@ -34,14 +34,14 @@ pub trait Dimension : Clone + Eq {
         // Shape (a, b, c) => Give strides (b * c, c, 1)
         let mut strides = self.clone();
         {
-            let mut it = strides.shape_mut().mut_iter().rev();
+            let mut it = strides.slice_mut().mut_iter().rev();
             // Set first element to 1
             for rs in it {
                 *rs = 1;
                 break;
             }
             let mut cum_prod = 1;
-            for (rs, dim) in it.zip(self.shape().iter().rev()) {
+            for (rs, dim) in it.zip(self.slice().iter().rev()) {
                 cum_prod *= *dim;
                 *rs = cum_prod;
             }
@@ -53,7 +53,7 @@ pub trait Dimension : Clone + Eq {
     fn first_index(&self) -> Self
     {
         let mut index = self.clone();
-        for rr in index.shape_mut().mut_iter() {
+        for rr in index.slice_mut().mut_iter() {
             *rr = 0;
         }
         index
@@ -66,8 +66,8 @@ pub trait Dimension : Clone + Eq {
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut index = index;
         let mut done = false;
-        for (&dim, ix) in self.shape().iter().rev()
-                            .zip(index.shape_mut().mut_iter().rev())
+        for (&dim, ix) in self.slice().iter().rev()
+                            .zip(index.slice_mut().mut_iter().rev())
         {
             *ix += 1;
             if *ix == dim {
@@ -86,8 +86,8 @@ pub trait Dimension : Clone + Eq {
     fn stride_offset(index: &Self, strides: &Self) -> int
     {
         let mut offset = 0;
-        for (&i, &s) in index.shape().iter()
-                            .zip(strides.shape().iter()) {
+        for (&i, &s) in index.slice().iter()
+                            .zip(strides.slice().iter()) {
             offset += i as int * s as int;
         }
         offset
@@ -97,9 +97,9 @@ pub trait Dimension : Clone + Eq {
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<int>
     {
         let mut offset = 0;
-        for ((&d, &i), &s) in self.shape().iter()
-                                .zip(index.shape().iter())
-                                .zip(strides.shape().iter())
+        for ((&d, &i), &s) in self.slice().iter()
+                                .zip(index.slice().iter())
+                                .zip(strides.slice().iter())
         {
             if i >= d {
                 return None;
@@ -114,8 +114,8 @@ impl Dimension for () {
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> uint { 0 }
-    fn shape(&self) -> &[Ix] { &[] }
-    fn shape_mut(&mut self) -> &mut [Ix] { &mut [] }
+    fn slice(&self) -> &[Ix] { &[] }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
 }
 
 impl Dimension for Ix {
@@ -243,8 +243,8 @@ impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&s
 impl Dimension for Vec<Ix>
 {
     fn ndim(&self) -> uint { self.len() }
-    fn shape(&self) -> &[Ix] { self.as_slice() }
-    fn shape_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
+    fn slice(&self) -> &[Ix] { self.as_slice() }
+    fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
 }
 
 /// Helper trait to define a smaller-than relation for array shapes.
@@ -252,8 +252,8 @@ pub trait Shrink<T: Dimension + Default> : Dimension {
     fn from_slice(&self, ignored: uint) -> T {
         let mut tup: T = Default::default();
         {
-            let mut it = tup.shape_mut().mut_iter();
-            for (i, &d) in self.shape().iter().enumerate() {
+            let mut it = tup.slice_mut().mut_iter();
+            for (i, &d) in self.slice().iter().enumerate() {
                 if i == ignored {
                     continue;
                 }
