@@ -342,7 +342,7 @@ impl<A, D: Dimension> Array<A, D>
         ///
         /// **Note:** Cannot be used for mutable iterators, since repeating
         /// elements would create aliasing pointers.
-        fn upcast<D: Dimension, E: Dimension>(to: D, from: E, stride: E) -> Option<D> {
+        fn upcast<D: Dimension, E: Dimension>(to: &D, from: &E, stride: &E) -> Option<D> {
             let mut new_stride = to.clone();
             // begin at the back (the least significant dimension)
             // size of the axis has to either agree or `from` has to be 1
@@ -377,7 +377,7 @@ impl<A, D: Dimension> Array<A, D>
         }
 
         let broadcast_strides = 
-            match upcast(dim.clone(), self.dim.clone(), self.strides.clone()) {
+            match upcast(&dim, &self.dim, &self.strides) {
                 Some(st) => st,
                 None => return None,
             };
