@@ -391,6 +391,17 @@ impl<A, D: Dimension> Array<A, D>
         Some(Elements{inner: base})
     }
 
+    #[inline(never)]
+    fn broadcast_iter_unwrap<'a, E: Dimension>(&'a self, dim: E)
+        -> Elements<'a, A, E>
+    {
+        match self.broadcast_iter(dim.clone()) {
+            Some(it) => it,
+            None => fail!("Could not broadcast array from shape {} into: {}",
+                          self.shape(), dim.slice())
+        }
+    }
+
     /// Swap axes `ax` and `bx`.
     ///
     /// **Fail** if the axes are out of bounds.
@@ -651,11 +662,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
                 *x = y.clone();
             }
         } else {
-            let other_iter = match other.broadcast_iter(self.dim()) {
-                Some(it) => it,
-                None => fail!("{}: Could not broadcast array from shape {} into: {}",
-                              "assign", other.shape(), self.shape())
-            };
+            let other_iter = other.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = y.clone();
             }
@@ -1014,11 +1021,7 @@ Array<A, D>
                 *x = (*x). $mth (y);
             }
         } else {
-            let other_iter = match other.broadcast_iter(self.dim()) {
-                Some(it) => it,
-                None => fail!("{}: Could not broadcast array from shape {} into: {}",
-                              stringify!($imethod), other.shape(), self.shape())
-            };
+            let other_iter = other.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = (*x). $mth (y);
             }
@@ -1053,11 +1056,7 @@ $trt<Array<A, E>, Array<A, D>> for Array<A, D>
                 result.push((*x). $mth (y));
             }
         } else {
-            let other_iter = match other.broadcast_iter(self.dim()) {
-                Some(it) => it,
-                None => fail!("{}: Could not broadcast array from shape {} into: {}",
-                              stringify!($mth), other.shape(), self.shape())
-            };
+            let other_iter = other.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter().zip(other_iter) {
                 result.push((*x). $mth (y));
             }
