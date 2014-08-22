@@ -49,13 +49,18 @@ pub trait Dimension : Clone + Eq {
     }
 
     #[inline]
-    fn first_index(&self) -> Self
+    fn first_index(&self) -> Option<Self>
     {
+        for ax in self.slice().iter() {
+            if *ax == 0 {
+                return None
+            }
+        }
         let mut index = self.clone();
         for rr in index.slice_mut().mut_iter() {
             *rr = 0;
         }
-        index
+        Some(index)
     }
 
     /// Iteration -- Use self as size, and return next index after `index`
@@ -123,6 +128,12 @@ impl Dimension for Ix {
     #[inline]
     fn size(&self) -> uint { *self }
     #[inline]
+    fn first_index(&self) -> Option<Ix> {
+        if *self != 0 {
+            Some(0)
+        } else { None }
+    }
+    #[inline]
     fn next_for(&self, mut index: Ix) -> Option<Ix> {
         index += 1;
         if index < *self {
@@ -153,6 +164,13 @@ impl Dimension for (Ix, Ix) {
     fn ndim(&self) -> uint { 2 }
     #[inline]
     fn size(&self) -> uint { let (m, n) = *self; m * n }
+    #[inline]
+    fn first_index(&self) -> Option<(Ix, Ix)> {
+        let (m, n) = *self;
+        if m != 0 && n != 0 {
+            Some((0, 0))
+        } else { None }
+    }
     #[inline]
     fn next_for(&self, index: (Ix, Ix)) -> Option<(Ix, Ix)> {
         let (mut i, mut j) = index;

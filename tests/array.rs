@@ -297,3 +297,19 @@ fn iter_size_hint()
         assert_eq!(it.size_hint().val0(), 0);
     }
 }
+
+#[test]
+fn zero_axes()
+{
+    let a = arr1::<f32>([]);
+    for elt in a.iter() {
+        assert!(false);
+    }
+    println!("{}", a);
+    let b = arr2::<f32>([[], [], [], []]);
+    println!("{}\n{}", b.shape(), b);
+
+    // we can even get a subarray of b
+    let bsub = b.subview(0, 2);
+    assert_eq!(bsub.dim(), 0);
+}

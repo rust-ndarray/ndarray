@@ -281,7 +281,7 @@ impl<A, D: Dimension> Array<A, D>
             ptr: self.ptr,
             dim: self.dim.clone(),
             strides: self.strides.clone(),
-            index: Some(self.dim.first_index()),
+            index: self.dim.first_index(),
             life: kinds::marker::ContravariantLifetime,
         }
     }
@@ -384,7 +384,7 @@ impl<A, D: Dimension> Array<A, D>
         let base = Baseiter {
             ptr: self.ptr,
             strides: broadcast_strides,
-            index: Some(dim.first_index()),
+            index: dim.first_index(),
             dim: dim,
             life: kinds::marker::ContravariantLifetime,
         };
@@ -928,7 +928,11 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
     if sz > 0 && f.width.is_none() {
         f.width = Some(4)
     }
-    let mut last_index = view.dim.first_index();
+    // None will be an empty iter.
+    let mut last_index = match view.dim.first_index() {
+        None => view.dim.clone(),
+        Some(ix) => ix,
+    };
     for _ in range(0, sz) {
         try!(write!(f, "["));
     }
@@ -1367,7 +1371,7 @@ impl<D: Dimension> Indexes<D>
     pub fn new(dim: D) -> Indexes<D>
     {
         Indexes {
-            index: Some(dim.first_index()),
+            index: dim.first_index(),
             dim: dim,
         }
     }
