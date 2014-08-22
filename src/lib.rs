@@ -19,9 +19,8 @@ use std::hash;
 use std::kinds;
 use std::mem;
 use std::num;
-use std::default::Default;
 
-pub use dimension::{Dimension, Shrink};
+pub use dimension::{Dimension, RemoveAxis};
 
 pub mod linalg;
 mod dimension;
@@ -477,7 +476,7 @@ impl<A, D: Dimension> Array<A, D>
     }
 }
 
-impl<A, E: Dimension + Default, D: Dimension + Shrink<E>> Array<A, D>
+impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
 {
     /// Select the subview `index` along `axis` and return a reduced
     /// dimension array.
@@ -497,12 +496,12 @@ impl<A, E: Dimension + Default, D: Dimension + Shrink<E>> Array<A, D>
         let mut res = self.clone();
         res.isubview(axis, index);
         // don't use reshape -- we always know it will fit the size,
-        // and we can use from_slice on the strides as well
+        // and we can use remove_axis on the strides as well
         Array{
             data: res.data,
             ptr: res.ptr,
-            dim: res.dim.from_slice(axis),
-            strides: res.strides.from_slice(axis),
+            dim: res.dim.remove_axis(axis),
+            strides: res.strides.remove_axis(axis),
         }
     }
 
@@ -513,8 +512,8 @@ impl<A, E: Dimension + Default, D: Dimension + Shrink<E>> Array<A, D>
         do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
         Elements {
             ptr: it.ptr,
-            dim: it.dim.from_slice(axis),
-            strides: it.strides.from_slice(axis),
+            dim: it.dim.remove_axis(axis),
+            strides: it.strides.remove_axis(axis),
             index: Some(Default::default()),
             life: it.life,
         }
@@ -737,7 +736,7 @@ pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
 }
 
 impl<A: Clone + Add<A, A>,
-     E: Dimension + Default, D: Dimension + Shrink<E>>
+     D: RemoveAxis<E>, E: Dimension>
     Array<A, D>
 {
     /// Return sum along `axis`.
@@ -766,7 +765,7 @@ impl<A: Clone + Add<A, A>,
 }
 
 impl<A: Clone + linalg::Field,
-     E: Dimension + Default, D: Dimension + Shrink<E>>
+     D: RemoveAxis<E>, E: Dimension>
     Array<A, D>
 {
     /// Return mean along `axis`.

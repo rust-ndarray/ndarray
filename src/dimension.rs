@@ -1,4 +1,3 @@
-use std::default::Default;
 use std::mem;
 use std::raw;
 
@@ -247,14 +246,23 @@ impl Dimension for Vec<Ix>
     fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
 }
 
-/// Helper trait to define a smaller-than relation for array shapes.
-pub trait Shrink<T: Dimension + Default> : Dimension {
-    fn from_slice(&self, ignored: uint) -> T {
-        let mut tup: T = Default::default();
+/// Helper trait to define a larger-than relation for array shapes:
+/// removing one axis from *Self* gives smaller dimension *E*.
+pub trait RemoveAxis<E: Dimension> : Dimension {
+    fn remove_axis(&self, axis: uint) -> E;
+}
+
+macro_rules! impl_shrink(
+    ($from:ident $(,$more:ident)*) => (
+impl RemoveAxis<($($more),*)> for ($from $(,$more)*)
+{
+    #[allow(unnecessary_parens)]
+    fn remove_axis(&self, axis: uint) -> ($($more),*) {
+        let mut tup = ($(0 as $more),*);
         {
             let mut it = tup.slice_mut().mut_iter();
             for (i, &d) in self.slice().iter().enumerate() {
-                if i == ignored {
+                if i == axis {
                     continue;
                 }
                 for rr in it {
@@ -266,17 +274,17 @@ pub trait Shrink<T: Dimension + Default> : Dimension {
         tup
     }
 }
+    )
+)
 
-impl Shrink<()> for Ix { }
-impl Shrink<Ix> for (Ix, Ix) { }
-impl Shrink<(Ix, Ix)> for (Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
-impl Shrink<(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)> for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { }
+macro_rules! impl_shrink_recursive(
+    ($ix:ident) => (impl_shrink!($ix));
+    ($ix1:ident $(,$ix:ident)*) => (
+        impl_shrink_recursive!($($ix),*)
+        impl_shrink!($ix1 $(,$ix)*)
+    )
+)
+
+// 12 is the maximum number for having the Eq trait from libstd
+impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)
 
