@@ -736,7 +736,7 @@ pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
     Array::from_slices(xs)
 }
 
-impl<A: Clone + linalg::Field,
+impl<A: Clone + Add<A, A>,
      E: Dimension + Default, D: Dimension + Shrink<E>>
     Array<A, D>
 {
@@ -763,7 +763,12 @@ impl<A: Clone + linalg::Field,
         }
         res
     }
+}
 
+impl<A: Clone + linalg::Field,
+     E: Dimension + Default, D: Dimension + Shrink<E>>
+    Array<A, D>
+{
     /// Return mean along `axis`.
     ///
     /// **Fail** if `axis` is out of bounds.

@@ -13,13 +13,10 @@ pub type Col<A> = Array<A, Ix>;
 /// Rectangular matrix.
 pub type Mat<A> = Array<A, (Ix, Ix)>;
 
-/// Trait union for an additive group.
-pub trait AddGroup : Clone + Zero + Add<Self, Self> + Sub<Self, Self> { }
-impl<A: Clone + Zero + Add<A, A> + Sub<A, A>> AddGroup for A { }
-
-/// Trait union for a commutative ring with 1.
-pub trait Ring : AddGroup + One + Mul<Self, Self> { }
-impl<A: AddGroup + One + Mul<A, A>> Ring for A { }
+/// Trait union for a ring with 1.
+pub trait Ring : Clone + Zero + Add<Self, Self> + Sub<Self, Self>
+    + One + Mul<Self, Self> { }
+impl<A: Clone + Zero + Add<A, A> + Sub<A, A> + One + Mul<A, A>> Ring for A { }
 
 /// Trait union for a field.
 pub trait Field : Ring + Div<Self, Self> { }
