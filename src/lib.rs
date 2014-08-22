@@ -142,44 +142,6 @@ impl<A> Array<A, Ix>
 
 }
 
-impl<A: Clone> Array<A, Ix>
-{
-    /// Create a one-dimensional array from a slice.
-    pub fn from_slice(xs: &[A]) -> Array<A, Ix>
-    {
-        Array::from_vec(xs.to_vec())
-    }
-}
-
-impl<A: Clone> Array<A, (Ix, Ix)>
-{
-    /// Create a two-dimensional array from a slice.
-    ///
-    /// **Fail** if the slices are not all of the same length.
-    ///
-    /// ```
-    /// use ndarray::Array;
-    /// let a = Array::from_slices([[1, 2, 3],
-    ///                             [4, 5, 6i]]);
-    /// assert!(
-    ///     a.shape() == &[2, 3]
-    /// );
-    /// ```
-    pub fn from_slices(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
-    {
-        unsafe {
-            let (m, n) = (xs.len(), xs.get(0).map_or(0, |snd| snd.len()));
-            let dim = (m, n);
-            let mut result = Vec::<A>::with_capacity(dim.size());
-            for &snd in xs.iter() {
-                assert!(snd.len() == n);
-                result.extend(snd.iter().clones())
-            }
-            Array::from_vec_dim(dim, result)
-        }
-    }
-}
-
 /// Collapse axis `axis` and shift so that only subarray `index` is
 /// available.
 ///
@@ -739,15 +701,34 @@ pub fn arr0<A>(x: A) -> Array<A, ()>
 /// Return a one-dimensional array with elements from `xs`.
 pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 {
-    Array::from_slice(xs)
+    Array::from_vec(xs.to_vec())
 }
 
 /// Return a two-dimensional array with elements from `xs`.
 ///
 /// **Fail** if the slices are not all of the same length.
+///
+/// ```
+/// use ndarray::arr2;
+///
+/// let a = arr2([[1, 2, 3],
+///               [4, 5, 6i]]);
+/// assert!(
+///     a.shape() == &[2, 3]
+/// );
+/// ```
 pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
 {
-    Array::from_slices(xs)
+    unsafe {
+        let (m, n) = (xs.len(), xs.get(0).map_or(0, |snd| snd.len()));
+        let dim = (m, n);
+        let mut result = Vec::<A>::with_capacity(dim.size());
+        for &snd in xs.iter() {
+            assert!(snd.len() == n);
+            result.extend(snd.iter().clones())
+        }
+        Array::from_vec_dim(dim, result)
+    }
 }
 
 impl<A: Clone + Add<A, A>,

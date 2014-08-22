@@ -8,9 +8,9 @@ use std::fmt;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
 {
-    let aa = Array::from_slice(a);
-    let bb = Array::from_slice(b);
-    let cc = Array::from_slice(c);
+    let aa = arr1(a);
+    let bb = arr1(b);
+    let cc = arr1(c);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (2u, 2u);
     let aa = aa.reshape(dim);
