@@ -21,6 +21,7 @@ use std::mem;
 use std::num;
 
 pub use dimension::{Dimension, RemoveAxis};
+pub use dimension::{d1, d2, d3};
 
 pub mod linalg;
 mod dimension;
