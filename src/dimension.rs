@@ -121,13 +121,13 @@ pub trait Dimension : Clone + Eq {
     fn do_slices(dim: &mut Self, strides: &mut Self, slices: &[Si]) -> int
     {
         let mut offset = 0;
-        assert!(slices.len() == dim.ndim());
+        assert!(slices.len() == dim.slice().len());
         for ((dr, sr), &slc) in dim.slice_mut().mut_iter()
                                 .zip(strides.slice_mut().mut_iter())
                                 .zip(slices.iter())
         {
             let m = *dr;
-            let mi = m as int;
+            let mi = m as Ixs;
             let Si(b1, opt_e1, s1) = slc;
             let e1 = opt_e1.unwrap_or(mi);
 
@@ -140,10 +140,10 @@ pub trait Dimension : Clone + Eq {
 
             let m = e1 - b1;
             // stride
-            let s = (*sr) as int;
+            let s = (*sr) as Ixs;
 
             // Data pointer offset
-            offset += b1 as int * s;
+            offset += b1 as Ixs * s;
             // Adjust for strides
             assert!(s1 != 0);
             // How to implement negative strides:
@@ -152,19 +152,19 @@ pub trait Dimension : Clone + Eq {
             // old stride * (old dim - 1)
             // to put the pointer completely in the other end
             if s1 < 0 {
-                offset += s * ((m - 1) as int);
+                offset += (s * ((m - 1) as Ixs)) as Ixs;
             }
 
             let s_prim = s * s1;
 
-            let (d, r) = num::div_rem(m, s1.abs() as uint);
+            let (d, r) = num::div_rem(m, s1.abs() as Ix);
             let m_prim = d + if r > 0 { 1 } else { 0 };
 
             // Update dimension and stride coordinate
             *dr = m_prim;
-            *sr = s_prim as uint;
+            *sr = s_prim as Ix;
         }
-        offset
+        offset as int
     }
 }
 
@@ -186,7 +186,7 @@ impl Dimension for Ix {
     #[inline]
     fn ndim(&self) -> uint { 1 }
     #[inline]
-    fn size(&self) -> uint { *self }
+    fn size(&self) -> uint { *self as uint }
     #[inline]
     fn first_index(&self) -> Option<Ix> {
         if *self != 0 {
@@ -223,7 +223,7 @@ impl Dimension for (Ix, Ix) {
     #[inline]
     fn ndim(&self) -> uint { 2 }
     #[inline]
-    fn size(&self) -> uint { let (m, n) = *self; m * n }
+    fn size(&self) -> uint { let (m, n) = *self; m as uint * n as uint }
     #[inline]
     fn first_index(&self) -> Option<(Ix, Ix)> {
         let (m, n) = *self;
@@ -273,7 +273,7 @@ impl Dimension for (Ix, Ix, Ix) {
     #[inline]
     fn ndim(&self) -> uint { 3 }
     #[inline]
-    fn size(&self) -> uint { let (m, n, o) = *self; m * n * o }
+    fn size(&self) -> uint { let (m, n, o) = *self; m as uint * n as uint * o as uint }
     #[inline]
     fn next_for(&self, index: (Ix, Ix, Ix)) -> Option<(Ix, Ix, Ix)> {
         let (mut i, mut j, mut k) = index;
@@ -323,6 +323,19 @@ impl Dimension for Vec<Ix>
     fn slice(&self) -> &[Ix] { self.as_slice() }
     fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
 }
+
+/// Construct one-dimensional array shape. Helper function to use where
+/// integer literal inference isn't working.
+#[inline]
+pub fn d1(a: Ix) -> Ix { a }
+/// Construct two-dimensional array shape. Helper function to use where
+/// integer literal inference isn't working.
+#[inline]
+pub fn d2(a: Ix, b: Ix) -> (Ix, Ix) { (a, b) }
+/// Construct three-dimensional array shape. Helper function to use where
+/// integer literal inference isn't working.
+#[inline]
+pub fn d3(a: Ix, b: Ix, c: Ix) -> (Ix, Ix, Ix) { (a, b, c) }
 
 /// Helper trait to define a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *E*.

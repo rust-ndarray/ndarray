@@ -21,14 +21,15 @@ use std::mem;
 use std::num;
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
+pub use dimension::{d1, d2, d3};
 
 pub mod linalg;
 mod dimension;
 
 /// Array index type
-pub type Ix = uint;
+pub type Ix = u32;
 /// Array index type (signed)
-pub type Ixs = int;
+pub type Ixs = i32;
 
 unsafe fn to_ref<A>(ptr: *const A) -> &'static A {
     mem::transmute(ptr)
@@ -131,7 +132,7 @@ impl<A> Array<A, Ix>
     /// Create a one-dimensional array from a vector (no allocation needed).
     pub fn from_vec(v: Vec<A>) -> Array<A, Ix> {
         unsafe {
-            Array::from_vec_dim(v.len(), v)
+            Array::from_vec_dim(v.len() as Ix, v)
         }
     }
 
@@ -148,7 +149,7 @@ impl<A> Array<A, Ix>
 /// **Fail** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
 fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
-                           axis: uint, index: uint)
+                           axis: uint, index: Ix)
 {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis] as int;
@@ -306,7 +307,7 @@ impl<A, D: Dimension> Array<A, D>
     /// and select the subview of `index` along that axis.
     ///
     /// **Fail** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: uint, index: uint)
+    pub fn isubview(&mut self, axis: uint, index: Ix)
     {
         do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
@@ -420,7 +421,7 @@ impl<A, D: Dimension> Array<A, D>
             self.ptr.offset(off)
         };
         unsafe {
-            stride_new(ptr as *const _, dim, stride as int)
+            stride_new(ptr as *const _, dim as uint, stride as int)
         }
     }
 
@@ -431,8 +432,8 @@ impl<A, D: Dimension> Array<A, D>
         let len = self.dim.slice().iter().clones().min().unwrap_or(1);
         let stride = self.strides.slice().iter()
                         .map(|x| *x as int)
-                        .fold(0i, |s, a| s + a);
-        return (len, stride)
+                        .fold(0i, |s, a| s + a as int);
+        return (len as uint, stride)
     }
 
     /// Return an iterator over the diagonal elements of the array.
@@ -449,7 +450,7 @@ impl<A, D: Dimension> Array<A, D>
         Array {
             data: self.data.clone(),
             ptr: self.ptr,
-            dim: len,
+            dim: len as Ix,
             strides: stride as Ix,
         }
     }
@@ -473,7 +474,7 @@ impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
     ///     a.subview(1, 1) == arr1([2., 4.])
     /// );
     /// ```
-    pub fn subview(&self, axis: uint, index: uint) -> Array<A, E>
+    pub fn subview(&self, axis: uint, index: Ix) -> Array<A, E>
     {
         let mut res = self.clone();
         res.isubview(axis, index);
@@ -587,7 +588,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Iterator element type is `&'a mut A`.
     ///
     /// **Fail** if `axis` or `index` is out of bounds.
-    pub fn sub_iter_mut<'a>(&'a mut self, axis: uint, index: uint)
+    pub fn sub_iter_mut<'a>(&'a mut self, axis: uint, index: Ix)
         -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
@@ -727,11 +728,11 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
 {
     unsafe {
-        let (m, n) = (xs.len(), xs.get(0).map_or(0, |snd| snd.len()));
+        let (m, n) = (xs.len() as Ix, xs.get(0).map_or(0, |snd| snd.len() as Ix));
         let dim = (m, n);
         let mut result = Vec::<A>::with_capacity(dim.size());
         for &snd in xs.iter() {
-            assert!(snd.len() == n);
+            assert!(snd.len() as Ix == n);
             result.extend(snd.iter().clones())
         }
         Array::from_vec_dim(dim, result)
@@ -797,28 +798,28 @@ impl<A> Array<A, (Ix, Ix)>
     /// Return an iterator over the elements of row `index`.
     ///
     /// **Fail** if `index` is out of bounds.
-    pub fn row_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
+    pub fn row_iter<'a>(&'a self, index: Ix) -> it::Stride<'a, A>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
         let (sr, sc) = (sr as int, sc as int);
         assert!(index < m);
         unsafe {
-            stride_new(self.ptr.offset(sr * index as int) as *const A, n, sc)
+            stride_new(self.ptr.offset(sr * index as int) as *const A, n as uint, sc)
         }
     }
 
     /// Return an iterator over the elements of column `index`.
     ///
     /// **Fail** if `index` is out of bounds.
-    pub fn col_iter<'a>(&'a self, index: uint) -> it::Stride<'a, A>
+    pub fn col_iter<'a>(&'a self, index: Ix) -> it::Stride<'a, A>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
         let (sr, sc) = (sr as int, sc as int);
         assert!(index < n);
         unsafe {
-            stride_new(self.ptr.offset(sc * index as int) as *const A, m, sr)
+            stride_new(self.ptr.offset(sc * index as int) as *const A, m as uint, sr)
         }
     }
 }
@@ -858,9 +859,9 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         assert!(self_columns == other_rows);
 
         // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::<A>::with_capacity(m * n);
+        let mut res_elems = Vec::<A>::with_capacity(m as uint * n as uint);
         unsafe {
-            res_elems.set_len(m * n);
+            res_elems.set_len(m as uint * n as uint);
         }
         let mut i = 0;
         let mut j = 0;
@@ -898,9 +899,9 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         assert!(self_columns == other_rows);
 
         // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::<A>::with_capacity(m);
+        let mut res_elems = Vec::<A>::with_capacity(m as uint);
         unsafe {
-            res_elems.set_len(m);
+            res_elems.set_len(m as uint);
         }
         let mut i = 0;
         for rr in res_elems.mut_iter() {
@@ -1198,7 +1199,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
             Some(ref ix) => {
                 let gone = self.dim.default_strides().slice().iter()
                             .zip(ix.slice().iter())
-                                 .fold(0u, |s, (&a, &b)| s + a * b);
+                                 .fold(0u, |s, (&a, &b)| s + a as uint * b as uint);
                 self.dim.size() - gone
             }
         }
@@ -1430,14 +1431,13 @@ impl<D: Dimension> Iterator<D> for Indexes<D>
             Some(ref ix) => {
                 let gone = self.dim.default_strides().slice().iter()
                             .zip(ix.slice().iter())
-                                 .fold(0u, |s, (&a, &b)| s + a * b);
+                                 .fold(0u, |s, (&a, &b)| s + a as uint * b as uint);
                 self.dim.size() - gone
             }
         };
         (l, Some(l))
     }
 }
-
 
 impl<A> FromIterator<A> for Array<A, Ix>
 {
