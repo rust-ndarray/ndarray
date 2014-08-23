@@ -3,8 +3,8 @@
 //! A few linear algebra operations on two-dimensional arrays.
 
 use std::num::{zero, one, Zero, One};
-#[cfg(complex)]
-use num::Complex;
+#[cfg(not(nocomplex))]
+use libnum::Complex;
 
 use super::{Array, Ix};
 
@@ -44,7 +44,7 @@ impl ComplexField for f64
     fn sqrt_real(self) -> f64 { self.sqrt() }
 }
 
-#[cfg(complex)]
+#[cfg(not(nocomplex))]
 impl<A: Float> ComplexField for Complex<A>
 {
     #[inline]

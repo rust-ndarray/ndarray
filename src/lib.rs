@@ -8,8 +8,8 @@
 //!
 
 extern crate itertools;
-#[cfg(complex)]
-extern crate num;
+#[cfg(not(nocomplex))]
+extern crate libnum = "num";
 
 use itertools::ItertoolsClonable;
 use itertools as it;
