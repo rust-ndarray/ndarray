@@ -29,6 +29,8 @@ use dimension::stride_as_int;
 pub mod linalg;
 mod dimension;
 
+// NOTE: In theory, the whole library should compile
+// and pass tests even if you change Ix and Ixs.
 /// Array index type
 pub type Ix = u32;
 /// Array index type (signed)
@@ -63,6 +65,16 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 ///
 /// Methods mutating the view or array elements in place use an *i* prefix,
 /// for example *slice* vs. *islice* and *add* vs *iadd*.
+///
+/// ## Indexing
+///
+/// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
+/// (signed).
+///
+/// Where dimension is generic, integer literals don't infer properly to the
+/// `Ix` type. For these cases, mostly `Array::zeros(dim)` and `.reshape(dim)`,
+/// you can use the convenience functions `d1(x)`, `d2(x, y)`,
+/// `d3(x, y, z)` and `d4(x, y, z, w)`.
 ///
 /// ## Broadcasting
 ///
