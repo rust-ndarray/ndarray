@@ -22,6 +22,8 @@ use std::num;
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
 pub use dimension::{d1, d2, d3};
+use dimension::stride_offset;
+use dimension::stride_as_int;
 
 pub mod linalg;
 mod dimension;
@@ -141,24 +143,6 @@ impl<A> Array<A, Ix>
         Array::from_vec(it.collect())
     }
 
-}
-
-/// Collapse axis `axis` and shift so that only subarray `index` is
-/// available.
-///
-/// **Fail** if `index` is larger than the size of the axis
-// FIXME: Move to Dimension trait
-fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
-                           axis: uint, index: Ix)
-{
-    let dim = dims.slice()[axis];
-    let stride = strides.slice()[axis] as int;
-    assert!(index < dim);
-    dims.slice_mut()[axis] = 1;
-    let off = stride * index as int;
-    unsafe {
-        *ptr = ptr.offset(off);
-    }
 }
 
 impl<A, D: Dimension> Array<A, D>
@@ -309,7 +293,7 @@ impl<A, D: Dimension> Array<A, D>
     /// **Fail** if `index` is past the length of the axis.
     pub fn isubview(&mut self, axis: uint, index: Ix)
     {
-        do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
+        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*
@@ -421,7 +405,7 @@ impl<A, D: Dimension> Array<A, D>
             self.ptr.offset(off)
         };
         unsafe {
-            stride_new(ptr as *const _, dim as uint, stride as int)
+            stride_new(ptr as *const _, dim as uint, stride_as_int(stride))
         }
     }
 
@@ -431,8 +415,8 @@ impl<A, D: Dimension> Array<A, D>
         /* empty shape has len 1 */
         let len = self.dim.slice().iter().clones().min().unwrap_or(1);
         let stride = self.strides.slice().iter()
-                        .map(|x| *x as int)
-                        .fold(0i, |s, a| s + a as int);
+                        .map(|x| *x)
+                        .fold(0i, |sum, s| sum + stride_as_int(s));
         return (len as uint, stride)
     }
 
@@ -592,7 +576,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
         -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
-        do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
+        dimension::do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
         it
     }
 
@@ -802,10 +786,11 @@ impl<A> Array<A, (Ix, Ix)>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
-        let (sr, sc) = (sr as int, sc as int);
+        //let (sr, sc) = (stride_as_int(sr), stride_as_int(sc));
         assert!(index < m);
         unsafe {
-            stride_new(self.ptr.offset(sr * index as int) as *const A, n as uint, sc)
+            stride_new(self.ptr.offset(stride_offset(index, sr)) as *const A,
+                       n as uint, stride_as_int(sc))
         }
     }
 
@@ -816,10 +801,10 @@ impl<A> Array<A, (Ix, Ix)>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
-        let (sr, sc) = (sr as int, sc as int);
         assert!(index < n);
         unsafe {
-            stride_new(self.ptr.offset(sc * index as int) as *const A, m as uint, sr)
+            stride_new(self.ptr.offset(stride_offset(index, sc)) as *const A,
+                       m as uint, stride_as_int(sr))
         }
     }
 }

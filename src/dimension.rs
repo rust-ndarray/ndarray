@@ -4,6 +4,19 @@ use std::raw;
 
 use super::{Ix, Ixs};
 
+/// Calculate offset from `Ix` stride converting sign properly
+#[inline]
+pub fn stride_offset(n: Ix, stride: Ix) -> int
+{
+    (n as int) * ((stride as Ixs) as int)
+}
+
+#[inline]
+pub fn stride_as_int(stride: Ix) -> int
+{
+    (stride as Ixs) as int
+}
+
 /// Trait for the shape and index types of arrays.
 pub trait Dimension : Clone + Eq {
     fn ndim(&self) -> uint;
@@ -93,7 +106,7 @@ pub trait Dimension : Clone + Eq {
         let mut offset = 0;
         for (&i, &s) in index.slice().iter()
                             .zip(strides.slice().iter()) {
-            offset += i as int * s as int;
+            offset += stride_offset(i, s);
         }
         offset
     }
@@ -109,7 +122,7 @@ pub trait Dimension : Clone + Eq {
             if i >= d {
                 return None;
             }
-            offset += i as int * s as int;
+            offset += stride_offset(i, s);
         }
         Some(offset)
     }
@@ -143,7 +156,7 @@ pub trait Dimension : Clone + Eq {
             let s = (*sr) as Ixs;
 
             // Data pointer offset
-            offset += b1 as Ixs * s;
+            offset += stride_offset(b1, *sr);
             // Adjust for strides
             assert!(s1 != 0);
             // How to implement negative strides:
@@ -152,7 +165,7 @@ pub trait Dimension : Clone + Eq {
             // old stride * (old dim - 1)
             // to put the pointer completely in the other end
             if s1 < 0 {
-                offset += (s * ((m - 1) as Ixs)) as Ixs;
+                offset += stride_offset(m - 1, *sr);
             }
 
             let s_prim = s * s1;
@@ -164,7 +177,7 @@ pub trait Dimension : Clone + Eq {
             *dr = m_prim;
             *sr = s_prim as Ix;
         }
-        offset as int
+        offset
     }
 }
 
@@ -173,6 +186,25 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
         (len + index) as Ix
     } else { index as Ix }
 }
+
+/// Collapse axis `axis` and shift so that only subarray `index` is
+/// available.
+///
+/// **Fail** if `index` is larger than the size of the axis
+// FIXME: Move to Dimension trait
+pub fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
+                           axis: uint, index: Ix)
+{
+    let dim = dims.slice()[axis];
+    let stride = strides.slice()[axis];
+    assert!(index < dim);
+    dims.slice_mut()[axis] = 1;
+    let off = stride_offset(index, stride);
+    unsafe {
+        *ptr = ptr.offset(off);
+    }
+}
+
 
 impl Dimension for () {
     // empty product is 1 -> size is 1
@@ -205,14 +237,14 @@ impl Dimension for Ix {
     #[inline]
     fn stride_offset(index: &Ix, stride: &Ix) -> int
     {
-        *index as int * (*stride) as int
+        stride_offset(*index, *stride)
     }
 
     /// Return stride offset for this dimension and index.
     fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<int>
     {
         if *index < *self {
-            Some(*index as int * *stride as int)
+            Some(stride_offset(*index, *stride))
         } else {
             None
         }
@@ -252,7 +284,7 @@ impl Dimension for (Ix, Ix) {
     {
         let (i, j) = *index;
         let (s, t) = *strides;
-        (i as int * s as int) + (j as int * t as int)
+        stride_offset(i, s) + stride_offset(j, t)
     }
 
     /// Return stride offset for this dimension and index.
@@ -262,7 +294,7 @@ impl Dimension for (Ix, Ix) {
         let (i, j) = *index;
         let (s, t) = *strides;
         if i < m && j < n {
-            Some((i as int * s as int) + (j as int * t as int))
+            Some(stride_offset(i, s) + stride_offset(j, t))
         } else {
             None
         }
@@ -299,7 +331,7 @@ impl Dimension for (Ix, Ix, Ix) {
     {
         let (i, j, k) = *index;
         let (s, t, u) = *strides;
-        (i as int * s as int) + (j as int * t as int) + (k as int * u as int)
+        stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
 }
 
