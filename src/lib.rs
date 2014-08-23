@@ -952,7 +952,10 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
                 for _ in range(0, n) {
                     try!(write!(f, "]"));
                 }
-                try!(write!(f, ",\n"));
+                try!(write!(f, ","));
+                if f.flags & (1u << (fmt::rt::FlagAlternate as uint)) == 0 {
+                    try!(write!(f, "\n"));
+                }
                 for _ in range(0, sz - n) {
                     try!(write!(f, " "));
                 }
@@ -983,6 +986,11 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
 // NOTE: We can impl other fmt traits here
 impl<'a, A: fmt::Show, D: Dimension> fmt::Show for Array<A, D>
 {
+    /// Format the array using `Show` and apply the formatting parameters used
+    /// to each element.
+    ///
+    /// The array is shown in multiline style, unless the alternate form 
+    /// is used -- i.e. `{:#}`.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, |f, elt| elt.fmt(f))
     }
@@ -990,6 +998,11 @@ impl<'a, A: fmt::Show, D: Dimension> fmt::Show for Array<A, D>
 
 impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
 {
+    /// Format the array using `LowerExp` and apply the formatting parameters used
+    /// to each element.
+    ///
+    /// The array is shown in multiline style, unless the alternate form
+    /// is used -- i.e. `{:#e}`.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, |f, elt| elt.fmt(f))
     }
@@ -997,6 +1010,11 @@ impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
 
 impl<'a, A: fmt::UpperExp, D: Dimension> fmt::UpperExp for Array<A, D>
 {
+    /// Format the array using `UpperExp` and apply the formatting parameters used
+    /// to each element.
+    ///
+    /// The array is shown in multiline style, unless the alternate form
+    /// is used -- i.e. `{:#E}`.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, |f, elt| elt.fmt(f))
     }

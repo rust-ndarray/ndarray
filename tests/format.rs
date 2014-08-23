@@ -15,6 +15,8 @@ fn formatting()
     let a = a.reshape((2u, 2u));
     assert_eq!(a.to_string().as_slice(),
                "[[   1,    2],\n [   3,    4]]");
+    assert_eq!(format!("{:#}", a).as_slice(),
+               "[[   1,    2], [   3,    4]]");
 
     let b = arr0::<f32>(3.5);
     assert_eq!(b.to_string().as_slice(),
