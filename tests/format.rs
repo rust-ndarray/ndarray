@@ -19,4 +19,9 @@ fn formatting()
     let b = arr0::<f32>(3.5);
     assert_eq!(b.to_string().as_slice(),
                "3.5");
+
+    let c = arr1::<f32>([1.1, 2.2, 33., 440.]);
+    let s = format!("{:.3e}", c);
+    assert_eq!(s.as_slice(),
+               "[1.100e0, 2.200e0, 3.300e1, 4.400e2]");
 }

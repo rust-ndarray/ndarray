@@ -988,6 +988,20 @@ impl<'a, A: fmt::Show, D: Dimension> fmt::Show for Array<A, D>
     }
 }
 
+impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        format_array(self, f, |f, elt| elt.fmt(f))
+    }
+}
+
+impl<'a, A: fmt::UpperExp, D: Dimension> fmt::UpperExp for Array<A, D>
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        format_array(self, f, |f, elt| elt.fmt(f))
+    }
+}
+
 // Array OPERATORS
 
 impl<A: PartialEq, D: Dimension>
