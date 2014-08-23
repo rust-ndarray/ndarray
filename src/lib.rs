@@ -20,7 +20,7 @@ use std::kinds;
 use std::mem;
 use std::num;
 
-pub use dimension::{Dimension, RemoveAxis};
+pub use dimension::{Dimension, RemoveAxis, Si, S};
 
 pub mod linalg;
 mod dimension;
@@ -220,7 +220,7 @@ impl<A, D: Dimension> Array<A, D>
     /// **Fail** if `indexes` does not match the number of array axes.
     pub fn islice(&mut self, indexes: &[Si])
     {
-        let offset = do_slices(&mut self.dim, &mut self.strides, indexes);
+        let offset = Dimension::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }
@@ -232,7 +232,7 @@ impl<A, D: Dimension> Array<A, D>
     pub fn slice_iter<'a>(&'a self, indexes: &[Si]) -> Elements<'a, A, D>
     {
         let mut it = self.iter();
-        let offset = do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
+        let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
         unsafe {
             it.inner.ptr = it.inner.ptr.offset(offset);
         }
@@ -573,7 +573,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
-        let offset = do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
+        let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
         unsafe {
             it.inner.ptr = it.inner.ptr.offset(offset);
         }
@@ -1406,90 +1406,6 @@ impl<D: Dimension> Iterator<D> for Indexes<D>
     }
 }
 
-// [a:b:s] syntax for example [:3], [::-1]
-// [0,:] -- first row of matrix
-// [:,0] -- first column of matrix
-
-#[deriving(Clone, PartialEq, Eq, Hash, Show)]
-/// A slice, a description of a range of an array axis.
-///
-/// Fields are `begin`, `end` and `stride`, where
-/// negative `begin` or `end` indexes are counted from the back
-/// of the axis.
-///
-/// If `end` is `None`, the slice extends to the end of the axis.
-///
-/// ## Examples
-///
-/// `Si(0, None, 1)` is the full range of an axis.
-/// Python equivalent is `[:]`.
-///
-/// `Si(a, Some(b), 2)` is every second element from `a` until `b`.
-/// Python equivalent is `[a:b:2]`.
-///
-/// `Si(a, None, -1)` is every element, in reverse order, from `a`
-/// until the end. Python equivalent is `[a::-1]`
-pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
-
-/// Slice value for the full range of an axis.
-pub static S: Si = Si(0, None, 1);
-
-fn abs_index(len: Ixs, index: Ixs) -> Ix {
-    if index < 0 {
-        (len + index) as Ix
-    } else { index as Ix }
-}
-
-/// Modify dimension, strides and return data pointer offset
-// FIXME: Move to Dimension trait
-fn do_slices<D: Dimension>(dim: &mut D, strides: &mut D, slices: &[Si]) -> int
-{
-    let mut offset = 0;
-    assert!(slices.len() == dim.slice().len());
-    for ((dr, sr), &slc) in dim.slice_mut().mut_iter()
-                            .zip(strides.slice_mut().mut_iter())
-                            .zip(slices.iter())
-    {
-        let m = *dr;
-        let mi = m as int;
-        let Si(b1, opt_e1, s1) = slc;
-        let e1 = opt_e1.unwrap_or(mi);
-
-        let b1 = abs_index(mi, b1);
-        let mut e1 = abs_index(mi, e1);
-        if e1 < b1 { e1 = b1; }
-
-        assert!(b1 <= m);
-        assert!(e1 <= m);
-
-        let m = e1 - b1;
-        // stride
-        let s = (*sr) as int;
-
-        // Data pointer offset
-        offset += b1 as int * s;
-        // Adjust for strides
-        assert!(s1 != 0);
-        // How to implement negative strides:
-        //
-        // Increase start pointer by
-        // old stride * (old dim - 1)
-        // to put the pointer completely in the other end
-        if s1 < 0 {
-            offset += s * ((m - 1) as int);
-        }
-
-        let s_prim = s * s1;
-
-        let (d, r) = num::div_rem(m, s1.abs() as uint);
-        let m_prim = d + if r > 0 { 1 } else { 0 };
-
-        // Update dimension and stride coordinate
-        *dr = m_prim;
-        *sr = s_prim as uint;
-    }
-    offset
-}
 
 impl<A> FromIterator<A> for Array<A, Ix>
 {

@@ -1,7 +1,8 @@
 use std::mem;
+use std::num;
 use std::raw;
 
-use super::Ix;
+use super::{Ix, Ixs};
 
 /// Trait for the shape and index types of arrays.
 pub trait Dimension : Clone + Eq {
@@ -112,6 +113,65 @@ pub trait Dimension : Clone + Eq {
         }
         Some(offset)
     }
+
+    /// Modify dimension, strides and return data pointer offset
+    ///
+    /// **Fail** if `slices` does not correspond to the number of axes,
+    /// if any stride is 0, or if any index is out of bounds.
+    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &[Si]) -> int
+    {
+        let mut offset = 0;
+        assert!(slices.len() == dim.ndim());
+        for ((dr, sr), &slc) in dim.slice_mut().mut_iter()
+                                .zip(strides.slice_mut().mut_iter())
+                                .zip(slices.iter())
+        {
+            let m = *dr;
+            let mi = m as int;
+            let Si(b1, opt_e1, s1) = slc;
+            let e1 = opt_e1.unwrap_or(mi);
+
+            let b1 = abs_index(mi, b1);
+            let mut e1 = abs_index(mi, e1);
+            if e1 < b1 { e1 = b1; }
+
+            assert!(b1 <= m);
+            assert!(e1 <= m);
+
+            let m = e1 - b1;
+            // stride
+            let s = (*sr) as int;
+
+            // Data pointer offset
+            offset += b1 as int * s;
+            // Adjust for strides
+            assert!(s1 != 0);
+            // How to implement negative strides:
+            //
+            // Increase start pointer by
+            // old stride * (old dim - 1)
+            // to put the pointer completely in the other end
+            if s1 < 0 {
+                offset += s * ((m - 1) as int);
+            }
+
+            let s_prim = s * s1;
+
+            let (d, r) = num::div_rem(m, s1.abs() as uint);
+            let m_prim = d + if r > 0 { 1 } else { 0 };
+
+            // Update dimension and stride coordinate
+            *dr = m_prim;
+            *sr = s_prim as uint;
+        }
+        offset
+    }
+}
+
+fn abs_index(len: Ixs, index: Ixs) -> Ix {
+    if index < 0 {
+        (len + index) as Ix
+    } else { index as Ix }
 }
 
 impl Dimension for () {
@@ -305,4 +365,32 @@ macro_rules! impl_shrink_recursive(
 
 // 12 is the maximum number for having the Eq trait from libstd
 impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)
+
+// [a:b:s] syntax for example [:3], [::-1]
+// [0,:] -- first row of matrix
+// [:,0] -- first column of matrix
+
+#[deriving(Clone, PartialEq, Eq, Hash, Show)]
+/// A slice, a description of a range of an array axis.
+///
+/// Fields are `begin`, `end` and `stride`, where
+/// negative `begin` or `end` indexes are counted from the back
+/// of the axis.
+///
+/// If `end` is `None`, the slice extends to the end of the axis.
+///
+/// ## Examples
+///
+/// `Si(0, None, 1)` is the full range of an axis.
+/// Python equivalent is `[:]`.
+///
+/// `Si(a, Some(b), 2)` is every second element from `a` until `b`.
+/// Python equivalent is `[a:b:2]`.
+///
+/// `Si(a, None, -1)` is every element, in reverse order, from `a`
+/// until the end. Python equivalent is `[a::-1]`
+pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
+
+/// Slice value for the full range of an axis.
+pub static S: Si = Si(0, None, 1);
 
