@@ -22,6 +22,7 @@ use std::num;
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
 pub use dimension::{d1, d2, d3, d4};
+pub use dimension::ixrange;
 use dimension::stride_offset;
 use dimension::stride_as_int;
 
