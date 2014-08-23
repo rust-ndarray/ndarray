@@ -4,7 +4,7 @@ extern crate test;
 extern crate ndarray;
 
 use ndarray::{Array, Dimension};
-use ndarray::{arr1, arr2};
+use ndarray::{arr1, arr2, d2};
 
 pub fn allclose<A: Signed + PartialOrd, D: Dimension>
     (a: &Array<A, D>, b: &Array<A, D>, lim: A) -> bool
@@ -40,7 +40,7 @@ fn chol()
     assert!(allclose(&ans, &chol, 0.001));
 
     // Compute bT b for a pos def matrix
-    let b = Array::from_iter(range(0.0f32, 9.)).reshape((3u, 3u));
+    let b = Array::from_iter(range(0.0f32, 9.)).reshape(d2(3, 3));
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
     let bpd = bt.mat_mul(&b);

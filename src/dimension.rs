@@ -368,6 +368,10 @@ pub fn d2(a: Ix, b: Ix) -> (Ix, Ix) { (a, b) }
 /// integer literal inference isn't working.
 #[inline]
 pub fn d3(a: Ix, b: Ix, c: Ix) -> (Ix, Ix, Ix) { (a, b, c) }
+/// Construct four-dimensional array shape. Helper function to use where
+/// integer literal inference isn't working.
+#[inline]
+pub fn d4(a: Ix, b: Ix, c: Ix, d: Ix) -> (Ix, Ix, Ix, Ix) { (a, b, c, d) }
 
 /// Helper trait to define a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *E*.

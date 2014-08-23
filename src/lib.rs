@@ -21,7 +21,7 @@ use std::mem;
 use std::num;
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
-pub use dimension::{d1, d2, d3};
+pub use dimension::{d1, d2, d3, d4};
 use dimension::stride_offset;
 use dimension::stride_as_int;
 
@@ -609,9 +609,9 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// **Fail** if sizes are incompatible.
     ///
     /// ```
-    /// use ndarray::arr1;
+    /// use ndarray::{arr1, d2};
     ///
-    /// arr1::<f32>([1., 2., 3., 4.]).reshape((2u, 2u));
+    /// arr1::<f32>([1., 2., 3., 4.]).reshape(d2(2, 2));
     /// ```
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {

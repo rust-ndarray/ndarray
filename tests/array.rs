@@ -89,7 +89,7 @@ fn test_add()
 #[test]
 fn test_multidim()
 {
-    let mut mat = Array::zeros(2u32*3*4*5*6).reshape((2u32,3u32,4u32,5u32,6u32));
+    let mut mat = Array::zeros(2 as Ix*3*4*5*6).reshape((2 as Ix,3 as Ix,4 as Ix,5 as Ix,6 as Ix));
     mat[(0,0,0,0,0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -97,7 +97,7 @@ fn test_multidim()
         }
     }
     //println!("shape={}, strides={}", mat.shape(), mat.strides);
-    assert_eq!(mat.shape(), &[2u32,3,4,5,6]);
+    assert_eq!(mat.shape(), &[2 as Ix,3,4,5,6]);
 }
 
 
@@ -242,8 +242,8 @@ fn assign()
 #[test]
 fn dyn_dimension()
 {
-    let a = arr2::<f32>([[1., 2.], [3., 4.0]]).reshape(vec![2u32, 2]);
-    assert_eq!(a - a, Array::zeros(vec![2u32, 2]));
+    let a = arr2::<f32>([[1., 2.], [3., 4.0]]).reshape(vec![2 as Ix, 2]);
+    assert_eq!(a - a, Array::zeros(vec![2 as Ix, 2]));
 
     let mut dim = Vec::from_elem(1024, 1 as Ix);
     dim.as_mut_slice()[16] = 4;

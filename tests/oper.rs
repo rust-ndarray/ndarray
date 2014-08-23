@@ -2,7 +2,7 @@ extern crate test;
 extern crate ndarray;
 
 use ndarray::Array;
-use ndarray::{arr0, arr1, arr2};
+use ndarray::{arr0, arr1, arr2, d2, d4};
 
 use std::fmt;
 
@@ -12,12 +12,12 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     let bb = arr1(b);
     let cc = arr1(c);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
-    let dim = (2u, 2u);
+    let dim = d2(2, 2);
     let aa = aa.reshape(dim);
     let bb = bb.reshape(dim);
     let cc = cc.reshape(dim);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
-    let dim = (1u, 2u, 1u, 2u);
+    let dim = d4(1, 2, 1, 2);
     let aa = aa.reshape(dim);
     let bb = bb.reshape(dim);
     let cc = cc.reshape(dim);
@@ -100,7 +100,7 @@ fn scalar_operations()
 
     {
         let mut x = c.clone();
-        let mut y = Array::zeros((2u,2u));
+        let mut y = Array::zeros(d2(2, 2));
         x.iadd_scalar(&1.);
         y.assign_scalar(&2.);
         assert_eq!(x, c + arr0(1.));
