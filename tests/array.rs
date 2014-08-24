@@ -319,3 +319,11 @@ fn zero_axes()
     let bsub = b.subview(0, 2);
     assert_eq!(bsub.dim(), 0);
 }
+
+#[test]
+fn map1()
+{
+    let a = arr2::<f32>([[1., 2.], [3., 4.]]);
+    let b = a.map(|x| (x / 3.) as int);
+    assert_eq!(b, arr2([[0, 0], [1, 1]]));
+}

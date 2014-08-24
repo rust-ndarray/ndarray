@@ -438,6 +438,32 @@ impl<A, D: Dimension> Array<A, D>
             strides: stride as Ix,
         }
     }
+
+    /// Apply `f` elementwise and return a new array with
+    /// the results.
+    ///
+    /// Return an array with the same shape as *self*.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2::<f32>([[1., 2.],
+    ///                      [3., 4.]]);
+    /// assert!(
+    ///     a.map(|x| (x / 2.) as int)
+    ///     == arr2([[0, 1], [1, 2]])
+    /// );
+    /// ```
+    pub fn map<B>(&self, f: |&A| -> B) -> Array<B, D>
+    {
+        let mut res = Vec::<B>::with_capacity(self.dim.size());
+        for elt in self.iter() {
+            res.push(f(elt))
+        }
+        unsafe {
+            Array::from_vec_dim(self.dim.clone(), res)
+        }
+    }
 }
 
 impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
@@ -471,21 +497,6 @@ impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
             strides: res.strides.remove_axis(axis),
         }
     }
-
-    /*
-    pub fn sub_iter<'a>(&'a self, axis: uint, index: uint) -> Elements<'a, A, E>
-    {
-        let mut it = self.iter();
-        do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
-        Elements {
-            ptr: it.ptr,
-            dim: it.dim.remove_axis(axis),
-            strides: it.strides.remove_axis(axis),
-            index: Some(Default::default()),
-            life: it.life,
-        }
-    }
-    */
 }
 
 impl<A: Clone, D: Dimension> Array<A, D>
