@@ -22,12 +22,11 @@ impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
 impl<A: PartialEq, D: Dimension>
 PartialEq for Array<A, D>
 {
-    /// Return `true` if all elements of `self` and `other` are equal.
-    ///
-    /// **Fail** if shapes are not equal.
+    /// Return `true` if the array shapes and all elements of `self` and
+    /// `other` are equal. Return `false` otherwise.
     fn eq(&self, other: &Array<A, D>) -> bool
     {
-        assert!(self.shape() == other.shape());
+        self.shape() == other.shape() &&
         self.iter().zip(other.iter()).all(|(a, b)| a == b)
     }
 }

@@ -321,6 +321,20 @@ fn zero_axes()
 }
 
 #[test]
+fn equality()
+{
+    let a = arr2::<f32>([[1., 2.], [3., 4.]]);
+    let mut b = arr2::<f32>([[1., 2.], [2., 4.]]);
+    assert!(a != b);
+    b[(1, 0)] = 3.;
+    assert!(a == b);
+
+    // make sure we can compare different shapes without failure.
+    let c = arr2::<f32>([[1., 2.]]);
+    assert!(a != c);
+}
+
+#[test]
 fn map1()
 {
     let a = arr2::<f32>([[1., 2.], [3., 4.]]);
