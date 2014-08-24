@@ -912,6 +912,18 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
 }
 
 
+impl<A: Signed + PartialOrd, D: Dimension> Array<A, D>
+{
+    /// Return `true` if the arrays' elementwise differences are all within
+    /// the given absolute tolerance.<br>
+    /// Return `false` otherwise, or if the shapes disagree.
+    pub fn allclose(&self, other: &Array<A, D>, tol: A) -> bool
+    {
+        self.shape() == other.shape() &&
+        self.iter().zip(other.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
+    }
+}
+
 
 // Array OPERATORS
 
