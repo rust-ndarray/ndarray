@@ -12,7 +12,6 @@ extern crate itertools;
 extern crate libnum = "num";
 
 use itertools::ItertoolsClonable;
-use itertools as it;
 
 use std::kinds;
 use std::mem;
@@ -277,15 +276,10 @@ impl<A, D: Dimension> Array<A, D>
     }
 
     /// Return a protoiterator
+    #[inline]
     fn base_iter<'a>(&'a self) -> Baseiter<'a, A, D>
     {
-        Baseiter {
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
-            index: self.dim.first_index(),
-            life: kinds::marker::ContravariantLifetime,
-        }
+        Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
     }
 
     /// Return an iterator of references to the elements of the array.
@@ -383,13 +377,7 @@ impl<A, D: Dimension> Array<A, D>
                 Some(st) => st,
                 None => return None,
             };
-        let base = Baseiter {
-            ptr: self.ptr,
-            strides: broadcast_strides,
-            index: dim.first_index(),
-            dim: dim,
-            life: kinds::marker::ContravariantLifetime,
-        };
+        let base = Baseiter::new(self.ptr, dim, broadcast_strides);
         Some(Elements{inner: base})
     }
 
@@ -413,33 +401,23 @@ impl<A, D: Dimension> Array<A, D>
         self.strides.slice_mut().swap(ax, bx);
     }
 
-    /// One-dimensional iterator along `axis`, starting at `from`.
-    pub fn iter1d<'b>(&'b self, axis: uint, from: &D) -> it::Stride<'b, A> {
-        let dim = self.dim.slice()[axis];
-        let stride = self.strides.slice()[axis];
-        let off = self.dim.stride_offset_checked(&self.strides, from).unwrap();
-        unsafe {
-            let ptr = self.ptr.offset(off);
-            stride_new(ptr as *const _, dim as uint, stride_as_int(stride))
-        }
-    }
-
     // Return (length, stride) for diagonal
-    fn diag_params(&self) -> (uint, int)
+    fn diag_params(&self) -> (Ix, Ixs)
     {
         /* empty shape has len 1 */
         let len = self.dim.slice().iter().clones().min().unwrap_or(1);
         let stride = self.strides.slice().iter()
-                        .map(|x| *x)
-                        .fold(0i, |sum, s| sum + stride_as_int(s));
-        return (len as uint, stride)
+                        .map(|x| *x as Ixs)
+                        .fold(0, |sum, s| sum + s);
+        return (len, stride)
     }
 
     /// Return an iterator over the diagonal elements of the array.
-    pub fn diag_iter<'a>(&'a self) -> it::Stride<'a, A> {
+    pub fn diag_iter<'a>(&'a self) -> Elements<'a, A, Ix>
+    {
         let (len, stride) = self.diag_params();
-        unsafe {
-            stride_new(self.ptr as *const _, len, stride)
+        Elements { inner:
+            Baseiter::new(self.ptr, len, stride as Ix)
         }
     }
 
@@ -449,7 +427,7 @@ impl<A, D: Dimension> Array<A, D>
         Array {
             data: self.data.clone(),
             ptr: self.ptr,
-            dim: len as Ix,
+            dim: len,
             strides: stride as Ix,
         }
     }
@@ -596,11 +574,13 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 
     /// Return an iterator over the diagonal elements of the array.
-    pub fn diag_iter_mut<'a>(&'a mut self) -> it::StrideMut<'a, A> {
+    pub fn diag_iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, Ix>
+    {
         self.ensure_unique();
         let (len, stride) = self.diag_params();
-        unsafe {
-            stride_mut(self.ptr, len, stride)
+        ElementsMut { inner:
+            Baseiter::new(self.ptr, len, stride as Ix),
+            nocopy: kinds::marker::NoCopy,
         }
     }
 
@@ -684,17 +664,6 @@ impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
     fn index_mut(&mut self, index: &D) -> &mut A {
         self.at_mut(index.clone()).unwrap()
     }
-}
-
-unsafe fn stride_new<A>(ptr: *const A, len: uint, stride: int) -> it::Stride<'static, A>
-{
-    it::Stride::from_ptr_len(ptr, len, stride)
-}
-
-// NOTE: lifetime
-unsafe fn stride_mut<A>(ptr: *mut A, len: uint, stride: int) -> it::StrideMut<'static, A>
-{
-    it::StrideMut::from_ptr_len(ptr, len, stride)
 }
 
 /// Return a zero-dimensional array with the element `x`.
@@ -792,34 +761,43 @@ impl<A: Clone + linalg::Field,
     }
 }
 
+macro_rules! simple_assert(
+    ($e: expr) => (
+        if !($e) {
+            fail!(concat!("assertion failed: ", stringify!($e)))
+        }
+    );
+)
+
 impl<A> Array<A, (Ix, Ix)>
 {
     /// Return an iterator over the elements of row `index`.
     ///
     /// **Fail** if `index` is out of bounds.
-    pub fn row_iter<'a>(&'a self, index: Ix) -> it::Stride<'a, A>
+    pub fn row_iter<'a>(&'a self, index: Ix) -> Elements<'a, A, Ix>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
-        //let (sr, sc) = (stride_as_int(sr), stride_as_int(sc));
-        assert!(index < m);
+        simple_assert!(index < m);
         unsafe {
-            stride_new(self.ptr.offset(stride_offset(index, sr)) as *const A,
-                       n as uint, stride_as_int(sc))
+            Elements { inner:
+                Baseiter::new(self.ptr.offset(stride_offset(index, sr)), n, sc)
+            }
         }
     }
 
     /// Return an iterator over the elements of column `index`.
     ///
     /// **Fail** if `index` is out of bounds.
-    pub fn col_iter<'a>(&'a self, index: Ix) -> it::Stride<'a, A>
+    pub fn col_iter<'a>(&'a self, index: Ix) -> Elements<'a, A, Ix>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
-        assert!(index < n);
+        simple_assert!(index < n);
         unsafe {
-            stride_new(self.ptr.offset(stride_offset(index, sc)) as *const A,
-                       m as uint, stride_as_int(sr))
+            Elements { inner:
+                Baseiter::new(self.ptr.offset(stride_offset(index, sc)), m, sr)
+            }
         }
     }
 }
@@ -1058,6 +1036,23 @@ struct Baseiter<'a, A, D> {
     strides: D,
     index: Option<D>,
     life: kinds::marker::ContravariantLifetime<'a>,
+}
+
+
+impl<'a, A, D: Dimension> Baseiter<'a, A, D>
+{
+    /// NOTE: Mind the lifetime, it's arbitrary
+    #[inline]
+    fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<'a, A, D>
+    {
+        Baseiter {
+            ptr: ptr,
+            index: len.first_index(),
+            dim: len,
+            strides: stride,
+            life: kinds::marker::ContravariantLifetime,
+        }
+    }
 }
 
 impl<'a, A, D: Dimension> Baseiter<'a, A, D>
