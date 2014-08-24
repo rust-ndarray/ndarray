@@ -428,6 +428,9 @@ impl<A, D: Dimension> Array<A, D>
     }
 
     /// Return an iterator over the diagonal elements of the array.
+    ///
+    /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
+    /// *(1, 1, ..., 1)* etc as long as all axes have elements.
     pub fn diag_iter<'a>(&'a self) -> Elements<'a, A, Ix>
     {
         let (len, stride) = self.diag_params();
