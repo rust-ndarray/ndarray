@@ -12,11 +12,13 @@ pub fn stride_offset(n: Ix, stride: Ix) -> int
     (n as int) * ((stride as Ixs) as int)
 }
 
+/*
 #[inline]
 pub fn stride_as_int(stride: Ix) -> int
 {
     (stride as Ixs) as int
 }
+*/
 
 /// Specialization of `std::iter::range` to use array indices.
 #[inline]

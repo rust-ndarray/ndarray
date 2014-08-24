@@ -1,7 +1,6 @@
 #![feature(phase)]
 #![allow(uppercase_variables)]
 
-#[phase(plugin, link)] extern crate itertools;
 extern crate test;
 extern crate ndarray;
 
@@ -58,15 +57,20 @@ fn test_index()
         *elt = i;
     }
 
-    for ((i, j), x) in iproduct!(ixrange(0,2), ixrange(0,3)).zip(A.iter()) {
-        assert_eq!(*x, A[(i, j)]);
+    let mut ait = A.iter();
+    for i in ixrange(0,2) { 
+        for j in ixrange(0,3) {
+            assert_eq!(*ait.next().unwrap(), A[(i, j)]);
+        }
     }
 
     let vi = A.slice([Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
-    for (i, j) in iproduct!(ixrange(0, 1), ixrange(0, 2)) {
-        let x = it.next().unwrap();
-        assert_eq!(*x, vi[(i, j)]);
+    for i in ixrange(0, 1) {
+        for j in ixrange(0, 2) {
+            let x = it.next().unwrap();
+            assert_eq!(*x, vi[(i, j)]);
+        }
     }
     assert!(it.next().is_none());
 }

@@ -7,11 +7,8 @@
 //! n-dimensional numerical container similar to numpy's ndarray.
 //!
 
-extern crate itertools;
 #[cfg(not(nocomplex))]
 extern crate libnum = "num";
-
-use itertools::ItertoolsClonable;
 
 use std::kinds;
 use std::mem;
@@ -21,7 +18,6 @@ pub use dimension::{Dimension, RemoveAxis, Si, S};
 pub use dimension::{d1, d2, d3, d4};
 pub use dimension::ixrange;
 use dimension::stride_offset;
-use dimension::stride_as_int;
 
 pub use indexes::Indexes;
 
@@ -405,7 +401,7 @@ impl<A, D: Dimension> Array<A, D>
     fn diag_params(&self) -> (Ix, Ixs)
     {
         /* empty shape has len 1 */
-        let len = self.dim.slice().iter().clones().min().unwrap_or(1);
+        let len = self.dim.slice().iter().map(|x| *x).min().unwrap_or(1);
         let stride = self.strides.slice().iter()
                         .map(|x| *x as Ixs)
                         .fold(0, |sum, s| sum + s);
@@ -502,7 +498,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
         if self.dim.size() <= self.data.len() / 2 {
             unsafe {
                 *self = Array::from_vec_dim(self.dim.clone(),
-                                            self.iter().clones().collect());
+                                            self.iter().map(|x| x.clone()).collect());
             }
             return;
         }
@@ -700,7 +696,7 @@ pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
     let mut result = Vec::<A>::with_capacity(dim.size());
     for &snd in xs.iter() {
         assert!(snd.len() as Ix == n);
-        result.extend(snd.iter().clones())
+        result.extend(snd.iter().map(|x| x.clone()))
     }
     unsafe {
         Array::from_vec_dim(dim, result)
