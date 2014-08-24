@@ -86,12 +86,12 @@ unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
 /// ```
 /// use ndarray::arr2;
 ///
-/// let a = arr2::<f32>([[1., 2.],
-///                      [3., 4.]]);
+/// let a = arr2::<f32>([[1., 1.],
+///                      [1., 2.]]);
 /// let b = arr2::<f32>([[0., 1.]]);
 ///
-/// let c = arr2::<f32>([[1., 3.],
-///                      [3., 5.]]);
+/// let c = arr2::<f32>([[1., 2.],
+///                      [1., 3.]]);
 /// // We can add because the shapes are compatible even if not equal.
 /// assert!(
 ///     c == a + b
@@ -400,6 +400,16 @@ impl<A, D: Dimension> Array<A, D>
     /// Swap axes `ax` and `bx`.
     ///
     /// **Fail** if the axes are out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let mut a = arr2::<f32>([[1., 2., 3.]]);
+    /// a.swap_axes(0, 1);
+    /// assert!(
+    ///     a == arr2([[1.], [2.], [3.]])
+    /// );
+    /// ```
     pub fn swap_axes(&mut self, ax: uint, bx: uint)
     {
         self.dim.slice_mut().swap(ax, bx);
