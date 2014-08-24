@@ -164,6 +164,7 @@ impl<A, D: Dimension> Array<A, D>
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
     pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D> {
+        debug_assert!(dim.size() == v.len());
         Array {
             ptr: v.as_mut_ptr(),
             data: std::rc::Rc::new(v),
@@ -414,10 +415,8 @@ impl<A, D: Dimension> Array<A, D>
         let dim = self.dim.slice()[axis];
         let stride = self.strides.slice()[axis];
         let off = self.dim.stride_offset_checked(&self.strides, from).unwrap();
-        let ptr = unsafe {
-            self.ptr.offset(off)
-        };
         unsafe {
+            let ptr = self.ptr.offset(off);
             stride_new(ptr as *const _, dim as uint, stride_as_int(stride))
         }
     }
@@ -724,14 +723,14 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 /// ```
 pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
 {
+    let (m, n) = (xs.len() as Ix, xs.get(0).map_or(0, |snd| snd.len() as Ix));
+    let dim = (m, n);
+    let mut result = Vec::<A>::with_capacity(dim.size());
+    for &snd in xs.iter() {
+        assert!(snd.len() as Ix == n);
+        result.extend(snd.iter().clones())
+    }
     unsafe {
-        let (m, n) = (xs.len() as Ix, xs.get(0).map_or(0, |snd| snd.len() as Ix));
-        let dim = (m, n);
-        let mut result = Vec::<A>::with_capacity(dim.size());
-        for &snd in xs.iter() {
-            assert!(snd.len() as Ix == n);
-            result.extend(snd.iter().clones())
-        }
         Array::from_vec_dim(dim, result)
     }
 }
@@ -1190,6 +1189,14 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
         }
     }
 
+    #[inline]
+    fn next_ref(&mut self) -> Option<&'a A>
+    {
+        unsafe {
+            self.next().map(|p| to_ref(p as *const _))
+        }
+    }
+
     fn size_hint(&self) -> uint
     {
         match self.index {
@@ -1221,6 +1228,14 @@ impl<'a, A> Baseiter<'a, A, Ix>
 
         unsafe {
             Some(self.ptr.offset(offset))
+        }
+    }
+
+    #[inline]
+    fn next_back_ref(&mut self) -> Option<&'a A>
+    {
+        unsafe {
+            self.next_back().map(|p| to_ref(p as *const _))
         }
     }
 }
@@ -1256,9 +1271,7 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
     #[inline]
     fn next(&mut self) -> Option<&'a A>
     {
-        unsafe {
-            self.inner.next().map(|p| to_ref(p as *const _))
-        }
+        self.inner.next_ref()
     }
 
     fn size_hint(&self) -> (uint, Option<uint>)
@@ -1273,9 +1286,7 @@ impl<'a, A> DoubleEndedIterator<&'a A> for Elements<'a, A, Ix>
     #[inline]
     fn next_back(&mut self) -> Option<&'a A>
     {
-        unsafe {
-            self.inner.next_back().map(|p| to_ref(p as *const _))
-        }
+        self.inner.next_back_ref()
     }
 }
 
@@ -1304,11 +1315,9 @@ impl<'a, A, D: Dimension> Iterator<(D, &'a A)> for IndexedElements<'a, A, D>
             None => return None,
             Some(ref ix) => ix.clone()
         };
-        unsafe {
-            match self.inner.next() {
-                None => None,
-                Some(p) => Some((index, to_ref(p as *const _)))
-            }
+        match self.inner.next_ref() {
+            None => None,
+            Some(p) => Some((index, p))
         }
     }
 
