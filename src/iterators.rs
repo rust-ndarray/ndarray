@@ -19,9 +19,16 @@ pub struct Baseiter<'a, A, D> {
 
 impl<'a, A, D: Dimension> Baseiter<'a, A, D>
 {
+    /// Creating a Baseiter is unsafe, because it can
+    /// have any lifetime, be immut or mut, and the
+    /// boundary and stride parameters need to be correct to
+    /// avoid memory unsafety.
+    ///
+    /// It must be placed in the correct mother iterator to be safe.
+    ///
     /// NOTE: Mind the lifetime, it's arbitrary
     #[inline]
-    pub fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<'a, A, D>
+    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<'a, A, D>
     {
         Baseiter {
             ptr: ptr,
@@ -52,9 +59,13 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
     #[inline]
     fn next_ref(&mut self) -> Option<&'a A>
     {
-        unsafe {
-            self.next().map(|p| to_ref(p as *const _))
-        }
+        unsafe { self.next().map(|p| to_ref(p as *const _)) }
+    }
+
+    #[inline]
+    fn next_ref_mut(&mut self) -> Option<&'a mut A>
+    {
+        unsafe { self.next().map(|p| to_ref_mut(p)) }
     }
 
     fn size_hint(&self) -> uint
@@ -94,9 +105,13 @@ impl<'a, A> Baseiter<'a, A, Ix>
     #[inline]
     fn next_back_ref(&mut self) -> Option<&'a A>
     {
-        unsafe {
-            self.next_back().map(|p| to_ref(p as *const _))
-        }
+        unsafe { self.next_back().map(|p| to_ref(p as *const _)) }
+    }
+
+    #[inline]
+    fn next_back_ref_mut(&mut self) -> Option<&'a mut A>
+    {
+        unsafe { self.next_back().map(|p| to_ref_mut(p)) }
     }
 }
 
@@ -179,9 +194,7 @@ impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
     #[inline]
     fn next(&mut self) -> Option<&'a mut A>
     {
-        unsafe {
-            self.inner.next().map(|p| to_ref_mut(p))
-        }
+        self.inner.next_ref_mut()
     }
 
     fn size_hint(&self) -> (uint, Option<uint>)
@@ -196,9 +209,7 @@ impl<'a, A> DoubleEndedIterator<&'a mut A> for ElementsMut<'a, A, Ix>
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A>
     {
-        unsafe {
-            self.inner.next_back().map(|p| to_ref_mut(p))
-        }
+        self.inner.next_back_ref_mut()
     }
 }
 
@@ -211,11 +222,9 @@ impl<'a, A, D: Dimension> Iterator<(D, &'a mut A)> for IndexedElementsMut<'a, A,
             None => return None,
             Some(ref ix) => ix.clone()
         };
-        unsafe {
-            match self.inner.next() {
-                None => None,
-                Some(p) => Some((index, to_ref_mut(p)))
-            }
+        match self.inner.next_ref_mut() {
+            None => None,
+            Some(p) => Some((index, p))
         }
     }
 

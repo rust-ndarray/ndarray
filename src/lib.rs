@@ -278,7 +278,9 @@ impl<A, D: Dimension> Array<A, D>
     #[inline]
     fn base_iter<'a>(&'a self) -> Baseiter<'a, A, D>
     {
-        Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+        unsafe {
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+        }
     }
 
     /// Return an iterator of references to the elements of the array.
@@ -376,8 +378,12 @@ impl<A, D: Dimension> Array<A, D>
                 Some(st) => st,
                 None => return None,
             };
-        let base = Baseiter::new(self.ptr, dim, broadcast_strides);
-        Some(Elements{inner: base})
+        Some(Elements {
+            inner:
+            unsafe {
+                Baseiter::new(self.ptr, dim, broadcast_strides)
+            }
+        })
     }
 
     #[inline(never)]
@@ -415,8 +421,10 @@ impl<A, D: Dimension> Array<A, D>
     pub fn diag_iter<'a>(&'a self) -> Elements<'a, A, Ix>
     {
         let (len, stride) = self.diag_params();
-        Elements { inner:
-            Baseiter::new(self.ptr, len, stride as Ix)
+        unsafe {
+            Elements { inner:
+                Baseiter::new(self.ptr, len, stride as Ix)
+            }
         }
     }
 
@@ -569,9 +577,11 @@ impl<A: Clone, D: Dimension> Array<A, D>
     {
         self.ensure_unique();
         let (len, stride) = self.diag_params();
-        ElementsMut { inner:
-            Baseiter::new(self.ptr, len, stride as Ix),
-            nocopy: kinds::marker::NoCopy,
+        unsafe {
+            ElementsMut { inner:
+                Baseiter::new(self.ptr, len, stride as Ix),
+                nocopy: kinds::marker::NoCopy,
+            }
         }
     }
 
