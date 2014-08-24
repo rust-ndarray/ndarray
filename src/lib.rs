@@ -477,14 +477,6 @@ impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
     */
 }
 
-impl<'a, A, D: Dimension> Index<D, A> for Array<A, D>
-{
-    #[inline]
-    fn index(&self, index: &D) -> &A {
-        self.at(index.clone()).unwrap()
-    }
-}
-
 impl<A: Clone, D: Dimension> Array<A, D>
 {
     /// Make the array unshared.
@@ -651,14 +643,6 @@ impl<A: Clone, D: Dimension> Array<A, D>
         for elt in self.iter_mut() {
             *elt = x.clone();
         }
-    }
-}
-
-impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
-{
-    #[inline]
-    fn index_mut(&mut self, index: &D) -> &mut A {
-        self.at_mut(index.clone()).unwrap()
     }
 }
 

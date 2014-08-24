@@ -2,6 +2,23 @@ use std::hash;
 
 use super::{Array, Dimension, Ix};
 
+impl<'a, A, D: Dimension> Index<D, A> for Array<A, D>
+{
+    #[inline]
+    fn index(&self, index: &D) -> &A {
+        self.at(index.clone()).unwrap()
+    }
+}
+
+impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
+{
+    #[inline]
+    fn index_mut(&mut self, index: &D) -> &mut A {
+        self.at_mut(index.clone()).unwrap()
+    }
+}
+
+
 impl<A: PartialEq, D: Dimension>
 PartialEq for Array<A, D>
 {
