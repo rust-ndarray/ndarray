@@ -15,7 +15,6 @@ use itertools::ItertoolsClonable;
 use itertools as it;
 
 use std::fmt;
-use std::hash;
 use std::kinds;
 use std::mem;
 use std::num;
@@ -29,6 +28,7 @@ use dimension::stride_as_int;
 pub use indexes::Indexes;
 
 pub mod linalg;
+mod arraytraits;
 mod dimension;
 mod indexes;
 
@@ -1023,22 +1023,6 @@ impl<'a, A: fmt::UpperExp, D: Dimension> fmt::UpperExp for Array<A, D>
 
 // Array OPERATORS
 
-impl<A: PartialEq, D: Dimension>
-PartialEq for Array<A, D>
-{
-    /// Return `true` if all elements of `self` and `other` are equal.
-    ///
-    /// **Fail** if shapes are not equal.
-    fn eq(&self, other: &Array<A, D>) -> bool
-    {
-        assert!(self.shape() == other.shape());
-        self.iter().zip(other.iter()).all(|(a, b)| a == b)
-    }
-}
-
-impl<A: Eq, D: Dimension>
-Eq for Array<A, D> {}
-
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
 impl<A: Clone + $trt<A, A>, D: Dimension>
@@ -1399,22 +1383,3 @@ impl<'a, A, D: Dimension> Iterator<(D, &'a mut A)> for IndexedElementsMut<'a, A,
     }
 }
 
-impl<A> FromIterator<A> for Array<A, Ix>
-{
-    fn from_iter<I: Iterator<A>>(it: I) -> Array<A, Ix>
-    {
-        Array::from_iter(it)
-    }
-}
-
-impl<S: hash::Writer, A: hash::Hash<S>, D: Dimension>
-hash::Hash<S> for Array<A, D>
-{
-    fn hash(&self, state: &mut S)
-    {
-        self.shape().hash(state);
-        for elt in self.iter() {
-            elt.hash(state)
-        }
-    }
-}
