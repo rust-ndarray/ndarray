@@ -677,7 +677,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Perform an elementwise assigment to `self` from scalar `x`.
     pub fn assign_scalar(&mut self, x: &A)
     {
-        for elt in self.iter_mut() {
+        for elt in self.raw_data_mut().mut_iter() {
             *elt = x.clone();
         }
     }

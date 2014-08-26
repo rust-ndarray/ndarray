@@ -57,6 +57,18 @@ fn bench_std_iter_2d(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn assign_scalar_2d(bench: &mut test::Bencher)
+{
+    let mut a = arr2::<f32>([[1., 2., 2.],
+                         [3., 4., 4.],
+                         [3., 4., 4.],
+                         [3., 4., 4.],
+                         [5., 6., 6.]]);
+    a.swap_axes(0, 1);
+    bench.iter(|| a.assign_scalar(&3.))
+}
+
+#[bench]
 fn bench_iter_diag(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros(d2(1024, 1024));
