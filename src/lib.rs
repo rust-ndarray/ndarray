@@ -16,10 +16,10 @@ use std::num;
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
 pub use dimension::{d1, d2, d3, d4};
-pub use dimension::ixrange;
 use dimension::stride_offset;
 
 pub use indexes::Indexes;
+pub use indexes::ixrange;
 
 use iterators::Baseiter;
 

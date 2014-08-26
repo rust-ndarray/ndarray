@@ -1,4 +1,4 @@
-use super::Dimension;
+use super::{Dimension, Ix};
 
 /// An iterator of the indexes of an array shape.
 ///
@@ -17,6 +17,46 @@ impl<D: Dimension> Indexes<D>
         Indexes {
             index: dim.first_index(),
             dim: dim,
+        }
+    }
+}
+
+/// Like `range`, except with array indexes.
+#[inline]
+pub fn ixrange(a: Ix, b: Ix) -> Indexes<Ix>
+{
+    Indexes {
+        index: if a >= b { None } else { Some(a) },
+        dim: b,
+    }
+}
+
+impl Indexes<()>
+{
+    /// Create an iterator over the array shape `a`.
+    pub fn new1(a: Ix) -> Indexes<Ix>
+    {
+        Indexes {
+            index: a.first_index(),
+            dim: a,
+        }
+    }
+
+    /// Create an iterator over the array shape `(a, b)`.
+    pub fn new2(a: Ix, b: Ix) -> Indexes<(Ix, Ix)>
+    {
+        Indexes {
+            index: (a, b).first_index(),
+            dim: (a, b),
+        }
+    }
+
+    /// Create an iterator over the array shape `(a, b, c)`.
+    pub fn new3(a: Ix, b: Ix, c: Ix) -> Indexes<(Ix, Ix, Ix)>
+    {
+        Indexes {
+            index: (a, b, c).first_index(),
+            dim: (a, b, c),
         }
     }
 }

@@ -7,7 +7,7 @@ extern crate ndarray;
 use ndarray::{Array, S, Si};
 use ndarray::{arr0, arr1, arr2};
 use ndarray::{d1, d2, d3, Ix};
-use ndarray::ixrange;
+use ndarray::Indexes;
 
 #[test]
 fn test_matmul_rcarray()
@@ -57,20 +57,14 @@ fn test_index()
         *elt = i;
     }
 
-    let mut ait = A.iter();
-    for i in ixrange(0,2) { 
-        for j in ixrange(0,3) {
-            assert_eq!(*ait.next().unwrap(), A[(i, j)]);
-        }
+    for ((i, j), a) in Indexes::new2(2, 3).zip(A.iter()) {
+        assert_eq!(*a, A[(i, j)]);
     }
 
     let vi = A.slice([Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
-    for i in ixrange(0, 1) {
-        for j in ixrange(0, 2) {
-            let x = it.next().unwrap();
-            assert_eq!(*x, vi[(i, j)]);
-        }
+    for ((i, j), x) in Indexes::new2(1, 2).zip(it.by_ref()) {
+        assert_eq!(*x, vi[(i, j)]);
     }
     assert!(it.next().is_none());
 }

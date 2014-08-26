@@ -1,7 +1,6 @@
 use std::mem;
 use std::num;
 use std::raw;
-use std::iter;
 
 use super::{Ix, Ixs};
 
@@ -19,13 +18,6 @@ pub fn stride_as_int(stride: Ix) -> int
     (stride as Ixs) as int
 }
 */
-
-/// Specialization of `std::iter::range` to use array indices.
-#[inline]
-pub fn ixrange(a: Ix, b: Ix) -> iter::Range<Ix>
-{
-    iter::range(a, b)
-}
 
 /// Trait for the shape and index types of arrays.
 pub trait Dimension : Clone + Eq {
