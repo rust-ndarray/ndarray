@@ -9,6 +9,7 @@
 
 #[cfg(not(nocomplex))]
 extern crate libnum = "num";
+extern crate serialize;
 
 use std::kinds;
 use std::mem;
