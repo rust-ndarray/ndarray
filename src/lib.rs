@@ -38,11 +38,11 @@ pub type Ix = u32;
 /// Array index type (signed)
 pub type Ixs = i32;
 
-unsafe fn to_ref<A>(ptr: *const A) -> &'static A {
+unsafe fn to_ref<'a, A>(ptr: *const A) -> &'a A {
     mem::transmute(ptr)
 }
 
-unsafe fn to_ref_mut<A>(ptr: *mut A) -> &'static mut A {
+unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
     mem::transmute(ptr)
 }
 
