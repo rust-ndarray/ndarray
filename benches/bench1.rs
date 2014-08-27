@@ -14,11 +14,11 @@ use test::black_box;
 #[bench]
 fn bench_std_add(bench: &mut test::Bencher)
 {
-    let mut a = arr2::<f32>([[1., 2., 2.],
-                             [3., 4., 4.],
-                             [3., 4., 4.],
-                             [3., 4., 4.],
-                             [5., 6., 6.]]);
+    let mut a = arr2::<f32>(&[&[1., 2., 2.],
+                              &[3., 4., 4.],
+                              &[3., 4., 4.],
+                              &[3., 4., 4.],
+                              &[5., 6., 6.]]);
     let b = a.clone();
     bench.iter(|| a.iadd(&b));
 }
@@ -48,22 +48,22 @@ fn bench_std_iter_1d_raw(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_2d(bench: &mut test::Bencher)
 {
-    let a = arr2::<f32>([[1., 2., 2.],
-                         [3., 4., 4.],
-                         [3., 4., 4.],
-                         [3., 4., 4.],
-                         [5., 6., 6.]]);
+    let a = arr2::<f32>(&[&[1., 2., 2.],
+                          &[3., 4., 4.],
+                          &[3., 4., 4.],
+                          &[3., 4., 4.],
+                          &[5., 6., 6.]]);
     bench.iter(|| for elt in a.iter() { black_box(elt) })
 }
 
 #[bench]
 fn assign_scalar_2d(bench: &mut test::Bencher)
 {
-    let mut a = arr2::<f32>([[1., 2., 2.],
-                         [3., 4., 4.],
-                         [3., 4., 4.],
-                         [3., 4., 4.],
-                         [5., 6., 6.]]);
+    let mut a = arr2::<f32>(&[&[1., 2., 2.],
+                              &[3., 4., 4.],
+                              &[3., 4., 4.],
+                              &[3., 4., 4.],
+                              &[5., 6., 6.]]);
     a.swap_axes(0, 1);
     bench.iter(|| a.assign_scalar(&3.))
 }
@@ -93,11 +93,11 @@ fn bench_col_iter(bench: &mut test::Bencher)
 #[bench]
 fn bench_mat_mul(bench: &mut test::Bencher)
 {
-    let a = arr2::<f32>([[1., 2., 2.],
-                         [3., 4., 4.],
-                         [3., 4., 4.],
-                         [3., 4., 4.],
-                         [5., 6., 6.]]);
+    let a = arr2::<f32>(&[&[1., 2., 2.],
+                          &[3., 4., 4.],
+                          &[3., 4., 4.],
+                          &[3., 4., 4.],
+                          &[5., 6., 6.]]);
     let mut at = a.clone();
     at.swap_axes(0, 1);
     bench.iter(|| at.mat_mul(&a));
@@ -106,10 +106,10 @@ fn bench_mat_mul(bench: &mut test::Bencher)
 #[bench]
 fn lst_squares(bench: &mut test::Bencher)
 {
-    let xs = arr2::<f32>([[ 2.,  3.],
-                          [-2., -1.],
-                          [ 1.,  5.],
-                          [-1.,  2.]]);
+    let xs = arr2::<f32>(&[&[ 2.,  3.],
+                           &[-2., -1.],
+                           &[ 1.,  5.],
+                           &[-1.,  2.]]);
     let b = arr1([1., -1., 2., 1.]);
     bench.iter(|| ndarray::linalg::least_squares(&xs, &b));
 }

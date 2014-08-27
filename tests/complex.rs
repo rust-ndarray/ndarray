@@ -12,7 +12,7 @@ fn c<T: Clone + Num>(re: T, im: T) -> Complex<T> {
 #[test]
 fn complex_mat_mul()
 {
-    let a = arr2([[c::<f32>(1., 1.), c(2., 0.)], [c(0., -2.), c(3., 0.)]]);
+    let a = arr2(&[&[c::<f32>(1., 1.), c(2., 0.)], &[c(0., -2.), c(3., 0.)]]);
     let e = ndarray::linalg::eye(2);
     let r = a.mat_mul(&e);
     println!("{}", a);
