@@ -1,4 +1,4 @@
-#![allow(uppercase_variables)]
+#![allow(non_snake_case)]
 
 //! A few linear algebra operations on two-dimensional arrays.
 

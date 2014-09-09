@@ -1,4 +1,4 @@
-#![allow(uppercase_variables)]
+#![allow(non_snake_case)]
 
 extern crate test;
 extern crate ndarray;
