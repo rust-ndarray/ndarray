@@ -7,7 +7,7 @@ extern crate ndarray;
 
 use ndarray::{Array, S, Si};
 use ndarray::{arr0, arr1, arr2};
-use ndarray::d2;
+use ndarray::{d1, d2};
 
 use test::black_box;
 
@@ -31,7 +31,7 @@ fn bench_std_iter_1d(bench: &mut test::Bencher)
                          3., 4., 4.,
                          3., 4., 4.,
                          5., 6., 6.]);
-    bench.iter(|| for elt in a.iter() { black_box(elt) })
+    bench.iter(|| for &elt in a.iter() { black_box(elt) })
 }
 
 #[bench]
@@ -42,7 +42,7 @@ fn bench_std_iter_1d_raw(bench: &mut test::Bencher)
                          3., 4., 4.,
                          3., 4., 4.,
                          5., 6., 6.]);
-    bench.iter(|| for elt in a.raw_data().iter() { black_box(elt) })
+    bench.iter(|| for &elt in a.raw_data().iter() { black_box(elt) })
 }
 
 #[bench]
@@ -53,7 +53,28 @@ fn bench_std_iter_2d(bench: &mut test::Bencher)
                           &[3., 4., 4.],
                           &[3., 4., 4.],
                           &[5., 6., 6.]]);
-    bench.iter(|| for elt in a.iter() { black_box(elt) })
+    bench.iter(|| for &elt in a.iter() { black_box(elt) })
+}
+
+#[bench]
+fn bench_std_iter_1d_large(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros(d1(1024));
+    bench.iter(|| for &elt in a.iter() { black_box(elt) })
+}
+
+#[bench]
+fn bench_std_iter_1d_raw_large(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros(d1(1024));
+    bench.iter(|| for &elt in a.raw_data().iter() { black_box(elt) })
+}
+
+#[bench]
+fn bench_std_iter_2d_large(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros(d2(16, 64));
+    bench.iter(|| for &elt in a.iter() { black_box(elt) })
 }
 
 #[bench]
