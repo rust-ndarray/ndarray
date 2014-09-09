@@ -8,7 +8,7 @@
 //!
 
 #[cfg(not(nocomplex))]
-extern crate libnum = "num";
+extern crate "num" as libnum;
 extern crate serialize;
 
 use std::kinds;
