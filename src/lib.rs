@@ -349,7 +349,7 @@ impl<A, D: Dimension> Array<A, D>
             }
 
             {
-                let mut new_stride_iter = new_stride.slice_mut().mut_iter().rev();
+                let mut new_stride_iter = new_stride.slice_mut().iter_mut().rev();
                 for ((er, es), dr) in from.slice().iter().rev()
                                         .zip(stride.slice().iter().rev())
                                         .zip(new_stride_iter.by_ref())
@@ -678,7 +678,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Perform an elementwise assigment to `self` from scalar `x`.
     pub fn assign_scalar(&mut self, x: &A)
     {
-        for elt in self.raw_data_mut().mut_iter() {
+        for elt in self.raw_data_mut().iter_mut() {
             *elt = x.clone();
         }
     }
@@ -861,7 +861,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         }
         let mut i = 0;
         let mut j = 0;
-        for rr in res_elems.mut_iter() {
+        for rr in res_elems.iter_mut() {
             unsafe {
                 let dot = range(0, a).fold(num::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at((k, j))
@@ -900,7 +900,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
             res_elems.set_len(m as uint);
         }
         let mut i = 0;
-        for rr in res_elems.mut_iter() {
+        for rr in res_elems.iter_mut() {
             unsafe {
                 let dot = range(0, a).fold(num::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at(k)

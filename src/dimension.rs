@@ -49,7 +49,7 @@ pub trait Dimension : Clone + Eq {
         // Shape (a, b, c) => Give strides (b * c, c, 1)
         let mut strides = self.clone();
         {
-            let mut it = strides.slice_mut().mut_iter().rev();
+            let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
             for rs in it {
                 *rs = 1;
@@ -73,7 +73,7 @@ pub trait Dimension : Clone + Eq {
             }
         }
         let mut index = self.clone();
-        for rr in index.slice_mut().mut_iter() {
+        for rr in index.slice_mut().iter_mut() {
             *rr = 0;
         }
         Some(index)
@@ -87,7 +87,7 @@ pub trait Dimension : Clone + Eq {
         let mut index = index;
         let mut done = false;
         for (&dim, ix) in self.slice().iter().rev()
-                            .zip(index.slice_mut().mut_iter().rev())
+                            .zip(index.slice_mut().iter_mut().rev())
         {
             *ix += 1;
             if *ix == dim {
@@ -137,8 +137,8 @@ pub trait Dimension : Clone + Eq {
     {
         let mut offset = 0;
         assert!(slices.len() == dim.slice().len());
-        for ((dr, sr), &slc) in dim.slice_mut().mut_iter()
-                                .zip(strides.slice_mut().mut_iter())
+        for ((dr, sr), &slc) in dim.slice_mut().iter_mut()
+                                .zip(strides.slice_mut().iter_mut())
                                 .zip(slices.iter())
         {
             let m = *dr;
@@ -389,7 +389,7 @@ impl RemoveAxis<($($more),*)> for ($from $(,$more)*)
     fn remove_axis(&self, axis: uint) -> ($($more),*) {
         let mut tup = ($(0 as $more),*);
         {
-            let mut it = tup.slice_mut().mut_iter();
+            let mut it = tup.slice_mut().iter_mut();
             for (i, &d) in self.slice().iter().enumerate() {
                 if i == axis {
                     continue;
