@@ -769,7 +769,7 @@ impl<A: Clone + linalg::Field,
         let mut sum = self.sum(axis);
         let one = num::one::<A>();
         let mut cnt = one.clone();
-        for i in range(1, n) {
+        for _ in range(1, n) {
             cnt = cnt + one;
         }
         for elt in sum.iter_mut() {

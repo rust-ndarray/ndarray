@@ -302,7 +302,7 @@ fn iter_size_hint()
 fn zero_axes()
 {
     let a = arr1::<f32>([]);
-    for elt in a.iter() {
+    for _ in a.iter() {
         assert!(false);
     }
     println!("{}", a);
