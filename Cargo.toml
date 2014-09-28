@@ -3,3 +3,7 @@
 name = "ndarray"
 version = "0.0.1"
 authors = []
+
+[dependencies.num]
+
+git = "https://github.com/rust-lang/num"
