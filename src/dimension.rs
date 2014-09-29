@@ -354,7 +354,7 @@ impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&s
 impl Dimension for Vec<Ix>
 {
     fn ndim(&self) -> uint { self.len() }
-    fn slice(&self) -> &[Ix] { self.as_slice() }
+    fn slice(&self) -> &[Ix] { self[] }
     fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
 }
 

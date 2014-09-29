@@ -1,5 +1,6 @@
 #![feature(macro_rules)]
 #![feature(default_type_params)] /* Hash<S> */
+#![feature(slicing_syntax)]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
@@ -203,7 +204,7 @@ impl<A, D: Dimension> Array<A, D>
     /// Array's view.
     pub fn raw_data<'a>(&'a self) -> &'a [A]
     {
-        self.data.as_slice()
+        (*self.data)[]
     }
 
     /// Return a sliced array.
