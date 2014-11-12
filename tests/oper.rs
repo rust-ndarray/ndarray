@@ -58,7 +58,7 @@ fn test_oper_arr<A: Primitive + fmt::Show, D: ndarray::Dimension>
             aa.ineg();
             assert_eq!(aa, cc);
         },
-        _ => fail!()
+        _ => panic!()
     }
 }
 

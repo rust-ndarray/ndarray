@@ -394,8 +394,8 @@ impl<A, D: Dimension> Array<A, D>
     {
         match self.broadcast_iter(dim.clone()) {
             Some(it) => it,
-            None => fail!("Could not broadcast array from shape {} into: {}",
-                          self.shape(), dim.slice())
+            None => panic!("Could not broadcast array from shape {} into: {}",
+                           self.shape(), dim.slice())
         }
     }
 
@@ -465,7 +465,7 @@ impl<A, D: Dimension> Array<A, D>
     /// let a = arr2::<f32>(&[&[1., 2.],
     ///                       &[3., 4.]]);
     /// assert!(
-    ///     a.map(|x| (x / 2.) as int)
+    ///     a.map(|&x| (x / 2.) as int)
     ///     == arr2(&[&[0, 1], &[1, 2]])
     /// );
     /// ```
@@ -637,8 +637,8 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// ```
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {
-            fail!("Incompatible sizes in reshape, attempted from: {}, to: {}",
-                  self.dim.slice(), shape.slice())
+            panic!("Incompatible sizes in reshape, attempted from: {}, to: {}",
+                   self.dim.slice(), shape.slice())
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -783,7 +783,7 @@ impl<A: Clone + linalg::Field,
 macro_rules! simple_assert(
     ($e: expr) => (
         if !($e) {
-            fail!(concat!("assertion failed: ", stringify!($e)))
+            panic!(concat!("assertion failed: ", stringify!($e)))
         }
     );
 )

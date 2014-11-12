@@ -385,7 +385,7 @@ macro_rules! impl_shrink(
     ($from:ident $(,$more:ident)*) => (
 impl RemoveAxis<($($more),*)> for ($from $(,$more)*)
 {
-    #[allow(unnecessary_parens)]
+    #[allow(unused_parens)]
     fn remove_axis(&self, axis: uint) -> ($($more),*) {
         let mut tup = ($(0 as $more),*);
         {
