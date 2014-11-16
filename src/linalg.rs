@@ -2,7 +2,8 @@
 
 //! A few linear algebra operations on two-dimensional arrays.
 
-use std::num::{zero, one, Zero, One};
+use libnum::{Num, zero, one, Zero, One};
+use std::num::Float;
 #[cfg(not(nocomplex))]
 use libnum::Complex;
 
@@ -45,7 +46,7 @@ impl ComplexField for f64
 }
 
 #[cfg(not(nocomplex))]
-impl<A: Float> ComplexField for Complex<A>
+impl<A: Num + Float> ComplexField for Complex<A>
 {
     #[inline]
     fn conjugate(self) -> Complex<A> { self.conj() }

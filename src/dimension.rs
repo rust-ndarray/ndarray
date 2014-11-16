@@ -1,5 +1,6 @@
 use std::mem;
 use std::num;
+use std::num::SignedInt;
 use std::raw;
 
 use super::{Ix, Ixs};

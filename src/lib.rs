@@ -14,7 +14,7 @@ extern crate serialize;
 
 use std::kinds;
 use std::mem;
-use std::num;
+use std::num::Float;
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
 pub use dimension::{d1, d2, d3, d4};
@@ -125,12 +125,12 @@ impl<A, D: Clone> Clone for Array<A, D>
     }
 }
 
-impl<A: Clone + num::Zero, D: Dimension> Array<A, D>
+impl<A: Clone + libnum::Zero, D: Dimension> Array<A, D>
 {
     /// Construct an Array with zeros.
     pub fn zeros(dim: D) -> Array<A, D>
     {
-        Array::from_elem(dim, num::zero())
+        Array::from_elem(dim, libnum::zero())
     }
 }
 
@@ -768,7 +768,7 @@ impl<A: Clone + linalg::Field,
     {
         let n = self.shape()[axis];
         let mut sum = self.sum(axis);
-        let one = num::one::<A>();
+        let one = libnum::one::<A>();
         let mut cnt = one.clone();
         for _ in range(1, n) {
             cnt = cnt + one;
@@ -864,7 +864,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         let mut j = 0;
         for rr in res_elems.iter_mut() {
             unsafe {
-                let dot = range(0, a).fold(num::zero::<A>(),
+                let dot = range(0, a).fold(libnum::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at((k, j))
                 );
                 std::ptr::write(rr, dot);
@@ -903,7 +903,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         let mut i = 0;
         for rr in res_elems.iter_mut() {
             unsafe {
-                let dot = range(0, a).fold(num::zero::<A>(),
+                let dot = range(0, a).fold(libnum::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at(k)
                 );
                 std::ptr::write(rr, dot);
@@ -917,7 +917,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
 }
 
 
-impl<A: Signed + PartialOrd, D: Dimension> Array<A, D>
+impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 {
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance.<br>
