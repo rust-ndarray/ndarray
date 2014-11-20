@@ -6,9 +6,11 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
                                 -> fmt::Result
 {
     let sz = view.dim.slice().len();
+    /* private nowadays
     if sz > 0 && f.width.is_none() {
         f.width = Some(4)
     }
+    */
     // None will be an empty iter.
     let mut last_index = match view.dim.first_index() {
         None => view.dim.clone(),
@@ -34,7 +36,7 @@ fn format_array<A, D: Dimension>(view: &Array<A, D>, f: &mut fmt::Formatter,
                     try!(write!(f, "]"));
                 }
                 try!(write!(f, ","));
-                if f.flags & (1u << (fmt::rt::FlagAlternate as uint)) == 0 {
+                if f.flags() & (1u << (fmt::rt::FlagAlternate as uint)) == 0 {
                     try!(write!(f, "\n"));
                 }
                 for _ in range(0, sz - n) {
