@@ -20,7 +20,7 @@ fn serial_many_dim()
     }
 
     {
-        let a = arr1::<f32>([2.72, 1., 2.]);
+        let a = arr1::<f32>(&[2.72, 1., 2.]);
         println!("{}", a);
         let serial = json::encode(&a);
         println!("{}", serial);
@@ -45,8 +45,8 @@ fn serial_many_dim()
 
     {
         // Test a sliced array.
-        let mut a = Array::from_iter(range(0., 32.0_f32)).reshape(d4(2, 2, 2, 4));
-        a.islice([Si(0, None, -1), S, S, Si(0, Some(2), 1)]);
+        let mut a = Array::range(0., 32.0_f32).reshape(d4(2, 2, 2, 4));
+        a.islice(&[Si(0, None, -1), S, S, Si(0, Some(2), 1)]);
         println!("{}", a);
         let serial = json::encode(&a);
         println!("{}", serial);

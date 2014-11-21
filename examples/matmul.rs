@@ -7,7 +7,7 @@ use ndarray::d3;
 
 fn main()
 {
-    let mat = Array::from_iter(range(0.0f32, 16.0)).reshape(d3(2, 4, 2));
+    let mat = Array::range(0.0f32, 16.0).reshape(d3(2, 4, 2));
     println!("{a}\n times \n{b}\nis equal to:\n{c}",
              a=mat.subview(2,1),
              b=mat.subview(0,1),

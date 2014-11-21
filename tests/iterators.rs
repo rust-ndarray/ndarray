@@ -6,7 +6,7 @@ use ndarray::{Ix, d3};
 #[test]
 fn double_ended()
 {
-    let a = Array::from_iter(range(0.0, 8.0f32));
+    let a = Array::range(0.0, 8.0f32);
     let mut it = a.iter().map(|x| *x);
     assert_eq!(it.next(), Some(0.));
     assert_eq!(it.next_back(), Some(7.));
@@ -17,7 +17,7 @@ fn double_ended()
 #[test]
 fn indexed()
 {
-    let a = Array::from_iter(range(0.0, 8.0f32));
+    let a = Array::range(0.0, 8.0f32);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }

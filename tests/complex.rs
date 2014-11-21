@@ -3,7 +3,7 @@ extern crate num;
 extern crate ndarray;
 
 use ndarray::{arr1, arr2};
-use num::Complex;
+use num::{Num, Complex};
 
 fn c<T: Clone + Num>(re: T, im: T) -> Complex<T> {
     Complex::new(re, im)
@@ -17,5 +17,5 @@ fn complex_mat_mul()
     let r = a.mat_mul(&e);
     println!("{}", a);
     assert_eq!(r, a);
-    assert_eq!(a.mean(0), arr1([c(0.5, -0.5), c(2.5, 0.)]));
+    assert_eq!(a.mean(0), arr1(&[c(0.5, -0.5), c(2.5, 0.)]));
 }

@@ -33,7 +33,7 @@ fn chol()
     assert!(ans.allclose(&chol, 0.001));
 
     // Compute bT b for a pos def matrix
-    let b = Array::from_iter(range(0.0f32, 9.)).reshape(d2(3, 3));
+    let b = Array::range(0.0f32, 9.).reshape(d2(3, 3));
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
     let bpd = bt.mat_mul(&b);
@@ -63,9 +63,9 @@ fn subst()
     let lll = arr2::<f32>(&[&[ 0.22805704,  0.        ,  0.        ],
                             &[ 1.00774829,  0.30044197,  0.        ],
                             &[ 0.44468348, -0.2285419 ,  0.95499557]]);
-    let ans = arr1::<f32>([4.384868, -8.050947, -0.827078]);
+    let ans = arr1::<f32>(&[4.384868, -8.050947, -0.827078]);
 
-    assert!(ans.allclose(&ndarray::linalg::subst_fw(&lll, &arr1([1., 2., 3.])),
+    assert!(ans.allclose(&ndarray::linalg::subst_fw(&lll, &arr1(&[1., 2., 3.])),
                          0.001));
 }
 
@@ -76,8 +76,8 @@ fn lst_squares()
                            &[-2., -1.],
                            &[ 1.,  5.],
                            &[-1.,  2.]]);
-    let b = arr1([1., -1., 2., 1.]);
+    let b = arr1(&[1., -1., 2., 1.]);
     let x_lstsq = ndarray::linalg::least_squares(&xs, &b);
-    let ans = arr1([0.070632, 0.390335]);
+    let ans = arr1(&[0.070632, 0.390335]);
     assert!(x_lstsq.allclose(&ans, 0.001));
 }

@@ -42,9 +42,9 @@ fn test_slice()
         *elt = i;
     }
 
-    let vi = A.slice([Si(1, None, 1), Si(0, None, 2)]);
+    let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
     assert_eq!(vi.dim(), (2, 2));
-    let vi = A.slice([S, S]);
+    let vi = A.slice(&[S, S]);
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
 }
@@ -61,7 +61,7 @@ fn test_index()
         assert_eq!(*a, A[(i, j)]);
     }
 
-    let vi = A.slice([Si(1, None, 1), Si(0, None, 2)]);
+    let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
     for ((i, j), x) in Indexes::new2(1, 2).zip(it.by_ref()) {
         assert_eq!(*x, vi[(i, j)]);
@@ -121,7 +121,7 @@ fn test_negative_stride_rcarray()
     }
 
     {
-        let vi = mat.slice([S, Si(0, None, -1), Si(0, None, -1)]);
+        let vi = mat.slice(&[S, Si(0, None, -1), Si(0, None, -1)]);
         assert_eq!(vi.dim(), (2,4,2));
         // Test against sequential iterator
         let seq = [7f32,6., 5.,4.,3.,2.,1.,0.,15.,14.,13., 12.,11.,  10.,   9.,   8.];
@@ -130,7 +130,7 @@ fn test_negative_stride_rcarray()
         }
     }
     {
-        let vi = mat.slice([S, Si(0, None, -5), S]);
+        let vi = mat.slice(&[S, Si(0, None, -5), S]);
         let seq = [6_f32, 7., 14., 15.];
         for (a, b) in vi.iter().zip(seq.iter()) {
             assert_eq!(*a, *b);
@@ -151,7 +151,7 @@ fn test_cow()
     assert_eq!(mat[(0,1)], 2);
     assert_eq!(n[(0,0)], 1);
     assert_eq!(n[(0,1)], 0);
-    let mut rev = mat.reshape(d1(4)).slice([Si(0, None, -1)]);
+    let mut rev = mat.reshape(d1(4)).slice(&[Si(0, None, -1)]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -172,12 +172,12 @@ fn test_cow()
 #[test]
 fn test_sub()
 {
-    let mat = Array::from_iter(range(0.0f32, 16.0)).reshape(d3(2, 4, 2));
+    let mat = Array::range(0.0f32, 16.0).reshape(d3(2, 4, 2));
     let s1 = mat.subview(0,0);
     let s2 = mat.subview(0,1);
     assert_eq!(s1.dim(), (4, 2));
     assert_eq!(s2.dim(), (4, 2));
-    let n = Array::from_iter(range(8.0f32, 16.0)).reshape(d2(4,2));
+    let n = Array::range(8.0f32, 16.0).reshape(d2(4,2));
     assert_eq!(n, s2);
     let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape(d2(2, 2));
     assert_eq!(m, mat.subview(1, 1));
@@ -190,7 +190,7 @@ fn diag()
     assert_eq!(d.dim(), 1);
     let d = arr2::<f32>(&[&[1., 2., 3.0f32], &[0., 0., 0.]]).diag();
     assert_eq!(d.dim(), 2);
-    let d = arr2::<f32>([]).diag();
+    let d = arr2::<f32>(&[]).diag();
     assert_eq!(d.dim(), 0);
     let d = Array::<f32, _>::zeros(()).diag();
     assert_eq!(d.dim(), 1);
@@ -255,10 +255,10 @@ fn dyn_dimension()
 fn sum_mean()
 {
     let a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
-    assert_eq!(a.sum(0), arr1([4., 6.]));
-    assert_eq!(a.sum(1), arr1([3., 7.]));
-    assert_eq!(a.mean(0), arr1([2., 3.]));
-    assert_eq!(a.mean(1), arr1([1.5, 3.5]));
+    assert_eq!(a.sum(0), arr1(&[4., 6.]));
+    assert_eq!(a.sum(1), arr1(&[3., 7.]));
+    assert_eq!(a.mean(0), arr1(&[2., 3.]));
+    assert_eq!(a.mean(1), arr1(&[1.5, 3.5]));
     assert_eq!(a.sum(1).sum(0), arr0(10.));
 }
 
@@ -301,7 +301,7 @@ fn iter_size_hint()
 #[test]
 fn zero_axes()
 {
-    let a = arr1::<f32>([]);
+    let a = arr1::<f32>(&[]);
     for _ in a.iter() {
         assert!(false);
     }
