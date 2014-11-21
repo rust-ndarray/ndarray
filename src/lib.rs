@@ -158,7 +158,15 @@ impl<A> Array<A, Ix>
     pub fn from_iter<I: Iterator<A>>(mut it: I) -> Array<A, Ix> {
         Array::from_vec(it.collect())
     }
+}
 
+impl Array<f32, Ix>
+{
+    /// Create a one-dimensional Array from interval `[begin, end)`
+    pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
+    {
+        Array::from_iter(std::iter::count(begin, 1.0).take_while(|&x| x < end))
+    }
 }
 
 impl<A, D: Dimension> Array<A, D>
