@@ -217,7 +217,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Return a sliced array.
     ///
-    /// **Fail** if `indexes` does not match the number of array axes.
+    /// **Panics** if `indexes` does not match the number of array axes.
     pub fn slice(&self, indexes: &[Si]) -> Array<A, D>
     {
         let mut arr = self.clone();
@@ -227,7 +227,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Slice the array's view in place.
     ///
-    /// **Fail** if `indexes` does not match the number of array axes.
+    /// **Panics** if `indexes` does not match the number of array axes.
     pub fn islice(&mut self, indexes: &[Si])
     {
         let offset = Dimension::do_slices(&mut self.dim, &mut self.strides, indexes);
@@ -238,7 +238,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Return an iterator over a sliced view.
     ///
-    /// **Fail** if `indexes` does not match the number of array axes.
+    /// **Panics** if `indexes` does not match the number of array axes.
     pub fn slice_iter<'a>(&'a self, indexes: &[Si]) -> Elements<'a, A, D>
     {
         let mut it = self.iter();
@@ -312,7 +312,7 @@ impl<A, D: Dimension> Array<A, D>
     /// Collapse dimension `axis` into length one,
     /// and select the subview of `index` along that axis.
     ///
-    /// **Fail** if `index` is past the length of the axis.
+    /// **Panics** if `index` is past the length of the axis.
     pub fn isubview(&mut self, axis: uint, index: Ix)
     {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
@@ -409,7 +409,7 @@ impl<A, D: Dimension> Array<A, D>
 
     /// Swap axes `ax` and `bx`.
     ///
-    /// **Fail** if the axes are out of bounds.
+    /// **Panics** if the axes are out of bounds.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -494,7 +494,7 @@ impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
     /// Select the subview `index` along `axis` and return an
     /// array with that axis removed.
     ///
-    /// **Fail** if `index` is past the length of the axis.
+    /// **Panics** if `index` is past the length of the axis.
     ///
     /// ```
     /// use ndarray::{arr1, arr2};
@@ -580,7 +580,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     ///
     /// Iterator element type is `&'a mut A`.
     ///
-    /// **Fail** if `indexes` does not match the number of array axes.
+    /// **Panics** if `indexes` does not match the number of array axes.
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
     {
         let mut it = self.iter_mut();
@@ -597,7 +597,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     ///
     /// Iterator element type is `&'a mut A`.
     ///
-    /// **Fail** if `axis` or `index` is out of bounds.
+    /// **Panics** if `axis` or `index` is out of bounds.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: uint, index: Ix)
         -> ElementsMut<'a, A, D>
     {
@@ -636,7 +636,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Transform the array into `shape`; any other shape
     /// with the same number of elements is accepted.
     ///
-    /// **Fail** if sizes are incompatible.
+    /// **Panics** if sizes are incompatible.
     ///
     /// ```
     /// use ndarray::{arr1, d2};
@@ -669,7 +669,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
     ///
-    /// **Fail** if broadcasting isn't possible.
+    /// **Panics** if broadcasting isn't possible.
     pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
     {
         if self.shape() == other.shape() {
@@ -709,7 +709,7 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 
 /// Return a two-dimensional array with elements from `xs`.
 ///
-/// **Fail** if the slices are not all of the same length.
+/// **Panics** if the slices are not all of the same length.
 ///
 /// ```
 /// use ndarray::arr2;
@@ -753,7 +753,7 @@ impl<A: Clone + Add<A, A>,
     /// );
     /// ```
     ///
-    /// **Fail** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds.
     pub fn sum(&self, axis: uint) -> Array<A, E>
     {
         let n = self.shape()[axis];
@@ -771,7 +771,7 @@ impl<A: Clone + linalg::Field,
 {
     /// Return mean along `axis`.
     ///
-    /// **Fail** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds.
     pub fn mean(&self, axis: uint) -> Array<A, E>
     {
         let n = self.shape()[axis];
@@ -800,7 +800,7 @@ impl<A> Array<A, (Ix, Ix)>
 {
     /// Return an iterator over the elements of row `index`.
     ///
-    /// **Fail** if `index` is out of bounds.
+    /// **Panics** if `index` is out of bounds.
     pub fn row_iter<'a>(&'a self, index: Ix) -> Elements<'a, A, Ix>
     {
         let (m, n) = self.dim;
@@ -815,7 +815,7 @@ impl<A> Array<A, (Ix, Ix)>
 
     /// Return an iterator over the elements of column `index`.
     ///
-    /// **Fail** if `index` is out of bounds.
+    /// **Panics** if `index` is out of bounds.
     pub fn col_iter<'a>(&'a self, index: Ix) -> Elements<'a, A, Ix>
     {
         let (m, n) = self.dim;
@@ -841,7 +841,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     ///
     /// Return a result array with shape *M* × *K*.
     ///
-    /// **Fail** if sizes are incompatible.
+    /// **Panics** if sizes are incompatible.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -896,7 +896,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     ///
     /// Return a result array with shape *M*.
     ///
-    /// **Fail** if sizes are incompatible.
+    /// **Panics** if sizes are incompatible.
     pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
     {
         let ((m, a), n) = (self.dim, other.dim);
@@ -950,7 +950,7 @@ Array<A, D>
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
     ///
-    /// **Fail** if broadcasting isn't possible.
+    /// **Panics** if broadcasting isn't possible.
     pub fn $imethod <E: Dimension> (&mut self, other: &Array<A, E>)
     {
         if self.dim.ndim() == other.dim.ndim() &&
@@ -984,7 +984,7 @@ $trt<Array<A, E>, Array<A, D>> for Array<A, D>
     ///
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
     ///
-    /// **Fail** if broadcasting isn't possible.
+    /// **Panics** if broadcasting isn't possible.
     fn $mth (&self, other: &Array<A, E>) -> Array<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?

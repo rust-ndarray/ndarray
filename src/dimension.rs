@@ -132,7 +132,7 @@ pub trait Dimension : Clone + Eq {
 
     /// Modify dimension, strides and return data pointer offset
     ///
-    /// **Fail** if `slices` does not correspond to the number of axes,
+    /// **Panics** if `slices` does not correspond to the number of axes,
     /// if any stride is 0, or if any index is out of bounds.
     fn do_slices(dim: &mut Self, strides: &mut Self, slices: &[Si]) -> int
     {
@@ -193,7 +193,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 /// Collapse axis `axis` and shift so that only subarray `index` is
 /// available.
 ///
-/// **Fail** if `index` is larger than the size of the axis
+/// **Panics** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
 pub fn do_sub<A, D: Dimension, P: Copy + RawPtr<A>>(dims: &mut D, ptr: &mut P, strides: &D,
                            axis: uint, index: Ix)
