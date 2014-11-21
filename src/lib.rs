@@ -503,8 +503,8 @@ impl<A, D: RemoveAxis<E>, E: Dimension> Array<A, D>
     ///                       &[3., 4.]]);
     ///
     /// assert!(
-    ///     a.subview(0, 0) == arr1([1., 2.]) &&
-    ///     a.subview(1, 1) == arr1([2., 4.])
+    ///     a.subview(0, 0) == arr1(&[1., 2.]) &&
+    ///     a.subview(1, 1) == arr1(&[2., 4.])
     /// );
     /// ```
     pub fn subview(&self, axis: uint, index: Ix) -> Array<A, E>
@@ -641,7 +641,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// ```
     /// use ndarray::{arr1, d2};
     ///
-    /// arr1::<f32>([1., 2., 3., 4.]).reshape(d2(2, 2));
+    /// arr1::<f32>(&[1., 2., 3., 4.]).reshape(d2(2, 2));
     /// ```
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {
@@ -746,8 +746,8 @@ impl<A: Clone + Add<A, A>,
     /// let a = arr2::<f32>(&[&[1., 2.],
     ///                       &[3., 4.]]);
     /// assert!(
-    ///     a.sum(0) == arr1([4., 6.]) &&
-    ///     a.sum(1) == arr1([3., 7.]) &&
+    ///     a.sum(0) == arr1(&[4., 6.]) &&
+    ///     a.sum(1) == arr1(&[3., 7.]) &&
     ///
     ///     a.sum(0).sum(0) == arr0(10.)
     /// );
