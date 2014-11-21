@@ -74,11 +74,6 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 /// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
 /// (signed).
 ///
-/// Where dimension is generic, integer literals don't infer properly to the
-/// `Ix` type. For these cases, mostly `Array::zeros(dim)` and `.reshape(dim)`,
-/// you can use the convenience functions `d1(x)`, `d2(x, y)`,
-/// `d3(x, y, z)` and `d4(x, y, z, w)`.
-///
 /// ## Broadcasting
 ///
 /// Arrays support limited *broadcasting*, where arithmetic operations with
@@ -639,9 +634,9 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// **Panics** if sizes are incompatible.
     ///
     /// ```
-    /// use ndarray::{arr1, d2};
+    /// use ndarray::arr1;
     ///
-    /// arr1::<f32>(&[1., 2., 3., 4.]).reshape(d2(2, 2));
+    /// arr1::<f32>(&[1., 2., 3., 4.]).reshape((2, 2));
     /// ```
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
         if shape.size() != self.dim.size() {

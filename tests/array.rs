@@ -6,18 +6,17 @@ extern crate ndarray;
 
 use ndarray::{Array, S, Si};
 use ndarray::{arr0, arr1, arr2};
-use ndarray::{d1, d2, d3, Ix};
 use ndarray::Indexes;
 
 #[test]
 fn test_matmul_rcarray()
 {
-    let mut A = Array::<uint, _>::zeros(d2(2, 3));
+    let mut A = Array::<uint, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
 
-    let mut B = Array::<uint, _>::zeros(d2(3, 4));
+    let mut B = Array::<uint, _>::zeros((3, 4));
     for (i, elt) in B.iter_mut().enumerate() {
         *elt = i;
     }
@@ -27,7 +26,7 @@ fn test_matmul_rcarray()
     println!("B = \n{}", B);
     println!("A x B = \n{}", c);
     unsafe {
-        let result = Array::from_vec_dim(d2(2, 4), vec![20u, 23, 26, 29, 56, 68, 80, 92]);
+        let result = Array::from_vec_dim((2, 4), vec![20u, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);
@@ -37,7 +36,7 @@ fn test_matmul_rcarray()
 #[test]
 fn test_slice()
 {
-    let mut A = Array::<uint, _>::zeros(d2(3, 4));
+    let mut A = Array::<uint, _>::zeros((3, 4));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -52,7 +51,7 @@ fn test_slice()
 #[test]
 fn test_index()
 {
-    let mut A = Array::<uint, _>::zeros(d2(2, 3));
+    let mut A = Array::<uint, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -72,7 +71,7 @@ fn test_index()
 #[test]
 fn test_add()
 {
-    let mut A = Array::<uint, _>::zeros(d2(2, 2));
+    let mut A = Array::<uint, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -88,7 +87,7 @@ fn test_add()
 #[test]
 fn test_multidim()
 {
-    let mut mat = Array::zeros(2 as Ix*3*4*5*6).reshape((2 as Ix,3 as Ix,4 as Ix,5 as Ix,6 as Ix));
+    let mut mat = Array::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
     mat[(0,0,0,0,0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -114,7 +113,7 @@ array([[[ 7,  6],
 #[test]
 fn test_negative_stride_rcarray()
 {
-    let mut mat = Array::zeros(d3(2, 4, 2));
+    let mut mat = Array::zeros((2, 4, 2));
     mat[(0, 0, 0)] = 1.0f32;
     for (i, elt) in mat.iter_mut().enumerate() {
         *elt = i as f32;
@@ -141,7 +140,7 @@ fn test_negative_stride_rcarray()
 #[test]
 fn test_cow()
 {
-    let mut mat = Array::<int, _>::zeros(d2(2,2));
+    let mut mat = Array::<int, _>::zeros((2,2));
     mat[(0, 0)] = 1;
     let n = mat.clone();
     mat[(0, 1)] = 2;
@@ -151,7 +150,7 @@ fn test_cow()
     assert_eq!(mat[(0,1)], 2);
     assert_eq!(n[(0,0)], 1);
     assert_eq!(n[(0,1)], 0);
-    let mut rev = mat.reshape(d1(4)).slice(&[Si(0, None, -1)]);
+    let mut rev = mat.reshape(4).slice(&[Si(0, None, -1)]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -172,14 +171,14 @@ fn test_cow()
 #[test]
 fn test_sub()
 {
-    let mat = Array::range(0.0f32, 16.0).reshape(d3(2, 4, 2));
+    let mat = Array::range(0.0f32, 16.0).reshape((2, 4, 2));
     let s1 = mat.subview(0,0);
     let s2 = mat.subview(0,1);
     assert_eq!(s1.dim(), (4, 2));
     assert_eq!(s2.dim(), (4, 2));
-    let n = Array::range(8.0f32, 16.0).reshape(d2(4,2));
+    let n = Array::range(8.0f32, 16.0).reshape((4,2));
     assert_eq!(n, s2);
-    let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape(d2(2, 2));
+    let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.subview(1, 1));
 }
 
@@ -234,17 +233,17 @@ fn assign()
     assert_eq!(a, b);
 
     /* Test broadcasting */
-    a.assign(&Array::zeros(d1(1)));
-    assert_eq!(a, Array::zeros(d2(2, 2)));
+    a.assign(&Array::zeros(1));
+    assert_eq!(a, Array::zeros((2, 2)));
 }
 
 #[test]
 fn dyn_dimension()
 {
-    let a = arr2::<f32>(&[&[1., 2.], &[3., 4.0]]).reshape(vec![2 as Ix, 2]);
-    assert_eq!(a - a, Array::zeros(vec![2 as Ix, 2]));
+    let a = arr2::<f32>(&[&[1., 2.], &[3., 4.0]]).reshape(vec![2, 2]);
+    assert_eq!(a - a, Array::zeros(vec![2, 2]));
 
-    let mut dim = Vec::from_elem(1024, 1 as Ix);
+    let mut dim = Vec::from_elem(1024, 1);
     dim.as_mut_slice()[16] = 4;
     dim.as_mut_slice()[17] = 3;
     let z = Array::<f32, _>::zeros(dim.clone());

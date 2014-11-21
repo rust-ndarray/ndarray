@@ -4,7 +4,7 @@ extern crate test;
 extern crate ndarray;
 
 use ndarray::Array;
-use ndarray::{arr1, arr2, d2};
+use ndarray::{arr1, arr2};
 
 #[test]
 fn identity()
@@ -33,7 +33,7 @@ fn chol()
     assert!(ans.allclose(&chol, 0.001));
 
     // Compute bT b for a pos def matrix
-    let b = Array::range(0.0f32, 9.).reshape(d2(3, 3));
+    let b = Array::range(0.0f32, 9.).reshape((3, 3));
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
     let bpd = bt.mat_mul(&b);
