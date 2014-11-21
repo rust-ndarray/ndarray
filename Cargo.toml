@@ -2,7 +2,9 @@
 
 name = "ndarray"
 version = "0.0.1"
-authors = []
+authors = ["bluss"]
+repository = "https://github.com/bluss/rust-ndarray"
+documentation = "http://bluss.github.io/rust-ndarray/"
 
 [dependencies.num]
 
