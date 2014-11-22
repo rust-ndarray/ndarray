@@ -1,5 +1,4 @@
 use std::mem;
-use std::num;
 use std::num::SignedInt;
 use std::raw;
 
@@ -173,7 +172,8 @@ pub trait Dimension : Clone + Eq {
 
             let s_prim = s * s1;
 
-            let (d, r) = num::div_rem(m, s1.abs() as Ix);
+            let d = m / s1.abs() as Ix;
+            let r = m % s1.abs() as Ix;
             let m_prim = d + if r > 0 { 1 } else { 0 };
 
             // Update dimension and stride coordinate
