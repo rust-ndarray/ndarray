@@ -25,7 +25,7 @@ fn bench_std_add(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_1d(bench: &mut test::Bencher)
 {
-    let a = arr1::<f32>([1., 2., 2.,
+    let a = arr1::<f32>(&[1., 2., 2.,
                          3., 4., 4.,
                          3., 4., 4.,
                          3., 4., 4.,
@@ -36,7 +36,7 @@ fn bench_std_iter_1d(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_1d_raw(bench: &mut test::Bencher)
 {
-    let a = arr1::<f32>([1., 2., 2.,
+    let a = arr1::<f32>(&[1., 2., 2.,
                          3., 4., 4.,
                          3., 4., 4.,
                          3., 4., 4.,
@@ -130,6 +130,6 @@ fn lst_squares(bench: &mut test::Bencher)
                            &[-2., -1.],
                            &[ 1.,  5.],
                            &[-1.,  2.]]);
-    let b = arr1([1., -1., 2., 1.]);
+    let b = arr1(&[1., -1., 2., 1.]);
     bench.iter(|| ndarray::linalg::least_squares(&xs, &b));
 }
