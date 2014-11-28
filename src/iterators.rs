@@ -158,7 +158,7 @@ impl<'a, A> DoubleEndedIterator<&'a A> for Elements<'a, A, Ix>
     }
 }
 
-impl<'a, A> ExactSize<&'a A> for Elements<'a, A, Ix> { }
+impl<'a, A> ExactSizeIterator<&'a A> for Elements<'a, A, Ix> { }
 
 impl<'a, A, D: Clone> Clone for IndexedElements<'a, A, D>
 {
