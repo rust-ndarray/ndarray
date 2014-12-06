@@ -31,6 +31,7 @@ mod arrayformat;
 mod dimension;
 mod indexes;
 mod iterators;
+mod macros;
 
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
