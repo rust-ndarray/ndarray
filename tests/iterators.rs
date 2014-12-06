@@ -1,7 +1,7 @@
 extern crate ndarray;
 
 use ndarray::Array;
-use ndarray::{Ix, d3};
+use ndarray::{Ix};
 
 #[test]
 fn double_ended()
@@ -21,7 +21,7 @@ fn indexed()
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }
-    let a = a.reshape(d3(2, 4, 1));
+    let a = a.reshape((2, 4, 1));
     let (mut i, mut j, k) = (0, 0, 0);
     for (idx, elt) in a.indexed_iter() {
         assert_eq!(idx, (i, j, k));
