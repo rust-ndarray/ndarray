@@ -447,6 +447,8 @@ impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)
 /// until the end. Python equivalent is `[a::-1]`
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
+impl Copy for Si {}
+
 /// Slice value for the full range of an axis.
 pub static S: Si = Si(0, None, 1);
 
