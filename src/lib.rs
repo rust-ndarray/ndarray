@@ -784,14 +784,6 @@ impl<A: Clone + linalg::Field,
     }
 }
 
-macro_rules! simple_assert(
-    ($e: expr) => (
-        if !($e) {
-            panic!(concat!("assertion failed: ", stringify!($e)))
-        }
-    );
-)
-
 impl<A> Array<A, (Ix, Ix)>
 {
     /// Return an iterator over the elements of row `index`.
@@ -801,7 +793,7 @@ impl<A> Array<A, (Ix, Ix)>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
-        simple_assert!(index < m);
+        assert!(index < m);
         unsafe {
             Elements { inner:
                 Baseiter::new(self.ptr.offset(stride_offset(index, sr)), n, sc)
@@ -816,7 +808,7 @@ impl<A> Array<A, (Ix, Ix)>
     {
         let (m, n) = self.dim;
         let (sr, sc) = self.strides;
-        simple_assert!(index < n);
+        assert!(index < n);
         unsafe {
             Elements { inner:
                 Baseiter::new(self.ptr.offset(stride_offset(index, sc)), m, sr)
@@ -1001,18 +993,18 @@ $trt<Array<A, E>, Array<A, D>> for Array<A, D>
     }
 }
     );
-)
+);
 
-impl_binary_op!(Add, add, iadd, iadd_scalar)
-impl_binary_op!(Sub, sub, isub, isub_scalar)
-impl_binary_op!(Mul, mul, imul, imul_scalar)
-impl_binary_op!(Div, div, idiv, idiv_scalar)
-impl_binary_op!(Rem, rem, irem, irem_scalar)
-impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar)
-impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar)
-impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar)
-impl_binary_op!(Shl, shl, ishl, ishl_scalar)
-impl_binary_op!(Shr, shr, ishr, ishr_scalar)
+impl_binary_op!(Add, add, iadd, iadd_scalar);
+impl_binary_op!(Sub, sub, isub, isub_scalar);
+impl_binary_op!(Mul, mul, imul, imul_scalar);
+impl_binary_op!(Div, div, idiv, idiv_scalar);
+impl_binary_op!(Rem, rem, irem, irem_scalar);
+impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar);
+impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar);
+impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar);
+impl_binary_op!(Shl, shl, ishl, ishl_scalar);
+impl_binary_op!(Shr, shr, ishr, ishr_scalar);
 
 impl<A: Clone + Neg<A>, D: Dimension>
 Array<A, D>

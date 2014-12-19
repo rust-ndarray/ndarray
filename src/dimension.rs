@@ -409,18 +409,18 @@ impl RemoveAxis<($($more),*)> for ($from $(,$more)*)
     }
 }
     )
-)
+);
 
 macro_rules! impl_shrink_recursive(
-    ($ix:ident) => (impl_shrink!($ix));
+    ($ix:ident) => (impl_shrink!($ix););
     ($ix1:ident $(,$ix:ident)*) => (
-        impl_shrink_recursive!($($ix),*)
-        impl_shrink!($ix1 $(,$ix)*)
+        impl_shrink_recursive!($($ix),*);
+        impl_shrink!($ix1 $(,$ix)*);
     )
-)
+);
 
 // 12 is the maximum number for having the Eq trait from libstd
-impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix)
+impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix

@@ -49,6 +49,6 @@ pub macro_rules! matrix(
             }
         }
     };
-)
+);
 
 

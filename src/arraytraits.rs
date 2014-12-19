@@ -67,11 +67,11 @@ impl<A: Encodable<S, E>, D: Dimension + Encodable<S, E>, E, S: Encoder<E>>
         s.emit_struct("Array", 0, |e| {
             try!(e.emit_struct_field("v", 0, |e| {
                 ARRAY_FORMAT_VERSION.encode(e)
-            }))
+            }));
             // FIXME: Write self.dim as a slice (self.shape)
             // The problem is decoding it.
             try!(e.emit_struct_field("dim", 1,
-                                           |e| self.dim.encode(e)))
+                                           |e| self.dim.encode(e)));
             try!(e.emit_struct_field("data", 2, |e| {
                 let sz = self.dim.size();
                 e.emit_seq(sz, |e| {
@@ -82,7 +82,7 @@ impl<A: Encodable<S, E>, D: Dimension + Encodable<S, E>, E, S: Encoder<E>>
                     }
                     Ok(())
                 })
-            }))
+            }));
             Ok(())
         })
     }
