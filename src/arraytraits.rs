@@ -109,7 +109,7 @@ impl<A: Decodable<S, E>, D: Dimension + Decodable<S, E>, E, S: Decoder<E>>
                         } else {
                             let mut elements = Vec::with_capacity(len);
                             for i in range(0, len) {
-                                elements.push(try!(d.read_seq_elt::<A>(i, Decodable::decode)))
+                                elements.push(try!(d.read_seq_elt::<A, _>(i, Decodable::decode)))
                             }
                             Ok(elements)
                         }
