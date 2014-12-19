@@ -197,7 +197,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 }
 
 /// Solve *L x = b* where *L* is a lower triangular matrix.
-pub fn subst_fw<A: Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 {
     let (m, n) = l.dim();
     assert!(m == n);
@@ -215,7 +215,7 @@ pub fn subst_fw<A: Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 }
 
 /// Solve *U x = b* where *U* is an upper triangular matrix.
-pub fn subst_bw<A: Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
 {
     let (m, n) = u.dim();
     assert!(m == n);

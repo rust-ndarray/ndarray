@@ -30,27 +30,27 @@ fn test_oper_arr<A: Float + fmt::Show, D: ndarray::Dimension>
 {
     match op {
         "+" => {
-            assert_eq!(aa + bb, cc);
+            assert_eq!(&aa + &bb, cc);
             aa.iadd(&bb);
             assert_eq!(aa, cc);
         },
         "-" => {
-            assert_eq!(aa - bb, cc);
+            assert_eq!(&aa - &bb, cc);
             aa.isub(&bb);
             assert_eq!(aa, cc);
         },
         "*" => {
-            assert_eq!(aa * bb, cc);
+            assert_eq!(&aa * &bb, cc);
             aa.imul(&bb);
             assert_eq!(aa, cc);
         },
         "/" => {
-            assert_eq!(aa / bb, cc);
+            assert_eq!(&aa / &bb, cc);
             aa.idiv(&bb);
             assert_eq!(aa, cc);
         },
         "%" => {
-            assert_eq!(aa % bb, cc);
+            assert_eq!(&aa % &bb, cc);
             aa.irem(&bb);
             assert_eq!(aa, cc);
         },

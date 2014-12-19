@@ -241,7 +241,7 @@ fn assign()
 fn dyn_dimension()
 {
     let a = arr2::<f32>(&[&[1., 2.], &[3., 4.0]]).reshape(vec![2, 2]);
-    assert_eq!(a - a, Array::zeros(vec![2, 2]));
+    assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
 
     let mut dim = Vec::from_elem(1024, 1);
     dim.as_mut_slice()[16] = 4;
