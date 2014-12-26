@@ -1038,7 +1038,7 @@ Array<A, D>
     pub fn ineg(&mut self)
     {
         for elt in self.iter_mut() {
-            *elt = (*elt).neg()
+            *elt = elt.clone().neg()
         }
     }
 }
@@ -1047,11 +1047,10 @@ impl<A: Clone + Neg<A>, D: Dimension>
 Neg<Array<A, D>> for Array<A, D>
 {
     /// Perform an elementwise negation of `self` and return the result.
-    fn neg(&self) -> Array<A, D>
+    fn neg(mut self) -> Array<A, D>
     {
-        let mut res = self.clone();
-        res.ineg();
-        res
+        self.ineg();
+        self
     }
 }
 
@@ -1062,7 +1061,7 @@ Array<A, D>
     pub fn inot(&mut self)
     {
         for elt in self.iter_mut() {
-            *elt = (*elt).not()
+            *elt = elt.clone().not()
         }
     }
 }
@@ -1071,11 +1070,10 @@ impl<A: Clone + Not<A>, D: Dimension>
 Not<Array<A, D>> for Array<A, D>
 {
     /// Perform an elementwise unary not of `self` and return the result.
-    fn not(&self) -> Array<A, D>
+    fn not(mut self) -> Array<A, D>
     {
-        let mut res = self.clone();
-        res.inot();
-        res
+        self.inot();
+        self
     }
 }
 
