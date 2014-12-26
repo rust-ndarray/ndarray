@@ -55,7 +55,7 @@ fn test_oper_arr<A: Float + fmt::Show, D: ndarray::Dimension>
             assert_eq!(aa, cc);
         },
         "neg" => {
-            assert_eq!(-aa, cc);
+            assert_eq!(-aa.clone(), cc);
             aa.ineg();
             assert_eq!(aa, cc);
         },
