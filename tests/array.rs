@@ -269,15 +269,15 @@ fn iter_size_hint()
         let mut it = a.iter();
         assert_eq!(it.size_hint(), (4, Some(4)));
         it.next();
-        assert_eq!(it.size_hint().val0(), 3);
+        assert_eq!(it.size_hint().0, 3);
         it.next();
-        assert_eq!(it.size_hint().val0(), 2);
+        assert_eq!(it.size_hint().0, 2);
         it.next();
-        assert_eq!(it.size_hint().val0(), 1);
+        assert_eq!(it.size_hint().0, 1);
         it.next();
-        assert_eq!(it.size_hint().val0(), 0);
+        assert_eq!(it.size_hint().0, 0);
         assert!(it.next().is_none());
-        assert_eq!(it.size_hint().val0(), 0);
+        assert_eq!(it.size_hint().0, 0);
     }
 
     a.swap_axes(0, 1);
@@ -285,15 +285,15 @@ fn iter_size_hint()
         let mut it = a.iter();
         assert_eq!(it.size_hint(), (4, Some(4)));
         it.next();
-        assert_eq!(it.size_hint().val0(), 3);
+        assert_eq!(it.size_hint().0, 3);
         it.next();
-        assert_eq!(it.size_hint().val0(), 2);
+        assert_eq!(it.size_hint().0, 2);
         it.next();
-        assert_eq!(it.size_hint().val0(), 1);
+        assert_eq!(it.size_hint().0, 1);
         it.next();
-        assert_eq!(it.size_hint().val0(), 0);
+        assert_eq!(it.size_hint().0, 0);
         assert!(it.next().is_none());
-        assert_eq!(it.size_hint().val0(), 0);
+        assert_eq!(it.size_hint().0, 0);
     }
 }
 
