@@ -3,6 +3,7 @@
 //! A few linear algebra operations on two-dimensional arrays.
 
 use libnum::{Num, zero, one, Zero, One};
+use std::iter;
 use std::num::Float;
 #[cfg(not(nocomplex))]
 use libnum::Complex;
@@ -202,7 +203,7 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = l.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x = Vec::from_elem(m as uint, zero::<A>());
+    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as uint).collect();
     for (i, bi) in b.indexed_iter() {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
         let mut b_lx_sum = bi.clone();
@@ -220,7 +221,7 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = u.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x = Vec::from_elem(m as uint, zero::<A>());
+    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as uint).collect();
     for i in range(0, m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
         let mut b_ux_sum = b[i].clone();

@@ -134,7 +134,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
 {
     /// Construct an Array with copies of `elem`.
     pub fn from_elem(dim: D, elem: A) -> Array<A, D> {
-        let v = Vec::from_elem(dim.size(), elem);
+        let v = std::iter::repeat(elem).take(dim.size()).collect();
         unsafe {
             Array::from_vec_dim(dim, v)
         }
