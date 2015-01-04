@@ -9,16 +9,18 @@ use std::ops::{
 
 use super::{Array, Dimension, Ix};
 
-impl<'a, A, D: Dimension> Index<D, A> for Array<A, D>
+impl<'a, A, D: Dimension> Index<D> for Array<A, D>
 {
+    type Output = A;
     #[inline]
     fn index(&self, index: &D) -> &A {
         self.at(index.clone()).unwrap()
     }
 }
 
-impl<'a, A: Clone, D: Dimension> IndexMut<D, A> for Array<A, D>
+impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
 {
+    type Output = A;
     #[inline]
     fn index_mut(&mut self, index: &D) -> &mut A {
         self.at_mut(index.clone()).unwrap()
@@ -43,7 +45,7 @@ Eq for Array<A, D> {}
 
 impl<A> FromIterator<A> for Array<A, Ix>
 {
-    fn from_iter<I: Iterator<A>>(it: I) -> Array<A, Ix>
+    fn from_iter<I: Iterator<Item=A>>(it: I) -> Array<A, Ix>
     {
         Array::from_iter(it)
     }

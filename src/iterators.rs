@@ -134,8 +134,9 @@ impl<'a, A, D: Clone> Clone for Elements<'a, A, D>
     fn clone(&self) -> Elements<'a, A, D> { Elements{inner: self.inner.clone()} }
 }
 
-impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D>
 {
+    type Item = &'a A;
     #[inline]
     fn next(&mut self) -> Option<&'a A>
     {
@@ -149,7 +150,7 @@ impl<'a, A, D: Dimension> Iterator<&'a A> for Elements<'a, A, D>
     }
 }
 
-impl<'a, A> DoubleEndedIterator<&'a A> for Elements<'a, A, Ix>
+impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
 {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A>
@@ -158,7 +159,7 @@ impl<'a, A> DoubleEndedIterator<&'a A> for Elements<'a, A, Ix>
     }
 }
 
-impl<'a, A> ExactSizeIterator<&'a A> for Elements<'a, A, Ix> { }
+impl<'a, A> ExactSizeIterator for Elements<'a, A, Ix> { }
 
 impl<'a, A, D: Clone> Clone for IndexedElements<'a, A, D>
 {
@@ -167,8 +168,9 @@ impl<'a, A, D: Clone> Clone for IndexedElements<'a, A, D>
     }
 }
 
-impl<'a, A, D: Dimension> Iterator<(D, &'a A)> for IndexedElements<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for IndexedElements<'a, A, D>
 {
+    type Item = (D, &'a A);
     #[inline]
     fn next(&mut self) -> Option<(D, &'a A)>
     {
@@ -189,8 +191,9 @@ impl<'a, A, D: Dimension> Iterator<(D, &'a A)> for IndexedElements<'a, A, D>
     }
 }
 
-impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D>
 {
+    type Item = &'a mut A;
     #[inline]
     fn next(&mut self) -> Option<&'a mut A>
     {
@@ -204,7 +207,7 @@ impl<'a, A, D: Dimension> Iterator<&'a mut A> for ElementsMut<'a, A, D>
     }
 }
 
-impl<'a, A> DoubleEndedIterator<&'a mut A> for ElementsMut<'a, A, Ix>
+impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
 {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A>
@@ -213,8 +216,9 @@ impl<'a, A> DoubleEndedIterator<&'a mut A> for ElementsMut<'a, A, Ix>
     }
 }
 
-impl<'a, A, D: Dimension> Iterator<(D, &'a mut A)> for IndexedElementsMut<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for IndexedElementsMut<'a, A, D>
 {
+    type Item = (D, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<(D, &'a mut A)>
     {

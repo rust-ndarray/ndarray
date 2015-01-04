@@ -62,8 +62,9 @@ impl Indexes<()>
 }
 
 
-impl<D: Dimension> Iterator<D> for Indexes<D>
+impl<D: Dimension> Iterator for Indexes<D>
 {
+    type Item = D;
     #[inline]
     fn next(&mut self) -> Option<D>
     {

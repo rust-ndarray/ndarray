@@ -1,3 +1,4 @@
+#![feature(associated_types)]
 #![feature(old_orphan_check)]
 #![feature(macro_rules)]
 #![feature(default_type_params)] /* Hash<S> */
@@ -157,7 +158,7 @@ impl<A> Array<A, Ix>
     }
 
     /// Create a one-dimensional array from an iterator.
-    pub fn from_iter<I: Iterator<A>>(it: I) -> Array<A, Ix> {
+    pub fn from_iter<I: Iterator<Item=A>>(it: I) -> Array<A, Ix> {
         Array::from_vec(it.collect())
     }
 }
@@ -736,7 +737,7 @@ pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
     }
 }
 
-impl<A: Clone + Add<A, A>,
+impl<A: Clone + Add<Output=A>,
      D: RemoveAxis<E>, E: Dimension>
     Array<A, D>
 {
@@ -936,7 +937,7 @@ impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
-impl<A, D> Array<A, D> where A: Clone + $trt<A, A>, D: Dimension
+impl<A, D> Array<A, D> where A: Clone + $trt<A, Output=A>, D: Dimension
 {
     /// Perform an elementwise arithmetic operation between `self` and `other`,
     /// *in place*.
@@ -969,9 +970,10 @@ impl<A, D> Array<A, D> where A: Clone + $trt<A, A>, D: Dimension
     }
 }
 
-impl<'a, A, D, E> $trt<Array<A, E>, Array<A, D>> for Array<A, D>
-where A: Clone + $trt<A, A>, D: Dimension, E: Dimension
+impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D>
+where A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension
 {
+    type Output = Array<A, D>;
     /// Perform an elementwise arithmetic operation between `self` and `other`,
     /// and return the result.
     ///
@@ -995,9 +997,10 @@ where A: Clone + $trt<A, A>, D: Dimension, E: Dimension
     }
 }
 
-impl<'a, A: Clone + $trt<A, A>, D: Dimension, E: Dimension>
-$trt<&'a Array<A, E>, Array<A, D>> for &'a Array<A, D>
+impl<'a, A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension>
+$trt<&'a Array<A, E>> for &'a Array<A, D>
 {
+    type Output = Array<A, D>;
     /// Perform an elementwise arithmetic operation between `self` and `other`,
     /// and return the result.
     ///
@@ -1037,7 +1040,7 @@ impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar);
 impl_binary_op!(Shl, shl, ishl, ishl_scalar);
 impl_binary_op!(Shr, shr, ishr, ishr_scalar);
 
-impl<A: Clone + Neg<A>, D: Dimension>
+impl<A: Clone + Neg<Output=A>, D: Dimension>
 Array<A, D>
 {
     /// Perform an elementwise negation of `self`, *in place*.
@@ -1049,9 +1052,10 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + Neg<A>, D: Dimension>
-Neg<Array<A, D>> for Array<A, D>
+impl<A: Clone + Neg<Output=A>, D: Dimension>
+Neg for Array<A, D>
 {
+    type Output = Self;
     /// Perform an elementwise negation of `self` and return the result.
     fn neg(mut self) -> Array<A, D>
     {
@@ -1060,7 +1064,7 @@ Neg<Array<A, D>> for Array<A, D>
     }
 }
 
-impl<A: Clone + Not<A>, D: Dimension>
+impl<A: Clone + Not<Output=A>, D: Dimension>
 Array<A, D>
 {
     /// Perform an elementwise unary not of `self`, *in place*.
@@ -1072,9 +1076,10 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + Not<A>, D: Dimension>
-Not<Array<A, D>> for Array<A, D>
+impl<A: Clone + Not<Output=A>, D: Dimension>
+Not for Array<A, D>
 {
+    type Output = Self;
     /// Perform an elementwise unary not of `self` and return the result.
     fn not(mut self) -> Array<A, D>
     {

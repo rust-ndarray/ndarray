@@ -17,13 +17,13 @@ pub type Col<A> = Array<A, Ix>;
 pub type Mat<A> = Array<A, (Ix, Ix)>;
 
 /// Trait union for a ring with 1.
-pub trait Ring : Clone + Zero + Add<Self, Self> + Sub<Self, Self>
-    + One + Mul<Self, Self> { }
-impl<A: Clone + Zero + Add<A, A> + Sub<A, A> + One + Mul<A, A>> Ring for A { }
+pub trait Ring : Clone + Zero + Add<Output=Self> + Sub<Output=Self>
+    + One + Mul<Output=Self> { }
+impl<A: Clone + Zero + Add<Output=A> + Sub<Output=A> + One + Mul<Output=A>> Ring for A { }
 
 /// Trait union for a field.
-pub trait Field : Ring + Div<Self, Self> { }
-impl<A: Ring + Div<A, A>> Field for A { }
+pub trait Field : Ring + Div<Output=Self> { }
+impl<A: Ring + Div<Output=A>> Field for A { }
 
 /// A real or complex number.
 pub trait ComplexField : Copy + Field
