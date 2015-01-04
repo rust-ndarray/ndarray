@@ -1,3 +1,4 @@
+#![feature(old_orphan_check)]
 #![feature(macro_rules)]
 #![feature(default_type_params)] /* Hash<S> */
 #![feature(slicing_syntax)]
@@ -15,6 +16,11 @@ extern crate serialize;
 use std::kinds;
 use std::mem;
 use std::num::Float;
+use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
+    BitAnd,
+    BitOr,
+    BitXor,
+};
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
 pub use dimension::{d1, d2, d3, d4};

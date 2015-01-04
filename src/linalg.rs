@@ -7,6 +7,7 @@ use std::iter;
 use std::num::Float;
 #[cfg(not(nocomplex))]
 use libnum::Complex;
+use std::ops::{Add, Sub, Mul, Div};
 
 use super::{Array, Ix};
 

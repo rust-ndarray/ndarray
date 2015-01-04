@@ -1,6 +1,11 @@
 use serialize::{Encodable, Encoder, Decodable, Decoder};
 
 use std::hash;
+use std::iter::FromIterator;
+use std::ops::{
+    Index,
+    IndexMut,
+};
 
 use super::{Array, Dimension, Ix};
 
