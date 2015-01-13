@@ -1,4 +1,4 @@
-#![macro_escape]
+#![macro_use]
 
 #[macro_export]
 /// Create a 2D matrix
@@ -7,7 +7,7 @@
 ///
 /// ```ignore
 /// let e = matrix![1., 0.; 0., 1.0_f32];
-/// let m = matrix![1, 2, 3, 4; 5, 6, 7, 8i];
+/// let m = matrix![1, 2, 3, 4; 5, 6, 7, 8];
 /// ```
 ///
 /// **Panics** if row lengths don't match.
@@ -17,7 +17,7 @@ pub macro_rules! matrix(
     // Count the macro arguments and evaluate to an expression
     // (a sum `1 + 1 + ... + 1 + 0`).
     (__count ) => { 0 };
-    (__count $_i:tt $(, $rest:tt)*) => { 1 + matrix!(__count $($rest),*) };
+    (__count $_i:tt, $($rest:tt,)*) => { 1 + matrix!(__count $($rest,)*) };
     // matrix macro follows
     ($($($elt:expr),*);*) => {
         {
@@ -28,7 +28,7 @@ pub macro_rules! matrix(
             let mut cols: ::ndarray::Ix = 0;
             $(
                 {
-                    let this_count = matrix!(__count $($elt),*);
+                    let this_count = matrix!(__count $($elt,)*);
                     if !_first && this_count != cols {
                         panic!("Row length mismatch in matrix![]")
                     }

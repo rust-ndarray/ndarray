@@ -37,9 +37,9 @@ fn chol()
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
     let bpd = bt.mat_mul(&b);
-    println!("bpd=\n{}", bpd);
+    println!("bpd=\n{:?}", bpd);
     let chol = ndarray::linalg::cholesky(bpd);
-    println!("chol=\n{:.8}", chol);
+    println!("chol=\n{:.8?}", chol);
 
     let ans = arr2::<f32>(&[&[6.70820379, 0.00000000, 0.00000000],
                             &[8.04984474, 1.09544373, 0.00000000],

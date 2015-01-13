@@ -1,4 +1,4 @@
-use std::kinds;
+use std::marker;
 
 use super::{Dimension, Ix};
 use super::{to_ref, to_ref_mut};
@@ -13,7 +13,7 @@ pub struct Baseiter<'a, A, D> {
     pub dim: D,
     pub strides: D,
     pub index: Option<D>,
-    pub life: kinds::marker::ContravariantLifetime<'a>,
+    pub life: marker::ContravariantLifetime<'a>,
 }
 
 
@@ -35,7 +35,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
             index: len.first_index(),
             dim: len,
             strides: stride,
-            life: kinds::marker::ContravariantLifetime,
+            life: marker::ContravariantLifetime,
         }
     }
 }
@@ -68,14 +68,14 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
         unsafe { self.next().map(|p| to_ref_mut(p)) }
     }
 
-    fn size_hint(&self) -> uint
+    fn size_hint(&self) -> usize
     {
         match self.index {
             None => 0,
             Some(ref ix) => {
                 let gone = self.dim.default_strides().slice().iter()
                             .zip(ix.slice().iter())
-                                 .fold(0u, |s, (&a, &b)| s + a as uint * b as uint);
+                                 .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
                 self.dim.size() - gone
             }
         }
@@ -143,7 +143,7 @@ impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D>
         self.inner.next_ref()
     }
 
-    fn size_hint(&self) -> (uint, Option<uint>)
+    fn size_hint(&self) -> (usize, Option<usize>)
     {
         let len = self.inner.size_hint();
         (len, Some(len))
@@ -184,7 +184,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedElements<'a, A, D>
         }
     }
 
-    fn size_hint(&self) -> (uint, Option<uint>)
+    fn size_hint(&self) -> (usize, Option<usize>)
     {
         let len = self.inner.size_hint();
         (len, Some(len))
@@ -200,7 +200,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D>
         self.inner.next_ref_mut()
     }
 
-    fn size_hint(&self) -> (uint, Option<uint>)
+    fn size_hint(&self) -> (usize, Option<usize>)
     {
         let len = self.inner.size_hint();
         (len, Some(len))
@@ -232,7 +232,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedElementsMut<'a, A, D>
         }
     }
 
-    fn size_hint(&self) -> (uint, Option<uint>)
+    fn size_hint(&self) -> (usize, Option<usize>)
     {
         let len = self.inner.size_hint();
         (len, Some(len))

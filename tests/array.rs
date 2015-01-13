@@ -1,4 +1,3 @@
-#![feature(phase)]
 #![allow(non_snake_case)]
 
 extern crate test;
@@ -11,22 +10,22 @@ use ndarray::Indexes;
 #[test]
 fn test_matmul_rcarray()
 {
-    let mut A = Array::<uint, _>::zeros((2, 3));
+    let mut A = Array::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
 
-    let mut B = Array::<uint, _>::zeros((3, 4));
+    let mut B = Array::<usize, _>::zeros((3, 4));
     for (i, elt) in B.iter_mut().enumerate() {
         *elt = i;
     }
 
     let c = A.mat_mul(&B);
-    println!("A = \n{}", A);
-    println!("B = \n{}", B);
-    println!("A x B = \n{}", c);
+    println!("A = \n{:?}", A);
+    println!("B = \n{:?}", B);
+    println!("A x B = \n{:?}", c);
     unsafe {
-        let result = Array::from_vec_dim((2, 4), vec![20u, 23, 26, 29, 56, 68, 80, 92]);
+        let result = Array::from_vec_dim((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);
@@ -36,7 +35,7 @@ fn test_matmul_rcarray()
 #[test]
 fn test_slice()
 {
-    let mut A = Array::<uint, _>::zeros((3, 4));
+    let mut A = Array::<usize, _>::zeros((3, 4));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -51,7 +50,7 @@ fn test_slice()
 #[test]
 fn test_index()
 {
-    let mut A = Array::<uint, _>::zeros((2, 3));
+    let mut A = Array::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -71,17 +70,17 @@ fn test_index()
 #[test]
 fn test_add()
 {
-    let mut A = Array::<uint, _>::zeros((2, 2));
+    let mut A = Array::<usize, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
 
     let B = A.clone();
     A.iadd(&B);
-    assert_eq!(A[(0,0)], 0u);
-    assert_eq!(A[(0,1)], 2u);
-    assert_eq!(A[(1,0)], 4u);
-    assert_eq!(A[(1,1)], 6u);
+    assert_eq!(A[(0,0)], 0);
+    assert_eq!(A[(0,1)], 2);
+    assert_eq!(A[(1,0)], 4);
+    assert_eq!(A[(1,1)], 6);
 }
 
 #[test]
@@ -94,7 +93,7 @@ fn test_multidim()
             *elt = i as u8;
         }
     }
-    //println!("shape={}, strides={}", mat.shape(), mat.strides);
+    //println!("shape={:?}, strides={:?}", mat.shape(), mat.strides);
     assert_eq!(mat.dim(), (2,3,4,5,6));
 }
 
@@ -140,7 +139,7 @@ fn test_negative_stride_rcarray()
 #[test]
 fn test_cow()
 {
-    let mut mat = Array::<int, _>::zeros((2,2));
+    let mut mat = Array::<isize, _>::zeros((2,2));
     mat[(0, 0)] = 1;
     let n = mat.clone();
     mat[(0, 1)] = 2;
@@ -247,7 +246,7 @@ fn dyn_dimension()
     dim.as_mut_slice()[16] = 4;
     dim.as_mut_slice()[17] = 3;
     let z = Array::<f32, _>::zeros(dim.clone());
-    assert_eq!(z.shape(), dim.as_slice());
+    assert_eq!(z.shape(), &dim[]);
 }
 
 #[test]
@@ -304,9 +303,9 @@ fn zero_axes()
     for _ in a.iter() {
         assert!(false);
     }
-    println!("{}", a);
+    println!("{:?}", a);
     let b = arr2::<f32>(&[&[], &[], &[], &[]]);
-    println!("{}\n{}", b.shape(), b);
+    println!("{:?}\n{:?}", b.shape(), b);
 
     // we can even get a subarray of b
     let bsub = b.subview(0, 2);
@@ -331,7 +330,7 @@ fn equality()
 fn map1()
 {
     let a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
-    let b = a.map(|&x| (x / 3.) as int);
+    let b = a.map(|&x| (x / 3.) as isize);
     assert_eq!(b, arr2(&[&[0, 0], &[1, 1]]));
     // test map to reference with array's lifetime.
     let c = a.map(|x| x);

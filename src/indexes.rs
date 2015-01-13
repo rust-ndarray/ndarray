@@ -76,14 +76,14 @@ impl<D: Dimension> Iterator for Indexes<D>
         Some(index)
     }
 
-    fn size_hint(&self) -> (uint, Option<uint>)
+    fn size_hint(&self) -> (usize, Option<usize>)
     {
         let l = match self.index {
             None => 0,
             Some(ref ix) => {
                 let gone = self.dim.default_strides().slice().iter()
                             .zip(ix.slice().iter())
-                                 .fold(0u, |s, (&a, &b)| s + a as uint * b as uint);
+                                 .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
                 self.dim.size() - gone
             }
         };

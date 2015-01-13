@@ -51,7 +51,7 @@ impl<A> FromIterator<A> for Array<A, Ix>
     }
 }
 
-impl<S: hash::Writer, A: hash::Hash<S>, D: Dimension>
+impl<S: hash::Writer + hash::Hasher, A: hash::Hash<S>, D: Dimension>
 hash::Hash<S> for Array<A, D>
 {
     fn hash(&self, state: &mut S)
@@ -66,10 +66,9 @@ hash::Hash<S> for Array<A, D>
 // Use version number so we can add a packed format later.
 static ARRAY_FORMAT_VERSION: u8 = 1u8;
 
-impl<A: Encodable<S, E>, D: Dimension + Encodable<S, E>, E, S: Encoder<E>>
-    Encodable<S, E> for Array<A, D>
+impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
 {
-    fn encode(&self, s: &mut S) -> Result<(), E>
+    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error>
     {
         s.emit_struct("Array", 0, |e| {
             try!(e.emit_struct_field("v", 0, |e| {
@@ -95,10 +94,10 @@ impl<A: Encodable<S, E>, D: Dimension + Encodable<S, E>, E, S: Encoder<E>>
     }
 }
 
-impl<A: Decodable<S, E>, D: Dimension + Decodable<S, E>, E, S: Decoder<E>>
-    Decodable<S, E> for Array<A, D>
+impl<A: Decodable, D: Dimension + Decodable>
+    Decodable for Array<A, D>
 {
-    fn decode(d: &mut S) -> Result<Array<A, D>, E>
+    fn decode<S: Decoder>(d: &mut S) -> Result<Array<A, D>, S::Error>
     {
         d.read_struct("Array", 0, |d| {
             let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));

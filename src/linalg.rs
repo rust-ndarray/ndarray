@@ -170,7 +170,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
                 // L_jk for k = 0 .. j
                 let Lik = L.row_iter(i);
                 let Ljk = L.row_iter(j);
-                for (&lik, &ljk) in Lik.zip(Ljk).take(j as uint) {
+                for (&lik, &ljk) in Lik.zip(Ljk).take(j as usize) {
                     lik_ljk_sum = lik_ljk_sum + lik * ljk.conjugate();
                 }
             }
@@ -184,7 +184,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
         let j = i;
         let mut ljk_sum = z.clone();
         // L_jk for k = 0 .. j
-        for &ljk in L.row_iter(j).take(j as uint) {
+        for &ljk in L.row_iter(j).take(j as usize) {
             ljk_sum = ljk_sum + ljk * ljk.conjugate();
         }
         L[(j, j)] = (L[(j, j)] - ljk_sum).sqrt_real();
@@ -204,14 +204,14 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = l.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as uint).collect();
+    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as usize).collect();
     for (i, bi) in b.indexed_iter() {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
         let mut b_lx_sum = bi.clone();
-        for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i as uint) {
+        for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i as usize) {
             b_lx_sum = b_lx_sum - (*lij) * (*xj)
         }
-        x.as_mut_slice()[i as uint] = b_lx_sum / l[(i, i)];
+        x.as_mut_slice()[i as usize] = b_lx_sum / l[(i, i)];
     }
     Array::from_vec(x)
 }
@@ -222,14 +222,14 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = u.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as uint).collect();
+    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as usize).collect();
     for i in range(0, m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
         let mut b_ux_sum = b[i].clone();
-        for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take((m - i - 1) as uint) {
+        for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take((m - i - 1) as usize) {
             b_ux_sum = b_ux_sum - (*uij) * (*xj);
         }
-        x.as_mut_slice()[i as uint] = b_ux_sum / u[(i, i)];
+        x.as_mut_slice()[i as usize] = b_ux_sum / u[(i, i)];
     }
     Array::from_vec(x)
 }

@@ -6,22 +6,22 @@ use super::{Ix, Ixs};
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
-pub fn stride_offset(n: Ix, stride: Ix) -> int
+pub fn stride_offset(n: Ix, stride: Ix) -> isize
 {
-    (n as int) * ((stride as Ixs) as int)
+    (n as isize) * ((stride as Ixs) as isize)
 }
 
 /*
 #[inline]
-pub fn stride_as_int(stride: Ix) -> int
+pub fn stride_as_int(stride: Ix) -> isize
 {
-    (stride as Ixs) as int
+    (stride as Ixs) as isize
 }
 */
 
 /// Trait for the shape and index types of arrays.
 pub trait Dimension : Clone + Eq {
-    fn ndim(&self) -> uint;
+    fn ndim(&self) -> usize;
     fn slice<'a>(&'a self) -> &'a [Ix] {
         unsafe {
             mem::transmute(raw::Slice {
@@ -40,8 +40,8 @@ pub trait Dimension : Clone + Eq {
         }
     }
 
-    fn size(&self) -> uint {
-        self.slice().iter().fold(1u, |s, &a| s * a as uint)
+    fn size(&self) -> usize {
+        self.slice().iter().fold(1, |s, &a| s * a as usize)
     }
 
     fn default_strides(&self) -> Self {
@@ -103,7 +103,7 @@ pub trait Dimension : Clone + Eq {
     }
 
     /// Return stride offset for index.
-    fn stride_offset(index: &Self, strides: &Self) -> int
+    fn stride_offset(index: &Self, strides: &Self) -> isize
     {
         let mut offset = 0;
         for (&i, &s) in index.slice().iter()
@@ -114,7 +114,7 @@ pub trait Dimension : Clone + Eq {
     }
 
     /// Return stride offset for this dimension and index.
-    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<int>
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
     {
         let mut offset = 0;
         for ((&d, &i), &s) in self.slice().iter()
@@ -133,7 +133,7 @@ pub trait Dimension : Clone + Eq {
     ///
     /// **Panics** if `slices` does not correspond to the number of axes,
     /// if any stride is 0, or if any index is out of bounds.
-    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &[Si]) -> int
+    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &[Si]) -> isize
     {
         let mut offset = 0;
         assert!(slices.len() == dim.slice().len());
@@ -196,7 +196,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 /// **Panics** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
 pub fn do_sub<A, D: Dimension, P: Copy + PtrExt<Target=A>>(dims: &mut D, ptr: &mut P, strides: &D,
-                           axis: uint, index: Ix)
+                           axis: usize, index: Ix)
 {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
@@ -212,16 +212,16 @@ pub fn do_sub<A, D: Dimension, P: Copy + PtrExt<Target=A>>(dims: &mut D, ptr: &m
 impl Dimension for () {
     // empty product is 1 -> size is 1
     #[inline]
-    fn ndim(&self) -> uint { 0 }
+    fn ndim(&self) -> usize { 0 }
     fn slice(&self) -> &[Ix] { &[] }
     fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
 }
 
 impl Dimension for Ix {
     #[inline]
-    fn ndim(&self) -> uint { 1 }
+    fn ndim(&self) -> usize { 1 }
     #[inline]
-    fn size(&self) -> uint { *self as uint }
+    fn size(&self) -> usize { *self as usize }
     #[inline]
     fn first_index(&self) -> Option<Ix> {
         if *self != 0 {
@@ -238,13 +238,13 @@ impl Dimension for Ix {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &Ix, stride: &Ix) -> int
+    fn stride_offset(index: &Ix, stride: &Ix) -> isize
     {
         stride_offset(*index, *stride)
     }
 
     /// Return stride offset for this dimension and index.
-    fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<int>
+    fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<isize>
     {
         if *index < *self {
             Some(stride_offset(*index, *stride))
@@ -256,9 +256,9 @@ impl Dimension for Ix {
 
 impl Dimension for (Ix, Ix) {
     #[inline]
-    fn ndim(&self) -> uint { 2 }
+    fn ndim(&self) -> usize { 2 }
     #[inline]
-    fn size(&self) -> uint { let (m, n) = *self; m as uint * n as uint }
+    fn size(&self) -> usize { let (m, n) = *self; m as usize * n as usize }
     #[inline]
     fn first_index(&self) -> Option<(Ix, Ix)> {
         let (m, n) = *self;
@@ -283,7 +283,7 @@ impl Dimension for (Ix, Ix) {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &(Ix, Ix), strides: &(Ix, Ix)) -> int
+    fn stride_offset(index: &(Ix, Ix), strides: &(Ix, Ix)) -> isize
     {
         let (i, j) = *index;
         let (s, t) = *strides;
@@ -291,7 +291,7 @@ impl Dimension for (Ix, Ix) {
     }
 
     /// Return stride offset for this dimension and index.
-    fn stride_offset_checked(&self, strides: &(Ix, Ix), index: &(Ix, Ix)) -> Option<int>
+    fn stride_offset_checked(&self, strides: &(Ix, Ix), index: &(Ix, Ix)) -> Option<isize>
     {
         let (m, n) = *self;
         let (i, j) = *index;
@@ -306,9 +306,9 @@ impl Dimension for (Ix, Ix) {
 
 impl Dimension for (Ix, Ix, Ix) {
     #[inline]
-    fn ndim(&self) -> uint { 3 }
+    fn ndim(&self) -> usize { 3 }
     #[inline]
-    fn size(&self) -> uint { let (m, n, o) = *self; m as uint * n as uint * o as uint }
+    fn size(&self) -> usize { let (m, n, o) = *self; m as usize * n as usize * o as usize }
     #[inline]
     fn next_for(&self, index: (Ix, Ix, Ix)) -> Option<(Ix, Ix, Ix)> {
         let (mut i, mut j, mut k) = index;
@@ -330,7 +330,7 @@ impl Dimension for (Ix, Ix, Ix) {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &(Ix, Ix, Ix), strides: &(Ix, Ix, Ix)) -> int
+    fn stride_offset(index: &(Ix, Ix, Ix), strides: &(Ix, Ix, Ix)) -> isize
     {
         let (i, j, k) = *index;
         let (s, t, u) = *strides;
@@ -338,15 +338,15 @@ impl Dimension for (Ix, Ix, Ix) {
     }
 }
 
-impl Dimension for (Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 4 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 5 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 6 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 7 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 8 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 9 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 10 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 11 } }
-impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> uint { 12 } }
+impl Dimension for (Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 4 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 5 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 6 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 7 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 8 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 9 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 10 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 11 } }
+impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&self) -> usize { 12 } }
 
 // Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
 // and memory wasteful, but it allows an arbitrary number of dimensions.
@@ -354,8 +354,8 @@ impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn ndim(&s
 // NOTE: No Shrink impl for Vec<Ix> yet.
 impl Dimension for Vec<Ix>
 {
-    fn ndim(&self) -> uint { self.len() }
-    fn slice(&self) -> &[Ix] { self[] }
+    fn ndim(&self) -> usize { self.len() }
+    fn slice(&self) -> &[Ix] { &self[] }
     fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
 }
 
@@ -382,16 +382,18 @@ pub fn d4(a: Ix, b: Ix, c: Ix, d: Ix) -> (Ix, Ix, Ix, Ix) { (a, b, c, d) }
 
 /// Helper trait to define a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *E*.
-pub trait RemoveAxis<E: Dimension> : Dimension {
-    fn remove_axis(&self, axis: uint) -> E;
+pub trait RemoveAxis : Dimension {
+    type E: Dimension;
+    fn remove_axis(&self, axis: usize) -> Self::E;
 }
 
 macro_rules! impl_shrink(
-    ($from:ident $(,$more:ident)*) => (
-impl RemoveAxis<($($more),*)> for ($from $(,$more)*)
+    ($from:ident, $($more:ident,)*) => (
+impl RemoveAxis for ($from $(,$more)*)
 {
+    type E = ($($more),*);
     #[allow(unused_parens)]
-    fn remove_axis(&self, axis: uint) -> ($($more),*) {
+    fn remove_axis(&self, axis: usize) -> ($($more),*) {
         let mut tup = ($(0 as $more),*);
         {
             let mut it = tup.slice_mut().iter_mut();
@@ -412,15 +414,15 @@ impl RemoveAxis<($($more),*)> for ($from $(,$more)*)
 );
 
 macro_rules! impl_shrink_recursive(
-    ($ix:ident) => (impl_shrink!($ix););
-    ($ix1:ident $(,$ix:ident)*) => (
-        impl_shrink_recursive!($($ix),*);
-        impl_shrink!($ix1 $(,$ix)*);
+    ($ix:ident, ) => (impl_shrink!($ix,););
+    ($ix1:ident, $($ix:ident,)*) => (
+        impl_shrink_recursive!($($ix,)*);
+        impl_shrink!($ix1, $($ix,)*);
     )
 );
 
 // 12 is the maximum number for having the Eq trait from libstd
-impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
 
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix

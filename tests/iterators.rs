@@ -30,6 +30,6 @@ fn indexed()
             j = 0;
             i += 1;
         }
-        println!("{}", (idx, elt));
+        println!("{:?}", (idx, elt));
     }
 }
