@@ -1,6 +1,6 @@
 #![feature(macro_rules)]
 
-extern crate serialize;
+extern crate "rustc-serialize" as serialize;
 extern crate ndarray;
 
 use serialize::json;

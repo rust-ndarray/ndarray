@@ -9,3 +9,7 @@ documentation = "http://bluss.github.io/rust-ndarray/"
 [dependencies.num]
 
 git = "https://github.com/rust-lang/num"
+
+[dependencies]
+
+rustc-serialize = "0.2"
