@@ -121,8 +121,8 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
         // conjugate transpose
         // only elements below the diagonal have imag part
         let (m, _) = L.dim();
-        for i in range(1, m) {
-            for j in range(0, i) {
+        for i in (1..m) {
+            for j in (0..i) {
                 let elt = &mut L[(i, j)];
                 *elt = elt.conjugate();
             }
@@ -156,9 +156,9 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
     assert!(m == n);
     // Perform the operation in-place on `a`
     let mut L = a;
-    for i in range(0, m) {
+    for i in (0..m) {
         // Entries 0 .. i before the diagonal
-        for j in range(0, i) {
+        for j in (0..i) {
             // A = (
             // L²_1,1
             // L_2,1 L_1,1  L²_2,1 + L²_2,2
@@ -191,7 +191,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 
         // After the diagonal
         // L_ij = 0 for j > i
-        for j in range(i + 1, n) {
+        for j in (i + 1..n) {
             L[(i, j)] = z.clone();
         }
     }
@@ -223,7 +223,7 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     assert!(m == n);
     assert!(m == b.dim());
     let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as usize).collect();
-    for i in range(0, m).rev() {
+    for i in (0..m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
         let mut b_ux_sum = b[i].clone();
         for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take((m - i - 1) as usize) {

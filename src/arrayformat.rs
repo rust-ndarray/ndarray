@@ -16,7 +16,7 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
         None => view.dim.clone(),
         Some(ix) => ix,
     };
-    for _ in range(0, sz) {
+    for _ in (0..sz) {
         try!(write!(f, "["));
     }
     let mut first = true;
@@ -32,17 +32,17 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
                 // New row.
                 // # of ['s needed
                 let n = sz - i - 1;
-                for _ in range(0, n) {
+                for _ in (0..n) {
                     try!(write!(f, "]"));
                 }
                 try!(write!(f, ","));
                 if f.flags() & (1 << (fmt::rt::FlagAlternate as usize)) == 0 {
                     try!(write!(f, "\n"));
                 }
-                for _ in range(0, sz - n) {
+                for _ in (0..sz - n) {
                     try!(write!(f, " "));
                 }
-                for _ in range(0, n) {
+                for _ in (0..n) {
                     try!(write!(f, "["));
                 }
                 first = true;
@@ -60,7 +60,7 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
             last_index = index;
         }
     }
-    for _ in range(0, sz) {
+    for _ in (0..sz) {
         try!(write!(f, "]"));
     }
     Ok(())

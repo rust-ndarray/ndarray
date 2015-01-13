@@ -114,7 +114,7 @@ impl<A: Decodable, D: Dimension + Decodable>
                             Err(d.error("data and dimension must match in size"))
                         } else {
                             let mut elements = Vec::with_capacity(len);
-                            for i in range(0, len) {
+                            for i in (0..len) {
                                 elements.push(try!(d.read_seq_elt::<A, _>(i, Decodable::decode)))
                             }
                             Ok(elements)

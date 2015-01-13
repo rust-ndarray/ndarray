@@ -755,7 +755,7 @@ impl<A: Clone + Add<Output=A>,
     {
         let n = self.shape()[axis];
         let mut res = self.subview(axis, 0);
-        for i in range(1, n) {
+        for i in (1..n) {
             res.iadd(&self.subview(axis, i))
         }
         res
@@ -775,7 +775,7 @@ impl<A: Copy + linalg::Field,
         let mut sum = self.sum(axis);
         let one = libnum::one::<A>();
         let mut cnt = one;
-        for _ in range(1, n) {
+        for _ in (1..n) {
             cnt = cnt + one;
         }
         for elt in sum.iter_mut() {
@@ -861,7 +861,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         let mut j = 0;
         for rr in res_elems.iter_mut() {
             unsafe {
-                let dot = range(0, a).fold(libnum::zero::<A>(),
+                let dot = (0..a).fold(libnum::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at((k, j))
                 );
                 std::ptr::write(rr, dot);
@@ -900,7 +900,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         let mut i = 0;
         for rr in res_elems.iter_mut() {
             unsafe {
-                let dot = range(0, a).fold(libnum::zero::<A>(),
+                let dot = (0..a).fold(libnum::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at(k)
                 );
                 std::ptr::write(rr, dot);
