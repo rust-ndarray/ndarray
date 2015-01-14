@@ -73,7 +73,7 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 ///
 /// ## Indexing
 ///
-/// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
+/// Arrays use **u32** for indexing, represented by the types **Ix** and **Ixs** 
 /// (signed).
 ///
 /// ## Broadcasting
@@ -106,7 +106,7 @@ pub struct Array<A, D> {
     ptr: *mut A,
     /// The size of each axis
     dim: D,
-    /// The element count stride per axis. To be parsed as `isize`.
+    /// The element count stride per axis. To be parsed as **isize**.
     strides: D,
 }
 
@@ -139,7 +139,7 @@ impl<A> Array<A, Ix>
 
 impl Array<f32, Ix>
 {
-    /// Create a one-dimensional Array from interval `[begin, end)`
+    /// Create a one-dimensional Array from interval **[begin, end)**
     pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
     {
         Array::from_iter(std::iter::count(begin, 1.0).take_while(|&x| x < end))
@@ -154,7 +154,7 @@ impl<A, D> Array<A, D> where D: Dimension
         Array::from_elem(dim, libnum::zero())
     }
 
-    /// Construct an Array with copies of `elem`.
+    /// Construct an Array with copies of **elem**.
     pub fn from_elem(dim: D, elem: A) -> Array<A, D> where A: Clone
     {
         let v = std::iter::repeat(elem).take(dim.size()).collect();
@@ -187,11 +187,11 @@ impl<A, D> Array<A, D> where D: Dimension
         self.dim.slice()
     }
 
-    /// Return `true` if the array data is laid out in
+    /// Return **true** if the array data is laid out in
     /// contiguous “C order” where the last index is the most rapidly
     /// varying.
     ///
-    /// Return `false` otherwise, i.e the array is possibly not
+    /// Return **false** otherwise, i.e the array is possibly not
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool
     {
@@ -210,7 +210,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Return a sliced array.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
+    /// **Panics** if **indexes** does not match the number of array axes.
     pub fn slice(&self, indexes: &[Si]) -> Array<A, D>
     {
         let mut arr = self.clone();
@@ -220,7 +220,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Slice the array's view in place.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
+    /// **Panics** if **indexes** does not match the number of array axes.
     pub fn islice(&mut self, indexes: &[Si])
     {
         let offset = Dimension::do_slices(&mut self.dim, &mut self.strides, indexes);
@@ -231,7 +231,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Return an iterator over a sliced view.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
+    /// **Panics** if **indexes** does not match the number of array axes.
     pub fn slice_iter<'a>(&'a self, indexes: &[Si]) -> Elements<'a, A, D>
     {
         let mut it = self.iter();
@@ -242,7 +242,7 @@ impl<A, D> Array<A, D> where D: Dimension
         it
     }
 
-    /// Return a reference to the element at `index`, or return `None`
+    /// Return a reference to the element at **index**, or return **None** 
     /// if the index is out of bounds.
     pub fn at<'a>(&'a self, index: D) -> Option<&'a A> {
         self.dim.stride_offset_checked(&self.strides, &index)
@@ -253,7 +253,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Perform *unchecked* array indexing.
     ///
-    /// Return a reference to the element at `index`.
+    /// Return a reference to the element at **index**.
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
@@ -265,7 +265,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Perform *unchecked* array indexing.
     ///
-    /// Return a mutable reference to the element at `index`.
+    /// Return a mutable reference to the element at **index**.
     ///
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
     /// **Note:** The array must be uniquely held when mutating it.
@@ -288,7 +288,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Return an iterator of references to the elements of the array.
     ///
-    /// Iterator element type is `&'a A`.
+    /// Iterator element type is **&'a A**.
     pub fn iter<'a>(&'a self) -> Elements<'a, A, D>
     {
         Elements { inner: self.base_iter() }
@@ -296,16 +296,16 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Return an iterator of references to the elements of the array.
     ///
-    /// Iterator element type is `(D, &'a A)`.
+    /// Iterator element type is **(D, &'a A)**.
     pub fn indexed_iter<'a>(&'a self) -> IndexedElements<'a, A, D>
     {
         IndexedElements { inner: self.base_iter() }
     }
 
-    /// Collapse dimension `axis` into length one,
-    /// and select the subview of `index` along that axis.
+    /// Collapse dimension **axis** into length one,
+    /// and select the subview of **index** along that axis.
     ///
-    /// **Panics** if `index` is past the length of the axis.
+    /// **Panics** if **index** is past the length of the axis.
     pub fn isubview(&mut self, axis: usize, index: Ix)
     {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
@@ -314,7 +314,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Act like a larger size and/or shape array by *broadcasting*
     /// into a larger shape, if possible.
     ///
-    /// Return `None` if shapes can not be broadcast together.
+    /// Return **None** if shapes can not be broadcast together.
     ///
     /// ## Background
     ///
@@ -334,7 +334,7 @@ impl<A, D> Array<A, D> where D: Dimension
     pub fn broadcast_iter<'a, E: Dimension>(&'a self, dim: E)
         -> Option<Elements<'a, A, E>>
     {
-        /// Return new stride when trying to grow `from` into shape `to`
+        /// Return new stride when trying to grow **from** into shape **to**
         ///
         /// Broadcasting works by returning a "fake stride" where elements
         /// to repeat are in axes with 0 stride, so that several indexes point
@@ -400,7 +400,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Swap axes `ax` and `bx`.
+    /// Swap axes **ax** and **bx**.
     ///
     /// **Panics** if the axes are out of bounds.
     ///
@@ -455,7 +455,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Apply `f` elementwise and return a new array with
+    /// Apply **f** elementwise and return a new array with
     /// the results.
     ///
     /// Return an array with the same shape as *self*.
@@ -482,10 +482,10 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Select the subview `index` along `axis` and return an
+    /// Select the subview **index** along **axis** and return an
     /// array with that axis removed.
     ///
-    /// **Panics** if `index` is past the length of the axis.
+    /// **Panics** if **index** is past the length of the axis.
     ///
     /// ```
     /// use ndarray::{arr1, arr2};
@@ -536,7 +536,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Return a mutable reference to the element at `index`, or return `None`
+    /// Return a mutable reference to the element at **index**, or return **None**
     /// if the index is out of bounds.
     pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> where A: Clone
     {
@@ -549,7 +549,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Return an iterator of mutable references to the elements of the array.
     ///
-    /// Iterator element type is `&'a mut A`.
+    /// Iterator element type is **&'a mut A**.
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D> where A: Clone
     {
         self.ensure_unique();
@@ -558,7 +558,7 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
-    /// Iterator element type is `(D, &'a mut A)`.
+    /// Iterator element type is **(D, &'a mut A)**.
     pub fn indexed_iter_mut<'a>(&'a mut self) -> IndexedElementsMut<'a, A, D> where A: Clone
     {
         self.ensure_unique();
@@ -568,9 +568,9 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Return an iterator of mutable references into the sliced view
     /// of the array.
     ///
-    /// Iterator element type is `&'a mut A`.
+    /// Iterator element type is **&'a mut A**.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
+    /// **Panics** if **indexes** does not match the number of array axes.
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D> where A: Clone
     {
         let mut it = self.iter_mut();
@@ -582,12 +582,12 @@ impl<A, D> Array<A, D> where D: Dimension
     }
 
 
-    /// Select the subview `index` along `axis` and return an iterator
+    /// Select the subview **index** along **axis** and return an iterator
     /// of the subview.
     ///
-    /// Iterator element type is `&'a mut A`.
+    /// Iterator element type is **&'a mut A**.
     ///
-    /// **Panics** if `axis` or `index` is out of bounds.
+    /// **Panics** if **axis** or **index** is out of bounds.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: usize, index: Ix)
         -> ElementsMut<'a, A, D> where A: Clone
     {
@@ -622,7 +622,7 @@ impl<A, D> Array<A, D> where D: Dimension
     }
 
 
-    /// Transform the array into `shape`; any other shape
+    /// Transform the array into **shape**; any other shape
     /// with the same number of elements is accepted.
     ///
     /// **Panics** if sizes are incompatible.
@@ -655,9 +655,9 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Perform an elementwise assigment to `self` from `other`.
+    /// Perform an elementwise assigment to **self** from **other**.
     ///
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
     pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>) where A: Clone
@@ -674,7 +674,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Perform an elementwise assigment to `self` from scalar `x`.
+    /// Perform an elementwise assigment to **self** from scalar **x**.
     pub fn assign_scalar(&mut self, x: &A) where A: Clone
     {
         for elt in self.raw_data_mut().iter_mut() {
@@ -683,7 +683,7 @@ impl<A, D> Array<A, D> where D: Dimension
     }
 }
 
-/// Return a zero-dimensional array with the element `x`.
+/// Return a zero-dimensional array with the element **x**.
 pub fn arr0<A>(x: A) -> Array<A, ()>
 {
     let mut v = Vec::with_capacity(1);
@@ -691,7 +691,7 @@ pub fn arr0<A>(x: A) -> Array<A, ()>
     unsafe { Array::from_vec_dim((), v) }
 }
 
-/// Return a one-dimensional array with elements from `xs`.
+/// Return a one-dimensional array with elements from **xs**.
 pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 {
     Array::from_vec(xs.to_vec())
@@ -721,7 +721,7 @@ impl<T> ArrInit<T> for [T;  7] { fn as_init_slice(&self) -> &[T] { &self[] } }
 impl<T> ArrInit<T> for [T;  8] { fn as_init_slice(&self) -> &[T] { &self[] } }
 impl<T> ArrInit<T> for [T;  9] { fn as_init_slice(&self) -> &[T] { &self[] } }
 
-/// Return a two-dimensional array with elements from `xs`.
+/// Return a two-dimensional array with elements from **xs**.
 ///
 /// **Panics** if the slices are not all of the same length.
 ///
@@ -754,7 +754,7 @@ impl<A: Clone + Add<Output=A>,
      D: RemoveAxis<E=E2>, E2: Dimension>
     Array<A, D>
 {
-    /// Return sum along `axis`.
+    /// Return sum along **axis**.
     ///
     /// ```
     /// use ndarray::{arr0, arr1, arr2};
@@ -769,7 +769,7 @@ impl<A: Clone + Add<Output=A>,
     /// );
     /// ```
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if **axis** is out of bounds.
     pub fn sum(&self, axis: usize) -> Array<A, E2>
     {
         let n = self.shape()[axis];
@@ -785,9 +785,9 @@ impl<A: Copy + linalg::Field,
      D: RemoveAxis<E=E2>, E2: Dimension>
     Array<A, D>
 {
-    /// Return mean along `axis`.
+    /// Return mean along **axis**.
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if **axis** is out of bounds.
     pub fn mean(&self, axis: usize) -> Array<A, E2>
     {
         let n = self.shape()[axis];
@@ -806,9 +806,9 @@ impl<A: Copy + linalg::Field,
 
 impl<A> Array<A, (Ix, Ix)>
 {
-    /// Return an iterator over the elements of row `index`.
+    /// Return an iterator over the elements of row **index**.
     ///
-    /// **Panics** if `index` is out of bounds.
+    /// **Panics** if **index** is out of bounds.
     pub fn row_iter<'a>(&'a self, index: Ix) -> Elements<'a, A, Ix>
     {
         let (m, n) = self.dim;
@@ -821,9 +821,9 @@ impl<A> Array<A, (Ix, Ix)>
         }
     }
 
-    /// Return an iterator over the elements of column `index`.
+    /// Return an iterator over the elements of column **index**.
     ///
-    /// **Panics** if `index` is out of bounds.
+    /// **Panics** if **index** is out of bounds.
     pub fn col_iter<'a>(&'a self, index: Ix) -> Elements<'a, A, Ix>
     {
         let (m, n) = self.dim;
@@ -842,10 +842,10 @@ impl<A> Array<A, (Ix, Ix)>
 // avoid trouble with failing + and *, and destructors
 impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
 {
-    /// Perform matrix multiplication of rectangular arrays `self` and `other`.
+    /// Perform matrix multiplication of rectangular arrays **self** and **other**.
     ///
     /// The array sizes must agree in the way that
-    /// if `self` is *M* × *N*, then `other` is *N* × *K*.
+    /// if **self** is *M* × *N*, then **other** is *N* × *K*.
     ///
     /// Return a result array with shape *M* × *K*.
     ///
@@ -896,11 +896,11 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
         }
     }
 
-    /// Perform the matrix multiplication of the rectangular array `self` and
-    /// column vector `other`.
+    /// Perform the matrix multiplication of the rectangular array **self** and
+    /// column vector **other**.
     ///
     /// The array sizes must agree in the way that
-    /// if `self` is *M* × *N*, then `other` is *N*.
+    /// if **self** is *M* × *N*, then **other** is *N*.
     ///
     /// Return a result array with shape *M*.
     ///
@@ -935,9 +935,9 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
 
 impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 {
-    /// Return `true` if the arrays' elementwise differences are all within
+    /// Return **true** if the arrays' elementwise differences are all within
     /// the given absolute tolerance.<br>
-    /// Return `false` otherwise, or if the shapes disagree.
+    /// Return **false** otherwise, or if the shapes disagree.
     pub fn allclose(&self, other: &Array<A, D>, tol: A) -> bool
     {
         self.shape() == other.shape() &&
@@ -952,10 +952,10 @@ macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
 impl<A, D> Array<A, D> where A: Clone + $trt<A, Output=A>, D: Dimension
 {
-    /// Perform an elementwise arithmetic operation between `self` and `other`,
+    /// Perform an elementwise arithmetic operation between **self** and **other**,
     /// *in place*.
     ///
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
     pub fn $imethod <E: Dimension> (&mut self, other: &Array<A, E>)
@@ -973,7 +973,7 @@ impl<A, D> Array<A, D> where A: Clone + $trt<A, Output=A>, D: Dimension
         }
     }
 
-    /// Perform an elementwise arithmetic operation between `self` and the scalar `x`,
+    /// Perform an elementwise arithmetic operation between **self** and the scalar **x**,
     /// *in place*.
     pub fn $imth_scalar (&mut self, x: &A)
     {
@@ -987,10 +987,10 @@ impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D>
 where A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension
 {
     type Output = Array<A, D>;
-    /// Perform an elementwise arithmetic operation between `self` and `other`,
+    /// Perform an elementwise arithmetic operation between **self** and **other**,
     /// and return the result.
     ///
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
     fn $mth (mut self, other: Array<A, E>) -> Array<A, D>
@@ -1014,10 +1014,10 @@ impl<'a, A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension>
 $trt<&'a Array<A, E>> for &'a Array<A, D>
 {
     type Output = Array<A, D>;
-    /// Perform an elementwise arithmetic operation between `self` and `other`,
+    /// Perform an elementwise arithmetic operation between **self** and **other**,
     /// and return the result.
     ///
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
     fn $mth (self, other: &'a Array<A, E>) -> Array<A, D>
@@ -1056,7 +1056,7 @@ impl_binary_op!(Shr, shr, ishr, ishr_scalar);
 impl<A: Clone + Neg<Output=A>, D: Dimension>
 Array<A, D>
 {
-    /// Perform an elementwise negation of `self`, *in place*.
+    /// Perform an elementwise negation of **self**, *in place*.
     pub fn ineg(&mut self)
     {
         for elt in self.iter_mut() {
@@ -1069,7 +1069,7 @@ impl<A: Clone + Neg<Output=A>, D: Dimension>
 Neg for Array<A, D>
 {
     type Output = Self;
-    /// Perform an elementwise negation of `self` and return the result.
+    /// Perform an elementwise negation of **self** and return the result.
     fn neg(mut self) -> Array<A, D>
     {
         self.ineg();
@@ -1080,7 +1080,7 @@ Neg for Array<A, D>
 impl<A: Clone + Not<Output=A>, D: Dimension>
 Array<A, D>
 {
-    /// Perform an elementwise unary not of `self`, *in place*.
+    /// Perform an elementwise unary not of **self**, *in place*.
     pub fn inot(&mut self)
     {
         for elt in self.iter_mut() {
@@ -1093,7 +1093,7 @@ impl<A: Clone + Not<Output=A>, D: Dimension>
 Not for Array<A, D>
 {
     type Output = Self;
-    /// Perform an elementwise unary not of `self` and return the result.
+    /// Perform an elementwise unary not of **self** and return the result.
     fn not(mut self) -> Array<A, D>
     {
         self.inot();
@@ -1103,28 +1103,28 @@ Not for Array<A, D>
 
 /// An iterator over the elements of an array.
 ///
-/// Iterator element type is `&'a A`.
+/// Iterator element type is **&'a A**.
 pub struct Elements<'a, A, D> {
     inner: Baseiter<'a, A, D>,
 }
 
 /// An iterator over the elements of an array.
 ///
-/// Iterator element type is `&'a mut A`.
+/// Iterator element type is **&'a mut A**.
 pub struct ElementsMut<'a, A, D> {
     inner: Baseiter<'a, A, D>,
 }
 
 /// An iterator over the indexes and elements of an array.
 ///
-/// Iterator element type is `(D, &'a A)`.
+/// Iterator element type is **(D, &'a A)**.
 pub struct IndexedElements<'a, A, D> {
     inner: Baseiter<'a, A, D>,
 }
 
 /// An iterator over the indexes and elements of an array.
 ///
-/// Iterator element type is `(D, &'a mut A)`.
+/// Iterator element type is **(D, &'a mut A)**.
 pub struct IndexedElementsMut<'a, A, D> {
     inner: Baseiter<'a, A, D>,
 }
