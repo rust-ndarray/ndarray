@@ -13,7 +13,7 @@ use test::black_box;
 #[bench]
 fn bench_std_add(bench: &mut test::Bencher)
 {
-    let mut a = arr2::<f32>(&[&[1., 2., 2.],
+    let mut a = arr2(&[&[1., 2., 2.],
                               &[3., 4., 4.],
                               &[3., 4., 4.],
                               &[3., 4., 4.],
@@ -47,7 +47,7 @@ fn bench_std_iter_1d_raw(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_2d(bench: &mut test::Bencher)
 {
-    let a = arr2::<f32>(&[&[1., 2., 2.],
+    let a = arr2(&[&[1., 2., 2.],
                           &[3., 4., 4.],
                           &[3., 4., 4.],
                           &[3., 4., 4.],
@@ -79,7 +79,7 @@ fn bench_std_iter_2d_large(bench: &mut test::Bencher)
 #[bench]
 fn assign_scalar_2d(bench: &mut test::Bencher)
 {
-    let mut a = arr2::<f32>(&[&[1., 2., 2.],
+    let mut a = arr2(&[&[1., 2., 2.],
                               &[3., 4., 4.],
                               &[3., 4., 4.],
                               &[3., 4., 4.],
@@ -113,7 +113,7 @@ fn bench_col_iter(bench: &mut test::Bencher)
 #[bench]
 fn bench_mat_mul(bench: &mut test::Bencher)
 {
-    let a = arr2::<f32>(&[&[1., 2., 2.],
+    let a = arr2(&[&[1., 2., 2.],
                           &[3., 4., 4.],
                           &[3., 4., 4.],
                           &[3., 4., 4.],
@@ -126,7 +126,7 @@ fn bench_mat_mul(bench: &mut test::Bencher)
 #[bench]
 fn lst_squares(bench: &mut test::Bencher)
 {
-    let xs = arr2::<f32>(&[&[ 2.,  3.],
+    let xs = arr2(&[&[ 2.,  3.],
                            &[-2., -1.],
                            &[ 1.,  5.],
                            &[-1.,  2.]]);

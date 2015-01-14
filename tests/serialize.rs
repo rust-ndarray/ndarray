@@ -30,7 +30,7 @@ fn serial_many_dim()
     }
 
     {
-        let a = arr2::<f32>(&[&[3., 1., 2.2], &[3.1, 4., 7.]]);
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]]);
         println!("{:?}", a);
         let serial = json::encode(&a);
         println!("{:?}", serial);

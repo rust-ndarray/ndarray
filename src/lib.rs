@@ -85,12 +85,12 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 /// ```
 /// use ndarray::arr2;
 ///
-/// let a = arr2::<f32>(&[&[1., 1.],
-///                       &[1., 2.]]);
-/// let b = arr2::<f32>(&[&[0., 1.]]);
+/// let a = arr2(&[[1., 1.],
+///                [1., 2.]]);
+/// let b = arr2(&[[0., 1.]]);
 ///
-/// let c = arr2::<f32>(&[&[1., 2.],
-///                       &[1., 3.]]);
+/// let c = arr2(&[[1., 2.],
+///                [1., 3.]]);
 /// // We can add because the shapes are compatible even if not equal.
 /// assert!(
 ///     c == a + b
@@ -411,10 +411,10 @@ impl<A, D: Dimension> Array<A, D>
     /// ```
     /// use ndarray::arr2;
     ///
-    /// let mut a = arr2::<f32>(&[&[1., 2., 3.]]);
+    /// let mut a = arr2(&[[1., 2., 3.]]);
     /// a.swap_axes(0, 1);
     /// assert!(
-    ///     a == arr2(&[&[1.], &[2.], &[3.]])
+    ///     a == arr2(&[[1.], [2.], [3.]])
     /// );
     /// ```
     pub fn swap_axes(&mut self, ax: usize, bx: usize)
@@ -467,11 +467,11 @@ impl<A, D: Dimension> Array<A, D>
     /// ```
     /// use ndarray::arr2;
     ///
-    /// let a = arr2::<f32>(&[&[1., 2.],
-    ///                       &[3., 4.]]);
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
     /// assert!(
     ///     a.map(|&x| (x / 2.) as isize)
-    ///     == arr2(&[&[0, 1], &[1, 2]])
+    ///     == arr2(&[[0, 1], [1, 2]])
     /// );
     /// ```
     pub fn map<'a, B, F>(&'a self, mut f: F) -> Array<B, D> where
@@ -497,8 +497,8 @@ impl<A, D: RemoveAxis<E=E2>, E2: Dimension> Array<A, D>
     /// ```
     /// use ndarray::{arr1, arr2};
     ///
-    /// let a = arr2::<f32>(&[&[1., 2.],
-    ///                       &[3., 4.]]);
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
     ///
     /// assert!(
     ///     a.subview(0, 0) == arr1(&[1., 2.]) &&
@@ -704,6 +704,30 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
     Array::from_vec(xs.to_vec())
 }
 
+/// Slice or fixed-size array used for array initialization
+pub trait ArrInit<T> {
+    fn as_init_slice(&self) -> &[T];
+}
+
+impl<T> ArrInit<T> for [T]
+{
+    fn as_init_slice(&self) -> &[T]
+    {
+        self
+    }
+}
+
+impl<T> ArrInit<T> for [T;  0] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  1] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  2] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  3] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  4] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  5] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  6] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  7] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  8] { fn as_init_slice(&self) -> &[T] { &self[] } }
+impl<T> ArrInit<T> for [T;  9] { fn as_init_slice(&self) -> &[T] { &self[] } }
+
 /// Return a two-dimensional array with elements from `xs`.
 ///
 /// **Panics** if the slices are not all of the same length.
@@ -711,18 +735,20 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 /// ```
 /// use ndarray::arr2;
 ///
-/// let a = arr2(&[&[1, 2, 3],
-///                &[4, 5, 6]]);
+/// let a = arr2(&[[1, 2, 3],
+///                [4, 5, 6]]);
 /// assert!(
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone>(xs: &[&[A]]) -> Array<A, (Ix, Ix)>
+pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
 {
-    let (m, n) = (xs.len() as Ix, xs.get(0).map_or(0, |snd| snd.len() as Ix));
+    let (m, n) = (xs.len() as Ix,
+                  xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
-    for &snd in xs.iter() {
+    for snd in xs.iter() {
+        let snd = snd.as_init_slice();
         assert!(snd.len() as Ix == n);
         result.extend(snd.iter().map(|x| x.clone()))
     }
@@ -740,8 +766,8 @@ impl<A: Clone + Add<Output=A>,
     /// ```
     /// use ndarray::{arr0, arr1, arr2};
     ///
-    /// let a = arr2::<f32>(&[&[1., 2.],
-    ///                       &[3., 4.]]);
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
     /// assert!(
     ///     a.sum(0) == arr1(&[4., 6.]) &&
     ///     a.sum(1) == arr1(&[3., 7.]) &&
@@ -835,14 +861,14 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     /// ```
     /// use ndarray::arr2;
     ///
-    /// let a = arr2::<f32>(&[&[1., 2.],
-    ///                       &[0., 1.]]);
-    /// let b = arr2::<f32>(&[&[1., 2.],
-    ///                       &[2., 3.]]);
+    /// let a = arr2(&[[1., 2.],
+    ///                [0., 1.]]);
+    /// let b = arr2(&[[1., 2.],
+    ///                [2., 3.]]);
     ///
     /// assert!(
-    ///     a.mat_mul(&b) == arr2(&[&[5., 8.],
-    ///                             &[2., 3.]])
+    ///     a.mat_mul(&b) == arr2(&[[5., 8.],
+    ///                             [2., 3.]])
     /// );
     /// ```
     ///

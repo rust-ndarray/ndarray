@@ -184,11 +184,11 @@ fn test_sub()
 #[test]
 fn diag()
 {
-    let d = arr2::<f32>(&[&[1., 2., 3.0f32]]).diag();
+    let d = arr2(&[[1., 2., 3.0f32]]).diag();
     assert_eq!(d.dim(), 1);
-    let d = arr2::<f32>(&[&[1., 2., 3.0f32], &[0., 0., 0.]]).diag();
+    let d = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]).diag();
     assert_eq!(d.dim(), 2);
-    let d = arr2::<f32>(&[]).diag();
+    let d = arr2::<f32, _>(&[[]]).diag();
     assert_eq!(d.dim(), 0);
     let d = Array::<f32, _>::zeros(()).diag();
     assert_eq!(d.dim(), 1);
@@ -197,8 +197,8 @@ fn diag()
 #[test]
 fn swapaxes()
 {
-    let mut a = arr2::<f32>(&[&[1., 2.], &[3., 4.0f32]]);
-    let     b = arr2::<f32>(&[&[1., 3.], &[2., 4.0f32]]);
+    let mut a = arr2(&[[1., 2.], [3., 4.0f32]]);
+    let     b = arr2(&[[1., 3.], [2., 4.0f32]]);
     assert!(a != b);
     a.swap_axes(0, 1);
     assert_eq!(a, b);
@@ -211,7 +211,7 @@ fn swapaxes()
 #[test]
 fn standard_layout()
 {
-    let mut a = arr2::<f32>(&[&[1., 2.], &[3., 4.0]]);
+    let mut a = arr2(&[[1., 2.], [3., 4.0]]);
     assert!(a.is_standard_layout());
     a.swap_axes(0, 1);
     assert!(!a.is_standard_layout());
@@ -226,8 +226,8 @@ fn standard_layout()
 #[test]
 fn assign()
 {
-    let mut a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
-    let     b = arr2::<f32>(&[&[1., 3.], &[2., 4.]]);
+    let mut a = arr2(&[[1., 2.], [3., 4.]]);
+    let     b = arr2(&[[1., 3.], [2., 4.]]);
     a.assign(&b);
     assert_eq!(a, b);
 
@@ -239,7 +239,7 @@ fn assign()
 #[test]
 fn dyn_dimension()
 {
-    let a = arr2::<f32>(&[&[1., 2.], &[3., 4.0]]).reshape(vec![2, 2]);
+    let a = arr2(&[[1., 2.], [3., 4.0]]).reshape(vec![2, 2]);
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
 
     let mut dim = [1; 1024].to_vec();
@@ -252,7 +252,7 @@ fn dyn_dimension()
 #[test]
 fn sum_mean()
 {
-    let a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
+    let a = arr2(&[[1., 2.], [3., 4.]]);
     assert_eq!(a.sum(0), arr1(&[4., 6.]));
     assert_eq!(a.sum(1), arr1(&[3., 7.]));
     assert_eq!(a.mean(0), arr1(&[2., 3.]));
@@ -263,7 +263,7 @@ fn sum_mean()
 #[test]
 fn iter_size_hint()
 {
-    let mut a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
+    let mut a = arr2(&[[1., 2.], [3., 4.]]);
     {
         let mut it = a.iter();
         assert_eq!(it.size_hint(), (4, Some(4)));
@@ -304,7 +304,7 @@ fn zero_axes()
         assert!(false);
     }
     println!("{:?}", a);
-    let b = arr2::<f32>(&[&[], &[], &[], &[]]);
+    let b = arr2::<f32, _>(&[[], [], [], []]);
     println!("{:?}\n{:?}", b.shape(), b);
 
     // we can even get a subarray of b
@@ -315,23 +315,23 @@ fn zero_axes()
 #[test]
 fn equality()
 {
-    let a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
-    let mut b = arr2::<f32>(&[&[1., 2.], &[2., 4.]]);
+    let a = arr2(&[[1., 2.], [3., 4.]]);
+    let mut b = arr2(&[[1., 2.], [2., 4.]]);
     assert!(a != b);
     b[(1, 0)] = 3.;
     assert!(a == b);
 
     // make sure we can compare different shapes without failure.
-    let c = arr2::<f32>(&[&[1., 2.]]);
+    let c = arr2(&[[1., 2.]]);
     assert!(a != c);
 }
 
 #[test]
 fn map1()
 {
-    let a = arr2::<f32>(&[&[1., 2.], &[3., 4.]]);
+    let a = arr2(&[[1., 2.], [3., 4.]]);
     let b = a.map(|&x| (x / 3.) as isize);
-    assert_eq!(b, arr2(&[&[0, 0], &[1, 1]]));
+    assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
     // test map to reference with array's lifetime.
     let c = a.map(|x| x);
     assert_eq!(a[(0, 0)], *c[(0, 0)]);

@@ -79,7 +79,7 @@ fn scalar_operations()
 {
     let a = arr0::<f32>(1.);
     let b = arr1::<f32>(&[1., 1.]);
-    let c = arr2::<f32>(&[&[1., 1.], &[1., 1.]]);
+    let c = arr2(&[[1., 1.], [1., 1.]]);
 
     {
         let mut x = a.clone();
