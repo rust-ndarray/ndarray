@@ -122,26 +122,6 @@ impl<A, D: Clone> Clone for Array<A, D>
     }
 }
 
-impl<A: Clone + libnum::Zero, D: Dimension> Array<A, D>
-{
-    /// Construct an Array with zeros.
-    pub fn zeros(dim: D) -> Array<A, D>
-    {
-        Array::from_elem(dim, libnum::zero())
-    }
-}
-
-impl<A: Clone, D: Dimension> Array<A, D>
-{
-    /// Construct an Array with copies of `elem`.
-    pub fn from_elem(dim: D, elem: A) -> Array<A, D> {
-        let v = std::iter::repeat(elem).take(dim.size()).collect();
-        unsafe {
-            Array::from_vec_dim(dim, v)
-        }
-    }
-}
-
 impl<A> Array<A, Ix>
 {
     /// Create a one-dimensional array from a vector (no allocation needed).
@@ -166,12 +146,28 @@ impl Array<f32, Ix>
     }
 }
 
-impl<A, D: Dimension> Array<A, D>
+impl<A, D> Array<A, D> where D: Dimension
 {
+    /// Construct an Array with zeros.
+    pub fn zeros(dim: D) -> Array<A, D> where A: Clone + libnum::Zero
+    {
+        Array::from_elem(dim, libnum::zero())
+    }
+
+    /// Construct an Array with copies of `elem`.
+    pub fn from_elem(dim: D, elem: A) -> Array<A, D> where A: Clone
+    {
+        let v = std::iter::repeat(elem).take(dim.size()).collect();
+        unsafe {
+            Array::from_vec_dim(dim, v)
+        }
+    }
+
     /// Create an array from a vector (with no allocation needed).
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D> {
+    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D>
+    {
         debug_assert!(dim.size() == v.len());
         Array {
             ptr: v.as_mut_ptr(),
@@ -485,10 +481,7 @@ impl<A, D: Dimension> Array<A, D>
             Array::from_vec_dim(self.dim.clone(), res)
         }
     }
-}
 
-impl<A, D: RemoveAxis<E=E2>, E2: Dimension> Array<A, D>
-{
     /// Select the subview `index` along `axis` and return an
     /// array with that axis removed.
     ///
@@ -505,7 +498,8 @@ impl<A, D: RemoveAxis<E=E2>, E2: Dimension> Array<A, D>
     ///     a.subview(1, 1) == arr1(&[2., 4.])
     /// );
     /// ```
-    pub fn subview(&self, axis: usize, index: Ix) -> Array<A, E2>
+    pub fn subview<EE>(&self, axis: usize, index: Ix) -> Array<A, EE> where
+        D: RemoveAxis<E=EE>, EE: Dimension
     {
         let mut res = self.clone();
         res.isubview(axis, index);
@@ -518,14 +512,11 @@ impl<A, D: RemoveAxis<E=E2>, E2: Dimension> Array<A, D>
             strides: res.strides.remove_axis(axis),
         }
     }
-}
 
-impl<A: Clone, D: Dimension> Array<A, D>
-{
     /// Make the array unshared.
     ///
     /// This method is mostly only useful with unsafe code.
-    pub fn ensure_unique(&mut self)
+    pub fn ensure_unique(&mut self) where A: Clone
     {
         if std::rc::is_unique(&self.data) {
             return
@@ -547,7 +538,8 @@ impl<A: Clone, D: Dimension> Array<A, D>
 
     /// Return a mutable reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
-    pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> {
+    pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> where A: Clone
+    {
         self.ensure_unique();
         self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
@@ -558,7 +550,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Return an iterator of mutable references to the elements of the array.
     ///
     /// Iterator element type is `&'a mut A`.
-    pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
+    pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D> where A: Clone
     {
         self.ensure_unique();
         ElementsMut { inner: self.base_iter() }
@@ -567,7 +559,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is `(D, &'a mut A)`.
-    pub fn indexed_iter_mut<'a>(&'a mut self) -> IndexedElementsMut<'a, A, D>
+    pub fn indexed_iter_mut<'a>(&'a mut self) -> IndexedElementsMut<'a, A, D> where A: Clone
     {
         self.ensure_unique();
         IndexedElementsMut { inner: self.base_iter() }
@@ -579,7 +571,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// Iterator element type is `&'a mut A`.
     ///
     /// **Panics** if `indexes` does not match the number of array axes.
-    pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
+    pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D> where A: Clone
     {
         let mut it = self.iter_mut();
         let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
@@ -597,7 +589,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: usize, index: Ix)
-        -> ElementsMut<'a, A, D>
+        -> ElementsMut<'a, A, D> where A: Clone
     {
         let mut it = self.iter_mut();
         dimension::do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
@@ -605,7 +597,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 
     /// Return an iterator over the diagonal elements of the array.
-    pub fn diag_iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, Ix>
+    pub fn diag_iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, Ix> where A: Clone
     {
         self.ensure_unique();
         let (len, stride) = self.diag_params();
@@ -624,7 +616,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
-    pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
+    pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A] where A: Clone
     {
         self.data.make_unique().as_mut_slice()
     }
@@ -640,7 +632,8 @@ impl<A: Clone, D: Dimension> Array<A, D>
     ///
     /// arr1::<f32>(&[1., 2., 3., 4.]).reshape((2, 2));
     /// ```
-    pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> {
+    pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> where A: Clone
+    {
         if shape.size() != self.dim.size() {
             panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(), shape.slice())
@@ -667,7 +660,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     /// If their shapes disagree, `other` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
+    pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>) where A: Clone
     {
         if self.shape() == other.shape() {
             for (x, y) in self.iter_mut().zip(other.iter()) {
@@ -682,7 +675,7 @@ impl<A: Clone, D: Dimension> Array<A, D>
     }
 
     /// Perform an elementwise assigment to `self` from scalar `x`.
-    pub fn assign_scalar(&mut self, x: &A)
+    pub fn assign_scalar(&mut self, x: &A) where A: Clone
     {
         for elt in self.raw_data_mut().iter_mut() {
             *elt = x.clone();
