@@ -18,7 +18,6 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
 };
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
-pub use dimension::{d1, d2, d3, d4};
 use dimension::stride_offset;
 
 pub use indexes::Indexes;

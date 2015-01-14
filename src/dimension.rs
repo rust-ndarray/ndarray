@@ -359,27 +359,6 @@ impl Dimension for Vec<Ix>
     fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
 }
 
-/// Construct one-dimensional array shape. Helper function to use where
-/// integer literal inference isn't working.
-#[inline]
-#[deprecated="No longer needed, inference is good enough."]
-pub fn d1(a: Ix) -> Ix { a }
-/// Construct two-dimensional array shape. Helper function to use where
-/// integer literal inference isn't working.
-#[inline]
-#[deprecated="No longer needed, inference is good enough."]
-pub fn d2(a: Ix, b: Ix) -> (Ix, Ix) { (a, b) }
-/// Construct three-dimensional array shape. Helper function to use where
-/// integer literal inference isn't working.
-#[inline]
-#[deprecated="No longer needed, inference is good enough."]
-pub fn d3(a: Ix, b: Ix, c: Ix) -> (Ix, Ix, Ix) { (a, b, c) }
-/// Construct four-dimensional array shape. Helper function to use where
-/// integer literal inference isn't working.
-#[inline]
-#[deprecated="No longer needed, inference is good enough."]
-pub fn d4(a: Ix, b: Ix, c: Ix, d: Ix) -> (Ix, Ix, Ix, Ix) { (a, b, c, d) }
-
 /// Helper trait to define a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *E*.
 pub trait RemoveAxis : Dimension {
