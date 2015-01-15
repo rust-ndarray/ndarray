@@ -13,8 +13,11 @@ impl<'a, A, D: Dimension> Index<D> for Array<A, D>
 {
     type Output = A;
     #[inline]
+    /// Access the element at **index**.
+    ///
+    /// **Panics** if index is out of bounds.
     fn index(&self, index: &D) -> &A {
-        self.at(index.clone()).unwrap()
+        self.at(index.clone()).expect("Array::index: out of bounds")
     }
 }
 
@@ -22,8 +25,11 @@ impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
 {
     type Output = A;
     #[inline]
+    /// Access the element at **index** mutably.
+    ///
+    /// **Panics** if index is out of bounds.
     fn index_mut(&mut self, index: &D) -> &mut A {
-        self.at_mut(index.clone()).unwrap()
+        self.at_mut(index.clone()).expect("Array::index_mut: out of bounds")
     }
 }
 
