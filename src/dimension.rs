@@ -360,17 +360,17 @@ impl Dimension for Vec<Ix>
 }
 
 /// Helper trait to define a larger-than relation for array shapes:
-/// removing one axis from *Self* gives smaller dimension *E*.
+/// removing one axis from *Self* gives smaller dimension *Smaller*.
 pub trait RemoveAxis : Dimension {
-    type E: Dimension;
-    fn remove_axis(&self, axis: usize) -> Self::E;
+    type Smaller: Dimension;
+    fn remove_axis(&self, axis: usize) -> Self::Smaller;
 }
 
 macro_rules! impl_shrink(
     ($from:ident, $($more:ident,)*) => (
 impl RemoveAxis for ($from $(,$more)*)
 {
-    type E = ($($more),*);
+    type Smaller = ($($more),*);
     #[allow(unused_parens)]
     fn remove_axis(&self, axis: usize) -> ($($more),*) {
         let mut tup = ($(0 as $more),*);

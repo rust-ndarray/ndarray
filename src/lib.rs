@@ -497,8 +497,8 @@ impl<A, D> Array<A, D> where D: Dimension
     ///     a.subview(1, 1) == arr1(&[2., 4.])
     /// );
     /// ```
-    pub fn subview<EE>(&self, axis: usize, index: Ix) -> Array<A, EE> where
-        D: RemoveAxis<E=EE>, EE: Dimension
+    pub fn subview(&self, axis: usize, index: Ix) -> Array<A, <D as RemoveAxis>::Smaller> where
+        D: RemoveAxis
     {
         let mut res = self.clone();
         res.isubview(axis, index);
@@ -749,9 +749,9 @@ pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
     }
 }
 
-impl<A: Clone + Add<Output=A>,
-     D: RemoveAxis<E=E2>, E2: Dimension>
-    Array<A, D>
+impl<A, D> Array<A, D> where
+    A: Clone + Add<Output=A>,
+    D: RemoveAxis,
 {
     /// Return sum along **axis**.
     ///
@@ -769,7 +769,7 @@ impl<A: Clone + Add<Output=A>,
     /// ```
     ///
     /// **Panics** if **axis** is out of bounds.
-    pub fn sum(&self, axis: usize) -> Array<A, E2>
+    pub fn sum(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
     {
         let n = self.shape()[axis];
         let mut res = self.subview(axis, 0);
@@ -780,14 +780,14 @@ impl<A: Clone + Add<Output=A>,
     }
 }
 
-impl<A: Copy + linalg::Field,
-     D: RemoveAxis<E=E2>, E2: Dimension>
-    Array<A, D>
+impl<A, D> Array<A, D> where
+    A: Copy + linalg::Field,
+    D: RemoveAxis,
 {
     /// Return mean along **axis**.
     ///
     /// **Panics** if **axis** is out of bounds.
-    pub fn mean(&self, axis: usize) -> Array<A, E2>
+    pub fn mean(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
     {
         let n = self.shape()[axis];
         let mut sum = self.sum(axis);
