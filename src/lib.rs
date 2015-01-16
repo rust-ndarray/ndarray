@@ -2,7 +2,7 @@
 #![crate_type="dylib"]
 
 //! The **ndarray** crate provides the [**Array**](./struct.Array.html) type, an
-//! n-dimensional numerical container similar to numpy's ndarray.
+//! n-dimensional container similar to numpy's ndarray.
 //!
 
 #[cfg(not(nocomplex))]
@@ -52,8 +52,9 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 ///
 /// A reference counted array with copy-on-write mutability.
 ///
-/// The array is a container of numerical use, supporting
-/// all mathematical operators by applying them elementwise.
+/// The array can be a container of numerical use, supporting
+/// all mathematical operators by applying them elementwise -- but it can
+/// store any kind of value.
 ///
 /// The array is both a view and a shared owner of its data. Some methods,
 /// for example [*slice()*](#method.slice), merely change the view of the data,
@@ -584,7 +585,6 @@ impl<A, D> Array<A, D> where D: Dimension
         }
         it
     }
-
 
     /// Select the subview **index** along **axis** and return an iterator
     /// of the subview.
@@ -1119,6 +1119,20 @@ impl<'a, A, D> Elements<'a, A, D> where D: Clone
     {
         self.inner.dim.clone()
     }
+
+    /// Return an indexed version of the iterator.
+    ///
+    /// Iterator element type is **(D, &'a A)**.
+    ///
+    /// **Note:** the indices run over the logical dimension of the iterator,
+    /// i.e. a *.slice_iter()* will yield indices relative to the slice, not the
+    /// base array.
+    pub fn indexed(self) -> IndexedElements<'a, A, D>
+    {
+        IndexedElements {
+            inner: self.inner,
+        }
+    }
 }
 
 /// An iterator over the elements of an array.
@@ -1134,6 +1148,16 @@ impl<'a, A, D> ElementsMut<'a, A, D> where D: Clone
     pub fn dim(&self) -> D
     {
         self.inner.dim.clone()
+    }
+
+    /// Return an indexed version of the iterator.
+    ///
+    /// Iterator element type is **(D, &'a mut A)**.
+    pub fn indexed(self) -> IndexedElementsMut<'a, A, D>
+    {
+        IndexedElementsMut{
+            inner: self.inner,
+        }
     }
 }
 
