@@ -176,6 +176,11 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
+    pub fn len(&self) -> usize
+    {
+        self.dim.size()
+    }
+
     /// Return the shape of the array.
     pub fn dim(&self) -> D {
         self.dim.clone()
