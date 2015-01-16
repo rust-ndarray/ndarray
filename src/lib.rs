@@ -1112,11 +1112,29 @@ pub struct Elements<'a, A, D> {
     inner: Baseiter<'a, A, D>,
 }
 
+impl<'a, A, D> Elements<'a, A, D> where D: Clone
+{
+    /// Return the base dimension of the array being iterated.
+    pub fn dim(&self) -> D
+    {
+        self.inner.dim.clone()
+    }
+}
+
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is **&'a mut A**.
 pub struct ElementsMut<'a, A, D> {
     inner: Baseiter<'a, A, D>,
+}
+
+impl<'a, A, D> ElementsMut<'a, A, D> where D: Clone
+{
+    /// Return the base dimension of the array being iterated.
+    pub fn dim(&self) -> D
+    {
+        self.inner.dim.clone()
+    }
 }
 
 /// An iterator over the indexes and elements of an array.
