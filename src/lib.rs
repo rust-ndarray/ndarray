@@ -54,7 +54,8 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 ///
 /// The array can be a container of numerical use, supporting
 /// all mathematical operators by applying them elementwise -- but it can
-/// store any kind of value.
+/// store any kind of value. It cannot grow or shrink, but can be sliced into
+/// views of parts of its data.
 ///
 /// The array is both a view and a shared owner of its data. Some methods,
 /// for example [*slice()*](#method.slice), merely change the view of the data,
@@ -80,7 +81,9 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 ///
 /// Arrays support limited *broadcasting*, where arithmetic operations with
 /// array operands of different sizes can be carried out by repeating the
-/// elements of the smaller dimension array.
+/// elements of the smaller dimension array. See
+/// [*.broadcast_iter()*](#method.broadcast_iter) for a more detailed
+/// description.
 ///
 /// ```
 /// use ndarray::arr2;
@@ -177,6 +180,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
+    /// Return the total number of elements in the Array.
     pub fn len(&self) -> usize
     {
         self.dim.size()
@@ -336,6 +340,17 @@ impl<A, D> Array<A, D> where D: Dimension
     /// axes that are to be repeated.
     ///
     /// See broadcasting documentation for Numpy for more information.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use ndarray::arr1;
+    ///
+    /// assert!(
+    ///     arr1(&[1., 0.]).broadcast_iter((10, 2)).unwrap().count()
+    ///     == 20
+    /// );
+    /// ```
     pub fn broadcast_iter<'a, E: Dimension>(&'a self, dim: E)
         -> Option<Elements<'a, A, E>>
     {
@@ -471,7 +486,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.map(|&x| (x / 2.) as isize)
+    ///     a.map(|&x| (x / 2.) as i32)
     ///     == arr2(&[[0, 1], [1, 2]])
     /// );
     /// ```
@@ -632,9 +647,13 @@ impl<A, D> Array<A, D> where D: Dimension
     /// **Panics** if sizes are incompatible.
     ///
     /// ```
-    /// use ndarray::arr1;
+    /// use ndarray::{arr1, arr2};
     ///
-    /// arr1::<f32>(&[1., 2., 3., 4.]).reshape((2, 2));
+    /// assert!(
+    ///     arr1(&[1., 2., 3., 4.]).reshape((2, 2))
+    ///     == arr2(&[[1., 2.],
+    ///               [3., 4.]])
+    /// );
     /// ```
     pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> where A: Clone
     {
@@ -790,6 +809,18 @@ impl<A, D> Array<A, D> where
     D: RemoveAxis,
 {
     /// Return mean along **axis**.
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr2};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// assert!(
+    ///     a.mean(0) == arr1(&[2.0, 3.0]) &&
+    ///     a.mean(1) == arr1(&[1.5, 3.5])
+    /// );
+    /// ```
+    ///
     ///
     /// **Panics** if **axis** is out of bounds.
     pub fn mean(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
