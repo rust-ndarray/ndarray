@@ -403,6 +403,17 @@ macro_rules! impl_shrink_recursive(
 // 12 is the maximum number for having the Eq trait from libstd
 impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
 
+impl RemoveAxis for Vec<Ix>
+{
+    type Smaller = Vec<Ix>;
+    fn remove_axis(&self, axis: usize) -> Vec<Ix>
+    {
+        let mut res = self.clone();
+        res.remove(axis);
+        res
+    }
+}
+
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix
 // [:,0] -- first column of matrix
