@@ -12,7 +12,7 @@ fn serial_many_dim()
     {
         let a = arr0::<f32>(2.72);
         println!("{:?}", a);
-        let serial = json::encode(&a);
+        let serial = json::encode(&a).unwrap();
         println!("{:?}", serial);
         let res = json::decode::<Array<f32, _>>(&serial[]);
         println!("{:?}", res);
@@ -22,7 +22,7 @@ fn serial_many_dim()
     {
         let a = arr1::<f32>(&[2.72, 1., 2.]);
         println!("{:?}", a);
-        let serial = json::encode(&a);
+        let serial = json::encode(&a).unwrap();
         println!("{:?}", serial);
         let res = json::decode::<Array<f32, _>>(&serial[]);
         println!("{:?}", res);
@@ -32,7 +32,7 @@ fn serial_many_dim()
     {
         let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]]);
         println!("{:?}", a);
-        let serial = json::encode(&a);
+        let serial = json::encode(&a).unwrap();
         println!("{:?}", serial);
         let res = json::decode::<Array<f32, _>>(&serial[]);
         println!("{:?}", res);
@@ -48,7 +48,7 @@ fn serial_many_dim()
         let mut a = Array::range(0., 32.0_f32).reshape((2, 2, 2, 4));
         a.islice(&[Si(0, None, -1), S, S, Si(0, Some(2), 1)]);
         println!("{:?}", a);
-        let serial = json::encode(&a);
+        let serial = json::encode(&a).unwrap();
         println!("{:?}", serial);
         let res = json::decode::<Array<f32, _>>(&serial[]);
         println!("{:?}", res);

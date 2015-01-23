@@ -25,7 +25,7 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<A: Float + fmt::Show, D: ndarray::Dimension>
+fn test_oper_arr<A: Float + fmt::Debug, D: ndarray::Dimension>
     (op: &str, mut aa: Array<A,D>, bb: Array<A, D>, cc: Array<A, D>)
 {
     match op {

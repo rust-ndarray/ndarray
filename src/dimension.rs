@@ -418,7 +418,7 @@ impl RemoveAxis for Vec<Ix>
 // [0,:] -- first row of matrix
 // [:,0] -- first column of matrix
 
-#[derive(Clone, PartialEq, Eq, Hash, Show)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 /// A slice, a description of a range of an array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
