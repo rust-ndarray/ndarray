@@ -3,7 +3,6 @@
 //! A few linear algebra operations on two-dimensional arrays.
 
 use libnum::{Num, zero, one, Zero, One};
-use std::iter;
 use std::num::Float;
 #[cfg(not(nocomplex))]
 use libnum::Complex;
@@ -198,13 +197,22 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
     L
 }
 
+fn vec_elem<A: Copy>(elt: A, n: usize) -> Vec<A>
+{
+    let mut v = Vec::with_capacity(n);
+    for _ in (0..n) {
+        v.push(elt);
+    }
+    v
+}
+
 /// Solve *L x = b* where *L* is a lower triangular matrix.
 pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 {
     let (m, n) = l.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as usize).collect();
+    let mut x = vec_elem(zero::<A>(), m as usize);
     for (i, bi) in b.indexed_iter() {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
         let mut b_lx_sum = bi.clone();
@@ -222,7 +230,7 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = u.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x: Vec<_> = iter::repeat(zero::<A>()).take(m as usize).collect();
+    let mut x = vec_elem(zero::<A>(), m as usize);
     for i in (0..m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
         let mut b_ux_sum = b[i].clone();
