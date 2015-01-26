@@ -219,7 +219,7 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
         for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i as usize) {
             b_lx_sum = b_lx_sum - (*lij) * (*xj)
         }
-        x.as_mut_slice()[i as usize] = b_lx_sum / l[(i, i)];
+        x[i as usize] = b_lx_sum / l[(i, i)];
     }
     Array::from_vec(x)
 }
@@ -237,7 +237,7 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
         for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take((m - i - 1) as usize) {
             b_ux_sum = b_ux_sum - (*uij) * (*xj);
         }
-        x.as_mut_slice()[i as usize] = b_ux_sum / u[(i, i)];
+        x[i as usize] = b_ux_sum / u[(i, i)];
     }
     Array::from_vec(x)
 }
