@@ -32,7 +32,7 @@ pub trait ComplexField : Copy + Field
     fn conjugate(self) -> Self { self }
     fn sqrt_real(self) -> Self;
     #[inline]
-    fn is_complex(_mark: Option<Self>) -> bool { false }
+    fn is_complex() -> bool { false }
 }
 
 impl ComplexField for f32
@@ -54,7 +54,7 @@ impl<A: Num + Float> ComplexField for Complex<A>
     fn conjugate(self) -> Complex<A> { self.conj() }
     fn sqrt_real(self) -> Complex<A> { Complex::new(self.re.sqrt(), zero()) }
     #[inline]
-    fn is_complex(_mark: Option<Complex<A>>) -> bool { true }
+    fn is_complex() -> bool { true }
 }
 
 /// Return the identity matrix of dimension *n*.
@@ -102,7 +102,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     // 
     let mut aT = a.clone();
     aT.swap_axes(0, 1);
-    if ComplexField::is_complex(None::<A>) {
+    if <A as ComplexField>::is_complex() {
         // conjugate transpose
         for elt in aT.iter_mut() {
             *elt = elt.conjugate();
@@ -117,7 +117,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     let z = subst_fw(&L, &rhs);
 
     // Solve L.T x = z
-    if ComplexField::is_complex(None::<A>) {
+    if <A as ComplexField>::is_complex() {
         // conjugate transpose
         // only elements below the diagonal have imag part
         let (m, _) = L.dim();
