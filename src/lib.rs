@@ -159,6 +159,22 @@ impl<A, D> Array<A, D> where D: Dimension
     }
 
     /// Construct an Array with copies of **elem**.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use ndarray::Array;
+    /// use ndarray::arr3;
+    ///
+    /// let a = Array::from_elem((2, 2, 2), 1.);
+    ///
+    /// assert!(
+    ///     a == arr3(&[[[1., 1.],
+    ///                  [1., 1.]],
+    ///                 [[1., 1.],
+    ///                  [1., 1.]]])
+    /// );
+    /// ```
     pub fn from_elem(dim: D, elem: A) -> Array<A, D> where A: Clone
     {
         let v = std::iter::repeat(elem).take(dim.size()).collect();
@@ -731,11 +747,12 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 }
 
 /// Slice or fixed-size array used for array initialization
-pub trait ArrInit<T> {
+pub unsafe trait ArrInit<T> {
     fn as_init_slice(&self) -> &[T];
+    fn is_fixed_size() -> bool { false }
 }
 
-impl<T> ArrInit<T> for [T]
+unsafe impl<T> ArrInit<T> for [T]
 {
     fn as_init_slice(&self) -> &[T]
     {
@@ -743,16 +760,22 @@ impl<T> ArrInit<T> for [T]
     }
 }
 
-impl<T> ArrInit<T> for [T;  0] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  1] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  2] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  3] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  4] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  5] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  6] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  7] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  8] { fn as_init_slice(&self) -> &[T] { &self[] } }
-impl<T> ArrInit<T> for [T;  9] { fn as_init_slice(&self) -> &[T] { &self[] } }
+macro_rules! impl_arr_init {
+    (__impl $n: expr) => (
+        unsafe impl<T> ArrInit<T> for [T;  $n] {
+            fn as_init_slice(&self) -> &[T] { &self[] }
+            fn is_fixed_size() -> bool { true }
+        }
+    );
+    () => ();
+    ($n: expr, $($m:expr,)*) => (
+        impl_arr_init!(__impl $n);
+        impl_arr_init!($($m,)*);
+    )
+
+}
+
+impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 
 /// Return a two-dimensional array with elements from **xs**.
 ///
@@ -769,19 +792,62 @@ impl<T> ArrInit<T> for [T;  9] { fn as_init_slice(&self) -> &[T] { &self[] } }
 /// ```
 pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
 {
+    // FIXME: Simplify this when V is fix size array
     let (m, n) = (xs.len() as Ix,
                   xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs.iter() {
         let snd = snd.as_init_slice();
-        assert!(snd.len() as Ix == n);
+        assert!(<V as ArrInit<A>>::is_fixed_size() || snd.len() as Ix == n);
         result.extend(snd.iter().map(|x| x.clone()))
     }
     unsafe {
         Array::from_vec_dim(dim, result)
     }
 }
+
+/// Return a three-dimensional array with elements from **xs**.
+///
+/// **Panics** if the slices are not all of the same length.
+///
+/// ```
+/// use ndarray::arr3;
+///
+/// let a = arr3(&[[[1, 2],
+///                 [3, 4]],
+///                [[5, 6],
+///                 [7, 8]],
+///                [[9, 0],
+///                 [1, 2]]]);
+/// assert!(
+///     a.shape() == [3, 2, 2]
+/// );
+/// ```
+pub fn arr3<A: Clone, V: ArrInit<U>, U: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix, Ix)>
+{
+    // FIXME: Simplify this when U/V are fix size arrays
+    let m = xs.len() as Ix;
+    let fst = xs.get(0).map(|snd| snd.as_init_slice());
+    let thr = fst.and_then(|elt| elt.get(0).map(|elt2| elt2.as_init_slice()));
+    let n = fst.map_or(0, |v| v.len() as Ix);
+    let o = thr.map_or(0, |v| v.len() as Ix);
+    let dim = (m, n, o);
+    let mut result = Vec::<A>::with_capacity(dim.size());
+    for snd in xs.iter() {
+        let snd = snd.as_init_slice();
+        assert!(<V as ArrInit<U>>::is_fixed_size() || snd.len() as Ix == n);
+        for thr in snd.iter() {
+            let thr = thr.as_init_slice();
+            assert!(<U as ArrInit<A>>::is_fixed_size() || thr.len() as Ix == o);
+            result.extend(thr.iter().map(|x| x.clone()))
+        }
+    }
+    unsafe {
+        Array::from_vec_dim(dim, result)
+    }
+}
+
 
 impl<A, D> Array<A, D> where
     A: Clone + Add<Output=A>,
