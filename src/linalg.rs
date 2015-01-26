@@ -163,7 +163,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
             // L_2,1 L_1,1  L²_2,1 + L²_2,2
             // L_3,1 L_1,1  L_3,1 L_2,1 + L_3,2 L_2,2  L²_3,1 + L²_3,2 + L²_3,3
             // .. )
-            let mut lik_ljk_sum = z.clone();
+            let mut lik_ljk_sum = z;
             {
                 // L_ik for k = 0 .. j
                 // L_jk for k = 0 .. j
@@ -181,7 +181,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
         // Diagonal where i == j
         // L_jj = Sqrt[ A_jj - Sum(k = 1 .. j) L_jk L_jk ]
         let j = i;
-        let mut ljk_sum = z.clone();
+        let mut ljk_sum = z;
         // L_jk for k = 0 .. j
         for &ljk in L.row_iter(j).take(j as usize) {
             ljk_sum = ljk_sum + ljk * ljk.conjugate();
@@ -191,7 +191,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
         // After the diagonal
         // L_ij = 0 for j > i
         for j in (i + 1..n) {
-            L[(i, j)] = z.clone();
+            L[(i, j)] = z;
         }
     }
     L
@@ -215,7 +215,7 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
     let mut x = vec_elem(zero::<A>(), m as usize);
     for (i, bi) in b.indexed_iter() {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
-        let mut b_lx_sum = bi.clone();
+        let mut b_lx_sum = *bi;
         for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i as usize) {
             b_lx_sum = b_lx_sum - (*lij) * (*xj)
         }
@@ -233,7 +233,7 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     let mut x = vec_elem(zero::<A>(), m as usize);
     for i in (0..m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
-        let mut b_ux_sum = b[i].clone();
+        let mut b_ux_sum = b[i];
         for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take((m - i - 1) as usize) {
             b_ux_sum = b_ux_sum - (*uij) * (*xj);
         }
