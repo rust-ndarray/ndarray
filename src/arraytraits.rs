@@ -76,7 +76,7 @@ impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
 {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error>
     {
-        s.emit_struct("Array", 0, |e| {
+        s.emit_struct("Array", 3, |e| {
             try!(e.emit_struct_field("v", 0, |e| {
                 ARRAY_FORMAT_VERSION.encode(e)
             }));
@@ -105,7 +105,7 @@ impl<A: Decodable, D: Dimension + Decodable>
 {
     fn decode<S: Decoder>(d: &mut S) -> Result<Array<A, D>, S::Error>
     {
-        d.read_struct("Array", 0, |d| {
+        d.read_struct("Array", 3, |d| {
             let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));
             if version > ARRAY_FORMAT_VERSION {
                 return Err(d.error("unknown array version"))

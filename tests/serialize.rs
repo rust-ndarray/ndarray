@@ -11,9 +11,8 @@ fn serial_many_dim()
 {
     {
         let a = arr0::<f32>(2.72);
-        println!("{:?}", a);
         let serial = json::encode(&a).unwrap();
-        println!("{:?}", serial);
+        println!("Encode {:?} => {:?}", a, serial);
         let res = json::decode::<Array<f32, _>>(&serial[]);
         println!("{:?}", res);
         assert_eq!(a, res.unwrap());
