@@ -1,3 +1,9 @@
+#![feature(
+    core,
+    hash,
+    alloc,
+    rand,
+    )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
