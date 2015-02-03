@@ -70,6 +70,18 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
 }
 
 // NOTE: We can impl other fmt traits here
+impl<'a, A: fmt::Display, D: Dimension> fmt::Display for Array<A, D>
+{
+    /// Format the array using `Display` and apply the formatting parameters used
+    /// to each element.
+    ///
+    /// The array is shown in multiline style, unless the alternate form 
+    /// is used -- i.e. `{:#}`.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        format_array(self, f, |f, elt| elt.fmt(f))
+    }
+}
+
 impl<'a, A: fmt::Debug, D: Dimension> fmt::Debug for Array<A, D>
 {
     /// Format the array using `Debug` and apply the formatting parameters used
