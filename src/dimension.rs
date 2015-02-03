@@ -53,7 +53,7 @@ pub unsafe trait Dimension : Clone + Eq {
         {
             let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
-            for rs in it {
+            for rs in it.by_ref() {
                 *rs = 1;
                 break;
             }
@@ -382,7 +382,7 @@ impl RemoveAxis for ($from $(,$more)*)
                 if i == axis {
                     continue;
                 }
-                for rr in it {
+                for rr in it.by_ref() {
                     *rr = d;
                     break
                 }
