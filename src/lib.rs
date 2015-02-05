@@ -2,7 +2,6 @@
     core,
     hash,
     alloc,
-    rand,
     )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
@@ -22,7 +21,6 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitOr,
     BitXor,
 };
-use std::rand::{Rand, Rng};
 
 pub use dimension::{Dimension, RemoveAxis, Si, S};
 use dimension::stride_offset;
@@ -200,15 +198,6 @@ impl<A, D> Array<A, D> where D: Dimension
             data: std::rc::Rc::new(v),
             strides: dim.default_strides(),
             dim: dim
-        }
-    }
-
-    /// Construct an Array with random elements
-    pub fn random<R: Rng>(dim: D, rng: &mut R) -> Array<A, D> where A: Rand
-    {
-        unsafe {
-            let sz = dim.size();
-            Array::from_vec_dim(dim, rng.gen_iter().take(sz).collect())
         }
     }
 
