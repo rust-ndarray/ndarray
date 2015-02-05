@@ -357,8 +357,8 @@ unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) { fn 
 unsafe impl Dimension for Vec<Ix>
 {
     fn ndim(&self) -> usize { self.len() }
-    fn slice(&self) -> &[Ix] { &self[] }
-    fn slice_mut(&mut self) -> &mut [Ix] { self.as_mut_slice() }
+    fn slice(&self) -> &[Ix] { self }
+    fn slice_mut(&mut self) -> &mut [Ix] { self }
 }
 
 /// Helper trait to define a larger-than relation for array shapes:

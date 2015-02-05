@@ -246,7 +246,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Array's view.
     pub fn raw_data<'a>(&'a self) -> &'a [A]
     {
-        &(*self.data)[]
+        &self.data
     }
 
     /// Return a sliced array.
@@ -669,7 +669,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// while it is mutably borrowed.
     pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A] where A: Clone
     {
-        self.data.make_unique().as_mut_slice()
+        self.data.make_unique()
     }
 
 
@@ -769,7 +769,7 @@ unsafe impl<T> ArrInit<T> for [T]
 macro_rules! impl_arr_init {
     (__impl $n: expr) => (
         unsafe impl<T> ArrInit<T> for [T;  $n] {
-            fn as_init_slice(&self) -> &[T] { &self[] }
+            fn as_init_slice(&self) -> &[T] { self }
             fn is_fixed_size() -> bool { true }
         }
     );

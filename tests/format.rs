@@ -30,6 +30,6 @@ fn formatting()
 
     let c = arr1::<f32>(&[1.1, 2.2, 33., 440.]);
     let s = format!("{:.3e}", c);
-    assert_eq!(&s[],
+    assert_eq!(s,
                "[1.100e0, 2.200e0, 3.300e1, 4.400e2]");
 }

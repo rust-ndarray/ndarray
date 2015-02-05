@@ -243,11 +243,11 @@ fn dyn_dimension()
     let a = arr2(&[[1., 2.], [3., 4.0]]).reshape(vec![2, 2]);
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
 
-    let mut dim = [1; 1024].to_vec();
-    dim.as_mut_slice()[16] = 4;
-    dim.as_mut_slice()[17] = 3;
+    let mut dim = vec![1; 1024];
+    dim[16] = 4;
+    dim[17] = 3;
     let z = Array::<f32, _>::zeros(dim.clone());
-    assert_eq!(z.shape(), &dim[]);
+    assert_eq!(z.shape(), dim);
 }
 
 #[test]
