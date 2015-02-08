@@ -23,7 +23,6 @@ impl<'a, A, D: Dimension> Index<D> for Array<A, D>
 
 impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
 {
-    type Output = A;
     #[inline]
     /// Access the element at **index** mutably.
     ///
