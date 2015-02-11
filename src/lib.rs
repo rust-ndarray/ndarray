@@ -1056,7 +1056,9 @@ impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
-impl<A, D> Array<A, D> where A: Clone + $trt<A, Output=A>, D: Dimension
+impl<A, D> Array<A, D> where
+    A: Clone + $trt<A, Output=A>,
+    D: Dimension,
 {
     /// Perform an elementwise arithmetic operation between **self** and **other**,
     /// *in place*.
@@ -1089,8 +1091,10 @@ impl<A, D> Array<A, D> where A: Clone + $trt<A, Output=A>, D: Dimension
     }
 }
 
-impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D>
-where A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension
+impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D> where
+    A: Clone + $trt<A, Output=A>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = Array<A, D>;
     /// Perform an elementwise arithmetic operation between **self** and **other**,
@@ -1116,8 +1120,10 @@ where A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension
     }
 }
 
-impl<'a, A: Clone + $trt<A, Output=A>, D: Dimension, E: Dimension>
-$trt<&'a Array<A, E>> for &'a Array<A, D>
+impl<'a, A, D, E> $trt<&'a Array<A, E>> for &'a Array<A, D> where
+    A: Clone + $trt<A, Output=A>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = Array<A, D>;
     /// Perform an elementwise arithmetic operation between **self** and **other**,
