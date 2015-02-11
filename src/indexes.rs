@@ -22,6 +22,8 @@ impl<D: Dimension> Indexes<D>
 }
 
 /// Like `range`, except with array indexes.
+///
+/// **Deprecated, use ranges instead.**
 #[inline]
 pub fn ixrange(a: Ix, b: Ix) -> Indexes<Ix>
 {
@@ -34,6 +36,8 @@ pub fn ixrange(a: Ix, b: Ix) -> Indexes<Ix>
 impl Indexes<()>
 {
     /// Create an iterator over the array shape `a`.
+    ///
+    /// **Deprecated**
     pub fn new1(a: Ix) -> Indexes<Ix>
     {
         Indexes {
@@ -43,6 +47,8 @@ impl Indexes<()>
     }
 
     /// Create an iterator over the array shape `(a, b)`.
+    ///
+    /// **Deprecated**
     pub fn new2(a: Ix, b: Ix) -> Indexes<(Ix, Ix)>
     {
         Indexes {
@@ -52,6 +58,8 @@ impl Indexes<()>
     }
 
     /// Create an iterator over the array shape `(a, b, c)`.
+    ///
+    /// **Deprecated**
     pub fn new3(a: Ix, b: Ix, c: Ix) -> Indexes<(Ix, Ix, Ix)>
     {
         Indexes {
