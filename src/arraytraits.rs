@@ -2,6 +2,7 @@ use serialize::{Encodable, Encoder, Decodable, Decoder};
 
 use std::hash;
 use std::iter::FromIterator;
+use std::iter::IntoIterator;
 use std::ops::{
     Index,
     IndexMut,
@@ -50,16 +51,16 @@ Eq for Array<A, D> {}
 
 impl<A> FromIterator<A> for Array<A, Ix>
 {
-    fn from_iter<I: Iterator<Item=A>>(it: I) -> Array<A, Ix>
+    fn from_iter<I: IntoIterator<Item=A>>(it: I) -> Array<A, Ix>
     {
-        Array::from_iter(it)
+        Array::from_iter(it.into_iter())
     }
 }
 
-impl<S: hash::Writer + hash::Hasher, A: hash::Hash<S>, D: Dimension>
-hash::Hash<S> for Array<A, D>
+impl<A: hash::Hash, D: Dimension>
+hash::Hash for Array<A, D>
 {
-    fn hash(&self, state: &mut S)
+    fn hash<S: hash::Hasher>(&self, state: &mut S)
     {
         self.shape().hash(state);
         for elt in self.iter() {

@@ -7,13 +7,13 @@ use super::{Elements, ElementsMut, IndexedElements, IndexedElementsMut};
 /// Base for array iterators
 ///
 /// Iterator element type is `&'a A`.
-pub struct Baseiter<'a, A, D> {
+pub struct Baseiter<'a, A: 'a, D> {
     // Can have pub fields because it is not itself pub.
     pub ptr: *mut A,
     pub dim: D,
     pub strides: D,
     pub index: Option<D>,
-    pub life: marker::ContravariantLifetime<'a>,
+    pub life: marker::PhantomData<&'a A>,
 }
 
 
@@ -35,7 +35,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
             index: len.first_index(),
             dim: len,
             strides: stride,
-            life: marker::ContravariantLifetime,
+            life: marker::PhantomData,
         }
     }
 }
@@ -124,7 +124,7 @@ impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D>
             dim: self.dim.clone(),
             strides: self.strides.clone(),
             index: self.index.clone(),
-            life: self.life
+            life: self.life,
         }
     }
 }

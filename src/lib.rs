@@ -1216,7 +1216,7 @@ Not for Array<A, D>
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is **&'a A**.
-pub struct Elements<'a, A, D> {
+pub struct Elements<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
@@ -1246,7 +1246,7 @@ impl<'a, A, D> Elements<'a, A, D> where D: Clone
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is **&'a mut A**.
-pub struct ElementsMut<'a, A, D> {
+pub struct ElementsMut<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
@@ -1272,13 +1272,13 @@ impl<'a, A, D> ElementsMut<'a, A, D> where D: Clone
 /// An iterator over the indexes and elements of an array.
 ///
 /// Iterator element type is **(D, &'a A)**.
-pub struct IndexedElements<'a, A, D> {
+pub struct IndexedElements<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
 /// An iterator over the indexes and elements of an array.
 ///
 /// Iterator element type is **(D, &'a mut A)**.
-pub struct IndexedElementsMut<'a, A, D> {
+pub struct IndexedElementsMut<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
