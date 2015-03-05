@@ -8,9 +8,9 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
                                     mut format: F) -> fmt::Result where
     F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
 {
-    let sz = view.dim.slice().len();
+    let ndim = view.dim.slice().len();
     /* private nowadays
-    if sz > 0 && f.width.is_none() {
+    if ndim > 0 && f.width.is_none() {
         f.width = Some(4)
     }
     */
@@ -19,22 +19,23 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
         None => view.dim.clone(),
         Some(ix) => ix,
     };
-    for _ in (0..sz) {
+    for _ in (0..ndim) {
         try!(write!(f, "["));
     }
     let mut first = true;
     // Simply use the indexed iterator, and take the index wraparounds
     // as cues for when to add []'s and how many to add.
     for (index, elt) in view.indexed_iter() {
+        let take_n = if ndim == 0 { 1 } else { ndim - 1 };
         let mut update_index = false;
-        for (i, (a, b)) in index.slice().iter().take(sz-1)
+        for (i, (a, b)) in index.slice().iter().take(take_n)
                         .zip(last_index.slice().iter())
                         .enumerate()
         {
             if a != b {
                 // New row.
                 // # of ['s needed
-                let n = sz - i - 1;
+                let n = ndim - i - 1;
                 for _ in (0..n) {
                     try!(write!(f, "]"));
                 }
@@ -42,7 +43,7 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
                 if f.flags() & (1 << FlagAlternate) == 0 {
                     try!(write!(f, "\n"));
                 }
-                for _ in (0..sz - n) {
+                for _ in (0..ndim - n) {
                     try!(write!(f, " "));
                 }
                 for _ in (0..n) {
@@ -63,7 +64,7 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
             last_index = index;
         }
     }
-    for _ in (0..sz) {
+    for _ in (0..ndim) {
         try!(write!(f, "]"));
     }
     Ok(())
