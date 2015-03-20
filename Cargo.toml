@@ -12,4 +12,4 @@ git = "https://github.com/rust-lang/num"
 
 [dependencies]
 
-rustc-serialize = "0.2"
+rustc-serialize = "*"
