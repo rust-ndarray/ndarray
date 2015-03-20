@@ -1,7 +1,7 @@
 #![feature(
     core,
-    hash,
     alloc,
+    step_by,
     )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
@@ -150,7 +150,7 @@ impl Array<f32, Ix>
     /// Create a one-dimensional Array from interval **[begin, end)**
     pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
     {
-        Array::from_iter(std::iter::count(begin, 1.0).take_while(|&x| x < end))
+        Array::from_iter((begin..).step_by(1.).take_while(|&x| x < end))
     }
 }
 
