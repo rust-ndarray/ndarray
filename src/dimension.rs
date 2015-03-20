@@ -197,8 +197,8 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 ///
 /// **Panics** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
-pub fn do_sub<A, D: Dimension, P: Copy + PtrExt<Target=A>>(dims: &mut D, ptr: &mut P, strides: &D,
-                           axis: usize, index: Ix)
+pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
+                               axis: usize, index: Ix)
 {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
