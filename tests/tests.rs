@@ -1,3 +1,4 @@
+#![feature(test)]
 extern crate test;
 extern crate ndarray;
 

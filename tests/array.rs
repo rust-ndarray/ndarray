@@ -1,9 +1,7 @@
 #![allow(non_snake_case)]
 
-extern crate test;
 extern crate ndarray;
 
-use std::rand;
 use ndarray::{Array, S, Si};
 use ndarray::{arr0, arr1, arr2};
 use ndarray::Indexes;
