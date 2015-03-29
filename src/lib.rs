@@ -11,8 +11,8 @@
 //!
 
 #[cfg(not(nocomplex))]
-extern crate "num" as libnum;
-extern crate "rustc-serialize" as serialize;
+extern crate num as libnum;
+extern crate rustc_serialize as serialize;
 
 use std::mem;
 use std::num::Float;
