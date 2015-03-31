@@ -41,7 +41,7 @@ fn test_add()
     a.iadd(&t);
 }
 
-#[test] #[should_fail]
+#[test] #[should_panic]
 fn test_add_incompat()
 {
     let a_dim = (2, 4, 2, 2);
