@@ -13,3 +13,5 @@ git = "https://github.com/rust-lang/num"
 [dependencies]
 
 rustc-serialize = "*"
+
+itertools = "0.2.2"

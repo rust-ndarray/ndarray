@@ -1,7 +1,6 @@
 #![feature(
     core,
     alloc,
-    step_by,
     )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
@@ -10,6 +9,7 @@
 //! n-dimensional container similar to numpy's ndarray.
 //!
 
+extern crate itertools as it;
 #[cfg(not(nocomplex))]
 extern crate num as libnum;
 extern crate rustc_serialize as serialize;
@@ -150,7 +150,10 @@ impl Array<f32, Ix>
     /// Create a one-dimensional Array from interval **[begin, end)**
     pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
     {
-        Array::from_iter((begin..).step_by(1.).take_while(|&x| x < end))
+        let mut n = (end - begin) as usize;
+        Array::from_iter(it::linspace(begin,
+                                      begin + 1. * ((n - 1) as f32),
+                                      n))
     }
 }
 
