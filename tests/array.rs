@@ -245,7 +245,7 @@ fn dyn_dimension()
     dim[16] = 4;
     dim[17] = 3;
     let z = Array::<f32, _>::zeros(dim.clone());
-    assert_eq!(z.shape(), dim);
+    assert_eq!(z.shape(), &dim[..]);
 }
 
 #[test]

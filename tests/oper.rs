@@ -1,10 +1,11 @@
 extern crate ndarray;
+extern crate num as libnum;
 
 use ndarray::Array;
 use ndarray::{arr0, arr1, arr2};
 
 use std::fmt;
-use std::num::Float;
+use libnum::Float;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
 {
