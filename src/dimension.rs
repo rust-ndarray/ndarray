@@ -1,6 +1,6 @@
 use std::mem;
+use std::slice;
 use std::num::SignedInt;
-use std::raw;
 
 use super::{Ix, Ixs};
 
@@ -24,21 +24,15 @@ pub fn stride_as_int(stride: Ix) -> isize
 /// unsafe trait due to how the assumptions in the default impls work.
 pub unsafe trait Dimension : Clone + Eq {
     fn ndim(&self) -> usize;
-    fn slice<'a>(&'a self) -> &'a [Ix] {
+    fn slice(&self) -> &[Ix] {
         unsafe {
-            mem::transmute(raw::Slice {
-                data: self as *const _ as *const Ix,
-                len: self.ndim(),
-            })
+            slice::from_raw_parts(self as *const _ as *const Ix, self.ndim())
         }
     }
 
-    fn slice_mut<'a>(&'a mut self) -> &'a mut [Ix] {
+    fn slice_mut(&mut self) -> &mut [Ix] {
         unsafe {
-            mem::transmute(raw::Slice {
-                data: self as *mut _ as *const Ix,
-                len: self.ndim(),
-            })
+            slice::from_raw_parts_mut(self as *mut _ as *mut Ix, self.ndim())
         }
     }
 
