@@ -1,6 +1,4 @@
-use std::mem;
 use std::slice;
-use std::num::SignedInt;
 
 use super::{Ix, Ixs};
 

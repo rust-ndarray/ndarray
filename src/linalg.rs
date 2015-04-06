@@ -3,8 +3,7 @@
 //! A few linear algebra operations on two-dimensional arrays.
 
 use libnum::{Num, zero, one, Zero, One};
-use std::num::Float;
-#[cfg(not(nocomplex))]
+use libnum::Float;
 use libnum::Complex;
 use std::ops::{Add, Sub, Mul, Div};
 

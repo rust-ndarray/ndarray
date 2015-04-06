@@ -1,5 +1,4 @@
 #![feature(
-    core,
     alloc,
     )]
 #![crate_name="ndarray"]
@@ -15,7 +14,7 @@ extern crate num as libnum;
 extern crate rustc_serialize as serialize;
 
 use std::mem;
-use std::num::Float;
+use libnum::Float;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
     BitOr,
@@ -150,9 +149,10 @@ impl Array<f32, Ix>
     /// Create a one-dimensional Array from interval **[begin, end)**
     pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
     {
-        let mut n = (end - begin) as usize;
+        let n = (end - begin) as usize;
+        let span = if n > 0 { (n - 1) as f32 } else { 0. };
         Array::from_iter(it::linspace(begin,
-                                      begin + 1. * ((n - 1) as f32),
+                                      begin + span,
                                       n))
     }
 }
