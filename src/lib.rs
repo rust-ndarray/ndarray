@@ -26,7 +26,6 @@ pub use si::{Si, S, SliceRange};
 use dimension::stride_offset;
 
 pub use indexes::Indexes;
-pub use indexes::ixrange;
 
 use iterators::Baseiter;
 
