@@ -8,7 +8,7 @@ use std::ops::{
     IndexMut,
 };
 
-use super::{Array, Dimension, Ix};
+use super::{Array, Dimension, Ix, Elements, ElementsMut};
 
 impl<'a, A, D: Dimension> Index<D> for Array<A, D>
 {
@@ -54,6 +54,31 @@ impl<A> FromIterator<A> for Array<A, Ix>
     fn from_iter<I: IntoIterator<Item=A>>(it: I) -> Array<A, Ix>
     {
         Array::from_iter(it.into_iter())
+    }
+}
+
+impl<'a, A, D> IntoIterator for &'a Array<A, D> where
+    D: Dimension,
+{
+    type Item = &'a A;
+    type IntoIter = Elements<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        self.iter()
+    }
+}
+
+impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
+    A: Clone,
+    D: Dimension,
+{
+    type Item = &'a mut A;
+    type IntoIter = ElementsMut<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        self.iter_mut()
     }
 }
 
