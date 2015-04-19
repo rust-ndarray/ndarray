@@ -5,6 +5,7 @@ extern crate ndarray;
 use ndarray::{Array, S, Si};
 use ndarray::{arr0, arr1, arr2};
 use ndarray::Indexes;
+use ndarray::SliceRange;
 
 #[test]
 fn test_matmul_rcarray()
@@ -39,7 +40,7 @@ fn test_slice()
         *elt = i;
     }
 
-    let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
+    let vi = A.slice(&[(1..).slice(), (0..).step(2)]);
     assert_eq!(vi.dim(), (2, 2));
     let vi = A.slice(&[S, S]);
     assert_eq!(vi.shape(), A.shape());

@@ -21,7 +21,8 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitXor,
 };
 
-pub use dimension::{Dimension, RemoveAxis, Si, S};
+pub use dimension::{Dimension, RemoveAxis};
+pub use si::{Si, S, SliceRange};
 use dimension::stride_offset;
 
 pub use indexes::Indexes;
@@ -35,6 +36,7 @@ mod arrayformat;
 mod dimension;
 mod indexes;
 mod iterators;
+mod si;
 //mod macros;
 
 // NOTE: In theory, the whole library should compile
