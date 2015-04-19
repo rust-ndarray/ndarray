@@ -332,9 +332,9 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Return an iterator of references to the elements of the array.
     ///
     /// Iterator element type is **(D, &'a A)**.
-    pub fn indexed_iter<'a>(&'a self) -> IndexedElements<'a, A, D>
+    pub fn indexed_iter<'a>(&'a self) -> Indexed<Elements<'a, A, D>>
     {
-        IndexedElements { inner: self.base_iter() }
+        self.iter().indexed()
     }
 
     /// Collapse dimension **axis** into length one,
@@ -605,10 +605,9 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is **(D, &'a mut A)**.
-    pub fn indexed_iter_mut<'a>(&'a mut self) -> IndexedElementsMut<'a, A, D> where A: Clone
+    pub fn indexed_iter_mut<'a>(&'a mut self) -> Indexed<ElementsMut<'a, A, D>> where A: Clone
     {
-        self.ensure_unique();
-        IndexedElementsMut { inner: self.base_iter() }
+        self.iter_mut().indexed()
     }
 
     /// Return an iterator of mutable references into the sliced view
@@ -1240,10 +1239,10 @@ impl<'a, A, D> Elements<'a, A, D> where D: Clone
     /// **Note:** the indices run over the logical dimension of the iterator,
     /// i.e. a *.slice_iter()* will yield indices relative to the slice, not the
     /// base array.
-    pub fn indexed(self) -> IndexedElements<'a, A, D>
+    pub fn indexed(self) -> Indexed<Elements<'a, A, D>>
     {
-        IndexedElements {
-            inner: self.inner,
+        Indexed {
+            inner: self,
         }
     }
 }
@@ -1266,24 +1265,17 @@ impl<'a, A, D> ElementsMut<'a, A, D> where D: Clone
     /// Return an indexed version of the iterator.
     ///
     /// Iterator element type is **(D, &'a mut A)**.
-    pub fn indexed(self) -> IndexedElementsMut<'a, A, D>
+    pub fn indexed(self) -> Indexed<ElementsMut<'a, A, D>>
     {
-        IndexedElementsMut{
-            inner: self.inner,
+        Indexed {
+            inner: self,
         }
     }
 }
 
 /// An iterator over the indexes and elements of an array.
-///
-/// Iterator element type is **(D, &'a A)**.
-pub struct IndexedElements<'a, A: 'a, D> {
-    inner: Baseiter<'a, A, D>,
+#[derive(Clone)]
+pub struct Indexed<I> {
+    inner: I,
 }
 
-/// An iterator over the indexes and elements of an array.
-///
-/// Iterator element type is **(D, &'a mut A)**.
-pub struct IndexedElementsMut<'a, A: 'a, D> {
-    inner: Baseiter<'a, A, D>,
-}

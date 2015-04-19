@@ -2,7 +2,7 @@ use std::marker;
 
 use super::{Dimension, Ix};
 use super::{to_ref, to_ref_mut};
-use super::{Elements, ElementsMut, IndexedElements, IndexedElementsMut};
+use super::{Elements, ElementsMut, Indexed};
 
 /// Base for array iterators
 ///
@@ -161,24 +161,17 @@ impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
 
 impl<'a, A> ExactSizeIterator for Elements<'a, A, Ix> { }
 
-impl<'a, A, D: Clone> Clone for IndexedElements<'a, A, D>
-{
-    fn clone(&self) -> IndexedElements<'a, A, D> {
-        IndexedElements{inner: self.inner.clone()}
-    }
-}
-
-impl<'a, A, D: Dimension> Iterator for IndexedElements<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for Indexed<Elements<'a, A, D>>
 {
     type Item = (D, &'a A);
     #[inline]
     fn next(&mut self) -> Option<(D, &'a A)>
     {
-        let index = match self.inner.index {
+        let index = match self.inner.inner.index {
             None => return None,
             Some(ref ix) => ix.clone()
         };
-        match self.inner.next_ref() {
+        match self.inner.inner.next_ref() {
             None => None,
             Some(p) => Some((index, p))
         }
@@ -186,7 +179,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedElements<'a, A, D>
 
     fn size_hint(&self) -> (usize, Option<usize>)
     {
-        let len = self.inner.size_hint();
+        let len = self.inner.inner.size_hint();
         (len, Some(len))
     }
 }
@@ -216,17 +209,17 @@ impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
     }
 }
 
-impl<'a, A, D: Dimension> Iterator for IndexedElementsMut<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for Indexed<ElementsMut<'a, A, D>>
 {
     type Item = (D, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<(D, &'a mut A)>
     {
-        let index = match self.inner.index {
+        let index = match self.inner.inner.index {
             None => return None,
             Some(ref ix) => ix.clone()
         };
-        match self.inner.next_ref_mut() {
+        match self.inner.inner.next_ref_mut() {
             None => None,
             Some(p) => Some((index, p))
         }
@@ -234,7 +227,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedElementsMut<'a, A, D>
 
     fn size_hint(&self) -> (usize, Option<usize>)
     {
-        let len = self.inner.size_hint();
+        let len = self.inner.inner.size_hint();
         (len, Some(len))
     }
 }
