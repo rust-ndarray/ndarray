@@ -1,5 +1,3 @@
-#![feature(macro_rules)]
-
 extern crate rustc_serialize as serialize;
 extern crate ndarray;
 
