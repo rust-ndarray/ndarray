@@ -1,9 +1,9 @@
-STYLE = customdocstyle.html
+#STYLE = customdocstyle.html
 SRC = src/lib.rs
 
-NUM = --extern num=$(wildcard ./target/deps/libnum*)
-
 docs: $(STYLE) $(SRC)
-	rustdoc --html-in-header $(STYLE) -L target/deps $(NUM) $(SRC)
+	cargo doc --no-deps
+	rm -r ./doc
+	cp -r ./target/doc ./doc
 
 .PHONY: docs
