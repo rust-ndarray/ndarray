@@ -14,4 +14,11 @@ git = "https://github.com/rust-lang/num"
 
 rustc-serialize = "*"
 
-itertools = "*"
+[dependencies.itertools]
+version = "*"
+features = ["unstable"]
+
+[dependencies.serde]
+version = "*"
+optional = true
+

@@ -8,6 +8,9 @@
 //! n-dimensional container similar to numpy's ndarray.
 //!
 
+#[cfg(feature = "serde")]
+extern crate serde;
+
 extern crate itertools as it;
 #[cfg(not(nocomplex))]
 extern crate num as libnum;
@@ -31,6 +34,8 @@ use iterators::Baseiter;
 
 pub mod linalg;
 mod arraytraits;
+#[cfg(feature = "serde")]
+mod arrayserialize;
 mod arrayformat;
 mod dimension;
 mod indexes;
