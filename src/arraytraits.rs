@@ -1,3 +1,4 @@
+#[cfg(feature = "rustc-serialize")]
 use serialize::{Encodable, Encoder, Decodable, Decoder};
 
 use std::hash;
@@ -94,9 +95,11 @@ hash::Hash for Array<A, D>
     }
 }
 
+#[cfg(feature = "rustc-serialize")]
 // Use version number so we can add a packed format later.
 static ARRAY_FORMAT_VERSION: u8 = 1u8;
 
+#[cfg(feature = "rustc-serialize")]
 impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
 {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error>
@@ -125,6 +128,7 @@ impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
     }
 }
 
+#[cfg(feature = "rustc-serialize")]
 impl<A: Decodable, D: Dimension + Decodable>
     Decodable for Array<A, D>
 {

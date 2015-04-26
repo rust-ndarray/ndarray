@@ -10,11 +10,12 @@
 
 #[cfg(feature = "serde")]
 extern crate serde;
+#[cfg(feature = "rustc-serialize")]
+extern crate rustc_serialize as serialize;
 
 extern crate itertools as it;
 #[cfg(not(nocomplex))]
 extern crate num as libnum;
-extern crate rustc_serialize as serialize;
 
 use std::mem;
 use libnum::Float;

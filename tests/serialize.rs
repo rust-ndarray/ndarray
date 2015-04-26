@@ -1,10 +1,13 @@
+#[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 extern crate ndarray;
 
 #[cfg(feature = "serde")]
 extern crate serde;
 
+#[cfg(feature = "rustc-serialize")]
 use serialize::json;
+
 use ndarray::{arr0, arr1, arr2, Array, Ix, S, Si};
 
 #[cfg(feature = "serde")]
@@ -41,6 +44,7 @@ fn test_serde()
     }
 }
 
+#[cfg(feature = "rustc-serialize")]
 #[test]
 fn serial_many_dim()
 {
@@ -90,6 +94,7 @@ fn serial_many_dim()
     }
 }
 
+#[cfg(feature = "rustc-serialize")]
 #[test]
 fn serial_wrong_count()
 {
