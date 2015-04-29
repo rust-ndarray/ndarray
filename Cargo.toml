@@ -7,8 +7,7 @@ repository = "https://github.com/bluss/rust-ndarray"
 documentation = "http://bluss.github.io/rust-ndarray/"
 
 [dependencies.num]
-
-git = "https://github.com/rust-lang/num"
+version = "*"
 
 [dependencies.rustc-serialize]
 version = "*"
@@ -16,7 +15,6 @@ optional = true
 
 [dependencies.itertools]
 version = "*"
-features = ["unstable"]
 
 [dependencies.serde]
 version = "*"
