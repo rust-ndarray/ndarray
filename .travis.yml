@@ -4,7 +4,7 @@ matrix:
   include:
     - rust: nightly
       env:
-       - FEATURES='test'
+       - FEATURES=''
        - BENCH=1
 script:
   - |
