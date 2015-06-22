@@ -1,5 +1,5 @@
 #![feature(
-    alloc,
+    rc_unique,
     )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
@@ -18,6 +18,7 @@ extern crate itertools as it;
 extern crate num as libnum;
 
 use std::mem;
+use std::rc::Rc;
 use libnum::Float;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -114,7 +115,7 @@ unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
 pub struct Array<A, D> {
     // FIXME: Unsafecell around vec needed?
     /// Rc data when used as view, Uniquely held data when being mutated
-    data: std::rc::Rc<Vec<A>>,
+    data: Rc<Vec<A>>,
     /// A pointer into the buffer held by data, may point anywhere
     /// in its range.
     ptr: *mut A,
@@ -311,7 +312,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// **Note:** The array must be uniquely held when mutating it.
     #[inline]
     pub unsafe fn uchk_at_mut<'a>(&'a mut self, index: D) -> &'a mut A {
-        debug_assert!(std::rc::is_unique(&self.data));
+        debug_assert!(Rc::is_unique(&self.data));
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         to_ref_mut(self.ptr.offset(off))
@@ -569,7 +570,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// This method is mostly only useful with unsafe code.
     pub fn ensure_unique(&mut self) where A: Clone
     {
-        if std::rc::is_unique(&self.data) {
+        if Rc::is_unique(&self.data) {
             return
         }
         if self.dim.size() <= self.data.len() / 2 {
@@ -581,7 +582,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
         let our_off = (self.ptr as isize - self.data.as_ptr() as isize)
             / mem::size_of::<A>() as isize;
-        let rvec = self.data.make_unique();
+        let rvec = Rc::make_unique(&mut self.data);
         unsafe {
             self.ptr = rvec.as_mut_ptr().offset(our_off);
         }
