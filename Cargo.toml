@@ -7,7 +7,7 @@ repository = "https://github.com/bluss/rust-ndarray"
 documentation = "http://bluss.github.io/rust-ndarray/"
 
 [dependencies.num]
-version = "*"
+version = "0.1"
 features = ["complex"]
 default-features = false
 
@@ -16,9 +16,9 @@ version = "*"
 optional = true
 
 [dependencies.itertools]
-version = "*"
+version = "0.3"
 
 [dependencies.serde]
-version = "*"
+version = "0.4"
 optional = true
 
