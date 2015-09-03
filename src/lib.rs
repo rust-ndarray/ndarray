@@ -1,5 +1,6 @@
 #![feature(
     rc_unique,
+    rc_counts,
     )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
@@ -582,7 +583,7 @@ impl<A, D> Array<A, D> where D: Dimension
         }
         let our_off = (self.ptr as isize - self.data.as_ptr() as isize)
             / mem::size_of::<A>() as isize;
-        let rvec = Rc::make_unique(&mut self.data);
+        let rvec = Rc::make_mut(&mut self.data);
         unsafe {
             self.ptr = rvec.as_mut_ptr().offset(our_off);
         }
@@ -666,9 +667,10 @@ impl<A, D> Array<A, D> where D: Dimension
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
-    pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A] where A: Clone
+    pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
+        where A: Clone
     {
-        self.data.make_unique()
+        &mut Rc::make_mut(&mut self.data)[..]
     }
 
 
