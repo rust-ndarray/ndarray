@@ -1,7 +1,3 @@
-#![feature(
-    rc_unique,
-    rc_counts,
-    )]
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
@@ -312,8 +308,8 @@ impl<A, D> Array<A, D> where D: Dimension
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
     /// **Note:** The array must be uniquely held when mutating it.
     #[inline]
-    pub unsafe fn uchk_at_mut<'a>(&'a mut self, index: D) -> &'a mut A {
-        debug_assert!(Rc::is_unique(&self.data));
+    pub unsafe fn uchk_at_mut(&mut self, index: D) -> &mut A {
+        debug_assert!(Rc::get_mut(&mut self.data).is_some());
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         to_ref_mut(self.ptr.offset(off))
@@ -571,7 +567,7 @@ impl<A, D> Array<A, D> where D: Dimension
     /// This method is mostly only useful with unsafe code.
     pub fn ensure_unique(&mut self) where A: Clone
     {
-        if Rc::is_unique(&self.data) {
+        if Rc::get_mut(&mut self.data).is_some() {
             return
         }
         if self.dim.size() <= self.data.len() / 2 {
