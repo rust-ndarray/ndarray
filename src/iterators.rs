@@ -1,7 +1,6 @@
 use std::marker;
 
 use super::{Dimension, Ix};
-use super::{to_ref, to_ref_mut};
 use super::{Elements, ElementsMut, Indexed};
 
 /// Base for array iterators
@@ -59,13 +58,13 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
     #[inline]
     fn next_ref(&mut self) -> Option<&'a A>
     {
-        unsafe { self.next().map(|p| to_ref(p as *const _)) }
+        unsafe { self.next().map(|p| &*p) }
     }
 
     #[inline]
     fn next_ref_mut(&mut self) -> Option<&'a mut A>
     {
-        unsafe { self.next().map(|p| to_ref_mut(p)) }
+        unsafe { self.next().map(|p| &mut *p) }
     }
 
     fn size_hint(&self) -> usize
@@ -105,13 +104,13 @@ impl<'a, A> Baseiter<'a, A, Ix>
     #[inline]
     fn next_back_ref(&mut self) -> Option<&'a A>
     {
-        unsafe { self.next_back().map(|p| to_ref(p as *const _)) }
+        unsafe { self.next_back().map(|p| &*p) }
     }
 
     #[inline]
     fn next_back_ref_mut(&mut self) -> Option<&'a mut A>
     {
-        unsafe { self.next_back().map(|p| to_ref_mut(p)) }
+        unsafe { self.next_back().map(|p| &mut *p) }
     }
 }
 

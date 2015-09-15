@@ -49,14 +49,6 @@ pub type Ix = u32;
 /// Array index type (signed)
 pub type Ixs = i32;
 
-unsafe fn to_ref<'a, A>(ptr: *const A) -> &'a A {
-    mem::transmute(ptr)
-}
-
-unsafe fn to_ref_mut<'a, A>(ptr: *mut A) -> &'a mut A {
-    mem::transmute(ptr)
-}
-
 /// The **Array** type is an *N-dimensional array*.
 ///
 /// A reference counted array with copy-on-write mutability.
@@ -285,7 +277,7 @@ impl<A, D> Array<A, D> where D: Dimension
     pub fn at<'a>(&'a self, index: D) -> Option<&'a A> {
         self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
-                to_ref(self.ptr.offset(offset) as *const _)
+                &*self.ptr.offset(offset)
             })
     }
 
@@ -298,7 +290,7 @@ impl<A, D> Array<A, D> where D: Dimension
     pub unsafe fn uchk_at<'a>(&'a self, index: D) -> &'a A {
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
-        to_ref(self.ptr.offset(off) as *const _)
+        &*self.ptr.offset(off)
     }
 
     /// Perform *unchecked* array indexing.
@@ -312,7 +304,7 @@ impl<A, D> Array<A, D> where D: Dimension
         debug_assert!(Rc::get_mut(&mut self.data).is_some());
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
-        to_ref_mut(self.ptr.offset(off))
+        &mut *self.ptr.offset(off)
     }
 
     /// Return a protoiterator
@@ -592,7 +584,7 @@ impl<A, D> Array<A, D> where D: Dimension
         self.ensure_unique();
         self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
-                to_ref_mut(self.ptr.offset(offset))
+                &mut *self.ptr.offset(offset)
             })
     }
 
