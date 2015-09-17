@@ -40,8 +40,7 @@ fn indexed2()
     let a = Array::range(0.0, 8.0f32);
     let mut iter = a.iter();
     iter.next();
-    let mut iter = iter.indexed();
-    for (i, elt) in iter {
+    for (i, elt) in iter.indexed() {
         assert_eq!(i, *elt as Ix);
     }
     let a = a.reshape((2, 4, 1));
