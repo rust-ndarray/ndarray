@@ -3,6 +3,12 @@ Please read the `API documentation here`__
 
 __ http://bluss.github.io/rust-ndarray/
 
+|build_status|_
+
+.. |build_status| image:: https://travis-ci.org/bluss/rust-ndarray.svg?branch=master
+.. _build_status: https://travis-ci.org/bluss/rust-ndarray
+
+
 License
 =======
 
