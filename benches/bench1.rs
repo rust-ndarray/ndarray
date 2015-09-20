@@ -1,4 +1,4 @@
-#![allow(uppercase_variables)]
+#![feature(test)]
 #![allow(unused_imports)]
 
 extern crate test;
