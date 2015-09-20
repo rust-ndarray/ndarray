@@ -16,7 +16,7 @@ version = "*"
 optional = true
 
 [dependencies.itertools]
-version = "0.3"
+version = "0.4"
 
 [dependencies.serde]
 version = "0.4"
