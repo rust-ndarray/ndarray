@@ -7,11 +7,14 @@ use std::iter::IntoIterator;
 use std::ops::{
     Index,
     IndexMut,
+    Deref,
+    DerefMut
 };
 
 use super::{Array, Dimension, Ix, Elements, ElementsMut};
 
-impl<'a, A, D: Dimension> Index<D> for Array<A, D>
+impl<'a, A, S, D: Dimension> Index<D> for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     type Output = A;
     #[inline]
@@ -23,7 +26,8 @@ impl<'a, A, D: Dimension> Index<D> for Array<A, D>
     }
 }
 
-impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
+impl<'a, A: Clone, S, D: Dimension> IndexMut<D> for Array<A, S, D>
+where S: DerefMut<Target=[A]>
 {
     #[inline]
     /// Access the element at **index** mutably.
@@ -35,31 +39,34 @@ impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
 }
 
 
-impl<A: PartialEq, D: Dimension>
-PartialEq for Array<A, D>
+impl<A: PartialEq, S, D: Dimension>
+PartialEq for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     /// Return `true` if the array shapes and all elements of `self` and
     /// `other` are equal. Return `false` otherwise.
-    fn eq(&self, other: &Array<A, D>) -> bool
+    fn eq(&self, other: &Array<A, S, D>) -> bool
     {
         self.shape() == other.shape() &&
         self.iter().zip(other.iter()).all(|(a, b)| a == b)
     }
 }
 
-impl<A: Eq, D: Dimension>
-Eq for Array<A, D> {}
+impl<A: Eq, S, D: Dimension>
+Eq for Array<A, S, D>
+where S: Deref<Target=[A]>
+{}
 
-impl<A> FromIterator<A> for Array<A, Ix>
+impl<A> FromIterator<A> for Array<A, Vec<A>, Ix>
 {
-    fn from_iter<I: IntoIterator<Item=A>>(it: I) -> Array<A, Ix>
+    fn from_iter<I: IntoIterator<Item=A>>(it: I) -> Array<A, Vec<A>, Ix>
     {
         Array::from_iter(it.into_iter())
     }
 }
 
-impl<'a, A, D> IntoIterator for &'a Array<A, D> where
-    D: Dimension,
+impl<'a, A, S, D> IntoIterator for &'a Array<A, S, D> where
+    D: Dimension, S: Deref<Target=[A]>
 {
     type Item = &'a A;
     type IntoIter = Elements<'a, A, D>;
@@ -70,9 +77,10 @@ impl<'a, A, D> IntoIterator for &'a Array<A, D> where
     }
 }
 
-impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
+impl<'a, A, S, D> IntoIterator for &'a mut Array<A, S, D> where
     A: Clone,
     D: Dimension,
+    S: Deref<Target=[A]>,
 {
     type Item = &'a mut A;
     type IntoIter = ElementsMut<'a, A, D>;
@@ -83,10 +91,10 @@ impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
     }
 }
 
-impl<A: hash::Hash, D: Dimension>
-hash::Hash for Array<A, D>
+impl<A: hash::Hash, S: Deref<Target=[A]>, D: Dimension>
+hash::Hash for Array<A, S, D>
 {
-    fn hash<S: hash::Hasher>(&self, state: &mut S)
+    fn hash<H: hash::Hasher>(&self, state: &mut H)
     {
         self.shape().hash(state);
         for elt in self.iter() {
@@ -100,7 +108,8 @@ hash::Hash for Array<A, D>
 static ARRAY_FORMAT_VERSION: u8 = 1u8;
 
 #[cfg(feature = "rustc-serialize")]
-impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
+impl<A: Encodable, S, D: Dimension + Encodable> Encodable for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error>
     {
@@ -129,10 +138,11 @@ impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
 }
 
 #[cfg(feature = "rustc-serialize")]
-impl<A: Decodable, D: Dimension + Decodable>
-    Decodable for Array<A, D>
+impl<A: Decodable, S, D: Dimension + Decodable>
+    Decodable for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
-    fn decode<S: Decoder>(d: &mut S) -> Result<Array<A, D>, S::Error>
+    fn decode<Dec: Decoder>(d: &mut Dec) -> Result<Array<A, D>, Dec::Error>
     {
         d.read_struct("Array", 3, |d| {
             let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));

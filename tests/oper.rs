@@ -1,7 +1,7 @@
 extern crate ndarray;
 extern crate num as libnum;
 
-use ndarray::Array;
+use ndarray::{Array, ArrayOwned};
 use ndarray::{arr0, arr1, arr2};
 
 use std::fmt;
@@ -26,7 +26,8 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
 }
 
 fn test_oper_arr<A: Float + fmt::Debug, D: ndarray::Dimension>
-    (op: &str, mut aa: Array<A,D>, bb: Array<A, D>, cc: Array<A, D>)
+    (op: &str, mut aa: ArrayOwned<A,D>,
+     bb: ArrayOwned<A, D>, cc: ArrayOwned<A, D>)
 {
     match op {
         "+" => {

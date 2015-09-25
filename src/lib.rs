@@ -14,8 +14,7 @@ extern crate itertools as it;
 #[cfg(not(nocomplex))]
 extern crate num as libnum;
 
-use std::mem;
-use std::rc::Rc;
+use std::ops::{Deref, DerefMut};
 use libnum::Float;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -45,9 +44,9 @@ mod si;
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
 /// Array index type
-pub type Ix = u32;
+pub type Ix = usize;
 /// Array index type (signed)
-pub type Ixs = i32;
+pub type Ixs = isize;
 
 /// The **Array** type is an *N-dimensional array*.
 ///
@@ -101,10 +100,10 @@ pub type Ixs = i32;
 /// );
 /// ```
 ///
-pub struct Array<A, D> {
+pub struct Array<A, S, D> where S: Deref<Target=[A]> {
     // FIXME: Unsafecell around vec needed?
     /// Rc data when used as view, Uniquely held data when being mutated
-    data: Rc<Vec<A>>,
+    data: S,
     /// A pointer into the buffer held by data, may point anywhere
     /// in its range.
     ptr: *mut A,
@@ -114,9 +113,14 @@ pub struct Array<A, D> {
     strides: D,
 }
 
-impl<A, D: Clone> Clone for Array<A, D>
+pub type ArrayOwned<A, D> = Array<A, Vec<A>, D>;
+pub type ArrayView<'a, A, D> = Array<A, &'a [A], D>;
+pub type ArrayViewMut<'a, A, D> = Array<A, &'a mut [A], D>;
+
+impl<A, S, D: Clone> Clone for Array<A, S, D>
+where S: Deref<Target=[A]> + Clone
 {
-    fn clone(&self) -> Array<A, D> {
+    fn clone(&self) -> Array<A, S, D> {
         Array {
             data: self.data.clone(),
             ptr: self.ptr,
@@ -126,25 +130,25 @@ impl<A, D: Clone> Clone for Array<A, D>
     }
 }
 
-impl<A> Array<A, Ix>
+impl<A> Array<A, Vec<A>, Ix>
 {
     /// Create a one-dimensional array from a vector (no allocation needed).
-    pub fn from_vec(v: Vec<A>) -> Array<A, Ix> {
+    pub fn from_vec(v: Vec<A>) -> ArrayOwned<A, Ix> {
         unsafe {
             Array::from_vec_dim(v.len() as Ix, v)
         }
     }
 
     /// Create a one-dimensional array from an iterator.
-    pub fn from_iter<I: Iterator<Item=A>>(it: I) -> Array<A, Ix> {
+    pub fn from_iter<I: Iterator<Item=A>>(it: I) -> ArrayOwned<A, Ix> {
         Array::from_vec(it.collect())
     }
 }
 
-impl Array<f32, Ix>
+impl Array<f32, Vec<f32>, Ix>
 {
     /// Create a one-dimensional Array from interval **[begin, end)**
-    pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
+    pub fn range(begin: f32, end: f32) -> ArrayOwned<f32, Ix>
     {
         let n = (end - begin) as usize;
         let span = if n > 0 { (n - 1) as f32 } else { 0. };
@@ -154,10 +158,24 @@ impl Array<f32, Ix>
     }
 }
 
-impl<A, D> Array<A, D> where D: Dimension
+impl<A, D> Array<A, Vec<A>, D> where D: Dimension
 {
+    /// Create an array from a vector (with no allocation needed).
+    ///
+    /// Unsafe because dimension is unchecked, and must be correct.
+    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> ArrayOwned<A, D>
+    {
+        debug_assert!(dim.size() == v.len());
+        Array {
+            ptr: v.as_mut_ptr(),
+            data: v,
+            strides: dim.default_strides(),
+            dim: dim
+        }
+    }
+
     /// Construct an Array with zeros.
-    pub fn zeros(dim: D) -> Array<A, D> where A: Clone + libnum::Zero
+    pub fn zeros(dim: D) -> ArrayOwned<A, D> where A: Clone + libnum::Zero
     {
         Array::from_elem(dim, libnum::zero())
     }
@@ -179,7 +197,7 @@ impl<A, D> Array<A, D> where D: Dimension
     ///                  [1., 1.]]])
     /// );
     /// ```
-    pub fn from_elem(dim: D, elem: A) -> Array<A, D> where A: Clone
+    pub fn from_elem(dim: D, elem: A) -> ArrayOwned<A, D> where A: Clone
     {
         let v = std::iter::repeat(elem).take(dim.size()).collect();
         unsafe {
@@ -187,20 +205,10 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Create an array from a vector (with no allocation needed).
-    ///
-    /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> Array<A, D>
-    {
-        debug_assert!(dim.size() == v.len());
-        Array {
-            ptr: v.as_mut_ptr(),
-            data: std::rc::Rc::new(v),
-            strides: dim.default_strides(),
-            dim: dim
-        }
-    }
+}
 
+impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
+{
     /// Return the total number of elements in the Array.
     pub fn len(&self) -> usize
     {
@@ -233,17 +241,49 @@ impl<A, D> Array<A, D> where D: Dimension
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
     /// Array's view.
-    pub fn raw_data<'a>(&'a self) -> &'a [A]
+    pub fn raw_data(& self) -> &[A]
     {
-        &self.data
+        &self.data[..]
+    }
+
+    /// Get a view (borrow) into this array
+    pub fn view(&self) -> ArrayView<A, D> {
+        ArrayView {
+            data: &self.data[..],
+            ptr: self.ptr.clone(),
+            dim: self.dim.clone(),
+            strides: self.dim.clone(),
+        }
+    }
+
+    /// Get a mutable view (borrow) into this array
+    pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
+    where S: DerefMut<Target=[A]> {
+        ArrayViewMut {
+            data: &mut self.data[..],
+            ptr: self.ptr.clone(),
+            dim: self.dim.clone(),
+            strides: self.dim.clone(),
+        }
+    }
+
+    /// Get an owned copy of this array
+    pub fn to_owned(&self) -> ArrayOwned<A, D>
+    where A: Clone {
+        ArrayOwned {
+            data: self.data.to_vec(),
+            ptr: self.ptr.clone(),
+            dim: self.dim.clone(),
+            strides: self.dim.clone(),
+        }
     }
 
     /// Return a sliced array.
     ///
     /// **Panics** if **indexes** does not match the number of array axes.
-    pub fn slice(&self, indexes: &[Si]) -> Array<A, D>
+    pub fn slice(&self, indexes: &[Si]) -> ArrayView<A, D>
     {
-        let mut arr = self.clone();
+        let mut arr = self.view();
         arr.islice(indexes);
         arr
     }
@@ -298,10 +338,8 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Return a mutable reference to the element at **index**.
     ///
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** The array must be uniquely held when mutating it.
     #[inline]
     pub unsafe fn uchk_at_mut(&mut self, index: D) -> &mut A {
-        debug_assert!(Rc::get_mut(&mut self.data).is_some());
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
@@ -486,10 +524,10 @@ impl<A, D> Array<A, D> where D: Dimension
     }
 
     /// Return the diagonal as a one-dimensional array.
-    pub fn diag(&self) -> Array<A, Ix> {
+    pub fn diag(&self) -> ArrayView<A, Ix> {
         let (len, stride) = self.diag_params();
         Array {
-            data: self.data.clone(),
+            data: &self.data[..],
             ptr: self.ptr,
             dim: len,
             strides: stride as Ix,
@@ -511,7 +549,7 @@ impl<A, D> Array<A, D> where D: Dimension
     ///     == arr2(&[[0, 1], [1, 2]])
     /// );
     /// ```
-    pub fn map<'a, B, F>(&'a self, mut f: F) -> Array<B, D> where
+    pub fn map<'a, B, F>(&'a self, mut f: F) -> ArrayOwned<B, D> where
         F: FnMut(&'a A) -> B
     {
         let mut res = Vec::<B>::with_capacity(self.dim.size());
@@ -539,14 +577,15 @@ impl<A, D> Array<A, D> where D: Dimension
     ///     a.subview(1, 1) == arr1(&[2., 4.])
     /// );
     /// ```
-    pub fn subview(&self, axis: usize, index: Ix) -> Array<A, <D as RemoveAxis>::Smaller> where
+    pub fn subview(&self, axis: usize,
+                   index: Ix) -> ArrayView<A, <D as RemoveAxis>::Smaller> where
         D: RemoveAxis
     {
-        let mut res = self.clone();
+        let mut res = self.view();
         res.isubview(axis, index);
         // don't use reshape -- we always know it will fit the size,
         // and we can use remove_axis on the strides as well
-        Array{
+        ArrayView {
             data: res.data,
             ptr: res.ptr,
             dim: res.dim.remove_axis(axis),
@@ -554,34 +593,10 @@ impl<A, D> Array<A, D> where D: Dimension
         }
     }
 
-    /// Make the array unshared.
-    ///
-    /// This method is mostly only useful with unsafe code.
-    pub fn ensure_unique(&mut self) where A: Clone
-    {
-        if Rc::get_mut(&mut self.data).is_some() {
-            return
-        }
-        if self.dim.size() <= self.data.len() / 2 {
-            unsafe {
-                *self = Array::from_vec_dim(self.dim.clone(),
-                                            self.iter().map(|x| x.clone()).collect());
-            }
-            return;
-        }
-        let our_off = (self.ptr as isize - self.data.as_ptr() as isize)
-            / mem::size_of::<A>() as isize;
-        let rvec = Rc::make_mut(&mut self.data);
-        unsafe {
-            self.ptr = rvec.as_mut_ptr().offset(our_off);
-        }
-    }
-
     /// Return a mutable reference to the element at **index**, or return **None**
     /// if the index is out of bounds.
     pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A> where A: Clone
     {
-        self.ensure_unique();
         self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
                 &mut *self.ptr.offset(offset)
@@ -593,7 +608,6 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Iterator element type is **&'a mut A**.
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D> where A: Clone
     {
-        self.ensure_unique();
         ElementsMut { inner: self.base_iter() }
     }
 
@@ -638,7 +652,6 @@ impl<A, D> Array<A, D> where D: Dimension
     /// Return an iterator over the diagonal elements of the array.
     pub fn diag_iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, Ix> where A: Clone
     {
-        self.ensure_unique();
         let (len, stride) = self.diag_params();
         unsafe {
             ElementsMut { inner:
@@ -655,17 +668,18 @@ impl<A, D> Array<A, D> where D: Dimension
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
-    pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
-        where A: Clone
+    pub fn raw_data_mut(&mut self) -> &mut [A]
+        where A: Clone, S: DerefMut<Target=[A]>
     {
-        &mut Rc::make_mut(&mut self.data)[..]
+        &mut self.data[..]
     }
 
 
     /// Transform the array into **shape**; any other shape
     /// with the same number of elements is accepted.
     ///
-    /// **Panics** if sizes are incompatible.
+    /// **Panics** if sizes are incompatible or the reshape can't be done
+    /// without cloning
     ///
     /// ```
     /// use ndarray::{arr1, arr2};
@@ -676,26 +690,50 @@ impl<A, D> Array<A, D> where D: Dimension
     ///               [3., 4.]])
     /// );
     /// ```
-    pub fn reshape<E: Dimension>(&self, shape: E) -> Array<A, E> where A: Clone
+    pub fn reshape_view<E: Dimension>(&self, shape: E
+                                ) -> ArrayView<A, E>
     {
         if shape.size() != self.dim.size() {
             panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(), shape.slice())
         }
-        // Check if contiguous, if not => copy all, else just adapt strides
-        if self.is_standard_layout() {
-            let cl = self.clone();
-            Array{
-                data: cl.data,
-                ptr: cl.ptr,
-                strides: shape.default_strides(),
-                dim: shape,
-            }
-        } else {
-            let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
-            unsafe {
-                Array::from_vec_dim(shape, v)
-            }
+        // Check if contiguous, if not => panic
+        if ! self.is_standard_layout() {
+            panic!("cannot reshape without allocating, you should use reshape_clone")
+        }
+        ArrayView {
+            data: &self.data[..],
+            ptr: self.ptr,
+            strides: shape.default_strides(),
+            dim: shape,
+        }
+    }
+
+    /// Clone the array into **shape**; any other shape
+    /// with the same number of elements is accepted.
+    ///
+    /// **Panics** if sizes are incompatible
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr2};
+    ///
+    /// assert!(
+    ///     arr1(&[1., 2., 3., 4.]).reshape((2, 2))
+    ///     == arr2(&[[1., 2.],
+    ///               [3., 4.]])
+    /// );
+    /// ```
+    pub fn reshape_clone<E: Dimension>(&self, shape: E
+                                ) -> ArrayOwned<A, E>
+    where A: Clone {
+        if shape.size() != self.dim.size() {
+            panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
+                   self.dim.slice(), shape.slice())
+        }
+
+        let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
+        unsafe {
+            Array::from_vec_dim(shape, v)
         }
     }
 
@@ -704,7 +742,9 @@ impl<A, D> Array<A, D> where D: Dimension
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>) where A: Clone
+    pub fn assign<S2, E: Dimension>(&mut self,
+                                    other: &Array<A, S2, E>) where
+        A: Clone, S2: Deref<Target=[A]>
     {
         if self.shape() == other.shape() {
             for (x, y) in self.iter_mut().zip(other.iter()) {
@@ -719,7 +759,8 @@ impl<A, D> Array<A, D> where D: Dimension
     }
 
     /// Perform an elementwise assigment to **self** from scalar **x**.
-    pub fn assign_scalar(&mut self, x: &A) where A: Clone
+    pub fn assign_scalar(&mut self, x: &A)
+    where A: Clone, S: DerefMut<Target=[A]>
     {
         for elt in self.raw_data_mut().iter_mut() {
             *elt = x.clone();
@@ -728,7 +769,7 @@ impl<A, D> Array<A, D> where D: Dimension
 }
 
 /// Return a zero-dimensional array with the element **x**.
-pub fn arr0<A>(x: A) -> Array<A, ()>
+pub fn arr0<A>(x: A) -> Array<A, Vec<A>, ()>
 {
     let mut v = Vec::with_capacity(1);
     v.push(x);
@@ -736,7 +777,7 @@ pub fn arr0<A>(x: A) -> Array<A, ()>
 }
 
 /// Return a one-dimensional array with elements from **xs**.
-pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
+pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Vec<A>, Ix>
 {
     Array::from_vec(xs.to_vec())
 }
@@ -785,7 +826,7 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
+pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, Vec<A>, (Ix, Ix)>
 {
     // FIXME: Simplify this when V is fix size array
     let (m, n) = (xs.len() as Ix,
@@ -819,7 +860,8 @@ pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
 ///     a.shape() == [3, 2, 2]
 /// );
 /// ```
-pub fn arr3<A: Clone, V: ArrInit<U>, U: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix, Ix)>
+pub fn arr3<A, V, U>(xs: &[V]) -> Array<A, Vec<A>, (Ix, Ix, Ix)>
+where A: Clone, V: ArrInit<U>, U: ArrInit<A>,
 {
     // FIXME: Simplify this when U/V are fix size arrays
     let m = xs.len() as Ix;
@@ -844,8 +886,9 @@ pub fn arr3<A: Clone, V: ArrInit<U>, U: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, I
 }
 
 
-impl<A, D> Array<A, D> where
+impl<A, S, D> Array<A, S, D> where
     A: Clone + Add<Output=A>,
+    S: Deref<Target=[A]>,
     D: RemoveAxis,
 {
     /// Return sum along **axis**.
@@ -864,10 +907,10 @@ impl<A, D> Array<A, D> where
     /// ```
     ///
     /// **Panics** if **axis** is out of bounds.
-    pub fn sum(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn sum(&self, axis: usize) -> Array<A, Vec<A>, <D as RemoveAxis>::Smaller>
     {
         let n = self.shape()[axis];
-        let mut res = self.subview(axis, 0);
+        let mut res = self.subview(axis, 0).to_owned();
         for i in (1..n) {
             res.iadd(&self.subview(axis, i))
         }
@@ -875,8 +918,9 @@ impl<A, D> Array<A, D> where
     }
 }
 
-impl<A, D> Array<A, D> where
+impl<A, S, D> Array<A, S, D> where
     A: Copy + linalg::Field,
+    S: Deref<Target=[A]>,
     D: RemoveAxis,
 {
     /// Return mean along **axis**.
@@ -894,7 +938,8 @@ impl<A, D> Array<A, D> where
     ///
     ///
     /// **Panics** if **axis** is out of bounds.
-    pub fn mean(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn mean(&self, axis: usize
+               ) -> Array<A, Vec<A>, <D as RemoveAxis>::Smaller>
     {
         let n = self.shape()[axis];
         let mut sum = self.sum(axis);
@@ -910,7 +955,7 @@ impl<A, D> Array<A, D> where
     }
 }
 
-impl<A> Array<A, (Ix, Ix)>
+impl<A, S: Deref<Target=[A]>> Array<A, S, (Ix, Ix)>
 {
     /// Return an iterator over the elements of row **index**.
     ///
@@ -946,7 +991,7 @@ impl<A> Array<A, (Ix, Ix)>
 
 // Matrix multiplication only defined for simple types to
 // avoid trouble with failing + and *, and destructors
-impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
+impl<'a, A: Copy + linalg::Ring, S: Deref<Target=[A]>> Array<A, S, (Ix, Ix)>
 {
     /// Perform matrix multiplication of rectangular arrays **self** and **other**.
     ///
@@ -971,7 +1016,10 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     /// );
     /// ```
     ///
-    pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
+    pub fn mat_mul<S2>(&self,
+                       other: &Array<A, S2, (Ix, Ix)>
+                      ) -> ArrayOwned<A, (Ix, Ix)>
+    where S2: Deref<Target=[A]>
     {
         let ((m, a), (b, n)) = (self.dim, other.dim);
         let (self_columns, other_rows) = (a, b);
@@ -1011,7 +1059,8 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if sizes are incompatible.
-    pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
+    pub fn mat_mul_col<S2>(&self, other: &Array<A, S2, Ix>) -> ArrayOwned<A, Ix>
+    where S2: Deref<Target=[A]>
     {
         let ((m, a), n) = (self.dim, other.dim);
         let (self_columns, other_rows) = (a, n);
@@ -1039,12 +1088,13 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
 }
 
 
-impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
+impl<A: Float + PartialOrd, S: Deref<Target=[A]>, D: Dimension> Array<A, S, D>
 {
     /// Return **true** if the arrays' elementwise differences are all within
     /// the given absolute tolerance.<br>
     /// Return **false** otherwise, or if the shapes disagree.
-    pub fn allclose(&self, other: &Array<A, D>, tol: A) -> bool
+    pub fn allclose<S2>(&self, other: &Array<A, S2, D>, tol: A) -> bool
+    where S2: Deref<Target=[A]>
     {
         self.shape() == other.shape() &&
         self.iter().zip(other.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
@@ -1056,8 +1106,9 @@ impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
-impl<A, D> Array<A, D> where
+impl<A, S, D> Array<A, S, D> where
     A: Clone + $trt<A, Output=A>,
+    S: Deref<Target=[A]>,
     D: Dimension,
 {
     /// Perform an elementwise arithmetic operation between **self** and **other**,
@@ -1066,7 +1117,8 @@ impl<A, D> Array<A, D> where
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn $imethod <E: Dimension> (&mut self, other: &Array<A, E>)
+    pub fn $imethod <E: Dimension, S2> (&mut self, other: &Array<A, S2, E>)
+    where S2: Deref<Target=[A]>
     {
         if self.dim.ndim() == other.dim.ndim() &&
             self.shape() == other.shape() {
@@ -1091,19 +1143,21 @@ impl<A, D> Array<A, D> where
     }
 }
 
-impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D> where
+impl<'a, A, S1, S2, D, E> $trt<Array<A, S2, E>> for Array<A, S1, D> where
     A: Clone + $trt<A, Output=A>,
+    S1: DerefMut<Target=[A]>,
+    S2: Deref<Target=[A]>,
     D: Dimension,
     E: Dimension,
 {
-    type Output = Array<A, D>;
+    type Output = Array<A, S1, D>;
     /// Perform an elementwise arithmetic operation between **self** and **other**,
     /// and return the result.
     ///
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
-    fn $mth (mut self, other: Array<A, E>) -> Array<A, D>
+    fn $mth (mut self, other: Array<A, S2, E>) -> Array<A, S1, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
         if self.shape() == other.shape() {
@@ -1120,19 +1174,21 @@ impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D> where
     }
 }
 
-impl<'a, A, D, E> $trt<&'a Array<A, E>> for &'a Array<A, D> where
+impl<'a, A, S1, S2, D, E> $trt<&'a Array<A, S2, E>> for &'a Array<A, S1, D> where
     A: Clone + $trt<A, Output=A>,
+    S1: Deref<Target=[A]>,
+    S2: Deref<Target=[A]>,
     D: Dimension,
     E: Dimension,
 {
-    type Output = Array<A, D>;
+    type Output = ArrayOwned<A, D>;
     /// Perform an elementwise arithmetic operation between **self** and **other**,
     /// and return the result.
     ///
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
-    fn $mth (self, other: &'a Array<A, E>) -> Array<A, D>
+    fn $mth (self, other: &'a Array<A, S2, E>) -> ArrayOwned<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
         let mut result = Vec::<A>::with_capacity(self.dim.size());
@@ -1165,8 +1221,8 @@ impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar);
 impl_binary_op!(Shl, shl, ishl, ishl_scalar);
 impl_binary_op!(Shr, shr, ishr, ishr_scalar);
 
-impl<A: Clone + Neg<Output=A>, D: Dimension>
-Array<A, D>
+impl<A: Clone + Neg<Output=A>, S: DerefMut<Target=[A]>, D: Dimension>
+Array<A, S, D>
 {
     /// Perform an elementwise negation of **self**, *in place*.
     pub fn ineg(&mut self)
@@ -1177,20 +1233,20 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + Neg<Output=A>, D: Dimension>
-Neg for Array<A, D>
+impl<A: Clone + Neg<Output=A>, S: DerefMut<Target=[A]>, D: Dimension>
+Neg for Array<A, S, D>
 {
     type Output = Self;
     /// Perform an elementwise negation of **self** and return the result.
-    fn neg(mut self) -> Array<A, D>
+    fn neg(mut self) -> Array<A, S, D>
     {
         self.ineg();
         self
     }
 }
 
-impl<A: Clone + Not<Output=A>, D: Dimension>
-Array<A, D>
+impl<A: Clone + Not<Output=A>, S: DerefMut<Target=[A]>, D: Dimension>
+Array<A, S, D>
 {
     /// Perform an elementwise unary not of **self**, *in place*.
     pub fn inot(&mut self)
@@ -1201,12 +1257,12 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + Not<Output=A>, D: Dimension>
-Not for Array<A, D>
+impl<A: Clone + Not<Output=A>, S: DerefMut<Target=[A]>, D: Dimension>
+Not for Array<A, S, D>
 {
     type Output = Self;
     /// Perform an elementwise unary not of **self** and return the result.
-    fn not(mut self) -> Array<A, D>
+    fn not(mut self) -> Array<A, S, D>
     {
         self.inot();
         self
