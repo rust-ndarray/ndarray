@@ -691,7 +691,7 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
     /// );
     /// ```
     pub fn reshape_view<E: Dimension>(&self, shape: E
-                                ) -> ArrayView<A, E>
+                                     ) -> ArrayView<A, E>
     {
         if shape.size() != self.dim.size() {
             panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
@@ -703,6 +703,29 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
         }
         ArrayView {
             data: &self.data[..],
+            ptr: self.ptr,
+            strides: shape.default_strides(),
+            dim: shape,
+        }
+    }
+
+    /// Transform the array into **shape**; any other shape
+    /// with the same number of elements is accepted.
+    ///
+    /// **Panics** if sizes are incompatible or the reshape can't be done
+    /// without cloning
+    pub fn reshape_into<E: Dimension>(self, shape: E) -> Array<A, S, E>
+    {
+        if shape.size() != self.dim.size() {
+            panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
+                   self.dim.slice(), shape.slice())
+        }
+        // Check if contiguous, if not => panic
+        if ! self.is_standard_layout() {
+            panic!("cannot reshape without allocating, you should use reshape_clone")
+        }
+        Array{
+            data: self.data,
             ptr: self.ptr,
             strides: shape.default_strides(),
             dim: shape,
@@ -912,7 +935,8 @@ impl<A, S, D> Array<A, S, D> where
         let n = self.shape()[axis];
         let mut res = self.subview(axis, 0).to_owned();
         for i in (1..n) {
-            res.iadd(&self.subview(axis, i))
+            let slice = self.subview(axis, i);
+            res.iadd(&slice)
         }
         res
     }

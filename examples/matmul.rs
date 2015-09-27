@@ -6,7 +6,7 @@ use ndarray::Array;
 
 fn main()
 {
-    let mat = Array::range(0.0f32, 16.0).reshape((2, 4, 2)).unwrap().to_owned();
+    let mat = Array::range(0.0f32, 16.0).reshape_clone((2, 4, 2));
     println!("{a:?}\n times \n{b:?}\nis equal to:\n{c:?}",
              a=mat.subview(2,1),
              b=mat.subview(0,1),

@@ -14,14 +14,14 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     let cc = arr1(c);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (2, 2);
-    let aa = aa.reshape(dim);
-    let bb = bb.reshape(dim);
-    let cc = cc.reshape(dim);
+    let aa = aa.reshape_into(dim);
+    let bb = bb.reshape_into(dim);
+    let cc = cc.reshape_into(dim);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (1, 2, 1, 2);
-    let aa = aa.reshape(dim);
-    let bb = bb.reshape(dim);
-    let cc = cc.reshape(dim);
+    let aa = aa.reshape_into(dim);
+    let bb = bb.reshape_into(dim);
+    let cc = cc.reshape_into(dim);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
 }
 

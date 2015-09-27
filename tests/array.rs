@@ -86,7 +86,7 @@ fn test_add()
 #[test]
 fn test_multidim()
 {
-    let mut mat = Array::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
+    let mut mat = Array::zeros(2*3*4*5*6).reshape_into((2,3,4,5,6));
     mat[(0,0,0,0,0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -136,62 +136,64 @@ fn test_negative_stride_rcarray()
     }
 }
 
-#[test]
-fn test_cow()
-{
-    let mut mat = Array::<isize, _>::zeros((2,2));
-    mat[(0, 0)] = 1;
-    let n = mat.clone();
-    mat[(0, 1)] = 2;
-    mat[(1, 0)] = 3;
-    mat[(1, 1)] = 4;
-    assert_eq!(mat[(0,0)], 1);
-    assert_eq!(mat[(0,1)], 2);
-    assert_eq!(n[(0,0)], 1);
-    assert_eq!(n[(0,1)], 0);
-    let mut rev = mat.reshape(4).slice(&[Si(0, None, -1)]);
-    assert_eq!(rev[0], 4);
-    assert_eq!(rev[1], 3);
-    assert_eq!(rev[2], 2);
-    assert_eq!(rev[3], 1);
-    let before = rev.clone();
-    // mutation
-    rev[0] = 5;
-    assert_eq!(rev[0], 5);
-    assert_eq!(rev[1], 3);
-    assert_eq!(rev[2], 2);
-    assert_eq!(rev[3], 1);
-    assert_eq!(before[0], 4);
-    assert_eq!(before[1], 3);
-    assert_eq!(before[2], 2);
-    assert_eq!(before[3], 1);
-}
+// Removed copy on write test, only makes sense with Rc storage
+// #[test]
+// fn test_cow()
+// {
+//     let mut mat = Array::<isize, _>::zeros((2,2));
+//     mat[(0, 0)] = 1;
+//     let n = mat.clone();
+//     mat[(0, 1)] = 2;
+//     mat[(1, 0)] = 3;
+//     mat[(1, 1)] = 4;
+//     assert_eq!(mat[(0,0)], 1);
+//     assert_eq!(mat[(0,1)], 2);
+//     assert_eq!(n[(0,0)], 1);
+//     assert_eq!(n[(0,1)], 0);
+//     let mat = mat.reshape_into(4);
+//     let mut rev = mat.slice(&[Si(0, None, -1)]);
+//     assert_eq!(rev[0], 4);
+//     assert_eq!(rev[1], 3);
+//     assert_eq!(rev[2], 2);
+//     assert_eq!(rev[3], 1);
+//     let before = rev.clone();
+//     // mutation
+//     rev[0] = 5;
+//     assert_eq!(rev[0], 5);
+//     assert_eq!(rev[1], 3);
+//     assert_eq!(rev[2], 2);
+//     assert_eq!(rev[3], 1);
+//     assert_eq!(before[0], 4);
+//     assert_eq!(before[1], 3);
+//     assert_eq!(before[2], 2);
+//     assert_eq!(before[3], 1);
+// }
 
 #[test]
 fn test_sub()
 {
-    let mat = Array::range(0.0f32, 16.0).reshape((2, 4, 2));
+    let mat = Array::range(0.0f32, 16.0).reshape_into((2, 4, 2));
     let s1 = mat.subview(0,0);
     let s2 = mat.subview(0,1);
     assert_eq!(s1.dim(), (4, 2));
     assert_eq!(s2.dim(), (4, 2));
-    let n = Array::range(8.0f32, 16.0).reshape((4,2));
-    assert_eq!(n, s2);
-    let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape((2, 2));
-    assert_eq!(m, mat.subview(1, 1));
+    let n = Array::range(8.0f32, 16.0).reshape_into((4,2));
+    assert_eq!(n.view(), s2);
+    let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape_into((2, 2));
+    assert_eq!(m.view(), mat.subview(1, 1));
 }
 
 #[test]
 fn diag()
 {
-    let d = arr2(&[[1., 2., 3.0f32]]).diag();
-    assert_eq!(d.dim(), 1);
-    let d = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]).diag();
-    assert_eq!(d.dim(), 2);
-    let d = arr2::<f32, _>(&[[]]).diag();
-    assert_eq!(d.dim(), 0);
-    let d = Array::<f32, _>::zeros(()).diag();
-    assert_eq!(d.dim(), 1);
+    let a = arr2(&[[1., 2., 3.0f32]]);
+    assert_eq!(a.diag().dim(), 1);
+    let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
+    assert_eq!(a.diag().dim(), 2);
+    let a = arr2::<f32, _>(&[[]]);
+    assert_eq!(a.diag().dim(), 0);
+    let a = Array::<f32, _>::zeros(());
+    assert_eq!(a.diag().dim(), 1);
 }
 
 #[test]
@@ -239,7 +241,7 @@ fn assign()
 #[test]
 fn dyn_dimension()
 {
-    let a = arr2(&[[1., 2.], [3., 4.0]]).reshape(vec![2, 2]);
+    let a = arr2(&[[1., 2.], [3., 4.0]]).reshape_into(vec![2, 2]);
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
 
     let mut dim = vec![1; 1024];
