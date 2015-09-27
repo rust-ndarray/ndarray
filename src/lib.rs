@@ -252,7 +252,7 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
             data: &self.data[..],
             ptr: self.ptr.clone(),
             dim: self.dim.clone(),
-            strides: self.dim.clone(),
+            strides: self.strides.clone(),
         }
     }
 
