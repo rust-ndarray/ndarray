@@ -123,7 +123,7 @@ fn test_negative_stride_rcarray()
         assert_eq!(vi.dim(), (2,4,2));
         // Test against sequential iterator
         let seq = [7f32,6., 5.,4.,3.,2.,1.,0.,15.,14.,13., 12.,11.,  10.,   9.,   8.];
-        for (a, b) in vi.clone().iter().zip(seq.iter()) {
+        for (a, b) in vi.iter().zip(seq.iter()) {
             assert_eq!(*a, *b);
         }
     }

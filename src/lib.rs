@@ -15,6 +15,7 @@ extern crate itertools as it;
 extern crate num as libnum;
 
 use std::ops::{Deref, DerefMut};
+use std::mem;
 use libnum::Float;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -117,13 +118,20 @@ pub type ArrayOwned<A, D> = Array<A, Vec<A>, D>;
 pub type ArrayView<'a, A, D> = Array<A, &'a [A], D>;
 pub type ArrayViewMut<'a, A, D> = Array<A, &'a mut [A], D>;
 
-impl<A, S, D: Clone> Clone for Array<A, S, D>
-where S: Deref<Target=[A]> + Clone
+impl<A, D: Clone> Clone for Array<A, Vec<A>, D>
+where A: Clone
 {
-    fn clone(&self) -> Array<A, S, D> {
+    fn clone(&self) -> ArrayOwned<A, D> {
+        let mut data = self.data.clone();
+        let mut ptr = data.as_mut_ptr();
+        let offset = (self.ptr as isize - self.data.as_ptr() as isize)
+                   / mem::size_of::<A>() as isize;
+        unsafe {
+            ptr = ptr.offset(offset);
+        }
         Array {
-            data: self.data.clone(),
-            ptr: self.ptr,
+            data: data,
+            ptr: ptr,
             dim: self.dim.clone(),
             strides: self.strides.clone(),
         }
@@ -263,19 +271,26 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
             data: &mut self.data[..],
             ptr: self.ptr.clone(),
             dim: self.dim.clone(),
-            strides: self.dim.clone(),
+            strides: self.strides.clone(),
         }
     }
 
     /// Get an owned copy of this array
     pub fn to_owned(&self) -> ArrayOwned<A, D>
     where A: Clone {
-        ArrayOwned {
+        let mut res = ArrayOwned {
             data: self.data.to_vec(),
             ptr: self.ptr.clone(),
             dim: self.dim.clone(),
-            strides: self.dim.clone(),
+            strides: self.strides.clone(),
+        };
+        res.ptr = res.data.as_mut_ptr();
+        let offset = (self.ptr as isize - self.data.as_ptr() as isize)
+                   / mem::size_of::<A>() as isize;
+        unsafe {
+            res.ptr = res.ptr.offset(offset);
         }
+        res
     }
 
     /// Return a sliced array.
@@ -573,8 +588,8 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
     ///                [3., 4.]]);
     ///
     /// assert!(
-    ///     a.subview(0, 0) == arr1(&[1., 2.]) &&
-    ///     a.subview(1, 1) == arr1(&[2., 4.])
+    ///     a.subview(0, 0) == arr1(&[1., 2.]).view() &&
+    ///     a.subview(1, 1) == arr1(&[2., 4.]).view()
     /// );
     /// ```
     pub fn subview(&self, axis: usize,
@@ -685,9 +700,9 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
     /// use ndarray::{arr1, arr2};
     ///
     /// assert!(
-    ///     arr1(&[1., 2., 3., 4.]).reshape((2, 2))
+    ///     arr1(&[1., 2., 3., 4.]).reshape_view((2, 2))
     ///     == arr2(&[[1., 2.],
-    ///               [3., 4.]])
+    ///               [3., 4.]]).view()
     /// );
     /// ```
     pub fn reshape_view<E: Dimension>(&self, shape: E
@@ -741,7 +756,7 @@ impl<A, S, D> Array<A, S, D> where D: Dimension, S: Deref<Target=[A]>
     /// use ndarray::{arr1, arr2};
     ///
     /// assert!(
-    ///     arr1(&[1., 2., 3., 4.]).reshape((2, 2))
+    ///     arr1(&[1., 2., 3., 4.]).reshape_clone((2, 2))
     ///     == arr2(&[[1., 2.],
     ///               [3., 4.]])
     /// );
