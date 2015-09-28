@@ -1,12 +1,14 @@
 use std::fmt;
 use super::{Array, Dimension};
+use std::ops::Deref;
 
 /// HACK: fmt::rt::FlagAlternate has been hidden away
 const FLAG_ALTERNATE: usize = 2;
 
-fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
-                                    mut format: F) -> fmt::Result where
-    F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
+fn format_array<A, S, D: Dimension, F>(view: &Array<A, S, D>,
+                                       f: &mut fmt::Formatter,
+                                       mut format: F) -> fmt::Result where
+    F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result, S: Deref<Target=[A]>
 {
     let ndim = view.dim.slice().len();
     /* private nowadays
@@ -71,7 +73,8 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
 }
 
 // NOTE: We can impl other fmt traits here
-impl<'a, A: fmt::Display, D: Dimension> fmt::Display for Array<A, D>
+impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     /// Format the array using `Display` and apply the formatting parameters used
     /// to each element.
@@ -83,7 +86,8 @@ impl<'a, A: fmt::Display, D: Dimension> fmt::Display for Array<A, D>
     }
 }
 
-impl<'a, A: fmt::Debug, D: Dimension> fmt::Debug for Array<A, D>
+impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     /// Format the array using `Debug` and apply the formatting parameters used
     /// to each element.
@@ -95,7 +99,8 @@ impl<'a, A: fmt::Debug, D: Dimension> fmt::Debug for Array<A, D>
     }
 }
 
-impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
+impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     /// Format the array using `LowerExp` and apply the formatting parameters used
     /// to each element.
@@ -107,7 +112,8 @@ impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
     }
 }
 
-impl<'a, A: fmt::UpperExp, D: Dimension> fmt::UpperExp for Array<A, D>
+impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for Array<A, S, D>
+where S: Deref<Target=[A]>
 {
     /// Format the array using `UpperExp` and apply the formatting parameters used
     /// to each element.

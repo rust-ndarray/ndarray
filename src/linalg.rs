@@ -5,14 +5,14 @@
 use libnum::{Num, zero, one, Zero, One};
 use libnum::Float;
 use libnum::Complex;
-use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{Add, Sub, Mul, Div, Deref, DerefMut};
 
 use super::{Array, Ix};
 
 /// Column vector.
-pub type Col<A> = Array<A, Ix>;
+pub type Col<A, S> = Array<A, S, Ix>;
 /// Rectangular matrix.
-pub type Mat<A> = Array<A, (Ix, Ix)>;
+pub type Mat<A, S> = Array<A, S, (Ix, Ix)>;
 
 /// Trait union for a ring with 1.
 pub trait Ring : Clone + Zero + Add<Output=Self> + Sub<Output=Self>
@@ -56,7 +56,7 @@ impl<A: Num + Float> ComplexField for Complex<A>
 }
 
 /// Return the identity matrix of dimension *n*.
-pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A>
+pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A, Vec<A>>
 {
     let mut eye = Array::zeros((n, n));
     for a_ii in eye.diag_iter_mut() {
@@ -80,7 +80,9 @@ pub fn inverse<A: Primitive>(a: &Mat<A>) -> Mat<A>
 /// unknowns *x*.
 ///
 /// Return best fit for *x*.
-pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn least_squares<A: ComplexField, S1, S2>(a: &Mat<A, S1>,
+                                              b: &Col<A, S2>) -> Col<A, Vec<A>>
+where S1: DerefMut<Target=[A]>, S2: Deref<Target=[A]>
 {
     // Using transpose: a.T a x = a.T b;
     // a.T a being square gives naive solution
@@ -93,12 +95,12 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     //
     // L L.T x = aT b
     //
-    // => L z = aT b 
+    // => L z = aT b
     //  fw subst for z
     // => L.T x = z
     //  bw subst for x estimate
-    // 
-    let mut aT = a.clone();
+    //
+    let mut aT = a.to_owned();
     aT.swap_axes(0, 1);
     if <A as ComplexField>::is_complex() {
         // conjugate transpose
@@ -106,10 +108,10 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
             *elt = elt.conjugate();
         }
     }
-
-    let aT_a = aT.mat_mul(a);
-    let mut L = cholesky(aT_a);
     let rhs = aT.mat_mul_col(b);
+    let aT_a = aT.mat_mul(a);
+
+    let mut L = cholesky(aT_a);
 
     // Solve L z = aT b
     let z = subst_fw(&L, &rhs);
@@ -147,7 +149,8 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 /// substitution.”
 ///
 /// Return L.
-pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
+pub fn cholesky<A: ComplexField, S>(a: Mat<A, S>) -> Mat<A, S>
+where S: DerefMut<Target=[A]>
 {
     let z = zero::<A>();
     let (m, n) = a.dim();
@@ -206,7 +209,9 @@ fn vec_elem<A: Copy>(elt: A, n: usize) -> Vec<A>
 }
 
 /// Solve *L x = b* where *L* is a lower triangular matrix.
-pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn subst_fw<A: Copy + Field, S1, S2>(l: &Mat<A, S1>,
+                                         b: &Col<A, S2>) -> Col<A, Vec<A>>
+where S1: Deref<Target=[A]>, S2: Deref<Target=[A]>
 {
     let (m, n) = l.dim();
     assert!(m == n);
@@ -224,7 +229,9 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 }
 
 /// Solve *U x = b* where *U* is an upper triangular matrix.
-pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
+pub fn subst_bw<A: Copy + Field, S1, S2>(u: &Mat<A, S1>,
+                                         b: &Col<A, S2>) -> Col<A, Vec<A>>
+where S1: Deref<Target=[A]>, S2: Deref<Target=[A]>
 {
     let (m, n) = u.dim();
     assert!(m == n);
