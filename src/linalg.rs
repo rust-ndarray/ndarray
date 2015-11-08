@@ -119,8 +119,8 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
         // conjugate transpose
         // only elements below the diagonal have imag part
         let (m, _) = L.dim();
-        for i in (1..m) {
-            for j in (0..i) {
+        for i in 1..m {
+            for j in 0..i {
                 let elt = &mut L[(i, j)];
                 *elt = elt.conjugate();
             }
@@ -154,9 +154,9 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
     assert!(m == n);
     // Perform the operation in-place on `a`
     let mut L = a;
-    for i in (0..m) {
+    for i in 0..m {
         // Entries 0 .. i before the diagonal
-        for j in (0..i) {
+        for j in 0..i {
             // A = (
             // L²_1,1
             // L_2,1 L_1,1  L²_2,1 + L²_2,2
@@ -189,7 +189,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 
         // After the diagonal
         // L_ij = 0 for j > i
-        for j in (i + 1..n) {
+        for j in i + 1..n {
             L[(i, j)] = z;
         }
     }
@@ -199,7 +199,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 fn vec_elem<A: Copy>(elt: A, n: usize) -> Vec<A>
 {
     let mut v = Vec::with_capacity(n);
-    for _ in (0..n) {
+    for _ in 0..n {
         v.push(elt);
     }
     v

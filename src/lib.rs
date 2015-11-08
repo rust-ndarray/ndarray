@@ -868,7 +868,7 @@ impl<A, D> Array<A, D> where
     {
         let n = self.shape()[axis];
         let mut res = self.subview(axis, 0);
-        for i in (1..n) {
+        for i in 1..n {
             res.iadd(&self.subview(axis, i))
         }
         res
@@ -900,7 +900,7 @@ impl<A, D> Array<A, D> where
         let mut sum = self.sum(axis);
         let one = libnum::one::<A>();
         let mut cnt = one;
-        for _ in (1..n) {
+        for _ in 1..n {
             cnt = cnt + one;
         }
         for elt in sum.iter_mut() {
