@@ -2,6 +2,7 @@ language: rust
 sudo: false
 matrix:
   include:
+    - rust: stable
     - rust: beta
     - rust: nightly
       env:
