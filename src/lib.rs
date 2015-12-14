@@ -661,11 +661,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.map(|&x| (x / 2.) as i32)
+    ///     a.map::<Vec<_>, _>(|&x| (x / 2.) as i32)
     ///     == arr2(&[[0, 1], [1, 2]])
     /// );
     /// ```
-    pub fn map<'a, F, S2>(&'a self, mut f: F) -> ArrayBase<S2, D>
+    pub fn map<'a, S2, F>(&'a self, mut f: F) -> ArrayBase<S2, D>
         where F: FnMut(&'a A) -> S2::Elem,
               A: 'a,
               S2: StorageNew,
