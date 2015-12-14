@@ -184,9 +184,12 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Construct an Array with default values, dimension `dim`.
     pub fn default(dim: D) -> Array<A, D>
-        where A: Clone + Default
+        where A: Default
     {
-        Array::from_elem(dim, A::default())
+        let v = (0..dim.size()).map(|_| A::default()).collect();
+        unsafe {
+            Array::from_vec_dim(dim, v)
+        }
     }
 
     /// Construct an Array with copies of **elem**.
