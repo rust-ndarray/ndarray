@@ -846,8 +846,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
-        where Self: ArrayMut, A: Clone,
+    pub fn assign<E: Dimension, S2>(&mut self, other: &ArrayBase<S2, E>)
+        where Self: ArrayMut,
+              A: Clone,
+              S2: Storage<Elem=A>,
     {
         if self.shape() == other.shape() {
             for (x, y) in self.iter_mut().zip(other.iter()) {

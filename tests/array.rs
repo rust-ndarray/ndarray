@@ -236,6 +236,10 @@ fn assign()
     /* Test broadcasting */
     a.assign(&Array::zeros(1));
     assert_eq!(a, Array::zeros((2, 2)));
+
+    /* Test other type */
+    a.assign(&OwnedArray::from_elem((2, 2), 3.));
+    assert_eq!(a, Array::from_elem((2, 2), 3.));
 }
 
 #[test]
