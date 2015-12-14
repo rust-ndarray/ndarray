@@ -18,3 +18,8 @@ pre.trait .where::before {
 content: '\a         ';
 }
 
+.docblock code {
+    background-color: inherit;
+    font-weight: bold;
+    padding: 0 0.1em;
+}

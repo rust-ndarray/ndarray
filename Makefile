@@ -3,7 +3,7 @@ DOCCRATES = ndarray
 # deps to delete the generated docs
 RMDOCS =
 
-FEATURES =
+FEATURES = assign_ops
 
 VERSIONS = $(patsubst %,target/VERS/%,$(DOCCRATES))
 
@@ -12,7 +12,7 @@ docs: mkdocs subst $(RMDOCS)
 # https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
 $(VERSIONS): Cargo.toml
 	mkdir -p $(@D)
-	cargo pkgid $(@F) | sed -e "s/.*#\(\|.*:\)//" > "$@"
+	cargo pkgid rendarray | sed -e "s/.*#\(\|.*:\)//" > "$@"
 
 $(DOCCRATES): %: target/VERS/%
 	# Put in the crate version into the docs
