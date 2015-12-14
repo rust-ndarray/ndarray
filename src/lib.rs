@@ -665,16 +665,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///     == arr2(&[[0, 1], [1, 2]])
     /// );
     /// ```
-    pub fn map<'a, B, F>(&'a self, mut f: F) -> Array<B, D>
-        where F: FnMut(&'a A) -> B,
+    pub fn map<'a, F, S2>(&'a self, mut f: F) -> ArrayBase<S2, D>
+        where F: FnMut(&'a A) -> S2::Elem,
               A: 'a,
+              S2: StorageNew,
     {
-        let mut res = Vec::<B>::with_capacity(self.dim.size());
+        let mut res = Vec::with_capacity(self.dim.size());
         for elt in self.iter() {
             res.push(f(elt))
         }
         unsafe {
-            Array::from_vec_dim(self.dim.clone(), res)
+            ArrayBase::from_vec_dim(self.dim.clone(), res)
         }
     }
 
