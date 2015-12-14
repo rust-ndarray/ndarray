@@ -1,8 +1,13 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
-//! The **ndarray** crate provides the [**Array**](./struct.Array.html) type, an
-//! n-dimensional container similar to numpy's ndarray.
+//! The **ndarray** crate provides an n-dimensional container similar to numpy's ndarray.
+//!
+//! - `ArrayBase`
+//! - `Array`
+//! - `OwnedArray`
+//! - `ArrayView`
+//! - `ArrayViewMut`
 //!
 //! ## Crate Summary and Status
 //!
