@@ -3,7 +3,7 @@ DOCCRATES = ndarray
 # deps to delete the generated docs
 RMDOCS =
 
-FEATURES =
+FEATURES = assign_ops
 
 VERSIONS = $(patsubst %,target/VERS/%,$(DOCCRATES))
 

@@ -15,6 +15,14 @@
 //!   or linear algebra. `Array` is a good container.
 //! - There is no integration with linear algebra packages (at least not yet).
 //!
+//! ## Crate feature flags
+//!
+//! - `assign_ops`
+//!   - Optional, requires nightly
+//!   - Enables the compound assignment operators
+//!
+#![cfg_attr(feature = "assign_ops", feature(augmented_assignments,
+                                            op_assign_traits))]
 
 #[cfg(feature = "serde")]
 extern crate serde;
@@ -41,6 +49,7 @@ use dimension::stride_offset;
 pub use indexes::Indexes;
 
 use iterators::Baseiter;
+
 
 pub mod linalg;
 mod arraytraits;
@@ -1175,6 +1184,61 @@ impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar);
 impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar);
 impl_binary_op!(Shl, shl, ishl, ishl_scalar);
 impl_binary_op!(Shr, shr, ishr, ishr_scalar);
+
+#[cfg(feature = "assign_ops")]
+mod assign_ops {
+    use super::*;
+
+    use std::ops::{
+        AddAssign,
+        SubAssign,
+        MulAssign,
+        DivAssign,
+        RemAssign,
+        BitAndAssign,
+        BitOrAssign,
+        BitXorAssign,
+    };
+
+
+    macro_rules! impl_assign_op {
+        ($trt:ident, $method:ident) => {
+    impl<'a, A, D, E> $trt<&'a Array<A, E>> for Array<A, D>
+        where A: Clone + $trt<A>,
+              D: Dimension,
+              E: Dimension,
+    {
+        /// Perform an elementwise in place arithmetic operation between **self** and **other**,
+        ///
+        /// If their shapes disagree, **other** is broadcast to the shape of **self**.
+        ///
+        /// **Panics** if broadcasting isn't possible.
+        fn $method(&mut self, other: &Array<A, E>) {
+            if self.shape() == other.shape() {
+                for (x, y) in self.iter_mut().zip(other.iter()) {
+                    x.$method(y.clone());
+                }
+            } else {
+                let other_iter = other.broadcast_iter_unwrap(self.dim());
+                for (x, y) in self.iter_mut().zip(other_iter) {
+                    x.$method(y.clone());
+                }
+            }
+        }
+    }
+
+        };
+    }
+
+    impl_assign_op!(AddAssign, add_assign);
+    impl_assign_op!(SubAssign, sub_assign);
+    impl_assign_op!(MulAssign, mul_assign);
+    impl_assign_op!(DivAssign, div_assign);
+    impl_assign_op!(RemAssign, rem_assign);
+    impl_assign_op!(BitAndAssign, bitand_assign);
+    impl_assign_op!(BitOrAssign, bitor_assign);
+    impl_assign_op!(BitXorAssign, bitxor_assign);
+}
 
 impl<A: Clone + Neg<Output=A>, D: Dimension>
 Array<A, D>
