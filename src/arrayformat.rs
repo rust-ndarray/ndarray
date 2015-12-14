@@ -1,9 +1,6 @@
 use std::fmt;
 use super::{Array, Dimension};
 
-/// HACK: fmt::rt::FlagAlternate has been hidden away
-const FLAG_ALTERNATE: usize = 2;
-
 fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
                                     mut format: F) -> fmt::Result where
     F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
@@ -40,7 +37,7 @@ fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
                     try!(write!(f, "]"));
                 }
                 try!(write!(f, ","));
-                if f.flags() & (1 << FLAG_ALTERNATE) == 0 {
+                if !f.alternate() {
                     try!(write!(f, "\n"));
                 }
                 for _ in 0..ndim - n {
