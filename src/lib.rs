@@ -182,6 +182,13 @@ impl<A, D> Array<A, D> where D: Dimension
         Array::from_elem(dim, libnum::zero())
     }
 
+    /// Construct an Array with default values, dimension `dim`.
+    pub fn default(dim: D) -> Array<A, D>
+        where A: Clone + Default
+    {
+        Array::from_elem(dim, A::default())
+    }
+
     /// Construct an Array with copies of **elem**.
     ///
     /// ## Example
