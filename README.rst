@@ -1,3 +1,14 @@
+rendarray
+=========
+
+An arbitrary dimension N-dimensional array container of elements of
+arbitrary types.
+
+Features
+
+- Array views and slices, including lightweight transposition
+- Broadcast array dimensions
+- Good support for numerics, but lacking optimization.
 
 Please read the `API documentation here`__
 
@@ -8,6 +19,18 @@ __ http://bluss.github.io/rust-ndarray/
 .. |build_status| image:: https://travis-ci.org/bluss/rust-ndarray.svg?branch=master
 .. _build_status: https://travis-ci.org/bluss/rust-ndarray
 
+How to use with cargo::
+
+    [dependencies]
+    rendarray = "0.1"
+
+Recent Changes
+--------------
+
+- 0.1.0
+
+  - First release on crates.io
+  - Starting point for evolution to come
 
 License
 =======
