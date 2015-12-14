@@ -2,7 +2,9 @@
 
 extern crate ndarray;
 
-use ndarray::{Array, S, Si};
+use ndarray::{Array, S, Si,
+    OwnedArray,
+};
 use ndarray::{arr0, arr1, arr2};
 use ndarray::Indexes;
 use ndarray::SliceRange;
@@ -340,10 +342,22 @@ fn map1()
 #[test]
 fn raw_data_mut()
 {
-    let mut a = arr2(&[[1., 2.], [3., 4.0f32]]);
+    let a = arr2(&[[1., 2.], [3., 4.0f32]]);
     let mut b = a.clone();
     for elt in b.raw_data_mut() {
         *elt = 0.;
     }
     assert!(a != b, "{:?} != {:?}", a, b);
+}
+
+#[test]
+fn owned_array1() {
+    let mut a = OwnedArray::from_vec(vec![1, 2, 3, 4]);
+    for elt in a.iter_mut() {
+        *elt = 2;
+    }
+    for elt in a.iter() {
+        assert_eq!(*elt, 2);
+    }
+    assert_eq!(a.shape(), &[4]);
 }

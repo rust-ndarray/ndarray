@@ -192,23 +192,23 @@ impl<A> StorageNew for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
 }
 
-pub trait StoragePolicy {
+pub trait ArrayMut {
     fn ensure_unique(&mut self);
 }
 
-impl<A, D> StoragePolicy for ArrayBase<Vec<A>, D>
+impl<A, D> ArrayMut for ArrayBase<Vec<A>, D>
     where D: Dimension,
 {
     fn ensure_unique(&mut self) { }
 }
 
-impl<'a, A, D> StoragePolicy for ArrayBase<&'a mut [A], D>
+impl<'a, A, D> ArrayMut for ArrayBase<&'a mut [A], D>
     where D: Dimension,
 {
     fn ensure_unique(&mut self) { }
 }
 
-impl<A, D> StoragePolicy for ArrayBase<Rc<Vec<A>>, D>
+impl<A, D> ArrayMut for ArrayBase<Rc<Vec<A>>, D>
     where D: Dimension,
           A: Clone,
 {
@@ -708,7 +708,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// Return a mutable reference to the element at **index**, or return **None**
     /// if the index is out of bounds.
     pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A>
-        where Self: StoragePolicy,
+        where Self: ArrayMut,
     {
         self.ensure_unique();
         self.dim.stride_offset_checked(&self.strides, &index)
@@ -721,7 +721,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// Iterator element type is **&'a mut A**.
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
-        where Self: StoragePolicy,
+        where Self: ArrayMut,
     {
         self.ensure_unique();
         ElementsMut { inner: self.base_iter() }
@@ -731,7 +731,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// Iterator element type is **(D, &'a mut A)**.
     pub fn indexed_iter_mut<'a>(&'a mut self) -> Indexed<ElementsMut<'a, A, D>>
-        where Self: StoragePolicy,
+        where Self: ArrayMut,
     {
         self.iter_mut().indexed()
     }
@@ -743,7 +743,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// **Panics** if **indexes** does not match the number of array axes.
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
-        where Self: StoragePolicy,
+        where Self: ArrayMut,
     {
         let mut it = self.iter_mut();
         let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
@@ -761,7 +761,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// **Panics** if **axis** or **index** is out of bounds.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: usize, index: Ix)
         -> ElementsMut<'a, A, D>
-        where Self: StoragePolicy,
+        where Self: ArrayMut,
     {
         let mut it = self.iter_mut();
         dimension::do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
@@ -770,7 +770,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
 
     /// Return an iterator over the diagonal elements of the array.
     pub fn diag_iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, Ix>
-        where Self: StoragePolicy,
+        where Self: ArrayMut,
     {
         self.ensure_unique();
         let (len, stride) = self.diag_params();
@@ -790,7 +790,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
     pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
-        where Self: StoragePolicy, S: StorageMut
+        where Self: ArrayMut, S: StorageMut
     {
         self.ensure_unique();
         self.data.slice_mut()
@@ -841,7 +841,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// **Panics** if broadcasting isn't possible.
     pub fn assign<E: Dimension>(&mut self, other: &Array<A, E>)
-        where Self: StoragePolicy, A: Clone,
+        where Self: ArrayMut, A: Clone,
     {
         if self.shape() == other.shape() {
             for (x, y) in self.iter_mut().zip(other.iter()) {
@@ -857,7 +857,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
 
     /// Perform an elementwise assigment to **self** from scalar **x**.
     pub fn assign_scalar(&mut self, x: &A)
-        where Self: StoragePolicy, S: StorageMut, A: Clone,
+        where Self: ArrayMut, S: StorageMut, A: Clone,
     {
         for elt in self.raw_data_mut().iter_mut() {
             *elt = x.clone();
