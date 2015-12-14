@@ -1111,18 +1111,18 @@ impl<A, D> Array<A, D> where
     }
 }
 
-impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D> where
-    A: Clone + $trt<A, Output=A>,
-    D: Dimension,
-    E: Dimension,
+/// Perform an elementwise arithmetic operation between **self** and **other**,
+/// and return the result.
+///
+/// If their shapes disagree, **other** is broadcast to the shape of **self**.
+///
+/// **Panics** if broadcasting isn't possible.
+impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D>
+    where A: Clone + $trt<A, Output=A>,
+          D: Dimension,
+          E: Dimension,
 {
     type Output = Array<A, D>;
-    /// Perform an elementwise arithmetic operation between **self** and **other**,
-    /// and return the result.
-    ///
-    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
-    ///
-    /// **Panics** if broadcasting isn't possible.
     fn $mth (mut self, other: Array<A, E>) -> Array<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
@@ -1140,18 +1140,18 @@ impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D> where
     }
 }
 
-impl<'a, A, D, E> $trt<&'a Array<A, E>> for &'a Array<A, D> where
-    A: Clone + $trt<A, Output=A>,
-    D: Dimension,
-    E: Dimension,
+/// Perform an elementwise arithmetic operation between **self** and **other**,
+/// and return the result.
+///
+/// If their shapes disagree, **other** is broadcast to the shape of **self**.
+///
+/// **Panics** if broadcasting isn't possible.
+impl<'a, A, D, E> $trt<&'a Array<A, E>> for &'a Array<A, D>
+    where A: Clone + $trt<A, Output=A>,
+          D: Dimension,
+          E: Dimension,
 {
     type Output = Array<A, D>;
-    /// Perform an elementwise arithmetic operation between **self** and **other**,
-    /// and return the result.
-    ///
-    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
-    ///
-    /// **Panics** if broadcasting isn't possible.
     fn $mth (self, other: &'a Array<A, E>) -> Array<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
