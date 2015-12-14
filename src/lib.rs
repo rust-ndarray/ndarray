@@ -138,45 +138,45 @@ pub struct ArrayBase<S, D> where S: Storage {
     strides: D,
 }
 
-pub trait Storage {
+pub unsafe trait Storage {
     type Elem;
     fn slice(&self) -> &[Self::Elem];
 }
 
-pub trait StorageMut : Storage {
+pub unsafe trait StorageMut : Storage {
     fn slice_mut(&mut self) -> &mut [Self::Elem];
 }
 
-impl<A> Storage for Rc<Vec<A>> {
+unsafe impl<A> Storage for Rc<Vec<A>> {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
 }
 
 // NOTE: Copy on write
-impl<A> StorageMut for Rc<Vec<A>> where A: Clone {
+unsafe impl<A> StorageMut for Rc<Vec<A>> where A: Clone {
     fn slice_mut(&mut self) -> &mut [A] { &mut Rc::make_mut(self)[..] }
 }
 
-impl<A> Storage for Vec<A> {
+unsafe impl<A> Storage for Vec<A> {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
 }
 
-impl<A> StorageMut for Vec<A> {
+unsafe impl<A> StorageMut for Vec<A> {
     fn slice_mut(&mut self) -> &mut [A] { self }
 }
 
-impl<'a, A> Storage for &'a [A] {
+unsafe impl<'a, A> Storage for &'a [A] {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
 }
 
-impl<'a, A> Storage for &'a mut [A] {
+unsafe impl<'a, A> Storage for &'a mut [A] {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
 }
 
-impl<'a, A> StorageMut for &'a mut [A] {
+unsafe impl<'a, A> StorageMut for &'a mut [A] {
     fn slice_mut(&mut self) -> &mut [A] { self }
 }
 
