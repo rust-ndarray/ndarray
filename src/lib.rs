@@ -4,6 +4,17 @@
 //! The **ndarray** crate provides the [**Array**](./struct.Array.html) type, an
 //! n-dimensional container similar to numpy's ndarray.
 //!
+//! ## Crate Summary and Status
+//!
+//! - Implements the numpy striding scheme for n-dimensional arrays
+//! - `Array` is clone on write, so it can be both a view or an owner of the
+//!   data.
+//! - Striding and broadcasting is fully implemented
+//! - Due to iterators, arithmetic operations, matrix multiplication etc
+//!   are not very well optimized, this is not a serious crate for numerics
+//!   or linear algebra. `Array` is a good container.
+//! - There is no integration with linear algebra packages (at least not yet).
+//!
 
 #[cfg(feature = "serde")]
 extern crate serde;
