@@ -1203,16 +1203,19 @@ mod assign_ops {
 
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident) => {
+
+    /// Perform an elementwise in place arithmetic operation between **self** and **other**,
+    ///
+    /// If their shapes disagree, **other** is broadcast to the shape of **self**.
+    ///
+    /// **Panics** if broadcasting isn't possible.
+    ///
+    /// **Requires `feature = "assign_ops"`**
     impl<'a, A, D, E> $trt<&'a Array<A, E>> for Array<A, D>
         where A: Clone + $trt<A>,
               D: Dimension,
               E: Dimension,
     {
-        /// Perform an elementwise in place arithmetic operation between **self** and **other**,
-        ///
-        /// If their shapes disagree, **other** is broadcast to the shape of **self**.
-        ///
-        /// **Panics** if broadcasting isn't possible.
         fn $method(&mut self, other: &Array<A, E>) {
             if self.shape() == other.shape() {
                 for (x, y) in self.iter_mut().zip(other.iter()) {
