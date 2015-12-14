@@ -155,9 +155,9 @@ impl<A> Array<A, Ix>
         }
     }
 
-    /// Create a one-dimensional array from an iterator.
-    pub fn from_iter<I: Iterator<Item=A>>(it: I) -> Array<A, Ix> {
-        Array::from_vec(it.collect())
+    /// Create a one-dimensional array from an iterable.
+    pub fn from_iter<I: IntoIterator<Item=A>>(iterable: I) -> Array<A, Ix> {
+        Self::from_vec(iterable.into_iter().collect())
     }
 }
 

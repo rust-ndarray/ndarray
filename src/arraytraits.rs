@@ -52,9 +52,9 @@ Eq for Array<A, D> {}
 
 impl<A> FromIterator<A> for Array<A, Ix>
 {
-    fn from_iter<I: IntoIterator<Item=A>>(it: I) -> Array<A, Ix>
+    fn from_iter<I: IntoIterator<Item=A>>(iterable: I) -> Array<A, Ix>
     {
-        Array::from_iter(it.into_iter())
+        Array::from_iter(iterable)
     }
 }
 
