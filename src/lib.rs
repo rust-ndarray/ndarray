@@ -684,6 +684,7 @@ impl<A, D> Array<A, D> where D: Dimension
     pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
         where A: Clone
     {
+        self.ensure_unique();
         &mut Rc::make_mut(&mut self.data)[..]
     }
 

@@ -336,3 +336,14 @@ fn map1()
     let c = a.map(|x| x);
     assert_eq!(a[(0, 0)], *c[(0, 0)]);
 }
+
+#[test]
+fn raw_data_mut()
+{
+    let mut a = arr2(&[[1., 2.], [3., 4.0f32]]);
+    let mut b = a.clone();
+    for elt in b.raw_data_mut() {
+        *elt = 0.;
+    }
+    assert!(a != b, "{:?} != {:?}", a, b);
+}
