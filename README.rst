@@ -27,6 +27,11 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.1.1
+
+  - Add Array::default
+  - Fix bug in raw_data_mut
+
 - 0.1.0
 
   - First release on crates.io
