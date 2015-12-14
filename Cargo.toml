@@ -1,10 +1,13 @@
 [package]
 
-name = "ndarray"
-version = "0.0.1"
+name = "rendarray"
+version = "0.1.0"
 authors = ["bluss"]
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "http://bluss.github.io/rust-ndarray/"
+
+[lib]
+name = "ndarray"
 
 [dependencies.num]
 version = "0.1"
