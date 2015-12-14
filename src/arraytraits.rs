@@ -13,6 +13,8 @@ use super::{
     Array, Dimension, Ix, Elements, ElementsMut,
     ArrayBase,
     Storage,
+    StorageMut,
+    ArrayMut,
 };
 
 impl<'a, A, D: Dimension> Index<D> for Array<A, D>
@@ -68,24 +70,25 @@ impl<A> FromIterator<A> for Array<A, Ix>
     }
 }
 
-impl<'a, A, D> IntoIterator for &'a Array<A, D> where
-    D: Dimension,
+impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
+    where D: Dimension,
+          S: Storage,
 {
-    type Item = &'a A;
-    type IntoIter = Elements<'a, A, D>;
+    type Item = &'a S::Elem;
+    type IntoIter = Elements<'a, S::Elem, D>;
 
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
-    A: Clone,
-    D: Dimension,
+impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
+    where D: Dimension,
+          S: StorageMut,
+          ArrayBase<S, D>: ArrayMut,
 {
-    type Item = &'a mut A;
-    type IntoIter = ElementsMut<'a, A, D>;
+    type Item = &'a mut S::Elem;
+    type IntoIter = ElementsMut<'a, S::Elem, D>;
 
     fn into_iter(self) -> Self::IntoIter
     {
@@ -93,10 +96,12 @@ impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
     }
 }
 
-impl<A: hash::Hash, D: Dimension>
-hash::Hash for Array<A, D>
+impl<'a, S, D> hash::Hash for ArrayBase<S, D>
+    where D: Dimension,
+          S: Storage,
+          S::Elem: hash::Hash,
 {
-    fn hash<S: hash::Hasher>(&self, state: &mut S)
+    fn hash<H: hash::Hasher>(&self, state: &mut H)
     {
         self.shape().hash(state);
         for elt in self.iter() {
