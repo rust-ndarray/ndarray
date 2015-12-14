@@ -191,8 +191,6 @@ impl<A, D> Array<A, D> where D: Dimension
 
     /// Construct an Array with copies of **elem**.
     ///
-    /// ## Example
-    ///
     /// ```
     /// use ndarray::Array;
     /// use ndarray::arr3;
@@ -388,8 +386,6 @@ impl<A, D> Array<A, D> where D: Dimension
     /// axes that are to be repeated.
     ///
     /// See broadcasting documentation for Numpy for more information.
-    ///
-    /// ## Example
     ///
     /// ```
     /// use ndarray::arr1;
