@@ -10,7 +10,7 @@ documentation = "http://bluss.github.io/rust-ndarray/"
 
 description = "An N-dimensional array for elements of arbitrary type. Lightweight array views and slicing. The Array is copy-on-write and similar to numpy’s ndarray."
 
-keywords = ["array", "data-structure", "n-dimensional"]
+keywords = ["array", "data-structure", "n-dimensional", "matrix"]
 
 [lib]
 name = "ndarray"
