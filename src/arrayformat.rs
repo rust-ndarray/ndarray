@@ -1,9 +1,15 @@
 use std::fmt;
 use super::{Array, Dimension};
+use super::{
+    ArrayBase,
+    Storage,
+};
 
-fn format_array<A, D: Dimension, F>(view: &Array<A, D>, f: &mut fmt::Formatter,
-                                    mut format: F) -> fmt::Result where
-    F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
+fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
+                            mut format: F) -> fmt::Result
+    where F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
+          D: Dimension,
+          S: Storage<Elem=A>,
 {
     let ndim = view.dim.slice().len();
     /* private nowadays
@@ -80,7 +86,8 @@ impl<'a, A: fmt::Display, D: Dimension> fmt::Display for Array<A, D>
     }
 }
 
-impl<'a, A: fmt::Debug, D: Dimension> fmt::Debug for Array<A, D>
+impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
+    where S: Storage<Elem=A>,
 {
     /// Format the array using `Debug` and apply the formatting parameters used
     /// to each element.

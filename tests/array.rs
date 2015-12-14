@@ -336,10 +336,10 @@ fn equality()
 fn map1()
 {
     let a = arr2(&[[1., 2.], [3., 4.]]);
-    let b = a.map(|&x| (x / 3.) as isize);
+    let b = a.map::<Vec<_>, _>(|&x| (x / 3.) as isize);
     assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
     // test map to reference with array's lifetime.
-    let c = a.map(|x| x);
+    let c = a.map::<Vec<_>, _>(|x| x);
     assert_eq!(a[(0, 0)], *c[(0, 0)]);
 }
 
@@ -364,4 +364,10 @@ fn owned_array1() {
         assert_eq!(*elt, 2);
     }
     assert_eq!(a.shape(), &[4]);
+
+    let mut a = OwnedArray::zeros((2, 2));
+    let mut b = Array::zeros((2, 2));
+    a[(1, 1)] = 3;
+    b[(1, 1)] = 3;
+    assert_eq!(a, b);
 }

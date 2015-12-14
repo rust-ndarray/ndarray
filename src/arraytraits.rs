@@ -17,25 +17,30 @@ use super::{
     ArrayMut,
 };
 
-impl<'a, A, D: Dimension> Index<D> for Array<A, D>
+/// Access the element at **index**.
+///
+/// **Panics** if index is out of bounds.
+impl<S, D> Index<D> for ArrayBase<S, D>
+    where D: Dimension,
+          S: Storage,
 {
-    type Output = A;
+    type Output = S::Elem;
     #[inline]
-    /// Access the element at **index**.
-    ///
-    /// **Panics** if index is out of bounds.
-    fn index(&self, index: D) -> &A {
+    fn index(&self, index: D) -> &S::Elem {
         self.at(index).expect("Array::index: out of bounds")
     }
 }
 
-impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
+/// Access the element at **index** mutably.
+///
+/// **Panics** if index is out of bounds.
+impl<S, D> IndexMut<D> for ArrayBase<S, D>
+    where D: Dimension,
+          S: StorageMut,
+          ArrayBase<S, D>: ArrayMut,
 {
     #[inline]
-    /// Access the element at **index** mutably.
-    ///
-    /// **Panics** if index is out of bounds.
-    fn index_mut(&mut self, index: D) -> &mut A {
+    fn index_mut(&mut self, index: D) -> &mut S::Elem {
         self.at_mut(index).expect("Array::index_mut: out of bounds")
     }
 }
