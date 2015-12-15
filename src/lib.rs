@@ -341,8 +341,23 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
-    fn into_iter(self) -> Elements<'a, A, D> {
+    fn into_iter_(self) -> Elements<'a, A, D> {
         Elements { inner: self.into_base_iter() }
+    }
+}
+
+impl<'a, A, D> ArrayViewMut<'a, A, D>
+    where D: Dimension,
+{
+    #[inline]
+    fn into_base_iter(self) -> Baseiter<'a, A, D> {
+        unsafe {
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+        }
+    }
+
+    fn into_iter_(self) -> ElementsMut<'a, A, D> {
+        ElementsMut { inner: self.into_base_iter() }
     }
 }
 
@@ -608,7 +623,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     pub fn broadcast_iter<'a, E: Dimension>(&'a self, dim: E)
         -> Option<Elements<'a, A, E>>
     {
-        self.broadcast(dim).map(|v| v.into_iter())
+        self.broadcast(dim).map(|v| v.into_iter_())
     }
 
     #[inline(never)]

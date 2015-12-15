@@ -12,6 +12,8 @@ use std::ops::{
 use super::{
     Array, Dimension, Ix, Elements, ElementsMut,
     ArrayBase,
+    ArrayView,
+    ArrayViewMut,
     Storage,
     StorageMut,
 };
@@ -95,6 +97,28 @@ impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
     fn into_iter(self) -> Self::IntoIter
     {
         self.iter_mut()
+    }
+}
+
+impl<'a, A, D> IntoIterator for ArrayView<'a, A,  D>
+    where D: Dimension,
+{
+    type Item = &'a A;
+    type IntoIter = Elements<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter_()
+    }
+}
+
+impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A,  D>
+    where D: Dimension,
+{
+    type Item = &'a mut A;
+    type IntoIter = ElementsMut<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter_()
     }
 }
 

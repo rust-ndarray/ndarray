@@ -391,6 +391,9 @@ fn views() {
     assert_eq!(a.clone() + b, &b + &b);
     a.clone()[(0, 0)] = 99;
     assert_eq!(b[(0, 0)], 1);
+
+    assert_eq!(a.view().into_iter().cloned().collect::<Vec<_>>(),
+               vec![1, 2, 3, 4]);
 }
 
 #[test]
@@ -405,6 +408,11 @@ fn view_mut() {
         b[(0, 0)] = 7;
     }
     assert_eq!(a[(0, 0)], 7);
+
+    for elt in a.view_mut() {
+        *elt = 2;
+    }
+    assert_eq!(a, Array::from_elem((2, 2), 2));
 }
 
 #[cfg(feature = "assign_ops")]
