@@ -428,6 +428,31 @@ fn view_mut() {
     assert_eq!(a, Array::from_elem((2, 2), 2));
 }
 
+#[test]
+fn slice_mut() {
+    let mut a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    for elt in a.slice_mut(&[S, S]) {
+        *elt = 0;
+    }
+    assert_eq!(a, aview2(&[[0, 0], [0, 0]]));
+
+    let mut b = arr2(&[[1, 2, 3],
+                       [4, 5, 6]]);
+    let c = b.clone(); // make sure we can mutate b even if it has to be unshared first
+    for elt in b.slice_mut(&[S, Si(0, Some(1), 1)]) {
+        *elt = 0;
+    }
+    assert_eq!(b, aview2(&[[0, 2, 3],
+                           [0, 5, 6]]));
+    assert!(c != b);
+
+    for elt in b.slice_mut(&[S, Si(0, None, 2)]) {
+        *elt = 99;
+    }
+    assert_eq!(b, aview2(&[[99, 2, 99],
+                           [99, 5, 99]]));
+}
+
 #[cfg(feature = "assign_ops")]
 #[test]
 fn assign_ops()

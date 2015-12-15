@@ -862,6 +862,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.iter_mut().indexed()
     }
 
+    /// Return a sliced read-write view of the array.
+    ///
+    /// **Panics** if **indexes** does not match the number of array axes.
+    pub fn slice_mut(&mut self, indexes: &[Si]) -> ArrayViewMut<A, D>
+        where S: DataMut
+    {
+        let mut arr = self.view_mut();
+        arr.islice(indexes);
+        arr
+    }
+
     /// Return an iterator of mutable references into the sliced view
     /// of the array.
     ///
