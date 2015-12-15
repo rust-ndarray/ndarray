@@ -1442,12 +1442,16 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
 }
 
 
-impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
+impl<A, S, D> ArrayBase<S, D>
+    where A: Float + PartialOrd,
+          S: Data<Elem=A>,
+          D: Dimension
 {
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance.<br>
     /// Return `false` otherwise, or if the shapes disagree.
-    pub fn allclose(&self, rhs: &Array<A, D>, tol: A) -> bool
+    pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
+        where S2: Data<Elem=A>,
     {
         self.shape() == rhs.shape() &&
         self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
