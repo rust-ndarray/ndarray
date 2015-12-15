@@ -379,6 +379,30 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
         self.strides == self.dim.default_strides()
     }
 
+    /// Return a read-only view of the array
+    pub fn view(&self) -> ArrayView<A, D> {
+        ArrayView {
+            ptr: self.ptr,
+            dim: self.dim.clone(),
+            strides: self.strides.clone(),
+            data: self.raw_data(),
+        }
+    }
+
+    /// Return a read-only view of the array
+    pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
+        where Self: ArrayMut,
+              S: StorageMut,
+    {
+        self.ensure_unique();
+        ArrayViewMut {
+            ptr: self.ptr,
+            dim: self.dim.clone(),
+            strides: self.strides.clone(),
+            data: self.data.slice_mut(),
+        }
+    }
+
     /// Return a slice of the array's backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order

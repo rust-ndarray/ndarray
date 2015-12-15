@@ -378,3 +378,29 @@ fn owned_array1() {
     assert_eq!(c, d1);
     assert_eq!(d1, d2);
 }
+
+#[test]
+fn views() {
+    let a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let b = a.view();
+    assert_eq!(a, b);
+    assert_eq!(a.shape(), b.shape());
+    assert_eq!(a.clone() + a.clone(), &b + &b);
+    assert_eq!(a.clone() + b, &b + &b);
+    a.clone()[(0, 0)] = 99;
+    assert_eq!(b[(0, 0)], 1);
+}
+
+#[test]
+fn view_mut() {
+    let mut a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    for elt in &mut a.view_mut() {
+        *elt = 0;
+    }
+    assert_eq!(a, OwnedArray::zeros((2, 2)));
+    {
+        let mut b = a.view_mut();
+        b[(0, 0)] = 7;
+    }
+    assert_eq!(a[(0, 0)], 7);
+}
