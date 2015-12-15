@@ -11,7 +11,7 @@
 //! - `OwnedArray`<br>
 //!   Array where the data is owned uniquely.
 //! - `ArrayView`<br>
-//!   A lightweight immutable array view.
+//!   A lightweight array view.
 //! - `ArrayViewMut`<br>
 //!   A lightweight read-write array view.
 //!
@@ -145,11 +145,13 @@ pub struct ArrayBase<S, D> where S: Storage {
     strides: D,
 }
 
+/// Array's inner representation.
 pub unsafe trait Storage {
     type Elem;
     fn slice(&self) -> &[Self::Elem];
 }
 
+/// Array's writable inner representation.
 pub unsafe trait StorageMut : Storage {
     fn slice_mut(&mut self) -> &mut [Self::Elem];
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
@@ -212,28 +214,36 @@ unsafe impl<'a, A> StorageMut for &'a mut [A] {
     fn slice_mut(&mut self) -> &mut [A] { self }
 }
 
-pub trait StorageNew : Storage {
+/// Array representation that is a unique or shared owner of its data.
+pub trait OwnedStorage : Storage {
     fn new(elements: Vec<Self::Elem>) -> Self;
 }
 
+/// Array representation that is a lightweight view.
 pub trait Shared : Clone { }
 
 impl<A> Shared for Rc<Vec<A>> { }
 impl<'a, A> Shared for &'a [A] { }
 
-impl<A> StorageNew for Vec<A> {
+impl<A> OwnedStorage for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
 }
 
-impl<A> StorageNew for Rc<Vec<A>> {
+impl<A> OwnedStorage for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
 }
 
 
+/// Array where the data is reference counted and copy on write, it
+/// can act as both an owner as the data as well as a lightweight view.
 pub type Array<A, D> = ArrayBase<Rc<Vec<A>>, D>;
+
+/// Array where the data is owned uniquely.
 pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 
+/// A lightweight array view.
 pub type ArrayView<'a, A, D> = ArrayBase<&'a [A], D>;
+/// A lightweight read-write array view.
 pub type ArrayViewMut<'a, A, D> = ArrayBase<&'a mut [A], D>;
 
 impl<S: Storage + Clone, D: Clone> Clone for ArrayBase<S, D>
@@ -251,7 +261,7 @@ impl<S: Storage + Clone, D: Clone> Clone for ArrayBase<S, D>
 impl<S: Storage + Copy, D: Copy> Copy for ArrayBase<S, D> { }
 
 impl<S> ArrayBase<S, Ix>
-    where S: StorageNew,
+    where S: OwnedStorage,
 {
     /// Create a one-dimensional array from a vector (no allocation needed).
     pub fn from_vec(v: Vec<S::Elem>) -> Self {
@@ -280,7 +290,7 @@ impl Array<f32, Ix>
 }
 
 impl<S, D> ArrayBase<S, D>
-    where S: StorageNew,
+    where S: OwnedStorage,
           D: Dimension,
 {
     /// Create an array from a vector (with no allocation needed).
@@ -291,7 +301,7 @@ impl<S, D> ArrayBase<S, D>
         debug_assert!(dim.size() == v.len());
         ArrayBase {
             ptr: v.as_mut_ptr(),
-            data: StorageNew::new(v),
+            data: OwnedStorage::new(v),
             strides: dim.default_strides(),
             dim: dim
         }
@@ -719,7 +729,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     pub fn map<'a, S2, F>(&'a self, mut f: F) -> ArrayBase<S2, D>
         where F: FnMut(&'a A) -> S2::Elem,
               A: 'a,
-              S2: StorageNew,
+              S2: OwnedStorage,
     {
         let mut res = Vec::with_capacity(self.dim.size());
         for elt in self.iter() {
@@ -878,7 +888,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// );
     /// ```
     pub fn reshape<E: Dimension>(&self, shape: E) -> ArrayBase<S, E>
-        where S: Shared + StorageNew, A: Clone,
+        where S: Shared + OwnedStorage, A: Clone,
     {
         if shape.size() != self.dim.size() {
             panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
