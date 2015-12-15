@@ -354,7 +354,7 @@ fn map1()
     let b = a.map(|&x| (x / 3.) as isize);
     assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
     // test map to reference with array's lifetime.
-    let c = a.map(|x| x);
+    let c = a.map(|x| x).into_shared();
     assert_eq!(a[(0, 0)], *c[(0, 0)]);
 }
 

@@ -252,6 +252,7 @@ unsafe impl<'a, A> DataMut for &'a mut [A] {
 /// Array representation that is a unique or shared owner of its data.
 pub unsafe trait DataOwned : Data {
     fn new(elements: Vec<Self::Elem>) -> Self;
+    fn into_shared(self) -> Rc<Vec<Self::Elem>>;
 }
 
 /// Array representation that is a lightweight view.
@@ -262,10 +263,12 @@ impl<'a, A> DataShared for &'a [A] { }
 
 unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
+    fn into_shared(self) -> Rc<Vec<A>> { Rc::new(self) }
 }
 
 unsafe impl<A> DataOwned for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
+    fn into_shared(self) -> Rc<Vec<A>> { self }
 }
 
 
@@ -476,6 +479,31 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let data = self.iter().cloned().collect();
         unsafe {
             ArrayBase::from_vec_dim(self.dim.clone(), data)
+        }
+    }
+
+    /// Return a shared ownership (copy on write) array.
+    pub fn to_shared(&self) -> Array<A, D>
+        where A: Clone
+    {
+        // FIXME: Avoid copying if it's already an Array.
+        // FIXME: Use standard layout / more efficient copy?
+        let data = self.iter().cloned().collect();
+        unsafe {
+            ArrayBase::from_vec_dim(self.dim.clone(), data)
+        }
+    }
+
+    /// Return a shared ownership (copy on write) array.
+    pub fn into_shared(self) -> Array<A, D>
+        where S: DataOwned,
+    {
+        let data = self.data.into_shared();
+        ArrayBase {
+            data: data,
+            ptr: self.ptr,
+            dim: self.dim,
+            strides: self.strides,
         }
     }
 
