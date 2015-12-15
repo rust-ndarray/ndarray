@@ -115,7 +115,7 @@ pub type Ixs = i32;
 /// Arrays support limited *broadcasting*, where arithmetic operations with
 /// array operands of different sizes can be carried out by repeating the
 /// elements of the smaller dimension array. See
-/// [*.broadcast_iter()*](#method.broadcast_iter) for a more detailed
+/// [`.broadcast()`](#method.broadcast) for a more detailed
 /// description.
 ///
 /// ```
@@ -600,7 +600,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// Return **None** if shapes can not be broadcast together.
     ///
-    /// ## Background
+    /// ***Background***
     ///
     ///  * Two axes are compatible if they are equal, or one of them is 1.
     ///  * In this instance, only the axes of the smaller side (self) can be 1.
@@ -611,10 +611,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// because its axes are either equal or 1 (or missing);
     /// while (2, 2) can *not* be broadcast into (2, 4).
     ///
-    /// The implementation creates an iterator with strides set to 0 for the
+    /// The implementation creates a view with strides set to zero for the
     /// axes that are to be repeated.
     ///
-    /// See broadcasting documentation for Numpy for more information.
+    /// The broadcasting documentation for Numpy has more information.
     ///
     /// ```
     /// use ndarray::arr1;
@@ -669,6 +669,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
             Some(new_stride)
         }
 
+        // Note: zero strides are safe precisely because we return an read-only view
         let broadcast_strides = 
             match upcast(&dim, &self.dim, &self.strides) {
                 Some(st) => st,
