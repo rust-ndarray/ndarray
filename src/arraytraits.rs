@@ -115,6 +115,22 @@ impl<'a, S, D> hash::Hash for ArrayBase<S, D>
     }
 }
 
+// NOTE: ArrayBase keeps an internal raw pointer that always
+// points into the storage. This is Sync & Send as long as we
+// follow the usual inherited mutability rules, as we do with
+// Vec, &[] and &mut []
+
+/// `ArrayBase` is `Sync` when the storage type is.
+unsafe impl<S, D> Sync for ArrayBase<S, D>
+    where S: Sync + Storage, D: Sync
+{ }
+
+/// `ArrayBase` is `Send` when the storage type is.
+unsafe impl<S, D> Send for ArrayBase<S, D>
+    where S: Send + Storage, D: Send
+{ }
+
+
 #[cfg(feature = "rustc-serialize")]
 // Use version number so we can add a packed format later.
 static ARRAY_FORMAT_VERSION: u8 = 1u8;
