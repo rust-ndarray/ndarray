@@ -389,7 +389,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
         }
     }
 
-    /// Return a read-only view of the array
+    /// Return a read-write view of the array
     pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
         where Self: ArrayMut,
               S: StorageMut,
