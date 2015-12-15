@@ -1056,7 +1056,8 @@ impl<A, D> Array<A, D> where
     }
 }
 
-impl<A> Array<A, (Ix, Ix)>
+impl<A, S> ArrayBase<S, (Ix, Ix)>
+    where S: Storage<Elem=A>,
 {
     /// Return an iterator over the elements of row **index**.
     ///
@@ -1092,7 +1093,8 @@ impl<A> Array<A, (Ix, Ix)>
 
 // Matrix multiplication only defined for simple types to
 // avoid trouble with failing + and *, and destructors
-impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
+impl<'a, A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
+    where S: Storage<Elem=A>,
 {
     /// Perform matrix multiplication of rectangular arrays **self** and **other**.
     ///
@@ -1117,7 +1119,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     /// );
     /// ```
     ///
-    pub fn mat_mul(&self, other: &Array<A, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
+    pub fn mat_mul(&self, other: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
     {
         let ((m, a), (b, n)) = (self.dim, other.dim);
         let (self_columns, other_rows) = (a, b);
@@ -1144,7 +1146,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
             }
         }
         unsafe {
-            Array::from_vec_dim((m, n), res_elems)
+            ArrayBase::from_vec_dim((m, n), res_elems)
         }
     }
 
@@ -1157,7 +1159,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if sizes are incompatible.
-    pub fn mat_mul_col(&self, other: &Array<A, Ix>) -> Array<A, Ix>
+    pub fn mat_mul_col(&self, other: &ArrayBase<S, Ix>) -> Array<A, Ix>
     {
         let ((m, a), n) = (self.dim, other.dim);
         let (self_columns, other_rows) = (a, n);
@@ -1179,7 +1181,7 @@ impl<'a, A: Copy + linalg::Ring> Array<A, (Ix, Ix)>
             i += 1;
         }
         unsafe {
-            Array::from_vec_dim(m, res_elems)
+            ArrayBase::from_vec_dim(m, res_elems)
         }
     }
 }
