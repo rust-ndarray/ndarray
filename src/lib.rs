@@ -1282,9 +1282,8 @@ impl<'a, A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 /// **Panics** if broadcasting isn't possible.
 impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
-          S: StorageMut<Elem=A>,
+          S: Storage<Elem=A>,
           S2: Storage<Elem=A>,
-          ArrayBase<S, D>: ArrayMut,
           D: Dimension,
           E: Dimension,
 {
