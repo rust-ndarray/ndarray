@@ -189,7 +189,8 @@ fn diag()
 {
     let d = arr2(&[[1., 2., 3.0f32]]).diag();
     assert_eq!(d.dim(), 1);
-    let d = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]).diag();
+    let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
+    let d = a.view().diag();
     assert_eq!(d.dim(), 2);
     let d = arr2::<f32, _>(&[[]]).diag();
     assert_eq!(d.dim(), 0);
