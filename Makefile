@@ -16,7 +16,7 @@ $(VERSIONS): Cargo.toml
 
 $(DOCCRATES): %: target/VERS/%
 	# Put in the crate version into the docs
-	find ./doc/$@ -name "*.html" -exec sed -i -e "s/<title>\(.*\) - Rust/<title>$@ $(shell cat $<) - \1 - Rust/g" {} \;
+	find ./doc/$@ -name "*.html" -exec sed -i -e "s/<title>\(.*\) - Rust/<title>rendarray $(shell cat $<) - \1 - Rust/g" {} \;
 
 subst: $(DOCCRATES)
 
