@@ -96,7 +96,7 @@ pub type Ixs = i32;
 /// values.
 ///
 /// Calling a method for mutating elements, for example 
-/// [*at_mut()*](#method.at_mut), [*iadd()*](#method.iadd) or
+/// [*get_mut()*](#method.get_mut), [*iadd()*](#method.iadd) or
 /// [*iter_mut()*](#method.iter_mut) will break sharing and require a clone of
 /// the data (if it is not uniquely held).
 ///
@@ -554,11 +554,35 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a reference to the element at **index**, or return **None** 
     /// if the index is out of bounds.
-    pub fn at(&self, index: D) -> Option<&A> {
+    pub fn get(&self, index: D) -> Option<&A> {
         self.dim.stride_offset_checked(&self.strides, &index)
             .map(|offset| unsafe {
                 &*self.ptr.offset(offset)
             })
+    }
+
+    /// ***Deprecated: use .get(i)***
+    pub fn at(&self, index: D) -> Option<&A> {
+        self.get(index)
+    }
+
+    /// Return a mutable reference to the element at **index**, or return **None**
+    /// if the index is out of bounds.
+    pub fn get_mut(&mut self, index: D) -> Option<&mut A>
+        where S: DataMut,
+    {
+        self.ensure_unique();
+        self.dim.stride_offset_checked(&self.strides, &index)
+            .map(|offset| unsafe {
+                &mut *self.ptr.offset(offset)
+            })
+    }
+
+    /// ***Deprecated: use .get_mut(i)***
+    pub fn at_mut(&mut self, index: D) -> Option<&mut A>
+        where S: DataMut,
+    {
+        self.get_mut(index)
     }
 
     /// Perform *unchecked* array indexing.
@@ -856,18 +880,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         S::ensure_unique(self);
-    }
-
-    /// Return a mutable reference to the element at **index**, or return **None**
-    /// if the index is out of bounds.
-    pub fn at_mut(&mut self, index: D) -> Option<&mut A>
-        where S: DataMut,
-    {
-        self.ensure_unique();
-        self.dim.stride_offset_checked(&self.strides, &index)
-            .map(|offset| unsafe {
-                &mut *self.ptr.offset(offset)
-            })
     }
 
     /// Return an iterator of mutable references to the elements of the array.

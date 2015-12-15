@@ -28,7 +28,7 @@ impl<S, D> Index<D> for ArrayBase<S, D>
     type Output = S::Elem;
     #[inline]
     fn index(&self, index: D) -> &S::Elem {
-        self.at(index).expect("Array::index: out of bounds")
+        self.get(index).expect("Array::index: out of bounds")
     }
 }
 
@@ -41,7 +41,7 @@ impl<S, D> IndexMut<D> for ArrayBase<S, D>
 {
     #[inline]
     fn index_mut(&mut self, index: D) -> &mut S::Elem {
-        self.at_mut(index).expect("Array::index_mut: out of bounds")
+        self.get_mut(index).expect("Array::index_mut: out of bounds")
     }
 }
 
