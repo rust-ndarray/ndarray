@@ -468,6 +468,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
         }
     }
 
+    /// Return an uniquely owned copy of the array or view
+    pub fn to_owned(&self) -> OwnedArray<A, D>
+        where A: Clone
+    {
+        // FIXME: Use standard layout / more efficient copy?
+        let data = self.iter().cloned().collect();
+        unsafe {
+            ArrayBase::from_vec_dim(self.dim.clone(), data)
+        }
+    }
+
     /// Return a slice of the array's backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -1135,9 +1146,10 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
 }
 
 
-impl<A, D> Array<A, D> where
-    A: Clone + Add<Output=A>,
-    D: RemoveAxis,
+impl<A, S, D> ArrayBase<S, D>
+    where A: Clone + Add<Output=A>,
+          S: Storage<Elem=A>,
+          D: RemoveAxis,
 {
     /// Return sum along **axis**.
     ///
@@ -1155,20 +1167,22 @@ impl<A, D> Array<A, D> where
     /// ```
     ///
     /// **Panics** if **axis** is out of bounds.
-    pub fn sum(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn sum(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
     {
         let n = self.shape()[axis];
-        let mut res = self.subview(axis, 0);
+        let mut res = self.view().subview(axis, 0).to_owned();
         for i in 1..n {
-            res.iadd(&self.subview(axis, i))
+            let view = self.view().subview(axis, i);
+            res.iadd(&view);
         }
         res
     }
 }
 
-impl<A, D> Array<A, D> where
-    A: Copy + linalg::Field,
-    D: RemoveAxis,
+impl<A, S, D> ArrayBase<S, D>
+    where A: Copy + linalg::Field,
+          S: Storage<Elem=A>,
+          D: RemoveAxis,
 {
     /// Return mean along **axis**.
     ///
@@ -1185,7 +1199,7 @@ impl<A, D> Array<A, D> where
     ///
     ///
     /// **Panics** if **axis** is out of bounds.
-    pub fn mean(&self, axis: usize) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
     {
         let n = self.shape()[axis];
         let mut sum = self.sum(axis);

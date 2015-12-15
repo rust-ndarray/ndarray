@@ -6,8 +6,10 @@ extern crate ndarray;
 use ndarray::{Array, S, Si,
     OwnedArray,
 };
-use ndarray::{arr0, arr1, arr2};
-use ndarray::{aview2};
+use ndarray::{arr0, arr1, arr2,
+    aview1,
+    aview2,
+};
 use ndarray::Indexes;
 use ndarray::SliceRange;
 
@@ -267,6 +269,7 @@ fn sum_mean()
     assert_eq!(a.mean(0), arr1(&[2., 3.]));
     assert_eq!(a.mean(1), arr1(&[1.5, 3.5]));
     assert_eq!(a.sum(1).sum(0), arr0(10.));
+    assert_eq!(a.view().mean(1), aview1(&[1.5, 3.5]));
 }
 
 #[test]
