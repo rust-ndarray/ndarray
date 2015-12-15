@@ -9,46 +9,63 @@ use std::ops::{
     IndexMut,
 };
 
-use super::{Array, Dimension, Ix, Elements, ElementsMut};
+use super::{
+    Array, Dimension, Ix, Elements, ElementsMut,
+    ArrayBase,
+    ArrayView,
+    ArrayViewMut,
+    Data,
+    DataMut,
+};
 
-impl<'a, A, D: Dimension> Index<D> for Array<A, D>
+/// Access the element at **index**.
+///
+/// **Panics** if index is out of bounds.
+impl<S, D> Index<D> for ArrayBase<S, D>
+    where D: Dimension,
+          S: Data,
 {
-    type Output = A;
+    type Output = S::Elem;
     #[inline]
-    /// Access the element at **index**.
-    ///
-    /// **Panics** if index is out of bounds.
-    fn index(&self, index: D) -> &A {
-        self.at(index).expect("Array::index: out of bounds")
+    fn index(&self, index: D) -> &S::Elem {
+        self.get(index).expect("Array::index: out of bounds")
     }
 }
 
-impl<'a, A: Clone, D: Dimension> IndexMut<D> for Array<A, D>
+/// Access the element at **index** mutably.
+///
+/// **Panics** if index is out of bounds.
+impl<S, D> IndexMut<D> for ArrayBase<S, D>
+    where D: Dimension,
+          S: DataMut,
 {
     #[inline]
-    /// Access the element at **index** mutably.
-    ///
-    /// **Panics** if index is out of bounds.
-    fn index_mut(&mut self, index: D) -> &mut A {
-        self.at_mut(index).expect("Array::index_mut: out of bounds")
+    fn index_mut(&mut self, index: D) -> &mut S::Elem {
+        self.get_mut(index).expect("Array::index_mut: out of bounds")
     }
 }
 
 
-impl<A: PartialEq, D: Dimension>
-PartialEq for Array<A, D>
+impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
+    where D: Dimension,
+          S: Data,
+          S2: Data<Elem = S::Elem>,
+          S::Elem: PartialEq,
 {
     /// Return `true` if the array shapes and all elements of `self` and
     /// `other` are equal. Return `false` otherwise.
-    fn eq(&self, other: &Array<A, D>) -> bool
+    fn eq(&self, other: &ArrayBase<S2, D>) -> bool
     {
         self.shape() == other.shape() &&
         self.iter().zip(other.iter()).all(|(a, b)| a == b)
     }
 }
 
-impl<A: Eq, D: Dimension>
-Eq for Array<A, D> {}
+impl<S, D> Eq for ArrayBase<S, D>
+    where D: Dimension,
+          S: Data,
+          S::Elem: Eq,
+{ }
 
 impl<A> FromIterator<A> for Array<A, Ix>
 {
@@ -58,24 +75,24 @@ impl<A> FromIterator<A> for Array<A, Ix>
     }
 }
 
-impl<'a, A, D> IntoIterator for &'a Array<A, D> where
-    D: Dimension,
+impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
+    where D: Dimension,
+          S: Data,
 {
-    type Item = &'a A;
-    type IntoIter = Elements<'a, A, D>;
+    type Item = &'a S::Elem;
+    type IntoIter = Elements<'a, S::Elem, D>;
 
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
-    A: Clone,
-    D: Dimension,
+impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
+    where D: Dimension,
+          S: DataMut,
 {
-    type Item = &'a mut A;
-    type IntoIter = ElementsMut<'a, A, D>;
+    type Item = &'a mut S::Elem;
+    type IntoIter = ElementsMut<'a, S::Elem, D>;
 
     fn into_iter(self) -> Self::IntoIter
     {
@@ -83,10 +100,34 @@ impl<'a, A, D> IntoIterator for &'a mut Array<A, D> where
     }
 }
 
-impl<A: hash::Hash, D: Dimension>
-hash::Hash for Array<A, D>
+impl<'a, A, D> IntoIterator for ArrayView<'a, A,  D>
+    where D: Dimension,
 {
-    fn hash<S: hash::Hasher>(&self, state: &mut S)
+    type Item = &'a A;
+    type IntoIter = Elements<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter_()
+    }
+}
+
+impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A,  D>
+    where D: Dimension,
+{
+    type Item = &'a mut A;
+    type IntoIter = ElementsMut<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter_()
+    }
+}
+
+impl<'a, S, D> hash::Hash for ArrayBase<S, D>
+    where D: Dimension,
+          S: Data,
+          S::Elem: hash::Hash,
+{
+    fn hash<H: hash::Hasher>(&self, state: &mut H)
     {
         self.shape().hash(state);
         for elt in self.iter() {
@@ -94,6 +135,22 @@ hash::Hash for Array<A, D>
         }
     }
 }
+
+// NOTE: ArrayBase keeps an internal raw pointer that always
+// points into the storage. This is Sync & Send as long as we
+// follow the usual inherited mutability rules, as we do with
+// Vec, &[] and &mut []
+
+/// `ArrayBase` is `Sync` when the storage type is.
+unsafe impl<S, D> Sync for ArrayBase<S, D>
+    where S: Sync + Data, D: Sync
+{ }
+
+/// `ArrayBase` is `Send` when the storage type is.
+unsafe impl<S, D> Send for ArrayBase<S, D>
+    where S: Send + Data, D: Send
+{ }
+
 
 #[cfg(feature = "rustc-serialize")]
 // Use version number so we can add a packed format later.

@@ -1,9 +1,15 @@
 #![allow(non_snake_case)]
+#![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 
 extern crate ndarray;
 
-use ndarray::{Array, S, Si};
-use ndarray::{arr0, arr1, arr2};
+use ndarray::{Array, S, Si,
+    OwnedArray,
+};
+use ndarray::{arr0, arr1, arr2,
+    aview1,
+    aview2,
+};
 use ndarray::Indexes;
 use ndarray::SliceRange;
 
@@ -186,7 +192,8 @@ fn diag()
 {
     let d = arr2(&[[1., 2., 3.0f32]]).diag();
     assert_eq!(d.dim(), 1);
-    let d = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]).diag();
+    let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
+    let d = a.view().diag();
     assert_eq!(d.dim(), 2);
     let d = arr2::<f32, _>(&[[]]).diag();
     assert_eq!(d.dim(), 0);
@@ -234,6 +241,19 @@ fn assign()
     /* Test broadcasting */
     a.assign(&Array::zeros(1));
     assert_eq!(a, Array::zeros((2, 2)));
+
+    /* Test other type */
+    a.assign(&OwnedArray::from_elem((2, 2), 3.));
+    assert_eq!(a, Array::from_elem((2, 2), 3.));
+
+    /* Test mut view */
+    let mut a = arr2(&[[1, 2], [3, 4]]);
+    {
+        let mut v = a.view_mut();
+        v.islice(&[Si(0, Some(1), 1), S]);
+        v.assign_scalar(&0);
+    }
+    assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
 }
 
 #[test]
@@ -258,6 +278,7 @@ fn sum_mean()
     assert_eq!(a.mean(0), arr1(&[2., 3.]));
     assert_eq!(a.mean(1), arr1(&[1.5, 3.5]));
     assert_eq!(a.sum(1).sum(0), arr0(10.));
+    assert_eq!(a.view().mean(1), aview1(&[1.5, 3.5]));
 }
 
 #[test]
@@ -333,17 +354,124 @@ fn map1()
     let b = a.map(|&x| (x / 3.) as isize);
     assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
     // test map to reference with array's lifetime.
-    let c = a.map(|x| x);
+    let c = a.map(|x| x).into_shared();
     assert_eq!(a[(0, 0)], *c[(0, 0)]);
 }
 
 #[test]
 fn raw_data_mut()
 {
-    let mut a = arr2(&[[1., 2.], [3., 4.0f32]]);
+    let a = arr2(&[[1., 2.], [3., 4.0f32]]);
     let mut b = a.clone();
     for elt in b.raw_data_mut() {
         *elt = 0.;
     }
     assert!(a != b, "{:?} != {:?}", a, b);
+}
+
+#[test]
+fn owned_array1() {
+    let mut a = OwnedArray::from_vec(vec![1, 2, 3, 4]);
+    for elt in a.iter_mut() {
+        *elt = 2;
+    }
+    for elt in a.iter() {
+        assert_eq!(*elt, 2);
+    }
+    assert_eq!(a.shape(), &[4]);
+
+    let mut a = OwnedArray::zeros((2, 2));
+    let mut b = Array::zeros((2, 2));
+    a[(1, 1)] = 3;
+    b[(1, 1)] = 3;
+    assert_eq!(a, b);
+
+    let c = a.clone();
+
+    let d1 = &a + &b;
+    let d2 = a + b;
+    assert!(c != d1);
+    assert_eq!(d1, d2);
+}
+
+#[test]
+fn views() {
+    let a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let b = a.view();
+    assert_eq!(a, b);
+    assert_eq!(a.shape(), b.shape());
+    assert_eq!(a.clone() + a.clone(), &b + &b);
+    assert_eq!(a.clone() + b, &b + &b);
+    a.clone()[(0, 0)] = 99;
+    assert_eq!(b[(0, 0)], 1);
+
+    assert_eq!(a.view().into_iter().cloned().collect::<Vec<_>>(),
+               vec![1, 2, 3, 4]);
+}
+
+#[test]
+fn view_mut() {
+    let mut a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    for elt in &mut a.view_mut() {
+        *elt = 0;
+    }
+    assert_eq!(a, OwnedArray::zeros((2, 2)));
+    {
+        let mut b = a.view_mut();
+        b[(0, 0)] = 7;
+    }
+    assert_eq!(a[(0, 0)], 7);
+
+    for elt in a.view_mut() {
+        *elt = 2;
+    }
+    assert_eq!(a, Array::from_elem((2, 2), 2));
+}
+
+#[test]
+fn slice_mut() {
+    let mut a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    for elt in a.slice_mut(&[S, S]) {
+        *elt = 0;
+    }
+    assert_eq!(a, aview2(&[[0, 0], [0, 0]]));
+
+    let mut b = arr2(&[[1, 2, 3],
+                       [4, 5, 6]]);
+    let c = b.clone(); // make sure we can mutate b even if it has to be unshared first
+    for elt in b.slice_mut(&[S, Si(0, Some(1), 1)]) {
+        *elt = 0;
+    }
+    assert_eq!(b, aview2(&[[0, 2, 3],
+                           [0, 5, 6]]));
+    assert!(c != b);
+
+    for elt in b.slice_mut(&[S, Si(0, None, 2)]) {
+        *elt = 99;
+    }
+    assert_eq!(b, aview2(&[[99, 2, 99],
+                           [99, 5, 99]]));
+}
+
+#[cfg(feature = "assign_ops")]
+#[test]
+fn assign_ops()
+{
+    let mut a = arr2(&[[1., 2.], [3., 4.]]);
+    let     b = arr2(&[[1., 3.], [2., 4.]]);
+    (*&mut a.view_mut()) += &b;
+    assert_eq!(a, arr2(&[[2., 5.], [5., 8.]]));
+
+    a -= &b;
+    a -= &b;
+    assert_eq!(a, arr2(&[[0., -1.,], [1., 0.]]));
+}
+
+#[test]
+fn aview() {
+    let a = arr2(&[[1., 2., 3.], [4., 5., 6.]]);
+    let data = [[1., 2., 3.], [4., 5., 6.]];
+    let b = aview2(&data);
+    assert_eq!(a, b);
+    assert_eq!(b.shape(), &[2, 3]);
 }
