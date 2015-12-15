@@ -1371,12 +1371,15 @@ mod assign_ops {
     /// **Panics** if broadcasting isn't possible.
     ///
     /// **Requires `feature = "assign_ops"`**
-    impl<'a, A, D, E> $trt<&'a Array<A, E>> for Array<A, D>
+    impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
         where A: Clone + $trt<A>,
+              S: StorageMut<Elem=A>,
+              ArrayBase<S, D>: ArrayMut,
+              S2: Storage<Elem=A>,
               D: Dimension,
               E: Dimension,
     {
-        fn $method(&mut self, other: &Array<A, E>) {
+        fn $method(&mut self, other: &ArrayBase<S2, E>) {
             if self.shape() == other.shape() {
                 for (x, y) in self.iter_mut().zip(other.iter()) {
                     x.$method(y.clone());

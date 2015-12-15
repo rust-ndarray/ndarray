@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 
 extern crate ndarray;
 
@@ -403,4 +404,18 @@ fn view_mut() {
         b[(0, 0)] = 7;
     }
     assert_eq!(a[(0, 0)], 7);
+}
+
+#[cfg(feature = "assign_ops")]
+#[test]
+fn assign_ops()
+{
+    let mut a = arr2(&[[1., 2.], [3., 4.]]);
+    let     b = arr2(&[[1., 3.], [2., 4.]]);
+    (*&mut a.view_mut()) += &b;
+    assert_eq!(a, arr2(&[[2., 5.], [5., 8.]]));
+
+    a -= &b;
+    a -= &b;
+    assert_eq!(a, arr2(&[[0., -1.,], [1., 0.]]));
 }
