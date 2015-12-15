@@ -220,7 +220,7 @@ pub trait OwnedStorage : Storage {
 }
 
 /// Array representation that is a lightweight view.
-pub trait Shared : Clone { }
+pub trait Shared : Clone + Storage { }
 
 impl<A> Shared for Rc<Vec<A>> { }
 impl<'a, A> Shared for &'a [A] { }
