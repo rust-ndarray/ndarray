@@ -250,7 +250,7 @@ unsafe impl<'a, A> DataMut for &'a mut [A] {
 }
 
 /// Array representation that is a unique or shared owner of its data.
-pub trait DataOwned : Data {
+pub unsafe trait DataOwned : Data {
     fn new(elements: Vec<Self::Elem>) -> Self;
 }
 
@@ -260,11 +260,11 @@ pub trait DataShared : Clone + DataClone { }
 impl<A> DataShared for Rc<Vec<A>> { }
 impl<'a, A> DataShared for &'a [A] { }
 
-impl<A> DataOwned for Vec<A> {
+unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
 }
 
-impl<A> DataOwned for Rc<Vec<A>> {
+unsafe impl<A> DataOwned for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
 }
 
