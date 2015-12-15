@@ -1458,13 +1458,15 @@ impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 // Array OPERATORS
 
 macro_rules! impl_binary_op(
-    ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
+    ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (
 impl<A, S, D> ArrayBase<S, D> where
     A: Clone + $trt<A, Output=A>,
     S: DataMut<Elem=A>,
     D: Dimension,
 {
-    /// Perform an elementwise arithmetic operation between **self** and **other**,
+    /// Perform elementwise
+    #[doc=$doc]
+    /// between **self** and **other**,
     /// *in place*.
     ///
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
@@ -1486,7 +1488,9 @@ impl<A, S, D> ArrayBase<S, D> where
         }
     }
 
-    /// Perform an elementwise arithmetic operation between **self** and the scalar **x**,
+    /// Perform elementwise
+    #[doc=$doc]
+    /// between **self** and the scalar **x**,
     /// *in place*.
     pub fn $imth_scalar (&mut self, x: &A)
     {
@@ -1496,7 +1500,9 @@ impl<A, S, D> ArrayBase<S, D> where
     }
 }
 
-/// Perform an elementwise arithmetic operation between **self** and **other**,
+/// Perform elementwise
+#[doc=$doc]
+/// between **self** and **other**,
 /// and return the result.
 ///
 /// If their shapes disagree, **other** is broadcast to the shape of **self**.
@@ -1527,7 +1533,9 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     }
 }
 
-/// Perform an elementwise arithmetic operation between **self** and **other**,
+/// Perform elementwise
+#[doc=$doc]
+/// between **self** and **other**,
 /// and return the result.
 ///
 /// If their shapes disagree, **other** is broadcast to the shape of **self**.
@@ -1563,16 +1571,16 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
     );
 );
 
-impl_binary_op!(Add, add, iadd, iadd_scalar);
-impl_binary_op!(Sub, sub, isub, isub_scalar);
-impl_binary_op!(Mul, mul, imul, imul_scalar);
-impl_binary_op!(Div, div, idiv, idiv_scalar);
-impl_binary_op!(Rem, rem, irem, irem_scalar);
-impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar);
-impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar);
-impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar);
-impl_binary_op!(Shl, shl, ishl, ishl_scalar);
-impl_binary_op!(Shr, shr, ishr, ishr_scalar);
+impl_binary_op!(Add, add, iadd, iadd_scalar, "Addition");
+impl_binary_op!(Sub, sub, isub, isub_scalar, "Subtraction");
+impl_binary_op!(Mul, mul, imul, imul_scalar, "Multiplication");
+impl_binary_op!(Div, div, idiv, idiv_scalar, "Divsion");
+impl_binary_op!(Rem, rem, irem, irem_scalar, "Remainder");
+impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar, "Bit and");
+impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar, "Bit or");
+impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar, "Bit xor");
+impl_binary_op!(Shl, shl, ishl, ishl_scalar, "Shift left");
+impl_binary_op!(Shr, shr, ishr, ishr_scalar, "Shift right");
 
 #[cfg(feature = "assign_ops")]
 mod assign_ops {
@@ -1591,10 +1599,9 @@ mod assign_ops {
 
 
     macro_rules! impl_assign_op {
-        ($trt:ident, $method:ident) => {
+        ($trt:ident, $method:ident, $doc:expr) => {
 
-    /// Perform an elementwise in place arithmetic operation between **self** and **other**,
-    ///
+    #[doc=$doc]
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
@@ -1624,14 +1631,22 @@ mod assign_ops {
         };
     }
 
-    impl_assign_op!(AddAssign, add_assign);
-    impl_assign_op!(SubAssign, sub_assign);
-    impl_assign_op!(MulAssign, mul_assign);
-    impl_assign_op!(DivAssign, div_assign);
-    impl_assign_op!(RemAssign, rem_assign);
-    impl_assign_op!(BitAndAssign, bitand_assign);
-    impl_assign_op!(BitOrAssign, bitor_assign);
-    impl_assign_op!(BitXorAssign, bitxor_assign);
+    impl_assign_op!(AddAssign, add_assign,
+                    "Implement `self += other` as elementwise addition (in place).\n");
+    impl_assign_op!(SubAssign, sub_assign,
+                    "Implement `self -= other` as elementwise subtraction (in place).\n");
+    impl_assign_op!(MulAssign, mul_assign,
+                    "Implement `self *= other` as elementwise multiplication (in place).\n");
+    impl_assign_op!(DivAssign, div_assign,
+                    "Implement `self /= other` as elementwise division (in place).\n");
+    impl_assign_op!(RemAssign, rem_assign,
+                    "Implement `self %= other` as elementwise remainder (in place).\n");
+    impl_assign_op!(BitAndAssign, bitand_assign,
+                    "Implement `self &= other` as elementwise bit and (in place).\n");
+    impl_assign_op!(BitOrAssign, bitor_assign,
+                    "Implement `self |= other` as elementwise bit or (in place).\n");
+    impl_assign_op!(BitXorAssign, bitxor_assign,
+                    "Implement `self ^= other` as elementwise bit xor (in place).\n");
 }
 
 impl<A: Clone + Neg<Output=A>, D: Dimension>
