@@ -3,11 +3,17 @@
 
 //! The **ndarray** crate provides an n-dimensional container similar to numpy's ndarray.
 //!
-//! - `ArrayBase`
-//! - `Array`
-//! - `OwnedArray`
-//! - `ArrayView`
-//! - `ArrayViewMut`
+//! - [`ArrayBase`](struct.ArrayBase.html)<br>
+//!   The n-dimensional array type itself, parameterized by data storage.
+//! - `Array`<br>
+//!   Array where the data is reference counted and copy on write, it
+//!   can act as both an owner as the data as well as a lightweight view.
+//! - `OwnedArray`<br>
+//!   Array where the data is owned uniquely.
+//! - `ArrayView`<br>
+//!   A lightweight immutable array view.
+//! - `ArrayViewMut`<br>
+//!   A lightweight read-write array view.
 //!
 //! ## Crate Summary and Status
 //!
@@ -15,6 +21,7 @@
 //! - `Array` is clone on write, so it can be both a view or an owner of the
 //!   data.
 //! - Striding and broadcasting is fully implemented
+//! - Focus is on being a generic n-dimensional container
 //! - Due to iterators, arithmetic operations, matrix multiplication etc
 //!   are not very well optimized, this is not a serious crate for numerics
 //!   or linear algebra. `Array` is a good container.
