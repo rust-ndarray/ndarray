@@ -245,6 +245,15 @@ fn assign()
     /* Test other type */
     a.assign(&OwnedArray::from_elem((2, 2), 3.));
     assert_eq!(a, Array::from_elem((2, 2), 3.));
+
+    /* Test mut view */
+    let mut a = arr2(&[[1, 2], [3, 4]]);
+    {
+        let mut v = a.view_mut();
+        v.islice(&[Si(0, Some(1), 1), S]);
+        v.assign_scalar(&0);
+    }
+    assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
 }
 
 #[test]

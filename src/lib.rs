@@ -986,7 +986,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     pub fn assign_scalar(&mut self, x: &A)
         where S: StorageMut, A: Clone,
     {
-        for elt in self.raw_data_mut().iter_mut() {
+        for elt in self.iter_mut() {
             *elt = x.clone();
         }
     }
