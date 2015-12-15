@@ -160,6 +160,12 @@ pub unsafe trait StorageMut : Storage {
     }
 }
 
+/// Clone an Array's storage.
+pub unsafe trait StorageClone : Storage {
+    /// Unsafe because, `ptr` must point inside the current storage.
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
+}
+
 unsafe impl<A> Storage for Rc<Vec<A>> {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
@@ -191,6 +197,15 @@ unsafe impl<A> StorageMut for Rc<Vec<A>> where A: Clone {
     }
 }
 
+unsafe impl<A> StorageClone for Rc<Vec<A>> {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
+        -> (Self, *mut Self::Elem)
+    {
+        // pointer is preserved
+        (self.clone(), ptr)
+    }
+}
+
 unsafe impl<A> Storage for Vec<A> {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
@@ -200,9 +215,29 @@ unsafe impl<A> StorageMut for Vec<A> {
     fn slice_mut(&mut self) -> &mut [A] { self }
 }
 
+unsafe impl<A> StorageClone for Vec<A> where A: Clone {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
+        -> (Self, *mut Self::Elem)
+    {
+        let mut u = self.clone();
+        let our_off = (self.as_ptr() as isize - ptr as isize)
+            / mem::size_of::<A>() as isize;
+        let new_ptr = u.as_mut_ptr().offset(our_off);
+        (u, new_ptr)
+    }
+}
+
 unsafe impl<'a, A> Storage for &'a [A] {
     type Elem = A;
     fn slice(&self) -> &[A] { self }
+}
+
+unsafe impl<'a, A> StorageClone for &'a [A] {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
+        -> (Self, *mut Self::Elem)
+    {
+        (*self, ptr)
+    }
 }
 
 unsafe impl<'a, A> Storage for &'a mut [A] {
@@ -220,7 +255,7 @@ pub trait OwnedStorage : Storage {
 }
 
 /// Array representation that is a lightweight view.
-pub trait Shared : Clone + Storage { }
+pub trait Shared : Clone + StorageClone { }
 
 impl<A> Shared for Rc<Vec<A>> { }
 impl<'a, A> Shared for &'a [A] { }
@@ -246,19 +281,22 @@ pub type ArrayView<'a, A, D> = ArrayBase<&'a [A], D>;
 /// A lightweight read-write array view.
 pub type ArrayViewMut<'a, A, D> = ArrayBase<&'a mut [A], D>;
 
-impl<S: Storage + Clone, D: Clone> Clone for ArrayBase<S, D>
+impl<S: StorageClone, D: Clone> Clone for ArrayBase<S, D>
 {
     fn clone(&self) -> ArrayBase<S, D> {
-        ArrayBase {
-            data: self.data.clone(),
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
+        unsafe {
+            let (data, ptr) = self.data.clone_with_ptr(self.ptr);
+            ArrayBase {
+                data: data,
+                ptr: ptr,
+                dim: self.dim.clone(),
+                strides: self.strides.clone(),
+            }
         }
     }
 }
 
-impl<S: Storage + Copy, D: Copy> Copy for ArrayBase<S, D> { }
+impl<S: StorageClone + Copy, D: Copy> Copy for ArrayBase<S, D> { }
 
 impl<S> ArrayBase<S, Ix>
     where S: OwnedStorage,

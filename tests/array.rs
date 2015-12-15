@@ -378,7 +378,7 @@ fn owned_array1() {
 
     let d1 = &a + &b;
     let d2 = a + b;
-    assert_eq!(c, d1);
+    assert!(c != d1);
     assert_eq!(d1, d2);
 }
 
