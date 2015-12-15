@@ -1653,8 +1653,10 @@ mod assign_ops {
                     "Implement `self ^= rhs` as elementwise bit xor (in place).\n");
 }
 
-impl<A: Clone + Neg<Output=A>, D: Dimension>
-Array<A, D>
+impl<A, S, D> ArrayBase<S, D>
+    where A: Clone + Neg<Output=A>,
+          S: DataMut<Elem=A>,
+          D: Dimension
 {
     /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
@@ -1665,20 +1667,23 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + Neg<Output=A>, D: Dimension>
-Neg for Array<A, D>
+impl<A, S, D> Neg for ArrayBase<S, D>
+    where A: Clone + Neg<Output=A>,
+          S: DataMut<Elem=A>,
+          D: Dimension
 {
     type Output = Self;
     /// Perform an elementwise negation of `self` and return the result.
-    fn neg(mut self) -> Array<A, D>
-    {
+    fn neg(mut self) -> Self {
         self.ineg();
         self
     }
 }
 
-impl<A: Clone + Not<Output=A>, D: Dimension>
-Array<A, D>
+impl<A, S, D> ArrayBase<S, D>
+    where A: Clone + Not<Output=A>,
+          S: DataMut<Elem=A>,
+          D: Dimension
 {
     /// Perform an elementwise unary not of `self`, *in place*.
     pub fn inot(&mut self)
@@ -1689,13 +1694,15 @@ Array<A, D>
     }
 }
 
-impl<A: Clone + Not<Output=A>, D: Dimension>
-Not for Array<A, D>
+
+impl<A, S, D> Not for ArrayBase<S, D>
+    where A: Clone + Not<Output=A>,
+          S: DataMut<Elem=A>,
+          D: Dimension
 {
     type Output = Self;
     /// Perform an elementwise unary not of `self` and return the result.
-    fn not(mut self) -> Array<A, D>
-    {
+    fn not(mut self) -> Self {
         self.inot();
         self
     }
