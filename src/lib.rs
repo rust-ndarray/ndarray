@@ -879,6 +879,38 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         it
     }
 
+    /// Select the subview **index** along **axis** and return a read-write view.
+    ///
+    /// **Panics** if **axis** or **index** is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{arr2, aview2};
+    ///
+    /// let mut a = arr2(&[[1., 2.],
+    ///                    [3., 4.]]);
+    ///
+    /// a.subview_mut(1, 1).iadd_scalar(&10.);
+    ///
+    /// assert!(
+    ///     a == aview2(&[[1., 12.],
+    ///                   [3., 14.]])
+    /// );
+    /// ```
+    pub fn subview_mut(&mut self, axis: usize, index: Ix)
+        -> ArrayViewMut<A, D::Smaller>
+        where S: DataMut,
+              D: RemoveAxis,
+    {
+        let mut res = self.view_mut();
+        res.isubview(axis, index);
+        ArrayBase {
+            data: res.data,
+            ptr: res.ptr,
+            dim: res.dim.remove_axis(axis),
+            strides: res.strides.remove_axis(axis),
+        }
+    }
+
     /// Select the subview **index** along **axis** and return an iterator
     /// of the subview.
     ///
