@@ -1043,22 +1043,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Perform an elementwise assigment to `self` from `other`.
+    /// Perform an elementwise assigment to `self` from `rhs`.
     ///
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn assign<E: Dimension, S2>(&mut self, other: &ArrayBase<S2, E>)
+    pub fn assign<E: Dimension, S2>(&mut self, rhs: &ArrayBase<S2, E>)
         where S: DataMut,
               A: Clone,
               S2: Data<Elem=A>,
     {
-        if self.shape() == other.shape() {
-            for (x, y) in self.iter_mut().zip(other.iter()) {
+        if self.shape() == rhs.shape() {
+            for (x, y) in self.iter_mut().zip(rhs.iter()) {
                 *x = y.clone();
             }
         } else {
-            let other_iter = other.broadcast_iter_unwrap(self.dim());
+            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = y.clone();
             }
@@ -1351,10 +1351,10 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
     where S: Data<Elem=A>,
 {
-    /// Perform matrix multiplication of rectangular arrays `self` and `other`.
+    /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
     /// The array sizes must agree in the way that
-    /// if `self` is *M* × *N*, then `other` is *N* × *K*.
+    /// if `self` is *M* × *N*, then `rhs` is *N* × *K*.
     ///
     /// Return a result array with shape *M* × *K*.
     ///
@@ -1374,9 +1374,9 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
     /// );
     /// ```
     ///
-    pub fn mat_mul(&self, other: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
+    pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
     {
-        let ((m, a), (b, n)) = (self.dim, other.dim);
+        let ((m, a), (b, n)) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, b);
         assert!(self_columns == other_rows);
 
@@ -1390,7 +1390,7 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 let dot = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at((k, j))
+                    |s, k| s + *self.uchk_at((i, k)) * *rhs.uchk_at((k, j))
                 );
                 std::ptr::write(rr, dot);
             }
@@ -1406,17 +1406,17 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
     }
 
     /// Perform the matrix multiplication of the rectangular array `self` and
-    /// column vector `other`.
+    /// column vector `rhs`.
     ///
     /// The array sizes must agree in the way that
-    /// if `self` is *M* × *N*, then `other` is *N*.
+    /// if `self` is *M* × *N*, then `rhs` is *N*.
     ///
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if sizes are incompatible.
-    pub fn mat_mul_col(&self, other: &ArrayBase<S, Ix>) -> Array<A, Ix>
+    pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> Array<A, Ix>
     {
-        let ((m, a), n) = (self.dim, other.dim);
+        let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
         assert!(self_columns == other_rows);
 
@@ -1429,7 +1429,7 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 let dot = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uchk_at((i, k)) * *other.uchk_at(k)
+                    |s, k| s + *self.uchk_at((i, k)) * *rhs.uchk_at(k)
                 );
                 std::ptr::write(rr, dot);
             }
@@ -1447,10 +1447,10 @@ impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance.<br>
     /// Return `false` otherwise, or if the shapes disagree.
-    pub fn allclose(&self, other: &Array<A, D>, tol: A) -> bool
+    pub fn allclose(&self, rhs: &Array<A, D>, tol: A) -> bool
     {
-        self.shape() == other.shape() &&
-        self.iter().zip(other.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
+        self.shape() == rhs.shape() &&
+        self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
     }
 }
 
@@ -1466,22 +1466,22 @@ impl<A, S, D> ArrayBase<S, D> where
 {
     /// Perform elementwise
     #[doc=$doc]
-    /// between `self` and `other`,
+    /// between `self` and `rhs`,
     /// *in place*.
     ///
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn $imethod <E: Dimension, S2> (&mut self, other: &ArrayBase<S2, E>)
+    pub fn $imethod <E: Dimension, S2> (&mut self, rhs: &ArrayBase<S2, E>)
         where S2: Data<Elem=A>,
     {
-        if self.dim.ndim() == other.dim.ndim() &&
-            self.shape() == other.shape() {
-            for (x, y) in self.iter_mut().zip(other.iter()) {
+        if self.dim.ndim() == rhs.dim.ndim() &&
+            self.shape() == rhs.shape() {
+            for (x, y) in self.iter_mut().zip(rhs.iter()) {
                 *x = (x.clone()). $mth (y.clone());
             }
         } else {
-            let other_iter = other.broadcast_iter_unwrap(self.dim());
+            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = (x.clone()). $mth (y.clone());
             }
@@ -1502,10 +1502,10 @@ impl<A, S, D> ArrayBase<S, D> where
 
 /// Perform elementwise
 #[doc=$doc]
-/// between `self` and `other`,
+/// between `self` and `rhs`,
 /// and return the result.
 ///
-/// If their shapes disagree, `other` is broadcast to the shape of `self`.
+/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn't possible.
 impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
@@ -1516,15 +1516,15 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
           E: Dimension,
 {
     type Output = ArrayBase<S, D>;
-    fn $mth (mut self, other: ArrayBase<S2, E>) -> ArrayBase<S, D>
+    fn $mth (mut self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        if self.shape() == other.shape() {
-            for (x, y) in self.iter_mut().zip(other.iter()) {
+        if self.shape() == rhs.shape() {
+            for (x, y) in self.iter_mut().zip(rhs.iter()) {
                 *x = x.clone(). $mth (y.clone());
             }
         } else {
-            let other_iter = other.broadcast_iter_unwrap(self.dim());
+            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter_mut().zip(other_iter) {
                 *x = x.clone(). $mth (y.clone());
             }
@@ -1535,10 +1535,10 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 
 /// Perform elementwise
 #[doc=$doc]
-/// between `self` and `other`,
+/// between `self` and `rhs`,
 /// and return the result.
 ///
-/// If their shapes disagree, `other` is broadcast to the shape of `self`.
+/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn't possible.
 impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
@@ -1549,16 +1549,16 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
           E: Dimension,
 {
     type Output = OwnedArray<A, D>;
-    fn $mth (self, other: &'a ArrayBase<S2, E>) -> OwnedArray<A, D>
+    fn $mth (self, rhs: &'a ArrayBase<S2, E>) -> OwnedArray<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
         let mut result = Vec::<A>::with_capacity(self.dim.size());
-        if self.shape() == other.shape() {
-            for (x, y) in self.iter().zip(other.iter()) {
+        if self.shape() == rhs.shape() {
+            for (x, y) in self.iter().zip(rhs.iter()) {
                 result.push((x.clone()). $mth (y.clone()));
             }
         } else {
-            let other_iter = other.broadcast_iter_unwrap(self.dim());
+            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
             for (x, y) in self.iter().zip(other_iter) {
                 result.push((x.clone()). $mth (y.clone()));
             }
@@ -1602,7 +1602,7 @@ mod assign_ops {
         ($trt:ident, $method:ident, $doc:expr) => {
 
     #[doc=$doc]
-    /// If their shapes disagree, `other` is broadcast to the shape of `self`.
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn't possible.
     ///
@@ -1614,13 +1614,13 @@ mod assign_ops {
               D: Dimension,
               E: Dimension,
     {
-        fn $method(&mut self, other: &ArrayBase<S2, E>) {
-            if self.shape() == other.shape() {
-                for (x, y) in self.iter_mut().zip(other.iter()) {
+        fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
+            if self.shape() == rhs.shape() {
+                for (x, y) in self.iter_mut().zip(rhs.iter()) {
                     x.$method(y.clone());
                 }
             } else {
-                let other_iter = other.broadcast_iter_unwrap(self.dim());
+                let other_iter = rhs.broadcast_iter_unwrap(self.dim());
                 for (x, y) in self.iter_mut().zip(other_iter) {
                     x.$method(y.clone());
                 }
@@ -1632,21 +1632,21 @@ mod assign_ops {
     }
 
     impl_assign_op!(AddAssign, add_assign,
-                    "Implement `self += other` as elementwise addition (in place).\n");
+                    "Implement `self += rhs` as elementwise addition (in place).\n");
     impl_assign_op!(SubAssign, sub_assign,
-                    "Implement `self -= other` as elementwise subtraction (in place).\n");
+                    "Implement `self -= rhs` as elementwise subtraction (in place).\n");
     impl_assign_op!(MulAssign, mul_assign,
-                    "Implement `self *= other` as elementwise multiplication (in place).\n");
+                    "Implement `self *= rhs` as elementwise multiplication (in place).\n");
     impl_assign_op!(DivAssign, div_assign,
-                    "Implement `self /= other` as elementwise division (in place).\n");
+                    "Implement `self /= rhs` as elementwise division (in place).\n");
     impl_assign_op!(RemAssign, rem_assign,
-                    "Implement `self %= other` as elementwise remainder (in place).\n");
+                    "Implement `self %= rhs` as elementwise remainder (in place).\n");
     impl_assign_op!(BitAndAssign, bitand_assign,
-                    "Implement `self &= other` as elementwise bit and (in place).\n");
+                    "Implement `self &= rhs` as elementwise bit and (in place).\n");
     impl_assign_op!(BitOrAssign, bitor_assign,
-                    "Implement `self |= other` as elementwise bit or (in place).\n");
+                    "Implement `self |= rhs` as elementwise bit or (in place).\n");
     impl_assign_op!(BitXorAssign, bitxor_assign,
-                    "Implement `self ^= other` as elementwise bit xor (in place).\n");
+                    "Implement `self ^= rhs` as elementwise bit xor (in place).\n");
 }
 
 impl<A: Clone + Neg<Output=A>, D: Dimension>
