@@ -350,6 +350,21 @@ impl<S, D> ArrayBase<S, D>
 
 }
 
+impl<'a, A, D> ArrayView<'a, A, D>
+    where D: Dimension,
+{
+    #[inline]
+    fn into_base_iter(self) -> Baseiter<'a, A, D> {
+        unsafe {
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+        }
+    }
+
+    fn into_iter(self) -> Elements<'a, A, D> {
+        Elements { inner: self.into_base_iter() }
+    }
+}
+
 impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
 {
     /// Return the total number of elements in the Array.
@@ -544,12 +559,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// use ndarray::arr1;
     ///
     /// assert!(
-    ///     arr1(&[1., 0.]).broadcast_iter((10, 2)).unwrap().count()
-    ///     == 20
+    ///     arr1(&[1., 0.]).broadcast((10, 2)).unwrap().dim()
+    ///     == (10, 2)
     /// );
     /// ```
-    pub fn broadcast_iter<'a, E: Dimension>(&'a self, dim: E)
-        -> Option<Elements<'a, A, E>>
+    pub fn broadcast<'a, E: Dimension>(&'a self, dim: E)
+        -> Option<ArrayView<'a, A, E>>
     {
         /// Return new stride when trying to grow **from** into shape **to**
         ///
@@ -598,12 +613,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
                 Some(st) => st,
                 None => return None,
             };
-        Some(Elements {
-            inner:
-            unsafe {
-                Baseiter::new(self.ptr, dim, broadcast_strides)
-            }
+        Some(ArrayView {
+            data: self.raw_data(),
+            ptr: self.ptr,
+            dim: dim,
+            strides: broadcast_strides,
         })
+    }
+
+    /// Act like a larger size and/or shape array by *broadcasting*
+    /// into a larger shape, if possible.
+    ///
+    /// Return **None** if shapes can not be broadcast together.
+    pub fn broadcast_iter<'a, E: Dimension>(&'a self, dim: E)
+        -> Option<Elements<'a, A, E>>
+    {
+        self.broadcast(dim).map(|v| v.into_iter())
     }
 
     #[inline(never)]
