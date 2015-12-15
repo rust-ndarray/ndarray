@@ -370,4 +370,11 @@ fn owned_array1() {
     a[(1, 1)] = 3;
     b[(1, 1)] = 3;
     assert_eq!(a, b);
+
+    let c = a.clone();
+
+    let d1 = &a + &b;
+    let d2 = a + b;
+    assert_eq!(c, d1);
+    assert_eq!(d1, d2);
 }

@@ -1248,13 +1248,16 @@ impl<A, S, D> ArrayBase<S, D> where
 /// If their shapes disagree, **other** is broadcast to the shape of **self**.
 ///
 /// **Panics** if broadcasting isn't possible.
-impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D>
+impl<'a, A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
+          S: StorageMut<Elem=A>,
+          ArrayBase<S, D>: ArrayMut,
+          S2: Storage<Elem=A>,
           D: Dimension,
           E: Dimension,
 {
-    type Output = Array<A, D>;
-    fn $mth (mut self, other: Array<A, E>) -> Array<A, D>
+    type Output = ArrayBase<S, D>;
+    fn $mth (mut self, other: ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
         if self.shape() == other.shape() {
@@ -1277,13 +1280,16 @@ impl<'a, A, D, E> $trt<Array<A, E>> for Array<A, D>
 /// If their shapes disagree, **other** is broadcast to the shape of **self**.
 ///
 /// **Panics** if broadcasting isn't possible.
-impl<'a, A, D, E> $trt<&'a Array<A, E>> for &'a Array<A, D>
+impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
+          S: StorageMut<Elem=A>,
+          S2: Storage<Elem=A>,
+          ArrayBase<S, D>: ArrayMut,
           D: Dimension,
           E: Dimension,
 {
-    type Output = Array<A, D>;
-    fn $mth (self, other: &'a Array<A, E>) -> Array<A, D>
+    type Output = OwnedArray<A, D>;
+    fn $mth (self, other: &'a ArrayBase<S2, E>) -> OwnedArray<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
         let mut result = Vec::<A>::with_capacity(self.dim.size());
@@ -1298,7 +1304,7 @@ impl<'a, A, D, E> $trt<&'a Array<A, E>> for &'a Array<A, D>
             }
         }
         unsafe {
-            Array::from_vec_dim(self.dim.clone(), result)
+            ArrayBase::from_vec_dim(self.dim.clone(), result)
         }
     }
 }
