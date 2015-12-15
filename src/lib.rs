@@ -1039,6 +1039,19 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
     Array::from_vec(xs.to_vec())
 }
 
+/// Return a zero-dimensional array view borrowing `x`.
+pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
+    let data = unsafe {
+        std::slice::from_raw_parts(x, 1)
+    };
+    ArrayView {
+        data: data,
+        ptr: data.as_ptr() as *mut _,
+        dim: (),
+        strides: (),
+    }
+}
+
 /// Return a one-dimensional array view with elements borrowing **xs**.
 pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix> {
     ArrayView {
@@ -1187,15 +1200,15 @@ impl<A, S, D> ArrayBase<S, D>
     /// Return sum along **axis**.
     ///
     /// ```
-    /// use ndarray::{arr0, arr1, arr2};
+    /// use ndarray::{aview0, aview1, arr2};
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.sum(0) == arr1(&[4., 6.]) &&
-    ///     a.sum(1) == arr1(&[3., 7.]) &&
+    ///     a.sum(0) == aview1(&[4., 6.]) &&
+    ///     a.sum(1) == aview1(&[3., 7.]) &&
     ///
-    ///     a.sum(0).sum(0) == arr0(10.)
+    ///     a.sum(0).sum(0) == aview0(&10.)
     /// );
     /// ```
     ///
@@ -1220,13 +1233,13 @@ impl<A, S, D> ArrayBase<S, D>
     /// Return mean along **axis**.
     ///
     /// ```
-    /// use ndarray::{arr1, arr2};
+    /// use ndarray::{aview1, arr2};
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.mean(0) == arr1(&[2.0, 3.0]) &&
-    ///     a.mean(1) == arr1(&[1.5, 3.5])
+    ///     a.mean(0) == aview1(&[2.0, 3.0]) &&
+    ///     a.mean(1) == aview1(&[1.5, 3.5])
     /// );
     /// ```
     ///
