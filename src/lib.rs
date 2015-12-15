@@ -957,25 +957,61 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
     Array::from_vec(xs.to_vec())
 }
 
+/// Return a one-dimensional array view with elements borrowing **xs**.
+pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix> {
+    ArrayView {
+        data: xs,
+        ptr: xs.as_ptr() as *mut _,
+        dim: xs.len() as Ix,
+        strides: 1,
+    }
+}
+
+/// Return a two-dimensional array view with elements borrowing **xs**.
+pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)> {
+    let cols = V::len();
+    let rows = xs.len();
+    let data = unsafe {
+        std::slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows)
+    };
+    let dim = (rows as Ix, cols as Ix);
+    ArrayView {
+        data: data,
+        ptr: data.as_ptr() as *mut _,
+        strides: dim.default_strides(),
+        dim: dim,
+    }
+}
+
 /// Slice or fixed-size array used for array initialization
-pub unsafe trait ArrInit<T> {
-    fn as_init_slice(&self) -> &[T];
+pub unsafe trait Initializer {
+    type Elem;
+    fn as_init_slice(&self) -> &[Self::Elem];
     fn is_fixed_size() -> bool { false }
 }
 
-unsafe impl<T> ArrInit<T> for [T]
-{
-    fn as_init_slice(&self) -> &[T]
-    {
+/// Fixed-size array used for array initialization
+pub unsafe trait FixedInitializer: Initializer {
+    fn len() -> usize;
+}
+
+unsafe impl<T> Initializer for [T] {
+    type Elem = T;
+    fn as_init_slice(&self) -> &[T] {
         self
     }
 }
 
 macro_rules! impl_arr_init {
     (__impl $n: expr) => (
-        unsafe impl<T> ArrInit<T> for [T;  $n] {
+        unsafe impl<T> Initializer for [T;  $n] {
+            type Elem = T;
             fn as_init_slice(&self) -> &[T] { self }
             fn is_fixed_size() -> bool { true }
+        }
+
+        unsafe impl<T> FixedInitializer for [T;  $n] {
+            fn len() -> usize { $n }
         }
     );
     () => ();
@@ -1001,7 +1037,7 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
+pub fn arr2<A: Clone, V: Initializer<Elem=A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
 {
     // FIXME: Simplify this when V is fix size array
     let (m, n) = (xs.len() as Ix,
@@ -1010,7 +1046,7 @@ pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs.iter() {
         let snd = snd.as_init_slice();
-        assert!(<V as ArrInit<A>>::is_fixed_size() || snd.len() as Ix == n);
+        assert!(<V as Initializer>::is_fixed_size() || snd.len() as Ix == n);
         result.extend(snd.iter().map(|x| x.clone()))
     }
     unsafe {
@@ -1035,7 +1071,8 @@ pub fn arr2<A: Clone, V: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
 ///     a.shape() == [3, 2, 2]
 /// );
 /// ```
-pub fn arr3<A: Clone, V: ArrInit<U>, U: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, Ix, Ix)>
+pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
+    -> Array<A, (Ix, Ix, Ix)>
 {
     // FIXME: Simplify this when U/V are fix size arrays
     let m = xs.len() as Ix;
@@ -1047,10 +1084,10 @@ pub fn arr3<A: Clone, V: ArrInit<U>, U: ArrInit<A>>(xs: &[V]) -> Array<A, (Ix, I
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs.iter() {
         let snd = snd.as_init_slice();
-        assert!(<V as ArrInit<U>>::is_fixed_size() || snd.len() as Ix == n);
+        assert!(<V as Initializer>::is_fixed_size() || snd.len() as Ix == n);
         for thr in snd.iter() {
             let thr = thr.as_init_slice();
-            assert!(<U as ArrInit<A>>::is_fixed_size() || thr.len() as Ix == o);
+            assert!(<U as Initializer>::is_fixed_size() || thr.len() as Ix == o);
             result.extend(thr.iter().map(|x| x.clone()))
         }
     }

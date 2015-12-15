@@ -7,6 +7,7 @@ use ndarray::{Array, S, Si,
     OwnedArray,
 };
 use ndarray::{arr0, arr1, arr2};
+use ndarray::{aview2};
 use ndarray::Indexes;
 use ndarray::SliceRange;
 
@@ -427,4 +428,13 @@ fn assign_ops()
     a -= &b;
     a -= &b;
     assert_eq!(a, arr2(&[[0., -1.,], [1., 0.]]));
+}
+
+#[test]
+fn aview() {
+    let a = arr2(&[[1., 2., 3.], [4., 5., 6.]]);
+    let data = [[1., 2., 3.], [4., 5., 6.]];
+    let b = aview2(&data);
+    assert_eq!(a, b);
+    assert_eq!(b.shape(), &[2, 3]);
 }
