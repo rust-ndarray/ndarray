@@ -14,8 +14,8 @@ use super::{
     ArrayBase,
     ArrayView,
     ArrayViewMut,
-    Storage,
-    StorageMut,
+    Data,
+    DataMut,
 };
 
 /// Access the element at **index**.
@@ -23,7 +23,7 @@ use super::{
 /// **Panics** if index is out of bounds.
 impl<S, D> Index<D> for ArrayBase<S, D>
     where D: Dimension,
-          S: Storage,
+          S: Data,
 {
     type Output = S::Elem;
     #[inline]
@@ -37,7 +37,7 @@ impl<S, D> Index<D> for ArrayBase<S, D>
 /// **Panics** if index is out of bounds.
 impl<S, D> IndexMut<D> for ArrayBase<S, D>
     where D: Dimension,
-          S: StorageMut,
+          S: DataMut,
 {
     #[inline]
     fn index_mut(&mut self, index: D) -> &mut S::Elem {
@@ -48,8 +48,8 @@ impl<S, D> IndexMut<D> for ArrayBase<S, D>
 
 impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
     where D: Dimension,
-          S: Storage,
-          S2: Storage<Elem = S::Elem>,
+          S: Data,
+          S2: Data<Elem = S::Elem>,
           S::Elem: PartialEq,
 {
     /// Return `true` if the array shapes and all elements of `self` and
@@ -63,7 +63,7 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
 
 impl<S, D> Eq for ArrayBase<S, D>
     where D: Dimension,
-          S: Storage,
+          S: Data,
           S::Elem: Eq,
 { }
 
@@ -77,7 +77,7 @@ impl<A> FromIterator<A> for Array<A, Ix>
 
 impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
     where D: Dimension,
-          S: Storage,
+          S: Data,
 {
     type Item = &'a S::Elem;
     type IntoIter = Elements<'a, S::Elem, D>;
@@ -89,7 +89,7 @@ impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
 
 impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
     where D: Dimension,
-          S: StorageMut,
+          S: DataMut,
 {
     type Item = &'a mut S::Elem;
     type IntoIter = ElementsMut<'a, S::Elem, D>;
@@ -124,7 +124,7 @@ impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A,  D>
 
 impl<'a, S, D> hash::Hash for ArrayBase<S, D>
     where D: Dimension,
-          S: Storage,
+          S: Data,
           S::Elem: hash::Hash,
 {
     fn hash<H: hash::Hasher>(&self, state: &mut H)
@@ -143,12 +143,12 @@ impl<'a, S, D> hash::Hash for ArrayBase<S, D>
 
 /// `ArrayBase` is `Sync` when the storage type is.
 unsafe impl<S, D> Sync for ArrayBase<S, D>
-    where S: Sync + Storage, D: Sync
+    where S: Sync + Data, D: Sync
 { }
 
 /// `ArrayBase` is `Send` when the storage type is.
 unsafe impl<S, D> Send for ArrayBase<S, D>
-    where S: Send + Storage, D: Send
+    where S: Send + Data, D: Send
 { }
 
 
