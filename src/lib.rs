@@ -145,6 +145,10 @@ pub unsafe trait Storage {
 
 pub unsafe trait StorageMut : Storage {
     fn slice_mut(&mut self) -> &mut [Self::Elem];
+    fn ensure_unique<D>(&mut ArrayBase<Self, D>)
+        where Self: Sized, D: Dimension
+    {
+    }
 }
 
 unsafe impl<A> Storage for Rc<Vec<A>> {
@@ -155,6 +159,27 @@ unsafe impl<A> Storage for Rc<Vec<A>> {
 // NOTE: Copy on write
 unsafe impl<A> StorageMut for Rc<Vec<A>> where A: Clone {
     fn slice_mut(&mut self) -> &mut [A] { &mut Rc::make_mut(self)[..] }
+
+    fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
+        where Self: Sized, D: Dimension
+    {
+        if Rc::get_mut(&mut self_.data).is_some() {
+            return
+        }
+        if self_.dim.size() <= self_.data.len() / 2 {
+            unsafe {
+                *self_ = Array::from_vec_dim(self_.dim.clone(),
+                                            self_.iter().map(|x| x.clone()).collect());
+            }
+            return;
+        }
+        let our_off = (self_.ptr as isize - self_.data.as_ptr() as isize)
+            / mem::size_of::<A>() as isize;
+        let rvec = Rc::make_mut(&mut self_.data);
+        unsafe {
+            self_.ptr = rvec.as_mut_ptr().offset(our_off);
+        }
+    }
 }
 
 unsafe impl<A> Storage for Vec<A> {
@@ -195,50 +220,6 @@ impl<A> StorageNew for Vec<A> {
 
 impl<A> StorageNew for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
-}
-
-pub trait ArrayMut {
-    fn ensure_unique(&mut self);
-}
-
-impl<A, D> ArrayMut for ArrayBase<Vec<A>, D>
-    where D: Dimension,
-{
-    fn ensure_unique(&mut self) { }
-}
-
-impl<'a, A, D> ArrayMut for ArrayBase<&'a mut [A], D>
-    where D: Dimension,
-{
-    fn ensure_unique(&mut self) { }
-}
-
-impl<A, D> ArrayMut for ArrayBase<Rc<Vec<A>>, D>
-    where D: Dimension,
-          A: Clone,
-{
-    /// Make the array unshared.
-    ///
-    /// This method is mostly only useful with unsafe code.
-    fn ensure_unique(&mut self)
-    {
-        if Rc::get_mut(&mut self.data).is_some() {
-            return
-        }
-        if self.dim.size() <= self.data.len() / 2 {
-            unsafe {
-                *self = Array::from_vec_dim(self.dim.clone(),
-                                            self.iter().map(|x| x.clone()).collect());
-            }
-            return;
-        }
-        let our_off = (self.ptr as isize - self.data.as_ptr() as isize)
-            / mem::size_of::<A>() as isize;
-        let rvec = Rc::make_mut(&mut self.data);
-        unsafe {
-            self.ptr = rvec.as_mut_ptr().offset(our_off);
-        }
-    }
 }
 
 
@@ -406,8 +387,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
 
     /// Return a read-write view of the array
     pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
-        where Self: ArrayMut,
-              S: StorageMut,
+        where S: StorageMut,
     {
         self.ensure_unique();
         ArrayViewMut {
@@ -760,10 +740,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
         }
     }
 
+    /// Make the array unshared.
+    ///
+    /// This method is mostly only useful with unsafe code.
+    fn ensure_unique(&mut self)
+        where S: StorageMut
+    {
+        S::ensure_unique(self);
+    }
+
     /// Return a mutable reference to the element at **index**, or return **None**
     /// if the index is out of bounds.
     pub fn at_mut<'a>(&'a mut self, index: D) -> Option<&'a mut A>
-        where Self: ArrayMut,
+        where S: StorageMut,
     {
         self.ensure_unique();
         self.dim.stride_offset_checked(&self.strides, &index)
@@ -776,7 +765,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// Iterator element type is **&'a mut A**.
     pub fn iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, D>
-        where Self: ArrayMut,
+        where S: StorageMut,
     {
         self.ensure_unique();
         ElementsMut { inner: self.base_iter() }
@@ -786,7 +775,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// Iterator element type is **(D, &'a mut A)**.
     pub fn indexed_iter_mut<'a>(&'a mut self) -> Indexed<ElementsMut<'a, A, D>>
-        where Self: ArrayMut,
+        where S: StorageMut,
     {
         self.iter_mut().indexed()
     }
@@ -798,7 +787,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// **Panics** if **indexes** does not match the number of array axes.
     pub fn slice_iter_mut<'a>(&'a mut self, indexes: &[Si]) -> ElementsMut<'a, A, D>
-        where Self: ArrayMut,
+        where S: StorageMut,
     {
         let mut it = self.iter_mut();
         let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
@@ -816,7 +805,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// **Panics** if **axis** or **index** is out of bounds.
     pub fn sub_iter_mut<'a>(&'a mut self, axis: usize, index: Ix)
         -> ElementsMut<'a, A, D>
-        where Self: ArrayMut,
+        where S: StorageMut,
     {
         let mut it = self.iter_mut();
         dimension::do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
@@ -825,7 +814,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
 
     /// Return an iterator over the diagonal elements of the array.
     pub fn diag_iter_mut<'a>(&'a mut self) -> ElementsMut<'a, A, Ix>
-        where Self: ArrayMut,
+        where S: StorageMut,
     {
         self.ensure_unique();
         let (len, stride) = self.diag_params();
@@ -845,7 +834,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
     pub fn raw_data_mut<'a>(&'a mut self) -> &'a mut [A]
-        where Self: ArrayMut, S: StorageMut
+        where S: StorageMut,
     {
         self.ensure_unique();
         self.data.slice_mut()
@@ -896,7 +885,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
     ///
     /// **Panics** if broadcasting isn't possible.
     pub fn assign<E: Dimension, S2>(&mut self, other: &ArrayBase<S2, E>)
-        where Self: ArrayMut,
+        where S: StorageMut,
               A: Clone,
               S2: Storage<Elem=A>,
     {
@@ -914,7 +903,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Storage<Elem=A>, D: Dimension
 
     /// Perform an elementwise assigment to **self** from scalar **x**.
     pub fn assign_scalar(&mut self, x: &A)
-        where Self: ArrayMut, S: StorageMut, A: Clone,
+        where S: StorageMut, A: Clone,
     {
         for elt in self.raw_data_mut().iter_mut() {
             *elt = x.clone();
@@ -1255,7 +1244,6 @@ macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
 impl<A, S, D> ArrayBase<S, D> where
     A: Clone + $trt<A, Output=A>,
-    ArrayBase<S, D>: ArrayMut,
     S: StorageMut<Elem=A>,
     D: Dimension,
 {
@@ -1300,7 +1288,6 @@ impl<A, S, D> ArrayBase<S, D> where
 impl<'a, A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
           S: StorageMut<Elem=A>,
-          ArrayBase<S, D>: ArrayMut,
           S2: Storage<Elem=A>,
           D: Dimension,
           E: Dimension,
@@ -1399,7 +1386,6 @@ mod assign_ops {
     impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
         where A: Clone + $trt<A>,
               S: StorageMut<Elem=A>,
-              ArrayBase<S, D>: ArrayMut,
               S2: Storage<Elem=A>,
               D: Dimension,
               E: Dimension,

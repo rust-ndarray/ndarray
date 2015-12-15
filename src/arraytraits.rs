@@ -14,7 +14,6 @@ use super::{
     ArrayBase,
     Storage,
     StorageMut,
-    ArrayMut,
 };
 
 /// Access the element at **index**.
@@ -37,7 +36,6 @@ impl<S, D> Index<D> for ArrayBase<S, D>
 impl<S, D> IndexMut<D> for ArrayBase<S, D>
     where D: Dimension,
           S: StorageMut,
-          ArrayBase<S, D>: ArrayMut,
 {
     #[inline]
     fn index_mut(&mut self, index: D) -> &mut S::Elem {
@@ -90,7 +88,6 @@ impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
 impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
     where D: Dimension,
           S: StorageMut,
-          ArrayBase<S, D>: ArrayMut,
 {
     type Item = &'a mut S::Elem;
     type IntoIter = ElementsMut<'a, S::Elem, D>;
