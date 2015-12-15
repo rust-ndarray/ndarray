@@ -17,14 +17,13 @@
 //!
 //! ## Crate Summary and Status
 //!
-//! - Implements the numpy striding scheme for n-dimensional arrays
+//! - Implements the numpy striding and broadcasting scheme for n-dimensional arrays
 //! - `Array` is clone on write, so it can be both a view or an owner of the
-//!   data.
-//! - Striding and broadcasting is fully implemented
+//!   data. `OwnedArray` is a uniquely owned array.
 //! - Focus is on being a generic n-dimensional container
 //! - Due to iterators, arithmetic operations, matrix multiplication etc
 //!   are not very well optimized, this is not a serious crate for numerics
-//!   or linear algebra. `Array` is a good container.
+//!   or linear algebra.
 //! - There is no integration with linear algebra packages (at least not yet).
 //!
 //! ## Crate feature flags
