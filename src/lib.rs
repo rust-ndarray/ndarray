@@ -1204,8 +1204,10 @@ impl<A: Float + PartialOrd, D: Dimension> Array<A, D>
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident) => (
-impl<A, D> Array<A, D> where
+impl<A, S, D> ArrayBase<S, D> where
     A: Clone + $trt<A, Output=A>,
+    ArrayBase<S, D>: ArrayMut,
+    S: StorageMut<Elem=A>,
     D: Dimension,
 {
     /// Perform an elementwise arithmetic operation between **self** and **other**,
@@ -1214,7 +1216,8 @@ impl<A, D> Array<A, D> where
     /// If their shapes disagree, **other** is broadcast to the shape of **self**.
     ///
     /// **Panics** if broadcasting isn't possible.
-    pub fn $imethod <E: Dimension> (&mut self, other: &Array<A, E>)
+    pub fn $imethod <E: Dimension, S2> (&mut self, other: &ArrayBase<S2, E>)
+        where S2: Storage<Elem=A>,
     {
         if self.dim.ndim() == other.dim.ndim() &&
             self.shape() == other.shape() {
