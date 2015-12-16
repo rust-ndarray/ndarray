@@ -45,6 +45,9 @@ Recent Changes
     - ``.sum()``
     - ``.mean()``
 
+  - Add ``get``, ``get_mut`` to replace the now deprecated ``at``, ``at_mut``.
+  - Fix bug in assign_scalar
+
 - 0.1.1
 
   - Add Array::default
