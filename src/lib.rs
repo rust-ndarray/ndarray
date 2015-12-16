@@ -584,11 +584,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
     /// Array's view.
-    pub fn raw_data(&self) -> &[A]
-    {
+    pub fn raw_data(&self) -> &[A] {
         self.data.slice()
     }
 
+    /// Return the array's data as a slice, if it is contiguous and
+    /// the element order corresponds to the memory order. Return `None` otherwise.
     pub fn as_slice(&self) -> Option<&[A]> {
         if self.is_standard_layout() {
             unsafe {
@@ -599,6 +600,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Return the array's data as a slice, if it is contiguous and
+    /// the element order corresponds to the memory order. Return `None` otherwise.
     pub fn as_slice_mut(&mut self) -> Option<&mut [A]>
         where S: DataMut
     {
