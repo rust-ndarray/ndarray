@@ -32,6 +32,19 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.2.0-alpha.2
+
+  - **Note:** At some point in a future release, the indexing type ``Ix`` will
+    change to ``usize``
+  - Improve performance for iterators when the array data is in the default
+    memory layout. The iterator then wraps the default slice iterator and
+    loops will autovectorize.
+  - Remove method ``.indexed()`` on iterators. Changed ``Indexed`` and added
+    ``ÌndexedMut``.
+  - Added ``.as_slice(), .as_mut_slice()``
+  - Support rustc-serialize
+
+
 - 0.2.0-alpha
 
   - Alpha release!
@@ -39,6 +52,8 @@ Recent Changes
   - All arithmetic operations should accept any array type
   - ``Array`` continues to refer to the default reference counted copy on write
     array
+  - Add ``.view()``, ``.view_mut()``, ``.to_owned()``, ``.into_shared()``
+  - Add ``.slice_mut()``, ``.subview_mut()``
   - Some operations now return ``OwnedArray``:
 
     - ``.map()``
