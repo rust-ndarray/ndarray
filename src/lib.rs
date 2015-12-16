@@ -97,7 +97,7 @@ pub type Ixs = i32;
 /// while methods like [*iadd()*](#method.iadd) allow mutating the element
 /// values.
 ///
-/// Calling a method for mutating elements, for example 
+/// Calling a method for mutating elements, for example
 /// [*get_mut()*](#method.get_mut), [*iadd()*](#method.iadd) or
 /// [*iter_mut()*](#method.iter_mut) will break sharing and require a clone of
 /// the data (if it is not uniquely held).
@@ -109,7 +109,7 @@ pub type Ixs = i32;
 ///
 /// ## Indexing
 ///
-/// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs` 
+/// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
 /// (signed).
 ///
 /// ## Broadcasting
@@ -405,7 +405,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
 
     fn into_iter_(self) -> Elements<'a, A, D> {
         Elements {
-            inner: 
+            inner:
             if let Some(slc) = self.into_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
@@ -440,7 +440,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     fn into_iter_(self) -> ElementsMut<'a, A, D> {
         ElementsMut {
-            inner: 
+            inner:
                 if self.is_standard_layout() {
                     let slc = unsafe {
                         slice::from_raw_parts_mut(self.ptr, self.len())
@@ -642,7 +642,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         it.into_iter_()
     }
 
-    /// Return a reference to the element at `index`, or return `None` 
+    /// Return a reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
     pub fn get(&self, index: D) -> Option<&A> {
         self.dim.stride_offset_checked(&self.strides, &index)
@@ -814,7 +814,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
 
         // Note: zero strides are safe precisely because we return an read-only view
-        let broadcast_strides = 
+        let broadcast_strides =
             match upcast(&dim, &self.dim, &self.strides) {
                 Some(st) => st,
                 None => return None,
