@@ -52,7 +52,7 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitOr,
     BitXor,
 };
-use std::slice::{self, Iter};
+use std::slice::{self, Iter, IterMut};
 
 pub use dimension::{Dimension, RemoveAxis};
 pub use si::{Si, S, SliceRange};
@@ -430,14 +430,26 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     #[inline]
-    fn into_base_iter(self) -> Baseiter<'a, A, D> {
+    fn into_base_iter(self) -> ElementsBaseMut<'a, A, D> {
         unsafe {
-            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+            ElementsBaseMut { inner:
+                Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+            }
         }
     }
 
     fn into_iter_(self) -> ElementsMut<'a, A, D> {
-        ElementsMut { inner: self.into_base_iter() }
+        ElementsMut {
+            inner: 
+                if self.is_standard_layout() {
+                    let slc = unsafe {
+                        slice::from_raw_parts_mut(self.ptr, self.len())
+                    };
+                    ElementsRepr::Slice(slc.iter_mut())
+                } else {
+                    ElementsRepr::Counted(self.into_base_iter())
+                }
+        }
     }
 
     fn into_slice_mut(self) -> Option<&'a mut [A]>
@@ -971,7 +983,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
     {
         self.ensure_unique();
-        ElementsMut { inner: self.base_iter() }
+        self.view_mut().into_iter_()
+    }
+
+    fn iter_base_mut(&mut self) -> ElementsBaseMut<A, D>
+        where S: DataMut,
+    {
+        self.ensure_unique();
+        ElementsBaseMut { inner: self.base_iter() }
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
@@ -980,7 +999,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {
-        IndexedMut(self.iter_mut())
+        IndexedMut(self.iter_base_mut())
     }
 
     /// Return a sliced read-write view of the array.
@@ -1003,12 +1022,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_iter_mut(&mut self, indexes: &[Si]) -> ElementsMut<A, D>
         where S: DataMut,
     {
-        let mut it = self.iter_mut();
-        let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
+        let mut it = self.view_mut();
+        let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
         unsafe {
-            it.inner.ptr = it.inner.ptr.offset(offset);
+            it.ptr = it.ptr.offset(offset);
         }
-        it
+        it.into_iter_()
     }
 
     /// Select the subview `index` along `axis` and return a read-write view.
@@ -1053,9 +1072,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         -> ElementsMut<A, D>
         where S: DataMut,
     {
-        let mut it = self.iter_mut();
-        dimension::do_sub(&mut it.inner.dim, &mut it.inner.ptr, &it.inner.strides, axis, index);
-        it
+        let mut it = self.view_mut();
+        dimension::do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
+        it.into_iter_()
     }
 
     /// Return an iterator over the diagonal elements of the array.
@@ -1064,11 +1083,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         self.ensure_unique();
         let (len, stride) = self.diag_params();
-        unsafe {
-            ElementsMut { inner:
-                Baseiter::new(self.ptr, len, stride as Ix),
-            }
-        }
+        let view = ArrayBase {
+            ptr: self.ptr,
+            data: self.raw_data_mut(),
+            dim: len,
+            strides: stride as Ix,
+        };
+        view.into_iter_()
     }
 
     /// Return a mutable slice of the array's backing data in memory order.
@@ -1160,12 +1181,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               F: FnMut(&mut A)
     {
-        if let Some(slc) = self.as_slice_mut() {
-            for elt in slc {
-                f(elt);
-            }
-            return;
-        }
         for elt in self.iter_mut() {
             f(elt);
         }
@@ -1817,12 +1832,10 @@ impl<A, S, D> Not for ArrayBase<S, D>
 ///
 /// Iterator element type is `&'a A`.
 pub struct Elements<'a, A: 'a, D> {
-    inner: ElementsRepr<'a, A, D>,
+    inner: ElementsRepr<Iter<'a, A>, ElementsBase<'a, A, D>>,
 }
 
-/// An iterator over the elements of an array.
-///
-/// Iterator element type is `&'a A`.
+/// Counted read only iterator
 struct ElementsBase<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
@@ -1831,6 +1844,13 @@ struct ElementsBase<'a, A: 'a, D> {
 ///
 /// Iterator element type is `&'a mut A`.
 pub struct ElementsMut<'a, A: 'a, D> {
+    inner: ElementsRepr<IterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
+}
+
+/// An iterator over the elements of an array.
+///
+/// Iterator element type is `&'a mut A`.
+struct ElementsBaseMut<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
@@ -1838,7 +1858,7 @@ pub struct ElementsMut<'a, A: 'a, D> {
 #[derive(Clone)]
 pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// An iterator over the indexes and elements of an array.
-pub struct IndexedMut<'a, A: 'a, D>(ElementsMut<'a, A, D>);
+pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
     where T: it::misc::Slice, U: it::misc::Slice
@@ -1846,7 +1866,7 @@ fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
     ZipSlices::from_slices(t, u)
 }
 
-enum ElementsRepr<'a, A: 'a, D> {
-    Slice(Iter<'a, A>),
-    Counted(ElementsBase<'a, A, D>),
+enum ElementsRepr<S, C> {
+    Slice(S),
+    Counted(C),
 }

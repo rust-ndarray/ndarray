@@ -1,7 +1,7 @@
 use std::marker;
 
 use super::{Dimension, Ix};
-use super::{Elements, ElementsRepr, ElementsBase, ElementsMut, Indexed, IndexedMut};
+use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
 
 /// Base for array iterators
 ///
@@ -242,6 +242,27 @@ impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D>
 {
     type Item = &'a mut A;
     #[inline]
+    fn next(&mut self) -> Option<&'a mut A> {
+        either_mut!(self.inner, iter => iter.next())
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        either!(self.inner, iter => iter.size_hint())
+    }
+}
+
+impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<&'a mut A> {
+        either_mut!(self.inner, iter => iter.next_back())
+    }
+}
+
+impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D>
+{
+    type Item = &'a mut A;
+    #[inline]
     fn next(&mut self) -> Option<&'a mut A>
     {
         self.inner.next_ref_mut()
@@ -254,7 +275,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D>
     }
 }
 
-impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
+impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix>
 {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A>
