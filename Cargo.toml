@@ -36,4 +36,5 @@ version = "0.4"
 assign_ops = []
 
 [profile.bench]
+debug = true
 lto = true
