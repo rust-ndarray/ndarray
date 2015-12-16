@@ -323,7 +323,7 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
 
 impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> { }
 
-/// Constructor methods single dimensional `ArrayBase`.
+/// Constructor methods for single dimensional `ArrayBase`.
 impl<S> ArrayBase<S, Ix>
     where S: DataOwned,
 {
@@ -809,8 +809,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     == (10, 2)
     /// );
     /// ```
-    pub fn broadcast<E: Dimension>(&self, dim: E)
+    pub fn broadcast<E>(&self, dim: E)
         -> Option<ArrayView<A, E>>
+        where E: Dimension
     {
         /// Return new stride when trying to grow `from` into shape `to`
         ///
@@ -1398,9 +1399,8 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
 
 
 impl<A, S, D> ArrayBase<S, D>
-    where A: Clone + Add<Output=A>,
-          S: Data<Elem=A>,
-          D: RemoveAxis,
+    where S: Data<Elem=A>,
+          D: Dimension,
 {
     /// Return sum along `axis`.
     ///
@@ -1419,6 +1419,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds.
     pub fn sum(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
+        where A: Clone + Add<Output=A>,
+              D: RemoveAxis,
     {
         let n = self.shape()[axis];
         let mut res = self.view().subview(axis, 0).to_owned();
@@ -1428,13 +1430,7 @@ impl<A, S, D> ArrayBase<S, D>
         }
         res
     }
-}
 
-impl<A, S, D> ArrayBase<S, D>
-    where A: Copy + linalg::Field,
-          S: Data<Elem=A>,
-          D: RemoveAxis,
-{
     /// Return mean along `axis`.
     ///
     /// ```
@@ -1451,6 +1447,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds.
     pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
+        where A: Copy + linalg::Field,
+              D: RemoveAxis,
     {
         let n = self.shape()[axis];
         let mut sum = self.sum(axis);
@@ -1461,6 +1459,17 @@ impl<A, S, D> ArrayBase<S, D>
         }
         sum.idiv_scalar(&cnt);
         sum
+    }
+
+    /// Return `true` if the arrays' elementwise differences are all within
+    /// the given absolute tolerance.<br>
+    /// Return `false` otherwise, or if the shapes disagree.
+    pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
+        where A: Float + PartialOrd,
+              S2: Data<Elem=A>,
+    {
+        self.shape() == rhs.shape() &&
+        self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
     }
 }
 
@@ -1505,14 +1514,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
             Self::one_dimensional_iter(self.ptr.offset(stride_offset(index, sc)), m, sr)
         }
     }
-}
 
-
-// Matrix multiplication only defined for simple types to
-// avoid trouble with failing + and *, and destructors
-impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
-    where S: Data<Elem=A>,
-{
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
     /// The array sizes must agree in the way that
@@ -1537,7 +1539,11 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
     /// ```
     ///
     pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
+        where A: Copy + linalg::Ring
     {
+        // NOTE: Matrix multiplication only defined for simple types to
+        // avoid trouble with panicking + and *, and destructors
+
         let ((m, a), (b, n)) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, b);
         assert!(self_columns == other_rows);
@@ -1577,6 +1583,7 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
     ///
     /// **Panics** if sizes are incompatible.
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> Array<A, Ix>
+        where A: Copy + linalg::Ring
     {
         let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
@@ -1603,32 +1610,11 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
 }
 
 
-impl<A, S, D> ArrayBase<S, D>
-    where A: Float + PartialOrd,
-          S: Data<Elem=A>,
-          D: Dimension
-{
-    /// Return `true` if the arrays' elementwise differences are all within
-    /// the given absolute tolerance.<br>
-    /// Return `false` otherwise, or if the shapes disagree.
-    pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
-        where S2: Data<Elem=A>,
-    {
-        self.shape() == rhs.shape() &&
-        self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
-    }
-}
-
 
 // Array OPERATORS
 
-macro_rules! impl_binary_op(
+macro_rules! impl_binary_op_inherent(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (
-impl<A, S, D> ArrayBase<S, D> where
-    A: Clone + $trt<A, Output=A>,
-    S: DataMut<Elem=A>,
-    D: Dimension,
-{
     /// Perform elementwise
     #[doc=$doc]
     /// between `self` and `rhs`,
@@ -1638,7 +1624,8 @@ impl<A, S, D> ArrayBase<S, D> where
     ///
     /// **Panics** if broadcasting isn't possible.
     pub fn $imethod <E: Dimension, S2> (&mut self, rhs: &ArrayBase<S2, E>)
-        where S2: Data<Elem=A>,
+        where A: Clone + $trt<A, Output=A>,
+              S2: Data<Elem=A>,
     {
         if self.dim.ndim() == rhs.dim.ndim() &&
             self.shape() == rhs.shape() {
@@ -1657,13 +1644,56 @@ impl<A, S, D> ArrayBase<S, D> where
     #[doc=$doc]
     /// between `self` and the scalar `x`,
     /// *in place*.
-    pub fn $imth_scalar (&mut self, x: &A) {
+    pub fn $imth_scalar (&mut self, x: &A)
+        where A: Clone + $trt<A, Output=A>,
+    {
         self.unordered_foreach_mut(|elt| {
             *elt = elt.clone(). $mth (x.clone());
         });
     }
+    );
+);
+
+/// *In-place* arithmetic operations.
+impl<A, S, D> ArrayBase<S, D>
+    where S: DataMut<Elem=A>,
+          D: Dimension,
+{
+
+
+impl_binary_op_inherent!(Add, add, iadd, iadd_scalar, "Addition");
+impl_binary_op_inherent!(Sub, sub, isub, isub_scalar, "Subtraction");
+impl_binary_op_inherent!(Mul, mul, imul, imul_scalar, "Multiplication");
+impl_binary_op_inherent!(Div, div, idiv, idiv_scalar, "Divsion");
+impl_binary_op_inherent!(Rem, rem, irem, irem_scalar, "Remainder");
+impl_binary_op_inherent!(BitAnd, bitand, ibitand, ibitand_scalar, "Bit and");
+impl_binary_op_inherent!(BitOr, bitor, ibitor, ibitor_scalar, "Bit or");
+impl_binary_op_inherent!(BitXor, bitxor, ibitxor, ibitxor_scalar, "Bit xor");
+impl_binary_op_inherent!(Shl, shl, ishl, ishl_scalar, "Left shift");
+impl_binary_op_inherent!(Shr, shr, ishr, ishr_scalar, "Right shift");
+
+    /// Perform an elementwise negation of `self`, *in place*.
+    pub fn ineg(&mut self)
+        where A: Clone + Neg<Output=A>,
+    {
+        self.unordered_foreach_mut(|elt| {
+            *elt = elt.clone().neg()
+        });
+    }
+
+    /// Perform an elementwise unary not of `self`, *in place*.
+    pub fn inot(&mut self)
+        where A: Clone + Not<Output=A>,
+    {
+        self.unordered_foreach_mut(|elt| {
+            *elt = elt.clone().not()
+        });
+    }
+
 }
 
+macro_rules! impl_binary_op(
+    ($trt:ident, $mth:ident, $doc:expr) => (
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
@@ -1735,16 +1765,47 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
     );
 );
 
-impl_binary_op!(Add, add, iadd, iadd_scalar, "Addition");
-impl_binary_op!(Sub, sub, isub, isub_scalar, "Subtraction");
-impl_binary_op!(Mul, mul, imul, imul_scalar, "Multiplication");
-impl_binary_op!(Div, div, idiv, idiv_scalar, "Divsion");
-impl_binary_op!(Rem, rem, irem, irem_scalar, "Remainder");
-impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar, "Bit and");
-impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar, "Bit or");
-impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar, "Bit xor");
-impl_binary_op!(Shl, shl, ishl, ishl_scalar, "Left shift");
-impl_binary_op!(Shr, shr, ishr, ishr_scalar, "Right shift");
+mod arithmetic_ops {
+    use super::*;
+    use std::ops::*;
+
+    impl_binary_op!(Add, add, "Addition");
+    impl_binary_op!(Sub, sub, "Subtraction");
+    impl_binary_op!(Mul, mul, "Multiplication");
+    impl_binary_op!(Div, div, "Divsion");
+    impl_binary_op!(Rem, rem, "Remainder");
+    impl_binary_op!(BitAnd, bitand, "Bit and");
+    impl_binary_op!(BitOr, bitor, "Bit or");
+    impl_binary_op!(BitXor, bitxor, "Bit xor");
+    impl_binary_op!(Shl, shl, "Left shift");
+    impl_binary_op!(Shr, shr, "Right shift");
+
+    impl<A, S, D> Neg for ArrayBase<S, D>
+        where A: Clone + Neg<Output=A>,
+              S: DataMut<Elem=A>,
+              D: Dimension
+    {
+        type Output = Self;
+        /// Perform an elementwise negation of `self` and return the result.
+        fn neg(mut self) -> Self {
+            self.ineg();
+            self
+        }
+    }
+
+    impl<A, S, D> Not for ArrayBase<S, D>
+        where A: Clone + Not<Output=A>,
+              S: DataMut<Elem=A>,
+              D: Dimension
+    {
+        type Output = Self;
+        /// Perform an elementwise unary not of `self` and return the result.
+        fn not(mut self) -> Self {
+            self.inot();
+            self
+        }
+    }
+}
 
 #[cfg(feature = "assign_ops")]
 mod assign_ops {
@@ -1811,61 +1872,6 @@ mod assign_ops {
                     "Implement `self |= rhs` as elementwise bit or (in place).\n");
     impl_assign_op!(BitXorAssign, bitxor_assign,
                     "Implement `self ^= rhs` as elementwise bit xor (in place).\n");
-}
-
-impl<A, S, D> ArrayBase<S, D>
-    where A: Clone + Neg<Output=A>,
-          S: DataMut<Elem=A>,
-          D: Dimension
-{
-    /// Perform an elementwise negation of `self`, *in place*.
-    pub fn ineg(&mut self)
-    {
-        self.unordered_foreach_mut(|elt| {
-            *elt = elt.clone().neg()
-        });
-    }
-}
-
-impl<A, S, D> Neg for ArrayBase<S, D>
-    where A: Clone + Neg<Output=A>,
-          S: DataMut<Elem=A>,
-          D: Dimension
-{
-    type Output = Self;
-    /// Perform an elementwise negation of `self` and return the result.
-    fn neg(mut self) -> Self {
-        self.ineg();
-        self
-    }
-}
-
-impl<A, S, D> ArrayBase<S, D>
-    where A: Clone + Not<Output=A>,
-          S: DataMut<Elem=A>,
-          D: Dimension
-{
-    /// Perform an elementwise unary not of `self`, *in place*.
-    pub fn inot(&mut self)
-    {
-        self.unordered_foreach_mut(|elt| {
-            *elt = elt.clone().not()
-        });
-    }
-}
-
-
-impl<A, S, D> Not for ArrayBase<S, D>
-    where A: Clone + Not<Output=A>,
-          S: DataMut<Elem=A>,
-          D: Dimension
-{
-    type Output = Self;
-    /// Perform an elementwise unary not of `self` and return the result.
-    fn not(mut self) -> Self {
-        self.inot();
-        self
-    }
 }
 
 /// An iterator over the elements of an array.
