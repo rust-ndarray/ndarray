@@ -113,7 +113,7 @@ fn bench_std_iter_2d_raw_large(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn assign_scalar_2d(bench: &mut test::Bencher)
+fn assign_scalar_2d_transposed(bench: &mut test::Bencher)
 {
     let mut a = arr2::<f32, _>(&[[1., 2., 2.],
                               [3., 4., 4.],
@@ -122,6 +122,45 @@ fn assign_scalar_2d(bench: &mut test::Bencher)
                               [5., 6., 6.]]);
     a.swap_axes(0, 1);
     bench.iter(|| a.assign_scalar(&3.))
+}
+
+#[bench]
+fn assign_scalar_2d(bench: &mut test::Bencher)
+{
+    let mut a = arr2::<f32, _>(&[[1., 2., 2.],
+                              [3., 4., 4.],
+                              [3., 4., 4.],
+                              [3., 4., 4.],
+                              [5., 6., 6.]]);
+    bench.iter(|| a.assign_scalar(&3.))
+}
+
+#[bench]
+fn assign_scalar_2d_large(bench: &mut test::Bencher)
+{
+    let a = Array::zeros((64, 64));
+    let mut a = black_box(a);
+    let s = black_box(3.);
+    bench.iter(|| a.assign_scalar(&s))
+}
+
+#[bench]
+fn assign_scalar_2d_transposed_large(bench: &mut test::Bencher)
+{
+    let mut a = Array::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let mut a = black_box(a);
+    let s = black_box(3.);
+    bench.iter(|| a.assign_scalar(&s))
+}
+
+#[bench]
+fn assign_scalar_2d_raw_large(bench: &mut test::Bencher)
+{
+    let a = Array::zeros((64, 64));
+    let mut a = black_box(a);
+    let s = black_box(3.);
+    bench.iter(|| for elt in a.raw_data_mut() { *elt = s; });
 }
 
 #[bench]

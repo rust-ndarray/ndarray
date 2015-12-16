@@ -550,6 +550,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    pub fn as_slice_mut(&mut self) -> Option<&mut [A]>
+        where S: DataMut
+    {
+        if self.is_standard_layout() {
+            self.ensure_unique();
+            unsafe {
+                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
     /// Return a sliced array.
     ///
     /// **Panics** if `indexes` does not match the number of array axes.
@@ -1102,6 +1115,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn assign_scalar(&mut self, x: &A)
         where S: DataMut, A: Clone,
     {
+        if let Some(slc) = self.as_slice_mut() {
+            for elt in slc {
+                *elt = x.clone();
+            }
+            return;
+        }
         for elt in self.iter_mut() {
             *elt = x.clone();
         }
