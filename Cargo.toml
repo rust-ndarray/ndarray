@@ -34,3 +34,6 @@ version = "0.4"
 [features]
 
 assign_ops = []
+
+[profile.bench]
+lto = true

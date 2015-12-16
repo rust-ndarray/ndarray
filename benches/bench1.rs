@@ -57,22 +57,59 @@ fn bench_std_iter_2d(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_1d_large(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros((1024));
-    bench.iter(|| for &elt in a.iter() { black_box(elt); })
+    let a = Array::<i32, _>::zeros(64 * 64);
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.iter() {
+            sum += elt;
+        }
+        sum
+    });
 }
 
 #[bench]
 fn bench_std_iter_1d_raw_large(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros((1024));
-    bench.iter(|| for &elt in a.raw_data().iter() { black_box(elt); })
+    // this is autovectorized to death (= great performance)
+    let a = Array::<i32, _>::zeros(64 * 64);
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.raw_data() {
+            sum += elt;
+        }
+        sum
+    });
 }
 
 #[bench]
 fn bench_std_iter_2d_large(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros((16, 64));
-    bench.iter(|| for &elt in a.iter() { black_box(elt); })
+    let a = Array::<i32, _>::zeros((64, 64));
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.iter() {
+            sum += elt;
+        }
+        sum
+    });
+}
+
+#[bench]
+fn bench_std_iter_2d_raw_large(bench: &mut test::Bencher)
+{
+    // this is autovectorized to death (= great performance)
+    let a = Array::<i32, _>::zeros((64, 64));
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.raw_data() {
+            sum += elt;
+        }
+        sum
+    });
 }
 
 #[bench]
