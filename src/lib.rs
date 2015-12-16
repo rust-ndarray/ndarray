@@ -132,6 +132,102 @@ pub type Ixs = i32;
 /// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
 /// (signed). ***Note: A future version will switch to `usize`.***
 ///
+/// ## Slicing and Subviews
+///
+/// You can use slicing to create a view of a subset of the data in
+/// the array. Slicing methods include `.slice()`, `.islice()`,
+/// `.slice_mut()`.
+///
+/// Slices are passed with the type [`Si`] with fields `Si(begin, end, stride)`,
+/// where the values are signed integers, and `end` is an `Option<Ixs>`.
+/// The constant [`S`] is a shorthand for the full range of an axis.
+///
+/// [`Si`]: struct.Si.html
+/// [`S`]: constant.S.html
+///
+/// The dimensionality of the array determines the number of *axes*, for example
+/// a 3D array has three axes. These are listed in “big endian” order, so that
+/// the greatest dimension is listed first, the lowest dimension with the most
+/// rapidly varying index is the last.
+///
+/// In a 2D array this means that the axes are listed in (row, column) order, and
+/// the natural order of the elements is
+/// *(0, 0), (0, 1), ... (1, 0), (1, 1), (1, 2) ...* etc..
+///
+/// ```
+/// use ndarray::{arr3};
+/// use ndarray::{Si, S};
+///
+/// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
+/// let a = arr3(&[[[ 1,  2,  3],
+///                 [ 4,  5,  6]],
+///                [[ 7,  8,  9],
+///                 [10, 11, 12]]]);
+/// assert_eq!(a.shape(), &[2, 2, 3]);
+///
+/// // Let's create a slice with
+/// //
+/// // - Every element in each row: `S`
+/// // - Only the first row in each submatrix: `Si(0, Some(1), 1)`
+/// // - In both of the submatrices of the third dimension: `S`
+///
+/// let b = a.slice(&[S, Si(0, Some(1), 1), S]);
+/// let c = arr3(&[[[ 1,  2,  3]],
+///                [[ 7,  8,  9]]]);
+/// assert_eq!(b, c);
+/// assert_eq!(b.shape(), &[2, 1, 3]);
+///
+/// // Let's create a slice with
+/// // 
+/// // - Row elements in reverse order: `Si(0, None, -1)`
+/// // - The last row in each submatrix: `Si(-1, None, 1)`
+/// // - In both submatrices of the third dimension: `S`
+/// let d = a.slice(&[S, Si(-1, None, 1), Si(0, None, -1)]);
+/// let e = arr3(&[[[ 6,  5,  4]],
+///                [[12, 11, 10]]]);
+/// assert_eq!(d, e);
+/// ```
+///
+/// Subview methods allow you to restrict the array view while removing
+/// one axis from the array. Subview methods include `.subview()`,
+/// `.isubview()`, `.subview_mut()`.
+/// 
+/// Subview takes two arguments: axis and index.
+///
+/// ```
+/// use ndarray::{arr3, aview2};
+/// use ndarray::{Si, S};
+///
+/// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
+/// let a = arr3(&[[[ 1,  2,  3],
+///                 [ 4,  5,  6]],
+///                [[ 7,  8,  9],
+///                 [10, 11, 12]]]);
+/// assert_eq!(a.shape(), &[2, 2, 3]);
+///
+/// // Let's take a subview along the greatest dimension (axis 0),
+/// // taking the 0th submatrix, then the 1st.
+///
+/// let sub_0 = a.subview(0, 0);
+/// let sub_1 = a.subview(0, 1);
+///
+/// assert_eq!(sub_0, aview2(&[[ 1,  2,  3],
+///                            [ 4,  5,  6]]));
+/// assert_eq!(sub_1, aview2(&[[ 7,  8,  9],
+///                            [10, 11, 12]]));
+/// assert_eq!(sub_0.shape(), &[2, 3]);
+///
+/// // This is the subview picking only the first column of the 2nd axis
+/// let sub_col = a.subview(2, 0);
+///
+/// assert_eq!(sub_col, aview2(&[[ 1,  4],
+///                              [ 7, 10]]));
+/// ```
+///
+/// `.isubview()` modifies the view in the same way as `subview()`, but
+/// since it is *in place*, it cannot remove the collapsed axis. It becomes
+/// an axis of length 1.
+///
 /// ## Broadcasting
 ///
 /// Arrays support limited *broadcasting*, where arithmetic operations with
