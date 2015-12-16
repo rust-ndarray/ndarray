@@ -1,7 +1,7 @@
 use std::marker;
 
 use super::{Dimension, Ix};
-use super::{Elements, ElementsMut, Indexed};
+use super::{Elements, ElementsRepr, ElementsBase, ElementsMut, Indexed, IndexedMut};
 
 /// Base for array iterators
 ///
@@ -128,12 +128,12 @@ impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D>
     }
 }
 
-impl<'a, A, D: Clone> Clone for Elements<'a, A, D>
+impl<'a, A, D: Clone> Clone for ElementsBase<'a, A, D>
 {
-    fn clone(&self) -> Elements<'a, A, D> { Elements{inner: self.inner.clone()} }
+    fn clone(&self) -> ElementsBase<'a, A, D> { ElementsBase{inner: self.inner.clone()} }
 }
 
-impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D>
+impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D>
 {
     type Item = &'a A;
     #[inline]
@@ -149,7 +149,7 @@ impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D>
     }
 }
 
-impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
+impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix>
 {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A>
@@ -158,19 +158,74 @@ impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
     }
 }
 
+impl<'a, A> ExactSizeIterator for ElementsBase<'a, A, Ix> { }
+
+macro_rules! either {
+    ($value:expr, $inner:ident => $result:expr) => (
+        match $value {
+            ElementsRepr::Slice(ref $inner) => $result,
+            ElementsRepr::Counted(ref $inner) => $result,
+        }
+    )
+}
+
+macro_rules! either_mut {
+    ($value:expr, $inner:ident => $result:expr) => (
+        match $value {
+            ElementsRepr::Slice(ref mut $inner) => $result,
+            ElementsRepr::Counted(ref mut $inner) => $result,
+        }
+    )
+}
+
+impl<'a, A, D: Clone> Clone for Elements<'a, A, D>
+{
+    fn clone(&self) -> Elements<'a, A, D> {
+        Elements {
+            inner: match self.inner {
+                ElementsRepr::Slice(ref iter) => ElementsRepr::Slice(iter.clone()),
+                ElementsRepr::Counted(ref iter) => ElementsRepr::Counted(iter.clone()),
+            }
+        }
+    }
+}
+
+impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D>
+{
+    type Item = &'a A;
+    #[inline]
+    fn next(&mut self) -> Option<&'a A> {
+        either_mut!(self.inner, iter => iter.next())
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>)
+    {
+        either!(self.inner, iter => iter.size_hint())
+    }
+}
+
+impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<&'a A> {
+        either_mut!(self.inner, iter => iter.next_back())
+    }
+}
+
 impl<'a, A> ExactSizeIterator for Elements<'a, A, Ix> { }
 
-impl<'a, A, D: Dimension> Iterator for Indexed<Elements<'a, A, D>>
+
+impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D>
 {
     type Item = (D, &'a A);
     #[inline]
     fn next(&mut self) -> Option<(D, &'a A)>
     {
-        let index = match self.inner.inner.index {
+        let index = match self.0.inner.index {
             None => return None,
             Some(ref ix) => ix.clone()
         };
-        match self.inner.inner.next_ref() {
+        match self.0.inner.next_ref() {
             None => None,
             Some(p) => Some((index, p))
         }
@@ -178,7 +233,7 @@ impl<'a, A, D: Dimension> Iterator for Indexed<Elements<'a, A, D>>
 
     fn size_hint(&self) -> (usize, Option<usize>)
     {
-        let len = self.inner.inner.size_hint();
+        let len = self.0.inner.size_hint();
         (len, Some(len))
     }
 }
@@ -208,17 +263,17 @@ impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
     }
 }
 
-impl<'a, A, D: Dimension> Iterator for Indexed<ElementsMut<'a, A, D>>
+impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D>
 {
     type Item = (D, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<(D, &'a mut A)>
     {
-        let index = match self.inner.inner.index {
+        let index = match self.0.inner.index {
             None => return None,
             Some(ref ix) => ix.clone()
         };
-        match self.inner.inner.next_ref_mut() {
+        match self.0.inner.next_ref_mut() {
             None => None,
             Some(p) => Some((index, p))
         }
@@ -226,7 +281,7 @@ impl<'a, A, D: Dimension> Iterator for Indexed<ElementsMut<'a, A, D>>
 
     fn size_hint(&self) -> (usize, Option<usize>)
     {
-        let len = self.inner.inner.size_hint();
+        let len = self.0.inner.size_hint();
         (len, Some(len))
     }
 }

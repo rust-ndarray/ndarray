@@ -10,7 +10,9 @@ use std::ops::{
 };
 
 use super::{
-    Array, Dimension, Ix, Elements, ElementsMut,
+    Array, Dimension, Ix,
+    Elements,
+    ElementsMut,
     ArrayBase,
     ArrayView,
     ArrayViewMut,

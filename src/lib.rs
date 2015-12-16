@@ -52,7 +52,7 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitOr,
     BitXor,
 };
-use std::slice;
+use std::slice::{self, Iter};
 
 pub use dimension::{Dimension, RemoveAxis};
 pub use si::{Si, S, SliceRange};
@@ -395,15 +395,35 @@ impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
     #[inline]
-    fn into_base_iter(self) -> Baseiter<'a, A, D> {
+    fn into_base_iter(self) -> ElementsBase<'a, A, D> {
         unsafe {
-            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+            ElementsBase { inner:
+                Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+            }
         }
     }
 
     fn into_iter_(self) -> Elements<'a, A, D> {
-        Elements { inner: self.into_base_iter() }
+        Elements {
+            inner: 
+            if let Some(slc) = self.into_slice() {
+                ElementsRepr::Slice(slc.iter())
+            } else {
+                ElementsRepr::Counted(self.into_base_iter())
+            }
+        }
     }
+
+    fn into_slice(&self) -> Option<&'a [A]> {
+        if self.is_standard_layout() {
+            unsafe {
+                Some(slice::from_raw_parts(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
@@ -419,6 +439,18 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     fn into_iter_(self) -> ElementsMut<'a, A, D> {
         ElementsMut { inner: self.into_base_iter() }
     }
+
+    fn into_slice_mut(self) -> Option<&'a mut [A]>
+    {
+        if self.is_standard_layout() {
+            unsafe {
+                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
 }
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -590,12 +622,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `indexes` does not match the number of array axes.
     pub fn slice_iter(&self, indexes: &[Si]) -> Elements<A, D>
     {
-        let mut it = self.iter();
-        let offset = Dimension::do_slices(&mut it.inner.dim, &mut it.inner.strides, indexes);
+        let mut it = self.view();
+        let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
         unsafe {
-            it.inner.ptr = it.inner.ptr.offset(offset);
+            it.ptr = it.ptr.offset(offset);
         }
-        it
+        it.into_iter_()
     }
 
     /// Return a reference to the element at `index`, or return `None` 
@@ -668,22 +700,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    fn elements_base(&self) -> ElementsBase<A, D> {
+        ElementsBase { inner: self.base_iter() }
+    }
+
     /// Return an iterator of references to the elements of the array.
     ///
     /// Iterator element type is `&A`.
-    pub fn iter(&self) -> Elements<A, D>
-    {
-        Elements { inner: self.base_iter() }
+    pub fn iter(&self) -> Elements<A, D> {
+        self.view().into_iter_()
     }
 
     /// Return an iterator of references to the elements of the array.
     ///
     /// Iterator element type is `(D, &A)`.
-    pub fn indexed_iter(&self) -> Indexed<Elements<A, D>>
-    {
-        Indexed {
-            inner: self.iter(),
-        }
+    pub fn indexed_iter(&self) -> Indexed<A, D> {
+        Indexed(self.elements_base())
     }
 
     /// Collapse dimension `axis` into length one,
@@ -787,15 +819,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// into a larger shape, if possible.
     ///
     /// Return `None` if shapes can not be broadcast together.
-    pub fn broadcast_iter<E: Dimension>(&self, dim: E)
-        -> Option<Elements<A, E>>
+    pub fn broadcast_iter<E>(&self, dim: E) -> Option<Elements<A, E>>
+        where E: Dimension,
     {
         self.broadcast(dim).map(|v| v.into_iter_())
     }
 
     #[inline(never)]
-    fn broadcast_iter_unwrap<E: Dimension>(&self, dim: E)
-        -> Elements<A, E>
+    fn broadcast_iter_unwrap<E>(&self, dim: E) -> Elements<A, E>
+        where E: Dimension,
     {
         match self.broadcast_iter(dim.clone()) {
             Some(it) => it,
@@ -841,11 +873,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn diag_iter(&self) -> Elements<A, Ix>
     {
         let (len, stride) = self.diag_params();
-        unsafe {
-            Elements { inner:
-                Baseiter::new(self.ptr, len, stride as Ix)
-            }
-        }
+        let view = ArrayBase {
+            data: self.raw_data(),
+            ptr: self.ptr,
+            dim: len,
+            strides: stride as Ix,
+        };
+        view.into_iter_()
     }
 
     /// Return the diagonal as a one-dimensional array.
@@ -943,12 +977,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is `(D, &mut A)`.
-    pub fn indexed_iter_mut(&mut self) -> Indexed<ElementsMut<A, D>>
+    pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {
-        Indexed {
-            inner: self.iter_mut(),
-        }
+        IndexedMut(self.iter_mut())
     }
 
     /// Return a sliced read-write view of the array.
@@ -1379,6 +1411,19 @@ impl<A, S, D> ArrayBase<S, D>
 impl<A, S> ArrayBase<S, (Ix, Ix)>
     where S: Data<Elem=A>,
 {
+    unsafe fn one_dimensional_iter<'a>(ptr: *mut A, len: Ix, stride: Ix)
+        -> Elements<'a, A, Ix>
+    {
+        // NOTE: `data` field is unused by into_iter
+        let view = ArrayView {
+            data: &[],
+            ptr: ptr,
+            dim: len,
+            strides: stride,
+        };
+        view.into_iter_()
+    }
+
     /// Return an iterator over the elements of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -1388,9 +1433,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         let (sr, sc) = self.strides;
         assert!(index < m);
         unsafe {
-            Elements { inner:
-                Baseiter::new(self.ptr.offset(stride_offset(index, sr)), n, sc)
-            }
+            Self::one_dimensional_iter(self.ptr.offset(stride_offset(index, sr)), n, sc)
         }
     }
 
@@ -1403,9 +1446,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         let (sr, sc) = self.strides;
         assert!(index < n);
         unsafe {
-            Elements { inner:
-                Baseiter::new(self.ptr.offset(stride_offset(index, sc)), m, sr)
-            }
+            Self::one_dimensional_iter(self.ptr.offset(stride_offset(index, sc)), m, sr)
         }
     }
 }
@@ -1776,6 +1817,13 @@ impl<A, S, D> Not for ArrayBase<S, D>
 ///
 /// Iterator element type is `&'a A`.
 pub struct Elements<'a, A: 'a, D> {
+    inner: ElementsRepr<'a, A, D>,
+}
+
+/// An iterator over the elements of an array.
+///
+/// Iterator element type is `&'a A`.
+struct ElementsBase<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
@@ -1788,9 +1836,9 @@ pub struct ElementsMut<'a, A: 'a, D> {
 
 /// An iterator over the indexes and elements of an array.
 #[derive(Clone)]
-pub struct Indexed<I> {
-    inner: I,
-}
+pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
+/// An iterator over the indexes and elements of an array.
+pub struct IndexedMut<'a, A: 'a, D>(ElementsMut<'a, A, D>);
 
 fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
     where T: it::misc::Slice, U: it::misc::Slice
@@ -1798,3 +1846,7 @@ fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
     ZipSlices::from_slices(t, u)
 }
 
+enum ElementsRepr<'a, A: 'a, D> {
+    Slice(Iter<'a, A>),
+    Counted(ElementsBase<'a, A, D>),
+}
