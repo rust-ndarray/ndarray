@@ -1726,8 +1726,8 @@ impl_binary_op!(Rem, rem, irem, irem_scalar, "Remainder");
 impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar, "Bit and");
 impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar, "Bit or");
 impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar, "Bit xor");
-impl_binary_op!(Shl, shl, ishl, ishl_scalar, "Shift left");
-impl_binary_op!(Shr, shr, ishr, ishr_scalar, "Shift right");
+impl_binary_op!(Shl, shl, ishl, ishl_scalar, "Left shift");
+impl_binary_op!(Shr, shr, ishr, ishr_scalar, "Right shift");
 
 #[cfg(feature = "assign_ops")]
 mod assign_ops {
