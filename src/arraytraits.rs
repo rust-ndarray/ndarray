@@ -19,6 +19,8 @@ use super::{
     Data,
     DataMut,
 };
+#[cfg(feature = "rustc-serialize")]
+use super::DataOwned;
 
 /// Access the element at **index**.
 ///
@@ -158,10 +160,13 @@ unsafe impl<S, D> Send for ArrayBase<S, D>
 // Use version number so we can add a packed format later.
 static ARRAY_FORMAT_VERSION: u8 = 1u8;
 
+/// **Requires `feature = "rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
-impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
+impl<A, S, D> Encodable for ArrayBase<S, D>
+    where A: Encodable, D: Dimension + Encodable,
+          S: Data<Elem=A>,
 {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error>
+    fn encode<E: Encoder>(&self, s: &mut E) -> Result<(), E::Error>
     {
         s.emit_struct("Array", 3, |e| {
             try!(e.emit_struct_field("v", 0, |e| {
@@ -187,11 +192,13 @@ impl<A: Encodable, D: Dimension + Encodable> Encodable for Array<A, D>
     }
 }
 
+/// **Requires `feature = "rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
-impl<A: Decodable, D: Dimension + Decodable>
-    Decodable for Array<A, D>
+impl<A, S, D> Decodable for ArrayBase<S, D>
+    where A: Decodable, D: Dimension + Decodable,
+          S: DataOwned<Elem=A>,
 {
-    fn decode<S: Decoder>(d: &mut S) -> Result<Array<A, D>, S::Error>
+    fn decode<E: Decoder>(d: &mut E) -> Result<ArrayBase<S, D>, E::Error>
     {
         d.read_struct("Array", 3, |d| {
             let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));
@@ -208,7 +215,7 @@ impl<A: Decodable, D: Dimension + Decodable>
                             Err(d.error("data and dimension must match in size"))
                         } else {
                             let mut elements = Vec::with_capacity(len);
-                            for i in (0..len) {
+                            for i in 0..len {
                                 elements.push(try!(d.read_seq_elt::<A, _>(i, Decodable::decode)))
                             }
                             Ok(elements)
@@ -216,7 +223,7 @@ impl<A: Decodable, D: Dimension + Decodable>
                     })
             }));
             unsafe {
-                Ok(Array::from_vec_dim(dim, elements))
+                Ok(ArrayBase::from_vec_dim(dim, elements))
             }
         })
     }

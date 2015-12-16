@@ -23,9 +23,9 @@ default-features = false
 [dependencies.itertools]
 version = "0.4.4"
 
-#[dependencies.rustc-serialize]
-#version = "0.3"
-#optional = true
+[dependencies.rustc-serialize]
+version = "0.3"
+optional = true
 
 #[dependencies.serde]
 #version = "0.4"

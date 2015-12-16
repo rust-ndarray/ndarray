@@ -6,7 +6,7 @@ matrix:
     - rust: beta
     - rust: nightly
       env:
-       - FEATURES=''
+       - FEATURES='rustc-serialize'
        - BENCH=1
 branches:
   only:

@@ -31,6 +31,9 @@
 //! - `assign_ops`
 //!   - Optional, requires nightly
 //!   - Enables the compound assignment operators
+//! - `rustc-serialize`
+//!   - Optional, stable
+//!   - Enables serialization support
 //!
 #![cfg_attr(feature = "assign_ops", feature(augmented_assignments,
                                             op_assign_traits))]
