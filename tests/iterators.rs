@@ -2,7 +2,7 @@ extern crate ndarray;
 extern crate itertools;
 
 use ndarray::Array;
-use ndarray::{Ix, Si, S, arr2};
+use ndarray::{Ix, Si, S};
 use ndarray::{
     ArrayBase,
     Data,
