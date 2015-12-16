@@ -1,6 +1,7 @@
 use std::slice;
 
 use super::{Si, Ix, Ixs};
+use super::zipsl;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -80,8 +81,7 @@ pub unsafe trait Dimension : Clone + Eq {
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut index = index;
         let mut done = false;
-        for (&dim, ix) in self.slice().iter().rev()
-                            .zip(index.slice_mut().iter_mut().rev())
+        for (&dim, ix) in zipsl(self.slice(), index.slice_mut()).rev()
         {
             *ix += 1;
             if *ix == dim {
@@ -100,8 +100,7 @@ pub unsafe trait Dimension : Clone + Eq {
     fn stride_offset(index: &Self, strides: &Self) -> isize
     {
         let mut offset = 0;
-        for (&i, &s) in index.slice().iter()
-                            .zip(strides.slice().iter()) {
+        for (&i, &s) in zipsl(index.slice(), strides.slice()) {
             offset += stride_offset(i, s);
         }
         offset
@@ -111,9 +110,9 @@ pub unsafe trait Dimension : Clone + Eq {
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
     {
         let mut offset = 0;
-        for ((&d, &i), &s) in self.slice().iter()
-                                .zip(index.slice().iter())
-                                .zip(strides.slice().iter())
+        for ((&d, &i), &s) in zipsl(zipsl(self.slice(),
+                                          index.slice()),
+                                    strides.slice())
         {
             if i >= d {
                 return None;
@@ -131,9 +130,9 @@ pub unsafe trait Dimension : Clone + Eq {
     {
         let mut offset = 0;
         assert!(slices.len() == dim.slice().len());
-        for ((dr, sr), &slc) in dim.slice_mut().iter_mut()
-                                .zip(strides.slice_mut().iter_mut())
-                                .zip(slices.iter())
+        for ((dr, sr), &slc) in zipsl(zipsl(dim.slice_mut(),
+                                            strides.slice_mut()),
+                                      slices)
         {
             let m = *dr;
             let mi = m as Ixs;
@@ -216,6 +215,10 @@ unsafe impl Dimension for Ix {
     fn ndim(&self) -> usize { 1 }
     #[inline]
     fn size(&self) -> usize { *self as usize }
+
+    #[inline]
+    fn default_strides(&self) -> Self { 1 }
+
     #[inline]
     fn first_index(&self) -> Option<Ix> {
         if *self != 0 {
@@ -253,6 +256,13 @@ unsafe impl Dimension for (Ix, Ix) {
     fn ndim(&self) -> usize { 2 }
     #[inline]
     fn size(&self) -> usize { let (m, n) = *self; m as usize * n as usize }
+    #[inline]
+    fn default_strides(&self) -> Self {
+        // Compute default array strides
+        // Shape (a, b, c) => Give strides (b * c, c, 1)
+        (self.1, 1)
+    }
+
     #[inline]
     fn first_index(&self) -> Option<(Ix, Ix)> {
         let (m, n) = *self;

@@ -306,6 +306,7 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
 
 impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> { }
 
+/// Constructor methods single dimensional `ArrayBase`.
 impl<S> ArrayBase<S, Ix>
     where S: DataOwned,
 {
@@ -335,6 +336,7 @@ impl Array<f32, Ix>
     }
 }
 
+/// Constructor methods for `ArrayBase`.
 impl<S, D> ArrayBase<S, D>
     where S: DataOwned,
           D: Dimension,
