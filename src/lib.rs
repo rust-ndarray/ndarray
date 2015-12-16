@@ -522,6 +522,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a read-only view of the array
     pub fn view(&self) -> ArrayView<A, D> {
+        debug_assert!(self.pointer_is_inbounds());
         ArrayView {
             ptr: self.ptr,
             dim: self.dim.clone(),
@@ -534,7 +535,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
         where S: DataMut,
     {
+        debug_assert!(self.pointer_is_inbounds());
         self.ensure_unique();
+        debug_assert!(self.pointer_is_inbounds());
         ArrayViewMut {
             ptr: self.ptr,
             dim: self.dim.clone(),
@@ -586,6 +589,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Array's view.
     pub fn raw_data(&self) -> &[A] {
         self.data.slice()
+    }
+
+    fn pointer_is_inbounds(&self) -> bool {
+        let slc = self.data.slice();
+        let ptr = slc.as_ptr() as *mut _;
+        let end =  unsafe {
+            ptr.offset(slc.len() as isize)
+        };
+        if ptr != self.ptr {
+            println!("{:p} <= {:p} <= {:p}", ptr, self.ptr, end);
+        }
+        self.ptr >= ptr && self.ptr <= end
     }
 
     /// Return the array's data as a slice, if it is contiguous and
@@ -728,6 +743,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element type is `&A`.
     pub fn iter(&self) -> Elements<A, D> {
+        debug_assert!(self.pointer_is_inbounds());
         self.view().into_iter_()
     }
 
@@ -990,7 +1006,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn iter_mut(&mut self) -> ElementsMut<A, D>
         where S: DataMut,
     {
+        debug_assert!(self.pointer_is_inbounds());
         self.ensure_unique();
+        debug_assert!(self.pointer_is_inbounds());
         self.view_mut().into_iter_()
     }
 
