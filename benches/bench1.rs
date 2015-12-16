@@ -212,6 +212,24 @@ fn bench_mat_mul(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn bench_create_iter(bench: &mut test::Bencher)
+{
+    let a = arr2(&[[1., 2., 2.],
+                   [3., 4., 4.],
+                   [3., 4., 4.],
+                   [3., 4., 4.],
+                   [5., 6., 6.]]);
+    let mut at = a.clone();
+    at.swap_axes(0, 1);
+    let v = black_box(at.view());
+
+    bench.iter(|| {
+        let v = black_box(v);
+        v.into_iter()
+    });
+}
+
+#[bench]
 fn lst_squares(bench: &mut test::Bencher)
 {
     let xs = arr2::<f32, _>(&[[ 2.,  3.],
