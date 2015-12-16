@@ -1442,9 +1442,7 @@ impl<A, S, D> ArrayBase<S, D>
         for _ in 1..n {
             cnt = cnt + one;
         }
-        for elt in sum.iter_mut() {
-            *elt = *elt / cnt;
-        }
+        sum.idiv_scalar(&cnt);
         sum
     }
 }
