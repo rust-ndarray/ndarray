@@ -1115,14 +1115,23 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn assign_scalar(&mut self, x: &A)
         where S: DataMut, A: Clone,
     {
+        self.unordered_foreach_mut(|elt| *elt = x.clone());
+    }
+
+    /// Apply closure `f` to each element in the array, in whatever
+    /// order is the fastest to visit.
+    fn unordered_foreach_mut<F>(&mut self, mut f: F)
+        where S: DataMut,
+              F: FnMut(&mut A)
+    {
         if let Some(slc) = self.as_slice_mut() {
             for elt in slc {
-                *elt = x.clone();
+                f(elt);
             }
             return;
         }
         for elt in self.iter_mut() {
-            *elt = x.clone();
+            f(elt);
         }
     }
 }
@@ -1548,11 +1557,10 @@ impl<A, S, D> ArrayBase<S, D> where
     #[doc=$doc]
     /// between `self` and the scalar `x`,
     /// *in place*.
-    pub fn $imth_scalar (&mut self, x: &A)
-    {
-        for elt in self.iter_mut() {
+    pub fn $imth_scalar (&mut self, x: &A) {
+        self.unordered_foreach_mut(|elt| {
             *elt = elt.clone(). $mth (x.clone());
-        }
+        });
     }
 }
 
@@ -1713,9 +1721,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
     {
-        for elt in self.iter_mut() {
+        self.unordered_foreach_mut(|elt| {
             *elt = elt.clone().neg()
-        }
+        });
     }
 }
 
@@ -1740,9 +1748,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// Perform an elementwise unary not of `self`, *in place*.
     pub fn inot(&mut self)
     {
-        for elt in self.iter_mut() {
+        self.unordered_foreach_mut(|elt| {
             *elt = elt.clone().not()
-        }
+        });
     }
 }
 
