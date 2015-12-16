@@ -52,6 +52,7 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitOr,
     BitXor,
 };
+use std::slice;
 
 pub use dimension::{Dimension, RemoveAxis};
 pub use si::{Si, S, SliceRange};
@@ -434,6 +435,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return the shape of the array as a slice.
     pub fn shape(&self) -> &[Ix] {
         self.dim.slice()
+    }
+
+    /// Return the strides of the array
+    pub fn strides(&self) -> &[Ixs] {
+        let s = self.strides.slice();
+        // reinterpret unsigned integer as signed
+        unsafe {
+            slice::from_raw_parts(s.as_ptr() as *const _, s.len())
+        }
     }
 
     /// Return `true` if the array data is laid out in
