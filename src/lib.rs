@@ -1526,6 +1526,7 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
         assert!(self_columns == other_rows);
 
         // Avoid initializing the memory in vec -- set it during iteration
+        // Panic safe because A: Copy
         let mut res_elems = Vec::<A>::with_capacity(m as usize * n as usize);
         unsafe {
             res_elems.set_len(m as usize * n as usize);
@@ -1534,10 +1535,9 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
         let mut j = 0;
         for rr in res_elems.iter_mut() {
             unsafe {
-                let dot = (0..a).fold(libnum::zero::<A>(),
+                *rr = (0..a).fold(libnum::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *rhs.uchk_at((k, j))
                 );
-                std::ptr::write(rr, dot);
             }
             j += 1;
             if j == n {
@@ -1573,10 +1573,9 @@ impl<A: Copy + linalg::Ring, S> ArrayBase<S, (Ix, Ix)>
         let mut i = 0;
         for rr in res_elems.iter_mut() {
             unsafe {
-                let dot = (0..a).fold(libnum::zero::<A>(),
+                *rr = (0..a).fold(libnum::zero::<A>(),
                     |s, k| s + *self.uchk_at((i, k)) * *rhs.uchk_at(k)
                 );
-                std::ptr::write(rr, dot);
             }
             i += 1;
         }
