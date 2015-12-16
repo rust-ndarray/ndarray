@@ -681,7 +681,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Iterator element type is `(D, &A)`.
     pub fn indexed_iter(&self) -> Indexed<Elements<A, D>>
     {
-        self.iter().indexed()
+        Indexed {
+            inner: self.iter(),
+        }
     }
 
     /// Collapse dimension `axis` into length one,
@@ -944,7 +946,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn indexed_iter_mut(&mut self) -> Indexed<ElementsMut<A, D>>
         where S: DataMut,
     {
-        self.iter_mut().indexed()
+        Indexed {
+            inner: self.iter_mut(),
+        }
     }
 
     /// Return a sliced read-write view of the array.
@@ -1775,53 +1779,11 @@ pub struct Elements<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
-impl<'a, A, D> Elements<'a, A, D> where D: Clone
-{
-    /// Return the base dimension of the array being iterated.
-    pub fn dim(&self) -> D
-    {
-        self.inner.dim.clone()
-    }
-
-    /// Return an indexed version of the iterator.
-    ///
-    /// Iterator element type is `(D, &'a A)`.
-    ///
-    /// **Note:** the indices run over the logical dimension of the iterator,
-    /// i.e. a *.slice_iter()* will yield indices relative to the slice, not the
-    /// base array.
-    pub fn indexed(self) -> Indexed<Elements<'a, A, D>>
-    {
-        Indexed {
-            inner: self,
-        }
-    }
-}
-
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a mut A`.
 pub struct ElementsMut<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
-}
-
-impl<'a, A, D> ElementsMut<'a, A, D> where D: Clone
-{
-    /// Return the base dimension of the array being iterated.
-    pub fn dim(&self) -> D
-    {
-        self.inner.dim.clone()
-    }
-
-    /// Return an indexed version of the iterator.
-    ///
-    /// Iterator element type is `(D, &'a mut A)`.
-    pub fn indexed(self) -> Indexed<ElementsMut<'a, A, D>>
-    {
-        Indexed {
-            inner: self,
-        }
-    }
 }
 
 /// An iterator over the indexes and elements of an array.
