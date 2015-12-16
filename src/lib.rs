@@ -1880,7 +1880,7 @@ struct ElementsBase<'a, A: 'a, D> {
     inner: Baseiter<'a, A, D>,
 }
 
-/// An iterator over the elements of an array.
+/// An iterator over the elements of an array (mutable).
 ///
 /// Iterator element type is `&'a mut A`.
 pub struct ElementsMut<'a, A: 'a, D> {
@@ -1897,7 +1897,7 @@ struct ElementsBaseMut<'a, A: 'a, D> {
 /// An iterator over the indexes and elements of an array.
 #[derive(Clone)]
 pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
-/// An iterator over the indexes and elements of an array.
+/// An iterator over the indexes and elements of an array (mutable).
 pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>

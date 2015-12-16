@@ -1,6 +1,6 @@
 use super::Dimension;
 
-/// An iterator of the indexes of an array shape.
+/// An iterator over the indexes of an array shape.
 ///
 /// Iterator element type is `D`.
 #[derive(Clone)]
