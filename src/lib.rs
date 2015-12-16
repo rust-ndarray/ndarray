@@ -6,10 +6,10 @@
 //! - [`ArrayBase`](struct.ArrayBase.html)<br>
 //!   The n-dimensional array type itself, parameterized by data storage.
 //! - `Array`<br>
-//!   Array where the data is reference counted and copy on write, it
+//!   An array where the data is reference counted and copy on write, it
 //!   can act as both an owner as the data as well as a lightweight view.
 //! - `OwnedArray`<br>
-//!   Array where the data is owned uniquely.
+//!   An array where the data is owned uniquely.
 //! - `ArrayView`<br>
 //!   A lightweight array view.
 //! - `ArrayViewMut`<br>
@@ -18,15 +18,13 @@
 //! ## Crate Summary and Status
 //!
 //! - Implements the numpy striding and broadcasting scheme for n-dimensional arrays
-//! - `Array` is clone on write, so it can be both a view or an owner of the
-//!   data. `OwnedArray` is a uniquely owned array.
 //! - Focus is on being a generic n-dimensional container
-//! - Due to iterators, arithmetic operations, matrix multiplication etc
+//! - Due to that arithmetic operations and matrix multiplication etc
 //!   are not very well optimized, this is not a serious crate for numerics
 //!   or linear algebra.
 //! - There is no integration with linear algebra packages (at least not yet).
 //!
-//! ## Crate feature flags
+//! ## Crate Feature Flags
 //!
 //! - `assign_ops`
 //!   - Optional, requires nightly
