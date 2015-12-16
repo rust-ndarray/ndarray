@@ -84,34 +84,53 @@ pub type Ix = u32;
 /// Array index type (signed)
 pub type Ixs = i32;
 
-/// The `Array` type is an *N-dimensional array*.
-///
-/// A reference counted array with copy-on-write mutability.
+/// An *N-dimensional array*.
 ///
 /// The array can be a container of numerical use, supporting
 /// all mathematical operators by applying them elementwise -- but it can
 /// store any kind of value. It cannot grow or shrink, but can be sliced into
 /// views of parts of its data.
 ///
-/// The array is both a view and a shared owner of its data. Some methods,
-/// for example [*slice()*](#method.slice), merely change the view of the data,
-/// while methods like [*iadd()*](#method.iadd) allow mutating the element
+/// The `ArrayBase<S, D>` is parameterized by:
+///
+/// - `S` for the data storage
+/// - `D` for the number of dimensions
+///
+/// Type aliases [`Array`], [`OwnedArray`], [`ArrayView`], and [`ArrayViewMut`] refer
+/// to `ArrayBase` with different types for the data storage.
+///
+/// [`Array`]: type.Array.html
+/// [`OwnedArray`]: type.OwnedArray.html
+/// [`ArrayView`]: type.ArrayView.html
+/// [`ArrayViewMut`]: type.ArrayViewMut.html
+///
+/// ## `Array`
+///
+/// `Array<A, D>` is a an array with reference counted data and copy-on-write
+/// mutability.
+///
+/// The `Array` is both a view and a shared owner of its data. Some methods,
+/// for example [`slice()`](#method.slice), merely change the view of the data,
+/// while methods like [`iadd()`](#method.iadd) allow mutating the element
 /// values.
 ///
 /// Calling a method for mutating elements, for example
-/// [*get_mut()*](#method.get_mut), [*iadd()*](#method.iadd) or
-/// [*iter_mut()*](#method.iter_mut) will break sharing and require a clone of
+/// [`get_mut()`](#method.get_mut), [`iadd()`](#method.iadd) or
+/// [`iter_mut()`](#method.iter_mut) will break sharing and require a clone of
 /// the data (if it is not uniquely held).
 ///
 /// ## Method Conventions
 ///
 /// Methods mutating the view or array elements in place use an *i* prefix,
-/// for example *slice* vs. *islice* and *add* vs *iadd*.
+/// for example `slice` vs. `islice` and `add` vs `iadd`.
+///
+/// Note that all `ArrayBase` variants can change their view (slicing) of the
+/// data freely, even when the data can't be mutated.
 ///
 /// ## Indexing
 ///
 /// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
-/// (signed).
+/// (signed). ***Note: A future version will switch to `usize`.***
 ///
 /// ## Broadcasting
 ///
