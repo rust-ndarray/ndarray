@@ -27,15 +27,20 @@ __ http://bluss.github.io/rust-ndarray/
 How to use with cargo::
 
     [dependencies]
-    rendarray = "0.1"
+    rendarray = "0.2"
 
 Recent Changes
 --------------
 
+- **Note:** At some point in a future release, the indexing type ``Ix`` will
+  change to ``usize``
+
+- 0.2.0-alpha.3
+
+  - Add and edit a lot of documentation
+
 - 0.2.0-alpha.2
 
-  - **Note:** At some point in a future release, the indexing type ``Ix`` will
-    change to ``usize``
   - Improve performance for iterators when the array data is in the default
     memory layout. The iterator then wraps the default slice iterator and
     loops will autovectorize.
