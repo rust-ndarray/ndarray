@@ -1,3 +1,4 @@
+#![cfg(any(feature = "rustc-serialize", feature = "serde"))]
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 extern crate ndarray;
