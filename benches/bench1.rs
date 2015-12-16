@@ -195,7 +195,8 @@ fn bench_row_iter(bench: &mut test::Bencher)
 fn bench_col_iter(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((1024, 1024));
-    bench.iter(|| for elt in a.col_iter(17) { black_box(elt); })
+    let it = a.col_iter(17);
+    bench.iter(|| for elt in it.clone() { black_box(elt); })
 }
 
 #[bench]
