@@ -62,6 +62,8 @@ pub use indexes::Indexes;
 
 use iterators::Baseiter;
 
+use it::ZipSlices;
+
 
 pub mod linalg;
 mod arraytraits;
@@ -454,7 +456,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool
     {
-        self.strides == self.dim.default_strides()
+        let defaults = self.dim.default_strides();
+        if self.strides == defaults {
+            return true;
+        }
+        // check all dimensions -- a dimension of length 1 can have unequal strides
+        for (&dim, (&s, &ds)) in zipsl(self.dim.slice(),
+                                       zipsl(self.strides(), defaults.slice()))
+        {
+            if dim != 1 && s != (ds as Ixs) {
+                return false;
+            }
+        }
+        true
     }
 
     /// Return a read-only view of the array
@@ -524,6 +538,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn raw_data(&self) -> &[A]
     {
         self.data.slice()
+    }
+
+    pub fn as_slice(&self) -> Option<&[A]> {
+        if self.is_standard_layout() {
+            unsafe {
+                Some(slice::from_raw_parts(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
     }
 
     /// Return a sliced array.
@@ -1777,5 +1801,11 @@ impl<'a, A, D> ElementsMut<'a, A, D> where D: Clone
 #[derive(Clone)]
 pub struct Indexed<I> {
     inner: I,
+}
+
+fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
+    where T: it::misc::Slice, U: it::misc::Slice
+{
+    ZipSlices::from_slices(t, u)
 }
 

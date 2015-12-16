@@ -1,7 +1,15 @@
 extern crate ndarray;
+extern crate itertools;
 
 use ndarray::Array;
 use ndarray::{Ix, Si, S, arr2};
+use ndarray::{
+    ArrayBase,
+    Data,
+    Dimension,
+};
+
+use itertools::assert_equal;
 
 #[test]
 fn double_ended()
@@ -76,4 +84,53 @@ fn indexed3()
     let a = a.reshape((2, 4));
     assert_eq!( a, arr2(&[[0., -1., 2., -1.],
                           [4., -1., 6., -1.]]));
+}
+
+fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
+    where S: Data<Elem=A>,
+          D: Dimension,
+          A: PartialEq + std::fmt::Debug,
+{
+    let slc = v.as_slice();
+    assert!(slc.is_some());
+    let slc = slc.unwrap();
+    assert_eq!(v.len(), slc.len());
+    assert_equal(v.iter(), slc);
+}
+
+#[test]
+fn as_slice() {
+    let a = Array::range(0., 8.);
+    let a = a.reshape((2, 4, 1));
+
+    assert_slice_correct(&a);
+
+    let a = a.reshape((2, 4));
+    assert_slice_correct(&a);
+
+    assert!(a.view().subview(1, 0).as_slice().is_none());
+
+    let v = a.view();
+    assert_slice_correct(&v);
+    assert_slice_correct(&v.subview(0, 0));
+    assert_slice_correct(&v.subview(0, 1));
+
+    assert!(v.slice(&[S, Si(0, Some(1), 1)]).as_slice().is_none());
+    println!("{:?}", v.slice(&[Si(0, Some(1), 2), S]));
+    assert!(v.slice(&[Si(0, Some(1), 2), S]).as_slice().is_some());
+
+    // `u` is contiguous, because the column stride of `2` doesn't matter
+    // when the result is just one row anyway -- length of that dimension is 1
+    let u = v.slice(&[Si(0, Some(1), 2), S]);
+    println!("{:?}", u.shape());
+    println!("{:?}", u.strides());
+    println!("{:?}", v.slice(&[Si(0, Some(1), 2), S]));
+    assert!(u.as_slice().is_some());
+    assert_slice_correct(&u);
+
+    let a = a.reshape((8, 1));
+    assert_slice_correct(&a);
+    let u = a.view().slice(&[Si(0, None, 2), S]);
+    println!("u={:?}, shape={:?}, strides={:?}", u, u.shape(), u.strides());
+    assert!(u.as_slice().is_none());
 }
