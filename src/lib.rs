@@ -1,7 +1,8 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
-//! The `ndarray` crate provides an n-dimensional container similar to numpy's ndarray.
+//! The `ndarray` crate provides an n-dimensional container similar to numpy's
+//! ndarray.
 //!
 //! - [`ArrayBase`](struct.ArrayBase.html)<br>
 //!   The n-dimensional array type itself, parameterized by data storage.
@@ -86,10 +87,9 @@ pub type Ixs = i32;
 
 /// An *N-dimensional array*.
 ///
-/// The array can be a container of numerical use, supporting
-/// all mathematical operators by applying them elementwise -- but it can
-/// store any kind of value. It cannot grow or shrink, but can be sliced into
-/// views of parts of its data.
+/// The array is a general container of elements. It can be of numerical use
+/// too, supporting all mathematical operators by applying them elementwise.  It
+/// cannot grow or shrink, but can be sliced into views of parts of its data.
 ///
 /// The `ArrayBase<S, D>` is parameterized by:
 ///
