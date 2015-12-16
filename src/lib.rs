@@ -1,7 +1,7 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 
-//! The `ndarray` crate provides an n-dimensional container similar to numpy's
+//! The `ndarray` crate provides an N-dimensional container similar to numpy's
 //! ndarray.
 //!
 //! - [`ArrayBase`](struct.ArrayBase.html)<br>

@@ -1,8 +1,8 @@
 rendarray
 =========
 
-An arbitrary dimension N-dimensional array container of elements of
-arbitrary types.
+The `ndarray` crate provides an N-dimensional container similar to numpy's
+ndarray.
 
 Features
 
