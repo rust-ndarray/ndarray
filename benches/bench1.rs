@@ -10,13 +10,26 @@ use ndarray::{arr0, arr1, arr2};
 use test::black_box;
 
 #[bench]
-fn bench_std_add(bench: &mut test::Bencher)
+fn bench_std_add_shared(bench: &mut test::Bencher)
 {
     let mut a = arr2::<f32, _>(&[[1., 2., 2.],
                               [3., 4., 4.],
                               [3., 4., 4.],
                               [3., 4., 4.],
                               [5., 6., 6.]]);
+    let b = a.clone();
+    bench.iter(|| a.iadd(&b));
+}
+
+#[bench]
+fn bench_std_add_owned(bench: &mut test::Bencher)
+{
+    let a = arr2::<f32, _>(&[[1., 2., 2.],
+                              [3., 4., 4.],
+                              [3., 4., 4.],
+                              [3., 4., 4.],
+                              [5., 6., 6.]]);
+    let mut a = a.to_owned();
     let b = a.clone();
     bench.iter(|| a.iadd(&b));
 }
