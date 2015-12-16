@@ -452,7 +452,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         }
     }
 
-    fn into_slice_mut(self) -> Option<&'a mut [A]>
+    fn _into_slice_mut(self) -> Option<&'a mut [A]>
     {
         if self.is_standard_layout() {
             unsafe {
