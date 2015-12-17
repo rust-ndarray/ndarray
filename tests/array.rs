@@ -483,3 +483,39 @@ fn aview() {
     assert_eq!(a, b);
     assert_eq!(b.shape(), &[2, 3]);
 }
+
+#[test]
+fn reshape() {
+    let data = [1, 2, 3, 4, 5, 6, 7, 8];
+    let v = aview1(&data);
+    let u = v.into_shape((3, 3));
+    assert!(u.is_err());
+    let u = v.into_shape((2, 2, 2));
+    assert!(u.is_ok());
+    let u = u.unwrap();
+    assert_eq!(u.shape(), &[2, 2, 2]);
+    let s = u.into_shape((4, 2)).unwrap();
+    assert_eq!(s.shape(), &[4, 2]);
+    assert_eq!(s, aview2(&[[1, 2],
+                           [3, 4],
+                           [5, 6],
+                           [7, 8]]));
+}
+
+#[test]
+#[should_panic(expected = "IncompatibleShapes")]
+fn reshape_error1() {
+    let data = [1, 2, 3, 4, 5, 6, 7, 8];
+    let v = aview1(&data);
+    let u = v.into_shape((2, 5)).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "IncompatibleLayout")]
+fn reshape_error2() {
+    let data = [1, 2, 3, 4, 5, 6, 7, 8];
+    let v = aview1(&data);
+    let mut u = v.into_shape((4, 2)).unwrap();
+    u.swap_axes(0, 1);
+    let s = u.into_shape((2, 4)).unwrap();
+}

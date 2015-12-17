@@ -46,14 +46,16 @@ extern crate itertools as it;
 #[cfg(not(nocomplex))]
 extern crate num as libnum;
 
-use std::mem;
-use std::rc::Rc;
 use libnum::Float;
+
+use std::fmt;
+use std::mem;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
     BitOr,
     BitXor,
 };
+use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 
 pub use dimension::{Dimension, RemoveAxis};
@@ -1281,10 +1283,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
 
-    /// Transform the array into `shape`; any other shape
-    /// with the same number of elements is accepted.
+    /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted.
     ///
-    /// **Panics** if sizes are incompatible.
+    /// May clone all elements if needed to arrange elements in standard
+    /// layout (and break sharing).
+    ///
+    /// **Panics** if shapes are incompatible.
     ///
     /// ```
     /// use ndarray::{arr1, arr2};
@@ -1299,7 +1304,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataShared + DataOwned, A: Clone,
     {
         if shape.size() != self.dim.size() {
-            panic!("Incompatible sizes in reshape, attempted from: {:?}, to: {:?}",
+            panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(), shape.slice())
         }
         // Check if contiguous, if not => copy all, else just adapt strides
@@ -1316,6 +1321,40 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             unsafe {
                 ArrayBase::from_vec_dim(shape, v)
             }
+        }
+    }
+
+    /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted, but the source array or view must have
+    /// standard layout, otherwise we cannot rearrange the dimension.
+    ///
+    /// ```
+    /// use ndarray::{aview1, aview2};
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
+    ///     == aview2(&[[1., 2.],
+    ///                 [3., 4.]])
+    /// );
+    /// ```
+    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E>, ShapeError>
+        where E: Dimension
+    {
+        if shape.size() != self.dim.size() {
+            return Err(ShapeError::IncompatibleShapes(
+                    self.dim.slice().to_vec().into_boxed_slice(),
+                    shape.slice().to_vec().into_boxed_slice()));
+        }
+        // Check if contiguous, if not => copy all, else just adapt strides
+        if self.is_standard_layout() {
+            Ok(ArrayBase {
+                data: self.data,
+                ptr: self.ptr,
+                strides: shape.default_strides(),
+                dim: shape,
+            })
+        } else {
+            Err(ShapeError::IncompatibleLayout)
         }
     }
 
@@ -2044,4 +2083,36 @@ fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
 enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
+}
+
+/// An error that can be produced by `.into_shape()`
+#[derive(Clone, Debug)]
+pub enum ShapeError {
+    IncompatibleShapes(Box<[Ix]>, Box<[Ix]>),
+    IncompatibleLayout,
+}
+
+impl std::error::Error for ShapeError {
+    fn description(&self) -> &str {
+        match *self {
+            ShapeError::IncompatibleShapes(..) =>
+                "incompatible shapes in reshape",
+            ShapeError::IncompatibleLayout =>
+                "incompatible layout: not standard layout",
+        }
+    }
+}
+
+impl fmt::Display for ShapeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ShapeError::IncompatibleShapes(ref a, ref b) => {
+                write!(f, "incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
+                       a, b)
+            }
+            ShapeError::IncompatibleLayout => {
+                write!(f, "{}", std::error::Error::description(self))
+            }
+        }
+    }
 }
