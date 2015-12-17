@@ -138,7 +138,8 @@ pub type Ixs = i32;
 /// the array. Slicing methods include `.slice()`, `.islice()`,
 /// `.slice_mut()`.
 ///
-/// Slices are passed with the type [`Si`] with fields `Si(begin, end, stride)`,
+/// The slicing specification is passed as a function argument as a fixed size
+/// array with elements of type [`Si`] with fields `Si(begin, end, stride)`,
 /// where the values are signed integers, and `end` is an `Option<Ixs>`.
 /// The constant [`S`] is a shorthand for the full range of an axis.
 ///
@@ -169,7 +170,9 @@ pub type Ixs = i32;
 /// //
 /// // - Every element in each row: `S`
 /// // - Only the first row in each submatrix: `Si(0, Some(1), 1)`
-/// // - In both of the submatrices of the third dimension: `S`
+/// // - In both of the submatrices of the greatest dimension: `S`
+/// //
+/// // The argument passed is of type `&[Si; 3]` since the array has three axes.
 ///
 /// let b = a.slice(&[S, Si(0, Some(1), 1), S]);
 /// let c = arr3(&[[[ 1,  2,  3]],
@@ -181,7 +184,7 @@ pub type Ixs = i32;
 /// // 
 /// // - Row elements in reverse order: `Si(0, None, -1)`
 /// // - The last row in each submatrix: `Si(-1, None, 1)`
-/// // - In both submatrices of the third dimension: `S`
+/// // - In both submatrices of the greatest dimension: `S`
 /// let d = a.slice(&[S, Si(-1, None, 1), Si(0, None, -1)]);
 /// let e = arr3(&[[[ 6,  5,  4]],
 ///                [[12, 11, 10]]]);
@@ -745,8 +748,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a sliced array.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
-    pub fn slice(&self, indexes: &[Si]) -> Self
+    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
+    /// element per axis.
+    ///
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    pub fn slice(&self, indexes: &D::SliceArg) -> Self
         where S: DataShared
     {
         let mut arr = self.clone();
@@ -756,8 +765,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Slice the array's view in place.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
-    pub fn islice(&mut self, indexes: &[Si])
+    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
+    /// element per axis.
+    ///
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    pub fn islice(&mut self, indexes: &D::SliceArg)
     {
         let offset = Dimension::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
@@ -767,8 +782,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator over a sliced view.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
-    pub fn slice_iter(&self, indexes: &[Si]) -> Elements<A, D>
+    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
+    /// element per axis.
+    ///
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    pub fn slice_iter(&self, indexes: &D::SliceArg) -> Elements<A, D>
     {
         let mut it = self.view();
         let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
@@ -1144,8 +1165,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a sliced read-write view of the array.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
-    pub fn slice_mut(&mut self, indexes: &[Si]) -> ArrayViewMut<A, D>
+    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
+    /// element per axis.
+    ///
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    pub fn slice_mut(&mut self, indexes: &D::SliceArg) -> ArrayViewMut<A, D>
         where S: DataMut
     {
         let mut arr = self.view_mut();
@@ -1156,10 +1183,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator of mutable references into the sliced view
     /// of the array.
     ///
+    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
+    /// element per axis.
+    ///
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
     /// Iterator element type is `&mut A`.
     ///
-    /// **Panics** if `indexes` does not match the number of array axes.
-    pub fn slice_iter_mut(&mut self, indexes: &[Si]) -> ElementsMut<A, D>
+    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    pub fn slice_iter_mut(&mut self, indexes: &D::SliceArg) -> ElementsMut<A, D>
         where S: DataMut,
     {
         let mut it = self.view_mut();

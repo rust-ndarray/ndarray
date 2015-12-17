@@ -53,6 +53,14 @@ fn test_slice()
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
 }
 
+#[should_panic]
+#[test]
+fn slice_oob()
+{
+    let mut a = Array::<i32, _>::zeros((3, 4));
+    let vi = a.slice(&[Si(0, Some(10), 1), S]);
+}
+
 #[test]
 fn test_index()
 {
