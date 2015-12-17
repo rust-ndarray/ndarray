@@ -92,6 +92,7 @@ use itertools::free::enumerate;
 pub use dimension::{
     Dimension,
     RemoveAxis,
+    Axis,
 };
 
 pub use dimension::NdIndex;
@@ -292,7 +293,7 @@ pub type Ixs = isize;
 /// Subview takes two arguments: `axis` and `index`.
 ///
 /// ```
-/// use ndarray::{arr3, aview2};
+/// use ndarray::{arr3, aview2, Axis};
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -308,8 +309,8 @@ pub type Ixs = isize;
 /// // Let’s take a subview along the greatest dimension (axis 0),
 /// // taking submatrix 0, then submatrix 1
 ///
-/// let sub_0 = a.subview(0, 0);
-/// let sub_1 = a.subview(0, 1);
+/// let sub_0 = a.subview(Axis(0), 0);
+/// let sub_1 = a.subview(Axis(0), 1);
 ///
 /// assert_eq!(sub_0, aview2(&[[ 1,  2,  3],
 ///                            [ 4,  5,  6]]));
@@ -318,7 +319,7 @@ pub type Ixs = isize;
 /// assert_eq!(sub_0.shape(), &[2, 3]);
 ///
 /// // This is the subview picking only axis 2, column 0
-/// let sub_col = a.subview(2, 0);
+/// let sub_col = a.subview(Axis(2), 0);
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
 ///                              [ 7, 10]]));
@@ -1265,7 +1266,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
     /// ```
-    /// use ndarray::{arr1, arr2};
+    /// use ndarray::{arr1, arr2, Axis};
     ///
     /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
     ///                [3., 4.],    // -- axis 0, row 1
@@ -1274,13 +1275,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// //                \   axis 1, column 1
     /// //                 axis 1, column 0
     /// assert!(
-    ///     a.subview(0, 1) == arr1(&[3., 4.]) &&
-    ///     a.subview(1, 1) == arr1(&[2., 4., 6.])
+    ///     a.subview(Axis(0), 1) == arr1(&[3., 4.]) &&
+    ///     a.subview(Axis(1), 1) == arr1(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn subview(&self, axis: usize, index: Ix)
+    pub fn subview(&self, axis: Axis, index: Ix)
         -> ArrayView<A, <D as RemoveAxis>::Smaller>
-        where D: RemoveAxis
+        where D: RemoveAxis,
     {
         self.view().into_subview(axis, index)
     }
@@ -1291,19 +1292,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
     /// ```
-    /// use ndarray::{arr2, aview2};
+    /// use ndarray::{arr2, aview2, Axis};
     ///
     /// let mut a = arr2(&[[1., 2.],
     ///                    [3., 4.]]);
     ///
-    /// a.subview_mut(1, 1).iadd_scalar(&10.);
+    /// a.subview_mut(Axis(1), 1).iadd_scalar(&10.);
     ///
     /// assert!(
     ///     a == aview2(&[[1., 12.],
     ///                   [3., 14.]])
     /// );
     /// ```
-    pub fn subview_mut(&mut self, axis: usize, index: Ix)
+    pub fn subview_mut(&mut self, axis: Axis, index: Ix)
         -> ArrayViewMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
@@ -1315,19 +1316,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: usize, index: Ix) {
-        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
+    pub fn isubview(&mut self, axis: Axis, index: Ix) {
+        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
+                          axis.axis(), index)
     }
 
     /// Along `axis`, select the subview `index` and return `self`
     /// with that axis removed.
     ///
     /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: usize, index: Ix)
+    pub fn into_subview(mut self, axis: Axis, index: Ix)
         -> ArrayBase<S, <D as RemoveAxis>::Smaller>
-        where D: RemoveAxis
+        where D: RemoveAxis,
     {
         self.isubview(axis, index);
+        let axis = axis.axis();
         // don't use reshape -- we always know it will fit the size,
         // and we can use remove_axis on the strides as well
         ArrayBase {
@@ -1379,15 +1382,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
     ///
     /// ```
-    /// use ndarray::arr3;
+    /// use ndarray::{arr3, Axis};
+    ///
     /// let a = arr3(&[[[ 0,  1,  2],    // \ axis 0, submatrix 0
     ///                 [ 3,  4,  5]],   // /
     ///                [[ 6,  7,  8],    // \ axis 0, submatrix 1
     ///                 [ 9, 10, 11]]]); // /
     /// // `outer_iter` yields the two submatrices along axis 0.
     /// let mut iter = a.outer_iter();
-    /// assert_eq!(iter.next().unwrap(), a.subview(0, 0));
-    /// assert_eq!(iter.next().unwrap(), a.subview(0, 1));
+    /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 0));
+    /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 1));
     /// ```
     pub fn outer_iter(&self) -> OuterIter<A, D::Smaller>
         where D: RemoveAxis,
@@ -1418,10 +1422,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// See [*Subviews*](#subviews) for full documentation.
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_iter(&self, axis: usize) -> OuterIter<A, D::Smaller>
-        where D: RemoveAxis
+    pub fn axis_iter(&self, axis: Axis) -> OuterIter<A, D::Smaller>
+        where D: RemoveAxis,
     {
-        iterators::new_axis_iter(self.view(), axis)
+        iterators::new_axis_iter(self.view(), axis.axis())
     }
 
 
@@ -1432,11 +1436,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// (read-write array view).
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_iter_mut(&mut self, axis: usize) -> OuterIterMut<A, D::Smaller>
+    pub fn axis_iter_mut(&mut self, axis: Axis) -> OuterIterMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
     {
-        iterators::new_axis_iter_mut(self.view_mut(), axis)
+        iterators::new_axis_iter_mut(self.view_mut(), axis.axis())
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
@@ -1451,20 +1455,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// ```
     /// use ndarray::OwnedArray;
-    /// use ndarray::arr3;
+    /// use ndarray::{arr3, Axis};
     ///
     /// let a = OwnedArray::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
-    /// let mut iter = a.axis_chunks_iter(1, 2);
+    /// let mut iter = a.axis_chunks_iter(Axis(1), 2);
     ///
     /// // first iteration yields a 2 × 2 × 2 view
     /// assert_eq!(iter.next().unwrap(),
-    ///            arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]));
+    ///            arr3(&[[[ 0,  1], [ 2, 3]],
+    ///                   [[14, 15], [16, 17]]]));
     ///
     /// // however the last element is a 2 × 1 × 2 view since 7 % 2 == 1
-    /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
+    /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]],
+    ///                                              [[26, 27]]]));
     /// ```
-    pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> AxisChunksIter<A, D> {
-        iterators::new_chunk_iter(self.view(), axis, size)
+    pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<A, D> {
+        iterators::new_chunk_iter(self.view(), axis.axis(), size)
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
@@ -1473,11 +1479,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Iterator element is `ArrayViewMut<A, D>`
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_chunks_iter_mut(&mut self, axis: usize, size: usize)
+    pub fn axis_chunks_iter_mut(&mut self, axis: Axis, size: usize)
         -> AxisChunksIterMut<A, D>
         where S: DataMut
     {
-        iterators::new_chunk_iter_mut(self.view_mut(), axis, size)
+        iterators::new_chunk_iter_mut(self.view_mut(), axis.axis(), size)
     }
 
     // Return (length, stride) for diagonal
@@ -2229,24 +2235,24 @@ impl<A, S, D> ArrayBase<S, D>
     /// Return sum along `axis`.
     ///
     /// ```
-    /// use ndarray::{aview0, aview1, arr2};
+    /// use ndarray::{aview0, aview1, arr2, Axis};
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.sum(0) == aview1(&[4., 6.]) &&
-    ///     a.sum(1) == aview1(&[3., 7.]) &&
+    ///     a.sum(Axis(0)) == aview1(&[4., 6.]) &&
+    ///     a.sum(Axis(1)) == aview1(&[3., 7.]) &&
     ///
-    ///     a.sum(0).sum(0) == aview0(&10.)
+    ///     a.sum(Axis(0)).sum(Axis(0)) == aview0(&10.)
     /// );
     /// ```
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn sum(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
+    pub fn sum(&self, axis: Axis) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
         where A: Clone + Add<Output=A>,
               D: RemoveAxis,
     {
-        let n = self.shape()[axis];
+        let n = self.shape()[axis.axis()];
         let mut res = self.subview(axis, 0).to_owned();
         for i in 1..n {
             let view = self.subview(axis, i);
@@ -2283,24 +2289,23 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return mean along `axis`.
     ///
+    /// **Panics** if `axis` is out of bounds.
+    ///
     /// ```
-    /// use ndarray::{aview1, arr2};
+    /// use ndarray::{aview1, arr2, Axis};
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.mean(0) == aview1(&[2.0, 3.0]) &&
-    ///     a.mean(1) == aview1(&[1.5, 3.5])
+    ///     a.mean(Axis(0)) == aview1(&[2.0, 3.0]) &&
+    ///     a.mean(Axis(1)) == aview1(&[1.5, 3.5])
     /// );
     /// ```
-    ///
-    ///
-    /// **Panics** if `axis` is out of bounds.
-    pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
+    pub fn mean(&self, axis: Axis) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
     {
-        let n = self.shape()[axis];
+        let n = self.shape()[axis.axis()];
         let mut sum = self.sum(axis);
         let one = libnum::one::<A>();
         let mut cnt = one;
@@ -2413,7 +2418,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.subview(0, index)
+        self.subview(Axis(0), index)
     }
 
     /// Return a mutable array view of row `index`.
@@ -2422,7 +2427,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
         where S: DataMut
     {
-        self.subview_mut(0, index)
+        self.subview_mut(Axis(0), index)
     }
 
     /// Return an array view of column `index`.
@@ -2430,7 +2435,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.subview(1, index)
+        self.subview(Axis(1), index)
     }
 
     /// Return a mutable array view of column `index`.
@@ -2439,7 +2444,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
         where S: DataMut
     {
-        self.subview_mut(1, index)
+        self.subview_mut(Axis(1), index)
     }
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.

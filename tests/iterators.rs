@@ -11,6 +11,7 @@ use ndarray::{
     aview1,
     arr2,
     arr3,
+    Axis,
 };
 
 use itertools::assert_equal;
@@ -89,12 +90,12 @@ fn as_slice() {
     let a = a.reshape((2, 4));
     assert_slice_correct(&a);
 
-    assert!(a.view().subview(1, 0).as_slice().is_none());
+    assert!(a.view().subview(Axis(1), 0).as_slice().is_none());
 
     let v = a.view();
     assert_slice_correct(&v);
-    assert_slice_correct(&v.subview(0, 0));
-    assert_slice_correct(&v.subview(0, 1));
+    assert_slice_correct(&v.subview(Axis(0), 0));
+    assert_slice_correct(&v.subview(Axis(0), 1));
 
     assert!(v.slice(&[S, Si(0, Some(1), 1)]).as_slice().is_none());
     println!("{:?}", v.slice(&[Si(0, Some(1), 2), S]));
@@ -176,12 +177,12 @@ fn outer_iter() {
     //   [8, 9],
     //    ...
     assert_equal(a.outer_iter(),
-                 vec![a.subview(0, 0), a.subview(0, 1)]);
+                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
     let mut b = RcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter(),
-                 vec![a.subview(0, 0), a.subview(0, 1)]);
+                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
 
     let mut found_rows = Vec::new();
     for sub in b.outer_iter() {
@@ -206,7 +207,7 @@ fn outer_iter() {
     cv.assign(&a);
     assert_eq!(&a, &cv);
     assert_equal(cv.outer_iter(),
-                 vec![a.subview(0, 0), a.subview(0, 1)]);
+                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
 
     let mut found_rows = Vec::new();
     for sub in cv.outer_iter() {
@@ -228,10 +229,10 @@ fn axis_iter() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.axis_iter(1),
-                 vec![a.subview(1, 0),
-                      a.subview(1, 1),
-                      a.subview(1, 2)]);
+    assert_equal(a.axis_iter(Axis(1)),
+                 vec![a.subview(Axis(1), 0),
+                      a.subview(Axis(1), 1),
+                      a.subview(Axis(1), 2)]);
 }
 
 #[test]
@@ -259,7 +260,7 @@ fn outer_iter_mut() {
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter_mut(),
-                 vec![a.subview(0, 0), a.subview(0, 1)]);
+                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
 
     let mut found_rows = Vec::new();
     for sub in b.outer_iter_mut() {
@@ -282,7 +283,7 @@ fn axis_iter_mut() {
     //    ...
     let mut a = a.to_owned();
 
-    for mut subview in a.axis_iter_mut(1) {
+    for mut subview in a.axis_iter_mut(Axis(1)) {
         subview[[0, 0]] = 42;
     }
 
@@ -300,7 +301,7 @@ fn axis_chunks_iter() {
     let a = RcArray::from_iter(0..24);
     let a = a.reshape((2, 6, 2));
 
-    let it = a.axis_chunks_iter(1, 2);
+    let it = a.axis_chunks_iter(Axis(1), 2);
     assert_equal(it,
                  vec![arr3(&[[[0, 1], [2, 3]], [[12, 13], [14, 15]]]),
                       arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]),
@@ -309,24 +310,24 @@ fn axis_chunks_iter() {
     let a = RcArray::from_iter(0..28);
     let a = a.reshape((2, 7, 2));
 
-    let it = a.axis_chunks_iter(1, 2);
+    let it = a.axis_chunks_iter(Axis(1), 2);
     assert_equal(it,
                  vec![arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]),
                       arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
                       arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
                       arr3(&[[[12, 13]], [[26, 27]]])]);
 
-    let it = a.axis_chunks_iter(1, 2).rev();
+    let it = a.axis_chunks_iter(Axis(1), 2).rev();
     assert_equal(it,
                  vec![arr3(&[[[12, 13]], [[26, 27]]]),
                       arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
                       arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
                       arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]])]);
 
-    let it = a.axis_chunks_iter(1, 7);
+    let it = a.axis_chunks_iter(Axis(1), 7);
     assert_equal(it, vec![a.view()]);
 
-    let it = a.axis_chunks_iter(1, 9);
+    let it = a.axis_chunks_iter(Axis(1), 9);
     assert_equal(it, vec![a.view()]);
 }
 
@@ -338,12 +339,12 @@ fn axis_chunks_iter_corner_cases() {
     // checking the absence of of out of bounds offseting cannot (?) be
     // done automatically, so one has to launch this test in a debugger.
     let a = RcArray::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
-    let it = a.axis_chunks_iter(0, 4);
+    let it = a.axis_chunks_iter(Axis(0), 4);
     assert_equal(it, vec![a.slice(s![..4, ..]), a.slice(s![4.., ..])]);
     let a = a.slice(s![..;-1,..]);
-    let it = a.axis_chunks_iter(0, 8);
+    let it = a.axis_chunks_iter(Axis(0), 8);
     assert_equal(it, vec![a.view()]);
-    let it = a.axis_chunks_iter(0, 3);
+    let it = a.axis_chunks_iter(Axis(0), 3);
     assert_equal(it,
                  vec![arr2(&[[7.], [6.], [5.]]),
                       arr2(&[[4.], [3.], [2.]]),
@@ -351,10 +352,10 @@ fn axis_chunks_iter_corner_cases() {
 
     let b = RcArray::<f32, _>::zeros((8, 2));
     let a = b.slice(s![1..;2,..]);
-    let it = a.axis_chunks_iter(0, 8);
+    let it = a.axis_chunks_iter(Axis(0), 8);
     assert_equal(it, vec![a.view()]);
 
-    let it = a.axis_chunks_iter(0, 1);
+    let it = a.axis_chunks_iter(Axis(0), 1);
     assert_equal(it, vec![RcArray::zeros((1, 2)); 4]);
 }
 
@@ -363,7 +364,7 @@ fn axis_chunks_iter_mut() {
     let a = RcArray::from_iter(0..24);
     let mut a = a.reshape((2, 6, 2));
 
-    let mut it = a.axis_chunks_iter_mut(1, 2);
+    let mut it = a.axis_chunks_iter_mut(Axis(1), 2);
     let mut col0 = it.next().unwrap();
     col0[[0, 0, 0]] = 42;
     assert_eq!(col0, arr3(&[[[42, 1], [2, 3]], [[12, 13], [14, 15]]]));

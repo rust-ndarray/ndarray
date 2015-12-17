@@ -2,7 +2,7 @@
 extern crate num;
 extern crate ndarray;
 
-use ndarray::{arr1, arr2};
+use ndarray::{arr1, arr2, Axis};
 use ndarray::OwnedArray;
 use num::{Num, Complex};
 
@@ -20,5 +20,5 @@ fn complex_mat_mul()
     let r = a.mat_mul(&e);
     println!("{}", a);
     assert_eq!(r, a);
-    assert_eq!(a.mean(0), arr1(&[c(1.5, 1.), c(2.5, 0.)]));
+    assert_eq!(a.mean(Axis(0)), arr1(&[c(1.5, 1.), c(2.5, 0.)]));
 }
