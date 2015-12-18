@@ -15,7 +15,7 @@
 //! use rblas::attribute::Transpose;
 //!
 //! use ndarray::{arr1, arr2, Array};
-//! use ndarray::blas_support::AsBlas;
+//! use ndarray::blas::AsBlas;
 //!
 //! fn main() {
 //!     let mut a = arr2(&[[1., 2., 3.],

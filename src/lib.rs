@@ -77,6 +77,8 @@ mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;
 mod arrayformat;
+#[cfg(feature = "rblas")]
+pub mod blas;
 mod dimension;
 mod indexes;
 mod iterators;
@@ -2151,6 +2153,3 @@ impl fmt::Display for ShapeError {
         }
     }
 }
-
-#[cfg(feature = "rblas")]
-pub mod blas_support;

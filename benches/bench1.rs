@@ -234,7 +234,7 @@ fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
 {
     use rblas::Gemm;
     use rblas::attribute::Transpose;
-    use ndarray::blas_support::AsBlas;
+    use ndarray::blas::AsBlas;
 
     let mut a = OwnedArray::<f32, _>::zeros((64, 64));
     let mut b = OwnedArray::<f32, _>::zeros((64, 64));
