@@ -2116,11 +2116,11 @@ enum ElementsRepr<S, C> {
 /// An error that can be produced by `.into_shape()`
 #[derive(Clone, Debug)]
 pub enum ShapeError {
-    /// incompatible shapes in reshape
+    /// incompatible shapes in reshape, (from, to)
     IncompatibleShapes(Box<[Ix]>, Box<[Ix]>),
     /// incompatible layout: not contiguous
     IncompatibleLayout,
-    /// Dimension too large (axis, size)
+    /// Dimension too large (shape)
     DimensionTooLarge(Box<[Ix]>),
 }
 
