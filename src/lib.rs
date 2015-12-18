@@ -19,7 +19,7 @@
 //! - Generic n-dimensional array
 //! - General slicing, also with steps > 1, and negative indices to mean
 //!   elements from the end of the axis.
-//! - There is both a an easy to use copy on write array (`Array`),
+//! - There is both an easy to use copy on write array (`Array`),
 //!   or a regular uniquely owned array (`OwnedArray`), and both can use
 //!   read-only and read-write array views.
 //! - Iteration and most operations are efficient on contiguous c-order arrays
