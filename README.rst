@@ -1,20 +1,63 @@
 rendarray
 =========
 
-The `ndarray` crate provides an N-dimensional container similar to numpy's
+The ``ndarray`` crate provides an N-dimensional container similar to numpy’s
 ndarray.
-
-Features
-
-- ``Array`` for a reference counted copy on write array
-- ``OwnedArray`` for a uniquely owned array
-- Array views and slices, including lightweight transposition
-- Broadcast array dimensions
-- Good support for numerics, but lacking optimization.
 
 Please read the `API documentation here`__
 
 __ http://bluss.github.io/rust-ndarray/
+
+
+Highlights
+----------
+
+- Generic N-dimensional array
+- Owned arrays and views
+
+  - ``ArrayBase``:
+    The N-dimensional array type itself.
+  - ``Array``:
+    An array where the data is shared and copy on write, it
+    can act as both an owner of the data as well as a lightweight view.
+  - ``OwnedArray``:
+    An array where the data is owned uniquely.
+  - ``ArrayView``, ``ArrayViewMut``:
+    Lightweight array views.
+
+- General slicing, also with steps > 1, and negative indices to mean
+  elements from the end of the axis.
+- Iteration and most operations are efficient on contiguous c-order arrays
+  (the default layout, without any transposition or discontiguous subslicing).
+- Array views can be used to slice and mutate any ``[T]`` data.
+
+Status and Lookout
+------------------
+
+- Still iterating on the API
+- Focus is on being a generic N-dimensional container
+- Implements numpy striding and broadcasting
+- Arithmetic operations and numerics need a rethink. They are not very
+  well optimized.
+- There is experimental bridging to the linear algebra package ``rblas``.
+
+Crate Feature Flags
+-------------------
+
+- ``assign_ops``
+
+  - Optional, requires nightly
+  - Enables the compound assignment operators
+
+- ``rustc-serialize``
+
+  - Optional, stable
+  - Enables serialization support
+
+- ``rblas``
+
+  - Optional, stable
+  - Enables ``rblas`` integration
 
 |build_status|_ |crates|_
 
@@ -34,6 +77,16 @@ Recent Changes
 
 - **Note:** At some point in a future release, the indexing type ``Ix`` will
   change to ``usize``
+
+- 0.2.0-alpha.5
+
+  - Add ``s![...]``, a slice argument macro.
+  - Add ``aview_mut1()``, ``zeros()``
+  - Add ``.diag_mut()`` and deprecate ``.diag_iter_mut()``, ``.sub_iter_mut()``
+  - Add ``.uget()``, ``.uget_mut()`` for unchecked indexing and deprecate the
+    old names.
+  - Improve ``ArrayBase::from_elem``
+  - Removed ``SliceRange``, replaced by ``From`` impls for ``Si``.
 
 - 0.2.0-alpha.4
 

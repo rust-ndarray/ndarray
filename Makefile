@@ -30,5 +30,7 @@ $(RMDOCS): mkdocs
 	rm -r ./doc/$@
 	sed -i "/searchIndex\['$@'\]/d" doc/search-index.js
 
+fast: FEATURES = 
+fast: mkdocs 
 
 .PHONY: docs mkdocs subst $(DOCCRATES) $(RMDOCS)

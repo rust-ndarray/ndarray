@@ -59,7 +59,7 @@ impl<A: Num + Float> ComplexField for Complex<A>
 pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A>
 {
     let mut eye = Array::zeros((n, n));
-    for a_ii in eye.diag_iter_mut() {
+    for a_ii in eye.diag_mut() {
         *a_ii = one::<A>();
     }
     eye

@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 #![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 
+#[macro_use]
 extern crate ndarray;
 
 use ndarray::{Array, S, Si,
@@ -9,9 +10,9 @@ use ndarray::{Array, S, Si,
 use ndarray::{arr0, arr1, arr2,
     aview1,
     aview2,
+    aview_mut1,
 };
 use ndarray::Indexes;
-use ndarray::SliceRange;
 
 #[test]
 fn test_matmul_rcarray()
@@ -46,7 +47,7 @@ fn test_slice()
         *elt = i;
     }
 
-    let vi = A.slice(&[(1..).slice(), (0..).step(2)]);
+    let vi = A.slice(s![1.., ..;2]);
     assert_eq!(vi.dim(), (2, 2));
     let vi = A.slice(&[S, S]);
     assert_eq!(vi.shape(), A.shape());
@@ -57,8 +58,8 @@ fn test_slice()
 #[test]
 fn slice_oob()
 {
-    let mut a = Array::<i32, _>::zeros((3, 4));
-    let vi = a.slice(&[Si(0, Some(10), 1), S]);
+    let a = Array::<i32, _>::zeros((3, 4));
+    let _vi = a.slice(&[Si(0, Some(10), 1), S]);
 }
 
 #[test]
@@ -485,6 +486,18 @@ fn aview() {
 }
 
 #[test]
+fn aview_mut() {
+    let mut data = [0; 16];
+    {
+        let mut a = aview_mut1(&mut data).into_shape((4, 4)).unwrap();
+        a.slice_mut(&[Si(0, Some(2), 1), Si(0, None, 2)])
+         .iadd_scalar(&1);
+        println!("{}", a);
+    }
+    assert_eq!(data, [1, 0, 1, 0,  1, 0, 1, 0,  0, 0, 0, 0,  0, 0, 0, 0]);
+}
+
+#[test]
 fn reshape() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
@@ -507,7 +520,7 @@ fn reshape() {
 fn reshape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
-    let u = v.into_shape((2, 5)).unwrap();
+    let _u = v.into_shape((2, 5)).unwrap();
 }
 
 #[test]
@@ -517,5 +530,5 @@ fn reshape_error2() {
     let v = aview1(&data);
     let mut u = v.into_shape((4, 2)).unwrap();
     u.swap_axes(0, 1);
-    let s = u.into_shape((2, 4)).unwrap();
+    let _s = u.into_shape((2, 4)).unwrap();
 }
