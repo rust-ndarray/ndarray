@@ -384,10 +384,10 @@ pub unsafe trait DataOwned : Data {
 }
 
 /// Array representation that is a lightweight view.
-pub trait DataShared : Clone + DataClone { }
+pub unsafe trait DataShared : Clone + DataClone { }
 
-impl<A> DataShared for Rc<Vec<A>> { }
-impl<'a, A> DataShared for &'a [A] { }
+unsafe impl<A> DataShared for Rc<Vec<A>> { }
+unsafe impl<'a, A> DataShared for &'a [A] { }
 
 unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
