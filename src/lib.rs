@@ -1372,9 +1372,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let end =  unsafe {
             ptr.offset(slc.len() as isize)
         };
-        if ptr != self.ptr {
-            println!("{:p} <= {:p} <= {:p}", ptr, self.ptr, end);
-        }
         self.ptr >= ptr && self.ptr <= end
     }
 
