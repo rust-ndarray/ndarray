@@ -40,4 +40,3 @@ assign_ops = []
 
 [profile.bench]
 debug = true
-lto = true

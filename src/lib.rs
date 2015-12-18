@@ -672,8 +672,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn to_owned(&self) -> OwnedArray<A, D>
         where A: Clone
     {
-        // FIXME: Use standard layout / more efficient copy?
-        let data = self.iter().cloned().collect();
+        let data = if let Some(slc) = self.as_slice() {
+            slc.to_vec()
+        } else {
+            self.iter().cloned().collect()
+        };
         unsafe {
             ArrayBase::from_vec_dim(self.dim.clone(), data)
         }
@@ -684,11 +687,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where A: Clone
     {
         // FIXME: Avoid copying if it's already an Array.
-        // FIXME: Use standard layout / more efficient copy?
-        let data = self.iter().cloned().collect();
-        unsafe {
-            ArrayBase::from_vec_dim(self.dim.clone(), data)
-        }
+        self.to_owned().into_shared()
     }
 
     /// Return a shared ownership (copy on write) array.

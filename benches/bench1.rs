@@ -10,6 +10,7 @@ use rblas::matrix::Matrix;
 
 use ndarray::{Array, S, Si,
     OwnedArray,
+    zeros,
 };
 use ndarray::{arr0, arr1, arr2};
 
@@ -275,4 +276,19 @@ fn lst_squares(bench: &mut test::Bencher)
                            [-1.,  2.]]);
     let b = arr1(&[1., -1., 2., 1.]);
     bench.iter(|| ndarray::linalg::least_squares(&xs, &b));
+}
+
+#[bench]
+fn bench_to_owned_n(bench: &mut test::Bencher)
+{
+    let mut a = zeros::<f32, _>((32, 32));
+    bench.iter(|| a.to_owned());
+}
+
+#[bench]
+fn bench_to_owned_t(bench: &mut test::Bencher)
+{
+    let mut a = zeros::<f32, _>((32, 32));
+    a.swap_axes(0, 1);
+    bench.iter(|| a.to_owned());
 }
