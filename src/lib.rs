@@ -51,7 +51,6 @@ extern crate num as libnum;
 
 use libnum::Float;
 
-use std::fmt;
 use std::mem;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -61,16 +60,15 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
 use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 
-pub use dimension::{Dimension, RemoveAxis};
-pub use si::{Si, S, SliceRange};
-use dimension::stride_offset;
-
-pub use indexes::Indexes;
-
-use iterators::Baseiter;
-
 use it::ZipSlices;
 
+pub use dimension::{Dimension, RemoveAxis};
+pub use indexes::Indexes;
+pub use shape_error::ShapeError;
+pub use si::{Si, S, SliceRange};
+
+use dimension::stride_offset;
+use iterators::Baseiter;
 
 pub mod linalg;
 mod arraytraits;
@@ -83,6 +81,7 @@ mod dimension;
 mod indexes;
 mod iterators;
 mod si;
+mod shape_error;
 //mod macros;
 
 // NOTE: In theory, the whole library should compile
@@ -2113,43 +2112,3 @@ enum ElementsRepr<S, C> {
     Counted(C),
 }
 
-/// An error that can be produced by `.into_shape()`
-#[derive(Clone, Debug)]
-pub enum ShapeError {
-    /// incompatible shapes in reshape, (from, to)
-    IncompatibleShapes(Box<[Ix]>, Box<[Ix]>),
-    /// incompatible layout: not contiguous
-    IncompatibleLayout,
-    /// Dimension too large (shape)
-    DimensionTooLarge(Box<[Ix]>),
-}
-
-impl std::error::Error for ShapeError {
-    fn description(&self) -> &str {
-        match *self {
-            ShapeError::IncompatibleShapes(..) =>
-                "incompatible shapes in reshape",
-            ShapeError::IncompatibleLayout =>
-                "incompatible layout: not not contiguous",
-            ShapeError::DimensionTooLarge(..) =>
-                "dimension too large",
-        }
-    }
-}
-
-impl fmt::Display for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ShapeError::IncompatibleShapes(ref a, ref b) => {
-                write!(f, "incompatible shapes, attempted from: {:?}, to: {:?}",
-                       a, b)
-            }
-            ShapeError::IncompatibleLayout => {
-                write!(f, "{}", std::error::Error::description(self))
-            }
-            ShapeError::DimensionTooLarge(ref a) => {
-                write!(f, "dimension too large in shape {:?}", a)
-            }
-        }
-    }
-}
