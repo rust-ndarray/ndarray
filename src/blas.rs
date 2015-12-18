@@ -35,13 +35,14 @@
 //!
 //! ```
 //!
-//! Usage notes: Use checked or panicking methods to convert an array into
-//! a view that implements rblas' `Vector` or `Matrix` traits.
+//! Use the checked or panicking methods in trait `AsBlas` to
+//! convert an array into a view that implements rblas’ `Vector` or `Matrix`
+//! traits.
 //!
-//! blas does not support strided arrays, so they can be copied into
-//! c-contiguous layout automatically. blas has its own error reporting system
+//! Blas supports strided vectors but not matrices, so they can be copied into
+//! c-contiguous layout automatically. Blas has its own error reporting system
 //! and will not panic on errors (that I know), instead output its own error
-//! conditions. For example on dimension mismatch in a matrix multiplication.
+//! conditions, for example on dimension mismatch in a matrix multiplication.
 //!
 extern crate rblas;
 
