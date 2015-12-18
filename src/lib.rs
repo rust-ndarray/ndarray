@@ -33,6 +33,9 @@
 //! - `rustc-serialize`
 //!   - Optional, stable
 //!   - Enables serialization support
+//! - `rblas`
+//!   - Optional, stable
+//!   - Enables `rblas` integration
 //!
 #![cfg_attr(feature = "assign_ops", feature(augmented_assignments,
                                             op_assign_traits))]
@@ -48,7 +51,6 @@ extern crate num as libnum;
 
 use libnum::Float;
 
-use std::fmt;
 use std::mem;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -58,26 +60,28 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
 use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 
-pub use dimension::{Dimension, RemoveAxis};
-pub use si::{Si, S, SliceRange};
-use dimension::stride_offset;
-
-pub use indexes::Indexes;
-
-use iterators::Baseiter;
-
 use it::ZipSlices;
 
+pub use dimension::{Dimension, RemoveAxis};
+pub use indexes::Indexes;
+pub use shape_error::ShapeError;
+pub use si::{Si, S, SliceRange};
+
+use dimension::stride_offset;
+use iterators::Baseiter;
 
 pub mod linalg;
 mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;
 mod arrayformat;
+#[cfg(feature = "rblas")]
+pub mod blas;
 mod dimension;
 mod indexes;
 mod iterators;
 mod si;
+mod shape_error;
 //mod macros;
 
 // NOTE: In theory, the whole library should compile
@@ -379,10 +383,10 @@ pub unsafe trait DataOwned : Data {
 }
 
 /// Array representation that is a lightweight view.
-pub trait DataShared : Clone + DataClone { }
+pub unsafe trait DataShared : Clone + DataClone { }
 
-impl<A> DataShared for Rc<Vec<A>> { }
-impl<'a, A> DataShared for &'a [A] { }
+unsafe impl<A> DataShared for Rc<Vec<A>> { }
+unsafe impl<'a, A> DataShared for &'a [A] { }
 
 unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
@@ -1137,6 +1141,29 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         S::ensure_unique(self);
     }
 
+    #[cfg(feature = "rblas")]
+    /// If the array is not in the standard layout, copy all elements
+    /// into the standard layout so that the array is C-contiguous.
+    fn ensure_standard_layout(&mut self)
+        where S: DataOwned,
+              A: Clone
+    {
+        if !self.is_standard_layout() {
+            let mut v: Vec<A> = self.iter().cloned().collect();
+            self.ptr = v.as_mut_ptr();
+            self.data = DataOwned::new(v);
+            self.strides = self.dim.default_strides();
+        }
+    }
+
+    /*
+    /// Set the array to the standard layout, without adjusting elements.
+    /// Useful for overwriting.
+    fn force_standard_layout(&mut self) {
+        self.strides = self.dim.default_strides();
+    }
+    */
+
     /// Return an iterator of mutable references to the elements of the array.
     ///
     /// Iterator element type is `&mut A`.
@@ -1325,8 +1352,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Transform the array into `shape`; any shape with the same number of
-    /// elements is accepted, but the source array or view must have
-    /// standard layout, otherwise we cannot rearrange the dimension.
+    /// elements is accepted, but the source array or view must be
+    /// contiguous, otherwise we cannot rearrange the dimension.
     ///
     /// ```
     /// use ndarray::{aview1, aview2};
@@ -2085,34 +2112,3 @@ enum ElementsRepr<S, C> {
     Counted(C),
 }
 
-/// An error that can be produced by `.into_shape()`
-#[derive(Clone, Debug)]
-pub enum ShapeError {
-    IncompatibleShapes(Box<[Ix]>, Box<[Ix]>),
-    IncompatibleLayout,
-}
-
-impl std::error::Error for ShapeError {
-    fn description(&self) -> &str {
-        match *self {
-            ShapeError::IncompatibleShapes(..) =>
-                "incompatible shapes in reshape",
-            ShapeError::IncompatibleLayout =>
-                "incompatible layout: not standard layout",
-        }
-    }
-}
-
-impl fmt::Display for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ShapeError::IncompatibleShapes(ref a, ref b) => {
-                write!(f, "incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
-                       a, b)
-            }
-            ShapeError::IncompatibleLayout => {
-                write!(f, "{}", std::error::Error::description(self))
-            }
-        }
-    }
-}

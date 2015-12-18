@@ -10,17 +10,12 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize
     (n as isize) * ((stride as Ixs) as isize)
 }
 
-/*
-#[inline]
-pub fn stride_as_int(stride: Ix) -> isize
-{
-    (stride as Ixs) as isize
-}
-*/
-
 /// Trait for the shape and index types of arrays.
 ///
-/// unsafe trait due to how the assumptions in the default impls work.
+/// `unsafe` because of the assumptions in the default methods.
+///
+/// ***Don't implement this trait, it's internal to the crate and will
+/// evolve at will.***
 pub unsafe trait Dimension : Clone + Eq {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
@@ -387,10 +382,8 @@ unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 12];
     fn ndim(&self) -> usize { 12 } }
 
-// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
-// and memory wasteful, but it allows an arbitrary number of dimensions.
-//
-// NOTE: No Shrink impl for Vec<Ix> yet.
+/// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
+/// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 unsafe impl Dimension for Vec<Ix>
 {
     type SliceArg = [Si];

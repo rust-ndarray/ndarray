@@ -3,8 +3,14 @@
 
 extern crate test;
 extern crate ndarray;
+#[cfg(feature = "rblas")]
+extern crate rblas;
+#[cfg(feature = "rblas")]
+use rblas::matrix::Matrix;
 
-use ndarray::{Array, S, Si};
+use ndarray::{Array, S, Si,
+    OwnedArray,
+};
 use ndarray::{arr0, arr1, arr2};
 
 use test::black_box;
@@ -210,6 +216,36 @@ fn bench_mat_mul(bench: &mut test::Bencher)
     let mut at = a.clone();
     at.swap_axes(0, 1);
     bench.iter(|| at.mat_mul(&a));
+}
+
+#[bench]
+fn bench_mat_mul_large(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = black_box(a.view());
+    let b = black_box(b.view());
+    bench.iter(|| a.mat_mul(&b));
+}
+
+#[cfg(feature = "rblas")]
+#[bench]
+fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
+{
+    use rblas::Gemm;
+    use rblas::attribute::Transpose;
+    use ndarray::blas::AsBlas;
+
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let mut b = OwnedArray::<f32, _>::zeros((64, 64));
+    let mut c = OwnedArray::<f32, _>::zeros((64, 64));
+    bench.iter(|| {
+        // C ← α AB + β C
+        f32::gemm(&1.,
+                  Transpose::NoTrans, &a.blas(),
+                  Transpose::NoTrans, &b.blas(),
+                  &1., &mut c.blas());
+    });
 }
 
 #[bench]
