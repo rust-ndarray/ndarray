@@ -6,7 +6,7 @@ matrix:
     - rust: beta
     - rust: nightly
       env:
-       - FEATURES='rustc-serialize'
+       - FEATURES='assign_ops rustc-serialize'
        - BENCH=1
 branches:
   only:
