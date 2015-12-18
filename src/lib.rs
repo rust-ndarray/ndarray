@@ -24,6 +24,7 @@
 //!   read-only and read-write array views.
 //! - Iteration and most operations are efficient on contiguous c-order arrays
 //!   (the default layout, without any transposition or discontiguous subslicing).
+//! - Array views can be used to slice and mutate any `[T]` data.
 //!
 //! ## Status and Lookout
 //!
@@ -1502,6 +1503,16 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
         ptr: data.as_ptr() as *mut _,
         strides: dim.default_strides(),
         dim: dim,
+    }
+}
+
+/// Return a one-dimensional read-write array view with elements borrowing `xs`.
+pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
+    ArrayViewMut {
+        ptr: xs.as_mut_ptr(),
+        dim: xs.len() as Ix,
+        strides: 1,
+        data: xs,
     }
 }
 
