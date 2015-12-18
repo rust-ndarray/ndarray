@@ -387,10 +387,8 @@ unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 12];
     fn ndim(&self) -> usize { 12 } }
 
-// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
-// and memory wasteful, but it allows an arbitrary number of dimensions.
-//
-// NOTE: No Shrink impl for Vec<Ix> yet.
+/// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
+/// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 unsafe impl Dimension for Vec<Ix>
 {
     type SliceArg = [Si];
