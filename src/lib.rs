@@ -33,6 +33,9 @@
 //! - `rustc-serialize`
 //!   - Optional, stable
 //!   - Enables serialization support
+//! - `rblas`
+//!   - Optional, stable
+//!   - Enables `rblas` integration
 //!
 #![cfg_attr(feature = "assign_ops", feature(augmented_assignments,
                                             op_assign_traits))]
@@ -1151,6 +1154,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Set the array to the standard layout, without adjusting elements.
+    /// Useful for overwriting.
+    fn force_standard_layout(&mut self) {
+        self.strides = self.dim.default_strides();
+    }
+
     /// Return an iterator of mutable references to the elements of the array.
     ///
     /// Iterator element type is `&mut A`.
@@ -2139,3 +2148,6 @@ impl fmt::Display for ShapeError {
         }
     }
 }
+
+#[cfg(feature = "rblas")]
+pub mod blas_support;
