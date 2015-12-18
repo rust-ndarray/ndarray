@@ -10,17 +10,12 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize
     (n as isize) * ((stride as Ixs) as isize)
 }
 
-/*
-#[inline]
-pub fn stride_as_int(stride: Ix) -> isize
-{
-    (stride as Ixs) as isize
-}
-*/
-
 /// Trait for the shape and index types of arrays.
 ///
-/// unsafe trait due to how the assumptions in the default impls work.
+/// `unsafe` because of the assumptions in the default methods.
+///
+/// ***Don't implement this trait, it's internal to the crate and will
+/// evolve at will.***
 pub unsafe trait Dimension : Clone + Eq {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
