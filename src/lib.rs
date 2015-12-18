@@ -135,8 +135,8 @@ pub type Ixs = i32;
 ///
 /// ## Indexing
 ///
-/// Arrays use `u32` for indexing, represented by the types `Ix` and `Ixs`
-/// (signed). ***Note: A future version will switch to `usize`.***
+/// Array indexes are represented by the types `Ix` and `Ixs`
+/// (signed). ***Note: A future version will switch from `u32` to `usize`.***
 ///
 /// ## Slicing and Subviews
 ///
