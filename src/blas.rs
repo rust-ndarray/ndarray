@@ -51,7 +51,6 @@ use self::rblas::{
 };
 use super::{
     ArrayBase,
-    ArrayView,
     ArrayViewMut,
     Ix,
     ShapeError,
@@ -62,6 +61,7 @@ use super::{
 };
 
 
+/*
 /// ***Requires `features = "rblas"`***
 pub struct BlasArrayView<'a, A: 'a, D>(ArrayView<'a, A, D>);
 impl<'a, A, D: Copy> Copy for BlasArrayView<'a, A, D> { }
@@ -70,6 +70,7 @@ impl<'a, A, D: Clone> Clone for BlasArrayView<'a, A, D> {
         BlasArrayView(self.0.clone())
     }
 }
+*/
 
 /// ***Requires `features = "rblas"`***
 pub struct BlasArrayViewMut<'a, A: 'a, D>(ArrayViewMut<'a, A, D>);
@@ -98,6 +99,7 @@ impl<S, D> ArrayBase<S, D>
     }
 }
 
+/*
 impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
@@ -111,6 +113,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
         Ok(BlasArrayView(self))
     }
 }
+*/
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
@@ -192,6 +195,7 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
     */
 }
 
+/*
 impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
     fn len(&self) -> i32 {
         self.0.len() as i32
@@ -210,6 +214,7 @@ impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
         self.0.strides as i32
     }
 }
+*/
 
 impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
     fn len(&self) -> i32 {
@@ -230,6 +235,7 @@ impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
     }
 }
 
+/*
 impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
     fn rows(&self) -> i32 {
         self.0.dim().1 as i32
@@ -247,6 +253,7 @@ impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
         panic!("BlasArrayView is not mutable");
     }
 }
+*/
 
 impl<'a, A> Matrix<A> for BlasArrayViewMut<'a, A, (Ix, Ix)> {
     fn rows(&self) -> i32 {
