@@ -673,9 +673,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
         where S: DataMut,
     {
-        debug_assert!(self.pointer_is_inbounds());
         self.ensure_unique();
-        debug_assert!(self.pointer_is_inbounds());
         ArrayViewMut {
             ptr: self.ptr,
             dim: self.dim.clone(),
@@ -1231,7 +1229,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     fn ensure_unique(&mut self)
         where S: DataMut
     {
+        debug_assert!(self.pointer_is_inbounds());
         S::ensure_unique(self);
+        debug_assert!(self.pointer_is_inbounds());
     }
 
     #[cfg(feature = "rblas")]
@@ -1263,9 +1263,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn iter_mut(&mut self) -> ElementsMut<A, D>
         where S: DataMut,
     {
-        debug_assert!(self.pointer_is_inbounds());
         self.ensure_unique();
-        debug_assert!(self.pointer_is_inbounds());
         self.view_mut().into_iter_()
     }
 
