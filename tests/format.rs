@@ -1,7 +1,7 @@
 
 extern crate ndarray;
 
-use ndarray::{arr0, arr1};
+use ndarray::{arr0, arr1, aview1};
 
 #[test]
 fn formatting()
@@ -28,8 +28,7 @@ fn formatting()
     assert_eq!(format!("{:?}", b),
                "3.5");
 
-    let c = arr1::<f32>(&[1.1, 2.2, 33., 440.]);
-    let s = format!("{:.3e}", c);
+    let s = format!("{:.3e}", aview1::<f32>(&[1.1, 2.2, 33., 440.]));
     assert_eq!(s,
                "[1.100e0, 2.200e0, 3.300e1, 4.400e2]");
 }

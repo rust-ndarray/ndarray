@@ -1,8 +1,8 @@
 use std::fmt;
-use super::{Array, Dimension};
 use super::{
     ArrayBase,
     Data,
+    Dimension,
 };
 
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
@@ -74,7 +74,8 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
 }
 
 // NOTE: We can impl other fmt traits here
-impl<'a, A: fmt::Display, D: Dimension> fmt::Display for Array<A, D>
+impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
+    where S: Data<Elem=A>,
 {
     /// Format the array using `Display` and apply the formatting parameters used
     /// to each element.
@@ -99,7 +100,8 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
     }
 }
 
-impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
+impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
+    where S: Data<Elem=A>,
 {
     /// Format the array using `LowerExp` and apply the formatting parameters used
     /// to each element.
@@ -111,7 +113,8 @@ impl<'a, A: fmt::LowerExp, D: Dimension> fmt::LowerExp for Array<A, D>
     }
 }
 
-impl<'a, A: fmt::UpperExp, D: Dimension> fmt::UpperExp for Array<A, D>
+impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
+    where S: Data<Elem=A>,
 {
     /// Format the array using `UpperExp` and apply the formatting parameters used
     /// to each element.
