@@ -500,7 +500,7 @@ impl<S, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem(dim: D, elem: S::Elem) -> ArrayBase<S, D> where S::Elem: Clone
     {
-        let v = std::iter::repeat(elem).take(dim.size()).collect();
+        let v = vec![elem; dim.size()];
         unsafe {
             Self::from_vec_dim(dim, v)
         }
