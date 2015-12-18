@@ -1,16 +1,16 @@
 [package]
 
 name = "rendarray"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "http://bluss.github.io/rust-ndarray/"
 
-description = "An N-dimensional array for elements of arbitrary type. Lightweight array views and slicing. The Array is copy-on-write and similar to numpy’s ndarray."
+description = "An N-dimensional array for elements of arbitrary type. Lightweight array views and slicing. Supports both uniquely owned and shared copy-on-write arrays similar to numpy’s ndarray. `rblas` is an optional dependency."
 
-keywords = ["array", "data-structure", "n-dimensional", "matrix"]
+keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 
 [lib]
 name = "ndarray"
