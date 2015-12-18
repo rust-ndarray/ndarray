@@ -27,7 +27,7 @@
 //!
 //!     let x = [1., 0., 1.];
 //!     Gemv::gemv(Transpose::NoTrans, &1., &a.blas(), &x[..], &1.,
-//!                &mut y.blas_overwrite());
+//!                &mut y.blas_mut());
 //!     assert_eq!(y, arr1(&[4., 10., 16.]));
 //! }
 //!
@@ -166,6 +166,7 @@ pub trait AsBlas<A, S, D> {
     {
         self.blas_mut_checked().unwrap()
     }
+    /*
 
     /// Equivalent to `.blas_mut_checked().unwrap()`, except elements
     /// are not copied to make the array contiguous: instead just
@@ -175,6 +176,7 @@ pub trait AsBlas<A, S, D> {
     /// **Panics** if there was a an error in `blas_mut_checked`.
     fn blas_overwrite(&mut self) -> BlasArrayViewMut<A, D>
         where S: DataMut;
+        */
 }
 
 impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
@@ -203,6 +205,7 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
         self.view_mut().into_matrix_mut()
     }
 
+    /*
     fn blas_overwrite(&mut self) -> BlasArrayViewMut<A, D>
         where S: DataMut,
     {
@@ -212,6 +215,7 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
         }
         BlasArrayViewMut(self.view_mut())
     }
+    */
 }
 
 impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {

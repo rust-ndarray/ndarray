@@ -1140,6 +1140,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         S::ensure_unique(self);
     }
 
+    #[cfg(feature = "rblas")]
     /// If the array is not in the standard layout, copy all elements
     /// into the standard layout so that the array is C-contiguous.
     fn ensure_standard_layout(&mut self)
@@ -1154,11 +1155,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /*
     /// Set the array to the standard layout, without adjusting elements.
     /// Useful for overwriting.
     fn force_standard_layout(&mut self) {
         self.strides = self.dim.default_strides();
     }
+    */
 
     /// Return an iterator of mutable references to the elements of the array.
     ///
