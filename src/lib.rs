@@ -1137,6 +1137,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         S::ensure_unique(self);
     }
 
+    /// If the array is not in the standard layout, copy all elements
+    /// into the standard layout so that the array is C-contiguous.
+    fn ensure_standard_layout(&mut self)
+        where S: DataOwned,
+              A: Clone
+    {
+        if !self.is_standard_layout() {
+            let mut v: Vec<A> = self.iter().cloned().collect();
+            self.ptr = v.as_mut_ptr();
+            self.data = DataOwned::new(v);
+            self.strides = self.dim.default_strides();
+        }
+    }
+
     /// Return an iterator of mutable references to the elements of the array.
     ///
     /// Iterator element type is `&mut A`.
