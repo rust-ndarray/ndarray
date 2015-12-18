@@ -1426,6 +1426,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 }
 
+/// Return an array filled with zeros
+pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
+    where A: Clone + libnum::Zero, D: Dimension,
+{
+    ArrayBase::zeros(dim)
+}
+
 /// Return a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array<A, ()>
 {
