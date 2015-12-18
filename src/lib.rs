@@ -2092,6 +2092,8 @@ pub enum ShapeError {
     IncompatibleShapes(Box<[Ix]>, Box<[Ix]>),
     /// incompatible layout: not contiguous
     IncompatibleLayout,
+    /// Dimension too large (axis, size)
+    DimensionTooLarge(Box<[Ix]>),
 }
 
 impl std::error::Error for ShapeError {
@@ -2101,6 +2103,8 @@ impl std::error::Error for ShapeError {
                 "incompatible shapes in reshape",
             ShapeError::IncompatibleLayout =>
                 "incompatible layout: not not contiguous",
+            ShapeError::DimensionTooLarge(..) =>
+                "dimension too large",
         }
     }
 }
@@ -2109,11 +2113,14 @@ impl fmt::Display for ShapeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ShapeError::IncompatibleShapes(ref a, ref b) => {
-                write!(f, "incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
+                write!(f, "incompatible shapes, attempted from: {:?}, to: {:?}",
                        a, b)
             }
             ShapeError::IncompatibleLayout => {
                 write!(f, "{}", std::error::Error::description(self))
+            }
+            ShapeError::DimensionTooLarge(ref a) => {
+                write!(f, "dimension too large in shape {:?}", a)
             }
         }
     }
