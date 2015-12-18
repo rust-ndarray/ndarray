@@ -18,16 +18,18 @@
 //! use ndarray::blas::AsBlas;
 //!
 //! fn main() {
+//!     // Gemv is the operation y = α a x + β y
+//!     let alpha = 1.;
 //!     let mut a = arr2(&[[1., 2., 3.],
 //!                        [4., 5., 6.],
 //!                        [7., 8., 9.]]);
+//!     let x = [1., 0., 1.];
+//!     let beta = 1.;
 //!     let mut y = arr1(&[0., 0., 0.]);
 //!
-//!     // gemv is y = α a x + β y
+//!     Gemv::gemv(Transpose::NoTrans, &alpha, &a.blas(), &x[..],
+//!                &beta, &mut y.blas());
 //!
-//!     let x = [1., 0., 1.];
-//!     Gemv::gemv(Transpose::NoTrans, &1., &a.blas(), &x[..], &1.,
-//!                &mut y.blas_mut());
 //!     assert_eq!(y, arr1(&[4., 10., 16.]));
 //! }
 //!
@@ -127,53 +129,36 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 ///
 /// ***Requires `features = "rblas"`***
 pub trait AsBlas<A, S, D> {
-    /// Return a contiguous array view implementing Vector (1D) or Matrix (2D)
+    /// Return an array view implementing Vector (1D) or Matrix (2D)
     /// traits.
     ///
-    /// Elements are copied if needed to produce a contiguous array.
+    /// Elements are copied if needed to produce a contiguous matrix.<br>
+    /// The result is always mutable, due to the requirement of having write
+    /// access to update the layout either way. Breaks sharing if the array is
+    /// an `Array`.
     ///
     /// **Errors:** Produces an error if any dimension is larger than `i32::MAX`.
-    fn blas_checked(&mut self) -> Result<BlasArrayView<A, D>, ShapeError>
-        where S: DataOwned,
-              A: Clone;
-
-    /// Return a contiguous array view implementing Vector (1D) or Matrix (2D)
-    /// traits.
-    ///
-    /// Elements are copied if needed to produce a contiguous array.
-    ///
-    /// **Errors:** Produces an error if any dimension is larger than `i32::MAX`.
-    fn blas_mut_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
+    fn blas_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
         where S: DataOwned + DataMut,
               A: Clone;
 
     /// Equivalent to `.blas_checked().unwrap()`
     ///
     /// **Panics** if there was a an error in `blas_checked`.
-    fn blas(&mut self) -> BlasArrayView<A, D>
-        where S: DataOwned<Elem=A>,
+    fn blas(&mut self) -> BlasArrayViewMut<A, D>
+        where S: DataOwned<Elem=A> + DataMut,
               A: Clone
     {
         self.blas_checked().unwrap()
     }
-
-    /// Equivalent to `.blas_mut_checked().unwrap()`
-    ///
-    /// **Panics** if there was a an error in `blas_mut_checked`.
-    fn blas_mut(&mut self) -> BlasArrayViewMut<A, D>
-        where S: DataOwned<Elem=A> + DataMut,
-              A: Clone
-    {
-        self.blas_mut_checked().unwrap()
-    }
     /*
 
-    /// Equivalent to `.blas_mut_checked().unwrap()`, except elements
+    /// Equivalent to `.blas_checked().unwrap()`, except elements
     /// are not copied to make the array contiguous: instead just
     /// dimensions and strides are adjusted, and elements end up in
     /// arbitrary location. Useful if the content of the array doesn't matter.
     ///
-    /// **Panics** if there was a an error in `blas_mut_checked`.
+    /// **Panics** if there was a an error in `blas_checked`.
     fn blas_overwrite(&mut self) -> BlasArrayViewMut<A, D>
         where S: DataMut;
         */
@@ -183,18 +168,7 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
     where S: Data<Elem=A>,
           D: Dimension,
 {
-    fn blas_checked(&mut self) -> Result<BlasArrayView<A, D>, ShapeError>
-        where S: DataOwned,
-              A: Clone,
-    {
-        try!(self.size_check());
-        if self.dim.ndim() > 1 {
-            self.ensure_standard_layout();
-        }
-        self.view().into_matrix()
-    }
-
-    fn blas_mut_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
+    fn blas_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
         where S: DataOwned + DataMut,
               A: Clone,
     {

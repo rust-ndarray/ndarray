@@ -244,7 +244,7 @@ fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
         f32::gemm(&1.,
                   Transpose::NoTrans, &a.blas(),
                   Transpose::NoTrans, &b.blas(),
-                  &1., &mut c.blas_mut());
+                  &1., &mut c.blas());
     });
 }
 
