@@ -1337,7 +1337,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         match self.broadcast_iter(dim.clone()) {
             Some(it) => it,
-            None => panic!("Could not broadcast array from shape {:?} into: {:?}",
+            None => panic!("Could not broadcast array from shape: {:?} to: {:?}",
                            self.shape(), dim.slice())
         }
     }
