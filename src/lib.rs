@@ -166,10 +166,13 @@ pub type Ixs = i32;
 /// use ndarray::{Si, S};
 ///
 /// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
-/// let a = arr3(&[[[ 1,  2,  3],
-///                 [ 4,  5,  6]],
-///                [[ 7,  8,  9],
-///                 [10, 11, 12]]]);
+///
+/// let a = arr3(&[[[ 1,  2,  3],     // -- 2 rows  \_
+///                 [ 4,  5,  6]],    // --         /  
+///                [[ 7,  8,  9],     //            \_ 2 submatrices
+///                 [10, 11, 12]]]);  //            /
+/// //  3 columns ..../.../.../
+///
 /// assert_eq!(a.shape(), &[2, 2, 3]);
 ///
 /// // Let's create a slice with
@@ -208,14 +211,17 @@ pub type Ixs = i32;
 /// use ndarray::{Si, S};
 ///
 /// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
-/// let a = arr3(&[[[ 1,  2,  3],
-///                 [ 4,  5,  6]],
-///                [[ 7,  8,  9],
-///                 [10, 11, 12]]]);
+/// let a = arr3(&[[[ 1,  2,  3],    // \ submatrix 0 of axis 0
+///                 [ 4,  5,  6]],   // /
+///                [[ 7,  8,  9],    // \ submatrix 1 of axis 0
+///                 [10, 11, 12]]]); // /
+///         //        ↑
+///         //        column 0 of axis 2
+///
 /// assert_eq!(a.shape(), &[2, 2, 3]);
 ///
 /// // Let's take a subview along the greatest dimension (axis 0),
-/// // taking the 0th submatrix, then the 1st.
+/// // taking submatrix 0, then submatrix 1
 ///
 /// let sub_0 = a.subview(0, 0);
 /// let sub_1 = a.subview(0, 1);
@@ -226,7 +232,7 @@ pub type Ixs = i32;
 ///                            [10, 11, 12]]));
 /// assert_eq!(sub_0.shape(), &[2, 3]);
 ///
-/// // This is the subview picking only the first column of the 2nd axis
+/// // This is the subview picking only column 0 of axis 2
 /// let sub_col = a.subview(2, 0);
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
@@ -893,15 +899,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         Indexed(self.elements_base())
     }
 
-    /// Collapse dimension `axis` into length one,
-    /// and select the subview of `index` along that axis.
-    ///
-    /// **Panics** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: usize, index: Ix)
-    {
-        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
-    }
-
     /// Act like a larger size and/or shape array by *broadcasting*
     /// into a larger shape, if possible.
     ///
@@ -1099,20 +1096,23 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Select the subview `index` along `axis` and return an
+    /// Along `axis`, select the subview `index` and return an
     /// array with that axis removed.
     ///
-    /// **Panics** if `index` is past the length of the axis.
+    /// **Panics** if `axis` or `index` is out of bounds.
     ///
     /// ```
     /// use ndarray::{arr1, arr2};
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
-    ///
+    /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
+    ///                [3., 4.],    // -- axis 0, row 1
+    ///                [5., 6.]]);  // -- axis 0, row 2 
+    /// //               \   \
+    /// //                \   axis 1, column 1
+    /// //                  axis 1, column 0
     /// assert!(
-    ///     a.subview(0, 0) == arr1(&[1., 2.]) &&
-    ///     a.subview(1, 1) == arr1(&[2., 4.])
+    ///     a.subview(0, 1) == arr1(&[3., 4.]) &&
+    ///     a.subview(1, 1) == arr1(&[2., 4., 6.])
     /// );
     /// ```
     pub fn subview(&self, axis: usize, index: Ix) -> ArrayBase<S, <D as RemoveAxis>::Smaller>
@@ -1129,6 +1129,63 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             dim: res.dim.remove_axis(axis),
             strides: res.strides.remove_axis(axis),
         }
+    }
+
+    /// Collapse dimension `axis` into length one,
+    /// and select the subview of `index` along that axis.
+    ///
+    /// **Panics** if `index` is past the length of the axis.
+    pub fn isubview(&mut self, axis: usize, index: Ix)
+    {
+        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
+    }
+
+    /// Along `axis`, select the subview `index` and return a read-write view
+    /// with the axis removed.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{arr2, aview2};
+    ///
+    /// let mut a = arr2(&[[1., 2.],
+    ///                    [3., 4.]]);
+    ///
+    /// a.subview_mut(1, 1).iadd_scalar(&10.);
+    ///
+    /// assert!(
+    ///     a == aview2(&[[1., 12.],
+    ///                   [3., 14.]])
+    /// );
+    /// ```
+    pub fn subview_mut(&mut self, axis: usize, index: Ix)
+        -> ArrayViewMut<A, D::Smaller>
+        where S: DataMut,
+              D: RemoveAxis,
+    {
+        let mut res = self.view_mut();
+        res.isubview(axis, index);
+        ArrayBase {
+            data: res.data,
+            ptr: res.ptr,
+            dim: res.dim.remove_axis(axis),
+            strides: res.strides.remove_axis(axis),
+        }
+    }
+
+    /// Select the subview `index` along `axis` and return an iterator
+    /// of the subview.
+    ///
+    /// Iterator element type is `&mut A`.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    pub fn sub_iter_mut(&mut self, axis: usize, index: Ix)
+        -> ElementsMut<A, D>
+        where S: DataMut,
+    {
+        let mut it = self.view_mut();
+        dimension::do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
+        it.into_iter_()
     }
 
     /// Make the array unshared.
@@ -1228,53 +1285,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe {
             it.ptr = it.ptr.offset(offset);
         }
-        it.into_iter_()
-    }
-
-    /// Select the subview `index` along `axis` and return a read-write view.
-    ///
-    /// **Panics** if `axis` or `index` is out of bounds.
-    ///
-    /// ```
-    /// use ndarray::{arr2, aview2};
-    ///
-    /// let mut a = arr2(&[[1., 2.],
-    ///                    [3., 4.]]);
-    ///
-    /// a.subview_mut(1, 1).iadd_scalar(&10.);
-    ///
-    /// assert!(
-    ///     a == aview2(&[[1., 12.],
-    ///                   [3., 14.]])
-    /// );
-    /// ```
-    pub fn subview_mut(&mut self, axis: usize, index: Ix)
-        -> ArrayViewMut<A, D::Smaller>
-        where S: DataMut,
-              D: RemoveAxis,
-    {
-        let mut res = self.view_mut();
-        res.isubview(axis, index);
-        ArrayBase {
-            data: res.data,
-            ptr: res.ptr,
-            dim: res.dim.remove_axis(axis),
-            strides: res.strides.remove_axis(axis),
-        }
-    }
-
-    /// Select the subview `index` along `axis` and return an iterator
-    /// of the subview.
-    ///
-    /// Iterator element type is `&mut A`.
-    ///
-    /// **Panics** if `axis` or `index` is out of bounds.
-    pub fn sub_iter_mut(&mut self, axis: usize, index: Ix)
-        -> ElementsMut<A, D>
-        where S: DataMut,
-    {
-        let mut it = self.view_mut();
-        dimension::do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
         it.into_iter_()
     }
 
