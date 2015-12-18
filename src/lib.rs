@@ -4,26 +4,35 @@
 //! The `ndarray` crate provides an N-dimensional container similar to numpy's
 //! ndarray.
 //!
-//! - [`ArrayBase`](struct.ArrayBase.html)<br>
-//!   The n-dimensional array type itself, parameterized by data storage.
-//! - `Array`<br>
-//!   An array where the data is reference counted and copy on write, it
-//!   can act as both an owner as the data as well as a lightweight view.
-//! - `OwnedArray`<br>
+//! - [`ArrayBase`](struct.ArrayBase.html):
+//!   The n-dimensional array type itself.
+//! - [`Array`](type.Array.html):
+//!   An array where the data is shared and copy on write, it
+//!   can act as both an owner of the data as well as a lightweight view.
+//! - [`OwnedArray`](type.OwnedArray.html):
 //!   An array where the data is owned uniquely.
-//! - `ArrayView`<br>
-//!   A lightweight array view.
-//! - `ArrayViewMut`<br>
-//!   A lightweight read-write array view.
+//! - [`ArrayView`](type.ArrayView.html), [`ArrayViewMut`](type.ArrayViewMut.html):
+//!   Lightweight array views.
 //!
-//! ## Crate Summary and Status
+//! ## Highlights
 //!
-//! - Implements the numpy striding and broadcasting scheme for n-dimensional arrays
+//! - Generic n-dimensional array
+//! - General slicing, also with steps > 1, and negative indices to mean
+//!   elements from the end of the axis.
+//! - There is both a an easy to use copy on write array (`Array`),
+//!   or a regular uniquely owned array (`OwnedArray`), and both can use
+//!   read-only and read-write array views.
+//! - Iteration and most operations are efficient on contiguous c-order arrays
+//!   (the default layout, without any transposition or discontiguous subslicing).
+//!
+//! ## Status and Lookout
+//!
+//! - Still iterating on the API
 //! - Focus is on being a generic n-dimensional container
-//! - Due to that arithmetic operations and matrix multiplication etc
-//!   are not very well optimized, this is not a serious crate for numerics
-//!   or linear algebra.
-//! - There is no integration with linear algebra packages (at least not yet).
+//! - Implements numpy striding and broadcasting
+//! - Arithmetic operations and numerics need a rethink. They are not very
+//!   well optimized.
+//! - There is experimental bridging to the linear algebra package `rblas`.
 //!
 //! ## Crate Feature Flags
 //!
@@ -674,7 +683,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return an uniquely owned copy of the array or view
+    /// Return an uniquely owned copy of the array
     pub fn to_owned(&self) -> OwnedArray<A, D>
         where A: Clone
     {
@@ -696,7 +705,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.to_owned().into_shared()
     }
 
-    /// Return a shared ownership (copy on write) array.
+    /// Turn the array into a shared ownership (copy on write) array,
+    /// without any copying.
     pub fn into_shared(self) -> Array<A, D>
         where S: DataOwned,
     {
