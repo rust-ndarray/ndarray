@@ -1079,6 +1079,30 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Return a read-write view over the diagonal elements of the array.
+    pub fn diag_mut(&mut self) -> ArrayViewMut<A, Ix>
+        where S: DataMut,
+    {
+        self.ensure_unique();
+        let (len, stride) = self.diag_params();
+        ArrayViewMut {
+            ptr: self.ptr,
+            data: self.raw_data_mut(),
+            dim: len,
+            strides: stride as Ix,
+        }
+    }
+
+    /// ***Deprecated: use `.diag_mut()`***
+    ///
+    /// Return an iterator over the diagonal elements of the array.
+    pub fn diag_iter_mut(&mut self) -> ElementsMut<A, Ix>
+        where S: DataMut,
+    {
+        self.diag_mut().into_iter_()
+    }
+
+
     /// Apply `f` elementwise and return a new array with
     /// the results.
     ///
@@ -1184,6 +1208,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// ***Deprecated: use `.subview_mut()`***
+    ///
     /// Select the subview `index` along `axis` and return an iterator
     /// of the subview.
     ///
@@ -1297,21 +1323,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             it.ptr = it.ptr.offset(offset);
         }
         it.into_iter_()
-    }
-
-    /// Return an iterator over the diagonal elements of the array.
-    pub fn diag_iter_mut(&mut self) -> ElementsMut<A, Ix>
-        where S: DataMut,
-    {
-        self.ensure_unique();
-        let (len, stride) = self.diag_params();
-        let view = ArrayBase {
-            ptr: self.ptr,
-            data: self.raw_data_mut(),
-            dim: len,
-            strides: stride as Ix,
-        };
-        view.into_iter_()
     }
 
     /// Return a mutable slice of the array's backing data in memory order.
