@@ -38,8 +38,8 @@ Recent Changes
 - 0.2.0-alpha.4
 
   - Slicing methods like ``.slice()`` now take a fixed size array of ``Si``
-    as the slice description. This allows more type checking that the number
-    of axes is correct.
+    as the slice description. This allows more type checking to verify that the
+    number of axes is correct.
   - Add experimental ``rblas`` integration.
   - Add ``into_shape()`` which allows reshaping any array or view kind.
 
