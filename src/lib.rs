@@ -1325,8 +1325,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Transform the array into `shape`; any shape with the same number of
-    /// elements is accepted, but the source array or view must have
-    /// standard layout, otherwise we cannot rearrange the dimension.
+    /// elements is accepted, but the source array or view must be
+    /// contiguous, otherwise we cannot rearrange the dimension.
     ///
     /// ```
     /// use ndarray::{aview1, aview2};
@@ -2088,7 +2088,9 @@ enum ElementsRepr<S, C> {
 /// An error that can be produced by `.into_shape()`
 #[derive(Clone, Debug)]
 pub enum ShapeError {
+    /// incompatible shapes in reshape
     IncompatibleShapes(Box<[Ix]>, Box<[Ix]>),
+    /// incompatible layout: not contiguous
     IncompatibleLayout,
 }
 
@@ -2098,7 +2100,7 @@ impl std::error::Error for ShapeError {
             ShapeError::IncompatibleShapes(..) =>
                 "incompatible shapes in reshape",
             ShapeError::IncompatibleLayout =>
-                "incompatible layout: not standard layout",
+                "incompatible layout: not not contiguous",
         }
     }
 }
