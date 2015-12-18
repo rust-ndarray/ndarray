@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 #![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 
+#[macro_use]
 extern crate ndarray;
 
 use ndarray::{Array, S, Si,
@@ -12,7 +13,6 @@ use ndarray::{arr0, arr1, arr2,
     aview_mut1,
 };
 use ndarray::Indexes;
-use ndarray::SliceRange;
 
 #[test]
 fn test_matmul_rcarray()
@@ -47,7 +47,7 @@ fn test_slice()
         *elt = i;
     }
 
-    let vi = A.slice(&[(1..).slice(), (0..).step(2)]);
+    let vi = A.slice(s![1.., ..;2]);
     assert_eq!(vi.dim(), (2, 2));
     let vi = A.slice(&[S, S]);
     assert_eq!(vi.shape(), A.shape());

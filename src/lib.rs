@@ -75,7 +75,7 @@ use it::ZipSlices;
 pub use dimension::{Dimension, RemoveAxis};
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
-pub use si::{Si, S, SliceRange};
+pub use si::{Si, S};
 
 use dimension::stride_offset;
 use iterators::Baseiter;
