@@ -1505,6 +1505,24 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 }
 
 /// Return a one-dimensional read-write array view with elements borrowing `xs`.
+///
+/// ```
+/// #[macro_use(s)]
+/// extern crate ndarray;
+///
+/// use ndarray::aview_mut1;
+///
+/// // Create an array view over some data,
+/// // then slice it and modify it.
+/// fn main() {
+///     let mut data = [0; 1024];
+///     {
+///         let mut a = aview_mut1(&mut data).into_shape((32, 32)).unwrap();
+///         a.slice_mut(s![.., ..;3]).assign_scalar(&5);
+///     }
+///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
+/// }
+/// ```
 pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
     ArrayViewMut {
         ptr: xs.as_mut_ptr(),
