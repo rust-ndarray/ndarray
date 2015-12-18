@@ -858,10 +858,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
-    pub unsafe fn uchk_at(&self, index: D) -> &A {
+    pub unsafe fn uget(&self, index: D) -> &A {
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
+    }
+
+    /// ***Deprecated: use `.uget()`***
+    #[inline]
+    pub unsafe fn uchk_at(&self, index: D) -> &A {
+        self.uget(index)
     }
 
     /// Perform *unchecked* array indexing.
@@ -871,13 +877,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
     /// **Note:** The array must be uniquely held when mutating it.
     #[inline]
-    pub unsafe fn uchk_at_mut(&mut self, index: D) -> &mut A
+    pub unsafe fn uget_mut(&mut self, index: D) -> &mut A
         where S: DataMut
     {
         //debug_assert!(Rc::get_mut(&mut self.data).is_some());
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
+    }
+
+    /// ***Deprecated: use `.uget_mut()`***
+    #[inline]
+    pub unsafe fn uchk_at_mut(&mut self, index: D) -> &mut A
+        where S: DataMut
+    {
+        self.uget_mut(index)
     }
 
     /// Return a protoiterator
