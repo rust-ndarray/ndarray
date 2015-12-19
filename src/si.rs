@@ -14,16 +14,20 @@ use super::{Ixs};
 ///
 /// If `end` is `None`, the slice extends to the end of the axis.
 ///
+/// See also the [`s![] macro`](macro.s!.html), a convenient way to specify
+/// an array of `Si`.
+///
 /// ## Examples
 ///
 /// `Si(0, None, 1)` is the full range of an axis.
-/// Python equivalent is `[:]`.
+/// Python equivalent is `[:]`. Macro equivalent is `s![..]`.
 ///
 /// `Si(a, Some(b), 2)` is every second element from `a` until `b`.
-/// Python equivalent is `[a:b:2]`.
+/// Python equivalent is `[a:b:2]`. Macro equivalent is `s![a..b;2]`.
 ///
-/// `Si(a, None, -1)` is every element, in reverse order, from `a`
-/// until the end. Python equivalent is `[a::-1]`
+/// `Si(a, None, -1)` is every element, from `a`
+/// until the end, in reverse order. Python equivalent is `[a::-1]`.
+/// Macro equivalent is `s![..;-1]`.
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
 impl From<Range<Ixs>> for Si

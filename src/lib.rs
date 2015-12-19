@@ -149,34 +149,43 @@ pub type Ixs = i32;
 /// Array indexes are represented by the types `Ix` and `Ixs`
 /// (signed). ***Note: A future version will switch from `u32` to `usize`.***
 ///
-/// ## Slicing and Subviews
+/// ## Slicing
 ///
 /// You can use slicing to create a view of a subset of the data in
 /// the array. Slicing methods include `.slice()`, `.islice()`,
 /// `.slice_mut()`.
 ///
+/// The dimensionality of the array determines the number of *axes*, for example
+/// a 2D array has three axes. These are listed in “big endian” order, so that
+/// the greatest dimension is listed first, the lowest dimension with the most
+/// rapidly varying index is the last.
+///
+/// In a 2D array this means that indices are `(row, column)`, and the order of
+/// the elements is *(0, 0), (0, 1), (0, 2), ... (1, 0), (1, 1), (1, 2) ...* etc.
+///
 /// The slicing specification is passed as a function argument as a fixed size
 /// array with elements of type [`Si`] with fields `Si(begin, end, stride)`,
 /// where the values are signed integers, and `end` is an `Option<Ixs>`.
 /// The constant [`S`] is a shorthand for the full range of an axis.
+/// For example, if the array has three axes, the slice argument is passed as
+/// type `&[Si; 3]`.
+///
+/// The macro [`s![]`](macro.s!.html) is however a much more convenient way to
+/// specify the slicing argument, so it will be used in all examples.
 ///
 /// [`Si`]: struct.Si.html
 /// [`S`]: constant.S.html
 ///
-/// The dimensionality of the array determines the number of *axes*, for example
-/// a 3D array has three axes. These are listed in “big endian” order, so that
-/// the greatest dimension is listed first, the lowest dimension with the most
-/// rapidly varying index is the last.
-///
-/// In a 2D array this means that the axes are listed in (row, column) order, and
-/// the natural order of the elements is
-/// *(0, 0), (0, 1), ... (1, 0), (1, 1), (1, 2) ...* etc..
-///
 /// ```
-/// use ndarray::{arr3};
-/// use ndarray::{Si, S};
+/// // import the s![] macro
+/// #[macro_use(s)]
+/// extern crate ndarray;
 ///
-/// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
+/// use ndarray::arr3;
+///
+/// fn main() {
+///
+/// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
 /// let a = arr3(&[[[ 1,  2,  3],     // -- 2 rows  \_
 ///                 [ 4,  5,  6]],    // --         /  
@@ -188,13 +197,13 @@ pub type Ixs = i32;
 ///
 /// // Let’s create a slice with
 /// //
-/// // - Every element in each row: `S`
-/// // - Only the first row in each submatrix: `Si(0, Some(1), 1)`
-/// // - In both of the submatrices of the greatest dimension: `S`
-/// //
-/// // The argument passed is of type `&[Si; 3]` since the array has three axes.
+/// // - Both of the submatrices of the greatest dimension: `..`
+/// // - Only the first row in each submatrix: `0..1`
+/// // - Every element in each row: `..`
 ///
-/// let b = a.slice(&[S, Si(0, Some(1), 1), S]);
+/// let b = a.slice(s![.., 0..1, ..]);
+/// // without the macro, the explicit argument is `&[S, Si(0, Some(1), 1), S]`
+///
 /// let c = arr3(&[[[ 1,  2,  3]],
 ///                [[ 7,  8,  9]]]);
 /// assert_eq!(b, c);
@@ -202,32 +211,34 @@ pub type Ixs = i32;
 ///
 /// // Let’s create a slice with
 /// // 
-/// // - Row elements in reverse order: `Si(0, None, -1)`
-/// // - The last row in each submatrix: `Si(-1, None, 1)`
-/// // - In both submatrices of the greatest dimension: `S`
-/// let d = a.slice(&[S, Si(-1, None, 1), Si(0, None, -1)]);
+/// // - Both submatrices of the greatest dimension: `..`
+/// // - The last row in each submatrix: `-1..`
+/// // - Row elements in reverse order: `..;-1`
+/// let d = a.slice(s![.., -1.., ..;-1]);
 /// let e = arr3(&[[[ 6,  5,  4]],
 ///                [[12, 11, 10]]]);
 /// assert_eq!(d, e);
+/// }
 /// ```
+///
+/// ## Subviews
 ///
 /// Subview methods allow you to restrict the array view while removing
 /// one axis from the array. Subview methods include `.subview()`,
 /// `.isubview()`, `.subview_mut()`.
 /// 
-/// Subview takes two arguments: axis and index.
+/// Subview takes two arguments: `axis` and `index`.
 ///
 /// ```
 /// use ndarray::{arr3, aview2};
-/// use ndarray::{Si, S};
 ///
 /// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
-/// let a = arr3(&[[[ 1,  2,  3],    // \ submatrix 0 of axis 0
+/// let a = arr3(&[[[ 1,  2,  3],    // \ axis 0, submatrix 0
 ///                 [ 4,  5,  6]],   // /
-///                [[ 7,  8,  9],    // \ submatrix 1 of axis 0
+///                [[ 7,  8,  9],    // \ axis 0, submatrix 1
 ///                 [10, 11, 12]]]); // /
-///         //        ↑
-///         //        column 0 of axis 2
+///         //        \ 
+///         //         axis 2, column 0
 ///
 /// assert_eq!(a.shape(), &[2, 2, 3]);
 ///
@@ -243,7 +254,7 @@ pub type Ixs = i32;
 ///                            [10, 11, 12]]));
 /// assert_eq!(sub_0.shape(), &[2, 3]);
 ///
-/// // This is the subview picking only column 0 of axis 2
+/// // This is the subview picking only axis 2, column 0
 /// let sub_col = a.subview(2, 0);
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
@@ -747,6 +758,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a sliced array.
     ///
+    /// See [*Slicing*](#slicing) for full documentation.
+    ///
     /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
     /// element per axis.
     ///
@@ -942,6 +955,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Along `axis`, select the subview `index` and return an
     /// array with that axis removed.
     ///
+    /// See [*Subviews*](#subviews) for full documentation.
+    ///
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
     /// ```
@@ -952,7 +967,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                [5., 6.]]);  // -- axis 0, row 2 
     /// //               \   \
     /// //                \   axis 1, column 1
-    /// //                  axis 1, column 0
+    /// //                 axis 1, column 0
     /// assert!(
     ///     a.subview(0, 1) == arr1(&[3., 4.]) &&
     ///     a.subview(1, 1) == arr1(&[2., 4., 6.])
@@ -1527,8 +1542,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 ///
 /// use ndarray::aview_mut1;
 ///
-/// // Create an array view over some data,
-/// // then slice it and modify it.
+/// // Create an array view over some data, then slice it and modify it.
 /// fn main() {
 ///     let mut data = [0; 1024];
 ///     {
