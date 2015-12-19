@@ -156,19 +156,18 @@ pub type Ixs = i32;
 /// `.slice_mut()`.
 ///
 /// The dimensionality of the array determines the number of *axes*, for example
-/// a 2D array has three axes. These are listed in “big endian” order, so that
+/// a 2D array has two axes. These are listed in “big endian” order, so that
 /// the greatest dimension is listed first, the lowest dimension with the most
 /// rapidly varying index is the last.
-///
-/// In a 2D array this means that indices are `(row, column)`, and the order of
+/// For the 2D array this means that indices are `(row, column)`, and the order of
 /// the elements is *(0, 0), (0, 1), (0, 2), ... (1, 0), (1, 1), (1, 2) ...* etc.
 ///
 /// The slicing specification is passed as a function argument as a fixed size
 /// array with elements of type [`Si`] with fields `Si(begin, end, stride)`,
 /// where the values are signed integers, and `end` is an `Option<Ixs>`.
 /// The constant [`S`] is a shorthand for the full range of an axis.
-/// For example, if the array has three axes, the slice argument is passed as
-/// type `&[Si; 3]`.
+/// For example, if the array has two axes, the slice argument is passed as
+/// type `&[Si; 2]`.
 ///
 /// The macro [`s![]`](macro.s!.html) is however a much more convenient way to
 /// specify the slicing argument, so it will be used in all examples.
