@@ -1815,7 +1815,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uchk_at((i, k)) * *rhs.uchk_at((k, j))
+                    |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
                 );
             }
             j += 1;
@@ -1854,7 +1854,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uchk_at((i, k)) * *rhs.uchk_at(k)
+                    |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
                 );
             }
             i += 1;
