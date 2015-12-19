@@ -43,7 +43,7 @@ fn bench_std_add_owned(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_1d(bench: &mut test::Bencher)
+fn small_iter_1d(bench: &mut test::Bencher)
 {
     let a = arr1::<f32>(&[1., 2., 2.,
                          3., 4., 4.,
@@ -54,7 +54,7 @@ fn bench_std_iter_1d(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_1d_raw(bench: &mut test::Bencher)
+fn small_iter_1d_raw(bench: &mut test::Bencher)
 {
     let a = arr1::<f32>(&[1., 2., 2.,
                          3., 4., 4.,
@@ -65,7 +65,7 @@ fn bench_std_iter_1d_raw(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_2d(bench: &mut test::Bencher)
+fn small_iter_2d(bench: &mut test::Bencher)
 {
     let a = arr2::<f32, _>(&[[1., 2., 2.],
                           [3., 4., 4.],
@@ -143,6 +143,55 @@ fn bench_std_iter_2d_cutout(bench: &mut test::Bencher)
         let mut sum = 0;
         for &elt in a.iter() {
             sum += elt;
+        }
+        sum
+    });
+}
+
+#[bench]
+fn bench_std_iter_2d_by_row_cutout(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<i32, _>::zeros((66, 66));
+    let av = a.view().slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        let mut sum = 0;
+        for row in 0..a.shape()[0] {
+            for &elt in a.row_iter(row) {
+                sum += elt;
+            }
+        }
+        sum
+    });
+}
+
+#[bench]
+fn bench_std_iter_2d_transpose_large(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.iter() {
+            sum += elt;
+        }
+        sum
+    });
+}
+
+#[bench]
+fn bench_std_iter_2d_transpose_by_row_large(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for row in 0..a.shape()[0] {
+            for &elt in a.row_iter(row) {
+                sum += elt;
+            }
         }
         sum
     });
