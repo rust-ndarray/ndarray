@@ -460,18 +460,25 @@ impl<S> ArrayBase<S, Ix>
     pub fn from_iter<I: IntoIterator<Item=S::Elem>>(iterable: I) -> ArrayBase<S, Ix> {
         Self::from_vec(iterable.into_iter().collect())
     }
-}
 
-impl Array<f32, Ix>
-{
-    /// Create a one-dimensional Array from interval `[begin, end)`
-    pub fn range(begin: f32, end: f32) -> Array<f32, Ix>
+    /// Create a one-dimensional array from inclusive interval `[start, end]` with
+    /// `n` elements.
+    pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
+        where S: Data<Elem=F>,
+              F: libnum::Float,
+              usize: it::misc::ToFloat<F>,
     {
-        let n = (end - begin) as usize;
+        Self::from_iter(it::linspace(start, end, n))
+    }
+
+    /// Create a one-dimensional array from interval `[start, end)`
+    #[cfg_attr(has_deprecated, deprecated(note="use ArrayBase::linspace() instead"))]
+    pub fn range(start: f32, end: f32) -> ArrayBase<S, Ix>
+        where S: Data<Elem=f32>,
+    {
+        let n = (end - start) as usize;
         let span = if n > 0 { (n - 1) as f32 } else { 0. };
-        Array::from_iter(it::linspace(begin,
-                                      begin + span,
-                                      n))
+        Self::linspace(start, start + span, n)
     }
 }
 

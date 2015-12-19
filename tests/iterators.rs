@@ -14,7 +14,7 @@ use itertools::assert_equal;
 #[test]
 fn double_ended()
 {
-    let a = Array::range(0.0, 8.0f32);
+    let a = Array::linspace(0., 7., 8);
     let mut it = a.iter().map(|x| *x);
     assert_eq!(it.next(), Some(0.));
     assert_eq!(it.next_back(), Some(7.));
@@ -25,7 +25,7 @@ fn double_ended()
 #[test]
 fn indexed()
 {
-    let a = Array::range(0.0, 8.0f32);
+    let a = Array::linspace(0., 7., 8);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }
@@ -57,7 +57,7 @@ fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
 
 #[test]
 fn as_slice() {
-    let a = Array::range(0., 8.);
+    let a = Array::linspace(0., 7., 8);
     let a = a.reshape((2, 4, 1));
 
     assert_slice_correct(&a);

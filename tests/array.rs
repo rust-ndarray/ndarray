@@ -185,14 +185,14 @@ fn test_cow()
 #[test]
 fn test_sub()
 {
-    let mat = Array::range(0.0f32, 16.0).reshape((2, 4, 2));
+    let mat = Array::linspace(0., 15., 16).reshape((2, 4, 2));
     let s1 = mat.subview(0,0);
     let s2 = mat.subview(0,1);
     assert_eq!(s1.dim(), (4, 2));
     assert_eq!(s2.dim(), (4, 2));
-    let n = Array::range(8.0f32, 16.0).reshape((4,2));
+    let n = Array::linspace(8., 15., 8).reshape((4,2));
     assert_eq!(n, s2);
-    let m = Array::from_vec(vec![2f32, 3., 10., 11.]).reshape((2, 2));
+    let m = Array::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.subview(1, 1));
 }
 
