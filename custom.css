@@ -23,3 +23,8 @@ content: '\a         ';
     font-weight: bold;
     padding: 0 0.1em;
 }
+
+em.deprecated {
+    font-weight: bold;
+    font-style: italic;
+}
