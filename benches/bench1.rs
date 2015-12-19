@@ -76,7 +76,7 @@ fn small_iter_2d(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_1d_large(bench: &mut test::Bencher)
+fn add_1d_regular(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros(64 * 64);
     let a = black_box(a);
@@ -90,7 +90,7 @@ fn bench_std_iter_1d_large(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_1d_raw_large(bench: &mut test::Bencher)
+fn add_1d_raw(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
     let a = OwnedArray::<i32, _>::zeros(64 * 64);
@@ -105,7 +105,7 @@ fn bench_std_iter_1d_raw_large(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_2d_large(bench: &mut test::Bencher)
+fn add_2d_regular(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
@@ -134,7 +134,7 @@ fn bench_std_iter_2d_raw_large(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_2d_cutout(bench: &mut test::Bencher)
+fn add_2d_cutout(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.view().slice(s![1..-1, 1..-1]);
@@ -149,7 +149,7 @@ fn bench_std_iter_2d_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_2d_by_row_cutout(bench: &mut test::Bencher)
+fn add_2d_cutout_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.view().slice(s![1..-1, 1..-1]);
@@ -181,7 +181,7 @@ fn bench_std_iter_2d_transpose_large(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_std_iter_2d_transpose_by_row_large(bench: &mut test::Bencher)
+fn add_2d_transpose_by_row(bench: &mut test::Bencher)
 {
     let mut a = OwnedArray::<i32, _>::zeros((64, 64));
     a.swap_axes(0, 1);
@@ -225,7 +225,17 @@ fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::zeros((64, 64));
     let mut a = black_box(a);
-    let s = black_box(3.);
+    let s = 3.;
+    bench.iter(|| a.assign_scalar(&s))
+}
+
+#[bench]
+fn assign_scalar_2d_cutout(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::zeros((66, 66));
+    let mut a = a.slice_mut(s![1..-1, 1..-1]);
+    let mut a = black_box(a);
+    let s = 3.;
     bench.iter(|| a.assign_scalar(&s))
 }
 
@@ -235,7 +245,7 @@ fn assign_scalar_2d_transposed_large(bench: &mut test::Bencher)
     let mut a = OwnedArray::zeros((64, 64));
     a.swap_axes(0, 1);
     let mut a = black_box(a);
-    let s = black_box(3.);
+    let s = 3.;
     bench.iter(|| a.assign_scalar(&s))
 }
 
@@ -244,7 +254,7 @@ fn assign_scalar_2d_raw_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::zeros((64, 64));
     let mut a = black_box(a);
-    let s = black_box(3.);
+    let s = 3.;
     bench.iter(|| for elt in a.raw_data_mut() { *elt = s; });
 }
 
