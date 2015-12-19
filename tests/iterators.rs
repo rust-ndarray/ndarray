@@ -91,3 +91,24 @@ fn as_slice() {
     println!("u={:?}, shape={:?}, strides={:?}", u, u.shape(), u.strides());
     assert!(u.as_slice().is_none());
 }
+
+#[test]
+fn outer_iter() {
+    let a = Array::from_iter(0..12);
+    let a = a.reshape((2, 3, 2));
+    // [[[0, 1],
+    //   [2, 3],
+    //   [4, 5]],
+    //  [[6, 7],
+    //   [8, 9],
+    //    ...
+    assert_equal(a.outer_iter().map(|v| v.iter().cloned().collect::<Vec<_>>()),
+                 vec![vec![0, 1], vec![2, 3], vec![4, 5],
+                      vec![6, 7], vec![8, 9], vec![10, 11]]);
+    let mut b = Array::zeros((2, 3, 2));
+    b.swap_axes(0, 2);
+    b.assign(&a);
+    assert_equal(b.outer_iter().map(|v| v.iter().cloned().collect::<Vec<_>>()),
+                 vec![vec![0, 1], vec![2, 3], vec![4, 5],
+                      vec![6, 7], vec![8, 9], vec![10, 11]]);
+}
