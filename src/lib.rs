@@ -80,6 +80,7 @@ pub use si::{Si, S};
 
 use dimension::stride_offset;
 use iterators::Baseiter;
+use iterators::{OuterIter, OuterIterMut};
 
 pub mod linalg;
 mod arraytraits;
@@ -556,12 +557,15 @@ impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
     #[inline]
-    fn into_base_iter(self) -> ElementsBase<'a, A, D> {
+    fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
-            ElementsBase { inner:
-                Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
-            }
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
         }
+    }
+
+    #[inline]
+    fn into_elements_base(self) -> ElementsBase<'a, A, D> {
+        ElementsBase { inner: self.into_base_iter() }
     }
 
     fn into_iter_(self) -> Elements<'a, A, D> {
@@ -570,7 +574,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
             if let Some(slc) = self.into_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
-                ElementsRepr::Counted(self.into_base_iter())
+                ElementsRepr::Counted(self.into_elements_base())
             }
         }
     }
@@ -591,12 +595,15 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     #[inline]
-    fn into_base_iter(self) -> ElementsBaseMut<'a, A, D> {
+    fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
-            ElementsBaseMut { inner:
-                Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
-            }
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
         }
+    }
+
+    #[inline]
+    fn into_elements_base(self) -> ElementsBaseMut<'a, A, D> {
+        ElementsBaseMut { inner: self.into_base_iter() }
     }
 
     fn into_iter_(self) -> ElementsMut<'a, A, D> {
@@ -608,7 +615,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
                     };
                     ElementsRepr::Slice(slc.iter_mut())
                 } else {
-                    ElementsRepr::Counted(self.into_base_iter())
+                    ElementsRepr::Counted(self.into_elements_base())
                 }
         }
     }
@@ -725,7 +732,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element type is `(D, &A)`.
     pub fn indexed_iter(&self) -> Indexed<A, D> {
-        Indexed(self.view().into_base_iter())
+        Indexed(self.view().into_elements_base())
     }
 
     /// Return an iterator of mutable references to the elements of the array.
@@ -744,7 +751,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {
-        IndexedMut(self.view_mut().into_base_iter())
+        IndexedMut(self.view_mut().into_elements_base())
     }
 
 
@@ -1019,6 +1026,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let mut it = self.view_mut();
         dimension::do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
         it.into_iter_()
+    }
+
+    pub fn outer_iter(&self) -> OuterIter<A, D> {
+        iterators::new_outer(self.view())
+    }
+
+    pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D>
+        where S: DataMut
+    {
+        iterators::new_outer_mut(self.view_mut())
     }
 
     // Return (length, stride) for diagonal
@@ -1410,7 +1427,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn assign_scalar(&mut self, x: &A)
         where S: DataMut, A: Clone,
     {
-        self.unordered_foreach_mut(|elt| *elt = x.clone());
+        self.unordered_foreach_mut(move |elt| *elt = x.clone());
     }
 
     /// Apply closure `f` to each element in the array, in whatever
@@ -1419,8 +1436,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               F: FnMut(&mut A)
     {
-        for elt in self.iter_mut() {
-            f(elt);
+        if let Some(slc) = self.as_slice_mut() {
+            for elt in slc {
+                f(elt);
+            }
+            return;
+        } 
+        for row in self.outer_iter_mut() {
+            for elt in row {
+                f(elt);
+            }
         }
     }
 
@@ -2172,4 +2197,3 @@ enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
 }
-
