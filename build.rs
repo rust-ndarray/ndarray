@@ -11,6 +11,7 @@ const DEPRECATED_CFG: &'static str = "has_deprecated";
 
 fn main() {
     let version = rustc_version::version_meta();
+    println!("cargo:rerun-if-changed=build.rs");
     if version.channel == Channel::Nightly {
         if let Some(ref date) = version.commit_date { 
             // parse year, month, day
