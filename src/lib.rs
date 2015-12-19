@@ -809,6 +809,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use `.slice_mut()`***
+    #[cfg_attr(has_deprecated, deprecated(note="use .slice_mut() instead"))]
     pub fn slice_iter_mut(&mut self, indexes: &D::SliceArg) -> ElementsMut<A, D>
         where S: DataMut,
     {
@@ -830,6 +831,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use .get(i)***
+    #[cfg_attr(has_deprecated, deprecated(note="use .get() instead"))]
     pub fn at(&self, index: D) -> Option<&A> {
         self.get(index)
     }
@@ -847,6 +849,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use .get_mut(i)***
+    #[cfg_attr(has_deprecated, deprecated(note="use .get_mut() instead"))]
     pub fn at_mut(&mut self, index: D) -> Option<&mut A>
         where S: DataMut,
     {
@@ -866,6 +869,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use `.uget()`***
+    #[cfg_attr(has_deprecated, deprecated(note="use .uget() instead"))]
     #[inline]
     pub unsafe fn uchk_at(&self, index: D) -> &A {
         self.uget(index)
@@ -888,6 +892,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use `.uget_mut()`***
+    #[cfg_attr(has_deprecated, deprecated(note="use .uget_mut() instead"))]
     #[inline]
     pub unsafe fn uchk_at_mut(&mut self, index: D) -> &mut A
         where S: DataMut
@@ -1005,7 +1010,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use `.subview_mut()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .subview_mut()"))]
+    #[cfg_attr(has_deprecated, deprecated(note="use .subview_mut() instead"))]
     pub fn sub_iter_mut(&mut self, axis: usize, index: Ix)
         -> ElementsMut<A, D>
         where S: DataMut,
@@ -1070,6 +1075,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use `.diag_mut()`***
+    #[cfg_attr(has_deprecated, deprecated(note="use .diag_mut() instead"))]
     pub fn diag_iter_mut(&mut self) -> ElementsMut<A, Ix>
         where S: DataMut,
     {
