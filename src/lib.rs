@@ -1510,7 +1510,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if broadcasting isn’t possible.
     #[inline]
-    pub fn zip_with_mut<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, f: F)
+    pub fn zip_with_mut<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
         where S: DataMut,
               S2: Data<Elem=B>,
               E: Dimension,
@@ -1518,6 +1518,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
             self.zip_with_mut_same_shape(rhs, f);
+        } else if rhs.dim.ndim() == 0 {
+            // Skip broadcast from 0-dim array
+            // FIXME: Order
+            unsafe {
+                let rhs_elem = &*rhs.ptr;
+                let f_ = &mut f;
+                self.unordered_foreach_mut(move |elt| f_(elt, rhs_elem));
+            }
         } else {
             let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
             self.zip_with_mut_outer_iter(&rhs_broadcast, f);
