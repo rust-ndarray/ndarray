@@ -9,7 +9,7 @@ extern crate rblas;
 #[cfg(feature = "rblas")]
 use rblas::matrix::Matrix;
 
-use ndarray::{Array, S, Si,
+use ndarray::{
     OwnedArray,
     zeros,
 };
@@ -78,7 +78,7 @@ fn bench_std_iter_2d(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_1d_large(bench: &mut test::Bencher)
 {
-    let a = Array::<i32, _>::zeros(64 * 64);
+    let a = OwnedArray::<i32, _>::zeros(64 * 64);
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
@@ -93,7 +93,7 @@ fn bench_std_iter_1d_large(bench: &mut test::Bencher)
 fn bench_std_iter_1d_raw_large(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
-    let a = Array::<i32, _>::zeros(64 * 64);
+    let a = OwnedArray::<i32, _>::zeros(64 * 64);
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
@@ -107,7 +107,7 @@ fn bench_std_iter_1d_raw_large(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_2d_large(bench: &mut test::Bencher)
 {
-    let a = Array::<i32, _>::zeros((64, 64));
+    let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
@@ -122,7 +122,7 @@ fn bench_std_iter_2d_large(bench: &mut test::Bencher)
 fn bench_std_iter_2d_raw_large(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
-    let a = Array::<i32, _>::zeros((64, 64));
+    let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
@@ -136,8 +136,8 @@ fn bench_std_iter_2d_raw_large(bench: &mut test::Bencher)
 #[bench]
 fn bench_std_iter_2d_cutout(bench: &mut test::Bencher)
 {
-    let a = Array::<i32, _>::zeros((66, 66));
-    let av = a.slice(s![1..-1, 1..-1]);
+    let a = OwnedArray::<i32, _>::zeros((66, 66));
+    let av = a.view().slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         let mut sum = 0;
@@ -174,7 +174,7 @@ fn assign_scalar_2d(bench: &mut test::Bencher)
 #[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
-    let a = Array::zeros((64, 64));
+    let a = OwnedArray::zeros((64, 64));
     let mut a = black_box(a);
     let s = black_box(3.);
     bench.iter(|| a.assign_scalar(&s))
@@ -183,7 +183,7 @@ fn assign_scalar_2d_large(bench: &mut test::Bencher)
 #[bench]
 fn assign_scalar_2d_transposed_large(bench: &mut test::Bencher)
 {
-    let mut a = Array::zeros((64, 64));
+    let mut a = OwnedArray::zeros((64, 64));
     a.swap_axes(0, 1);
     let mut a = black_box(a);
     let s = black_box(3.);
@@ -193,7 +193,7 @@ fn assign_scalar_2d_transposed_large(bench: &mut test::Bencher)
 #[bench]
 fn assign_scalar_2d_raw_large(bench: &mut test::Bencher)
 {
-    let a = Array::zeros((64, 64));
+    let a = OwnedArray::zeros((64, 64));
     let mut a = black_box(a);
     let s = black_box(3.);
     bench.iter(|| for elt in a.raw_data_mut() { *elt = s; });
@@ -202,14 +202,14 @@ fn assign_scalar_2d_raw_large(bench: &mut test::Bencher)
 #[bench]
 fn bench_iter_diag(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros((1024, 1024));
+    let a = OwnedArray::<f32, _>::zeros((1024, 1024));
     bench.iter(|| for elt in a.diag_iter() { black_box(elt); })
 }
 
 #[bench]
 fn bench_row_iter(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros((1024, 1024));
+    let a = OwnedArray::<f32, _>::zeros((1024, 1024));
     let it = a.row_iter(17);
     bench.iter(|| for elt in it.clone() { black_box(elt); })
 }
@@ -217,7 +217,7 @@ fn bench_row_iter(bench: &mut test::Bencher)
 #[bench]
 fn bench_col_iter(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros((1024, 1024));
+    let a = OwnedArray::<f32, _>::zeros((1024, 1024));
     let it = a.col_iter(17);
     bench.iter(|| for elt in it.clone() { black_box(elt); })
 }
@@ -297,7 +297,7 @@ fn lst_squares(bench: &mut test::Bencher)
 #[bench]
 fn bench_to_owned_n(bench: &mut test::Bencher)
 {
-    let mut a = zeros::<f32, _>((32, 32));
+    let a = zeros::<f32, _>((32, 32));
     bench.iter(|| a.to_owned());
 }
 
