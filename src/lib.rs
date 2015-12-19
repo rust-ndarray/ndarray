@@ -1348,10 +1348,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         })
     }
 
-    /// Act like a larger size and/or shape array by *broadcasting*
-    /// into a larger shape, if possible.
-    ///
-    /// Return `None` if shapes can not be broadcast together.
+    #[cfg_attr(has_deprecated, deprecated(note="use .broadcast() instead"))]
+    /// ***Deprecated: Use `.broadcast()` instead.***
     pub fn broadcast_iter<E>(&self, dim: E) -> Option<Elements<A, E>>
         where E: Dimension,
     {
@@ -1362,8 +1360,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     fn broadcast_iter_unwrap<E>(&self, dim: E) -> Elements<A, E>
         where E: Dimension,
     {
-        match self.broadcast_iter(dim.clone()) {
-            Some(it) => it,
+        match self.broadcast(dim.clone()) {
+            Some(it) => it.into_iter(),
             None => panic!("Could not broadcast array from shape: {:?} to: {:?}",
                            self.shape(), dim.slice())
         }
