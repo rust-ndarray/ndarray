@@ -103,6 +103,7 @@ fn main() {
         turn_on_corners(&mut a);
         //render(&a);
     }
+    render(&a);
     let alive = a.iter().filter(|&&x| x > 0).count();
     println!("After {} steps there are {} cells alive", steps, alive);
 }
