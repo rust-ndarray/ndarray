@@ -1802,6 +1802,21 @@ impl<A, S, D> ArrayBase<S, D>
         res
     }
 
+    /// Return the sum all elements in the array.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// assert_eq!(a.scalar_sum(), 10.);
+    /// ```
+    pub fn scalar_sum(&self) -> A
+        where A: Clone + Add<Output=A> + libnum::Zero,
+    {
+        self.fold(A::zero(), |acc, elt| acc + elt.clone())
+    }
+
     /// Return mean along `axis`.
     ///
     /// ```
