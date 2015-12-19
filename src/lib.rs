@@ -34,7 +34,7 @@
 //! - Performance status:
 //!   + Arithmetic involving contiguous c-order arrays and contiguous lowest
 //!     dimension arrays optimizes very well.
-//!   + `.fold()` and `.zip_with_mut()` are the most efficient ways to
+//!   + `.fold()` and `.zip_mut_with()` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
 //!   + Transposed arrays where the lowest dimension is not c-contiguous
 //!     is still a pain point.
@@ -1420,7 +1420,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               A: Clone,
               S2: Data<Elem=A>,
     {
-        self.zip_with_mut(rhs, |x, y| *x = y.clone());
+        self.zip_mut_with(rhs, |x, y| *x = y.clone());
     }
 
     /// Perform an elementwise assigment to `self` from scalar `x`.
@@ -1511,7 +1511,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if broadcasting isn’t possible.
     #[inline]
-    pub fn zip_with_mut<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+    pub fn zip_mut_with<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
         where S: DataMut,
               S2: Data<Elem=B>,
               E: Dimension,
@@ -2026,7 +2026,7 @@ macro_rules! impl_binary_op_inherent(
         where A: Clone + $trt<A, Output=A>,
               S2: Data<Elem=A>,
     {
-        self.zip_with_mut(rhs, |x, y| {
+        self.zip_mut_with(rhs, |x, y| {
             *x = x.clone().$mth(y.clone());
         });
     }
@@ -2104,7 +2104,7 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     fn $mth (mut self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        self.zip_with_mut(&rhs, |x, y| {
+        self.zip_mut_with(&rhs, |x, y| {
             *x = x.clone(). $mth (y.clone());
         });
         self
@@ -2224,7 +2224,7 @@ mod assign_ops {
               E: Dimension,
     {
         fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
-            self.zip_with_mut(rhs, |x, y| {
+            self.zip_mut_with(rhs, |x, y| {
                 x.$method(y.clone());
             });
         }

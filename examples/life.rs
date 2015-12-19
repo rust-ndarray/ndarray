@@ -57,7 +57,7 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
     {
         let mut zv = z.slice_mut(s![1..-1, 1..-1]);
 
-        zv.zip_with_mut(&neigh, |y, &n| {
+        zv.zip_mut_with(&neigh, |y, &n| {
             if n == 3 {
                 *y = 1;
             } else if n == 2 {

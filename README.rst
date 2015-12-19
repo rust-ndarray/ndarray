@@ -40,7 +40,7 @@ Status and Lookout
 
   + Arithmetic involving contiguous c-order arrays and contiguous lowest
     dimension arrays optimizes very well.
-  + `.fold()` and `.zip_with_mut()` are the most efficient ways to
+  + `.fold()` and `.zip_mut_with()` are the most efficient ways to
     perform single traversal and lock step traversal respectively.
   + Transposed arrays where the lowest dimension is not c-contiguous
     is still a pain point.
