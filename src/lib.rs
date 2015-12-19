@@ -1503,8 +1503,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Traverse two arrays in order, in lock step, calling the closure `f`
-    /// on each element pair.
+    // FIXME: Guarantee the order here or not?
+    /// Traverse two arrays in unspecified order, in lock step,
+    /// calling the closure `f` on each element pair.
     ///
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
