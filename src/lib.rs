@@ -1394,6 +1394,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data.slice();
+        if slc.is_empty() {
+            // special case for data-less views
+            return true;
+        }
         let ptr = slc.as_ptr() as *mut _;
         let end =  unsafe {
             ptr.offset(slc.len() as isize)
