@@ -12,8 +12,13 @@ description = "An N-dimensional array for elements of arbitrary type. Lightweigh
 
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 
+build = "build.rs"
+
 [lib]
 name = "ndarray"
+
+[build-dependencies]
+rustc_version = "0.1"
 
 [dependencies.num]
 version = "0.1"
@@ -28,7 +33,7 @@ version = "0.3"
 optional = true
 
 [dependencies]
-rblas = { version = "0.0.11", optional = true }
+rblas = { version = "0.0.12", optional = true }
 
 #[dependencies.serde]
 #version = "0.4"
@@ -38,5 +43,7 @@ rblas = { version = "0.0.11", optional = true }
 
 assign_ops = []
 
+[profile.release]
+debug = true
 [profile.bench]
 debug = true

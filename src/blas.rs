@@ -45,6 +45,8 @@
 //!
 extern crate rblas;
 
+use std::os::raw::{c_int, c_uint};
+
 use self::rblas::{
     Matrix,
     Vector,
@@ -81,7 +83,7 @@ impl<S, D> ArrayBase<S, D>
 {
     fn size_check(&self) -> Result<(), ShapeError> {
         for &dim in self.shape() {
-            if dim > (i32::max_value() as u32) {
+            if dim > (c_int::max_value() as c_uint) {
                 return Err(ShapeError::DimensionTooLarge(
                     self.shape().to_vec().into_boxed_slice()));
             }
@@ -140,7 +142,7 @@ pub trait AsBlas<A, S, D> {
     /// access to update the layout either way. Breaks sharing if the array is
     /// an `Array`.
     ///
-    /// **Errors:** Produces an error if any dimension is larger than `i32::MAX`.
+    /// **Errors:** Produces an error if any dimension is larger than `c_int::MAX`.
     fn blas_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
         where S: DataOwned + DataMut,
               A: Clone;
@@ -197,8 +199,8 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
 
 /*
 impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
-    fn len(&self) -> i32 {
-        self.0.len() as i32
+    fn len(&self) -> c_int {
+        self.0.len() as c_int
     }
 
     unsafe fn as_ptr(&self) -> *const A {
@@ -210,15 +212,15 @@ impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
     }
 
     // increment: stride
-    fn inc(&self) -> i32 {
-        self.0.strides as i32
+    fn inc(&self) -> c_int {
+        self.0.strides as c_int
     }
 }
 */
 
 impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
-    fn len(&self) -> i32 {
-        self.0.len() as i32
+    fn len(&self) -> c_int {
+        self.0.len() as c_int
     }
 
     unsafe fn as_ptr(&self) -> *const A {
@@ -230,45 +232,45 @@ impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
     }
 
     // increment: stride
-    fn inc(&self) -> i32 {
-        self.0.strides as i32
+    fn inc(&self) -> c_int {
+        self.0.strides as c_int
     }
 }
 
 /*
 impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
-    fn rows(&self) -> i32 {
-        self.0.dim().1 as i32
+    fn rows(&self) -> c_int {
+        self.0.dim().1 as c_int
     }
 
-    fn cols(&self) -> i32 {
-        self.0.dim().0 as i32
+    fn cols(&self) -> c_int {
+        self.0.dim().0 as c_int
     }
 
-    unsafe fn as_ptr(&self) -> *const A {
+    fn as_ptr(&self) -> *const A {
         self.0.ptr as *const _
     }
 
-    unsafe fn as_mut_ptr(&mut self) -> *mut A {
+    fn as_mut_ptr(&mut self) -> *mut A {
         panic!("BlasArrayView is not mutable");
     }
 }
 */
 
 impl<'a, A> Matrix<A> for BlasArrayViewMut<'a, A, (Ix, Ix)> {
-    fn rows(&self) -> i32 {
-        self.0.dim().1 as i32
+    fn rows(&self) -> c_int {
+        self.0.dim().1 as c_int
     }
 
-    fn cols(&self) -> i32 {
-        self.0.dim().0 as i32
+    fn cols(&self) -> c_int {
+        self.0.dim().0 as c_int
     }
 
-    unsafe fn as_ptr(&self) -> *const A {
+    fn as_ptr(&self) -> *const A {
         self.0.ptr as *const _
     }
 
-    unsafe fn as_mut_ptr(&mut self) -> *mut A {
+    fn as_mut_ptr(&mut self) -> *mut A {
         self.0.ptr
     }
 }
