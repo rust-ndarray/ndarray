@@ -265,6 +265,28 @@ fn add_2d_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    let b = OwnedArray::<i32, _>::zeros(64);
+    let bv = b.view();
+    bench.iter(|| {
+        let _x = black_box(a.view_mut() + bv);
+    });
+}
+
+#[bench]
+fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    let b = OwnedArray::<i32, _>::zeros(());
+    let bv = b.view();
+    bench.iter(|| {
+        let _x = black_box(a.view_mut() + bv);
+    });
+}
+
+#[bench]
 fn assign_scalar_2d_transposed(bench: &mut test::Bencher)
 {
     let mut a = arr2::<f32, _>(&[[1., 2., 2.],
