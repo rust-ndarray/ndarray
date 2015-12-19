@@ -76,7 +76,7 @@ fn small_iter_2d(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_1d_regular(bench: &mut test::Bencher)
+fn sum_1d_regular(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros(64 * 64);
     let a = black_box(a);
@@ -90,7 +90,7 @@ fn add_1d_regular(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_1d_raw(bench: &mut test::Bencher)
+fn sum_1d_raw(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
     let a = OwnedArray::<i32, _>::zeros(64 * 64);
@@ -105,7 +105,7 @@ fn add_1d_raw(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_regular(bench: &mut test::Bencher)
+fn sum_2d_regular(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
@@ -119,7 +119,7 @@ fn add_2d_regular(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_by_row(bench: &mut test::Bencher)
+fn sum_2d_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
@@ -135,7 +135,7 @@ fn add_2d_by_row(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_raw(bench: &mut test::Bencher)
+fn sum_2d_raw(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
     let a = OwnedArray::<i32, _>::zeros((64, 64));
@@ -150,7 +150,7 @@ fn add_2d_raw(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_cutout(bench: &mut test::Bencher)
+fn sum_2d_cutout(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.view().slice(s![1..-1, 1..-1]);
@@ -165,7 +165,7 @@ fn add_2d_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_cutout_fold(bench: &mut test::Bencher)
+fn sum_2d_cutout_fold(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.view().slice(s![1..-1, 1..-1]);
@@ -176,7 +176,7 @@ fn add_2d_cutout_fold(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_cutout_by_row(bench: &mut test::Bencher)
+fn sum_2d_cutout_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.view().slice(s![1..-1, 1..-1]);
@@ -193,7 +193,7 @@ fn add_2d_cutout_by_row(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_cutout_outer_iter(bench: &mut test::Bencher)
+fn sum_2d_cutout_outer_iter(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.view().slice(s![1..-1, 1..-1]);
@@ -210,7 +210,7 @@ fn add_2d_cutout_outer_iter(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_transpose_regular(bench: &mut test::Bencher)
+fn sum_2d_transpose_regular(bench: &mut test::Bencher)
 {
     let mut a = OwnedArray::<i32, _>::zeros((64, 64));
     a.swap_axes(0, 1);
@@ -225,7 +225,7 @@ fn add_2d_transpose_regular(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_transpose_by_row(bench: &mut test::Bencher)
+fn sum_2d_transpose_by_row(bench: &mut test::Bencher)
 {
     let mut a = OwnedArray::<i32, _>::zeros((64, 64));
     a.swap_axes(0, 1);
