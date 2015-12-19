@@ -1417,14 +1417,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               S2: Data<Elem=A>,
     {
         if self.shape() == rhs.shape() {
-            for (x, y) in self.iter_mut().zip(rhs.iter()) {
+            self.zip_with_mut(rhs, |x, y| {
                 *x = y.clone();
-            }
+            });
         } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter_mut().zip(other_iter) {
+            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            self.zip_with_mut(&rhs_broadcast, |x, y| {
                 *x = y.clone();
-            }
+            });
         }
     }
 
