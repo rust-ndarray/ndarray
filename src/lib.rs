@@ -62,6 +62,7 @@ extern crate num as libnum;
 
 use libnum::Float;
 
+use std::cmp;
 use std::mem;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -1455,6 +1456,48 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    fn zip_with_mut<S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+        where S: DataMut,
+              S2: Data<Elem=A>,
+              E: Dimension,
+              F: FnMut(&mut A, &A)
+    {
+        debug_assert_eq!(self.shape(), rhs.shape());
+        if let Some(self_s) = self.as_slice_mut() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                let len = cmp::min(self_s.len(), rhs_s.len());
+                let s = &mut self_s[..len];
+                let r = &rhs_s[..len];
+                for i in 0..len {
+                    f(&mut s[i], &r[i]);
+                }
+                return;
+            }
+        }
+        // otherwise, fall back to the outer iter
+        let mut try_slices = true;
+        let mut rows = self.outer_iter_mut().zip(rhs.outer_iter());
+        for (mut s_row, r_row) in &mut rows {
+            if try_slices {
+                if let Some(self_s) = s_row.as_slice_mut() {
+                    if let Some(rhs_s) = r_row.as_slice() {
+                        let len = cmp::min(self_s.len(), rhs_s.len());
+                        let s = &mut self_s[..len];
+                        let r = &rhs_s[..len];
+                        for i in 0..len {
+                            f(&mut s[i], &r[i]);
+                        }
+                        continue;
+                    }
+                }
+                try_slices = false;
+            }
+            for (y, x) in s_row.iter_mut().zip(r_row) {
+                f(y, x);
+            }
+        }
+    }
+
     /// Traverse the array elements in order and apply a fold,
     /// returning the resulting value.
     pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
@@ -1933,16 +1976,15 @@ macro_rules! impl_binary_op_inherent(
         where A: Clone + $trt<A, Output=A>,
               S2: Data<Elem=A>,
     {
-        if self.dim.ndim() == rhs.dim.ndim() &&
-            self.shape() == rhs.shape() {
-            for (x, y) in self.iter_mut().zip(rhs.iter()) {
-                *x = (x.clone()). $mth (y.clone());
-            }
+        if self.shape() == rhs.shape() {
+            self.zip_with_mut(rhs, |x, y| {
+                *x = x.clone(). $mth (y.clone());
+            });
         } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter_mut().zip(other_iter) {
-                *x = (x.clone()). $mth (y.clone());
-            }
+            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            self.zip_with_mut(&rhs_broadcast, |x, y| {
+                *x = x.clone(). $mth (y.clone());
+            });
         }
     }
 
@@ -2020,14 +2062,14 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
         if self.shape() == rhs.shape() {
-            for (x, y) in self.iter_mut().zip(rhs.iter()) {
+            self.zip_with_mut(&rhs, |x, y| {
                 *x = x.clone(). $mth (y.clone());
-            }
+            });
         } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter_mut().zip(other_iter) {
+            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            self.zip_with_mut(&rhs_broadcast, |x, y| {
                 *x = x.clone(). $mth (y.clone());
-            }
+            });
         }
         self
     }
@@ -2147,14 +2189,14 @@ mod assign_ops {
     {
         fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
             if self.shape() == rhs.shape() {
-                for (x, y) in self.iter_mut().zip(rhs.iter()) {
+                self.zip_with_mut(&rhs, |x, y| {
                     x.$method(y.clone());
-                }
+                });
             } else {
-                let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-                for (x, y) in self.iter_mut().zip(other_iter) {
+                let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+                self.zip_with_mut(&rhs_broadcast, |x, y| {
                     x.$method(y.clone());
-                }
+                });
             }
         }
     }
