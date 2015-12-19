@@ -1372,7 +1372,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
-    /// Array’s view.
+    /// Array’s view.<br>
+    /// **Note:** the slice may be empty.
     pub fn raw_data(&self) -> &[A] {
         self.data.slice()
     }
@@ -1381,7 +1382,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
-    /// array’s view.
+    /// Array’s view.<br>
+    /// **Note:** the slice may be empty.
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
