@@ -1416,16 +1416,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               A: Clone,
               S2: Data<Elem=A>,
     {
-        if self.shape() == rhs.shape() {
-            self.zip_with_mut(rhs, |x, y| {
-                *x = y.clone();
-            });
-        } else {
-            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
-            self.zip_with_mut(&rhs_broadcast, |x, y| {
-                *x = y.clone();
-            });
-        }
+        self.zip_with_mut(rhs, |x, y| *x = y.clone());
     }
 
     /// Perform an elementwise assigment to `self` from scalar `x`.
@@ -1454,11 +1445,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    fn zip_with_mut<S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+    fn zip_with_mut_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
         where S: DataMut,
-              S2: Data<Elem=A>,
+              S2: Data<Elem=B>,
               E: Dimension,
-              F: FnMut(&mut A, &A)
+              F: FnMut(&mut A, &B)
     {
         debug_assert_eq!(self.shape(), rhs.shape());
         if let Some(self_s) = self.as_slice_mut() {
@@ -1472,6 +1463,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 return;
             }
         }
+        // otherwise, fall back to the outer iter
+        self.zip_with_mut_outer_iter(rhs, f);
+    }
+
+    #[inline(always)]
+    fn zip_with_mut_outer_iter<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+        where S: DataMut,
+              S2: Data<Elem=B>,
+              E: Dimension,
+              F: FnMut(&mut A, &B)
+    {
+        debug_assert_eq!(self.shape(), rhs.shape());
         // otherwise, fall back to the outer iter
         let mut try_slices = true;
         let mut rows = self.outer_iter_mut().zip(rhs.outer_iter());
@@ -1493,6 +1496,27 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             for (y, x) in s_row.iter_mut().zip(r_row) {
                 f(y, x);
             }
+        }
+    }
+
+    /// Traverse two arrays in order, in lock step, calling the closure `f`
+    /// on each element pair.
+    ///
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+    ///
+    /// **Panics** if broadcasting isn’t possible.
+    #[inline]
+    pub fn zip_with_mut<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, f: F)
+        where S: DataMut,
+              S2: Data<Elem=B>,
+              E: Dimension,
+              F: FnMut(&mut A, &B)
+    {
+        if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
+            self.zip_with_mut_same_shape(rhs, f);
+        } else {
+            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            self.zip_with_mut_outer_iter(&rhs_broadcast, f);
         }
     }
 
@@ -1974,17 +1998,9 @@ macro_rules! impl_binary_op_inherent(
         where A: Clone + $trt<A, Output=A>,
               S2: Data<Elem=A>,
     {
-        if self.shape() == rhs.shape() {
-            self.zip_with_mut(rhs, |x, y| {
-                *x = x.clone(). $mth (y.clone());
-            });
-        } else {
-            // FIXME: Skip broadcast when E is zero dimensional
-            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
-            self.zip_with_mut(&rhs_broadcast, |x, y| {
-                *x = x.clone(). $mth (y.clone());
-            });
-        }
+        self.zip_with_mut(rhs, |x, y| {
+            *x = x.clone().$mth(y.clone());
+        });
     }
 
     /// Perform elementwise
@@ -2060,16 +2076,9 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     fn $mth (mut self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        if self.shape() == rhs.shape() {
-            self.zip_with_mut(&rhs, |x, y| {
-                *x = x.clone(). $mth (y.clone());
-            });
-        } else {
-            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
-            self.zip_with_mut(&rhs_broadcast, |x, y| {
-                *x = x.clone(). $mth (y.clone());
-            });
-        }
+        self.zip_with_mut(&rhs, |x, y| {
+            *x = x.clone(). $mth (y.clone());
+        });
         self
     }
 }
@@ -2187,16 +2196,9 @@ mod assign_ops {
               E: Dimension,
     {
         fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
-            if self.shape() == rhs.shape() {
-                self.zip_with_mut(&rhs, |x, y| {
-                    x.$method(y.clone());
-                });
-            } else {
-                let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
-                self.zip_with_mut(&rhs_broadcast, |x, y| {
-                    x.$method(y.clone());
-                });
-            }
+            self.zip_with_mut(rhs, |x, y| {
+                x.$method(y.clone());
+            });
         }
     }
 
