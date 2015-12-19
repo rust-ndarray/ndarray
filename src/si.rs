@@ -27,7 +27,7 @@ use super::{Ixs};
 ///
 /// `Si(a, None, -1)` is every element, from `a`
 /// until the end, in reverse order. Python equivalent is `[a::-1]`.
-/// Macro equivalent is `s![..;-1]`.
+/// Macro equivalent is `s![a..;-1]`.
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
 impl From<Range<Ixs>> for Si
