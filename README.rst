@@ -25,20 +25,26 @@ Highlights
   - ``ArrayView``, ``ArrayViewMut``:
     Lightweight array views.
 
-- General slicing, also with steps > 1, and negative indices to mean
+- Slicing, also with arbitrary step size, and negative indices to mean
   elements from the end of the axis.
-- Iteration and most operations are efficient on contiguous c-order arrays
+- Iteration and most operations are very efficient on contiguous c-order arrays
   (the default layout, without any transposition or discontiguous subslicing).
+  and on arrays where the lowest dimension is contiguous.
 - Array views can be used to slice and mutate any ``[T]`` data.
 
 Status and Lookout
 ------------------
 
 - Still iterating on the API
-- Focus is on being a generic N-dimensional container
-- Implements numpy striding and broadcasting
-- Arithmetic operations and numerics need a rethink. They are not very
-  well optimized.
+- Performance status:
+
+  + Arithmetic involving contiguous c-order arrays and contiguous lowest
+    dimension arrays optimizes very well.
+  + `.fold()` and `.zip_with_mut()` are the most efficient ways to
+    perform single traversal and lock step traversal respectively.
+  + Transposed arrays where the lowest dimension is not c-contiguous
+    is still a pain point.
+
 - There is experimental bridging to the linear algebra package ``rblas``.
 
 Crate Feature Flags
