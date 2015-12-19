@@ -1455,6 +1455,25 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Traverse the array elements in order and apply a fold,
+    /// returning the resulting value.
+    pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
+        where F: FnMut(B, &'a A) -> B, A: 'a
+    {
+        if let Some(slc) = self.as_slice() {
+            for elt in slc {
+                init = f(init, elt);
+            }
+            return init;
+        }
+        for row in self.outer_iter() {
+            for elt in row {
+                init = f(init, elt);
+            }
+        }
+        init
+    }
+
     /// Apply `f` elementwise and return a new array with
     /// the results.
     ///
