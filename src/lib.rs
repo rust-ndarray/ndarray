@@ -18,22 +18,26 @@
 //! ## Highlights
 //!
 //! - Generic N-dimensional array
-//! - General slicing, also with steps > 1, and negative indices to mean
+//! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
 //! - There is both an easy to use copy on write array (`Array`),
 //!   or a regular uniquely owned array (`OwnedArray`), and both can use
 //!   read-only and read-write array views.
-//! - Iteration and most operations are efficient on contiguous c-order arrays
-//!   (the default layout, without any transposition or discontiguous subslicing).
+//! - Iteration and most operations are very efficient on contiguous c-order arrays
+//!   (the default layout, without any transposition or discontiguous subslicing),
+//!   and on arrays where the lowest dimension is contiguous.
 //! - Array views can be used to slice and mutate any `[T]` data.
 //!
 //! ## Status and Lookout
 //!
 //! - Still iterating on the API
-//! - Focus is on being a generic N-dimensional container
-//! - Implements numpy striding and broadcasting
-//! - Arithmetic operations and numerics need a rethink. They are not very
-//!   well optimized.
+//! - Performance status:
+//!   + Arithmetic involving contiguous c-order arrays and contiguous lowest
+//!     dimension arrays optimizes very well.
+//!   + `.fold()` and `.zip_with_mut()` are the most efficient ways to
+//!     perform single traversal and lock step traversal respectively.
+//!   + Transposed arrays where the lowest dimension is not c-contiguous
+//!     is still a pain point.
 //! - There is experimental bridging to the linear algebra package `rblas`.
 //!
 //! ## Crate Feature Flags
@@ -62,6 +66,7 @@ extern crate num as libnum;
 
 use libnum::Float;
 
+use std::cmp;
 use std::mem;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
     BitAnd,
@@ -80,6 +85,7 @@ pub use si::{Si, S};
 
 use dimension::stride_offset;
 use iterators::Baseiter;
+use iterators::{OuterIter, OuterIterMut};
 
 pub mod linalg;
 mod arraytraits;
@@ -556,12 +562,15 @@ impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
     #[inline]
-    fn into_base_iter(self) -> ElementsBase<'a, A, D> {
+    fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
-            ElementsBase { inner:
-                Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
-            }
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
         }
+    }
+
+    #[inline]
+    fn into_elements_base(self) -> ElementsBase<'a, A, D> {
+        ElementsBase { inner: self.into_base_iter() }
     }
 
     fn into_iter_(self) -> Elements<'a, A, D> {
@@ -570,7 +579,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
             if let Some(slc) = self.into_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
-                ElementsRepr::Counted(self.into_base_iter())
+                ElementsRepr::Counted(self.into_elements_base())
             }
         }
     }
@@ -591,12 +600,15 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     #[inline]
-    fn into_base_iter(self) -> ElementsBaseMut<'a, A, D> {
+    fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
-            ElementsBaseMut { inner:
-                Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
-            }
+            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
         }
+    }
+
+    #[inline]
+    fn into_elements_base(self) -> ElementsBaseMut<'a, A, D> {
+        ElementsBaseMut { inner: self.into_base_iter() }
     }
 
     fn into_iter_(self) -> ElementsMut<'a, A, D> {
@@ -608,7 +620,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
                     };
                     ElementsRepr::Slice(slc.iter_mut())
                 } else {
-                    ElementsRepr::Counted(self.into_base_iter())
+                    ElementsRepr::Counted(self.into_elements_base())
                 }
         }
     }
@@ -725,7 +737,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element type is `(D, &A)`.
     pub fn indexed_iter(&self) -> Indexed<A, D> {
-        Indexed(self.elements_base())
+        Indexed(self.view().into_elements_base())
     }
 
     /// Return an iterator of mutable references to the elements of the array.
@@ -738,20 +750,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view_mut().into_iter_()
     }
 
-    fn iter_base_mut(&mut self) -> ElementsBaseMut<A, D>
-        where S: DataMut,
-    {
-        self.ensure_unique();
-        ElementsBaseMut { inner: self.base_iter() }
-    }
-
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is `(D, &mut A)`.
     pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {
-        IndexedMut(self.iter_base_mut())
+        IndexedMut(self.view_mut().into_elements_base())
     }
 
 
@@ -938,19 +943,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.strides.slice_mut().swap(ax, bx);
     }
 
-    /// Return a protoiterator
-    #[inline]
-    fn base_iter<'a>(&'a self) -> Baseiter<'a, A, D>
-    {
-        unsafe {
-            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
-        }
-    }
-
-    fn elements_base(&self) -> ElementsBase<A, D> {
-        ElementsBase { inner: self.base_iter() }
-    }
-
     /// Along `axis`, select the subview `index` and return an
     /// array with that axis removed.
     ///
@@ -1039,6 +1031,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let mut it = self.view_mut();
         dimension::do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
         it.into_iter_()
+    }
+
+    pub fn outer_iter(&self) -> OuterIter<A, D> {
+        iterators::new_outer(self.view())
+    }
+
+    pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D>
+        where S: DataMut
+    {
+        iterators::new_outer_mut(self.view_mut())
     }
 
     // Return (length, stride) for diagonal
@@ -1350,10 +1352,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         })
     }
 
-    /// Act like a larger size and/or shape array by *broadcasting*
-    /// into a larger shape, if possible.
-    ///
-    /// Return `None` if shapes can not be broadcast together.
+    #[cfg_attr(has_deprecated, deprecated(note="use .broadcast() instead"))]
+    /// ***Deprecated: Use `.broadcast()` instead.***
     pub fn broadcast_iter<E>(&self, dim: E) -> Option<Elements<A, E>>
         where E: Dimension,
     {
@@ -1364,8 +1364,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     fn broadcast_iter_unwrap<E>(&self, dim: E) -> Elements<A, E>
         where E: Dimension,
     {
-        match self.broadcast_iter(dim.clone()) {
-            Some(it) => it,
+        match self.broadcast(dim.clone()) {
+            Some(it) => it.into_iter(),
             None => panic!("Could not broadcast array from shape: {:?} to: {:?}",
                            self.shape(), dim.slice())
         }
@@ -1375,7 +1375,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
-    /// Array’s view.
+    /// Array’s view.<br>
+    /// **Note:** the slice may be empty.
     pub fn raw_data(&self) -> &[A] {
         self.data.slice()
     }
@@ -1384,7 +1385,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
-    /// array’s view.
+    /// Array’s view.<br>
+    /// **Note:** the slice may be empty.
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
@@ -1397,6 +1399,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data.slice();
+        if slc.is_empty() {
+            // special case for data-less views
+            return true;
+        }
         let ptr = slc.as_ptr() as *mut _;
         let end =  unsafe {
             ptr.offset(slc.len() as isize)
@@ -1414,23 +1420,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               A: Clone,
               S2: Data<Elem=A>,
     {
-        if self.shape() == rhs.shape() {
-            for (x, y) in self.iter_mut().zip(rhs.iter()) {
-                *x = y.clone();
-            }
-        } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter_mut().zip(other_iter) {
-                *x = y.clone();
-            }
-        }
+        self.zip_with_mut(rhs, |x, y| *x = y.clone());
     }
 
     /// Perform an elementwise assigment to `self` from scalar `x`.
     pub fn assign_scalar(&mut self, x: &A)
         where S: DataMut, A: Clone,
     {
-        self.unordered_foreach_mut(|elt| *elt = x.clone());
+        self.unordered_foreach_mut(move |elt| *elt = x.clone());
     }
 
     /// Apply closure `f` to each element in the array, in whatever
@@ -1439,9 +1436,120 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               F: FnMut(&mut A)
     {
-        for elt in self.iter_mut() {
-            f(elt);
+        if let Some(slc) = self.as_slice_mut() {
+            for elt in slc {
+                f(elt);
+            }
+            return;
+        } 
+        for row in self.outer_iter_mut() {
+            for elt in row {
+                f(elt);
+            }
         }
+    }
+
+    fn zip_with_mut_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+        where S: DataMut,
+              S2: Data<Elem=B>,
+              E: Dimension,
+              F: FnMut(&mut A, &B)
+    {
+        debug_assert_eq!(self.shape(), rhs.shape());
+        if let Some(self_s) = self.as_slice_mut() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                let len = cmp::min(self_s.len(), rhs_s.len());
+                let s = &mut self_s[..len];
+                let r = &rhs_s[..len];
+                for i in 0..len {
+                    f(&mut s[i], &r[i]);
+                }
+                return;
+            }
+        }
+        // otherwise, fall back to the outer iter
+        self.zip_with_mut_outer_iter(rhs, f);
+    }
+
+    #[inline(always)]
+    fn zip_with_mut_outer_iter<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+        where S: DataMut,
+              S2: Data<Elem=B>,
+              E: Dimension,
+              F: FnMut(&mut A, &B)
+    {
+        debug_assert_eq!(self.shape(), rhs.shape());
+        // otherwise, fall back to the outer iter
+        let mut try_slices = true;
+        let mut rows = self.outer_iter_mut().zip(rhs.outer_iter());
+        for (mut s_row, r_row) in &mut rows {
+            if try_slices {
+                if let Some(self_s) = s_row.as_slice_mut() {
+                    if let Some(rhs_s) = r_row.as_slice() {
+                        let len = cmp::min(self_s.len(), rhs_s.len());
+                        let s = &mut self_s[..len];
+                        let r = &rhs_s[..len];
+                        for i in 0..len {
+                            f(&mut s[i], &r[i]);
+                        }
+                        continue;
+                    }
+                }
+                try_slices = false;
+            }
+            for (y, x) in s_row.iter_mut().zip(r_row) {
+                f(y, x);
+            }
+        }
+    }
+
+    // FIXME: Guarantee the order here or not?
+    /// Traverse two arrays in unspecified order, in lock step,
+    /// calling the closure `f` on each element pair.
+    ///
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+    ///
+    /// **Panics** if broadcasting isn’t possible.
+    #[inline]
+    pub fn zip_with_mut<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+        where S: DataMut,
+              S2: Data<Elem=B>,
+              E: Dimension,
+              F: FnMut(&mut A, &B)
+    {
+        if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
+            self.zip_with_mut_same_shape(rhs, f);
+        } else if rhs.dim.ndim() == 0 {
+            // Skip broadcast from 0-dim array
+            // FIXME: Order
+            unsafe {
+                let rhs_elem = &*rhs.ptr;
+                let f_ = &mut f;
+                self.unordered_foreach_mut(move |elt| f_(elt, rhs_elem));
+            }
+        } else {
+            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            self.zip_with_mut_outer_iter(&rhs_broadcast, f);
+        }
+    }
+
+    /// Traverse the array elements in order and apply a fold,
+    /// returning the resulting value.
+    pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
+        where F: FnMut(B, &'a A) -> B, A: 'a
+    {
+        if let Some(slc) = self.as_slice() {
+            for elt in slc {
+                init = f(init, elt);
+            }
+            return init;
+        }
+        for row in self.outer_iter() {
+            for elt in row {
+                init = f(init, elt);
+            }
+        }
+        init
     }
 
     /// Apply `f` elementwise and return a new array with
@@ -1707,6 +1815,21 @@ impl<A, S, D> ArrayBase<S, D>
         res
     }
 
+    /// Return the sum all elements in the array.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// assert_eq!(a.scalar_sum(), 10.);
+    /// ```
+    pub fn scalar_sum(&self) -> A
+        where A: Clone + Add<Output=A> + libnum::Zero,
+    {
+        self.fold(A::zero(), |acc, elt| acc + elt.clone())
+    }
+
     /// Return mean along `axis`.
     ///
     /// ```
@@ -1903,17 +2026,9 @@ macro_rules! impl_binary_op_inherent(
         where A: Clone + $trt<A, Output=A>,
               S2: Data<Elem=A>,
     {
-        if self.dim.ndim() == rhs.dim.ndim() &&
-            self.shape() == rhs.shape() {
-            for (x, y) in self.iter_mut().zip(rhs.iter()) {
-                *x = (x.clone()). $mth (y.clone());
-            }
-        } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter_mut().zip(other_iter) {
-                *x = (x.clone()). $mth (y.clone());
-            }
-        }
+        self.zip_with_mut(rhs, |x, y| {
+            *x = x.clone().$mth(y.clone());
+        });
     }
 
     /// Perform elementwise
@@ -1989,16 +2104,9 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     fn $mth (mut self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        if self.shape() == rhs.shape() {
-            for (x, y) in self.iter_mut().zip(rhs.iter()) {
-                *x = x.clone(). $mth (y.clone());
-            }
-        } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter_mut().zip(other_iter) {
-                *x = x.clone(). $mth (y.clone());
-            }
-        }
+        self.zip_with_mut(&rhs, |x, y| {
+            *x = x.clone(). $mth (y.clone());
+        });
         self
     }
 }
@@ -2116,16 +2224,9 @@ mod assign_ops {
               E: Dimension,
     {
         fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
-            if self.shape() == rhs.shape() {
-                for (x, y) in self.iter_mut().zip(rhs.iter()) {
-                    x.$method(y.clone());
-                }
-            } else {
-                let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-                for (x, y) in self.iter_mut().zip(other_iter) {
-                    x.$method(y.clone());
-                }
-            }
+            self.zip_with_mut(rhs, |x, y| {
+                x.$method(y.clone());
+            });
         }
     }
 
@@ -2192,4 +2293,3 @@ enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
 }
-

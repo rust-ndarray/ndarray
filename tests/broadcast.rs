@@ -10,23 +10,23 @@ fn broadcast_1()
     let b_dim = (2, 1, 2, 1);
     let a = Array::linspace(0., 1., a_dim.size()).reshape(a_dim);
     let b = Array::linspace(0., 1., b_dim.size()).reshape(b_dim);
-    assert!(b.broadcast_iter(a.dim()).is_some());
+    assert!(b.broadcast(a.dim()).is_some());
 
     let c_dim = (2, 1);
     let c = Array::linspace(0., 1., c_dim.size()).reshape(c_dim);
-    assert!(c.broadcast_iter(1).is_none());
-    assert!(c.broadcast_iter(()).is_none());
-    assert!(c.broadcast_iter((2, 1)).is_some());
-    assert!(c.broadcast_iter((2, 2)).is_some());
-    assert!(c.broadcast_iter((32, 2, 1)).is_some());
-    assert!(c.broadcast_iter((32, 1, 2)).is_none());
+    assert!(c.broadcast(1).is_none());
+    assert!(c.broadcast(()).is_none());
+    assert!(c.broadcast((2, 1)).is_some());
+    assert!(c.broadcast((2, 2)).is_some());
+    assert!(c.broadcast((32, 2, 1)).is_some());
+    assert!(c.broadcast((32, 1, 2)).is_none());
 
     /* () can be broadcast to anything */
     let z = Array::<f32,_>::zeros(());
-    assert!(z.broadcast_iter(()).is_some());
-    assert!(z.broadcast_iter(1).is_some());
-    assert!(z.broadcast_iter(3).is_some());
-    assert!(z.broadcast_iter((7,2,9)).is_some());
+    assert!(z.broadcast(()).is_some());
+    assert!(z.broadcast(1).is_some());
+    assert!(z.broadcast(3).is_some());
+    assert!(z.broadcast((7,2,9)).is_some());
 }
 
 #[test]

@@ -57,19 +57,14 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
     {
         let mut zv = z.slice_mut(s![1..-1, 1..-1]);
 
-        for row in 0..zv.shape()[0] {
-            let row = row as Ix;
-            for (i, &n) in neigh.row_iter(row).enumerate() {
-                let i = i as Ix;
-                if n == 3 {
-                    zv[(row, i)] = 1;
-                } else if n == 2 {
-                    /* survive */
-                } else {
-                    zv[(row, i)] = 0;
-                }
+        zv.zip_with_mut(&neigh, |y, &n| {
+            if n == 3 {
+                *y = 1;
+            } else if n == 2 {
+            } else {
+                *y = 0;
             }
-        }
+        });
     }
 }
 

@@ -8,6 +8,7 @@ use ndarray::{Array, S, Si,
     OwnedArray,
 };
 use ndarray::{arr0, arr1, arr2,
+    aview0,
     aview1,
     aview2,
     aview_mut1,
@@ -288,6 +289,7 @@ fn sum_mean()
     assert_eq!(a.mean(1), arr1(&[1.5, 3.5]));
     assert_eq!(a.sum(1).sum(0), arr0(10.));
     assert_eq!(a.view().mean(1), aview1(&[1.5, 3.5]));
+    assert_eq!(a.scalar_sum(), 10.);
 }
 
 #[test]
@@ -531,4 +533,22 @@ fn reshape_error2() {
     let mut u = v.into_shape((4, 2)).unwrap();
     u.swap_axes(0, 1);
     let _s = u.into_shape((2, 4)).unwrap();
+}
+
+#[test]
+fn arithmetic_broadcast() {
+    let mut a = arr2(&[[1., 2.], [3., 4.]]);
+    let b = a.clone() * aview0(&1.);
+    assert_eq!(a, b);
+    a.swap_axes(0, 1);
+    let b = a.clone() / aview0(&1.);
+    assert_eq!(a, b);
+}
+
+#[test]
+fn char_array()
+{
+    // test compilation & basics of non-numerical array
+    let cc = Array::from_iter("alphabet".chars()).reshape((4, 2));
+    assert!(cc.subview(1, 0) == Array::from_iter("apae".chars()));
 }
