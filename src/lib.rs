@@ -1979,6 +1979,7 @@ macro_rules! impl_binary_op_inherent(
                 *x = x.clone(). $mth (y.clone());
             });
         } else {
+            // FIXME: Skip broadcast when E is zero dimensional
             let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
             self.zip_with_mut(&rhs_broadcast, |x, y| {
                 *x = x.clone(). $mth (y.clone());
