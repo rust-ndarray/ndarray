@@ -38,5 +38,7 @@ rblas = { version = "0.0.11", optional = true }
 
 assign_ops = []
 
+[profile.release]
+debug = true
 [profile.bench]
 debug = true

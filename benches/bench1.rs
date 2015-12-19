@@ -2,6 +2,7 @@
 #![allow(unused_imports)]
 
 extern crate test;
+#[macro_use(s)]
 extern crate ndarray;
 #[cfg(feature = "rblas")]
 extern crate rblas;
@@ -126,6 +127,21 @@ fn bench_std_iter_2d_raw_large(bench: &mut test::Bencher)
     bench.iter(|| {
         let mut sum = 0;
         for &elt in a.raw_data() {
+            sum += elt;
+        }
+        sum
+    });
+}
+
+#[bench]
+fn bench_std_iter_2d_cutout(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((66, 66));
+    let av = a.slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.iter() {
             sum += elt;
         }
         sum
