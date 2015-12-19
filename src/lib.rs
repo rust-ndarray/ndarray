@@ -725,7 +725,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element type is `(D, &A)`.
     pub fn indexed_iter(&self) -> Indexed<A, D> {
-        Indexed(self.elements_base())
+        Indexed(self.view().into_base_iter())
     }
 
     /// Return an iterator of mutable references to the elements of the array.
@@ -738,20 +738,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view_mut().into_iter_()
     }
 
-    fn iter_base_mut(&mut self) -> ElementsBaseMut<A, D>
-        where S: DataMut,
-    {
-        self.ensure_unique();
-        ElementsBaseMut { inner: self.base_iter() }
-    }
-
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is `(D, &mut A)`.
     pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {
-        IndexedMut(self.iter_base_mut())
+        IndexedMut(self.view_mut().into_base_iter())
     }
 
 
@@ -936,19 +929,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         self.dim.slice_mut().swap(ax, bx);
         self.strides.slice_mut().swap(ax, bx);
-    }
-
-    /// Return a protoiterator
-    #[inline]
-    fn base_iter<'a>(&'a self) -> Baseiter<'a, A, D>
-    {
-        unsafe {
-            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
-        }
-    }
-
-    fn elements_base(&self) -> ElementsBase<A, D> {
-        ElementsBase { inner: self.base_iter() }
     }
 
     /// Along `axis`, select the subview `index` and return an
