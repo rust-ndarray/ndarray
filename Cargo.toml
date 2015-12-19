@@ -33,7 +33,7 @@ version = "0.3"
 optional = true
 
 [dependencies]
-rblas = { version = "0.0.12", optional = true }
+rblas = { version = "0.0.13", optional = true }
 
 #[dependencies.serde]
 #version = "0.4"
