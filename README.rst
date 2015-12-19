@@ -78,6 +78,11 @@ Recent Changes
 - **Note:** At some point in a future release, the indexing type ``Ix`` will
   change to ``usize``
 
+- 0.2.0-alpha.6
+
+  - Add ``#[deprecated]`` attributes (enabled with new enough nightly)
+  - Add ``ArrayBase::linspace``, deprecate constructor ``range``.
+
 - 0.2.0-alpha.5
 
   - Add ``s![...]``, a slice argument macro.
