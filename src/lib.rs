@@ -1,5 +1,6 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
+#![cfg_attr(has_deprecated, feature(deprecated))]
 
 //! The `ndarray` crate provides an N-dimensional container similar to numpy’s
 //! ndarray.
@@ -1004,6 +1005,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// ***Deprecated: use `.subview_mut()`***
+    #[cfg_attr(has_deprecated, deprecated(note="use .subview_mut()"))]
     pub fn sub_iter_mut(&mut self, axis: usize, index: Ix)
         -> ElementsMut<A, D>
         where S: DataMut,

@@ -12,8 +12,13 @@ description = "An N-dimensional array for elements of arbitrary type. Lightweigh
 
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 
+build = "build.rs"
+
 [lib]
 name = "ndarray"
+
+[build-dependencies]
+rustc_version = "0.1"
 
 [dependencies.num]
 version = "0.1"
