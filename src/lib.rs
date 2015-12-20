@@ -85,7 +85,10 @@ pub use si::{Si, S};
 
 use dimension::stride_offset;
 use iterators::Baseiter;
-use iterators::{InnerIter, InnerIterMut};
+pub use iterators::{
+    InnerIter,
+    InnerIterMut,
+};
 
 pub mod linalg;
 mod arraytraits;
@@ -1033,10 +1036,29 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         it.into_iter_()
     }
 
+    /// Return an iterator that traverses over all dimensions but the innermost,
+    /// and yields each inner row.
+    ///
+    /// Iterator element is `ArrayView<A, Ix>` (1D array view).
+    ///
+    /// ```
+    /// use ndarray::arr3;
+    /// let a = arr3(&[[[ 0,  1,  2],    // -- row 0, 0
+    ///                 [ 3,  4,  5]],   // -- row 0, 1
+    ///                [[ 6,  7,  8],    // -- row 1, 0
+    ///                 [ 9, 10, 11]]]); // -- row 1, 1
+    /// // `inner_iter` yields the four inner rows of the 3D array.
+    /// let mut row_sums = a.inner_iter().map(|v| v.scalar_sum());
+    /// assert_eq!(row_sums.collect::<Vec<_>>(), vec![3, 12, 21, 30]);
+    /// ```
     pub fn inner_iter(&self) -> InnerIter<A, D> {
         iterators::new_outer(self.view())
     }
 
+    /// Return an iterator that traverses over all dimensions but the innermost,
+    /// and yields each inner row.
+    ///
+    /// Iterator element is `ArrayViewView<A, Ix>` (1D read-write array view).
     pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
         where S: DataMut
     {
