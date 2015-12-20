@@ -2153,20 +2153,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
     fn $mth (self, rhs: &'a ArrayBase<S2, E>) -> OwnedArray<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        let mut result = Vec::<A>::with_capacity(self.dim.size());
-        if self.shape() == rhs.shape() {
-            for (x, y) in self.iter().zip(rhs.iter()) {
-                result.push((x.clone()). $mth (y.clone()));
-            }
-        } else {
-            let other_iter = rhs.broadcast_iter_unwrap(self.dim());
-            for (x, y) in self.iter().zip(other_iter) {
-                result.push((x.clone()). $mth (y.clone()));
-            }
-        }
-        unsafe {
-            ArrayBase::from_vec_dim(self.dim.clone(), result)
-        }
+        self.to_owned().$mth(rhs.view())
     }
 }
     );
