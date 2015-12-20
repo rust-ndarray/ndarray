@@ -74,13 +74,13 @@ Crate Feature Flags
 .. |build_status| image:: https://travis-ci.org/bluss/rust-ndarray.svg?branch=master
 .. _build_status: https://travis-ci.org/bluss/rust-ndarray
 
-.. |crates| image:: http://meritbadge.herokuapp.com/rendarray
-.. _crates: https://crates.io/crates/rendarray
+.. |crates| image:: http://meritbadge.herokuapp.com/ndarray
+.. _crates: https://crates.io/crates/ndarray
 
 How to use with cargo::
 
     [dependencies]
-    rendarray = "0.2"
+    ndarray = "0.2"
 
 Recent Changes
 --------------

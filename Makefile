@@ -12,11 +12,11 @@ docs: mkdocs subst $(RMDOCS)
 # https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
 $(VERSIONS): Cargo.toml
 	mkdir -p $(@D)
-	cargo pkgid rendarray | sed -e "s/.*#\(\|.*:\)//" > "$@"
+	cargo pkgid ndarray | sed -e "s/.*#\(\|.*:\)//" > "$@"
 
 $(DOCCRATES): %: target/VERS/%
 	# Put in the crate version into the docs
-	find ./doc/$@ -name "*.html" -exec sed -i -e "s/<title>\(.*\) - Rust/<title>rendarray $(shell cat $<) - \1 - Rust/g" {} \;
+	find ./doc/$@ -name "*.html" -exec sed -i -e "s/<title>\(.*\) - Rust/<title>ndarray $(shell cat $<) - \1 - Rust/g" {} \;
 
 subst: $(DOCCRATES)
 

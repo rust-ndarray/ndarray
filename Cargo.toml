@@ -1,6 +1,6 @@
 [package]
 
-name = "rendarray"
+name = "ndarray"
 version = "0.2.0-alpha.8"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
