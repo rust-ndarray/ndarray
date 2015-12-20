@@ -1382,17 +1382,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.broadcast(dim).map(|v| v.into_iter_())
     }
 
-    #[inline(never)]
-    fn broadcast_iter_unwrap<E>(&self, dim: E) -> Elements<A, E>
-        where E: Dimension,
-    {
-        match self.broadcast(dim.clone()) {
-            Some(it) => it.into_iter(),
-            None => panic!("Could not broadcast array from shape: {:?} to: {:?}",
-                           self.shape(), dim.slice())
-        }
-    }
-
     /// Return a slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
