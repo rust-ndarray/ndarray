@@ -169,6 +169,7 @@ pub trait AsBlas<A, S, D> {
         */
 }
 
+/// ***Requires `features = "rblas"`***
 impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
     where S: Data<Elem=A>,
           D: Dimension,
