@@ -85,7 +85,7 @@ pub use si::{Si, S};
 
 use dimension::stride_offset;
 use iterators::Baseiter;
-use iterators::{OuterIter, OuterIterMut};
+use iterators::{InnerIter, InnerIterMut};
 
 pub mod linalg;
 mod arraytraits;
@@ -1033,11 +1033,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         it.into_iter_()
     }
 
-    pub fn outer_iter(&self) -> OuterIter<A, D> {
+    pub fn inner_iter(&self) -> InnerIter<A, D> {
         iterators::new_outer(self.view())
     }
 
-    pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D>
+    pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
         where S: DataMut
     {
         iterators::new_outer_mut(self.view_mut())
@@ -1442,7 +1442,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
             return;
         } 
-        for row in self.outer_iter_mut() {
+        for row in self.inner_iter_mut() {
             for elt in row {
                 f(elt);
             }
@@ -1481,7 +1481,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         debug_assert_eq!(self.shape(), rhs.shape());
         // otherwise, fall back to the outer iter
         let mut try_slices = true;
-        let mut rows = self.outer_iter_mut().zip(rhs.outer_iter());
+        let mut rows = self.inner_iter_mut().zip(rhs.inner_iter());
         for (mut s_row, r_row) in &mut rows {
             if try_slices {
                 if let Some(self_s) = s_row.as_slice_mut() {
@@ -1497,6 +1497,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
                 try_slices = false;
             }
+            // FIXME: Regular .zip() is slow
             for (y, x) in s_row.iter_mut().zip(r_row) {
                 f(y, x);
             }
@@ -1544,7 +1545,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
             return init;
         }
-        for row in self.outer_iter() {
+        for row in self.inner_iter() {
             for elt in row {
                 init = f(init, elt);
             }

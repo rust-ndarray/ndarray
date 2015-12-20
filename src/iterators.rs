@@ -311,17 +311,17 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D>
     }
 }
 
-pub struct OuterIter<'a, A: 'a, D> {
+pub struct InnerIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
 }
 
-pub fn new_outer<A, D>(mut v: ArrayView<A, D>) -> OuterIter<A, D>
+pub fn new_outer<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
     where D: Dimension,
 {
     if v.shape().len() == 0 {
-        OuterIter {
+        InnerIter {
             inner_len: 1,
             inner_stride: 1,
             iter: v.into_base_iter(),
@@ -332,7 +332,7 @@ pub fn new_outer<A, D>(mut v: ArrayView<A, D>) -> OuterIter<A, D>
         let len = v.shape()[ndim - 1];
         let stride = v.strides()[ndim - 1];
         v.dim.slice_mut()[ndim - 1] = 1;
-        OuterIter {
+        InnerIter {
             inner_len: len,
             inner_stride: stride,
             iter: v.into_base_iter(),
@@ -340,7 +340,7 @@ pub fn new_outer<A, D>(mut v: ArrayView<A, D>) -> OuterIter<A, D>
     }
 }
 
-impl<'a, A, D> Iterator for OuterIter<'a, A, D>
+impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     where D: Dimension,
 {
     type Item = ArrayView<'a, A, Ix>;
@@ -357,17 +357,20 @@ impl<'a, A, D> Iterator for OuterIter<'a, A, D>
     }
 }
 
-pub struct OuterIterMut<'a, A: 'a, D> {
+// NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
+// pointers. Due to this we use an empty slice for the raw data (it's unused
+// anyway).
+pub struct InnerIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
 }
 
-pub fn new_outer_mut<A, D>(mut v: ArrayViewMut<A, D>) -> OuterIterMut<A, D>
+pub fn new_outer_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
     where D: Dimension,
 {
     if v.shape().len() == 0 {
-        OuterIterMut {
+        InnerIterMut {
             inner_len: 1,
             inner_stride: 1,
             iter: v.into_base_iter(),
@@ -378,7 +381,7 @@ pub fn new_outer_mut<A, D>(mut v: ArrayViewMut<A, D>) -> OuterIterMut<A, D>
         let len = v.shape()[ndim - 1];
         let stride = v.strides()[ndim - 1];
         v.dim.slice_mut()[ndim - 1] = 1;
-        OuterIterMut {
+        InnerIterMut {
             inner_len: len,
             inner_stride: stride,
             iter: v.into_base_iter(),
@@ -386,7 +389,7 @@ pub fn new_outer_mut<A, D>(mut v: ArrayViewMut<A, D>) -> OuterIterMut<A, D>
     }
 }
 
-impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
+impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     where D: Dimension,
 {
     type Item = ArrayViewMut<'a, A, Ix>;
