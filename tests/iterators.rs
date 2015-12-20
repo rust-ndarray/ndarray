@@ -7,6 +7,7 @@ use ndarray::{
     ArrayBase,
     Data,
     Dimension,
+    aview1,
 };
 
 use itertools::assert_equal;
@@ -102,13 +103,27 @@ fn inner_iter() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.inner_iter().map(|v| v.iter().cloned().collect::<Vec<_>>()),
-                 vec![vec![0, 1], vec![2, 3], vec![4, 5],
-                      vec![6, 7], vec![8, 9], vec![10, 11]]);
+    assert_equal(a.inner_iter(),
+                 vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
+                      aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
     let mut b = Array::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
-    assert_equal(b.inner_iter().map(|v| v.iter().cloned().collect::<Vec<_>>()),
-                 vec![vec![0, 1], vec![2, 3], vec![4, 5],
-                      vec![6, 7], vec![8, 9], vec![10, 11]]);
+    assert_equal(b.inner_iter(),
+                 vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
+                      aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
+}
+
+#[test]
+fn inner_iter_corner_cases() {
+    let a0 = Array::zeros(());
+    assert_equal(a0.inner_iter(), vec![aview1(&[0])]);
+
+    let a2 = Array::<i32, _>::zeros((0, 3));
+    assert_equal(a2.inner_iter(),
+                 vec![aview1(&[]); 0]);
+
+    let a2 = Array::<i32, _>::zeros((3, 0));
+    assert_equal(a2.inner_iter(),
+                 vec![aview1(&[]); 3]);
 }
