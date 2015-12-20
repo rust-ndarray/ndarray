@@ -84,6 +84,18 @@ Recent Changes
 - **Note:** At some point in a future release, the indexing type ``Ix`` will
   change to ``usize``
 
+- 0.2.0-alpha.7
+
+  - Optimized arithmetic operations!
+
+    - For c-contiguous arrays or arrays with c-contiguous lowest dimension
+      they optimize very well, and can vectorize!
+
+  - Add ``.inner_iter()``, ``.inner_iter_mut()``
+  - Add ``.fold()``, ``.zip_mut_with()``
+  - Add ``.scalar_sum()``
+  - Add example ``examples/life.rs``
+
 - 0.2.0-alpha.6
 
   - Add ``#[deprecated]`` attributes (enabled with new enough nightly)
