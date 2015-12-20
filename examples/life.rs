@@ -54,18 +54,12 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
 
     // birth where n = 3 and z[i] = 0,
     // survive where n = 2 || n = 3 and z[i] = 1
-    {
-        let mut zv = z.slice_mut(s![1..-1, 1..-1]);
+    let mut zv = z.slice_mut(s![1..-1, 1..-1]);
 
-        zv.zip_mut_with(&neigh, |y, &n| {
-            if n == 3 {
-                *y = 1;
-            } else if n == 2 {
-            } else {
-                *y = 0;
-            }
-        });
-    }
+    // this is autovectorized amazingly well!
+    zv.zip_mut_with(&neigh, |y, &n| {
+        *y = ((n == 3) || (n == 2 && *y > 0)) as u8
+    });
 }
 
 fn turn_on_corners(z: &mut Board) {
