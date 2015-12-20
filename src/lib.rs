@@ -1255,6 +1255,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// elements is accepted, but the source array or view must be
     /// contiguous, otherwise we cannot rearrange the dimension.
     ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    /// **Errors** if the input array is not c-contiguous (this will be
+    /// slightly improved in the future).
+    ///
     /// ```
     /// use ndarray::{aview1, aview2};
     ///
