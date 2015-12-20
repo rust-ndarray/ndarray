@@ -1838,7 +1838,7 @@ impl<A, S, D> ArrayBase<S, D>
         res
     }
 
-    /// Return the sum all elements in the array.
+    /// Return the sum of all elements in the array.
     ///
     /// ```
     /// use ndarray::arr2;
