@@ -498,3 +498,13 @@ fn bench_to_owned_t(bench: &mut test::Bencher)
     a.swap_axes(0, 1);
     bench.iter(|| a.to_owned());
 }
+
+#[bench]
+fn equality(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = black_box(a.view());
+    let b = black_box(b.view());
+    bench.iter(|| a == b);
+}
