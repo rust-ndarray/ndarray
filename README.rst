@@ -1,5 +1,9 @@
-rendarray
+ndarray
 =========
+
+- **Note:** CRATE NAME CHANGED TO ``ndarray``. Having package != crate ran
+  into many quirks of various tools. Changing the package name is easier for
+  everyone involved!
 
 The ``ndarray`` crate provides an N-dimensional container similar to numpy’s
 ndarray.
@@ -83,6 +87,14 @@ Recent Changes
 
 - **Note:** At some point in a future release, the indexing type ``Ix`` will
   change to ``usize``
+
+- 0.2.0-alpha.8
+
+  - **Note:** CRATE NAME CHANGED TO ``ndarray``. Having package != crate ran
+    into many quirks of various tools. Changing the package name is easier for
+    everyone involved!
+  - Optimized ``scalar_sum()`` so that it will vectorize for the floating point
+    element case too.
 
 - 0.2.0-alpha.7
 
