@@ -176,6 +176,27 @@ fn sum_2d_cutout_fold(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn scalar_sum_2d_regular(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<i32, _>::zeros((64, 64));
+    let a = black_box(a);
+    bench.iter(|| {
+        a.scalar_sum()
+    });
+}
+
+#[bench]
+fn scalar_sum_2d_cutout(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<i32, _>::zeros((66, 66));
+    let av = a.view().slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        a.scalar_sum()
+    });
+}
+
+#[bench]
 fn sum_2d_cutout_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
@@ -238,6 +259,27 @@ fn sum_2d_transpose_by_row(bench: &mut test::Bencher)
             }
         }
         sum
+    });
+}
+
+#[bench]
+fn scalar_sum_2d_float(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = black_box(a.view());
+    bench.iter(|| {
+        a.scalar_sum()
+    });
+}
+
+#[bench]
+fn scalar_sum_2d_float_cutout(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros((66, 66));
+    let av = a.view().slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        a.scalar_sum()
     });
 }
 
