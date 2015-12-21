@@ -93,6 +93,7 @@ Recent Changes
 
   - Support strided matrices in ``rblas`` bridge, and fix a bug with
     non square matrices.
+  - Deprecated all of module ``linalg``.
 
 - 0.2.0-alpha.8
 
@@ -101,7 +102,6 @@ Recent Changes
     everyone involved!
   - Optimized ``scalar_sum()`` so that it will vectorize for the floating point
     element case too.
-  - Deprecated all of module ``linalg``.
 
 - 0.2.0-alpha.7
 
