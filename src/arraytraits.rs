@@ -57,11 +57,18 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
           S::Elem: PartialEq,
 {
     /// Return `true` if the array shapes and all elements of `self` and
-    /// `other` are equal. Return `false` otherwise.
-    fn eq(&self, other: &ArrayBase<S2, D>) -> bool
+    /// `rhs` are equal. Return `false` otherwise.
+    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
     {
-        self.shape() == other.shape() &&
-        self.iter().zip(other.iter()).all(|(a, b)| a == b)
+        if self.shape() != rhs.shape() {
+            return false;
+        }
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s == rhs_s;
+            }
+        }
+        self.iter().zip(rhs.iter()).all(|(a, b)| a == b)
     }
 }
 
