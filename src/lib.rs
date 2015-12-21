@@ -851,9 +851,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
     pub fn get(&self, index: D) -> Option<&A> {
+        let ptr = self.ptr;
         self.dim.stride_offset_checked(&self.strides, &index)
-            .map(|offset| unsafe {
-                &*self.ptr.offset(offset)
+            .map(move |offset| unsafe {
+                &*ptr.offset(offset)
             })
     }
 
@@ -869,9 +870,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
     {
         self.ensure_unique();
+        let ptr = self.ptr;
         self.dim.stride_offset_checked(&self.strides, &index)
-            .map(|offset| unsafe {
-                &mut *self.ptr.offset(offset)
+            .map(move |offset| unsafe {
+                &mut *ptr.offset(offset)
             })
     }
 
@@ -2030,7 +2032,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
+                    move |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
                 );
             }
             j += 1;
@@ -2069,7 +2071,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
+                    move |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
                 );
             }
             i += 1;
@@ -2110,7 +2112,7 @@ macro_rules! impl_binary_op_inherent(
     pub fn $imth_scalar (&mut self, x: &A)
         where A: Clone + $trt<A, Output=A>,
     {
-        self.unordered_foreach_mut(|elt| {
+        self.unordered_foreach_mut(move |elt| {
             *elt = elt.clone(). $mth (x.clone());
         });
     }
