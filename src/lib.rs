@@ -25,7 +25,8 @@
 //!   read-only and read-write array views.
 //! - Iteration and most operations are very efficient on contiguous c-order arrays
 //!   (the default layout, without any transposition or discontiguous subslicing),
-//!   and on arrays where the lowest dimension is contiguous.
+//!   and on arrays where the lowest dimension is contiguous (contiguous block
+//!   slicing).
 //! - Array views can be used to slice and mutate any `[T]` data.
 //!
 //! ## Status and Lookout
@@ -89,6 +90,9 @@ pub use iterators::{
     InnerIter,
     InnerIterMut,
 };
+
+#[allow(deprecated)]
+use linalg::{Field, Ring};
 
 pub mod linalg;
 mod arraytraits;
@@ -240,7 +244,8 @@ pub type Ixs = i32;
 /// ```
 /// use ndarray::{arr3, aview2};
 ///
-/// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
+/// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
+///
 /// let a = arr3(&[[[ 1,  2,  3],    // \ axis 0, submatrix 0
 ///                 [ 4,  5,  6]],   // /
 ///                [[ 7,  8,  9],    // \ axis 0, submatrix 1
@@ -469,7 +474,7 @@ impl<S> ArrayBase<S, Ix>
     where S: DataOwned,
 {
     /// Create a one-dimensional array from a vector (no allocation needed).
-    pub fn from_vec(v: Vec<S::Elem>) -> Self {
+    pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
         unsafe {
             Self::from_vec_dim(v.len() as Ix, v)
         }
@@ -480,8 +485,8 @@ impl<S> ArrayBase<S, Ix>
         Self::from_vec(iterable.into_iter().collect())
     }
 
-    /// Create a one-dimensional array from inclusive interval `[start, end]` with
-    /// `n` elements.
+    /// Create a one-dimensional array from inclusive interval
+    /// `[start, end]` with `n` elements. `F` must be a floating point type.
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
@@ -502,31 +507,11 @@ impl<S> ArrayBase<S, Ix>
 }
 
 /// Constructor methods for `ArrayBase`.
-impl<S, D> ArrayBase<S, D>
-    where S: DataOwned,
+impl<S, A, D> ArrayBase<S, D>
+    where S: DataOwned<Elem=A>,
           D: Dimension,
 {
-    /// Create an array from a vector (with no allocation needed).
-    ///
-    /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<S::Elem>) -> ArrayBase<S, D>
-    {
-        debug_assert!(dim.size() == v.len());
-        ArrayBase {
-            ptr: v.as_mut_ptr(),
-            data: DataOwned::new(v),
-            strides: dim.default_strides(),
-            dim: dim
-        }
-    }
-
-    /// Construct an Array with zeros.
-    pub fn zeros(dim: D) -> ArrayBase<S, D> where S::Elem: Clone + libnum::Zero
-    {
-        Self::from_elem(dim, libnum::zero())
-    }
-
-    /// Construct an Array with copies of `elem`.
+    /// Construct an array with copies of `elem`, dimension `dim`.
     ///
     /// ```
     /// use ndarray::Array;
@@ -541,7 +526,7 @@ impl<S, D> ArrayBase<S, D>
     ///                  [1., 1.]]])
     /// );
     /// ```
-    pub fn from_elem(dim: D, elem: S::Elem) -> ArrayBase<S, D> where S::Elem: Clone
+    pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
         let v = vec![elem; dim.size()];
         unsafe {
@@ -549,16 +534,35 @@ impl<S, D> ArrayBase<S, D>
         }
     }
 
-    /// Construct an Array with default values, dimension `dim`.
-    pub fn default(dim: D) -> ArrayBase<S, D>
-        where S::Elem: Default
+    /// Construct an array with zeros, dimension `dim`.
+    pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
-        let v = (0..dim.size()).map(|_| <S::Elem>::default()).collect();
+        Self::from_elem(dim, libnum::zero())
+    }
+
+    /// Construct an array with default values, dimension `dim`.
+    pub fn default(dim: D) -> ArrayBase<S, D>
+        where A: Default
+    {
+        let v = (0..dim.size()).map(|_| A::default()).collect();
         unsafe {
             Self::from_vec_dim(dim, v)
         }
     }
 
+    /// Create an array from a vector (with no allocation needed).
+    ///
+    /// Unsafe because dimension is unchecked, and must be correct.
+    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
+    {
+        debug_assert!(dim.size() == v.len());
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: dim.default_strides(),
+            dim: dim
+        }
+    }
 }
 
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -811,10 +815,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_iter(&self, indexes: &D::SliceArg) -> Elements<A, D>
     {
         let mut it = self.view();
-        let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
-        unsafe {
-            it.ptr = it.ptr.offset(offset);
-        }
+        it.islice(indexes);
         it.into_iter_()
     }
 
@@ -840,20 +841,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_iter_mut(&mut self, indexes: &D::SliceArg) -> ElementsMut<A, D>
         where S: DataMut,
     {
-        let mut it = self.view_mut();
-        let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
-        unsafe {
-            it.ptr = it.ptr.offset(offset);
-        }
-        it.into_iter_()
+        self.slice_mut(indexes).into_iter()
     }
 
     /// Return a reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
     pub fn get(&self, index: D) -> Option<&A> {
+        let ptr = self.ptr;
         self.dim.stride_offset_checked(&self.strides, &index)
-            .map(|offset| unsafe {
-                &*self.ptr.offset(offset)
+            .map(move |offset| unsafe {
+                &*ptr.offset(offset)
             })
     }
 
@@ -869,9 +866,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
     {
         self.ensure_unique();
+        let ptr = self.ptr;
         self.dim.stride_offset_checked(&self.strides, &index)
-            .map(|offset| unsafe {
-                &mut *self.ptr.offset(offset)
+            .map(move |offset| unsafe {
+                &mut *ptr.offset(offset)
             })
     }
 
@@ -1607,9 +1605,7 @@ pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
 /// Return a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array<A, ()>
 {
-    let mut v = Vec::with_capacity(1);
-    v.push(x);
-    unsafe { Array::from_vec_dim((), v) }
+    unsafe { Array::from_vec_dim((), vec![x]) }
 }
 
 /// Return a one-dimensional array with elements from `xs`.
@@ -1880,7 +1876,7 @@ impl<A, S, D> ArrayBase<S, D>
              mut p4, mut p5, mut p6, mut p7) =
             (A::zero(), A::zero(), A::zero(), A::zero(),
              A::zero(), A::zero(), A::zero(), A::zero());
-        while xs.len() > 8 {
+        while xs.len() >= 8 {
             p0 = p0 + xs[0].clone();
             p1 = p1 + xs[1].clone();
             p2 = p2 + xs[2].clone();
@@ -1917,8 +1913,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[allow(deprecated)]
     pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
-        where A: Copy + linalg::Field,
+        where A: Copy + Field,
               D: RemoveAxis,
     {
         let n = self.shape()[axis];
@@ -2009,8 +2006,9 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// );
     /// ```
     ///
+    #[allow(deprecated)]
     pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
-        where A: Copy + linalg::Ring
+        where A: Copy + Ring
     {
         // NOTE: Matrix multiplication only defined for simple types to
         // avoid trouble with panicking + and *, and destructors
@@ -2030,7 +2028,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
+                    move |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
                 );
             }
             j += 1;
@@ -2053,8 +2051,9 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if sizes are incompatible.
+    #[allow(deprecated)]
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> Array<A, Ix>
-        where A: Copy + linalg::Ring
+        where A: Copy + Ring
     {
         let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
@@ -2069,7 +2068,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         for rr in res_elems.iter_mut() {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
-                    |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
+                    move |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
                 );
             }
             i += 1;
@@ -2110,7 +2109,7 @@ macro_rules! impl_binary_op_inherent(
     pub fn $imth_scalar (&mut self, x: &A)
         where A: Clone + $trt<A, Output=A>,
     {
-        self.unordered_foreach_mut(|elt| {
+        self.unordered_foreach_mut(move |elt| {
             *elt = elt.clone(). $mth (x.clone());
         });
     }

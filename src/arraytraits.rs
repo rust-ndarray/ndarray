@@ -10,7 +10,7 @@ use std::ops::{
 };
 
 use super::{
-    Array, Dimension, Ix,
+    Dimension, Ix,
     Elements,
     ElementsMut,
     ArrayBase,
@@ -18,9 +18,8 @@ use super::{
     ArrayViewMut,
     Data,
     DataMut,
+    DataOwned,
 };
-#[cfg(feature = "rustc-serialize")]
-use super::DataOwned;
 
 /// Access the element at **index**.
 ///
@@ -57,11 +56,18 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
           S::Elem: PartialEq,
 {
     /// Return `true` if the array shapes and all elements of `self` and
-    /// `other` are equal. Return `false` otherwise.
-    fn eq(&self, other: &ArrayBase<S2, D>) -> bool
+    /// `rhs` are equal. Return `false` otherwise.
+    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
     {
-        self.shape() == other.shape() &&
-        self.iter().zip(other.iter()).all(|(a, b)| a == b)
+        if self.shape() != rhs.shape() {
+            return false;
+        }
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s == rhs_s;
+            }
+        }
+        self.iter().zip(rhs.iter()).all(|(a, b)| a == b)
     }
 }
 
@@ -71,11 +77,13 @@ impl<S, D> Eq for ArrayBase<S, D>
           S::Elem: Eq,
 { }
 
-impl<A> FromIterator<A> for Array<A, Ix>
+impl<A, S> FromIterator<A> for ArrayBase<S, Ix>
+    where S: DataOwned<Elem=A>
 {
-    fn from_iter<I: IntoIterator<Item=A>>(iterable: I) -> Array<A, Ix>
+    fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
+        where I: IntoIterator<Item=A>,
     {
-        Array::from_iter(iterable)
+        ArrayBase::from_iter(iterable)
     }
 }
 

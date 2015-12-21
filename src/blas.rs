@@ -38,10 +38,15 @@
 //! Use the methods in trait `AsBlas` to convert an array into a view that
 //! implements rblas’ `Vector` or `Matrix` traits.
 //!
-//! Blas supports strided vectors but not matrices, so they will be copied into
-//! c-contiguous layout automatically. Blas has its own error reporting system
-//! and will not panic on errors (that I know), instead output its own error
-//! conditions, for example on dimension mismatch in a matrix multiplication.
+//! Blas supports strided vectors and matrices; Matrices need to be contiguous
+//! in their lowest dimension, so they will be copied into c-contiguous layout
+//! automatically if needed. You should be able to use blocks sliced out
+//! from a larger matrix without copying. Use the transpose flags in blas
+//! instead of transposing with `ndarray`.
+//!
+//! Blas has its own error reporting system and will not panic on errors (that
+//! I know), instead output its own error conditions, for example on dimension
+//! mismatch in a matrix multiplication.
 //!
 extern crate rblas;
 
@@ -60,6 +65,7 @@ use super::{
     DataMut,
     DataOwned,
     Dimension,
+    zipsl,
 };
 
 
@@ -82,8 +88,9 @@ impl<S, D> ArrayBase<S, D>
           D: Dimension
 {
     fn size_check(&self) -> Result<(), ShapeError> {
-        for &dim in self.shape() {
-            if dim > (c_int::max_value() as c_uint) {
+        let max = c_int::max_value();
+        for (&dim, &stride) in zipsl(self.shape(), self.strides()) {
+            if dim > max as c_uint || stride > max {
                 return Err(ShapeError::DimensionTooLarge(
                     self.shape().to_vec().into_boxed_slice()));
             }
@@ -93,7 +100,7 @@ impl<S, D> ArrayBase<S, D>
 
     fn contiguous_check(&self) -> Result<(), ShapeError> {
         // FIXME: handle transposed
-        if self.is_standard_layout() {
+        if self.dim.ndim() <= 1 || self.strides().last().cloned() == Some(1) {
             Ok(())
         } else {
             Err(ShapeError::IncompatibleLayout)
@@ -131,6 +138,9 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 }
 
 /// Convert an array into a blas friendly wrapper.
+///
+/// Note that `blas` suppors four different element types: `f32`, `f64`,
+/// `Complex<f32>`, and `Complex<f64>`.
 ///
 /// ***Requires `features = "rblas"`***
 pub trait AsBlas<A, S, D> {
@@ -179,8 +189,14 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
               A: Clone,
     {
         try!(self.size_check());
-        if self.dim.ndim() > 1 {
-            self.ensure_standard_layout();
+        match self.dim.ndim() {
+            0 | 1 => { }
+            2 => {
+                if self.strides()[1] != 1 {
+                    self.ensure_standard_layout();
+                }
+            }
+            _n => self.ensure_standard_layout(),
         }
         self.view_mut().into_matrix_mut()
     }
@@ -260,11 +276,17 @@ impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
 
 impl<'a, A> Matrix<A> for BlasArrayViewMut<'a, A, (Ix, Ix)> {
     fn rows(&self) -> c_int {
-        self.0.dim().1 as c_int
+        self.0.dim().0 as c_int
     }
 
     fn cols(&self) -> c_int {
-        self.0.dim().0 as c_int
+        self.0.dim().1 as c_int
+    }
+
+    // leading dimension == stride between each row
+    fn lead_dim(&self) -> c_int {
+        debug_assert_eq!(self.0.strides()[1], 1);
+        self.0.strides()[0] as c_int
     }
 
     fn as_ptr(&self) -> *const A {

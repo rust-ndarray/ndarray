@@ -31,4 +31,7 @@ fn formatting()
     let s = format!("{:.3e}", aview1::<f32>(&[1.1, 2.2, 33., 440.]));
     assert_eq!(s,
                "[1.100e0, 2.200e0, 3.300e1, 4.400e2]");
+
+    let s = format!("{:02x}", aview1::<u8>(&[1, 0xff, 0xfe]));
+    assert_eq!(s, "[01, ff, fe]");
 }

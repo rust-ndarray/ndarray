@@ -87,3 +87,14 @@ fn lst_squares()
     let ans = arr1(&[0.070632, 0.390335]);
     assert!(x_lstsq.allclose(&ans, 0.001));
 }
+
+#[test]
+fn mat_mul() {
+    // smoke test, a big matrix multiplication of uneven size
+    let (n, m) = (45, 33);
+    let mut a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
+    let b = ndarray::linalg::eye(m);
+    assert_eq!(a.mat_mul(&b), a);
+    let c = ndarray::linalg::eye(n);
+    assert_eq!(c.mat_mul(&a), a);
+}
