@@ -497,9 +497,7 @@ fn bench_to_owned_t(bench: &mut test::Bencher)
 #[bench]
 fn equality(bench: &mut test::Bencher)
 {
-    let a = OwnedArray::<f32, _>::zeros((64, 64));
-    let b = OwnedArray::<f32, _>::zeros((64, 64));
-    let a = black_box(a.view());
-    let b = black_box(b.view());
+    let a = OwnedArray::<i32, _>::zeros((64, 64));
+    let b = OwnedArray::<i32, _>::zeros((64, 64));
     bench.iter(|| a == b);
 }
