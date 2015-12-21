@@ -815,10 +815,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_iter(&self, indexes: &D::SliceArg) -> Elements<A, D>
     {
         let mut it = self.view();
-        let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
-        unsafe {
-            it.ptr = it.ptr.offset(offset);
-        }
+        it.islice(indexes);
         it.into_iter_()
     }
 
@@ -844,12 +841,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_iter_mut(&mut self, indexes: &D::SliceArg) -> ElementsMut<A, D>
         where S: DataMut,
     {
-        let mut it = self.view_mut();
-        let offset = Dimension::do_slices(&mut it.dim, &mut it.strides, indexes);
-        unsafe {
-            it.ptr = it.ptr.offset(offset);
-        }
-        it.into_iter_()
+        self.slice_mut(indexes).into_iter()
     }
 
     /// Return a reference to the element at `index`, or return `None`
