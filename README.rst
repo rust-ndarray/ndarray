@@ -1,7 +1,7 @@
 ndarray
 =========
 
-- **Note:** CRATE NAME CHANGED TO ``ndarray``. Having package != crate ran
+- **Note:** PACKAGE NAME CHANGED TO ``ndarray``. Having package != crate ran
   into many quirks of various tools. Changing the package name is easier for
   everyone involved!
 
@@ -90,7 +90,7 @@ Recent Changes
 
 - 0.2.0-alpha.8
 
-  - **Note:** CRATE NAME CHANGED TO ``ndarray``. Having package != crate ran
+  - **Note:** PACKAGE NAME CHANGED TO ``ndarray``. Having package != crate ran
     into many quirks of various tools. Changing the package name is easier for
     everyone involved!
   - Optimized ``scalar_sum()`` so that it will vectorize for the floating point
