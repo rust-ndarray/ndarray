@@ -1,5 +1,8 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, deprecated)]
+#![cfg_attr(has_deprecated, deprecated(note="`linalg` is not in good shape."))]
 
+//! ***Deprecated: linalg is not in good shape.***
+//!
 //! A few linear algebra operations on two-dimensional arrays.
 
 use libnum::{Num, zero, one, Zero, One};

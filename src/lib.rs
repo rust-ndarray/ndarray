@@ -91,6 +91,9 @@ pub use iterators::{
     InnerIterMut,
 };
 
+#[allow(deprecated)]
+use linalg::{Field, Ring};
+
 pub mod linalg;
 mod arraytraits;
 #[cfg(feature = "serde")]
@@ -1920,8 +1923,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[allow(deprecated)]
     pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
-        where A: Copy + linalg::Field,
+        where A: Copy + Field,
               D: RemoveAxis,
     {
         let n = self.shape()[axis];
@@ -2012,8 +2016,9 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// );
     /// ```
     ///
+    #[allow(deprecated)]
     pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
-        where A: Copy + linalg::Ring
+        where A: Copy + Ring
     {
         // NOTE: Matrix multiplication only defined for simple types to
         // avoid trouble with panicking + and *, and destructors
@@ -2056,8 +2061,9 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if sizes are incompatible.
+    #[allow(deprecated)]
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> Array<A, Ix>
-        where A: Copy + linalg::Ring
+        where A: Copy + Ring
     {
         let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
