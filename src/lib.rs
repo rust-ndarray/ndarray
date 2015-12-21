@@ -471,7 +471,7 @@ impl<S> ArrayBase<S, Ix>
     where S: DataOwned,
 {
     /// Create a one-dimensional array from a vector (no allocation needed).
-    pub fn from_vec(v: Vec<S::Elem>) -> Self {
+    pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
         unsafe {
             Self::from_vec_dim(v.len() as Ix, v)
         }
@@ -482,8 +482,8 @@ impl<S> ArrayBase<S, Ix>
         Self::from_vec(iterable.into_iter().collect())
     }
 
-    /// Create a one-dimensional array from inclusive interval `[start, end]` with
-    /// `n` elements.
+    /// Create a one-dimensional array from inclusive interval
+    /// `[start, end]` with `n` elements. `F` must be a floating point type.
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
@@ -504,31 +504,11 @@ impl<S> ArrayBase<S, Ix>
 }
 
 /// Constructor methods for `ArrayBase`.
-impl<S, D> ArrayBase<S, D>
-    where S: DataOwned,
+impl<S, A, D> ArrayBase<S, D>
+    where S: DataOwned<Elem=A>,
           D: Dimension,
 {
-    /// Create an array from a vector (with no allocation needed).
-    ///
-    /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<S::Elem>) -> ArrayBase<S, D>
-    {
-        debug_assert!(dim.size() == v.len());
-        ArrayBase {
-            ptr: v.as_mut_ptr(),
-            data: DataOwned::new(v),
-            strides: dim.default_strides(),
-            dim: dim
-        }
-    }
-
-    /// Construct an Array with zeros.
-    pub fn zeros(dim: D) -> ArrayBase<S, D> where S::Elem: Clone + libnum::Zero
-    {
-        Self::from_elem(dim, libnum::zero())
-    }
-
-    /// Construct an Array with copies of `elem`.
+    /// Construct an array with copies of `elem`, dimension `dim`.
     ///
     /// ```
     /// use ndarray::Array;
@@ -543,7 +523,7 @@ impl<S, D> ArrayBase<S, D>
     ///                  [1., 1.]]])
     /// );
     /// ```
-    pub fn from_elem(dim: D, elem: S::Elem) -> ArrayBase<S, D> where S::Elem: Clone
+    pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
         let v = vec![elem; dim.size()];
         unsafe {
@@ -551,16 +531,35 @@ impl<S, D> ArrayBase<S, D>
         }
     }
 
-    /// Construct an Array with default values, dimension `dim`.
-    pub fn default(dim: D) -> ArrayBase<S, D>
-        where S::Elem: Default
+    /// Construct an array with zeros, dimension `dim`.
+    pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
-        let v = (0..dim.size()).map(|_| <S::Elem>::default()).collect();
+        Self::from_elem(dim, libnum::zero())
+    }
+
+    /// Construct an array with default values, dimension `dim`.
+    pub fn default(dim: D) -> ArrayBase<S, D>
+        where A: Default
+    {
+        let v = (0..dim.size()).map(|_| A::default()).collect();
         unsafe {
             Self::from_vec_dim(dim, v)
         }
     }
 
+    /// Create an array from a vector (with no allocation needed).
+    ///
+    /// Unsafe because dimension is unchecked, and must be correct.
+    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
+    {
+        debug_assert!(dim.size() == v.len());
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: dim.default_strides(),
+            dim: dim
+        }
+    }
 }
 
 impl<'a, A, D> ArrayView<'a, A, D>
