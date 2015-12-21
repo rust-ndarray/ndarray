@@ -241,7 +241,8 @@ pub type Ixs = i32;
 /// ```
 /// use ndarray::{arr3, aview2};
 ///
-/// // 3 elements per row, times 2 rows, times 2 means a shape of `[2, 2, 3]`.
+/// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
+///
 /// let a = arr3(&[[[ 1,  2,  3],    // \ axis 0, submatrix 0
 ///                 [ 4,  5,  6]],   // /
 ///                [[ 7,  8,  9],    // \ axis 0, submatrix 1
