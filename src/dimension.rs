@@ -356,30 +356,39 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
 
 unsafe impl Dimension for (Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 4];
+    #[inline]
     fn ndim(&self) -> usize { 4 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 5];
+    #[inline]
     fn ndim(&self) -> usize { 5 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 6];
+    #[inline]
     fn ndim(&self) -> usize { 6 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 7];
+    #[inline]
     fn ndim(&self) -> usize { 7 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 8];
+    #[inline]
     fn ndim(&self) -> usize { 8 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 9];
+    #[inline]
     fn ndim(&self) -> usize { 9 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 10];
+    #[inline]
     fn ndim(&self) -> usize { 10 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 11];
+    #[inline]
     fn ndim(&self) -> usize { 11 } }
 unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
     type SliceArg = [Si; 12];
+    #[inline]
     fn ndim(&self) -> usize { 12 } }
 
 /// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
