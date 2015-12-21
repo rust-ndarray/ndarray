@@ -89,6 +89,11 @@ Recent Changes
 - **Note:** At some point in a future release, the indexing type ``Ix`` will
   change to ``usize``
 
+- 0.2.0-alpha.9
+
+  - Support strided matrices in ``rblas`` bridge, and fix a bug with
+    non square matrices.
+
 - 0.2.0-alpha.8
 
   - **Note:** PACKAGE NAME CHANGED TO ``ndarray``. Having package != crate ran
@@ -96,6 +101,7 @@ Recent Changes
     everyone involved!
   - Optimized ``scalar_sum()`` so that it will vectorize for the floating point
     element case too.
+  - Deprecated all of module ``linalg``.
 
 - 0.2.0-alpha.7
 
