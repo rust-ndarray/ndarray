@@ -456,19 +456,14 @@ fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_create_iter(bench: &mut test::Bencher)
+fn create_iter_4d(bench: &mut test::Bencher)
 {
-    let a = arr2(&[[1., 2., 2.],
-                   [3., 4., 4.],
-                   [3., 4., 4.],
-                   [3., 4., 4.],
-                   [5., 6., 6.]]);
-    let mut at = a.clone();
-    at.swap_axes(0, 1);
-    let v = black_box(at.view());
+    let mut a = OwnedArray::from_elem((4, 5, 3, 2), 1.0);
+    a.swap_axes(0, 1);
+    a.swap_axes(2, 1);
+    let v = black_box(a.view());
 
     bench.iter(|| {
-        let v = black_box(v);
         v.into_iter()
     });
 }
