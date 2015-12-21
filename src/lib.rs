@@ -1605,9 +1605,7 @@ pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
 /// Return a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array<A, ()>
 {
-    let mut v = Vec::with_capacity(1);
-    v.push(x);
-    unsafe { Array::from_vec_dim((), v) }
+    unsafe { Array::from_vec_dim((), vec![x]) }
 }
 
 /// Return a one-dimensional array with elements from `xs`.
