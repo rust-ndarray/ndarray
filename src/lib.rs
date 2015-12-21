@@ -25,7 +25,8 @@
 //!   read-only and read-write array views.
 //! - Iteration and most operations are very efficient on contiguous c-order arrays
 //!   (the default layout, without any transposition or discontiguous subslicing),
-//!   and on arrays where the lowest dimension is contiguous.
+//!   and on arrays where the lowest dimension is contiguous (contiguous block
+//!   slicing).
 //! - Array views can be used to slice and mutate any `[T]` data.
 //!
 //! ## Status and Lookout
