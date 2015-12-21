@@ -1880,7 +1880,7 @@ impl<A, S, D> ArrayBase<S, D>
              mut p4, mut p5, mut p6, mut p7) =
             (A::zero(), A::zero(), A::zero(), A::zero(),
              A::zero(), A::zero(), A::zero(), A::zero());
-        while xs.len() > 8 {
+        while xs.len() >= 8 {
             p0 = p0 + xs[0].clone();
             p1 = p1 + xs[1].clone();
             p2 = p2 + xs[2].clone();
