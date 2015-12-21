@@ -10,7 +10,7 @@ use std::ops::{
 };
 
 use super::{
-    Array, Dimension, Ix,
+    Dimension, Ix,
     Elements,
     ElementsMut,
     ArrayBase,
@@ -18,9 +18,8 @@ use super::{
     ArrayViewMut,
     Data,
     DataMut,
+    DataOwned,
 };
-#[cfg(feature = "rustc-serialize")]
-use super::DataOwned;
 
 /// Access the element at **index**.
 ///
@@ -78,11 +77,13 @@ impl<S, D> Eq for ArrayBase<S, D>
           S::Elem: Eq,
 { }
 
-impl<A> FromIterator<A> for Array<A, Ix>
+impl<A, S> FromIterator<A> for ArrayBase<S, Ix>
+    where S: DataOwned<Elem=A>
 {
-    fn from_iter<I: IntoIterator<Item=A>>(iterable: I) -> Array<A, Ix>
+    fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
+        where I: IntoIterator<Item=A>,
     {
-        Array::from_iter(iterable)
+        ArrayBase::from_iter(iterable)
     }
 }
 
