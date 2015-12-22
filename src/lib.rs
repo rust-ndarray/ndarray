@@ -846,6 +846,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
+    ///
+    /// Arrays also support indexing syntax: `array[index]`.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    ///
+    /// assert!(
+    ///     a.get((0, 1)) == Some(&2.) &&
+    ///     a.get((0, 2)) == None &&
+    ///     a[(0, 1)] == 2.
+    /// );
+    /// ```
     pub fn get(&self, index: D) -> Option<&A> {
         let ptr = self.ptr;
         self.dim.stride_offset_checked(&self.strides, &index)
