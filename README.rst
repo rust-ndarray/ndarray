@@ -12,6 +12,13 @@ Please read the `API documentation here`__
 
 __ http://bluss.github.io/rust-ndarray/
 
+|build_status|_ |crates|_
+
+.. |build_status| image:: https://travis-ci.org/bluss/rust-ndarray.svg?branch=master
+.. _build_status: https://travis-ci.org/bluss/rust-ndarray
+
+.. |crates| image:: http://meritbadge.herokuapp.com/ndarray
+.. _crates: https://crates.io/crates/ndarray
 
 Highlights
 ----------
@@ -70,14 +77,6 @@ Crate Feature Flags
   - Optional, stable
   - Enables ``rblas`` integration
 
-|build_status|_ |crates|_
-
-.. |build_status| image:: https://travis-ci.org/bluss/rust-ndarray.svg?branch=master
-.. _build_status: https://travis-ci.org/bluss/rust-ndarray
-
-.. |crates| image:: http://meritbadge.herokuapp.com/ndarray
-.. _crates: https://crates.io/crates/ndarray
-
 How to use with cargo::
 
     [dependencies]
@@ -86,8 +85,17 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- **Note:** At some point in a future release, the indexing type ``Ix`` will
+- **Note:** In 0.3 (future release) the indexing type ``Ix`` will
   change to ``usize``
+
+- 0.2.0
+
+  - First chapter of API and performance evolution is done \o/
+  - 0.2.0 highlight: Vectorized (efficient) arithmetic operations
+  - 0.2.0 highlight: Easier slicing using `s![]`
+  - 0.2.0 highlight: Nicer API using views
+  - 0.2.0 highlight: Bridging to BLAS functions.
+  - See below for more info
 
 - 0.2.0-alpha.9
 
