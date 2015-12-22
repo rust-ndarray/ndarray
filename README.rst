@@ -90,7 +90,7 @@ Recent Changes
 
 - 0.2.0
 
-  - First chapter of API and performance evolution is done \o/
+  - First chapter of API and performance evolution is done \\o/
   - 0.2.0 highlight: Vectorized (efficient) arithmetic operations
   - 0.2.0 highlight: Easier slicing using `s![]`
   - 0.2.0 highlight: Nicer API using views
