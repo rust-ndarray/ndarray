@@ -1,14 +1,14 @@
 [package]
 
 name = "ndarray"
-version = "0.2.0-alpha.9"
+version = "0.2.0"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "http://bluss.github.io/rust-ndarray/"
 
-description = "An N-dimensional array for elements of arbitrary type. Lightweight array views and slicing. Supports both uniquely owned and shared copy-on-write arrays similar to numpy’s ndarray. `rblas` is an optional dependency."
+description = "An N-dimensional array for general elements and for numerics. Lightweight array views and slicing. Supports both uniquely owned and shared copy-on-write arrays similar to numpy’s ndarray. `rblas` is an optional dependency."
 
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 
@@ -44,6 +44,5 @@ rblas = { version = "0.0.13", optional = true }
 assign_ops = []
 
 [profile.release]
-debug = true
 [profile.bench]
 debug = true
