@@ -311,7 +311,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D>
     }
 }
 
-/// an iterator that traverses over all dimensions but the innermost,
+/// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
 pub struct InnerIter<'a, A: 'a, D> {
     inner_len: Ix,
@@ -362,7 +362,7 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
 // NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
 // anyway).
-/// an iterator that traverses over all dimensions but the innermost,
+/// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row (mutable).
 pub struct InnerIterMut<'a, A: 'a, D> {
     inner_len: Ix,

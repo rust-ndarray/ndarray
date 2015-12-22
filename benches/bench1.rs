@@ -1,5 +1,6 @@
 #![feature(test)]
 #![allow(unused_imports)]
+#![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 
 extern crate test;
 #[macro_use(s)]
@@ -291,6 +292,20 @@ fn add_2d_regular(bench: &mut test::Bencher)
     let bv = b.view();
     bench.iter(|| {
         let _x = black_box(a.view_mut() + bv);
+    });
+}
+
+#[cfg(feature = "assign_ops")]
+#[bench]
+fn add_2d_assign_ops(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    let b = OwnedArray::<i32, _>::zeros((64, 64));
+    let bv = b.view();
+    bench.iter(|| {
+        let mut x = a.view_mut();
+        x += &bv;
+        black_box(x);
     });
 }
 

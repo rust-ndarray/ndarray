@@ -1,6 +1,6 @@
 #![crate_name="ndarray"]
-#![crate_type="dylib"]
 #![cfg_attr(has_deprecated, feature(deprecated))]
+#![doc(html_root_url = "http://bluss.github.io/rust-ndarray/doc/")]
 
 //! The `ndarray` crate provides an N-dimensional container similar to numpy’s
 //! ndarray.
@@ -106,7 +106,6 @@ mod indexes;
 mod iterators;
 mod si;
 mod shape_error;
-//mod macros;
 
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
@@ -200,7 +199,7 @@ pub type Ixs = i32;
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
 /// let a = arr3(&[[[ 1,  2,  3],     // -- 2 rows  \_
-///                 [ 4,  5,  6]],    // --         /  
+///                 [ 4,  5,  6]],    // --         /
 ///                [[ 7,  8,  9],     //            \_ 2 submatrices
 ///                 [10, 11, 12]]]);  //            /
 /// //  3 columns ..../.../.../
@@ -222,7 +221,7 @@ pub type Ixs = i32;
 /// assert_eq!(b.shape(), &[2, 1, 3]);
 ///
 /// // Let’s create a slice with
-/// // 
+/// //
 /// // - Both submatrices of the greatest dimension: `..`
 /// // - The last row in each submatrix: `-1..`
 /// // - Row elements in reverse order: `..;-1`
@@ -238,7 +237,7 @@ pub type Ixs = i32;
 /// Subview methods allow you to restrict the array view while removing
 /// one axis from the array. Subview methods include `.subview()`,
 /// `.isubview()`, `.subview_mut()`.
-/// 
+///
 /// Subview takes two arguments: `axis` and `index`.
 ///
 /// ```
@@ -250,7 +249,7 @@ pub type Ixs = i32;
 ///                 [ 4,  5,  6]],   // /
 ///                [[ 7,  8,  9],    // \ axis 0, submatrix 1
 ///                 [10, 11, 12]]]); // /
-///         //        \ 
+///         //        \
 ///         //         axis 2, column 0
 ///
 /// assert_eq!(a.shape(), &[2, 2, 3]);
@@ -846,6 +845,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
+    ///
+    /// Arrays also support indexing syntax: `array[index]`.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    ///
+    /// assert!(
+    ///     a.get((0, 1)) == Some(&2.) &&
+    ///     a.get((0, 2)) == None &&
+    ///     a[(0, 1)] == 2.
+    /// );
+    /// ```
     pub fn get(&self, index: D) -> Option<&A> {
         let ptr = self.ptr;
         self.dim.stride_offset_checked(&self.strides, &index)
@@ -927,6 +941,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Swap axes `ax` and `bx`.
     ///
+    /// This does not move any data, it just adjusts the array’s dimensions
+    /// and strides.
+    ///
     /// **Panics** if the axes are out of bounds.
     ///
     /// ```
@@ -956,7 +973,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
     ///                [3., 4.],    // -- axis 0, row 1
-    ///                [5., 6.]]);  // -- axis 0, row 2 
+    ///                [5., 6.]]);  // -- axis 0, row 2
     /// //               \   \
     /// //                \   axis 1, column 1
     /// //                 axis 1, column 0
@@ -1384,6 +1401,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.broadcast(dim).map(|v| v.into_iter_())
     }
 
+    #[inline]
+    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
+        where E: Dimension,
+    {
+        match self.broadcast(dim.clone()) {
+            Some(it) => it,
+            None => Self::broadcast_panic(&self.dim, &dim),
+        }
+    }
+
+    #[inline(never)]
+    fn broadcast_panic<E: Dimension>(from: &D, to: &E) -> ! {
+        panic!("Could not broadcast array from shape: {:?} to: {:?}",
+               from.slice(), to.slice())
+    }
+
     /// Return a slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -1454,7 +1487,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 f(elt);
             }
             return;
-        } 
+        }
         for row in self.inner_iter_mut() {
             for elt in row {
                 f(elt);
@@ -1542,7 +1575,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 self.unordered_foreach_mut(move |elt| f_(elt, rhs_elem));
             }
         } else {
-            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
             self.zip_with_mut_outer_iter(&rhs_broadcast, f);
         }
     }
@@ -2123,16 +2156,16 @@ impl<A, S, D> ArrayBase<S, D>
 {
 
 
-impl_binary_op_inherent!(Add, add, iadd, iadd_scalar, "Addition");
-impl_binary_op_inherent!(Sub, sub, isub, isub_scalar, "Subtraction");
-impl_binary_op_inherent!(Mul, mul, imul, imul_scalar, "Multiplication");
-impl_binary_op_inherent!(Div, div, idiv, idiv_scalar, "Divsion");
-impl_binary_op_inherent!(Rem, rem, irem, irem_scalar, "Remainder");
-impl_binary_op_inherent!(BitAnd, bitand, ibitand, ibitand_scalar, "Bit and");
-impl_binary_op_inherent!(BitOr, bitor, ibitor, ibitor_scalar, "Bit or");
-impl_binary_op_inherent!(BitXor, bitxor, ibitxor, ibitxor_scalar, "Bit xor");
-impl_binary_op_inherent!(Shl, shl, ishl, ishl_scalar, "Left shift");
-impl_binary_op_inherent!(Shr, shr, ishr, ishr_scalar, "Right shift");
+impl_binary_op_inherent!(Add, add, iadd, iadd_scalar, "addition");
+impl_binary_op_inherent!(Sub, sub, isub, isub_scalar, "subtraction");
+impl_binary_op_inherent!(Mul, mul, imul, imul_scalar, "multiplication");
+impl_binary_op_inherent!(Div, div, idiv, idiv_scalar, "division");
+impl_binary_op_inherent!(Rem, rem, irem, irem_scalar, "remainder");
+impl_binary_op_inherent!(BitAnd, bitand, ibitand, ibitand_scalar, "bit and");
+impl_binary_op_inherent!(BitOr, bitor, ibitor, ibitor_scalar, "bit or");
+impl_binary_op_inherent!(BitXor, bitxor, ibitxor, ibitxor_scalar, "bit xor");
+impl_binary_op_inherent!(Shl, shl, ishl, ishl_scalar, "left shift");
+impl_binary_op_inherent!(Shr, shr, ishr, ishr_scalar, "right shift");
 
     /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
@@ -2159,7 +2192,7 @@ macro_rules! impl_binary_op(
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
-/// and return the result.
+/// and return the result (based on `self`).
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -2184,8 +2217,8 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 
 /// Perform elementwise
 #[doc=$doc]
-/// between `self` and `rhs`,
-/// and return the result.
+/// between references `self` and `rhs`,
+/// and return the result as a new `OwnedArray`.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -2211,16 +2244,16 @@ mod arithmetic_ops {
     use super::*;
     use std::ops::*;
 
-    impl_binary_op!(Add, add, "Addition");
-    impl_binary_op!(Sub, sub, "Subtraction");
-    impl_binary_op!(Mul, mul, "Multiplication");
-    impl_binary_op!(Div, div, "Divsion");
-    impl_binary_op!(Rem, rem, "Remainder");
-    impl_binary_op!(BitAnd, bitand, "Bit and");
-    impl_binary_op!(BitOr, bitor, "Bit or");
-    impl_binary_op!(BitXor, bitxor, "Bit xor");
-    impl_binary_op!(Shl, shl, "Left shift");
-    impl_binary_op!(Shr, shr, "Right shift");
+    impl_binary_op!(Add, add, "addition");
+    impl_binary_op!(Sub, sub, "subtraction");
+    impl_binary_op!(Mul, mul, "multiplication");
+    impl_binary_op!(Div, div, "division");
+    impl_binary_op!(Rem, rem, "remainder");
+    impl_binary_op!(BitAnd, bitand, "bit and");
+    impl_binary_op!(BitOr, bitor, "bit or");
+    impl_binary_op!(BitXor, bitxor, "bit xor");
+    impl_binary_op!(Shl, shl, "left shift");
+    impl_binary_op!(Shr, shr, "right shift");
 
     impl<A, S, D> Neg for ArrayBase<S, D>
         where A: Clone + Neg<Output=A>,
@@ -2292,21 +2325,21 @@ mod assign_ops {
     }
 
     impl_assign_op!(AddAssign, add_assign,
-                    "Implement `self += rhs` as elementwise addition (in place).\n");
+                    "Perform `self += rhs` as elementwise addition (in place).\n");
     impl_assign_op!(SubAssign, sub_assign,
-                    "Implement `self -= rhs` as elementwise subtraction (in place).\n");
+                    "Perform `self -= rhs` as elementwise subtraction (in place).\n");
     impl_assign_op!(MulAssign, mul_assign,
-                    "Implement `self *= rhs` as elementwise multiplication (in place).\n");
+                    "Perform `self *= rhs` as elementwise multiplication (in place).\n");
     impl_assign_op!(DivAssign, div_assign,
-                    "Implement `self /= rhs` as elementwise division (in place).\n");
+                    "Perform `self /= rhs` as elementwise division (in place).\n");
     impl_assign_op!(RemAssign, rem_assign,
-                    "Implement `self %= rhs` as elementwise remainder (in place).\n");
+                    "Perform `self %= rhs` as elementwise remainder (in place).\n");
     impl_assign_op!(BitAndAssign, bitand_assign,
-                    "Implement `self &= rhs` as elementwise bit and (in place).\n");
+                    "Perform `self &= rhs` as elementwise bit and (in place).\n");
     impl_assign_op!(BitOrAssign, bitor_assign,
-                    "Implement `self |= rhs` as elementwise bit or (in place).\n");
+                    "Perform `self |= rhs` as elementwise bit or (in place).\n");
     impl_assign_op!(BitXorAssign, bitxor_assign,
-                    "Implement `self ^= rhs` as elementwise bit xor (in place).\n");
+                    "Perform `self ^= rhs` as elementwise bit xor (in place).\n");
 }
 
 /// An iterator over the elements of an array.

@@ -28,6 +28,9 @@ pub unsafe trait Dimension : Clone + Eq {
     /// - For `(Ix, Ix)`: `[Si; 2]`
     /// - and so on..
     /// - For `Vec<Ix>`: `[Si]`
+    ///
+    /// The easiest way to create a `&SliceArg` is using the macro
+    /// [`s![]`](macro.s!.html).
     type SliceArg: ?Sized + AsRef<[Si]>;
     fn ndim(&self) -> usize;
     fn slice(&self) -> &[Ix] {
