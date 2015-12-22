@@ -199,7 +199,7 @@ pub type Ixs = i32;
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
 /// let a = arr3(&[[[ 1,  2,  3],     // -- 2 rows  \_
-///                 [ 4,  5,  6]],    // --         /  
+///                 [ 4,  5,  6]],    // --         /
 ///                [[ 7,  8,  9],     //            \_ 2 submatrices
 ///                 [10, 11, 12]]]);  //            /
 /// //  3 columns ..../.../.../
@@ -221,7 +221,7 @@ pub type Ixs = i32;
 /// assert_eq!(b.shape(), &[2, 1, 3]);
 ///
 /// // Let’s create a slice with
-/// // 
+/// //
 /// // - Both submatrices of the greatest dimension: `..`
 /// // - The last row in each submatrix: `-1..`
 /// // - Row elements in reverse order: `..;-1`
@@ -237,7 +237,7 @@ pub type Ixs = i32;
 /// Subview methods allow you to restrict the array view while removing
 /// one axis from the array. Subview methods include `.subview()`,
 /// `.isubview()`, `.subview_mut()`.
-/// 
+///
 /// Subview takes two arguments: `axis` and `index`.
 ///
 /// ```
@@ -249,7 +249,7 @@ pub type Ixs = i32;
 ///                 [ 4,  5,  6]],   // /
 ///                [[ 7,  8,  9],    // \ axis 0, submatrix 1
 ///                 [10, 11, 12]]]); // /
-///         //        \ 
+///         //        \
 ///         //         axis 2, column 0
 ///
 /// assert_eq!(a.shape(), &[2, 2, 3]);
@@ -973,7 +973,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
     ///                [3., 4.],    // -- axis 0, row 1
-    ///                [5., 6.]]);  // -- axis 0, row 2 
+    ///                [5., 6.]]);  // -- axis 0, row 2
     /// //               \   \
     /// //                \   axis 1, column 1
     /// //                 axis 1, column 0
@@ -1487,7 +1487,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 f(elt);
             }
             return;
-        } 
+        }
         for row in self.inner_iter_mut() {
             for elt in row {
                 f(elt);
