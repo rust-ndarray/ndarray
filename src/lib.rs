@@ -2193,7 +2193,7 @@ macro_rules! impl_binary_op(
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
-/// and return the result.
+/// and return the result (based on `self`).
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -2218,8 +2218,8 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 
 /// Perform elementwise
 #[doc=$doc]
-/// between `self` and `rhs`,
-/// and return the result.
+/// between references `self` and `rhs`,
+/// and return the result as a new `OwnedArray`.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -2245,16 +2245,16 @@ mod arithmetic_ops {
     use super::*;
     use std::ops::*;
 
-    impl_binary_op!(Add, add, "Addition");
-    impl_binary_op!(Sub, sub, "Subtraction");
-    impl_binary_op!(Mul, mul, "Multiplication");
-    impl_binary_op!(Div, div, "Divsion");
-    impl_binary_op!(Rem, rem, "Remainder");
-    impl_binary_op!(BitAnd, bitand, "Bit and");
-    impl_binary_op!(BitOr, bitor, "Bit or");
-    impl_binary_op!(BitXor, bitxor, "Bit xor");
-    impl_binary_op!(Shl, shl, "Left shift");
-    impl_binary_op!(Shr, shr, "Right shift");
+    impl_binary_op!(Add, add, "addition");
+    impl_binary_op!(Sub, sub, "subtraction");
+    impl_binary_op!(Mul, mul, "multiplication");
+    impl_binary_op!(Div, div, "division");
+    impl_binary_op!(Rem, rem, "remainder");
+    impl_binary_op!(BitAnd, bitand, "bit and");
+    impl_binary_op!(BitOr, bitor, "bit or");
+    impl_binary_op!(BitXor, bitxor, "bit xor");
+    impl_binary_op!(Shl, shl, "left shift");
+    impl_binary_op!(Shr, shr, "right shift");
 
     impl<A, S, D> Neg for ArrayBase<S, D>
         where A: Clone + Neg<Output=A>,
@@ -2326,21 +2326,21 @@ mod assign_ops {
     }
 
     impl_assign_op!(AddAssign, add_assign,
-                    "Implement `self += rhs` as elementwise addition (in place).\n");
+                    "Perform `self += rhs` as elementwise addition (in place).\n");
     impl_assign_op!(SubAssign, sub_assign,
-                    "Implement `self -= rhs` as elementwise subtraction (in place).\n");
+                    "Perform `self -= rhs` as elementwise subtraction (in place).\n");
     impl_assign_op!(MulAssign, mul_assign,
-                    "Implement `self *= rhs` as elementwise multiplication (in place).\n");
+                    "Perform `self *= rhs` as elementwise multiplication (in place).\n");
     impl_assign_op!(DivAssign, div_assign,
-                    "Implement `self /= rhs` as elementwise division (in place).\n");
+                    "Perform `self /= rhs` as elementwise division (in place).\n");
     impl_assign_op!(RemAssign, rem_assign,
-                    "Implement `self %= rhs` as elementwise remainder (in place).\n");
+                    "Perform `self %= rhs` as elementwise remainder (in place).\n");
     impl_assign_op!(BitAndAssign, bitand_assign,
-                    "Implement `self &= rhs` as elementwise bit and (in place).\n");
+                    "Perform `self &= rhs` as elementwise bit and (in place).\n");
     impl_assign_op!(BitOrAssign, bitor_assign,
-                    "Implement `self |= rhs` as elementwise bit or (in place).\n");
+                    "Perform `self |= rhs` as elementwise bit or (in place).\n");
     impl_assign_op!(BitXorAssign, bitxor_assign,
-                    "Implement `self ^= rhs` as elementwise bit xor (in place).\n");
+                    "Perform `self ^= rhs` as elementwise bit xor (in place).\n");
 }
 
 /// An iterator over the elements of an array.
