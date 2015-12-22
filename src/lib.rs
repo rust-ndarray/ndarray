@@ -927,6 +927,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Swap axes `ax` and `bx`.
     ///
+    /// This does not move any data, it just adjusts the array’s dimensions
+    /// and strides.
+    ///
     /// **Panics** if the axes are out of bounds.
     ///
     /// ```
