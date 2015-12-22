@@ -1384,6 +1384,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.broadcast(dim).map(|v| v.into_iter_())
     }
 
+    #[inline]
+    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
+        where E: Dimension,
+    {
+        match self.broadcast(dim.clone()) {
+            Some(it) => it,
+            None => Self::broadcast_panic(&self.dim, &dim),
+        }
+    }
+
+    #[inline(never)]
+    fn broadcast_panic<E: Dimension>(from: &D, to: &E) -> ! {
+        panic!("Could not broadcast array from shape: {:?} to: {:?}",
+               from.slice(), to.slice())
+    }
+
     /// Return a slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -1542,7 +1558,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 self.unordered_foreach_mut(move |elt| f_(elt, rhs_elem));
             }
         } else {
-            let rhs_broadcast = rhs.broadcast(self.dim()).unwrap();
+            let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
             self.zip_with_mut_outer_iter(&rhs_broadcast, f);
         }
     }
