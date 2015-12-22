@@ -1,6 +1,7 @@
 #![crate_name="ndarray"]
 #![crate_type="dylib"]
 #![cfg_attr(has_deprecated, feature(deprecated))]
+#![doc(html_root_url = "http://bluss.github.io/rust-ndarray/doc/")]
 
 //! The `ndarray` crate provides an N-dimensional container similar to numpy’s
 //! ndarray.
