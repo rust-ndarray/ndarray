@@ -50,7 +50,7 @@
 //!
 extern crate rblas;
 
-use std::os::raw::{c_int, c_uint};
+use std::os::raw::{c_int};
 
 use self::rblas::{
     Matrix,
@@ -59,7 +59,7 @@ use self::rblas::{
 use super::{
     ArrayBase,
     ArrayViewMut,
-    Ix,
+    Ix, Ixs,
     ShapeError,
     Data,
     DataMut,
@@ -90,7 +90,7 @@ impl<S, D> ArrayBase<S, D>
     fn size_check(&self) -> Result<(), ShapeError> {
         let max = c_int::max_value();
         for (&dim, &stride) in zipsl(self.shape(), self.strides()) {
-            if dim > max as c_uint || stride > max {
+            if dim > max as Ix || stride > max as Ixs {
                 return Err(ShapeError::DimensionTooLarge(
                     self.shape().to_vec().into_boxed_slice()));
             }

@@ -110,9 +110,9 @@ mod shape_error;
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
 /// Array index type
-pub type Ix = u32;
+pub type Ix = usize;
 /// Array index type (signed)
-pub type Ixs = i32;
+pub type Ixs = isize;
 
 /// An *N*-dimensional array.
 ///
