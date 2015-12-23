@@ -1073,7 +1073,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over all dimensions but the innermost,
     /// and yields each inner row.
     ///
-    /// Iterator element is `ArrayViewView<A, Ix>` (1D read-write array view).
+    /// Iterator element is `ArrayViewMut<A, Ix>` (1D read-write array view).
     pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
         where S: DataMut
     {
