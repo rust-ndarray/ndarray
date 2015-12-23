@@ -19,31 +19,6 @@ use ndarray::{arr0, arr1, arr2};
 use test::black_box;
 
 #[bench]
-fn bench_std_add_shared(bench: &mut test::Bencher)
-{
-    let mut a = arr2::<f32, _>(&[[1., 2., 2.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [5., 6., 6.]]);
-    let b = a.clone();
-    bench.iter(|| a.iadd(&b));
-}
-
-#[bench]
-fn bench_std_add_owned(bench: &mut test::Bencher)
-{
-    let a = arr2::<f32, _>(&[[1., 2., 2.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [5., 6., 6.]]);
-    let mut a = a.to_owned();
-    let b = a.clone();
-    bench.iter(|| a.iadd(&b));
-}
-
-#[bench]
 fn small_iter_1d(bench: &mut test::Bencher)
 {
     let a = arr1::<f32>(&[1., 2., 2.,
@@ -344,29 +319,6 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn assign_scalar_2d_transposed(bench: &mut test::Bencher)
-{
-    let mut a = arr2::<f32, _>(&[[1., 2., 2.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [5., 6., 6.]]);
-    a.swap_axes(0, 1);
-    bench.iter(|| a.assign_scalar(&3.))
-}
-
-#[bench]
-fn assign_scalar_2d(bench: &mut test::Bencher)
-{
-    let mut a = arr2::<f32, _>(&[[1., 2., 2.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [3., 4., 4.],
-                              [5., 6., 6.]]);
-    bench.iter(|| a.assign_scalar(&3.))
-}
-
-#[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::zeros((64, 64));
@@ -379,7 +331,7 @@ fn assign_scalar_2d_large(bench: &mut test::Bencher)
 fn assign_scalar_2d_cutout(bench: &mut test::Bencher)
 {
     let mut a = OwnedArray::zeros((66, 66));
-    let mut a = a.slice_mut(s![1..-1, 1..-1]);
+    let a = a.slice_mut(s![1..-1, 1..-1]);
     let mut a = black_box(a);
     let s = 3.;
     bench.iter(|| a.assign_scalar(&s))
@@ -428,19 +380,6 @@ fn bench_col_iter(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn bench_mat_mul(bench: &mut test::Bencher)
-{
-    let a = arr2::<f32, _>(&[[1., 2., 2.],
-                          [3., 4., 4.],
-                          [3., 4., 4.],
-                          [3., 4., 4.],
-                          [5., 6., 6.]]);
-    let mut at = a.clone();
-    at.swap_axes(0, 1);
-    bench.iter(|| at.mat_mul(&a));
-}
-
-#[bench]
 fn bench_mat_mul_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros((64, 64));
@@ -481,17 +420,6 @@ fn create_iter_4d(bench: &mut test::Bencher)
     bench.iter(|| {
         v.into_iter()
     });
-}
-
-#[bench]
-fn lst_squares(bench: &mut test::Bencher)
-{
-    let xs = arr2::<f32, _>(&[[ 2.,  3.],
-                           [-2., -1.],
-                           [ 1.,  5.],
-                           [-1.,  2.]]);
-    let b = arr1(&[1., -1., 2., 1.]);
-    bench.iter(|| ndarray::linalg::least_squares(&xs, &b));
 }
 
 #[bench]
