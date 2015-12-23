@@ -58,6 +58,7 @@ use self::rblas::{
 };
 use super::{
     ArrayBase,
+    ArrayView,
     ArrayViewMut,
     Ix, Ixs,
     ShapeError,
@@ -69,7 +70,6 @@ use super::{
 };
 
 
-/*
 /// ***Requires `features = "rblas"`***
 pub struct BlasArrayView<'a, A: 'a, D>(ArrayView<'a, A, D>);
 impl<'a, A, D: Copy> Copy for BlasArrayView<'a, A, D> { }
@@ -78,7 +78,6 @@ impl<'a, A, D: Clone> Clone for BlasArrayView<'a, A, D> {
         BlasArrayView(self.0.clone())
     }
 }
-*/
 
 /// ***Requires `features = "rblas"`***
 pub struct BlasArrayViewMut<'a, A: 'a, D>(ArrayViewMut<'a, A, D>);
@@ -99,8 +98,8 @@ impl<S, D> ArrayBase<S, D>
     }
 
     fn contiguous_check(&self) -> Result<(), ShapeError> {
-        // FIXME: handle transposed
-        if self.dim.ndim() <= 1 || self.strides().last().cloned() == Some(1) {
+        // FIXME: handle transposed?
+        if self.is_inner_contiguous() {
             Ok(())
         } else {
             Err(ShapeError::IncompatibleLayout)
@@ -108,11 +107,9 @@ impl<S, D> ArrayBase<S, D>
     }
 }
 
-/*
 impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
-    /// ***Requires `features = "rblas"`***
     fn into_matrix(self) -> Result<BlasArrayView<'a, A, D>, ShapeError>
     {
         if self.dim.ndim() > 1 {
@@ -122,7 +119,6 @@ impl<'a, A, D> ArrayView<'a, A, D>
         Ok(BlasArrayView(self))
     }
 }
-*/
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
@@ -152,19 +148,67 @@ pub trait AsBlas<A, S, D> {
     /// access to update the layout either way. Breaks sharing if the array is
     /// an `Array`.
     ///
-    /// **Errors:** Produces an error if any dimension is larger than `c_int::MAX`.
+    /// **Errors** if any dimension is larger than `c_int::MAX`.
     fn blas_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
         where S: DataOwned + DataMut,
               A: Clone;
 
     /// Equivalent to `.blas_checked().unwrap()`
     ///
-    /// **Panics** if there was a an error in `blas_checked`.
+    /// **Panics** if there was a an error in `.blas_checked()`.
     fn blas(&mut self) -> BlasArrayViewMut<A, D>
         where S: DataOwned<Elem=A> + DataMut,
               A: Clone
     {
         self.blas_checked().unwrap()
+    }
+
+    /// Return a read-only array view implementing Vector (1D) or Matrix (2D)
+    /// traits.
+    ///
+    /// The array must already be in a blas compatible layout: its innermost
+    /// dimension must be contiguous.
+    ///
+    /// **Errors** if any dimension is larger than `c_int::MAX`.<br>
+    /// **Errors** if the inner dimension is not c-contiguous.
+    ///
+    /// Layout requirements may be loosened in the future.
+    fn blas_view_checked(&self) -> Result<BlasArrayView<A, D>, ShapeError>
+        where S: Data;
+
+    /// `bv` stands for **b**las **v**iew.
+    ///
+    /// Equivalent to `.blas_view_checked().unwrap()`
+    ///
+    /// **Panics** if there was a an error in `.blas_view_checked()`.
+    fn bv(&self) -> BlasArrayView<A, D>
+        where S: Data,
+    {
+        self.blas_view_checked().unwrap()
+    }
+
+    /// Return a read-write array view implementing Vector (1D) or Matrix (2D)
+    /// traits.
+    ///
+    /// The array must already be in a blas compatible layout: its innermost
+    /// dimension must be contiguous.
+    ///
+    /// **Errors** if any dimension is larger than `c_int::MAX`.<br>
+    /// **Errors** if the inner dimension is not c-contiguous.
+    ///
+    /// Layout requirements may be loosened in the future.
+    fn blas_view_mut_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
+        where S: DataMut;
+
+    /// `bvm` stands for **b**las **v**iew **m**ut.
+    ///
+    /// Equivalent to `.blas_view_mut_checked().unwrap()`
+    ///
+    /// **Panics** if there was a an error in `.blas_view_mut_checked()`.
+    fn bvm(&mut self) -> BlasArrayViewMut<A, D>
+        where S: DataMut,
+    {
+        self.blas_view_mut_checked().unwrap()
     }
     /*
 
@@ -192,12 +236,24 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
         match self.dim.ndim() {
             0 | 1 => { }
             2 => {
-                if self.strides()[1] != 1 {
+                if !self.is_inner_contiguous() {
                     self.ensure_standard_layout();
                 }
             }
             _n => self.ensure_standard_layout(),
         }
+        self.view_mut().into_matrix_mut()
+    }
+
+    fn blas_view_checked(&self) -> Result<BlasArrayView<A, D>, ShapeError>
+        where S: Data
+    {
+        self.view().into_matrix()
+    }
+
+    fn blas_view_mut_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
+        where S: DataMut,
+    {
         self.view_mut().into_matrix_mut()
     }
 
@@ -214,14 +270,14 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
     */
 }
 
-/*
+/// **Panics** if `as_mut_ptr` is called on a read-only view.
 impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
     fn len(&self) -> c_int {
         self.0.len() as c_int
     }
 
     fn as_ptr(&self) -> *const A {
-        self.0.ptr as *const _
+        self.0.ptr
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
@@ -233,7 +289,6 @@ impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
         self.0.strides as c_int
     }
 }
-*/
 
 impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
     fn len(&self) -> c_int {
@@ -254,14 +309,20 @@ impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
     }
 }
 
-/*
+/// **Panics** if `as_mut_ptr` is called on a read-only view.
 impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
     fn rows(&self) -> c_int {
-        self.0.dim().1 as c_int
+        self.0.dim().0 as c_int
     }
 
     fn cols(&self) -> c_int {
-        self.0.dim().0 as c_int
+        self.0.dim().1 as c_int
+    }
+
+    // leading dimension == stride between each row
+    fn lead_dim(&self) -> c_int {
+        debug_assert!(self.cols() <= 1 || self.0.strides()[1] == 1);
+        self.0.strides()[0] as c_int
     }
 
     fn as_ptr(&self) -> *const A {
@@ -272,7 +333,6 @@ impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
         panic!("BlasArrayView is not mutable");
     }
 }
-*/
 
 impl<'a, A> Matrix<A> for BlasArrayViewMut<'a, A, (Ix, Ix)> {
     fn rows(&self) -> c_int {
@@ -285,7 +345,7 @@ impl<'a, A> Matrix<A> for BlasArrayViewMut<'a, A, (Ix, Ix)> {
 
     // leading dimension == stride between each row
     fn lead_dim(&self) -> c_int {
-        debug_assert_eq!(self.0.strides()[1], 1);
+        debug_assert!(self.cols() <= 1 || self.0.strides()[1] == 1);
         self.0.strides()[0] as c_int
     }
 
