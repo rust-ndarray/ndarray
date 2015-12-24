@@ -561,9 +561,29 @@ fn char_array()
 
 #[test]
 fn scalar_ops() {
-    let mut a = OwnedArray::<i32, _>::zeros((5, 5));
-    let b = a.clone() + 1;
-    let c = (a.clone() + &a + 2) - &3;
+    let a = OwnedArray::<i32, _>::zeros((5, 5));
+    let b = &a + 1;
+    let c = (&a + &a + 2) - &3;
     println!("{:?}", b);
     println!("{:?}", c);
+
+    let a = OwnedArray::<f32, _>::zeros((2, 2));
+    let b = (1. + a) * 3.;
+    assert_eq!(b, arr2(&[[3., 3.], [3., 3.]]));
+
+    let a = arr1(&[false, true, true]);
+    let b = &a ^ true;
+    let c = true ^ &a;
+    assert_eq!(b, c);
+    assert_eq!(true & &a, a);
+    assert_eq!(b, arr1(&[true, false, false]));
+    assert_eq!(true ^ &a, !a);
+
+    let zero = OwnedArray::<f32, _>::zeros((2, 2));
+    let one = &zero + 1.;
+    assert_eq!(0. * &one, zero);
+    assert_eq!(&one * 0., zero);
+    assert_eq!((&one + &one).scalar_sum(), 8.);
+    assert_eq!(&one / 2., 0.5 * &one);
+    assert_eq!(&one % 1., zero);
 }

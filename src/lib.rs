@@ -297,10 +297,10 @@ pub type Ixs = isize;
 ///
 /// The trait [`Scalar`](trait.Scalar.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
-/// are supported (scalar must be on the right hand side):
+/// are supported (scalar can be on either side).
 ///
-/// - `&A @ K` which produces a new `OwnedArray`
-/// - `B @ K` which consumes `B`, updates it with the result and returns it
+/// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
+/// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
 /// - `B @= K` which performs an arithmetic operation in place
 ///   (requires `features = "assign_ops"`)
 ///
@@ -2227,6 +2227,11 @@ impl_binary_op_inherent!(Shr, shr, ishr, ishr_scalar, "right shift");
 /// overloading, e.g. `B @ K` or `B @= K`  where `B` is a mutable array,
 /// `K` a scalar, and `@` arbitrary arithmetic operator that the scalar supports.
 ///
+/// Left hand side operands must instead be implemented one by one (it does not
+/// involve the `Scalar` trait). Scalar left hand side operations: `K @ &A`
+/// and `K @ B`, are implemented for the primitive numerical types and for
+/// `Complex<f32>, Complex<f64>`.
+///
 /// Non-`Scalar` types can still participate in arithmetic as array elements in
 /// in array-array operations.
 pub trait Scalar { }
@@ -2355,9 +2360,47 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
     );
 );
 
+macro_rules! impl_scalar_op {
+    ($scalar:ty, $trt:ident, $mth:ident, $doc:expr) => (
+// these have no doc -- they are not visible in rustdoc
+// Perform elementwise
+// between the scalar `self` and array `rhs`,
+// and return the result (based on `self`).
+impl<S, D> $trt<ArrayBase<S, D>> for $scalar
+    where S: DataMut<Elem=$scalar>,
+          D: Dimension,
+{
+    type Output = ArrayBase<S, D>;
+    fn $mth (self, mut rhs: ArrayBase<S, D>) -> ArrayBase<S, D>
+    {
+        rhs.unordered_foreach_mut(move |elt| {
+            *elt = self.$mth(*elt);
+        });
+        rhs
+    }
+}
+
+// Perform elementwise
+// between the scalar `self` and array `rhs`,
+// and return the result as a new `OwnedArray`.
+impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
+    where S: Data<Elem=$scalar>,
+          D: Dimension,
+{
+    type Output = OwnedArray<$scalar, D>;
+    fn $mth (self, rhs: &ArrayBase<S, D>) -> OwnedArray<$scalar, D>
+    {
+        rhs.to_owned().$mth(self)
+    }
+}
+    );
+}
+
+
 mod arithmetic_ops {
     use super::*;
     use std::ops::*;
+    use libnum::Complex;
 
     impl_binary_op!(Add, add, "addition");
     impl_binary_op!(Sub, sub, "subtraction");
@@ -2369,6 +2412,55 @@ mod arithmetic_ops {
     impl_binary_op!(BitXor, bitxor, "bit xor");
     impl_binary_op!(Shl, shl, "left shift");
     impl_binary_op!(Shr, shr, "right shift");
+
+    macro_rules! all_scalar_ops {
+        ($int_scalar:ty) => (
+            impl_scalar_op!($int_scalar, Add, add, "addition");
+            impl_scalar_op!($int_scalar, Sub, sub, "subtraction");
+            impl_scalar_op!($int_scalar, Mul, mul, "multiplication");
+            impl_scalar_op!($int_scalar, Div, div, "division");
+            impl_scalar_op!($int_scalar, Rem, rem, "remainder");
+            impl_scalar_op!($int_scalar, BitAnd, bitand, "bit and");
+            impl_scalar_op!($int_scalar, BitOr, bitor, "bit or");
+            impl_scalar_op!($int_scalar, BitXor, bitxor, "bit xor");
+            impl_scalar_op!($int_scalar, Shl, shl, "left shift");
+            impl_scalar_op!($int_scalar, Shr, shr, "right shift");
+        );
+    }
+    all_scalar_ops!(i8);
+    all_scalar_ops!(u8);
+    all_scalar_ops!(i16);
+    all_scalar_ops!(u16);
+    all_scalar_ops!(i32);
+    all_scalar_ops!(u32);
+    all_scalar_ops!(i64);
+    all_scalar_ops!(u64);
+
+    impl_scalar_op!(bool, BitAnd, bitand, "bit and");
+    impl_scalar_op!(bool, BitOr, bitor, "bit or");
+    impl_scalar_op!(bool, BitXor, bitxor, "bit xor");
+
+    impl_scalar_op!(f32, Add, add, "addition");
+    impl_scalar_op!(f32, Sub, sub, "subtraction");
+    impl_scalar_op!(f32, Mul, mul, "multiplication");
+    impl_scalar_op!(f32, Div, div, "division");
+    impl_scalar_op!(f32, Rem, rem, "remainder");
+
+    impl_scalar_op!(f64, Add, add, "addition");
+    impl_scalar_op!(f64, Sub, sub, "subtraction");
+    impl_scalar_op!(f64, Mul, mul, "multiplication");
+    impl_scalar_op!(f64, Div, div, "division");
+    impl_scalar_op!(f64, Rem, rem, "remainder");
+
+    impl_scalar_op!(Complex<f32>, Add, add, "addition");
+    impl_scalar_op!(Complex<f32>, Sub, sub, "subtraction");
+    impl_scalar_op!(Complex<f32>, Mul, mul, "multiplication");
+    impl_scalar_op!(Complex<f32>, Div, div, "division");
+
+    impl_scalar_op!(Complex<f64>, Add, add, "addition");
+    impl_scalar_op!(Complex<f64>, Sub, sub, "subtraction");
+    impl_scalar_op!(Complex<f64>, Mul, mul, "multiplication");
+    impl_scalar_op!(Complex<f64>, Div, div, "division");
 
     impl<A, S, D> Neg for ArrayBase<S, D>
         where A: Clone + Neg<Output=A>,
