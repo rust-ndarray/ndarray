@@ -671,6 +671,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Return the number of dimensions (axes) in the array
+    pub fn ndim(&self) -> usize {
+        self.dim.ndim()
+    }
+
     /// Return a read-only view of the array
     pub fn view(&self) -> ArrayView<A, D> {
         debug_assert!(self.pointer_is_inbounds());
