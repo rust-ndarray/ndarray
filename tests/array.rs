@@ -476,6 +476,12 @@ fn assign_ops()
     a -= &b;
     a -= &b;
     assert_eq!(a, arr2(&[[0., -1.,], [1., 0.]]));
+
+    a += 1.;
+    assert_eq!(a, arr2(&[[1., 0.,], [2., 1.]]));
+    a *= 10.;
+    a /= 5.;
+    assert_eq!(a, arr2(&[[2., 0.,], [4., 2.]]));
 }
 
 #[test]
@@ -551,4 +557,13 @@ fn char_array()
     // test compilation & basics of non-numerical array
     let cc = Array::from_iter("alphabet".chars()).reshape((4, 2));
     assert!(cc.subview(1, 0) == Array::from_iter("apae".chars()));
+}
+
+#[test]
+fn scalar_ops() {
+    let mut a = OwnedArray::<i32, _>::zeros((5, 5));
+    let b = a.clone() + 1;
+    let c = (a.clone() + &a + 2) - &3;
+    println!("{:?}", b);
+    println!("{:?}", c);
 }
