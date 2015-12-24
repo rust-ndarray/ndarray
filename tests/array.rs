@@ -563,7 +563,7 @@ fn char_array()
 fn scalar_ops() {
     let a = OwnedArray::<i32, _>::zeros((5, 5));
     let b = &a + 1;
-    let c = (&a + &a + 2) - &3;
+    let c = (&a + &a + 2) - 3;
     println!("{:?}", b);
     println!("{:?}", c);
 

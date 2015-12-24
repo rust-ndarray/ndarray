@@ -2246,8 +2246,8 @@ impl Scalar for i64 { }
 impl Scalar for u64 { }
 impl Scalar for f32 { }
 impl Scalar for f64 { }
-impl<T> Scalar for Complex<T> where T: Scalar { }
-impl<'a, T> Scalar for &'a T where T: Scalar { }
+impl Scalar for Complex<f32> { }
+impl Scalar for Complex<f64> { }
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $doc:expr) => (
