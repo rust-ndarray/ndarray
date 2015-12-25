@@ -156,16 +156,10 @@ pub type Ixs = i32;
 /// Note that all `ArrayBase` variants can change their view (slicing) of the
 /// data freely, even when the data can’t be mutated.
 ///
-/// ## Indexing
+/// ## Indexing and Dimension
 ///
 /// Array indexes are represented by the types `Ix` and `Ixs`
 /// (signed). ***Note: A future version will switch from `u32` to `usize`.***
-///
-/// ## Slicing
-///
-/// You can use slicing to create a view of a subset of the data in
-/// the array. Slicing methods include `.slice()`, `.islice()`,
-/// `.slice_mut()`.
 ///
 /// The dimensionality of the array determines the number of *axes*, for example
 /// a 2D array has two axes. These are listed in “big endian” order, so that
@@ -173,6 +167,17 @@ pub type Ixs = i32;
 /// rapidly varying index is the last.
 /// For the 2D array this means that indices are `(row, column)`, and the order of
 /// the elements is *(0, 0), (0, 1), (0, 2), ... (1, 0), (1, 1), (1, 2) ...* etc.
+///
+/// The number of axes for an array is fixed by the `D` parameter: `Ix` for
+/// a 1D array, `(Ix, Ix)` for a 2D array etc. The `D` type is also used
+/// for element indices in `.get()` and `array[index]`. The dimension type `Vec<Ix>`
+/// allows a dynamic number of axes.
+///
+/// ## Slicing
+///
+/// You can use slicing to create a view of a subset of the data in
+/// the array. Slicing methods include `.slice()`, `.islice()`,
+/// `.slice_mut()`.
 ///
 /// The slicing specification is passed as a function argument as a fixed size
 /// array with elements of type [`Si`] with fields `Si(begin, end, stride)`,
