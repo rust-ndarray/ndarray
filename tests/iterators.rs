@@ -88,7 +88,7 @@ fn as_slice() {
 
     let a = a.reshape((8, 1));
     assert_slice_correct(&a);
-    let u = a.view().slice(&[Si(0, None, 2), S]);
+    let u = a.slice(&[Si(0, None, 2), S]);
     println!("u={:?}, shape={:?}, strides={:?}", u, u.shape(), u.strides());
     assert!(u.as_slice().is_none());
 }
