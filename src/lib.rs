@@ -2390,7 +2390,7 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
     type Output = OwnedArray<$scalar, D>;
     fn $mth (self, rhs: &ArrayBase<S, D>) -> OwnedArray<$scalar, D>
     {
-        rhs.to_owned().$mth(self)
+        self.$mth(rhs.to_owned())
     }
 }
     );

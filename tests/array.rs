@@ -586,4 +586,12 @@ fn scalar_ops() {
     assert_eq!((&one + &one).scalar_sum(), 8.);
     assert_eq!(&one / 2., 0.5 * &one);
     assert_eq!(&one % 1., zero);
+
+    let zero = OwnedArray::<i32, _>::zeros((2, 2));
+    let one = &zero + 1;
+    assert_eq!(one.clone() << 3, 8 * &one);
+    assert_eq!(3 << one.clone() , 6 * &one);
+
+    assert_eq!(&one << 3, 8 * &one);
+    assert_eq!(3 << &one , 6 * &one);
 }
