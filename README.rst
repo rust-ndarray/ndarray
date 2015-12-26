@@ -6,7 +6,7 @@ ndarray
   everyone involved!
 
 The ``ndarray`` crate provides an N-dimensional container similar to numpy’s
-ndarray.
+ndarray. Requires Rust 1.5.
 
 Please read the `API documentation here`__
 
