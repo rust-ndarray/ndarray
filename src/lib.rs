@@ -133,28 +133,18 @@ pub type Ixs = i32;
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
-/// ## `Array`
+/// ## `Array` and `OwnedArray`
 ///
-/// `Array<A, D>` is a an array with reference counted data and copy-on-write
-/// mutability.
-///
-/// The `Array` is both a view and a shared owner of its data. Some methods,
-/// for example [`slice()`](#method.slice), merely change the view of the data,
-/// while methods like [`iadd()`](#method.iadd) allow mutating the element
-/// values.
-///
-/// Calling a method for mutating elements, for example
-/// [`get_mut()`](#method.get_mut), [`iadd()`](#method.iadd) or
-/// [`iter_mut()`](#method.iter_mut) will break sharing and require a clone of
-/// the data (if it is not uniquely held).
-///
-/// ## Method Conventions
-///
-/// Methods mutating the view or array elements in place use an *i* prefix,
-/// for example `slice` vs. `islice` and `add` vs `iadd`.
+/// `OwnedArray` owns the underlying array elements directly (just like
+/// a `Vec`), while [`Array`](type.Array.html) is a an array with reference
+/// counted data. `Array` can act both as an owner or as a view in that regard.
+/// Sharing requires that it uses copy-on-write for mutable operations.
+/// Calling a method for mutating elements on `Array`, for example
+/// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
+/// will break sharing and require a clone of the data (if it is not uniquely held).
 ///
 /// Note that all `ArrayBase` variants can change their view (slicing) of the
-/// data freely, even when the data can’t be mutated.
+/// data freely, even when their data can’t be mutated.
 ///
 /// ## Indexing and Dimension
 ///
