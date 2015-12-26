@@ -279,10 +279,10 @@ pub type Ixs = isize;
 ///
 /// Since the trait implementations are hard to overview, here is a summary.
 ///
-/// The following combinations of operands
-/// are supported for an arbitrary binary operator denoted by `@`.
 /// Let `A` be an array or view of any kind. Let `B` be a mutable
 /// array (that is, either `OwnedArray`, `Array`, or `ArrayViewMut`)
+/// The following combinations of operands
+/// are supported for an arbitrary binary operator denoted by `@`.
 ///
 /// - `&A @ &A` which produces a new `OwnedArray`
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
@@ -804,10 +804,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
-    pub fn slice(&self, indexes: &D::SliceArg) -> Self
-        where S: DataShared
+    pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D>
     {
-        let mut arr = self.clone();
+        let mut arr = self.view();
         arr.islice(indexes);
         arr
     }
@@ -829,20 +828,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return an iterator over a sliced view.
-    ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
-    ///
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
-    ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// ***Deprecated: Use `.slice()` instead.***
+    #[cfg_attr(has_deprecated, deprecated(note="use .slice() instead"))]
     pub fn slice_iter(&self, indexes: &D::SliceArg) -> Elements<A, D>
     {
-        let mut it = self.view();
-        it.islice(indexes);
-        it.into_iter_()
+        self.slice(indexes).into_iter()
     }
 
     /// Return a sliced read-write view of the array.
@@ -1118,47 +1108,38 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         return (len, stride)
     }
 
-    /// Return an iterator over the diagonal elements of the array.
+    /// Return an view of the diagonal elements of the array.
     ///
     /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
     /// *(1, 1, ..., 1)* etc as long as all axes have elements.
-    pub fn diag_iter(&self) -> Elements<A, Ix>
+    pub fn diag(&self) -> ArrayView<A, Ix>
     {
-        let (len, stride) = self.diag_params();
-        let view = ArrayBase {
-            data: self.raw_data(),
-            ptr: self.ptr,
-            dim: len,
-            strides: stride as Ix,
-        };
-        view.into_iter_()
-    }
-
-    /// Return the diagonal as a one-dimensional array.
-    pub fn diag(&self) -> ArrayBase<S, Ix>
-        where S: DataShared,
-    {
-        let (len, stride) = self.diag_params();
-        ArrayBase {
-            data: self.data.clone(),
-            ptr: self.ptr,
-            dim: len,
-            strides: stride as Ix,
-        }
+        self.view().into_diag()
     }
 
     /// Return a read-write view over the diagonal elements of the array.
     pub fn diag_mut(&mut self) -> ArrayViewMut<A, Ix>
         where S: DataMut,
     {
-        self.ensure_unique();
+        self.view_mut().into_diag()
+    }
+
+    /// Return the diagonal as a one-dimensional array.
+    pub fn into_diag(self) -> ArrayBase<S, Ix>
+    {
         let (len, stride) = self.diag_params();
-        ArrayViewMut {
+        ArrayBase {
+            data: self.data,
             ptr: self.ptr,
-            data: self.raw_data_mut(),
             dim: len,
             strides: stride as Ix,
         }
+    }
+
+    /// ***Deprecated: use `.diag()`***
+    #[cfg_attr(has_deprecated, deprecated(note="use .diag() instead"))]
+    pub fn diag_iter(&self) -> Elements<A, Ix> {
+        self.diag().into_iter()
     }
 
     /// ***Deprecated: use `.diag_mut()`***
@@ -1168,7 +1149,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         self.diag_mut().into_iter_()
     }
-
 
     /// Make the array unshared.
     ///
@@ -1269,8 +1249,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///               [3., 4.]])
     /// );
     /// ```
-    pub fn reshape<E: Dimension>(&self, shape: E) -> ArrayBase<S, E>
-        where S: DataShared + DataOwned, A: Clone,
+    pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E>
+        where S: DataShared + DataOwned,
+              A: Clone,
+              E: Dimension,
     {
         if shape.size() != self.dim.size() {
             panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
@@ -2488,20 +2470,9 @@ mod arithmetic_ops {
 mod assign_ops {
     use super::*;
 
-    use std::ops::{
-        AddAssign,
-        SubAssign,
-        MulAssign,
-        DivAssign,
-        RemAssign,
-        BitAndAssign,
-        BitOrAssign,
-        BitXorAssign,
-    };
-
-
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {
+    use std::ops::$trt;
 
     #[doc=$doc]
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.

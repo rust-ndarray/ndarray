@@ -165,7 +165,8 @@ fn test_cow()
     assert_eq!(mat[(0,1)], 2);
     assert_eq!(n[(0,0)], 1);
     assert_eq!(n[(0,1)], 0);
-    let mut rev = mat.reshape(4).slice(&[Si(0, None, -1)]);
+    let mut rev = mat.reshape(4);
+    rev.islice(&[Si(0, None, -1)]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -200,14 +201,14 @@ fn test_sub()
 #[test]
 fn diag()
 {
-    let d = arr2(&[[1., 2., 3.0f32]]).diag();
+    let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
     assert_eq!(d.dim(), 1);
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
-    let d = a.view().diag();
+    let d = a.view().into_diag();
     assert_eq!(d.dim(), 2);
-    let d = arr2::<f32, _>(&[[]]).diag();
+    let d = arr2::<f32, _>(&[[]]).into_diag();
     assert_eq!(d.dim(), 0);
-    let d = Array::<f32, _>::zeros(()).diag();
+    let d = Array::<f32, _>::zeros(()).into_diag();
     assert_eq!(d.dim(), 1);
 }
 
