@@ -86,7 +86,7 @@ pub const S: Si = Si(0, None, 1);
 /// };
 ///
 /// fn laplacian(v: &ArrayView<f32, (Ix, Ix)>) -> OwnedArray<f32, (Ix, Ix)> {
-///     (&v.slice(s![1..-1, 1..-1]) * &aview0(&-4.))
+///     -4. * &v.slice(s![1..-1, 1..-1])
 ///     + v.slice(s![ ..-2, 1..-1])
 ///     + v.slice(s![1..-1,  ..-2])
 ///     + v.slice(s![1..-1, 2..  ])

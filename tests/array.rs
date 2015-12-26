@@ -476,6 +476,12 @@ fn assign_ops()
     a -= &b;
     a -= &b;
     assert_eq!(a, arr2(&[[0., -1.,], [1., 0.]]));
+
+    a += 1.;
+    assert_eq!(a, arr2(&[[1., 0.,], [2., 1.]]));
+    a *= 10.;
+    a /= 5.;
+    assert_eq!(a, arr2(&[[2., 0.,], [4., 2.]]));
 }
 
 #[test]
@@ -551,4 +557,41 @@ fn char_array()
     // test compilation & basics of non-numerical array
     let cc = Array::from_iter("alphabet".chars()).reshape((4, 2));
     assert!(cc.subview(1, 0) == Array::from_iter("apae".chars()));
+}
+
+#[test]
+fn scalar_ops() {
+    let a = OwnedArray::<i32, _>::zeros((5, 5));
+    let b = &a + 1;
+    let c = (&a + &a + 2) - 3;
+    println!("{:?}", b);
+    println!("{:?}", c);
+
+    let a = OwnedArray::<f32, _>::zeros((2, 2));
+    let b = (1. + a) * 3.;
+    assert_eq!(b, arr2(&[[3., 3.], [3., 3.]]));
+
+    let a = arr1(&[false, true, true]);
+    let b = &a ^ true;
+    let c = true ^ &a;
+    assert_eq!(b, c);
+    assert_eq!(true & &a, a);
+    assert_eq!(b, arr1(&[true, false, false]));
+    assert_eq!(true ^ &a, !a);
+
+    let zero = OwnedArray::<f32, _>::zeros((2, 2));
+    let one = &zero + 1.;
+    assert_eq!(0. * &one, zero);
+    assert_eq!(&one * 0., zero);
+    assert_eq!((&one + &one).scalar_sum(), 8.);
+    assert_eq!(&one / 2., 0.5 * &one);
+    assert_eq!(&one % 1., zero);
+
+    let zero = OwnedArray::<i32, _>::zeros((2, 2));
+    let one = &zero + 1;
+    assert_eq!(one.clone() << 3, 8 * &one);
+    assert_eq!(3 << one.clone() , 6 * &one);
+
+    assert_eq!(&one << 3, 8 * &one);
+    assert_eq!(3 << &one , 6 * &one);
 }
