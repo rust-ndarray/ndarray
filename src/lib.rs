@@ -279,10 +279,10 @@ pub type Ixs = isize;
 ///
 /// Since the trait implementations are hard to overview, here is a summary.
 ///
-/// The following combinations of operands
-/// are supported for an arbitrary binary operator denoted by `@`.
 /// Let `A` be an array or view of any kind. Let `B` be a mutable
 /// array (that is, either `OwnedArray`, `Array`, or `ArrayViewMut`)
+/// The following combinations of operands
+/// are supported for an arbitrary binary operator denoted by `@`.
 ///
 /// - `&A @ &A` which produces a new `OwnedArray`
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
