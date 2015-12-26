@@ -1249,8 +1249,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///               [3., 4.]])
     /// );
     /// ```
-    pub fn reshape<E: Dimension>(&self, shape: E) -> ArrayBase<S, E>
-        where S: DataShared + DataOwned, A: Clone,
+    pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E>
+        where S: DataShared + DataOwned,
+              A: Clone,
+              E: Dimension,
     {
         if shape.size() != self.dim.size() {
             panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
