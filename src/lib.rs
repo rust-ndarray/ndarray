@@ -2470,20 +2470,9 @@ mod arithmetic_ops {
 mod assign_ops {
     use super::*;
 
-    use std::ops::{
-        AddAssign,
-        SubAssign,
-        MulAssign,
-        DivAssign,
-        RemAssign,
-        BitAndAssign,
-        BitOrAssign,
-        BitXorAssign,
-    };
-
-
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {
+    use std::ops::$trt;
 
     #[doc=$doc]
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
