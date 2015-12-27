@@ -344,10 +344,13 @@ pub unsafe trait Data {
 /// Array’s writable inner representation.
 pub unsafe trait DataMut : Data {
     fn slice_mut(&mut self) -> &mut [Self::Elem];
+    #[inline]
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
         where Self: Sized, D: Dimension
     {
     }
+    #[inline]
+    fn is_unique(&mut self) -> bool { true }
 }
 
 /// Clone an Array’s storage.
@@ -384,6 +387,10 @@ unsafe impl<A> DataMut for Rc<Vec<A>> where A: Clone {
         unsafe {
             self_.ptr = rvec.as_mut_ptr().offset(our_off);
         }
+    }
+
+    fn is_unique(&mut self) -> bool {
+        Rc::get_mut(self).is_some()
     }
 }
 
@@ -946,7 +953,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub unsafe fn uget_mut(&mut self, index: D) -> &mut A
         where S: DataMut
     {
-        //debug_assert!(Rc::get_mut(&mut self.data).is_some());
+        debug_assert!(self.data.is_unique());
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
