@@ -129,7 +129,7 @@ fn sum_2d_raw(bench: &mut test::Bencher)
 fn sum_2d_cutout(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.view().slice(s![1..-1, 1..-1]);
+    let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         let mut sum = 0;
@@ -144,7 +144,7 @@ fn sum_2d_cutout(bench: &mut test::Bencher)
 fn sum_2d_cutout_fold(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.view().slice(s![1..-1, 1..-1]);
+    let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         a.fold(0, |acc, elt| acc + *elt)
@@ -165,7 +165,7 @@ fn scalar_sum_2d_regular(bench: &mut test::Bencher)
 fn scalar_sum_2d_cutout(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.view().slice(s![1..-1, 1..-1]);
+    let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         a.scalar_sum()
@@ -176,7 +176,7 @@ fn scalar_sum_2d_cutout(bench: &mut test::Bencher)
 fn sum_2d_cutout_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.view().slice(s![1..-1, 1..-1]);
+    let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         let mut sum = 0;
@@ -193,7 +193,7 @@ fn sum_2d_cutout_by_row(bench: &mut test::Bencher)
 fn sum_2d_cutout_outer_iter(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.view().slice(s![1..-1, 1..-1]);
+    let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         let mut sum = 0;
@@ -252,7 +252,7 @@ fn scalar_sum_2d_float(bench: &mut test::Bencher)
 fn scalar_sum_2d_float_cutout(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros((66, 66));
-    let av = a.view().slice(s![1..-1, 1..-1]);
+    let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
         a.scalar_sum()
@@ -360,7 +360,7 @@ fn assign_scalar_2d_raw_large(bench: &mut test::Bencher)
 fn bench_iter_diag(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros((1024, 1024));
-    bench.iter(|| for elt in a.diag_iter() { black_box(elt); })
+    bench.iter(|| for elt in a.diag() { black_box(elt); })
 }
 
 #[bench]
