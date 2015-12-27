@@ -8,8 +8,9 @@ ndarray
 The ``ndarray`` crate provides an N-dimensional container similar to numpy’s
 ndarray. Requires Rust 1.5.
 
-Please read the `API documentation here`__
+Please read the `API documentation here (0.2)`__ `(master)`__
 
+__ http://bluss.github.io/rust-ndarray/0.2/
 __ http://bluss.github.io/rust-ndarray/
 
 |build_status|_ |crates|_
