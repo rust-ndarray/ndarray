@@ -85,10 +85,17 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- **Note:** In 0.3 (future release) the indexing type ``Ix`` will
-  change to ``usize``
+- 0.3.0-alpha.1
 
-- 0.2.0
+  - **Index type** ``Ix`` **changed to** ``usize`` (#9). Gives better iterator codegen
+    and 64-bit size arrays.
+  - Support scalar operands with arithmetic operators.
+  - Change ``.slice()`` and ``.diag()`` to return array views, add ``.into_diag()``.
+  - Add ability to use fixed size arrays for array indexing, enabling syntax
+    like ``a[[i, j]]`` for indexing.
+  - Add ``.ndim()``
+
+- **0.2.0**
 
   - First chapter of API and performance evolution is done \\o/
   - 0.2.0 highlight: Vectorized (efficient) arithmetic operations
