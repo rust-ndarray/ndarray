@@ -72,13 +72,13 @@ fn test_index()
     }
 
     for ((i, j), a) in Indexes::new((2, 3)).zip(A.iter()) {
-        assert_eq!(*a, A[(i, j)]);
+        assert_eq!(*a, A[[i, j]]);
     }
 
     let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
     for ((i, j), x) in Indexes::new((1, 2)).zip(it.by_ref()) {
-        assert_eq!(*x, vi[(i, j)]);
+        assert_eq!(*x, vi[[i, j]]);
     }
     assert!(it.next().is_none());
 }
@@ -93,10 +93,10 @@ fn test_add()
 
     let B = A.clone();
     A.iadd(&B);
-    assert_eq!(A[(0,0)], 0);
-    assert_eq!(A[(0,1)], 2);
-    assert_eq!(A[(1,0)], 4);
-    assert_eq!(A[(1,1)], 6);
+    assert_eq!(A[[0, 0]], 0);
+    assert_eq!(A[[0, 1]], 2);
+    assert_eq!(A[[1, 0]], 4);
+    assert_eq!(A[[1, 1]], 6);
 }
 
 #[test]
@@ -156,15 +156,16 @@ fn test_negative_stride_rcarray()
 fn test_cow()
 {
     let mut mat = Array::<isize, _>::zeros((2,2));
-    mat[(0, 0)] = 1;
+    mat[[0, 0]] = 1;
     let n = mat.clone();
-    mat[(0, 1)] = 2;
-    mat[(1, 0)] = 3;
-    mat[(1, 1)] = 4;
-    assert_eq!(mat[(0,0)], 1);
-    assert_eq!(mat[(0,1)], 2);
-    assert_eq!(n[(0,0)], 1);
-    assert_eq!(n[(0,1)], 0);
+    mat[[0, 1]] = 2;
+    mat[[1, 0]] = 3;
+    mat[[1, 1]] = 4;
+    assert_eq!(mat[[0, 0]], 1);
+    assert_eq!(mat[[0, 1]], 2);
+    assert_eq!(n[[0, 0]], 1);
+    assert_eq!(n[[0, 1]], 0);
+    assert_eq!(n.get((0, 1)), Some(&0));
     let mut rev = mat.reshape(4);
     rev.islice(&[Si(0, None, -1)]);
     assert_eq!(rev[0], 4);
@@ -265,19 +266,6 @@ fn assign()
         v.assign_scalar(&0);
     }
     assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
-}
-
-#[test]
-fn dyn_dimension()
-{
-    let a = arr2(&[[1., 2.], [3., 4.0]]).reshape(vec![2, 2]);
-    assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
-
-    let mut dim = vec![1; 1024];
-    dim[16] = 4;
-    dim[17] = 3;
-    let z = Array::<f32, _>::zeros(dim.clone());
-    assert_eq!(z.shape(), &dim[..]);
 }
 
 #[test]

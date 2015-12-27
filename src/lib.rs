@@ -81,6 +81,7 @@ use std::slice::{self, Iter, IterMut};
 use it::ZipSlices;
 
 pub use dimension::{Dimension, RemoveAxis};
+pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
 pub use si::{Si, S};
@@ -343,10 +344,13 @@ pub unsafe trait Data {
 /// Array’s writable inner representation.
 pub unsafe trait DataMut : Data {
     fn slice_mut(&mut self) -> &mut [Self::Elem];
+    #[inline]
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
         where Self: Sized, D: Dimension
     {
     }
+    #[inline]
+    fn is_unique(&mut self) -> bool { true }
 }
 
 /// Clone an Array’s storage.
@@ -383,6 +387,10 @@ unsafe impl<A> DataMut for Rc<Vec<A>> where A: Clone {
         unsafe {
             self_.ptr = rvec.as_mut_ptr().offset(our_off);
         }
+    }
+
+    fn is_unique(&mut self) -> bool {
+        Rc::get_mut(self).is_some()
     }
 }
 
@@ -874,12 +882,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert!(
     ///     a.get((0, 1)) == Some(&2.) &&
     ///     a.get((0, 2)) == None &&
-    ///     a[(0, 1)] == 2.
+    ///     a[(0, 1)] == 2. &&
+    ///     a[[0, 1]] == 2.
     /// );
     /// ```
-    pub fn get(&self, index: D) -> Option<&A> {
+    pub fn get<I>(&self, index: I) -> Option<&A>
+        where I: NdIndex<Dim=D>,
+    {
         let ptr = self.ptr;
-        self.dim.stride_offset_checked(&self.strides, &index)
+        index.index_checked(&self.dim, &self.strides)
             .map(move |offset| unsafe {
                 &*ptr.offset(offset)
             })
@@ -893,12 +904,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a mutable reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
-    pub fn get_mut(&mut self, index: D) -> Option<&mut A>
+    pub fn get_mut<I>(&mut self, index: I) -> Option<&mut A>
         where S: DataMut,
+              I: NdIndex<Dim=D>,
     {
         self.ensure_unique();
         let ptr = self.ptr;
-        self.dim.stride_offset_checked(&self.strides, &index)
+        index.index_checked(&self.dim, &self.strides)
             .map(move |offset| unsafe {
                 &mut *ptr.offset(offset)
             })
@@ -941,7 +953,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub unsafe fn uget_mut(&mut self, index: D) -> &mut A
         where S: DataMut
     {
-        //debug_assert!(Rc::get_mut(&mut self.data).is_some());
+        debug_assert!(self.data.is_unique());
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)

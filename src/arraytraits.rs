@@ -19,35 +19,43 @@ use super::{
     Data,
     DataMut,
     DataOwned,
+    NdIndex,
 };
+
+#[cold]
+#[inline(never)]
+fn array_out_of_bounds() -> ! {
+    panic!("ndarray: index out of bounds");
+}
 
 /// Access the element at **index**.
 ///
 /// **Panics** if index is out of bounds.
-impl<S, D> Index<D> for ArrayBase<S, D>
+impl<S, D, I> Index<I> for ArrayBase<S, D>
     where D: Dimension,
+          I: NdIndex<Dim=D>,
           S: Data,
 {
     type Output = S::Elem;
     #[inline]
-    fn index(&self, index: D) -> &S::Elem {
-        self.get(index).expect("Array::index: out of bounds")
+    fn index(&self, index: I) -> &S::Elem {
+        self.get(index).unwrap_or_else(|| array_out_of_bounds())
     }
 }
 
 /// Access the element at **index** mutably.
 ///
 /// **Panics** if index is out of bounds.
-impl<S, D> IndexMut<D> for ArrayBase<S, D>
+impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
     where D: Dimension,
+          I: NdIndex<Dim=D>,
           S: DataMut,
 {
     #[inline]
-    fn index_mut(&mut self, index: D) -> &mut S::Elem {
-        self.get_mut(index).expect("Array::index_mut: out of bounds")
+    fn index_mut(&mut self, index: I) -> &mut S::Elem {
+        self.get_mut(index).unwrap_or_else(|| array_out_of_bounds())
     }
 }
-
 
 impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
     where D: Dimension,

@@ -124,7 +124,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
         let (m, _) = L.dim();
         for i in 1..m {
             for j in 0..i {
-                let elt = &mut L[(i, j)];
+                let elt = &mut L[[i, j]];
                 *elt = elt.conjugate();
             }
         }
@@ -177,7 +177,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
             }
 
             // L_ij = [ A_ij - Sum(k = 1 .. j) L_ik L_jk ] / L_jj
-            L[(i, j)] = (L[(i, j)] - lik_ljk_sum) / L[(j, j)];
+            L[[i, j]] = (L[[i, j]] - lik_ljk_sum) / L[[j, j]];
         }
 
         // Diagonal where i == j
@@ -188,12 +188,12 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
         for &ljk in L.row_iter(j).take(j as usize) {
             ljk_sum = ljk_sum + ljk * ljk.conjugate();
         }
-        L[(j, j)] = (L[(j, j)] - ljk_sum).sqrt_real();
+        L[[j, j]] = (L[[j, j]] - ljk_sum).sqrt_real();
 
         // After the diagonal
         // L_ij = 0 for j > i
         for j in i + 1..n {
-            L[(i, j)] = z;
+            L[[i, j]] = z;
         }
     }
     L
