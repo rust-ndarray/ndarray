@@ -359,42 +359,25 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
     }
 }
 
-unsafe impl Dimension for (Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 4];
-    #[inline]
-    fn ndim(&self) -> usize { 4 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 5];
-    #[inline]
-    fn ndim(&self) -> usize { 5 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 6];
-    #[inline]
-    fn ndim(&self) -> usize { 6 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 7];
-    #[inline]
-    fn ndim(&self) -> usize { 7 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 8];
-    #[inline]
-    fn ndim(&self) -> usize { 8 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 9];
-    #[inline]
-    fn ndim(&self) -> usize { 9 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 10];
-    #[inline]
-    fn ndim(&self) -> usize { 10 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 11];
-    #[inline]
-    fn ndim(&self) -> usize { 11 } }
-unsafe impl Dimension for (Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix) {
-    type SliceArg = [Si; 12];
-    #[inline]
-    fn ndim(&self) -> usize { 12 } }
+macro_rules! large_dim {
+    ($n:expr, $($ix:ident),+) => (
+        unsafe impl Dimension for ($($ix),+) {
+            type SliceArg = [Si; $n];
+            #[inline]
+            fn ndim(&self) -> usize { $n }
+        }
+    )
+}
+
+large_dim!(4, Ix, Ix, Ix, Ix);
+large_dim!(5, Ix, Ix, Ix, Ix, Ix);
+large_dim!(6, Ix, Ix, Ix, Ix, Ix, Ix);
+large_dim!(7, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+large_dim!(8, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+large_dim!(9, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+large_dim!(10, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+large_dim!(11, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 
 /// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
