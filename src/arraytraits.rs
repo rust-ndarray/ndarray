@@ -22,6 +22,12 @@ use super::{
     NdIndex,
 };
 
+#[cold]
+#[inline(never)]
+fn array_out_of_bounds() -> ! {
+    panic!("ndarray: index out of bounds");
+}
+
 /// Access the element at **index**.
 ///
 /// **Panics** if index is out of bounds.
@@ -33,7 +39,7 @@ impl<S, D, I> Index<I> for ArrayBase<S, D>
     type Output = S::Elem;
     #[inline]
     fn index(&self, index: I) -> &S::Elem {
-        self.get(index).expect("Array::index: out of bounds")
+        self.get(index).unwrap_or_else(|| array_out_of_bounds())
     }
 }
 
@@ -47,7 +53,7 @@ impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
 {
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut S::Elem {
-        self.get_mut(index).expect("Array::index_mut: out of bounds")
+        self.get_mut(index).unwrap_or_else(|| array_out_of_bounds())
     }
 }
 
