@@ -16,19 +16,19 @@ $(VERSIONS): Cargo.toml
 
 $(DOCCRATES): %: target/VERS/%
 	# Put in the crate version into the docs
-	find ./doc/$@ -name "*.html" -exec sed -i -e "s/<title>\(.*\) - Rust/<title>ndarray $(shell cat $<) - \1 - Rust/g" {} \;
+	find ./master/$@ -name "*.html" -exec sed -i -e "s/<title>\(.*\) - Rust/<title>ndarray $(shell cat $<) - \1 - Rust/g" {} \;
 
 subst: $(DOCCRATES)
 
 mkdocs: Cargo.toml
 	cargo doc --no-deps --features=$(FEATURES)
-	rm -rf ./doc
-	cp -r ./target/doc ./doc
-	- cat ./custom.css >> doc/main.css
+	rm -rf ./master
+	cp -r ./target/doc ./master
+	- cat ./custom.css >> master/main.css
 
 $(RMDOCS): mkdocs
-	rm -r ./doc/$@
-	sed -i "/searchIndex\['$@'\]/d" doc/search-index.js
+	rm -r ./master/$@
+	sed -i "/searchIndex\['$@'\]/d" master/search-index.js
 
 fast: FEATURES = 
 fast: mkdocs 
