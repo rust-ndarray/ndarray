@@ -63,10 +63,11 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
 }
 
 fn turn_on_corners(z: &mut Board) {
-    z.slice_mut(s![1..2, 1..2]).assign_scalar(&1);
-    z.slice_mut(s![1..2, -2..-1]).assign_scalar(&1);
-    z.slice_mut(s![-2..-1, 1..2]).assign_scalar(&1);
-    z.slice_mut(s![-2..-1, -2..-1]).assign_scalar(&1);
+    let (n, m) = z.dim();
+    z[[1    , 1    ]] = 1;
+    z[[1    , m - 2]] = 1;
+    z[[n - 2, 1    ]] = 1;
+    z[[n - 2, m - 2]] = 1;
 }
 
 fn render(a: &Board) {

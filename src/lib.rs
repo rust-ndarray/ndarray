@@ -81,6 +81,7 @@ use std::slice::{self, Iter, IterMut};
 use it::ZipSlices;
 
 pub use dimension::{Dimension, RemoveAxis};
+pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
 pub use si::{Si, S};
@@ -874,12 +875,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert!(
     ///     a.get((0, 1)) == Some(&2.) &&
     ///     a.get((0, 2)) == None &&
-    ///     a[(0, 1)] == 2.
+    ///     a[(0, 1)] == 2. &&
+    ///     a[[0, 1]] == 2.
     /// );
     /// ```
-    pub fn get(&self, index: D) -> Option<&A> {
+    pub fn get<I>(&self, index: I) -> Option<&A>
+        where I: NdIndex<Dim=D>,
+    {
         let ptr = self.ptr;
-        self.dim.stride_offset_checked(&self.strides, &index)
+        index.index_checked(&self.dim, &self.strides)
             .map(move |offset| unsafe {
                 &*ptr.offset(offset)
             })
@@ -893,12 +897,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a mutable reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
-    pub fn get_mut(&mut self, index: D) -> Option<&mut A>
+    pub fn get_mut<I>(&mut self, index: I) -> Option<&mut A>
         where S: DataMut,
+              I: NdIndex<Dim=D>,
     {
         self.ensure_unique();
         let ptr = self.ptr;
-        self.dim.stride_offset_checked(&self.strides, &index)
+        index.index_checked(&self.dim, &self.strides)
             .map(move |offset| unsafe {
                 &mut *ptr.offset(offset)
             })
