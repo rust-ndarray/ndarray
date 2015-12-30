@@ -1602,11 +1602,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::arr2;
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
+    /// let a = arr2(&[[ 0., 1.],
+    ///                [-1., 2.]]);
     /// assert!(
-    ///     a.map(|&x| (x / 2.) as i32)
-    ///     == arr2(&[[0, 1], [1, 2]])
+    ///     a.map(|x| *x >= 1.0)
+    ///     == arr2(&[[false, true],
+    ///               [false, true]])
     /// );
     /// ```
     pub fn map<'a, B, F>(&'a self, mut f: F) -> OwnedArray<B, D>
