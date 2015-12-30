@@ -205,16 +205,16 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = l.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x = vec![zero::<A>(); m as usize];
-    for (i, bi) in b.indexed_iter() {
+    let mut x = Col::zeros(m);
+    for i in 0..m {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
-        let mut b_lx_sum = *bi;
-        for (lij, xj) in l.row_iter(i).zip(x.iter()).take(i as usize) {
-            b_lx_sum = b_lx_sum - (*lij) * (*xj)
+        let mut b_lx_sum = b[i];
+        for j in 0..i {
+            b_lx_sum = b_lx_sum - l[[i, j]] * x[j];
         }
-        x[i as usize] = b_lx_sum / l[(i, i)];
+        x[i] = b_lx_sum / l[[i, i]];
     }
-    Array::from_vec(x)
+    x
 }
 
 /// Solve *U x = b* where *U* is an upper triangular matrix.
@@ -223,14 +223,14 @@ pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
     let (m, n) = u.dim();
     assert!(m == n);
     assert!(m == b.dim());
-    let mut x = vec![zero::<A>(); m as usize];
+    let mut x = Col::zeros(m);
     for i in (0..m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j
         let mut b_ux_sum = b[i];
-        for (uij, xj) in u.row_iter(i).rev().zip(x.iter().rev()).take((m - i - 1) as usize) {
-            b_ux_sum = b_ux_sum - (*uij) * (*xj);
+        for j in i..m {
+            b_ux_sum = b_ux_sum - u[[i, j]] * x[j];
         }
-        x[i as usize] = b_ux_sum / u[(i, i)];
+        x[i] = b_ux_sum / u[[i, i]];
     }
-    Array::from_vec(x)
+    x
 }

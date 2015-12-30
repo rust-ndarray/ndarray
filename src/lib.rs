@@ -1,6 +1,6 @@
 #![crate_name="ndarray"]
 #![cfg_attr(has_deprecated, feature(deprecated))]
-#![doc(html_root_url = "http://bluss.github.io/rust-ndarray/doc/")]
+#![doc(html_root_url = "http://bluss.github.io/rust-ndarray/master/")]
 
 //! The `ndarray` crate provides an N-dimensional container similar to numpy’s
 //! ndarray.
@@ -118,13 +118,13 @@ pub type Ixs = isize;
 
 /// An *N*-dimensional array.
 ///
-/// The array is a general container of elements. It can be of numerical use
-/// too, supporting all mathematical operators by applying them elementwise.  It
-/// cannot grow or shrink, but can be sliced into views of parts of its data.
+/// The array is a general container of elements. It cannot grow or shrink, but
+/// can be sliced into subsets of its data.
+/// The array supports arithmetic operations by applying them elementwise.
 ///
 /// The `ArrayBase<S, D>` is parameterized by:
 ///
-/// - `S` for the data storage
+/// - `S` for the data container
 /// - `D` for the number of dimensions
 ///
 /// Type aliases [`Array`], [`OwnedArray`], [`ArrayView`], and [`ArrayViewMut`] refer
@@ -477,8 +477,12 @@ pub type Array<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 
 /// A lightweight array view.
+///
+/// `ArrayView` implements `IntoIterator`.
 pub type ArrayView<'a, A, D> = ArrayBase<&'a [A], D>;
 /// A lightweight read-write array view.
+///
+/// `ArrayViewMut` implements `IntoIterator`.
 pub type ArrayViewMut<'a, A, D> = ArrayBase<&'a mut [A], D>;
 
 impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
@@ -834,6 +838,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }
+        debug_assert!(self.pointer_is_inbounds());
     }
 
     /// ***Deprecated: Use `.slice()` instead.***
@@ -1308,9 +1313,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where E: Dimension
     {
         if shape.size() != self.dim.size() {
-            return Err(ShapeError::IncompatibleShapes(
-                    self.dim.slice().to_vec().into_boxed_slice(),
-                    shape.slice().to_vec().into_boxed_slice()));
+            return Err(Self::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -1323,6 +1326,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else {
             Err(ShapeError::IncompatibleLayout)
         }
+    }
+
+    #[inline(never)]
+    #[cold]
+    fn incompatible_shapes<E>(a: &D, b: &E) -> ShapeError
+        where E: Dimension,
+    {
+        ShapeError::IncompatibleShapes(
+            a.slice().to_vec().into_boxed_slice(),
+            b.slice().to_vec().into_boxed_slice())
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*
@@ -1564,9 +1577,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
                 try_slices = false;
             }
-            // FIXME: Regular .zip() is slow
-            for (y, x) in s_row.iter_mut().zip(r_row) {
-                f(y, x);
+            unsafe {
+                for i in 0..s_row.len() {
+                    f(s_row.uget_mut(i), r_row.uget(i))
+                }
             }
         }
     }
@@ -1628,11 +1642,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::arr2;
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
+    /// let a = arr2(&[[ 0., 1.],
+    ///                [-1., 2.]]);
     /// assert!(
-    ///     a.map(|&x| (x / 2.) as i32)
-    ///     == arr2(&[[0, 1], [1, 2]])
+    ///     a.map(|x| *x >= 1.0)
+    ///     == arr2(&[[false, true],
+    ///               [false, true]])
     /// );
     /// ```
     pub fn map<'a, B, F>(&'a self, mut f: F) -> OwnedArray<B, D>
