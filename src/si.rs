@@ -80,7 +80,6 @@ pub const S: Si = Si(0, None, 1);
 ///
 /// use ndarray::{
 ///     ArrayView,
-///     aview0,
 ///     Ix,
 ///     OwnedArray,
 /// };
