@@ -1287,9 +1287,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where E: Dimension
     {
         if shape.size() != self.dim.size() {
-            return Err(ShapeError::IncompatibleShapes(
-                    self.dim.slice().to_vec().into_boxed_slice(),
-                    shape.slice().to_vec().into_boxed_slice()));
+            return Err(Self::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -1302,6 +1300,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else {
             Err(ShapeError::IncompatibleLayout)
         }
+    }
+
+    #[inline(never)]
+    #[cold]
+    fn incompatible_shapes<E>(a: &D, b: &E) -> ShapeError
+        where E: Dimension,
+    {
+        ShapeError::IncompatibleShapes(
+            a.slice().to_vec().into_boxed_slice(),
+            b.slice().to_vec().into_boxed_slice())
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*
