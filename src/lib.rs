@@ -1,6 +1,6 @@
 #![crate_name="ndarray"]
 #![cfg_attr(has_deprecated, feature(deprecated))]
-#![doc(html_root_url = "http://bluss.github.io/rust-ndarray/doc/")]
+#![doc(html_root_url = "http://bluss.github.io/rust-ndarray/master/")]
 
 //! The `ndarray` crate provides an N-dimensional container similar to numpy’s
 //! ndarray.
@@ -116,13 +116,13 @@ pub type Ixs = i32;
 
 /// An *N*-dimensional array.
 ///
-/// The array is a general container of elements. It can be of numerical use
-/// too, supporting all mathematical operators by applying them elementwise.  It
-/// cannot grow or shrink, but can be sliced into views of parts of its data.
+/// The array is a general container of elements. It cannot grow or shrink, but
+/// can be sliced into subsets of its data.
+/// The array supports arithmetic operations by applying them elementwise.
 ///
 /// The `ArrayBase<S, D>` is parameterized by:
 ///
-/// - `S` for the data storage
+/// - `S` for the data container
 /// - `D` for the number of dimensions
 ///
 /// Type aliases [`Array`], [`OwnedArray`], [`ArrayView`], and [`ArrayViewMut`] refer
