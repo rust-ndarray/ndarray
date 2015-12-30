@@ -91,7 +91,7 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
 /// to each element.
 ///
 /// The array is shown in multiline style, unless the alternate form 
-/// is used, `{:#}`.
+/// is used, `{:#?}`.
 impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
