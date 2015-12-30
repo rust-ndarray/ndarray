@@ -1543,9 +1543,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
                 try_slices = false;
             }
-            // FIXME: Regular .zip() is slow
-            for (y, x) in s_row.iter_mut().zip(r_row) {
-                f(y, x);
+            unsafe {
+                for i in 0..s_row.len() {
+                    f(s_row.uget_mut(i), r_row.uget(i))
+                }
             }
         }
     }
