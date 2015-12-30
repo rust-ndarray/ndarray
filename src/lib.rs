@@ -442,8 +442,12 @@ pub type Array<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 
 /// A lightweight array view.
+///
+/// `ArrayView` implements `IntoIterator`.
 pub type ArrayView<'a, A, D> = ArrayBase<&'a [A], D>;
 /// A lightweight read-write array view.
+///
+/// `ArrayViewMut` implements `IntoIterator`.
 pub type ArrayViewMut<'a, A, D> = ArrayBase<&'a mut [A], D>;
 
 impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
