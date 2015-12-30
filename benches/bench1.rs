@@ -319,6 +319,18 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_transposed(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let b = OwnedArray::<i32, _>::zeros((64, 64));
+    let bv = b.view();
+    bench.iter(|| {
+        let _x = black_box(a.view_mut() + bv);
+    });
+}
+
+#[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::zeros((64, 64));
