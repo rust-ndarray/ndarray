@@ -799,6 +799,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }
+        debug_assert!(self.pointer_is_inbounds());
     }
 
     /// Return an iterator over a sliced view.
