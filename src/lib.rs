@@ -106,6 +106,7 @@ pub mod blas;
 mod dimension;
 mod indexes;
 mod iterators;
+mod numeric_util;
 mod si;
 mod shape_error;
 
@@ -2007,6 +2008,35 @@ impl<A, S, D> ArrayBase<S, D>
     {
         self.shape() == rhs.shape() &&
         self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
+    }
+}
+
+impl<A, S> ArrayBase<S, Ix>
+    where S: Data<Elem=A>,
+{
+    /// Compute the dot product of one dimensional arrays.
+    ///
+    /// The dot product is a sum of the elementwise products (no conjugation
+    /// of complex operands, and thus not their inner product).
+    ///
+    /// **Panics** if the arrays are not of the same length.
+    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+        where S2: Data<Elem=A>,
+              A: Clone + Add<Output=A> + Mul<Output=A> + libnum::Zero,
+    {
+        assert_eq!(self.len(), rhs.len());
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return numeric_util::unrolled_dot(self_s, rhs_s);
+            }
+        }
+        let mut sum = A::zero();
+        for i in 0..self.len() {
+            unsafe {
+                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+            }
+        }
+        sum
     }
 }
 

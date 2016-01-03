@@ -456,3 +456,11 @@ fn equality(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     bench.iter(|| a == b);
 }
+
+#[bench]
+fn dot(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros(256);
+    let b = OwnedArray::<f32, _>::zeros(256);
+    bench.iter(|| a.dot(&b));
+}
