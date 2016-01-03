@@ -106,6 +106,7 @@ pub mod blas;
 mod dimension;
 mod indexes;
 mod iterators;
+mod numeric_util;
 mod si;
 mod shape_error;
 
@@ -2010,6 +2011,35 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
+impl<A, S> ArrayBase<S, Ix>
+    where S: Data<Elem=A>,
+{
+    /// Compute the dot product of one dimensional arrays.
+    ///
+    /// The dot product is a sum of the elementwise products (no conjugation
+    /// of complex operands, and thus not their inner product).
+    ///
+    /// **Panics** if the arrays are not of the same length.
+    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+        where S2: Data<Elem=A>,
+              A: Clone + Add<Output=A> + Mul<Output=A> + libnum::Zero,
+    {
+        assert_eq!(self.len(), rhs.len());
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return numeric_util::unrolled_dot(self_s, rhs_s);
+            }
+        }
+        let mut sum = A::zero();
+        for i in 0..self.len() {
+            unsafe {
+                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+            }
+        }
+        sum
+    }
+}
+
 impl<A, S> ArrayBase<S, (Ix, Ix)>
     where S: Data<Elem=A>,
 {
@@ -2026,9 +2056,24 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         view.into_iter_()
     }
 
-    /// Return an iterator over the elements of row `index`.
+    /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
+    pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.view().subview(0, index)
+    }
+
+    /// Return an array view of column `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.view().subview(1, index)
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="use .row() instead"))]
+    /// ***Deprecated: Use `.row()` instead.***
     pub fn row_iter(&self, index: Ix) -> Elements<A, Ix>
     {
         let (m, n) = self.dim;
@@ -2039,9 +2084,8 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         }
     }
 
-    /// Return an iterator over the elements of column `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
+    #[cfg_attr(has_deprecated, deprecated(note="use .column() instead"))]
+    /// ***Deprecated: Use `.column()` instead.***
     pub fn col_iter(&self, index: Ix) -> Elements<A, Ix>
     {
         let (m, n) = self.dim;
@@ -2254,7 +2298,7 @@ impl Scalar for Complex<f32> { }
 impl Scalar for Complex<f64> { }
 
 macro_rules! impl_binary_op(
-    ($trt:ident, $mth:ident, $doc:expr) => (
+    ($trt:ident, $mth:ident, $imth:ident, $imth_scalar:ident, $doc:expr) => (
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
@@ -2295,9 +2339,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
     type Output = ArrayBase<S, D>;
     fn $mth (mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
-        self.zip_mut_with(&rhs, |x, y| {
-            *x = x.clone(). $mth (y.clone());
-        });
+        self.$imth(rhs);
         self
     }
 }
@@ -2406,16 +2448,16 @@ mod arithmetic_ops {
     use std::ops::*;
     use libnum::Complex;
 
-    impl_binary_op!(Add, add, "addition");
-    impl_binary_op!(Sub, sub, "subtraction");
-    impl_binary_op!(Mul, mul, "multiplication");
-    impl_binary_op!(Div, div, "division");
-    impl_binary_op!(Rem, rem, "remainder");
-    impl_binary_op!(BitAnd, bitand, "bit and");
-    impl_binary_op!(BitOr, bitor, "bit or");
-    impl_binary_op!(BitXor, bitxor, "bit xor");
-    impl_binary_op!(Shl, shl, "left shift");
-    impl_binary_op!(Shr, shr, "right shift");
+    impl_binary_op!(Add, add, iadd, iadd_scalar, "addition");
+    impl_binary_op!(Sub, sub, isub, isub_scalar, "subtraction");
+    impl_binary_op!(Mul, mul, imul, imul_scalar, "multiplication");
+    impl_binary_op!(Div, div, idiv, idiv_scalar, "division");
+    impl_binary_op!(Rem, rem, irem, irem_scalar, "remainder");
+    impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar, "bit and");
+    impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar, "bit or");
+    impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar, "bit xor");
+    impl_binary_op!(Shl, shl, ishl, ishl_scalar, "left shift");
+    impl_binary_op!(Shr, shr, ishr, ishr_scalar, "right shift");
 
     macro_rules! all_scalar_ops {
         ($int_scalar:ty) => (
