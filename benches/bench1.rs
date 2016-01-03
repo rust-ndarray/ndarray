@@ -464,3 +464,10 @@ fn dot(bench: &mut test::Bencher)
     let b = OwnedArray::<f32, _>::zeros(256);
     bench.iter(|| a.dot(&b));
 }
+
+#[bench]
+fn means(bench: &mut test::Bencher) {
+    let a = OwnedArray::from_iter(0..100_000i64);
+    let a = a.into_shape((100, 1000)).unwrap();
+    bench.iter(|| a.mean(0));
+}
