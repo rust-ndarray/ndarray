@@ -2254,7 +2254,7 @@ impl Scalar for Complex<f32> { }
 impl Scalar for Complex<f64> { }
 
 macro_rules! impl_binary_op(
-    ($trt:ident, $mth:ident, $doc:expr) => (
+    ($trt:ident, $mth:ident, $imth:ident, $imth_scalar:ident, $doc:expr) => (
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
@@ -2295,9 +2295,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
     type Output = ArrayBase<S, D>;
     fn $mth (mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
-        self.zip_mut_with(&rhs, |x, y| {
-            *x = x.clone(). $mth (y.clone());
-        });
+        self.$imth(rhs);
         self
     }
 }
@@ -2406,16 +2404,16 @@ mod arithmetic_ops {
     use std::ops::*;
     use libnum::Complex;
 
-    impl_binary_op!(Add, add, "addition");
-    impl_binary_op!(Sub, sub, "subtraction");
-    impl_binary_op!(Mul, mul, "multiplication");
-    impl_binary_op!(Div, div, "division");
-    impl_binary_op!(Rem, rem, "remainder");
-    impl_binary_op!(BitAnd, bitand, "bit and");
-    impl_binary_op!(BitOr, bitor, "bit or");
-    impl_binary_op!(BitXor, bitxor, "bit xor");
-    impl_binary_op!(Shl, shl, "left shift");
-    impl_binary_op!(Shr, shr, "right shift");
+    impl_binary_op!(Add, add, iadd, iadd_scalar, "addition");
+    impl_binary_op!(Sub, sub, isub, isub_scalar, "subtraction");
+    impl_binary_op!(Mul, mul, imul, imul_scalar, "multiplication");
+    impl_binary_op!(Div, div, idiv, idiv_scalar, "division");
+    impl_binary_op!(Rem, rem, irem, irem_scalar, "remainder");
+    impl_binary_op!(BitAnd, bitand, ibitand, ibitand_scalar, "bit and");
+    impl_binary_op!(BitOr, bitor, ibitor, ibitor_scalar, "bit or");
+    impl_binary_op!(BitXor, bitxor, ibitxor, ibitxor_scalar, "bit xor");
+    impl_binary_op!(Shl, shl, ishl, ishl_scalar, "left shift");
+    impl_binary_op!(Shr, shr, ishr, ishr_scalar, "right shift");
 
     macro_rules! all_scalar_ops {
         ($int_scalar:ty) => (
