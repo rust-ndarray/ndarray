@@ -2026,9 +2026,24 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         view.into_iter_()
     }
 
-    /// Return an iterator over the elements of row `index`.
+    /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
+    pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.view().subview(0, index)
+    }
+
+    /// Return an array view of column `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.view().subview(1, index)
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="use .row() instead"))]
+    /// ***Deprecated: Use `.row()` instead.***
     pub fn row_iter(&self, index: Ix) -> Elements<A, Ix>
     {
         let (m, n) = self.dim;
@@ -2039,9 +2054,8 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         }
     }
 
-    /// Return an iterator over the elements of column `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
+    #[cfg_attr(has_deprecated, deprecated(note="use .column() instead"))]
+    /// ***Deprecated: Use `.column()` instead.***
     pub fn col_iter(&self, index: Ix) -> Elements<A, Ix>
     {
         let (m, n) = self.dim;

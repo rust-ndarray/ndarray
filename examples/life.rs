@@ -71,8 +71,8 @@ fn turn_on_corners(z: &mut Board) {
 }
 
 fn render(a: &Board) {
-    for row in 0..a.shape()[0] {
-        for &x in a.row_iter(row) {
+    for row in a.inner_iter() {
+        for &x in row {
             if x > 0 {
                 print!("#");
             } else {

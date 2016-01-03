@@ -169,8 +169,8 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
             {
                 // L_ik for k = 0 .. j
                 // L_jk for k = 0 .. j
-                let Lik = L.row_iter(i);
-                let Ljk = L.row_iter(j);
+                let Lik = L.row(i).into_iter();
+                let Ljk = L.row(j).into_iter();
                 for (&lik, &ljk) in Lik.zip(Ljk).take(j as usize) {
                     lik_ljk_sum = lik_ljk_sum + lik * ljk.conjugate();
                 }
@@ -185,7 +185,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
         let j = i;
         let mut ljk_sum = z;
         // L_jk for k = 0 .. j
-        for &ljk in L.row_iter(j).take(j as usize) {
+        for &ljk in L.row(j).into_iter().take(j as usize) {
             ljk_sum = ljk_sum + ljk * ljk.conjugate();
         }
         L[[j, j]] = (L[[j, j]] - ljk_sum).sqrt_real();
