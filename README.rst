@@ -86,6 +86,15 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.3.0-alpha.2
+
+  - Improve the strided last dimension case in ``zip_mut_with`` slightly
+    (affects all binary operations).
+  - Add ``.row(i), .column(i)`` for 2D arrays.
+  - Deprecate ``.row_iter(), .col_iter()``.
+  - Add method ``.dot()`` for computing the dot product between two 1D arrays.
+
+
 - 0.3.0-alpha.1
 
   - **Index type** ``Ix`` **changed to** ``usize`` (#9). Gives better iterator codegen
