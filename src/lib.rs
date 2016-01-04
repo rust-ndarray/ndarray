@@ -151,8 +151,7 @@ pub type Ixs = isize;
 ///
 /// ## Indexing and Dimension
 ///
-/// Array indexes are represented by the types `Ix` and `Ixs`
-/// (signed). ***Note: A future version will switch from `u32` to `usize`.***
+/// Array indexes are represented by the types `Ix` and `Ixs` (signed).
 ///
 /// The dimensionality of the array determines the number of *axes*, for example
 /// a 2D array has two axes. These are listed in “big endian” order, so that

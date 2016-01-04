@@ -402,6 +402,7 @@ impl RemoveAxis for ($from $(,$more)*)
 {
     type Smaller = ($($more),*);
     #[allow(unused_parens)]
+    #[inline]
     fn remove_axis(&self, axis: usize) -> ($($more),*) {
         let mut tup = ($(0 as $more),*);
         {
