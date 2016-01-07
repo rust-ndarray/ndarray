@@ -20,25 +20,19 @@
 //! - Generic N-dimensional array
 //! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
-//! - There is both an easy to use copy on write array (`Array`),
-//!   or a regular uniquely owned array (`OwnedArray`), and both can use
-//!   read-only and read-write array views.
-//! - Iteration and most operations are very efficient on contiguous c-order arrays
-//!   (the default layout, without any transposition or discontiguous subslicing),
-//!   and on arrays where the lowest dimension is contiguous (contiguous block
-//!   slicing).
+//! - There is both a copy on write array (`Array`), or a regular uniquely owned array
+//!   (`OwnedArray`), and both can use read-only and read-write array views.
+//! - Iteration and most operations are efficient on arrays with contgiuous
+//!   innermost dimension.
 //! - Array views can be used to slice and mutate any `[T]` data.
 //!
-//! ## Status and Lookout
+//! ## Crate Status
 //!
 //! - Still iterating on the API
 //! - Performance status:
-//!   + Arithmetic involving contiguous c-order arrays and contiguous lowest
-//!     dimension arrays optimizes very well.
+//!   + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
 //!   + `.fold()` and `.zip_mut_with()` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
-//!   + Transposed arrays where the lowest dimension is not c-contiguous
-//!     is still a pain point.
 //! - There is experimental bridging to the linear algebra package `rblas`.
 //!
 //! ## Crate Feature Flags
@@ -91,6 +85,8 @@ use iterators::Baseiter;
 pub use iterators::{
     InnerIter,
     InnerIterMut,
+    OuterIter,
+    OuterIterMut,
 };
 
 #[allow(deprecated)]
@@ -171,18 +167,10 @@ pub type Ixs = isize;
 /// the array. Slicing methods include `.slice()`, `.islice()`,
 /// `.slice_mut()`.
 ///
-/// The slicing specification is passed as a function argument as a fixed size
-/// array with elements of type [`Si`] with fields `Si(begin, end, stride)`,
-/// where the values are signed integers, and `end` is an `Option<Ixs>`.
-/// The constant [`S`] is a shorthand for the full range of an axis.
-/// For example, if the array has two axes, the slice argument is passed as
-/// type `&[Si; 2]`.
-///
-/// The macro [`s![]`](macro.s!.html) is however a much more convenient way to
-/// specify the slicing argument, so it will be used in all examples.
-///
+/// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
+/// which will be used in all examples. (The explicit form is a reference
+/// to a fixed size array of [`Si`]; see its docs for more information.)
 /// [`Si`]: struct.Si.html
-/// [`S`]: constant.S.html
 ///
 /// ```
 /// // import the s![] macro
@@ -634,6 +622,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
+    pub fn into_outer_iter(self) -> OuterIter<'a, A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter(self)
+    }
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
@@ -676,6 +669,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         }
     }
 
+    pub fn into_outer_iter(self) -> OuterIterMut<'a, A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter_mut(self)
+    }
 }
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -1102,7 +1100,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert_eq!(row_sums.collect::<Vec<_>>(), vec![3, 12, 21, 30]);
     /// ```
     pub fn inner_iter(&self) -> InnerIter<A, D> {
-        iterators::new_outer(self.view())
+        iterators::new_inner_iter(self.view())
     }
 
     /// Return an iterator that traverses over all dimensions but the innermost,
@@ -1112,7 +1110,43 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
         where S: DataMut
     {
-        iterators::new_outer_mut(self.view_mut())
+        iterators::new_inner_iter_mut(self.view_mut())
+    }
+
+    /// Return an iterator that traverses over the outermost dimension
+    /// and yields each subview.
+    ///
+    /// For example, in a 2 × 2 × 3 array, the iterator element
+    /// is a 2 × 3 subview (and there are 2 in total).
+    ///
+    /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
+    ///
+    /// ```
+    /// use ndarray::arr3;
+    /// let a = arr3(&[[[ 0,  1,  2],    // \ axis 0, subview 0
+    ///                 [ 3,  4,  5]],   // /
+    ///                [[ 6,  7,  8],    // \ axis 0, subview 1
+    ///                 [ 9, 10, 11]]]); // /
+    /// // `outer_iter` yields the two submatrices along axis 0.
+    /// let mut iter = a.outer_iter();
+    /// assert_eq!(iter.next().unwrap(), a.subview(0, 0));
+    /// assert_eq!(iter.next().unwrap(), a.subview(0, 1));
+    /// ```
+    pub fn outer_iter(&self) -> OuterIter<A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter(self.view())
+    }
+
+    /// Return an iterator that traverses over the outermost dimension
+    /// and yields each subview.
+    ///
+    /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
+    pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D::Smaller>
+        where S: DataMut,
+              D: RemoveAxis,
+    {
+        iterators::new_outer_iter_mut(self.view_mut())
     }
 
     // Return (length, stride) for diagonal

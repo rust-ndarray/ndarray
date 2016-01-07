@@ -127,3 +127,66 @@ fn inner_iter_corner_cases() {
     assert_equal(a2.inner_iter(),
                  vec![aview1(&[]); 3]);
 }
+
+#[test]
+fn outer_iter() {
+    let a = Array::from_iter(0..12);
+    let a = a.reshape((2, 3, 2));
+    // [[[0, 1],
+    //   [2, 3],
+    //   [4, 5]],
+    //  [[6, 7],
+    //   [8, 9],
+    //    ...
+    assert_equal(a.outer_iter(),
+                 vec![a.subview(0, 0), a.subview(0, 1)]);
+    let mut b = Array::zeros((2, 3, 2));
+    b.swap_axes(0, 2);
+    b.assign(&a);
+    assert_equal(b.outer_iter(),
+                 vec![a.subview(0, 0), a.subview(0, 1)]);
+
+    let mut found_rows = Vec::new();
+    for sub in b.outer_iter() {
+        for row in sub.into_outer_iter() {
+            found_rows.push(row);
+        }
+    }
+    assert_equal(a.inner_iter(), found_rows);
+}
+
+#[test]
+fn outer_iter_corner_cases() {
+    let a2 = Array::<i32, _>::zeros((0, 3));
+    assert_equal(a2.outer_iter(),
+                 vec![aview1(&[]); 0]);
+
+    let a2 = Array::<i32, _>::zeros((3, 0));
+    assert_equal(a2.outer_iter(),
+                 vec![aview1(&[]); 3]);
+}
+
+#[test]
+fn outer_iter_mut() {
+    let a = Array::from_iter(0..12);
+    let a = a.reshape((2, 3, 2));
+    // [[[0, 1],
+    //   [2, 3],
+    //   [4, 5]],
+    //  [[6, 7],
+    //   [8, 9],
+    //    ...
+    let mut b = Array::zeros((2, 3, 2));
+    b.swap_axes(0, 2);
+    b.assign(&a);
+    assert_equal(b.outer_iter_mut(),
+                 vec![a.subview(0, 0), a.subview(0, 1)]);
+
+    let mut found_rows = Vec::new();
+    for sub in b.outer_iter_mut() {
+        for row in sub.into_outer_iter() {
+            found_rows.push(row);
+        }
+    }
+    assert_equal(a.inner_iter(), found_rows);
+}

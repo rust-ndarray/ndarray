@@ -1,10 +1,13 @@
-use std::marker;
+use std::marker::PhantomData;
 
 use super::{Dimension, Ix, Ixs};
 use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
 use super::{
+    ArrayBase,
+    Data,
     ArrayView,
     ArrayViewMut,
+    RemoveAxis,
 };
 
 /// Base for array iterators
@@ -16,7 +19,7 @@ pub struct Baseiter<'a, A: 'a, D> {
     pub dim: D,
     pub strides: D,
     pub index: Option<D>,
-    pub life: marker::PhantomData<&'a A>,
+    pub life: PhantomData<&'a A>,
 }
 
 
@@ -38,7 +41,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
             index: len.first_index(),
             dim: len,
             strides: stride,
-            life: marker::PhantomData,
+            life: PhantomData,
         }
     }
 }
@@ -319,7 +322,7 @@ pub struct InnerIter<'a, A: 'a, D> {
     iter: Baseiter<'a, A, D>,
 }
 
-pub fn new_outer<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
+pub fn new_inner_iter<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
     where D: Dimension,
 {
     if v.shape().len() == 0 {
@@ -357,6 +360,11 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
             view
         })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.iter.size_hint();
+        (len, Some(len))
+    }
 }
 
 // NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
@@ -370,7 +378,7 @@ pub struct InnerIterMut<'a, A: 'a, D> {
     iter: Baseiter<'a, A, D>,
 }
 
-pub fn new_outer_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
+pub fn new_inner_iter_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
     where D: Dimension,
 {
     if v.shape().len() == 0 {
@@ -407,5 +415,143 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
             };
             view
         })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.iter.size_hint();
+        (len, Some(len))
+    }
+}
+
+pub struct OuterIterCore<A, D> {
+    index: Ix,
+    len: Ix,
+    stride: Ixs,
+    inner_dim: D,
+    inner_strides: D,
+    ptr: *mut A,
+}
+
+fn new_outer_core<A, S, D>(v: ArrayBase<S, D>) -> OuterIterCore<A, D::Smaller>
+    where D: RemoveAxis,
+          S: Data<Elem=A>,
+{
+    let shape = v.shape()[0];
+    let stride = v.strides()[0];
+
+    OuterIterCore {
+        index: 0,
+        len: shape,
+        stride: stride,
+        inner_dim: v.dim.remove_axis(0),
+        inner_strides: v.strides.remove_axis(0),
+        ptr: v.ptr,
+    }
+}
+
+impl<A, D> Iterator for OuterIterCore<A, D>
+    where D: Dimension,
+{
+    type Item = *mut A;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.len {
+            None
+        } else {
+            let ptr = unsafe {
+                self.ptr.offset(self.index as isize * self.stride)
+            };
+            self.index += 1;
+            Some(ptr)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len - self.index;
+        (len, Some(len))
+    }
+}
+
+/// An iterator that traverses over the outermost dimension
+/// and yields each subview.
+///
+/// For example, in a 2 × 2 × 3 array, the iterator element
+/// is a 2 × 3 subview (and there are 2 in total).
+///
+/// Iterator element type is `ArrayViewMut<'a, A, D>`.
+pub struct OuterIter<'a, A: 'a, D> {
+    iter: OuterIterCore<A, D>,
+    life: PhantomData<&'a A>,
+}
+
+impl<'a, A, D> Iterator for OuterIter<'a, A, D>
+    where D: Dimension,
+{
+    type Item = ArrayView<'a, A, D>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|ptr| {
+            ArrayView {
+                data: &[],
+                ptr: ptr,
+                dim: self.iter.inner_dim.clone(),
+                strides: self.iter.inner_strides.clone(),
+            }
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
+    where D: RemoveAxis,
+{
+    OuterIter {
+        iter: new_outer_core(v),
+        life: PhantomData,
+    }
+}
+
+/// An iterator that traverses over the outermost dimension
+/// and yields each subview (mutable).
+///
+/// For example, in a 2 × 2 × 3 array, the iterator element
+/// is a 2 × 3 subview (and there are 2 in total).
+///
+/// Iterator element type is `ArrayViewMut<'a, A, D>`.
+pub struct OuterIterMut<'a, A: 'a, D> {
+    iter: OuterIterCore<A, D>,
+    life: PhantomData<&'a mut A>,
+}
+
+impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
+    where D: Dimension,
+{
+    type Item = ArrayViewMut<'a, A, D>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|ptr| {
+            ArrayViewMut {
+                data: &mut [],
+                ptr: ptr,
+                dim: self.iter.inner_dim.clone(),
+                strides: self.iter.inner_strides.clone(),
+            }
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Smaller>
+    where D: RemoveAxis,
+{
+    OuterIterMut {
+        iter: new_outer_core(v),
+        life: PhantomData,
     }
 }
