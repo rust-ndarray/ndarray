@@ -319,7 +319,7 @@ pub struct InnerIter<'a, A: 'a, D> {
     iter: Baseiter<'a, A, D>,
 }
 
-pub fn new_outer<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
+pub fn new_inner_iter<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
     where D: Dimension,
 {
     if v.shape().len() == 0 {
@@ -370,7 +370,7 @@ pub struct InnerIterMut<'a, A: 'a, D> {
     iter: Baseiter<'a, A, D>,
 }
 
-pub fn new_outer_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
+pub fn new_inner_iter_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
     where D: Dimension,
 {
     if v.shape().len() == 0 {

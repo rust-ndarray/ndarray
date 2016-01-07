@@ -1102,7 +1102,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert_eq!(row_sums.collect::<Vec<_>>(), vec![3, 12, 21, 30]);
     /// ```
     pub fn inner_iter(&self) -> InnerIter<A, D> {
-        iterators::new_outer(self.view())
+        iterators::new_inner_iter(self.view())
     }
 
     /// Return an iterator that traverses over all dimensions but the innermost,
@@ -1112,7 +1112,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
         where S: DataMut
     {
-        iterators::new_outer_mut(self.view_mut())
+        iterators::new_inner_iter_mut(self.view_mut())
     }
 
     // Return (length, stride) for diagonal
