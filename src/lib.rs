@@ -92,6 +92,7 @@ pub use iterators::{
     InnerIter,
     InnerIterMut,
     OuterIter,
+    OuterIterMut,
 };
 
 #[allow(deprecated)]
@@ -640,7 +641,6 @@ impl<'a, A, D> ArrayView<'a, A, D>
     {
         iterators::new_outer_iter(self)
     }
-
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
@@ -683,6 +683,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         }
     }
 
+    pub fn into_outer_iter(self) -> OuterIterMut<'a, A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter_mut(self)
+    }
 }
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -1145,6 +1150,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where D: RemoveAxis,
     {
         iterators::new_outer_iter(self.view())
+    }
+
+    /// Return an iterator that traverses over the outermost dimension
+    /// and yields each subview.
+    ///
+    /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
+    pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D::Smaller>
+        where S: DataMut,
+              D: RemoveAxis,
+    {
+        iterators::new_outer_iter_mut(self.view_mut())
     }
 
     // Return (length, stride) for diagonal
