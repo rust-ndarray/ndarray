@@ -995,8 +995,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.strides.slice_mut().swap(ax, bx);
     }
 
-    /// Along `axis`, select the subview `index` and return an
-    /// array with that axis removed.
+    /// Along `axis`, select the subview `index` and return a
+    /// view with that axis removed.
     ///
     /// See [*Subviews*](#subviews) for full documentation.
     ///
@@ -1016,20 +1016,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     a.subview(1, 1) == arr1(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn subview(&self, axis: usize, index: Ix) -> ArrayBase<S, <D as RemoveAxis>::Smaller>
+    pub fn subview(&self, axis: usize, index: Ix) -> ArrayView<A, <D as RemoveAxis>::Smaller>
         where D: RemoveAxis,
-              S: DataShared,
     {
-        let mut res = self.clone();
-        res.isubview(axis, index);
-        // don't use reshape -- we always know it will fit the size,
-        // and we can use remove_axis on the strides as well
-        ArrayBase {
-            data: res.data,
-            ptr: res.ptr,
-            dim: res.dim.remove_axis(axis),
-            strides: res.strides.remove_axis(axis),
-        }
+        self.view().into_subview(axis, index)
     }
 
     /// Collapse dimension `axis` into length one,
@@ -1039,6 +1029,24 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn isubview(&mut self, axis: usize, index: Ix)
     {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
+    }
+
+    /// Along `axis`, select the subview `index` and return `self`
+    /// with that axis removed.
+    ///
+    /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
+    pub fn into_subview(mut self, axis: usize, index: Ix) -> ArrayBase<S, <D as RemoveAxis>::Smaller>
+        where D: RemoveAxis,
+    {
+        self.isubview(axis, index);
+        // don't use reshape -- we always know it will fit the size,
+        // and we can use remove_axis on the strides as well
+        ArrayBase {
+            data: self.data,
+            ptr: self.ptr,
+            dim: self.dim.remove_axis(axis),
+            strides: self.strides.remove_axis(axis),
+        }
     }
 
     /// Along `axis`, select the subview `index` and return a read-write view
@@ -1064,14 +1072,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               D: RemoveAxis,
     {
-        let mut res = self.view_mut();
-        res.isubview(axis, index);
-        ArrayBase {
-            data: res.data,
-            ptr: res.ptr,
-            dim: res.dim.remove_axis(axis),
-            strides: res.strides.remove_axis(axis),
-        }
+        self.view_mut().into_subview(axis, index)
     }
 
     /// ***Deprecated: use `.subview_mut()`***
@@ -1901,9 +1902,9 @@ impl<A, S, D> ArrayBase<S, D>
               D: RemoveAxis,
     {
         let n = self.shape()[axis];
-        let mut res = self.view().subview(axis, 0).to_owned();
+        let mut res = self.subview(axis, 0).to_owned();
         for i in 1..n {
-            let view = self.view().subview(axis, i);
+            let view = self.subview(axis, i);
             res.iadd(&view);
         }
         res
@@ -2060,7 +2061,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.view().subview(0, index)
+        self.subview(0, index)
     }
 
     /// Return an array view of column `index`.
@@ -2068,7 +2069,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.view().subview(1, index)
+        self.subview(1, index)
     }
 
     #[cfg_attr(has_deprecated, deprecated(note="use .row() instead"))]
