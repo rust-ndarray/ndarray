@@ -1,10 +1,11 @@
-use std::marker;
+use std::marker::PhantomData;
 
 use super::{Dimension, Ix, Ixs};
 use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
 use super::{
     ArrayView,
     ArrayViewMut,
+    RemoveAxis,
 };
 
 /// Base for array iterators
@@ -16,7 +17,7 @@ pub struct Baseiter<'a, A: 'a, D> {
     pub dim: D,
     pub strides: D,
     pub index: Option<D>,
-    pub life: marker::PhantomData<&'a A>,
+    pub life: PhantomData<&'a A>,
 }
 
 
@@ -38,7 +39,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D>
             index: len.first_index(),
             dim: len,
             strides: stride,
-            life: marker::PhantomData,
+            life: PhantomData,
         }
     }
 }
@@ -407,5 +408,62 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
             };
             view
         })
+    }
+}
+
+/// An iterator that traverses over the outermost dimension
+/// and yields every outer subview of the array.
+///
+/// For example, in a 2 × 2 × 3 array, the iterator element
+/// is a 2 × 3 subview (and there are 2 in total).
+///
+/// Iterator element type is `ArrayView<'a, A, D>`.
+pub struct OuterIter<'a, A: 'a, D> {
+    index: Ix,
+    len: Ix,
+    stride: Ixs,
+    inner_dim: D,
+    inner_strides: D,
+    ptr: *mut A,
+    life: PhantomData<&'a A>,
+}
+
+pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
+    where D: RemoveAxis,
+{
+    let shape = v.shape()[0];
+    let stride = v.strides()[0];
+
+    OuterIter {
+        index: 0,
+        len: shape,
+        stride: stride,
+        inner_dim: v.dim.remove_axis(0),
+        inner_strides: v.strides.remove_axis(0),
+        ptr: v.ptr,
+        life: PhantomData,
+    }
+}
+
+impl<'a, A, D> Iterator for OuterIter<'a, A, D>
+    where D: Dimension,
+{
+    type Item = ArrayView<'a, A, D>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.len {
+            None
+        } else {
+            let ptr = unsafe {
+                self.ptr.offset(self.index as isize * self.stride)
+            };
+            self.index += 1;
+            Some(ArrayView {
+                data: &[],
+                ptr: ptr,
+                dim: self.inner_dim.clone(),
+                strides: self.inner_strides.clone(),
+            })
+        }
     }
 }

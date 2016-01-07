@@ -91,6 +91,7 @@ use iterators::Baseiter;
 pub use iterators::{
     InnerIter,
     InnerIterMut,
+    OuterIter,
 };
 
 #[allow(deprecated)]
@@ -634,6 +635,12 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
+    pub fn into_outer_iter(self) -> OuterIter<'a, A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter(self)
+    }
+
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
@@ -1113,6 +1120,31 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         iterators::new_inner_iter_mut(self.view_mut())
+    }
+
+    /// Return an iterator that traverses over the outermost dimension
+    /// and yields each subview.
+    ///
+    /// For example, in a 2 × 2 × 3 array, the iterator element
+    /// is a 2 × 3 subview (and there are 2 in total).
+    ///
+    /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
+    ///
+    /// ```
+    /// use ndarray::arr3;
+    /// let a = arr3(&[[[ 0,  1,  2],    // \ axis 0, subview 0
+    ///                 [ 3,  4,  5]],   // /
+    ///                [[ 6,  7,  8],    // \ axis 0, subview 1
+    ///                 [ 9, 10, 11]]]); // /
+    /// // `outer_iter` yields the two submatrices along axis 0.
+    /// let mut iter = a.outer_iter();
+    /// assert_eq!(iter.next().unwrap(), a.subview(0, 0));
+    /// assert_eq!(iter.next().unwrap(), a.subview(0, 1));
+    /// ```
+    pub fn outer_iter(&self) -> OuterIter<A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter(self.view())
     }
 
     // Return (length, stride) for diagonal
