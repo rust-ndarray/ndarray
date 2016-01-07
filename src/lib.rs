@@ -1395,11 +1395,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// The broadcasting documentation for Numpy has more information.
     ///
     /// ```
-    /// use ndarray::arr1;
+    /// use ndarray::{aview1, aview2};
     ///
     /// assert!(
-    ///     arr1(&[1., 0.]).broadcast((10, 2)).unwrap().dim()
-    ///     == (10, 2)
+    ///     aview1(&[1., 0.]).broadcast((10, 2)).unwrap()
+    ///     == aview2(&[[1., 0.]; 10])
     /// );
     /// ```
     pub fn broadcast<E>(&self, dim: E)
