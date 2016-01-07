@@ -1123,9 +1123,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// ```
     /// use ndarray::arr3;
-    /// let a = arr3(&[[[ 0,  1,  2],    // \ axis 0, subview 0
+    /// let a = arr3(&[[[ 0,  1,  2],    // \ axis 0, submatrix 0
     ///                 [ 3,  4,  5]],   // /
-    ///                [[ 6,  7,  8],    // \ axis 0, subview 1
+    ///                [[ 6,  7,  8],    // \ axis 0, submatrix 1
     ///                 [ 9, 10, 11]]]); // /
     /// // `outer_iter` yields the two submatrices along axis 0.
     /// let mut iter = a.outer_iter();
