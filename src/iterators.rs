@@ -360,6 +360,11 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
             view
         })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.iter.size_hint();
+        (len, Some(len))
+    }
 }
 
 // NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
@@ -411,6 +416,11 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
             view
         })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.iter.size_hint();
+        (len, Some(len))
+    }
 }
 
 pub struct OuterIterCore<A, D> {
@@ -455,6 +465,11 @@ impl<A, D> Iterator for OuterIterCore<A, D>
             Some(ptr)
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len - self.index;
+        (len, Some(len))
+    }
 }
 
 /// An iterator that traverses over the outermost dimension
@@ -483,6 +498,10 @@ impl<'a, A, D> Iterator for OuterIter<'a, A, D>
                 strides: self.iter.inner_strides.clone(),
             }
         })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 
@@ -521,6 +540,10 @@ impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
                 strides: self.iter.inner_strides.clone(),
             }
         })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 
