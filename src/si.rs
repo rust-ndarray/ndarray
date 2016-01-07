@@ -28,6 +28,9 @@ use super::{Ixs};
 /// `Si(a, None, -1)` is every element, from `a`
 /// until the end, in reverse order. Python equivalent is `[a::-1]`.
 /// Macro equivalent is `s![a..;-1]`.
+///
+/// The constant [`S`] is a shorthand for the full range of an axis.
+/// [`S`]: constant.S.html
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
 impl From<Range<Ixs>> for Si
@@ -70,6 +73,9 @@ pub const S: Si = Si(0, None, 1);
 /// `s![]` takes a list of ranges, separated by comma, with optional strides
 /// that are separated from the range by a semicolon.
 /// It is converted into a slice argument with type `&[Si; n]`.
+///
+/// For example, if an array has two axes, the slice argument is passed as
+/// type `&[Si; 2]`.
 ///
 /// For example `s![a..b;c, d..e]`
 /// is equivalent to `&[Si(a, Some(b), c), Si(d, Some(e), 1)]`.

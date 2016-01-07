@@ -473,7 +473,7 @@ impl<A, D> Iterator for OuterIterCore<A, D>
 }
 
 /// An iterator that traverses over the outermost dimension
-/// and yields every outer subview of the array.
+/// and yields each subview.
 ///
 /// For example, in a 2 × 2 × 3 array, the iterator element
 /// is a 2 × 3 subview (and there are 2 in total).
@@ -515,7 +515,7 @@ pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
 }
 
 /// An iterator that traverses over the outermost dimension
-/// and yields every outer subview of the array.
+/// and yields each subview (mutable).
 ///
 /// For example, in a 2 × 2 × 3 array, the iterator element
 /// is a 2 × 3 subview (and there are 2 in total).

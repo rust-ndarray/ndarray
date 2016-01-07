@@ -20,25 +20,19 @@
 //! - Generic N-dimensional array
 //! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
-//! - There is both an easy to use copy on write array (`Array`),
-//!   or a regular uniquely owned array (`OwnedArray`), and both can use
-//!   read-only and read-write array views.
-//! - Iteration and most operations are very efficient on contiguous c-order arrays
-//!   (the default layout, without any transposition or discontiguous subslicing),
-//!   and on arrays where the lowest dimension is contiguous (contiguous block
-//!   slicing).
+//! - There is both a copy on write array (`Array`), or a regular uniquely owned array
+//!   (`OwnedArray`), and both can use read-only and read-write array views.
+//! - Iteration and most operations are efficient on arrays with contgiuous
+//!   innermost dimension.
 //! - Array views can be used to slice and mutate any `[T]` data.
 //!
-//! ## Status and Lookout
+//! ## Crate Status
 //!
 //! - Still iterating on the API
 //! - Performance status:
-//!   + Arithmetic involving contiguous c-order arrays and contiguous lowest
-//!     dimension arrays optimizes very well.
+//!   + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
 //!   + `.fold()` and `.zip_mut_with()` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
-//!   + Transposed arrays where the lowest dimension is not c-contiguous
-//!     is still a pain point.
 //! - There is experimental bridging to the linear algebra package `rblas`.
 //!
 //! ## Crate Feature Flags
@@ -173,18 +167,10 @@ pub type Ixs = isize;
 /// the array. Slicing methods include `.slice()`, `.islice()`,
 /// `.slice_mut()`.
 ///
-/// The slicing specification is passed as a function argument as a fixed size
-/// array with elements of type [`Si`] with fields `Si(begin, end, stride)`,
-/// where the values are signed integers, and `end` is an `Option<Ixs>`.
-/// The constant [`S`] is a shorthand for the full range of an axis.
-/// For example, if the array has two axes, the slice argument is passed as
-/// type `&[Si; 2]`.
-///
-/// The macro [`s![]`](macro.s!.html) is however a much more convenient way to
-/// specify the slicing argument, so it will be used in all examples.
-///
+/// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
+/// which will be used in all examples. (The explicit form is a reference
+/// to a fixed size array of [`Si`]; see its docs for more information.)
 /// [`Si`]: struct.Si.html
-/// [`S`]: constant.S.html
 ///
 /// ```
 /// // import the s![] macro
