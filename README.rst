@@ -81,6 +81,13 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.3.0-alpha.3
+
+  - ``.subview()`` changed to return an array view, also added ``into_subview()``.
+  - Add ``.outer_iter()`` and ``.outer_iter_mut()`` for iteration along the
+    greatest axis of the array. Views also implement ``into_outer_iter()`` for
+    “lifetime preserving” iterators.
+
 - 0.3.0-alpha.2
 
   - Improve the strided last dimension case in ``zip_mut_with`` slightly
