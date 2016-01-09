@@ -270,6 +270,10 @@ impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for ElementsMut<'a, A, D>
+    where D: Dimension,
+{ }
+
 impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D>
 {
     type Item = &'a mut A;
@@ -373,6 +377,10 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
+    where D: Dimension,
+{ }
+
 // NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
 // anyway).
@@ -432,6 +440,10 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
+    where D: Dimension,
+{ }
+
 pub struct OuterIterCore<A, D> {
     index: Ix,
     len: Ix,
@@ -481,6 +493,22 @@ impl<A, D> Iterator for OuterIterCore<A, D>
     }
 }
 
+impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.len {
+            None
+        } else {
+            self.len -= 1;
+            let ptr = unsafe {
+                self.ptr.offset(self.len as isize * self.stride)
+            };
+            Some(ptr)
+        }
+    }
+}
+
 /// An iterator that traverses over the outermost dimension
 /// and yields each subview.
 ///
@@ -516,6 +544,25 @@ impl<'a, A, D> Iterator for OuterIter<'a, A, D>
         self.iter.size_hint()
     }
 }
+
+impl<'a, A, D> DoubleEndedIterator for OuterIter<'a, A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| {
+            ArrayView {
+                data: &[],
+                ptr: ptr,
+                dim: self.iter.inner_dim.clone(),
+                strides: self.iter.inner_strides.clone(),
+            }
+        })
+    }
+}
+
+impl<'a, A, D> ExactSizeIterator for OuterIter<'a, A, D>
+    where D: Dimension,
+{ }
 
 pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
     where D: RemoveAxis,
@@ -561,6 +608,25 @@ impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
         self.iter.size_hint()
     }
 }
+
+impl<'a, A, D> DoubleEndedIterator for OuterIterMut<'a, A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| {
+            ArrayViewMut {
+                data: &mut [],
+                ptr: ptr,
+                dim: self.iter.inner_dim.clone(),
+                strides: self.iter.inner_strides.clone(),
+            }
+        })
+    }
+}
+
+impl<'a, A, D> ExactSizeIterator for OuterIterMut<'a, A, D>
+    where D: Dimension,
+{ }
 
 pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Smaller>
     where D: RemoveAxis,

@@ -26,7 +26,7 @@ fn double_ended() {
 }
 
 #[test]
-fn size_hint() {
+fn iter_size_hint() {
     // Check that the size hint is correctly computed
     let a = Array::from_iter(0..24).reshape((2, 3, 4));
     let mut data = [0; 24];
@@ -149,6 +149,20 @@ fn inner_iter_corner_cases() {
 }
 
 #[test]
+fn inner_iter_size_hint() {
+    // Check that the size hint is correctly computed
+    let a = Array::from_iter(0..24).reshape((2, 3, 4));
+    let mut len = 6;
+    let mut it = a.inner_iter();
+    assert_eq!(it.len(), len);
+    while len > 0 {
+        it.next();
+        len -= 1;
+        assert_eq!(it.len(), len);
+    }
+}
+
+#[test]
 fn outer_iter() {
     let a = Array::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
@@ -172,7 +186,16 @@ fn outer_iter() {
             found_rows.push(row);
         }
     }
-    assert_equal(a.inner_iter(), found_rows);
+    assert_equal(a.inner_iter(), found_rows.clone());
+
+    let mut found_rows_rev = Vec::new();
+    for sub in b.outer_iter().rev() {
+        for row in sub.into_outer_iter().rev() {
+            found_rows_rev.push(row);
+        }
+    }
+    found_rows_rev.reverse();
+    assert_eq!(&found_rows, &found_rows_rev);
 }
 
 #[test]
@@ -209,4 +232,37 @@ fn outer_iter_mut() {
         }
     }
     assert_equal(a.inner_iter(), found_rows);
+}
+
+#[test]
+fn outer_iter_size_hint() {
+    // Check that the size hint is correctly computed
+    let a = Array::from_iter(0..24).reshape((4, 3, 2));
+    let mut len = 4;
+    let mut it = a.outer_iter();
+    assert_eq!(it.len(), len);
+    while len > 0 {
+        it.next();
+        len -= 1;
+        assert_eq!(it.len(), len);
+    }
+
+    // now try the double ended case
+    let mut it = a.outer_iter();
+    it.next_back();
+    let mut len = 3;
+    while len > 0 {
+        it.next();
+        len -= 1;
+        assert_eq!(it.len(), len);
+    }
+
+    let mut it = a.outer_iter();
+    it.next();
+    let mut len = 3;
+    while len > 0 {
+        it.next_back();
+        len -= 1;
+        assert_eq!(it.len(), len);
+    }
 }
