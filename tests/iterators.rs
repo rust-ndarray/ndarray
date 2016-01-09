@@ -11,16 +11,36 @@ use ndarray::{
 };
 
 use itertools::assert_equal;
+use itertools::{rev, enumerate};
 
 #[test]
-fn double_ended()
-{
+fn double_ended() {
     let a = Array::linspace(0., 7., 8);
     let mut it = a.iter().map(|x| *x);
     assert_eq!(it.next(), Some(0.));
     assert_eq!(it.next_back(), Some(7.));
     assert_eq!(it.next(), Some(1.));
     assert_eq!(it.rev().last(), Some(2.));
+    assert_equal(aview1(&[1, 2, 3]), &[1, 2, 3]);
+    assert_equal(rev(aview1(&[1, 2, 3])), rev(&[1, 2, 3]));
+}
+
+#[test]
+fn size_hint() {
+    // Check that the size hint is correctly computed
+    let a = Array::from_iter(0..24).reshape((2, 3, 4));
+    let mut data = [0; 24];
+    for (i, elt) in enumerate(&mut data) {
+        *elt = i as i32;
+    }
+    assert_equal(&a, &data);
+    let mut it = a.iter();
+    let mut ans = data.iter();
+    assert_eq!(it.len(), ans.len());
+    while ans.len() > 0 {
+        assert_eq!(it.next(), ans.next());
+        assert_eq!(it.len(), ans.len());
+    }
 }
 
 #[test]

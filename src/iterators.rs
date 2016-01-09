@@ -165,7 +165,9 @@ impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix>
     }
 }
 
-impl<'a, A> ExactSizeIterator for ElementsBase<'a, A, Ix> { }
+impl<'a, A, D> ExactSizeIterator for ElementsBase<'a, A, D>
+    where D: Dimension,
+{ }
 
 macro_rules! either {
     ($value:expr, $inner:ident => $result:expr) => (
@@ -219,7 +221,9 @@ impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
     }
 }
 
-impl<'a, A> ExactSizeIterator for Elements<'a, A, Ix> { }
+impl<'a, A, D> ExactSizeIterator for Elements<'a, A, D>
+    where D: Dimension,
+{ }
 
 
 impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D>
