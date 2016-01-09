@@ -805,9 +805,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a sliced array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
+    /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
@@ -822,8 +820,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Slice the array’s view in place.
     ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
+    /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
@@ -847,8 +844,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a sliced read-write view of the array.
     ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
+    /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
