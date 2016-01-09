@@ -316,6 +316,8 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D>
 
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
+///
+/// See [`.inner_iter()`](struct.ArrayBase.html#method.inner_iter) for more information.
 pub struct InnerIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
@@ -372,6 +374,9 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
 // anyway).
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row (mutable).
+///
+/// See [`.inner_iter_mut()`](struct.ArrayBase.html#method.inner_iter_mut)
+/// for more information.
 pub struct InnerIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
@@ -478,7 +483,10 @@ impl<A, D> Iterator for OuterIterCore<A, D>
 /// For example, in a 2 × 2 × 3 array, the iterator element
 /// is a 2 × 3 subview (and there are 2 in total).
 ///
-/// Iterator element type is `ArrayViewMut<'a, A, D>`.
+/// Iterator element type is `ArrayView<'a, A, D>`.
+///
+/// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
+/// for more information.
 pub struct OuterIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a A>,
@@ -521,6 +529,9 @@ pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
 /// is a 2 × 3 subview (and there are 2 in total).
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
+///
+/// See [`.outer_iter_mut()`](struct.ArrayBase.html#method.outer_iter_mut)
+/// for more information.
 pub struct OuterIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a mut A>,

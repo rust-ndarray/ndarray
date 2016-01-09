@@ -2635,6 +2635,8 @@ mod assign_ops {
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a A`.
+///
+/// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
 pub struct Elements<'a, A: 'a, D> {
     inner: ElementsRepr<Iter<'a, A>, ElementsBase<'a, A, D>>,
 }
@@ -2647,6 +2649,8 @@ struct ElementsBase<'a, A: 'a, D> {
 /// An iterator over the elements of an array (mutable).
 ///
 /// Iterator element type is `&'a mut A`.
+///
+/// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
 pub struct ElementsMut<'a, A: 'a, D> {
     inner: ElementsRepr<IterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
 }
@@ -2659,9 +2663,13 @@ struct ElementsBaseMut<'a, A: 'a, D> {
 }
 
 /// An iterator over the indexes and elements of an array.
+///
+/// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
 #[derive(Clone)]
 pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// An iterator over the indexes and elements of an array (mutable).
+///
+/// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
 pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
