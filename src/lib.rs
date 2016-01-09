@@ -2037,7 +2037,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// the given absolute tolerance.<br>
     /// Return `false` otherwise, or if the shapes disagree.
     pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
-        where A: Float + PartialOrd,
+        where A: Float,
               S2: Data<Elem=A>,
     {
         self.shape() == rhs.shape() &&
