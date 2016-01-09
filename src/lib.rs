@@ -56,7 +56,6 @@ extern crate serde;
 extern crate rustc_serialize as serialize;
 
 extern crate itertools as it;
-#[cfg(not(nocomplex))]
 extern crate num as libnum;
 
 use libnum::Float;
