@@ -1,4 +1,4 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, deprecated)]
 
 extern crate ndarray;
 
@@ -92,7 +92,7 @@ fn lst_squares()
 fn mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let mut a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
+    let a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
     let b = ndarray::linalg::eye(m);
     assert_eq!(a.mat_mul(&b), a);
     let c = ndarray::linalg::eye(n);

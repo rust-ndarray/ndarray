@@ -56,7 +56,6 @@ extern crate serde;
 extern crate rustc_serialize as serialize;
 
 extern crate itertools as it;
-#[cfg(not(nocomplex))]
 extern crate num as libnum;
 
 use libnum::Float;
@@ -806,9 +805,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a sliced array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
+    /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
@@ -823,8 +820,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Slice the array’s view in place.
     ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
+    /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
@@ -848,8 +844,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a sliced read-write view of the array.
     ///
-    /// [`D::SliceArg`] is typically a fixed size array of `Si`, with one
-    /// element per axis.
+    /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
@@ -2037,7 +2032,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// the given absolute tolerance.<br>
     /// Return `false` otherwise, or if the shapes disagree.
     pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
-        where A: Float + PartialOrd,
+        where A: Float,
               S2: Data<Elem=A>,
     {
         self.shape() == rhs.shape() &&
@@ -2636,6 +2631,8 @@ mod assign_ops {
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a A`.
+///
+/// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
 pub struct Elements<'a, A: 'a, D> {
     inner: ElementsRepr<Iter<'a, A>, ElementsBase<'a, A, D>>,
 }
@@ -2648,6 +2645,8 @@ struct ElementsBase<'a, A: 'a, D> {
 /// An iterator over the elements of an array (mutable).
 ///
 /// Iterator element type is `&'a mut A`.
+///
+/// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
 pub struct ElementsMut<'a, A: 'a, D> {
     inner: ElementsRepr<IterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
 }
@@ -2660,9 +2659,13 @@ struct ElementsBaseMut<'a, A: 'a, D> {
 }
 
 /// An iterator over the indexes and elements of an array.
+///
+/// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
 #[derive(Clone)]
 pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// An iterator over the indexes and elements of an array (mutable).
+///
+/// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
 pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>

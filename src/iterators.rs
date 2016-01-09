@@ -165,7 +165,9 @@ impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix>
     }
 }
 
-impl<'a, A> ExactSizeIterator for ElementsBase<'a, A, Ix> { }
+impl<'a, A, D> ExactSizeIterator for ElementsBase<'a, A, D>
+    where D: Dimension,
+{ }
 
 macro_rules! either {
     ($value:expr, $inner:ident => $result:expr) => (
@@ -219,7 +221,9 @@ impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix>
     }
 }
 
-impl<'a, A> ExactSizeIterator for Elements<'a, A, Ix> { }
+impl<'a, A, D> ExactSizeIterator for Elements<'a, A, D>
+    where D: Dimension,
+{ }
 
 
 impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D>
@@ -265,6 +269,10 @@ impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix>
         either_mut!(self.inner, iter => iter.next_back())
     }
 }
+
+impl<'a, A, D> ExactSizeIterator for ElementsMut<'a, A, D>
+    where D: Dimension,
+{ }
 
 impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D>
 {
@@ -316,6 +324,8 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D>
 
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
+///
+/// See [`.inner_iter()`](struct.ArrayBase.html#method.inner_iter) for more information.
 pub struct InnerIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
@@ -367,11 +377,18 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
+    where D: Dimension,
+{ }
+
 // NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
 // anyway).
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row (mutable).
+///
+/// See [`.inner_iter_mut()`](struct.ArrayBase.html#method.inner_iter_mut)
+/// for more information.
 pub struct InnerIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
@@ -423,6 +440,10 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
+    where D: Dimension,
+{ }
+
 pub struct OuterIterCore<A, D> {
     index: Ix,
     len: Ix,
@@ -472,13 +493,32 @@ impl<A, D> Iterator for OuterIterCore<A, D>
     }
 }
 
+impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.len {
+            None
+        } else {
+            self.len -= 1;
+            let ptr = unsafe {
+                self.ptr.offset(self.len as isize * self.stride)
+            };
+            Some(ptr)
+        }
+    }
+}
+
 /// An iterator that traverses over the outermost dimension
 /// and yields each subview.
 ///
 /// For example, in a 2 × 2 × 3 array, the iterator element
 /// is a 2 × 3 subview (and there are 2 in total).
 ///
-/// Iterator element type is `ArrayViewMut<'a, A, D>`.
+/// Iterator element type is `ArrayView<'a, A, D>`.
+///
+/// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
+/// for more information.
 pub struct OuterIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a A>,
@@ -505,6 +545,25 @@ impl<'a, A, D> Iterator for OuterIter<'a, A, D>
     }
 }
 
+impl<'a, A, D> DoubleEndedIterator for OuterIter<'a, A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| {
+            ArrayView {
+                data: &[],
+                ptr: ptr,
+                dim: self.iter.inner_dim.clone(),
+                strides: self.iter.inner_strides.clone(),
+            }
+        })
+    }
+}
+
+impl<'a, A, D> ExactSizeIterator for OuterIter<'a, A, D>
+    where D: Dimension,
+{ }
+
 pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
     where D: RemoveAxis,
 {
@@ -521,6 +580,9 @@ pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
 /// is a 2 × 3 subview (and there are 2 in total).
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
+///
+/// See [`.outer_iter_mut()`](struct.ArrayBase.html#method.outer_iter_mut)
+/// for more information.
 pub struct OuterIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a mut A>,
@@ -546,6 +608,25 @@ impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
         self.iter.size_hint()
     }
 }
+
+impl<'a, A, D> DoubleEndedIterator for OuterIterMut<'a, A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| {
+            ArrayViewMut {
+                data: &mut [],
+                ptr: ptr,
+                dim: self.iter.inner_dim.clone(),
+                strides: self.iter.inner_strides.clone(),
+            }
+        })
+    }
+}
+
+impl<'a, A, D> ExactSizeIterator for OuterIterMut<'a, A, D>
+    where D: Dimension,
+{ }
 
 pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Smaller>
     where D: RemoveAxis,

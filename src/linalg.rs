@@ -48,7 +48,6 @@ impl ComplexField for f64
     fn sqrt_real(self) -> f64 { self.sqrt() }
 }
 
-#[cfg(not(nocomplex))]
 impl<A: Num + Float> ComplexField for Complex<A>
 {
     #[inline]
