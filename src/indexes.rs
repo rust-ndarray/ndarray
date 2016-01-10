@@ -21,12 +21,12 @@ impl<D: Dimension> Indexes<D>
     }
 }
 
-impl<D: Dimension> Iterator for Indexes<D>
+impl<D> Iterator for Indexes<D>
+    where D: Dimension,
 {
     type Item = D;
     #[inline]
-    fn next(&mut self) -> Option<D>
-    {
+    fn next(&mut self) -> Option<D> {
         let index = match self.index {
             None => return None,
             Some(ref ix) => ix.clone(),
@@ -35,8 +35,7 @@ impl<D: Dimension> Iterator for Indexes<D>
         Some(index)
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>)
-    {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         let l = match self.index {
             None => 0,
             Some(ref ix) => {
@@ -50,3 +49,4 @@ impl<D: Dimension> Iterator for Indexes<D>
     }
 }
 
+impl<D> ExactSizeIterator for Indexes<D> where D: Dimension { }
