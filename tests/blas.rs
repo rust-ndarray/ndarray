@@ -24,7 +24,8 @@ fn strided_matrix() {
     assert_eq!(res, a);
 
     // matrix multiplication, strided
-    let mut aprim = a.to_shared().slice(s![0..12, 0..11]);
+    let mut aprim = a.to_shared();
+    aprim.islice(s![0..12, 0..11]);
     println!("{:?}", aprim.shape());
     println!("{:?}", aprim.strides());
     let mut b = ndarray::linalg::eye(aprim.shape()[1]);
@@ -48,7 +49,8 @@ fn strided_matrix() {
     assert_eq!(at, res);
 
     // strided, needs copy
-    let mut abis = a.to_shared().slice(s![0..12, ..;2]);
+    let mut abis = a.to_shared();
+    abis.islice(s![0..12, ..;2]);
     println!("{:?}", abis.shape());
     println!("{:?}", abis.strides());
     let mut b = ndarray::linalg::eye(abis.shape()[1]);
