@@ -70,6 +70,7 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
 };
 use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
+use std::marker::PhantomData;
 
 use it::ZipSlices;
 
@@ -411,12 +412,12 @@ unsafe impl<A> DataClone for Vec<A> where A: Clone {
     }
 }
 
-unsafe impl<'a, A> Data for &'a [A] {
+unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     type Elem = A;
-    fn slice(&self) -> &[A] { self }
+    fn slice(&self) -> &[A] { &[] }
 }
 
-unsafe impl<'a, A> DataClone for &'a [A] {
+unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
         -> (Self, *mut Self::Elem)
     {
@@ -424,13 +425,13 @@ unsafe impl<'a, A> DataClone for &'a [A] {
     }
 }
 
-unsafe impl<'a, A> Data for &'a mut [A] {
+unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     type Elem = A;
-    fn slice(&self) -> &[A] { self }
+    fn slice(&self) -> &[A] { &[] }
 }
 
-unsafe impl<'a, A> DataMut for &'a mut [A] {
-    fn slice_mut(&mut self) -> &mut [A] { self }
+unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
+    fn slice_mut(&mut self) -> &mut [A] { &mut [] }
 }
 
 /// Array representation that is a unique or shared owner of its data.
@@ -443,7 +444,7 @@ pub unsafe trait DataOwned : Data {
 pub unsafe trait DataShared : Clone + DataClone { }
 
 unsafe impl<A> DataShared for Rc<Vec<A>> { }
-unsafe impl<'a, A> DataShared for &'a [A] { }
+unsafe impl<'a, A> DataShared for ViewRepr<&'a A> { }
 
 unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
@@ -466,11 +467,25 @@ pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 /// A lightweight array view.
 ///
 /// `ArrayView` implements `IntoIterator`.
-pub type ArrayView<'a, A, D> = ArrayBase<&'a [A], D>;
+pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 /// A lightweight read-write array view.
 ///
 /// `ArrayViewMut` implements `IntoIterator`.
-pub type ArrayViewMut<'a, A, D> = ArrayBase<&'a mut [A], D>;
+pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
+
+/// Array view’s representation.
+#[derive(Copy, Clone)]
+// This is just a marker type, to carry the lifetime parameter.
+pub struct ViewRepr<A> {
+    life: PhantomData<A>,
+}
+
+impl<A> ViewRepr<A> {
+    #[inline(always)]
+    fn new() -> Self {
+        ViewRepr { life: PhantomData, }
+    }
+}
 
 impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
 {
@@ -585,9 +600,36 @@ impl<S, A, D> ArrayBase<S, D>
     }
 }
 
+
+// ArrayView methods
+impl<'a, A> ArrayView<'a, A, Ix> {
+    #[inline]
+    fn from_slice(xs: &'a [A]) -> Self {
+        ArrayView {
+            data: ViewRepr::new(),
+            ptr: xs.as_ptr() as *mut A,
+            dim: xs.len(),
+            strides: 1,
+        }
+    }
+}
+
 impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
+    /// Create a new `ArrayView`
+    ///
+    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
+    #[inline(always)]
+    unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
+        ArrayView {
+            data: ViewRepr::new(),
+            ptr: ptr as *mut A,
+            dim: dim,
+            strides: strides,
+        }
+    }
+
     #[inline]
     fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
@@ -621,6 +663,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
+    /// Return an outer iterator for this view.
     pub fn into_outer_iter(self) -> OuterIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
@@ -631,6 +674,19 @@ impl<'a, A, D> ArrayView<'a, A, D>
 impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
+    /// Create a new `ArrayView`
+    ///
+    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
+    #[inline(always)]
+    unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
+        ArrayViewMut {
+            data: ViewRepr::new(),
+            ptr: ptr,
+            dim: dim,
+            strides: strides,
+        }
+    }
+
     #[inline]
     fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
@@ -710,11 +766,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a read-only view of the array
     pub fn view(&self) -> ArrayView<A, D> {
         debug_assert!(self.pointer_is_inbounds());
-        ArrayView {
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
-            data: self.raw_data(),
+        unsafe {
+            ArrayView::new_(self.ptr, self.dim.clone(), self.strides.clone())
         }
     }
 
@@ -723,11 +776,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
     {
         self.ensure_unique();
-        ArrayViewMut {
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
-            data: self.data.slice_mut(),
+        unsafe {
+            ArrayViewMut::new_(self.ptr, self.dim.clone(), self.strides.clone())
         }
     }
 
@@ -1449,12 +1499,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 Some(st) => st,
                 None => return None,
             };
-        Some(ArrayView {
-            data: self.raw_data(),
-            ptr: self.ptr,
-            dim: dim,
-            strides: broadcast_strides,
-        })
+        unsafe {
+            Some(ArrayView::new_(self.ptr, dim, broadcast_strides))
+        }
     }
 
     #[cfg_attr(has_deprecated, deprecated(note="use .broadcast() instead"))]
@@ -1715,14 +1762,8 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
 
 /// Return a zero-dimensional array view borrowing `x`.
 pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
-    let data = unsafe {
-        std::slice::from_raw_parts(x, 1)
-    };
-    ArrayView {
-        data: data,
-        ptr: data.as_ptr() as *mut _,
-        dim: (),
-        strides: (),
+    unsafe {
+        ArrayView::new_(x, (), ())
     }
 }
 
@@ -1741,12 +1782,7 @@ pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
 /// );
 /// ```
 pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix> {
-    ArrayView {
-        data: xs,
-        ptr: xs.as_ptr() as *mut _,
-        dim: xs.len() as Ix,
-        strides: 1,
-    }
+    ArrayView::from_slice(xs)
 }
 
 /// Return a two-dimensional array view with elements borrowing `xs`.
@@ -1757,11 +1793,9 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
         std::slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows)
     };
     let dim = (rows as Ix, cols as Ix);
-    ArrayView {
-        data: data,
-        ptr: data.as_ptr() as *mut _,
-        strides: dim.default_strides(),
-        dim: dim,
+    unsafe {
+        let strides = dim.default_strides();
+        ArrayView::new_(data.as_ptr(), dim, strides)
     }
 }
 
@@ -1784,11 +1818,8 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 /// }
 /// ```
 pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
-    ArrayViewMut {
-        ptr: xs.as_mut_ptr(),
-        dim: xs.len() as Ix,
-        strides: 1,
-        data: xs,
+    unsafe {
+        ArrayViewMut::new_(xs.as_mut_ptr(), xs.len() as Ix, 1)
     }
 }
 
@@ -2075,14 +2106,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     unsafe fn one_dimensional_iter<'a>(ptr: *mut A, len: Ix, stride: Ix)
         -> Elements<'a, A, Ix>
     {
-        // NOTE: `data` field is unused by into_iter
-        let view = ArrayView {
-            data: &[],
-            ptr: ptr,
-            dim: len,
-            strides: stride,
-        };
-        view.into_iter_()
+        ArrayView::new_(ptr, len, stride).into_iter_()
     }
 
     /// Return an array view of row `index`.
