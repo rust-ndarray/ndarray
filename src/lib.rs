@@ -22,7 +22,7 @@
 //!   elements from the end of the axis.
 //! - There is both a copy on write array (`Array`), or a regular uniquely owned array
 //!   (`OwnedArray`), and both can use read-only and read-write array views.
-//! - Iteration and most operations are efficient on arrays with contgiuous
+//! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
 //! - Array views can be used to slice and mutate any `[T]` data.
 //!
