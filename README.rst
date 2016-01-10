@@ -39,7 +39,7 @@ Highlights
 
 - Slicing, also with arbitrary step size, and negative indices to mean
   elements from the end of the axis.
-- Iteration and most operations are efficient on arrays with contgiuous
+- Iteration and most operations are efficient on arrays with contiguous
   innermost dimension.
 - Array views can be used to slice and mutate any ``[T]`` data.
 

@@ -361,13 +361,9 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     type Item = ArrayView<'a, A, Ix>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
-            let view = ArrayView {
-                data: &[],
-                ptr: ptr,
-                dim: self.inner_len,
-                strides: self.inner_stride as Ix,
-            };
-            view
+            unsafe {
+                ArrayView::new_(ptr, self.inner_len, self.inner_stride as Ix)
+            }
         })
     }
 
@@ -424,13 +420,9 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     type Item = ArrayViewMut<'a, A, Ix>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
-            let view = ArrayViewMut {
-                data: &mut [],
-                ptr: ptr,
-                dim: self.inner_len,
-                strides: self.inner_stride as Ix,
-            };
-            view
+            unsafe {
+                ArrayViewMut::new_(ptr, self.inner_len, self.inner_stride as Ix)
+            }
         })
     }
 
@@ -531,11 +523,8 @@ impl<'a, A, D> Iterator for OuterIter<'a, A, D>
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
-            ArrayView {
-                data: &[],
-                ptr: ptr,
-                dim: self.iter.inner_dim.clone(),
-                strides: self.iter.inner_strides.clone(),
+            unsafe {
+                ArrayView::new_(ptr, self.iter.inner_dim.clone(), self.iter.inner_strides.clone())
             }
         })
     }
@@ -550,11 +539,8 @@ impl<'a, A, D> DoubleEndedIterator for OuterIter<'a, A, D>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter.next_back().map(|ptr| {
-            ArrayView {
-                data: &[],
-                ptr: ptr,
-                dim: self.iter.inner_dim.clone(),
-                strides: self.iter.inner_strides.clone(),
+            unsafe {
+                ArrayView::new_(ptr, self.iter.inner_dim.clone(), self.iter.inner_strides.clone())
             }
         })
     }
@@ -595,11 +581,9 @@ impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
-            ArrayViewMut {
-                data: &mut [],
-                ptr: ptr,
-                dim: self.iter.inner_dim.clone(),
-                strides: self.iter.inner_strides.clone(),
+            unsafe {
+                ArrayViewMut::new_(ptr, self.iter.inner_dim.clone(),
+                                   self.iter.inner_strides.clone())
             }
         })
     }
@@ -614,11 +598,9 @@ impl<'a, A, D> DoubleEndedIterator for OuterIterMut<'a, A, D>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter.next_back().map(|ptr| {
-            ArrayViewMut {
-                data: &mut [],
-                ptr: ptr,
-                dim: self.iter.inner_dim.clone(),
-                strides: self.iter.inner_strides.clone(),
+            unsafe {
+                ArrayViewMut::new_(ptr, self.iter.inner_dim.clone(),
+                                   self.iter.inner_strides.clone())
             }
         })
     }
