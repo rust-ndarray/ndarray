@@ -1132,6 +1132,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over all dimensions but the innermost,
     /// and yields each inner row.
     ///
+    /// For example, in a 2 × 2 × 3 array, the iterator element
+    /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
+    ///
     /// Iterator element is `ArrayView<A, Ix>` (1D array view).
     ///
     /// ```
