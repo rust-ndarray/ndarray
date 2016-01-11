@@ -5,7 +5,7 @@
 //!
 //! A few linear algebra operations on two-dimensional arrays.
 
-use libnum::{Num, zero, one, Zero, One};
+use libnum::{Num, zero, Zero, One};
 use libnum::Float;
 use libnum::Complex;
 use std::ops::{Add, Sub, Mul, Div};
@@ -58,13 +58,11 @@ impl<A: Num + Float> ComplexField for Complex<A>
 }
 
 /// Return the identity matrix of dimension *n*.
-pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A>
-{
-    let mut eye = Array::zeros((n, n));
-    for a_ii in eye.diag_mut() {
-        *a_ii = one::<A>();
-    }
-    eye
+///
+/// Deprecated: Use `Array::eye(n)` instead.
+#[cfg_attr(has_deprecated, deprecated(note="Use Array::eye instead."))]
+pub fn eye<A: Clone + Zero + One>(n: Ix) -> Mat<A> {
+    Array::eye(n)
 }
 
 /*

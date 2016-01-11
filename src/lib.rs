@@ -514,7 +514,7 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
 
 impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> { }
 
-/// Constructor methods for single dimensional `ArrayBase`.
+/// Constructor methods for one-dimensional arrays.
 impl<S> ArrayBase<S, Ix>
     where S: DataOwned,
 {
@@ -551,12 +551,29 @@ impl<S> ArrayBase<S, Ix>
     }
 }
 
-/// Constructor methods for `ArrayBase`.
+/// Constructor methods for two-dimensional arrays.
+impl<S, A> ArrayBase<S, (Ix, Ix)>
+    where S: DataOwned<Elem=A>,
+{
+    /// Create an identity matrix of size `n` (square 2D array).
+    pub fn eye(n: Ix) -> ArrayBase<S, (Ix, Ix)>
+        where S: DataMut,
+              A: Clone + libnum::Zero + libnum::One,
+    {
+        let mut eye = Self::zeros((n, n));
+        for a_ii in eye.diag_mut() {
+            *a_ii = A::one();
+        }
+        eye
+    }
+}
+
+/// Constructor methods for arrays.
 impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
           D: Dimension,
 {
-    /// Construct an array with copies of `elem`, dimension `dim`.
+    /// Create an array with copies of `elem`, dimension `dim`.
     ///
     /// ```
     /// use ndarray::Array;
@@ -579,13 +596,13 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
-    /// Construct an array with zeros, dimension `dim`.
+    /// Create an array with zeros, dimension `dim`.
     pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
     }
 
-    /// Construct an array with default values, dimension `dim`.
+    /// Create an array with default values, dimension `dim`.
     pub fn default(dim: D) -> ArrayBase<S, D>
         where A: Default
     {
