@@ -81,7 +81,7 @@ Recent Changes
 
 - 0.3.0
 
-  - Second round of API update & consistency is done
+  - Second round of API & consistency update is done
   - 0.3.0 highlight: **Index type** ``Ix`` **changed to** ``usize``.
   - 0.3.0 highlight: Operator overloading for scalar and array arithmetic.
   - 0.3.0 highlight: Indexing with ``a[[i, j, k]]`` syntax.
