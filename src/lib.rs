@@ -33,6 +33,7 @@
 //!   + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
 //!   + `.fold()` and `.zip_mut_with()` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
+//!   + `.iter()` and `.iter_mut()` are efficient for contiguous arrays.
 //! - There is experimental bridging to the linear algebra package `rblas`.
 //!
 //! ## Crate Feature Flags
@@ -120,7 +121,7 @@ pub type Ixs = isize;
 /// The array supports arithmetic operations by applying them elementwise.
 ///
 /// The `ArrayBase<S, D>` is parameterized by:
-///
+
 /// - `S` for the data container
 /// - `D` for the number of dimensions
 ///
@@ -153,8 +154,18 @@ pub type Ixs = isize;
 /// a 2D array has two axes. These are listed in “big endian” order, so that
 /// the greatest dimension is listed first, the lowest dimension with the most
 /// rapidly varying index is the last.
-/// For the 2D array this means that indices are `(row, column)`, and the order of
-/// the elements is *(0, 0), (0, 1), (0, 2), ... (1, 0), (1, 1), (1, 2) ...* etc.
+///
+/// In a 2D array the index of each element is `(row, column)`
+/// as seen in this 3 × 3 example:
+///
+/// ```ignore
+/// [[ (0, 0), (0, 1), (0, 2)],  // row 0
+///  [ (1, 0), (1, 1), (1, 2)],  // row 1
+///  [ (2, 0), (2, 1), (2, 2)]]  // row 2
+/// //    \       \       \
+/// //   column 0  \     column 2
+/// //            column 1
+/// ```
 ///
 /// The number of axes for an array is fixed by the `D` parameter: `Ix` for
 /// a 1D array, `(Ix, Ix)` for a 2D array etc. The `D` type is also used
@@ -504,7 +515,7 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
 
 impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> { }
 
-/// Constructor methods for single dimensional `ArrayBase`.
+/// Constructor methods for one-dimensional arrays.
 impl<S> ArrayBase<S, Ix>
     where S: DataOwned,
 {
@@ -541,12 +552,29 @@ impl<S> ArrayBase<S, Ix>
     }
 }
 
-/// Constructor methods for `ArrayBase`.
+/// Constructor methods for two-dimensional arrays.
+impl<S, A> ArrayBase<S, (Ix, Ix)>
+    where S: DataOwned<Elem=A>,
+{
+    /// Create an identity matrix of size `n` (square 2D array).
+    pub fn eye(n: Ix) -> ArrayBase<S, (Ix, Ix)>
+        where S: DataMut,
+              A: Clone + libnum::Zero + libnum::One,
+    {
+        let mut eye = Self::zeros((n, n));
+        for a_ii in eye.diag_mut() {
+            *a_ii = A::one();
+        }
+        eye
+    }
+}
+
+/// Constructor methods for arrays.
 impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
           D: Dimension,
 {
-    /// Construct an array with copies of `elem`, dimension `dim`.
+    /// Create an array with copies of `elem`, dimension `dim`.
     ///
     /// ```
     /// use ndarray::Array;
@@ -569,13 +597,13 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
-    /// Construct an array with zeros, dimension `dim`.
+    /// Create an array with zeros, dimension `dim`.
     pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
     }
 
-    /// Construct an array with default values, dimension `dim`.
+    /// Create an array with default values, dimension `dim`.
     pub fn default(dim: D) -> ArrayBase<S, D>
         where A: Default
     {
@@ -1131,6 +1159,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator that traverses over all dimensions but the innermost,
     /// and yields each inner row.
+    ///
+    /// For example, in a 2 × 2 × 3 array, the iterator element
+    /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
     ///
     /// Iterator element is `ArrayView<A, Ix>` (1D array view).
     ///
@@ -2074,7 +2105,7 @@ impl<A, S, D> ArrayBase<S, D>
 impl<A, S> ArrayBase<S, Ix>
     where S: Data<Elem=A>,
 {
-    /// Compute the dot product of one dimensional arrays.
+    /// Compute the dot product of one-dimensional arrays.
     ///
     /// The dot product is a sum of the elementwise products (no conjugation
     /// of complex operands, and thus not their inner product).
@@ -2151,12 +2182,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
-    /// The array sizes must agree in the way that
+    /// The array shapes must agree in the way that
     /// if `self` is *M* × *N*, then `rhs` is *N* × *K*.
     ///
     /// Return a result array with shape *M* × *K*.
     ///
-    /// **Panics** if sizes are incompatible.
+    /// **Panics** if shapes are incompatible.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -2211,12 +2242,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Perform the matrix multiplication of the rectangular array `self` and
     /// column vector `rhs`.
     ///
-    /// The array sizes must agree in the way that
+    /// The array shapes must agree in the way that
     /// if `self` is *M* × *N*, then `rhs` is *N*.
     ///
     /// Return a result array with shape *M*.
     ///
-    /// **Panics** if sizes are incompatible.
+    /// **Panics** if shapes are incompatible.
     #[allow(deprecated)]
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
         where A: Copy + Ring
