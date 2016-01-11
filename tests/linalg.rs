@@ -37,7 +37,7 @@ fn chol()
     let b = Array::linspace(0f32, 8., 9).reshape((3, 3));
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
-    let bpd = bt.mat_mul(&b);
+    let bpd = bt.mat_mul(&b).into_shared();
     println!("bpd=\n{:?}", bpd);
     let chol = ndarray::linalg::cholesky(bpd);
     println!("chol=\n{:.8?}", chol);
