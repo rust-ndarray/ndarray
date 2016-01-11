@@ -72,7 +72,11 @@ pub const S: Si = Si(0, None, 1);
 ///
 /// `s![]` takes a list of ranges, separated by comma, with optional strides
 /// that are separated from the range by a semicolon.
-/// It is converted into a slice argument with type `&[Si; n]`.
+/// It is converted into a slice argument with type `&[Si; N]`.
+///
+/// Each range uses signed indices, where a negative value is counted from
+/// the end of the axis. Strides are also signed and may be negative, but
+/// must not be zero.
 ///
 /// For example, if an array has two axes, the slice argument is passed as
 /// type `&[Si; 2]`.

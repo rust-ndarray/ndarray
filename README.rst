@@ -50,8 +50,9 @@ Status and Lookout
 - Performance status:
 
   + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
-  + `.fold()` and `.zip_mut_with()` are the most efficient ways to
+  + ``.fold()`` and ``.zip_mut_with()`` are the most efficient ways to
     perform single traversal and lock step traversal respectively.
+  + ``.iter()`` and ``.iter_mut()`` are efficient for contiguous arrays.
 
 - There is experimental bridging to the linear algebra package ``rblas``.
 
