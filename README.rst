@@ -81,6 +81,15 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.3.0-alpha.4
+
+  - Shrink array view structs by removing their redundant slice field (see #45).
+    Changed the definition of the view ``type`` aliases.
+  - ``.mat_mul()`` and ``.mat_mul_col()`` now return ``OwnedArray``.
+    Use ``.into_shared()`` if you need an ``Array``.
+  - impl ExactSizeIterator where possible for iterators.
+  - impl DoubleEndedIterator for ``.outer_iter()`` (and _mut).
+
 - 0.3.0-alpha.3
 
   - ``.subview()`` changed to return an array view, also added ``into_subview()``.
