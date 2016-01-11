@@ -1,17 +1,14 @@
 ndarray
 =========
 
-- **Note:** PACKAGE NAME CHANGED TO ``ndarray``. Having package != crate ran
-  into many quirks of various tools. Changing the package name is easier for
-  everyone involved!
-
 The ``ndarray`` crate provides an N-dimensional container similar to numpy’s
 ndarray. Requires Rust 1.5.
 
-Please read the `API documentation here (0.2)`__ `(master)`__
+Please read the `API documentation here (master)`__, `(0.3)`__, `(0.2)`__
 
-__ http://bluss.github.io/rust-ndarray/0.2/
 __ http://bluss.github.io/rust-ndarray/
+__ http://bluss.github.io/rust-ndarray/0.3/
+__ http://bluss.github.io/rust-ndarray/0.2/
 
 |build_status|_ |crates|_
 
@@ -77,10 +74,19 @@ Crate Feature Flags
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.2"
+    ndarray = "0.3"
 
 Recent Changes
 --------------
+
+- 0.3.0
+
+  - Second round of API update & consistency is done
+  - 0.3.0 highlight: **Index type** ``Ix`` **changed to** ``usize``.
+  - 0.3.0 highlight: Operator overloading for scalar and array arithmetic.
+  - 0.3.0 highlight: Indexing with ``a[[i, j, k]]`` syntax.
+  - Add ``ArrayBase::eye(n)``
+  - See below for more info
 
 - 0.3.0-alpha.4
 
