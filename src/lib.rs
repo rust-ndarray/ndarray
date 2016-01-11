@@ -2173,10 +2173,10 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// ```
     ///
     #[allow(deprecated)]
-    pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> Array<A, (Ix, Ix)>
+    pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
         where A: Copy + Ring
     {
-        // NOTE: Matrix multiplication only defined for simple types to
+        // NOTE: Matrix multiplication only defined for Copy types to
         // avoid trouble with panicking + and *, and destructors
 
         let ((m, a), (b, n)) = (self.dim, rhs.dim);
@@ -2218,7 +2218,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     ///
     /// **Panics** if sizes are incompatible.
     #[allow(deprecated)]
-    pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> Array<A, Ix>
+    pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
         where A: Copy + Ring
     {
         let ((m, a), n) = (self.dim, rhs.dim);
