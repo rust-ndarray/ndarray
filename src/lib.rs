@@ -120,7 +120,7 @@ pub type Ixs = isize;
 /// The array supports arithmetic operations by applying them elementwise.
 ///
 /// The `ArrayBase<S, D>` is parameterized by:
-///
+
 /// - `S` for the data container
 /// - `D` for the number of dimensions
 ///
@@ -153,8 +153,18 @@ pub type Ixs = isize;
 /// a 2D array has two axes. These are listed in “big endian” order, so that
 /// the greatest dimension is listed first, the lowest dimension with the most
 /// rapidly varying index is the last.
-/// For the 2D array this means that indices are `(row, column)`, and the order of
-/// the elements is *(0, 0), (0, 1), (0, 2), ... (1, 0), (1, 1), (1, 2) ...* etc.
+///
+/// In a 2D array the index of each element is `(row, column)`
+/// as seen in this 3 × 3 example:
+///
+/// ```ignore
+/// [[ (0, 0), (0, 1), (0, 2)],  // row 0
+///  [ (1, 0), (1, 1), (1, 2)],  // row 1
+///  [ (2, 0), (2, 1), (2, 2)]]  // row 2
+/// //    \       \       \
+/// //   column 0  \     column 2
+/// //            column 1
+/// ```
 ///
 /// The number of axes for an array is fixed by the `D` parameter: `Ix` for
 /// a 1D array, `(Ix, Ix)` for a 2D array etc. The `D` type is also used
