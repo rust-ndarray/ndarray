@@ -2104,7 +2104,7 @@ impl<A, S, D> ArrayBase<S, D>
 impl<A, S> ArrayBase<S, Ix>
     where S: Data<Elem=A>,
 {
-    /// Compute the dot product of one dimensional arrays.
+    /// Compute the dot product of one-dimensional arrays.
     ///
     /// The dot product is a sum of the elementwise products (no conjugation
     /// of complex operands, and thus not their inner product).
@@ -2181,12 +2181,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
-    /// The array sizes must agree in the way that
+    /// The array shapes must agree in the way that
     /// if `self` is *M* × *N*, then `rhs` is *N* × *K*.
     ///
     /// Return a result array with shape *M* × *K*.
     ///
-    /// **Panics** if sizes are incompatible.
+    /// **Panics** if shapes are incompatible.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -2241,12 +2241,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Perform the matrix multiplication of the rectangular array `self` and
     /// column vector `rhs`.
     ///
-    /// The array sizes must agree in the way that
+    /// The array shapes must agree in the way that
     /// if `self` is *M* × *N*, then `rhs` is *N*.
     ///
     /// Return a result array with shape *M*.
     ///
-    /// **Panics** if sizes are incompatible.
+    /// **Panics** if shapes are incompatible.
     #[allow(deprecated)]
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
         where A: Copy + Ring
