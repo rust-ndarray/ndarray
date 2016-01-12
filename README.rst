@@ -79,7 +79,7 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- 0.3.0
+- **0.3.0**
 
   - Second round of API & consistency update is done
   - 0.3.0 highlight: **Index type** ``Ix`` **changed to** ``usize``.
