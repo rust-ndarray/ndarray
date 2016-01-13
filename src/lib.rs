@@ -335,6 +335,10 @@ pub struct ArrayBase<S, D> where S: Data {
 }
 
 /// Array’s inner representation.
+///
+/// ***Note:*** `Data` is not an extension interface at this point.
+/// Traits in Rust can serve many different roles. This trait is public because
+/// it is used as a bound on public methods.
 pub unsafe trait Data {
     type Elem;
     fn slice(&self) -> &[Self::Elem];
