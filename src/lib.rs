@@ -2164,7 +2164,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     ///
     /// **Panics** if `index` is out of bounds.
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
-    where S: DataMut
+        where S: DataMut
     {
         self.subview_mut(0, index)
     }
@@ -2173,7 +2173,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     ///
     /// **Panics** if `index` is out of bounds.
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
-    where S: DataMut
+        where S: DataMut
     {
         self.subview_mut(1, index)
     }
