@@ -2160,6 +2160,24 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         self.subview(1, index)
     }
 
+    /// Return a mutable array view of row `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
+    where S: DataMut
+    {
+        self.subview_mut(0, index)
+    }
+
+    /// Return a mutable array view of column `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
+    where S: DataMut
+    {
+        self.subview_mut(1, index)
+    }
+
     #[cfg_attr(has_deprecated, deprecated(note="use .row() instead"))]
     /// ***Deprecated: Use `.row()` instead.***
     pub fn row_iter(&self, index: Ix) -> Elements<A, Ix>
