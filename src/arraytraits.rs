@@ -9,6 +9,8 @@ use std::ops::{
     IndexMut,
 };
 
+use std::cmp::Ordering;
+
 use super::{
     Dimension, Ix,
     Elements,
@@ -76,6 +78,88 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
             }
         }
         self.iter().zip(rhs.iter()).all(|(a, b)| a == b)
+    }
+}
+
+impl<S, S2, D> PartialOrd<ArrayBase<S2, D>> for ArrayBase<S, D>
+    where D: Dimension,
+          S: Data,
+          S2: Data<Elem = S::Elem>,
+          S::Elem: PartialOrd,
+{
+    /// Return `None` if the array shapes `self` and `rhs` are not equal.
+    /// Return appropriate `Option<Ordering>` otherwise.
+    fn partial_cmp(&self, rhs: &ArrayBase<S2, D>) -> Option<Ordering>
+    {
+        // Balk on arguments with different shapes. Should probably
+        // broadcast at some point
+        if self.shape() != rhs.shape() {
+            return None;
+        }
+        // Use partial_cmp from the slice version if contiguous
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s.partial_cmp(rhs_s);
+            }
+        }
+
+        let mut cmps = self.iter().zip(rhs.iter()).map(|(a, b)| a.partial_cmp(b));
+        if let Some(first_cmp) = cmps.next() {
+            if cmps.all(|x| x == first_cmp) {return first_cmp}
+        }
+        None
+    }
+
+    fn lt(&self, rhs: &ArrayBase<S2, D>) -> bool
+    {
+        if self.shape() != rhs.shape() {
+            return false;
+        }
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s.lt(rhs_s);
+            }
+        }
+        self.iter().zip(rhs.iter()).all(|(a, b)| a.lt(b))
+    }
+
+    fn le(&self, rhs: &ArrayBase<S2, D>) -> bool
+    {
+        if self.shape() != rhs.shape() {
+            return false;
+        }
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s.le(rhs_s);
+            }
+        }
+        self.iter().zip(rhs.iter()).all(|(a, b)| a.le(b))
+    }
+
+    fn gt(&self, rhs: &ArrayBase<S2, D>) -> bool
+    {
+        if self.shape() != rhs.shape() {
+            return false;
+        }
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s.gt(rhs_s);
+            }
+        }
+        self.iter().zip(rhs.iter()).all(|(a, b)| a.gt(b))
+    }
+
+    fn ge(&self, rhs: &ArrayBase<S2, D>) -> bool
+    {
+        if self.shape() != rhs.shape() {
+            return false;
+        }
+        if let Some(self_s) = self.as_slice() {
+            if let Some(rhs_s) = rhs.as_slice() {
+                return self_s.ge(rhs_s);
+            }
+        }
+        self.iter().zip(rhs.iter()).all(|(a, b)| a.ge(b))
     }
 }
 
