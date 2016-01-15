@@ -1,3 +1,4 @@
+#[macro_use(s)]
 extern crate ndarray;
 extern crate itertools;
 
@@ -196,6 +197,23 @@ fn outer_iter() {
     }
     found_rows_rev.reverse();
     assert_eq!(&found_rows, &found_rows_rev);
+
+    // Test a case where strides are negative instead
+    let mut c = Array::zeros((2, 3, 2));
+    let mut cv = c.slice_mut(s![..;-1, ..;-1, ..;-1]);
+    cv.assign(&a);
+    assert_eq!(&a, &cv);
+    assert_equal(cv.outer_iter(),
+                 vec![a.subview(0, 0), a.subview(0, 1)]);
+
+    let mut found_rows = Vec::new();
+    for sub in cv.outer_iter() {
+        for row in sub.into_outer_iter() {
+            found_rows.push(row);
+        }
+    }
+    println!("{:#?}", found_rows);
+    assert_equal(a.inner_iter(), found_rows);
 }
 
 #[test]
