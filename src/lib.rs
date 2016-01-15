@@ -1218,6 +1218,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         iterators::new_outer_iter(self.view())
     }
 
+    /// Return an iterator that traverses over the `axis` dimension
+    /// and yields each subview.
+    ///
+    /// For example, in a 2 × 2 × 3 array, with `axis` equal to 1,
+    /// the iterator element
+    /// is a 2 × 2 subview (and there are 3 in total).
+    ///
+    /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
+    pub fn iter_axis(&self, axis: usize) -> OuterIter<A, D::Smaller>
+        where D: RemoveAxis
+    {
+        iterators::new_iter_axis(self.view(), axis)
+    }
+
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
     ///

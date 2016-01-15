@@ -445,19 +445,21 @@ pub struct OuterIterCore<A, D> {
     ptr: *mut A,
 }
 
-fn new_outer_core<A, S, D>(v: ArrayBase<S, D>) -> OuterIterCore<A, D::Smaller>
+fn new_outer_core<A, S, D>(v: ArrayBase<S, D>,
+                           axis: usize
+                           ) -> OuterIterCore<A, D::Smaller>
     where D: RemoveAxis,
           S: Data<Elem=A>,
 {
-    let shape = v.shape()[0];
-    let stride = v.strides()[0];
+    let shape = v.shape()[axis];
+    let stride = v.strides()[axis];
 
     OuterIterCore {
         index: 0,
         len: shape,
         stride: stride,
-        inner_dim: v.dim.remove_axis(0),
-        inner_strides: v.strides.remove_axis(0),
+        inner_dim: v.dim.remove_axis(axis),
+        inner_strides: v.strides.remove_axis(axis),
         ptr: v.ptr,
     }
 }
@@ -554,10 +556,20 @@ pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
     where D: RemoveAxis,
 {
     OuterIter {
-        iter: new_outer_core(v),
+        iter: new_outer_core(v, 0),
         life: PhantomData,
     }
 }
+
+pub fn new_iter_axis<A, D>(v: ArrayView<A, D>, axis: usize) -> OuterIter<A, D::Smaller>
+    where D: RemoveAxis,
+{
+    OuterIter {
+        iter: new_outer_core(v, axis),
+        life: PhantomData,
+    }
+}
+
 
 /// An iterator that traverses over the outermost dimension
 /// and yields each subview (mutable).
@@ -614,7 +626,7 @@ pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Sma
     where D: RemoveAxis,
 {
     OuterIterMut {
-        iter: new_outer_core(v),
+        iter: new_outer_core(v, 0),
         life: PhantomData,
     }
 }

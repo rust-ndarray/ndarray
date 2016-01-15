@@ -199,6 +199,22 @@ fn outer_iter() {
 }
 
 #[test]
+fn iter_axis() {
+    let a = Array::from_iter(0..12);
+    let a = a.reshape((2, 3, 2));
+    // [[[0, 1],
+    //   [2, 3],
+    //   [4, 5]],
+    //  [[6, 7],
+    //   [8, 9],
+    //    ...
+    assert_equal(a.iter_axis(1),
+                 vec![a.subview(1, 0),
+                      a.subview(1, 1),
+                      a.subview(1, 2)]);
+}
+
+#[test]
 fn outer_iter_corner_cases() {
     let a2 = Array::<i32, _>::zeros((0, 3));
     assert_equal(a2.outer_iter(),
