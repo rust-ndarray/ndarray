@@ -21,7 +21,7 @@ name = "ndarray"
 rustc_version = "0.1"
 
 [dependencies.num]
-version = "0.1"
+version = "0.1.30"
 features = ["complex"]
 default-features = false
 
