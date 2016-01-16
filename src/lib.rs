@@ -2185,14 +2185,6 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         self.subview(0, index)
     }
 
-    /// Return an array view of column `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
-    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
-    {
-        self.subview(1, index)
-    }
-
     /// Return a mutable array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -2200,6 +2192,14 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         where S: DataMut
     {
         self.subview_mut(0, index)
+    }
+
+    /// Return an array view of column `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.subview(1, index)
     }
 
     /// Return a mutable array view of column `index`.
