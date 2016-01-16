@@ -1218,24 +1218,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         iterators::new_outer_iter(self.view())
     }
 
-    /// Return an iterator that traverses over the `axis` dimension
-    /// and yields each subview.
-    ///
-    /// For example, in a 2 × 2 × 3 array, with `axis` equal to 1,
-    /// the iterator element
-    /// is a 2 × 2 subview (and there are 3 in total).
-    ///
-    /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
-    ///
-    /// # Panics
-    ///
-    /// If axis is out of bounds.
-    pub fn axis_iter(&self, axis: usize) -> OuterIter<A, D::Smaller>
-        where D: RemoveAxis
-    {
-        iterators::new_axis_iter(self.view(), axis)
-    }
-
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
     ///
@@ -1247,15 +1229,32 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         iterators::new_outer_iter_mut(self.view_mut())
     }
 
-    /// Return an iterator that traverses over the `axis` dimension
-    /// and yields each mutable subview.
+    /// Return an iterator that traverses over `axis`
+    /// and yields each subview along it.
+    ///
+    /// For example, in a 2 × 2 × 3 array, with `axis` equal to 1,
+    /// the iterator element
+    /// is a 2 × 2 subview (and there are 3 in total).
+    ///
+    /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
+    ///
+    /// See [*Subviews*](#subviews) for full documentation.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_iter(&self, axis: usize) -> OuterIter<A, D::Smaller>
+        where D: RemoveAxis
+    {
+        iterators::new_axis_iter(self.view(), axis)
+    }
+
+
+    /// Return an iterator that traverses over `axis`
+    /// and yields each mutable subview along it.
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>`
     /// (read-write array view).
     ///
-    /// # Panics
-    ///
-    /// If axis is out of bounds.
+    /// **Panics** if `axis` is out of bounds.
     pub fn axis_iter_mut(&mut self, axis: usize) -> OuterIterMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
