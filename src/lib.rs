@@ -1234,7 +1234,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// For example, in a 2 × 2 × 3 array, with `axis` equal to 1,
     /// the iterator element
-    /// is a 2 × 2 subview (and there are 3 in total).
+    /// is a 2 × 3 subview (and there are 2 in total).
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
     ///
