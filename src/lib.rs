@@ -273,6 +273,10 @@ pub type Ixs = isize;
 /// since it is *in place*, it cannot remove the collapsed axis. It becomes
 /// an axis of length 1.
 ///
+/// `.outer_iter()` is an iterator of every subview along the zeroth (outer)
+/// axis, while `.axis_iter()` is an iterator of every subview along a
+/// specific axis.
+///
 /// ## Arithmetic Operations
 ///
 /// Arrays support all arithmetic operations the same way: they apply elementwise.
