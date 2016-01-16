@@ -1226,10 +1226,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// is a 2 × 2 subview (and there are 3 in total).
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
-    pub fn iter_axis(&self, axis: usize) -> OuterIter<A, D::Smaller>
+    ///
+    /// # Panics
+    ///
+    /// If axis is out of bounds.
+    pub fn axis_iter(&self, axis: usize) -> OuterIter<A, D::Smaller>
         where D: RemoveAxis
     {
-        iterators::new_iter_axis(self.view(), axis)
+        iterators::new_axis_iter(self.view(), axis)
     }
 
     /// Return an iterator that traverses over the outermost dimension

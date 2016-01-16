@@ -199,7 +199,7 @@ fn outer_iter() {
 }
 
 #[test]
-fn iter_axis() {
+fn axis_iter() {
     let a = Array::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
     // [[[0, 1],
@@ -208,7 +208,7 @@ fn iter_axis() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.iter_axis(1),
+    assert_equal(a.axis_iter(1),
                  vec![a.subview(1, 0),
                       a.subview(1, 1),
                       a.subview(1, 2)]);

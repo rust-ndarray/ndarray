@@ -561,7 +561,7 @@ pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
     }
 }
 
-pub fn new_iter_axis<A, D>(v: ArrayView<A, D>, axis: usize) -> OuterIter<A, D::Smaller>
+pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize) -> OuterIter<A, D::Smaller>
     where D: RemoveAxis,
 {
     OuterIter {
