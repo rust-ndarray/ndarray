@@ -630,3 +630,14 @@ pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Sma
         life: PhantomData,
     }
 }
+
+pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
+                               axis: usize
+                              ) -> OuterIterMut<A, D::Smaller>
+    where D: RemoveAxis,
+{
+    OuterIterMut {
+        iter: new_outer_core(v, axis),
+        life: PhantomData,
+    }
+}

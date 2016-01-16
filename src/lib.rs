@@ -1247,6 +1247,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         iterators::new_outer_iter_mut(self.view_mut())
     }
 
+    /// Return an iterator that traverses over the `axis` dimension
+    /// and yields each mutable subview.
+    ///
+    /// Iterator element is `ArrayViewMut<A, D::Smaller>`
+    /// (read-write array view).
+    ///
+    /// # Panics
+    ///
+    /// If axis is out of bounds.
+    pub fn axis_iter_mut(&mut self, axis: usize) -> OuterIterMut<A, D::Smaller>
+        where S: DataMut,
+              D: RemoveAxis,
+    {
+        iterators::new_axis_iter_mut(self.view_mut(), axis)
+    }
+
     // Return (length, stride) for diagonal
     fn diag_params(&self) -> (Ix, Ixs)
     {

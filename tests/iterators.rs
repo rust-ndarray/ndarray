@@ -8,6 +8,7 @@ use ndarray::{
     Data,
     Dimension,
     aview1,
+    arr3,
 };
 
 use itertools::assert_equal;
@@ -248,6 +249,31 @@ fn outer_iter_mut() {
         }
     }
     assert_equal(a.inner_iter(), found_rows);
+}
+
+#[test]
+fn axis_iter_mut() {
+    let a = Array::from_iter(0..12);
+    let a = a.reshape((2, 3, 2));
+    // [[[0, 1],
+    //   [2, 3],
+    //   [4, 5]],
+    //  [[6, 7],
+    //   [8, 9],
+    //    ...
+    let mut a = a.to_owned();
+
+    for mut subview in a.axis_iter_mut(1) {
+        subview[[0, 0]] = 42;
+    }
+
+    let b = arr3(&[[[42, 1],
+                    [42, 3],
+                    [42, 5]],
+                   [[6, 7],
+                    [8, 9],
+                    [10, 11]]]);
+    assert_eq!(a, b);
 }
 
 #[test]
