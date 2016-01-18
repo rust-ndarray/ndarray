@@ -10,6 +10,38 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize
     (n as isize) * ((stride as Ixs) as isize)
 }
 
+/// Check whether `stride` is strictly positive
+#[inline]
+pub fn stride_is_positive(stride: Ix) -> bool
+{
+    (stride as Ixs) > 0
+}
+
+/// Check whether the given dimension and strides are memory safe
+/// to index the provided slice.
+///
+/// To be safe, no stride may be negative, and the 
+pub fn can_index_slice<A, D: Dimension>(data: &[A],
+                                        dim: &D,
+                                        strides: &D
+                                       ) -> bool
+{
+    if strides.slice().iter().cloned().all(stride_is_positive) {
+        let mut last_index = dim.clone();
+        for mut index in last_index.slice_mut().iter_mut() {
+            *index -= 1;
+        }
+        if let Some(offset) = dim.stride_offset_checked(strides, &last_index) {
+            // offset is guaranteed to be positive so no issue converting
+            // to usize here
+            if (offset as usize) < data.len() {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Trait for the shape and index types of arrays.
 ///
 /// `unsafe` because of the assumptions in the default methods.

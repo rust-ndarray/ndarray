@@ -75,7 +75,7 @@ use std::marker::PhantomData;
 
 use itertools::ZipSlices;
 
-pub use dimension::{Dimension, RemoveAxis};
+pub use dimension::{Dimension, RemoveAxis, can_index_slice};
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
@@ -632,6 +632,40 @@ impl<S, A, D> ArrayBase<S, D>
             data: DataOwned::new(v),
             strides: dim.default_strides(),
             dim: dim
+        }
+    }
+
+    /// Create an array from a vector and interpret it according to the
+    /// provided dimensions and strides. No allocation needed.
+    ///
+    /// Unsafe because dimension and strides are unchecked.
+    pub unsafe fn from_vec_dim_stride_uchk(dim: D,
+                                           strides: D,
+                                           mut v: Vec<A>
+                                          ) -> ArrayBase<S, D>
+    {
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: strides,
+            dim: dim
+        }
+    }
+
+    /// Create an array from a vector and interpret it according to the
+    /// provided dimensions and strides. No allocation needed.
+    ///
+    /// **Panics** if the stride and dimensions point outside the vector's
+    /// memory.
+    pub fn from_vec_dim_stride(dim: D,
+                               strides: D,
+                               v: Vec<A>
+                              ) -> ArrayBase<S, D>
+    {
+        assert!(dimension::can_index_slice(&v, &dim, &strides),
+                "dim and strides index out of the vector's memory");
+        unsafe {
+            Self::from_vec_dim_stride_uchk(dim, strides, v)
         }
     }
 }
