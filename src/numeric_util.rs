@@ -45,3 +45,37 @@ pub fn unrolled_dot<A>(xs: &[A], ys: &[A]) -> A
     }
     sum
 }
+
+/// Compute pairwise equality
+///
+/// `xs` and `ys` must be the same length
+pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
+    where A: PartialEq
+{
+    debug_assert_eq!(xs.len(), ys.len());
+    // eightfold unrolled for performance (this is not done by llvm automatically)
+    let len = cmp::min(xs.len(), ys.len());
+    let mut xs = &xs[..len];
+    let mut ys = &ys[..len];
+
+    while xs.len() >= 8 {
+        if (xs[0] != ys[0])
+        | (xs[1] != ys[1])
+        | (xs[2] != ys[2])
+        | (xs[3] != ys[3])
+        | (xs[4] != ys[4])
+        | (xs[5] != ys[5])
+        | (xs[6] != ys[6])
+        | (xs[7] != ys[7]) { return false; }
+        xs = &xs[8..];
+        ys = &ys[8..];
+    }
+
+    for i in 0..xs.len() {
+        if xs[i] != ys[i] {
+            return false;
+        }
+    }
+
+    return true;
+}
