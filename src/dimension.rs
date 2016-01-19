@@ -17,6 +17,45 @@ pub fn stride_is_positive(stride: Ix) -> bool
     (stride as Ixs) > 0
 }
 
+/// Return the axis ordering corresponding to the fastest variation
+///
+/// Assumes that no stride value appears twice. This cannot yield the correct
+/// result the strides are not positive.
+fn fastest_varying_order<D: Dimension>(strides: &D) -> D
+{
+    let mut sorted = strides.clone();
+    sorted.slice_mut().sort();
+    let mut res = strides.clone();
+    for (ind, val) in sorted.slice().iter().enumerate() {
+        res.slice_mut()[ind] = sorted.slice()
+                                     .binary_search(val)
+                                     .expect("should be present");
+    }
+    res
+}
+
+/// Check whether the given `dim` and `stride` lead to overlapping indices
+///
+/// There is overlap if, when iterating through the dimensions in the order
+/// of maximum variation, the current stride is inferior to the sum of all
+/// preceding strides multiplied by their corresponding dimensions.
+///
+/// The current implementation assumes strides to be positive
+pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
+{
+    let order = fastest_varying_order(strides);
+
+    let mut sum = 0;
+    for &ind in order.slice().iter() {
+        let s = strides.slice()[ind];
+        if (s as isize) < sum {
+            return true;
+        }
+        sum += stride_offset(dim.slice()[ind], s);
+    }
+    false
+}
+
 /// Check whether the given dimension and strides are memory safe
 /// to index the provided slice.
 ///
