@@ -4,6 +4,7 @@ use ndarray::{
     Array,
     RemoveAxis,
     arr2,
+    can_index_slice
 };
 
 #[test]
@@ -36,3 +37,14 @@ fn dyn_dimension()
     assert_eq!(z.shape(), &dim[..]);
 }
 
+#[test]
+fn slice_indexing_uncommon_strides()
+{
+    let v: Vec<_> = (0..12).collect();
+    let dim = (2, 3, 2);
+    let strides = (1, 2, 6);
+    assert!(can_index_slice(&v, &dim, &strides));
+
+    let strides = (2, 4, 12);
+    assert!(!can_index_slice(&v, &dim, &strides));
+}

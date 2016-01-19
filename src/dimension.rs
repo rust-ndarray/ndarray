@@ -20,7 +20,10 @@ pub fn stride_is_positive(stride: Ix) -> bool
 /// Check whether the given dimension and strides are memory safe
 /// to index the provided slice.
 ///
-/// To be safe, no stride may be negative, and the 
+/// To be safe, no stride may be negative, and the offset corresponding
+/// to the last element of each dimension should be smaller than the length
+/// of the slice. Also, the strides should not allow a same element to be
+/// referenced by two different index.
 pub fn can_index_slice<A, D: Dimension>(data: &[A],
                                         dim: &D,
                                         strides: &D
