@@ -26,10 +26,12 @@ fn fastest_varying_order<D: Dimension>(strides: &D) -> D
     let mut sorted = strides.clone();
     sorted.slice_mut().sort();
     let mut res = strides.clone();
-    for (ind, val) in sorted.slice().iter().enumerate() {
-        res.slice_mut()[ind] = sorted.slice()
-                                     .binary_search(val)
-                                     .expect("should be present");
+    for (ind, val) in strides.slice().iter().enumerate() {
+        // cannot binary search in unsorted...
+        let sorted_ind = sorted.slice()
+                               .binary_search(val)
+                               .expect("should be present");
+        res.slice_mut()[sorted_ind] = ind;
     }
     res
 }
@@ -601,5 +603,17 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
             offset += stride_offset(i, s);
         }
         Some(offset)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Dimension;
+
+    #[test]
+    fn fastest_varying_order() {
+        let strides = (2, 8, 4, 1);
+        let order = super::fastest_varying_order(&strides);
+        assert_eq!(order.slice(), &[3, 0, 2, 1]);
     }
 }
