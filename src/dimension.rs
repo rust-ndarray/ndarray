@@ -2,6 +2,7 @@ use std::slice;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
+use stride_error::StrideError;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -68,7 +69,7 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
 pub fn can_index_slice<A, D: Dimension>(data: &[A],
                                         dim: &D,
                                         strides: &D
-                                       ) -> bool
+                                       ) -> Result<(), StrideError>
 {
     if strides.slice().iter().cloned().all(stride_is_positive) {
         let mut last_index = dim.clone();
@@ -79,16 +80,16 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A],
             // offset is guaranteed to be positive so no issue converting
             // to usize here
             if (offset as usize) >= data.len() {
-                return false;
+                return Err(StrideError::OutOfBoundsStride);
             }
             if dim_stride_overlap(dim, strides) {
-                return false;
+                return Err(StrideError::OutOfBoundsStride);
             }
         }
-        true
+        Ok(())
     }
     else {
-        false
+        Err(StrideError::NegativeStride)
     }
 }
 

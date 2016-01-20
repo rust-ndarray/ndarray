@@ -84,6 +84,7 @@ pub use dimension::{
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
+pub use stride_error::StrideError;
 pub use si::{Si, S};
 
 use dimension::stride_offset;
@@ -112,6 +113,7 @@ mod linspace;
 mod numeric_util;
 mod si;
 mod shape_error;
+mod stride_error;
 
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
@@ -665,13 +667,15 @@ impl<S, A, D> ArrayBase<S, D>
     pub fn from_vec_dim_stride(dim: D,
                                strides: D,
                                v: Vec<A>
-                              ) -> ArrayBase<S, D>
+                              ) -> Result<ArrayBase<S, D>, StrideError>
     {
-        assert!(dimension::can_index_slice(&v, &dim, &strides),
-                "dim and strides index out of the vector's memory");
-        unsafe {
-            Self::from_vec_dim_stride_uchk(dim, strides, v)
-        }
+        dimension::can_index_slice(&v,
+                                   &dim,
+                                   &strides).map(|_| {
+            unsafe {
+                Self::from_vec_dim_stride_uchk(dim, strides, v)
+            }
+        })
     }
 }
 
