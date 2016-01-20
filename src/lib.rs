@@ -56,7 +56,7 @@ extern crate serde;
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 
-extern crate itertools as it;
+extern crate itertools;
 extern crate num as libnum;
 
 use libnum::Float;
@@ -73,7 +73,7 @@ use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 use std::marker::PhantomData;
 
-use it::ZipSlices;
+use itertools::ZipSlices;
 
 pub use dimension::{Dimension, RemoveAxis};
 pub use dimension::NdIndex;
@@ -103,6 +103,7 @@ pub mod blas;
 mod dimension;
 mod indexes;
 mod iterators;
+mod linspace;
 mod numeric_util;
 mod si;
 mod shape_error;
@@ -544,9 +545,8 @@ impl<S> ArrayBase<S, Ix>
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
-              usize: it::misc::ToFloat<F>,
     {
-        Self::from_iter(it::linspace(start, end, n))
+        Self::from_iter(linspace::linspace(start, end, n))
     }
 
     /// Create a one-dimensional array from interval `[start, end)`
@@ -2783,7 +2783,7 @@ pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
-    where T: it::misc::Slice, U: it::misc::Slice
+    where T: itertools::misc::Slice, U: itertools::misc::Slice
 {
     ZipSlices::from_slices(t, u)
 }
