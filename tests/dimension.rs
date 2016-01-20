@@ -4,7 +4,8 @@ use ndarray::{
     Array,
     RemoveAxis,
     arr2,
-    can_index_slice
+    can_index_slice,
+    dim_stride_overlap,
 };
 
 #[test]
@@ -47,4 +48,14 @@ fn slice_indexing_uncommon_strides()
 
     let strides = (2, 4, 12);
     assert!(!can_index_slice(&v, &dim, &strides));
+}
+
+#[test]
+fn overlapping_strides_dim()
+{
+    let dim = (2, 3, 2);
+    let strides = (5, 2, 1);
+    assert!(dim_stride_overlap(&dim, &strides));
+    let strides = (6, 2, 1);
+    assert!(!dim_stride_overlap(&dim, &strides));
 }

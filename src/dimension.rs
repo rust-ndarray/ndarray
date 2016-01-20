@@ -47,13 +47,13 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
 {
     let order = fastest_varying_order(strides);
 
-    let mut sum = 0;
+    let mut prev_offset = 1;
     for &ind in order.slice().iter() {
         let s = strides.slice()[ind];
-        if (s as isize) < sum {
+        if (s as isize) < prev_offset {
             return true;
         }
-        sum += stride_offset(dim.slice()[ind], s);
+        prev_offset = stride_offset(dim.slice()[ind], s);
     }
     false
 }

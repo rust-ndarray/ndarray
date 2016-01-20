@@ -75,7 +75,12 @@ use std::marker::PhantomData;
 
 use itertools::ZipSlices;
 
-pub use dimension::{Dimension, RemoveAxis, can_index_slice};
+pub use dimension::{
+    Dimension,
+    RemoveAxis,
+    can_index_slice,
+    dim_stride_overlap,
+};
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
