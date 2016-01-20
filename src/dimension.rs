@@ -78,12 +78,18 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A],
         if let Some(offset) = dim.stride_offset_checked(strides, &last_index) {
             // offset is guaranteed to be positive so no issue converting
             // to usize here
-            if (offset as usize) < data.len() {
-                return true;
+            if (offset as usize) >= data.len() {
+                return false;
+            }
+            if dim_stride_overlap(dim, strides) {
+                return false;
             }
         }
+        true
     }
-    false
+    else {
+        false
+    }
 }
 
 /// Trait for the shape and index types of arrays.
