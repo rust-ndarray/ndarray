@@ -612,10 +612,41 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
+    /// Create an array with copies of `elem`, dimension `dim` and fortran
+    /// ordering.
+    ///
+    /// ```
+    /// use ndarray::Array;
+    /// use ndarray::arr3;
+    ///
+    /// let a = Array::from_elem_f((2, 2, 2), 1.);
+    ///
+    /// assert!(
+    ///     a == arr3(&[[[1., 1.],
+    ///                  [1., 1.]],
+    ///                 [[1., 1.],
+    ///                  [1., 1.]]])
+    /// );
+    /// assert!(a.strides() == &[1, 2, 4]);
+    /// ```
+    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
+    {
+        let v = vec![elem; dim.size()];
+        unsafe {
+            Self::from_vec_dim_f(dim, v)
+        }
+    }
+
     /// Create an array with zeros, dimension `dim`.
     pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
+    }
+
+    /// Create an array with zeros, dimension `dim` and fortran ordering.
+    pub fn zeros_f(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
+    {
+        Self::from_elem_f(dim, libnum::zero())
     }
 
     /// Create an array with default values, dimension `dim`.
@@ -641,6 +672,22 @@ impl<S, A, D> ArrayBase<S, D>
             dim: dim
         }
     }
+
+    /// Create an array from a vector (with no allocation needed),
+    /// using fortran ordering to interpret the data.
+    ///
+    /// Unsafe because dimension is unchecked, and must be correct.
+    pub unsafe fn from_vec_dim_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
+    {
+        debug_assert!(dim.size() == v.len());
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: dim.fortran_strides(),
+            dim: dim
+        }
+    }
+
 
     /// Create an array from a vector and interpret it according to the
     /// provided dimensions and strides. No allocation needed.

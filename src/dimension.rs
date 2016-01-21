@@ -152,6 +152,26 @@ pub unsafe trait Dimension : Clone + Eq {
         strides
     }
 
+    fn fortran_strides(&self) -> Self {
+        // Compute fortran array strides
+        // Shape (a, b, c) => Give strides (1, a, a * b)
+        let mut strides = self.clone();
+        {
+            let mut it = strides.slice_mut().iter_mut();
+            // Set first element to 1
+            for rs in it.by_ref() {
+                *rs = 1;
+                break;
+            }
+            let mut cum_prod = 1;
+            for (rs, dim) in it.zip(self.slice().iter()) {
+                cum_prod *= *dim;
+                *rs = cum_prod;
+            }
+        }
+        strides
+    }
+
     #[inline]
     fn first_index(&self) -> Option<Self>
     {
