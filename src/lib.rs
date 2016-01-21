@@ -709,8 +709,8 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array from a vector and interpret it according to the
     /// provided dimensions and strides. No allocation needed.
     ///
-    /// **Panics** if the stride and dimensions point outside the vector's
-    /// memory.
+    /// Checks whether `dim` and `strides` are compatible with the vector's
+    /// length, returning an `Err` if not compatible.
     pub fn from_vec_dim_stride(dim: D,
                                strides: D,
                                v: Vec<A>
@@ -754,6 +754,44 @@ impl<'a, A, D> ArrayView<'a, A, D>
             dim: dim,
             strides: strides,
         }
+    }
+
+    /// Create an `ArrayView` borrowing its data from a slice.
+    ///
+    /// Checks whether `dim` and `strides` are compatible with the slice's
+    /// length, returning an `Err` if not compatible.
+    ///
+    /// ```
+    /// use ndarray::ArrayView;
+    /// use ndarray::arr3;
+    ///
+    /// let s = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    /// let a = ArrayView::from_slice_dim_stride((2, 3, 2),
+    ///                                          (1, 4, 2),
+    ///                                          s).unwrap();
+    ///
+    /// assert!(
+    ///     a == arr3(&[[[0, 2],
+    ///                  [4, 6],
+    ///                  [8, 10]],
+    ///                 [[1, 3],
+    ///                  [5, 7],
+    ///                  [9, 11]]])
+    /// );
+    /// assert!(a.strides() == &[1, 4, 2]);
+    /// ```
+    pub fn from_slice_dim_stride(dim: D,
+                                 strides: D,
+                                 s: &'a [A]
+                                 ) -> Result<Self, StrideError>
+    {
+        dimension::can_index_slice(s,
+                                   &dim,
+                                   &strides).map(|_| {
+            unsafe {
+                Self::new_(s.as_ptr(), dim, strides)
+            }
+        })
     }
 
     #[inline]
