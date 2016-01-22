@@ -5,22 +5,18 @@ use std::error::Error;
 #[derive(Clone, Debug, PartialEq)]
 pub enum StrideError {
     /// stride leads to out of bounds indexing
-    OutOfBoundsStride,
+    OutOfBounds,
     /// stride leads to aliasing array elements
-    AliasingStride,
-    /// negative strides are unsafe in constructors
-    NegativeStride,
+    Aliasing,
 }
 
 impl Error for StrideError {
     fn description(&self) -> &str {
         match *self {
-            StrideError::OutOfBoundsStride =>
+            StrideError::OutOfBounds =>
                 "stride leads to out of bounds indexing",
-            StrideError::AliasingStride =>
+            StrideError::Aliasing =>
                 "stride leads to aliasing array elements",
-            StrideError::NegativeStride =>
-                "negative strides are unsafe in constructors",
         }
     }
 }

@@ -80,16 +80,16 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A],
             // offset is guaranteed to be positive so no issue converting
             // to usize here
             if (offset as usize) >= data.len() {
-                return Err(StrideError::OutOfBoundsStride);
+                return Err(StrideError::OutOfBounds);
             }
             if dim_stride_overlap(dim, strides) {
-                return Err(StrideError::OutOfBoundsStride);
+                return Err(StrideError::Aliasing);
             }
         }
         Ok(())
     }
     else {
-        Err(StrideError::NegativeStride)
+        Err(StrideError::Aliasing)
     }
 }
 
@@ -635,12 +635,36 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
 
 #[cfg(test)]
 mod test {
-    use super::Dimension;
+    use super::{Dimension};
+    use stride_error::StrideError;
 
     #[test]
     fn fastest_varying_order() {
         let strides = (2, 8, 4, 1);
         let order = super::fastest_varying_order(&strides);
         assert_eq!(order.slice(), &[3, 0, 2, 1]);
+    }
+
+    #[test]
+    fn slice_indexing_uncommon_strides()
+    {
+        let v: Vec<_> = (0..12).collect();
+        let dim = (2, 3, 2);
+        let strides = (1, 2, 6);
+        assert!(super::can_index_slice(&v, &dim, &strides).is_ok());
+
+        let strides = (2, 4, 12);
+        assert_eq!(super::can_index_slice(&v, &dim, &strides),
+                   Err(StrideError::OutOfBounds));
+    }
+
+    #[test]
+    fn overlapping_strides_dim()
+    {
+        let dim = (2, 3, 2);
+        let strides = (5, 2, 1);
+        assert!(super::dim_stride_overlap(&dim, &strides));
+        let strides = (6, 2, 1);
+        assert!(!super::dim_stride_overlap(&dim, &strides));
     }
 }
