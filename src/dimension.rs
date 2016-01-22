@@ -27,11 +27,12 @@ fn fastest_varying_order<D: Dimension>(strides: &D) -> D
     let mut sorted = strides.clone();
     sorted.slice_mut().sort();
     let mut res = strides.clone();
-    for (ind, val) in strides.slice().iter().enumerate() {
-        // cannot binary search in unsorted...
+    for (ind, &val) in strides.slice().iter().enumerate() {
         let sorted_ind = sorted.slice()
-                               .binary_search(val)
-                               .expect("should be present");
+                               .iter()
+                               .enumerate()
+                               .find(|&(_, &x)| x == val)
+                               .unwrap().0; // cannot panic by construction
         res.slice_mut()[sorted_ind] = ind;
     }
     res
