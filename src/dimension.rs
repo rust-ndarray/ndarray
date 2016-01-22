@@ -30,9 +30,8 @@ fn fastest_varying_order<D: Dimension>(strides: &D) -> D
     for (ind, &val) in strides.slice().iter().enumerate() {
         let sorted_ind = sorted.slice()
                                .iter()
-                               .enumerate()
-                               .find(|&(_, &x)| x == val)
-                               .unwrap().0; // cannot panic by construction
+                               .position(|&x| x == val)
+                               .unwrap(); // cannot panic by construction
         res.slice_mut()[sorted_ind] = ind;
     }
     res
