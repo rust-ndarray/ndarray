@@ -2,12 +2,95 @@ use std::slice;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
+use stride_error::StrideError;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
 pub fn stride_offset(n: Ix, stride: Ix) -> isize
 {
     (n as isize) * ((stride as Ixs) as isize)
+}
+
+/// Check whether `stride` is strictly positive
+#[inline]
+pub fn stride_is_positive(stride: Ix) -> bool
+{
+    (stride as Ixs) > 0
+}
+
+/// Return the axis ordering corresponding to the fastest variation
+///
+/// Assumes that no stride value appears twice. This cannot yield the correct
+/// result the strides are not positive.
+fn fastest_varying_order<D: Dimension>(strides: &D) -> D
+{
+    let mut sorted = strides.clone();
+    sorted.slice_mut().sort();
+    let mut res = strides.clone();
+    for (ind, &val) in strides.slice().iter().enumerate() {
+        let sorted_ind = sorted.slice()
+                               .iter()
+                               .position(|&x| x == val)
+                               .unwrap(); // cannot panic by construction
+        res.slice_mut()[sorted_ind] = ind;
+    }
+    res
+}
+
+/// Check whether the given `dim` and `stride` lead to overlapping indices
+///
+/// There is overlap if, when iterating through the dimensions in the order
+/// of maximum variation, the current stride is inferior to the sum of all
+/// preceding strides multiplied by their corresponding dimensions.
+///
+/// The current implementation assumes strides to be positive
+pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
+{
+    let order = fastest_varying_order(strides);
+
+    let mut prev_offset = 1;
+    for &ind in order.slice().iter() {
+        let s = strides.slice()[ind];
+        if (s as isize) < prev_offset {
+            return true;
+        }
+        prev_offset = stride_offset(dim.slice()[ind], s);
+    }
+    false
+}
+
+/// Check whether the given dimension and strides are memory safe
+/// to index the provided slice.
+///
+/// To be safe, no stride may be negative, and the offset corresponding
+/// to the last element of each dimension should be smaller than the length
+/// of the slice. Also, the strides should not allow a same element to be
+/// referenced by two different index.
+pub fn can_index_slice<A, D: Dimension>(data: &[A],
+                                        dim: &D,
+                                        strides: &D
+                                       ) -> Result<(), StrideError>
+{
+    if strides.slice().iter().cloned().all(stride_is_positive) {
+        let mut last_index = dim.clone();
+        for mut index in last_index.slice_mut().iter_mut() {
+            *index -= 1;
+        }
+        if let Some(offset) = dim.stride_offset_checked(strides, &last_index) {
+            // offset is guaranteed to be positive so no issue converting
+            // to usize here
+            if (offset as usize) >= data.len() {
+                return Err(StrideError::OutOfBounds);
+            }
+            if dim_stride_overlap(dim, strides) {
+                return Err(StrideError::Aliasing);
+            }
+        }
+        Ok(())
+    }
+    else {
+        Err(StrideError::Aliasing)
+    }
 }
 
 /// Trait for the shape and index types of arrays.
@@ -62,6 +145,26 @@ pub unsafe trait Dimension : Clone + Eq {
             }
             let mut cum_prod = 1;
             for (rs, dim) in it.zip(self.slice().iter().rev()) {
+                cum_prod *= *dim;
+                *rs = cum_prod;
+            }
+        }
+        strides
+    }
+
+    fn fortran_strides(&self) -> Self {
+        // Compute fortran array strides
+        // Shape (a, b, c) => Give strides (1, a, a * b)
+        let mut strides = self.clone();
+        {
+            let mut it = strides.slice_mut().iter_mut();
+            // Set first element to 1
+            for rs in it.by_ref() {
+                *rs = 1;
+                break;
+            }
+            let mut cum_prod = 1;
+            for (rs, dim) in it.zip(self.slice().iter()) {
                 cum_prod *= *dim;
                 *rs = cum_prod;
             }
@@ -527,5 +630,41 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
             offset += stride_offset(i, s);
         }
         Some(offset)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Dimension};
+    use stride_error::StrideError;
+
+    #[test]
+    fn fastest_varying_order() {
+        let strides = (2, 8, 4, 1);
+        let order = super::fastest_varying_order(&strides);
+        assert_eq!(order.slice(), &[3, 0, 2, 1]);
+    }
+
+    #[test]
+    fn slice_indexing_uncommon_strides()
+    {
+        let v: Vec<_> = (0..12).collect();
+        let dim = (2, 3, 2);
+        let strides = (1, 2, 6);
+        assert!(super::can_index_slice(&v, &dim, &strides).is_ok());
+
+        let strides = (2, 4, 12);
+        assert_eq!(super::can_index_slice(&v, &dim, &strides),
+                   Err(StrideError::OutOfBounds));
+    }
+
+    #[test]
+    fn overlapping_strides_dim()
+    {
+        let dim = (2, 3, 2);
+        let strides = (5, 2, 1);
+        assert!(super::dim_stride_overlap(&dim, &strides));
+        let strides = (6, 2, 1);
+        assert!(!super::dim_stride_overlap(&dim, &strides));
     }
 }

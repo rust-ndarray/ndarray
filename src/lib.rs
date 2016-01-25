@@ -75,10 +75,15 @@ use std::marker::PhantomData;
 
 use itertools::ZipSlices;
 
-pub use dimension::{Dimension, RemoveAxis};
+pub use dimension::{
+    Dimension,
+    RemoveAxis,
+};
+
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
+pub use stride_error::StrideError;
 pub use si::{Si, S};
 
 use dimension::stride_offset;
@@ -107,6 +112,7 @@ mod linspace;
 mod numeric_util;
 mod si;
 mod shape_error;
+mod stride_error;
 
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
@@ -605,10 +611,41 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
+    /// Create an array with copies of `elem`, dimension `dim` and fortran
+    /// ordering.
+    ///
+    /// ```
+    /// use ndarray::Array;
+    /// use ndarray::arr3;
+    ///
+    /// let a = Array::from_elem_f((2, 2, 2), 1.);
+    ///
+    /// assert!(
+    ///     a == arr3(&[[[1., 1.],
+    ///                  [1., 1.]],
+    ///                 [[1., 1.],
+    ///                  [1., 1.]]])
+    /// );
+    /// assert!(a.strides() == &[1, 2, 4]);
+    /// ```
+    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
+    {
+        let v = vec![elem; dim.size()];
+        unsafe {
+            Self::from_vec_dim_f(dim, v)
+        }
+    }
+
     /// Create an array with zeros, dimension `dim`.
     pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
+    }
+
+    /// Create an array with zeros, dimension `dim` and fortran ordering.
+    pub fn zeros_f(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
+    {
+        Self::from_elem_f(dim, libnum::zero())
     }
 
     /// Create an array with default values, dimension `dim`.
@@ -633,6 +670,58 @@ impl<S, A, D> ArrayBase<S, D>
             strides: dim.default_strides(),
             dim: dim
         }
+    }
+
+    /// Create an array from a vector (with no allocation needed),
+    /// using fortran ordering to interpret the data.
+    ///
+    /// Unsafe because dimension is unchecked, and must be correct.
+    pub unsafe fn from_vec_dim_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
+    {
+        debug_assert!(dim.size() == v.len());
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: dim.fortran_strides(),
+            dim: dim
+        }
+    }
+
+
+    /// Create an array from a vector and interpret it according to the
+    /// provided dimensions and strides. No allocation needed.
+    ///
+    /// Unsafe because dimension and strides are unchecked.
+    pub unsafe fn from_vec_dim_stride_uchk(dim: D,
+                                           strides: D,
+                                           mut v: Vec<A>
+                                          ) -> ArrayBase<S, D>
+    {
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: strides,
+            dim: dim
+        }
+    }
+
+    /// Create an array from a vector and interpret it according to the
+    /// provided dimensions and strides. No allocation needed.
+    ///
+    /// Checks whether `dim` and `strides` are compatible with the vector's
+    /// length, returning an `Err` if not compatible.
+    pub fn from_vec_dim_stride(dim: D,
+                               strides: D,
+                               v: Vec<A>
+                              ) -> Result<ArrayBase<S, D>, StrideError>
+    {
+        dimension::can_index_slice(&v,
+                                   &dim,
+                                   &strides).map(|_| {
+            unsafe {
+                Self::from_vec_dim_stride_uchk(dim, strides, v)
+            }
+        })
     }
 }
 
@@ -664,6 +753,44 @@ impl<'a, A, D> ArrayView<'a, A, D>
             dim: dim,
             strides: strides,
         }
+    }
+
+    /// Create an `ArrayView` borrowing its data from a slice.
+    ///
+    /// Checks whether `dim` and `strides` are compatible with the slice's
+    /// length, returning an `Err` if not compatible.
+    ///
+    /// ```
+    /// use ndarray::ArrayView;
+    /// use ndarray::arr3;
+    ///
+    /// let s = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    /// let a = ArrayView::from_slice_dim_stride((2, 3, 2),
+    ///                                          (1, 4, 2),
+    ///                                          s).unwrap();
+    ///
+    /// assert!(
+    ///     a == arr3(&[[[0, 2],
+    ///                  [4, 6],
+    ///                  [8, 10]],
+    ///                 [[1, 3],
+    ///                  [5, 7],
+    ///                  [9, 11]]])
+    /// );
+    /// assert!(a.strides() == &[1, 4, 2]);
+    /// ```
+    pub fn from_slice_dim_stride(dim: D,
+                                 strides: D,
+                                 s: &'a [A]
+                                 ) -> Result<Self, StrideError>
+    {
+        dimension::can_index_slice(s,
+                                   &dim,
+                                   &strides).map(|_| {
+            unsafe {
+                Self::new_(s.as_ptr(), dim, strides)
+            }
+        })
     }
 
     #[inline]
@@ -721,6 +848,45 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
             dim: dim,
             strides: strides,
         }
+    }
+
+    /// Create an `ArrayView` borrowing its data from a slice.
+    ///
+    /// Checks whether `dim` and `strides` are compatible with the slice's
+    /// length, returning an `Err` if not compatible.
+    ///
+    /// ```
+    /// use ndarray::ArrayViewMut;
+    /// use ndarray::arr3;
+    ///
+    /// let s = &mut [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    /// let mut a = ArrayViewMut::from_slice_dim_stride((2, 3, 2),
+    ///                                                 (1, 4, 2),
+    ///                                                 s).unwrap();
+    ///
+    /// a[[0, 0, 0]] = 1;
+    /// assert!(
+    ///     a == arr3(&[[[1, 2],
+    ///                  [4, 6],
+    ///                  [8, 10]],
+    ///                 [[1, 3],
+    ///                  [5, 7],
+    ///                  [9, 11]]])
+    /// );
+    /// assert!(a.strides() == &[1, 4, 2]);
+    /// ```
+    pub fn from_slice_dim_stride(dim: D,
+                                 strides: D,
+                                 s: &'a mut [A]
+                                 ) -> Result<Self, StrideError>
+    {
+        dimension::can_index_slice(s,
+                                   &dim,
+                                   &strides).map(|_| {
+            unsafe {
+                Self::new_(s.as_mut_ptr(), dim, strides)
+            }
+        })
     }
 
     #[inline]

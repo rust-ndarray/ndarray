@@ -395,6 +395,16 @@ fn owned_array1() {
 }
 
 #[test]
+fn owned_array_with_stride() {
+    let v: Vec<_> = (0..12).collect();
+    let dim = (2, 3, 2);
+    let strides = (1, 4, 2);
+
+    let a = OwnedArray::from_vec_dim_stride(dim, strides, v).unwrap();
+    assert_eq!(a.strides(), &[1, 4, 2]);
+}
+
+#[test]
 fn views() {
     let a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     let b = a.view();
