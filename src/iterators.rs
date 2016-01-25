@@ -641,3 +641,110 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
         life: PhantomData,
     }
 }
+
+/// An iterator that traverses over the specified axis
+/// and yields subviews of the specified size on this axis.
+///
+/// For example, in a 2 × 8 × 3 array, if the axis of iteration
+/// is 1 and the chunk size is 2, the yielded elements
+/// are 2 × 2 × 3 subviews (and there are 4 in total).
+///
+/// Iterator element type is `ArrayView<'a, A, D>`.
+pub struct ChunkIter<'a, A: 'a, D> {
+    iter: OuterIterCore<A, D>,
+    last_index: usize,
+    last_dim: D,
+    life: PhantomData<&'a A>,
+}
+
+pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>,
+                        axis: usize,
+                        size: usize,
+                        ) -> ChunkIter<A, D>
+    where D: Dimension
+{
+    let last_index = v.shape()[axis] / size;
+    let shape = last_index + 1;
+    let stride = v.strides()[axis] * size as isize;
+
+    let mut inner_dim = v.dim.clone();
+    inner_dim.slice_mut()[axis] = size;
+
+    let rem = v.shape()[axis] % size;
+    let mut last_dim = v.dim.clone();
+    last_dim.slice_mut()[axis] = rem;
+
+    let iter = OuterIterCore {
+        index: 0,
+        len: shape,
+        stride: stride,
+        inner_dim: inner_dim,
+        inner_strides: v.strides.clone(),
+        ptr: v.ptr,
+    };
+
+    ChunkIter {
+        iter: iter,
+        last_index: last_index,
+        last_dim: last_dim,
+        life: PhantomData,
+    }
+}
+
+impl<'a, A, D> ChunkIter<'a, A, D>
+    where D: Dimension
+{
+    fn get_subview(&self,
+                   iter_item: Option<*mut A>
+                  ) -> Option<ArrayView<'a, A, D>>
+    {
+        if self.iter.index != self.last_index {
+            iter_item.map(|ptr| {
+                unsafe {
+                    ArrayView::new_(ptr,
+                                    self.iter.inner_dim.clone(),
+                                    self.iter.inner_strides.clone())
+                }
+            })
+        }
+        else {
+            // the last subview has a lower shape
+            iter_item.map(|ptr| {
+                unsafe {
+                    ArrayView::new_(ptr,
+                                    self.last_dim.clone(),
+                                    self.iter.inner_strides.clone())
+                }
+            })
+        }
+    }
+}
+
+impl<'a, A, D> Iterator for ChunkIter<'a, A, D>
+    where D: Dimension,
+{
+    type Item = ArrayView<'a, A, D>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = self.iter.next();
+        self.get_subview(res)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+impl<'a, A, D> DoubleEndedIterator for ChunkIter<'a, A, D>
+    where D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        let res = self.iter.next_back();
+        self.get_subview(res)
+    }
+}
+
+impl<'a, A, D> ExactSizeIterator for ChunkIter<'a, A, D>
+    where D: Dimension,
+{ }
+
