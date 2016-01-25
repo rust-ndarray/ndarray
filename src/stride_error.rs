@@ -7,7 +7,7 @@ pub enum StrideError {
     /// stride leads to out of bounds indexing
     OutOfBounds,
     /// stride leads to aliasing array elements
-    Aliasing,
+    Unsupported,
 }
 
 impl Error for StrideError {
@@ -15,7 +15,7 @@ impl Error for StrideError {
         match *self {
             StrideError::OutOfBounds =>
                 "stride leads to out of bounds indexing",
-            StrideError::Aliasing =>
+            StrideError::Unsupported =>
                 "stride leads to aliasing array elements",
         }
     }

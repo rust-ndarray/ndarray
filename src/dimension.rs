@@ -13,7 +13,7 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize
 
 /// Check whether `stride` is strictly positive
 #[inline]
-pub fn stride_is_positive(stride: Ix) -> bool
+fn stride_is_positive(stride: Ix) -> bool
 {
     (stride as Ixs) > 0
 }
@@ -27,12 +27,12 @@ fn fastest_varying_order<D: Dimension>(strides: &D) -> D
     let mut sorted = strides.clone();
     sorted.slice_mut().sort();
     let mut res = strides.clone();
-    for (ind, &val) in strides.slice().iter().enumerate() {
+    for (index, &val) in strides.slice().iter().enumerate() {
         let sorted_ind = sorted.slice()
                                .iter()
                                .position(|&x| x == val)
                                .unwrap(); // cannot panic by construction
-        res.slice_mut()[sorted_ind] = ind;
+        res.slice_mut()[sorted_ind] = index;
     }
     res
 }
@@ -49,12 +49,12 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
     let order = fastest_varying_order(strides);
 
     let mut prev_offset = 1;
-    for &ind in order.slice().iter() {
-        let s = strides.slice()[ind];
+    for &index in order.slice().iter() {
+        let s = strides.slice()[index];
         if (s as isize) < prev_offset {
             return true;
         }
-        prev_offset = stride_offset(dim.slice()[ind], s);
+        prev_offset = stride_offset(dim.slice()[index], s);
     }
     false
 }
@@ -66,10 +66,8 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
 /// to the last element of each dimension should be smaller than the length
 /// of the slice. Also, the strides should not allow a same element to be
 /// referenced by two different index.
-pub fn can_index_slice<A, D: Dimension>(data: &[A],
-                                        dim: &D,
-                                        strides: &D
-                                       ) -> Result<(), StrideError>
+pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
+    -> Result<(), StrideError>
 {
     if strides.slice().iter().cloned().all(stride_is_positive) {
         let mut last_index = dim.clone();
@@ -83,13 +81,13 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A],
                 return Err(StrideError::OutOfBounds);
             }
             if dim_stride_overlap(dim, strides) {
-                return Err(StrideError::Aliasing);
+                return Err(StrideError::Unsupported);
             }
         }
         Ok(())
     }
     else {
-        Err(StrideError::Aliasing)
+        Err(StrideError::Unsupported)
     }
 }
 
@@ -666,5 +664,7 @@ mod test {
         assert!(super::dim_stride_overlap(&dim, &strides));
         let strides = (6, 2, 1);
         assert!(!super::dim_stride_overlap(&dim, &strides));
+        let strides = (6, 0, 1);
+        assert!(super::dim_stride_overlap(&dim, &strides));
     }
 }
