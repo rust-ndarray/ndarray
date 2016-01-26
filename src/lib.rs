@@ -576,6 +576,8 @@ impl<S, A> ArrayBase<S, (Ix, Ix)>
     where S: DataOwned<Elem=A>,
 {
     /// Create an identity matrix of size `n` (square 2D array).
+    ///
+    /// **Panics** if `n * n` would overflow usize.
     pub fn eye(n: Ix) -> ArrayBase<S, (Ix, Ix)>
         where S: DataMut,
               A: Clone + libnum::Zero + libnum::One,
@@ -595,6 +597,8 @@ impl<S, A, D> ArrayBase<S, D>
 {
     /// Create an array with copies of `elem`, dimension `dim`.
     ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
+    ///
     /// ```
     /// use ndarray::Array;
     /// use ndarray::arr3;
@@ -610,7 +614,8 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
-        let v = vec![elem; dim.size()];
+        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let v = vec![elem; size];
         unsafe {
             Self::from_vec_dim(dim, v)
         }
@@ -618,6 +623,8 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array with copies of `elem`, dimension `dim` and fortran
     /// memory order.
+    ///
+    /// **Panics** if the number of elements would overflow usize.
     ///
     /// ```
     /// use ndarray::Array;
@@ -635,25 +642,32 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
-        let v = vec![elem; dim.size()];
+        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let v = vec![elem; size];
         unsafe {
             Self::from_vec_dim_unchecked_f(dim, v)
         }
     }
 
     /// Create an array with zeros, dimension `dim`.
+    ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
     }
 
     /// Create an array with zeros, dimension `dim` and fortran memory order.
+    ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn zeros_f(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem_f(dim, libnum::zero())
     }
 
     /// Create an array with default values, dimension `dim`.
+    ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn default(dim: D) -> ArrayBase<S, D>
         where A: Default
     {
@@ -668,7 +682,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// Unsafe because dimension is unchecked, and must be correct.
     pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
     {
-        debug_assert!(dim.size() == v.len());
+        debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
@@ -683,7 +697,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// Unsafe because dimension is unchecked, and must be correct.
     pub unsafe fn from_vec_dim_unchecked_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
     {
-        debug_assert!(dim.size() == v.len());
+        debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
@@ -1584,7 +1598,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               A: Clone,
               E: Dimension,
     {
-        if shape.size() != self.dim.size() {
+        if shape.size_checked() != Some(self.dim.size()) {
             panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(), shape.slice())
         }
@@ -1625,7 +1639,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E>, ShapeError>
         where E: Dimension
     {
-        if shape.size() != self.dim.size() {
+        if shape.size_checked() != Some(self.dim.size()) {
             return Err(Self::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides

@@ -594,3 +594,18 @@ fn scalar_ops() {
     assert_eq!(&one << 3, 8 * &one);
     assert_eq!(3 << &one , 6 * &one);
 }
+
+#[should_panic]
+#[test]
+fn deny_wraparound_zeros() {
+    //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
+    let _five_large = OwnedArray::<f32, _>::zeros((3, 7, 29, 36760123, 823996703));
+}
+
+#[should_panic]
+#[test]
+fn deny_wraparound_reshape() {
+    //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
+    let five = OwnedArray::<f32, _>::zeros(5);
+    let _five_large = five.into_shape((3, 7, 29, 36760123, 823996703)).unwrap();
+}

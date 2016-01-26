@@ -70,6 +70,9 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
     -> Result<(), StrideError>
 {
     if strides.slice().iter().cloned().all(stride_is_positive) {
+        if dim.size_checked().is_none() || strides.size_checked().is_none() {
+            return Err(StrideError::OutOfBounds);
+        }
         let mut last_index = dim.clone();
         for mut index in last_index.slice_mut().iter_mut() {
             *index -= 1;
@@ -128,6 +131,13 @@ pub unsafe trait Dimension : Clone + Eq {
 
     fn size(&self) -> usize {
         self.slice().iter().fold(1, |s, &a| s * a as usize)
+    }
+
+    /// Compute the size while checking for overflow
+    fn size_checked(&self) -> Option<usize> {
+        self.slice().iter().fold(Some(1), |s, &a| {
+            s.and_then(|s_| s_.checked_mul(a))
+        })
     }
 
     fn default_strides(&self) -> Self {
@@ -329,6 +339,8 @@ unsafe impl Dimension for Ix {
     fn ndim(&self) -> usize { 1 }
     #[inline]
     fn size(&self) -> usize { *self as usize }
+    #[inline]
+    fn size_checked(&self) -> Option<usize> { Some(*self as usize) }
 
     #[inline]
     fn default_strides(&self) -> Self { 1 }
@@ -370,8 +382,16 @@ unsafe impl Dimension for (Ix, Ix) {
     type SliceArg = [Si; 2];
     #[inline]
     fn ndim(&self) -> usize { 2 }
+
     #[inline]
     fn size(&self) -> usize { let (m, n) = *self; m as usize * n as usize }
+
+    #[inline]
+    fn size_checked(&self) -> Option<usize> {
+        let (m, n) = *self;
+        (m as usize).checked_mul(n as usize)
+    }
+
     #[inline]
     fn default_strides(&self) -> Self {
         // Compute default array strides
