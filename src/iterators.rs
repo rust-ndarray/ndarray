@@ -652,7 +652,7 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
 /// Iterator element type is `ArrayView<'a, A, D>`.
 pub struct ChunkIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
-    last_index: usize,
+    last_ptr: *mut A,
     last_dim: D,
     life: PhantomData<&'a A>,
 }
@@ -660,7 +660,7 @@ pub struct ChunkIter<'a, A: 'a, D> {
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>,
                                      axis: usize,
                                      size: usize
-                                    ) -> (OuterIterCore<A, D>, usize, D)
+                                    ) -> (OuterIterCore<A, D>, *mut A, D)
 {
     let last_index = v.shape()[axis] / size;
     let rem = v.shape()[axis] % size;
@@ -673,6 +673,9 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>,
     let mut last_dim = v.dim.clone();
     last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
+    let last_ptr = unsafe {
+        v.ptr.offset(stride * last_index as isize)
+    };
     let iter = OuterIterCore {
         index: 0,
         len: shape,
@@ -682,7 +685,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>,
         ptr: v.ptr,
     };
 
-    (iter, last_index, last_dim)
+    (iter, last_ptr, last_dim)
 }
 
 pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>,
@@ -691,11 +694,11 @@ pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>,
                             ) -> ChunkIter<A, D>
     where D: Dimension
 {
-    let (iter, last_index, last_dim) = chunk_iter_parts(v.view(), axis, size);
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
 
     ChunkIter {
         iter: iter,
-        last_index: last_index,
+        last_ptr: last_ptr,
         last_dim: last_dim,
         life: PhantomData,
     }
@@ -710,25 +713,22 @@ macro_rules! chunk_iter_impl {
                            iter_item: Option<*mut A>
                           ) -> Option<$array<'a, A, D>>
             {
-                if self.iter.index != self.last_index + 1 {
-                    iter_item.map(|ptr| {
+                iter_item.map(|ptr| {
+                    if ptr != self.last_ptr {
                         unsafe {
                             $array::new_(ptr,
-                                            self.iter.inner_dim.clone(),
-                                            self.iter.inner_strides.clone())
+                                         self.iter.inner_dim.clone(),
+                                         self.iter.inner_strides.clone())
                         }
-                    })
-                }
-                else {
-                    // the last subview has a lower shape
-                    iter_item.map(|ptr| {
+                    }
+                    else {
                         unsafe {
                             $array::new_(ptr,
-                                            self.last_dim.clone(),
-                                            self.iter.inner_strides.clone())
+                                         self.last_dim.clone(),
+                                         self.iter.inner_strides.clone())
                         }
-                    })
-                }
+                    }
+                })
             }
         }
 
@@ -772,7 +772,7 @@ macro_rules! chunk_iter_impl {
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 pub struct ChunkIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
-    last_index: usize,
+    last_ptr: *mut A,
     last_dim: D,
     life: PhantomData<&'a mut A>,
 }
@@ -783,11 +783,11 @@ pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>,
                                 ) -> ChunkIterMut<A, D>
     where D: Dimension
 {
-    let (iter, last_index, last_dim) = chunk_iter_parts(v.view(), axis, size);
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
 
     ChunkIterMut {
         iter: iter,
-        last_index: last_index,
+        last_ptr: last_ptr,
         last_dim: last_dim,
         life: PhantomData,
     }

@@ -324,6 +324,12 @@ fn axis_chunks_iter() {
 
     let mut it = a.axis_chunks_iter(1, 2).rev();
     assert_eq!(it.next().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
+    assert_eq!(it.next().unwrap(),
+               arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]));
+    assert_eq!(it.next().unwrap(),
+               arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]));
+    assert_eq!(it.next().unwrap(),
+               arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]));
 }
 
 #[test]
