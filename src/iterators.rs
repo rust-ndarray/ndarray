@@ -672,7 +672,7 @@ pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>,
 
     let rem = v.shape()[axis] % size;
     let mut last_dim = v.dim.clone();
-    last_dim.slice_mut()[axis] = rem;
+    last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
     let iter = OuterIterCore {
         index: 0,
