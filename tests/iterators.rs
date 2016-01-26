@@ -324,6 +324,17 @@ fn axis_chunks_iter() {
 }
 
 #[test]
+fn axis_chunks_iter_mut() {
+    let a = Array::from_iter(0..24);
+    let mut a = a.reshape((2, 6, 2));
+
+    let mut it = a.axis_chunks_iter_mut(1, 2);
+    let mut col0 = it.next().unwrap();
+    col0[[0, 0, 0]] = 42;
+    assert_eq!(col0, arr3(&[[[42, 1], [2, 3]], [[12, 13], [14, 15]]]));
+}
+
+#[test]
 fn outer_iter_size_hint() {
     // Check that the size hint is correctly computed
     let a = Array::from_iter(0..24).reshape((4, 3, 2));

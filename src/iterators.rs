@@ -762,5 +762,36 @@ macro_rules! chunk_iter_impl {
     )
 }
 
+/// An iterator that traverses over the specified axis
+/// and yields mutable subviews of the specified size on this axis.
+///
+/// For example, in a 2 × 8 × 3 array, if the axis of iteration
+/// is 1 and the chunk size is 2, the yielded elements
+/// are 2 × 2 × 3 subviews (and there are 4 in total).
+///
+/// Iterator element type is `ArrayViewMut<'a, A, D>`.
+pub struct ChunkIterMut<'a, A: 'a, D> {
+    iter: OuterIterCore<A, D>,
+    last_index: usize,
+    last_dim: D,
+    life: PhantomData<&'a mut A>,
+}
+
+pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>,
+                                axis: usize,
+                                size: usize,
+                                ) -> ChunkIterMut<A, D>
+    where D: Dimension
+{
+    let (iter, last_index, last_dim) = chunk_iter_parts(v.view(), axis, size);
+
+    ChunkIterMut {
+        iter: iter,
+        last_index: last_index,
+        last_dim: last_dim,
+        life: PhantomData,
+    }
+}
 
 chunk_iter_impl!(ChunkIter, ArrayView);
+chunk_iter_impl!(ChunkIterMut, ArrayViewMut);

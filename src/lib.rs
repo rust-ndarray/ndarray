@@ -94,6 +94,7 @@ pub use iterators::{
     OuterIter,
     OuterIterMut,
     ChunkIter,
+    ChunkIterMut,
 };
 
 #[allow(deprecated)]
@@ -1466,9 +1467,24 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn axis_chunks_iter(&self,
                             axis: usize,
                             size: usize
-                            ) -> ChunkIter<A, D>
+                           ) -> ChunkIter<A, D>
     {
         iterators::new_chunk_iter(self.view(), axis, size)
+    }
+
+    /// Return an iterator that traverses over `axis` by chunks of `size`,
+    /// yielding non-overlapping mutable subviews along that axis.
+    ///
+    /// Iterator element is `ArrayViewMut<A, D>`
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_chunks_iter_mut(&mut self,
+                                axis: usize,
+                                size: usize
+                               ) -> ChunkIterMut<A, D>
+        where S: DataMut,
+    {
+        iterators::new_chunk_iter_mut(self.view_mut(), axis, size)
     }
 
     // Return (length, stride) for diagonal
