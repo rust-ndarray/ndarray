@@ -1455,11 +1455,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::Array;
     ///
-    /// let a = Array::from_iter(0..24).reshape((2, 6, 2));
+    /// let a = Array::from_iter(0..28).reshape((2, 7, 2));
     /// let mut iter = a.axis_chunks_iter(1, 2);
     /// assert_eq!(2, iter.next().unwrap().shape()[1]);
     /// assert_eq!(2, iter.next().unwrap().shape()[1]);
     /// assert_eq!(2, iter.next().unwrap().shape()[1]);
+    /// assert_eq!(1, iter.next().unwrap().shape()[1]);
     /// assert_eq!(None, iter.next());
     /// ```
     pub fn axis_chunks_iter(&self,

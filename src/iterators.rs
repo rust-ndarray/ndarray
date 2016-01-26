@@ -664,13 +664,13 @@ pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>,
     where D: Dimension
 {
     let last_index = v.shape()[axis] / size;
-    let shape = last_index + 1;
+    let rem = v.shape()[axis] % size;
+    let shape = if rem == 0 { last_index } else { last_index + 1 };
     let stride = v.strides()[axis] * size as isize;
 
     let mut inner_dim = v.dim.clone();
     inner_dim.slice_mut()[axis] = size;
 
-    let rem = v.shape()[axis] % size;
     let mut last_dim = v.dim.clone();
     last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
@@ -698,7 +698,7 @@ impl<'a, A, D> ChunkIter<'a, A, D>
                    iter_item: Option<*mut A>
                   ) -> Option<ArrayView<'a, A, D>>
     {
-        if self.iter.index != self.last_index {
+        if self.iter.index != self.last_index + 1 {
             iter_item.map(|ptr| {
                 unsafe {
                     ArrayView::new_(ptr,
