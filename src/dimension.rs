@@ -70,14 +70,17 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
     -> Result<(), StrideError>
 {
     if strides.slice().iter().cloned().all(stride_is_positive) {
-        if dim.size_checked().is_none() || strides.size_checked().is_none() {
+        if dim.size_checked().is_none() {
             return Err(StrideError::OutOfBounds);
         }
         let mut last_index = dim.clone();
         for mut index in last_index.slice_mut().iter_mut() {
             *index -= 1;
         }
-        if let Some(offset) = dim.stride_offset_checked(strides, &last_index) {
+        if let Some(offset) = stride_offset_checked_arithmetic(dim,
+                                                               strides,
+                                                               &last_index)
+        {
             // offset is guaranteed to be positive so no issue converting
             // to usize here
             if (offset as usize) >= data.len() {
@@ -86,12 +89,39 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
             if dim_stride_overlap(dim, strides) {
                 return Err(StrideError::Unsupported);
             }
+        } else {
+            return Err(StrideError::OutOfBounds);
         }
         Ok(())
     }
     else {
         Err(StrideError::Unsupported)
     }
+}
+
+/// Return stride offset for this dimension and index.
+///
+/// Return None if the indices are out of bounds, or the calculation would wrap
+/// around.
+fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D) -> Option<isize>
+    where D: Dimension,
+{
+    let mut offset = 0;
+    for ((&d, &i), &s) in zipsl(zipsl(dim.slice(), index.slice()), strides.slice())
+    {
+        if i >= d {
+            return None;
+        }
+
+        if let Some(offset_) = (i as isize)
+            .checked_mul((s as Ixs) as isize)
+            .and_then(|x| x.checked_add(offset)) {
+                offset = offset_;
+        } else {
+            return None;
+        }
+    }
+    Some(offset)
 }
 
 /// Trait for the shape and index types of arrays.
