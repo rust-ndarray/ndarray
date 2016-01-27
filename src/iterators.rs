@@ -659,8 +659,10 @@ pub struct ChunkIter<'a, A: 'a, D> {
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> (OuterIterCore<A, D>, *mut A, D)
 {
-    let last_index = v.shape()[axis] / size;
-    let rem = v.shape()[axis] % size;
+    let axis_len = v.shape()[axis];
+    let size = if size > axis_len { axis_len } else { size };
+    let last_index = axis_len / size;
+    let rem = axis_len % size;
     let shape = if rem == 0 { last_index } else { last_index + 1 };
     let stride = v.strides()[axis] * size as isize;
 
@@ -670,8 +672,13 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     let mut last_dim = v.dim.clone();
     last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
-    let last_ptr = unsafe {
-        v.ptr.offset(stride * last_index as isize)
+    let last_ptr = if last_index < axis_len {
+        unsafe {
+            v.ptr.offset(stride * last_index as isize)
+        }
+    }
+    else {
+        v.ptr
     };
     let iter = OuterIterCore {
         index: 0,
