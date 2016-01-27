@@ -631,9 +631,8 @@ pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Sma
     }
 }
 
-pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
-                               axis: usize
-                              ) -> OuterIterMut<A, D::Smaller>
+pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
+    -> OuterIterMut<A, D::Smaller>
     where D: RemoveAxis,
 {
     OuterIterMut {
@@ -657,10 +656,8 @@ pub struct ChunkIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
-fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>,
-                                     axis: usize,
-                                     size: usize
-                                    ) -> (OuterIterCore<A, D>, *mut A, D)
+fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
+    -> (OuterIterCore<A, D>, *mut A, D)
 {
     let last_index = v.shape()[axis] / size;
     let rem = v.shape()[axis] % size;
@@ -688,10 +685,8 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>,
     (iter, last_ptr, last_dim)
 }
 
-pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>,
-                            axis: usize,
-                            size: usize,
-                            ) -> ChunkIter<A, D>
+pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
+    -> ChunkIter<A, D>
     where D: Dimension
 {
     let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
@@ -709,9 +704,8 @@ macro_rules! chunk_iter_impl {
         impl<'a, A, D> $iter<'a, A, D>
             where D: Dimension
         {
-            fn get_subview(&self,
-                           iter_item: Option<*mut A>
-                          ) -> Option<$array<'a, A, D>>
+            fn get_subview(&self, iter_item: Option<*mut A>)
+                -> Option<$array<'a, A, D>>
             {
                 iter_item.map(|ptr| {
                     if ptr != self.last_ptr {
@@ -777,10 +771,8 @@ pub struct ChunkIterMut<'a, A: 'a, D> {
     life: PhantomData<&'a mut A>,
 }
 
-pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>,
-                                axis: usize,
-                                size: usize,
-                                ) -> ChunkIterMut<A, D>
+pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
+    -> ChunkIterMut<A, D>
     where D: Dimension
 {
     let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
