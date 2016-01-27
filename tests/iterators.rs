@@ -321,6 +321,12 @@ fn axis_chunks_iter() {
                       arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
                       arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
                       arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]])]);
+
+    let it = a.axis_chunks_iter(1, 7);
+    assert_equal(it, vec![a.view()]);
+
+    let it = a.axis_chunks_iter(1, 9);
+    assert_equal(it, vec![a.view()]);
 }
 
 #[test]
