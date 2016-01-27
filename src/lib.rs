@@ -614,6 +614,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
+        // Note: We don't need to check the case of a size between
+        // isize::MAX -> usize::MAX; in this case, the vec constructor itself
+        // panics.
         let size = dim.size_checked().expect("Shape too large: overflow in size");
         let v = vec![elem; size];
         unsafe {
