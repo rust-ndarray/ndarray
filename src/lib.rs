@@ -1447,9 +1447,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
-    /// yielding non-overlapping subviews along that axis.
+    /// yielding non-overlapping views along that axis.
     ///
     /// Iterator element is `ArrayView<A, D>`
+    ///
+    /// The last view may have less elements if `size` does not divide
+    /// the axis' dimension.
     ///
     /// **Panics** if `axis` is out of bounds.
     ///

@@ -643,11 +643,11 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
 }
 
 /// An iterator that traverses over the specified axis
-/// and yields subviews of the specified size on this axis.
+/// and yields views of the specified size on this axis.
 ///
 /// For example, in a 2 × 8 × 3 array, if the axis of iteration
 /// is 1 and the chunk size is 2, the yielded elements
-/// are 2 × 2 × 3 subviews (and there are 4 in total).
+/// are 2 × 2 × 3 views (and there are 4 in total).
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 pub struct ChunkIter<'a, A: 'a, D> {
@@ -763,11 +763,11 @@ macro_rules! chunk_iter_impl {
 }
 
 /// An iterator that traverses over the specified axis
-/// and yields mutable subviews of the specified size on this axis.
+/// and yields mutable views of the specified size on this axis.
 ///
 /// For example, in a 2 × 8 × 3 array, if the axis of iteration
 /// is 1 and the chunk size is 2, the yielded elements
-/// are 2 × 2 × 3 subviews (and there are 4 in total).
+/// are 2 × 2 × 3 views (and there are 4 in total).
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 pub struct ChunkIterMut<'a, A: 'a, D> {
