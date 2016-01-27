@@ -179,6 +179,11 @@ pub type Ixs = isize;
 /// for element indices in `.get()` and `array[index]`. The dimension type `Vec<Ix>`
 /// allows a dynamic number of axes.
 ///
+/// The default memory order of an array is *row major* order, where each
+/// row is contiguous in memory. 
+/// A *column major* (a.k.a. fortran) memory order array has
+/// columns (or, in general, the outermost axis) with contiguous elements.
+///
 /// ## Slicing
 ///
 /// You can use slicing to create a view of a subset of the data in
@@ -571,6 +576,8 @@ impl<S, A> ArrayBase<S, (Ix, Ix)>
     where S: DataOwned<Elem=A>,
 {
     /// Create an identity matrix of size `n` (square 2D array).
+    ///
+    /// **Panics** if `n * n` would overflow usize.
     pub fn eye(n: Ix) -> ArrayBase<S, (Ix, Ix)>
         where S: DataMut,
               A: Clone + libnum::Zero + libnum::One,
@@ -590,6 +597,8 @@ impl<S, A, D> ArrayBase<S, D>
 {
     /// Create an array with copies of `elem`, dimension `dim`.
     ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
+    ///
     /// ```
     /// use ndarray::Array;
     /// use ndarray::arr3;
@@ -605,14 +614,20 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
-        let v = vec![elem; dim.size()];
+        // Note: We don't need to check the case of a size between
+        // isize::MAX -> usize::MAX; in this case, the vec constructor itself
+        // panics.
+        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let v = vec![elem; size];
         unsafe {
             Self::from_vec_dim(dim, v)
         }
     }
 
     /// Create an array with copies of `elem`, dimension `dim` and fortran
-    /// ordering.
+    /// memory order.
+    ///
+    /// **Panics** if the number of elements would overflow usize.
     ///
     /// ```
     /// use ndarray::Array;
@@ -630,25 +645,32 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
     {
-        let v = vec![elem; dim.size()];
+        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let v = vec![elem; size];
         unsafe {
-            Self::from_vec_dim_f(dim, v)
+            Self::from_vec_dim_unchecked_f(dim, v)
         }
     }
 
     /// Create an array with zeros, dimension `dim`.
+    ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
     }
 
-    /// Create an array with zeros, dimension `dim` and fortran ordering.
+    /// Create an array with zeros, dimension `dim` and fortran memory order.
+    ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn zeros_f(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
     {
         Self::from_elem_f(dim, libnum::zero())
     }
 
     /// Create an array with default values, dimension `dim`.
+    ///
+    /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn default(dim: D) -> ArrayBase<S, D>
         where A: Default
     {
@@ -663,7 +685,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// Unsafe because dimension is unchecked, and must be correct.
     pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
     {
-        debug_assert!(dim.size() == v.len());
+        debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
@@ -673,34 +695,16 @@ impl<S, A, D> ArrayBase<S, D>
     }
 
     /// Create an array from a vector (with no allocation needed),
-    /// using fortran ordering to interpret the data.
+    /// using fortran memory order to interpret the data.
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
+    pub unsafe fn from_vec_dim_unchecked_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
     {
-        debug_assert!(dim.size() == v.len());
+        debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
             strides: dim.fortran_strides(),
-            dim: dim
-        }
-    }
-
-
-    /// Create an array from a vector and interpret it according to the
-    /// provided dimensions and strides. No allocation needed.
-    ///
-    /// Unsafe because dimension and strides are unchecked.
-    pub unsafe fn from_vec_dim_stride_uchk(dim: D,
-                                           strides: D,
-                                           mut v: Vec<A>
-                                          ) -> ArrayBase<S, D>
-    {
-        ArrayBase {
-            ptr: v.as_mut_ptr(),
-            data: DataOwned::new(v),
-            strides: strides,
             dim: dim
         }
     }
@@ -710,19 +714,35 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// Checks whether `dim` and `strides` are compatible with the vector's
     /// length, returning an `Err` if not compatible.
-    pub fn from_vec_dim_stride(dim: D,
-                               strides: D,
-                               v: Vec<A>
-                              ) -> Result<ArrayBase<S, D>, StrideError>
+    ///
+    /// **Errors** if strides and dimensions can point out of bounds of `v`.<br>
+    /// **Errors** if strides allow multiple indices to point to the same element.
+    pub fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
+        -> Result<ArrayBase<S, D>, StrideError>
     {
-        dimension::can_index_slice(&v,
-                                   &dim,
-                                   &strides).map(|_| {
+        dimension::can_index_slice(&v, &dim, &strides).map(|_| {
             unsafe {
-                Self::from_vec_dim_stride_uchk(dim, strides, v)
+                Self::from_vec_dim_stride_unchecked(dim, strides, v)
             }
         })
     }
+
+    /// Create an array from a vector and interpret it according to the
+    /// provided dimensions and strides. No allocation needed.
+    ///
+    /// Unsafe because dimension and strides are unchecked.
+    pub unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
+        -> ArrayBase<S, D>
+    {
+        debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
+        ArrayBase {
+            ptr: v.as_mut_ptr(),
+            data: DataOwned::new(v),
+            strides: strides,
+            dim: dim
+        }
+    }
+
 }
 
 
@@ -779,14 +799,10 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_slice_dim_stride(dim: D,
-                                 strides: D,
-                                 s: &'a [A]
-                                 ) -> Result<Self, StrideError>
+    pub fn from_slice_dim_stride(dim: D, strides: D, s: &'a [A])
+        -> Result<Self, StrideError>
     {
-        dimension::can_index_slice(s,
-                                   &dim,
-                                   &strides).map(|_| {
+        dimension::can_index_slice(s, &dim, &strides).map(|_| {
             unsafe {
                 Self::new_(s.as_ptr(), dim, strides)
             }
@@ -875,14 +891,10 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_slice_dim_stride(dim: D,
-                                 strides: D,
-                                 s: &'a mut [A]
-                                 ) -> Result<Self, StrideError>
+    pub fn from_slice_dim_stride(dim: D, strides: D, s: &'a mut [A])
+        -> Result<Self, StrideError>
     {
-        dimension::can_index_slice(s,
-                                   &dim,
-                                   &strides).map(|_| {
+        dimension::can_index_slice(s, &dim, &strides).map(|_| {
             unsafe {
                 Self::new_(s.as_mut_ptr(), dim, strides)
             }
@@ -1589,7 +1601,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               A: Clone,
               E: Dimension,
     {
-        if shape.size() != self.dim.size() {
+        if shape.size_checked() != Some(self.dim.size()) {
             panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(), shape.slice())
         }
@@ -1630,7 +1642,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E>, ShapeError>
         where E: Dimension
     {
-        if shape.size() != self.dim.size() {
+        if shape.size_checked() != Some(self.dim.size()) {
             return Err(Self::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
