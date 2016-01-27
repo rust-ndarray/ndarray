@@ -299,37 +299,28 @@ fn axis_chunks_iter() {
     let a = Array::from_iter(0..24);
     let a = a.reshape((2, 6, 2));
 
-    let mut it = a.axis_chunks_iter(1, 2);
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[0, 1], [2, 3]], [[12, 13], [14, 15]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]]));
-    assert_eq!(it.next(), None);
+    let it = a.axis_chunks_iter(1, 2);
+    assert_equal(it,
+                 vec![arr3(&[[[0, 1], [2, 3]], [[12, 13], [14, 15]]]),
+                      arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]),
+                      arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]])]);
 
     let a = Array::from_iter(0..28);
     let a = a.reshape((2, 7, 2));
 
-    let mut it = a.axis_chunks_iter(1, 2);
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[12, 13]], [[26, 27]]]));
-    assert_eq!(it.next(), None);
+    let it = a.axis_chunks_iter(1, 2);
+    assert_equal(it,
+                 vec![arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]),
+                      arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
+                      arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
+                      arr3(&[[[12, 13]], [[26, 27]]])]);
 
-    let mut it = a.axis_chunks_iter(1, 2).rev();
-    assert_eq!(it.next().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]));
-    assert_eq!(it.next().unwrap(),
-               arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]));
+    let it = a.axis_chunks_iter(1, 2).rev();
+    assert_equal(it,
+                 vec![arr3(&[[[12, 13]], [[26, 27]]]),
+                      arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
+                      arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
+                      arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]])]);
 }
 
 #[test]
