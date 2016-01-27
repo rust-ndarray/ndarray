@@ -1458,14 +1458,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// ```
     /// use ndarray::Array;
+    /// use ndarray::arr3;
     ///
     /// let a = Array::from_iter(0..28).reshape((2, 7, 2));
     /// let mut iter = a.axis_chunks_iter(1, 2);
-    /// assert_eq!(2, iter.next().unwrap().shape()[1]);
-    /// assert_eq!(2, iter.next().unwrap().shape()[1]);
-    /// assert_eq!(2, iter.next().unwrap().shape()[1]);
-    /// assert_eq!(1, iter.next().unwrap().shape()[1]);
-    /// assert_eq!(None, iter.next());
+    ///
+    /// // first iteration yields a 2 × 2 × 2 view
+    /// assert_eq!(iter.next().unwrap(),
+    ///            arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]));
+    ///
+    /// // however the last element is a 2 × 1 × 2 view since 7 % 2 == 1
+    /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
     /// ```
     pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> ChunkIter<A, D>
     {
