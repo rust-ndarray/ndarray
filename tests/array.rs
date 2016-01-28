@@ -33,7 +33,7 @@ fn test_matmul_rcarray()
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
     unsafe {
-        let result = Array::from_vec_dim((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
+        let result = Array::from_vec_dim_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);
@@ -593,6 +593,15 @@ fn scalar_ops() {
 
     assert_eq!(&one << 3, 8 * &one);
     assert_eq!(3 << &one , 6 * &one);
+}
+
+#[test]
+fn deny_wraparound_from_vec() {
+    let five = vec![0; 5];
+    let _five_large = OwnedArray::from_vec_dim((3, 7, 29, 36760123, 823996703), five.clone());
+    assert!(_five_large.is_err());
+    let six = OwnedArray::from_vec_dim(6, five.clone());
+    assert!(six.is_err());
 }
 
 #[should_panic]

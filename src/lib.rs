@@ -397,7 +397,7 @@ unsafe impl<A> DataMut for Rc<Vec<A>> where A: Clone {
         }
         if self_.dim.size() <= self_.data.len() / 2 {
             unsafe {
-                *self_ = Array::from_vec_dim(self_.dim.clone(),
+                *self_ = Array::from_vec_dim_unchecked(self_.dim.clone(),
                                             self_.iter().map(|x| x.clone()).collect());
             }
             return;
@@ -544,7 +544,7 @@ impl<S> ArrayBase<S, Ix>
     /// Create a one-dimensional array from a vector (no allocation needed).
     pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
         unsafe {
-            Self::from_vec_dim(v.len() as Ix, v)
+            Self::from_vec_dim_unchecked(v.len() as Ix, v)
         }
     }
 
@@ -622,7 +622,7 @@ impl<S, A, D> ArrayBase<S, D>
         let size = dim.size_checked().expect("Shape too large: overflow in size");
         let v = vec![elem; size];
         unsafe {
-            Self::from_vec_dim(dim, v)
+            Self::from_vec_dim_unchecked(dim, v)
         }
     }
 
@@ -678,14 +678,28 @@ impl<S, A, D> ArrayBase<S, D>
     {
         let v = (0..dim.size()).map(|_| A::default()).collect();
         unsafe {
-            Self::from_vec_dim(dim, v)
+            Self::from_vec_dim_unchecked(dim, v)
+        }
+    }
+
+    /// Create an array from a vector (with no allocation needed).
+    ///
+    /// **Errors** if `dim` does not correspond to the number of elements
+    /// in `v`.
+    pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
+    {
+        if dim.size_checked() != Some(v.len()) {
+            return Err(Self::incompatible_shapes(&dim, &v.len()));
+        }
+        unsafe {
+            Ok(Self::from_vec_dim_unchecked(dim, v))
         }
     }
 
     /// Create an array from a vector (with no allocation needed).
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
+    pub unsafe fn from_vec_dim_unchecked(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
     {
         debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
@@ -1007,7 +1021,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             self.iter().cloned().collect()
         };
         unsafe {
-            ArrayBase::from_vec_dim(self.dim.clone(), data)
+            ArrayBase::from_vec_dim_unchecked(self.dim.clone(), data)
         }
     }
 
@@ -1661,7 +1675,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else {
             let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
             unsafe {
-                ArrayBase::from_vec_dim(shape, v)
+                ArrayBase::from_vec_dim_unchecked(shape, v)
             }
         }
     }
@@ -2030,7 +2044,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             res.push(f(elt))
         }
         unsafe {
-            ArrayBase::from_vec_dim(self.dim.clone(), res)
+            ArrayBase::from_vec_dim_unchecked(self.dim.clone(), res)
         }
     }
 }
@@ -2045,7 +2059,7 @@ pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
 /// Return a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array<A, ()>
 {
-    unsafe { Array::from_vec_dim((), vec![x]) }
+    unsafe { Array::from_vec_dim_unchecked((), vec![x]) }
 }
 
 /// Return a one-dimensional array with elements from `xs`.
@@ -2184,7 +2198,7 @@ pub fn arr2<A: Clone, V: Initializer<Elem=A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
         result.extend(snd.iter().map(|x| x.clone()))
     }
     unsafe {
-        Array::from_vec_dim(dim, result)
+        Array::from_vec_dim_unchecked(dim, result)
     }
 }
 
@@ -2226,7 +2240,7 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
         }
     }
     unsafe {
-        Array::from_vec_dim(dim, result)
+        Array::from_vec_dim_unchecked(dim, result)
     }
 }
 
@@ -2516,7 +2530,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
             }
         }
         unsafe {
-            ArrayBase::from_vec_dim((m, n), res_elems)
+            ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
         }
     }
 
@@ -2552,7 +2566,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
             i += 1;
         }
         unsafe {
-            ArrayBase::from_vec_dim(m, res_elems)
+            ArrayBase::from_vec_dim_unchecked(m, res_elems)
         }
     }
 }
