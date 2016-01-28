@@ -333,6 +333,10 @@ fn axis_chunks_iter() {
 #[test]
 fn axis_chunks_iter_corner_cases() {
     // examples provided by @bluss in PR #65
+    // these tests highlight corner cases of the axis_chunks_iter implementation
+    // and enable checking if no pointer offseting is out of bounds. However
+    // checking the absence of of out of bounds offseting cannot (?) be
+    // done automatically, so one has to launch this test in a debugger.
     let a = Array::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
     let a = a.slice(s![..;-1,..]);
     let it = a.axis_chunks_iter(0, 8);
@@ -343,10 +347,13 @@ fn axis_chunks_iter_corner_cases() {
                       arr2(&[[4.], [3.], [2.]]),
                       arr2(&[[1.], [0.]])]);
 
-    let a = Array::<f32, _>::zeros((8, 2));
-    let a = a.slice(s![1..;2,..]);
+    let b = Array::<f32, _>::zeros((8, 2));
+    let a = b.slice(s![1..;2,..]);
     let it = a.axis_chunks_iter(0, 8);
     assert_equal(it, vec![a.view()]);
+
+    let it = a.axis_chunks_iter(0, 1);
+    assert_equal(it, vec![Array::zeros((1, 2)); 4]);
 }
 
 #[test]
