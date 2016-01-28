@@ -338,6 +338,8 @@ fn axis_chunks_iter_corner_cases() {
     // checking the absence of of out of bounds offseting cannot (?) be
     // done automatically, so one has to launch this test in a debugger.
     let a = Array::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
+    let it = a.axis_chunks_iter(0, 4);
+    assert_equal(it, vec![a.slice(s![..4, ..]), a.slice(s![4.., ..])]);
     let a = a.slice(s![..;-1,..]);
     let it = a.axis_chunks_iter(0, 8);
     assert_equal(it, vec![a.view()]);
