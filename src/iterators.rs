@@ -672,7 +672,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     let mut last_dim = v.dim.clone();
     last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
-    let last_ptr = if last_index < axis_len {
+    let last_ptr = if rem != 0 {
         unsafe {
             v.ptr.offset(stride * last_index as isize)
         }
