@@ -1044,13 +1044,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().into_iter_()
     }
 
-    /// Return an iterator of references to the elements of the array.
-    ///
-    /// Iterator element type is `(D, &A)`.
-    pub fn indexed_iter(&self) -> Indexed<A, D> {
-        Indexed(self.view().into_elements_base())
-    }
-
     /// Return an iterator of mutable references to the elements of the array.
     ///
     /// Iterator element type is `&mut A`.
@@ -1059,6 +1052,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         self.ensure_unique();
         self.view_mut().into_iter_()
+    }
+
+    /// Return an iterator of indexes and references to the elements of the array.
+    ///
+    /// Iterator element type is `(D, &A)`.
+    pub fn indexed_iter(&self) -> Indexed<A, D> {
+        Indexed(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
