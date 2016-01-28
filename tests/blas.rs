@@ -17,7 +17,7 @@ fn strided_matrix() {
     // smoke test, a matrix multiplication of uneven size
     let (n, m) = (45, 33);
     let mut a = OwnedArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).into_shape((n, m)).unwrap();
-    let mut b = ndarray::linalg::eye(m);
+    let mut b = OwnedArray::eye(m);
     let mut res = OwnedArray::zeros(a.dim());
     Gemm::gemm(&1., Transpose::NoTrans, &a.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
@@ -28,7 +28,7 @@ fn strided_matrix() {
     aprim.islice(s![0..12, 0..11]);
     println!("{:?}", aprim.shape());
     println!("{:?}", aprim.strides());
-    let mut b = ndarray::linalg::eye(aprim.shape()[1]);
+    let mut b = OwnedArray::eye(aprim.shape()[1]);
     let mut res = OwnedArray::zeros(aprim.dim());
     Gemm::gemm(&1., Transpose::NoTrans, &aprim.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
@@ -41,7 +41,7 @@ fn strided_matrix() {
     // Transposed matrix multiply
     let (np, mp) = aprim.dim();
     let mut res = OwnedArray::zeros((mp, np));
-    let mut b = ndarray::linalg::eye(np);
+    let mut b = OwnedArray::eye(np);
     Gemm::gemm(&1., Transpose::Trans, &aprim.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
     let mut at = aprim.clone();
@@ -53,7 +53,7 @@ fn strided_matrix() {
     abis.islice(s![0..12, ..;2]);
     println!("{:?}", abis.shape());
     println!("{:?}", abis.strides());
-    let mut b = ndarray::linalg::eye(abis.shape()[1]);
+    let mut b = OwnedArray::eye(abis.shape()[1]);
     let mut res = OwnedArray::zeros(abis.dim());
     Gemm::gemm(&1., Transpose::NoTrans, &abis.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
