@@ -93,6 +93,8 @@ pub use iterators::{
     InnerIterMut,
     OuterIter,
     OuterIterMut,
+    ChunkIter,
+    ChunkIterMut,
 };
 
 #[allow(deprecated)]
@@ -1442,6 +1444,48 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               D: RemoveAxis,
     {
         iterators::new_axis_iter_mut(self.view_mut(), axis)
+    }
+
+    /// Return an iterator that traverses over `axis` by chunks of `size`,
+    /// yielding non-overlapping views along that axis.
+    ///
+    /// Iterator element is `ArrayView<A, D>`
+    ///
+    /// The last view may have less elements if `size` does not divide
+    /// the axis' dimension.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::Array;
+    /// use ndarray::arr3;
+    ///
+    /// let a = Array::from_iter(0..28).reshape((2, 7, 2));
+    /// let mut iter = a.axis_chunks_iter(1, 2);
+    ///
+    /// // first iteration yields a 2 × 2 × 2 view
+    /// assert_eq!(iter.next().unwrap(),
+    ///            arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]));
+    ///
+    /// // however the last element is a 2 × 1 × 2 view since 7 % 2 == 1
+    /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
+    /// ```
+    pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> ChunkIter<A, D>
+    {
+        iterators::new_chunk_iter(self.view(), axis, size)
+    }
+
+    /// Return an iterator that traverses over `axis` by chunks of `size`,
+    /// yielding non-overlapping mutable subviews along that axis.
+    ///
+    /// Iterator element is `ArrayViewMut<A, D>`
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_chunks_iter_mut(&mut self, axis: usize, size: usize)
+        -> ChunkIterMut<A, D>
+        where S: DataMut,
+    {
+        iterators::new_chunk_iter_mut(self.view_mut(), axis, size)
     }
 
     // Return (length, stride) for diagonal

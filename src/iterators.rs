@@ -631,9 +631,8 @@ pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Sma
     }
 }
 
-pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
-                               axis: usize
-                              ) -> OuterIterMut<A, D::Smaller>
+pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
+    -> OuterIterMut<A, D::Smaller>
     where D: RemoveAxis,
 {
     OuterIterMut {
@@ -641,3 +640,157 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>,
         life: PhantomData,
     }
 }
+
+/// An iterator that traverses over the specified axis
+/// and yields views of the specified size on this axis.
+///
+/// For example, in a 2 × 8 × 3 array, if the axis of iteration
+/// is 1 and the chunk size is 2, the yielded elements
+/// are 2 × 2 × 3 views (and there are 4 in total).
+///
+/// Iterator element type is `ArrayView<'a, A, D>`.
+pub struct ChunkIter<'a, A: 'a, D> {
+    iter: OuterIterCore<A, D>,
+    last_ptr: *mut A,
+    last_dim: D,
+    life: PhantomData<&'a A>,
+}
+
+fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
+    -> (OuterIterCore<A, D>, *mut A, D)
+{
+    let axis_len = v.shape()[axis];
+    let size = if size > axis_len { axis_len } else { size };
+    let last_index = axis_len / size;
+    let rem = axis_len % size;
+    let shape = if rem == 0 { last_index } else { last_index + 1 };
+    let stride = v.strides()[axis] * size as isize;
+
+    let mut inner_dim = v.dim.clone();
+    inner_dim.slice_mut()[axis] = size;
+
+    let mut last_dim = v.dim.clone();
+    last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
+
+    let last_ptr = if rem != 0 {
+        unsafe {
+            v.ptr.offset(stride * last_index as isize)
+        }
+    }
+    else {
+        v.ptr
+    };
+    let iter = OuterIterCore {
+        index: 0,
+        len: shape,
+        stride: stride,
+        inner_dim: inner_dim,
+        inner_strides: v.strides.clone(),
+        ptr: v.ptr,
+    };
+
+    (iter, last_ptr, last_dim)
+}
+
+pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
+    -> ChunkIter<A, D>
+    where D: Dimension
+{
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
+
+    ChunkIter {
+        iter: iter,
+        last_ptr: last_ptr,
+        last_dim: last_dim,
+        life: PhantomData,
+    }
+}
+
+macro_rules! chunk_iter_impl {
+    ($iter:ident, $array:ident) => (
+        impl<'a, A, D> $iter<'a, A, D>
+            where D: Dimension
+        {
+            fn get_subview(&self, iter_item: Option<*mut A>)
+                -> Option<$array<'a, A, D>>
+            {
+                iter_item.map(|ptr| {
+                    if ptr != self.last_ptr {
+                        unsafe {
+                            $array::new_(ptr,
+                                         self.iter.inner_dim.clone(),
+                                         self.iter.inner_strides.clone())
+                        }
+                    }
+                    else {
+                        unsafe {
+                            $array::new_(ptr,
+                                         self.last_dim.clone(),
+                                         self.iter.inner_strides.clone())
+                        }
+                    }
+                })
+            }
+        }
+
+        impl<'a, A, D> Iterator for $iter<'a, A, D>
+            where D: Dimension,
+        {
+            type Item = $array<'a, A, D>;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let res = self.iter.next();
+                self.get_subview(res)
+            }
+
+            fn size_hint(&self) -> (usize, Option<usize>) {
+                self.iter.size_hint()
+            }
+        }
+
+        impl<'a, A, D> DoubleEndedIterator for $iter<'a, A, D>
+            where D: Dimension,
+        {
+            fn next_back(&mut self) -> Option<Self::Item> {
+                let res = self.iter.next_back();
+                self.get_subview(res)
+            }
+        }
+
+        impl<'a, A, D> ExactSizeIterator for $iter<'a, A, D>
+            where D: Dimension,
+        { }
+    )
+}
+
+/// An iterator that traverses over the specified axis
+/// and yields mutable views of the specified size on this axis.
+///
+/// For example, in a 2 × 8 × 3 array, if the axis of iteration
+/// is 1 and the chunk size is 2, the yielded elements
+/// are 2 × 2 × 3 views (and there are 4 in total).
+///
+/// Iterator element type is `ArrayViewMut<'a, A, D>`.
+pub struct ChunkIterMut<'a, A: 'a, D> {
+    iter: OuterIterCore<A, D>,
+    last_ptr: *mut A,
+    last_dim: D,
+    life: PhantomData<&'a mut A>,
+}
+
+pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
+    -> ChunkIterMut<A, D>
+    where D: Dimension
+{
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
+
+    ChunkIterMut {
+        iter: iter,
+        last_ptr: last_ptr,
+        last_dim: last_dim,
+        life: PhantomData,
+    }
+}
+
+chunk_iter_impl!(ChunkIter, ArrayView);
+chunk_iter_impl!(ChunkIterMut, ArrayViewMut);

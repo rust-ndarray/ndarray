@@ -9,6 +9,7 @@ use ndarray::{
     Data,
     Dimension,
     aview1,
+    arr2,
     arr3,
 };
 
@@ -292,6 +293,78 @@ fn axis_iter_mut() {
                     [8, 9],
                     [10, 11]]]);
     assert_eq!(a, b);
+}
+
+#[test]
+fn axis_chunks_iter() {
+    let a = Array::from_iter(0..24);
+    let a = a.reshape((2, 6, 2));
+
+    let it = a.axis_chunks_iter(1, 2);
+    assert_equal(it,
+                 vec![arr3(&[[[0, 1], [2, 3]], [[12, 13], [14, 15]]]),
+                      arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]),
+                      arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]])]);
+
+    let a = Array::from_iter(0..28);
+    let a = a.reshape((2, 7, 2));
+
+    let it = a.axis_chunks_iter(1, 2);
+    assert_equal(it,
+                 vec![arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]),
+                      arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
+                      arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
+                      arr3(&[[[12, 13]], [[26, 27]]])]);
+
+    let it = a.axis_chunks_iter(1, 2).rev();
+    assert_equal(it,
+                 vec![arr3(&[[[12, 13]], [[26, 27]]]),
+                      arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
+                      arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
+                      arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]])]);
+
+    let it = a.axis_chunks_iter(1, 7);
+    assert_equal(it, vec![a.view()]);
+
+    let it = a.axis_chunks_iter(1, 9);
+    assert_equal(it, vec![a.view()]);
+}
+
+#[test]
+fn axis_chunks_iter_corner_cases() {
+    // examples provided by @bluss in PR #65
+    // these tests highlight corner cases of the axis_chunks_iter implementation
+    // and enable checking if no pointer offseting is out of bounds. However
+    // checking the absence of of out of bounds offseting cannot (?) be
+    // done automatically, so one has to launch this test in a debugger.
+    let a = Array::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
+    let a = a.slice(s![..;-1,..]);
+    let it = a.axis_chunks_iter(0, 8);
+    assert_equal(it, vec![a.view()]);
+    let it = a.axis_chunks_iter(0, 3);
+    assert_equal(it,
+                 vec![arr2(&[[7.], [6.], [5.]]),
+                      arr2(&[[4.], [3.], [2.]]),
+                      arr2(&[[1.], [0.]])]);
+
+    let b = Array::<f32, _>::zeros((8, 2));
+    let a = b.slice(s![1..;2,..]);
+    let it = a.axis_chunks_iter(0, 8);
+    assert_equal(it, vec![a.view()]);
+
+    let it = a.axis_chunks_iter(0, 1);
+    assert_equal(it, vec![Array::zeros((1, 2)); 4]);
+}
+
+#[test]
+fn axis_chunks_iter_mut() {
+    let a = Array::from_iter(0..24);
+    let mut a = a.reshape((2, 6, 2));
+
+    let mut it = a.axis_chunks_iter_mut(1, 2);
+    let mut col0 = it.next().unwrap();
+    col0[[0, 0, 0]] = 42;
+    assert_eq!(col0, arr3(&[[[42, 1], [2, 3]], [[12, 13], [14, 15]]]));
 }
 
 #[test]
