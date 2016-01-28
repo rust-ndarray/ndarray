@@ -86,7 +86,6 @@ pub use shape_error::ShapeError;
 pub use stride_error::StrideError;
 pub use si::{Si, S};
 
-use dimension::stride_offset;
 use iterators::Baseiter;
 pub use iterators::{
     InnerIter,
@@ -560,16 +559,6 @@ impl<S> ArrayBase<S, Ix>
               F: libnum::Float,
     {
         Self::from_iter(linspace::linspace(start, end, n))
-    }
-
-    /// Create a one-dimensional array from interval `[start, end)`
-    #[cfg_attr(has_deprecated, deprecated(note="use ArrayBase::linspace() instead"))]
-    pub fn range(start: f32, end: f32) -> ArrayBase<S, Ix>
-        where S: Data<Elem=f32>,
-    {
-        let n = (end - start) as usize;
-        let span = if n > 0 { (n - 1) as f32 } else { 0. };
-        Self::linspace(start, start + span, n)
     }
 }
 
@@ -1115,13 +1104,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         debug_assert!(self.pointer_is_inbounds());
     }
 
-    /// ***Deprecated: Use `.slice()` instead.***
-    #[cfg_attr(has_deprecated, deprecated(note="use .slice() instead"))]
-    pub fn slice_iter(&self, indexes: &D::SliceArg) -> Elements<A, D>
-    {
-        self.slice(indexes).into_iter()
-    }
-
     /// Return a sliced read-write view of the array.
     ///
     /// See also [`D::SliceArg`].
@@ -1136,14 +1118,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let mut arr = self.view_mut();
         arr.islice(indexes);
         arr
-    }
-
-    /// ***Deprecated: use `.slice_mut()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .slice_mut() instead"))]
-    pub fn slice_iter_mut(&mut self, indexes: &D::SliceArg) -> ElementsMut<A, D>
-        where S: DataMut,
-    {
-        self.slice_mut(indexes).into_iter()
     }
 
     /// Return a reference to the element at `index`, or return `None`
@@ -1174,12 +1148,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             })
     }
 
-    /// ***Deprecated: use .get(i)***
-    #[cfg_attr(has_deprecated, deprecated(note="use .get() instead"))]
-    pub fn at(&self, index: D) -> Option<&A> {
-        self.get(index)
-    }
-
     /// Return a mutable reference to the element at `index`, or return `None`
     /// if the index is out of bounds.
     pub fn get_mut<I>(&mut self, index: I) -> Option<&mut A>
@@ -1194,14 +1162,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             })
     }
 
-    /// ***Deprecated: use .get_mut(i)***
-    #[cfg_attr(has_deprecated, deprecated(note="use .get_mut() instead"))]
-    pub fn at_mut(&mut self, index: D) -> Option<&mut A>
-        where S: DataMut,
-    {
-        self.get_mut(index)
-    }
-
     /// Perform *unchecked* array indexing.
     ///
     /// Return a reference to the element at `index`.
@@ -1212,13 +1172,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
-    }
-
-    /// ***Deprecated: use `.uget()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .uget() instead"))]
-    #[inline]
-    pub unsafe fn uchk_at(&self, index: D) -> &A {
-        self.uget(index)
     }
 
     /// Perform *unchecked* array indexing.
@@ -1235,15 +1188,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
-    }
-
-    /// ***Deprecated: use `.uget_mut()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .uget_mut() instead"))]
-    #[inline]
-    pub unsafe fn uchk_at_mut(&mut self, index: D) -> &mut A
-        where S: DataMut
-    {
-        self.uget_mut(index)
     }
 
     /// Swap axes `ax` and `bx`.
@@ -1346,17 +1290,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               D: RemoveAxis,
     {
         self.view_mut().into_subview(axis, index)
-    }
-
-    /// ***Deprecated: use `.subview_mut()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .subview_mut() instead"))]
-    pub fn sub_iter_mut(&mut self, axis: usize, index: Ix)
-        -> ElementsMut<A, D>
-        where S: DataMut,
-    {
-        let mut it = self.view_mut();
-        dimension::do_sub(&mut it.dim, &mut it.ptr, &it.strides, axis, index);
-        it.into_iter_()
     }
 
     /// Return an iterator that traverses over all dimensions but the innermost,
@@ -1539,20 +1472,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             dim: len,
             strides: stride as Ix,
         }
-    }
-
-    /// ***Deprecated: use `.diag()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .diag() instead"))]
-    pub fn diag_iter(&self) -> Elements<A, Ix> {
-        self.diag().into_iter()
-    }
-
-    /// ***Deprecated: use `.diag_mut()`***
-    #[cfg_attr(has_deprecated, deprecated(note="use .diag_mut() instead"))]
-    pub fn diag_iter_mut(&mut self) -> ElementsMut<A, Ix>
-        where S: DataMut,
-    {
-        self.diag_mut().into_iter_()
     }
 
     /// Make the array unshared.
@@ -1810,14 +1729,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe {
             Some(ArrayView::new_(self.ptr, dim, broadcast_strides))
         }
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="use .broadcast() instead"))]
-    /// ***Deprecated: Use `.broadcast()` instead.***
-    pub fn broadcast_iter<E>(&self, dim: E) -> Option<Elements<A, E>>
-        where E: Dimension,
-    {
-        self.broadcast(dim).map(|v| v.into_iter_())
     }
 
     #[inline]
@@ -2411,12 +2322,6 @@ impl<A, S> ArrayBase<S, Ix>
 impl<A, S> ArrayBase<S, (Ix, Ix)>
     where S: Data<Elem=A>,
 {
-    unsafe fn one_dimensional_iter<'a>(ptr: *mut A, len: Ix, stride: Ix)
-        -> Elements<'a, A, Ix>
-    {
-        ArrayView::new_(ptr, len, stride).into_iter_()
-    }
-
     /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -2449,30 +2354,6 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         where S: DataMut
     {
         self.subview_mut(1, index)
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="use .row() instead"))]
-    /// ***Deprecated: Use `.row()` instead.***
-    pub fn row_iter(&self, index: Ix) -> Elements<A, Ix>
-    {
-        let (m, n) = self.dim;
-        let (sr, sc) = self.strides;
-        assert!(index < m);
-        unsafe {
-            Self::one_dimensional_iter(self.ptr.offset(stride_offset(index, sr)), n, sc)
-        }
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="use .column() instead"))]
-    /// ***Deprecated: Use `.column()` instead.***
-    pub fn col_iter(&self, index: Ix) -> Elements<A, Ix>
-    {
-        let (m, n) = self.dim;
-        let (sr, sc) = self.strides;
-        assert!(index < n);
-        unsafe {
-            Self::one_dimensional_iter(self.ptr.offset(stride_offset(index, sc)), m, sr)
-        }
     }
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
