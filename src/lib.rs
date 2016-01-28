@@ -92,8 +92,8 @@ pub use iterators::{
     InnerIterMut,
     OuterIter,
     OuterIterMut,
-    ChunkIter,
-    ChunkIterMut,
+    AxisChunkIter,
+    AxisChunkIterMut,
 };
 
 #[allow(deprecated)]
@@ -1417,7 +1417,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// // however the last element is a 2 × 1 × 2 view since 7 % 2 == 1
     /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
     /// ```
-    pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> ChunkIter<A, D>
+    pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> AxisChunkIter<A, D>
     {
         iterators::new_chunk_iter(self.view(), axis, size)
     }
@@ -1429,7 +1429,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` is out of bounds.
     pub fn axis_chunks_iter_mut(&mut self, axis: usize, size: usize)
-        -> ChunkIterMut<A, D>
+        -> AxisChunkIterMut<A, D>
         where S: DataMut,
     {
         iterators::new_chunk_iter_mut(self.view_mut(), axis, size)
