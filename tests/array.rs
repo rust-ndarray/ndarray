@@ -41,6 +41,18 @@ fn test_matmul_rcarray()
 }
 
 #[test]
+fn test_mat_mul() {
+    // smoke test, a big matrix multiplication of uneven size
+    let (n, m) = (45, 33);
+    let a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
+    let b = Array::eye(m);
+    assert_eq!(a.mat_mul(&b), a);
+    let c = Array::eye(n);
+    assert_eq!(c.mat_mul(&a), a);
+}
+
+
+#[test]
 fn test_slice()
 {
     let mut A = Array::<usize, _>::zeros((3, 4));
