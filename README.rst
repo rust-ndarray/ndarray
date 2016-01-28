@@ -98,6 +98,8 @@ Recent Changes
     trigger debug assertions for overflow in the previous versions*!.
   - Add an array chunks iterator ``.axis_chunks_iter()`` and mutable version;
     it allows traversing the array in for example chunks of *n* rows at a time.
+  - Remove methods and items deprecated since 0.3 or earlier; deprecated methods
+    have notes about replacements in 0.3 docs.
 
 - 0.3.1
 
