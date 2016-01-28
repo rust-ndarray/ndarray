@@ -1087,6 +1087,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         arr
     }
 
+    /// Return a sliced read-write view of the array.
+    ///
+    /// See also [`D::SliceArg`].
+    ///
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    pub fn slice_mut(&mut self, indexes: &D::SliceArg) -> ArrayViewMut<A, D>
+        where S: DataMut
+    {
+        let mut arr = self.view_mut();
+        arr.islice(indexes);
+        arr
+    }
+
     /// Slice the array’s view in place.
     ///
     /// See also [`D::SliceArg`].
@@ -1102,22 +1118,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             self.ptr = self.ptr.offset(offset);
         }
         debug_assert!(self.pointer_is_inbounds());
-    }
-
-    /// Return a sliced read-write view of the array.
-    ///
-    /// See also [`D::SliceArg`].
-    ///
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
-    ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
-    pub fn slice_mut(&mut self, indexes: &D::SliceArg) -> ArrayViewMut<A, D>
-        where S: DataMut
-    {
-        let mut arr = self.view_mut();
-        arr.islice(indexes);
-        arr
     }
 
     /// Return a reference to the element at `index`, or return `None`
@@ -1239,6 +1239,32 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().into_subview(axis, index)
     }
 
+    /// Along `axis`, select the subview `index` and return a read-write view
+    /// with the axis removed.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{arr2, aview2};
+    ///
+    /// let mut a = arr2(&[[1., 2.],
+    ///                    [3., 4.]]);
+    ///
+    /// a.subview_mut(1, 1).iadd_scalar(&10.);
+    ///
+    /// assert!(
+    ///     a == aview2(&[[1., 12.],
+    ///                   [3., 14.]])
+    /// );
+    /// ```
+    pub fn subview_mut(&mut self, axis: usize, index: Ix)
+        -> ArrayViewMut<A, D::Smaller>
+        where S: DataMut,
+              D: RemoveAxis,
+    {
+        self.view_mut().into_subview(axis, index)
+    }
+
     /// Collapse dimension `axis` into length one,
     /// and select the subview of `index` along that axis.
     ///
@@ -1264,32 +1290,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             dim: self.dim.remove_axis(axis),
             strides: self.strides.remove_axis(axis),
         }
-    }
-
-    /// Along `axis`, select the subview `index` and return a read-write view
-    /// with the axis removed.
-    ///
-    /// **Panics** if `axis` or `index` is out of bounds.
-    ///
-    /// ```
-    /// use ndarray::{arr2, aview2};
-    ///
-    /// let mut a = arr2(&[[1., 2.],
-    ///                    [3., 4.]]);
-    ///
-    /// a.subview_mut(1, 1).iadd_scalar(&10.);
-    ///
-    /// assert!(
-    ///     a == aview2(&[[1., 12.],
-    ///                   [3., 14.]])
-    /// );
-    /// ```
-    pub fn subview_mut(&mut self, axis: usize, index: Ix)
-        -> ArrayViewMut<A, D::Smaller>
-        where S: DataMut,
-              D: RemoveAxis,
-    {
-        self.view_mut().into_subview(axis, index)
     }
 
     /// Return an iterator that traverses over all dimensions but the innermost,
