@@ -84,7 +84,7 @@ fn serial_many_dim()
 
     {
         // Test a sliced array.
-        let mut a = Array::range(0., 32.0_f32).reshape((2, 2, 2, 4));
+        let mut a = Array::linspace(0., 31., 32).reshape((2, 2, 2, 4));
         a.islice(&[Si(0, None, -1), S, S, Si(0, Some(2), 1)]);
         println!("{:?}", a);
         let serial = json::encode(&a).unwrap();
