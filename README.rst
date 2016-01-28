@@ -79,6 +79,26 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.4.0-alpha.X
+
+  - Add checked and unchecked constructor methods for creating arrays
+    from a vector and explicit dimension and stride, or with
+    fortran (column major) memory order (marked ``f``):
+    
+    + ``ArrayBase::from_vec_dim``, ``from_vec_dim_stride``,
+      ``from_vec_dim_stride_unchecked``,
+    + ``from_vec_dim_unchecked_f``, ``from_elem_f``, ``zeros_f``
+    + View constructors ``ArrayView::from_slice_dim_stride``,
+      ``ArrayViewMut::from_slice_dim_stride``.
+    + Rename old ``ArrayBase::from_vec_dim`` to ``from_vec_dim_unchecked``.
+
+  - Check better for wraparound when computing the number of elements in a shape;
+    this adds error cases that **panic** in ``from_elem``, ``zeros`` etc,
+    however *the new check will only ever panic in cases that would
+    trigger debug assertions for overflow in the previous versions*!.
+  - Add an array chunks iterator ``.axis_chunks_iter()`` and mutable version;
+    it allows traversing the array in for example chunks of *n* rows at a time.
+
 - 0.3.1
 
   - Add ``.row_mut()``, ``.column_mut()``
