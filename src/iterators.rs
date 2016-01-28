@@ -650,8 +650,8 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 ///
-/// See [`.axis_chunk_iter()`](struct.ArrayBase.html#method.axis_chunk_iter) for more information.
-pub struct AxisChunkIter<'a, A: 'a, D> {
+/// See [`.axis_chunks_iter()`](struct.ArrayBase.html#method.axis_chunks_iter) for more information.
+pub struct AxisChunksIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     last_ptr: *mut A,
     last_dim: D,
@@ -695,12 +695,12 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
 }
 
 pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
-    -> AxisChunkIter<A, D>
+    -> AxisChunksIter<A, D>
     where D: Dimension
 {
     let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
 
-    AxisChunkIter {
+    AxisChunksIter {
         iter: iter,
         last_ptr: last_ptr,
         last_dim: last_dim,
@@ -774,9 +774,9 @@ macro_rules! chunk_iter_impl {
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 ///
-/// See [`.axis_chunk_iter_mut()`](struct.ArrayBase.html#method.axis_chunk_iter_mut)
+/// See [`.axis_chunks_iter_mut()`](struct.ArrayBase.html#method.axis_chunks_iter_mut)
 /// for more information.
-pub struct AxisChunkIterMut<'a, A: 'a, D> {
+pub struct AxisChunksIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     last_ptr: *mut A,
     last_dim: D,
@@ -784,12 +784,12 @@ pub struct AxisChunkIterMut<'a, A: 'a, D> {
 }
 
 pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
-    -> AxisChunkIterMut<A, D>
+    -> AxisChunksIterMut<A, D>
     where D: Dimension
 {
     let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
 
-    AxisChunkIterMut {
+    AxisChunksIterMut {
         iter: iter,
         last_ptr: last_ptr,
         last_dim: last_dim,
@@ -797,5 +797,5 @@ pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
     }
 }
 
-chunk_iter_impl!(AxisChunkIter, ArrayView);
-chunk_iter_impl!(AxisChunkIterMut, ArrayViewMut);
+chunk_iter_impl!(AxisChunksIter, ArrayView);
+chunk_iter_impl!(AxisChunksIterMut, ArrayViewMut);
