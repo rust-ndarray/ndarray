@@ -79,7 +79,7 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- 0.4.0-alpha.X
+- 0.4.0-alpha.1
 
   - Add checked and unchecked constructor methods for creating arrays
     from a vector and explicit dimension and stride, or with
