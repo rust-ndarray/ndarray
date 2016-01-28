@@ -9,6 +9,7 @@ use ndarray::{
     Data,
     Dimension,
     aview1,
+    arr2,
     arr3,
 };
 
@@ -326,6 +327,25 @@ fn axis_chunks_iter() {
     assert_equal(it, vec![a.view()]);
 
     let it = a.axis_chunks_iter(1, 9);
+    assert_equal(it, vec![a.view()]);
+}
+
+#[test]
+fn axis_chunks_iter_corner_cases() {
+    // examples provided by @bluss in PR #65
+    let a = Array::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
+    let a = a.slice(s![..;-1,..]);
+    let it = a.axis_chunks_iter(0, 8);
+    assert_equal(it, vec![a.view()]);
+    let it = a.axis_chunks_iter(0, 3);
+    assert_equal(it,
+                 vec![arr2(&[[7.], [6.], [5.]]),
+                      arr2(&[[4.], [3.], [2.]]),
+                      arr2(&[[1.], [0.]])]);
+
+    let a = Array::<f32, _>::zeros((8, 2));
+    let a = a.slice(s![1..;2,..]);
+    let it = a.axis_chunks_iter(0, 8);
     assert_equal(it, vec![a.view()]);
 }
 
