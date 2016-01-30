@@ -1556,6 +1556,35 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Get a transposed view of this array.
+    ///
+    /// Transposition reverses the order of the axes and strides while
+    /// retaining the same data.
+    pub fn transpose_view(&self) -> ArrayView<A, D>
+    {
+        let dim = self.dim.reverse();
+        let strides = self.strides.reverse();
+        // safe because transposing an array exposes the same memory
+        unsafe {
+            ArrayView::new_(self.ptr, dim, strides)
+        }
+    }
+
+    /// Get a mutable transposed view of this array.
+    ///
+    /// Transposition reverses the order of the axes and strides while
+    /// retaining the same data.
+    pub fn transpose_view_mut(&mut self) -> ArrayViewMut<A, D>
+        where S: DataMut
+    {
+        let dim = self.dim.reverse();
+        let strides = self.strides.reverse();
+        // safe because transposing an array exposes the same memory
+        unsafe {
+            ArrayViewMut::new_(self.ptr, dim, strides)
+        }
+    }
+
     /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted.
     ///
