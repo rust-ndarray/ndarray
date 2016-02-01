@@ -545,6 +545,17 @@ fn transpose_view_mut() {
 }
 
 #[test]
+fn transpose_into() {
+    let a = arr2(&[[1, 2],
+                   [3, 4]]);
+    let a_ = a.clone();
+
+    let at = a.transpose_into();
+
+    assert_eq!(at, a_.transpose_view());
+}
+
+#[test]
 fn reshape() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);

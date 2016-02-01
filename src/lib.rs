@@ -72,6 +72,7 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
 use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 use std::marker::PhantomData;
+use std::fmt::Debug;
 
 use itertools::ZipSlices;
 
@@ -470,6 +471,9 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
 pub unsafe trait DataOwned : Data {
     fn new(elements: Vec<Self::Elem>) -> Self;
     fn into_shared(self) -> Rc<Vec<Self::Elem>>;
+
+    fn into_owned(self) -> Vec<Self::Elem>
+        where Self::Elem : Clone + Debug;
 }
 
 /// Array representation that is a lightweight view.
@@ -481,11 +485,17 @@ unsafe impl<'a, A> DataShared for ViewRepr<&'a A> { }
 unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
     fn into_shared(self) -> Rc<Vec<A>> { Rc::new(self) }
+    fn into_owned(self) -> Vec<A> where A: Clone + Debug { self }
 }
 
 unsafe impl<A> DataOwned for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
     fn into_shared(self) -> Rc<Vec<A>> { self }
+    fn into_owned(mut self) -> Vec<A> where A: Clone + Debug
+    {
+        Rc::make_mut(&mut self);
+        Rc::try_unwrap(self).unwrap()
+    }
 }
 
 
@@ -1582,6 +1592,26 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // safe because transposing an array exposes the same memory
         unsafe {
             ArrayViewMut::new_(self.ptr, dim, strides)
+        }
+    }
+
+    /// Consume this array and get its transposition.
+    /// If the array storage was shared (Rc based storage), the underlying
+    /// data will be copied. Otherwise this method will not allocate.
+    ///
+    /// Transposition reverses the order of the axes and strides while
+    /// retaining the same data.
+    pub fn transpose_into(mut self) -> OwnedArray<A, D>
+        where S: DataOwned + DataMut,
+              A: Clone + Debug
+    {
+        self.ensure_unique();
+        let dim = self.dim.reverse();
+        let strides = self.strides.reverse();
+        let vec = self.data.into_owned();
+        // transposing does not change the safety of the strides
+        unsafe {
+            OwnedArray::from_vec_dim_stride_unchecked(dim, strides, vec)
         }
     }
 
