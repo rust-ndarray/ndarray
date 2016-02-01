@@ -520,12 +520,12 @@ fn aview_mut() {
 fn transpose_view() {
     let a = arr2(&[[1, 2],
                    [3, 4]]);
-    let at = a.transpose_view();
+    let at = a.view().transpose();
     assert_eq!(at, arr2(&[[1, 3], [2, 4]]));
 
     let a = arr2(&[[1, 2, 3],
                    [4, 5, 6]]);
-    let at = a.transpose_view();
+    let at = a.view().transpose();
     assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 6]]));
 }
 
@@ -533,13 +533,13 @@ fn transpose_view() {
 fn transpose_view_mut() {
     let mut a = arr2(&[[1, 2],
                        [3, 4]]);
-    let mut at = a.transpose_view_mut();
+    let mut at = a.view_mut().transpose();
     at[[0, 1]] = 5;
     assert_eq!(at, arr2(&[[1, 5], [2, 4]]));
 
     let mut a = arr2(&[[1, 2, 3],
                        [4, 5, 6]]);
-    let mut at = a.transpose_view_mut();
+    let mut at = a.view_mut().transpose();
     at[[2, 1]] = 7;
     assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 7]]));
 }
@@ -550,9 +550,9 @@ fn transpose_into() {
                    [3, 4]]);
     let a_ = a.clone();
 
-    let at = a.transpose_into();
+    let at = a.into_owned().transpose();
 
-    assert_eq!(at, a_.transpose_view());
+    assert_eq!(at, a_.view().transpose());
 }
 
 #[test]

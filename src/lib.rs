@@ -1566,52 +1566,32 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Get a transposed view of this array.
+    /// Transpose this array.
     ///
     /// Transposition reverses the order of the axes and strides while
     /// retaining the same data.
-    pub fn transpose_view(&self) -> ArrayView<A, D>
+    pub fn transpose(self) -> ArrayBase<S, D>
     {
         let dim = self.dim.reverse();
         let strides = self.strides.reverse();
-        // safe because transposing an array exposes the same memory
-        unsafe {
-            ArrayView::new_(self.ptr, dim, strides)
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim: dim,
+            strides: strides
         }
     }
 
-    /// Get a mutable transposed view of this array.
-    ///
-    /// Transposition reverses the order of the axes and strides while
-    /// retaining the same data.
-    pub fn transpose_view_mut(&mut self) -> ArrayViewMut<A, D>
-        where S: DataMut
-    {
-        let dim = self.dim.reverse();
-        let strides = self.strides.reverse();
-        // safe because transposing an array exposes the same memory
-        unsafe {
-            ArrayViewMut::new_(self.ptr, dim, strides)
-        }
-    }
-
-    /// Consume this array and get its transposition.
-    /// If the array storage was shared (Rc based storage), the underlying
-    /// data will be copied. Otherwise this method will not allocate.
-    ///
-    /// Transposition reverses the order of the axes and strides while
-    /// retaining the same data.
-    pub fn transpose_into(mut self) -> OwnedArray<A, D>
+    pub fn into_owned(mut self) -> OwnedArray<A, D>
         where S: DataOwned + DataMut,
               A: Clone + Debug
     {
         self.ensure_unique();
-        let dim = self.dim.reverse();
-        let strides = self.strides.reverse();
         let vec = self.data.into_owned();
-        // transposing does not change the safety of the strides
         unsafe {
-            OwnedArray::from_vec_dim_stride_unchecked(dim, strides, vec)
+            OwnedArray::from_vec_dim_stride_unchecked(self.dim,
+                                                      self.strides,
+                                                      vec)
         }
     }
 
