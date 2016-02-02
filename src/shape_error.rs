@@ -2,6 +2,7 @@ use std::fmt;
 use std::error::Error;
 use super::{
     Ix,
+    Dimension,
 };
 
 /// An error that can be produced by `.into_shape()`
@@ -14,6 +15,17 @@ pub enum ShapeError {
     /// Dimension too large (shape)
     DimensionTooLarge(Box<[Ix]>),
 }
+
+#[inline(never)]
+#[cold]
+pub fn incompatible_shapes<D, E>(a: &D, b: &E) -> ShapeError
+    where D: Dimension, E: Dimension,
+{
+    ShapeError::IncompatibleShapes(
+        a.slice().to_vec().into_boxed_slice(),
+        b.slice().to_vec().into_boxed_slice())
+}
+
 
 impl Error for ShapeError {
     fn description(&self) -> &str {
