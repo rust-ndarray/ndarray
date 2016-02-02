@@ -6,6 +6,40 @@ use std::ops::{
     Mul,
 };
 
+/// Compute the sum of the values in `xs`
+pub fn unrolled_sum<A>(mut xs: &[A]) -> A
+    where A: Clone + Add<Output=A> + libnum::Zero,
+{
+    // eightfold unrolled so that floating point can be vectorized
+    // (even with strict floating point accuracy semantics)
+    let mut sum = A::zero();
+    let (mut p0, mut p1, mut p2, mut p3,
+         mut p4, mut p5, mut p6, mut p7) =
+        (A::zero(), A::zero(), A::zero(), A::zero(),
+         A::zero(), A::zero(), A::zero(), A::zero());
+    while xs.len() >= 8 {
+        p0 = p0 + xs[0].clone();
+        p1 = p1 + xs[1].clone();
+        p2 = p2 + xs[2].clone();
+        p3 = p3 + xs[3].clone();
+        p4 = p4 + xs[4].clone();
+        p5 = p5 + xs[5].clone();
+        p6 = p6 + xs[6].clone();
+        p7 = p7 + xs[7].clone();
+
+        xs = &xs[8..];
+    }
+    sum = sum.clone() + (p0 + p4);
+    sum = sum.clone() + (p1 + p5);
+    sum = sum.clone() + (p2 + p6);
+    sum = sum.clone() + (p3 + p7);
+    for elt in xs {
+        sum = sum.clone() + elt.clone();
+    }
+    sum
+}
+
+
 /// Compute the dot product.
 ///
 /// `xs` and `ys` must be the same length
