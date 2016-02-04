@@ -517,6 +517,34 @@ fn aview_mut() {
 }
 
 #[test]
+fn transpose_view() {
+    let a = arr2(&[[1, 2],
+                   [3, 4]]);
+    let at = a.view().transpose();
+    assert_eq!(at, arr2(&[[1, 3], [2, 4]]));
+
+    let a = arr2(&[[1, 2, 3],
+                   [4, 5, 6]]);
+    let at = a.view().transpose();
+    assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 6]]));
+}
+
+#[test]
+fn transpose_view_mut() {
+    let mut a = arr2(&[[1, 2],
+                       [3, 4]]);
+    let mut at = a.view_mut().transpose();
+    at[[0, 1]] = 5;
+    assert_eq!(at, arr2(&[[1, 5], [2, 4]]));
+
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6]]);
+    let mut at = a.view_mut().transpose();
+    at[[2, 1]] = 7;
+    assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 7]]));
+}
+
+#[test]
 fn reshape() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);

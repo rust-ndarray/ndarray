@@ -1556,6 +1556,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Transpose this array.
+    ///
+    /// Transposition reverses the order of the axes and strides while
+    /// retaining the same data.
+    pub fn transpose(mut self) -> ArrayBase<S, D>
+    {
+        self.dim.slice_mut().reverse();
+        self.strides.slice_mut().reverse();
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim: self.dim,
+            strides: self.strides
+        }
+    }
+
     /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted.
     ///
