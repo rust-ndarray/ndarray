@@ -1741,16 +1741,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
         where E: Dimension,
     {
+        #[cold]
+        #[inline(never)]
+        fn broadcast_panic<D, E>(from: &D, to: &E) -> !
+            where D: Dimension,
+                  E: Dimension,
+        {
+            panic!("Could not broadcast array from shape: {:?} to: {:?}",
+                   from.slice(), to.slice())
+        }
+
         match self.broadcast(dim.clone()) {
             Some(it) => it,
-            None => Self::broadcast_panic(&self.dim, &dim),
+            None => broadcast_panic(&self.dim, &dim),
         }
-    }
-
-    #[inline(never)]
-    fn broadcast_panic<E: Dimension>(from: &D, to: &E) -> ! {
-        panic!("Could not broadcast array from shape: {:?} to: {:?}",
-               from.slice(), to.slice())
     }
 
     /// Return a slice of the array’s backing data in memory order.
