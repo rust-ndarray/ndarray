@@ -1190,28 +1190,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         &mut *self.ptr.offset(off)
     }
 
-    /// Swap axes `ax` and `bx`.
-    ///
-    /// This does not move any data, it just adjusts the array’s dimensions
-    /// and strides.
-    ///
-    /// **Panics** if the axes are out of bounds.
-    ///
-    /// ```
-    /// use ndarray::arr2;
-    ///
-    /// let mut a = arr2(&[[1., 2., 3.]]);
-    /// a.swap_axes(0, 1);
-    /// assert!(
-    ///     a == arr2(&[[1.], [2.], [3.]])
-    /// );
-    /// ```
-    pub fn swap_axes(&mut self, ax: usize, bx: usize)
-    {
-        self.dim.slice_mut().swap(ax, bx);
-        self.strides.slice_mut().swap(ax, bx);
-    }
-
     /// Along `axis`, select the subview `index` and return a
     /// view with that axis removed.
     ///
@@ -1556,22 +1534,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Transpose this array.
-    ///
-    /// Transposition reverses the order of the axes and strides while
-    /// retaining the same data.
-    pub fn transpose(mut self) -> ArrayBase<S, D>
-    {
-        self.dim.slice_mut().reverse();
-        self.strides.slice_mut().reverse();
-        ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim: self.dim,
-            strides: self.strides
-        }
-    }
-
     /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted.
     ///
@@ -1756,6 +1718,39 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             None => broadcast_panic(&self.dim, &dim),
         }
     }
+
+    /// Swap axes `ax` and `bx`.
+    ///
+    /// This does not move any data, it just adjusts the array’s dimensions
+    /// and strides.
+    ///
+    /// **Panics** if the axes are out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let mut a = arr2(&[[1., 2., 3.]]);
+    /// a.swap_axes(0, 1);
+    /// assert!(
+    ///     a == arr2(&[[1.], [2.], [3.]])
+    /// );
+    /// ```
+    pub fn swap_axes(&mut self, ax: usize, bx: usize)
+    {
+        self.dim.slice_mut().swap(ax, bx);
+        self.strides.slice_mut().swap(ax, bx);
+    }
+
+    /// Transpose the array by reversing all axes.
+    ///
+    /// Transposition reverses the order of the axes (dimensions and strides)
+    /// while retaining the same data.
+    pub fn reversed_axes(mut self) -> ArrayBase<S, D> {
+        self.dim.slice_mut().reverse();
+        self.strides.slice_mut().reverse();
+        self
+    }
+
 
     /// Return a slice of the array’s backing data in memory order.
     ///
