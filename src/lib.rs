@@ -72,7 +72,6 @@ use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
 use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 use std::marker::PhantomData;
-use std::fmt::Debug;
 
 use itertools::ZipSlices;
 
@@ -471,9 +470,6 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
 pub unsafe trait DataOwned : Data {
     fn new(elements: Vec<Self::Elem>) -> Self;
     fn into_shared(self) -> Rc<Vec<Self::Elem>>;
-
-    fn into_owned(self) -> Vec<Self::Elem>
-        where Self::Elem : Clone + Debug;
 }
 
 /// Array representation that is a lightweight view.
@@ -485,17 +481,11 @@ unsafe impl<'a, A> DataShared for ViewRepr<&'a A> { }
 unsafe impl<A> DataOwned for Vec<A> {
     fn new(elements: Vec<A>) -> Self { elements }
     fn into_shared(self) -> Rc<Vec<A>> { Rc::new(self) }
-    fn into_owned(self) -> Vec<A> where A: Clone + Debug { self }
 }
 
 unsafe impl<A> DataOwned for Rc<Vec<A>> {
     fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
     fn into_shared(self) -> Rc<Vec<A>> { self }
-    fn into_owned(mut self) -> Vec<A> where A: Clone + Debug
-    {
-        Rc::make_mut(&mut self);
-        Rc::try_unwrap(self).unwrap()
-    }
 }
 
 
@@ -1579,19 +1569,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             data: self.data,
             dim: self.dim,
             strides: self.strides
-        }
-    }
-
-    pub fn into_owned(mut self) -> OwnedArray<A, D>
-        where S: DataOwned + DataMut,
-              A: Clone + Debug
-    {
-        self.ensure_unique();
-        let vec = self.data.into_owned();
-        unsafe {
-            OwnedArray::from_vec_dim_stride_unchecked(self.dim,
-                                                      self.strides,
-                                                      vec)
         }
     }
 
