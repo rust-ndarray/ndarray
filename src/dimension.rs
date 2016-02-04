@@ -210,18 +210,6 @@ pub unsafe trait Dimension : Clone + Eq {
         strides
     }
 
-    /// Return a Dimension with inverted values, useful for transposition
-    fn reverse(&self) -> Self {
-        let mut reversed = self.clone();
-        {
-            let iter = reversed.slice_mut().iter_mut().rev().zip(self.slice());
-            for (rev, &cur) in iter {
-                *rev = cur;
-            }
-        }
-        reversed
-    }
-
     #[inline]
     fn first_index(&self) -> Option<Self>
     {

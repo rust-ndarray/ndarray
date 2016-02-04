@@ -1570,15 +1570,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Transposition reverses the order of the axes and strides while
     /// retaining the same data.
-    pub fn transpose(self) -> ArrayBase<S, D>
+    pub fn transpose(mut self) -> ArrayBase<S, D>
     {
-        let dim = self.dim.reverse();
-        let strides = self.strides.reverse();
+        self.dim.slice_mut().reverse();
+        self.strides.slice_mut().reverse();
         ArrayBase {
             ptr: self.ptr,
             data: self.data,
-            dim: dim,
-            strides: strides
+            dim: self.dim,
+            strides: self.strides
         }
     }
 
