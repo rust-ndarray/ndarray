@@ -79,6 +79,10 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.4.0-alpha.2
+
+  - Add ``ArrayBase::reversed_axes`` which transposes an array.
+
 - 0.4.0-alpha.1
 
   - Add checked and unchecked constructor methods for creating arrays
