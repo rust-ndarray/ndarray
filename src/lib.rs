@@ -1478,13 +1478,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /*
-    /// Set the array to the standard layout, without adjusting elements.
-    /// Useful for overwriting.
-    fn force_standard_layout(&mut self) {
-        self.strides = self.dim.default_strides();
-    }
-    */
     /// Return `true` if the array data is laid out in contiguous “C order” in
     /// memory (where the last index is the most rapidly varying).
     ///
@@ -1505,6 +1498,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
         }
         true
+    }
+
+    #[cfg(feature = "rblas")]
+    /// Return `true` if the innermost dimension is contiguous (includes
+    /// the special cases of 0 or 1 length in that axis).
+    fn is_inner_contiguous(&self) -> bool {
+        let ndim = self.ndim();
+        if ndim == 0 {
+            return true;
+        }
+        self.shape()[ndim - 1] <= 1 || self.strides()[ndim - 1] == 1
     }
 
     /// Return the array’s data as a slice, if it is contiguous and

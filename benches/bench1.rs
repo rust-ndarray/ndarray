@@ -415,9 +415,9 @@ fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
     bench.iter(|| {
         // C ← α AB + β C
         f32::gemm(&1.,
-                  Transpose::NoTrans, &a.blas(),
-                  Transpose::NoTrans, &b.blas(),
-                  &1., &mut c.blas());
+                  Transpose::NoTrans, &a.bv(),
+                  Transpose::NoTrans, &b.bv(),
+                  &1., &mut c.bvm());
     });
 }
 
