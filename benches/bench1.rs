@@ -342,6 +342,35 @@ fn add_2d_transposed(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_f32_regular(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
+    let bv = b.view();
+    bench.iter(|| {
+        let _x = black_box(a.view_mut() + bv);
+    });
+}
+
+#[cfg(feature = "rblas")]
+#[bench]
+fn add_2d_f32_blas(bench: &mut test::Bencher)
+{
+    use rblas::Axpy;
+    use rblas::attribute::Transpose;
+    use ndarray::blas::AsBlas;
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
+    let len = a.len();
+    let mut av = a.view_mut().into_shape(len).unwrap();
+    let bv = b.view().into_shape(len).unwrap();
+    bench.iter(|| {
+        f32::axpy(&1., &bv.bv(), &mut av.bvm());
+    });
+}
+
+
+#[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::zeros((64, 64));
@@ -420,8 +449,8 @@ fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
     use rblas::attribute::Transpose;
     use ndarray::blas::AsBlas;
 
-    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
-    let mut b = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
     let mut c = OwnedArray::<f32, _>::zeros((64, 64));
     bench.iter(|| {
         // C ← α AB + β C
