@@ -1401,7 +1401,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
-    /// yielding non-overlapping mutable subviews along that axis.
+    /// yielding non-overlapping read-write views along that axis.
     ///
     /// Iterator element is `ArrayViewMut<A, D>`
     ///
@@ -1745,7 +1745,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.strides.slice_mut().swap(ax, bx);
     }
 
-    /// Transpose the array by reversing all axes.
+    /// Transpose the array by reversing axes.
     ///
     /// Transposition reverses the order of the axes (dimensions and strides)
     /// while retaining the same data.
