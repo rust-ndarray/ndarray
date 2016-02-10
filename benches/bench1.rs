@@ -318,6 +318,17 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
     });
 }
 
+// This is for comparison with add_2d_broadcast_0_to_2
+#[bench]
+fn add_2d_0_to_2_iadd_scalar(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    let n = black_box(0);
+    bench.iter(|| {
+        a.iadd_scalar(&n);
+    });
+}
+
 #[bench]
 fn add_2d_transposed(bench: &mut test::Bencher)
 {
