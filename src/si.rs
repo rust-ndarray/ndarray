@@ -5,7 +5,7 @@ use super::{Ixs};
 // [0,:] -- first row of matrix
 // [:,0] -- first column of matrix
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, PartialEq, Eq, Hash, Debug)]
 /// A slice, a description of a range of an array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
@@ -63,6 +63,11 @@ impl Si {
     pub fn step(self, step: Ixs) -> Self {
         Si(self.0, self.1, self.2 * step)
     }
+}
+
+impl Clone for Si {
+    #[inline]
+    fn clone(&self) -> Self { *self }
 }
 
 /// Slice value for the full range of an axis.

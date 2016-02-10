@@ -128,8 +128,8 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D) -> Optio
 ///
 /// `unsafe` because of the assumptions in the default methods.
 ///
-/// ***Don't implement this trait, it's internal to the crate and will
-/// evolve at will.***
+/// ***Don't implement or call methods in this trait, its interface is internal
+/// to the crate and will evolve at will.***
 pub unsafe trait Dimension : Clone + Eq {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
@@ -146,23 +146,28 @@ pub unsafe trait Dimension : Clone + Eq {
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
     type SliceArg: ?Sized + AsRef<[Si]>;
+    #[doc(hidden)]
     fn ndim(&self) -> usize;
+    #[doc(hidden)]
     fn slice(&self) -> &[Ix] {
         unsafe {
             slice::from_raw_parts(self as *const _ as *const Ix, self.ndim())
         }
     }
 
+    #[doc(hidden)]
     fn slice_mut(&mut self) -> &mut [Ix] {
         unsafe {
             slice::from_raw_parts_mut(self as *mut _ as *mut Ix, self.ndim())
         }
     }
 
+    #[doc(hidden)]
     fn size(&self) -> usize {
         self.slice().iter().fold(1, |s, &a| s * a as usize)
     }
 
+    #[doc(hidden)]
     /// Compute the size while checking for overflow
     fn size_checked(&self) -> Option<usize> {
         self.slice().iter().fold(Some(1), |s, &a| {
@@ -170,6 +175,7 @@ pub unsafe trait Dimension : Clone + Eq {
         })
     }
 
+    #[doc(hidden)]
     fn default_strides(&self) -> Self {
         // Compute default array strides
         // Shape (a, b, c) => Give strides (b * c, c, 1)
@@ -190,6 +196,7 @@ pub unsafe trait Dimension : Clone + Eq {
         strides
     }
 
+    #[doc(hidden)]
     fn fortran_strides(&self) -> Self {
         // Compute fortran array strides
         // Shape (a, b, c) => Give strides (1, a, a * b)
@@ -210,9 +217,9 @@ pub unsafe trait Dimension : Clone + Eq {
         strides
     }
 
+    #[doc(hidden)]
     #[inline]
-    fn first_index(&self) -> Option<Self>
-    {
+    fn first_index(&self) -> Option<Self> {
         for ax in self.slice().iter() {
             if *ax == 0 {
                 return None
@@ -225,6 +232,7 @@ pub unsafe trait Dimension : Clone + Eq {
         Some(index)
     }
 
+    #[doc(hidden)]
     /// Iteration -- Use self as size, and return next index after `index`
     /// or None if there are no more.
     // FIXME: use &Self for index or even &mut?
@@ -247,6 +255,7 @@ pub unsafe trait Dimension : Clone + Eq {
         } else { None }
     }
 
+    #[doc(hidden)]
     /// Return stride offset for index.
     fn stride_offset(index: &Self, strides: &Self) -> isize
     {
@@ -257,6 +266,7 @@ pub unsafe trait Dimension : Clone + Eq {
         offset
     }
 
+    #[doc(hidden)]
     /// Return stride offset for this dimension and index.
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
     {
@@ -273,6 +283,7 @@ pub unsafe trait Dimension : Clone + Eq {
         Some(offset)
     }
 
+    #[doc(hidden)]
     /// Modify dimension, strides and return data pointer offset
     ///
     /// **Panics** if `slices` does not correspond to the number of axes,

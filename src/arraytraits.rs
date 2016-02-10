@@ -152,8 +152,18 @@ impl<'a, S, D> hash::Hash for ArrayBase<S, D>
     fn hash<H: hash::Hasher>(&self, state: &mut H)
     {
         self.shape().hash(state);
-        for elt in self.iter() {
-            elt.hash(state)
+        if let Some(self_s) = self.as_slice() {
+            hash::Hash::hash_slice(self_s, state);
+        } else {
+            for row in self.inner_iter() {
+                if let Some(row_s) = row.as_slice() {
+                    hash::Hash::hash_slice(row_s, state);
+                } else {
+                    for elt in row {
+                        elt.hash(state)
+                    }
+                }
+            }
         }
     }
 }
