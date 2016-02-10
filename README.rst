@@ -79,6 +79,13 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- master
+
+  - Improve arithmetic operations where the RHS is a broadcast 0-dimensional
+    array.
+  - Add read-only and read-write array views to the ``rblas`` integration.
+    Added methods ``AsBlas::{blas_view_checked, blas_view_mut_checked, bv, bvm}``.
+
 - 0.4.0-alpha.2
 
   - Add ``ArrayBase::reversed_axes`` which transposes an array.
