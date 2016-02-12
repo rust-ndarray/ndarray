@@ -79,12 +79,13 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- master
+- 0.4.0-alpha.3
 
   - Improve arithmetic operations where the RHS is a broadcast 0-dimensional
     array.
   - Add read-only and read-write array views to the ``rblas`` integration.
     Added methods ``AsBlas::{blas_view_checked, blas_view_mut_checked, bv, bvm}``.
+  - Use hash_slice in ``Hash`` impl for arrays.
 
 - 0.4.0-alpha.2
 
