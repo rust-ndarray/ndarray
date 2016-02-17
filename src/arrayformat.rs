@@ -6,7 +6,8 @@ use super::{
 };
 
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
-                            mut format: F) -> fmt::Result
+                            mut format: F)
+    -> fmt::Result
     where F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
           D: Dimension,
           S: Data<Elem=A>,
@@ -31,10 +32,11 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
     for (index, elt) in view.indexed_iter() {
         let take_n = if ndim == 0 { 1 } else { ndim - 1 };
         let mut update_index = false;
-        for (i, (a, b)) in index.slice().iter().take(take_n)
-                        .zip(last_index.slice().iter())
-                        .enumerate()
-        {
+        for (i, (a, b)) in index.slice()
+                                .iter()
+                                .take(take_n)
+                                .zip(last_index.slice().iter())
+                                .enumerate() {
             if a != b {
                 // New row.
                 // # of ['s needed

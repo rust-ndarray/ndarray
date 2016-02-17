@@ -6,15 +6,13 @@ use stride_error::StrideError;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
-pub fn stride_offset(n: Ix, stride: Ix) -> isize
-{
+pub fn stride_offset(n: Ix, stride: Ix) -> isize {
     (n as isize) * ((stride as Ixs) as isize)
 }
 
 /// Check whether `stride` is strictly positive
 #[inline]
-fn stride_is_positive(stride: Ix) -> bool
-{
+fn stride_is_positive(stride: Ix) -> bool {
     (stride as Ixs) > 0
 }
 
@@ -22,8 +20,7 @@ fn stride_is_positive(stride: Ix) -> bool
 ///
 /// Assumes that no stride value appears twice. This cannot yield the correct
 /// result the strides are not positive.
-fn fastest_varying_order<D: Dimension>(strides: &D) -> D
-{
+fn fastest_varying_order<D: Dimension>(strides: &D) -> D {
     let mut sorted = strides.clone();
     sorted.slice_mut().sort();
     let mut res = strides.clone();
@@ -44,8 +41,7 @@ fn fastest_varying_order<D: Dimension>(strides: &D) -> D
 /// preceding strides multiplied by their corresponding dimensions.
 ///
 /// The current implementation assumes strides to be positive
-pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
-{
+pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
     let order = fastest_varying_order(strides);
 
     let mut prev_offset = 1;
@@ -93,8 +89,7 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
             return Err(StrideError::OutOfBounds);
         }
         Ok(())
-    }
-    else {
+    } else {
         Err(StrideError::Unsupported)
     }
 }
@@ -103,20 +98,20 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
 ///
 /// Return None if the indices are out of bounds, or the calculation would wrap
 /// around.
-fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D) -> Option<isize>
-    where D: Dimension,
+fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
+    -> Option<isize>
+    where D: Dimension
 {
     let mut offset = 0;
-    for ((&d, &i), &s) in zipsl(zipsl(dim.slice(), index.slice()), strides.slice())
-    {
+    for ((&d, &i), &s) in zipsl(zipsl(dim.slice(), index.slice()), strides.slice()) {
         if i >= d {
             return None;
         }
 
         if let Some(offset_) = (i as isize)
-            .checked_mul((s as Ixs) as isize)
-            .and_then(|x| x.checked_add(offset)) {
-                offset = offset_;
+                                   .checked_mul((s as Ixs) as isize)
+                                   .and_then(|x| x.checked_add(offset)) {
+            offset = offset_;
         } else {
             return None;
         }
@@ -170,9 +165,7 @@ pub unsafe trait Dimension : Clone + Eq {
     #[doc(hidden)]
     /// Compute the size while checking for overflow
     fn size_checked(&self) -> Option<usize> {
-        self.slice().iter().fold(Some(1), |s, &a| {
-            s.and_then(|s_| s_.checked_mul(a))
-        })
+        self.slice().iter().fold(Some(1), |s, &a| s.and_then(|s_| s_.checked_mul(a)))
     }
 
     #[doc(hidden)]
@@ -222,7 +215,7 @@ pub unsafe trait Dimension : Clone + Eq {
     fn first_index(&self) -> Option<Self> {
         for ax in self.slice().iter() {
             if *ax == 0 {
-                return None
+                return None;
             }
         }
         let mut index = self.clone();
@@ -240,8 +233,7 @@ pub unsafe trait Dimension : Clone + Eq {
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut index = index;
         let mut done = false;
-        for (&dim, ix) in zipsl(self.slice(), index.slice_mut()).rev()
-        {
+        for (&dim, ix) in zipsl(self.slice(), index.slice_mut()).rev() {
             *ix += 1;
             if *ix == dim {
                 *ix = 0;
@@ -252,13 +244,14 @@ pub unsafe trait Dimension : Clone + Eq {
         }
         if done {
             Some(index)
-        } else { None }
+        } else {
+            None
+        }
     }
 
     #[doc(hidden)]
     /// Return stride offset for index.
-    fn stride_offset(index: &Self, strides: &Self) -> isize
-    {
+    fn stride_offset(index: &Self, strides: &Self) -> isize {
         let mut offset = 0;
         for (&i, &s) in zipsl(index.slice(), strides.slice()) {
             offset += stride_offset(i, s);
@@ -268,13 +261,10 @@ pub unsafe trait Dimension : Clone + Eq {
 
     #[doc(hidden)]
     /// Return stride offset for this dimension and index.
-    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
-    {
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
         let mut offset = 0;
-        for ((&d, &i), &s) in zipsl(zipsl(self.slice(),
-                                          index.slice()),
-                                    strides.slice())
-        {
+        for ((&d, &i), &s) in zipsl(zipsl(self.slice(), index.slice()),
+                                    strides.slice()) {
             if i >= d {
                 return None;
             }
@@ -288,15 +278,12 @@ pub unsafe trait Dimension : Clone + Eq {
     ///
     /// **Panics** if `slices` does not correspond to the number of axes,
     /// if any stride is 0, or if any index is out of bounds.
-    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &Self::SliceArg) -> isize
-    {
+    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &Self::SliceArg) -> isize {
         let slices = slices.as_ref();
         let mut offset = 0;
         assert!(slices.len() == dim.slice().len());
-        for ((dr, sr), &slc) in zipsl(zipsl(dim.slice_mut(),
-                                            strides.slice_mut()),
-                                      slices)
-        {
+        for ((dr, sr), &slc) in zipsl(zipsl(dim.slice_mut(), strides.slice_mut()),
+                                      slices) {
             let m = *dr;
             let mi = m as Ixs;
             let Si(b1, opt_e1, s1) = slc;
@@ -343,7 +330,9 @@ pub unsafe trait Dimension : Clone + Eq {
 fn abs_index(len: Ixs, index: Ixs) -> Ix {
     if index < 0 {
         (len + index) as Ix
-    } else { index as Ix }
+    } else {
+        index as Ix
+    }
 }
 
 /// Collapse axis `axis` and shift so that only subarray `index` is
@@ -352,8 +341,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 /// **Panics** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
 pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
-                               axis: usize, index: Ix)
-{
+                               axis: usize, index: Ix) {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
     assert!(index < dim);
@@ -390,27 +378,29 @@ unsafe impl Dimension for Ix {
     fn first_index(&self) -> Option<Ix> {
         if *self != 0 {
             Some(0)
-        } else { None }
+        } else {
+            None
+        }
     }
     #[inline]
     fn next_for(&self, mut index: Ix) -> Option<Ix> {
         index += 1;
         if index < *self {
             Some(index)
-        } else { None }
+        } else {
+            None
+        }
     }
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &Ix, stride: &Ix) -> isize
-    {
+    fn stride_offset(index: &Ix, stride: &Ix) -> isize {
         stride_offset(*index, *stride)
     }
 
     /// Return stride offset for this dimension and index.
     #[inline]
-    fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<isize>
-    {
+    fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<isize> {
         if *index < *self {
             Some(stride_offset(*index, *stride))
         } else {
@@ -445,7 +435,9 @@ unsafe impl Dimension for (Ix, Ix) {
         let (m, n) = *self;
         if m != 0 && n != 0 {
             Some((0, 0))
-        } else { None }
+        } else {
+            None
+        }
     }
     #[inline]
     fn next_for(&self, index: (Ix, Ix)) -> Option<(Ix, Ix)> {
@@ -464,8 +456,7 @@ unsafe impl Dimension for (Ix, Ix) {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &(Ix, Ix), strides: &(Ix, Ix)) -> isize
-    {
+    fn stride_offset(index: &(Ix, Ix), strides: &(Ix, Ix)) -> isize {
         let (i, j) = *index;
         let (s, t) = *strides;
         stride_offset(i, s) + stride_offset(j, t)
@@ -513,8 +504,7 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &(Ix, Ix, Ix), strides: &(Ix, Ix, Ix)) -> isize
-    {
+    fn stride_offset(index: &(Ix, Ix, Ix), strides: &(Ix, Ix, Ix)) -> isize {
         let (i, j, k) = *index;
         let (s, t, u) = *strides;
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
@@ -596,11 +586,9 @@ macro_rules! impl_shrink_recursive(
 // 12 is the maximum number for having the Eq trait from libstd
 impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
 
-impl RemoveAxis for Vec<Ix>
-{
+impl RemoveAxis for Vec<Ix> {
     type Smaller = Vec<Ix>;
-    fn remove_axis(&self, axis: usize) -> Vec<Ix>
-    {
+    fn remove_axis(&self, axis: usize) -> Vec<Ix> {
         let mut res = self.clone();
         res.remove(axis);
         res
@@ -626,7 +614,9 @@ pub unsafe trait NdIndex {
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;
 }
 
-unsafe impl<D> NdIndex for D where D: Dimension {
+unsafe impl<D> NdIndex for D
+    where D: Dimension
+{
     type Dim = D;
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, self)
@@ -680,9 +670,7 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
     type Dim = Vec<Ix>;
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         let mut offset = 0;
-        for ((&d, &i), &s) in zipsl(zipsl(&dim[..], &self[..]),
-                                    strides.slice())
-        {
+        for ((&d, &i), &s) in zipsl(zipsl(&dim[..], &self[..]), strides.slice()) {
             if i >= d {
                 return None;
             }
@@ -694,7 +682,7 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
 
 #[cfg(test)]
 mod test {
-    use super::{Dimension};
+    use super::Dimension;
     use stride_error::StrideError;
 
     #[test]
@@ -705,8 +693,7 @@ mod test {
     }
 
     #[test]
-    fn slice_indexing_uncommon_strides()
-    {
+    fn slice_indexing_uncommon_strides() {
         let v: Vec<_> = (0..12).collect();
         let dim = (2, 3, 2);
         let strides = (1, 2, 6);
@@ -718,8 +705,7 @@ mod test {
     }
 
     #[test]
-    fn overlapping_strides_dim()
-    {
+    fn overlapping_strides_dim() {
         let dim = (2, 3, 2);
         let strides = (5, 2, 1);
         assert!(super::dim_stride_overlap(&dim, &strides));

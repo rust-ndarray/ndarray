@@ -9,11 +9,9 @@ pub struct Indexes<D> {
     index: Option<D>,
 }
 
-impl<D: Dimension> Indexes<D>
-{
+impl<D: Dimension> Indexes<D> {
     /// Create an iterator over the array shape `dim`.
-    pub fn new(dim: D) -> Indexes<D>
-    {
+    pub fn new(dim: D) -> Indexes<D> {
         Indexes {
             index: dim.first_index(),
             dim: dim,
@@ -39,9 +37,12 @@ impl<D> Iterator for Indexes<D>
         let l = match self.index {
             None => 0,
             Some(ref ix) => {
-                let gone = self.dim.default_strides().slice().iter()
-                            .zip(ix.slice().iter())
-                                 .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                let gone = self.dim
+                               .default_strides()
+                               .slice()
+                               .iter()
+                               .zip(ix.slice().iter())
+                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
                 self.dim.size() - gone
             }
         };
@@ -49,4 +50,6 @@ impl<D> Iterator for Indexes<D>
     }
 }
 
-impl<D> ExactSizeIterator for Indexes<D> where D: Dimension { }
+impl<D> ExactSizeIterator for Indexes<D>
+    where D: Dimension
+{}

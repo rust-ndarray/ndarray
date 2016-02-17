@@ -111,5 +111,5 @@ pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
         }
     }
 
-    return true;
+    true
 }

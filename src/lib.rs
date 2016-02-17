@@ -74,6 +74,7 @@ use std::slice::{self, Iter, IterMut};
 use std::marker::PhantomData;
 
 use itertools::ZipSlices;
+use itertools::free::enumerate;
 
 pub use dimension::{
     Dimension,
@@ -339,7 +340,9 @@ pub type Ixs = isize;
 /// );
 /// ```
 ///
-pub struct ArrayBase<S, D> where S: Data {
+pub struct ArrayBase<S, D>
+    where S: Data
+{
     /// Rc data when used as view, Uniquely held data when being mutated
     data: S,
     /// A pointer into the buffer held by data, may point anywhere
@@ -366,11 +369,14 @@ pub unsafe trait DataMut : Data {
     fn slice_mut(&mut self) -> &mut [Self::Elem];
     #[inline]
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
-        where Self: Sized, D: Dimension
-    {
-    }
+        where Self: Sized,
+              D: Dimension
+    { }
+
     #[inline]
-    fn is_unique(&mut self) -> bool { true }
+    fn is_unique(&mut self) -> bool {
+        true
+    }
 }
 
 /// Clone an Array’s storage.
@@ -381,28 +387,39 @@ pub unsafe trait DataClone : Data {
 
 unsafe impl<A> Data for Rc<Vec<A>> {
     type Elem = A;
-    fn slice(&self) -> &[A] { self }
+    fn slice(&self) -> &[A] {
+        self
+    }
 }
 
 // NOTE: Copy on write
-unsafe impl<A> DataMut for Rc<Vec<A>> where A: Clone {
-    fn slice_mut(&mut self) -> &mut [A] { &mut Rc::make_mut(self)[..] }
+unsafe impl<A> DataMut for Rc<Vec<A>>
+    where A: Clone
+{
+    fn slice_mut(&mut self) -> &mut [A] {
+        &mut Rc::make_mut(self)[..]
+    }
 
     fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
-        where Self: Sized, D: Dimension
+        where Self: Sized,
+              D: Dimension
     {
         if Rc::get_mut(&mut self_.data).is_some() {
-            return
+            return;
         }
         if self_.dim.size() <= self_.data.len() / 2 {
+            // Create a new vec if the current view is less than half of
+            // backing data.
             unsafe {
                 *self_ = Array::from_vec_dim_unchecked(self_.dim.clone(),
-                                            self_.iter().map(|x| x.clone()).collect());
+                                                       self_.iter()
+                                                            .cloned()
+                                                            .collect());
             }
             return;
         }
-        let our_off = (self_.ptr as isize - self_.data.as_ptr() as isize)
-            / mem::size_of::<A>() as isize;
+        let our_off = (self_.ptr as isize - self_.data.as_ptr() as isize) /
+                      mem::size_of::<A>() as isize;
         let rvec = Rc::make_mut(&mut self_.data);
         unsafe {
             self_.ptr = rvec.as_mut_ptr().offset(our_off);
@@ -415,9 +432,7 @@ unsafe impl<A> DataMut for Rc<Vec<A>> where A: Clone {
 }
 
 unsafe impl<A> DataClone for Rc<Vec<A>> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
-        -> (Self, *mut Self::Elem)
-    {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         // pointer is preserved
         (self.clone(), ptr)
     }
@@ -425,20 +440,24 @@ unsafe impl<A> DataClone for Rc<Vec<A>> {
 
 unsafe impl<A> Data for Vec<A> {
     type Elem = A;
-    fn slice(&self) -> &[A] { self }
+    fn slice(&self) -> &[A] {
+        self
+    }
 }
 
 unsafe impl<A> DataMut for Vec<A> {
-    fn slice_mut(&mut self) -> &mut [A] { self }
+    fn slice_mut(&mut self) -> &mut [A] {
+        self
+    }
 }
 
-unsafe impl<A> DataClone for Vec<A> where A: Clone {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
-        -> (Self, *mut Self::Elem)
-    {
+unsafe impl<A> DataClone for Vec<A>
+    where A: Clone
+{
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         let mut u = self.clone();
-        let our_off = (self.as_ptr() as isize - ptr as isize)
-            / mem::size_of::<A>() as isize;
+        let our_off = (self.as_ptr() as isize - ptr as isize) /
+                      mem::size_of::<A>() as isize;
         let new_ptr = u.as_mut_ptr().offset(our_off);
         (u, new_ptr)
     }
@@ -446,24 +465,28 @@ unsafe impl<A> DataClone for Vec<A> where A: Clone {
 
 unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     type Elem = A;
-    fn slice(&self) -> &[A] { &[] }
+    fn slice(&self) -> &[A] {
+        &[]
+    }
 }
 
 unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem)
-        -> (Self, *mut Self::Elem)
-    {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         (*self, ptr)
     }
 }
 
 unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     type Elem = A;
-    fn slice(&self) -> &[A] { &[] }
+    fn slice(&self) -> &[A] {
+        &[]
+    }
 }
 
 unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
-    fn slice_mut(&mut self) -> &mut [A] { &mut [] }
+    fn slice_mut(&mut self) -> &mut [A] {
+        &mut []
+    }
 }
 
 /// Array representation that is a unique or shared owner of its data.
@@ -475,17 +498,25 @@ pub unsafe trait DataOwned : Data {
 /// Array representation that is a lightweight view.
 pub unsafe trait DataShared : Clone + DataClone { }
 
-unsafe impl<A> DataShared for Rc<Vec<A>> { }
-unsafe impl<'a, A> DataShared for ViewRepr<&'a A> { }
+unsafe impl<A> DataShared for Rc<Vec<A>> {}
+unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
 
 unsafe impl<A> DataOwned for Vec<A> {
-    fn new(elements: Vec<A>) -> Self { elements }
-    fn into_shared(self) -> Rc<Vec<A>> { Rc::new(self) }
+    fn new(elements: Vec<A>) -> Self {
+        elements
+    }
+    fn into_shared(self) -> Rc<Vec<A>> {
+        Rc::new(self)
+    }
 }
 
 unsafe impl<A> DataOwned for Rc<Vec<A>> {
-    fn new(elements: Vec<A>) -> Self { Rc::new(elements) }
-    fn into_shared(self) -> Rc<Vec<A>> { self }
+    fn new(elements: Vec<A>) -> Self {
+        Rc::new(elements)
+    }
+    fn into_shared(self) -> Rc<Vec<A>> {
+        self
+    }
 }
 
 
@@ -515,12 +546,11 @@ pub struct ViewRepr<A> {
 impl<A> ViewRepr<A> {
     #[inline(always)]
     fn new() -> Self {
-        ViewRepr { life: PhantomData, }
+        ViewRepr { life: PhantomData }
     }
 }
 
-impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
-{
+impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {
         unsafe {
             let (data, ptr) = self.data.clone_with_ptr(self.ptr);
@@ -534,17 +564,15 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D>
     }
 }
 
-impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> { }
+impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> {}
 
 /// Constructor methods for one-dimensional arrays.
 impl<S> ArrayBase<S, Ix>
-    where S: DataOwned,
+    where S: DataOwned
 {
     /// Create a one-dimensional array from a vector (no allocation needed).
     pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
-        unsafe {
-            Self::from_vec_dim_unchecked(v.len() as Ix, v)
-        }
+        unsafe { Self::from_vec_dim_unchecked(v.len() as Ix, v) }
     }
 
     /// Create a one-dimensional array from an iterable.
@@ -603,16 +631,15 @@ impl<S, A, D> ArrayBase<S, D>
     ///                  [1., 1.]]])
     /// );
     /// ```
-    pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
+    pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D>
+        where A: Clone
     {
         // Note: We don't need to check the case of a size between
         // isize::MAX -> usize::MAX; in this case, the vec constructor itself
         // panics.
         let size = dim.size_checked().expect("Shape too large: overflow in size");
         let v = vec![elem; size];
-        unsafe {
-            Self::from_vec_dim_unchecked(dim, v)
-        }
+        unsafe { Self::from_vec_dim_unchecked(dim, v) }
     }
 
     /// Create an array with copies of `elem`, dimension `dim` and fortran
@@ -634,19 +661,19 @@ impl<S, A, D> ArrayBase<S, D>
     /// );
     /// assert!(a.strides() == &[1, 2, 4]);
     /// ```
-    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D> where A: Clone
+    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>
+        where A: Clone
     {
         let size = dim.size_checked().expect("Shape too large: overflow in size");
         let v = vec![elem; size];
-        unsafe {
-            Self::from_vec_dim_unchecked_f(dim, v)
-        }
+        unsafe { Self::from_vec_dim_unchecked_f(dim, v) }
     }
 
     /// Create an array with zeros, dimension `dim`.
     ///
     /// **Panics** if the number of elements in `dim` would overflow usize.
-    pub fn zeros(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
+    pub fn zeros(dim: D) -> ArrayBase<S, D>
+        where A: Clone + libnum::Zero
     {
         Self::from_elem(dim, libnum::zero())
     }
@@ -654,7 +681,8 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array with zeros, dimension `dim` and fortran memory order.
     ///
     /// **Panics** if the number of elements in `dim` would overflow usize.
-    pub fn zeros_f(dim: D) -> ArrayBase<S, D> where A: Clone + libnum::Zero
+    pub fn zeros_f(dim: D) -> ArrayBase<S, D>
+        where A: Clone + libnum::Zero
     {
         Self::from_elem_f(dim, libnum::zero())
     }
@@ -666,36 +694,30 @@ impl<S, A, D> ArrayBase<S, D>
         where A: Default
     {
         let v = (0..dim.size()).map(|_| A::default()).collect();
-        unsafe {
-            Self::from_vec_dim_unchecked(dim, v)
-        }
+        unsafe { Self::from_vec_dim_unchecked(dim, v) }
     }
 
     /// Create an array from a vector (with no allocation needed).
     ///
     /// **Errors** if `dim` does not correspond to the number of elements
     /// in `v`.
-    pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
-    {
+    pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
         if dim.size_checked() != Some(v.len()) {
             return Err(shape_error::incompatible_shapes(&v.len(), &dim));
         }
-        unsafe {
-            Ok(Self::from_vec_dim_unchecked(dim, v))
-        }
+        unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
     }
 
     /// Create an array from a vector (with no allocation needed).
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim_unchecked(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
-    {
+    pub unsafe fn from_vec_dim_unchecked(dim: D, mut v: Vec<A>) -> ArrayBase<S, D> {
         debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
             strides: dim.default_strides(),
-            dim: dim
+            dim: dim,
         }
     }
 
@@ -703,14 +725,13 @@ impl<S, A, D> ArrayBase<S, D>
     /// using fortran memory order to interpret the data.
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim_unchecked_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D>
-    {
+    pub unsafe fn from_vec_dim_unchecked_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D> {
         debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
             strides: dim.fortran_strides(),
-            dim: dim
+            dim: dim,
         }
     }
 
@@ -828,12 +849,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
 
     fn into_iter_(self) -> Elements<'a, A, D> {
         Elements {
-            inner:
-            if let Some(slc) = self.into_slice() {
+            inner: if let Some(slc) = self.into_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
                 ElementsRepr::Counted(self.into_elements_base())
-            }
+            },
         }
     }
 
@@ -953,8 +973,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 {
     /// Return the total number of elements in the Array.
-    pub fn len(&self) -> usize
-    {
+    pub fn len(&self) -> usize {
         self.dim.size()
     }
 
@@ -1080,8 +1099,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
-    pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D>
-    {
+    pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D> {
         let mut arr = self.view();
         arr.islice(indexes);
         arr
@@ -1111,8 +1129,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
-    pub fn islice(&mut self, indexes: &D::SliceArg)
-    {
+    pub fn islice(&mut self, indexes: &D::SliceArg) {
         let offset = Dimension::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
             self.ptr = self.ptr.offset(offset);
@@ -1143,9 +1160,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let ptr = self.ptr;
         index.index_checked(&self.dim, &self.strides)
-            .map(move |offset| unsafe {
-                &*ptr.offset(offset)
-            })
+             .map(move |offset| unsafe { &*ptr.offset(offset) })
     }
 
     /// Return a mutable reference to the element at `index`, or return `None`
@@ -1157,9 +1172,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.ensure_unique();
         let ptr = self.ptr;
         index.index_checked(&self.dim, &self.strides)
-            .map(move |offset| unsafe {
-                &mut *ptr.offset(offset)
-            })
+             .map(move |offset| unsafe { &mut *ptr.offset(offset) })
     }
 
     /// Perform *unchecked* array indexing.
@@ -1169,7 +1182,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
     pub unsafe fn uget(&self, index: D) -> &A {
-        debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
+        debug_assert!(self.dim
+                          .stride_offset_checked(&self.strides, &index)
+                          .is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
     }
@@ -1185,7 +1200,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         debug_assert!(self.data.is_unique());
-        debug_assert!(self.dim.stride_offset_checked(&self.strides, &index).is_some());
+        debug_assert!(self.dim
+                          .stride_offset_checked(&self.strides, &index)
+                          .is_some());
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
     }
@@ -1211,8 +1228,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     a.subview(1, 1) == arr1(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn subview(&self, axis: usize, index: Ix) -> ArrayView<A, <D as RemoveAxis>::Smaller>
-        where D: RemoveAxis,
+    pub fn subview(&self, axis: usize, index: Ix)
+        -> ArrayView<A, <D as RemoveAxis>::Smaller>
+        where D: RemoveAxis
     {
         self.view().into_subview(axis, index)
     }
@@ -1247,8 +1265,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: usize, index: Ix)
-    {
+    pub fn isubview(&mut self, axis: usize, index: Ix) {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
 
@@ -1256,8 +1273,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// with that axis removed.
     ///
     /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: usize, index: Ix) -> ArrayBase<S, <D as RemoveAxis>::Smaller>
-        where D: RemoveAxis,
+    pub fn into_subview(mut self, axis: usize, index: Ix)
+        -> ArrayBase<S, <D as RemoveAxis>::Smaller>
+        where D: RemoveAxis
     {
         self.isubview(axis, index);
         // don't use reshape -- we always know it will fit the size,
@@ -1395,8 +1413,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// // however the last element is a 2 × 1 × 2 view since 7 % 2 == 1
     /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]], [[26, 27]]]));
     /// ```
-    pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> AxisChunksIter<A, D>
-    {
+    pub fn axis_chunks_iter(&self, axis: usize, size: usize) -> AxisChunksIter<A, D> {
         iterators::new_chunk_iter(self.view(), axis, size)
     }
 
@@ -1408,28 +1425,26 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` is out of bounds.
     pub fn axis_chunks_iter_mut(&mut self, axis: usize, size: usize)
         -> AxisChunksIterMut<A, D>
-        where S: DataMut,
+        where S: DataMut
     {
         iterators::new_chunk_iter_mut(self.view_mut(), axis, size)
     }
 
     // Return (length, stride) for diagonal
-    fn diag_params(&self) -> (Ix, Ixs)
-    {
+    fn diag_params(&self) -> (Ix, Ixs) {
         /* empty shape has len 1 */
-        let len = self.dim.slice().iter().map(|x| *x).min().unwrap_or(1);
-        let stride = self.strides.slice().iter()
-                        .map(|x| *x as Ixs)
-                        .fold(0, |sum, s| sum + s);
-        return (len, stride)
+        let len = self.dim.slice().iter().cloned().min().unwrap_or(1);
+        let stride = self.strides()
+                         .iter()
+                         .fold(0, |sum, s| sum + s);
+        (len, stride)
     }
 
     /// Return an view of the diagonal elements of the array.
     ///
     /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
     /// *(1, 1, ..., 1)* etc as long as all axes have elements.
-    pub fn diag(&self) -> ArrayView<A, Ix>
-    {
+    pub fn diag(&self) -> ArrayView<A, Ix> {
         self.view().into_diag()
     }
 
@@ -1441,8 +1456,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return the diagonal as a one-dimensional array.
-    pub fn into_diag(self) -> ArrayBase<S, Ix>
-    {
+    pub fn into_diag(self) -> ArrayBase<S, Ix> {
         let (len, stride) = self.diag_params();
         ArrayBase {
             data: self.data,
@@ -1483,8 +1497,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Return `false` otherwise, i.e the array is possibly not
     /// contiguous in memory, it has custom strides, etc.
-    pub fn is_standard_layout(&self) -> bool
-    {
+    pub fn is_standard_layout(&self) -> bool {
         let defaults = self.dim.default_strides();
         if self.strides == defaults {
             return true;
@@ -1562,7 +1575,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         if shape.size_checked() != Some(self.dim.size()) {
             panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
-                   self.dim.slice(), shape.slice())
+                   self.dim.slice(),
+                   shape.slice())
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -1646,8 +1660,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     == aview2(&[[1., 0.]; 10])
     /// );
     /// ```
-    pub fn broadcast<E>(&self, dim: E)
-        -> Option<ArrayView<A, E>>
+    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<A, E>>
         where E: Dimension
     {
         /// Return new stride when trying to grow `from` into shape `to`
@@ -1663,7 +1676,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             // begin at the back (the least significant dimension)
             // size of the axis has to either agree or `from` has to be 1
             if to.ndim() < from.ndim() {
-                return None
+                return None;
             }
 
             {
@@ -1693,14 +1706,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
 
         // Note: zero strides are safe precisely because we return an read-only view
-        let broadcast_strides =
-            match upcast(&dim, &self.dim, &self.strides) {
-                Some(st) => st,
-                None => return None,
-            };
-        unsafe {
-            Some(ArrayView::new_(self.ptr, dim, broadcast_strides))
-        }
+        let broadcast_strides = match upcast(&dim, &self.dim, &self.strides) {
+            Some(st) => st,
+            None => return None,
+        };
+        unsafe { Some(ArrayView::new_(self.ptr, dim, broadcast_strides)) }
     }
 
     #[inline]
@@ -1739,8 +1749,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     a == arr2(&[[1.], [2.], [3.]])
     /// );
     /// ```
-    pub fn swap_axes(&mut self, ax: usize, bx: usize)
-    {
+    pub fn swap_axes(&mut self, ax: usize, bx: usize) {
         self.dim.slice_mut().swap(ax, bx);
         self.strides.slice_mut().swap(ax, bx);
     }
@@ -1988,16 +1997,13 @@ pub fn arr0<A>(x: A) -> Array<A, ()>
 }
 
 /// Return a one-dimensional array with elements from `xs`.
-pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix>
-{
+pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix> {
     Array::from_vec(xs.to_vec())
 }
 
 /// Return a zero-dimensional array view borrowing `x`.
 pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
-    unsafe {
-        ArrayView::new_(x, (), ())
-    }
+    unsafe { ArrayView::new_(x, (), ()) }
 }
 
 /// Return a one-dimensional array view with elements borrowing `xs`.
@@ -2051,16 +2057,16 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 /// }
 /// ```
 pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
-    unsafe {
-        ArrayViewMut::new_(xs.as_mut_ptr(), xs.len() as Ix, 1)
-    }
+    unsafe { ArrayViewMut::new_(xs.as_mut_ptr(), xs.len() as Ix, 1) }
 }
 
 /// Slice or fixed-size array used for array initialization
 pub unsafe trait Initializer {
     type Elem;
     fn as_init_slice(&self) -> &[Self::Elem];
-    fn is_fixed_size() -> bool { false }
+    fn is_fixed_size() -> bool {
+        false
+    }
 }
 
 /// Fixed-size array used for array initialization
@@ -2110,17 +2116,16 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: Initializer<Elem=A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
-{
+pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, Ix)> {
     // FIXME: Simplify this when V is fix size array
     let (m, n) = (xs.len() as Ix,
                   xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
-    for snd in xs.iter() {
+    for snd in xs {
         let snd = snd.as_init_slice();
-        assert!(<V as Initializer>::is_fixed_size() || snd.len() as Ix == n);
-        result.extend(snd.iter().map(|x| x.clone()))
+        assert!(V::is_fixed_size() || snd.len() as Ix == n);
+        result.extend(snd.iter().cloned());
     }
     unsafe {
         Array::from_vec_dim_unchecked(dim, result)
@@ -2155,13 +2160,13 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
     let o = thr.map_or(0, |v| v.len() as Ix);
     let dim = (m, n, o);
     let mut result = Vec::<A>::with_capacity(dim.size());
-    for snd in xs.iter() {
+    for snd in xs {
         let snd = snd.as_init_slice();
-        assert!(<V as Initializer>::is_fixed_size() || snd.len() as Ix == n);
+        assert!(V::is_fixed_size() || snd.len() as Ix == n);
         for thr in snd.iter() {
             let thr = thr.as_init_slice();
-            assert!(<U as Initializer>::is_fixed_size() || thr.len() as Ix == o);
-            result.extend(thr.iter().map(|x| x.clone()))
+            assert!(U::is_fixed_size() || thr.len() as Ix == o);
+            result.extend(thr.iter().cloned());
         }
     }
     unsafe {
@@ -2380,7 +2385,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         }
         let mut i = 0;
         let mut j = 0;
-        for rr in res_elems.iter_mut() {
+        for rr in &mut res_elems {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
                     move |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
@@ -2419,14 +2424,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         unsafe {
             res_elems.set_len(m as usize);
         }
-        let mut i = 0;
-        for rr in res_elems.iter_mut() {
+        for (i, rr) in enumerate(&mut res_elems) {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
                     move |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
                 );
             }
-            i += 1;
         }
         unsafe {
             ArrayBase::from_vec_dim_unchecked(m, res_elems)

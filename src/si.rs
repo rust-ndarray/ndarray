@@ -1,5 +1,5 @@
 use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
-use super::{Ixs};
+use super::Ixs;
 
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix
@@ -33,28 +33,32 @@ use super::{Ixs};
 /// [`S`]: constant.S.html
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
-impl From<Range<Ixs>> for Si
-{
+impl From<Range<Ixs>> for Si {
     #[inline]
-    fn from(r: Range<Ixs>) -> Si { Si(r.start, Some(r.end), 1) }
+    fn from(r: Range<Ixs>) -> Si {
+        Si(r.start, Some(r.end), 1)
+    }
 }
 
-impl From<RangeFrom<Ixs>> for Si
-{
+impl From<RangeFrom<Ixs>> for Si {
     #[inline]
-    fn from(r: RangeFrom<Ixs>) -> Si { Si(r.start, None, 1) }
+    fn from(r: RangeFrom<Ixs>) -> Si {
+        Si(r.start, None, 1)
+    }
 }
 
-impl From<RangeTo<Ixs>> for Si
-{
+impl From<RangeTo<Ixs>> for Si {
     #[inline]
-    fn from(r: RangeTo<Ixs>) -> Si { Si(0, Some(r.end), 1) }
+    fn from(r: RangeTo<Ixs>) -> Si {
+        Si(0, Some(r.end), 1)
+    }
 }
 
-impl From<RangeFull> for Si
-{
+impl From<RangeFull> for Si {
     #[inline]
-    fn from(_: RangeFull) -> Si { S }
+    fn from(_: RangeFull) -> Si {
+        S
+    }
 }
 
 
@@ -67,7 +71,9 @@ impl Si {
 
 impl Clone for Si {
     #[inline]
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 /// Slice value for the full range of an axis.

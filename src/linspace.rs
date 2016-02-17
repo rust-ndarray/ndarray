@@ -50,7 +50,9 @@ impl<F> DoubleEndedIterator for Linspace<F>
     }
 }
 
-impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator { }
+impl<F> ExactSizeIterator for Linspace<F>
+    where Linspace<F>: Iterator
+{}
 
 /// Return an iterator of evenly spaced floats.
 ///
@@ -61,11 +63,11 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator { }
 /// either `f32` or `f64`.
 #[inline]
 pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
-    where F: Float,
+    where F: Float
 {
     let step = if n > 1 {
         let nf: F = F::from(n).unwrap();
-        (b - a)/(nf - F::one())
+        (b - a) / (nf - F::one())
     } else {
         F::zero()
     };

@@ -65,10 +65,9 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
     where D: Dimension,
           S: Data,
           S2: Data<Elem = S::Elem>,
-          S::Elem: PartialEq,
+          S::Elem: PartialEq
 {
-    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
-    {
+    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool {
         if self.shape() != rhs.shape() {
             return false;
         }
@@ -111,19 +110,18 @@ impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
 
 impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
     where D: Dimension,
-          S: DataMut,
+          S: DataMut
 {
     type Item = &'a mut S::Elem;
     type IntoIter = ElementsMut<'a, S::Elem, D>;
 
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
     }
 }
 
-impl<'a, A, D> IntoIterator for ArrayView<'a, A,  D>
-    where D: Dimension,
+impl<'a, A, D> IntoIterator for ArrayView<'a, A, D>
+    where D: Dimension
 {
     type Item = &'a A;
     type IntoIter = Elements<'a, A, D>;
@@ -133,8 +131,8 @@ impl<'a, A, D> IntoIterator for ArrayView<'a, A,  D>
     }
 }
 
-impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A,  D>
-    where D: Dimension,
+impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A, D>
+    where D: Dimension
 {
     type Item = &'a mut A;
     type IntoIter = ElementsMut<'a, A, D>;
@@ -147,10 +145,9 @@ impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A,  D>
 impl<'a, S, D> hash::Hash for ArrayBase<S, D>
     where D: Dimension,
           S: Data,
-          S::Elem: hash::Hash,
+          S::Elem: hash::Hash
 {
-    fn hash<H: hash::Hasher>(&self, state: &mut H)
-    {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.shape().hash(state);
         if let Some(self_s) = self.as_slice() {
             hash::Hash::hash_slice(self_s, state);
@@ -191,26 +188,21 @@ static ARRAY_FORMAT_VERSION: u8 = 1u8;
 /// **Requires `feature = "rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
 impl<A, S, D> Encodable for ArrayBase<S, D>
-    where A: Encodable, D: Dimension + Encodable,
-          S: Data<Elem=A>,
+    where A: Encodable,
+          D: Dimension + Encodable,
+          S: Data<Elem = A>
 {
-    fn encode<E: Encoder>(&self, s: &mut E) -> Result<(), E::Error>
-    {
+    fn encode<E: Encoder>(&self, s: &mut E) -> Result<(), E::Error> {
         s.emit_struct("Array", 3, |e| {
-            try!(e.emit_struct_field("v", 0, |e| {
-                ARRAY_FORMAT_VERSION.encode(e)
-            }));
+            try!(e.emit_struct_field("v", 0, |e| ARRAY_FORMAT_VERSION.encode(e)));
             // FIXME: Write self.dim as a slice (self.shape)
             // The problem is decoding it.
-            try!(e.emit_struct_field("dim", 1,
-                                           |e| self.dim.encode(e)));
+            try!(e.emit_struct_field("dim", 1, |e| self.dim.encode(e)));
             try!(e.emit_struct_field("data", 2, |e| {
                 let sz = self.dim.size();
                 e.emit_seq(sz, |e| {
                     for (i, elt) in self.iter().enumerate() {
-                        try!(e.emit_seq_elt(i, |e| {
-                            elt.encode(e)
-                        }))
+                        try!(e.emit_seq_elt(i, |e| elt.encode(e)))
                     }
                     Ok(())
                 })
@@ -223,11 +215,11 @@ impl<A, S, D> Encodable for ArrayBase<S, D>
 /// **Requires `feature = "rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
 impl<A, S, D> Decodable for ArrayBase<S, D>
-    where A: Decodable, D: Dimension + Decodable,
-          S: DataOwned<Elem=A>,
+    where A: Decodable,
+          D: Dimension + Decodable,
+          S: DataOwned<Elem = A>
 {
-    fn decode<E: Decoder>(d: &mut E) -> Result<ArrayBase<S, D>, E::Error>
-    {
+    fn decode<E: Decoder>(d: &mut E) -> Result<ArrayBase<S, D>, E::Error> {
         d.read_struct("Array", 3, |d| {
             let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));
             if version > ARRAY_FORMAT_VERSION {
