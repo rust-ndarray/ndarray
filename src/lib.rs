@@ -74,6 +74,7 @@ use std::slice::{self, Iter, IterMut};
 use std::marker::PhantomData;
 
 use itertools::ZipSlices;
+use itertools::free::enumerate;
 
 pub use dimension::{
     Dimension,
@@ -395,9 +396,11 @@ unsafe impl<A> DataMut for Rc<Vec<A>> where A: Clone {
             return
         }
         if self_.dim.size() <= self_.data.len() / 2 {
+            // Create a new vec if the current view is less than half of
+            // backing data.
             unsafe {
                 *self_ = Array::from_vec_dim_unchecked(self_.dim.clone(),
-                                            self_.iter().map(|x| x.clone()).collect());
+                                            self_.iter().cloned().collect());
             }
             return;
         }
@@ -1417,11 +1420,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     fn diag_params(&self) -> (Ix, Ixs)
     {
         /* empty shape has len 1 */
-        let len = self.dim.slice().iter().map(|x| *x).min().unwrap_or(1);
-        let stride = self.strides.slice().iter()
-                        .map(|x| *x as Ixs)
+        let len = self.dim.slice().iter().cloned().min().unwrap_or(1);
+        let stride = self.strides().iter()
                         .fold(0, |sum, s| sum + s);
-        return (len, stride)
+        (len, stride)
     }
 
     /// Return an view of the diagonal elements of the array.
@@ -2117,10 +2119,10 @@ pub fn arr2<A: Clone, V: Initializer<Elem=A>>(xs: &[V]) -> Array<A, (Ix, Ix)>
                   xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
-    for snd in xs.iter() {
+    for snd in xs {
         let snd = snd.as_init_slice();
-        assert!(<V as Initializer>::is_fixed_size() || snd.len() as Ix == n);
-        result.extend(snd.iter().map(|x| x.clone()))
+        assert!(V::is_fixed_size() || snd.len() as Ix == n);
+        result.extend(snd.iter().cloned());
     }
     unsafe {
         Array::from_vec_dim_unchecked(dim, result)
@@ -2155,13 +2157,13 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
     let o = thr.map_or(0, |v| v.len() as Ix);
     let dim = (m, n, o);
     let mut result = Vec::<A>::with_capacity(dim.size());
-    for snd in xs.iter() {
+    for snd in xs {
         let snd = snd.as_init_slice();
-        assert!(<V as Initializer>::is_fixed_size() || snd.len() as Ix == n);
+        assert!(V::is_fixed_size() || snd.len() as Ix == n);
         for thr in snd.iter() {
             let thr = thr.as_init_slice();
-            assert!(<U as Initializer>::is_fixed_size() || thr.len() as Ix == o);
-            result.extend(thr.iter().map(|x| x.clone()))
+            assert!(U::is_fixed_size() || thr.len() as Ix == o);
+            result.extend(thr.iter().cloned());
         }
     }
     unsafe {
@@ -2380,7 +2382,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         }
         let mut i = 0;
         let mut j = 0;
-        for rr in res_elems.iter_mut() {
+        for rr in &mut res_elems {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
                     move |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
@@ -2419,14 +2421,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         unsafe {
             res_elems.set_len(m as usize);
         }
-        let mut i = 0;
-        for rr in res_elems.iter_mut() {
+        for (i, rr) in enumerate(&mut res_elems) {
             unsafe {
                 *rr = (0..a).fold(libnum::zero::<A>(),
                     move |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
                 );
             }
-            i += 1;
         }
         unsafe {
             ArrayBase::from_vec_dim_unchecked(m, res_elems)

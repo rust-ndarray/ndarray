@@ -95,7 +95,7 @@ impl<'a, A> Baseiter<'a, A, Ix>
     {
         let index = match self.index {
             None => return None,
-            Some(ref ix) => ix.clone(),
+            Some(ix) => ix,
         };
         self.dim -= 1;
         let offset = Dimension::stride_offset(&self.dim, &self.strides);
