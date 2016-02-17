@@ -58,10 +58,10 @@ fn $name<A, $($arg,)+ Data, Dim, Func>(a: &mut ArrayBase<Data, Dim>,
     }
 }
 
-define_zip!(zip_2, B);
+//define_zip!(zip_2, B);
 define_zip!(zip_3, B, C);
-define_zip!(zip_4, B, C, D);
-define_zip!(zip_5, B, C, D, E);
+//define_zip!(zip_4, B, C, D);
+//define_zip!(zip_5, B, C, D, E);
 
 
 fn main() {
