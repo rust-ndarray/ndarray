@@ -13,10 +13,8 @@ pub enum StrideError {
 impl Error for StrideError {
     fn description(&self) -> &str {
         match *self {
-            StrideError::OutOfBounds =>
-                "stride leads to out of bounds indexing",
-            StrideError::Unsupported =>
-                "stride leads to aliasing array elements",
+            StrideError::OutOfBounds => "stride leads to out of bounds indexing",
+            StrideError::Unsupported => "stride leads to aliasing array elements",
         }
     }
 }

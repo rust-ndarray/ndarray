@@ -15,5 +15,4 @@ impl<A: Clone + Zero + Add<Output=A> + Sub<Output=A> + One + Mul<Output=A>> Ring
 
 /// Trait union for a field.
 pub trait Field : Ring + Div<Output=Self> { }
-impl<A: Ring + Div<Output=A>> Field for A { }
-
+impl<A: Ring + Div<Output = A>> Field for A {}

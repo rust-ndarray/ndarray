@@ -90,8 +90,9 @@ impl<S, D> ArrayBase<S, D>
         let max = c_int::max_value();
         for (&dim, &stride) in zipsl(self.shape(), self.strides()) {
             if dim > max as Ix || stride > max as Ixs {
-                return Err(ShapeError::DimensionTooLarge(
-                    self.shape().to_vec().into_boxed_slice()));
+                return Err(ShapeError::DimensionTooLarge(self.shape()
+                                                             .to_vec()
+                                                             .into_boxed_slice()));
             }
         }
         Ok(())
@@ -108,10 +109,9 @@ impl<S, D> ArrayBase<S, D>
 }
 
 impl<'a, A, D> ArrayView<'a, A, D>
-    where D: Dimension,
+    where D: Dimension
 {
-    fn into_matrix(self) -> Result<BlasArrayView<'a, A, D>, ShapeError>
-    {
+    fn into_matrix(self) -> Result<BlasArrayView<'a, A, D>, ShapeError> {
         if self.dim.ndim() > 1 {
             try!(self.contiguous_check());
         }
@@ -121,10 +121,9 @@ impl<'a, A, D> ArrayView<'a, A, D>
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
-    where D: Dimension,
+    where D: Dimension
 {
-    fn into_matrix_mut(self) -> Result<BlasArrayViewMut<'a, A, D>, ShapeError>
-    {
+    fn into_matrix_mut(self) -> Result<BlasArrayViewMut<'a, A, D>, ShapeError> {
         if self.dim.ndim() > 1 {
             try!(self.contiguous_check());
         }

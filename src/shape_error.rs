@@ -19,23 +19,20 @@ pub enum ShapeError {
 #[inline(never)]
 #[cold]
 pub fn incompatible_shapes<D, E>(a: &D, b: &E) -> ShapeError
-    where D: Dimension, E: Dimension,
+    where D: Dimension,
+          E: Dimension
 {
-    ShapeError::IncompatibleShapes(
-        a.slice().to_vec().into_boxed_slice(),
-        b.slice().to_vec().into_boxed_slice())
+    ShapeError::IncompatibleShapes(a.slice().to_vec().into_boxed_slice(),
+                                   b.slice().to_vec().into_boxed_slice())
 }
 
 
 impl Error for ShapeError {
     fn description(&self) -> &str {
         match *self {
-            ShapeError::IncompatibleShapes(..) =>
-                "incompatible shapes",
-            ShapeError::IncompatibleLayout =>
-                "incompatible layout (not contiguous)",
-            ShapeError::DimensionTooLarge(..) =>
-                "dimension too large",
+            ShapeError::IncompatibleShapes(..) => "incompatible shapes",
+            ShapeError::IncompatibleLayout => "incompatible layout (not contiguous)",
+            ShapeError::DimensionTooLarge(..) => "dimension too large",
         }
     }
 }

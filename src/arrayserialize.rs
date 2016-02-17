@@ -13,32 +13,33 @@ struct AVisitor<'a, A: 'a, D: 'a> {
     state: u32,
 }
 
-impl<A: Serialize, D: Serialize> Serialize for Array<A, D> where
-    D: Dimension,
+impl<A: Serialize, D: Serialize> Serialize for Array<A, D>
+    where D: Dimension
 {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error> where
-        S: serde::Serializer
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
     {
-        serializer.visit_named_map("Array", AVisitor {
-            arr: self,
-            state: 0,
-        })
+        serializer.visit_named_map("Array",
+                                   AVisitor {
+                                       arr: self,
+                                       state: 0,
+                                   })
     }
 }
 
-impl<'a, A: Serialize, D: Serialize> Serialize for Elements<'a, A, D> where
-    D: Dimension,
+impl<'a, A: Serialize, D: Serialize> Serialize for Elements<'a, A, D>
+    where D: Dimension
 {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error> where
-        S: serde::Serializer
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
     {
         serializer.visit_seq(SeqIteratorVisitor::new(self.clone(), None))
     }
 }
 
-impl<'a, A, D> serde::ser::MapVisitor for AVisitor<'a, A, D> where
-    A: Serialize,
-    D: Serialize + Dimension,
+impl<'a, A, D> serde::ser::MapVisitor for AVisitor<'a, A, D>
+    where A: Serialize,
+          D: Serialize + Dimension
 {
     fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
         where S: serde::Serializer
