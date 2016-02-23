@@ -14,7 +14,7 @@
 //! use rblas::Gemv;
 //! use rblas::attribute::Transpose;
 //!
-//! use ndarray::{arr1, arr2, Array};
+//! use ndarray::{arr1, arr2};
 //! use ndarray::blas::AsBlas;
 //!
 //! fn main() {
@@ -145,7 +145,7 @@ pub trait AsBlas<A, S, D> {
     /// Elements are copied if needed to produce a contiguous matrix.<br>
     /// The result is always mutable, due to the requirement of having write
     /// access to update the layout either way. Breaks sharing if the array is
-    /// an `Array`.
+    /// an `RcArray`.
     ///
     /// **Errors** if any dimension is larger than `c_int::MAX`.
     fn blas_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>

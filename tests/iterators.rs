@@ -2,7 +2,7 @@
 extern crate ndarray;
 extern crate itertools;
 
-use ndarray::Array;
+use ndarray::RcArray;
 use ndarray::{Ix, Si, S};
 use ndarray::{
     ArrayBase,
@@ -18,7 +18,7 @@ use itertools::{rev, enumerate};
 
 #[test]
 fn double_ended() {
-    let a = Array::linspace(0., 7., 8);
+    let a = RcArray::linspace(0., 7., 8);
     let mut it = a.iter().map(|x| *x);
     assert_eq!(it.next(), Some(0.));
     assert_eq!(it.next_back(), Some(7.));
@@ -31,7 +31,7 @@ fn double_ended() {
 #[test]
 fn iter_size_hint() {
     // Check that the size hint is correctly computed
-    let a = Array::from_iter(0..24).reshape((2, 3, 4));
+    let a = RcArray::from_iter(0..24).reshape((2, 3, 4));
     let mut data = [0; 24];
     for (i, elt) in enumerate(&mut data) {
         *elt = i as i32;
@@ -49,7 +49,7 @@ fn iter_size_hint() {
 #[test]
 fn indexed()
 {
-    let a = Array::linspace(0., 7., 8);
+    let a = RcArray::linspace(0., 7., 8);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }
@@ -81,7 +81,7 @@ fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
 
 #[test]
 fn as_slice() {
-    let a = Array::linspace(0., 7., 8);
+    let a = RcArray::linspace(0., 7., 8);
     let a = a.reshape((2, 4, 1));
 
     assert_slice_correct(&a);
@@ -118,7 +118,7 @@ fn as_slice() {
 
 #[test]
 fn inner_iter() {
-    let a = Array::from_iter(0..12);
+    let a = RcArray::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
     // [[[0, 1],
     //   [2, 3],
@@ -129,7 +129,7 @@ fn inner_iter() {
     assert_equal(a.inner_iter(),
                  vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
                       aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
-    let mut b = Array::zeros((2, 3, 2));
+    let mut b = RcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.inner_iter(),
@@ -139,14 +139,14 @@ fn inner_iter() {
 
 #[test]
 fn inner_iter_corner_cases() {
-    let a0 = Array::zeros(());
+    let a0 = RcArray::zeros(());
     assert_equal(a0.inner_iter(), vec![aview1(&[0])]);
 
-    let a2 = Array::<i32, _>::zeros((0, 3));
+    let a2 = RcArray::<i32, _>::zeros((0, 3));
     assert_equal(a2.inner_iter(),
                  vec![aview1(&[]); 0]);
 
-    let a2 = Array::<i32, _>::zeros((3, 0));
+    let a2 = RcArray::<i32, _>::zeros((3, 0));
     assert_equal(a2.inner_iter(),
                  vec![aview1(&[]); 3]);
 }
@@ -154,7 +154,7 @@ fn inner_iter_corner_cases() {
 #[test]
 fn inner_iter_size_hint() {
     // Check that the size hint is correctly computed
-    let a = Array::from_iter(0..24).reshape((2, 3, 4));
+    let a = RcArray::from_iter(0..24).reshape((2, 3, 4));
     let mut len = 6;
     let mut it = a.inner_iter();
     assert_eq!(it.len(), len);
@@ -167,7 +167,7 @@ fn inner_iter_size_hint() {
 
 #[test]
 fn outer_iter() {
-    let a = Array::from_iter(0..12);
+    let a = RcArray::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
     // [[[0, 1],
     //   [2, 3],
@@ -177,7 +177,7 @@ fn outer_iter() {
     //    ...
     assert_equal(a.outer_iter(),
                  vec![a.subview(0, 0), a.subview(0, 1)]);
-    let mut b = Array::zeros((2, 3, 2));
+    let mut b = RcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter(),
@@ -201,7 +201,7 @@ fn outer_iter() {
     assert_eq!(&found_rows, &found_rows_rev);
 
     // Test a case where strides are negative instead
-    let mut c = Array::zeros((2, 3, 2));
+    let mut c = RcArray::zeros((2, 3, 2));
     let mut cv = c.slice_mut(s![..;-1, ..;-1, ..;-1]);
     cv.assign(&a);
     assert_eq!(&a, &cv);
@@ -220,7 +220,7 @@ fn outer_iter() {
 
 #[test]
 fn axis_iter() {
-    let a = Array::from_iter(0..12);
+    let a = RcArray::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
     // [[[0, 1],
     //   [2, 3],
@@ -236,18 +236,18 @@ fn axis_iter() {
 
 #[test]
 fn outer_iter_corner_cases() {
-    let a2 = Array::<i32, _>::zeros((0, 3));
+    let a2 = RcArray::<i32, _>::zeros((0, 3));
     assert_equal(a2.outer_iter(),
                  vec![aview1(&[]); 0]);
 
-    let a2 = Array::<i32, _>::zeros((3, 0));
+    let a2 = RcArray::<i32, _>::zeros((3, 0));
     assert_equal(a2.outer_iter(),
                  vec![aview1(&[]); 3]);
 }
 
 #[test]
 fn outer_iter_mut() {
-    let a = Array::from_iter(0..12);
+    let a = RcArray::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
     // [[[0, 1],
     //   [2, 3],
@@ -255,7 +255,7 @@ fn outer_iter_mut() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    let mut b = Array::zeros((2, 3, 2));
+    let mut b = RcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter_mut(),
@@ -272,7 +272,7 @@ fn outer_iter_mut() {
 
 #[test]
 fn axis_iter_mut() {
-    let a = Array::from_iter(0..12);
+    let a = RcArray::from_iter(0..12);
     let a = a.reshape((2, 3, 2));
     // [[[0, 1],
     //   [2, 3],
@@ -297,7 +297,7 @@ fn axis_iter_mut() {
 
 #[test]
 fn axis_chunks_iter() {
-    let a = Array::from_iter(0..24);
+    let a = RcArray::from_iter(0..24);
     let a = a.reshape((2, 6, 2));
 
     let it = a.axis_chunks_iter(1, 2);
@@ -306,7 +306,7 @@ fn axis_chunks_iter() {
                       arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]),
                       arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]])]);
 
-    let a = Array::from_iter(0..28);
+    let a = RcArray::from_iter(0..28);
     let a = a.reshape((2, 7, 2));
 
     let it = a.axis_chunks_iter(1, 2);
@@ -337,7 +337,7 @@ fn axis_chunks_iter_corner_cases() {
     // and enable checking if no pointer offseting is out of bounds. However
     // checking the absence of of out of bounds offseting cannot (?) be
     // done automatically, so one has to launch this test in a debugger.
-    let a = Array::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
+    let a = RcArray::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
     let it = a.axis_chunks_iter(0, 4);
     assert_equal(it, vec![a.slice(s![..4, ..]), a.slice(s![4.., ..])]);
     let a = a.slice(s![..;-1,..]);
@@ -349,18 +349,18 @@ fn axis_chunks_iter_corner_cases() {
                       arr2(&[[4.], [3.], [2.]]),
                       arr2(&[[1.], [0.]])]);
 
-    let b = Array::<f32, _>::zeros((8, 2));
+    let b = RcArray::<f32, _>::zeros((8, 2));
     let a = b.slice(s![1..;2,..]);
     let it = a.axis_chunks_iter(0, 8);
     assert_equal(it, vec![a.view()]);
 
     let it = a.axis_chunks_iter(0, 1);
-    assert_equal(it, vec![Array::zeros((1, 2)); 4]);
+    assert_equal(it, vec![RcArray::zeros((1, 2)); 4]);
 }
 
 #[test]
 fn axis_chunks_iter_mut() {
-    let a = Array::from_iter(0..24);
+    let a = RcArray::from_iter(0..24);
     let mut a = a.reshape((2, 6, 2));
 
     let mut it = a.axis_chunks_iter_mut(1, 2);
@@ -372,7 +372,7 @@ fn axis_chunks_iter_mut() {
 #[test]
 fn outer_iter_size_hint() {
     // Check that the size hint is correctly computed
-    let a = Array::from_iter(0..24).reshape((4, 3, 2));
+    let a = RcArray::from_iter(0..24).reshape((4, 3, 2));
     let mut len = 4;
     let mut it = a.outer_iter();
     assert_eq!(it.len(), len);

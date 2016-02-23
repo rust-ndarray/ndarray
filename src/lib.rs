@@ -7,11 +7,11 @@
 //!
 //! - [`ArrayBase`](struct.ArrayBase.html):
 //!   The N-dimensional array type itself.
-//! - [`Array`](type.Array.html):
-//!   An array where the data is shared and copy on write, it
-//!   can act as both an owner of the data as well as a lightweight view.
 //! - [`OwnedArray`](type.OwnedArray.html):
 //!   An array where the data is owned uniquely.
+//! - [`RcArray`](type.RcArray.html):
+//!   An array where the data is shared and copy on write, it
+//!   can act as both an owner of the data as well as a lightweight view.
 //! - [`ArrayView`](type.ArrayView.html), [`ArrayViewMut`](type.ArrayViewMut.html):
 //!   Lightweight array views.
 //!
@@ -20,7 +20,7 @@
 //! - Generic N-dimensional array
 //! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
-//! - There is both a copy on write array (`Array`), or a regular uniquely owned array
+//! - There is both a copy on write array (`RcArray`), or a regular uniquely owned array
 //!   (`OwnedArray`), and both can use read-only and read-write array views.
 //! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
@@ -134,21 +134,21 @@ pub type Ixs = isize;
 /// - `S` for the data container
 /// - `D` for the number of dimensions
 ///
-/// Type aliases [`Array`], [`OwnedArray`], [`ArrayView`], and [`ArrayViewMut`] refer
+/// Type aliases [`OwnedArray`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
 /// to `ArrayBase` with different types for the data storage.
 ///
-/// [`Array`]: type.Array.html
 /// [`OwnedArray`]: type.OwnedArray.html
+/// [`RcArray`]: type.RcArray.html
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
-/// ## `Array` and `OwnedArray`
+/// ## `OwnedArray` and `RcArray`
 ///
 /// `OwnedArray` owns the underlying array elements directly (just like
-/// a `Vec`), while [`Array`](type.Array.html) is a an array with reference
-/// counted data. `Array` can act both as an owner or as a view in that regard.
+/// a `Vec`), while [`RcArray`](type.RcArray.html) is a an array with reference
+/// counted data. `RcArray` can act both as an owner or as a view in that regard.
 /// Sharing requires that it uses copy-on-write for mutable operations.
-/// Calling a method for mutating elements on `Array`, for example
+/// Calling a method for mutating elements on `RcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
 ///
@@ -298,7 +298,7 @@ pub type Ixs = isize;
 /// Since the trait implementations are hard to overview, here is a summary.
 ///
 /// Let `A` be an array or view of any kind. Let `B` be a mutable
-/// array (that is, either `OwnedArray`, `Array`, or `ArrayViewMut`)
+/// array (that is, either `OwnedArray`, `RcArray`, or `ArrayViewMut`)
 /// The following combinations of operands
 /// are supported for an arbitrary binary operator denoted by `@`.
 ///
@@ -411,8 +411,8 @@ unsafe impl<A> DataMut for Rc<Vec<A>>
             // Create a new vec if the current view is less than half of
             // backing data.
             unsafe {
-                *self_ = Array::from_vec_dim_unchecked(self_.dim.clone(),
-                                                       self_.iter()
+                *self_ = ArrayBase::from_vec_dim_unchecked(self_.dim.clone(),
+                                                           self_.iter()
                                                             .cloned()
                                                             .collect());
             }
@@ -523,6 +523,7 @@ unsafe impl<A> DataOwned for Rc<Vec<A>> {
 /// Array where the data is reference counted and copy on write, it
 /// can act as both an owner as the data as well as a lightweight view.
 pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
+
 #[cfg_attr(has_deprecated, deprecated(note="`Array` is deprecated! Renamed to `RcArray`."))]
 /// ***Deprecated: Use `RcArray` instead***
 ///
@@ -625,10 +626,10 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `dim` would overflow usize.
     ///
     /// ```
-    /// use ndarray::Array;
+    /// use ndarray::RcArray;
     /// use ndarray::arr3;
     ///
-    /// let a = Array::from_elem((2, 2, 2), 1.);
+    /// let a = RcArray::from_elem((2, 2, 2), 1.);
     ///
     /// assert!(
     ///     a == arr3(&[[[1., 1.],
@@ -654,10 +655,10 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements would overflow usize.
     ///
     /// ```
-    /// use ndarray::Array;
+    /// use ndarray::RcArray;
     /// use ndarray::arr3;
     ///
-    /// let a = Array::from_elem_f((2, 2, 2), 1.);
+    /// let a = RcArray::from_elem_f((2, 2, 2), 1.);
     ///
     /// assert!(
     ///     a == arr3(&[[[1., 1.],
@@ -978,7 +979,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 {
-    /// Return the total number of elements in the Array.
+    /// Return the total number of elements in the array.
     pub fn len(&self) -> usize {
         self.dim.size()
     }
@@ -1040,16 +1041,16 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return a shared ownership (copy on write) array.
-    pub fn to_shared(&self) -> Array<A, D>
+    pub fn to_shared(&self) -> RcArray<A, D>
         where A: Clone
     {
-        // FIXME: Avoid copying if it’s already an Array.
+        // FIXME: Avoid copying if it’s already an RcArray.
         self.to_owned().into_shared()
     }
 
     /// Turn the array into a shared ownership (copy on write) array,
     /// without any copying.
-    pub fn into_shared(self) -> Array<A, D>
+    pub fn into_shared(self) -> RcArray<A, D>
         where S: DataOwned,
     {
         let data = self.data.into_shared();
@@ -1406,10 +1407,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` is out of bounds.
     ///
     /// ```
-    /// use ndarray::Array;
+    /// use ndarray::OwnedArray;
     /// use ndarray::arr3;
     ///
-    /// let a = Array::from_iter(0..28).reshape((2, 7, 2));
+    /// let a = OwnedArray::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
     /// let mut iter = a.axis_chunks_iter(1, 2);
     ///
     /// // first iteration yields a 2 × 2 × 2 view
@@ -1775,7 +1776,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
-    /// Array’s view.<br>
+    /// array’s view.<br>
     /// **Note:** the slice may be empty.
     pub fn raw_data(&self) -> &[A] {
         self.data.slice()
@@ -1785,7 +1786,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
-    /// Array’s view.<br>
+    /// array’s view.<br>
     /// **Note:** the slice may be empty.
     ///
     /// **Note:** The data is uniquely held and nonaliased
@@ -1997,14 +1998,14 @@ pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
 }
 
 /// Return a zero-dimensional array with the element `x`.
-pub fn arr0<A>(x: A) -> Array<A, ()>
+pub fn arr0<A>(x: A) -> RcArray<A, ()>
 {
-    unsafe { Array::from_vec_dim_unchecked((), vec![x]) }
+    unsafe { ArrayBase::from_vec_dim_unchecked((), vec![x]) }
 }
 
 /// Return a one-dimensional array with elements from `xs`.
-pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix> {
-    Array::from_vec(xs.to_vec())
+pub fn arr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix> {
+    ArrayBase::from_vec(xs.to_vec())
 }
 
 /// Return a zero-dimensional array view borrowing `x`.
@@ -2122,7 +2123,7 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, Ix)> {
+pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)> {
     // FIXME: Simplify this when V is fix size array
     let (m, n) = (xs.len() as Ix,
                   xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
@@ -2134,7 +2135,7 @@ pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, Ix)> 
         result.extend(snd.iter().cloned());
     }
     unsafe {
-        Array::from_vec_dim_unchecked(dim, result)
+        ArrayBase::from_vec_dim_unchecked(dim, result)
     }
 }
 
@@ -2156,7 +2157,7 @@ pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, Ix)> 
 /// );
 /// ```
 pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
-    -> Array<A, (Ix, Ix, Ix)>
+    -> RcArray<A, (Ix, Ix, Ix)>
 {
     // FIXME: Simplify this when U/V are fix size arrays
     let m = xs.len() as Ix;
@@ -2176,7 +2177,7 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
         }
     }
     unsafe {
-        Array::from_vec_dim_unchecked(dim, result)
+        ArrayBase::from_vec_dim_unchecked(dim, result)
     }
 }
 
@@ -2445,7 +2446,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 
 
 
-// Array OPERATORS
+// array OPERATORS
 
 macro_rules! impl_binary_op_inherent(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (

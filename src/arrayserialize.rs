@@ -9,11 +9,11 @@ use super::{
 };
 
 struct AVisitor<'a, A: 'a, D: 'a> {
-    arr: &'a Array<A, D>,
+    arr: &'a RcArray<A, D>,
     state: u32,
 }
 
-impl<A: Serialize, D: Serialize> Serialize for Array<A, D>
+impl<A: Serialize, D: Serialize> Serialize for RcArray<A, D>
     where D: Dimension
 {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
