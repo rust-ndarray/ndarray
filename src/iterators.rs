@@ -428,6 +428,12 @@ fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
     }
 }
 
+impl<A, D> OuterIterCore<A, D> {
+    unsafe fn offset(&self, index: usize) -> *mut A {
+        self.ptr.offset(index as isize * self.stride)
+    }
+}
+
 impl<A, D> Iterator for OuterIterCore<A, D>
     where D: Dimension,
 {
@@ -437,9 +443,7 @@ impl<A, D> Iterator for OuterIterCore<A, D>
         if self.index >= self.len {
             None
         } else {
-            let ptr = unsafe {
-                self.ptr.offset(self.index as isize * self.stride)
-            };
+            let ptr = unsafe { self.offset(self.index) };
             self.index += 1;
             Some(ptr)
         }
@@ -459,9 +463,7 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
             None
         } else {
             self.len -= 1;
-            let ptr = unsafe {
-                self.ptr.offset(self.len as isize * self.stride)
-            };
+            let ptr = unsafe { self.offset(self.len) };
             Some(ptr)
         }
     }
