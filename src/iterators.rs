@@ -498,7 +498,7 @@ impl<'a, A, D> OuterIter<'a, A, D>
         let left = OuterIter {
             iter: OuterIterCore {
                 index: 0,
-                len: self.iter.index,
+                len: index,
                 stride: self.iter.stride,
                 inner_dim: self.iter.inner_dim.clone(),
                 inner_strides: self.iter.inner_strides.clone(),
@@ -506,7 +506,18 @@ impl<'a, A, D> OuterIter<'a, A, D>
             },
             life: PhantomData,
         };
-        unimplemented!()
+        let right = OuterIter {
+            iter: OuterIterCore {
+                index: 0,
+                len: self.iter.len - index,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim.clone(),
+                inner_strides: self.iter.inner_strides.clone(),
+                ptr: right_ptr,
+            },
+            life: PhantomData,
+        };
+        (left, right)
     }
 }
 

@@ -401,3 +401,34 @@ fn outer_iter_size_hint() {
         assert_eq!(it.len(), len);
     }
 }
+
+#[test]
+fn outer_iter_split_at() {
+    let a = Array::from_iter(0..30).reshape((5, 3, 2));
+
+    let it = a.outer_iter();
+    let (mut itl, mut itr) = it.split_at(2);
+    assert_eq!(itl.next().unwrap()[[2, 1]], 5);
+    assert_eq!(itl.next().unwrap()[[2, 1]], 11);
+    assert_eq!(itl.next(), None);
+
+    assert_eq!(itr.next().unwrap()[[2, 1]], 17);
+    assert_eq!(itr.next().unwrap()[[2, 1]], 23);
+    assert_eq!(itr.next().unwrap()[[2, 1]], 29);
+    assert_eq!(itr.next(), None);
+
+    // split_at on length should yield an empty iterator
+    // on the right part
+    let it = a.outer_iter();
+    let (_, mut itr) = it.split_at(5);
+    assert_eq!(itr.next(), None);
+}
+
+#[test]
+#[should_panic]
+fn outer_iter_split_at_panics() {
+    let a = Array::from_iter(0..30).reshape((5, 3, 2));
+
+    let it = a.outer_iter();
+    it.split_at(6);
+}
