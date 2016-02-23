@@ -484,6 +484,32 @@ pub struct OuterIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+impl<'a, A, D> OuterIter<'a, A, D>
+    where D: Dimension
+{
+    /// Split the iterator at index
+    ///
+    /// *panics* if `index > len`.
+    pub fn split_at(&self, index: Ix)
+        -> (OuterIter<'a, A, D>, OuterIter<'a, A, D>)
+    {
+        assert!(index <= self.iter.len);
+        let right_ptr = unsafe { self.iter.offset(index) };
+        let left = OuterIter {
+            iter: OuterIterCore {
+                index: 0,
+                len: self.iter.index,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim.clone(),
+                inner_strides: self.iter.inner_strides.clone(),
+                ptr: self.iter.ptr,
+            },
+            life: PhantomData,
+        };
+        unimplemented!()
+    }
+}
+
 impl<'a, A, D> Iterator for OuterIter<'a, A, D>
     where D: Dimension
 {
