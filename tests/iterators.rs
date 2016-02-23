@@ -432,3 +432,23 @@ fn outer_iter_split_at_panics() {
     let it = a.outer_iter();
     it.split_at(6);
 }
+
+#[test]
+fn outer_iter_mut_split_at() {
+    let mut a = Array::from_iter(0..30).reshape((5, 3, 2));
+
+    {
+        let it = a.outer_iter_mut();
+        let (mut itl, mut itr) = it.split_at(2);
+        itl.next();
+        itl.next().unwrap()[[2, 1]] += 1; // now this value is 12
+        assert_eq!(itl.next(), None);
+
+        itr.next();
+        itr.next();
+        itr.next().unwrap()[[2, 1]] -= 1; // now this value is 28
+        assert_eq!(itr.next(), None);
+    }
+    assert_eq!(a[[1, 2, 1]], 12);
+    assert_eq!(a[[4, 2, 1]], 28);
+}

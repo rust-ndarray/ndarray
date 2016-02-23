@@ -487,10 +487,10 @@ pub struct OuterIter<'a, A: 'a, D> {
 impl<'a, A, D> OuterIter<'a, A, D>
     where D: Dimension
 {
-    /// Split the iterator at index
+    /// Split the iterator at index, yielding two disjoint iterators.
     ///
-    /// *panics* if `index > len`.
-    pub fn split_at(&self, index: Ix)
+    /// *panics* if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: Ix)
         -> (OuterIter<'a, A, D>, OuterIter<'a, A, D>)
     {
         assert!(index <= self.iter.len);
@@ -511,8 +511,8 @@ impl<'a, A, D> OuterIter<'a, A, D>
                 index: 0,
                 len: self.iter.len - index,
                 stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim.clone(),
-                inner_strides: self.iter.inner_strides.clone(),
+                inner_dim: self.iter.inner_dim,
+                inner_strides: self.iter.inner_strides,
                 ptr: right_ptr,
             },
             life: PhantomData,
@@ -592,6 +592,43 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 pub struct OuterIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a mut A>,
+}
+
+impl<'a, A, D> OuterIterMut<'a, A, D>
+    where D: Dimension
+{
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// *panics* if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: Ix)
+        -> (OuterIterMut<'a, A, D>, OuterIterMut<'a, A, D>)
+    {
+        assert!(index <= self.iter.len);
+        let right_ptr = unsafe { self.iter.offset(index) };
+        let left = OuterIterMut {
+            iter: OuterIterCore {
+                index: 0,
+                len: index,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim.clone(),
+                inner_strides: self.iter.inner_strides.clone(),
+                ptr: self.iter.ptr,
+            },
+            life: PhantomData,
+        };
+        let right = OuterIterMut {
+            iter: OuterIterCore {
+                index: 0,
+                len: self.iter.len - index,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim,
+                inner_strides: self.iter.inner_strides,
+                ptr: right_ptr,
+            },
+            life: PhantomData,
+        };
+        (left, right)
+    }
 }
 
 impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
