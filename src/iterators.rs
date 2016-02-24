@@ -627,7 +627,12 @@ impl<'a, A, D> OuterIterMut<'a, A, D>
         -> (OuterIterMut<'a, A, D>, OuterIterMut<'a, A, D>)
     {
         assert!(index <= self.iter.len);
-        let right_ptr = unsafe { self.iter.offset(index) };
+        let right_ptr = if index != self.iter.len {
+            unsafe { self.iter.offset(index) } 
+        }
+        else {
+            self.iter.ptr
+        };
         let left = OuterIterMut {
             iter: OuterIterCore {
                 index: 0,
