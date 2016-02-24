@@ -2,7 +2,7 @@
 extern crate ndarray;
 
 use ndarray::{
-    Array,
+    RcArray,
     Ix,
 };
 
@@ -14,12 +14,12 @@ const INPUT: &'static [u8] = include_bytes!("life.txt");
 const N: usize = 100;
 //const N: usize = 8;
 
-type Board = Array<u8, Ix2>;
+type Board = RcArray<u8, Ix2>;
 
 fn parse(x: &[u8]) -> Board {
     // make a border of 0 cells
-    let mut map = Array::from_elem(((N + 2) as Ix, (N + 2) as Ix), 0);
-    let a: Array<u8, Ix> = x.iter().filter_map(|&b| match b {
+    let mut map = RcArray::from_elem(((N + 2) as Ix, (N + 2) as Ix), 0);
+    let a: RcArray<u8, Ix> = x.iter().filter_map(|&b| match b {
         b'#' => Some(1),
         b'.' => Some(0),
         _ => None,

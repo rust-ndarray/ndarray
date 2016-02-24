@@ -1,7 +1,7 @@
 extern crate ndarray;
 extern crate num as libnum;
 
-use ndarray::Array;
+use ndarray::RcArray;
 use ndarray::{arr0, arr1, arr2};
 
 use std::fmt;
@@ -26,7 +26,7 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
 }
 
 fn test_oper_arr<A: Float + fmt::Debug, D: ndarray::Dimension>
-    (op: &str, mut aa: Array<A,D>, bb: Array<A, D>, cc: Array<A, D>)
+    (op: &str, mut aa: RcArray<A,D>, bb: RcArray<A, D>, cc: RcArray<A, D>)
 {
     match op {
         "+" => {
@@ -101,7 +101,7 @@ fn scalar_operations()
 
     {
         let mut x = c.clone();
-        let mut y = Array::zeros((2, 2));
+        let mut y = RcArray::zeros((2, 2));
         x.iadd_scalar(&1.);
         y.assign_scalar(&2.);
         assert_eq!(x, c + arr0(1.));

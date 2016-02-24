@@ -11,13 +11,13 @@ use libnum::Float;
 use libnum::Complex;
 use std::ops::{Add, Sub, Mul, Div};
 
-use ndarray::{Array, Ix};
+use ndarray::{RcArray, Ix};
 use ndarray::{arr1, arr2};
 
 /// Column vector.
-pub type Col<A> = Array<A, Ix>;
+pub type Col<A> = RcArray<A, Ix>;
 /// Rectangular matrix.
-pub type Mat<A> = Array<A, (Ix, Ix)>;
+pub type Mat<A> = RcArray<A, (Ix, Ix)>;
 
 /// Trait union for a ring with 1.
 pub trait Ring : Clone + Zero + Add<Output=Self> + Sub<Output=Self>
@@ -79,7 +79,7 @@ fn chol()
     assert!(ans.allclose(&chol, 0.001));
 
     // Compute bT b for a pos def matrix
-    let b = Array::linspace(0f32, 8., 9).reshape((3, 3));
+    let b = RcArray::linspace(0f32, 8., 9).reshape((3, 3));
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
     let bpd = bt.mat_mul(&b).into_shared();

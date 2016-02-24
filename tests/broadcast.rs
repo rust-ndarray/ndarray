@@ -1,19 +1,19 @@
 
 extern crate ndarray;
 
-use ndarray::{Array, Dimension};
+use ndarray::{RcArray, Dimension};
 
 #[test]
 fn broadcast_1()
 {
     let a_dim = (2, 4, 2, 2);
     let b_dim = (2, 1, 2, 1);
-    let a = Array::linspace(0., 1., a_dim.size()).reshape(a_dim);
-    let b = Array::linspace(0., 1., b_dim.size()).reshape(b_dim);
+    let a = RcArray::linspace(0., 1., a_dim.size()).reshape(a_dim);
+    let b = RcArray::linspace(0., 1., b_dim.size()).reshape(b_dim);
     assert!(b.broadcast(a.dim()).is_some());
 
     let c_dim = (2, 1);
-    let c = Array::linspace(0., 1., c_dim.size()).reshape(c_dim);
+    let c = RcArray::linspace(0., 1., c_dim.size()).reshape(c_dim);
     assert!(c.broadcast(1).is_none());
     assert!(c.broadcast(()).is_none());
     assert!(c.broadcast((2, 1)).is_some());
@@ -22,7 +22,7 @@ fn broadcast_1()
     assert!(c.broadcast((32, 1, 2)).is_none());
 
     /* () can be broadcast to anything */
-    let z = Array::<f32,_>::zeros(());
+    let z = RcArray::<f32,_>::zeros(());
     assert!(z.broadcast(()).is_some());
     assert!(z.broadcast(1).is_some());
     assert!(z.broadcast(3).is_some());
@@ -34,10 +34,10 @@ fn test_add()
 {
     let a_dim = (2, 4, 2, 2);
     let b_dim = (2, 1, 2, 1);
-    let mut a = Array::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
-    let b = Array::linspace(0.0, 1., b_dim.size()).reshape(b_dim);
+    let mut a = RcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
+    let b = RcArray::linspace(0.0, 1., b_dim.size()).reshape(b_dim);
     a.iadd(&b);
-    let t = Array::from_elem((), 1.0f32);
+    let t = RcArray::from_elem((), 1.0f32);
     a.iadd(&t);
 }
 
@@ -45,7 +45,7 @@ fn test_add()
 fn test_add_incompat()
 {
     let a_dim = (2, 4, 2, 2);
-    let mut a = Array::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
-    let incompat = Array::from_elem(3, 1.0f32);
+    let mut a = RcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
+    let incompat = RcArray::from_elem(3, 1.0f32);
     a.iadd(&incompat);
 }

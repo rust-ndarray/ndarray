@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate ndarray;
 
-use ndarray::{Array, S, Si,
+use ndarray::{RcArray, S, Si,
     OwnedArray,
 };
 use ndarray::{arr0, arr1, arr2,
@@ -18,12 +18,12 @@ use ndarray::Indexes;
 #[test]
 fn test_matmul_rcarray()
 {
-    let mut A = Array::<usize, _>::zeros((2, 3));
+    let mut A = RcArray::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
 
-    let mut B = Array::<usize, _>::zeros((3, 4));
+    let mut B = RcArray::<usize, _>::zeros((3, 4));
     for (i, elt) in B.iter_mut().enumerate() {
         *elt = i;
     }
@@ -33,7 +33,7 @@ fn test_matmul_rcarray()
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
     unsafe {
-        let result = Array::from_vec_dim_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
+        let result = RcArray::from_vec_dim_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);
@@ -44,10 +44,10 @@ fn test_matmul_rcarray()
 fn test_mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
-    let b = Array::eye(m);
+    let a = RcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
+    let b = RcArray::eye(m);
     assert_eq!(a.mat_mul(&b), a);
-    let c = Array::eye(n);
+    let c = RcArray::eye(n);
     assert_eq!(c.mat_mul(&a), a);
 }
 
@@ -55,7 +55,7 @@ fn test_mat_mul() {
 #[test]
 fn test_slice()
 {
-    let mut A = Array::<usize, _>::zeros((3, 4));
+    let mut A = RcArray::<usize, _>::zeros((3, 4));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -71,14 +71,14 @@ fn test_slice()
 #[test]
 fn slice_oob()
 {
-    let a = Array::<i32, _>::zeros((3, 4));
+    let a = RcArray::<i32, _>::zeros((3, 4));
     let _vi = a.slice(&[Si(0, Some(10), 1), S]);
 }
 
 #[test]
 fn test_index()
 {
-    let mut A = Array::<usize, _>::zeros((2, 3));
+    let mut A = RcArray::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -98,7 +98,7 @@ fn test_index()
 #[test]
 fn test_add()
 {
-    let mut A = Array::<usize, _>::zeros((2, 2));
+    let mut A = RcArray::<usize, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -114,7 +114,7 @@ fn test_add()
 #[test]
 fn test_multidim()
 {
-    let mut mat = Array::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
+    let mut mat = RcArray::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
     mat[(0,0,0,0,0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -140,7 +140,7 @@ array([[[ 7,  6],
 #[test]
 fn test_negative_stride_rcarray()
 {
-    let mut mat = Array::zeros((2, 4, 2));
+    let mut mat = RcArray::zeros((2, 4, 2));
     mat[(0, 0, 0)] = 1.0f32;
     for (i, elt) in mat.iter_mut().enumerate() {
         *elt = i as f32;
@@ -167,7 +167,7 @@ fn test_negative_stride_rcarray()
 #[test]
 fn test_cow()
 {
-    let mut mat = Array::<isize, _>::zeros((2,2));
+    let mut mat = RcArray::<isize, _>::zeros((2,2));
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -200,14 +200,14 @@ fn test_cow()
 #[test]
 fn test_sub()
 {
-    let mat = Array::linspace(0., 15., 16).reshape((2, 4, 2));
+    let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
     let s1 = mat.subview(0,0);
     let s2 = mat.subview(0,1);
     assert_eq!(s1.dim(), (4, 2));
     assert_eq!(s2.dim(), (4, 2));
-    let n = Array::linspace(8., 15., 8).reshape((4,2));
+    let n = RcArray::linspace(8., 15., 8).reshape((4,2));
     assert_eq!(n, s2);
-    let m = Array::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
+    let m = RcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.subview(1, 1));
 }
 
@@ -221,7 +221,7 @@ fn diag()
     assert_eq!(d.dim(), 2);
     let d = arr2::<f32, _>(&[[]]).into_diag();
     assert_eq!(d.dim(), 0);
-    let d = Array::<f32, _>::zeros(()).into_diag();
+    let d = RcArray::<f32, _>::zeros(()).into_diag();
     assert_eq!(d.dim(), 1);
 }
 
@@ -263,12 +263,12 @@ fn assign()
     assert_eq!(a, b);
 
     /* Test broadcasting */
-    a.assign(&Array::zeros(1));
-    assert_eq!(a, Array::zeros((2, 2)));
+    a.assign(&RcArray::zeros(1));
+    assert_eq!(a, RcArray::zeros((2, 2)));
 
     /* Test other type */
     a.assign(&OwnedArray::from_elem((2, 2), 3.));
-    assert_eq!(a, Array::from_elem((2, 2), 3.));
+    assert_eq!(a, RcArray::from_elem((2, 2), 3.));
 
     /* Test mut view */
     let mut a = arr2(&[[1, 2], [3, 4]]);
@@ -393,7 +393,7 @@ fn owned_array1() {
     assert_eq!(a.shape(), &[4]);
 
     let mut a = OwnedArray::zeros((2, 2));
-    let mut b = Array::zeros((2, 2));
+    let mut b = RcArray::zeros((2, 2));
     a[(1, 1)] = 3;
     b[(1, 1)] = 3;
     assert_eq!(a, b);
@@ -418,7 +418,7 @@ fn owned_array_with_stride() {
 
 #[test]
 fn views() {
-    let a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     let b = a.view();
     assert_eq!(a, b);
     assert_eq!(a.shape(), b.shape());
@@ -433,7 +433,7 @@ fn views() {
 
 #[test]
 fn view_mut() {
-    let mut a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in &mut a.view_mut() {
         *elt = 0;
     }
@@ -447,12 +447,12 @@ fn view_mut() {
     for elt in a.view_mut() {
         *elt = 2;
     }
-    assert_eq!(a, Array::from_elem((2, 2), 2));
+    assert_eq!(a, RcArray::from_elem((2, 2), 2));
 }
 
 #[test]
 fn slice_mut() {
-    let mut a = Array::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in a.slice_mut(&[S, S]) {
         *elt = 0;
     }
@@ -594,8 +594,8 @@ fn arithmetic_broadcast() {
 fn char_array()
 {
     // test compilation & basics of non-numerical array
-    let cc = Array::from_iter("alphabet".chars()).reshape((4, 2));
-    assert!(cc.subview(1, 0) == Array::from_iter("apae".chars()));
+    let cc = RcArray::from_iter("alphabet".chars()).reshape((4, 2));
+    assert!(cc.subview(1, 0) == RcArray::from_iter("apae".chars()));
 }
 
 #[test]
