@@ -404,7 +404,7 @@ fn outer_iter_size_hint() {
 
 #[test]
 fn outer_iter_split_at() {
-    let a = Array::from_iter(0..30).reshape((5, 3, 2));
+    let a = RcArray::from_iter(0..30).reshape((5, 3, 2));
 
     let it = a.outer_iter();
     let (mut itl, mut itr) = it.clone().split_at(2);
@@ -426,7 +426,7 @@ fn outer_iter_split_at() {
 #[test]
 #[should_panic]
 fn outer_iter_split_at_panics() {
-    let a = Array::from_iter(0..30).reshape((5, 3, 2));
+    let a = RcArray::from_iter(0..30).reshape((5, 3, 2));
 
     let it = a.outer_iter();
     it.split_at(6);
@@ -434,7 +434,7 @@ fn outer_iter_split_at_panics() {
 
 #[test]
 fn outer_iter_mut_split_at() {
-    let mut a = Array::from_iter(0..30).reshape((5, 3, 2));
+    let mut a = RcArray::from_iter(0..30).reshape((5, 3, 2));
 
     {
         let it = a.outer_iter_mut();
