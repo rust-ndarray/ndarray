@@ -521,6 +521,24 @@ impl<'a, A, D> OuterIter<'a, A, D>
     }
 }
 
+impl<'a, A, D> Clone for OuterIter<'a, A, D>
+    where D: Dimension
+{
+    fn clone(&self) -> Self {
+        OuterIter {
+            iter: OuterIterCore {
+                index: self.iter.index,
+                len: self.iter.len,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim.clone(),
+                inner_strides: self.iter.inner_strides.clone(),
+                ptr: self.iter.ptr,
+            },
+            life: PhantomData,
+        }
+    }
+}
+
 impl<'a, A, D> Iterator for OuterIter<'a, A, D>
     where D: Dimension
 {

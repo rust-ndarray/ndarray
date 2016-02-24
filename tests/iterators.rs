@@ -407,7 +407,7 @@ fn outer_iter_split_at() {
     let a = Array::from_iter(0..30).reshape((5, 3, 2));
 
     let it = a.outer_iter();
-    let (mut itl, mut itr) = it.split_at(2);
+    let (mut itl, mut itr) = it.clone().split_at(2);
     assert_eq!(itl.next().unwrap()[[2, 1]], 5);
     assert_eq!(itl.next().unwrap()[[2, 1]], 11);
     assert_eq!(itl.next(), None);
@@ -419,7 +419,6 @@ fn outer_iter_split_at() {
 
     // split_at on length should yield an empty iterator
     // on the right part
-    let it = a.outer_iter();
     let (_, mut itr) = it.split_at(5);
     assert_eq!(itr.next(), None);
 }
