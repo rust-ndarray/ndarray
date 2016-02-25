@@ -79,6 +79,13 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.4.0-alpha.4
+
+  - Rename ``Array`` to ``RcArray``. Old name is deprecated.
+  - Add methods ``OuterIter::split_at``, ``OuterIterMut::split_at``
+  - Change ``arr0, arr1, arr2, arr3`` to return ``OwnedArray``.
+    Add ``rcarr1, rcarr2, rcarr3`` that return ``RcArray``.
+
 - 0.4.0-alpha.3
 
   - Improve arithmetic operations where the RHS is a broadcast 0-dimensional
