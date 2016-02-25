@@ -484,47 +484,53 @@ pub struct OuterIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
-impl<'a, A, D> OuterIter<'a, A, D>
-    where D: Dimension
-{
-    /// Split the iterator at index, yielding two disjoint iterators.
-    ///
-    /// *panics* if `index` is strictly greater than the iterator's length
-    pub fn split_at(self, index: Ix)
-        -> (OuterIter<'a, A, D>, OuterIter<'a, A, D>)
-    {
-        assert!(index <= self.iter.len);
-        let right_ptr = if index != self.iter.len {
-            unsafe { self.iter.offset(index) } 
+macro_rules! outer_iter_split_at_impl {
+    ($iter: ident) => (
+        impl<'a, A, D> $iter<'a, A, D>
+            where D: Dimension
+        {
+            /// Split the iterator at index, yielding two disjoint iterators.
+            ///
+            /// *panics* if `index` is strictly greater than the iterator's length
+            pub fn split_at(self, index: Ix)
+                -> ($iter<'a, A, D>, $iter<'a, A, D>)
+            {
+                assert!(index <= self.iter.len);
+                let right_ptr = if index != self.iter.len {
+                    unsafe { self.iter.offset(index) } 
+                }
+                else {
+                    self.iter.ptr
+                };
+                let left = $iter {
+                    iter: OuterIterCore {
+                        index: 0,
+                        len: index,
+                        stride: self.iter.stride,
+                        inner_dim: self.iter.inner_dim.clone(),
+                        inner_strides: self.iter.inner_strides.clone(),
+                        ptr: self.iter.ptr,
+                    },
+                    life: PhantomData,
+                };
+                let right = $iter {
+                    iter: OuterIterCore {
+                        index: 0,
+                        len: self.iter.len - index,
+                        stride: self.iter.stride,
+                        inner_dim: self.iter.inner_dim,
+                        inner_strides: self.iter.inner_strides,
+                        ptr: right_ptr,
+                    },
+                    life: PhantomData,
+                };
+                (left, right)
+            }
         }
-        else {
-            self.iter.ptr
-        };
-        let left = OuterIter {
-            iter: OuterIterCore {
-                index: 0,
-                len: index,
-                stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim.clone(),
-                inner_strides: self.iter.inner_strides.clone(),
-                ptr: self.iter.ptr,
-            },
-            life: PhantomData,
-        };
-        let right = OuterIter {
-            iter: OuterIterCore {
-                index: 0,
-                len: self.iter.len - index,
-                stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim,
-                inner_strides: self.iter.inner_strides,
-                ptr: right_ptr,
-            },
-            life: PhantomData,
-        };
-        (left, right)
-    }
+    )
 }
+
+outer_iter_split_at_impl!(OuterIter);
 
 impl<'a, A, D> Clone for OuterIter<'a, A, D>
     where D: Dimension
@@ -617,47 +623,7 @@ pub struct OuterIterMut<'a, A: 'a, D> {
     life: PhantomData<&'a mut A>,
 }
 
-impl<'a, A, D> OuterIterMut<'a, A, D>
-    where D: Dimension
-{
-    /// Split the iterator at index, yielding two disjoint iterators.
-    ///
-    /// *panics* if `index` is strictly greater than the iterator's length
-    pub fn split_at(self, index: Ix)
-        -> (OuterIterMut<'a, A, D>, OuterIterMut<'a, A, D>)
-    {
-        assert!(index <= self.iter.len);
-        let right_ptr = if index != self.iter.len {
-            unsafe { self.iter.offset(index) } 
-        }
-        else {
-            self.iter.ptr
-        };
-        let left = OuterIterMut {
-            iter: OuterIterCore {
-                index: 0,
-                len: index,
-                stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim.clone(),
-                inner_strides: self.iter.inner_strides.clone(),
-                ptr: self.iter.ptr,
-            },
-            life: PhantomData,
-        };
-        let right = OuterIterMut {
-            iter: OuterIterCore {
-                index: 0,
-                len: self.iter.len - index,
-                stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim,
-                inner_strides: self.iter.inner_strides,
-                ptr: right_ptr,
-            },
-            life: PhantomData,
-        };
-        (left, right)
-    }
-}
+outer_iter_split_at_impl!(OuterIterMut);
 
 impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
     where D: Dimension
