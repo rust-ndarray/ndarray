@@ -43,6 +43,9 @@ rblas = { version = "0.0.13", optional = true }
 
 assign_ops = []
 
+# This feature is used for testing
+all = ["assign_ops", "rblas", "rustc-serialize"]
+
 [profile.release]
 [profile.bench]
 debug = true
