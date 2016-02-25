@@ -2169,6 +2169,7 @@ pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(
     }
 }
 
+/// Return a three-dimensional array with elements from `xs`.
 pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
     -> RcArray<A, (Ix, Ix, Ix)>
 {
