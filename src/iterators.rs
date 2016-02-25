@@ -430,6 +430,8 @@ fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
 
 impl<A, D> OuterIterCore<A, D> {
     unsafe fn offset(&self, index: usize) -> *mut A {
+        debug_assert!(index <= self.len,
+                      "index={}, len={}, stride={}", index, self.len, self.stride);
         self.ptr.offset(index as isize * self.stride)
     }
 }
@@ -511,7 +513,7 @@ macro_rules! outer_iter_split_at_impl {
                         inner_strides: self.iter.inner_strides.clone(),
                         ptr: self.iter.ptr,
                     },
-                    life: PhantomData,
+                    life: self.life,
                 };
                 let right = $iter {
                     iter: OuterIterCore {
@@ -522,7 +524,7 @@ macro_rules! outer_iter_split_at_impl {
                         inner_strides: self.iter.inner_strides,
                         ptr: right_ptr,
                     },
-                    life: PhantomData,
+                    life: self.life,
                 };
                 (left, right)
             }
@@ -545,7 +547,7 @@ impl<'a, A, D> Clone for OuterIter<'a, A, D>
                 inner_strides: self.iter.inner_strides.clone(),
                 ptr: self.iter.ptr,
             },
-            life: PhantomData,
+            life: self.life,
         }
     }
 }
