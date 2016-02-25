@@ -1,12 +1,12 @@
 
 extern crate ndarray;
 
-use ndarray::{arr0, arr1, aview1};
+use ndarray::{arr0, rcarr1, aview1};
 
 #[test]
 fn formatting()
 {
-    let a = arr1::<f32>(&[1., 2., 3., 4.]);
+    let a = rcarr1::<f32>(&[1., 2., 3., 4.]);
     assert_eq!(format!("{:?}", a),
                //"[   1,    2,    3,    4]");
                "[1, 2, 3, 4]");

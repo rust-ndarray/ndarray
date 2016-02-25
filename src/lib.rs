@@ -1567,12 +1567,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if shapes are incompatible.
     ///
     /// ```
-    /// use ndarray::{arr1, arr2};
+    /// use ndarray::{rcarr1, rcarr2};
     ///
     /// assert!(
-    ///     arr1(&[1., 2., 3., 4.]).reshape((2, 2))
-    ///     == arr2(&[[1., 2.],
-    ///               [3., 4.]])
+    ///     rcarr1(&[1., 2., 3., 4.]).reshape((2, 2))
+    ///     == rcarr2(&[[1., 2.],
+    ///                 [3., 4.]])
     /// );
     /// ```
     pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E>
@@ -1998,14 +1998,19 @@ pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
 }
 
 /// Return a zero-dimensional array with the element `x`.
-pub fn arr0<A>(x: A) -> RcArray<A, ()>
+pub fn arr0<A>(x: A) -> OwnedArray<A, ()>
 {
     unsafe { ArrayBase::from_vec_dim_unchecked((), vec![x]) }
 }
 
 /// Return a one-dimensional array with elements from `xs`.
-pub fn arr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix> {
+pub fn arr1<A: Clone>(xs: &[A]) -> OwnedArray<A, Ix> {
     ArrayBase::from_vec(xs.to_vec())
+}
+
+/// Return a one-dimensional array with elements from `xs`.
+pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix> {
+    arr1(xs).into_shared()
 }
 
 /// Return a zero-dimensional array view borrowing `x`.
@@ -2067,36 +2072,18 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
     unsafe { ArrayViewMut::new_(xs.as_mut_ptr(), xs.len() as Ix, 1) }
 }
 
-/// Slice or fixed-size array used for array initialization
-pub unsafe trait Initializer {
+/// Fixed-size array used for array initialization
+pub unsafe trait FixedInitializer {
     type Elem;
     fn as_init_slice(&self) -> &[Self::Elem];
-    fn is_fixed_size() -> bool {
-        false
-    }
-}
-
-/// Fixed-size array used for array initialization
-pub unsafe trait FixedInitializer: Initializer {
     fn len() -> usize;
-}
-
-unsafe impl<T> Initializer for [T] {
-    type Elem = T;
-    fn as_init_slice(&self) -> &[T] {
-        self
-    }
 }
 
 macro_rules! impl_arr_init {
     (__impl $n: expr) => (
-        unsafe impl<T> Initializer for [T;  $n] {
+        unsafe impl<T> FixedInitializer for [T;  $n] {
             type Elem = T;
             fn as_init_slice(&self) -> &[T] { self }
-            fn is_fixed_size() -> bool { true }
-        }
-
-        unsafe impl<T> FixedInitializer for [T;  $n] {
             fn len() -> usize { $n }
         }
     );
@@ -2112,8 +2099,6 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 
 /// Return a two-dimensional array with elements from `xs`.
 ///
-/// **Panics** if the slices are not all of the same length.
-///
 /// ```
 /// use ndarray::arr2;
 ///
@@ -2123,7 +2108,7 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)> {
+pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> OwnedArray<A, (Ix, Ix)> {
     // FIXME: Simplify this when V is fix size array
     let (m, n) = (xs.len() as Ix,
                   xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
@@ -2131,12 +2116,17 @@ pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
         let snd = snd.as_init_slice();
-        assert!(V::is_fixed_size() || snd.len() as Ix == n);
         result.extend(snd.iter().cloned());
     }
     unsafe {
         ArrayBase::from_vec_dim_unchecked(dim, result)
     }
+}
+
+/// Return a two-dimensional array with elements from `xs`.
+///
+pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)> {
+    arr2(xs).into_shared()
 }
 
 /// Return a three-dimensional array with elements from `xs`.
@@ -2156,8 +2146,8 @@ pub fn arr2<A: Clone, V: Initializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)
 ///     a.shape() == [3, 2, 2]
 /// );
 /// ```
-pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
-    -> RcArray<A, (Ix, Ix, Ix)>
+pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
+    -> OwnedArray<A, (Ix, Ix, Ix)>
 {
     // FIXME: Simplify this when U/V are fix size arrays
     let m = xs.len() as Ix;
@@ -2169,10 +2159,8 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
         let snd = snd.as_init_slice();
-        assert!(V::is_fixed_size() || snd.len() as Ix == n);
         for thr in snd.iter() {
             let thr = thr.as_init_slice();
-            assert!(U::is_fixed_size() || thr.len() as Ix == o);
             result.extend(thr.iter().cloned());
         }
     }
@@ -2181,6 +2169,11 @@ pub fn arr3<A: Clone, V: Initializer<Elem=U>, U: Initializer<Elem=A>>(xs: &[V])
     }
 }
 
+pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
+    -> RcArray<A, (Ix, Ix, Ix)>
+{
+    arr3(xs).into_shared()
+}
 
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>,

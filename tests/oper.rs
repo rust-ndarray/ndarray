@@ -2,16 +2,16 @@ extern crate ndarray;
 extern crate num as libnum;
 
 use ndarray::RcArray;
-use ndarray::{arr0, arr1, arr2};
+use ndarray::{arr0, rcarr1, rcarr2};
 
 use std::fmt;
 use libnum::Float;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
 {
-    let aa = arr1(a);
-    let bb = arr1(b);
-    let cc = arr1(c);
+    let aa = rcarr1(a);
+    let bb = rcarr1(b);
+    let cc = rcarr1(c);
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (2, 2);
     let aa = aa.reshape(dim);
@@ -78,8 +78,8 @@ fn operations()
 fn scalar_operations()
 {
     let a = arr0::<f32>(1.);
-    let b = arr1::<f32>(&[1., 1.]);
-    let c = arr2(&[[1., 1.], [1., 1.]]);
+    let b = rcarr1::<f32>(&[1., 1.]);
+    let c = rcarr2(&[[1., 1.], [1., 1.]]);
 
     {
         let mut x = a.clone();
@@ -92,7 +92,7 @@ fn scalar_operations()
 
     {
         let mut x = b.clone();
-        let mut y = arr1(&[0., 0.]);
+        let mut y = rcarr1(&[0., 0.]);
         x.iadd_scalar(&1.);
         y.assign_scalar(&2.);
         assert_eq!(x, b + arr0(1.));
