@@ -369,6 +369,41 @@ fn add_2d_f32_blas(bench: &mut test::Bencher)
     });
 }
 
+#[bench]
+fn muladd_2d_f32_regular(bench: &mut test::Bencher)
+{
+    use rblas::Axpy;
+    use rblas::attribute::Transpose;
+    use ndarray::blas::AsBlas;
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
+    let scalar = 3.1415926535;
+    let len = a.len();
+    let mut av = a.view_mut().into_shape(len).unwrap();
+    let bv = b.view().into_shape(len).unwrap();
+    bench.iter(|| {
+        av.zip_mut_with(&bv, |a, &b| *a += scalar * b);
+    });
+}
+
+#[cfg(feature = "rblas")]
+#[bench]
+fn muladd_2d_f32_blas(bench: &mut test::Bencher)
+{
+    use rblas::Axpy;
+    use rblas::attribute::Transpose;
+    use ndarray::blas::AsBlas;
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let b = OwnedArray::<f32, _>::zeros((64, 64));
+    let scalar = 3.1415926535;
+    let len = a.len();
+    let mut av = a.view_mut().into_shape(len).unwrap();
+    let bv = b.view().into_shape(len).unwrap();
+    bench.iter(|| {
+        f32::axpy(&scalar, &bv.bv(), &mut av.bvm());
+    });
+}
+
 
 #[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
