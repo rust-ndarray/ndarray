@@ -2609,7 +2609,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
     fn $mth (self, rhs: &'a ArrayBase<S2, E>) -> OwnedArray<A, D>
     {
         // FIXME: Can we co-broadcast arrays here? And how?
-        self.to_owned().$mth(rhs.view())
+        self.to_owned().$mth(rhs)
     }
 }
 
