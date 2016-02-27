@@ -56,6 +56,9 @@ extern crate serde;
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 
+#[cfg(feature = "rblas")]
+extern crate rblas;
+
 extern crate itertools;
 extern crate num as libnum;
 
@@ -114,6 +117,25 @@ mod numeric_util;
 mod si;
 mod shape_error;
 mod stride_error;
+
+/// Implementation's prelude. Common types used everywhere.
+mod imp_prelude {
+    pub use {
+        ArrayBase,
+        ArrayView,
+        ArrayViewMut,
+        OwnedArray,
+        RcArray,
+        Ix, Ixs,
+        Dimension,
+        Data,
+        DataMut,
+        DataOwned,
+    };
+    /// Wrapper type for private methods
+    #[derive(Copy, Clone, Debug)]
+    pub struct Priv<T>(pub T);
+}
 
 // NOTE: In theory, the whole library should compile
 // and pass tests even if you change Ix and Ixs.
@@ -2249,7 +2271,6 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     ///
     /// **Panics** if `axis` is out of bounds.
-    #[allow(deprecated)]
     pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
@@ -2286,7 +2307,15 @@ impl<A, S> ArrayBase<S, Ix>
     /// of complex operands, and thus not their inner product).
     ///
     /// **Panics** if the arrays are not of the same length.
+    #[cfg(not(feature="rblas"))]
     pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+        where S2: Data<Elem=A>,
+              A: LinalgScalar,
+    {
+        self.dot_generic(rhs)
+    }
+
+    fn dot_generic<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
@@ -2304,7 +2333,48 @@ impl<A, S> ArrayBase<S, Ix>
         }
         sum
     }
+
+    #[cfg(feature="rblas")]
+    /// Compute the dot product of one-dimensional arrays.
+    ///
+    /// The dot product is a sum of the elementwise products (no conjugation
+    /// of complex operands, and thus not their inner product).
+    ///
+    /// **Panics** if the arrays are not of the same length.
+    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+        where S2: Data<Elem=A>,
+              A: LinalgScalar,
+    {
+        use std::any::{Any, TypeId};
+        use rblas::vector::ops::Dot;
+        use linalg::AsBlasAny;
+
+        // Read pointer to type `A` as type `B`.
+        //
+        // **Panics** if `A` and `B` are not the same type
+        fn cast_as<A: Any + Copy, B: Any + Copy>(a: &A) -> B {
+            assert_eq!(TypeId::of::<A>(), TypeId::of::<B>());
+            unsafe {
+                ::std::ptr::read(a as *const _ as *const B)
+            }
+        }
+        assert_eq!(self.len(), rhs.len());
+        if let Ok(self_v) = self.blas_view_as_type::<f32>() {
+            if let Ok(rhs_v) = rhs.blas_view_as_type::<f32>() {
+                let f_ret = f32::dot(&self_v, &rhs_v);
+                return cast_as::<f32, A>(&f_ret);
+            }
+        }
+        if let Ok(self_v) = self.blas_view_as_type::<f64>() {
+            if let Ok(rhs_v) = rhs.blas_view_as_type::<f64>() {
+                let f_ret = f64::dot(&self_v, &rhs_v);
+                return cast_as::<f64, A>(&f_ret);
+            }
+        }
+        self.dot_generic(rhs)
+    }
 }
+
 
 impl<A, S> ArrayBase<S, (Ix, Ix)>
     where S: Data<Elem=A>,
@@ -2366,7 +2436,6 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// );
     /// ```
     ///
-    #[allow(deprecated)]
     pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
         where A: LinalgScalar,
     {
@@ -2411,7 +2480,6 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if shapes are incompatible.
-    #[allow(deprecated)]
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
         where A: LinalgScalar,
     {
@@ -2894,3 +2962,4 @@ enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
 }
+

@@ -57,17 +57,10 @@ use self::rblas::{
     Vector,
 };
 use super::{
-    ArrayBase,
-    ArrayView,
-    ArrayViewMut,
-    Ix, Ixs,
     ShapeError,
-    Data,
-    DataMut,
-    DataOwned,
-    Dimension,
     zipsl,
 };
+use imp_prelude::*;
 
 
 /// ***Requires `features = "rblas"`***
@@ -108,22 +101,23 @@ impl<S, D> ArrayBase<S, D>
     }
 }
 
-impl<'a, A, D> ArrayView<'a, A, D>
+impl<'a, A, D> Priv<ArrayView<'a, A, D>>
     where D: Dimension
 {
-    fn into_matrix(self) -> Result<BlasArrayView<'a, A, D>, ShapeError> {
-        if self.dim.ndim() > 1 {
-            try!(self.contiguous_check());
+    pub fn into_blas_view(self) -> Result<BlasArrayView<'a, A, D>, ShapeError> {
+        let self_ = self.0;
+        if self_.dim.ndim() > 1 {
+            try!(self_.contiguous_check());
         }
-        try!(self.size_check());
-        Ok(BlasArrayView(self))
+        try!(self_.size_check());
+        Ok(BlasArrayView(self_))
     }
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension
 {
-    fn into_matrix_mut(self) -> Result<BlasArrayViewMut<'a, A, D>, ShapeError> {
+    fn into_blas_view_mut(self) -> Result<BlasArrayViewMut<'a, A, D>, ShapeError> {
         if self.dim.ndim() > 1 {
             try!(self.contiguous_check());
         }
@@ -241,19 +235,19 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
             }
             _n => self.ensure_standard_layout(),
         }
-        self.view_mut().into_matrix_mut()
+        self.view_mut().into_blas_view_mut()
     }
 
     fn blas_view_checked(&self) -> Result<BlasArrayView<A, D>, ShapeError>
         where S: Data
     {
-        self.view().into_matrix()
+        Priv(self.view()).into_blas_view()
     }
 
     fn blas_view_mut_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
         where S: DataMut,
     {
-        self.view_mut().into_matrix_mut()
+        self.view_mut().into_blas_view_mut()
     }
 
     /*
