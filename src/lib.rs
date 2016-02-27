@@ -97,10 +97,8 @@ pub use iterators::{
     AxisChunksIterMut,
 };
 
-#[allow(deprecated)]
-use linalg::{Field, Ring};
+pub use linalg::LinalgScalar;
 
-pub mod linalg;
 mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;
@@ -110,6 +108,7 @@ pub mod blas;
 mod dimension;
 mod indexes;
 mod iterators;
+mod linalg;
 mod linspace;
 mod numeric_util;
 mod si;
@@ -2252,7 +2251,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// **Panics** if `axis` is out of bounds.
     #[allow(deprecated)]
     pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
-        where A: Copy + Field,
+        where A: LinalgScalar,
               D: RemoveAxis,
     {
         let n = self.shape()[axis];
@@ -2289,7 +2288,7 @@ impl<A, S> ArrayBase<S, Ix>
     /// **Panics** if the arrays are not of the same length.
     pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
         where S2: Data<Elem=A>,
-              A: Clone + Add<Output=A> + Mul<Output=A> + libnum::Zero,
+              A: LinalgScalar,
     {
         assert_eq!(self.len(), rhs.len());
         if let Some(self_s) = self.as_slice() {
@@ -2369,7 +2368,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     ///
     #[allow(deprecated)]
     pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
-        where A: Copy + Ring
+        where A: LinalgScalar,
     {
         // NOTE: Matrix multiplication only defined for Copy types to
         // avoid trouble with panicking + and *, and destructors
@@ -2414,7 +2413,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if shapes are incompatible.
     #[allow(deprecated)]
     pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
-        where A: Copy + Ring
+        where A: LinalgScalar,
     {
         let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
