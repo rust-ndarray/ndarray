@@ -2011,7 +2011,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 }
 
+/// ***Deprecated: Use `ArrayBase::zeros` instead.***
+///
 /// Return an array filled with zeros
+#[cfg_attr(has_deprecated, deprecated(note="Use `ArrayBase::zeros` instead."))]
 pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
     where A: Clone + libnum::Zero, D: Dimension,
 {
