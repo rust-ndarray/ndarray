@@ -398,6 +398,16 @@ fn muladd_2d_f32_blas(bench: &mut test::Bencher)
     });
 }
 
+#[bench]
+fn dot_f32_regular(bench: &mut test::Bencher)
+{
+    let av = OwnedArray::<f32, _>::zeros(1024);
+    let bv = OwnedArray::<f32, _>::zeros(1024);
+    bench.iter(|| {
+        av.dot(&bv)
+    });
+}
+
 
 #[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
