@@ -5,7 +5,7 @@ use ndarray::{
     OwnedArray,
     RemoveAxis,
     arr2,
-    Ax0, Ax1, Ax2,
+    Axis0, Axis1, Axis2,
 };
 
 #[test]
@@ -19,10 +19,10 @@ fn remove_axis()
     assert_eq!(vec![4, 5, 6].remove_axis(1), vec![4, 6]);
 
     let a = RcArray::<f32, _>::zeros((4,5));
-    a.subview(Ax1, 0);
+    a.subview(Axis1, 0);
 
     let a = RcArray::<f32, _>::zeros(vec![4,5,6]);
-    let _b = a.subview(Ax1, 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
+    let _b = a.subview(Axis1, 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
     
 }
 

@@ -92,7 +92,7 @@ use itertools::free::enumerate;
 pub use dimension::{
     Dimension,
     RemoveAxis,
-    Ax0, Ax1, Ax2, Ax3, Ax,
+    Axis0, Axis1, Axis2, Axis3, Axis,
 };
 
 pub use dimension::NdIndex;
@@ -115,7 +115,6 @@ pub use linalg::LinalgScalar;
 
 pub use dimension::{
     AxisForDimension,
-    Axis,
 };
 
 mod arraytraits;
@@ -2431,7 +2430,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.subview(Ax0, index)
+        self.subview(Axis0, index)
     }
 
     /// Return a mutable array view of row `index`.
@@ -2440,7 +2439,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
         where S: DataMut
     {
-        self.subview_mut(Ax0, index)
+        self.subview_mut(Axis0, index)
     }
 
     /// Return an array view of column `index`.
@@ -2448,7 +2447,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.subview(Ax1, index)
+        self.subview(Axis1, index)
     }
 
     /// Return a mutable array view of column `index`.
@@ -2457,7 +2456,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
         where S: DataMut
     {
-        self.subview_mut(Ax1, index)
+        self.subview_mut(Axis1, index)
     }
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.

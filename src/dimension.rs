@@ -142,7 +142,6 @@ pub unsafe trait Dimension : Clone + Eq {
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
     type SliceArg: ?Sized + AsRef<[Si]>;
-    type AxisArg: Copy + Axis;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
     #[doc(hidden)]
@@ -357,7 +356,6 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
 
 unsafe impl Dimension for () {
     type SliceArg = [Si; 0];
-    type AxisArg = VoidAxis;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
@@ -367,7 +365,6 @@ unsafe impl Dimension for () {
 
 unsafe impl Dimension for Ix {
     type SliceArg = [Si; 1];
-    type AxisArg = Axes0;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
@@ -415,7 +412,6 @@ unsafe impl Dimension for Ix {
 
 unsafe impl Dimension for (Ix, Ix) {
     type SliceArg = [Si; 2];
-    type AxisArg = Axes1;
     #[inline]
     fn ndim(&self) -> usize { 2 }
 
@@ -484,7 +480,6 @@ unsafe impl Dimension for (Ix, Ix) {
 
 unsafe impl Dimension for (Ix, Ix, Ix) {
     type SliceArg = [Si; 3];
-    type AxisArg = Axes2;
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
@@ -521,7 +516,6 @@ macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
         unsafe impl Dimension for ($($ix),+) {
             type SliceArg = [Si; $n];
-            type AxisArg = usize;
             #[inline]
             fn ndim(&self) -> usize { $n }
         }
@@ -543,7 +537,6 @@ large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 unsafe impl Dimension for Vec<Ix>
 {
     type SliceArg = [Si];
-    type AxisArg = usize;
     fn ndim(&self) -> usize { self.len() }
     fn slice(&self) -> &[Ix] { self }
     fn slice_mut(&mut self) -> &mut [Ix] { self }
@@ -724,21 +717,6 @@ mod test {
     }
 }
 
-pub trait Axis : Copy {
-    fn axis(&self) -> usize;
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum VoidAxis { }
-#[derive(Copy, Clone, Debug)]
-pub struct Axes0(usize);
-#[derive(Copy, Clone, Debug)]
-pub struct Axes1(usize);
-#[derive(Copy, Clone, Debug)]
-pub struct Axes2(usize);
-#[derive(Copy, Clone, Debug)]
-pub struct Axes3(usize);
-
 #[derive(Debug)]
 pub struct AxisForDimension<D> {
     axis: usize,
@@ -760,8 +738,8 @@ impl<D> PartialEq for AxisForDimension<D> {
     }
 }
 
-impl<D> From<Ax> for AxisForDimension<D> {
-    fn from(x: Ax) -> Self {
+impl<D> From<Axis> for AxisForDimension<D> {
+    fn from(x: Axis) -> Self {
         AxisForDimension {
             axis: x.0,
             dim: PhantomData,
@@ -769,46 +747,23 @@ impl<D> From<Ax> for AxisForDimension<D> {
     }
 }
 
-impl Axis for VoidAxis { fn axis(&self) -> usize { match *self { } } }
-impl Axis for Axes0 { fn axis(&self) -> usize { self.0 } }
-impl Axis for Axes1 { fn axis(&self) -> usize { self.0 } }
-impl Axis for Axes2 { fn axis(&self) -> usize { self.0 } }
-impl Axis for Axes3 { fn axis(&self) -> usize { self.0 } }
+#[derive(Copy, Clone, Debug)]
+pub struct Axis0;
+#[derive(Copy, Clone, Debug)]
+pub struct Axis1;
+#[derive(Copy, Clone, Debug)]
+pub struct Axis2;
+#[derive(Copy, Clone, Debug)]
+pub struct Axis3;
 
 #[derive(Copy, Clone, Debug)]
-pub struct Ax0;
-#[derive(Copy, Clone, Debug)]
-pub struct Ax1;
-#[derive(Copy, Clone, Debug)]
-pub struct Ax2;
-#[derive(Copy, Clone, Debug)]
-pub struct Ax3;
+pub struct Axis(pub usize);
 
-#[derive(Copy, Clone, Debug)]
-pub struct Ax(pub usize);
-
-impl Axis for Ax0 { fn axis(&self) -> usize { 0 } }
-impl Axis for Ax1 { fn axis(&self) -> usize { 1 } }
-impl Axis for Ax2 { fn axis(&self) -> usize { 2 } }
-impl Axis for Ax3 { fn axis(&self) -> usize { 3 } }
-impl Axis for usize { fn axis(&self) -> usize { *self } }
-impl Axis for Ax { fn axis(&self) -> usize { self.0 } }
-
-impl Into<VoidAxis> for usize {
-    fn into(self) -> VoidAxis {
-        panic!("VoidAxis: zero-dimensional arrays have no axes")
-    }
-}
-
-impl Into<usize> for Ax0 { fn into(self) -> usize { 0 } }
-impl Into<usize> for Ax1 { fn into(self) -> usize { 1 } }
-impl Into<usize> for Ax2 { fn into(self) -> usize { 2 } }
-impl Into<usize> for Ax3 { fn into(self) -> usize { 3 } }
-impl Into<usize> for Ax { fn into(self) -> usize { self.0 } }
-
-impl Into<Axes0> for Ax0 {
-    fn into(self) -> Axes0 { Axes0(0) }
-}
+impl Into<usize> for Axis0 { #[inline] fn into(self) -> usize { 0 } }
+impl Into<usize> for Axis1 { #[inline] fn into(self) -> usize { 1 } }
+impl Into<usize> for Axis2 { #[inline] fn into(self) -> usize { 2 } }
+impl Into<usize> for Axis3 { #[inline] fn into(self) -> usize { 3 } }
+impl Into<usize> for Axis { #[inline] fn into(self) -> usize { self.0 } }
 
 macro_rules! ax_for_dim {
     ($dim:ty, $($ax:ident),*) => {
@@ -824,48 +779,7 @@ macro_rules! ax_for_dim {
         )*
     }
 }
-ax_for_dim!{Ix, Ax0}
-ax_for_dim!{(Ix, Ix), Ax0, Ax1}
-ax_for_dim!{(Ix, Ix, Ix), Ax0, Ax1, Ax2}
-ax_for_dim!{(Ix, Ix, Ix, Ix), Ax0, Ax1, Ax2, Ax3}
-
-impl Into<Axes0> for usize {
-    fn into(self) -> Axes0 {
-        assert!(self == 0);
-        Axes0(self)
-    }
-}
-
-impl Into<Axes1> for Ax0 {
-    fn into(self) -> Axes1 { Axes1(self.axis()) }
-}
-
-impl Into<Axes1> for Ax1 {
-    fn into(self) -> Axes1 { Axes1(self.axis()) }
-}
-
-impl Into<Axes1> for usize {
-    fn into(self) -> Axes1 {
-        assert!(self <= 1);
-        Axes1(self)
-    }
-}
-
-impl Into<Axes2> for Ax0 {
-    fn into(self) -> Axes2 { Axes2(self.axis()) }
-}
-
-impl Into<Axes2> for Ax1 {
-    fn into(self) -> Axes2 { Axes2(self.axis()) }
-}
-
-impl Into<Axes2> for Ax2 {
-    fn into(self) -> Axes2 { Axes2(self.axis()) }
-}
-
-impl Into<Axes2> for usize {
-    fn into(self) -> Axes2 {
-        assert!(self <= 2);
-        Axes2(self)
-    }
-}
+ax_for_dim!{Ix, Axis0}
+ax_for_dim!{(Ix, Ix), Axis0, Axis1}
+ax_for_dim!{(Ix, Ix, Ix), Axis0, Axis1, Axis2}
+ax_for_dim!{(Ix, Ix, Ix, Ix), Axis0, Axis1, Axis2, Axis3}
