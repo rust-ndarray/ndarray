@@ -12,7 +12,6 @@ use rblas::matrix::Matrix;
 
 use ndarray::{
     OwnedArray,
-    zeros,
 };
 use ndarray::{arr0, arr1, arr2};
 
@@ -398,7 +397,6 @@ fn muladd_2d_f32_blas(bench: &mut test::Bencher)
     });
 }
 
-
 #[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
@@ -506,14 +504,14 @@ fn create_iter_4d(bench: &mut test::Bencher)
 #[bench]
 fn bench_to_owned_n(bench: &mut test::Bencher)
 {
-    let a = zeros::<f32, _>((32, 32));
+    let a = OwnedArray::<f32, _>::zeros((32, 32));
     bench.iter(|| a.to_owned());
 }
 
 #[bench]
 fn bench_to_owned_t(bench: &mut test::Bencher)
 {
-    let mut a = zeros::<f32, _>((32, 32));
+    let mut a = OwnedArray::<f32, _>::zeros((32, 32));
     a.swap_axes(0, 1);
     bench.iter(|| a.to_owned());
 }
@@ -535,11 +533,29 @@ fn equality_f32(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn dot(bench: &mut test::Bencher)
+fn dot_f32_16(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros(16);
+    let b = OwnedArray::<f32, _>::zeros(16);
+    bench.iter(|| a.dot(&b));
+}
+
+#[bench]
+fn dot_f32_256(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros(256);
     let b = OwnedArray::<f32, _>::zeros(256);
     bench.iter(|| a.dot(&b));
+}
+
+#[bench]
+fn dot_f32_1024(bench: &mut test::Bencher)
+{
+    let av = OwnedArray::<f32, _>::zeros(1024);
+    let bv = OwnedArray::<f32, _>::zeros(1024);
+    bench.iter(|| {
+        av.dot(&bv)
+    });
 }
 
 #[bench]

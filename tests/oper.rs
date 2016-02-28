@@ -3,6 +3,9 @@ extern crate num as libnum;
 
 use ndarray::RcArray;
 use ndarray::{arr0, rcarr1, rcarr2};
+use ndarray::{
+    OwnedArray,
+};
 
 use std::fmt;
 use libnum::Float;
@@ -107,4 +110,24 @@ fn scalar_operations()
         assert_eq!(x, c + arr0(1.));
         assert_eq!(x, y);
     }
+}
+
+fn assert_approx_eq<F: fmt::Debug + Float>(f: F, g: F, tol: F) -> bool {
+    assert!((f - g).abs() <= tol, "{:?} approx== {:?} (tol={:?})",
+            f, g, tol);
+    true
+}
+
+#[test]
+fn dot_product() {
+    let a = OwnedArray::linspace(0., 63., 64);
+    let b = OwnedArray::linspace(0., 63., 64);
+    let dot = 85344.;
+    assert_approx_eq(a.dot(&b), dot, 1e-5);
+    let a = a.map(|f| *f as f32);
+    let b = a.map(|f| *f as f32);
+    assert_approx_eq(a.dot(&b), dot as f32, 1e-5);
+    let a = a.map(|f| *f as i32);
+    let b = a.map(|f| *f as i32);
+    assert_eq!(a.dot(&b), dot as i32);
 }
