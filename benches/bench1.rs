@@ -398,17 +398,6 @@ fn muladd_2d_f32_blas(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn dot_f32_regular(bench: &mut test::Bencher)
-{
-    let av = OwnedArray::<f32, _>::zeros(1024);
-    let bv = OwnedArray::<f32, _>::zeros(1024);
-    bench.iter(|| {
-        av.dot(&bv)
-    });
-}
-
-
-#[bench]
 fn assign_scalar_2d_large(bench: &mut test::Bencher)
 {
     let a = OwnedArray::zeros((64, 64));
@@ -544,11 +533,29 @@ fn equality_f32(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn dot(bench: &mut test::Bencher)
+fn dot_f32_16(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros(16);
+    let b = OwnedArray::<f32, _>::zeros(16);
+    bench.iter(|| a.dot(&b));
+}
+
+#[bench]
+fn dot_f32_256(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros(256);
     let b = OwnedArray::<f32, _>::zeros(256);
     bench.iter(|| a.dot(&b));
+}
+
+#[bench]
+fn dot_f32_1024(bench: &mut test::Bencher)
+{
+    let av = OwnedArray::<f32, _>::zeros(1024);
+    let bv = OwnedArray::<f32, _>::zeros(1024);
+    bench.iter(|| {
+        av.dot(&bv)
+    });
 }
 
 #[bench]

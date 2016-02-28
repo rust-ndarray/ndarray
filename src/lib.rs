@@ -2361,17 +2361,20 @@ impl<A, S> ArrayBase<S, Ix>
                 ::std::ptr::read(a as *const _ as *const B)
             }
         }
-        assert_eq!(self.len(), rhs.len());
-        if let Ok(self_v) = self.blas_view_as_type::<f32>() {
-            if let Ok(rhs_v) = rhs.blas_view_as_type::<f32>() {
-                let f_ret = f32::dot(&self_v, &rhs_v);
-                return cast_as::<f32, A>(&f_ret);
+        // Use only if the vector is large enough to be worth it
+        if self.len() >= 32 {
+            assert_eq!(self.len(), rhs.len());
+            if let Ok(self_v) = self.blas_view_as_type::<f32>() {
+                if let Ok(rhs_v) = rhs.blas_view_as_type::<f32>() {
+                    let f_ret = f32::dot(&self_v, &rhs_v);
+                    return cast_as::<f32, A>(&f_ret);
+                }
             }
-        }
-        if let Ok(self_v) = self.blas_view_as_type::<f64>() {
-            if let Ok(rhs_v) = rhs.blas_view_as_type::<f64>() {
-                let f_ret = f64::dot(&self_v, &rhs_v);
-                return cast_as::<f64, A>(&f_ret);
+            if let Ok(self_v) = self.blas_view_as_type::<f64>() {
+                if let Ok(rhs_v) = rhs.blas_view_as_type::<f64>() {
+                    let f_ret = f64::dot(&self_v, &rhs_v);
+                    return cast_as::<f64, A>(&f_ret);
+                }
             }
         }
         self.dot_generic(rhs)
