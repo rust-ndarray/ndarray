@@ -1,4 +1,5 @@
 use std::slice;
+use std::marker::PhantomData;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
@@ -715,3 +716,80 @@ mod test {
         assert!(super::dim_stride_overlap(&dim, &strides));
     }
 }
+
+#[derive(Debug)]
+pub struct AxisForDimension<D> {
+    axis: usize,
+    dim: PhantomData<D>,
+}
+
+impl<D> AxisForDimension<D> {
+    pub fn axis(&self) -> usize { self.axis }
+}
+
+impl<D> Copy for AxisForDimension<D> { }
+impl<D> Clone for AxisForDimension<D> {
+    fn clone(&self) -> Self { *self }
+}
+
+impl<D> PartialEq for AxisForDimension<D> {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.axis == rhs.axis
+    }
+}
+
+impl<D> From<Axis> for AxisForDimension<D> {
+    fn from(x: Axis) -> Self {
+        AxisForDimension {
+            axis: x.0,
+            dim: PhantomData,
+        }
+    }
+}
+
+#[cfg_attr(has_deprecated, deprecated(note="Usize arguments for `axis` are deprecated. Use `Axis` instead."))]
+impl<D> From<usize> for AxisForDimension<D> {
+    fn from(x: usize) -> Self {
+        AxisForDimension {
+            axis: x,
+            dim: PhantomData,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Axis0;
+#[derive(Copy, Clone, Debug)]
+pub struct Axis1;
+#[derive(Copy, Clone, Debug)]
+pub struct Axis2;
+#[derive(Copy, Clone, Debug)]
+pub struct Axis3;
+
+#[derive(Copy, Clone, Debug)]
+pub struct Axis(pub usize);
+
+impl Into<usize> for Axis0 { #[inline] fn into(self) -> usize { 0 } }
+impl Into<usize> for Axis1 { #[inline] fn into(self) -> usize { 1 } }
+impl Into<usize> for Axis2 { #[inline] fn into(self) -> usize { 2 } }
+impl Into<usize> for Axis3 { #[inline] fn into(self) -> usize { 3 } }
+impl Into<usize> for Axis { #[inline] fn into(self) -> usize { self.0 } }
+
+macro_rules! ax_for_dim {
+    ($dim:ty, $($ax:ident),*) => {
+        $(
+            impl From<$ax> for AxisForDimension<$dim> {
+                fn from(x: $ax) -> Self {
+                    AxisForDimension {
+                        axis: x.into(),
+                        dim: PhantomData,
+                    }
+                }
+            }
+        )*
+    }
+}
+ax_for_dim!{Ix, Axis0}
+ax_for_dim!{(Ix, Ix), Axis0, Axis1}
+ax_for_dim!{(Ix, Ix, Ix), Axis0, Axis1, Axis2}
+ax_for_dim!{(Ix, Ix, Ix, Ix), Axis0, Axis1, Axis2, Axis3}
