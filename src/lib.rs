@@ -38,6 +38,9 @@
 //!
 //! ## Crate Feature Flags
 //!
+//! The following crate feature flags are available. The are specified in
+//! `Cargo.toml`.
+//!
 //! - `assign_ops`
 //!   - Optional, requires nightly
 //!   - Enables the compound assignment operators
@@ -140,6 +143,16 @@ pub type Ixs = isize;
 /// [`RcArray`]: type.RcArray.html
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
+///
+/// ## Contents
+///
+/// + [OwnedArray and RcArray](#ownedarray-and-rcarray)
+/// + [Indexing and Dimension](#indexing-and-dimension)
+/// + [Slicing](#slicing)
+/// + [Subviews](#subviews)
+/// + [Arithmetic Operations](#arithmetic-operations)
+/// + [Broadcasting](#broadcasting)
+/// + [Methods](#methods)
 ///
 /// ## `OwnedArray` and `RcArray`
 ///
@@ -296,16 +309,18 @@ pub type Ixs = isize;
 ///
 /// Since the trait implementations are hard to overview, here is a summary.
 ///
-/// Let `A` be an array or view of any kind. Let `B` be a mutable
-/// array (that is, either `OwnedArray`, `RcArray`, or `ArrayViewMut`)
+/// Let `A` be an array or view of any kind. Let `B` be an array
+/// with owned storage (either `OwnedArray` or `RcArray`).
+/// Let `C` be an array with mutable data (either `OwnedArray`, `RcArray`
+/// or `ArrayViewMut`).
 /// The following combinations of operands
 /// are supported for an arbitrary binary operator denoted by `@`.
 ///
 /// - `&A @ &A` which produces a new `OwnedArray`
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
-/// - `B @= &A` which performs an arithmetic operation in place
-///   (requires `features = "assign_ops"`)
+/// - `C @= &A` which performs an arithmetic operation in place
+///   (requires crate feature `"assign_ops"`)
 ///
 /// The trait [`Scalar`](trait.Scalar.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
@@ -313,8 +328,8 @@ pub type Ixs = isize;
 ///
 /// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
-/// - `B @= K` which performs an arithmetic operation in place
-///   (requires `features = "assign_ops"`)
+/// - `C @= K` which performs an arithmetic operation in place
+///   (requires crate feature `"assign_ops"`)
 ///
 /// ## Broadcasting
 ///
@@ -2549,12 +2564,14 @@ macro_rules! impl_binary_op(
 /// between `self` and `rhs`,
 /// and return the result (based on `self`).
 ///
+/// `self` must be an `OwnedArray` or `RcArray`.
+///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
-          S: DataMut<Elem=A>,
+          S: DataOwned<Elem=A> + DataMut,
           S2: Data<Elem=A>,
           D: Dimension,
           E: Dimension,
@@ -2616,9 +2633,11 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 #[doc=$doc]
 /// between `self` and the scalar `x`,
 /// and return the result (based on `self`).
+///
+/// `self` must be an `OwnedArray` or `RcArray`.
 impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
-          S: DataMut<Elem=A>,
+          S: DataOwned<Elem=A> + DataMut,
           D: Dimension,
           B: Clone + Scalar,
 {
@@ -2793,7 +2812,7 @@ mod assign_ops {
     ///
     /// **Panics** if broadcasting isn’t possible.
     ///
-    /// **Requires `feature = "assign_ops"`**
+    /// **Requires crate feature `"assign_ops"`**
     impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
         where A: Clone + $trt<A>,
               S: DataMut<Elem=A>,
@@ -2809,7 +2828,7 @@ mod assign_ops {
     }
 
     #[doc=$doc]
-    /// **Requires `feature = "assign_ops"`**
+    /// **Requires crate feature `"assign_ops"`**
     impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
         where A: $trt<B>,
               S: DataMut<Elem=A>,

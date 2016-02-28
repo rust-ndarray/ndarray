@@ -1,6 +1,6 @@
 //! Experimental BLAS (Basic Linear Algebra Subprograms) integration
 //!
-//! ***Requires `features = "rblas"`***
+//! ***Requires crate feature `"rblas"`***
 //!
 //! Depends on crate [`rblas`], ([docs]).
 //!
@@ -70,7 +70,7 @@ use super::{
 };
 
 
-/// ***Requires `features = "rblas"`***
+/// ***Requires crate feature `"rblas"`***
 pub struct BlasArrayView<'a, A: 'a, D>(ArrayView<'a, A, D>);
 impl<'a, A, D: Copy> Copy for BlasArrayView<'a, A, D> { }
 impl<'a, A, D: Clone> Clone for BlasArrayView<'a, A, D> {
@@ -79,7 +79,7 @@ impl<'a, A, D: Clone> Clone for BlasArrayView<'a, A, D> {
     }
 }
 
-/// ***Requires `features = "rblas"`***
+/// ***Requires crate feature `"rblas"`***
 pub struct BlasArrayViewMut<'a, A: 'a, D>(ArrayViewMut<'a, A, D>);
 
 impl<S, D> ArrayBase<S, D>
@@ -137,7 +137,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 /// Note that `blas` suppors four different element types: `f32`, `f64`,
 /// `Complex<f32>`, and `Complex<f64>`.
 ///
-/// ***Requires `features = "rblas"`***
+/// ***Requires crate feature `"rblas"`***
 pub trait AsBlas<A, S, D> {
     /// Return an array view implementing Vector (1D) or Matrix (2D)
     /// traits.
@@ -222,7 +222,7 @@ pub trait AsBlas<A, S, D> {
         */
 }
 
-/// ***Requires `features = "rblas"`***
+/// ***Requires crate feature `"rblas"`***
 impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
     where S: Data<Elem=A>,
           D: Dimension,
