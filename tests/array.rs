@@ -658,3 +658,13 @@ fn deny_wraparound_reshape() {
     let five = OwnedArray::<f32, _>::zeros(5);
     let _five_large = five.into_shape((3, 7, 29, 36760123, 823996703)).unwrap();
 }
+
+#[test]
+fn split_at() {
+    let a = arr2(&[[1., 2.], [3., 4.]]);
+
+    let (c0, c1) = a.axis_split_at(1, 1);
+
+    assert_eq!(c0, arr2(&[[1.], [3.]]));
+    assert_eq!(c1, arr2(&[[2.], [4.]]));
+}
