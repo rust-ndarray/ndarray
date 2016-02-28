@@ -266,7 +266,7 @@ fn add_2d_regular(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        let _x = black_box(a.view_mut() + bv);
+        a.iadd(&bv);
     });
 }
 
@@ -292,7 +292,7 @@ fn add_2d_cutout(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        let _x = black_box(acut.view_mut() + bv);
+        acut.iadd(&bv);
     });
 }
 
@@ -303,7 +303,7 @@ fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros(64);
     let bv = b.view();
     bench.iter(|| {
-        let _x = black_box(a.view_mut() + bv);
+        a.iadd(&bv);
     });
 }
 
@@ -314,7 +314,7 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros(());
     let bv = b.view();
     bench.iter(|| {
-        let _x = black_box(a.view_mut() + bv);
+        a.iadd(&bv);
     });
 }
 
@@ -337,7 +337,7 @@ fn add_2d_transposed(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        let _x = black_box(a.view_mut() + bv);
+        a.iadd(&bv);
     });
 }
 
@@ -348,7 +348,7 @@ fn add_2d_f32_regular(bench: &mut test::Bencher)
     let b = OwnedArray::<f32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        let _x = black_box(a.view_mut() + bv);
+        a.iadd(&bv);
     });
 }
 
