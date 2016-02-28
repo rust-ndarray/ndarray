@@ -48,11 +48,10 @@
 //! I know), instead output its own error conditions, for example on dimension
 //! mismatch in a matrix multiplication.
 //!
-extern crate rblas;
 
 use std::os::raw::{c_int};
 
-use self::rblas::{
+use rblas::{
     Matrix,
     Vector,
 };
