@@ -141,6 +141,16 @@ pub type Ixs = isize;
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
+/// ## Contents
+///
+/// + [OwnedArray and RcArray](#ownedarray-and-rcarray)
+/// + [Indexing and Dimension](#indexing-and-dimension)
+/// + [Slicing](#slicing)
+/// + [Subviews](#subviews)
+/// + [Arithmetic Operations](#arithmetic-operations)
+/// + [Broadcasting](#broadcasting)
+/// + [Methods](#methods)
+///
 /// ## `OwnedArray` and `RcArray`
 ///
 /// `OwnedArray` owns the underlying array elements directly (just like
