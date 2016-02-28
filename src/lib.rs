@@ -923,6 +923,51 @@ impl<'a, A, D> ArrayView<'a, A, D>
     {
         iterators::new_outer_iter(self)
     }
+
+    /// Split the array along `axis` and return one view strictly before the
+    /// split and one view after the split.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_split_at(self, axis: usize, index: Ix)
+        -> (Self, Self)
+    {
+        assert!(index <= self.shape()[axis]);
+        let left_ptr = self.ptr;
+        let right_ptr = if index == self.shape()[axis] {
+            self.ptr
+        }
+        else {
+            let mut indices = self.dim.clone();
+            for (ax, ind) in indices.slice_mut().iter_mut().enumerate() {
+                if ax != axis {
+                    *ind = 0;
+                }
+                else {
+                    *ind = index;
+                }
+            }
+            let offset = self.dim.stride_offset_checked(&self.strides,
+                                                        &indices).unwrap();
+            unsafe {
+                self.ptr.offset(offset)
+            }
+        };
+
+        let mut dim_left = self.dim.clone();
+        dim_left.slice_mut()[axis] = index;
+        let left = unsafe {
+            Self::new_(left_ptr, dim_left, self.strides.clone())
+        };
+
+        let mut dim_right = self.dim.clone();
+        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
+        let right = unsafe {
+            Self::new_(right_ptr, dim_right, self.strides.clone())
+        };
+
+        (left, right)
+    }
+
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
@@ -1018,6 +1063,51 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     {
         iterators::new_outer_iter_mut(self)
     }
+
+    /// Split the array along `axis` and return one mutable view strictly
+    /// before the split and one mutable view after the split.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_split_at(self, axis: usize, index: Ix)
+        -> (Self, Self)
+    {
+        assert!(index <= self.shape()[axis]);
+        let left_ptr = self.ptr;
+        let right_ptr = if index == self.shape()[axis] {
+            self.ptr
+        }
+        else {
+            let mut indices = self.dim.clone();
+            for (ax, ind) in indices.slice_mut().iter_mut().enumerate() {
+                if ax != axis {
+                    *ind = 0;
+                }
+                else {
+                    *ind = index;
+                }
+            }
+            let offset = self.dim.stride_offset_checked(&self.strides,
+                                                        &indices).unwrap();
+            unsafe {
+                self.ptr.offset(offset)
+            }
+        };
+
+        let mut dim_left = self.dim.clone();
+        dim_left.slice_mut()[axis] = index;
+        let left = unsafe {
+            Self::new_(left_ptr, dim_left, self.strides.clone())
+        };
+
+        let mut dim_right = self.dim.clone();
+        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
+        let right = unsafe {
+            Self::new_(right_ptr, dim_right, self.strides.clone())
+        };
+
+        (left, right)
+    }
+
 }
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -1437,56 +1527,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               D: RemoveAxis,
     {
         iterators::new_axis_iter_mut(self.view_mut(), axis)
-    }
-
-    /// Split the array along `axis` and return one view strictly before the
-    /// split and one view after the split.
-    ///
-    /// **Panics** if `axis` is out of bounds.
-    pub fn axis_split_at(&self, axis: usize, index: Ix)
-        -> (ArrayView<A, D>, ArrayView<A, D>)
-    {
-        assert!(index <= self.shape()[axis]);
-        let left_ptr = self.ptr;
-        let right_ptr = if index == self.shape()[axis] {
-            self.ptr
-        }
-        else {
-            let mut indices = self.dim.clone();
-            for (ax, ind) in indices.slice_mut().iter_mut().enumerate() {
-                if ax != axis {
-                    *ind = 0;
-                }
-                else {
-                    *ind = index;
-                }
-            }
-            let offset = self.dim.stride_offset_checked(&self.strides,
-                                                        &indices).unwrap();
-            unsafe {
-                self.ptr.offset(offset)
-            }
-        };
-
-        let mut dim_left = self.dim.clone();
-        dim_left.slice_mut()[axis] = index;
-        let left = ArrayView {
-            data: ViewRepr::new(),
-            ptr: left_ptr,
-            dim: dim_left,
-            strides: self.strides.clone()
-        };
-
-        let mut dim_right = self.dim.clone();
-        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
-        let right = ArrayView {
-            data: ViewRepr::new(),
-            ptr: right_ptr,
-            dim: dim_right,
-            strides: self.strides.clone()
-        };
-
-        (left, right)
     }
 
 
