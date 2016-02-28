@@ -2310,12 +2310,11 @@ impl<A, S> ArrayBase<S, Ix>
     /// of complex operands, and thus not their inner product).
     ///
     /// **Panics** if the arrays are not of the same length.
-    #[cfg(not(feature="rblas"))]
     pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
-        self.dot_generic(rhs)
+        self.dot_impl(rhs)
     }
 
     fn dot_generic<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
@@ -2337,14 +2336,16 @@ impl<A, S> ArrayBase<S, Ix>
         sum
     }
 
+    #[cfg(not(feature="rblas"))]
+    fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+        where S2: Data<Elem=A>,
+              A: LinalgScalar,
+    {
+        self.dot_generic(rhs)
+    }
+
     #[cfg(feature="rblas")]
-    /// Compute the dot product of one-dimensional arrays.
-    ///
-    /// The dot product is a sum of the elementwise products (no conjugation
-    /// of complex operands, and thus not their inner product).
-    ///
-    /// **Panics** if the arrays are not of the same length.
-    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+    fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
