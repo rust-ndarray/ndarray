@@ -24,11 +24,18 @@
 //!   (`OwnedArray`), and both can use read-only and read-write array views.
 //! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
-//! - Array views can be used to slice and mutate any `[T]` data.
+//! - Array views can be used to slice and mutate any `[T]` data using
+//!   `aview1` and `aview_mut1`.
 //!
 //! ## Crate Status
 //!
-//! - Still iterating on the API
+//! - Still iterating on and evolving the API
+//!   + The crate is continuously developing, and breaking changes are expected
+//!     during evolution from version to version. We adhere to semver,
+//!     but alpha releases break at will.
+//!   + We adopt the newest stable rust features we need. In place methods like `iadd`
+//!     *will be deprecated* when Rust supports `+=` and similar in Rust 1.8.
+//!   + We try to introduce more static checking gradually.
 //! - Performance status:
 //!   + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
 //!   + `.fold()` and `.zip_mut_with()` are the most efficient ways to

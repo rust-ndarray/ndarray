@@ -43,7 +43,15 @@ Highlights
 Status and Lookout
 ------------------
 
-- Still iterating on the API
+- Still iterating on and evolving the API
+
+  + The crate is continuously developing, and breaking changes are expected
+    during evolution from version to version. We adhere to semver,
+    but alpha releases break at will.
+  + We adopt the newest stable rust features we need. In place methods like ``iadd``
+    *will be deprecated* when Rust supports ``+=`` and similar in Rust 1.8.
+  + We try to introduce more static checking gradually.
+
 - Performance status:
 
   + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
@@ -78,6 +86,18 @@ How to use with cargo::
 
 Recent Changes
 --------------
+
+- 0.4.0-alpha.5
+
+  - Use new trait ``LinalgScalar`` for operations where we want type-based specialization.
+    This shrinks the set of types that allow dot product, matrix multiply, mean.
+  - Use BLAS acceleration transparently in ``.dot()`` (this is the first step).
+  - Only OwnedArray and RcArray and not ArrayViewMut can now be used as consumed
+    left hand operand for arithmetic operators. `See arithmetic operations docs!`__
+  - Remove deprecated module ``linalg`` (it was already mostly empty)
+  - Deprecate free function ``zeros`` in favour of static method ``zeros``.
+
+__ https://bluss.github.io/rust-ndarray/master/ndarray/struct.ArrayBase.html#arithmetic-operations
 
 - 0.4.0-alpha.4
 
