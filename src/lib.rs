@@ -38,6 +38,9 @@
 //!
 //! ## Crate Feature Flags
 //!
+//! The following crate feature flags are available. The are specified in
+//! `Cargo.toml`.
+//!
 //! - `assign_ops`
 //!   - Optional, requires nightly
 //!   - Enables the compound assignment operators
@@ -317,7 +320,7 @@ pub type Ixs = isize;
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
-///   (requires `features = "assign_ops"`)
+///   (requires crate feature `"assign_ops"`)
 ///
 /// The trait [`Scalar`](trait.Scalar.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
@@ -326,7 +329,7 @@ pub type Ixs = isize;
 /// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
 /// - `C @= K` which performs an arithmetic operation in place
-///   (requires `features = "assign_ops"`)
+///   (requires crate feature `"assign_ops"`)
 ///
 /// ## Broadcasting
 ///
@@ -2809,7 +2812,7 @@ mod assign_ops {
     ///
     /// **Panics** if broadcasting isn’t possible.
     ///
-    /// **Requires `feature = "assign_ops"`**
+    /// **Requires crate feature `"assign_ops"`**
     impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
         where A: Clone + $trt<A>,
               S: DataMut<Elem=A>,
@@ -2825,7 +2828,7 @@ mod assign_ops {
     }
 
     #[doc=$doc]
-    /// **Requires `feature = "assign_ops"`**
+    /// **Requires crate feature `"assign_ops"`**
     impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
         where A: $trt<B>,
               S: DataMut<Elem=A>,

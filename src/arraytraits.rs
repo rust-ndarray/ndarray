@@ -185,7 +185,7 @@ unsafe impl<S, D> Send for ArrayBase<S, D>
 // Use version number so we can add a packed format later.
 static ARRAY_FORMAT_VERSION: u8 = 1u8;
 
-/// **Requires `feature = "rustc-serialize"`**
+/// **Requires crate feature `"rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
 impl<A, S, D> Encodable for ArrayBase<S, D>
     where A: Encodable,
@@ -212,7 +212,7 @@ impl<A, S, D> Encodable for ArrayBase<S, D>
     }
 }
 
-/// **Requires `feature = "rustc-serialize"`**
+/// **Requires crate feature `"rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
 impl<A, S, D> Decodable for ArrayBase<S, D>
     where A: Decodable,
