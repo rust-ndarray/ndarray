@@ -40,17 +40,16 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
     // compute number of neighbors
     let mut neigh = scratch.view_mut();
     neigh.assign_scalar(&0);
-    let neigh = neigh
-    + z.slice(s![0..-2, 0..-2])
-    + z.slice(s![0..-2, 1..-1])
-    + z.slice(s![0..-2, 2..  ])
+    neigh.iadd(&z.slice(s![0..-2, 0..-2]));
+    neigh.iadd(&z.slice(s![0..-2, 1..-1]));
+    neigh.iadd(&z.slice(s![0..-2, 2..  ]));
 
-    + z.slice(s![1..-1, 0..-2])
-    + z.slice(s![1..-1, 2..  ])
+    neigh.iadd(&z.slice(s![1..-1, 0..-2]));
+    neigh.iadd(&z.slice(s![1..-1, 2..  ]));
 
-    + z.slice(s![2..  , 0..-2])
-    + z.slice(s![2..  , 1..-1])
-    + z.slice(s![2..  , 2..  ]);
+    neigh.iadd(&z.slice(s![2..  , 0..-2]));
+    neigh.iadd(&z.slice(s![2..  , 1..-1]));
+    neigh.iadd(&z.slice(s![2..  , 2..  ]));
 
     // birth where n = 3 and z[i] = 0,
     // survive where n = 2 || n = 3 and z[i] = 1
