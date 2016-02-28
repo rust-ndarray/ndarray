@@ -14,6 +14,7 @@ use ndarray::{arr0, arr1, arr2,
     aview_mut1,
 };
 use ndarray::Indexes;
+use ndarray::{Axis, Axis0, Axis1, Axis2};
 
 #[test]
 fn test_matmul_rcarray()
@@ -284,12 +285,12 @@ fn assign()
 fn sum_mean()
 {
     let a = arr2(&[[1., 2.], [3., 4.]]);
-    assert_eq!(a.sum(0), arr1(&[4., 6.]));
-    assert_eq!(a.sum(1), arr1(&[3., 7.]));
-    assert_eq!(a.mean(0), arr1(&[2., 3.]));
-    assert_eq!(a.mean(1), arr1(&[1.5, 3.5]));
-    assert_eq!(a.sum(1).sum(0), arr0(10.));
-    assert_eq!(a.view().mean(1), aview1(&[1.5, 3.5]));
+    assert_eq!(a.sum(Axis0), arr1(&[4., 6.]));
+    assert_eq!(a.sum(Axis1), arr1(&[3., 7.]));
+    assert_eq!(a.mean(Axis0), arr1(&[2., 3.]));
+    assert_eq!(a.mean(Axis1), arr1(&[1.5, 3.5]));
+    assert_eq!(a.sum(Axis1).sum(Axis0), arr0(10.));
+    assert_eq!(a.view().mean(Axis1), aview1(&[1.5, 3.5]));
     assert_eq!(a.scalar_sum(), 10.);
 }
 

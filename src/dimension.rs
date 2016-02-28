@@ -747,6 +747,16 @@ impl<D> From<Axis> for AxisForDimension<D> {
     }
 }
 
+#[cfg_attr(has_deprecated, deprecated(note="Usize arguments for `axis` are deprecated. Use `Axis` instead."))]
+impl<D> From<usize> for AxisForDimension<D> {
+    fn from(x: usize) -> Self {
+        AxisForDimension {
+            axis: x,
+            dim: PhantomData,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug)]
 pub struct Axis0;
 #[derive(Copy, Clone, Debug)]

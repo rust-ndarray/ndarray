@@ -5,6 +5,7 @@ use ndarray::{
     OwnedArray,
     RemoveAxis,
     arr2,
+    Axis,
     Axis0, Axis1, Axis2,
 };
 
@@ -22,7 +23,7 @@ fn remove_axis()
     a.subview(Axis1, 0);
 
     let a = RcArray::<f32, _>::zeros(vec![4,5,6]);
-    let _b = a.subview(Axis1, 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
+    let _b = a.into_subview(Axis(1), 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
     
 }
 

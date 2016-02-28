@@ -1431,10 +1431,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// See [*Subviews*](#subviews) for full documentation.
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_iter(&self, axis: usize) -> OuterIter<A, D::Smaller>
-        where D: RemoveAxis
+    pub fn axis_iter<Ax>(&self, axis: Ax) -> OuterIter<A, D::Smaller>
+        where D: RemoveAxis,
+              Ax: Into<AxisForDimension<D>>,
     {
-        iterators::new_axis_iter(self.view(), axis)
+        iterators::new_axis_iter(self.view(), axis.into().axis())
     }
 
 
