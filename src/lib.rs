@@ -24,7 +24,8 @@
 //!   (`OwnedArray`), and both can use read-only and read-write array views.
 //! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
-//! - Array views can be used to slice and mutate any `[T]` data.
+//! - Array views can be used to slice and mutate any `[T]` data using
+//!   `aview1` and `aview_mut1`.
 //!
 //! ## Crate Status
 //!
