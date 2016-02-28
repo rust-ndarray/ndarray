@@ -1,4 +1,5 @@
 use std::slice;
+use std::marker::PhantomData;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
@@ -723,7 +724,7 @@ mod test {
     }
 }
 
-pub trait Axis {
+pub trait Axis : Copy {
     fn axis(&self) -> usize;
 }
 
@@ -737,6 +738,36 @@ pub struct Axes1(usize);
 pub struct Axes2(usize);
 #[derive(Copy, Clone, Debug)]
 pub struct Axes3(usize);
+
+#[derive(Debug)]
+pub struct AxisForDimension<D> {
+    axis: usize,
+    dim: PhantomData<D>,
+}
+
+impl<D> AxisForDimension<D> {
+    pub fn axis(&self) -> usize { self.axis }
+}
+
+impl<D> Copy for AxisForDimension<D> { }
+impl<D> Clone for AxisForDimension<D> {
+    fn clone(&self) -> Self { *self }
+}
+
+impl<D> PartialEq for AxisForDimension<D> {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.axis == rhs.axis
+    }
+}
+
+impl<D> From<Ax> for AxisForDimension<D> {
+    fn from(x: Ax) -> Self {
+        AxisForDimension {
+            axis: x.0,
+            dim: PhantomData,
+        }
+    }
+}
 
 impl Axis for VoidAxis { fn axis(&self) -> usize { match *self { } } }
 impl Axis for Axes0 { fn axis(&self) -> usize { self.0 } }
@@ -753,11 +784,15 @@ pub struct Ax2;
 #[derive(Copy, Clone, Debug)]
 pub struct Ax3;
 
+#[derive(Copy, Clone, Debug)]
+pub struct Ax(pub usize);
+
 impl Axis for Ax0 { fn axis(&self) -> usize { 0 } }
 impl Axis for Ax1 { fn axis(&self) -> usize { 1 } }
 impl Axis for Ax2 { fn axis(&self) -> usize { 2 } }
 impl Axis for Ax3 { fn axis(&self) -> usize { 3 } }
 impl Axis for usize { fn axis(&self) -> usize { *self } }
+impl Axis for Ax { fn axis(&self) -> usize { self.0 } }
 
 impl Into<VoidAxis> for usize {
     fn into(self) -> VoidAxis {
@@ -769,10 +804,30 @@ impl Into<usize> for Ax0 { fn into(self) -> usize { 0 } }
 impl Into<usize> for Ax1 { fn into(self) -> usize { 1 } }
 impl Into<usize> for Ax2 { fn into(self) -> usize { 2 } }
 impl Into<usize> for Ax3 { fn into(self) -> usize { 3 } }
+impl Into<usize> for Ax { fn into(self) -> usize { self.0 } }
 
 impl Into<Axes0> for Ax0 {
     fn into(self) -> Axes0 { Axes0(0) }
 }
+
+macro_rules! ax_for_dim {
+    ($dim:ty, $($ax:ident),*) => {
+        $(
+            impl From<$ax> for AxisForDimension<$dim> {
+                fn from(x: $ax) -> Self {
+                    AxisForDimension {
+                        axis: x.into(),
+                        dim: PhantomData,
+                    }
+                }
+            }
+        )*
+    }
+}
+ax_for_dim!{Ix, Ax0}
+ax_for_dim!{(Ix, Ix), Ax0, Ax1}
+ax_for_dim!{(Ix, Ix, Ix), Ax0, Ax1, Ax2}
+ax_for_dim!{(Ix, Ix, Ix, Ix), Ax0, Ax1, Ax2, Ax3}
 
 impl Into<Axes0> for usize {
     fn into(self) -> Axes0 {

@@ -92,6 +92,7 @@ use itertools::free::enumerate;
 pub use dimension::{
     Dimension,
     RemoveAxis,
+    Ax0, Ax1, Ax2, Ax3, Ax,
 };
 
 pub use dimension::NdIndex;
@@ -111,6 +112,11 @@ pub use iterators::{
 };
 
 pub use linalg::LinalgScalar;
+
+pub use dimension::{
+    AxisForDimension,
+    Axis,
+};
 
 mod arraytraits;
 #[cfg(feature = "serde")]
@@ -1278,9 +1284,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     a.subview(1, 1) == arr1(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn subview(&self, axis: usize, index: Ix)
+    pub fn subview<Ax>(&self, axis: Ax, index: Ix)
         -> ArrayView<A, <D as RemoveAxis>::Smaller>
-        where D: RemoveAxis
+        where D: RemoveAxis,
+              Ax: Into<AxisForDimension<D>>,
     {
         self.view().into_subview(axis, index)
     }
@@ -1303,10 +1310,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                   [3., 14.]])
     /// );
     /// ```
-    pub fn subview_mut(&mut self, axis: usize, index: Ix)
+    pub fn subview_mut<Ax>(&mut self, axis: Ax, index: Ix)
         -> ArrayViewMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
+              Ax: Into<AxisForDimension<D>>,
     {
         self.view_mut().into_subview(axis, index)
     }
@@ -1315,7 +1323,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: usize, index: Ix) {
+    pub fn isubview<Ax>(&mut self, axis: Ax, index: Ix)
+        where Ax: Into<AxisForDimension<D>>,
+    {
+        let axis = axis.into().axis();
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides, axis, index)
     }
 
@@ -1323,11 +1334,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// with that axis removed.
     ///
     /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: usize, index: Ix)
+    pub fn into_subview<Ax>(mut self, axis: Ax, index: Ix)
         -> ArrayBase<S, <D as RemoveAxis>::Smaller>
-        where D: RemoveAxis
+        where D: RemoveAxis,
+              Ax: Into<AxisForDimension<D>>,
     {
+        let axis = axis.into();
         self.isubview(axis, index);
+        let axis = axis.axis();
         // don't use reshape -- we always know it will fit the size,
         // and we can use remove_axis on the strides as well
         ArrayBase {
@@ -2242,11 +2256,13 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn sum(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
+    pub fn sum<Ax>(&self, axis: Ax) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
         where A: Clone + Add<Output=A>,
               D: RemoveAxis,
+              Ax: Into<AxisForDimension<D>>,
     {
-        let n = self.shape()[axis];
+        let axis = axis.into();
+        let n = self.shape()[axis.axis()];
         let mut res = self.subview(axis, 0).to_owned();
         for i in 1..n {
             let view = self.subview(axis, i);
@@ -2296,11 +2312,13 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn mean(&self, axis: usize) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
+    pub fn mean<Ax>(&self, axis: Ax) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
+              Ax: Into<AxisForDimension<D>>,
     {
-        let n = self.shape()[axis];
+        let axis = axis.into();
+        let n = self.shape()[axis.axis()];
         let mut sum = self.sum(axis);
         let one = libnum::one::<A>();
         let mut cnt = one;
@@ -2413,7 +2431,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.subview(0, index)
+        self.subview(Ax0, index)
     }
 
     /// Return a mutable array view of row `index`.
@@ -2422,7 +2440,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
         where S: DataMut
     {
-        self.subview_mut(0, index)
+        self.subview_mut(Ax0, index)
     }
 
     /// Return an array view of column `index`.
@@ -2430,7 +2448,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `index` is out of bounds.
     pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
     {
-        self.subview(1, index)
+        self.subview(Ax1, index)
     }
 
     /// Return a mutable array view of column `index`.
@@ -2439,7 +2457,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
         where S: DataMut
     {
-        self.subview_mut(1, index)
+        self.subview_mut(Ax1, index)
     }
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
