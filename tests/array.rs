@@ -661,10 +661,26 @@ fn deny_wraparound_reshape() {
 
 #[test]
 fn split_at() {
-    let a = arr2(&[[1., 2.], [3., 4.]]);
+    let mut a = arr2(&[[1., 2.], [3., 4.]]);
 
-    let (c0, c1) = a.axis_split_at(1, 1);
+    {
+        let (c0, c1) = a.view().axis_split_at(1, 1);
 
-    assert_eq!(c0, arr2(&[[1.], [3.]]));
-    assert_eq!(c1, arr2(&[[2.], [4.]]));
+        assert_eq!(c0, arr2(&[[1.], [3.]]));
+        assert_eq!(c1, arr2(&[[2.], [4.]]));
+    }
+
+    {
+        let (mut r0, mut r1) = a.view_mut().axis_split_at(0, 1);
+        r0[[0, 1]] = 5.;
+        r1[[0, 0]] = 8.;
+    }
+    assert_eq!(a, arr2(&[[1., 5.], [8., 4.]]));
+
+
+    let b = RcArray::linspace(0., 59., 60).reshape((3, 4, 5));
+
+    let (left, right) = b.view().axis_split_at(2, 2);
+    assert_eq!(left.shape(), [3, 4, 2]);
+    assert_eq!(right.shape(), [3, 4, 3]);
 }
