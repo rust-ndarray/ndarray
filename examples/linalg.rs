@@ -13,6 +13,7 @@ use std::ops::{Add, Sub, Mul, Div};
 
 use ndarray::{RcArray, Ix};
 use ndarray::{rcarr1, rcarr2};
+use ndarray::LinalgScalar;
 
 /// Column vector.
 pub type Col<A> = RcArray<A, Ix>;
@@ -29,7 +30,7 @@ pub trait Field : Ring + Div<Output=Self> { }
 impl<A: Ring + Div<Output=A>> Field for A { }
 
 /// A real or complex number.
-pub trait ComplexField : Copy + Field
+pub trait ComplexField : LinalgScalar
 {
     #[inline]
     fn conjugate(self) -> Self { self }
@@ -50,7 +51,7 @@ impl ComplexField for f64
     fn sqrt_real(self) -> f64 { self.sqrt() }
 }
 
-impl<A: Num + Float> ComplexField for Complex<A>
+impl<A: LinalgScalar + Float +  Num> ComplexField for Complex<A>
 {
     #[inline]
     fn conjugate(self) -> Complex<A> { self.conj() }
