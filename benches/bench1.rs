@@ -12,6 +12,7 @@ use rblas::matrix::Matrix;
 
 use ndarray::{
     OwnedArray,
+    Axis,
 };
 use ndarray::{arr0, arr1, arr2};
 
@@ -562,5 +563,5 @@ fn dot_f32_1024(bench: &mut test::Bencher)
 fn means(bench: &mut test::Bencher) {
     let a = OwnedArray::from_iter(0..100_000i64);
     let a = a.into_shape((100, 1000)).unwrap();
-    bench.iter(|| a.mean(0));
+    bench.iter(|| a.mean(Axis(0)));
 }

@@ -14,6 +14,7 @@ use ndarray::{arr0, arr1, arr2, arr3,
     aview_mut1,
 };
 use ndarray::Indexes;
+use ndarray::Axis;
 
 #[test]
 fn test_matmul_rcarray()
@@ -201,14 +202,14 @@ fn test_cow()
 fn test_sub()
 {
     let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
-    let s1 = mat.subview(0,0);
-    let s2 = mat.subview(0,1);
+    let s1 = mat.subview(Axis(0),0);
+    let s2 = mat.subview(Axis(0),1);
     assert_eq!(s1.dim(), (4, 2));
     assert_eq!(s2.dim(), (4, 2));
     let n = RcArray::linspace(8., 15., 8).reshape((4,2));
     assert_eq!(n, s2);
     let m = RcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
-    assert_eq!(m, mat.subview(1, 1));
+    assert_eq!(m, mat.subview(Axis(1), 1));
 }
 
 #[test]
@@ -248,9 +249,9 @@ fn standard_layout()
     assert!(!a.is_standard_layout());
     a.swap_axes(0, 1);
     assert!(a.is_standard_layout());
-    let x1 = a.subview(0, 0);
+    let x1 = a.subview(Axis(0), 0);
     assert!(x1.is_standard_layout());
-    let x2 = a.subview(1, 0);
+    let x2 = a.subview(Axis(1), 0);
     assert!(!x2.is_standard_layout());
 }
 
@@ -284,12 +285,12 @@ fn assign()
 fn sum_mean()
 {
     let a = arr2(&[[1., 2.], [3., 4.]]);
-    assert_eq!(a.sum(0), arr1(&[4., 6.]));
-    assert_eq!(a.sum(1), arr1(&[3., 7.]));
-    assert_eq!(a.mean(0), arr1(&[2., 3.]));
-    assert_eq!(a.mean(1), arr1(&[1.5, 3.5]));
-    assert_eq!(a.sum(1).sum(0), arr0(10.));
-    assert_eq!(a.view().mean(1), aview1(&[1.5, 3.5]));
+    assert_eq!(a.sum(Axis(0)), arr1(&[4., 6.]));
+    assert_eq!(a.sum(Axis(1)), arr1(&[3., 7.]));
+    assert_eq!(a.mean(Axis(0)), arr1(&[2., 3.]));
+    assert_eq!(a.mean(Axis(1)), arr1(&[1.5, 3.5]));
+    assert_eq!(a.sum(Axis(1)).sum(Axis(0)), arr0(10.));
+    assert_eq!(a.view().mean(Axis(1)), aview1(&[1.5, 3.5]));
     assert_eq!(a.scalar_sum(), 10.);
 }
 
@@ -341,7 +342,7 @@ fn zero_axes()
     println!("{:?}\n{:?}", b.shape(), b);
 
     // we can even get a subarray of b
-    let bsub = b.subview(0, 2);
+    let bsub = b.subview(Axis(0), 2);
     assert_eq!(bsub.dim(), 0);
 }
 
@@ -595,7 +596,7 @@ fn char_array()
 {
     // test compilation & basics of non-numerical array
     let cc = RcArray::from_iter("alphabet".chars()).reshape((4, 2));
-    assert!(cc.subview(1, 0) == RcArray::from_iter("apae".chars()));
+    assert!(cc.subview(Axis(1), 0) == RcArray::from_iter("apae".chars()));
 }
 
 #[test]

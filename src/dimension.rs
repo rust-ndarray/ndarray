@@ -715,3 +715,13 @@ mod test {
         assert!(super::dim_stride_overlap(&dim, &strides));
     }
 }
+
+/// An axis index.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Axis(pub usize);
+
+impl Axis {
+    #[inline(always)]
+    pub fn axis(&self) -> usize { self.0 }
+}
+
