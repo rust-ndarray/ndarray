@@ -2513,7 +2513,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+impl<'a, 'b, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'b ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
@@ -3107,4 +3107,3 @@ enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
 }
-
