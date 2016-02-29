@@ -931,7 +931,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// split and one view after the split.
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_split_at(self, axis: Axis, index: Ix)
+    pub fn split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {
         // NOTE: Keep this in sync with the ArrayViewMut version
@@ -1064,7 +1064,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// before the split and one mutable view after the split.
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_split_at(self, axis: Axis, index: Ix)
+    pub fn split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {
         // NOTE: Keep this in sync with the ArrayView version
