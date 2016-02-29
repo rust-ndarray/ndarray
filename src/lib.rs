@@ -2790,7 +2790,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         }
     }
 
-    /// Create an `ArrayView` borrowing its data from a slice.
+    /// Create a read-only array view borrowing its data from a slice.
     ///
     /// Checks whether `dim` and `strides` are compatible with the slice's
     /// length, returning an `Err` if not compatible.
@@ -2799,10 +2799,10 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// use ndarray::ArrayView;
     /// use ndarray::arr3;
     ///
-    /// let s = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    /// let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     /// let a = ArrayView::from_slice_dim_stride((2, 3, 2),
     ///                                          (1, 4, 2),
-    ///                                          s).unwrap();
+    ///                                          &s).unwrap();
     ///
     /// assert!(
     ///     a == arr3(&[[[0, 2],
@@ -2920,7 +2920,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         }
     }
 
-    /// Create an `ArrayView` borrowing its data from a slice.
+    /// Create a read-write array view borrowing its data from a slice.
     ///
     /// Checks whether `dim` and `strides` are compatible with the slice's
     /// length, returning an `Err` if not compatible.
@@ -2929,10 +2929,10 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// use ndarray::ArrayViewMut;
     /// use ndarray::arr3;
     ///
-    /// let s = &mut [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    /// let mut s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     /// let mut a = ArrayViewMut::from_slice_dim_stride((2, 3, 2),
     ///                                                 (1, 4, 2),
-    ///                                                 s).unwrap();
+    ///                                                 &mut s).unwrap();
     ///
     /// a[[0, 0, 0]] = 1;
     /// assert!(
