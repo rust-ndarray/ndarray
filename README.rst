@@ -87,6 +87,11 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- master
+
+  - All axis arguments must now be wrapped in newtype ``Axis``.
+  - Add method ``.split_at(Axis, Ix)`` to read-only and read-write array views.
+
 - 0.4.0-alpha.5
 
   - Use new trait ``LinalgScalar`` for operations where we want type-based specialization.
