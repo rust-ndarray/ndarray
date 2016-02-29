@@ -10,8 +10,7 @@
 //! - [`OwnedArray`](type.OwnedArray.html):
 //!   An array where the data is owned uniquely.
 //! - [`RcArray`](type.RcArray.html):
-//!   An array where the data is shared and copy on write, it
-//!   can act as both an owner of the data as well as a lightweight view.
+//!   An array where the data has shared ownership and is copy on write.
 //! - [`ArrayView`](type.ArrayView.html), [`ArrayViewMut`](type.ArrayViewMut.html):
 //!   Lightweight array views.
 //!
@@ -25,7 +24,7 @@
 //! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
 //! - Array views can be used to slice and mutate any `[T]` data using
-//!   `aview1` and `aview_mut1`.
+//!   `ArrayView::from_slice` and `ArrayViewMut::from_slice`.
 //!
 //! ## Crate Status
 //!

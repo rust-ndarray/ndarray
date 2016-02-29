@@ -26,11 +26,10 @@ Highlights
 
   - ``ArrayBase``:
     The N-dimensional array type itself.
-  - ``Array``:
-    An array where the data is shared and copy on write, it
-    can act as both an owner of the data as well as a lightweight view.
   - ``OwnedArray``:
     An array where the data is owned uniquely.
+  - ``RcArray``:
+    An array where the data has shared ownership and is copy on write.
   - ``ArrayView``, ``ArrayViewMut``:
     Lightweight array views.
 
