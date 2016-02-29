@@ -94,6 +94,8 @@ pub use dimension::{
     RemoveAxis,
 };
 
+use dimension::stride_offset;
+
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
@@ -936,17 +938,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
         let right_ptr = if index == self.shape()[axis] {
             self.ptr
         } else {
-            let mut indices = self.dim.clone();
-            for (ax, ind) in indices.slice_mut().iter_mut().enumerate() {
-                if ax != axis {
-                    *ind = 0;
-                }
-                else {
-                    *ind = index;
-                }
-            }
-            let offset = self.dim.stride_offset_checked(&self.strides,
-                                                        &indices).unwrap();
+            let offset = stride_offset(index, self.strides.slice()[axis]);
             unsafe {
                 self.ptr.offset(offset)
             }
@@ -1076,17 +1068,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
             self.ptr
         }
         else {
-            let mut indices = self.dim.clone();
-            for (ax, ind) in indices.slice_mut().iter_mut().enumerate() {
-                if ax != axis {
-                    *ind = 0;
-                }
-                else {
-                    *ind = index;
-                }
-            }
-            let offset = self.dim.stride_offset_checked(&self.strides,
-                                                        &indices).unwrap();
+            let offset = stride_offset(index, self.strides.slice()[axis]);
             unsafe {
                 self.ptr.offset(offset)
             }
