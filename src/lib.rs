@@ -935,8 +935,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
         let left_ptr = self.ptr;
         let right_ptr = if index == self.shape()[axis] {
             self.ptr
-        }
-        else {
+        } else {
             let mut indices = self.dim.clone();
             for (ax, ind) in indices.slice_mut().iter_mut().enumerate() {
                 if ax != axis {
