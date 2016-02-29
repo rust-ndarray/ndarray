@@ -94,6 +94,8 @@ pub use dimension::{
     RemoveAxis,
 };
 
+use dimension::stride_offset;
+
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
 pub use shape_error::ShapeError;
@@ -923,6 +925,40 @@ impl<'a, A, D> ArrayView<'a, A, D>
     {
         iterators::new_outer_iter(self)
     }
+
+    /// Split the array along `axis` and return one view strictly before the
+    /// split and one view after the split.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_split_at(self, axis: usize, index: Ix)
+        -> (Self, Self)
+    {
+        assert!(index <= self.shape()[axis]);
+        let left_ptr = self.ptr;
+        let right_ptr = if index == self.shape()[axis] {
+            self.ptr
+        } else {
+            let offset = stride_offset(index, self.strides.slice()[axis]);
+            unsafe {
+                self.ptr.offset(offset)
+            }
+        };
+
+        let mut dim_left = self.dim.clone();
+        dim_left.slice_mut()[axis] = index;
+        let left = unsafe {
+            Self::new_(left_ptr, dim_left, self.strides.clone())
+        };
+
+        let mut dim_right = self.dim.clone();
+        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
+        let right = unsafe {
+            Self::new_(right_ptr, dim_right, self.strides.clone())
+        };
+
+        (left, right)
+    }
+
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
@@ -1018,6 +1054,41 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     {
         iterators::new_outer_iter_mut(self)
     }
+
+    /// Split the array along `axis` and return one mutable view strictly
+    /// before the split and one mutable view after the split.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn axis_split_at(self, axis: usize, index: Ix)
+        -> (Self, Self)
+    {
+        assert!(index <= self.shape()[axis]);
+        let left_ptr = self.ptr;
+        let right_ptr = if index == self.shape()[axis] {
+            self.ptr
+        }
+        else {
+            let offset = stride_offset(index, self.strides.slice()[axis]);
+            unsafe {
+                self.ptr.offset(offset)
+            }
+        };
+
+        let mut dim_left = self.dim.clone();
+        dim_left.slice_mut()[axis] = index;
+        let left = unsafe {
+            Self::new_(left_ptr, dim_left, self.strides.clone())
+        };
+
+        let mut dim_right = self.dim.clone();
+        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
+        let right = unsafe {
+            Self::new_(right_ptr, dim_right, self.strides.clone())
+        };
+
+        (left, right)
+    }
+
 }
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -1438,6 +1509,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         iterators::new_axis_iter_mut(self.view_mut(), axis)
     }
+
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
     /// yielding non-overlapping views along that axis.
