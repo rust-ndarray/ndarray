@@ -931,9 +931,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// split and one view after the split.
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_split_at(self, axis: usize, index: Ix)
+    pub fn axis_split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {
+        // NOTE: Keep this in sync with the ArrayViewMut version
+        let axis = axis.axis();
         assert!(index <= self.shape()[axis]);
         let left_ptr = self.ptr;
         let right_ptr = if index == self.shape()[axis] {
@@ -951,10 +953,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
             Self::new_(left_ptr, dim_left, self.strides.clone())
         };
 
-        let mut dim_right = self.dim.clone();
-        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
+        let mut dim_right = self.dim;
+        let right_len  = dim_right.slice()[axis] - index;
+        dim_right.slice_mut()[axis] = right_len;
         let right = unsafe {
-            Self::new_(right_ptr, dim_right, self.strides.clone())
+            Self::new_(right_ptr, dim_right, self.strides)
         };
 
         (left, right)
@@ -1061,9 +1064,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// before the split and one mutable view after the split.
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_split_at(self, axis: usize, index: Ix)
+    pub fn axis_split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {
+        // NOTE: Keep this in sync with the ArrayView version
+        let axis = axis.axis();
         assert!(index <= self.shape()[axis]);
         let left_ptr = self.ptr;
         let right_ptr = if index == self.shape()[axis] {
@@ -1082,10 +1087,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
             Self::new_(left_ptr, dim_left, self.strides.clone())
         };
 
-        let mut dim_right = self.dim.clone();
-        dim_right.slice_mut()[axis] = self.dim.slice()[axis] - index;
+        let mut dim_right = self.dim;
+        let right_len  = dim_right.slice()[axis] - index;
+        dim_right.slice_mut()[axis] = right_len;
         let right = unsafe {
-            Self::new_(right_ptr, dim_right, self.strides.clone())
+            Self::new_(right_ptr, dim_right, self.strides)
         };
 
         (left, right)
