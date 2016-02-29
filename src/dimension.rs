@@ -717,6 +717,12 @@ mod test {
 }
 
 /// An axis index.
+///
+/// An axis one of an array’s “dimensions”; an *n*-dimensional array has *n* axes.
+/// Axis *0* is the array’s outermost axis and *n*-1 is the innermost.
+///
+/// All array axis arguments use this type to make the code easier to write
+/// correctly and easier to understand.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Axis(pub usize);
 
