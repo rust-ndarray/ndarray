@@ -149,8 +149,6 @@ mod imp_prelude {
     pub struct Priv<T>(pub T);
 }
 
-// NOTE: In theory, the whole library should compile
-// and pass tests even if you change Ix and Ixs.
 /// Array index type
 pub type Ix = usize;
 /// Array index type (signed)
