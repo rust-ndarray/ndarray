@@ -1198,6 +1198,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 0));
     /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 1));
     /// ```
+    #[allow(deprecated)]
     pub fn outer_iter(&self) -> OuterIter<A, D::Smaller>
         where D: RemoveAxis,
     {
@@ -1208,6 +1209,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and yields each subview.
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
+    #[allow(deprecated)]
     pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
@@ -2856,6 +2858,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
+    #[cfg_attr(has_deprecated, deprecated(note="This method will be replaced."))]
     pub fn into_outer_iter(self) -> OuterIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
@@ -2991,6 +2994,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
+    #[cfg_attr(has_deprecated, deprecated(note="This method will be replaced."))]
     pub fn into_outer_iter(self) -> OuterIterMut<'a, A, D::Smaller>
         where D: RemoveAxis,
     {

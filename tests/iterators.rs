@@ -166,6 +166,7 @@ fn inner_iter_size_hint() {
     }
 }
 
+#[allow(deprecated)] // into_outer_iter
 #[test]
 fn outer_iter() {
     let a = RcArray::from_iter(0..12);
@@ -246,6 +247,7 @@ fn outer_iter_corner_cases() {
                  vec![aview1(&[]); 3]);
 }
 
+#[allow(deprecated)]
 #[test]
 fn outer_iter_mut() {
     let a = RcArray::from_iter(0..12);
