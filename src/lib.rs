@@ -2759,6 +2759,10 @@ mod assign_ops {
                     "Perform `self |= rhs` as elementwise bit or (in place).\n");
     impl_assign_op!(BitXorAssign, bitxor_assign,
                     "Perform `self ^= rhs` as elementwise bit xor (in place).\n");
+    impl_assign_op!(ShlAssign, shl_assign,
+                    "Perform `self <<= rhs` as elementwise left shift (in place).\n");
+    impl_assign_op!(ShrAssign, shr_assign,
+                    "Perform `self >>= rhs` as elementwise right shift (in place).\n");
 }
 
 /// # Methods for Array Views
