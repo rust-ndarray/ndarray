@@ -74,6 +74,7 @@ extern crate num as libnum;
 use libnum::Float;
 use libnum::Complex;
 
+use std::any::Any;
 use std::cmp;
 use std::mem;
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not, Shr, Shl,
@@ -352,7 +353,7 @@ pub type Ixs = isize;
 /// - `C @= &A` which performs an arithmetic operation in place
 ///   (requires crate feature `"assign_ops"`)
 ///
-/// The trait [`Scalar`](trait.Scalar.html) marks types that can be used in arithmetic
+/// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
 /// are supported (scalar can be on either side).
 ///
@@ -2421,33 +2422,39 @@ impl_binary_op_inherent!(Shr, shr, ishr, ishr_scalar, "right shift");
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
 ///
-/// This trait ***does not*** limit which elements can be stored in an `ArrayBase`.
+/// For example, `f64` is a `ScalarOperand` which means that for an array `a`,
+/// arithmetic like `a + 1.0`, and, `a * 2.`, and `a += 3.` are allowed.
 ///
-/// `Scalar` simply determines which types are applicable for direct operator
-/// overloading, e.g. `B @ K` or `B @= K`  where `B` is a mutable array,
-/// `K` a scalar, and `@` arbitrary arithmetic operator that the scalar supports.
+/// In the description below, let `A` be an array or array view,
+/// let `B` be an array with owned data,
+/// and let `C` be an array with mutable data.
 ///
-/// Left hand side operands must instead be implemented one by one (it does not
-/// involve the `Scalar` trait). Scalar left hand side operations: `K @ &A`
-/// and `K @ B`, are implemented for the primitive numerical types and for
-/// `Complex<f32>, Complex<f64>`.
+/// `ScalarOperand` determines for which scalars `K` operations `&A @ K`, and `B @ K`,
+/// and `C @= K` are defined, as **right hand side** operands, for applicable
+/// arithmetic operators (denoted `@`).
 ///
-/// Non-`Scalar` types can still participate in arithmetic as array elements in
+/// **Left hand side** scalar operands are implemented differently
+/// (one `impl` per concrete scalar type); they are
+/// implemented for the default `ScalarOperand` types, allowing
+/// operations `K @ &A`, and `K @ B`.
+///
+/// This trait ***does not*** limit which elements can be stored in an array in general.
+/// Non-`ScalarOperand` types can still participate in arithmetic as array elements in
 /// in array-array operations.
-pub trait Scalar { }
-impl Scalar for bool { }
-impl Scalar for i8 { }
-impl Scalar for u8 { }
-impl Scalar for i16 { }
-impl Scalar for u16 { }
-impl Scalar for i32 { }
-impl Scalar for u32 { }
-impl Scalar for i64 { }
-impl Scalar for u64 { }
-impl Scalar for f32 { }
-impl Scalar for f64 { }
-impl Scalar for Complex<f32> { }
-impl Scalar for Complex<f64> { }
+pub trait ScalarOperand : Any + Clone { }
+impl ScalarOperand for bool { }
+impl ScalarOperand for i8 { }
+impl ScalarOperand for u8 { }
+impl ScalarOperand for i16 { }
+impl ScalarOperand for u16 { }
+impl ScalarOperand for i32 { }
+impl ScalarOperand for u32 { }
+impl ScalarOperand for i64 { }
+impl ScalarOperand for u64 { }
+impl ScalarOperand for f32 { }
+impl ScalarOperand for f64 { }
+impl ScalarOperand for Complex<f32> { }
+impl ScalarOperand for Complex<f64> { }
 
 macro_rules! impl_binary_op(
     ($trt:ident, $mth:ident, $imth:ident, $imth_scalar:ident, $doc:expr) => (
@@ -2531,7 +2538,7 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
           S: DataOwned<Elem=A> + DataMut,
           D: Dimension,
-          B: Clone + Scalar,
+          B: ScalarOperand,
 {
     type Output = ArrayBase<S, D>;
     fn $mth (mut self, x: B) -> ArrayBase<S, D>
@@ -2551,7 +2558,7 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
           S: Data<Elem=A>,
           D: Dimension,
-          B: Clone + Scalar,
+          B: ScalarOperand,
 {
     type Output = OwnedArray<A, D>;
     fn $mth(self, x: B) -> OwnedArray<A, D>
@@ -2721,13 +2728,12 @@ mod assign_ops {
 
     #[doc=$doc]
     /// **Requires crate feature `"assign_ops"`**
-    impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
-        where A: $trt<B>,
+    impl<A, S, D> $trt<A> for ArrayBase<S, D>
+        where A: ScalarOperand + $trt<A>,
               S: DataMut<Elem=A>,
               D: Dimension,
-              B: Clone + Scalar,
     {
-        fn $method(&mut self, rhs: B) {
+        fn $method(&mut self, rhs: A) {
             self.unordered_foreach_mut(move |elt| {
                 elt.$method(rhs.clone());
             });
