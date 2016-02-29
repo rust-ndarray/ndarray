@@ -45,7 +45,7 @@
 //!
 //! ## Crate Feature Flags
 //!
-//! The following crate feature flags are available. The are specified in
+//! The following crate feature flags are available. The are configured in your
 //! `Cargo.toml`.
 //!
 //! - `assign_ops`

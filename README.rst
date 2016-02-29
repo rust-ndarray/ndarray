@@ -64,6 +64,9 @@ Status and Lookout
 Crate Feature Flags
 -------------------
 
+The following crate feature flags are available. The are configured in
+your `Cargo.toml`.
+
 - ``assign_ops``
 
   - Optional, requires nightly
@@ -87,10 +90,12 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- master
+- 0.4.0-alpha.6
 
   - All axis arguments must now be wrapped in newtype ``Axis``.
   - Add method ``.split_at(Axis, Ix)`` to read-only and read-write array views.
+  - Add constructors ``ArrayView{,Mut}::from_slice`` and array view methods
+    are now visible in the docs.
 
 - 0.4.0-alpha.5
 
