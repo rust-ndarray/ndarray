@@ -2868,7 +2868,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// Split the array along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` or `index` is out of bounds.
     pub fn split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {
@@ -3017,7 +3017,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// Split the array along `axis` and return one mutable view strictly
     /// before the split and one mutable view after the split.
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` or `index` is out of bounds.
     pub fn split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {
