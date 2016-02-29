@@ -1929,7 +1929,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 /// }
 /// ```
 pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
-    unsafe { ArrayViewMut::new_(xs.as_mut_ptr(), xs.len() as Ix, 1) }
+    ArrayViewMut::from_slice(xs)
 }
 
 /// Fixed-size array used for array initialization
@@ -2758,10 +2758,13 @@ mod assign_ops {
                     "Perform `self ^= rhs` as elementwise bit xor (in place).\n");
 }
 
-// ### ArrayView methods ###
-impl<'a, A> ArrayView<'a, A, Ix> {
+/// # Methods for Array Views
+///
+/// Methods for read-only array views `ArrayView<'a, A, D>`
+impl<'a, A> ArrayBase<ViewRepr<&'a A>, Ix> {
+    /// Create a one-dimensional read-only array view of the data in `xs`.
     #[inline]
-    fn from_slice(xs: &'a [A]) -> Self {
+    pub fn from_slice(xs: &'a [A]) -> Self {
         ArrayView {
             data: ViewRepr::new(),
             ptr: xs.as_ptr() as *mut A,
@@ -2771,9 +2774,6 @@ impl<'a, A> ArrayView<'a, A, Ix> {
     }
 }
 
-/// # Methods for Array Views
-///
-/// Methods for read-only array views `ArrayView<'a, A, D>`
 impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     where D: Dimension,
 {
@@ -2814,12 +2814,12 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_slice_dim_stride(dim: D, strides: D, s: &'a [A])
+    pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a [A])
         -> Result<Self, StrideError>
     {
-        dimension::can_index_slice(s, &dim, &strides).map(|_| {
+        dimension::can_index_slice(xs, &dim, &strides).map(|_| {
             unsafe {
-                Self::new_(s.as_ptr(), dim, strides)
+                Self::new_(xs.as_ptr(), dim, strides)
             }
         })
     }
@@ -2904,6 +2904,19 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 }
 
 /// Methods for read-write array views `ArrayViewMut<'a, A, D>`
+impl<'a, A> ArrayBase<ViewRepr<&'a mut A>, Ix> {
+    /// Create a one-dimensional read-write array view of the data in `xs`.
+    #[inline]
+    pub fn from_slice(xs: &'a mut [A]) -> Self {
+        ArrayViewMut {
+            data: ViewRepr::new(),
+            ptr: xs.as_mut_ptr(),
+            dim: xs.len(),
+            strides: 1,
+        }
+    }
+}
+
 impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     where D: Dimension,
 {
@@ -2945,12 +2958,12 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_slice_dim_stride(dim: D, strides: D, s: &'a mut [A])
+    pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a mut [A])
         -> Result<Self, StrideError>
     {
-        dimension::can_index_slice(s, &dim, &strides).map(|_| {
+        dimension::can_index_slice(xs, &dim, &strides).map(|_| {
             unsafe {
-                Self::new_(s.as_mut_ptr(), dim, strides)
+                Self::new_(xs.as_mut_ptr(), dim, strides)
             }
         })
     }
