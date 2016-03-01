@@ -542,6 +542,14 @@ fn dot_f32_16(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn dot_f32_32(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros(32);
+    let b = OwnedArray::<f32, _>::zeros(32);
+    bench.iter(|| a.dot(&b));
+}
+
+#[bench]
 fn dot_f32_256(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros(256);
@@ -557,6 +565,26 @@ fn dot_f32_1024(bench: &mut test::Bencher)
     bench.iter(|| {
         av.dot(&bv)
     });
+}
+
+#[bench]
+fn dot_extended(bench: &mut test::Bencher) {
+    let m = 10;
+    let n = 33;
+    let k = 10;
+    let av = OwnedArray::<f32, _>::zeros((m, n));
+    let bv = OwnedArray::<f32, _>::zeros((n, k));
+    let mut res = OwnedArray::<f32, _>::zeros((m, k));
+    // make a manual simple matrix multiply to test
+    bench.iter(|| {
+        for i in 0..m {
+            for j in 0..k {
+                unsafe {
+                    *res.uget_mut((i, j)) = av.row(i).dot(&bv.column(j));
+                }
+            }
+        }
+    })
 }
 
 #[bench]
