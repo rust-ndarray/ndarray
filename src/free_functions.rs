@@ -126,14 +126,11 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 /// );
 /// ```
 pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> OwnedArray<A, (Ix, Ix)> {
-    // FIXME: Simplify this when V is fix size array
-    let (m, n) = (xs.len() as Ix,
-                  xs.get(0).map_or(0, |snd| snd.as_init_slice().len() as Ix));
+    let (m, n) = (xs.len() as Ix, V::len() as Ix);
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
-        let snd = snd.as_init_slice();
-        result.extend(snd.iter().cloned());
+        result.extend_from_slice(snd.as_init_slice());
     }
     unsafe {
         ArrayBase::from_vec_dim_unchecked(dim, result)
@@ -166,19 +163,11 @@ pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, (
 pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
     -> OwnedArray<A, (Ix, Ix, Ix)>
 {
-    // FIXME: Simplify this when U/V are fix size arrays
-    let m = xs.len() as Ix;
-    let fst = xs.get(0).map(|snd| snd.as_init_slice());
-    let thr = fst.and_then(|elt| elt.get(0).map(|elt2| elt2.as_init_slice()));
-    let n = fst.map_or(0, |v| v.len() as Ix);
-    let o = thr.map_or(0, |v| v.len() as Ix);
-    let dim = (m, n, o);
+    let dim = (xs.len() as Ix, V::len() as Ix, U::len() as Ix);
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
-        let snd = snd.as_init_slice();
-        for thr in snd.iter() {
-            let thr = thr.as_init_slice();
-            result.extend(thr.iter().cloned());
+        for thr in snd.as_init_slice() {
+            result.extend_from_slice(thr.as_init_slice());
         }
     }
     unsafe {
