@@ -9,7 +9,6 @@ use iterators;
 use shape_error::{self, ShapeError};
 use super::zipsl;
 use {
-    Axis,
     NdIndex,
     AxisChunksIter,
     AxisChunksIterMut,
