@@ -1,7 +1,7 @@
 
 use imp_prelude::*;
 use dimension::{self, stride_offset};
-use error::StrideError;
+use error::ShapeError;
 
 use {
     ViewRepr,
@@ -51,7 +51,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
     pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a [A])
-        -> Result<Self, StrideError>
+        -> Result<Self, ShapeError>
     {
         dimension::can_index_slice(xs, &dim, &strides).map(|_| {
             unsafe {
@@ -141,7 +141,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
     pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a mut [A])
-        -> Result<Self, StrideError>
+        -> Result<Self, ShapeError>
     {
         dimension::can_index_slice(xs, &dim, &strides).map(|_| {
             unsafe {
