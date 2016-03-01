@@ -1,7 +1,7 @@
 
 use imp_prelude::*;
 use dimension::{self, stride_offset};
-use stride_error::StrideError;
+use error::StrideError;
 
 use {
     ViewRepr,

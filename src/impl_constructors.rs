@@ -6,8 +6,7 @@ use libnum;
 use imp_prelude::*;
 use dimension;
 use linspace;
-use shape_error::{self, ShapeError};
-use stride_error::StrideError;
+use error::{self, ShapeError, StrideError};
 
 /// Constructor methods for one-dimensional arrays.
 impl<S> ArrayBase<S, Ix>
@@ -146,7 +145,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// in `v`.
     pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
         if dim.size_checked() != Some(v.len()) {
-            return Err(shape_error::incompatible_shapes(&v.len(), &dim));
+            return Err(error::incompatible_shapes(&v.len(), &dim));
         }
         unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
     }
