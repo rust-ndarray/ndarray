@@ -2349,7 +2349,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 
 // array OPERATORS
 
-macro_rules! impl_binary_op_inherent(
+macro_rules! impl_binary_op_inplace(
     ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (
     /// Perform elementwise
     #[doc=$doc]
@@ -2389,16 +2389,16 @@ impl<A, S, D> ArrayBase<S, D>
 {
 
 
-impl_binary_op_inherent!(Add, add, iadd, iadd_scalar, "addition");
-impl_binary_op_inherent!(Sub, sub, isub, isub_scalar, "subtraction");
-impl_binary_op_inherent!(Mul, mul, imul, imul_scalar, "multiplication");
-impl_binary_op_inherent!(Div, div, idiv, idiv_scalar, "division");
-impl_binary_op_inherent!(Rem, rem, irem, irem_scalar, "remainder");
-impl_binary_op_inherent!(BitAnd, bitand, ibitand, ibitand_scalar, "bit and");
-impl_binary_op_inherent!(BitOr, bitor, ibitor, ibitor_scalar, "bit or");
-impl_binary_op_inherent!(BitXor, bitxor, ibitxor, ibitxor_scalar, "bit xor");
-impl_binary_op_inherent!(Shl, shl, ishl, ishl_scalar, "left shift");
-impl_binary_op_inherent!(Shr, shr, ishr, ishr_scalar, "right shift");
+impl_binary_op_inplace!(Add, add, iadd, iadd_scalar, "addition");
+impl_binary_op_inplace!(Sub, sub, isub, isub_scalar, "subtraction");
+impl_binary_op_inplace!(Mul, mul, imul, imul_scalar, "multiplication");
+impl_binary_op_inplace!(Div, div, idiv, idiv_scalar, "division");
+impl_binary_op_inplace!(Rem, rem, irem, irem_scalar, "remainder");
+impl_binary_op_inplace!(BitAnd, bitand, ibitand, ibitand_scalar, "bit and");
+impl_binary_op_inplace!(BitOr, bitor, ibitor, ibitor_scalar, "bit or");
+impl_binary_op_inplace!(BitXor, bitxor, ibitxor, ibitxor_scalar, "bit xor");
+impl_binary_op_inplace!(Shl, shl, ishl, ishl_scalar, "left shift");
+impl_binary_op_inplace!(Shr, shr, ishr, ishr_scalar, "right shift");
 
     /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
