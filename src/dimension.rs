@@ -680,6 +680,7 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
     }
 }
 
+// NOTE: These tests are not compiled & tested
 #[cfg(test)]
 mod test {
     use super::Dimension;

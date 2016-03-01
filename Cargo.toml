@@ -16,6 +16,8 @@ build = "build.rs"
 
 [lib]
 name = "ndarray"
+bench = false
+test = false
 
 [build-dependencies]
 rustc_version = "0.1.3"
