@@ -41,7 +41,10 @@ macro_rules! impl_binary_op_inplace(
     );
 );
 
-/// *In-place* arithmetic operations.
+/// In-place arithmetic operations.
+///
+/// ***Note: These will be deprecated in favour of overloaded `@=` operators
+/// when Rust 1.8 is released.***
 impl<A, S, D> ArrayBase<S, D>
     where S: DataMut<Elem=A>,
           D: Dimension,
