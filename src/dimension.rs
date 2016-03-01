@@ -2,7 +2,7 @@ use std::slice;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
-use stride_error::StrideError;
+use error::StrideError;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -684,7 +684,7 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
 #[cfg(test)]
 mod test {
     use super::Dimension;
-    use stride_error::StrideError;
+    use error::StrideError;
 
     #[test]
     fn fastest_varying_order() {
