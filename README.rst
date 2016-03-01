@@ -89,6 +89,12 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.4.0-alpha.7
+
+  - Fix too strict lifetime bound in arithmetic operations like ``&a @ &b``.
+  - Rename trait Scalar to ScalarOperand (and improve its docs).
+  - Implement <<= and >>= for arrays.
+
 - 0.4.0-alpha.6
 
   - All axis arguments must now be wrapped in newtype ``Axis``.
