@@ -9,6 +9,9 @@ use std::any::TypeId;
 use ShapeError;
 
 #[cfg(feature="rblas")]
+use error::{from_kind, ErrorKind};
+
+#[cfg(feature="rblas")]
 use blas::{AsBlas, BlasArrayView};
 
 #[cfg(feature="rblas")]
@@ -62,7 +65,7 @@ impl<A, S, D> AsBlasAny<A, S, D> for ArrayBase<S, D>
                 Priv(u).into_blas_view()
             }
         } else {
-            Err(ShapeError::IncompatibleLayout)
+            Err(from_kind(ErrorKind::IncompatibleLayout))
         }
     }
 }

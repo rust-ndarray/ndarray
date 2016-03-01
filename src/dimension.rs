@@ -2,7 +2,7 @@ use std::slice;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
-use error::StrideError;
+use error::{from_kind, ErrorKind, ShapeError};
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -63,11 +63,11 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
 /// of the slice. Also, the strides should not allow a same element to be
 /// referenced by two different index.
 pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
-    -> Result<(), StrideError>
+    -> Result<(), ShapeError>
 {
     if strides.slice().iter().cloned().all(stride_is_positive) {
         if dim.size_checked().is_none() {
-            return Err(StrideError::OutOfBounds);
+            return Err(from_kind(ErrorKind::OutOfBounds));
         }
         let mut last_index = dim.clone();
         for mut index in last_index.slice_mut().iter_mut() {
@@ -80,17 +80,17 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
             // offset is guaranteed to be positive so no issue converting
             // to usize here
             if (offset as usize) >= data.len() {
-                return Err(StrideError::OutOfBounds);
+                return Err(from_kind(ErrorKind::OutOfBounds));
             }
             if dim_stride_overlap(dim, strides) {
-                return Err(StrideError::Unsupported);
+                return Err(from_kind(ErrorKind::Unsupported));
             }
         } else {
-            return Err(StrideError::OutOfBounds);
+            return Err(from_kind(ErrorKind::OutOfBounds));
         }
         Ok(())
     } else {
-        Err(StrideError::Unsupported)
+        return Err(from_kind(ErrorKind::Unsupported));
     }
 }
 

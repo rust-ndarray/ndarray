@@ -661,7 +661,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 dim: shape,
             })
         } else {
-            Err(ShapeError::IncompatibleLayout)
+            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
         }
     }
 

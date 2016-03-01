@@ -85,7 +85,7 @@ pub use dimension::{
 
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
-pub use error::{ShapeError, StrideError};
+pub use error::{ShapeError, ErrorKind};
 pub use si::{Si, S};
 
 use iterators::Baseiter;
