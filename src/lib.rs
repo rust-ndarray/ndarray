@@ -682,4 +682,3 @@ enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
 }
-
