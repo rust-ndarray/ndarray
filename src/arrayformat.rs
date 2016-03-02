@@ -8,7 +8,7 @@ use super::{
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
                             mut format: F)
     -> fmt::Result
-    where F: FnMut(&mut fmt::Formatter, &A) -> fmt::Result,
+    where F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
           D: Dimension,
           S: Data<Elem=A>,
 {
@@ -63,7 +63,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
             try!(write!(f, ", "));
         }
         first = false;
-        try!(format(f, elt));
+        try!(format(elt, f));
 
         if update_index {
             last_index = index;
@@ -85,7 +85,7 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array(self, f, |f, elt| elt.fmt(f))
+        format_array(self, f, <_>::fmt)
     }
 }
 
@@ -98,7 +98,7 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array(self, f, |f, elt| elt.fmt(f))
+        format_array(self, f, <_>::fmt)
     }
 }
 
@@ -111,7 +111,7 @@ impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array(self, f, |f, elt| elt.fmt(f))
+        format_array(self, f, <_>::fmt)
     }
 }
 
@@ -124,7 +124,7 @@ impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array(self, f, |f, elt| elt.fmt(f))
+        format_array(self, f, <_>::fmt)
     }
 }
 /// Format the array using `LowerHex` and apply the formatting parameters used
@@ -136,7 +136,7 @@ impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array(self, f, |f, elt| elt.fmt(f))
+        format_array(self, f, <_>::fmt)
     }
 }
 
