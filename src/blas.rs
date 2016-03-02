@@ -83,7 +83,7 @@ impl<S, D> ArrayBase<S, D>
         let max = c_int::max_value();
         for (&dim, &stride) in zipsl(self.shape(), self.strides()) {
             if dim > max as Ix || stride > max as Ixs {
-                return Err(from_kind(ErrorKind::DimensionTooLarge));
+                return Err(from_kind(ErrorKind::RangeLimited));
             }
         }
         Ok(())

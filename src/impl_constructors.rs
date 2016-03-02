@@ -141,8 +141,7 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array from a vector (with no allocation needed).
     ///
-    /// **Errors** if `dim` does not correspond to the number of elements
-    /// in `v`.
+    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
     pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
         if dim.size_checked() != Some(v.len()) {
             return Err(error::incompatible_shapes(&v.len(), &dim));

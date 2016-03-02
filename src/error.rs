@@ -26,12 +26,12 @@ impl ShapeError {
 #[derive(Copy, Clone, Debug)]
 #[repr(u64)]
 pub enum ErrorKind {
-    /// incompatible shapes
-    IncompatibleShapes,
-    /// incompatible layout: not contiguous
+    /// incompatible shape
+    IncompatibleShape,
+    /// incompatible memory layout
     IncompatibleLayout,
-    /// dimension too large (shape)
-    DimensionTooLarge,
+    /// the shape does not fit inside type limits
+    RangeLimited,
     /// stride leads to out of bounds indexing
     OutOfBounds,
     /// stride leads to aliasing array elements
@@ -64,9 +64,9 @@ impl PartialEq for ShapeError {
 impl Error for ShapeError {
     fn description(&self) -> &str {
         match self.kind() {
-            ErrorKind::IncompatibleShapes => "incompatible shapes",
+            ErrorKind::IncompatibleShape => "incompatible shapes",
             ErrorKind::IncompatibleLayout => "incompatible layout (not contiguous)",
-            ErrorKind::DimensionTooLarge => "dimension too large",
+            ErrorKind::RangeLimited => "the shape does not fit in type limits",
             ErrorKind::OutOfBounds => "stride leads to out of bounds indexing",
             ErrorKind::Unsupported => "stride leads to aliasing array elements",
             ErrorKind::__Incomplete => "this error variant is not in use",
@@ -84,5 +84,5 @@ pub fn incompatible_shapes<D, E>(_a: &D, _b: &E) -> ShapeError
     where D: Dimension,
           E: Dimension
 {
-    from_kind(ErrorKind::IncompatibleShapes)
+    from_kind(ErrorKind::IncompatibleShape)
 }
