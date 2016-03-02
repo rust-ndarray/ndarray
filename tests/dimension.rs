@@ -6,6 +6,7 @@ use ndarray::{
     RemoveAxis,
     arr2,
     Axis,
+    Ix,
 };
 
 #[test]
@@ -41,3 +42,16 @@ fn dyn_dimension()
     assert_eq!(z.shape(), &dim[..]);
 }
 
+#[test]
+fn index_axis()
+{
+    assert_eq!(3[Axis(0)], 3);
+    assert_eq!((3, 2)[Axis(1)], 2);
+
+    let mut dim = (2, 3, 3);
+    dim[Axis(2)] = 1;
+    assert_eq!(dim[Axis(2)], 1);
+
+    let a: OwnedArray<f64, (Ix, Ix, Ix)> = OwnedArray::zeros(dim);
+    assert_eq!(a.dim()[Axis(1)], 3);
+}
