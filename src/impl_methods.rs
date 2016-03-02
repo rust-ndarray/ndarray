@@ -1,9 +1,11 @@
 
 use std::cmp;
+use std::ptr;
 use std::slice;
 
 use imp_prelude::*;
 
+use arraytraits;
 use dimension;
 use iterators;
 use error::{self, ShapeError};
@@ -234,9 +236,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
     pub unsafe fn uget(&self, index: D) -> &A {
-        debug_assert!(self.dim
-                          .stride_offset_checked(&self.strides, &index)
-                          .is_some());
+        arraytraits::debug_bounds_check(self, &index);
         let off = Dimension::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
     }
@@ -252,9 +252,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         debug_assert!(self.data.is_unique());
-        debug_assert!(self.dim
-                          .stride_offset_checked(&self.strides, &index)
-                          .is_some());
+        arraytraits::debug_bounds_check(self, &index);
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
     }
@@ -988,9 +986,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where F: FnMut(&'a A) -> B,
               A: 'a,
     {
+        // Use an `unsafe` block to do this efficiently.
+        // We know that iter will produce exactly .size() elements,
+        // and the loop can vectorize if it's clean (without branch
+        // to grow the vector).
         let mut res = Vec::with_capacity(self.dim.size());
+        let mut out_ptr = res.as_mut_ptr();
+        let mut len = 0;
         for elt in self.iter() {
-            res.push(f(elt))
+            unsafe {
+                ptr::write(out_ptr, f(elt));
+                len += 1;
+                res.set_len(len);
+                out_ptr = out_ptr.offset(1);
+            }
         }
         unsafe {
             ArrayBase::from_vec_dim_unchecked(self.dim.clone(), res)

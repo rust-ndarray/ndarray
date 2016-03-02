@@ -18,7 +18,9 @@ impl<S> ArrayBase<S, Ix>
     }
 
     /// Create a one-dimensional array from an iterable.
-    pub fn from_iter<I: IntoIterator<Item=S::Elem>>(iterable: I) -> ArrayBase<S, Ix> {
+    pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
+        where I: IntoIterator<Item=S::Elem>
+    {
         Self::from_vec(iterable.into_iter().collect())
     }
 
@@ -51,7 +53,7 @@ impl<S, A> ArrayBase<S, (Ix, Ix)>
     }
 }
 
-/// Constructor methods for arrays.
+/// Constructor methods for n-dimensional arrays.
 impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
           D: Dimension,
@@ -61,10 +63,10 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `dim` would overflow usize.
     ///
     /// ```
-    /// use ndarray::RcArray;
+    /// use ndarray::OwnedArray;
     /// use ndarray::arr3;
     ///
-    /// let a = RcArray::from_elem((2, 2, 2), 1.);
+    /// let a = OwnedArray::from_elem((2, 2, 2), 1.);
     ///
     /// assert!(
     ///     a == arr3(&[[[1., 1.],
@@ -72,6 +74,7 @@ impl<S, A, D> ArrayBase<S, D>
     ///                 [[1., 1.],
     ///                  [1., 1.]]])
     /// );
+    /// assert!(a.strides() == &[4, 2, 1]);
     /// ```
     pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D>
         where A: Clone
@@ -90,17 +93,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements would overflow usize.
     ///
     /// ```
-    /// use ndarray::RcArray;
-    /// use ndarray::arr3;
+    /// use ndarray::OwnedArray;
     ///
-    /// let a = RcArray::from_elem_f((2, 2, 2), 1.);
-    ///
-    /// assert!(
-    ///     a == arr3(&[[[1., 1.],
-    ///                  [1., 1.]],
-    ///                 [[1., 1.],
-    ///                  [1., 1.]]])
-    /// );
+    /// let a = OwnedArray::from_elem_f((2, 2, 2), 1.);
     /// assert!(a.strides() == &[1, 2, 4]);
     /// ```
     pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>

@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::slice;
 
 use super::{Si, Ix, Ixs};
@@ -119,13 +120,13 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
     Some(offset)
 }
 
-/// Trait for the shape and index types of arrays.
+/// Array shape and index trait.
 ///
 /// `unsafe` because of the assumptions in the default methods.
 ///
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
-pub unsafe trait Dimension : Clone + Eq {
+pub unsafe trait Dimension : Clone + Eq + Debug {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///
@@ -541,7 +542,9 @@ unsafe impl Dimension for Vec<Ix>
     fn slice_mut(&mut self) -> &mut [Ix] { self }
 }
 
-/// Helper trait to define a larger-than relation for array shapes:
+/// Array shape with a next smaller dimension.
+///
+/// `RemoveAxis` defines a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
 pub trait RemoveAxis : Dimension {
     type Smaller: Dimension;
@@ -595,7 +598,7 @@ impl RemoveAxis for Vec<Ix> {
     }
 }
 
-/// A tuple or fixed size array that can be used to index an array.
+/// Tuple or fixed size arrays that can be used to index an array.
 ///
 /// ```
 /// use ndarray::arr2;
@@ -608,7 +611,7 @@ impl RemoveAxis for Vec<Ix> {
 ///
 /// **Note** the blanket implementation that's not visible in rustdoc:
 /// `impl<D> NdIndex for D where D: Dimension { ... }`
-pub unsafe trait NdIndex {
+pub unsafe trait NdIndex : Debug {
     type Dim: Dimension;
     #[doc(hidden)]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;

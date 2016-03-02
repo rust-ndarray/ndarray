@@ -36,6 +36,33 @@ fn parse(x: &[u8]) -> Board {
 // 3 neighbors: birth
 // otherwise: death
 
+#[cfg(feature = "assign_ops")]
+fn iterate(z: &mut Board, scratch: &mut Board) {
+    // compute number of neighbors
+    let mut neigh = scratch.view_mut();
+    neigh.assign_scalar(&0);
+    neigh += &z.slice(s![0..-2, 0..-2]);
+    neigh += &z.slice(s![0..-2, 1..-1]);
+    neigh += &z.slice(s![0..-2, 2..  ]);
+
+    neigh += &z.slice(s![1..-1, 0..-2]);
+    neigh += &z.slice(s![1..-1, 2..  ]);
+
+    neigh += &z.slice(s![2..  , 0..-2]);
+    neigh += &z.slice(s![2..  , 1..-1]);
+    neigh += &z.slice(s![2..  , 2..  ]);
+
+    // birth where n = 3 and z[i] = 0,
+    // survive where n = 2 || n = 3 and z[i] = 1
+    let mut zv = z.slice_mut(s![1..-1, 1..-1]);
+
+    // this is autovectorized amazingly well!
+    zv.zip_mut_with(&neigh, |y, &n| {
+        *y = ((n == 3) || (n == 2 && *y > 0)) as u8
+    });
+}
+
+#[cfg(not(feature = "assign_ops"))]
 fn iterate(z: &mut Board, scratch: &mut Board) {
     // compute number of neighbors
     let mut neigh = scratch.view_mut();

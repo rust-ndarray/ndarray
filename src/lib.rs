@@ -57,8 +57,8 @@
 //!   - Optional, stable
 //!   - Enables `rblas` integration
 //!
-#![cfg_attr(feature = "assign_ops", feature(augmented_assignments,
-                                            op_assign_traits))]
+#![cfg_attr(all(feature = "assign_ops", not(has_assign)),
+            feature(augmented_assignments, op_assign_traits))]
 
 #[cfg(feature = "serde")]
 extern crate serde;
@@ -162,10 +162,8 @@ pub type Ixs = isize;
 /// can be sliced into subsets of its data.
 /// The array supports arithmetic operations by applying them elementwise.
 ///
-/// The `ArrayBase<S, D>` is parameterized by:
-
-/// - `S` for the data container
-/// - `D` for the number of dimensions
+/// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
+/// `D` for the dimensionality.
 ///
 /// Type aliases [`OwnedArray`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
 /// to `ArrayBase` with different types for the data storage.

@@ -59,10 +59,10 @@ fn main() {
             }
         }
     }
-    println!("{:?}", a);
+    println!("{:2}", a);
     let mut res = OwnedArray::zeros(a.dim());
     for _ in 0..1000 {
         conv_3x3(&a.view(), &mut res.view_mut(), &SOBEL_X);
     }
-    println!("{:?}", res);
+    println!("{:2}", res);
 }
