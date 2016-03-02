@@ -5,7 +5,7 @@ use super::{
 };
 
 /// An error related to array shape or layout.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ShapeError {
     // we want to be able to change this representation later
     repr: ErrorKind,
@@ -65,7 +65,7 @@ impl Error for ShapeError {
     fn description(&self) -> &str {
         match self.kind() {
             ErrorKind::IncompatibleShape => "incompatible shapes",
-            ErrorKind::IncompatibleLayout => "incompatible layout (not contiguous)",
+            ErrorKind::IncompatibleLayout => "incompatible memory layout",
             ErrorKind::RangeLimited => "the shape does not fit in type limits",
             ErrorKind::OutOfBounds => "stride leads to out of bounds indexing",
             ErrorKind::Unsupported => "stride leads to aliasing array elements",
@@ -77,6 +77,12 @@ impl Error for ShapeError {
 impl fmt::Display for ShapeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.description().fmt(f)
+    }
+}
+
+impl fmt::Debug for ShapeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ShapeError {:?}: {}", self.kind(), self.description())
     }
 }
 
