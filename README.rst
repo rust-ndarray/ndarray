@@ -68,7 +68,7 @@ your `Cargo.toml`.
 
 - ``assign_ops``
 
-  - Optional, requires nightly
+  - Requires Rust 1.8, will be default soon.
   - Enables the compound assignment operators
 
 - ``rustc-serialize``
