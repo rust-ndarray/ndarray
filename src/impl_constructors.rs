@@ -6,8 +6,7 @@ use libnum;
 use imp_prelude::*;
 use dimension;
 use linspace;
-use shape_error::{self, ShapeError};
-use stride_error::StrideError;
+use error::{self, ShapeError};
 
 /// Constructor methods for one-dimensional arrays.
 impl<S> ArrayBase<S, Ix>
@@ -142,11 +141,10 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array from a vector (with no allocation needed).
     ///
-    /// **Errors** if `dim` does not correspond to the number of elements
-    /// in `v`.
+    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
     pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
         if dim.size_checked() != Some(v.len()) {
-            return Err(shape_error::incompatible_shapes(&v.len(), &dim));
+            return Err(error::incompatible_shapes(&v.len(), &dim));
         }
         unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
     }
@@ -187,7 +185,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Errors** if strides and dimensions can point out of bounds of `v`.<br>
     /// **Errors** if strides allow multiple indices to point to the same element.
     pub fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
-        -> Result<ArrayBase<S, D>, StrideError>
+        -> Result<ArrayBase<S, D>, ShapeError>
     {
         dimension::can_index_slice(&v, &dim, &strides).map(|_| {
             unsafe {

@@ -85,8 +85,7 @@ pub use dimension::{
 
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
-pub use shape_error::ShapeError;
-pub use stride_error::StrideError;
+pub use error::{ShapeError, ErrorKind};
 pub use si::{Si, S};
 
 use iterators::Baseiter;
@@ -128,8 +127,7 @@ mod linalg;
 mod linspace;
 mod numeric_util;
 mod si;
-mod shape_error;
-mod stride_error;
+mod error;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {

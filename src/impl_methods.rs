@@ -6,7 +6,7 @@ use imp_prelude::*;
 
 use dimension;
 use iterators;
-use shape_error::{self, ShapeError};
+use error::{self, ShapeError};
 use super::zipsl;
 use {
     NdIndex,
@@ -650,7 +650,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where E: Dimension
     {
         if shape.size_checked() != Some(self.dim.size()) {
-            return Err(shape_error::incompatible_shapes(&self.dim, &shape));
+            return Err(error::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -661,7 +661,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 dim: shape,
             })
         } else {
-            Err(ShapeError::IncompatibleLayout)
+            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
         }
     }
 

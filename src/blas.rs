@@ -59,6 +59,7 @@ use super::{
     ShapeError,
     zipsl,
 };
+use error::{from_kind, ErrorKind};
 use imp_prelude::*;
 
 
@@ -82,9 +83,7 @@ impl<S, D> ArrayBase<S, D>
         let max = c_int::max_value();
         for (&dim, &stride) in zipsl(self.shape(), self.strides()) {
             if dim > max as Ix || stride > max as Ixs {
-                return Err(ShapeError::DimensionTooLarge(self.shape()
-                                                             .to_vec()
-                                                             .into_boxed_slice()));
+                return Err(from_kind(ErrorKind::RangeLimited));
             }
         }
         Ok(())
@@ -95,7 +94,7 @@ impl<S, D> ArrayBase<S, D>
         if self.is_inner_contiguous() {
             Ok(())
         } else {
-            Err(ShapeError::IncompatibleLayout)
+            Err(from_kind(ErrorKind::IncompatibleLayout))
         }
     }
 }
