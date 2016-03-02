@@ -5,6 +5,7 @@ use std::slice;
 
 use imp_prelude::*;
 
+use arraytraits;
 use dimension;
 use iterators;
 use error::{self, ShapeError};
@@ -235,9 +236,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
     pub unsafe fn uget(&self, index: D) -> &A {
-        debug_assert!(self.dim
-                          .stride_offset_checked(&self.strides, &index)
-                          .is_some());
+        arraytraits::debug_bounds_check(self, &index);
         let off = Dimension::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
     }
@@ -253,9 +252,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         debug_assert!(self.data.is_unique());
-        debug_assert!(self.dim
-                          .stride_offset_checked(&self.strides, &index)
-                          .is_some());
+        arraytraits::debug_bounds_check(self, &index);
         let off = Dimension::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
     }
