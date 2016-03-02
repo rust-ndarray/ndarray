@@ -10,33 +10,47 @@ use {
     ViewRepr,
 };
 
-/// Array’s inner representation.
+/// Array representation trait.
 ///
 /// ***Note:*** `Data` is not an extension interface at this point.
 /// Traits in Rust can serve many different roles. This trait is public because
 /// it is used as a bound on public methods.
 pub unsafe trait Data {
+    /// The array element type.
     type Elem;
+    #[doc(hidden)]
     fn slice(&self) -> &[Self::Elem];
 }
 
-/// Array’s writable inner representation.
+/// Array representation trait.
+///
+/// For an array with writable elements.
+/// 
+/// ***Internal trait, see `Data`.***
 pub unsafe trait DataMut : Data {
+    #[doc(hidden)]
     fn slice_mut(&mut self) -> &mut [Self::Elem];
+    #[doc(hidden)]
     #[inline]
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
         where Self: Sized,
               D: Dimension
     { }
 
+    #[doc(hidden)]
     #[inline]
     fn is_unique(&mut self) -> bool {
         true
     }
 }
 
-/// Clone an Array’s storage.
+/// Array representation trait.
+///
+/// An array representation that can be cloned.
+///
+/// ***Internal trait, see `Data`.***
 pub unsafe trait DataClone : Data {
+    #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
 }
@@ -145,13 +159,23 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
     }
 }
 
-/// Array representation that is a unique or shared owner of its data.
+/// Array representation trait.
+///
+/// A representation that is a unique or shared owner of its data.
+///
+/// ***Internal trait, see `Data`.***
 pub unsafe trait DataOwned : Data {
+    #[doc(hidden)]
     fn new(elements: Vec<Self::Elem>) -> Self;
+    #[doc(hidden)]
     fn into_shared(self) -> Rc<Vec<Self::Elem>>;
 }
 
-/// Array representation that is a lightweight view.
+/// Array representation trait.
+///
+/// A representation that is a lightweight view.
+///
+/// ***Internal trait, see `Data`.***
 pub unsafe trait DataShared : Clone + DataClone { }
 
 unsafe impl<A> DataShared for Rc<Vec<A>> {}
