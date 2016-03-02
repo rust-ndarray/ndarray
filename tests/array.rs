@@ -564,7 +564,7 @@ fn reshape() {
 }
 
 #[test]
-#[should_panic(expected = "IncompatibleShapes")]
+#[should_panic(expected = "IncompatibleShape")]
 fn reshape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
