@@ -100,6 +100,7 @@ pub use iterators::{
 
 pub use arraytraits::AsArray;
 pub use linalg::{LinalgScalar, NdFloat};
+pub use stacking::ArrayStackingExt;
 
 mod arraytraits;
 #[cfg(feature = "serde")]
@@ -129,6 +130,7 @@ mod linspace;
 mod numeric_util;
 mod si;
 mod error;
+mod stacking;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
