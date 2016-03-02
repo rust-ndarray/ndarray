@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::slice;
 
 use super::{Si, Ix, Ixs};
@@ -125,7 +126,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
 ///
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
-pub unsafe trait Dimension : Clone + Eq {
+pub unsafe trait Dimension : Clone + Eq + Debug {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///
@@ -610,7 +611,7 @@ impl RemoveAxis for Vec<Ix> {
 ///
 /// **Note** the blanket implementation that's not visible in rustdoc:
 /// `impl<D> NdIndex for D where D: Dimension { ... }`
-pub unsafe trait NdIndex {
+pub unsafe trait NdIndex : Debug {
     type Dim: Dimension;
     #[doc(hidden)]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;
