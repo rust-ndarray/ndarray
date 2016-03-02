@@ -162,10 +162,8 @@ pub type Ixs = isize;
 /// can be sliced into subsets of its data.
 /// The array supports arithmetic operations by applying them elementwise.
 ///
-/// The `ArrayBase<S, D>` is parameterized by:
-
-/// - `S` for the data container
-/// - `D` for the number of dimensions
+/// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
+/// `D` for the dimensionality.
 ///
 /// Type aliases [`OwnedArray`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
 /// to `ArrayBase` with different types for the data storage.
