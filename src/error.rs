@@ -24,7 +24,6 @@ impl ShapeError {
 /// This enumeration is not exhaustive. The representation of the enum
 /// is not guaranteed.
 #[derive(Copy, Clone, Debug)]
-#[repr(u64)]
 pub enum ErrorKind {
     /// incompatible shape
     IncompatibleShape,
@@ -50,7 +49,7 @@ pub fn from_kind(k: ErrorKind) -> ShapeError {
 impl PartialEq for ErrorKind {
     #[inline(always)]
     fn eq(&self, rhs: &Self) -> bool {
-        *self as u64 == *rhs as u64
+        *self as u8 == *rhs as u8
     }
 }
 
