@@ -19,36 +19,12 @@ use ndarray::{arr0, arr1, arr2};
 use test::black_box;
 
 #[bench]
-fn small_iter_1d(bench: &mut test::Bencher)
+fn map(bench: &mut test::Bencher)
 {
-    let a = arr1::<f32>(&[1., 2., 2.,
-                         3., 4., 4.,
-                         3., 4., 4.,
-                         3., 4., 4.,
-                         5., 6., 6.]);
-    bench.iter(|| for &elt in a.iter() { black_box(elt); })
-}
-
-#[bench]
-fn small_iter_1d_raw(bench: &mut test::Bencher)
-{
-    let a = arr1::<f32>(&[1., 2., 2.,
-                         3., 4., 4.,
-                         3., 4., 4.,
-                         3., 4., 4.,
-                         5., 6., 6.]);
-    bench.iter(|| for &elt in a.raw_data().iter() { black_box(elt); })
-}
-
-#[bench]
-fn small_iter_2d(bench: &mut test::Bencher)
-{
-    let a = arr2::<f32, _>(&[[1., 2., 2.],
-                          [3., 4., 4.],
-                          [3., 4., 4.],
-                          [3., 4., 4.],
-                          [5., 6., 6.]]);
-    bench.iter(|| for &elt in a.iter() { black_box(elt); })
+    let a = OwnedArray::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
+    bench.iter(|| {
+        a.map(|&x| 2. * x)
+    });
 }
 
 #[bench]
