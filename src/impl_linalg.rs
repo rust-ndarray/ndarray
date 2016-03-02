@@ -29,7 +29,8 @@ impl<A, S> ArrayBase<S, Ix>
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
-        assert_eq!(self.len(), rhs.len());
+        debug_assert_eq!(self.len(), rhs.len());
+        assert!(self.len() == rhs.len());
         if let Some(self_s) = self.as_slice() {
             if let Some(rhs_s) = rhs.as_slice() {
                 return numeric_util::unrolled_dot(self_s, rhs_s);
@@ -72,7 +73,8 @@ impl<A, S> ArrayBase<S, Ix>
         }
         // Use only if the vector is large enough to be worth it
         if self.len() >= 32 {
-            assert_eq!(self.len(), rhs.len());
+            debug_assert_eq!(self.len(), rhs.len());
+            assert!(self.len() == rhs.len());
             if let Ok(self_v) = self.blas_view_as_type::<f32>() {
                 if let Ok(rhs_v) = rhs.blas_view_as_type::<f32>() {
                     let f_ret = f32::dot(&self_v, &rhs_v);
