@@ -8,6 +8,8 @@ extern crate rustc_version;
 use rustc_version::Channel;
 
 const DEPRECATED_CFG: &'static str = "has_deprecated";
+const ASSIGN_FEATURE: &'static str = r#"feature="assign_ops""#;
+const ASSIGN_CFG: &'static str = "has_assign";
 
 fn main() {
     let version = rustc_version::version_meta();
@@ -23,6 +25,16 @@ fn main() {
             if ndate >= vec![2015, 12, 18] {
                 println!("cargo:rustc-cfg={}", DEPRECATED_CFG);
             }
+            // assign_ops is available from nightly 2016-03-01
+            if ndate >= vec![2016, 3, 1] {
+                println!("cargo:rustc-cfg={}", ASSIGN_CFG);
+                println!("cargo:rustc-cfg={}", ASSIGN_FEATURE);
+            }
+        }
+    } else {
+        if rustc_version::version_matches(">= 1.8") {
+            println!("cargo:rustc-cfg={}", ASSIGN_FEATURE);
+            println!("cargo:rustc-cfg={}", ASSIGN_CFG);
         }
     }
 }

@@ -57,8 +57,8 @@
 //!   - Optional, stable
 //!   - Enables `rblas` integration
 //!
-#![cfg_attr(feature = "assign_ops", feature(augmented_assignments,
-                                            op_assign_traits))]
+#![cfg_attr(all(feature = "assign_ops", not(has_assign)),
+            feature(augmented_assignments, op_assign_traits))]
 
 #[cfg(feature = "serde")]
 extern crate serde;

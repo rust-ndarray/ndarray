@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 #[macro_use]
 extern crate ndarray;
 
