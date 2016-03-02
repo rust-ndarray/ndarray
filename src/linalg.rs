@@ -17,7 +17,7 @@ use blas::{AsBlas, BlasArrayView};
 #[cfg(feature="rblas")]
 use imp_prelude::*;
 
-/// Trait union for scalars (array elements) that support linear algebra operations.
+/// Elements that support linear algebra operations.
 ///
 /// `Any` for type-based specialization, `Copy` so that they don't need move
 /// semantics or destructors, and the rest are numerical traits.

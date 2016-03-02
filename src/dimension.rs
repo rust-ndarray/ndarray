@@ -119,7 +119,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
     Some(offset)
 }
 
-/// Trait for the shape and index types of arrays.
+/// Array shape and index trait.
 ///
 /// `unsafe` because of the assumptions in the default methods.
 ///
@@ -541,7 +541,9 @@ unsafe impl Dimension for Vec<Ix>
     fn slice_mut(&mut self) -> &mut [Ix] { self }
 }
 
-/// Helper trait to define a larger-than relation for array shapes:
+/// Array shape with a next smaller dimension.
+///
+/// `RemoveAxis` defines a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
 pub trait RemoveAxis : Dimension {
     type Smaller: Dimension;
@@ -595,7 +597,7 @@ impl RemoveAxis for Vec<Ix> {
     }
 }
 
-/// A tuple or fixed size array that can be used to index an array.
+/// Tuple or fixed size arrays that can be used to index an array.
 ///
 /// ```
 /// use ndarray::arr2;
