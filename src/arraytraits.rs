@@ -30,6 +30,31 @@ fn array_out_of_bounds() -> ! {
     panic!("ndarray: index out of bounds");
 }
 
+// Macro to insert more informative out of bounds message in debug builds
+#[cfg(debug_assertions)]
+macro_rules! debug_bounds_check {
+    ($self_:ident, $index:expr) => {
+        if let None = $index.index_checked(&$self_.dim, &$self_.strides) {
+            panic!("ndarray: index {:?} is out of bounds for array of shape {:?}",
+                   $index, $self_.shape());
+        }
+    };
+}
+
+#[cfg(not(debug_assertions))]
+macro_rules! debug_bounds_check {
+    ($self_:ident, $index:expr) => { };
+}
+
+#[inline(always)]
+pub fn debug_bounds_check<S, D, I>(a: &ArrayBase<S, D>, index: &I)
+    where D: Dimension,
+          I: NdIndex<Dim=D>,
+          S: Data,
+{
+    debug_bounds_check!(a, *index);
+}
+
 /// Access the element at **index**.
 ///
 /// **Panics** if index is out of bounds.
@@ -41,6 +66,7 @@ impl<S, D, I> Index<I> for ArrayBase<S, D>
     type Output = S::Elem;
     #[inline]
     fn index(&self, index: I) -> &S::Elem {
+        debug_bounds_check!(self, index);
         self.get(index).unwrap_or_else(|| array_out_of_bounds())
     }
 }
@@ -55,6 +81,7 @@ impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
 {
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut S::Elem {
+        debug_bounds_check!(self, index);
         self.get_mut(index).unwrap_or_else(|| array_out_of_bounds())
     }
 }

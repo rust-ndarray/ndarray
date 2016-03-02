@@ -70,6 +70,13 @@ fn test_slice()
 
 #[should_panic]
 #[test]
+fn index_out_of_bounds() {
+    let mut a = OwnedArray::<i32, _>::zeros((3, 4));
+    a[[3, 2]] = 1;
+}
+
+#[should_panic]
+#[test]
 fn slice_oob()
 {
     let a = RcArray::<i32, _>::zeros((3, 4));
