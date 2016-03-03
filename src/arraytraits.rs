@@ -9,16 +9,10 @@ use std::ops::{
     IndexMut,
 };
 
-use super::{
-    Dimension, Ix,
+use imp_prelude::*;
+use {
     Elements,
     ElementsMut,
-    ArrayBase,
-    ArrayView,
-    ArrayViewMut,
-    Data,
-    DataMut,
-    DataOwned,
     NdIndex,
 };
 
@@ -277,8 +271,11 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
 }
 
 
+// use "raw" form instead of type aliases here so that they show up in docs
+/// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
+///
 /// Create a one-dimensional read-only array view of the data in `slice`.
-impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix>
+impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayBase<ViewRepr<&'a A>, Ix>
     where Slice: AsRef<[A]>
 {
     fn from(slice: &'a Slice) -> Self {
@@ -289,7 +286,10 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix>
     }
 }
 
-impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
+/// Implementation of `ArrayView::from(&A)` where `A` is an array.
+///
+/// Create a read-only array view of the array.
+impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayBase<ViewRepr<&'a A>, D>
     where S: Data<Elem=A>,
           D: Dimension,
 {
@@ -298,8 +298,10 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
     }
 }
 
+/// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or slicable.
+///
 /// Create a one-dimensional read-write array view of the data in `slice`.
-impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix>
+impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayBase<ViewRepr<&'a mut A>, Ix>
     where Slice: AsMut<[A]>
 {
     fn from(slice: &'a mut Slice) -> Self {
@@ -310,7 +312,10 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix>
     }
 }
 
-impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
+/// Implementation of `ArrayViewMut::from(&mut A)` where `A` is an array.
+///
+/// Create a read-write array view of the array.
+impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayBase<ViewRepr<&'a mut A>, D>
     where S: DataMut<Elem=A>,
           D: Dimension,
 {
