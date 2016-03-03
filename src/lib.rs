@@ -98,6 +98,7 @@ pub use iterators::{
     AxisChunksIterMut,
 };
 
+pub use arraytraits::AsArray;
 pub use linalg::LinalgScalar;
 
 mod arraytraits;
