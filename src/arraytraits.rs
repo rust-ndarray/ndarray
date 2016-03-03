@@ -275,3 +275,38 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
         })
     }
 }
+
+
+impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix>
+    where Slice: AsRef<[A]>
+{
+    fn from(slice: &'a Slice) -> Self {
+        ArrayView::from_slice(slice.as_ref())
+    }
+}
+
+impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
+    where S: Data<Elem=A>,
+          D: Dimension,
+{
+    fn from(array: &'a ArrayBase<S, D>) -> Self {
+        array.view()
+    }
+}
+
+impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix>
+    where Slice: AsMut<[A]>
+{
+    fn from(slice: &'a mut Slice) -> Self {
+        ArrayViewMut::from_slice(slice.as_mut())
+    }
+}
+
+impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
+    where S: DataMut<Elem=A>,
+          D: Dimension,
+{
+    fn from(array: &'a mut ArrayBase<S, D>) -> Self {
+        array.view_mut()
+    }
+}
