@@ -326,6 +326,24 @@ pub unsafe trait Dimension : Clone + Eq + Debug {
         }
         offset
     }
+
+    #[doc(hidden)]
+    /// Get the dimension on `axis`.
+    ///
+    /// *Panics* if `axis` is out of bounds.
+    #[inline]
+    fn index(&self, axis: Axis) -> &Ix {
+        &self.slice()[axis.axis()]
+    }
+
+    #[doc(hidden)]
+    /// Get a mutable reference to the dimension on `axis`.
+    ///
+    /// *Panics* if `axis` is out of bounds.
+    #[inline]
+    fn index_mut(&mut self, axis: Axis) -> &mut Ix {
+        &mut self.slice_mut()[axis.axis()]
+    }
 }
 
 fn abs_index(len: Ixs, index: Ixs) -> Ix {
