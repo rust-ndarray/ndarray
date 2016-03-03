@@ -208,10 +208,9 @@ unsafe impl<S, D> Send for ArrayBase<S, D>
     where S: Send + Data, D: Send
 { }
 
-
-#[cfg(feature = "rustc-serialize")]
+#[cfg(any(feature = "rustc-serialize", feature = "serde"))]
 // Use version number so we can add a packed format later.
-static ARRAY_FORMAT_VERSION: u8 = 1u8;
+pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
 /// **Requires crate feature `"rustc-serialize"`**
 #[cfg(feature = "rustc-serialize")]
@@ -256,6 +255,7 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
             let dim: D = try!(d.read_struct_field("dim", 1, |d| {
                 Decodable::decode(d)
             }));
+
             let elements = try!(
                 d.read_struct_field("data", 2, |d| {
                     d.read_seq(|d, len| {

@@ -39,6 +39,14 @@ optional = true
 blas-sys = { version = "0.6.3", optional = true, default-features = false }
 matrixmultiply = { version = "0.1.8" }
 
+[dependencies.serde]
+version = "0.7"
+optional = true
+
+[dev-dependencies.serde_json]
+version = "0.7"
+
+
 [features]
 blas = ["blas-sys"]
 

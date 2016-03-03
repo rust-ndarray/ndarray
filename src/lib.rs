@@ -114,6 +114,8 @@ pub use shape_builder::{ ShapeBuilder };
 mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;
+#[cfg(feature = "serde")]
+mod arraydeserialize;
 mod arrayformat;
 mod data_traits;
 

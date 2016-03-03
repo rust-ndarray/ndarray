@@ -6,62 +6,73 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use serde::ser::impls::SeqIteratorVisitor;
-use serde::{self, Serialize, Deserialize};
+use serde::{self, Serialize};
 
-use super::{
-    Array,
-    Dimension,
-    Ix,
-    Elements,
-};
+use imp_prelude::*;
 
-struct AVisitor<'a, A: 'a, D: 'a> {
-    arr: &'a RcArray<A, D>,
+use super::arraytraits::ARRAY_FORMAT_VERSION;
+use super::Elements;
+
+struct AVisitor<'a, D: 'a, S: 'a>
+    where S: Data
+{
+    arr: &'a ArrayBase<S, D>,
     state: u32,
 }
 
-impl<A: Serialize, D: Serialize> Serialize for RcArray<A, D>
-    where D: Dimension
-{
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: serde::Serializer
-    {
-        serializer.visit_named_map("Array",
-                                   AVisitor {
-                                       arr: self,
-                                       state: 0,
-                                   })
-    }
-}
-
-impl<'a, A: Serialize, D: Serialize> Serialize for Elements<'a, A, D>
-    where D: Dimension
-{
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: serde::Serializer
-    {
-        serializer.visit_seq(SeqIteratorVisitor::new(self.clone(), None))
-    }
-}
-
-impl<'a, A, D> serde::ser::MapVisitor for AVisitor<'a, A, D>
+impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
-          D: Serialize + Dimension
+          D: Dimension + Serialize,
+          S: DataOwned<Elem = A>
+
 {
-    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+    fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
+        where Se: serde::Serializer
+    {
+        serializer.serialize_struct("Array",
+            AVisitor {
+                arr: self,
+                state: 0,
+        })
+    }
+}
+
+impl<'a, A, D> Serialize for Elements<'a, A, D>
+    where A: Serialize,
+          D: Dimension + Serialize
+{
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
         where S: serde::Serializer
+    {
+        serializer.serialize_seq(SeqIteratorVisitor::new(
+            self.clone(),
+            None,
+        ))
+    }
+}
+
+impl<'a, A, D, S> serde::ser::MapVisitor for AVisitor<'a, D, S>
+    where A: Serialize,
+          D: Serialize + Dimension,
+          S: DataOwned<Elem = A>
+{
+    fn visit<Se>(&mut self, serializer: &mut Se) -> Result<Option<()>, Se::Error>
+        where Se: serde::Serializer
     {
         match self.state {
             0 => {
-                self.state += 1;
-                Ok(Some(try!(serializer.visit_map_elt("shape", self.arr.dim()))))
-            }
+                self.state +=1;
+                Ok(Some(try!(serializer.serialize_map_elt("v", ARRAY_FORMAT_VERSION))))
+            },
             1 => {
                 self.state += 1;
-                Ok(Some(try!(serializer.visit_map_elt("data", self.arr.iter()))))
-            }
+                Ok(Some(try!(serializer.serialize_struct_elt("dim", self.arr.dim()))))
+            },
+            2 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("data", self.arr.iter()))))
+            },
             _ => Ok(None),
         }
-
     }
 }
