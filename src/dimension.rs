@@ -4,7 +4,6 @@ use std::slice;
 use super::{Si, Ix, Ixs};
 use super::zipsl;
 use error::{from_kind, ErrorKind, ShapeError};
-use std::ops::{Index, IndexMut};
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
