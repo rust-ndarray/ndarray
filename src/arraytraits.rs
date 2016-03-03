@@ -318,3 +318,30 @@ impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
         array.view_mut()
     }
 }
+
+/// Argument conversion into an array view
+///
+/// The trait is parameterized over `A`, the element type, and `D`, the
+/// dimensionality of the array. `D` defaults to one-dimensional.
+///
+/// Use `.into()` to do the conversion.
+///
+/// ```
+/// use ndarray::AsArray;
+///
+/// fn sum<'a, V: AsArray<'a, f64>>(data: V) -> f64 {
+///     let array_view = data.into();
+///     array_view.scalar_sum()
+/// }
+///
+/// assert_eq!(
+///     sum(&[1., 2., 3.]),
+///     6.
+/// );
+///
+/// ```
+pub trait AsArray<'a, A: 'a, D = Ix> : Into<ArrayView<'a, A, D>> where D: Dimension { }
+impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
+    where T: Into<ArrayView<'a, A, D>>,
+          D: Dimension,
+{ }
