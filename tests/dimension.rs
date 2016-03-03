@@ -7,18 +7,18 @@ use ndarray::{
     arr2,
     Axis,
     Ix,
-    Dimension
+    Dimension,
 };
 
 #[test]
 fn remove_axis()
 {
-    assert_eq!(3.remove_axis(0), ());
-    assert_eq!((1, 2).remove_axis(0), 2);
-    assert_eq!((4, 5, 6).remove_axis(1), (4, 6));
+    assert_eq!(3.remove_axis(Axis(0)), ());
+    assert_eq!((1, 2).remove_axis(Axis(0)), 2);
+    assert_eq!((4, 5, 6).remove_axis(Axis(1)), (4, 6));
 
-    assert_eq!(vec![1,2].remove_axis(0), vec![2]);
-    assert_eq!(vec![4, 5, 6].remove_axis(1), vec![4, 6]);
+    assert_eq!(vec![1,2].remove_axis(Axis(0)), vec![2]);
+    assert_eq!(vec![4, 5, 6].remove_axis(Axis(1)), vec![4, 6]);
 
     let a = RcArray::<f32, _>::zeros((4,5));
     a.subview(Axis(1), 0);

@@ -329,7 +329,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where D: RemoveAxis,
     {
         self.isubview(axis, index);
-        let axis = axis.axis();
         // don't use reshape -- we always know it will fit the size,
         // and we can use remove_axis on the strides as well
         ArrayBase {
