@@ -7,6 +7,7 @@ use ndarray::{
     arr2,
     Axis,
     Ix,
+    Dimension
 };
 
 #[test]
@@ -45,13 +46,13 @@ fn dyn_dimension()
 #[test]
 fn index_axis()
 {
-    assert_eq!(3[Axis(0)], 3);
-    assert_eq!((3, 2)[Axis(1)], 2);
+    assert_eq!(3.index(Axis(0)), &3);
+    assert_eq!((3, 2).index(Axis(1)), &2);
 
     let mut dim = (2, 3, 3);
-    dim[Axis(2)] = 1;
-    assert_eq!(dim[Axis(2)], 1);
+    *dim.index_mut(Axis(2)) = 1;
+    assert_eq!(dim.index(Axis(2)), &1);
 
     let a: OwnedArray<f64, (Ix, Ix, Ix)> = OwnedArray::zeros(dim);
-    assert_eq!(a.dim()[Axis(1)], 3);
+    assert_eq!(a.dim().index(Axis(1)), &3);
 }
