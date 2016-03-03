@@ -50,7 +50,7 @@ pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
 /// );
 /// ```
 pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix> {
-    ArrayView::from_slice(xs)
+    ArrayView::from(xs)
 }
 
 /// Return a two-dimensional array view with elements borrowing `xs`.
@@ -86,7 +86,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 /// }
 /// ```
 pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
-    ArrayViewMut::from_slice(xs)
+    ArrayViewMut::from(xs)
 }
 
 /// Fixed-size array used for array initialization

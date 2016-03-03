@@ -277,11 +277,15 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
 }
 
 
+/// Create a one-dimensional read-only array view of the data in `slice`.
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix>
     where Slice: AsRef<[A]>
 {
     fn from(slice: &'a Slice) -> Self {
-        ArrayView::from_slice(slice.as_ref())
+        let xs = slice.as_ref();
+        unsafe {
+            Self::new_(xs.as_ptr(), xs.len(), 1)
+        }
     }
 }
 
@@ -294,11 +298,15 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
     }
 }
 
+/// Create a one-dimensional read-write array view of the data in `slice`.
 impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix>
     where Slice: AsMut<[A]>
 {
     fn from(slice: &'a mut Slice) -> Self {
-        ArrayViewMut::from_slice(slice.as_mut())
+        let xs = slice.as_mut();
+        unsafe {
+            Self::new_(xs.as_mut_ptr(), xs.len(), 1)
+        }
     }
 }
 
