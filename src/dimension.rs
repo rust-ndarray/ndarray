@@ -566,7 +566,7 @@ unsafe impl Dimension for Vec<Ix>
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
 pub trait RemoveAxis : Dimension {
     type Smaller: Dimension;
-    fn remove_axis(&self, axis: usize) -> Self::Smaller;
+    fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
 macro_rules! impl_shrink(
@@ -576,12 +576,12 @@ impl RemoveAxis for ($from $(,$more)*)
     type Smaller = ($($more),*);
     #[allow(unused_parens)]
     #[inline]
-    fn remove_axis(&self, axis: usize) -> ($($more),*) {
+    fn remove_axis(&self, axis: Axis) -> ($($more),*) {
         let mut tup = ($(0 as $more),*);
         {
             let mut it = tup.slice_mut().iter_mut();
             for (i, &d) in self.slice().iter().enumerate() {
-                if i == axis {
+                if i == axis.axis() {
                     continue;
                 }
                 for rr in it.by_ref() {
@@ -609,9 +609,9 @@ impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
 
 impl RemoveAxis for Vec<Ix> {
     type Smaller = Vec<Ix>;
-    fn remove_axis(&self, axis: usize) -> Vec<Ix> {
+    fn remove_axis(&self, axis: Axis) -> Vec<Ix> {
         let mut res = self.clone();
-        res.remove(axis);
+        res.remove(axis.axis());
         res
     }
 }

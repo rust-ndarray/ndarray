@@ -8,6 +8,7 @@ use super::{
     ArrayView,
     ArrayViewMut,
     RemoveAxis,
+    Axis,
 };
 
 /// Base for array iterators
@@ -422,8 +423,8 @@ fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
         index: 0,
         len: shape,
         stride: stride,
-        inner_dim: v.dim.remove_axis(axis),
-        inner_strides: v.strides.remove_axis(axis),
+        inner_dim: v.dim.remove_axis(Axis(axis)),
+        inner_strides: v.strides.remove_axis(Axis(axis)),
         ptr: v.ptr,
     }
 }
