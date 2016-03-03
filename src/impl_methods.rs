@@ -265,7 +265,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
     /// ```
-    /// use ndarray::{arr1, arr2, Axis};
+    /// use ndarray::{arr2, ArrayView, Axis};
     ///
     /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
     ///                [3., 4.],    // -- axis 0, row 1
@@ -274,8 +274,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// //                \   axis 1, column 1
     /// //                 axis 1, column 0
     /// assert!(
-    ///     a.subview(Axis(0), 1) == arr1(&[3., 4.]) &&
-    ///     a.subview(Axis(1), 1) == arr1(&[2., 4., 6.])
+    ///     a.subview(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
+    ///     a.subview(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
     /// );
     /// ```
     pub fn subview(&self, axis: Axis, index: Ix)
