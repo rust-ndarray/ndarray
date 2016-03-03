@@ -146,6 +146,7 @@ mod imp_prelude {
         DataMut,
         DataOwned,
         DataShared,
+        ViewRepr,
     };
     /// Wrapper type for private methods
     #[derive(Copy, Clone, Debug)]

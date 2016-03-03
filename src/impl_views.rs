@@ -3,15 +3,12 @@ use imp_prelude::*;
 use dimension::{self, stride_offset};
 use error::ShapeError;
 
-use {
-    ViewRepr,
-};
-
 /// # Methods for Array Views
 ///
 /// Methods for read-only array views `ArrayView<'a, A, D>`
 ///
-/// Note that array views implement traits like `From`, `IntoIterator` too.
+/// Note that array views implement traits like [`From`][f] and `IntoIterator` too.
+/// [f]: #method.from
 impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     where D: Dimension,
 {
@@ -89,7 +86,9 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 
 /// Methods for read-write array views `ArrayViewMut<'a, A, D>`
 ///
-/// Note that array views implement traits like `From`, `IntoIterator` too.
+/// Note that array views implement traits like [`From`][f] and `IntoIterator` too.
+///
+/// [f]: #method.from
 impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     where D: Dimension,
 {
