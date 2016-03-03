@@ -327,6 +327,18 @@ pub unsafe trait Dimension : Clone + Eq + Debug {
         }
         offset
     }
+
+    #[doc(hidden)]
+    #[inline]
+    fn index(&self, axis: Axis) -> &Ix {
+        &self.slice()[axis.axis()]
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    fn index_mut(&mut self, axis: Axis) -> &mut Ix {
+        &mut self.slice_mut()[axis.axis()]
+    }
 }
 
 fn abs_index(len: Ixs, index: Ixs) -> Ix {
@@ -736,35 +748,3 @@ impl Axis {
     pub fn axis(&self) -> usize { self.0 }
 }
 
-macro_rules! impl_index_axis {
-    ($n:expr, $($ix:ident),+) => (
-        impl Index<Axis> for ($($ix),+) {
-            type Output = Ix;
-
-            #[inline]
-            fn index(&self, axis: Axis) -> &Ix {
-                &self.slice()[axis.axis()]
-            }
-        }
-
-        impl IndexMut<Axis> for ($($ix),+) {
-            #[inline]
-            fn index_mut(&mut self, axis: Axis) -> &mut Ix {
-                &mut self.slice_mut()[axis.axis()]
-            }
-        }
-    )
-}
-
-impl_index_axis!(1, Ix);
-impl_index_axis!(2, Ix, Ix);
-impl_index_axis!(3, Ix, Ix, Ix);
-impl_index_axis!(4, Ix, Ix, Ix, Ix);
-impl_index_axis!(5, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(6, Ix, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(7, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(8, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(9, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(10, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(11, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-impl_index_axis!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
