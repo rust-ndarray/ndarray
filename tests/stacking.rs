@@ -18,5 +18,5 @@ fn vstack() {
                          [2., 2.],
                          [3., 3.]]));
 
-    let b = stack!([a.view(), a]; Axis(1));
+    let b = stack!(Axis(1), a.view(), a);
 }
