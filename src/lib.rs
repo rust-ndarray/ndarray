@@ -99,7 +99,7 @@ pub use iterators::{
 };
 
 pub use arraytraits::AsArray;
-pub use linalg::LinalgScalar;
+pub use linalg::{LinalgScalar, NdFloat};
 
 mod arraytraits;
 #[cfg(feature = "serde")]

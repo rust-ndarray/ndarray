@@ -12,11 +12,11 @@ use libnum::Complex;
 /// and let `C` be an array with mutable data.
 ///
 /// `ScalarOperand` determines for which scalars `K` operations `&A @ K`, and `B @ K`,
-/// and `C @= K` are defined, as **right hand side** operands, for applicable
+/// and `C @= K` are defined, as ***right hand side operands***, for applicable
 /// arithmetic operators (denoted `@`).
 ///
-/// **Left hand side** scalar operands are implemented differently
-/// (one `impl` per concrete scalar type); they are
+/// ***Left hand side*** scalar operands are not related to this trait.
+/// (They need one `impl` per concrete scalar type); they are
 /// implemented for the default `ScalarOperand` types, allowing
 /// operations `K @ &A`, and `K @ B`.
 ///
