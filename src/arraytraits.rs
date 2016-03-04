@@ -41,12 +41,12 @@ macro_rules! debug_bounds_check {
 }
 
 #[inline(always)]
-pub fn debug_bounds_check<S, D, I>(a: &ArrayBase<S, D>, index: &I)
+pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
     where D: Dimension,
           I: NdIndex<Dim=D>,
           S: Data,
 {
-    debug_bounds_check!(a, *index);
+    debug_bounds_check!(_a, *_index);
 }
 
 /// Access the element at **index**.
