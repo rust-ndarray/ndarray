@@ -3,7 +3,7 @@ use imp_prelude::*;
 use error::{ShapeError, ErrorKind, from_kind};
 
 /// Stack arrays along the given axis.
-pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
+pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     -> Result<OwnedArray<A, D>, ShapeError>
     where A: Copy,
           D: Dimension + RemoveAxis
@@ -48,6 +48,6 @@ pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
 #[macro_export]
 macro_rules! stack {
     ($axis:expr, $( $a:expr ),+ ) => {
-        ndarray::stack(&[ $($a.view() ),* ], $axis).unwrap()
+        ndarray::stack($axis, &[ $($a.view() ),* ]).unwrap()
     }
 }
