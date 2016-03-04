@@ -801,8 +801,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
     /// array’s view.<br>
-    /// **Note:** the slice may be empty.
-    pub fn raw_data(&self) -> &[A] {
+    pub fn raw_data(&self) -> &[A]
+        where S: DataOwned,
+    {
         self.data.slice()
     }
 
@@ -811,12 +812,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
     /// array’s view.<br>
-    /// **Note:** the slice may be empty.
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
     pub fn raw_data_mut(&mut self) -> &mut [A]
-        where S: DataMut,
+        where S: DataOwned + DataMut,
     {
         self.ensure_unique();
         self.data.slice_mut()
