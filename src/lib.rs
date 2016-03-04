@@ -170,7 +170,7 @@ pub type Ixs = isize;
 /// `D` for the dimensionality.
 ///
 /// Type aliases [`OwnedArray`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
-/// to `ArrayBase` with different types for the data storage.
+/// to `ArrayBase` with different types for the data container.
 ///
 /// [`OwnedArray`]: type.OwnedArray.html
 /// [`RcArray`]: type.RcArray.html
