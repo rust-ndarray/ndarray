@@ -54,10 +54,10 @@ impl<T> LinalgScalar for T
 
 /// Floating-point element types `f32` and `f64`.
 ///
-/// Trait `NdFloat` is only implemented for `f32` and `f64` but
-/// encompasses all float-relevant ndarray functionality,
-/// including the traits needed for linear algebra (`Any`) and
-/// for scalar operations (`ScalarOperand`).
+/// Trait `NdFloat` is only implemented for `f32` and `f64` but encompasses as
+/// much float-relevant ndarray functionality as possible, including the traits
+/// needed for linear algebra (`Any`) and for *right hand side* scalar
+/// operations (`ScalarOperand`).
 #[cfg(not(feature="assign_ops"))]
 pub trait NdFloat :
     Float +
@@ -67,10 +67,10 @@ pub trait NdFloat :
 
 /// Floating-point element types `f32` and `f64`.
 ///
-/// Trait `NdFloat` is only implemented for `f32` and `f64` but
-/// encompasses all float-relevant ndarray functionality,
-/// including the traits needed for linear algebra (`Any`) and
-/// for scalar operations (`ScalarOperand`).
+/// Trait `NdFloat` is only implemented for `f32` and `f64` but encompasses as
+/// much float-relevant ndarray functionality as possible, including the traits
+/// needed for linear algebra (`Any`) and for *right hand side* scalar
+/// operations (`ScalarOperand`).
 #[cfg(feature="assign_ops")]
 pub trait NdFloat :
     Float +
