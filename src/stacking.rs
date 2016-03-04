@@ -1,13 +1,24 @@
 
 use imp_prelude::*;
+use error::{ShapeError, ErrorKind, from_kind};
 
+/// Stack arrays along the given axis.
+///
+/// *Panics* if axis is out of bounds.
 pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
-    -> OwnedArray<A, D>
+    -> Result<OwnedArray<A, D>, ShapeError>
     where A: Copy,
           D: Dimension + RemoveAxis
 {
-    assert!(arrays.len() > 0);
+    if arrays.len() == 0 {
+        return Err(from_kind(ErrorKind::Unsupported));
+    }
     let mut res_dim = arrays[0].dim().clone();
+    let common_dim = res_dim.remove_axis(axis);
+    if arrays.iter().any(|a| a.dim().remove_axis(axis) != common_dim) {
+        return Err(from_kind(ErrorKind::IncompatibleShape));
+    }
+
     let stacked_dim = arrays.iter()
                             .fold(0, |acc, a| acc + a.dim().index(axis));
     *res_dim.index_mut(axis) = stacked_dim;
@@ -30,5 +41,5 @@ pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
             assign_view = rest;
         }
     }
-    res
+    Ok(res)
 }
