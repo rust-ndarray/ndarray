@@ -7,6 +7,7 @@ use numeric_util;
 
 use {
     LinalgScalar,
+    aview0,
 };
 
 impl<A, S, D> ArrayBase<S, D>
@@ -87,14 +88,12 @@ impl<A, S, D> ArrayBase<S, D>
               D: RemoveAxis,
     {
         let n = self.shape()[axis.axis()];
-        let mut sum = self.sum(axis);
-        let one = libnum::one::<A>();
-        let mut cnt = one;
+        let sum = self.sum(axis);
+        let mut cnt = A::one();
         for _ in 1..n {
-            cnt = cnt + one;
+            cnt = cnt + A::one();
         }
-        sum.idiv_scalar(&cnt);
-        sum
+        sum / &aview0(&cnt)
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
