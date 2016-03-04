@@ -24,7 +24,7 @@
 //! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
 //! - Array views can be used to slice and mutate any `[T]` data using
-//!   `ArrayView::from_slice` and `ArrayViewMut::from_slice`.
+//!   `ArrayView::from` and `ArrayViewMut::from`.
 //!
 //! ## Crate Status
 //!
@@ -98,6 +98,7 @@ pub use iterators::{
     AxisChunksIterMut,
 };
 
+pub use arraytraits::AsArray;
 pub use linalg::LinalgScalar;
 
 mod arraytraits;
@@ -145,6 +146,7 @@ mod imp_prelude {
         DataMut,
         DataOwned,
         DataShared,
+        ViewRepr,
     };
     /// Wrapper type for private methods
     #[derive(Copy, Clone, Debug)]
@@ -414,11 +416,12 @@ pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 
 /// A lightweight array view.
 ///
-/// `ArrayView` implements `IntoIterator`.
+/// See also [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
 pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 /// A lightweight read-write array view.
 ///
-/// `ArrayViewMut` implements `IntoIterator`.
+///
+/// See also [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 
 /// Array view’s representation.
