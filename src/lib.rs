@@ -416,12 +416,25 @@ pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 
 /// A lightweight array view.
 ///
-/// See also [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
+/// An array view represents an array or a part of it, created from
+/// an iterator, subview or slice of an array.
+///
+/// Array views have all the methods of an array (see [`ArrayBase`][ab]).
+///
+/// See also specific [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
+///
+/// [ab]: struct.ArrayBase.html
 pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 /// A lightweight read-write array view.
 ///
+/// An array view represents an array or a part of it, created from
+/// an iterator, subview or slice of an array.
 ///
-/// See also [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
+/// Array views have all the methods of an array (see [`ArrayBase`][ab]).
+///
+/// See also specific [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
+///
+/// [ab]: struct.ArrayBase.html
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 
 /// Array view’s representation.
