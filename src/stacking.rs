@@ -30,7 +30,7 @@ pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
     unsafe {
         v.set_len(size);
     }
-    let mut res = OwnedArray::from_vec_dim(res_dim, v).unwrap();
+    let mut res = try!(OwnedArray::from_vec_dim(res_dim, v));
 
     {
         let mut assign_view = res.view_mut();
