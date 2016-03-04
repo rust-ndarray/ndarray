@@ -1,4 +1,5 @@
 
+#[macro_use(stack)]
 extern crate ndarray;
 
 
@@ -16,4 +17,6 @@ fn vstack() {
                          [3., 3.],
                          [2., 2.],
                          [3., 3.]]));
+
+    let b = stack!([a.view(), a]; Axis(1));
 }
