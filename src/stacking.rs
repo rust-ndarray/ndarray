@@ -8,12 +8,12 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     where A: Copy,
           D: Dimension + RemoveAxis
 {
+    if arrays.len() == 0 {
+        return Err(from_kind(ErrorKind::Unsupported));
+    }
     let mut res_dim = arrays[0].dim();
     if axis.axis() >= res_dim.ndim() {
         return Err(from_kind(ErrorKind::OutOfBounds));
-    }
-    if arrays.len() == 0 {
-        return Err(from_kind(ErrorKind::Unsupported));
     }
     let common_dim = res_dim.remove_axis(axis);
     if arrays.iter().any(|a| a.dim().remove_axis(axis) != common_dim) {
