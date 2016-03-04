@@ -1,6 +1,5 @@
 
 use imp_prelude::*;
-use libnum;
 
 /// A slice extension trait for concatenating arrays.
 pub trait ArrayStackingExt {
@@ -14,7 +13,7 @@ pub trait ArrayStackingExt {
 }
 
 impl<'a, A, D> ArrayStackingExt for [ArrayView<'a, A, D>]
-    where A: Clone + libnum::Zero,
+    where A: Copy,
           D: Dimension + RemoveAxis
 {
     type Output = OwnedArray<A, D>;
@@ -25,7 +24,15 @@ impl<'a, A, D> ArrayStackingExt for [ArrayView<'a, A, D>]
         let stacked_dim = self.iter()
                               .fold(0, |acc, a| acc + a.dim().index(axis));
         *res_dim.index_mut(axis) = stacked_dim;
-        let mut res = OwnedArray::zeros(res_dim);
+
+        // we can safely use uninitialized values here because they are Copy
+        // and we will only ever write to them
+        let size = res_dim.size();
+        let mut v = Vec::with_capacity(size);
+        unsafe {
+            v.set_len(size);
+        }
+        let mut res = OwnedArray::from_vec_dim(res_dim, v).unwrap();
 
         {
             let mut assign_view = res.view_mut();
