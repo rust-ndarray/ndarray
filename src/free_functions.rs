@@ -6,7 +6,7 @@ use imp_prelude::*;
 
 /// ***Deprecated: Use `ArrayBase::zeros` instead.***
 ///
-/// Return an array filled with zeros
+/// Create an array filled with zeros
 #[cfg_attr(has_deprecated, deprecated(note="Use `ArrayBase::zeros` instead."))]
 pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
     where A: Clone + libnum::Zero, D: Dimension,
@@ -14,28 +14,28 @@ pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
     ArrayBase::zeros(dim)
 }
 
-/// Return a zero-dimensional array with the element `x`.
+/// Create a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> OwnedArray<A, ()>
 {
     unsafe { ArrayBase::from_vec_dim_unchecked((), vec![x]) }
 }
 
-/// Return a one-dimensional array with elements from `xs`.
+/// Create a one-dimensional array with elements from `xs`.
 pub fn arr1<A: Clone>(xs: &[A]) -> OwnedArray<A, Ix> {
     ArrayBase::from_vec(xs.to_vec())
 }
 
-/// Return a one-dimensional array with elements from `xs`.
+/// Create a one-dimensional array with elements from `xs`.
 pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix> {
     arr1(xs).into_shared()
 }
 
-/// Return a zero-dimensional array view borrowing `x`.
+/// Create a zero-dimensional array view borrowing `x`.
 pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
     unsafe { ArrayView::new_(x, (), ()) }
 }
 
-/// Return a one-dimensional array view with elements borrowing `xs`.
+/// Create a one-dimensional array view with elements borrowing `xs`.
 ///
 /// ```
 /// use ndarray::aview1;
@@ -53,7 +53,7 @@ pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix> {
     ArrayView::from(xs)
 }
 
-/// Return a two-dimensional array view with elements borrowing `xs`.
+/// Create a two-dimensional array view with elements borrowing `xs`.
 pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)> {
     let cols = V::len();
     let rows = xs.len();
@@ -67,7 +67,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
     }
 }
 
-/// Return a one-dimensional read-write array view with elements borrowing `xs`.
+/// Create a one-dimensional read-write array view with elements borrowing `xs`.
 ///
 /// ```
 /// #[macro_use(s)]
@@ -114,7 +114,7 @@ macro_rules! impl_arr_init {
 
 impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 
-/// Return a two-dimensional array with elements from `xs`.
+/// Create a two-dimensional array with elements from `xs`.
 ///
 /// ```
 /// use ndarray::arr2;
@@ -137,13 +137,13 @@ pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> OwnedArray<A, 
     }
 }
 
-/// Return a two-dimensional array with elements from `xs`.
+/// Create a two-dimensional array with elements from `xs`.
 ///
 pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)> {
     arr2(xs).into_shared()
 }
 
-/// Return a three-dimensional array with elements from `xs`.
+/// Create a three-dimensional array with elements from `xs`.
 ///
 /// **Panics** if the slices are not all of the same length.
 ///
@@ -175,7 +175,7 @@ pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(
     }
 }
 
-/// Return a three-dimensional array with elements from `xs`.
+/// Create a three-dimensional array with elements from `xs`.
 pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
     -> RcArray<A, (Ix, Ix, Ix)>
 {

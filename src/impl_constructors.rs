@@ -9,10 +9,19 @@ use linspace;
 use error::{self, ShapeError};
 
 /// Constructor methods for one-dimensional arrays.
+///
+/// Note that the constructor methods apply to `OwnedArray` and `RcArray`,
+/// the two array types that have owned storage.
 impl<S> ArrayBase<S, Ix>
     where S: DataOwned
 {
-    /// Create a one-dimensional array from a vector (no allocation needed).
+    /// Create a one-dimensional array from a vector (no copying needed).
+    ///
+    /// ```rust
+    /// use ndarray::OwnedArray;
+    ///
+    /// let array = OwnedArray::from_vec(vec![1., 2., 3., 4.]);
+    /// ```
     pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
         unsafe { Self::from_vec_dim_unchecked(v.len() as Ix, v) }
     }
@@ -134,7 +143,7 @@ impl<S, A, D> ArrayBase<S, D>
         unsafe { Self::from_vec_dim_unchecked(dim, v) }
     }
 
-    /// Create an array from a vector (with no allocation needed).
+    /// Create an array from a vector (no copying needed).
     ///
     /// **Errors** if `dim` does not correspond to the number of elements in `v`.
     pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
@@ -144,7 +153,7 @@ impl<S, A, D> ArrayBase<S, D>
         unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
     }
 
-    /// Create an array from a vector (with no allocation needed).
+    /// Create an array from a vector (no copying needed).
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
     pub unsafe fn from_vec_dim_unchecked(dim: D, mut v: Vec<A>) -> ArrayBase<S, D> {
@@ -157,7 +166,7 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
-    /// Create an array from a vector (with no allocation needed),
+    /// Create an array from a vector (with no copying needed),
     /// using fortran memory order to interpret the data.
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
