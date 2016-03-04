@@ -43,3 +43,10 @@ pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
     }
     Ok(res)
 }
+
+#[macro_export]
+macro_rules! stack {
+    ([ $( $a:expr ),* ]; $axis:expr) => {
+        ndarray::stack(&[ $($a.view() ),* ], $axis).unwrap()
+    }
+}
