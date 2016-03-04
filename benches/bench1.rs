@@ -1,6 +1,5 @@
 #![feature(test)]
 #![allow(unused_imports)]
-#![cfg_attr(feature = "assign_ops", feature(augmented_assignments))]
 
 extern crate test;
 #[macro_use(s)]
@@ -246,7 +245,6 @@ fn add_2d_regular(bench: &mut test::Bencher)
     });
 }
 
-#[cfg(feature = "assign_ops")]
 #[bench]
 fn add_2d_assign_ops(bench: &mut test::Bencher)
 {
