@@ -8,8 +8,8 @@ pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
     where A: Copy,
           D: Dimension + RemoveAxis
 {
-    let mut res_dim = arrays[0].dim().clone();
-    if axis.axis() >= res_dim.slice().len() {
+    let mut res_dim = arrays[0].dim();
+    if axis.axis() >= res_dim.ndim() {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
     if arrays.len() == 0 {
