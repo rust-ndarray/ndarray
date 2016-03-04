@@ -89,7 +89,7 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- master
+- 0.4.0-alpha.8
 
   - In debug mode, indexing an array out of bounds now has a detailed
     message about index and shape. (In release mode it does not.)
