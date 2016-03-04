@@ -27,16 +27,14 @@ impl<'a, A, D> ArrayStackingExt for [ArrayView<'a, A, D>]
         *res_dim.index_mut(axis) = stacked_dim;
         let mut res = OwnedArray::zeros(res_dim);
 
-        let mut array_iter = self.iter();
-        let mut in_iter = array_iter.next().unwrap().axis_iter(axis);
-        let mut cum = *self[0].dim().index(axis);
-        for (ind, mut out) in res.axis_iter_mut(axis).enumerate() {
-            if ind == cum {
-                let cur_array = array_iter.next().unwrap();
-                cum += *cur_array.dim().index(axis);
-                in_iter = cur_array.axis_iter(axis);
+        {
+            let mut assign_view = res.view_mut();
+            for array in self {
+                let len = *array.dim().index(axis);
+                let (mut front, rest) = assign_view.split_at(axis, len);
+                front.assign(array);
+                assign_view = rest;
             }
-            out.assign(&in_iter.next().unwrap());
         }
         res
     }
