@@ -3,17 +3,18 @@ use imp_prelude::*;
 use error::{ShapeError, ErrorKind, from_kind};
 
 /// Stack arrays along the given axis.
-///
-/// *Panics* if axis is out of bounds.
 pub fn stack<'a, A, D>(arrays: &[ArrayView<'a, A, D>], axis: Axis)
     -> Result<OwnedArray<A, D>, ShapeError>
     where A: Copy,
           D: Dimension + RemoveAxis
 {
+    let mut res_dim = arrays[0].dim().clone();
+    if axis.axis() >= res_dim.slice().len() {
+        return Err(from_kind(ErrorKind::OutOfBounds));
+    }
     if arrays.len() == 0 {
         return Err(from_kind(ErrorKind::Unsupported));
     }
-    let mut res_dim = arrays[0].dim().clone();
     let common_dim = res_dim.remove_axis(axis);
     if arrays.iter().any(|a| a.dim().remove_axis(axis) != common_dim) {
         return Err(from_kind(ErrorKind::IncompatibleShape));
