@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::slice;
 
@@ -745,11 +746,35 @@ mod test {
 ///
 /// All array axis arguments use this type to make the code easier to write
 /// correctly and easier to understand.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Copy, Eq, Ord, Hash, Debug)]
 pub struct Axis(pub usize);
 
 impl Axis {
     #[inline(always)]
     pub fn axis(&self) -> usize { self.0 }
 }
+
+macro_rules! clone_from_copy {
+    ($typename:ident) => {
+        impl Clone for $typename {
+            #[inline]
+            fn clone(&self) -> Self { *self }
+        }
+    }
+}
+
+macro_rules! derive_cmp {
+    ($traitname:ident for $typename:ident, $method:ident -> $ret:ty) => {
+        impl $traitname for $typename {
+            #[inline(always)]
+            fn $method(&self, rhs: &Self) -> $ret {
+                (self.0).$method(&rhs.0)
+            }
+        }
+    }
+}
+
+derive_cmp!{PartialEq for Axis, eq -> bool}
+derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
+clone_from_copy!{Axis}
 
