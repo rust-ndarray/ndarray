@@ -1,6 +1,16 @@
-use libnum::{Zero, One};
-use std::ops::{Add, Sub, Mul, Div};
+use libnum::{Zero, One, Float};
 use std::any::Any;
+use std::fmt;
+use std::ops::{Add, Sub, Mul, Div};
+#[cfg(feature="assign_ops")]
+use std::ops::{
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    RemAssign,
+};
+use ScalarOperand;
 
 #[cfg(feature="rblas")]
 use std::any::TypeId;
@@ -41,6 +51,37 @@ impl<T> LinalgScalar for T
     Mul<Output=T> +
     Div<Output=T>
 { }
+
+/// Floating-point element types `f32` and `f64`.
+///
+/// Trait `NdFloat` is only implemented for `f32` and `f64` but
+/// encompasses all float-relevant ndarray functionality,
+/// including the traits needed for linear algebra (`Any`) and
+/// for scalar operations (`ScalarOperand`).
+#[cfg(not(feature="assign_ops"))]
+pub trait NdFloat :
+    Float +
+    fmt::Display + fmt::Debug + fmt::LowerExp + fmt::UpperExp +
+    ScalarOperand + LinalgScalar
+{ }
+
+/// Floating-point element types `f32` and `f64`.
+///
+/// Trait `NdFloat` is only implemented for `f32` and `f64` but
+/// encompasses all float-relevant ndarray functionality,
+/// including the traits needed for linear algebra (`Any`) and
+/// for scalar operations (`ScalarOperand`).
+#[cfg(feature="assign_ops")]
+pub trait NdFloat :
+    Float +
+    AddAssign + SubAssign + MulAssign + DivAssign + RemAssign +
+    fmt::Display + fmt::Debug + fmt::LowerExp + fmt::UpperExp +
+    ScalarOperand + LinalgScalar
+{ }
+
+impl NdFloat for f32 { }
+impl NdFloat for f64 { }
+
 
 #[cfg(feature = "rblas")]
 pub trait AsBlasAny<A, S, D> : AsBlas<A, S, D> {
