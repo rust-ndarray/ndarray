@@ -100,7 +100,7 @@ pub use iterators::{
 
 pub use arraytraits::AsArray;
 pub use linalg::{LinalgScalar, NdFloat};
-pub use stacking::ArrayStackingExt;
+pub use stacking::stack;
 
 mod arraytraits;
 #[cfg(feature = "serde")]
