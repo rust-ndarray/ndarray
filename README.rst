@@ -102,6 +102,7 @@ Recent Changes
   - Improve ``.map()`` so that it can autovectorize.
   - Use ``Axis`` argument in ``RemoveAxis`` too.
   - Require ``DataOwned`` in the raw data methods.
+  - Merged error types into a single ``ShapeError``, which uses no allocated data.
 
 - 0.4.0-alpha.7
 
