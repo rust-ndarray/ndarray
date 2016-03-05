@@ -48,6 +48,6 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
 #[macro_export]
 macro_rules! stack {
     ($axis:expr, $( $a:expr ),+ ) => {
-        ndarray::stack($axis, &[ $($a.view() ),* ]).unwrap()
+        ndarray::stack($axis, &[ $(ndarray::ArrayView::from($a) ),* ]).unwrap()
     }
 }
