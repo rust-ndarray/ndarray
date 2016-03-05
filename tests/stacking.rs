@@ -21,7 +21,7 @@ fn stacking() {
                          [2., 2.],
                          [3., 3.]]));
 
-    let c = stack!(Axis(0), a.view(), b);
+    let c = stack!(Axis(0), a.view(), &b);
     assert_eq!(c, arr2(&[[2., 2.],
                          [3., 3.],
                          [2., 2.],
