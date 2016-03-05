@@ -712,3 +712,28 @@ fn deny_split_at_index_out_of_bounds() {
     let a = arr2(&[[1., 2.], [3., 4.]]);
     a.view().split_at(Axis(1), 3);
 }
+
+#[test]
+fn test_range() {
+    let a = OwnedArray::range(0., 5., 1.);
+    assert_eq!(a.len(), 5);
+    assert_eq!(a[0],  0.);
+    assert_eq!(a[4],  4.);
+
+    let b = OwnedArray::range(0., 2.2, 1.);
+    assert_eq!(b.len(), 3);
+    assert_eq!(b[0],  0.);
+    assert_eq!(b[2],  2.);
+
+    let c = OwnedArray::range(0., 5., 2.);
+    assert_eq!(c.len(), 3);
+    assert_eq!(c[0], 0.);
+    assert_eq!(c[1], 2.);
+    assert_eq!(c[2], 4.);
+
+    let d = OwnedArray::range(1.0, 2.2, 0.1);
+    assert_eq!(d.len(), 13);
+    assert_eq!(d[0], 1.);
+    assert_eq!(d[10], 2.);
+    assert_eq!(d[12], 2.2);
+}
