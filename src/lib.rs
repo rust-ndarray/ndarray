@@ -150,6 +150,7 @@ mod imp_prelude {
         DataShared,
         ViewRepr,
     };
+    pub use dimension::DimensionExt;
     /// Wrapper type for private methods
     #[derive(Copy, Clone, Debug)]
     pub struct Priv<T>(pub T);

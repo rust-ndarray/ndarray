@@ -71,6 +71,8 @@ pub trait NdFloat :
 /// much float-relevant ndarray functionality as possible, including the traits
 /// needed for linear algebra (`Any`) and for *right hand side* scalar
 /// operations (`ScalarOperand`).
+///
+/// This trait can only be implemented by `f32` and `f64`.
 #[cfg(feature="assign_ops")]
 pub trait NdFloat :
     Float +
