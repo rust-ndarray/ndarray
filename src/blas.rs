@@ -272,7 +272,7 @@ impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
-        panic!("BlasArrayView is not mutable");
+        panic!("ndarray: as_mut_ptr called on BlasArrayView (not mutable)");
     }
 
     // increment: stride
@@ -321,7 +321,7 @@ impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
-        panic!("BlasArrayView is not mutable");
+        panic!("ndarray: as_mut_ptr called on BlasArrayView (not mutable)");
     }
 }
 

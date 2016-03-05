@@ -4,6 +4,7 @@ extern crate ndarray;
 
 
 use ndarray::{
+    aview1,
     arr2,
     Axis,
     Ix,
@@ -21,13 +22,16 @@ fn stacking() {
                          [2., 2.],
                          [3., 3.]]));
 
-    let c = stack!(Axis(0), a.view(), &b);
+    let c = stack![Axis(0), a, b];
     assert_eq!(c, arr2(&[[2., 2.],
                          [3., 3.],
                          [2., 2.],
                          [3., 3.],
                          [2., 2.],
                          [3., 3.]]));
+
+    let d = stack![Axis(0), a.row(0), &[9., 9.]];
+    assert_eq!(d, aview1(&[2., 2., 9., 9.]));
 
     let res = ndarray::stack(Axis(1), &[a.view(), c.view()]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);

@@ -31,9 +31,9 @@ pub enum ErrorKind {
     IncompatibleLayout,
     /// the shape does not fit inside type limits
     RangeLimited,
-    /// stride leads to out of bounds indexing
+    /// out of bounds indexing
     OutOfBounds,
-    /// stride leads to aliasing array elements
+    /// aliasing array elements
     Unsupported,
     #[doc(hidden)]
     __Incomplete,
@@ -66,8 +66,8 @@ impl Error for ShapeError {
             ErrorKind::IncompatibleShape => "incompatible shapes",
             ErrorKind::IncompatibleLayout => "incompatible memory layout",
             ErrorKind::RangeLimited => "the shape does not fit in type limits",
-            ErrorKind::OutOfBounds => "stride leads to out of bounds indexing",
-            ErrorKind::Unsupported => "stride leads to aliasing array elements",
+            ErrorKind::OutOfBounds => "out of bounds indexing",
+            ErrorKind::Unsupported => "unsupported operation",
             ErrorKind::__Incomplete => "this error variant is not in use",
         }
     }

@@ -130,7 +130,7 @@ mod linspace;
 mod numeric_util;
 mod si;
 mod error;
-pub mod stacking;
+mod stacking;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
@@ -170,7 +170,7 @@ pub type Ixs = isize;
 /// `D` for the dimensionality.
 ///
 /// Type aliases [`OwnedArray`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
-/// to `ArrayBase` with different types for the data storage.
+/// to `ArrayBase` with different types for the data container.
 ///
 /// [`OwnedArray`]: type.OwnedArray.html
 /// [`RcArray`]: type.RcArray.html
