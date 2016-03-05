@@ -35,8 +35,8 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     }
 
     let stacked_dim = arrays.iter()
-                            .fold(0, |acc, a| acc + a.dim().index(axis));
-    *res_dim.index_mut(axis) = stacked_dim;
+                            .fold(0, |acc, a| acc + a.shape().axis(axis));
+    res_dim.set_axis(axis, stacked_dim);
 
     // we can safely use uninitialized values here because they are Copy
     // and we will only ever write to them
@@ -50,7 +50,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     {
         let mut assign_view = res.view_mut();
         for array in arrays {
-            let len = *array.dim().index(axis);
+            let len = array.shape().axis(axis);
             let (mut front, rest) = assign_view.split_at(axis, len);
             front.assign(array);
             assign_view = rest;
