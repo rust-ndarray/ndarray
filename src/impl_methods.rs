@@ -605,7 +605,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               E: Dimension,
     {
         if shape.size_checked() != Some(self.dim.size()) {
-            panic!("Incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
+            panic!("ndarray: incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(),
                    shape.slice())
         }
@@ -754,7 +754,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             where D: Dimension,
                   E: Dimension,
         {
-            panic!("Could not broadcast array from shape: {:?} to: {:?}",
+            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}",
                    from.slice(), to.slice())
         }
 
