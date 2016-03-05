@@ -328,22 +328,49 @@ pub unsafe trait Dimension : Clone + Eq + Debug {
         offset
     }
 
-    #[doc(hidden)]
-    /// Get the dimension on `axis`.
+}
+
+/// Implementation-specific extensions to `Dimension`
+pub trait DimensionExt {
+// note: many extensions go in the main trait if they need to be special-
+// cased per dimension
+    /// Get the dimension at `axis`.
     ///
     /// *Panics* if `axis` is out of bounds.
     #[inline]
-    fn index(&self, axis: Axis) -> &Ix {
-        &self.slice()[axis.axis()]
+    fn axis(&self, axis: Axis) -> Ix;
+
+    /// Set the dimension at `axis`.
+    ///
+    /// *Panics* if `axis` is out of bounds.
+    #[inline]
+    fn set_axis(&mut self, axis: Axis, value: Ix);
+}
+
+impl<D> DimensionExt for D
+    where D: Dimension
+{
+    #[inline]
+    fn axis(&self, axis: Axis) -> Ix {
+        self.slice()[axis.axis()]
     }
 
-    #[doc(hidden)]
-    /// Get a mutable reference to the dimension on `axis`.
-    ///
-    /// *Panics* if `axis` is out of bounds.
     #[inline]
-    fn index_mut(&mut self, axis: Axis) -> &mut Ix {
-        &mut self.slice_mut()[axis.axis()]
+    fn set_axis(&mut self, axis: Axis, value: Ix) {
+        self.slice_mut()[axis.axis()] = value;
+    }
+}
+
+impl<'a> DimensionExt for [Ix]
+{
+    #[inline]
+    fn axis(&self, axis: Axis) -> Ix {
+        self[axis.axis()]
+    }
+
+    #[inline]
+    fn set_axis(&mut self, axis: Axis, value: Ix) {
+        self[axis.axis()] = value;
     }
 }
 
