@@ -130,7 +130,7 @@ mod linspace;
 mod numeric_util;
 mod si;
 mod error;
-pub mod stacking;
+mod stacking;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {

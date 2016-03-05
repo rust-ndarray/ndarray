@@ -3,10 +3,24 @@ use imp_prelude::*;
 use error::{ShapeError, ErrorKind, from_kind};
 
 /// Stack arrays along the given axis.
+///
+/// ```
+/// use ndarray::{arr2, Axis, stack};
+///
+/// let a = arr2(&[[2., 2.],
+///                [3., 3.]]);
+/// assert!(
+///     stack(Axis(0), &[a.view(), a.view()])
+///     == Ok(arr2(&[[2., 2.],
+///                  [3., 3.],
+///                  [2., 2.],
+///                  [3., 3.]]))
+/// );
+/// ```
 pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     -> Result<OwnedArray<A, D>, ShapeError>
     where A: Copy,
-          D: Dimension + RemoveAxis
+          D: RemoveAxis
 {
     if arrays.len() == 0 {
         return Err(from_kind(ErrorKind::Unsupported));
@@ -45,9 +59,35 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     Ok(res)
 }
 
+/// Stack arrays along the given axis.
+///
+/// Uses the [`stack`][1] function, calling `ArrayView::from(&a)` on each
+/// argument `a`.
+///
+/// [1]: fn.stack.html
+///
+/// ```
+/// #[macro_use(stack)]
+/// extern crate ndarray;
+///
+/// use ndarray::{arr2, Axis, stack};
+///
+/// # fn main() {
+///
+/// let a = arr2(&[[2., 2.],
+///                [3., 3.]]);
+/// assert!(
+///     stack![Axis(0), a, a]
+///     == arr2(&[[2., 2.],
+///               [3., 3.],
+///               [2., 2.],
+///               [3., 3.]])
+/// );
+/// # }
+/// ```
 #[macro_export]
 macro_rules! stack {
-    ($axis:expr, $( $a:expr ),+ ) => {
-        ndarray::stack($axis, &[ $(ndarray::ArrayView::from($a) ),* ]).unwrap()
+    ($axis:expr, $( $array:expr ),+ ) => {
+        ndarray::stack($axis, &[ $(ndarray::ArrayView::from(&$array) ),* ]).unwrap()
     }
 }
