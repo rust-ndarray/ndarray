@@ -78,3 +78,26 @@ pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
         len: n,
     }
 }
+
+/// Return an iterator of floats spaced by `step`.
+///
+/// The `Linspace` has `n` elements, where the first
+/// element is `a` and `b` is not included.
+/// Numerical reasons can result in `b` being included
+/// in the result.
+///
+/// Iterator element type is `F`, where `F` must be
+/// either `f32` or `f64`.
+#[inline]
+pub fn arange<F>(a: F, b: F, step: F) -> Linspace<F>
+    where F: Float
+{
+    let len = b - a;
+    let steps = F::ceil(len / step);
+    Linspace {
+        start: a,
+        step: step,
+        len: steps.to_usize().unwrap(),
+        index: 0,
+    }
+}
