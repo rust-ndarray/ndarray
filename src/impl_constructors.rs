@@ -33,13 +33,22 @@ impl<S> ArrayBase<S, Ix>
         Self::from_vec(iterable.into_iter().collect())
     }
 
-    /// Create a one-dimensional array from inclusive interval
+    /// Create a one-dimensional array from the inclusive interval
     /// `[start, end]` with `n` elements. `F` must be a floating point type.
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
     {
         Self::from_iter(linspace::linspace(start, end, n))
+    }
+
+    /// Create a one-dimensional array from the half-open interval
+    /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
+    pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
+        where S: Data<Elem=F>,
+              F: libnum::Float,
+    {
+        Self::from_iter(linspace::range(start, end, step))
     }
 }
 
@@ -215,4 +224,3 @@ impl<S, A, D> ArrayBase<S, D>
     }
 
 }
-
