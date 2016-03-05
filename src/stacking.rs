@@ -66,6 +66,8 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
 ///
 /// [1]: fn.stack.html
 ///
+/// ***Panics*** if the `stack` function would return an error.
+///
 /// ```
 /// #[macro_use(stack)]
 /// extern crate ndarray;
