@@ -44,20 +44,20 @@ impl<S> ArrayBase<S, Ix>
 
     /// Create a one-dimensional array from the half-open interval
     /// `[start, end)` with elements unit-spaced elements. `F` must be a floating point type.
-    pub fn arange<F>(start: F, end: F) -> ArrayBase<S, Ix>
+    pub fn range<F>(start: F, end: F) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
     {
-        Self::from_iter(linspace::arange(start, end, F::from(1.0).unwrap()))
+        Self::from_iter(linspace::range(start, end, F::from(1.0).unwrap()))
     }
 
     /// Create a one-dimensional array from the half-open interval
     /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
-    pub fn arange_step<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
+    pub fn range_step<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
     {
-        Self::from_iter(linspace::arange(start, end, step))
+        Self::from_iter(linspace::range(start, end, step))
     }
 }
 

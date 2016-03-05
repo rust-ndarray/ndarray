@@ -89,7 +89,7 @@ pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
 /// Iterator element type is `F`, where `F` must be
 /// either `f32` or `f64`.
 #[inline]
-pub fn arange<F>(a: F, b: F, step: F) -> Linspace<F>
+pub fn range<F>(a: F, b: F, step: F) -> Linspace<F>
     where F: Float
 {
     let len = b - a;

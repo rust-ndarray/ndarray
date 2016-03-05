@@ -714,27 +714,27 @@ fn deny_split_at_index_out_of_bounds() {
 }
 
 #[test]
-fn test_arange() {
-    let a = OwnedArray::arange(0., 5.);
+fn test_range() {
+    let a = OwnedArray::range(0., 5.);
     assert_eq!(a.len(), 5);
     assert_eq!(a[0],  0.);
     assert_eq!(a[4],  4.);
 
-    let b = OwnedArray::arange(0., 2.2);
+    let b = OwnedArray::range(0., 2.2);
     assert_eq!(b.len(), 3);
     assert_eq!(b[0],  0.);
     assert_eq!(b[2],  2.);
 }
 
 #[test]
-fn test_arange_step() {
-    let a = OwnedArray::arange_step(0., 5., 2.);
+fn test_range_step() {
+    let a = OwnedArray::range_step(0., 5., 2.);
     assert_eq!(a.len(), 3);
     assert_eq!(a[0], 0.);
     assert_eq!(a[1], 2.);
     assert_eq!(a[2], 4.);
 
-    let b = OwnedArray::arange_step(1.0, 2.2, 0.1);
+    let b = OwnedArray::range_step(1.0, 2.2, 0.1);
     assert_eq!(b.len(), 13);
     assert_eq!(b[0], 1.);
     assert_eq!(b[10], 2.);
