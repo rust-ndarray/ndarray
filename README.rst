@@ -84,7 +84,7 @@ your `Cargo.toml`.
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.3"
+    ndarray = "0.4"
 
 Recent Changes
 --------------
