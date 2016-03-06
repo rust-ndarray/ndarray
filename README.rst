@@ -89,7 +89,7 @@ How to use with cargo::
 Recent Changes
 --------------
 
-- **0.4.0**
+- **0.4.0** `Release Announcement`__
 
   - New array splitting via ``.split_at(Axis, Ix)`` and ``.axis_chunks_iter()``
   - Added traits ``NdFloat``, ``AsArray`` and ``From for ArrayView`` which
@@ -103,6 +103,8 @@ Recent Changes
   - Binary operators are not defined when consuming a mutable array view as
     the left hand side argument anymore.
   - See below for full changelog through alphas.
+
+__ http://bluss.github.io/rust/2016/03/06/ndarray-0.4/
 
 - 0.4.0-alpha.8
 
