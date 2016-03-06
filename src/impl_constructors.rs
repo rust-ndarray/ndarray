@@ -34,6 +34,15 @@ impl<S> ArrayBase<S, Ix>
     }
 
     /// Create a one-dimensional array from an iterable.
+    ///
+    /// ```rust
+    /// use ndarray::OwnedArray;
+    /// use ndarray::arr1;
+    ///
+    /// let iter = (0..5).map(|x| x * x);
+    /// let array = OwnedArray::from_iter(iter);
+    /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
+    /// ```
     pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
         where I: IntoIterator<Item=S::Elem>
     {
@@ -42,6 +51,14 @@ impl<S> ArrayBase<S, Ix>
 
     /// Create a one-dimensional array from the inclusive interval
     /// `[start, end]` with `n` elements. `F` must be a floating point type.
+    ///
+    /// ```rust
+    /// use ndarray::OwnedArray;
+    /// use ndarray::arr1;
+    ///
+    /// let array = OwnedArray::linspace(0., 1., 5);
+    /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
+    /// ```
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
@@ -51,6 +68,14 @@ impl<S> ArrayBase<S, Ix>
 
     /// Create a one-dimensional array from the half-open interval
     /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
+    ///
+    /// ```rust
+    /// use ndarray::OwnedArray;
+    /// use ndarray::arr1;
+    ///
+    /// let array = OwnedArray::range(0., 5., 1.);
+    /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
+    /// ```
     pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
