@@ -89,6 +89,23 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- **0.4.0** `Release Announcement`__
+
+  - New array splitting via ``.split_at(Axis, Ix)`` and ``.axis_chunks_iter()``
+  - Added traits ``NdFloat``, ``AsArray`` and ``From for ArrayView`` which
+    improve generic programming.
+  - Array constructors panic when attempting to create an array whose element
+    count overflows ``usize``. (Would be a debug assertion for overflow before.)
+  - Performance improvements for ``.map()``.
+  - Added ``stack`` and macro ``stack![axis, arrays..]`` to concatenate arrays.
+  - Added constructor ``OwnedArray::range(start, end, step)``.
+  - The type alias ``Array`` was renamed to ``RcArray`` (and the old name deprecated).
+  - Binary operators are not defined when consuming a mutable array view as
+    the left hand side argument anymore.
+  - See below for full changelog through alphas.
+
+__ http://bluss.github.io/rust/2016/03/06/ndarray-0.4/
+
 - 0.4.0-alpha.8
 
   - In debug mode, indexing an array out of bounds now has a detailed
