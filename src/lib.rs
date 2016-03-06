@@ -359,7 +359,8 @@ pub type Ixs = isize;
 ///
 /// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
-/// are supported (scalar can be on either side).
+/// are supported (scalar can be on either the left or right side, but
+/// `ScalarOperand` docs has the detailed condtions).
 ///
 /// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
