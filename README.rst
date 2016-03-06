@@ -95,11 +95,11 @@ Recent Changes
   - Added traits ``NdFloat``, ``AsArray`` and ``From for ArrayView`` which
     improve generic programming.
   - Array constructors panic when attempting to create an array whose element
-    count overflows ``usize``. This is now properly implemented and documented.
-  - Some performance improvements.
+    count overflows ``usize``. (Would be a debug assertion for overflow before.)
+  - Performance improvements for ``.map()``.
   - Added ``stack`` and macro ``stack![axis, arrays..]`` to concatenate arrays.
   - Added constructor ``OwnedArray::range(start, end, step)``.
-  - See below for full changelog during alphas.
+  - See below for full changelog through alphas.
 
 - 0.4.0-alpha.8
 
