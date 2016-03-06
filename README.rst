@@ -94,7 +94,7 @@ Recent Changes
   - New array splitting via ``.split_at(Axis, Ix)`` and ``.axis_chunks_iter()``
   - Added traits ``NdFloat``, ``AsArray`` and ``From for ArrayView`` which
     improve generic programming.
-  - Array constructors panic when attemting to create an array whose element
+  - Array constructors panic when attempting to create an array whose element
     count overflows ``usize``. This is now properly implemented and documented.
   - Some performance improvements.
   - Added ``stack`` and macro ``stack![axis, arrays..]`` to concatenate arrays.
