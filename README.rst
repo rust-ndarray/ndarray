@@ -99,6 +99,9 @@ Recent Changes
   - Performance improvements for ``.map()``.
   - Added ``stack`` and macro ``stack![axis, arrays..]`` to concatenate arrays.
   - Added constructor ``OwnedArray::range(start, end, step)``.
+  - The type alias ``Array`` was renamed to ``RcArray`` (and the old name deprecated).
+  - Binary operators are not defined when consuming a mutable array view as
+    the left hand side argument anymore.
   - See below for full changelog through alphas.
 
 - 0.4.0-alpha.8
