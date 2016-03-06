@@ -89,6 +89,18 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- **0.4.0**
+
+  - New array splitting via ``.split_at(Axis, Ix)`` and ``.axis_chunks_iter()``
+  - Added traits ``NdFloat``, ``AsArray`` and ``From for ArrayView`` which
+    improve generic programming.
+  - Array constructors panic when attemting to create an array whose element
+    count overflows ``usize``. This is now properly implemented and documented.
+  - Some performance improvements.
+  - Added ``stack`` and macro ``stack![axis, arrays..]`` to concatenate arrays.
+  - Added constructor ``OwnedArray::range(start, end, step)``.
+  - See below for full changelog during alphas.
+
 - 0.4.0-alpha.8
 
   - In debug mode, indexing an array out of bounds now has a detailed
