@@ -86,10 +86,8 @@ pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
     }
 }
 
-/// Return an iterator of floats spaced by `step`.
-///
-/// The `Linspace` has `n` elements, where the first
-/// element is `a` and `b` is not included.
+/// Return an iterator of floats spaced by `step`, from
+/// the half-open interval [a, b).
 /// Numerical reasons can result in `b` being included
 /// in the result.
 ///
