@@ -24,6 +24,7 @@ mkdocs: Cargo.toml
 	cargo doc --no-deps --features=$(FEATURES)
 	rm -rf ./master
 	cp -r ./target/doc ./master
+	cp ./Documentation/split_at.svg ./master/ndarray/
 	- cat ./custom.css >> master/main.css
 
 $(RMDOCS): mkdocs
