@@ -36,11 +36,9 @@ impl<S> ArrayBase<S, Ix>
     /// Create a one-dimensional array from an iterable.
     ///
     /// ```rust
-    /// use ndarray::OwnedArray;
-    /// use ndarray::arr1;
+    /// use ndarray::{OwnedArray, arr1};
     ///
-    /// let iter = (0..5).map(|x| x * x);
-    /// let array = OwnedArray::from_iter(iter);
+    /// let array = OwnedArray::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
     pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
@@ -53,8 +51,7 @@ impl<S> ArrayBase<S, Ix>
     /// `[start, end]` with `n` elements. `F` must be a floating point type.
     ///
     /// ```rust
-    /// use ndarray::OwnedArray;
-    /// use ndarray::arr1;
+    /// use ndarray::{OwnedArray, arr1};
     ///
     /// let array = OwnedArray::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
@@ -70,8 +67,7 @@ impl<S> ArrayBase<S, Ix>
     /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
     ///
     /// ```rust
-    /// use ndarray::OwnedArray;
-    /// use ndarray::arr1;
+    /// use ndarray::{OwnedArray, arr1};
     ///
     /// let array = OwnedArray::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
