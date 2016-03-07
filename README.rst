@@ -102,6 +102,8 @@ Recent Changes
   - The type alias ``Array`` was renamed to ``RcArray`` (and the old name deprecated).
   - Binary operators are not defined when consuming a mutable array view as
     the left hand side argument anymore.
+  - Remove methods and items deprecated since 0.3 or earlier; deprecated methods
+    have notes about replacements in 0.3 docs.
   - See below for full changelog through alphas.
 
 __ http://bluss.github.io/rust/2016/03/06/ndarray-0.4/
