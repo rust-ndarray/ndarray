@@ -460,7 +460,7 @@ fn outer_iter_mut_split_at() {
 fn iterators_are_send_sync() {
     // When the element type is Send + Sync, then the iterators and views
     // are too.
-    fn _send_sync<T: Send + Sync>(_: T) { }
+    fn _send_sync<T: Send + Sync>(_: &T) { }
 
     let mut a = RcArray::from_iter(0..30).into_shape((5, 3, 2)).unwrap();
 
