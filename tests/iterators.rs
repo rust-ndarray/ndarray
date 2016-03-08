@@ -12,6 +12,7 @@ use ndarray::{
     arr2,
     arr3,
     Axis,
+    Indexes,
 };
 
 use itertools::assert_equal;
@@ -453,4 +454,29 @@ fn outer_iter_mut_split_at() {
     }
     assert_eq!(a[[1, 2, 1]], 12);
     assert_eq!(a[[4, 2, 1]], 28);
+}
+
+#[test]
+fn iterators_are_send_sync() {
+    // When the element type is Send + Sync, then the iterators and views
+    // are too.
+    fn _send_sync<T: Send + Sync>(_: T) { }
+
+    let mut a = RcArray::from_iter(0..30).into_shape((5, 3, 2)).unwrap();
+
+    _send_sync(&a.view());
+    _send_sync(&a.view_mut());
+    _send_sync(&a.iter());
+    _send_sync(&a.iter_mut());
+    _send_sync(&a.indexed_iter());
+    _send_sync(&a.indexed_iter_mut());
+    _send_sync(&a.inner_iter());
+    _send_sync(&a.inner_iter_mut());
+    _send_sync(&a.outer_iter());
+    _send_sync(&a.outer_iter_mut());
+    _send_sync(&a.axis_iter(Axis(1)));
+    _send_sync(&a.axis_iter_mut(Axis(1)));
+    _send_sync(&a.axis_chunks_iter(Axis(1), 1));
+    _send_sync(&a.axis_chunks_iter_mut(Axis(1), 1));
+    _send_sync(&Indexes::new(a.dim()));
 }
