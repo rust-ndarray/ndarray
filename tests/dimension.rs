@@ -6,8 +6,6 @@ use ndarray::{
     RemoveAxis,
     arr2,
     Axis,
-    Ix,
-    Dimension,
 };
 
 #[test]
