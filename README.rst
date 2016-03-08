@@ -89,6 +89,10 @@ How to use with cargo::
 Recent Changes
 --------------
 
+- 0.4.1
+
+  - Mark iterators ``Send + Sync`` when possible.
+
 - **0.4.0** `Release Announcement`__
 
   - New array splitting via ``.split_at(Axis, Ix)`` and ``.axis_chunks_iter()``
