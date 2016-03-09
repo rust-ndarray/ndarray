@@ -7,7 +7,6 @@
 // except according to those terms.
 
 use std::cmp;
-use std::ptr;
 use std::slice;
 
 use imp_prelude::*;
@@ -988,27 +987,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///               [false, true]])
     /// );
     /// ```
-    pub fn map<'a, B, F>(&'a self, mut f: F) -> OwnedArray<B, D>
+    pub fn map<'a, B, F>(&'a self, f: F) -> OwnedArray<B, D>
         where F: FnMut(&'a A) -> B,
               A: 'a,
     {
-        // Use an `unsafe` block to do this efficiently.
-        // We know that iter will produce exactly .size() elements,
-        // and the loop can vectorize if it's clean (without branch
-        // to grow the vector).
-        let mut res = Vec::with_capacity(self.dim.size());
-        let mut out_ptr = res.as_mut_ptr();
-        let mut len = 0;
-        for elt in self.iter() {
-            unsafe {
-                ptr::write(out_ptr, f(elt));
-                len += 1;
-                res.set_len(len);
-                out_ptr = out_ptr.offset(1);
-            }
-        }
+        let v = ::iterators::to_vec(self.iter().map(f));
         unsafe {
-            ArrayBase::from_vec_dim_unchecked(self.dim.clone(), res)
+            ArrayBase::from_vec_dim_unchecked(self.dim.clone(), v)
         }
     }
 }
