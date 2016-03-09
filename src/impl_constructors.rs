@@ -60,7 +60,7 @@ impl<S> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
     {
-        Self::from_iter(linspace::linspace(start, end, n))
+        Self::from_vec(::iterators::to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array from the half-open interval
@@ -76,7 +76,7 @@ impl<S> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: libnum::Float,
     {
-        Self::from_iter(linspace::range(start, end, step))
+        Self::from_vec(::iterators::to_vec(linspace::range(start, end, step)))
     }
 }
 
