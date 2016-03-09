@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::marker::PhantomData;
+use std::ptr;
 
 use super::{Dimension, Ix, Ixs};
 use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
@@ -882,3 +883,39 @@ send_sync_read_write!(IndexedMut);
 send_sync_read_write!(InnerIterMut);
 send_sync_read_write!(OuterIterMut);
 send_sync_read_write!(AxisChunksIterMut);
+
+/// (Trait used internally) An iterator that we trust
+/// to deliver exactly as many items as it said it would.
+pub unsafe trait TrustedIterator { }
+
+use std::iter;
+use linspace::Linspace;
+
+unsafe impl<F> TrustedIterator for Linspace<F> { }
+unsafe impl<'a, A, D> TrustedIterator for Elements<'a, A, D> { }
+unsafe impl<I, F> TrustedIterator for iter::Map<I, F>
+    where I: TrustedIterator { }
+
+
+/// Like Iterator::collect, but only for trusted length iterators
+pub fn to_vec<I>(iter: I) -> Vec<I::Item>
+    where I: TrustedIterator + ExactSizeIterator
+{
+    // Use an `unsafe` block to do this efficiently.
+    // We know that iter will produce exactly .size() elements,
+    // and the loop can vectorize if it's clean (without branch to grow the vector).
+    let (size, _) = iter.size_hint();
+    let mut result = Vec::with_capacity(size);
+    let mut out_ptr = result.as_mut_ptr();
+    let mut len = 0;
+    for elt in iter {
+        unsafe {
+            ptr::write(out_ptr, elt);
+            len += 1;
+            result.set_len(len);
+            out_ptr = out_ptr.offset(1);
+        }
+    }
+    debug_assert_eq!(size, result.len());
+    result
+}
