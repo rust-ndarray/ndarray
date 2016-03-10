@@ -88,8 +88,13 @@ pub fn unrolled_dot<A>(xs: &[A], ys: &[A]) -> A
     sum = sum + (p1 + p5);
     sum = sum + (p2 + p6);
     sum = sum + (p3 + p7);
+
     for i in 0..xs.len() {
-        sum = sum + xs[i] * ys[i];
+        if i >= 8 { break; }
+        unsafe {
+            // get_unchecked is needed to avoid the bounds check
+            sum = sum + xs[i] * *ys.get_unchecked(i);
+        }
     }
     sum
 }
