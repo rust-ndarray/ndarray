@@ -120,14 +120,14 @@ fn assert_approx_eq<F: fmt::Debug + Float>(f: F, g: F, tol: F) -> bool {
 
 #[test]
 fn dot_product() {
-    let a = OwnedArray::linspace(0., 63., 64);
-    let b = OwnedArray::linspace(0., 63., 64);
-    let dot = 85344.;
+    let a = OwnedArray::range(0., 69., 1.);
+    let b = &a * 2. - 7.;
+    let dot = 197846.;
     assert_approx_eq(a.dot(&b), dot, 1e-5);
     let a = a.map(|f| *f as f32);
-    let b = a.map(|f| *f as f32);
+    let b = b.map(|f| *f as f32);
     assert_approx_eq(a.dot(&b), dot as f32, 1e-5);
     let a = a.map(|f| *f as i32);
-    let b = a.map(|f| *f as i32);
+    let b = b.map(|f| *f as i32);
     assert_eq!(a.dot(&b), dot as i32);
 }

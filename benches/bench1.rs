@@ -516,6 +516,14 @@ fn dot_f32_16(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn dot_f32_20(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<f32, _>::zeros(20);
+    let b = OwnedArray::<f32, _>::zeros(20);
+    bench.iter(|| a.dot(&b));
+}
+
+#[bench]
 fn dot_f32_32(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<f32, _>::zeros(32);
