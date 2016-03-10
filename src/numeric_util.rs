@@ -41,12 +41,18 @@ pub fn unrolled_sum<A>(mut xs: &[A]) -> A
     sum = sum.clone() + (p1 + p5);
     sum = sum.clone() + (p2 + p6);
     sum = sum.clone() + (p3 + p7);
-    for elt in xs {
-        sum = sum.clone() + elt.clone();
+
+    // make it clear to the optimizer that this loop is short
+    // and can not be autovectorized.
+    for i in 0..8 {
+        if i < xs.len() {
+            sum = sum.clone() + xs[i].clone()
+        } else {
+            break;
+        }
     }
     sum
 }
-
 
 /// Compute the dot product.
 ///
@@ -82,8 +88,13 @@ pub fn unrolled_dot<A>(xs: &[A], ys: &[A]) -> A
     sum = sum + (p1 + p5);
     sum = sum + (p2 + p6);
     sum = sum + (p3 + p7);
+
     for i in 0..xs.len() {
-        sum = sum + xs[i] * ys[i];
+        if i >= 8 { break; }
+        unsafe {
+            // get_unchecked is needed to avoid the bounds check
+            sum = sum + xs[i] * *ys.get_unchecked(i);
+        }
     }
     sum
 }
