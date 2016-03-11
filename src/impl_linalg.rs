@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use libnum;
+use libnum::Zero;
 use itertools::free::enumerate;
 
 use imp_prelude::*;
@@ -209,7 +209,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         }
         for (i, rr) in enumerate(&mut res_elems) {
             unsafe {
-                *rr = (0..a).fold(libnum::zero::<A>(),
+                *rr = (0..a).fold(A::zero(),
                     move |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
                 );
             }
@@ -320,6 +320,10 @@ fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, I
 {
     let ((m, a), (_, n)) = (lhs.dim, rhs.dim);
 
+    let lhs_s0 = lhs.strides()[0];
+    let rhs_s0 = rhs.strides()[0];
+    let column_major = lhs_s0 == 1 && rhs_s0 == 1;
+
     // Avoid initializing the memory in vec -- set it during iteration
     // Panic safe because A: Copy
     let mut res_elems = Vec::<A>::with_capacity(m as usize * n as usize);
@@ -330,18 +334,29 @@ fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, I
     let mut j = 0;
     for rr in &mut res_elems {
         unsafe {
-            *rr = (0..a).fold(libnum::zero::<A>(),
-                move |s, k| s + *lhs.uget((i, k)) * *rhs.uget((k, j))
-            );
+            *rr = (0..a).fold(A::zero(),
+                move |s, k| s + *lhs.uget((i, k)) * *rhs.uget((k, j)));
         }
-        j += 1;
-        if j == n {
-            j = 0;
+        if !column_major {
+            j += 1;
+            if j == n {
+                j = 0;
+                i += 1;
+            }
+        } else {
             i += 1;
+            if i == m {
+                i = 0;
+                j += 1;
+            }
         }
     }
     unsafe {
-        ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
+        if !column_major {
+            ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
+        } else {
+            ArrayBase::from_vec_dim_unchecked_f((m, n), res_elems)
+        }
     }
 }
 
