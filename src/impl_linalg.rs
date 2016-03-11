@@ -34,6 +34,9 @@ const DOT_BLAS_CUTOFF: usize = 32;
 /// side of matrix before we use blas
 #[cfg(feature="blas")]
 const GEMM_BLAS_CUTOFF: usize = 7;
+#[cfg(feature="blas")]
+#[allow(non_camel_case_types)]
+type blas_index = c_int; // blas index type
 
 impl<A, S> ArrayBase<S, Ix>
     where S: Data<Elem=A>,
@@ -91,9 +94,9 @@ impl<A, S> ArrayBase<S, Ix>
             macro_rules! dot {
                 ($ty:ty, $func:ident) => {{
             if blas_compat_1d::<$ty, _>(self) && blas_compat_1d::<$ty, _>(rhs) {
-                let n = self.len() as c_int;
-                let incx = self.strides()[0] as c_int;
-                let incy = rhs.strides()[0] as c_int;
+                let n = self.len() as blas_index;
+                let incx = self.strides()[0] as blas_index;
+                let incy = rhs.strides()[0] as blas_index;
                 let ret = unsafe {
                     blas_sys::c::$func(
                         n,
@@ -288,17 +291,17 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>
                     CblasRowMajor,
                     lhs_trans,
                     rhs_trans,
-                    m as c_int, // m, rows of Op(a)
-                    n as c_int, // n, cols of Op(b)
-                    k as c_int, // k, cols of Op(a)
+                    m as blas_index, // m, rows of Op(a)
+                    n as blas_index, // n, cols of Op(b)
+                    k as blas_index, // k, cols of Op(a)
                     1.0,                  // alpha
                     lhs_.ptr as *const _, // a
-                    lhs_.strides()[0] as c_int, // lda
+                    lhs_.strides()[0] as blas_index, // lda
                     rhs_.ptr as *const _, // b
-                    rhs_.strides()[0] as c_int, // ldb
+                    rhs_.strides()[0] as blas_index, // ldb
                     0.0,                   // beta
                     c.ptr as *mut _,       // c
-                    c.strides()[0] as c_int, // ldc
+                    c.strides()[0] as blas_index, // ldc
                 );
                 }
             }
@@ -389,12 +392,12 @@ fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix>) -> bool
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    if a.len() > c_int::max_value() as usize {
+    if a.len() > blas_index::max_value() as usize {
         return false;
     }
     let stride = a.strides()[0];
-    if stride > c_int::max_value() as isize ||
-        stride < c_int::min_value() as isize {
+    if stride > blas_index::max_value() as isize ||
+        stride < blas_index::min_value() as isize {
         return false;
     }
     true
@@ -414,14 +417,14 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, (Ix, Ix)>) -> bool
     if s1 != 1 {
         return false;
     }
-    if (s0 > c_int::max_value() as isize || s0 < c_int::min_value() as isize) ||
-        (s1 > c_int::max_value() as isize || s1 < c_int::min_value() as isize)
+    if (s0 > blas_index::max_value() as isize || s0 < blas_index::min_value() as isize) ||
+        (s1 > blas_index::max_value() as isize || s1 < blas_index::min_value() as isize)
     {
         return false;
     }
     let (m, n) = a.dim();
-    if m > c_int::max_value() as usize ||
-        n > c_int::max_value() as usize
+    if m > blas_index::max_value() as usize ||
+        n > blas_index::max_value() as usize
     {
         return false;
     }
