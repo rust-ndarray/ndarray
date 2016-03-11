@@ -5,6 +5,7 @@ use ndarray::RcArray;
 use ndarray::{arr0, rcarr1, rcarr2};
 use ndarray::{
     OwnedArray,
+    Ix,
 };
 
 use std::fmt;
@@ -130,4 +131,50 @@ fn dot_product() {
     let a = a.map(|f| *f as i32);
     let b = b.map(|f| *f as i32);
     assert_eq!(a.dot(&b), dot as i32);
+}
+
+fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
+    OwnedArray::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
+}
+
+#[cfg(has_assign)]
+#[test]
+fn mat_mul() {
+    let (m, n, k) = (8, 8, 8);
+    let a = range_mat(m, n);
+    let b = range_mat(n, k);
+    let mut b = b / 4.;
+    {
+        let mut c = b.column_mut(0);
+        c += 1.0;
+    }
+    let ab = a.mat_mul(&b);
+
+    let mut af = OwnedArray::zeros_f(a.dim());
+    let mut bf = OwnedArray::zeros_f(b.dim());
+    af.assign(&a);
+    bf.assign(&b);
+
+    assert_eq!(ab, a.mat_mul(&bf));
+    assert_eq!(ab, af.mat_mul(&b));
+    assert_eq!(ab, af.mat_mul(&bf));
+
+    let (m, n, k) = (10, 5, 11);
+    let a = range_mat(m, n);
+    let b = range_mat(n, k);
+    let mut b = b / 4.;
+    {
+        let mut c = b.column_mut(0);
+        c += 1.0;
+    }
+    let ab = a.mat_mul(&b);
+
+    let mut af = OwnedArray::zeros_f(a.dim());
+    let mut bf = OwnedArray::zeros_f(b.dim());
+    af.assign(&a);
+    bf.assign(&b);
+
+    assert_eq!(ab, a.mat_mul(&bf));
+    assert_eq!(ab, af.mat_mul(&b));
+    assert_eq!(ab, af.mat_mul(&bf));
 }
