@@ -1,16 +1,24 @@
 language: rust
-sudo: false
+# use trusty for newer openblas
+sudo: required
+dist: trusty
 matrix:
   include:
     - rust: stable
+      env:
+       - FEATURES='test'
     - rust: beta
     - rust: nightly
       env:
-       - FEATURES='assign_ops rustc-serialize'
+       - FEATURES='test'
        - BENCH=1
 branches:
   only:
     - master
+addons:
+  apt:
+    packages:
+      - libopenblas-dev
 script:
   - |
       cargo build --verbose &&

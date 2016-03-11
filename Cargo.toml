@@ -52,7 +52,7 @@ blas-openblas-sys = [
 ]
 
 # This feature is used for testing
-all = ["blas-openblas-sys", "rustc-serialize"]
+test = ["blas-openblas-sys", "rustc-serialize"]
 
 [profile.release]
 [profile.bench]
