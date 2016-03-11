@@ -105,7 +105,10 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array(self, f, <_>::fmt)
+        // Add extra information for Debug
+        try!(format_array(self, f, <_>::fmt));
+        try!(write!(f, " shape={:?}, strides={:?}", self.shape(), self.strides()));
+        Ok(())
     }
 }
 
