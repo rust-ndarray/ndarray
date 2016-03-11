@@ -3,7 +3,7 @@ DOCCRATES = ndarray
 # deps to delete the generated docs
 RMDOCS =
 
-FEATURES = "assign_ops rustc-serialize rblas"
+FEATURES = "assign_ops rustc-serialize rblas blas"
 
 VERSIONS = $(patsubst %,target/VERS/%,$(DOCCRATES))
 
