@@ -281,14 +281,16 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>
                     CblasNoTrans => rhs_.dim().1,
                     _ => rhs_.dim().0,
                 };
+                // gemm is C ← αA^Op B^Op + βC
+                // Where Op is notrans/trans/conjtrans
                 unsafe {
                     blas_sys::c::$gemm(
                     CblasRowMajor,
                     lhs_trans,
                     rhs_trans,
-                    m as c_int, // m, rows of OP(a)
-                    n as c_int, // n, cols of OP(b)
-                    k as c_int, // k, cols of OP(a)
+                    m as c_int, // m, rows of Op(a)
+                    n as c_int, // n, cols of Op(b)
+                    k as c_int, // k, cols of Op(a)
                     1.0,                  // alpha
                     lhs_.ptr as *const _, // a
                     lhs_.strides()[0] as c_int, // lda
