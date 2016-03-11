@@ -19,21 +19,6 @@ use std::ops::{
 };
 use ScalarOperand;
 
-#[cfg(feature="rblas")]
-use std::any::TypeId;
-
-#[cfg(feature="rblas")]
-use ShapeError;
-
-#[cfg(feature="rblas")]
-use error::{from_kind, ErrorKind};
-
-#[cfg(feature="rblas")]
-use blas::{AsBlas, BlasArrayView};
-
-#[cfg(feature="rblas")]
-use imp_prelude::*;
-
 /// Elements that support linear algebra operations.
 ///
 /// `Any` for type-based specialization, `Copy` so that they don't need move
@@ -90,32 +75,3 @@ pub trait NdFloat :
 
 impl NdFloat for f32 { }
 impl NdFloat for f64 { }
-
-
-#[cfg(feature = "rblas")]
-pub trait AsBlasAny<A, S, D> : AsBlas<A, S, D> {
-    fn blas_view_as_type<T: Any>(&self) -> Result<BlasArrayView<T, D>, ShapeError>
-        where S: Data;
-}
-
-#[cfg(feature = "rblas")]
-/// ***Requires `features = "rblas"`***
-impl<A, S, D> AsBlasAny<A, S, D> for ArrayBase<S, D>
-    where S: Data<Elem=A>,
-          D: Dimension,
-          A: Any,
-{
-    fn blas_view_as_type<T: Any>(&self) -> Result<BlasArrayView<T, D>, ShapeError>
-        where S: Data
-    {
-        if TypeId::of::<A>() == TypeId::of::<T>() {
-            unsafe {
-                let v = self.view();
-                let u = ArrayView::new_(v.ptr as *const T, v.dim, v.strides);
-                Priv(u).into_blas_view()
-            }
-        } else {
-            Err(from_kind(ErrorKind::IncompatibleLayout))
-        }
-    }
-}

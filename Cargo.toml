@@ -35,18 +35,24 @@ version = "0.3.16"
 optional = true
 
 [dependencies]
-rblas = { version = "0.0.13", optional = true }
+blas-sys = { version = "0.5", optional = true, default-features = false }
 
-#[dependencies.serde]
-#version = "0.4"
-#optional = true
+# rblas is deprecatedish
+rblas = { version = "0.0.13", optional = true }
 
 [features]
 
 assign_ops = []
 
+blas = ["blas-sys"]
+blas-openblas-sys = [
+    "blas",
+    "blas-sys/openblas",
+    "blas-sys/openblas-provider/system-openblas",
+]
+
 # This feature is used for testing
-all = ["assign_ops", "rblas", "rustc-serialize"]
+test = ["blas-openblas-sys", "rustc-serialize"]
 
 [profile.release]
 [profile.bench]

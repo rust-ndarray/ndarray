@@ -433,19 +433,52 @@ fn bench_col_iter(bench: &mut test::Bencher)
     bench.iter(|| for elt in it.clone() { black_box(elt); })
 }
 
-#[bench]
-fn bench_mat_mul_large(bench: &mut test::Bencher)
-{
-    let a = OwnedArray::<f32, _>::zeros((64, 64));
-    let b = OwnedArray::<f32, _>::zeros((64, 64));
-    let a = black_box(a.view());
-    let b = black_box(b.view());
-    bench.iter(|| a.mat_mul(&b));
+macro_rules! mat_mul {
+    ($modname:ident, $ty:ident, $(($name:ident, $m:expr, $n:expr, $k:expr))+) => {
+        mod $modname {
+            use test::{black_box, Bencher};
+            use ndarray::OwnedArray;
+            $(
+            #[bench]
+            fn $name(bench: &mut Bencher)
+            {
+                let a = OwnedArray::<$ty, _>::zeros(($m, $n));
+                let b = OwnedArray::<$ty, _>::zeros(($n, $k));
+                let a = black_box(a.view());
+                let b = black_box(b.view());
+                bench.iter(|| a.mat_mul(&b));
+            }
+            )+
+        }
+    }
+}
+
+mat_mul!{mat_mul_f32, f32,
+    (m004, 4, 4, 4)
+    (m007, 7, 7, 7)
+    (m008, 8, 8, 8)
+    (m012, 12, 12, 12)
+    (m016, 16, 16, 16)
+    (m032, 32, 32, 32)
+    (m064, 64, 64, 64)
+    (m127, 127, 127, 127)
+    (mix16x4, 32, 4, 32)
+    (mix32x2, 32, 2, 32)
+}
+
+mat_mul!{mat_mul_i32, i32,
+    (m004, 4, 4, 4)
+    (m007, 7, 7, 7)
+    (m008, 8, 8, 8)
+    (m012, 12, 12, 12)
+    (m016, 16, 16, 16)
+    (m032, 32, 32, 32)
+    (m064, 64, 64, 64)
 }
 
 #[cfg(feature = "rblas")]
 #[bench]
-fn bench_mat_mul_rblas_large(bench: &mut test::Bencher)
+fn bench_mat_mul_rblas_64(bench: &mut test::Bencher)
 {
     use rblas::Gemm;
     use rblas::attribute::Transpose;

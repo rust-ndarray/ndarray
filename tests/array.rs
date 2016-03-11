@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate ndarray;
+extern crate itertools;
 
 use ndarray::{RcArray, S, Si,
     OwnedArray,
@@ -736,4 +737,27 @@ fn test_range() {
     assert_eq!(d[0], 1.);
     assert_eq!(d[10], 2.);
     assert_eq!(d[12], 2.2);
+}
+
+#[test]
+fn test_f_order() {
+    // Test that arrays are logically equal in every way,
+    // even if the underlying memory order is different
+    let c = arr2(&[[1, 2, 3],
+                   [4, 5, 6]]);
+    let mut f = OwnedArray::zeros_f(c.dim());
+    f.assign(&c);
+    assert_eq!(f, c);
+    assert_eq!(f.shape(), c.shape());
+    assert_eq!(c.strides(), &[3, 1]);
+    assert_eq!(f.strides(), &[1, 2]);
+    itertools::assert_equal(f.iter(), c.iter());
+    itertools::assert_equal(f.inner_iter(), c.inner_iter());
+    itertools::assert_equal(f.outer_iter(), c.outer_iter());
+    itertools::assert_equal(f.axis_iter(Axis(0)), c.axis_iter(Axis(0)));
+    itertools::assert_equal(f.axis_iter(Axis(1)), c.axis_iter(Axis(1)));
+
+    let dupc = &c + &c;
+    let dupf = &f + &f;
+    assert_eq!(dupc, dupf);
 }
