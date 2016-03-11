@@ -16,6 +16,25 @@ use {
     LinalgScalar,
 };
 
+#[cfg(feature="blas")]
+use std::mem::swap;
+#[cfg(feature="blas")]
+use std::os::raw::c_int;
+#[cfg(feature="blas")]
+use std::any::{Any, TypeId};
+
+#[cfg(feature="blas")]
+use blas_sys::c::{CblasNoTrans, CblasTrans, CblasRowMajor};
+#[cfg(feature="blas")]
+use blas_sys;
+
+/// len of vector before we use blas
+#[cfg(feature="blas")]
+const DOT_BLAS_CUTOFF: usize = 32;
+/// side of matrix before we use blas
+#[cfg(feature="blas")]
+const GEMM_BLAS_CUTOFF: usize = 7;
+
 impl<A, S> ArrayBase<S, Ix>
     where S: Data<Elem=A>,
 {
@@ -52,7 +71,7 @@ impl<A, S> ArrayBase<S, Ix>
         sum
     }
 
-    #[cfg(not(feature="rblas"))]
+    #[cfg(not(feature="blas"))]
     fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
@@ -60,40 +79,36 @@ impl<A, S> ArrayBase<S, Ix>
         self.dot_generic(rhs)
     }
 
-    #[cfg(feature="rblas")]
+    #[cfg(feature="blas")]
     fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
-        use std::any::{Any, TypeId};
-        use rblas::vector::ops::Dot;
-        use linalg::AsBlasAny;
-
-        // Read pointer to type `A` as type `B`.
-        //
-        // **Panics** if `A` and `B` are not the same type
-        fn cast_as<A: Any + Copy, B: Any + Copy>(a: &A) -> B {
-            assert_eq!(TypeId::of::<A>(), TypeId::of::<B>());
-            unsafe {
-                ::std::ptr::read(a as *const _ as *const B)
-            }
-        }
         // Use only if the vector is large enough to be worth it
-        if self.len() >= 32 {
+        if self.len() >= DOT_BLAS_CUTOFF {
             debug_assert_eq!(self.len(), rhs.len());
             assert!(self.len() == rhs.len());
-            if let Ok(self_v) = self.blas_view_as_type::<f32>() {
-                if let Ok(rhs_v) = rhs.blas_view_as_type::<f32>() {
-                    let f_ret = f32::dot(&self_v, &rhs_v);
-                    return cast_as::<f32, A>(&f_ret);
-                }
+            macro_rules! dot {
+                ($ty:ty, $func:ident) => {{
+            if blas_compat_1d::<$ty, _>(self) && blas_compat_1d::<$ty, _>(rhs) {
+                let n = self.len() as c_int;
+                let incx = self.strides()[0] as c_int;
+                let incy = rhs.strides()[0] as c_int;
+                let ret = unsafe {
+                    blas_sys::c::$func(
+                        n,
+                        self.ptr as *const $ty,
+                        incx,
+                        rhs.ptr as *const $ty,
+                        incy)
+                };
+                return cast_as::<$ty, A>(&ret);
             }
-            if let Ok(self_v) = self.blas_view_as_type::<f64>() {
-                if let Ok(rhs_v) = rhs.blas_view_as_type::<f64>() {
-                    let f_ret = f64::dot(&self_v, &rhs_v);
-                    return cast_as::<f64, A>(&f_ret);
-                }
+                }}
             }
+
+            dot!{f32, cblas_sdot};
+            dot!{f64, cblas_ddot};
         }
         self.dot_generic(rhs)
     }
@@ -163,36 +178,12 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
         where A: LinalgScalar,
     {
-        // NOTE: Matrix multiplication only defined for Copy types to
-        // avoid trouble with panicking + and *, and destructors
-
         let ((m, a), (b, n)) = (self.dim, rhs.dim);
-        let (self_columns, other_rows) = (a, b);
-        assert!(self_columns == other_rows);
+        let (lhs_columns, rhs_rows) = (a, b);
+        assert!(lhs_columns == rhs_rows);
+        assert!(m.checked_mul(n).is_some());
 
-        // Avoid initializing the memory in vec -- set it during iteration
-        // Panic safe because A: Copy
-        let mut res_elems = Vec::<A>::with_capacity(m as usize * n as usize);
-        unsafe {
-            res_elems.set_len(m as usize * n as usize);
-        }
-        let mut i = 0;
-        let mut j = 0;
-        for rr in &mut res_elems {
-            unsafe {
-                *rr = (0..a).fold(libnum::zero::<A>(),
-                    move |s, k| s + *self.uget((i, k)) * *rhs.uget((k, j))
-                );
-            }
-            j += 1;
-            if j == n {
-                j = 0;
-                i += 1;
-            }
-        }
-        unsafe {
-            ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
-        }
+        mat_mul_impl(self, rhs)
     }
 
     /// Perform the matrix multiplication of the rectangular array `self` and
@@ -229,4 +220,193 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     }
 }
 
+#[cfg(not(feature="blas"))]
+use self::mat_mul_general as mat_mul_impl;
 
+#[cfg(feature="blas")]
+fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>)
+    -> OwnedArray<A, (Ix, Ix)>
+    where A: LinalgScalar,
+          S: Data<Elem=A>,
+{
+    // size cutoff for using BLAS
+    let cut = GEMM_BLAS_CUTOFF;
+    let ((mut m, a), (_, mut n)) = (lhs.dim, rhs.dim);
+    if !(m > cut || n > cut || a > cut) ||
+        !(same_type::<A, f32>() || same_type::<A, f64>()) {
+        return mat_mul_general(lhs, rhs);
+    }
+    // Use `c` for c-order and `f` for an f-order matrix
+    // We can handle c * c, f * f generally and
+    // c * f and f * c if the `f` matrix is square.
+    let mut lhs_ = lhs.view();
+    let mut rhs_ = rhs.view();
+    let lhs_s0 = lhs_.strides()[0];
+    let rhs_s0 = rhs_.strides()[0];
+    let both_f = lhs_s0 == 1 && rhs_s0 == 1;
+    let mut lhs_trans = CblasNoTrans;
+    let mut rhs_trans = CblasNoTrans;
+    if both_f {
+        // A^t B^t = C^t => B A = C
+        lhs_ = lhs_.reversed_axes();
+        rhs_ = rhs_.reversed_axes();
+        swap(&mut lhs_, &mut rhs_);
+        swap(&mut m, &mut n);
+    } else if lhs_s0 == 1 && m == a {
+        lhs_ = lhs_.reversed_axes();
+        lhs_trans = CblasTrans;
+    } else if rhs_s0 == 1 && a == n {
+        rhs_ = rhs_.reversed_axes();
+        rhs_trans = CblasTrans;
+    }
+
+    macro_rules! gemm {
+        ($ty:ty, $gemm:ident) => {
+        if blas_row_major_2d::<$ty, _>(&lhs_) && blas_row_major_2d::<$ty, _>(&rhs_) {
+            let mut elems = Vec::<A>::with_capacity(m * n);
+            let c;
+            unsafe {
+                elems.set_len(m * n);
+                c = OwnedArray::from_vec_dim_unchecked((m, n), elems);
+            }
+            {
+                let (m, k) = match lhs_trans {
+                    CblasNoTrans => lhs_.dim(),
+                    _ => {
+                        let (rows, cols) = lhs_.dim();
+                        (cols, rows)
+                    }
+                };
+                let n = match rhs_trans {
+                    CblasNoTrans => rhs_.dim().1,
+                    _ => rhs_.dim().0,
+                };
+                unsafe {
+                    blas_sys::c::$gemm(
+                    CblasRowMajor,
+                    lhs_trans,
+                    rhs_trans,
+                    m as c_int, // m, rows of OP(a)
+                    n as c_int, // n, cols of OP(b)
+                    k as c_int, // k, cols of OP(a)
+                    1.0,                  // alpha
+                    lhs_.ptr as *const _, // a
+                    lhs_.strides()[0] as c_int, // lda
+                    rhs_.ptr as *const _, // b
+                    rhs_.strides()[0] as c_int, // ldb
+                    0.0,                   // beta
+                    c.ptr as *mut _,       // c
+                    c.strides()[0] as c_int, // ldc
+                );
+                }
+            }
+            return if both_f {
+                c.reversed_axes()
+            } else {
+                c
+            };
+        }
+        }
+    }
+    gemm!(f32, cblas_sgemm);
+    gemm!(f64, cblas_dgemm);
+    return mat_mul_general(lhs, rhs);
+}
+
+fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>)
+    -> OwnedArray<A, (Ix, Ix)>
+    where A: LinalgScalar,
+          S: Data<Elem=A>,
+{
+    let ((m, a), (_, n)) = (lhs.dim, rhs.dim);
+
+    // Avoid initializing the memory in vec -- set it during iteration
+    // Panic safe because A: Copy
+    let mut res_elems = Vec::<A>::with_capacity(m as usize * n as usize);
+    unsafe {
+        res_elems.set_len(m as usize * n as usize);
+    }
+    let mut i = 0;
+    let mut j = 0;
+    for rr in &mut res_elems {
+        unsafe {
+            *rr = (0..a).fold(libnum::zero::<A>(),
+                move |s, k| s + *lhs.uget((i, k)) * *rhs.uget((k, j))
+            );
+        }
+        j += 1;
+        if j == n {
+            j = 0;
+            i += 1;
+        }
+    }
+    unsafe {
+        ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
+    }
+}
+
+#[cfg(feature="blas")]
+#[inline(always)]
+/// Return `true` if `A` and `B` are the same type
+fn same_type<A: Any, B: Any>() -> bool {
+    TypeId::of::<A>() == TypeId::of::<B>()
+}
+
+#[cfg(feature="blas")]
+// Read pointer to type `A` as type `B`.
+//
+// **Panics** if `A` and `B` are not the same type
+fn cast_as<A: Any + Copy, B: Any + Copy>(a: &A) -> B {
+    assert!(same_type::<A, B>());
+    unsafe {
+        ::std::ptr::read(a as *const _ as *const B)
+    }
+}
+
+#[cfg(feature="blas")]
+fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix>) -> bool
+    where S: Data,
+          A: Any,
+          S::Elem: Any,
+{
+    if !same_type::<A, S::Elem>() {
+        return false;
+    }
+    if a.len() > c_int::max_value() as usize {
+        return false;
+    }
+    let stride = a.strides()[0];
+    if stride > c_int::max_value() as isize ||
+        stride < c_int::min_value() as isize {
+        return false;
+    }
+    true
+}
+
+#[cfg(feature="blas")]
+fn blas_row_major_2d<A, S>(a: &ArrayBase<S, (Ix, Ix)>) -> bool
+    where S: Data,
+          A: Any,
+          S::Elem: Any,
+{
+    if !same_type::<A, S::Elem>() {
+        return false;
+    }
+    let s0 = a.strides()[0];
+    let s1 = a.strides()[1];
+    if s1 != 1 {
+        return false;
+    }
+    if (s0 > c_int::max_value() as isize || s0 < c_int::min_value() as isize) ||
+        (s1 > c_int::max_value() as isize || s1 < c_int::min_value() as isize)
+    {
+        return false;
+    }
+    let (m, n) = a.dim();
+    if m > c_int::max_value() as usize ||
+        n > c_int::max_value() as usize
+    {
+        return false;
+    }
+    true
+}
