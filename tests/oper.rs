@@ -178,3 +178,22 @@ fn mat_mul() {
     assert_eq!(ab, af.mat_mul(&b));
     assert_eq!(ab, af.mat_mul(&bf));
 }
+
+// Check that matrix multiplication of contiguous matrices returns a
+// matrix with the same order 
+#[test]
+fn mat_mul_order() {
+    let (m, n, k) = (8, 8, 8);
+    let a = range_mat(m, n);
+    let b = range_mat(n, k);
+    let mut af = OwnedArray::zeros_f(a.dim());
+    let mut bf = OwnedArray::zeros_f(b.dim());
+    af.assign(&a);
+    bf.assign(&b);
+
+    let cc = a.mat_mul(&b);
+    let ff = af.mat_mul(&bf);
+
+    assert_eq!(cc.strides()[1], 1);
+    assert_eq!(ff.strides()[0], 1);
+}
