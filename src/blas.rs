@@ -55,7 +55,8 @@
 //! I know), instead output its own error conditions, for example on dimension
 //! mismatch in a matrix multiplication.
 //!
-#![cfg_attr(has_deprecated, deprecated(note="`rblas` integration will move to its own crate."))]
+#![cfg_attr(has_deprecated, deprecated(note="`rblas` integration has moved to crate `ndarray-rblas`, use it instead."))]
+#![allow(deprecated)]
 
 use std::os::raw::{c_int};
 
