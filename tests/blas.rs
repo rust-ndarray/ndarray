@@ -1,4 +1,5 @@
 #![cfg(feature = "rblas")]
+#![allow(deprecated)]
 
 extern crate rblas;
 extern crate num;
