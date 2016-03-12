@@ -24,6 +24,11 @@ impl ShapeError {
     pub fn kind(&self) -> ErrorKind {
         self.repr
     }
+
+    /// Create a new `ShapeError`
+    pub fn from_kind(error: ErrorKind) -> Self {
+        from_kind(error)
+    }
 }
 
 /// Error code for an error related to array shape or layout.

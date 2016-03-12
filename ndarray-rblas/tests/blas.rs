@@ -1,9 +1,7 @@
-#![cfg(feature = "rblas")]
-#![allow(deprecated)]
-
 extern crate rblas;
 extern crate num;
 #[macro_use] extern crate ndarray;
+extern crate ndarray_rblas;
 
 use rblas::Gemm;
 use rblas::attribute::Transpose;
@@ -19,7 +17,7 @@ use ndarray::{
     ShapeError
 };
 
-use ndarray::blas::AsBlas;
+use ndarray_rblas::AsBlas;
 
 #[test]
 fn strided_matrix() {

@@ -47,7 +47,7 @@
 //!   + `.fold()` and `.zip_mut_with()` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
 //!   + `.iter()` and `.iter_mut()` are efficient for contiguous arrays.
-//! - There is experimental bridging to the linear algebra package `rblas`.
+//!   + Can use BLAS in some operations (`dot` and `mat_mul`).
 //!
 //! ## Crate Feature Flags
 //!
@@ -61,7 +61,7 @@
 //!   - Optional, stable
 //!   - Enables serialization support
 //! - `rblas`
-//!   - Optional, stable
+//!   - ***Deprecated:*** replaced by separate crate `ndarray-rblas`
 //!   - Enables `rblas` integration
 //!
 #![cfg_attr(all(feature = "assign_ops", not(has_assign)),

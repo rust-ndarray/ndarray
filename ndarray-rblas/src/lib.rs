@@ -7,22 +7,21 @@
 // except according to those terms.
 //! Experimental BLAS (Basic Linear Algebra Subprograms) integration
 //!
-//! ***Requires crate feature `"rblas"`***
-//!
 //! Depends on crate [`rblas`], ([docs]).
 //!
 //! [`rblas`]: https://crates.io/crates/rblas/
 //! [docs]: http://mikkyang.github.io/rust-blas/doc/rblas/
 //!
 //! ```
-//! extern crate rblas;
 //! extern crate ndarray;
+//! extern crate ndarray_rblas;
+//! extern crate rblas;
 //!
 //! use rblas::Gemv;
 //! use rblas::attribute::Transpose;
 //!
 //! use ndarray::{arr1, arr2};
-//! use ndarray::blas::AsBlas;
+//! use ndarray_rblas::AsBlas;
 //!
 //! fn main() {
 //!     // Gemv is the operation y = α a x + β y
@@ -55,8 +54,9 @@
 //! I know), instead output its own error conditions, for example on dimension
 //! mismatch in a matrix multiplication.
 //!
-#![cfg_attr(has_deprecated, deprecated(note="`rblas` integration has moved to crate `ndarray-rblas`, use it instead."))]
-#![allow(deprecated)]
+
+extern crate rblas;
+extern crate ndarray;
 
 use std::os::raw::{c_int};
 
@@ -64,12 +64,18 @@ use rblas::{
     Matrix,
     Vector,
 };
-use super::{
+use ndarray::{
     ShapeError,
-    zipsl,
+    ErrorKind,
+    ArrayView,
+    ArrayViewMut,
+    Data,
+    DataOwned,
+    DataMut,
+    Dimension,
+    ArrayBase,
+    Ix, Ixs,
 };
-use error::{from_kind, ErrorKind};
-use imp_prelude::*;
 
 
 /// ***Requires crate feature `"rblas"`***
@@ -84,15 +90,46 @@ impl<'a, A, D: Clone> Clone for BlasArrayView<'a, A, D> {
 /// ***Requires crate feature `"rblas"`***
 pub struct BlasArrayViewMut<'a, A: 'a, D>(ArrayViewMut<'a, A, D>);
 
-impl<S, D> ArrayBase<S, D>
+struct Priv<T>(T);
+
+/// Return `true` if the innermost dimension is contiguous (includes
+/// the special cases of 0 or 1 length in that axis).
+fn is_inner_contiguous<S, D>(a: &ArrayBase<S, D>) -> bool
+    where S: Data,
+          D: Dimension,
+{
+    let ndim = a.ndim();
+    if ndim == 0 {
+        return true;
+    }
+    a.shape()[ndim - 1] <= 1 || a.strides()[ndim - 1] == 1
+}
+
+/// If the array is not in the standard layout, copy all elements
+/// into the standard layout so that the array is C-contiguous.
+fn ensure_standard_layout<A, S, D>(a: &mut ArrayBase<S, D>)
+    where S: DataOwned<Elem=A>,
+          D: Dimension,
+          A: Clone
+{
+    if !a.is_standard_layout() {
+        let d = a.dim();
+        let v: Vec<A> = a.iter().cloned().collect();
+        *a = ArrayBase::from_vec_dim(d, v).unwrap();
+    }
+}
+
+
+impl<S, D> Priv<ArrayBase<S, D>>
     where S: Data,
           D: Dimension
 {
     fn size_check(&self) -> Result<(), ShapeError> {
         let max = c_int::max_value();
-        for (&dim, &stride) in zipsl(self.shape(), self.strides()) {
+        let self_ = &self.0;
+        for (&dim, &stride) in self_.shape().iter().zip(self_.strides()) {
             if dim > max as Ix || stride > max as Ixs {
-                return Err(from_kind(ErrorKind::RangeLimited));
+                return Err(ShapeError::from_kind(ErrorKind::RangeLimited));
             }
         }
         Ok(())
@@ -100,10 +137,10 @@ impl<S, D> ArrayBase<S, D>
 
     fn contiguous_check(&self) -> Result<(), ShapeError> {
         // FIXME: handle transposed?
-        if self.is_inner_contiguous() {
+        if is_inner_contiguous(&self.0) {
             Ok(())
         } else {
-            Err(from_kind(ErrorKind::IncompatibleLayout))
+            Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout))
         }
     }
 }
@@ -112,26 +149,27 @@ impl<'a, A, D> Priv<ArrayView<'a, A, D>>
     where D: Dimension
 {
     pub fn into_blas_view(self) -> Result<BlasArrayView<'a, A, D>, ShapeError> {
-        let self_ = self.0;
-        if self_.dim.ndim() > 1 {
-            try!(self_.contiguous_check());
-        }
-        try!(self_.size_check());
-        Ok(BlasArrayView(self_))
-    }
-}
-
-impl<'a, A, D> ArrayViewMut<'a, A, D>
-    where D: Dimension
-{
-    fn into_blas_view_mut(self) -> Result<BlasArrayViewMut<'a, A, D>, ShapeError> {
-        if self.dim.ndim() > 1 {
+        if self.0.ndim() > 1 {
             try!(self.contiguous_check());
         }
         try!(self.size_check());
-        Ok(BlasArrayViewMut(self))
+        Ok(BlasArrayView(self.0))
     }
 }
+
+impl<'a, A, D> Priv<ArrayViewMut<'a, A, D>>
+    where D: Dimension
+{
+    fn into_blas_view_mut(self) -> Result<BlasArrayViewMut<'a, A, D>, ShapeError> {
+        if self.0.ndim() > 1 {
+            try!(self.contiguous_check());
+        }
+        try!(self.size_check());
+        Ok(BlasArrayViewMut(self.0))
+    }
+}
+/*
+*/
 
 /// Convert an array into a blas friendly wrapper.
 ///
@@ -232,17 +270,17 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
         where S: DataOwned + DataMut,
               A: Clone,
     {
-        try!(self.size_check());
-        match self.dim.ndim() {
+        try!(Priv(self.view()).size_check());
+        match self.ndim() {
             0 | 1 => { }
             2 => {
-                if !self.is_inner_contiguous() {
-                    self.ensure_standard_layout();
+                if !is_inner_contiguous(self) {
+                    ensure_standard_layout(self);
                 }
             }
-            _n => self.ensure_standard_layout(),
+            _n => ensure_standard_layout(self),
         }
-        self.view_mut().into_blas_view_mut()
+        Priv(self.view_mut()).into_blas_view_mut()
     }
 
     fn blas_view_checked(&self) -> Result<BlasArrayView<A, D>, ShapeError>
@@ -254,7 +292,7 @@ impl<A, S, D> AsBlas<A, S, D> for ArrayBase<S, D>
     fn blas_view_mut_checked(&mut self) -> Result<BlasArrayViewMut<A, D>, ShapeError>
         where S: DataMut,
     {
-        self.view_mut().into_blas_view_mut()
+        Priv(self.view_mut()).into_blas_view_mut()
     }
 
     /*
@@ -277,7 +315,7 @@ impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
     }
 
     fn as_ptr(&self) -> *const A {
-        self.0.ptr
+        self.0.as_ptr()
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
@@ -286,7 +324,7 @@ impl<'a, A> Vector<A> for BlasArrayView<'a, A, Ix> {
 
     // increment: stride
     fn inc(&self) -> c_int {
-        self.0.strides as c_int
+        self.0.strides()[0] as c_int
     }
 }
 
@@ -296,16 +334,16 @@ impl<'a, A> Vector<A> for BlasArrayViewMut<'a, A, Ix> {
     }
 
     fn as_ptr(&self) -> *const A {
-        self.0.ptr
+        self.0.as_ptr()
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
-        self.0.ptr
+        self.0.as_mut_ptr()
     }
 
     // increment: stride
     fn inc(&self) -> c_int {
-        self.0.strides as c_int
+        self.0.strides()[0] as c_int
     }
 }
 
@@ -326,7 +364,7 @@ impl<'a, A> Matrix<A> for BlasArrayView<'a, A, (Ix, Ix)> {
     }
 
     fn as_ptr(&self) -> *const A {
-        self.0.ptr as *const _
+        self.0.as_ptr()
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
@@ -350,10 +388,10 @@ impl<'a, A> Matrix<A> for BlasArrayViewMut<'a, A, (Ix, Ix)> {
     }
 
     fn as_ptr(&self) -> *const A {
-        self.0.ptr as *const _
+        self.0.as_ptr()
     }
 
     fn as_mut_ptr(&mut self) -> *mut A {
-        self.0.ptr
+        self.0.as_mut_ptr()
     }
 }

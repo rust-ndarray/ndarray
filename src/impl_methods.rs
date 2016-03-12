@@ -561,6 +561,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         true
     }
 
+    #[inline(always)]
+    pub fn as_ptr(&self) -> *const A {
+        self.ptr
+    }
+
+    #[inline(always)]
+    pub fn as_mut_ptr(&mut self) -> *mut A
+        where S: DataMut
+    {
+        self.ensure_unique(); // for RcArray
+        self.ptr
+    }
+
     /// Return the array’s data as a slice, if it is contiguous and
     /// the element order corresponds to the memory order. Return `None` otherwise.
     pub fn as_slice(&self) -> Option<&[A]> {

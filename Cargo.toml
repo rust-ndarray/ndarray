@@ -37,11 +37,11 @@ optional = true
 [dependencies]
 blas-sys = { version = "0.5", optional = true, default-features = false }
 
-# rblas is deprecatedish
+# deprecated! use ndarray-rblas instead
 rblas = { version = "0.0.13", optional = true }
 
 [features]
-
+# deprecated! Will be default
 assign_ops = []
 
 blas = ["blas-sys"]

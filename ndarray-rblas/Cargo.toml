@@ -1,0 +1,18 @@
+[package]
+name = "ndarray-rblas"
+version = "0.1.0"
+authors = ["bluss"]
+license = "MIT/Apache-2.0"
+
+repository = "https://github.com/bluss/rust-ndarray"
+
+description = "`rblas` bindings for `ndarray`."
+
+keywords = ["multidimensional", "matrix", "blas"]
+
+[dependencies]
+rblas = "0.0.13"
+ndarray = { version = "0.4.1" }
+
+[dev-dependencies]
+num = { version = "0.1", default-features = false }
