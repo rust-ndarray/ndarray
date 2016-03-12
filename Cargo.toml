@@ -36,7 +36,7 @@ optional = true
 
 [dependencies]
 blas-sys = { version = "0.5", optional = true, default-features = false }
-
+rand = "0.3"
 # deprecated! use ndarray-rblas instead
 rblas = { version = "0.0.13", optional = true }
 

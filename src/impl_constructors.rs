@@ -8,6 +8,9 @@
 
 //! Constructor methods for ndarray
 //!
+extern crate rand;
+use self::rand::distributions::{Normal, IndependentSample};
+use self::rand::{Rng, XorShiftRng, SeedableRng};
 use libnum;
 
 use imp_prelude::*;
@@ -251,4 +254,29 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
+}
+
+use super::NdFloat;
+
+impl<S, A, D> ArrayBase<S, D>
+    where S: DataOwned<Elem=A>,
+          A: NdFloat,
+          D: Dimension,
+{
+    pub fn randn_rng<R: Rng>(dim: D, rng: &mut R) -> ArrayBase<Vec<A>, D>
+    {
+        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let normal = Normal::new(1.0, 0.0);
+        let iter = (0..size).map(|_| A::from(normal.ind_sample(rng)).unwrap());
+        let arr = OwnedArray::from_iter(iter);
+        arr.into_shape(dim).unwrap()
+    }
+
+    pub fn randn(dim: D) -> ArrayBase<Vec<A>, D>
+    {
+        // Use the thread_rng once to seed a fast, non-crypto grade rng.
+        // To use a crypto quality RNG, use randn_rng directly.
+        let mut rng : XorShiftRng = SeedableRng::from_seed(rand::thread_rng().gen::<[u32;4]>());
+        ArrayBase::<Vec<A>, D>::randn_rng(dim, &mut rng)
+    }
 }
