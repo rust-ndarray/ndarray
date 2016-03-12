@@ -1,0 +1,11 @@
+[package]
+name = "ndarray-rblas"
+version = "0.1.0"
+authors = ["bluss"]
+
+[dependencies]
+rblas = "0.0.13"
+ndarray = { version = "0.4.1" }
+
+[dev-dependencies]
+num = { version = "0.1", default-features = false }
