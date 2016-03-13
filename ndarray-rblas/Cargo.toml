@@ -12,7 +12,7 @@ keywords = ["multidimensional", "matrix", "blas"]
 
 [dependencies]
 rblas = "0.0.13"
-ndarray = { version = "0.4.1" }
+ndarray = { version = "0.4.2", path = ".." }
 
 [dev-dependencies]
 num = { version = "0.1", default-features = false }
