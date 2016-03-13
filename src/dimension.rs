@@ -36,13 +36,17 @@ fn stride_is_positive(stride: Ix) -> bool {
 pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
     let order = strides._fastest_varying_stride_order();
 
+    let dim = dim.slice();
+    let strides = strides.slice();
     let mut prev_offset = 1;
-    for &index in order.slice().iter() {
-        let s = strides.slice()[index];
-        if (s as isize) < prev_offset {
+    for &index in order.slice() {
+        let d = dim[index];
+        let s = strides[index];
+        // any stride is ok if dimension is 1
+        if d != 1 && (s as isize) < prev_offset {
             return true;
         }
-        prev_offset = stride_offset(dim.slice()[index], s);
+        prev_offset = stride_offset(d, s);
     }
     false
 }
