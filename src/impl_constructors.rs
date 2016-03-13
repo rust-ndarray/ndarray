@@ -10,7 +10,10 @@
 //!
 extern crate rand;
 use self::rand::distributions::{Normal, IndependentSample};
-use self::rand::{Rng, XorShiftRng, SeedableRng};
+use self::rand::{Rng};
+
+extern crate asprim;
+use self::asprim::AsPrim;
 use libnum;
 
 use imp_prelude::*;
@@ -260,14 +263,14 @@ use super::NdFloat;
 
 impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
-          A: NdFloat,
+          A: NdFloat+AsPrim,
           D: Dimension,
 {
     pub fn randn_rng<R: Rng>(dim: D, rng: &mut R) -> ArrayBase<Vec<A>, D>
     {
         let size = dim.size_checked().expect("Shape too large: overflow in size");
         let normal = Normal::new(1.0, 0.0);
-        let iter = (0..size).map(|_| A::from(normal.ind_sample(rng)).unwrap());
+        let iter = (0..size).map(|_| normal.ind_sample(rng).as_());
         let arr = OwnedArray::from_iter(iter);
         arr.into_shape(dim).unwrap()
     }
@@ -276,7 +279,7 @@ impl<S, A, D> ArrayBase<S, D>
     {
         // Use the thread_rng once to seed a fast, non-crypto grade rng.
         // To use a crypto quality RNG, use randn_rng directly.
-        let mut rng : XorShiftRng = SeedableRng::from_seed(rand::thread_rng().gen::<[u32;4]>());
+        let mut rng = rand::weak_rng();
         ArrayBase::<Vec<A>, D>::randn_rng(dim, &mut rng)
     }
 }
