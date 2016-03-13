@@ -550,6 +550,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         if self.strides == defaults {
             return true;
         }
+        if self.ndim() == 1 { return false; }
         // check all dimensions -- a dimension of length 1 can have unequal strides
         for (&dim, (&s, &ds)) in zipsl(self.dim.slice(),
                                        zipsl(self.strides(), defaults.slice()))
@@ -563,13 +564,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     fn is_contiguous(&self) -> bool {
         let defaults = self.dim.default_strides();
-        if self.ndim() == 0 || self.strides == defaults {
+        if self.strides == defaults {
             return true;
         }
+        if self.ndim() == 1 { return false; }
         let order = self.strides._fastest_varying_stride_order();
         let strides = self.strides.slice();
 
-        // if any stride is negative
+        // FIXME: Negative strides
         let dim = self.dim.slice();
         let mut cstride = 1;
         for &i in order.slice() {
