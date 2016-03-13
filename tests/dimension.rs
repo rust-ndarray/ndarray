@@ -51,5 +51,11 @@ fn fastest_varying_order() {
     assert_eq!((1, 3)._fastest_varying_stride_order(), (0, 1));
     assert_eq!((7, 2)._fastest_varying_stride_order(), (1, 0));
     assert_eq!((6, 1, 3)._fastest_varying_stride_order(), (1, 2, 0));
+
+    // it's important that it produces distinct indices. Prefer the stable order
+    // where 0 is before 1 when they are equal.
+    assert_eq!((2, 2)._fastest_varying_stride_order(), (0, 1));
+    assert_eq!((2, 2, 1)._fastest_varying_stride_order(), (2, 0, 1));
+    assert_eq!((2, 2, 3, 1, 2)._fastest_varying_stride_order(), (3, 0, 1, 4, 2));
 }
 

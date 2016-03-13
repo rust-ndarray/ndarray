@@ -585,10 +585,11 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
             }
         }
         {
+            // stable sorting network for 3 elements
             let order = order.slice_mut();
             let strides = stride.slice_mut();
+            swap![strides, order, 1, 2];
             swap![strides, order, 0, 1];
-            swap![strides, order, 0, 2];
             swap![strides, order, 1, 2];
         }
         order
