@@ -48,7 +48,7 @@ fn sum_1d_raw(bench: &mut test::Bencher)
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
-        for &elt in a.raw_data() {
+        for &elt in a.as_slice_memory_order().unwrap() {
             sum += elt;
         }
         sum
@@ -93,7 +93,7 @@ fn sum_2d_raw(bench: &mut test::Bencher)
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
-        for &elt in a.raw_data() {
+        for &elt in a.as_slice_memory_order().unwrap() {
             sum += elt;
         }
         sum

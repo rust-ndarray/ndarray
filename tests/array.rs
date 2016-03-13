@@ -7,7 +7,9 @@ extern crate itertools;
 use ndarray::{RcArray, S, Si,
     OwnedArray,
 };
-use ndarray::{arr0, arr1, arr2, arr3,
+use ndarray::{
+    rcarr2,
+    arr0, arr1, arr2, arr3,
     aview0,
     aview1,
     aview2,
@@ -244,8 +246,8 @@ fn swapaxes()
     assert_eq!(a, b);
     a.swap_axes(1, 1);
     assert_eq!(a, b);
-    assert!(a.raw_data() == [1., 2., 3., 4.]);
-    assert!(b.raw_data() == [1., 3., 2., 4.]);
+    assert_eq!(a.as_slice_memory_order(), Some(&[1., 2., 3., 4.][..]));
+    assert_eq!(b.as_slice_memory_order(), Some(&[1., 3., 2., 4.][..]));
 }
 
 #[test]
@@ -380,11 +382,12 @@ fn map1()
 }
 
 #[test]
-fn raw_data_mut()
+fn as_slice_memory_order()
 {
-    let a = arr2(&[[1., 2.], [3., 4.0f32]]);
+    // test that mutation breaks sharing
+    let a = rcarr2(&[[1., 2.], [3., 4.0f32]]);
     let mut b = a.clone();
-    for elt in b.raw_data_mut() {
+    for elt in b.as_slice_memory_order_mut().unwrap() {
         *elt = 0.;
     }
     assert!(a != b, "{:?} != {:?}", a, b);

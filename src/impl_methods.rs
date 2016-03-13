@@ -878,6 +878,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
     /// array’s view.<br>
+    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order() instead"))]
     pub fn raw_data(&self) -> &[A]
         where S: DataOwned,
     {
@@ -892,6 +893,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
+    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order_mut() instead"))]
     pub fn raw_data_mut(&mut self) -> &mut [A]
         where S: DataOwned + DataMut,
     {
