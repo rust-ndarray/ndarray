@@ -72,8 +72,14 @@ your `Cargo.toml`.
 
 - ``rustc-serialize``
 
-  - Optional, stable
+  - Optional, compatible with Rust stable
   - Enables serialization support
+
+- ``blas``
+
+  - Optional and experimental, compatible with Rust stable
+  - Enable transparent BLAS support for matrix multiplication. Pluggable
+    backend via ``blas-sys``.
 
 - ``rblas``
 
@@ -85,8 +91,31 @@ How to use with cargo::
     [dependencies]
     ndarray = "0.4"
 
-Recent Changes
---------------
+Recent Changes (ndarray)
+------------------------
+
+- 0.4.2
+
+  - Add new BLAS integration used by matrix multiplication
+    (selected with crate feature ``blas``). Uses pluggable backend.
+  - Deprecate module ``ndarray::blas`` and crate feature ``rblas``. This module
+    was moved to the crate ``ndarray-rblas``.
+  - Add array methods ``as_slice_memory_order, as_slice_memory_order_mut, as_ptr,
+    as_mut_ptr``.
+  - Deprecate ``raw_data, raw_data_mut``.
+  - Add ``Send + Sync`` to ``NdFloat``.
+  - Arrays now show shape & stride in their debug formatter.
+  - Fix a bug where ``from_vec_dim_stride`` did not accept arrays with unitary axes.
+  - Performance improvements for contiguous arrays in non-c order when using
+    methods ``to_owned, map, scalar_sum, assign_scalar``,
+    and arithmetic operations between array and scalar.
+  - Some methods now return arrays in the same memory order of the input
+    if the input is contiguous: ``to_owned, map, mat_mul`` (matrix multiplication
+    only if both inputs are the same memory order), and arithmetic operations
+    that allocate a new result.
+  - Slight performance improvements in ``dot, mat_mul`` due to more efficient
+    glue code for calling BLAS.
+  - Performance improvements in ``.assign_scalar``.
 
 - 0.4.1
 
@@ -341,6 +370,13 @@ __ https://bluss.github.io/rust-ndarray/master/ndarray/struct.ArrayBase.html#ari
 
   - First release on crates.io
   - Starting point for evolution to come
+
+Recent Changes (ndarray-rblas)
+------------------------------
+
+- 0.1.0
+
+  - Initial release, identical to ndarray 0.4.1's version.
 
 License
 =======
