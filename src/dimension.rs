@@ -489,6 +489,7 @@ unsafe impl Dimension for (Ix, Ix) {
         (self.1, 1)
     }
 
+    #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         if self.0 as Ixs <= self.1 as Ixs { (0, 1) } else { (1, 0) }
     }
@@ -573,6 +574,7 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
 
+    #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut stride = *self;
         let mut order = (0, 1, 2);
