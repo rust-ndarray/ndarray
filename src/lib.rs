@@ -510,12 +510,20 @@ impl<A, S, D> ArrayBase<S, D>
               F: FnMut(&mut A)
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
-            for elt in slc {
-                f(elt);
+            // FIXME: Use for loop when slice iterator is perf is restored
+            for i in 0..slc.len() {
+                f(&mut slc[i]);
             }
             return;
         }
-        for row in self.inner_iter_mut() {
+        for mut row in self.inner_iter_mut() {
+            if let Some(slc) = row.as_slice_mut() {
+                // FIXME: Use for loop when slice iterator is perf is restored
+                for i in 0..slc.len() {
+                    f(&mut slc[i]);
+                }
+                continue;
+            }
             for elt in row {
                 f(elt);
             }
