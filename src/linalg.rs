@@ -54,7 +54,7 @@ impl<T> LinalgScalar for T
 pub trait NdFloat :
     Float +
     fmt::Display + fmt::Debug + fmt::LowerExp + fmt::UpperExp +
-    ScalarOperand + LinalgScalar
+    ScalarOperand + LinalgScalar + Send + Sync
 { }
 
 /// Floating-point element types `f32` and `f64`.
@@ -70,7 +70,7 @@ pub trait NdFloat :
     Float +
     AddAssign + SubAssign + MulAssign + DivAssign + RemAssign +
     fmt::Display + fmt::Debug + fmt::LowerExp + fmt::UpperExp +
-    ScalarOperand + LinalgScalar
+    ScalarOperand + LinalgScalar + Send + Sync
 { }
 
 impl NdFloat for f32 { }
