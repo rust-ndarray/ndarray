@@ -35,7 +35,9 @@ version = "0.3.16"
 optional = true
 
 [dependencies]
+# Use via the `blas` crate feature!
 blas-sys = { version = "0.5", optional = true, default-features = false }
+openblas-provider = { version = "0.3", optional = true, default-features = false }
 
 # deprecated! use ndarray-rblas instead
 rblas = { version = "0.0.13", optional = true }
@@ -48,7 +50,7 @@ blas = ["blas-sys"]
 blas-openblas-sys = [
     "blas",
     "blas-sys/openblas",
-    "blas-sys/openblas-provider/system-openblas",
+    "openblas-provider/system-openblas",
 ]
 
 # This feature is used for testing
