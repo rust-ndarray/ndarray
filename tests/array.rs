@@ -500,6 +500,18 @@ fn from_vec_dim_stride_2d_5() {
 }
 
 #[test]
+fn from_vec_dim_stride_2d_6() {
+    let a = [1., 2., 3., 4., 5., 6.];
+    let d = (2, 1, 1);
+    let s = (2, 2, 1);
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Ok(_));
+
+    let d = (1, 2, 1);
+    let s = (2, 2, 1);
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Ok(_));
+}
+
+#[test]
 fn from_vec_dim_stride_2d_rejects() {
     let two = [1., 2.];
     let d = (2, 2);
