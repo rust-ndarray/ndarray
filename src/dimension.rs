@@ -565,6 +565,27 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
         let (s, t, u) = *strides;
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
+
+    fn _fastest_varying_stride_order(&self) -> Self {
+        let mut stride = *self;
+        let mut order = (0, 1, 2);
+        macro_rules! swap {
+            ($stride:expr, $order:expr, $x:expr, $y:expr) => {
+                if $stride[$x] > $stride[$y] {
+                    $stride.swap($x, $y);
+                    $order.swap($x, $y);
+                }
+            }
+        }
+        {
+            let order = order.slice_mut();
+            let strides = stride.slice_mut();
+            swap![strides, order, 0, 1];
+            swap![strides, order, 0, 2];
+            swap![strides, order, 1, 2];
+        }
+        order
+    }
 }
 
 macro_rules! large_dim {
