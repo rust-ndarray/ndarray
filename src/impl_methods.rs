@@ -584,11 +584,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         true
     }
 
+    /// Return a pointer to the first element in the array.
+    ///
+    /// Raw access to array elements needs to follow the strided indexing
+    /// scheme: an element at multi-index *I* in an array with strides *S* is 
+    /// located at offset
+    ///
+    /// *Σ<sub>0 ≤ k < d</sub> I<sub>k</sub> × S<sub>k</sub>*
+    ///
+    /// where *d* is `self.ndim()`.
     #[inline(always)]
     pub fn as_ptr(&self) -> *const A {
         self.ptr
     }
 
+    /// Return a mutable pointer to the first element in the array.
     #[inline(always)]
     pub fn as_mut_ptr(&mut self) -> *mut A
         where S: DataMut
