@@ -8,6 +8,7 @@
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::slice;
+use itertools::free::enumerate;
 
 use super::{Si, Ix, Ixs};
 use super::zipsl;
@@ -25,24 +26,6 @@ fn stride_is_positive(stride: Ix) -> bool {
     (stride as Ixs) > 0
 }
 
-/// Return the axis ordering corresponding to the fastest variation
-///
-/// Assumes that no stride value appears twice. This cannot yield the correct
-/// result the strides are not positive.
-fn fastest_varying_order<D: Dimension>(strides: &D) -> D {
-    let mut sorted = strides.clone();
-    sorted.slice_mut().sort();
-    let mut res = strides.clone();
-    for (index, &val) in strides.slice().iter().enumerate() {
-        let sorted_ind = sorted.slice()
-                               .iter()
-                               .position(|&x| x == val)
-                               .unwrap(); // cannot panic by construction
-        res.slice_mut()[sorted_ind] = index;
-    }
-    res
-}
-
 /// Check whether the given `dim` and `stride` lead to overlapping indices
 ///
 /// There is overlap if, when iterating through the dimensions in the order
@@ -51,7 +34,7 @@ fn fastest_varying_order<D: Dimension>(strides: &D) -> D {
 ///
 /// The current implementation assumes strides to be positive
 pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
-    let order = fastest_varying_order(strides);
+    let order = strides._fastest_varying_stride_order();
 
     let mut prev_offset = 1;
     for &index in order.slice().iter() {
@@ -335,6 +318,21 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync {
         offset
     }
 
+    /// Return the axis ordering corresponding to the fastest variation
+    /// (in ascending order).
+    ///
+    /// Assumes that no stride value appears twice. This cannot yield the correct
+    /// result the strides are not positive.
+    #[doc(hidden)]
+    fn _fastest_varying_stride_order(&self) -> Self {
+        let mut indices = self.clone();
+        for (i, elt) in enumerate(indices.slice_mut()) {
+            *elt = i;
+        }
+        let strides = self.slice();
+        indices.slice_mut().sort_by_key(|&i| strides[i]);
+        indices
+    }
 }
 
 /// Implementation-specific extensions to `Dimension`
@@ -482,6 +480,10 @@ unsafe impl Dimension for (Ix, Ix) {
         // Compute default array strides
         // Shape (a, b, c) => Give strides (b * c, c, 1)
         (self.1, 1)
+    }
+
+    fn _fastest_varying_stride_order(&self) -> Self {
+        if self.0 as Ixs <= self.1 as Ixs { (0, 1) } else { (1, 0) }
     }
 
     #[inline]
@@ -741,13 +743,6 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
 mod test {
     use super::Dimension;
     use error::StrideError;
-
-    #[test]
-    fn fastest_varying_order() {
-        let strides = (2, 8, 4, 1);
-        let order = super::fastest_varying_order(&strides);
-        assert_eq!(order.slice(), &[3, 0, 2, 1]);
-    }
 
     #[test]
     fn slice_indexing_uncommon_strides() {

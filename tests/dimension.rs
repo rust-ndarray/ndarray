@@ -6,6 +6,7 @@ use ndarray::{
     RemoveAxis,
     arr2,
     Axis,
+    Dimension,
 };
 
 #[test]
@@ -40,3 +41,15 @@ fn dyn_dimension()
     let z = OwnedArray::<f32, _>::zeros(dim.clone());
     assert_eq!(z.shape(), &dim[..]);
 }
+
+#[test]
+fn fastest_varying_order() {
+    let strides = (2, 8, 4, 1);
+    let order = strides._fastest_varying_stride_order();
+    assert_eq!(order.slice(), &[3, 0, 2, 1]);
+
+    assert_eq!((1, 3)._fastest_varying_stride_order(), (0, 1));
+    assert_eq!((7, 2)._fastest_varying_stride_order(), (1, 0));
+    assert_eq!((6, 1, 3)._fastest_varying_stride_order(), (1, 2, 0));
+}
+

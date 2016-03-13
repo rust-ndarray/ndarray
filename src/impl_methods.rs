@@ -561,6 +561,27 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         true
     }
 
+    fn is_contiguous(&self) -> bool {
+        let defaults = self.dim.default_strides();
+        if self.ndim() == 0 || self.strides == defaults {
+            return true;
+        }
+        let order = self.strides._fastest_varying_stride_order();
+        let strides = self.strides.slice();
+
+        // if any stride is negative
+        let dim = self.dim.slice();
+        let mut cstride = 1;
+        for &i in order.slice() {
+            // a dimension of length 1 can have unequal strides
+            if dim[i] != 1 && strides[i] != cstride {
+                return false;
+            }
+            cstride *= dim[i];
+        }
+        true
+    }
+
     #[inline(always)]
     pub fn as_ptr(&self) -> *const A {
         self.ptr
@@ -592,6 +613,33 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         if self.is_standard_layout() {
+            self.ensure_unique();
+            unsafe {
+                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return the array’s data as a slice if it is contiguous,
+    /// return `None` otherwise.
+    pub fn as_slice_no_order(&self) -> Option<&[A]> {
+        if self.is_contiguous() {
+            unsafe {
+                Some(slice::from_raw_parts(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return the array’s data as a slice if it is contiguous,
+    /// return `None` otherwise.
+    pub fn as_slice_mut_no_order(&mut self) -> Option<&mut [A]>
+        where S: DataMut
+    {
+        if self.is_contiguous() {
             self.ensure_unique();
             unsafe {
                 Some(slice::from_raw_parts_mut(self.ptr, self.len()))
