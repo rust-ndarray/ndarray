@@ -25,4 +25,4 @@ script:
       cargo test --verbose &&
       ([ -z "$FEATURES" ] || cargo build --verbose --features "$FEATURES") &&
       ([ -z "$FEATURES" ] || cargo test --verbose --features "$FEATURES") &&
-      ([ "$BENCH" != 1 ] || cargo bench --verbose --features "$FEATURES")
+      ([ "$BENCH" != 1 ] || cargo bench --no-run --verbose --features "$FEATURES")
