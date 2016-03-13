@@ -884,6 +884,32 @@ fn test_f_order() {
 }
 
 #[test]
+fn to_owned_memory_order() {
+    // check that .to_owned() makes f-contiguous arrays out of f-contiguous
+    // input.
+    let c = arr2(&[[1, 2, 3],
+                   [4, 5, 6]]);
+    let mut f = c.view();
+    f.swap_axes(0, 1);
+    let fo = f.to_owned();
+    assert_eq!(f, fo);
+    assert_eq!(f.strides(), fo.strides());
+}
+
+#[test]
+fn map_memory_order() {
+    let a = arr3(&[[[1, 2, 3],
+                    [4, 5, 6]],
+                   [[7, 8, 9],
+                    [0, -1, -2]]]);
+    let mut v = a.view();
+    v.swap_axes(0, 1);
+    let amap = v.map(|x| *x >= 3);
+    assert_eq!(amap.dim(), v.dim());
+    assert_eq!(amap.strides(), v.strides());
+}
+
+#[test]
 fn test_contiguous() {
     let c = arr3(&[[[1, 2, 3],
                     [4, 5, 6]],

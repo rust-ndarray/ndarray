@@ -83,13 +83,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn to_owned(&self) -> OwnedArray<A, D>
         where A: Clone
     {
-        let data = if let Some(slc) = self.as_slice() {
-            slc.to_vec()
+        let (data, strides) = if let Some(slc) = self.as_slice_memory_order() {
+            (slc.to_vec(), self.strides.clone())
         } else {
-            self.iter().cloned().collect()
+            (self.iter().cloned().collect(), self.dim.default_strides())
         };
         unsafe {
-            ArrayBase::from_vec_dim_unchecked(self.dim.clone(), data)
+            ArrayBase::from_vec_dim_stride_unchecked(self.dim.clone(), strides, data)
         }
     }
 
@@ -1074,9 +1074,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where F: FnMut(&'a A) -> B,
               A: 'a,
     {
-        let v = ::iterators::to_vec(self.iter().map(f));
-        unsafe {
-            ArrayBase::from_vec_dim_unchecked(self.dim.clone(), v)
+        if let Some(slc) = self.as_slice_memory_order() {
+            let v = ::iterators::to_vec(slc.iter().map(f));
+            unsafe {
+                ArrayBase::from_vec_dim_stride_unchecked(
+                    self.dim.clone(), self.strides.clone(), v)
+            }
+        } else {
+            let v = ::iterators::to_vec(self.iter().map(f));
+            unsafe {
+                ArrayBase::from_vec_dim_unchecked(self.dim.clone(), v)
+            }
         }
     }
 }
