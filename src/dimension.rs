@@ -773,7 +773,7 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
 #[cfg(test)]
 mod test {
     use super::Dimension;
-    use error::StrideError;
+    use error::{from_kind, ErrorKind};
 
     #[test]
     fn slice_indexing_uncommon_strides() {
@@ -784,7 +784,7 @@ mod test {
 
         let strides = (2, 4, 12);
         assert_eq!(super::can_index_slice(&v, &dim, &strides),
-                   Err(StrideError::OutOfBounds));
+                   Err(from_kind(ErrorKind::OutOfBounds)));
     }
 
     #[test]

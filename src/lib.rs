@@ -58,8 +58,12 @@
 //!   - Requires Rust 1.8, will be default soon.
 //!   - Enables the compound assignment operators
 //! - `rustc-serialize`
-//!   - Optional, stable
+//!   - Optional, compatible with Rust stable
 //!   - Enables serialization support
+//! - `blas`
+//!   - Optional and experimental, compatible with Rust stable
+//!   - Enable transparent BLAS support for matrix multiplication. Pluggable
+//!     backend via `blas-sys`.
 //! - `rblas`
 //!   - ***Deprecated:*** replaced by separate crate `ndarray-rblas`
 //!   - Enables `rblas` integration

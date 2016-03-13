@@ -1007,7 +1007,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.unordered_foreach_mut(move |elt| f(elt, rhs_elem));
     }
 
-    // FIXME: Guarantee the order here or not?
     /// Traverse two arrays in unspecified order, in lock step,
     /// calling the closure `f` on each element pair.
     ///

@@ -13,7 +13,7 @@ use libnum;
 use imp_prelude::*;
 use dimension;
 use linspace;
-use error::{self, ShapeError};
+use error::{self, ShapeError, ErrorKind};
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -99,6 +99,15 @@ impl<S, A> ArrayBase<S, (Ix, Ix)>
     }
 }
 
+macro_rules! size_checked_unwrap {
+    ($dim:expr) => {
+        match $dim.size_checked() {
+            Some(sz) => sz,
+            None => panic!("ndarray: Shape too large, number of elements overflows usize"),
+        }
+    }
+}
+
 /// Constructor methods for n-dimensional arrays.
 impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
@@ -128,7 +137,7 @@ impl<S, A, D> ArrayBase<S, D>
         // Note: We don't need to check the case of a size between
         // isize::MAX -> usize::MAX; in this case, the vec constructor itself
         // panics.
-        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let size = size_checked_unwrap!(dim);
         let v = vec![elem; size];
         unsafe { Self::from_vec_dim_unchecked(dim, v) }
     }
@@ -147,7 +156,7 @@ impl<S, A, D> ArrayBase<S, D>
     pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>
         where A: Clone
     {
-        let size = dim.size_checked().expect("Shape too large: overflow in size");
+        let size = size_checked_unwrap!(dim);
         let v = vec![elem; size];
         unsafe { Self::from_vec_dim_unchecked_f(dim, v) }
     }
@@ -242,7 +251,15 @@ impl<S, A, D> ArrayBase<S, D>
     pub unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
         -> ArrayBase<S, D>
     {
-        debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
+        // debug check for issues that indicates wrong use of this constructor
+        debug_assert!(match dimension::can_index_slice(&v, &dim, &strides) {
+            Ok(_) => true,
+            Err(ref e) => match e.kind() {
+                ErrorKind::OutOfBounds => false,
+                ErrorKind::RangeLimited => false,
+                _ => true,
+            }
+        });
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
