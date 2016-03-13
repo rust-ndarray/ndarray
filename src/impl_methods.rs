@@ -1041,8 +1041,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
         if let Some(slc) = self.as_slice() {
-            for elt in slc {
-                init = f(init, elt);
+            // FIXME: Use for loop when slice iterator is perf is restored
+            for i in 0..slc.len() {
+                init = f(init, &slc[i]);
             }
             return init;
         }
