@@ -13,7 +13,7 @@ use libnum;
 use imp_prelude::*;
 use dimension;
 use linspace;
-use error::{self, ShapeError};
+use error::{self, ShapeError, ErrorKind};
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -251,7 +251,15 @@ impl<S, A, D> ArrayBase<S, D>
     pub unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
         -> ArrayBase<S, D>
     {
-        debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
+        // debug check for issues that indicates wrong use of this constructor
+        debug_assert!(match dimension::can_index_slice(&v, &dim, &strides) {
+            Ok(_) => true,
+            Err(ref e) => match e.kind() {
+                ErrorKind::OutOfBounds => false,
+                ErrorKind::RangeLimited => false,
+                _ => true,
+            }
+        });
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
