@@ -237,10 +237,13 @@ pub type Ixs = isize;
 /// for element indices in `.get()` and `array[index]`. The dimension type `Vec<Ix>`
 /// allows a dynamic number of axes.
 ///
-/// The default memory order of an array is *row major* order, where each
-/// row is contiguous in memory.
-/// A *column major* (a.k.a. fortran) memory order array has
+/// The default memory order of an array is *row major* order (a.k.a ”c” order),
+/// where each row is contiguous in memory.
+/// A *column major* (a.k.a. “f” or fortran) memory order array has
 /// columns (or, in general, the outermost axis) with contiguous elements.
+///
+/// The logical order of any array’s elements is the row major order.
+/// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
 ///
 /// ## Slicing
 ///
