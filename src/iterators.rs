@@ -888,6 +888,7 @@ send_sync_read_write!(AxisChunksIterMut);
 /// to deliver exactly as many items as it said it would.
 pub unsafe trait TrustedIterator { }
 
+use std::slice;
 use std::iter;
 use linspace::Linspace;
 
@@ -895,6 +896,7 @@ unsafe impl<F> TrustedIterator for Linspace<F> { }
 unsafe impl<'a, A, D> TrustedIterator for Elements<'a, A, D> { }
 unsafe impl<I, F> TrustedIterator for iter::Map<I, F>
     where I: TrustedIterator { }
+unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
 
 
 /// Like Iterator::collect, but only for trusted length iterators
