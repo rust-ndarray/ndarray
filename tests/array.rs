@@ -12,6 +12,7 @@ use ndarray::{arr0, arr1, arr2, arr3,
     aview1,
     aview2,
     aview_mut1,
+    Dimension,
 };
 use ndarray::Indexes;
 use ndarray::Axis;
@@ -422,6 +423,92 @@ fn owned_array_with_stride() {
 
     let a = OwnedArray::from_vec_dim_stride(dim, strides, v).unwrap();
     assert_eq!(a.strides(), &[1, 4, 2]);
+}
+
+macro_rules! assert_matches {
+    ($value:expr, $pat:pat) => {
+        match $value {
+            $pat => {}
+            ref err => panic!("assertion failed: `{}` matches `{}` found: {:?}",
+                               stringify!($value), stringify!($pat), err),
+        }
+    }
+}
+
+#[test]
+fn from_vec_dim_stride_empty_1d() {
+    let empty: [f32; 0] = [];
+    assert_matches!(OwnedArray::from_vec_dim_stride(0, 1, empty.to_vec()),
+                    Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_0d() {
+    let empty: [f32; 0] = [];
+    let one = [1.];
+    let two = [1., 2.];
+    // too few elements
+    assert_matches!(OwnedArray::from_vec_dim_stride((), (), empty.to_vec()), Err(_));
+    // exact number of elements
+    assert_matches!(OwnedArray::from_vec_dim_stride((), (), one.to_vec()), Ok(_));
+    // too many are ok
+    assert_matches!(OwnedArray::from_vec_dim_stride((), (), two.to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_1() {
+    let two = [1., 2.];
+    let d = (2, 1);
+    let s = d.default_strides();
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_2() {
+    let two = [1., 2.];
+    let d = (1, 2);
+    let s = d.default_strides();
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_3() {
+    let a = arr3(&[[[1]],
+                   [[2]],
+                   [[3]]]);
+    let d = a.dim();
+    let s = d.default_strides();
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.as_slice().unwrap().to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_4() {
+    let a = arr3(&[[[1]],
+                   [[2]],
+                   [[3]]]);
+    let d = a.dim();
+    let s = d.fortran_strides();
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.as_slice().unwrap().to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_5() {
+    let a = arr3(&[[[1, 2, 3]]]);
+    let d = a.dim();
+    let s = d.fortran_strides();
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.as_slice().unwrap().to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_rejects() {
+    let two = [1., 2.];
+    let d = (2, 2);
+    let s = (1, 0);
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Err(_));
+
+    let d = (2, 2);
+    let s = (0, 1);
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Err(_));
 }
 
 #[test]
