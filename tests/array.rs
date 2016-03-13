@@ -887,19 +887,19 @@ fn test_contiguous() {
                    [[4, 5, 6],
                     [7, 7, 7]]]);
     assert!(c.is_standard_layout());
-    assert!(c.as_slice_no_order().is_some());
+    assert!(c.as_slice_memory_order().is_some());
     let v = c.slice(s![.., 0..1, ..]);
     assert!(!v.is_standard_layout());
-    assert!(!v.as_slice_no_order().is_some());
+    assert!(!v.as_slice_memory_order().is_some());
 
     let v = c.slice(s![1..2, .., ..]);
     assert!(v.is_standard_layout());
-    assert!(v.as_slice_no_order().is_some());
+    assert!(v.as_slice_memory_order().is_some());
     let v = v.reversed_axes();
     assert!(!v.is_standard_layout());
-    assert!(v.as_slice_no_order().is_some());
+    assert!(v.as_slice_memory_order().is_some());
     let mut v = v.reversed_axes();
     v.swap_axes(1, 2);
     assert!(!v.is_standard_layout());
-    assert!(v.as_slice_no_order().is_some());
+    assert!(v.as_slice_memory_order().is_some());
 }

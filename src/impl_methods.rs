@@ -597,8 +597,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.ptr
     }
 
-    /// Return the array’s data as a slice, if it is contiguous and
-    /// the element order corresponds to the memory order. Return `None` otherwise.
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
+    ///
+    /// If this function returns `Some(_)`, then the element order in the slice
+    /// corresponds to the logical order of the array’s elements.
     pub fn as_slice(&self) -> Option<&[A]> {
         if self.is_standard_layout() {
             unsafe {
@@ -609,8 +612,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return the array’s data as a slice, if it is contiguous and
-    /// the element order corresponds to the memory order. Return `None` otherwise.
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
     pub fn as_slice_mut(&mut self) -> Option<&mut [A]>
         where S: DataMut
     {
@@ -626,7 +629,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return the array’s data as a slice if it is contiguous,
     /// return `None` otherwise.
-    pub fn as_slice_no_order(&self) -> Option<&[A]> {
+    ///
+    /// If this function returns `Some(_)`, then the elements in the slice
+    /// have whatever order the elements have in memory.
+    ///
+    /// Implementation notes: Does not yet support negatively strided arrays.
+    pub fn as_slice_memory_order(&self) -> Option<&[A]> {
         if self.is_contiguous() {
             unsafe {
                 Some(slice::from_raw_parts(self.ptr, self.len()))
@@ -638,7 +646,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return the array’s data as a slice if it is contiguous,
     /// return `None` otherwise.
-    pub fn as_slice_mut_no_order(&mut self) -> Option<&mut [A]>
+    pub fn as_slice_memory_order_mut(&mut self) -> Option<&mut [A]>
         where S: DataMut
     {
         if self.is_contiguous() {

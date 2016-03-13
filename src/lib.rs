@@ -506,7 +506,7 @@ impl<A, S, D> ArrayBase<S, D>
         where S: DataMut,
               F: FnMut(&mut A)
     {
-        if let Some(slc) = self.as_slice_mut_no_order() {
+        if let Some(slc) = self.as_slice_memory_order_mut() {
             for elt in slc {
                 f(elt);
             }
