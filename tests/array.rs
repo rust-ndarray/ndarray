@@ -512,6 +512,25 @@ fn from_vec_dim_stride_2d_6() {
 }
 
 #[test]
+fn from_vec_dim_stride_2d_7() {
+    // empty arrays can have 0 strides
+    let a: [f32; 0] = [];
+    // [[]] shape=[4, 0], strides=[0, 1]
+    let d = (4, 0);
+    let s = (0, 1);
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Ok(_));
+}
+
+#[test]
+fn from_vec_dim_stride_2d_8() {
+    // strides must be strictly positive (nonzero)
+    let a = [1.];
+    let d = (1, 1);
+    let s = (0, 1);
+    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Err(_));
+}
+
+#[test]
 fn from_vec_dim_stride_2d_rejects() {
     let two = [1., 2.];
     let d = (2, 2);

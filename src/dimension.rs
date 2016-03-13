@@ -20,12 +20,6 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize {
     (n as isize) * ((stride as Ixs) as isize)
 }
 
-/// Check whether `stride` is strictly positive
-#[inline]
-fn stride_is_positive(stride: Ix) -> bool {
-    (stride as Ixs) > 0
-}
-
 /// Check whether the given `dim` and `stride` lead to overlapping indices
 ///
 /// There is overlap if, when iterating through the dimensions in the order
@@ -61,33 +55,42 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
 pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
     -> Result<(), ShapeError>
 {
-    if strides.slice().iter().cloned().all(stride_is_positive) {
-        if dim.size_checked().is_none() {
-            return Err(from_kind(ErrorKind::OutOfBounds));
+    // check lengths of axes.
+    let len = match dim.size_checked() {
+        Some(l) => l,
+        None => return Err(from_kind(ErrorKind::OutOfBounds)),
+    };
+    // check if strides are strictly positive (zero ok for len 0)
+    for &s in strides.slice() {
+        let s = s as Ixs;
+        if s < 1 && (len != 0 || s < 0) {
+            return Err(from_kind(ErrorKind::Unsupported));
         }
-        let mut last_index = dim.clone();
-        for mut index in last_index.slice_mut().iter_mut() {
-            *index -= 1;
-        }
-        if let Some(offset) = stride_offset_checked_arithmetic(dim,
-                                                               strides,
-                                                               &last_index)
-        {
-            // offset is guaranteed to be positive so no issue converting
-            // to usize here
-            if (offset as usize) >= data.len() {
-                return Err(from_kind(ErrorKind::OutOfBounds));
-            }
-            if dim_stride_overlap(dim, strides) {
-                return Err(from_kind(ErrorKind::Unsupported));
-            }
-        } else {
-            return Err(from_kind(ErrorKind::OutOfBounds));
-        }
-        Ok(())
-    } else {
-        return Err(from_kind(ErrorKind::Unsupported));
     }
+    if len == 0 {
+        return Ok(());
+    }
+    // check that the maximum index is in bounds
+    let mut last_index = dim.clone();
+    for mut index in last_index.slice_mut().iter_mut() {
+        *index -= 1;
+    }
+    if let Some(offset) = stride_offset_checked_arithmetic(dim,
+                                                           strides,
+                                                           &last_index)
+    {
+        // offset is guaranteed to be positive so no issue converting
+        // to usize here
+        if (offset as usize) >= data.len() {
+            return Err(from_kind(ErrorKind::OutOfBounds));
+        }
+        if dim_stride_overlap(dim, strides) {
+            return Err(from_kind(ErrorKind::Unsupported));
+        }
+    } else {
+        return Err(from_kind(ErrorKind::OutOfBounds));
+    }
+    Ok(())
 }
 
 /// Return stride offset for this dimension and index.
