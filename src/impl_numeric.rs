@@ -62,7 +62,7 @@ impl<A, S, D> ArrayBase<S, D>
     pub fn scalar_sum(&self) -> A
         where A: Clone + Add<Output=A> + libnum::Zero,
     {
-        if let Some(slc) = self.as_slice() {
+        if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_sum(slc);
         }
         let mut sum = A::zero();

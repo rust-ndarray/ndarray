@@ -550,6 +550,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         if self.strides == defaults {
             return true;
         }
+        if self.ndim() == 1 { return false; }
         // check all dimensions -- a dimension of length 1 can have unequal strides
         for (&dim, (&s, &ds)) in zipsl(self.dim.slice(),
                                        zipsl(self.strides(), defaults.slice()))
@@ -561,11 +562,43 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         true
     }
 
+    fn is_contiguous(&self) -> bool {
+        let defaults = self.dim.default_strides();
+        if self.strides == defaults {
+            return true;
+        }
+        if self.ndim() == 1 { return false; }
+        let order = self.strides._fastest_varying_stride_order();
+        let strides = self.strides.slice();
+
+        // FIXME: Negative strides
+        let dim = self.dim.slice();
+        let mut cstride = 1;
+        for &i in order.slice() {
+            // a dimension of length 1 can have unequal strides
+            if dim[i] != 1 && strides[i] != cstride {
+                return false;
+            }
+            cstride *= dim[i];
+        }
+        true
+    }
+
+    /// Return a pointer to the first element in the array.
+    ///
+    /// Raw access to array elements needs to follow the strided indexing
+    /// scheme: an element at multi-index *I* in an array with strides *S* is 
+    /// located at offset
+    ///
+    /// *Σ<sub>0 ≤ k < d</sub> I<sub>k</sub> × S<sub>k</sub>*
+    ///
+    /// where *d* is `self.ndim()`.
     #[inline(always)]
     pub fn as_ptr(&self) -> *const A {
         self.ptr
     }
 
+    /// Return a mutable pointer to the first element in the array.
     #[inline(always)]
     pub fn as_mut_ptr(&mut self) -> *mut A
         where S: DataMut
@@ -574,8 +607,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.ptr
     }
 
-    /// Return the array’s data as a slice, if it is contiguous and
-    /// the element order corresponds to the memory order. Return `None` otherwise.
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
+    ///
+    /// If this function returns `Some(_)`, then the element order in the slice
+    /// corresponds to the logical order of the array’s elements.
     pub fn as_slice(&self) -> Option<&[A]> {
         if self.is_standard_layout() {
             unsafe {
@@ -586,12 +622,44 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return the array’s data as a slice, if it is contiguous and
-    /// the element order corresponds to the memory order. Return `None` otherwise.
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
     pub fn as_slice_mut(&mut self) -> Option<&mut [A]>
         where S: DataMut
     {
         if self.is_standard_layout() {
+            self.ensure_unique();
+            unsafe {
+                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return the array’s data as a slice if it is contiguous,
+    /// return `None` otherwise.
+    ///
+    /// If this function returns `Some(_)`, then the elements in the slice
+    /// have whatever order the elements have in memory.
+    ///
+    /// Implementation notes: Does not yet support negatively strided arrays.
+    pub fn as_slice_memory_order(&self) -> Option<&[A]> {
+        if self.is_contiguous() {
+            unsafe {
+                Some(slice::from_raw_parts(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return the array’s data as a slice if it is contiguous,
+    /// return `None` otherwise.
+    pub fn as_slice_memory_order_mut(&mut self) -> Option<&mut [A]>
+        where S: DataMut
+    {
+        if self.is_contiguous() {
             self.ensure_unique();
             unsafe {
                 Some(slice::from_raw_parts_mut(self.ptr, self.len()))
@@ -820,6 +888,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Data memory order may not correspond to the index order
     /// of the array. Neither is the raw data slice is restricted to just the
     /// array’s view.<br>
+    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order() instead"))]
     pub fn raw_data(&self) -> &[A]
         where S: DataOwned,
     {
@@ -834,6 +903,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** The data is uniquely held and nonaliased
     /// while it is mutably borrowed.
+    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order_mut() instead"))]
     pub fn raw_data_mut(&mut self) -> &mut [A]
         where S: DataOwned + DataMut,
     {
