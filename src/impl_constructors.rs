@@ -266,20 +266,20 @@ impl<S, A, D> ArrayBase<S, D>
           A: NdFloat+AsPrim,
           D: Dimension,
 {
-    pub fn randn_rng<R: Rng>(dim: D, rng: &mut R) -> ArrayBase<Vec<A>, D>
+    pub fn randn_rng<R: Rng>(dim: D, rng: &mut R) -> ArrayBase<S, D>
     {
         let size = dim.size_checked().expect("Shape too large: overflow in size");
         let normal = Normal::new(1.0, 0.0);
         let iter = (0..size).map(|_| normal.ind_sample(rng).as_());
-        let arr = OwnedArray::from_iter(iter);
+        let arr = ArrayBase::from_iter(iter);
         arr.into_shape(dim).unwrap()
     }
 
-    pub fn randn(dim: D) -> ArrayBase<Vec<A>, D>
+    pub fn randn(dim: D) -> ArrayBase<S, D>
     {
         // Use the thread_rng once to seed a fast, non-crypto grade rng.
         // To use a crypto quality RNG, use randn_rng directly.
         let mut rng = rand::weak_rng();
-        ArrayBase::<Vec<A>, D>::randn_rng(dim, &mut rng)
+        ArrayBase::<S, D>::randn_rng(dim, &mut rng)
     }
 }
