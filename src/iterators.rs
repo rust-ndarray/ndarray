@@ -60,7 +60,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        let offset = Dimension::stride_offset(&index, &self.strides);
+        let offset = D::stride_offset(&index, &self.strides);
         self.index = self.dim.next_for(index);
         unsafe { Some(self.ptr.offset(offset)) }
     }
@@ -99,7 +99,7 @@ impl<'a, A> Baseiter<'a, A, Ix> {
             Some(ix) => ix,
         };
         self.dim -= 1;
-        let offset = Dimension::stride_offset(&self.dim, &self.strides);
+        let offset = <_>::stride_offset(&self.dim, &self.strides);
         if index == self.dim {
             self.index = None;
         }

@@ -190,7 +190,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
     pub fn islice(&mut self, indexes: &D::SliceArg) {
-        let offset = Dimension::do_slices(&mut self.dim, &mut self.strides, indexes);
+        let offset = D::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }
