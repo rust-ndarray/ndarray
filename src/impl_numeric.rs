@@ -41,7 +41,7 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Add<Output=A>,
               D: RemoveAxis,
     {
-        let n = self.shape()[axis.axis()];
+        let n = self.shape().axis(axis);
         let mut res = self.subview(axis, 0).to_owned();
         for i in 1..n {
             let view = self.subview(axis, i);
@@ -94,7 +94,7 @@ impl<A, S, D> ArrayBase<S, D>
         where A: LinalgScalar,
               D: RemoveAxis,
     {
-        let n = self.shape()[axis.axis()];
+        let n = self.shape().axis(axis);
         let sum = self.sum(axis);
         let mut cnt = A::one();
         for _ in 1..n {
