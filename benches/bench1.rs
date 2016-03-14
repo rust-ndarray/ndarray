@@ -343,6 +343,29 @@ fn add_2d_f32_blas(bench: &mut test::Bencher)
     });
 }
 
+const ADD1D_SIZE: usize = 64 * 64;
+
+#[bench]
+fn add_1d_regular(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<f32, _>::zeros(ADD1D_SIZE);
+    let b = OwnedArray::<f32, _>::zeros(a.dim());
+    bench.iter(|| {
+        a += &b;
+    });
+}
+
+#[bench]
+fn add_1d_strided(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<f32, _>::zeros(ADD1D_SIZE * 2);
+    let mut av = a.slice_mut(s![..;2]);
+    let b = OwnedArray::<f32, _>::zeros(av.dim());
+    bench.iter(|| {
+        av += &b;
+    });
+}
+
 #[bench]
 fn muladd_2d_f32_regular(bench: &mut test::Bencher)
 {
