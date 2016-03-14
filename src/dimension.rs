@@ -386,6 +386,7 @@ impl<'a> DimensionExt for [Ix]
     }
 }
 
+#[inline]
 fn abs_index(len: Ixs, index: Ixs) -> Ix {
     if index < 0 {
         (len + index) as Ix
