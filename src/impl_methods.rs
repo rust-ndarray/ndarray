@@ -243,7 +243,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     #[inline]
     pub unsafe fn uget(&self, index: D) -> &A {
         arraytraits::debug_bounds_check(self, &index);
-        let off = Dimension::stride_offset(&index, &self.strides);
+        let off = D::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
     }
 
@@ -259,9 +259,28 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
-        let off = Dimension::stride_offset(&index, &self.strides);
+        let off = D::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
     }
+
+    // `uget` for one-dimensional arrays
+    unsafe fn uget_1d(&self, i: Ix) -> &A {
+        debug_assert!(self.ndim() <= 1);
+        debug_assert!(i < self.len());
+        let offset = self.strides()[0] * (i as Ixs);
+        &*self.as_ptr().offset(offset)
+    }
+
+    // `uget_mut` for one-dimensional arrays
+    unsafe fn uget_mut_1d(&mut self, i: Ix) -> &mut A
+        where S: DataMut
+    {
+        debug_assert!(self.ndim() <= 1);
+        debug_assert!(i < self.len());
+        let offset = self.strides()[0] * (i as Ixs);
+        &mut *self.as_mut_ptr().offset(offset)
+    }
+
 
     /// Along `axis`, select the subview `index` and return a
     /// view with that axis removed.
@@ -944,7 +963,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.unordered_foreach_mut(move |elt| *elt = x.clone());
     }
 
-    fn zip_with_mut_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+    fn zip_mut_with_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
         where S: DataMut,
               S2: Data<Elem=B>,
               E: Dimension,
@@ -963,18 +982,29 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
         }
         // otherwise, fall back to the outer iter
-        self.zip_with_mut_outer_iter(rhs, f);
+        self.zip_mut_with_by_rows(rhs, f);
     }
 
+    // zip two arrays where they have different layout or strides
     #[inline(always)]
-    fn zip_with_mut_outer_iter<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
+    fn zip_mut_with_by_rows<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
         where S: DataMut,
               S2: Data<Elem=B>,
               E: Dimension,
               F: FnMut(&mut A, &B)
     {
         debug_assert_eq!(self.shape(), rhs.shape());
-        // otherwise, fall back to the outer iter
+
+        // The one dimensional case is simple; we know they are not contig
+        if self.ndim() == 1 {
+            unsafe {
+                for i in 0..self.len() {
+                    f(self.uget_mut_1d(i), rhs.uget_1d(i));
+                }
+            }
+            return;
+        }
+        // otherwise, break the arrays up into their inner rows
         let mut try_slices = true;
         let mut rows = self.inner_iter_mut().zip(rhs.inner_iter());
         for (mut s_row, r_row) in &mut rows {
@@ -1027,10 +1057,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 self.zip_mut_with_elem(rhs_elem, f);
             }
         } else if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
-            self.zip_with_mut_same_shape(rhs, f);
+            self.zip_mut_with_same_shape(rhs, f);
         } else {
             let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
-            self.zip_with_mut_outer_iter(&rhs_broadcast, f);
+            self.zip_mut_with_by_rows(&rhs_broadcast, f);
         }
     }
 
