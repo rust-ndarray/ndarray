@@ -931,4 +931,17 @@ fn test_contiguous() {
     v.swap_axes(1, 2);
     assert!(!v.is_standard_layout());
     assert!(v.as_slice_memory_order().is_some());
+
+    let a = OwnedArray::<f32, _>::zeros((20, 1));
+    let b = OwnedArray::<f32, _>::zeros_f((20, 1));
+    assert!(a.as_slice().is_some());
+    assert!(b.as_slice().is_some());
+    assert!(a.as_slice_memory_order().is_some());
+    assert!(b.as_slice_memory_order().is_some());
+    let a = a.t();
+    let b = b.t();
+    assert!(a.as_slice().is_some());
+    assert!(b.as_slice().is_some());
+    assert!(a.as_slice_memory_order().is_some());
+    assert!(b.as_slice_memory_order().is_some());
 }
