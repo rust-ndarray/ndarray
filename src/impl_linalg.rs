@@ -8,7 +8,6 @@
 
 use libnum::Zero;
 use itertools::free::enumerate;
-use std::cmp;
 
 use imp_prelude::*;
 use numeric_util;
@@ -17,6 +16,8 @@ use {
     LinalgScalar,
 };
 
+#[cfg(feature="blas")]
+use std::cmp;
 #[cfg(feature="blas")]
 use std::mem::swap;
 #[cfg(feature="blas")]
