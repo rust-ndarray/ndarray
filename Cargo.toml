@@ -1,14 +1,14 @@
 [package]
 
 name = "ndarray"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "http://bluss.github.io/rust-ndarray/"
 
-description = "An N-dimensional array for general elements and for numerics. Lightweight array views and slicing. Supports both uniquely owned and shared copy-on-write arrays similar to numpy’s ndarray."
+description = "An N-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
 
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 

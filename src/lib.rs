@@ -9,8 +9,8 @@
 #![cfg_attr(has_deprecated, feature(deprecated))]
 #![doc(html_root_url = "http://bluss.github.io/rust-ndarray/master/")]
 
-//! The `ndarray` crate provides an N-dimensional container similar to numpy’s
-//! ndarray.
+//! The `ndarray` crate provides an N-dimensional container for general elements
+//! and for numerics.
 //!
 //! - [`ArrayBase`](struct.ArrayBase.html):
 //!   The N-dimensional array type itself.

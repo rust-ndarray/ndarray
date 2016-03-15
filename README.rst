@@ -1,8 +1,8 @@
 ndarray
 =========
 
-The ``ndarray`` crate provides an N-dimensional container similar to numpy’s
-ndarray. Requires Rust 1.7.
+The ``ndarray`` crate provides an N-dimensional container for general elements
+and for numerics.  Requires Rust 1.7.
 
 Please read the `API documentation here (master)`__, `(0.3)`__, `(0.2)`__
 
@@ -93,6 +93,13 @@ How to use with cargo::
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.4.3
+
+  - Add array method ``.t()`` as a shorthand to create a transposed view.
+  - Fix ``mat_mul`` so that it accepts arguments of different array kind
+  - Fix a bug in ``mat_mul`` when using BLAS and multiplying with a column
+    matrix (#154)
 
 - 0.4.2
 
