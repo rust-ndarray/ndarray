@@ -904,6 +904,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self
     }
 
+    /// Return a transposed view of the array.
+    ///
+    /// This is a shorthand for `self.view().reversed_axes()`.
+    ///
+    /// See also the more general methods `.reversed_axes()` and `.swap_axes()`.
+    pub fn t(&self) -> ArrayView<A, D> {
+        self.view().reversed_axes()
+    }
 
     /// Return a slice of the array’s backing data in memory order.
     ///
