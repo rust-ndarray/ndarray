@@ -8,6 +8,7 @@
 
 use libnum::Zero;
 use itertools::free::enumerate;
+use std::cmp;
 
 use imp_prelude::*;
 use numeric_util;
@@ -178,15 +179,17 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// );
     /// ```
     ///
-    pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
+    pub fn mat_mul<S2>(&self, rhs: &ArrayBase<S2, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
         where A: LinalgScalar,
+              S2: Data<Elem=A>,
     {
+        let rhs = rhs.view();
         let ((m, a), (b, n)) = (self.dim, rhs.dim);
         let (lhs_columns, rhs_rows) = (a, b);
         assert!(lhs_columns == rhs_rows);
         assert!(m.checked_mul(n).is_some());
 
-        mat_mul_impl(self, rhs)
+        mat_mul_impl(self, &rhs)
     }
 
     /// Perform the matrix multiplication of the rectangular array `self` and
@@ -198,8 +201,9 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if shapes are incompatible.
-    pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
+    pub fn mat_mul_col<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> OwnedArray<A, Ix>
         where A: LinalgScalar,
+              S2: Data<Elem=A>,
     {
         let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
@@ -227,7 +231,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature="blas")]
-fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>)
+fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
     -> OwnedArray<A, (Ix, Ix)>
     where A: LinalgScalar,
           S: Data<Elem=A>,
@@ -284,6 +288,10 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>
                     CblasNoTrans => rhs_.dim().1,
                     _ => rhs_.dim().0,
                 };
+                // adjust strides, these may [1, 1] for column matrices
+                let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
+                let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+
                 // gemm is C ← αA^Op B^Op + βC
                 // Where Op is notrans/trans/conjtrans
                 unsafe {
@@ -296,9 +304,9 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>
                     k as blas_index, // k, cols of Op(a)
                     1.0,                  // alpha
                     lhs_.ptr as *const _, // a
-                    lhs_.strides()[0] as blas_index, // lda
+                    lhs_stride, // lda
                     rhs_.ptr as *const _, // b
-                    rhs_.strides()[0] as blas_index, // ldb
+                    rhs_stride, // ldb
                     0.0,                   // beta
                     c.ptr as *mut _,       // c
                     c.strides()[0] as blas_index, // ldc
@@ -318,7 +326,7 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>
     return mat_mul_general(lhs, rhs);
 }
 
-fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>)
+fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
     -> OwnedArray<A, (Ix, Ix)>
     where A: LinalgScalar,
           S: Data<Elem=A>,
