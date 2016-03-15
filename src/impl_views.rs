@@ -66,27 +66,26 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         -> (Self, Self)
     {
         // NOTE: Keep this in sync with the ArrayViewMut version
-        let axis = axis.axis();
-        assert!(index <= self.shape()[axis]);
+        assert!(index <= self.shape().axis(axis));
         let left_ptr = self.ptr;
-        let right_ptr = if index == self.shape()[axis] {
+        let right_ptr = if index == self.shape().axis(axis) {
             self.ptr
         } else {
-            let offset = stride_offset(index, self.strides.slice()[axis]);
+            let offset = stride_offset(index, self.strides.axis(axis));
             unsafe {
                 self.ptr.offset(offset)
             }
         };
 
         let mut dim_left = self.dim.clone();
-        dim_left.slice_mut()[axis] = index;
+        dim_left.set_axis(axis, index);
         let left = unsafe {
             Self::new_(left_ptr, dim_left, self.strides.clone())
         };
 
         let mut dim_right = self.dim;
-        let right_len  = dim_right.slice()[axis] - index;
-        dim_right.slice_mut()[axis] = right_len;
+        let right_len  = dim_right.axis(axis) - index;
+        dim_right.set_axis(axis, right_len);
         let right = unsafe {
             Self::new_(right_ptr, dim_right, self.strides)
         };
@@ -147,28 +146,26 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         -> (Self, Self)
     {
         // NOTE: Keep this in sync with the ArrayView version
-        let axis = axis.axis();
-        assert!(index <= self.shape()[axis]);
+        assert!(index <= self.shape().axis(axis));
         let left_ptr = self.ptr;
-        let right_ptr = if index == self.shape()[axis] {
+        let right_ptr = if index == self.shape().axis(axis) {
             self.ptr
-        }
-        else {
-            let offset = stride_offset(index, self.strides.slice()[axis]);
+        } else {
+            let offset = stride_offset(index, self.strides.axis(axis));
             unsafe {
                 self.ptr.offset(offset)
             }
         };
 
         let mut dim_left = self.dim.clone();
-        dim_left.slice_mut()[axis] = index;
+        dim_left.set_axis(axis, index);
         let left = unsafe {
             Self::new_(left_ptr, dim_left, self.strides.clone())
         };
 
         let mut dim_right = self.dim;
-        let right_len  = dim_right.slice()[axis] - index;
-        dim_right.slice_mut()[axis] = right_len;
+        let right_len  = dim_right.axis(axis) - index;
+        dim_right.set_axis(axis, right_len);
         let right = unsafe {
             Self::new_(right_ptr, dim_right, self.strides)
         };
