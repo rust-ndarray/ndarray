@@ -177,6 +177,25 @@ fn mat_mul() {
     assert_eq!(ab, a.mat_mul(&bf));
     assert_eq!(ab, af.mat_mul(&b));
     assert_eq!(ab, af.mat_mul(&bf));
+
+    let (m, n, k) = (10, 8, 1);
+    let a = range_mat(m, n);
+    let b = range_mat(n, k);
+    let mut b = b / 4.;
+    {
+        let mut c = b.column_mut(0);
+        c += 1.0;
+    }
+    let ab = a.mat_mul(&b);
+
+    let mut af = OwnedArray::zeros_f(a.dim());
+    let mut bf = OwnedArray::zeros_f(b.dim());
+    af.assign(&a);
+    bf.assign(&b);
+
+    assert_eq!(ab, a.mat_mul(&bf));
+    assert_eq!(ab, af.mat_mul(&b));
+    assert_eq!(ab, af.mat_mul(&bf));
 }
 
 // Check that matrix multiplication of contiguous matrices returns a
