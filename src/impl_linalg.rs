@@ -8,6 +8,7 @@
 
 use libnum::Zero;
 use itertools::free::enumerate;
+use std::cmp;
 
 use imp_prelude::*;
 use numeric_util;
@@ -287,6 +288,10 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>
                     CblasNoTrans => rhs_.dim().1,
                     _ => rhs_.dim().0,
                 };
+                // adjust strides, these may [1, 1] for column matrices
+                let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
+                let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+
                 // gemm is C ← αA^Op B^Op + βC
                 // Where Op is notrans/trans/conjtrans
                 unsafe {
@@ -299,9 +304,9 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>
                     k as blas_index, // k, cols of Op(a)
                     1.0,                  // alpha
                     lhs_.ptr as *const _, // a
-                    lhs_.strides()[0] as blas_index, // lda
+                    lhs_stride, // lda
                     rhs_.ptr as *const _, // b
-                    rhs_.strides()[0] as blas_index, // ldb
+                    rhs_stride, // ldb
                     0.0,                   // beta
                     c.ptr as *mut _,       // c
                     c.strides()[0] as blas_index, // ldc
