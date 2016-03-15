@@ -178,15 +178,17 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// );
     /// ```
     ///
-    pub fn mat_mul(&self, rhs: &ArrayBase<S, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
+    pub fn mat_mul<S2>(&self, rhs: &ArrayBase<S2, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
         where A: LinalgScalar,
+              S2: Data<Elem=A>,
     {
+        let rhs = rhs.view();
         let ((m, a), (b, n)) = (self.dim, rhs.dim);
         let (lhs_columns, rhs_rows) = (a, b);
         assert!(lhs_columns == rhs_rows);
         assert!(m.checked_mul(n).is_some());
 
-        mat_mul_impl(self, rhs)
+        mat_mul_impl(self, &rhs)
     }
 
     /// Perform the matrix multiplication of the rectangular array `self` and
@@ -198,8 +200,9 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a result array with shape *M*.
     ///
     /// **Panics** if shapes are incompatible.
-    pub fn mat_mul_col(&self, rhs: &ArrayBase<S, Ix>) -> OwnedArray<A, Ix>
+    pub fn mat_mul_col<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> OwnedArray<A, Ix>
         where A: LinalgScalar,
+              S2: Data<Elem=A>,
     {
         let ((m, a), n) = (self.dim, rhs.dim);
         let (self_columns, other_rows) = (a, n);
@@ -227,7 +230,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
 use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature="blas")]
-fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>)
+fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
     -> OwnedArray<A, (Ix, Ix)>
     where A: LinalgScalar,
           S: Data<Elem=A>,
@@ -318,7 +321,7 @@ fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>
     return mat_mul_general(lhs, rhs);
 }
 
-fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S, (Ix, Ix)>)
+fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
     -> OwnedArray<A, (Ix, Ix)>
     where A: LinalgScalar,
           S: Data<Elem=A>,
