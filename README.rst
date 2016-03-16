@@ -53,16 +53,20 @@ Status and Lookout
 
 - Performance status:
 
-  + Arithmetic involving arrays of contiguous inner dimension optimizes very well.
-  + ``.fold()`` and ``.zip_mut_with()`` are the most efficient ways to
+  + Performance of an operation depends on the memory layout of the array
+    or array view. Especially if it's a binary operation, which
+    needs matching memory layout to be efficient (with some exceptions).
+  + Arithmetic optimizes very well if the arrays are have contiguous inner dimension.
+  + The callback based methods like ``.mapv()``, ``.applyv()`` and
+    ``.zip_mut_with()`` are the most efficient ways to
     perform single traversal and lock step traversal respectively.
-  + ``.iter()`` and ``.iter_mut()`` are efficient for contiguous arrays.
+  + ``.iter()`` is efficient for c-contiguous arrays.
   + Can use BLAS in some operations (``dot`` and ``mat_mul``).
 
 Crate Feature Flags
 -------------------
 
-The following crate feature flags are available. The are configured in
+The following crate feature flags are available. They are configured in
 your `Cargo.toml`.
 
 - ``assign_ops``
