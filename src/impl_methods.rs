@@ -913,6 +913,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().reversed_axes()
     }
 
+    /// ***Deprecated: Use .as_slice_memory_order() instead.***
+    ///
     /// Return a slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -925,6 +927,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.data.slice()
     }
 
+    /// ***Deprecated: Use .as_slice_memory_order_mut() instead.***
+    ///
     /// Return a mutable slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
