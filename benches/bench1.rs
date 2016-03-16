@@ -12,6 +12,7 @@ use rblas::matrix::Matrix;
 use ndarray::{
     OwnedArray,
     Axis,
+    Ix,
 };
 use ndarray::{arr0, arr1, arr2};
 
@@ -642,9 +643,33 @@ fn dot_extended(bench: &mut test::Bencher) {
     })
 }
 
+const MEAN_SUM_N: usize = 127;
+
+fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
+    assert!(m * n != 0);
+    OwnedArray::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
+}
+
 #[bench]
-fn means(bench: &mut test::Bencher) {
-    let a = OwnedArray::from_iter(0..100_000i64);
-    let a = a.into_shape((100, 1000)).unwrap();
+fn mean_axis0(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.mean(Axis(0)));
+}
+
+#[bench]
+fn mean_axis1(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
+    bench.iter(|| a.mean(Axis(1)));
+}
+
+#[bench]
+fn sum_axis0(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
+    bench.iter(|| a.sum(Axis(0)));
+}
+
+#[bench]
+fn sum_axis1(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
+    bench.iter(|| a.sum(Axis(1)));
 }
