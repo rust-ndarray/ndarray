@@ -117,17 +117,6 @@ fn iter_sum_2d_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn iter_sum_2d_cutout_fold(bench: &mut test::Bencher)
-{
-    let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.slice(s![1..-1, 1..-1]);
-    let a = black_box(av);
-    bench.iter(|| {
-        a.fold(0, |acc, elt| acc + *elt)
-    });
-}
-
-#[bench]
 fn iter_sum_2d_cutout_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));

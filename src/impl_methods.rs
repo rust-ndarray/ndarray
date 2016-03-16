@@ -1079,8 +1079,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// ***Deprecated: Will be removed because it dictates a specific order.***
+    ///
     /// Traverse the array elements in order and apply a fold,
     /// returning the resulting value.
+    #[cfg_attr(has_deprecated, deprecated(note=
+      "Will be removed because it dictates a specific order"))]
     pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
