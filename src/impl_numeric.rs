@@ -70,7 +70,7 @@ impl<A, S, D> ArrayBase<S, D>
             if let Some(slc) = row.as_slice() {
                 sum = sum + numeric_util::unrolled_sum(slc);
             } else {
-                sum = sum + row.fold(A::zero(), |acc, elt| acc + elt.clone());
+                sum = sum + row.iter().fold(A::zero(), |acc, elt| acc + elt.clone());
             }
         }
         sum

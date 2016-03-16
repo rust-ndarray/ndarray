@@ -129,7 +129,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn iter_mut(&mut self) -> ElementsMut<A, D>
         where S: DataMut,
     {
-        self.ensure_unique();
         self.view_mut().into_iter_()
     }
 
@@ -229,8 +228,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               I: NdIndex<Dim=D>,
     {
-        self.ensure_unique();
-        let ptr = self.ptr;
+        let ptr = self.as_mut_ptr();
         index.index_checked(&self.dim, &self.strides)
              .map(move |offset| unsafe { &mut *ptr.offset(offset) })
     }
@@ -913,6 +911,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().reversed_axes()
     }
 
+    /// ***Deprecated: Use .as_slice_memory_order() instead.***
+    ///
     /// Return a slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -925,6 +925,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.data.slice()
     }
 
+    /// ***Deprecated: Use .as_slice_memory_order_mut() instead.***
+    ///
     /// Return a mutable slice of the array’s backing data in memory order.
     ///
     /// **Note:** Data memory order may not correspond to the index order
@@ -1075,8 +1077,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// ***Deprecated: Will be removed because it dictates a specific order.***
+    ///
     /// Traverse the array elements in order and apply a fold,
     /// returning the resulting value.
+    #[cfg_attr(has_deprecated, deprecated(note=
+      "Will be removed because it dictates a specific order"))]
     pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
@@ -1095,10 +1101,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         init
     }
 
-    /// Apply `f` elementwise and return a new array with
-    /// the results.
+    /// Call `f` by reference on each element and create a new array
+    /// with the new values.
     ///
-    /// Return an array with the same shape as *self*.
+    /// Elements are visited in arbitrary order.
+    ///
+    /// Return an array with the same shape as `self`.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -1125,6 +1133,105 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             let v = ::iterators::to_vec(self.iter().map(f));
             unsafe {
                 ArrayBase::from_vec_dim_unchecked(self.dim.clone(), v)
+            }
+        }
+    }
+
+    /// Call `f` by **v**alue on each element and create a new array
+    /// with the new values.
+    ///
+    /// Elements are visited in arbitrary order.
+    ///
+    /// Return an array with the same shape as `self`.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[ 0., 1.],
+    ///                [-1., 2.]]);
+    /// assert!(
+    ///     a.mapv(f32::abs) == arr2(&[[0., 1.],
+    ///                                [1., 2.]])
+    /// );
+    /// ```
+    pub fn mapv<B, F>(&self, mut f: F) -> OwnedArray<B, D>
+        where F: FnMut(A) -> B,
+              A: Clone,
+    {
+        self.map(move |x| f(x.clone()))
+    }
+
+    /// Call `f` by **v**alue on each element, update the array with the new values
+    /// and return it.
+    ///
+    /// Elements are visited in arbitrary order.
+    pub fn mapv_into<F>(mut self, f: F) -> Self
+        where S: DataMut,
+              F: FnMut(A) -> A,
+              A: Clone,
+    {
+        self.applyv(f);
+        self
+    }
+
+    /// Modify the array in place by calling `f` by mutable reference on each element.
+    ///
+    /// Elements are visited in arbitrary order.
+    pub fn apply<F>(&mut self, f: F)
+        where S: DataMut,
+              F: FnMut(&mut A),
+    {
+        self.unordered_foreach_mut(f);
+    }
+
+    /// Modify the array in place by calling `f` by **v**alue on each element.
+    /// The array is updated with the new values.
+    ///
+    /// Elements are visited in arbitrary order.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let mut a = arr2(&[[ 0., 1.],
+    ///                    [-1., 2.]]);
+    /// a.applyv(f32::exp);
+    /// assert!(
+    ///     a.allclose(&arr2(&[[1.00000, 2.71828],
+    ///                        [0.36788, 7.38906]]), 1e-5)
+    /// );
+    /// ```
+    pub fn applyv<F>(&mut self, mut f: F)
+        where S: DataMut,
+              F: FnMut(A) -> A,
+              A: Clone,
+    {
+        self.unordered_foreach_mut(move |x| *x = f(x.clone()));
+    }
+
+    /// Visit each element in the array by calling `f` by reference
+    /// on each element.
+    ///
+    /// Elements are visited in arbitrary order.
+    pub fn visit<'a, F>(&'a self, mut f: F)
+        where F: FnMut(&'a A),
+              A: 'a,
+    {
+        if let Some(slc) = self.as_slice_memory_order() {
+            // FIXME: Use for loop when slice iterator is perf is restored
+            for i in 0..slc.len() {
+                f(&slc[i]);
+            }
+        } else {
+            for row in self.inner_iter() {
+                if let Some(slc) = row.into_slice() {
+                    for i in 0..slc.len() {
+                        f(&slc[i]);
+                    }
+                } else {
+                    for elt in row {
+                        f(elt);
+                    }
+                }
             }
         }
     }

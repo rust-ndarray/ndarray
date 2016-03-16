@@ -12,6 +12,7 @@ use rblas::matrix::Matrix;
 use ndarray::{
     OwnedArray,
     Axis,
+    Ix,
 };
 use ndarray::{arr0, arr1, arr2};
 
@@ -27,7 +28,7 @@ fn map(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_1d_regular(bench: &mut test::Bencher)
+fn iter_sum_1d_regular(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros(64 * 64);
     let a = black_box(a);
@@ -41,7 +42,7 @@ fn sum_1d_regular(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_1d_raw(bench: &mut test::Bencher)
+fn iter_sum_1d_raw(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
     let a = OwnedArray::<i32, _>::zeros(64 * 64);
@@ -56,7 +57,7 @@ fn sum_1d_raw(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_2d_regular(bench: &mut test::Bencher)
+fn iter_sum_2d_regular(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
@@ -70,7 +71,7 @@ fn sum_2d_regular(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_2d_by_row(bench: &mut test::Bencher)
+fn iter_sum_2d_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((64, 64));
     let a = black_box(a);
@@ -86,7 +87,7 @@ fn sum_2d_by_row(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_2d_raw(bench: &mut test::Bencher)
+fn iter_sum_2d_raw(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
     let a = OwnedArray::<i32, _>::zeros((64, 64));
@@ -101,7 +102,7 @@ fn sum_2d_raw(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_2d_cutout(bench: &mut test::Bencher)
+fn iter_sum_2d_cutout(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]);
@@ -116,13 +117,68 @@ fn sum_2d_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn sum_2d_cutout_fold(bench: &mut test::Bencher)
+fn iter_sum_2d_cutout_by_row(bench: &mut test::Bencher)
 {
     let a = OwnedArray::<i32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
-        a.fold(0, |acc, elt| acc + *elt)
+        let mut sum = 0;
+        for row in 0..a.shape()[0] {
+            for &elt in a.row(row) {
+                sum += elt;
+            }
+        }
+        sum
+    });
+}
+
+#[bench]
+fn iter_sum_2d_cutout_outer_iter(bench: &mut test::Bencher)
+{
+    let a = OwnedArray::<i32, _>::zeros((66, 66));
+    let av = a.slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        let mut sum = 0;
+        for row in a.inner_iter() {
+            for &elt in row {
+                sum += elt;
+            }
+        }
+        sum
+    });
+}
+
+#[bench]
+fn iter_sum_2d_transpose_regular(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for &elt in a.iter() {
+            sum += elt;
+        }
+        sum
+    });
+}
+
+#[bench]
+fn iter_sum_2d_transpose_by_row(bench: &mut test::Bencher)
+{
+    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let a = black_box(a);
+    bench.iter(|| {
+        let mut sum = 0;
+        for row in 0..a.shape()[0] {
+            for &elt in a.row(row) {
+                sum += elt;
+            }
+        }
+        sum
     });
 }
 
@@ -144,72 +200,6 @@ fn scalar_sum_2d_cutout(bench: &mut test::Bencher)
     let a = black_box(av);
     bench.iter(|| {
         a.scalar_sum()
-    });
-}
-
-#[bench]
-fn sum_2d_cutout_by_row(bench: &mut test::Bencher)
-{
-    let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.slice(s![1..-1, 1..-1]);
-    let a = black_box(av);
-    bench.iter(|| {
-        let mut sum = 0;
-        for row in 0..a.shape()[0] {
-            for &elt in a.row(row) {
-                sum += elt;
-            }
-        }
-        sum
-    });
-}
-
-#[bench]
-fn sum_2d_cutout_outer_iter(bench: &mut test::Bencher)
-{
-    let a = OwnedArray::<i32, _>::zeros((66, 66));
-    let av = a.slice(s![1..-1, 1..-1]);
-    let a = black_box(av);
-    bench.iter(|| {
-        let mut sum = 0;
-        for row in a.inner_iter() {
-            for &elt in row {
-                sum += elt;
-            }
-        }
-        sum
-    });
-}
-
-#[bench]
-fn sum_2d_transpose_regular(bench: &mut test::Bencher)
-{
-    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
-    a.swap_axes(0, 1);
-    let a = black_box(a);
-    bench.iter(|| {
-        let mut sum = 0;
-        for &elt in a.iter() {
-            sum += elt;
-        }
-        sum
-    });
-}
-
-#[bench]
-fn sum_2d_transpose_by_row(bench: &mut test::Bencher)
-{
-    let mut a = OwnedArray::<i32, _>::zeros((64, 64));
-    a.swap_axes(0, 1);
-    let a = black_box(a);
-    bench.iter(|| {
-        let mut sum = 0;
-        for row in 0..a.shape()[0] {
-            for &elt in a.row(row) {
-                sum += elt;
-            }
-        }
-        sum
     });
 }
 
@@ -642,9 +632,33 @@ fn dot_extended(bench: &mut test::Bencher) {
     })
 }
 
+const MEAN_SUM_N: usize = 127;
+
+fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
+    assert!(m * n != 0);
+    OwnedArray::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
+}
+
 #[bench]
-fn means(bench: &mut test::Bencher) {
-    let a = OwnedArray::from_iter(0..100_000i64);
-    let a = a.into_shape((100, 1000)).unwrap();
+fn mean_axis0(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.mean(Axis(0)));
+}
+
+#[bench]
+fn mean_axis1(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
+    bench.iter(|| a.mean(Axis(1)));
+}
+
+#[bench]
+fn sum_axis0(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
+    bench.iter(|| a.sum(Axis(0)));
+}
+
+#[bench]
+fn sum_axis1(bench: &mut test::Bencher) {
+    let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
+    bench.iter(|| a.sum(Axis(1)));
 }
