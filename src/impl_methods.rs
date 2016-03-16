@@ -129,7 +129,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn iter_mut(&mut self) -> ElementsMut<A, D>
         where S: DataMut,
     {
-        self.ensure_unique();
         self.view_mut().into_iter_()
     }
 
@@ -229,8 +228,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               I: NdIndex<Dim=D>,
     {
-        self.ensure_unique();
-        let ptr = self.ptr;
+        let ptr = self.as_mut_ptr();
         index.index_checked(&self.dim, &self.strides)
              .map(move |offset| unsafe { &mut *ptr.offset(offset) })
     }
