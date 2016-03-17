@@ -140,6 +140,11 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         self.subview_mut(Axis(0), index)
     }
 
+    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
+    pub fn rows(&self) -> Ix {
+        self.shape().axis(Axis(0))
+    }
+
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -155,6 +160,11 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         where S: DataMut
     {
         self.subview_mut(Axis(1), index)
+    }
+
+    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
+    pub fn cols(&self) -> Ix {
+        self.shape().axis(Axis(1))
     }
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
