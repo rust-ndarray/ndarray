@@ -1170,14 +1170,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: Fn(A) -> A,
               A: Clone,
     {
-        self.applyv(f);
+        self.mapv_inplace(f);
         self
     }
 
     /// Modify the array in place by calling `f` by mutable reference on each element.
     ///
     /// Elements are visited in arbitrary order.
-    pub fn apply<F>(&mut self, f: F)
+    pub fn map_inplace<F>(&mut self, f: F)
         where S: DataMut,
               F: Fn(&mut A),
     {
@@ -1194,13 +1194,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// let mut a = arr2(&[[ 0., 1.],
     ///                    [-1., 2.]]);
-    /// a.applyv(f32::exp);
+    /// a.mapv_inplace(f32::exp);
     /// assert!(
     ///     a.allclose(&arr2(&[[1.00000, 2.71828],
     ///                        [0.36788, 7.38906]]), 1e-5)
     /// );
     /// ```
-    pub fn applyv<F>(&mut self, f: F)
+    pub fn mapv_inplace<F>(&mut self, f: F)
         where S: DataMut,
               F: Fn(A) -> A,
               A: Clone,
