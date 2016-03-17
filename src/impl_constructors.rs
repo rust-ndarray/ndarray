@@ -199,6 +199,17 @@ impl<S, A, D> ArrayBase<S, D>
         unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
     }
 
+    /// Create an array from a vector (no copying needed) using fortran
+    /// memory order to interpret the data.
+    ///
+    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
+    pub fn from_vec_dim_f(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
+        if dim.size_checked() != Some(v.len()) {
+            return Err(error::incompatible_shapes(&v.len(), &dim));
+        }
+        unsafe { Ok(Self::from_vec_dim_unchecked_f(dim, v)) }
+    }
+
     /// Create an array from a vector (no copying needed).
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
@@ -216,14 +227,10 @@ impl<S, A, D> ArrayBase<S, D>
     /// using fortran memory order to interpret the data.
     ///
     /// Unsafe because dimension is unchecked, and must be correct.
-    pub unsafe fn from_vec_dim_unchecked_f(dim: D, mut v: Vec<A>) -> ArrayBase<S, D> {
+    pub unsafe fn from_vec_dim_unchecked_f(dim: D, v: Vec<A>) -> ArrayBase<S, D> {
         debug_assert!(dim.size_checked() == Some(v.len()));
-        ArrayBase {
-            ptr: v.as_mut_ptr(),
-            data: DataOwned::new(v),
-            strides: dim.fortran_strides(),
-            dim: dim,
-        }
+        let strides = dim.fortran_strides();
+        Self::from_vec_dim_stride_unchecked(dim, strides, v)
     }
 
     /// Create an array from a vector and interpret it according to the

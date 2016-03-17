@@ -140,6 +140,11 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         self.subview_mut(Axis(0), index)
     }
 
+    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
+    pub fn rows(&self) -> Ix {
+        self.shape().axis(Axis(0))
+    }
+
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -155,6 +160,11 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         where S: DataMut
     {
         self.subview_mut(Axis(1), index)
+    }
+
+    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
+    pub fn cols(&self) -> Ix {
+        self.shape().axis(Axis(1))
     }
 
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
@@ -225,6 +235,27 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
         unsafe {
             ArrayBase::from_vec_dim_unchecked(m, res_elems)
         }
+    }
+}
+
+impl<A, S, D> ArrayBase<S, D>
+    where S: Data<Elem=A>,
+          D: Dimension,
+{
+    /// Perform the operation `self += alpha * rhs` efficiently, where
+    /// `alpha` is a scalar and `rhs` is another array. This operation is
+    /// also known as `axpy` in BLAS.
+    ///
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+    ///
+    /// **Panics** if broadcasting isn’t possible.
+    pub fn scaled_add<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
+        where S: DataMut,
+              S2: Data<Elem=A>,
+              A: LinalgScalar,
+              E: Dimension,
+    {
+        self.zip_mut_with(rhs, move |y, &x| *y = *y + (alpha * x));
     }
 }
 
