@@ -238,6 +238,27 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     }
 }
 
+impl<A, S, D> ArrayBase<S, D>
+    where S: Data<Elem=A>,
+          D: Dimension,
+{
+    /// Perform the operation `self += alpha * rhs` efficiently, where
+    /// `alpha` is a scalar and `rhs` is another array. This operation is
+    /// also known as `axpy` in BLAS.
+    ///
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+    ///
+    /// **Panics** if broadcasting isn’t possible.
+    pub fn scaled_add<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
+        where S: DataMut,
+              S2: Data<Elem=A>,
+              A: LinalgScalar,
+              E: Dimension,
+    {
+        self.zip_mut_with(rhs, move |y, &x| *y = *y + (alpha * x));
+    }
+}
+
 #[cfg(not(feature="blas"))]
 use self::mat_mul_general as mat_mul_impl;
 

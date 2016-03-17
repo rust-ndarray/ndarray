@@ -216,3 +216,18 @@ fn mat_mul_order() {
     assert_eq!(cc.strides()[1], 1);
     assert_eq!(ff.strides()[0], 1);
 }
+
+#[test]
+fn scaled_add() {
+    let a = range_mat(16, 15);
+    let mut b = range_mat(16, 15);
+    b.applyv(f32::exp);
+
+    let alpha = 0.2_f32;
+    let mut c = a.clone();
+    c.scaled_add(alpha, &b);
+
+    let d = alpha * &b + &a;
+    assert_eq!(c, d);
+
+}
