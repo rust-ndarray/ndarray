@@ -115,7 +115,7 @@ fn test_add()
     }
 
     let B = A.clone();
-    A.iadd(&B);
+    A = A + &B;
     assert_eq!(A[[0, 0]], 0);
     assert_eq!(A[[0, 1]], 2);
     assert_eq!(A[[1, 0]], 4);
@@ -132,7 +132,6 @@ fn test_multidim()
             *elt = i as u8;
         }
     }
-    //println!("shape={:?}, strides={:?}", mat.shape(), mat.strides);
     assert_eq!(mat.dim(), (2,3,4,5,6));
 }
 
@@ -152,7 +151,7 @@ array([[[ 7,  6],
 fn test_negative_stride_rcarray()
 {
     let mut mat = RcArray::zeros((2, 4, 2));
-    mat[(0, 0, 0)] = 1.0f32;
+    mat[[0, 0, 0]] = 1.0f32;
     for (i, elt) in mat.iter_mut().enumerate() {
         *elt = i as f32;
     }
@@ -167,8 +166,8 @@ fn test_negative_stride_rcarray()
         }
     }
     {
-        let vi = mat.slice(&[S, Si(0, None, -5), S]);
-        let seq = [6_f32, 7., 14., 15.];
+        let vi = mat.slice(s![.., ..;-5, ..]);
+        let seq = [6., 7., 14., 15.];
         for (a, b) in vi.iter().zip(seq.iter()) {
             assert_eq!(*a, *b);
         }
@@ -178,7 +177,7 @@ fn test_negative_stride_rcarray()
 #[test]
 fn test_cow()
 {
-    let mut mat = RcArray::<isize, _>::zeros((2,2));
+    let mut mat = RcArray::zeros((2,2));
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -343,10 +342,13 @@ fn iter_size_hint()
 #[test]
 fn zero_axes()
 {
-    let a = arr1::<f32>(&[]);
+    let mut a = arr1::<f32>(&[]);
     for _ in a.iter() {
         assert!(false);
     }
+    a.map(|_| assert!(false));
+    a.apply(|_| assert!(false));
+    a.visit(|_| assert!(false));
     println!("{:?}", a);
     let b = arr2::<f32, _>(&[[], [], [], []]);
     println!("{:?}\n{:?}", b.shape(), b);
@@ -377,7 +379,7 @@ fn map1()
     let b = a.map(|&x| (x / 3.) as isize);
     assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
     // test map to reference with array's lifetime.
-    let c = a.map(|x| x).into_shared();
+    let c = a.map(|x| x);
     assert_eq!(a[(0, 0)], *c[(0, 0)]);
 }
 
