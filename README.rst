@@ -57,7 +57,7 @@ Status and Lookout
     or array view. Especially if it's a binary operation, which
     needs matching memory layout to be efficient (with some exceptions).
   + Arithmetic optimizes very well if the arrays are have contiguous inner dimension.
-  + The callback based methods like ``.mapv()``, ``.applyv()`` and
+  + The callback based methods like ``.map()``, ``.map_inplace()`` and
     ``.zip_mut_with()`` are the most efficient ways to
     perform single traversal and lock step traversal respectively.
   + ``.iter()`` is efficient for c-contiguous arrays.
@@ -97,6 +97,15 @@ How to use with cargo::
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.4.4
+
+  - Add mapping methods ``.mapv(), .mapv_into(), .map_inplace(),``
+    ``.mapv_inplace(), .visit()``. The ``mapv`` versions
+    have the transformation function receive the element by value (hence *v*).
+  - Add method ``.scaled_add()`` (a.k.a axpy) and constructor ``from_vec_dim_f``.
+  - Add 2d array methods ``.rows(), .cols()``.
+  - Deprecate method ``.fold()`` because it dictates a specific visit order.
 
 - 0.4.3
 
