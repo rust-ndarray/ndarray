@@ -221,7 +221,7 @@ fn mat_mul_order() {
 fn scaled_add() {
     let a = range_mat(16, 15);
     let mut b = range_mat(16, 15);
-    b.applyv(f32::exp);
+    b.mapv_inplace(f32::exp);
 
     let alpha = 0.2_f32;
     let mut c = a.clone();

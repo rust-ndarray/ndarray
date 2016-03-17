@@ -347,7 +347,7 @@ fn zero_axes()
         assert!(false);
     }
     a.map(|_| assert!(false));
-    a.apply(|_| assert!(false));
+    a.map_inplace(|_| assert!(false));
     a.visit(|_| assert!(false));
     println!("{:?}", a);
     let b = arr2::<f32, _>(&[[], [], [], []]);
