@@ -11,6 +11,11 @@ use error::{ShapeError, ErrorKind, from_kind};
 
 /// Stack arrays along the given axis.
 ///
+/// ***Errors*** if the arrays don't all have the same dimension
+/// (may be made more flexible in the future).<br>
+/// ***Errors*** if `arrays` is empty, if `axis` is out of bounds,
+/// if the result is larger than is possible to represent.
+///
 /// ```
 /// use ndarray::{arr2, Axis, stack};
 ///
