@@ -22,10 +22,10 @@ use libnum::Complex;
 /// and `C @= K` are defined, as ***right hand side operands***, for applicable
 /// arithmetic operators (denoted `@`).
 ///
-/// ***Left hand side*** scalar operands are not related to this trait.
-/// (They need one `impl` per concrete scalar type); they are
-/// implemented for the default `ScalarOperand` types, allowing
-/// operations `K @ &A`, and `K @ B`.
+/// ***Left hand side*** scalar operands are not related to this trait
+/// (they need one `impl` per concrete scalar type); but they are still
+/// implemented for the same types, allowing operations
+/// `K @ &A`, and `K @ B` for primitive numeric types `K`.
 ///
 /// This trait ***does not*** limit which elements can be stored in an array in general.
 /// Non-`ScalarOperand` types can still participate in arithmetic as array elements in
