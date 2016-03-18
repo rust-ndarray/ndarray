@@ -1176,8 +1176,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                    [-1., 2.]]);
     /// a.mapv_inplace(f32::exp);
     /// assert!(
-    ///     a.allclose(&arr2(&[[1.00000, 2.71828],
-    ///                        [0.36788, 7.38906]]), 1e-5)
+    ///     a.all_close(&arr2(&[[1.00000, 2.71828],
+    ///                         [0.36788, 7.38906]]), 1e-5)
     /// );
     /// ```
     pub fn mapv_inplace<F>(&mut self, f: F)

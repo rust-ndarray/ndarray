@@ -947,3 +947,13 @@ fn test_contiguous() {
     assert!(a.as_slice_memory_order().is_some());
     assert!(b.as_slice_memory_order().is_some());
 }
+
+#[test]
+fn test_all_close() {
+    let c = arr3(&[[[1., 2., 3.],
+                    [1.5, 1.5, 3.]],
+                   [[1., 2., 3.],
+                    [1., 2.5, 3.]]]);
+    assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
+    assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
+}

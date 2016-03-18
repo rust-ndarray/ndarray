@@ -104,6 +104,25 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
+    /// the given absolute tolerance, `false` otherwise.
+    ///
+    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+    ///
+    /// **Panics** if broadcasting to the same shape isn’t possible.
+    pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
+        where A: Float,
+              S2: Data<Elem=A>,
+              E: Dimension,
+    {
+        let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
+        self.iter().zip(rhs_broadcast.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note=
+      "Replaced by .all_close() which has clearer error cases"))]
+    /// ***Deprecated: Replaced by .all_close()***
+    ///
+    /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance.<br>
     /// Return `false` otherwise, or if the shapes disagree.
     pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
