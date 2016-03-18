@@ -357,19 +357,19 @@ fn add_1d_strided(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn muladd_2d_f32_regular(bench: &mut test::Bencher)
+fn scaled_add_2d_f32_regular(bench: &mut test::Bencher)
 {
     let mut av = OwnedArray::<f32, _>::zeros((64, 64));
     let bv = OwnedArray::<f32, _>::zeros((64, 64));
     let scalar = 3.1415926535;
     bench.iter(|| {
-        av.zip_mut_with(&bv, |a, &b| *a += scalar * b);
+        av.scaled_add(scalar, &bv);
     });
 }
 
 #[cfg(feature = "rblas")]
 #[bench]
-fn muladd_2d_f32_blas(bench: &mut test::Bencher)
+fn scaled_add_2d_f32_blas(bench: &mut test::Bencher)
 {
     use rblas::Axpy;
     use rblas::attribute::Transpose;
