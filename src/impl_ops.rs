@@ -158,7 +158,7 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
     );
 );
 
-macro_rules! impl_scalar_op {
+macro_rules! impl_scalar_lhs_op {
     ($scalar:ty, $trt:ident, $mth:ident, $doc:expr) => (
 // these have no doc -- they are not visible in rustdoc
 // Perform elementwise
@@ -215,16 +215,16 @@ mod arithmetic_ops {
 
     macro_rules! all_scalar_ops {
         ($int_scalar:ty) => (
-            impl_scalar_op!($int_scalar, Add, add, "addition");
-            impl_scalar_op!($int_scalar, Sub, sub, "subtraction");
-            impl_scalar_op!($int_scalar, Mul, mul, "multiplication");
-            impl_scalar_op!($int_scalar, Div, div, "division");
-            impl_scalar_op!($int_scalar, Rem, rem, "remainder");
-            impl_scalar_op!($int_scalar, BitAnd, bitand, "bit and");
-            impl_scalar_op!($int_scalar, BitOr, bitor, "bit or");
-            impl_scalar_op!($int_scalar, BitXor, bitxor, "bit xor");
-            impl_scalar_op!($int_scalar, Shl, shl, "left shift");
-            impl_scalar_op!($int_scalar, Shr, shr, "right shift");
+            impl_scalar_lhs_op!($int_scalar, Add, add, "addition");
+            impl_scalar_lhs_op!($int_scalar, Sub, sub, "subtraction");
+            impl_scalar_lhs_op!($int_scalar, Mul, mul, "multiplication");
+            impl_scalar_lhs_op!($int_scalar, Div, div, "division");
+            impl_scalar_lhs_op!($int_scalar, Rem, rem, "remainder");
+            impl_scalar_lhs_op!($int_scalar, BitAnd, bitand, "bit and");
+            impl_scalar_lhs_op!($int_scalar, BitOr, bitor, "bit or");
+            impl_scalar_lhs_op!($int_scalar, BitXor, bitxor, "bit xor");
+            impl_scalar_lhs_op!($int_scalar, Shl, shl, "left shift");
+            impl_scalar_lhs_op!($int_scalar, Shr, shr, "right shift");
         );
     }
     all_scalar_ops!(i8);
@@ -236,31 +236,31 @@ mod arithmetic_ops {
     all_scalar_ops!(i64);
     all_scalar_ops!(u64);
 
-    impl_scalar_op!(bool, BitAnd, bitand, "bit and");
-    impl_scalar_op!(bool, BitOr, bitor, "bit or");
-    impl_scalar_op!(bool, BitXor, bitxor, "bit xor");
+    impl_scalar_lhs_op!(bool, BitAnd, bitand, "bit and");
+    impl_scalar_lhs_op!(bool, BitOr, bitor, "bit or");
+    impl_scalar_lhs_op!(bool, BitXor, bitxor, "bit xor");
 
-    impl_scalar_op!(f32, Add, add, "addition");
-    impl_scalar_op!(f32, Sub, sub, "subtraction");
-    impl_scalar_op!(f32, Mul, mul, "multiplication");
-    impl_scalar_op!(f32, Div, div, "division");
-    impl_scalar_op!(f32, Rem, rem, "remainder");
+    impl_scalar_lhs_op!(f32, Add, add, "addition");
+    impl_scalar_lhs_op!(f32, Sub, sub, "subtraction");
+    impl_scalar_lhs_op!(f32, Mul, mul, "multiplication");
+    impl_scalar_lhs_op!(f32, Div, div, "division");
+    impl_scalar_lhs_op!(f32, Rem, rem, "remainder");
 
-    impl_scalar_op!(f64, Add, add, "addition");
-    impl_scalar_op!(f64, Sub, sub, "subtraction");
-    impl_scalar_op!(f64, Mul, mul, "multiplication");
-    impl_scalar_op!(f64, Div, div, "division");
-    impl_scalar_op!(f64, Rem, rem, "remainder");
+    impl_scalar_lhs_op!(f64, Add, add, "addition");
+    impl_scalar_lhs_op!(f64, Sub, sub, "subtraction");
+    impl_scalar_lhs_op!(f64, Mul, mul, "multiplication");
+    impl_scalar_lhs_op!(f64, Div, div, "division");
+    impl_scalar_lhs_op!(f64, Rem, rem, "remainder");
 
-    impl_scalar_op!(Complex<f32>, Add, add, "addition");
-    impl_scalar_op!(Complex<f32>, Sub, sub, "subtraction");
-    impl_scalar_op!(Complex<f32>, Mul, mul, "multiplication");
-    impl_scalar_op!(Complex<f32>, Div, div, "division");
+    impl_scalar_lhs_op!(Complex<f32>, Add, add, "addition");
+    impl_scalar_lhs_op!(Complex<f32>, Sub, sub, "subtraction");
+    impl_scalar_lhs_op!(Complex<f32>, Mul, mul, "multiplication");
+    impl_scalar_lhs_op!(Complex<f32>, Div, div, "division");
 
-    impl_scalar_op!(Complex<f64>, Add, add, "addition");
-    impl_scalar_op!(Complex<f64>, Sub, sub, "subtraction");
-    impl_scalar_op!(Complex<f64>, Mul, mul, "multiplication");
-    impl_scalar_op!(Complex<f64>, Div, div, "division");
+    impl_scalar_lhs_op!(Complex<f64>, Add, add, "addition");
+    impl_scalar_lhs_op!(Complex<f64>, Sub, sub, "subtraction");
+    impl_scalar_lhs_op!(Complex<f64>, Mul, mul, "multiplication");
+    impl_scalar_lhs_op!(Complex<f64>, Div, div, "division");
 
     impl<A, S, D> Neg for ArrayBase<S, D>
         where A: Clone + Neg<Output=A>,
