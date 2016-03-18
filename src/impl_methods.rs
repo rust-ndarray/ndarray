@@ -848,26 +848,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe { Some(ArrayView::new_(self.ptr, dim, broadcast_strides)) }
     }
 
-    #[inline]
-    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
-        where E: Dimension,
-    {
-        #[cold]
-        #[inline(never)]
-        fn broadcast_panic<D, E>(from: &D, to: &E) -> !
-            where D: Dimension,
-                  E: Dimension,
-        {
-            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}",
-                   from.slice(), to.slice())
-        }
-
-        match self.broadcast(dim.clone()) {
-            Some(it) => it,
-            None => broadcast_panic(&self.dim, &dim),
-        }
-    }
-
     /// Swap axes `ax` and `bx`.
     ///
     /// This does not move any data, it just adjusts the array’s dimensions
@@ -1196,8 +1176,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                    [-1., 2.]]);
     /// a.mapv_inplace(f32::exp);
     /// assert!(
-    ///     a.allclose(&arr2(&[[1.00000, 2.71828],
-    ///                        [0.36788, 7.38906]]), 1e-5)
+    ///     a.all_close(&arr2(&[[1.00000, 2.71828],
+    ///                         [0.36788, 7.38906]]), 1e-5)
     /// );
     /// ```
     pub fn mapv_inplace<F>(&mut self, f: F)

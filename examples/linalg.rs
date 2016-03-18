@@ -77,7 +77,7 @@ fn chol()
         rcarr2(&[[3.16227770, 0.00000000],
                  [4.42718887, 0.63245525]]);
 
-    assert!(ans.allclose(&chol, 0.001));
+    assert!(ans.all_close(&chol, 0.001));
 
     // Compute bT b for a pos def matrix
     let b = RcArray::linspace(0f32, 8., 9).reshape((3, 3));
@@ -92,7 +92,7 @@ fn chol()
         rcarr2(&[[6.70820379, 0.00000000, 0.00000000],
                  [8.04984474, 1.09544373, 0.00000000],
                  [9.39148617, 2.19088745, 0.00000000]]);
-    assert!(ans.allclose(&chol, 0.001));
+    assert!(ans.all_close(&chol, 0.001));
 
     let a =
         rcarr2(&[[ 0.05201001,  0.22982409,  0.1014132 ],
@@ -104,7 +104,7 @@ fn chol()
         rcarr2(&[[ 0.22805704,  0.        ,  0.        ],
                  [ 1.00774829,  0.30044197,  0.        ],
                  [ 0.44468348, -0.2285419 ,  0.95499557]]);
-    assert!(ans.allclose(&chol, 0.001));
+    assert!(ans.all_close(&chol, 0.001));
 }
 
 fn subst()
@@ -115,7 +115,7 @@ fn subst()
                  [ 0.44468348, -0.2285419 ,  0.95499557]]);
     let ans = rcarr1::<f32>(&[4.384868, -8.050947, -0.827078]);
 
-    assert!(ans.allclose(&subst_fw(&lll, &rcarr1(&[1., 2., 3.])),
+    assert!(ans.all_close(&subst_fw(&lll, &rcarr1(&[1., 2., 3.])),
                          0.001));
 }
 
@@ -129,7 +129,7 @@ fn lst_squares()
     let b = rcarr1(&[1., -1., 2., 1.]);
     let x_lstsq = least_squares(&xs, &b);
     let ans = rcarr1(&[0.070632, 0.390335]);
-    assert!(x_lstsq.allclose(&ans, 0.001));
+    assert!(x_lstsq.all_close(&ans, 0.001));
 }
 
 /// Solve *a x = b* with linear least squares approximation.
