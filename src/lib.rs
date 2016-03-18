@@ -47,7 +47,7 @@
 //!     or array view. Especially if it's a binary operation, which
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Arithmetic optimizes very well if the arrays are have contiguous inner dimension.
-//!   + The callback based methods like ``.mapv()``, ``.applyv()`` and
+//!   + The callback based methods like ``.map()``, ``.map_inplace()`` and
 //!     ``.zip_mut_with()`` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
 //!   + ``.iter()`` is efficient for c-contiguous arrays.
@@ -245,7 +245,7 @@ pub type Ixs = isize;
 /// for element indices in `.get()` and `array[index]`. The dimension type `Vec<Ix>`
 /// allows a dynamic number of axes.
 ///
-/// The default memory order of an array is *row major* order (a.k.a ”c” order),
+/// The default memory order of an array is *row major* order (a.k.a “c” order),
 /// where each row is contiguous in memory.
 /// A *column major* (a.k.a. “f” or fortran) memory order array has
 /// columns (or, in general, the outermost axis) with contiguous elements.
