@@ -511,6 +511,27 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    #[inline]
+    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
+        where E: Dimension,
+    {
+        #[cold]
+        #[inline(never)]
+        fn broadcast_panic<D, E>(from: &D, to: &E) -> !
+            where D: Dimension,
+                  E: Dimension,
+        {
+            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}",
+                   from.slice(), to.slice())
+        }
+
+        match self.broadcast(dim.clone()) {
+            Some(it) => it,
+            None => broadcast_panic(&self.dim, &dim),
+        }
+    }
+
+
     /// Apply closure `f` to each element in the array, in whatever
     /// order is the fastest to visit.
     fn unordered_foreach_mut<F>(&mut self, mut f: F)
