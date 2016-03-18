@@ -282,6 +282,52 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
     });
 }
 
+#[bench]
+fn scalar_toowned(bench: &mut test::Bencher) {
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let n = 1.;
+    bench.iter(|| {
+        a.to_owned()
+    });
+}
+
+#[bench]
+fn scalar_add_1(bench: &mut test::Bencher) {
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let n = 1.;
+    bench.iter(|| {
+        &a + n
+    });
+}
+
+#[bench]
+fn scalar_add_2(bench: &mut test::Bencher) {
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let n = 1.;
+    bench.iter(|| {
+        n + &a
+    });
+}
+
+#[bench]
+fn scalar_sub_1(bench: &mut test::Bencher) {
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let n = 1.;
+    bench.iter(|| {
+        &a - n
+    });
+}
+
+#[bench]
+fn scalar_sub_2(bench: &mut test::Bencher) {
+    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let n = 1.;
+    bench.iter(|| {
+        n - &a
+    });
+}
+
+
 // This is for comparison with add_2d_broadcast_0_to_2
 #[bench]
 fn add_2d_0_to_2_iadd_scalar(bench: &mut test::Bencher)
