@@ -19,7 +19,6 @@ use rand::distributions::IndependentSample;
 use ndarray::{
     ArrayBase,
     Dimension,
-    Data,
     DataOwned,
 };
 
@@ -102,4 +101,24 @@ unsafe fn to_vec<I>(iter: I) -> Vec<I::Item>
     }
     debug_assert_eq!(size, result.len());
     result
+}
+
+/// A wrapper type that allows casting f64 distributions to f32
+#[derive(Copy, Clone, Debug)]
+pub struct F32<S>(pub S);
+
+impl<S> Sample<f32> for F32<S>
+    where S: Sample<f64>
+{
+    fn sample<R>(&mut self, rng: &mut R) -> f32 where R: Rng {
+        self.0.sample(rng) as f32
+    }
+}
+
+impl<S> IndependentSample<f32> for F32<S>
+    where S: IndependentSample<f64>
+{
+    fn ind_sample<R>(&self, rng: &mut R) -> f32 where R: Rng {
+        self.0.ind_sample(rng) as f32
+    }
 }
