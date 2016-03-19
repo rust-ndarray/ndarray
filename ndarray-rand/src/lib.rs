@@ -35,6 +35,8 @@ pub trait RandomExt<S, D>
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution`  using the default rng.
     ///
+    /// ***Panics*** if the number of elements overflows usize.
+    ///
     /// ```
     /// extern crate rand;
     /// extern crate ndarray;
@@ -56,6 +58,8 @@ pub trait RandomExt<S, D>
 
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
+    ///
+    /// ***Panics*** if the number of elements overflows usize.
     fn random_using<IdS, R>(dim: D, distribution: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
               R: Rng;
