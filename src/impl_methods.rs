@@ -261,6 +261,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         &mut *self.ptr.offset(off)
     }
 
+    // `get` for zero-dimensional arrays
+    // panics if dimension is not zero. otherwise an element is always present.
+    fn get_0d(&self) -> &A {
+        assert!(self.ndim() == 0);
+        unsafe {
+            &*self.as_ptr()
+        }
+    }
+
     // `uget` for one-dimensional arrays
     unsafe fn uget_1d(&self, i: Ix) -> &A {
         debug_assert!(self.ndim() <= 1);
@@ -1045,10 +1054,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         if rhs.dim.ndim() == 0 {
             // Skip broadcast from 0-dim array
-            unsafe {
-                let rhs_elem = &*rhs.ptr;
-                self.zip_mut_with_elem(rhs_elem, f);
-            }
+            self.zip_mut_with_elem(rhs.get_0d(), f);
         } else if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
             self.zip_mut_with_same_shape(rhs, f);
         } else {
