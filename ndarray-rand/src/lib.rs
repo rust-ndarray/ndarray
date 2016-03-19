@@ -79,10 +79,8 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
               R: Rng
     {
-        unsafe {
-            let elements = Vec::from_iter((0..dim.size()).map(move |_| dist.ind_sample(rng)));
-            Self::from_vec_dim(dim, elements).unwrap()
-        }
+        let elements = Vec::from_iter((0..dim.size()).map(move |_| dist.ind_sample(rng)));
+        Self::from_vec_dim(dim, elements).unwrap()
     }
 }
 
