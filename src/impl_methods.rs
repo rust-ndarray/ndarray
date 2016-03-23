@@ -26,8 +26,8 @@ use {
     IndexedMut,
     InnerIter,
     InnerIterMut,
-    OuterIter,
-    OuterIterMut,
+    AxisIter,
+    AxisIterMut,
 };
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -424,7 +424,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 1));
     /// ```
     #[allow(deprecated)]
-    pub fn outer_iter(&self) -> OuterIter<A, D::Smaller>
+    pub fn outer_iter(&self) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
         self.view().into_outer_iter()
@@ -435,7 +435,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
     #[allow(deprecated)]
-    pub fn outer_iter_mut(&mut self) -> OuterIterMut<A, D::Smaller>
+    pub fn outer_iter_mut(&mut self) -> AxisIterMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
     {
@@ -457,7 +457,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` is out of bounds.
     ///
     /// <img src="axis_iter.svg" height="250px">
-    pub fn axis_iter(&self, axis: Axis) -> OuterIter<A, D::Smaller>
+    pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_axis_iter(self.view(), axis.axis())
@@ -471,7 +471,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// (read-write array view).
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_iter_mut(&mut self, axis: Axis) -> OuterIterMut<A, D::Smaller>
+    pub fn axis_iter_mut(&mut self, axis: Axis) -> AxisIterMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
     {

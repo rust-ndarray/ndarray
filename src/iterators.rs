@@ -494,10 +494,22 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 /// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
 /// or [`.axis_iter()`](struct.ArrayBase.html#method.axis_iter)
 /// for more information.
-pub struct OuterIter<'a, A: 'a, D> {
+pub struct AxisIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a A>,
 }
+
+#[cfg_attr(has_deprecated, deprecated(note="Use AxisIter instead"))]
+/// ***Deprecated:*** Type renamed to `AxisIter`.
+///
+/// Axis iterator for `Axis(0)`.
+pub type OuterIter<'a, A, D> = AxisIter<'a, A, D>;
+
+#[cfg_attr(has_deprecated, deprecated(note="Use AxisIterMut instead"))]
+/// ***Deprecated:*** Type renamed to `AxisIterMut`.
+///
+/// Axis iterator for `Axis(0)`.
+pub type OuterIterMut<'a, A, D> = AxisIterMut<'a, A, D>;
 
 macro_rules! outer_iter_split_at_impl {
     ($iter: ident) => (
@@ -545,13 +557,13 @@ macro_rules! outer_iter_split_at_impl {
     )
 }
 
-outer_iter_split_at_impl!(OuterIter);
+outer_iter_split_at_impl!(AxisIter);
 
-impl<'a, A, D> Clone for OuterIter<'a, A, D>
+impl<'a, A, D> Clone for AxisIter<'a, A, D>
     where D: Dimension
 {
     fn clone(&self) -> Self {
-        OuterIter {
+        AxisIter {
             iter: OuterIterCore {
                 index: self.iter.index,
                 len: self.iter.len,
@@ -565,7 +577,7 @@ impl<'a, A, D> Clone for OuterIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> Iterator for OuterIter<'a, A, D>
+impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     where D: Dimension
 {
     type Item = ArrayView<'a, A, D>;
@@ -585,7 +597,7 @@ impl<'a, A, D> Iterator for OuterIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> DoubleEndedIterator for OuterIter<'a, A, D>
+impl<'a, A, D> DoubleEndedIterator for AxisIter<'a, A, D>
     where D: Dimension
 {
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -599,24 +611,24 @@ impl<'a, A, D> DoubleEndedIterator for OuterIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for OuterIter<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for AxisIter<'a, A, D>
     where D: Dimension
 {}
 
-pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> OuterIter<A, D::Smaller>
+pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> AxisIter<A, D::Smaller>
     where D: RemoveAxis
 {
-    OuterIter {
+    AxisIter {
         iter: new_outer_core(v, 0),
         life: PhantomData,
     }
 }
 
 pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
-    -> OuterIter<A, D::Smaller>
+    -> AxisIter<A, D::Smaller>
     where D: RemoveAxis
 {
-    OuterIter {
+    AxisIter {
         iter: new_outer_core(v, axis),
         life: PhantomData,
     }
@@ -637,14 +649,14 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 /// See [`.outer_iter_mut()`](struct.ArrayBase.html#method.outer_iter_mut)
 /// or [`.axis_iter_mut()`](struct.ArrayBase.html#method.axis_iter_mut)
 /// for more information.
-pub struct OuterIterMut<'a, A: 'a, D> {
+pub struct AxisIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a mut A>,
 }
 
-outer_iter_split_at_impl!(OuterIterMut);
+outer_iter_split_at_impl!(AxisIterMut);
 
-impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
+impl<'a, A, D> Iterator for AxisIterMut<'a, A, D>
     where D: Dimension
 {
     type Item = ArrayViewMut<'a, A, D>;
@@ -664,7 +676,7 @@ impl<'a, A, D> Iterator for OuterIterMut<'a, A, D>
     }
 }
 
-impl<'a, A, D> DoubleEndedIterator for OuterIterMut<'a, A, D>
+impl<'a, A, D> DoubleEndedIterator for AxisIterMut<'a, A, D>
     where D: Dimension
 {
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -678,24 +690,24 @@ impl<'a, A, D> DoubleEndedIterator for OuterIterMut<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for OuterIterMut<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for AxisIterMut<'a, A, D>
     where D: Dimension
 {}
 
-pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> OuterIterMut<A, D::Smaller>
+pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> AxisIterMut<A, D::Smaller>
     where D: RemoveAxis
 {
-    OuterIterMut {
+    AxisIterMut {
         iter: new_outer_core(v, 0),
         life: PhantomData,
     }
 }
 
 pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
-    -> OuterIterMut<A, D::Smaller>
+    -> AxisIterMut<A, D::Smaller>
     where D: RemoveAxis
 {
-    OuterIterMut {
+    AxisIterMut {
         iter: new_outer_core(v, axis),
         life: PhantomData,
     }
@@ -883,13 +895,13 @@ macro_rules! send_sync_read_write {
 send_sync_read_only!(Elements);
 send_sync_read_only!(Indexed);
 send_sync_read_only!(InnerIter);
-send_sync_read_only!(OuterIter);
+send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
 
 send_sync_read_write!(ElementsMut);
 send_sync_read_write!(IndexedMut);
 send_sync_read_write!(InnerIterMut);
-send_sync_read_write!(OuterIterMut);
+send_sync_read_write!(AxisIterMut);
 send_sync_read_write!(AxisChunksIterMut);
 
 /// (Trait used internally) An iterator that we trust

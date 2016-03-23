@@ -109,10 +109,15 @@ use iterators::Baseiter;
 pub use iterators::{
     InnerIter,
     InnerIterMut,
-    OuterIter,
-    OuterIterMut,
+    AxisIter,
+    AxisIterMut,
     AxisChunksIter,
     AxisChunksIterMut,
+};
+#[allow(deprecated)]
+pub use iterators::{
+    OuterIter,
+    OuterIterMut,
 };
 
 pub use arraytraits::AsArray;
@@ -625,7 +630,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[cfg_attr(has_deprecated, deprecated(note="This method will be replaced."))]
-    pub fn into_outer_iter(self) -> OuterIter<'a, A, D::Smaller>
+    pub fn into_outer_iter(self) -> AxisIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_outer_iter(self)
@@ -689,7 +694,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[cfg_attr(has_deprecated, deprecated(note="This method will be replaced."))]
-    pub fn into_outer_iter(self) -> OuterIterMut<'a, A, D::Smaller>
+    pub fn into_outer_iter(self) -> AxisIterMut<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_outer_iter_mut(self)
