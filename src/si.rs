@@ -124,18 +124,23 @@ pub const S: Si = Si(0, None, 1);
 #[macro_export]
 macro_rules! s(
     (@as_expr $e:expr) => ($e);
+    // convert a..b;c into @step(a..b, c), final item
     (@parse [$($stack:tt)*] $r:expr;$s:expr) => {
         s![@as_expr &[$($stack)* s!(@step $r, $s)]]
     };
+    // convert a..b into @step(a..b, 1), final item
     (@parse [$($stack:tt)*] $r:expr) => {
         s![@as_expr &[$($stack)* s!(@step $r, 1)]]
     };
+    // convert a..b;c into @step(a..b, c)
     (@parse [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         s![@parse [$($stack)* s!(@step $r, $s),] $($t)*]
     };
+    // convert a..b into @step(a..b, 1)
     (@parse [$($stack:tt)*] $r:expr, $($t:tt)*) => {
         s![@parse [$($stack)* s!(@step $r, 1),] $($t)*]
     };
+    // convert range, step into Si
     (@step $r:expr, $s:expr) => {
         <$crate::Si as ::std::convert::From<_>>::from($r).step($s)
     };
