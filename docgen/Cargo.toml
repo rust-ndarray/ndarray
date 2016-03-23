@@ -1,0 +1,15 @@
+[package]
+
+name = "ndarray-docs"
+version = "0.0.1"
+authors = ["bluss"]
+license = "MIT/Apache-2.0"
+publish = false
+
+[lib]
+name = "ndarray_docs"
+
+[dependencies]
+ndarray = { version = "*", path = ".." }
+ndarray-rblas = { version = "*", path = "../ndarray-rblas" }
+ndarray-rand = { version = "*", path = "../ndarray-rand" }
