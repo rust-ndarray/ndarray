@@ -96,10 +96,12 @@ pub const S: Si = Si(0, None, 1);
 /// the end of the axis. Strides are also signed and may be negative, but
 /// must not be zero.
 ///
-/// For example, if an array has two axes, the slice argument is passed as
-/// type `&[Si; 2]`.
+/// For example `s![0..4;2, 1..5]` is a slice of rows 0..4 with step size 2,
+/// and columns 1..5 with default step size 1. The slice would have
+/// shape `[2, 4]`.
 ///
-/// For example `s![a..b;c, d..e]`
+/// If an array has two axes, the slice argument is passed as
+/// type `&[Si; 2]`.  The macro expansion of `s![a..b;c, d..e]`
 /// is equivalent to `&[Si(a, Some(b), c), Si(d, Some(e), 1)]`.
 ///
 /// ```
