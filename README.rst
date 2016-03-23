@@ -98,6 +98,15 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.4.5
+
+  - Add ``.all_close()`` which replaces the now deprecated ``.allclose()``.
+    The new method has a stricter protocol: it panics if the array
+    shapes are not compatible. We don't want errors to pass silently.
+  - Add a new illustration to the doc for ``.axis_iter()``.
+  - Rename ``OuterIter, OuterIterMut`` to ``AxisIter, AxisIterMut``.
+    The old name is now deprecated.
+
 - 0.4.4
 
   - Add mapping methods ``.mapv(), .mapv_into(), .map_inplace(),``
