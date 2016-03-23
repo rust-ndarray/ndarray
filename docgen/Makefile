@@ -3,7 +3,7 @@ DOCCRATES = ndarray ndarray-rblas ndarray-rand
 # deps to delete the generated docs
 RMDOCS = 
 
-FEATURES = "ndarray/rblas ndarray/rustc-serialize"
+FEATURES = 
 
 VERSIONS = $(patsubst %,target/VERS/%,$(DOCCRATES))
 
@@ -24,11 +24,11 @@ subst: $(DOCCRATES)
 
 mkdocs: Cargo.toml
 	for crate in $(DOCCRATES) ; do \
-		cargo doc --no-deps -p $$crate --features=$(FEATURES) ; \
+		cargo doc --no-deps -p $$crate ; \
 	done
 	rm -rf $(DESTDIR)
 	cp -r ./target/doc $(DESTDIR)
-	cp ./split_at.svg $(DESTDIR)/ndarray/
+	cp ./images/*.svg $(DESTDIR)/ndarray/
 	- cat ./custom.css >> $(DESTDIR)/main.css
 
 $(RMDOCS): mkdocs
