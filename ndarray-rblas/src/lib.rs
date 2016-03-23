@@ -5,7 +5,10 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-//! Experimental BLAS (Basic Linear Algebra Subprograms) integration
+//! Experimental `rblas` and BLAS (Basic Linear Algebra Subprograms) integration
+//! 
+//! ***Note:*** This crate is for explicitly integrating with the `rblas`
+//! crate and its API. ndarray can use BLAS by itself too.
 //!
 //! Depends on crate [`rblas`], ([docs]).
 //!

@@ -3,7 +3,7 @@ DOCCRATES = ndarray ndarray-rblas ndarray-rand
 # deps to delete the generated docs
 RMDOCS = 
 
-FEATURES = ""
+FEATURES = 
 
 VERSIONS = $(patsubst %,target/VERS/%,$(DOCCRATES))
 
@@ -28,7 +28,7 @@ mkdocs: Cargo.toml
 	done
 	rm -rf $(DESTDIR)
 	cp -r ./target/doc $(DESTDIR)
-	cp ./split_at.svg $(DESTDIR)/ndarray/
+	cp ./images/*.svg $(DESTDIR)/ndarray/
 	- cat ./custom.css >> $(DESTDIR)/main.css
 
 $(RMDOCS): mkdocs

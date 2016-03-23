@@ -96,10 +96,12 @@ pub const S: Si = Si(0, None, 1);
 /// the end of the axis. Strides are also signed and may be negative, but
 /// must not be zero.
 ///
-/// For example, if an array has two axes, the slice argument is passed as
-/// type `&[Si; 2]`.
+/// For example `s![0..4;2, 1..5]` is a slice of rows 0..4 with step size 2,
+/// and columns 1..5 with default step size 1. The slice would have
+/// shape `[2, 4]`.
 ///
-/// For example `s![a..b;c, d..e]`
+/// If an array has two axes, the slice argument is passed as
+/// type `&[Si; 2]`.  The macro expansion of `s![a..b;c, d..e]`
 /// is equivalent to `&[Si(a, Some(b), c), Si(d, Some(e), 1)]`.
 ///
 /// ```
@@ -124,18 +126,23 @@ pub const S: Si = Si(0, None, 1);
 #[macro_export]
 macro_rules! s(
     (@as_expr $e:expr) => ($e);
+    // convert a..b;c into @step(a..b, c), final item
     (@parse [$($stack:tt)*] $r:expr;$s:expr) => {
         s![@as_expr &[$($stack)* s!(@step $r, $s)]]
     };
+    // convert a..b into @step(a..b, 1), final item
     (@parse [$($stack:tt)*] $r:expr) => {
         s![@as_expr &[$($stack)* s!(@step $r, 1)]]
     };
+    // convert a..b;c into @step(a..b, c)
     (@parse [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         s![@parse [$($stack)* s!(@step $r, $s),] $($t)*]
     };
+    // convert a..b into @step(a..b, 1)
     (@parse [$($stack:tt)*] $r:expr, $($t:tt)*) => {
         s![@parse [$($stack)* s!(@step $r, 1),] $($t)*]
     };
+    // convert range, step into Si
     (@step $r:expr, $s:expr) => {
         <$crate::Si as ::std::convert::From<_>>::from($r).step($s)
     };
