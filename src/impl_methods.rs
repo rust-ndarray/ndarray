@@ -445,15 +445,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over `axis`
     /// and yields each subview along it.
     ///
-    /// For example, in a 2 × 2 × 3 array, with `axis` equal to 1,
+    /// For example, in a 3 × 5 × 5 array, with `axis` equal to `Axis(2)`,
     /// the iterator element
-    /// is a 2 × 3 subview (and there are 2 in total).
+    /// is a 3 × 5 subview (and there are 5 in total), as shown
+    /// in the picture below.
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
     ///
     /// See [*Subviews*](#subviews) for full documentation.
     ///
     /// **Panics** if `axis` is out of bounds.
+    ///
+    /// <img src="axis_iter.svg" height="250px">
     pub fn axis_iter(&self, axis: Axis) -> OuterIter<A, D::Smaller>
         where D: RemoveAxis,
     {

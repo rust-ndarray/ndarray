@@ -480,15 +480,19 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
     }
 }
 
-/// An iterator that traverses over the outermost dimension
+/// An iterator that traverses over an axis and
 /// and yields each subview.
 ///
-/// For example, in a 2 × 2 × 3 array, the iterator element
-/// is a 2 × 3 subview (and there are 2 in total).
+/// The outermost dimension is `Axis(0)`, created with `.outer_iter()`,
+/// but you can traverse arbitrary dimension with `.axis_iter()`.
+///
+/// For example, in a 3 × 5 × 5 array, with `axis` equal to `Axis(2)`,
+/// the iterator element is a 3 × 5 subview (and there are 5 in total).
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 ///
 /// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
+/// or [`.axis_iter()`](struct.ArrayBase.html#method.axis_iter)
 /// for more information.
 pub struct OuterIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
@@ -619,15 +623,19 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 }
 
 
-/// An iterator that traverses over the outermost dimension
-/// and yields each subview (mutable).
+/// An iterator that traverses over an axis and
+/// and yields each subview (mutable)
 ///
-/// For example, in a 2 × 2 × 3 array, the iterator element
-/// is a 2 × 3 subview (and there are 2 in total).
+/// The outermost dimension is `Axis(0)`, created with `.outer_iter()`,
+/// but you can traverse arbitrary dimension with `.axis_iter()`.
+///
+/// For example, in a 3 × 5 × 5 array, with `axis` equal to `Axis(2)`,
+/// the iterator element is a 3 × 5 subview (and there are 5 in total).
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 ///
 /// See [`.outer_iter_mut()`](struct.ArrayBase.html#method.outer_iter_mut)
+/// or [`.axis_iter_mut()`](struct.ArrayBase.html#method.axis_iter_mut)
 /// for more information.
 pub struct OuterIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
