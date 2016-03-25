@@ -98,6 +98,12 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.4.6
+
+  - Fix bug with crate feature blas; it would not compute matrix
+    multiplication correctly for arrays with negative or zero stride.
+  - Update blas-sys version (optional dependency).
+
 - 0.4.5
 
   - Add ``.all_close()`` which replaces the now deprecated ``.allclose()``.
