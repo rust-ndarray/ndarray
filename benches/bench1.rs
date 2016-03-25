@@ -284,8 +284,7 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
 
 #[bench]
 fn scalar_toowned(bench: &mut test::Bencher) {
-    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
-    let n = 1.;
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
     bench.iter(|| {
         a.to_owned()
     });
@@ -293,7 +292,7 @@ fn scalar_toowned(bench: &mut test::Bencher) {
 
 #[bench]
 fn scalar_add_1(bench: &mut test::Bencher) {
-    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
     let n = 1.;
     bench.iter(|| {
         &a + n
@@ -302,7 +301,7 @@ fn scalar_add_1(bench: &mut test::Bencher) {
 
 #[bench]
 fn scalar_add_2(bench: &mut test::Bencher) {
-    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
     let n = 1.;
     bench.iter(|| {
         n + &a
@@ -311,7 +310,7 @@ fn scalar_add_2(bench: &mut test::Bencher) {
 
 #[bench]
 fn scalar_sub_1(bench: &mut test::Bencher) {
-    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
     let n = 1.;
     bench.iter(|| {
         &a - n
@@ -320,7 +319,7 @@ fn scalar_sub_1(bench: &mut test::Bencher) {
 
 #[bench]
 fn scalar_sub_2(bench: &mut test::Bencher) {
-    let mut a = OwnedArray::<f32, _>::zeros((64, 64));
+    let a = OwnedArray::<f32, _>::zeros((64, 64));
     let n = 1.;
     bench.iter(|| {
         n - &a
