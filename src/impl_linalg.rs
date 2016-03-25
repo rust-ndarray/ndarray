@@ -457,6 +457,9 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, (Ix, Ix)>) -> bool
     if s1 != 1 {
         return false;
     }
+    if s0 < 1 || s1 < 1 {
+        return false;
+    }
     if (s0 > blas_index::max_value() as isize || s0 < blas_index::min_value() as isize) ||
         (s1 > blas_index::max_value() as isize || s1 < blas_index::min_value() as isize)
     {

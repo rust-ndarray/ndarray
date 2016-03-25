@@ -1,4 +1,4 @@
-extern crate ndarray;
+#[macro_use(s)] extern crate ndarray;
 extern crate num as libnum;
 
 use ndarray::RcArray;
@@ -215,6 +215,42 @@ fn mat_mul_order() {
 
     assert_eq!(cc.strides()[1], 1);
     assert_eq!(ff.strides()[0], 1);
+}
+
+// Check that matrix multiplication
+// supports broadcast arrays.
+#[test]
+fn mat_mul_broadcast() {
+    let (m, n, k) = (16, 16, 16);
+    let a = range_mat(m, n);
+    let x1 = 1.;
+    let x = OwnedArray::from_vec(vec![x1]);
+    let b0 = x.broadcast((n, k)).unwrap();
+    let b1 = OwnedArray::from_elem(n, x1);
+    let b1 = b1.broadcast((n, k)).unwrap();
+    let b2 = OwnedArray::from_elem((n, k), x1);
+
+    let c2 = a.mat_mul(&b2);
+    let c1 = a.mat_mul(&b1);
+    let c0 = a.mat_mul(&b0);
+    assert_eq!(c2, c1);
+    assert_eq!(c2, c0);
+}
+
+// Check that matrix multiplication supports reversed axes
+#[test]
+fn mat_mul_rev() {
+    let (m, n, k) = (16, 16, 16);
+    let a = range_mat(m, n);
+    let b = range_mat(n, k);
+    let mut rev = OwnedArray::zeros(b.dim());
+    let mut rev = rev.slice_mut(s![..;-1, ..]);
+    rev.assign(&b);
+    println!("{:.?}", rev);
+
+    let c1 = a.mat_mul(&b);
+    let c2 = a.mat_mul(&rev);
+    assert_eq!(c1, c2);
 }
 
 #[test]
