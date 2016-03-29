@@ -8,6 +8,7 @@ use ndarray::{
     Ix, Ixs,
     AsArray,
     NdFloat,
+    aview0,
 };
 
 use std::fmt;
@@ -169,6 +170,27 @@ fn dot_product() {
     let a = a.map(|f| *f as i32);
     let b = b.map(|f| *f as i32);
     assert_eq!(a.dot(&b), dot as i32);
+}
+
+// test that we can dot product with a broadcast array
+#[test]
+fn dot_product_0() {
+    let a = OwnedArray::range(0., 69., 1.);
+    let x = 1.5;
+    let b = aview0(&x);
+    let b = b.broadcast(a.dim()).unwrap();
+    assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+
+    // test different alignments
+    let max = 8 as Ixs;
+    for i in 1..max {
+        let a1 = a.slice(s![i..]);
+        let b1 = b.slice(s![i..]);
+        assert_approx_eq(a1.dot(&b1), reference_dot(&a1, &b1), 1e-5);
+        let a2 = a.slice(s![..-i]);
+        let b2 = b.slice(s![i..]);
+        assert_approx_eq(a2.dot(&b2), reference_dot(&a2, &b2), 1e-5);
+    }
 }
 
 fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
