@@ -658,6 +658,17 @@ fn dot_f32_1024(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn dot_f32_10e6(bench: &mut test::Bencher)
+{
+    let n = 1_000_000;
+    let av = OwnedArray::<f32, _>::zeros(n);
+    let bv = OwnedArray::<f32, _>::zeros(n);
+    bench.iter(|| {
+        av.dot(&bv)
+    });
+}
+
+#[bench]
 fn dot_extended(bench: &mut test::Bencher) {
     let m = 10;
     let n = 33;
