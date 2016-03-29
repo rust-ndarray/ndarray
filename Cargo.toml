@@ -38,6 +38,7 @@ optional = true
 # Use via the `blas` crate feature!
 blas-sys = { version = "0.6", optional = true, default-features = false }
 openblas-provider = { version = "0.4", optional = true, default-features = false }
+matrixmultiply = { version = "0.1.2" }
 
 # deprecated! use ndarray-rblas instead
 rblas = { version = "0.0.13", optional = true }
