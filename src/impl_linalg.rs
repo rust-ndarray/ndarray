@@ -16,14 +16,14 @@ use {
     LinalgScalar,
 };
 
+use std::any::{Any, TypeId};
+
 #[cfg(feature="blas")]
 use std::cmp;
 #[cfg(feature="blas")]
 use std::mem::swap;
 #[cfg(feature="blas")]
 use std::os::raw::c_int;
-#[cfg(feature="blas")]
-use std::any::{Any, TypeId};
 
 #[cfg(feature="blas")]
 use blas_sys::c::{CblasNoTrans, CblasTrans, CblasRowMajor};
@@ -363,7 +363,7 @@ fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, I
     where A: LinalgScalar,
           S: Data<Elem=A>,
 {
-    let ((m, a), (_, n)) = (lhs.dim, rhs.dim);
+    let ((m, k), (_, n)) = (lhs.dim, rhs.dim);
 
     let lhs_s0 = lhs.strides()[0];
     let rhs_s0 = rhs.strides()[0];
@@ -371,28 +371,72 @@ fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, I
 
     // Avoid initializing the memory in vec -- set it during iteration
     // Panic safe because A: Copy
-    let mut res_elems = Vec::<A>::with_capacity(m as usize * n as usize);
+    let mut res_elems = Vec::<A>::with_capacity(m * n);
     unsafe {
-        res_elems.set_len(m as usize * n as usize);
+        res_elems.set_len(m * n);
     }
-    let mut i = 0;
-    let mut j = 0;
-    for rr in &mut res_elems {
+
+    // common parameters for gemm
+    let ap = lhs.as_ptr();
+    let bp = rhs.as_ptr();
+    let c = res_elems.as_mut_ptr();
+    let (rsc, csc) = if column_major {
+        (1, m as isize)
+    } else {
+        (n as isize, 1)
+    };
+    if same_type::<A, f32>() {
         unsafe {
-            *rr = (0..a).fold(A::zero(),
-                move |s, k| s + *lhs.uget((i, k)) * *rhs.uget((k, j)));
+            ::matrixmultiply::sgemm(
+                m, k, n,
+                1.,
+                ap as *const _,
+                lhs.strides()[0],
+                lhs.strides()[1],
+                bp as *const _,
+                rhs.strides()[0],
+                rhs.strides()[1],
+                0.,
+                c as *mut _,
+                rsc, csc
+            );
         }
-        if !column_major {
-            j += 1;
-            if j == n {
-                j = 0;
-                i += 1;
+    } else if same_type::<A, f64>() {
+        unsafe {
+            ::matrixmultiply::dgemm(
+                m, k, n,
+                1.,
+                ap as *const _,
+                lhs.strides()[0],
+                lhs.strides()[1],
+                bp as *const _,
+                rhs.strides()[0],
+                rhs.strides()[1],
+                0.,
+                c as *mut _,
+                rsc, csc
+            );
+        }
+    } else {
+        let mut i = 0;
+        let mut j = 0;
+        for rr in &mut res_elems {
+            unsafe {
+                *rr = (0..k).fold(A::zero(),
+                    move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
             }
-        } else {
-            i += 1;
-            if i == m {
-                i = 0;
+            if !column_major {
                 j += 1;
+                if j == n {
+                    j = 0;
+                    i += 1;
+                }
+            } else {
+                i += 1;
+                if i == m {
+                    i = 0;
+                    j += 1;
+                }
             }
         }
     }
@@ -405,7 +449,6 @@ fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, I
     }
 }
 
-#[cfg(feature="blas")]
 #[inline(always)]
 /// Return `true` if `A` and `B` are the same type
 fn same_type<A: Any, B: Any>() -> bool {

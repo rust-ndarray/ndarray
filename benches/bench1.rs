@@ -539,6 +539,21 @@ mat_mul!{mat_mul_f32, f32,
     (m127, 127, 127, 127)
     (mix16x4, 32, 4, 32)
     (mix32x2, 32, 2, 32)
+    (mix10000, 128, 10000, 128)
+}
+
+mat_mul!{mat_mul_f64, f64,
+    (m004, 4, 4, 4)
+    (m007, 7, 7, 7)
+    (m008, 8, 8, 8)
+    (m012, 12, 12, 12)
+    (m016, 16, 16, 16)
+    (m032, 32, 32, 32)
+    (m064, 64, 64, 64)
+    (m127, 127, 127, 127)
+    (mix16x4, 32, 4, 32)
+    (mix32x2, 32, 2, 32)
+    (mix10000, 128, 10000, 128)
 }
 
 mat_mul!{mat_mul_i32, i32,
@@ -549,6 +564,7 @@ mat_mul!{mat_mul_i32, i32,
     (m016, 16, 16, 16)
     (m032, 32, 32, 32)
     (m064, 64, 64, 64)
+    (m127, 127, 127, 127)
 }
 
 #[cfg(feature = "rblas")]
@@ -652,6 +668,17 @@ fn dot_f32_1024(bench: &mut test::Bencher)
 {
     let av = OwnedArray::<f32, _>::zeros(1024);
     let bv = OwnedArray::<f32, _>::zeros(1024);
+    bench.iter(|| {
+        av.dot(&bv)
+    });
+}
+
+#[bench]
+fn dot_f32_10e6(bench: &mut test::Bencher)
+{
+    let n = 1_000_000;
+    let av = OwnedArray::<f32, _>::zeros(n);
+    let bv = OwnedArray::<f32, _>::zeros(n);
     bench.iter(|| {
         av.dot(&bv)
     });

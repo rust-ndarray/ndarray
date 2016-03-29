@@ -85,6 +85,8 @@ extern crate rblas;
 #[cfg(feature="blas")]
 extern crate blas_sys;
 
+extern crate matrixmultiply;
+
 extern crate itertools;
 extern crate num as libnum;
 
