@@ -49,7 +49,7 @@ pub trait RandomExt<S, D>
     /// # fn main() {
     /// let a = OwnedArray::random((2, 5), Range::new(0., 10.));
     /// println!("{:8.4}", a);
-    /// // Output:
+    /// // Example Output:
     /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],
     /// //  [  0.0914,   5.5186,   5.8135,   5.2361,   3.1879]]
     /// # }
@@ -85,6 +85,23 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
 }
 
 /// A wrapper type that allows casting f64 distributions to f32
+///
+/// ```
+/// extern crate rand;
+/// extern crate ndarray;
+/// extern crate ndarray_rand;
+///
+/// use rand::distributions::Normal;
+/// use ndarray::OwnedArray;
+/// use ndarray_rand::{RandomExt, F32};
+///
+/// # fn main() {
+/// let a = OwnedArray::random((2, 5), F32(Normal::new(0., 1.)));
+/// println!("{:8.4}", a);
+/// // Example Output:
+/// // [[ -0.6910,   1.1730,   1.0902,  -0.4092,  -1.7340],
+/// //  [ -0.6810,   0.1678,  -0.9487,   0.3150,   1.2981]]
+/// # }
 #[derive(Copy, Clone, Debug)]
 pub struct F32<S>(pub S);
 
