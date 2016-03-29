@@ -47,13 +47,9 @@ rblas = { version = "0.0.13", optional = true }
 assign_ops = []
 
 blas = ["blas-sys"]
-blas-openblas-sys = [
-    "blas",
-    "blas-sys/openblas",
-    "openblas-provider/system",
-]
 
-# This feature is used for testing
+# These features are used for testing
+blas-openblas-sys = ["blas"]
 test = ["blas-openblas-sys", "rustc-serialize"]
 
 [profile.release]

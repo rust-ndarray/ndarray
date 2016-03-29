@@ -37,4 +37,7 @@ fn main() {
             println!("cargo:rustc-cfg={}", ASSIGN_CFG);
         }
     }
+    if cfg!(feature = "blas-openblas-sys") {
+        println!("cargo:rustc-link-lib={}=openblas", "dylib");
+    }
 }
