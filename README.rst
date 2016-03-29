@@ -413,6 +413,13 @@ Recent Changes (ndarray-rblas)
 
   - Initial release, identical to ndarray 0.4.1's version.
 
+Recent Changes (ndarray-rand)
+-----------------------------
+
+- 0.1.0
+
+  - Initial release
+
 License
 =======
 
