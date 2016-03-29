@@ -98,6 +98,12 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.4.7
+
+  - Add dependency matrixmultiply to handle matrix multiplication
+    for floating point elements. It supports matrices of general stride
+    and is a great improvement for performance. See PR #175.
+
 - 0.4.6
 
   - Fix bug with crate feature blas; it would not compute matrix
