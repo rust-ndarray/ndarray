@@ -98,6 +98,10 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.4.8
+
+  - Fix an error in ``.dot()`` when using BLAS and arrays with negative stride.
+
 - 0.4.7
 
   - Add dependency matrixmultiply to handle matrix multiplication
