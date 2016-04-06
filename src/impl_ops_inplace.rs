@@ -15,8 +15,12 @@ use std::ops::{
 use imp_prelude::*;
 // array OPERATORS
 
+macro_rules! as_expr(
+    ($e:expr) => ($e)
+);
+
 macro_rules! impl_binary_op_inplace(
-    ($trt:ident, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (
+    ($trt:ident, $operator:tt, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (
     /// Perform elementwise
     #[doc=$doc]
     /// between `self` and `rhs`,
@@ -30,7 +34,7 @@ macro_rules! impl_binary_op_inplace(
               S2: Data<Elem=A>,
     {
         self.zip_mut_with(rhs, |x, y| {
-            *x = x.clone().$mth(y.clone());
+            *x = as_expr!(x.clone() $operator y.clone());
         });
     }
 
@@ -42,7 +46,7 @@ macro_rules! impl_binary_op_inplace(
         where A: Clone + $trt<A, Output=A>,
     {
         self.unordered_foreach_mut(move |elt| {
-            *elt = elt.clone(). $mth (x.clone());
+            *elt = as_expr!(elt.clone() $operator x.clone());
         });
     }
     );
@@ -58,23 +62,23 @@ impl<A, S, D> ArrayBase<S, D>
 {
 
 
-impl_binary_op_inplace!(Add, add, iadd, iadd_scalar, "addition");
-impl_binary_op_inplace!(Sub, sub, isub, isub_scalar, "subtraction");
-impl_binary_op_inplace!(Mul, mul, imul, imul_scalar, "multiplication");
-impl_binary_op_inplace!(Div, div, idiv, idiv_scalar, "division");
-impl_binary_op_inplace!(Rem, rem, irem, irem_scalar, "remainder");
-impl_binary_op_inplace!(BitAnd, bitand, ibitand, ibitand_scalar, "bit and");
-impl_binary_op_inplace!(BitOr, bitor, ibitor, ibitor_scalar, "bit or");
-impl_binary_op_inplace!(BitXor, bitxor, ibitxor, ibitxor_scalar, "bit xor");
-impl_binary_op_inplace!(Shl, shl, ishl, ishl_scalar, "left shift");
-impl_binary_op_inplace!(Shr, shr, ishr, ishr_scalar, "right shift");
+impl_binary_op_inplace!(Add, +, add, iadd, iadd_scalar, "addition");
+impl_binary_op_inplace!(Sub, -, sub, isub, isub_scalar, "subtraction");
+impl_binary_op_inplace!(Mul, *, mul, imul, imul_scalar, "multiplication");
+impl_binary_op_inplace!(Div, /, div, idiv, idiv_scalar, "division");
+impl_binary_op_inplace!(Rem, %, rem, irem, irem_scalar, "remainder");
+impl_binary_op_inplace!(BitAnd, &, bitand, ibitand, ibitand_scalar, "bit and");
+impl_binary_op_inplace!(BitOr, |, bitor, ibitor, ibitor_scalar, "bit or");
+impl_binary_op_inplace!(BitXor, ^, bitxor, ibitxor, ibitxor_scalar, "bit xor");
+impl_binary_op_inplace!(Shl, <<, shl, ishl, ishl_scalar, "left shift");
+impl_binary_op_inplace!(Shr, >>, shr, ishr, ishr_scalar, "right shift");
 
     /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
         where A: Clone + Neg<Output=A>,
     {
         self.unordered_foreach_mut(|elt| {
-            *elt = elt.clone().neg()
+            *elt = -elt.clone();
         });
     }
 
@@ -83,7 +87,7 @@ impl_binary_op_inplace!(Shr, shr, ishr, ishr_scalar, "right shift");
         where A: Clone + Not<Output=A>,
     {
         self.unordered_foreach_mut(|elt| {
-            *elt = elt.clone().not()
+            *elt = !elt.clone();
         });
     }
 

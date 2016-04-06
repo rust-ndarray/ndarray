@@ -96,18 +96,21 @@ impl<A, S> ArrayBase<S, Ix>
             macro_rules! dot {
                 ($ty:ty, $func:ident) => {{
             if blas_compat_1d::<$ty, _>(self) && blas_compat_1d::<$ty, _>(rhs) {
-                let n = self.len() as blas_index;
-                let incx = self.strides()[0] as blas_index;
-                let incy = rhs.strides()[0] as blas_index;
-                let ret = unsafe {
-                    blas_sys::c::$func(
+                unsafe {
+                    let (lhs_ptr, n, incx) = blas_1d_params(self.ptr,
+                                                            self.len(),
+                                                            self.strides()[0]);
+                    let (rhs_ptr, _, incy) = blas_1d_params(rhs.ptr,
+                                                            rhs.len(),
+                                                            rhs.strides()[0]);
+                    let ret = blas_sys::c::$func(
                         n,
-                        self.ptr as *const $ty,
+                        lhs_ptr as *const $ty,
                         incx,
-                        rhs.ptr as *const $ty,
-                        incy)
-                };
-                return cast_as::<$ty, A>(&ret);
+                        rhs_ptr as *const $ty,
+                        incy);
+                    return cast_as::<$ty, A>(&ret);
+                }
             }
                 }}
             }
@@ -116,6 +119,27 @@ impl<A, S> ArrayBase<S, Ix>
             dot!{f64, cblas_ddot};
         }
         self.dot_generic(rhs)
+    }
+}
+
+/// Return a pointer to the starting element in BLAS's view.
+///
+/// BLAS wants a pointer to the element with lowest address,
+/// which agrees with our pointer for non-negative strides, but
+/// is at the opposite end for negative strides.
+#[cfg(feature="blas")]
+unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize)
+    -> (*const A, blas_index, blas_index)
+{
+    // [x x x x]
+    //        ^--ptr
+    //        stride = -1
+    //  ^--blas_ptr = ptr + (len - 1) * stride
+    if stride >= 0 || len == 0 {
+        (ptr, len as blas_index, stride as blas_index)
+    } else {
+        let ptr = ptr.offset((len - 1) as isize * stride);
+        (ptr, len as blas_index, stride as blas_index)
     }
 }
 

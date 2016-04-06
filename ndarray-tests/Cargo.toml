@@ -1,0 +1,21 @@
+[package]
+name = "ndarray-tests"
+version = "0.1.0"
+authors = ["bluss"]
+publish = false
+
+[dependencies]
+ndarray = { version = "*", path = ".." }
+ndarray-rand = { version = "*", path = "../ndarray-rand/" }
+rand = "0.3"
+
+[lib]
+test = false
+
+[features]
+test_blas = ["ndarray/blas", "ndarray/blas-openblas-sys"]
+
+[profile.dev]
+opt-level = 2
+[profile.test]
+opt-level = 2
