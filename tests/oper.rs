@@ -193,6 +193,25 @@ fn dot_product_0() {
     }
 }
 
+#[test]
+fn dot_product_neg_stride() {
+    // test that we can dot with negative stride
+    let a = OwnedArray::range(0., 69., 1.);
+    let b = &a * 2. - 7.;
+    for stride in -10..0 {
+        // both negative
+        let a = a.slice(s![..;stride]);
+        let b = b.slice(s![..;stride]);
+        assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+    }
+    for stride in -10..0 {
+        // mixed
+        let a = a.slice(s![..;-stride]);
+        let b = b.slice(s![..;stride]);
+        assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+    }
+}
+
 fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
     OwnedArray::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
 }
