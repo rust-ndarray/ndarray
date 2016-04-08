@@ -80,11 +80,6 @@ your `Cargo.toml`.
   - Enable transparent BLAS support for matrix multiplication. Pluggable
     backend via ``blas-sys``.
 
-- ``rblas``
-
-  - **Deprecated:** replaced by separate crate ``ndarray-rblas``
-  - Enables ``rblas`` integration
-
 How to use with cargo::
 
     [dependencies]

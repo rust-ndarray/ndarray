@@ -65,9 +65,6 @@
 //!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication. Pluggable
 //!     backend via `blas-sys`.
-//! - `rblas`
-//!   - ***Deprecated:*** replaced by separate crate `ndarray-rblas`
-//!   - Enables `rblas` integration
 //!
 
 #[cfg(feature = "serde")]
@@ -75,8 +72,6 @@ extern crate serde;
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 
-#[cfg(feature = "rblas")]
-extern crate rblas;
 #[cfg(feature="blas")]
 extern crate blas_sys;
 
@@ -125,8 +120,6 @@ mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;
 mod arrayformat;
-#[cfg(feature = "rblas")]
-pub mod blas;
 mod data_traits;
 
 pub use data_traits::{
@@ -485,32 +478,6 @@ mod impl_methods;
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>, D: Dimension
 {
-    #[cfg(feature = "rblas")]
-    /// Return `true` if the innermost dimension is contiguous (includes
-    /// the special cases of 0 or 1 length in that axis).
-    fn is_inner_contiguous(&self) -> bool {
-        let ndim = self.ndim();
-        if ndim == 0 {
-            return true;
-        }
-        self.shape()[ndim - 1] <= 1 || self.strides()[ndim - 1] == 1
-    }
-
-    #[cfg(feature = "rblas")]
-    /// If the array is not in the standard layout, copy all elements
-    /// into the standard layout so that the array is C-contiguous.
-    fn ensure_standard_layout(&mut self)
-        where S: DataOwned,
-              A: Clone
-    {
-        if !self.is_standard_layout() {
-            let mut v: Vec<A> = self.iter().cloned().collect();
-            self.ptr = v.as_mut_ptr();
-            self.data = DataOwned::new(v);
-            self.strides = self.dim.default_strides();
-        }
-    }
-
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
         where E: Dimension,
