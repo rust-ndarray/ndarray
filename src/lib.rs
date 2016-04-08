@@ -357,7 +357,8 @@ pub type Ixs = isize;
 /// Let `C` be an array with mutable data (either `OwnedArray`, `RcArray`
 /// or `ArrayViewMut`).
 /// The following combinations of operands
-/// are supported for an arbitrary binary operator denoted by `@`.
+/// are supported for an arbitrary binary operator denoted by `@` (it can be
+/// `+`, `-`, `*`, `/` and so on).
 ///
 /// - `&A @ &A` which produces a new `OwnedArray`
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
