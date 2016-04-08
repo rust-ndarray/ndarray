@@ -288,7 +288,9 @@ mod arithmetic_ops {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
         fn neg(mut self) -> Self {
-            self.ineg();
+            self.unordered_foreach_mut(|elt| {
+                *elt = -elt.clone();
+            });
             self
         }
     }
@@ -301,7 +303,9 @@ mod arithmetic_ops {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
         fn not(mut self) -> Self {
-            self.inot();
+            self.unordered_foreach_mut(|elt| {
+                *elt = !elt.clone();
+            });
             self
         }
     }
