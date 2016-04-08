@@ -45,7 +45,7 @@ impl<A, S, D> ArrayBase<S, D>
         let mut res = self.subview(axis, 0).to_owned();
         for i in 1..n {
             let view = self.subview(axis, i);
-            res.iadd(&view);
+            res = res + &view;
         }
         res
     }

@@ -328,7 +328,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// let mut a = arr2(&[[1., 2.],
     ///                    [3., 4.]]);
     ///
-    /// a.subview_mut(Axis(1), 1).iadd_scalar(&10.);
+    /// {
+    ///     let mut column1 = a.subview_mut(Axis(1), 1);
+    ///     column1 += 10.;
+    /// }
     ///
     /// assert!(
     ///     a == aview2(&[[1., 12.],
