@@ -69,11 +69,6 @@ Crate Feature Flags
 The following crate feature flags are available. They are configured in
 your `Cargo.toml`.
 
-- ``assign_ops``
-
-  - Requires Rust 1.8, will be default soon.
-  - Enables the compound assignment operators
-
 - ``rustc-serialize``
 
   - Optional, compatible with Rust stable

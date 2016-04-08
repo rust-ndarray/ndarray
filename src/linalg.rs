@@ -9,7 +9,6 @@ use libnum::{Zero, One, Float};
 use std::any::Any;
 use std::fmt;
 use std::ops::{Add, Sub, Mul, Div};
-#[cfg(feature="assign_ops")]
 use std::ops::{
     AddAssign,
     SubAssign,
@@ -50,22 +49,8 @@ impl<T> LinalgScalar for T
 /// much float-relevant ndarray functionality as possible, including the traits
 /// needed for linear algebra (`Any`) and for *right hand side* scalar
 /// operations (`ScalarOperand`).
-#[cfg(not(feature="assign_ops"))]
-pub trait NdFloat :
-    Float +
-    fmt::Display + fmt::Debug + fmt::LowerExp + fmt::UpperExp +
-    ScalarOperand + LinalgScalar + Send + Sync
-{ }
-
-/// Floating-point element types `f32` and `f64`.
-///
-/// Trait `NdFloat` is only implemented for `f32` and `f64` but encompasses as
-/// much float-relevant ndarray functionality as possible, including the traits
-/// needed for linear algebra (`Any`) and for *right hand side* scalar
-/// operations (`ScalarOperand`).
 ///
 /// This trait can only be implemented by `f32` and `f64`.
-#[cfg(feature="assign_ops")]
 pub trait NdFloat :
     Float +
     AddAssign + SubAssign + MulAssign + DivAssign + RemAssign +

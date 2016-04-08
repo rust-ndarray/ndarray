@@ -58,9 +58,6 @@
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
-//! - `assign_ops`
-//!   - Requires Rust 1.8, will be default soon.
-//!   - Enables the compound assignment operators
 //! - `rustc-serialize`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support
@@ -72,8 +69,6 @@
 //!   - ***Deprecated:*** replaced by separate crate `ndarray-rblas`
 //!   - Enables `rblas` integration
 //!
-#![cfg_attr(all(feature = "assign_ops", not(has_assign)),
-            feature(augmented_assignments, op_assign_traits))]
 
 #[cfg(feature = "serde")]
 extern crate serde;
@@ -382,7 +377,6 @@ pub type Ixs = isize;
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
-///   (requires crate feature `"assign_ops"`)
 ///
 /// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
@@ -392,7 +386,6 @@ pub type Ixs = isize;
 /// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
 /// - `C @= K` which performs an arithmetic operation in place
-///   (requires crate feature `"assign_ops"`)
 ///
 /// ## Broadcasting
 ///

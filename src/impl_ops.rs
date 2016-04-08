@@ -303,7 +303,6 @@ mod arithmetic_ops {
     }
 }
 
-#[cfg(feature = "assign_ops")]
 mod assign_ops {
     use super::*;
     use imp_prelude::*;
@@ -316,8 +315,6 @@ mod assign_ops {
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn’t possible.
-    ///
-    /// **Requires crate feature `"assign_ops"`**
     impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
         where A: Clone + $trt<A>,
               S: DataMut<Elem=A>,
@@ -333,7 +330,6 @@ mod assign_ops {
     }
 
     #[doc=$doc]
-    /// **Requires crate feature `"assign_ops"`**
     impl<A, S, D> $trt<A> for ArrayBase<S, D>
         where A: ScalarOperand + $trt<A>,
               S: DataMut<Elem=A>,

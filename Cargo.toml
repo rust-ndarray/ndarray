@@ -44,9 +44,6 @@ matrixmultiply = { version = "0.1.7" }
 rblas = { version = "0.0.13", optional = true }
 
 [features]
-# deprecated! Will be default
-assign_ops = []
-
 blas = ["blas-sys"]
 
 # These features are used for testing

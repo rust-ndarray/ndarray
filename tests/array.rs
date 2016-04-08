@@ -606,7 +606,6 @@ fn slice_mut() {
                            [99, 5, 99]]));
 }
 
-#[cfg(feature = "assign_ops")]
 #[test]
 fn assign_ops()
 {
