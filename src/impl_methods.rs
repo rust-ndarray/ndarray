@@ -906,38 +906,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().reversed_axes()
     }
 
-    /// ***Deprecated: Use .as_slice_memory_order() instead.***
-    ///
-    /// Return a slice of the array’s backing data in memory order.
-    ///
-    /// **Note:** Data memory order may not correspond to the index order
-    /// of the array. Neither is the raw data slice is restricted to just the
-    /// array’s view.<br>
-    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order() instead"))]
-    pub fn raw_data(&self) -> &[A]
-        where S: DataOwned,
-    {
-        self.data.slice()
-    }
-
-    /// ***Deprecated: Use .as_slice_memory_order_mut() instead.***
-    ///
-    /// Return a mutable slice of the array’s backing data in memory order.
-    ///
-    /// **Note:** Data memory order may not correspond to the index order
-    /// of the array. Neither is the raw data slice is restricted to just the
-    /// array’s view.<br>
-    ///
-    /// **Note:** The data is uniquely held and nonaliased
-    /// while it is mutably borrowed.
-    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order_mut() instead"))]
-    pub fn raw_data_mut(&mut self) -> &mut [A]
-        where S: DataOwned + DataMut,
-    {
-        self.ensure_unique();
-        self.data.slice_mut()
-    }
-
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data.slice();
         if slc.is_empty() {
