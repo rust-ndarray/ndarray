@@ -39,9 +39,7 @@
 //!   + The crate is continuously developing, and breaking changes are expected
 //!     during evolution from version to version. We adhere to semver,
 //!     but alpha releases break at will.
-//!   + We adopt the newest stable rust features we need. In place methods like `iadd`
-//!     *will be deprecated* when Rust supports `+=` and similar in Rust 1.8.
-//!   + We try to introduce more static checking gradually.
+//!   + We adopt the newest stable rust features we need.
 //! - Performance status:
 //!   + Performance of an operation depends on the memory layout of the array
 //!     or array view. Especially if it's a binary operation, which
