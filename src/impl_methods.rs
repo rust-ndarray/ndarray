@@ -1037,16 +1037,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// ***Deprecated: Will be removed because it dictates a specific order.***
-    ///
-    /// Traverse the array elements in order and apply a fold,
+    /// Traverse the array elements and apply a fold,
     /// returning the resulting value.
-    #[cfg_attr(has_deprecated, deprecated(note=
-      "Will be removed because it dictates a specific order"))]
+    ///
+    /// Elements are visited in arbitrary order.
     pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
-        if let Some(slc) = self.as_slice() {
+        if let Some(slc) = self.as_slice_memory_order() {
             // FIXME: Use for loop when slice iterator is perf is restored
             for i in 0..slc.len() {
                 init = f(init, &slc[i]);
