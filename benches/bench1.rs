@@ -227,7 +227,7 @@ fn add_2d_regular(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        a.iadd(&bv);
+        a += &bv;
     });
 }
 
@@ -252,7 +252,7 @@ fn add_2d_cutout(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        acut.iadd(&bv);
+        acut += &bv;
     });
 }
 
@@ -263,7 +263,7 @@ fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros(64);
     let bv = b.view();
     bench.iter(|| {
-        a.iadd(&bv);
+        a += &bv;
     });
 }
 
@@ -274,7 +274,7 @@ fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros(());
     let bv = b.view();
     bench.iter(|| {
-        a.iadd(&bv);
+        a += &bv;
     });
 }
 
@@ -330,7 +330,7 @@ fn add_2d_0_to_2_iadd_scalar(bench: &mut test::Bencher)
     let mut a = OwnedArray::<i32, _>::zeros((64, 64));
     let n = black_box(0);
     bench.iter(|| {
-        a.iadd_scalar(&n);
+        a += n;
     });
 }
 
@@ -342,7 +342,7 @@ fn add_2d_transposed(bench: &mut test::Bencher)
     let b = OwnedArray::<i32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        a.iadd(&bv);
+        a += &bv;
     });
 }
 
@@ -353,7 +353,7 @@ fn add_2d_f32_regular(bench: &mut test::Bencher)
     let b = OwnedArray::<f32, _>::zeros((64, 64));
     let bv = b.view();
     bench.iter(|| {
-        a.iadd(&bv);
+        a += &bv;
     });
 }
 

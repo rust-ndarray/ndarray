@@ -36,9 +36,9 @@ fn test_add()
     let b_dim = (2, 1, 2, 1);
     let mut a = RcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
     let b = RcArray::linspace(0.0, 1., b_dim.size()).reshape(b_dim);
-    a.iadd(&b);
+    a += &b;
     let t = RcArray::from_elem((), 1.0f32);
-    a.iadd(&t);
+    a += &t;
 }
 
 #[test] #[should_panic]
@@ -47,5 +47,5 @@ fn test_add_incompat()
     let a_dim = (2, 4, 2, 2);
     let mut a = RcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
     let incompat = RcArray::from_elem(3, 1.0f32);
-    a.iadd(&incompat);
+    a += &incompat;
 }
