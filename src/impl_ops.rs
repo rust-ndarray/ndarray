@@ -176,16 +176,20 @@ macro_rules! impl_scalar_lhs_op {
 // between the scalar `self` and array `rhs`,
 // and return the result (based on `self`).
 impl<S, D> $trt<ArrayBase<S, D>> for $scalar
-    where S: DataMut<Elem=$scalar>,
+    where S: DataOwned<Elem=$scalar> + DataMut,
           D: Dimension,
 {
     type Output = ArrayBase<S, D>;
-    fn $mth(self, mut rhs: ArrayBase<S, D>) -> ArrayBase<S, D> {
-        // FIXME: Use when restricted to DataOwned
-        rhs.unordered_foreach_mut(move |elt| {
-            *elt = as_expr!(self $operator *elt);
-        });
-        rhs
+    fn $mth(self, rhs: ArrayBase<S, D>) -> ArrayBase<S, D> {
+        if_commutative!($commutative {
+            rhs.$mth(self)
+        } or {{
+            let mut rhs = rhs;
+            rhs.unordered_foreach_mut(move |elt| {
+                *elt = as_expr!(self $operator *elt);
+            });
+            rhs
+        }})
     }
 }
 
@@ -278,7 +282,7 @@ mod arithmetic_ops {
 
     impl<A, S, D> Neg for ArrayBase<S, D>
         where A: Clone + Neg<Output=A>,
-              S: DataMut<Elem=A>,
+              S: DataOwned<Elem=A> + DataMut,
               D: Dimension
     {
         type Output = Self;
@@ -291,7 +295,7 @@ mod arithmetic_ops {
 
     impl<A, S, D> Not for ArrayBase<S, D>
         where A: Clone + Not<Output=A>,
-              S: DataMut<Elem=A>,
+              S: DataOwned<Elem=A> + DataMut,
               D: Dimension
     {
         type Output = Self;
