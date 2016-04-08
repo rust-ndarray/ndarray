@@ -104,11 +104,6 @@ pub use iterators::{
     AxisChunksIter,
     AxisChunksIterMut,
 };
-#[allow(deprecated)]
-pub use iterators::{
-    OuterIter,
-    OuterIterMut,
-};
 
 pub use arraytraits::AsArray;
 pub use linalg::{LinalgScalar, NdFloat};
@@ -418,13 +413,6 @@ pub struct ArrayBase<S, D>
 /// Array where the data is reference counted and copy on write, it
 /// can act as both an owner as the data as well as a lightweight view.
 pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
-
-#[cfg_attr(has_deprecated, deprecated(note="`Array` is deprecated! Renamed to `RcArray`."))]
-/// ***Deprecated: Use `RcArray` instead***
-///
-/// Array where the data is reference counted and copy on write, it
-/// can act as both an owner as the data as well as a lightweight view.
-pub type Array<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 
 /// Array where the data is owned uniquely.
 pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;

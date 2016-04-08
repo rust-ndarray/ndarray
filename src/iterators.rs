@@ -499,18 +499,6 @@ pub struct AxisIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
-#[cfg_attr(has_deprecated, deprecated(note="Use AxisIter instead"))]
-/// ***Deprecated:*** Type renamed to `AxisIter`.
-///
-/// Axis iterator for `Axis(0)`.
-pub type OuterIter<'a, A, D> = AxisIter<'a, A, D>;
-
-#[cfg_attr(has_deprecated, deprecated(note="Use AxisIterMut instead"))]
-/// ***Deprecated:*** Type renamed to `AxisIterMut`.
-///
-/// Axis iterator for `Axis(0)`.
-pub type OuterIterMut<'a, A, D> = AxisIterMut<'a, A, D>;
-
 macro_rules! outer_iter_split_at_impl {
     ($iter: ident) => (
         impl<'a, A, D> $iter<'a, A, D>
