@@ -10,6 +10,6 @@ publish = false
 name = "ndarray_docs"
 
 [dependencies]
-ndarray = { version = "*", path = "..", features = ["rblas", "rustc-serialize"] }
+ndarray = { version = "*", path = "..", features = ["rustc-serialize"] }
 ndarray-rblas = { version = "*", path = "../ndarray-rblas" }
 ndarray-rand = { version = "*", path = "../ndarray-rand" }

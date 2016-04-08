@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use std::ops::Add;
-use libnum::{self, Float};
+use libnum::{self, Zero, Float};
 
 use imp_prelude::*;
 use numeric_util;
@@ -38,14 +38,14 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds.
     pub fn sum(&self, axis: Axis) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
-        where A: Clone + Add<Output=A>,
+        where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
         let n = self.shape().axis(axis);
         let mut res = self.subview(axis, 0).to_owned();
         for i in 1..n {
             let view = self.subview(axis, i);
-            res.iadd(&view);
+            res = res + &view;
         }
         res
     }

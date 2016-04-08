@@ -39,9 +39,7 @@
 //!   + The crate is continuously developing, and breaking changes are expected
 //!     during evolution from version to version. We adhere to semver,
 //!     but alpha releases break at will.
-//!   + We adopt the newest stable rust features we need. In place methods like `iadd`
-//!     *will be deprecated* when Rust supports `+=` and similar in Rust 1.8.
-//!   + We try to introduce more static checking gradually.
+//!   + We adopt the newest stable rust features we need.
 //! - Performance status:
 //!   + Performance of an operation depends on the memory layout of the array
 //!     or array view. Especially if it's a binary operation, which
@@ -58,9 +56,6 @@
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
-//! - `assign_ops`
-//!   - Requires Rust 1.8, will be default soon.
-//!   - Enables the compound assignment operators
 //! - `rustc-serialize`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support
@@ -68,20 +63,13 @@
 //!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication. Pluggable
 //!     backend via `blas-sys`.
-//! - `rblas`
-//!   - ***Deprecated:*** replaced by separate crate `ndarray-rblas`
-//!   - Enables `rblas` integration
 //!
-#![cfg_attr(all(feature = "assign_ops", not(has_assign)),
-            feature(augmented_assignments, op_assign_traits))]
 
 #[cfg(feature = "serde")]
 extern crate serde;
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 
-#[cfg(feature = "rblas")]
-extern crate rblas;
 #[cfg(feature="blas")]
 extern crate blas_sys;
 
@@ -116,11 +104,6 @@ pub use iterators::{
     AxisChunksIter,
     AxisChunksIterMut,
 };
-#[allow(deprecated)]
-pub use iterators::{
-    OuterIter,
-    OuterIterMut,
-};
 
 pub use arraytraits::AsArray;
 pub use linalg::{LinalgScalar, NdFloat};
@@ -130,8 +113,6 @@ mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;
 mod arrayformat;
-#[cfg(feature = "rblas")]
-pub mod blas;
 mod data_traits;
 
 pub use data_traits::{
@@ -376,13 +357,13 @@ pub type Ixs = isize;
 /// Let `C` be an array with mutable data (either `OwnedArray`, `RcArray`
 /// or `ArrayViewMut`).
 /// The following combinations of operands
-/// are supported for an arbitrary binary operator denoted by `@`.
+/// are supported for an arbitrary binary operator denoted by `@` (it can be
+/// `+`, `-`, `*`, `/` and so on).
 ///
 /// - `&A @ &A` which produces a new `OwnedArray`
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
-///   (requires crate feature `"assign_ops"`)
 ///
 /// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
@@ -392,7 +373,6 @@ pub type Ixs = isize;
 /// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
 /// - `C @= K` which performs an arithmetic operation in place
-///   (requires crate feature `"assign_ops"`)
 ///
 /// ## Broadcasting
 ///
@@ -434,13 +414,6 @@ pub struct ArrayBase<S, D>
 /// Array where the data is reference counted and copy on write, it
 /// can act as both an owner as the data as well as a lightweight view.
 pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
-
-#[cfg_attr(has_deprecated, deprecated(note="`Array` is deprecated! Renamed to `RcArray`."))]
-/// ***Deprecated: Use `RcArray` instead***
-///
-/// Array where the data is reference counted and copy on write, it
-/// can act as both an owner as the data as well as a lightweight view.
-pub type Array<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 
 /// Array where the data is owned uniquely.
 pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
@@ -492,32 +465,6 @@ mod impl_methods;
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>, D: Dimension
 {
-    #[cfg(feature = "rblas")]
-    /// Return `true` if the innermost dimension is contiguous (includes
-    /// the special cases of 0 or 1 length in that axis).
-    fn is_inner_contiguous(&self) -> bool {
-        let ndim = self.ndim();
-        if ndim == 0 {
-            return true;
-        }
-        self.shape()[ndim - 1] <= 1 || self.strides()[ndim - 1] == 1
-    }
-
-    #[cfg(feature = "rblas")]
-    /// If the array is not in the standard layout, copy all elements
-    /// into the standard layout so that the array is C-contiguous.
-    fn ensure_standard_layout(&mut self)
-        where S: DataOwned,
-              A: Clone
-    {
-        if !self.is_standard_layout() {
-            let mut v: Vec<A> = self.iter().cloned().collect();
-            self.ptr = v.as_mut_ptr();
-            self.data = DataOwned::new(v);
-            self.strides = self.dim.default_strides();
-        }
-    }
-
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
         where E: Dimension,

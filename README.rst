@@ -47,9 +47,7 @@ Status and Lookout
   + The crate is continuously developing, and breaking changes are expected
     during evolution from version to version. We adhere to semver,
     but alpha releases break at will.
-  + We adopt the newest stable rust features we need. In place methods like ``iadd``
-    *will be deprecated* when Rust supports ``+=`` and similar in Rust 1.8.
-  + We try to introduce more static checking gradually.
+  + We adopt the newest stable rust features we need.
 
 - Performance status:
 
@@ -69,11 +67,6 @@ Crate Feature Flags
 The following crate feature flags are available. They are configured in
 your `Cargo.toml`.
 
-- ``assign_ops``
-
-  - Requires Rust 1.8, will be default soon.
-  - Enables the compound assignment operators
-
 - ``rustc-serialize``
 
   - Optional, compatible with Rust stable
@@ -84,11 +77,6 @@ your `Cargo.toml`.
   - Optional and experimental, compatible with Rust stable
   - Enable transparent BLAS support for matrix multiplication. Pluggable
     backend via ``blas-sys``.
-
-- ``rblas``
-
-  - **Deprecated:** replaced by separate crate ``ndarray-rblas``
-  - Enables ``rblas`` integration
 
 How to use with cargo::
 

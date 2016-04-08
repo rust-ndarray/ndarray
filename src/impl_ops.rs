@@ -50,7 +50,7 @@ macro_rules! as_expr(
 );
 
 macro_rules! impl_binary_op(
-    ($trt:ident, $operator:tt, $mth:ident, $imth:ident, $imth_scalar:ident, $doc:expr) => (
+    ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
@@ -93,7 +93,9 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
     type Output = ArrayBase<S, D>;
     fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
-        self.$imth(rhs);
+        self.zip_mut_with(rhs, |x, y| {
+            *x = as_expr!(x.clone() $operator y.clone());
+        });
         self
     }
 }
@@ -174,16 +176,20 @@ macro_rules! impl_scalar_lhs_op {
 // between the scalar `self` and array `rhs`,
 // and return the result (based on `self`).
 impl<S, D> $trt<ArrayBase<S, D>> for $scalar
-    where S: DataMut<Elem=$scalar>,
+    where S: DataOwned<Elem=$scalar> + DataMut,
           D: Dimension,
 {
     type Output = ArrayBase<S, D>;
-    fn $mth(self, mut rhs: ArrayBase<S, D>) -> ArrayBase<S, D> {
-        // FIXME: Use when restricted to DataOwned
-        rhs.unordered_foreach_mut(move |elt| {
-            *elt = as_expr!(self $operator *elt);
-        });
-        rhs
+    fn $mth(self, rhs: ArrayBase<S, D>) -> ArrayBase<S, D> {
+        if_commutative!($commutative {
+            rhs.$mth(self)
+        } or {{
+            let mut rhs = rhs;
+            rhs.unordered_foreach_mut(move |elt| {
+                *elt = as_expr!(self $operator *elt);
+            });
+            rhs
+        }})
     }
 }
 
@@ -214,16 +220,16 @@ mod arithmetic_ops {
     use std::ops::*;
     use libnum::Complex;
 
-    impl_binary_op!(Add, +, add, iadd, iadd_scalar, "addition");
-    impl_binary_op!(Sub, -, sub, isub, isub_scalar, "subtraction");
-    impl_binary_op!(Mul, *, mul, imul, imul_scalar, "multiplication");
-    impl_binary_op!(Div, /, div, idiv, idiv_scalar, "division");
-    impl_binary_op!(Rem, %, rem, irem, irem_scalar, "remainder");
-    impl_binary_op!(BitAnd, &, bitand, ibitand, ibitand_scalar, "bit and");
-    impl_binary_op!(BitOr, |, bitor, ibitor, ibitor_scalar, "bit or");
-    impl_binary_op!(BitXor, ^, bitxor, ibitxor, ibitxor_scalar, "bit xor");
-    impl_binary_op!(Shl, <<, shl, ishl, ishl_scalar, "left shift");
-    impl_binary_op!(Shr, >>, shr, ishr, ishr_scalar, "right shift");
+    impl_binary_op!(Add, +, add, +=, "addition");
+    impl_binary_op!(Sub, -, sub, -=, "subtraction");
+    impl_binary_op!(Mul, *, mul, *=, "multiplication");
+    impl_binary_op!(Div, /, div, /=, "division");
+    impl_binary_op!(Rem, %, rem, %=, "remainder");
+    impl_binary_op!(BitAnd, &, bitand, &=, "bit and");
+    impl_binary_op!(BitOr, |, bitor, |=, "bit or");
+    impl_binary_op!(BitXor, ^, bitxor, ^=, "bit xor");
+    impl_binary_op!(Shl, <<, shl, <<=, "left shift");
+    impl_binary_op!(Shr, >>, shr, >>=, "right shift");
 
     macro_rules! all_scalar_ops {
         ($int_scalar:ty) => (
@@ -276,32 +282,35 @@ mod arithmetic_ops {
 
     impl<A, S, D> Neg for ArrayBase<S, D>
         where A: Clone + Neg<Output=A>,
-              S: DataMut<Elem=A>,
+              S: DataOwned<Elem=A> + DataMut,
               D: Dimension
     {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
         fn neg(mut self) -> Self {
-            self.ineg();
+            self.unordered_foreach_mut(|elt| {
+                *elt = -elt.clone();
+            });
             self
         }
     }
 
     impl<A, S, D> Not for ArrayBase<S, D>
         where A: Clone + Not<Output=A>,
-              S: DataMut<Elem=A>,
+              S: DataOwned<Elem=A> + DataMut,
               D: Dimension
     {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
         fn not(mut self) -> Self {
-            self.inot();
+            self.unordered_foreach_mut(|elt| {
+                *elt = !elt.clone();
+            });
             self
         }
     }
 }
 
-#[cfg(feature = "assign_ops")]
 mod assign_ops {
     use super::*;
     use imp_prelude::*;
@@ -314,8 +323,6 @@ mod assign_ops {
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn’t possible.
-    ///
-    /// **Requires crate feature `"assign_ops"`**
     impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
         where A: Clone + $trt<A>,
               S: DataMut<Elem=A>,
@@ -331,7 +338,6 @@ mod assign_ops {
     }
 
     #[doc=$doc]
-    /// **Requires crate feature `"assign_ops"`**
     impl<A, S, D> $trt<A> for ArrayBase<S, D>
         where A: ScalarOperand + $trt<A>,
               S: DataMut<Elem=A>,

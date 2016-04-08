@@ -328,7 +328,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// let mut a = arr2(&[[1., 2.],
     ///                    [3., 4.]]);
     ///
-    /// a.subview_mut(Axis(1), 1).iadd_scalar(&10.);
+    /// {
+    ///     let mut column1 = a.subview_mut(Axis(1), 1);
+    ///     column1 += 10.;
+    /// }
     ///
     /// assert!(
     ///     a == aview2(&[[1., 12.],
@@ -903,38 +906,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().reversed_axes()
     }
 
-    /// ***Deprecated: Use .as_slice_memory_order() instead.***
-    ///
-    /// Return a slice of the array’s backing data in memory order.
-    ///
-    /// **Note:** Data memory order may not correspond to the index order
-    /// of the array. Neither is the raw data slice is restricted to just the
-    /// array’s view.<br>
-    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order() instead"))]
-    pub fn raw_data(&self) -> &[A]
-        where S: DataOwned,
-    {
-        self.data.slice()
-    }
-
-    /// ***Deprecated: Use .as_slice_memory_order_mut() instead.***
-    ///
-    /// Return a mutable slice of the array’s backing data in memory order.
-    ///
-    /// **Note:** Data memory order may not correspond to the index order
-    /// of the array. Neither is the raw data slice is restricted to just the
-    /// array’s view.<br>
-    ///
-    /// **Note:** The data is uniquely held and nonaliased
-    /// while it is mutably borrowed.
-    #[cfg_attr(has_deprecated, deprecated(note="Use .as_slice_memory_order_mut() instead"))]
-    pub fn raw_data_mut(&mut self) -> &mut [A]
-        where S: DataOwned + DataMut,
-    {
-        self.ensure_unique();
-        self.data.slice_mut()
-    }
-
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data.slice();
         if slc.is_empty() {
@@ -1066,16 +1037,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// ***Deprecated: Will be removed because it dictates a specific order.***
-    ///
-    /// Traverse the array elements in order and apply a fold,
+    /// Traverse the array elements and apply a fold,
     /// returning the resulting value.
-    #[cfg_attr(has_deprecated, deprecated(note=
-      "Will be removed because it dictates a specific order"))]
+    ///
+    /// Elements are visited in arbitrary order.
     pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
-        if let Some(slc) = self.as_slice() {
+        if let Some(slc) = self.as_slice_memory_order() {
             // FIXME: Use for loop when slice iterator is perf is restored
             for i in 0..slc.len() {
                 init = f(init, &slc[i]);

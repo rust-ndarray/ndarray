@@ -606,7 +606,6 @@ fn slice_mut() {
                            [99, 5, 99]]));
 }
 
-#[cfg(feature = "assign_ops")]
 #[test]
 fn assign_ops()
 {
@@ -640,9 +639,10 @@ fn aview_mut() {
     let mut data = [0; 16];
     {
         let mut a = aview_mut1(&mut data).into_shape((4, 4)).unwrap();
-        a.slice_mut(&[Si(0, Some(2), 1), Si(0, None, 2)])
-         .iadd_scalar(&1);
-        println!("{}", a);
+        {
+            let mut slc = a.slice_mut(s![..2, ..;2]);
+            slc += 1;
+        }
     }
     assert_eq!(data, [1, 0, 1, 0,  1, 0, 1, 0,  0, 0, 0, 0,  0, 0, 0, 0]);
 }
