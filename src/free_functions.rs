@@ -8,18 +8,7 @@
 
 use std::slice;
 
-use libnum;
 use imp_prelude::*;
-
-/// ***Deprecated: Use `ArrayBase::zeros` instead.***
-///
-/// Create an array filled with zeros
-#[cfg_attr(has_deprecated, deprecated(note="Use `ArrayBase::zeros` instead."))]
-pub fn zeros<A, D>(dim: D) -> OwnedArray<A, D>
-    where A: Clone + libnum::Zero, D: Dimension,
-{
-    ArrayBase::zeros(dim)
-}
 
 /// Create a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> OwnedArray<A, ()>
