@@ -17,7 +17,7 @@ fn complex_mat_mul()
     let b = (&a * c(3., 0.)).map(|c| 5. * c / c.norm());
     println!("{:>8.2}", b);
     let e = OwnedArray::eye(2);
-    let r = a.mat_mul(&e);
+    let r = a.dot(&e);
     println!("{}", a);
     assert_eq!(r, a);
     assert_eq!(a.mean(Axis(0)), arr1(&[c(1.5, 1.), c(2.5, 0.)]));

@@ -68,11 +68,11 @@ fn accurate_eye_f32() {
         let eye = OwnedArray::eye(i);
         for j in 0..20 {
             let a = gen((i, j));
-            let a2 = eye.mat_mul(&a);
+            let a2 = eye.dot(&a);
             if !a.all_close(&a2, 1e-6) {
                 panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
             }
-            let a3 = a.t().mat_mul(&eye);
+            let a3 = a.t().dot(&eye);
             if !a.t().all_close(&a3, 1e-6) {
                 panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
             }
@@ -86,11 +86,11 @@ fn accurate_eye_f32() {
         println!("Testing size {} by {}", i, j);
         let a = gen((i, j));
         let eye = OwnedArray::eye(i);
-        let a2 = eye.mat_mul(&a);
+        let a2 = eye.dot(&a);
         if !a.all_close(&a2, 1e-6) {
             panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
         }
-        let a3 = a.t().mat_mul(&eye);
+        let a3 = a.t().dot(&eye);
         if !a.t().all_close(&a3, 1e-6) {
             panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
         }
@@ -104,11 +104,11 @@ fn accurate_eye_f64() {
         let eye = OwnedArray::eye(i);
         for j in 0..20 {
             let a = gen_f64((i, j));
-            let a2 = eye.mat_mul(&a);
+            let a2 = eye.dot(&a);
             if !a.all_close(&a2, abs_tol) {
                 panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
             }
-            let a3 = a.t().mat_mul(&eye);
+            let a3 = a.t().dot(&eye);
             if !a.t().all_close(&a3, abs_tol) {
                 panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
             }
@@ -122,11 +122,11 @@ fn accurate_eye_f64() {
         println!("Testing size {} by {}", i, j);
         let a = gen_f64((i, j));
         let eye = OwnedArray::eye(i);
-        let a2 = eye.mat_mul(&a);
+        let a2 = eye.dot(&a);
         if !a.all_close(&a2, 1e-6) {
             panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
         }
-        let a3 = a.t().mat_mul(&eye);
+        let a3 = a.t().dot(&eye);
         if !a.t().all_close(&a3, 1e-6) {
             panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
         }
@@ -150,7 +150,7 @@ fn accurate_mul_f32() {
         } else { (a.view(), b) };
 
         println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
-        let c = a.mat_mul(&b);
+        let c = a.dot(&b);
         let reference = reference_mat_mul(&a, &b);
         let diff = (&c - &reference).mapv_into(f32::abs);
 
@@ -184,7 +184,7 @@ fn accurate_mul_f64() {
         } else { (a.view(), b) };
 
         println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
-        let c = a.mat_mul(&b);
+        let c = a.dot(&b);
         let reference = reference_mat_mul(&a, &b);
         let diff = (&c - &reference).mapv_into(f64::abs);
 

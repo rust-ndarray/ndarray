@@ -40,6 +40,55 @@ const GEMM_BLAS_CUTOFF: usize = 7;
 #[allow(non_camel_case_types)]
 type blas_index = c_int; // blas index type
 
+impl<A, S> ArrayBase<S, (Ix, Ix)>
+    where S: Data<Elem=A>,
+{
+    /// Return an array view of row `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.subview(Axis(0), index)
+    }
+
+    /// Return a mutable array view of row `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
+        where S: DataMut
+    {
+        self.subview_mut(Axis(0), index)
+    }
+
+    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
+    pub fn rows(&self) -> Ix {
+        self.shape().axis(Axis(0))
+    }
+
+    /// Return an array view of column `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
+    {
+        self.subview(Axis(1), index)
+    }
+
+    /// Return a mutable array view of column `index`.
+    ///
+    /// **Panics** if `index` is out of bounds.
+    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
+        where S: DataMut
+    {
+        self.subview_mut(Axis(1), index)
+    }
+
+    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
+    pub fn cols(&self) -> Ix {
+        self.shape().axis(Axis(1))
+    }
+}
+
+
 impl<A, S> ArrayBase<S, Ix>
     where S: Data<Elem=A>,
 {
@@ -143,57 +192,26 @@ unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize)
     }
 }
 
+/// Matrix Multiplication
+///
+/// For two-dimensional arrays, the dot method computes the matrix
+/// multiplication.
+pub trait Dot<Rhs> {
+    /// The result of the operation.
+    ///
+    /// For two-dimensional arrays: a rectangular array.
+    type Output;
+    fn dot(&self, rhs: &Rhs) -> Self::Output;
+}
 
 impl<A, S> ArrayBase<S, (Ix, Ix)>
     where S: Data<Elem=A>,
 {
-    /// Return an array view of row `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
-    pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
-    {
-        self.subview(Axis(0), index)
-    }
-
-    /// Return a mutable array view of row `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
-    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
-        where S: DataMut
-    {
-        self.subview_mut(Axis(0), index)
-    }
-
-    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
-    pub fn rows(&self) -> Ix {
-        self.shape().axis(Axis(0))
-    }
-
-    /// Return an array view of column `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
-    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
-    {
-        self.subview(Axis(1), index)
-    }
-
-    /// Return a mutable array view of column `index`.
-    ///
-    /// **Panics** if `index` is out of bounds.
-    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
-        where S: DataMut
-    {
-        self.subview_mut(Axis(1), index)
-    }
-
-    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
-    pub fn cols(&self) -> Ix {
-        self.shape().axis(Axis(1))
-    }
-
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
-    /// The array shapes must agree in the way that
+    /// `Rhs` may be either a one-dimensional or a two-dimensional array.
+    ///
+    /// If Rhs is two-dimensional, they array shapes must agree in the way that
     /// if `self` is *M* × *N*, then `rhs` is *N* × *K*.
     ///
     /// Return a result array with shape *M* × *K*.
@@ -209,38 +227,54 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     ///                [2., 3.]]);
     ///
     /// assert!(
-    ///     a.mat_mul(&b) == arr2(&[[5., 8.],
-    ///                             [2., 3.]])
+    ///     a.dot(&b) == arr2(&[[5., 8.],
+    ///                         [2., 3.]])
     /// );
     /// ```
-    ///
-    pub fn mat_mul<S2>(&self, rhs: &ArrayBase<S2, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
-        where A: LinalgScalar,
-              S2: Data<Elem=A>,
+    pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
+        where Self: Dot<Rhs>
     {
-        let rhs = rhs.view();
-        let ((m, a), (b, n)) = (self.dim, rhs.dim);
-        let (lhs_columns, rhs_rows) = (a, b);
+        Dot::dot(self, rhs)
+    }
+}
+
+impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
+    where S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          A: LinalgScalar,
+{
+    type Output = OwnedArray<A, (Ix, Ix)>;
+    fn dot(&self, b: &ArrayBase<S2, (Ix, Ix)>)
+        -> OwnedArray<A, (Ix, Ix)>
+    {
+        let b = b.view();
+        let ((m, k), (k2, n)) = (self.dim(), b.dim());
+        let (lhs_columns, rhs_rows) = (k, k2);
         assert!(lhs_columns == rhs_rows);
         assert!(m.checked_mul(n).is_some());
 
-        mat_mul_impl(self, &rhs)
+        mat_mul_impl(self, &b)
     }
+}
 
-    /// Perform the matrix multiplication of the rectangular array `self` and
-    /// column vector `rhs`.
-    ///
-    /// The array shapes must agree in the way that
-    /// if `self` is *M* × *N*, then `rhs` is *N*.
-    ///
-    /// Return a result array with shape *M*.
-    ///
-    /// **Panics** if shapes are incompatible.
-    pub fn mat_mul_col<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> OwnedArray<A, Ix>
-        where A: LinalgScalar,
-              S2: Data<Elem=A>,
+/// Perform the matrix multiplication of the rectangular array `self` and
+/// column vector `rhs`.
+///
+/// The array shapes must agree in the way that
+/// if `self` is *M* × *N*, then `rhs` is *N*.
+///
+/// Return a result array with shape *M*.
+///
+/// **Panics** if shapes are incompatible.
+impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, (Ix, Ix)>
+    where S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          A: LinalgScalar,
+{
+    type Output = OwnedArray<A, Ix>;
+    fn dot(&self, rhs: &ArrayBase<S2, Ix>) -> OwnedArray<A, Ix>
     {
-        let ((m, a), n) = (self.dim, rhs.dim);
+        let ((m, a), n) = (self.dim(), rhs.dim());
         let (self_columns, other_rows) = (a, n);
         assert!(self_columns == other_rows);
 

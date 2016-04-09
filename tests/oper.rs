@@ -225,16 +225,16 @@ fn mat_mul() {
         let mut c = b.column_mut(0);
         c += 1.0;
     }
-    let ab = a.mat_mul(&b);
+    let ab = a.dot(&b);
 
     let mut af = OwnedArray::zeros_f(a.dim());
     let mut bf = OwnedArray::zeros_f(b.dim());
     af.assign(&a);
     bf.assign(&b);
 
-    assert_eq!(ab, a.mat_mul(&bf));
-    assert_eq!(ab, af.mat_mul(&b));
-    assert_eq!(ab, af.mat_mul(&bf));
+    assert_eq!(ab, a.dot(&bf));
+    assert_eq!(ab, af.dot(&b));
+    assert_eq!(ab, af.dot(&bf));
 
     let (m, n, k) = (10, 5, 11);
     let a = range_mat(m, n);
@@ -244,16 +244,16 @@ fn mat_mul() {
         let mut c = b.column_mut(0);
         c += 1.0;
     }
-    let ab = a.mat_mul(&b);
+    let ab = a.dot(&b);
 
     let mut af = OwnedArray::zeros_f(a.dim());
     let mut bf = OwnedArray::zeros_f(b.dim());
     af.assign(&a);
     bf.assign(&b);
 
-    assert_eq!(ab, a.mat_mul(&bf));
-    assert_eq!(ab, af.mat_mul(&b));
-    assert_eq!(ab, af.mat_mul(&bf));
+    assert_eq!(ab, a.dot(&bf));
+    assert_eq!(ab, af.dot(&b));
+    assert_eq!(ab, af.dot(&bf));
 
     let (m, n, k) = (10, 8, 1);
     let a = range_mat(m, n);
@@ -263,16 +263,16 @@ fn mat_mul() {
         let mut c = b.column_mut(0);
         c += 1.0;
     }
-    let ab = a.mat_mul(&b);
+    let ab = a.dot(&b);
 
     let mut af = OwnedArray::zeros_f(a.dim());
     let mut bf = OwnedArray::zeros_f(b.dim());
     af.assign(&a);
     bf.assign(&b);
 
-    assert_eq!(ab, a.mat_mul(&bf));
-    assert_eq!(ab, af.mat_mul(&b));
-    assert_eq!(ab, af.mat_mul(&bf));
+    assert_eq!(ab, a.dot(&bf));
+    assert_eq!(ab, af.dot(&b));
+    assert_eq!(ab, af.dot(&bf));
 }
 
 // Check that matrix multiplication of contiguous matrices returns a
@@ -287,8 +287,8 @@ fn mat_mul_order() {
     af.assign(&a);
     bf.assign(&b);
 
-    let cc = a.mat_mul(&b);
-    let ff = af.mat_mul(&bf);
+    let cc = a.dot(&b);
+    let ff = af.dot(&bf);
 
     assert_eq!(cc.strides()[1], 1);
     assert_eq!(ff.strides()[0], 1);
@@ -307,9 +307,9 @@ fn mat_mul_broadcast() {
     let b1 = b1.broadcast((n, k)).unwrap();
     let b2 = OwnedArray::from_elem((n, k), x1);
 
-    let c2 = a.mat_mul(&b2);
-    let c1 = a.mat_mul(&b1);
-    let c0 = a.mat_mul(&b0);
+    let c2 = a.dot(&b2);
+    let c1 = a.dot(&b1);
+    let c0 = a.dot(&b0);
     assert_eq!(c2, c1);
     assert_eq!(c2, c0);
 }
@@ -325,8 +325,8 @@ fn mat_mul_rev() {
     rev.assign(&b);
     println!("{:.?}", rev);
 
-    let c1 = a.mat_mul(&b);
-    let c2 = a.mat_mul(&rev);
+    let c1 = a.dot(&b);
+    let c2 = a.dot(&rev);
     assert_eq!(c1, c2);
 }
 

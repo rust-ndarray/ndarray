@@ -106,7 +106,7 @@ pub use iterators::{
 };
 
 pub use arraytraits::AsArray;
-pub use linalg::{LinalgScalar, NdFloat};
+pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
 mod arraytraits;
@@ -130,7 +130,8 @@ pub use free_functions::*;
 
 mod indexes;
 mod iterators;
-mod linalg;
+pub mod linalg;
+mod linalg_traits;
 mod linspace;
 mod numeric_util;
 mod si;
