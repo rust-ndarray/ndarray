@@ -117,20 +117,5 @@ impl<A, S, D> ArrayBase<S, D>
         let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
         self.iter().zip(rhs_broadcast.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
     }
-
-    #[cfg_attr(has_deprecated, deprecated(note=
-      "Replaced by .all_close() which has clearer error cases"))]
-    /// ***Deprecated: Replaced by .all_close()***
-    ///
-    /// Return `true` if the arrays' elementwise differences are all within
-    /// the given absolute tolerance.<br>
-    /// Return `false` otherwise, or if the shapes disagree.
-    pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
-        where A: Float,
-              S2: Data<Elem=A>,
-    {
-        self.shape() == rhs.shape() &&
-        self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
-    }
 }
 
