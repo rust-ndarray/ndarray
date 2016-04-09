@@ -482,7 +482,7 @@ macro_rules! mat_mul {
                 let b = OwnedArray::<$ty, _>::zeros(($n, $k));
                 let a = black_box(a.view());
                 let b = black_box(b.view());
-                bench.iter(|| a.mat_mul(&b));
+                bench.iter(|| a.dot(&b));
             }
             )+
         }

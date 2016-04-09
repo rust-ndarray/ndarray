@@ -12,7 +12,7 @@ use std::ops::{
     Add,
 };
 
-use linalg::LinalgScalar;
+use LinalgScalar;
 
 /// Compute the sum of the values in `xs`
 pub fn unrolled_sum<A>(mut xs: &[A]) -> A

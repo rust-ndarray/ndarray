@@ -17,10 +17,37 @@ use {
     aview0,
 };
 
+/// Numerical methods for arrays.
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>,
           D: Dimension,
 {
+    /// Return the sum of all elements in the array.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// assert_eq!(a.scalar_sum(), 10.);
+    /// ```
+    pub fn scalar_sum(&self) -> A
+        where A: Clone + Add<Output=A> + libnum::Zero,
+    {
+        if let Some(slc) = self.as_slice_memory_order() {
+            return numeric_util::unrolled_sum(slc);
+        }
+        let mut sum = A::zero();
+        for row in self.inner_iter() {
+            if let Some(slc) = row.as_slice() {
+                sum = sum + numeric_util::unrolled_sum(slc);
+            } else {
+                sum = sum + row.iter().fold(A::zero(), |acc, elt| acc + elt.clone());
+            }
+        }
+        sum
+    }
+
     /// Return sum along `axis`.
     ///
     /// ```
@@ -48,32 +75,6 @@ impl<A, S, D> ArrayBase<S, D>
             res = res + &view;
         }
         res
-    }
-
-    /// Return the sum of all elements in the array.
-    ///
-    /// ```
-    /// use ndarray::arr2;
-    ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
-    /// assert_eq!(a.scalar_sum(), 10.);
-    /// ```
-    pub fn scalar_sum(&self) -> A
-        where A: Clone + Add<Output=A> + libnum::Zero,
-    {
-        if let Some(slc) = self.as_slice_memory_order() {
-            return numeric_util::unrolled_sum(slc);
-        }
-        let mut sum = A::zero();
-        for row in self.inner_iter() {
-            if let Some(slc) = row.as_slice() {
-                sum = sum + numeric_util::unrolled_sum(slc);
-            } else {
-                sum = sum + row.iter().fold(A::zero(), |acc, elt| acc + elt.clone());
-            }
-        }
-        sum
     }
 
     /// Return mean along `axis`.
@@ -116,21 +117,6 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
         self.iter().zip(rhs_broadcast.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note=
-      "Replaced by .all_close() which has clearer error cases"))]
-    /// ***Deprecated: Replaced by .all_close()***
-    ///
-    /// Return `true` if the arrays' elementwise differences are all within
-    /// the given absolute tolerance.<br>
-    /// Return `false` otherwise, or if the shapes disagree.
-    pub fn allclose<S2>(&self, rhs: &ArrayBase<S2, D>, tol: A) -> bool
-        where A: Float,
-              S2: Data<Elem=A>,
-    {
-        self.shape() == rhs.shape() &&
-        self.iter().zip(rhs.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
     }
 }
 

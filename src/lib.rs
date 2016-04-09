@@ -106,7 +106,7 @@ pub use iterators::{
 };
 
 pub use arraytraits::AsArray;
-pub use linalg::{LinalgScalar, NdFloat};
+pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
 mod arraytraits;
@@ -130,7 +130,7 @@ pub use free_functions::*;
 
 mod indexes;
 mod iterators;
-mod linalg;
+mod linalg_traits;
 mod linspace;
 mod numeric_util;
 mod si;
@@ -515,9 +515,11 @@ impl<A, S, D> ArrayBase<S, D>
 }
 
 
-mod impl_numeric;
+mod impl_2d;
 
-mod impl_linalg;
+mod numeric;
+
+pub mod linalg;
 
 mod impl_ops_inplace;
 

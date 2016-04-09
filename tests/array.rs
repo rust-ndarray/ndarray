@@ -32,7 +32,7 @@ fn test_matmul_rcarray()
         *elt = i;
     }
 
-    let c = A.mat_mul(&B);
+    let c = A.dot(&B);
     println!("A = \n{:?}", A);
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
@@ -50,9 +50,9 @@ fn test_mat_mul() {
     let (n, m) = (45, 33);
     let a = RcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
     let b = RcArray::eye(m);
-    assert_eq!(a.mat_mul(&b), a);
+    assert_eq!(a.dot(&b), a);
     let c = RcArray::eye(n);
-    assert_eq!(c.mat_mul(&a), a);
+    assert_eq!(c.dot(&a), a);
 }
 
 

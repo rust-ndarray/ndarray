@@ -83,7 +83,7 @@ fn chol()
     let b = RcArray::linspace(0f32, 8., 9).reshape((3, 3));
     let mut bt = b.clone();
     bt.swap_axes(0, 1);
-    let bpd = bt.mat_mul(&b).into_shared();
+    let bpd = bt.dot(&b).into_shared();
     println!("bpd=\n{:?}", bpd);
     let chol = cholesky(bpd);
     println!("chol=\n{:.8?}", chol);
@@ -166,9 +166,9 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
         }
     }
 
-    let aT_a = aT.mat_mul(a).into_shared();
+    let aT_a = aT.dot(a).into_shared();
     let mut L = cholesky(aT_a);
-    let rhs = aT.mat_mul_col(b).into_shared();
+    let rhs = aT.dot(b).into_shared();
 
     // Solve L z = aT b
     let z = subst_fw(&L, &rhs);
