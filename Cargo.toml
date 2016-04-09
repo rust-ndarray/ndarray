@@ -47,6 +47,9 @@ blas = ["blas-sys"]
 blas-openblas-sys = ["blas"]
 test = ["blas-openblas-sys", "rustc-serialize"]
 
+# This feature is used for docs
+docs = ["rustc-serialize"]
+
 [profile.release]
 [profile.bench]
 debug = true
