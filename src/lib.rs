@@ -130,7 +130,6 @@ pub use free_functions::*;
 
 mod indexes;
 mod iterators;
-pub mod linalg;
 mod linalg_traits;
 mod linspace;
 mod numeric_util;
@@ -516,9 +515,11 @@ impl<A, S, D> ArrayBase<S, D>
 }
 
 
-mod impl_numeric;
+mod impl_2d;
 
-mod impl_linalg;
+mod numeric;
+
+pub mod linalg;
 
 mod impl_ops_inplace;
 

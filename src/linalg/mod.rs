@@ -9,4 +9,6 @@
 
 //! Linear algebra.
 
-pub use impl_linalg::Dot;
+pub use self::impl_linalg::Dot;
+
+mod impl_linalg;
