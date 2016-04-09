@@ -188,6 +188,22 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     {
         Dot::dot(self, rhs)
     }
+
+    #[cfg_attr(has_deprecated, deprecated(note="Use .dot() instead."))]
+    pub fn mat_mul<S2>(&self, rhs: &ArrayBase<S2, (Ix, Ix)>) -> OwnedArray<A, (Ix, Ix)>
+        where A: LinalgScalar,
+              S2: Data<Elem=A>,
+    {
+        self.dot(rhs)
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="Use .dot() instead."))]
+    pub fn mat_mul_col<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> OwnedArray<A, Ix>
+        where A: LinalgScalar,
+              S2: Data<Elem=A>,
+    {
+        self.dot(rhs)
+    }
 }
 
 impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
