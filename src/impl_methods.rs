@@ -1193,4 +1193,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
         }
     }
+
+    /// Fold along an axis
+    pub fn fold_axis<B, F>(&self, axis: Axis, init: B, mut fold: F)
+        -> OwnedArray<B, D::Smaller>
+        where D: RemoveAxis,
+              F: FnMut(&B, &A) -> B,
+              B: Clone,
+    {
+        let mut res = OwnedArray::from_elem(self.dim().remove_axis(axis), init);
+        for subview in self.axis_iter(axis) {
+            res.zip_mut_with(&subview, |x, y| *x = fold(x, y));
+        }
+        res
+    }
 }
