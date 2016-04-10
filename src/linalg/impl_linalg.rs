@@ -215,13 +215,29 @@ impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
     fn dot(&self, b: &ArrayBase<S2, (Ix, Ix)>)
         -> OwnedArray<A, (Ix, Ix)>
     {
+        let a = self.view();
         let b = b.view();
-        let ((m, k), (k2, n)) = (self.dim(), b.dim());
+        let ((m, k), (k2, n)) = (a.dim(), b.dim());
         let (lhs_columns, rhs_rows) = (k, k2);
         assert!(lhs_columns == rhs_rows);
         assert!(m.checked_mul(n).is_some());
 
-        mat_mul_impl(self, &b)
+        let lhs_s0 = a.strides()[0];
+        let rhs_s0 = b.strides()[0];
+        let column_major = lhs_s0 == 1 && rhs_s0 == 1;
+        // A is Copy so this is safe
+        let mut v = Vec::with_capacity(m * n);
+        let mut c;
+        unsafe {
+            v.set_len(m * n);
+            if !column_major {
+                c = OwnedArray::from_vec_dim_unchecked((m, n), v);
+            } else {
+                c = OwnedArray::from_vec_dim_unchecked_f((m, n), v);
+            }
+        }
+        mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
+        c
     }
 }
 
@@ -285,145 +301,132 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
+// mat_mul_impl uses ArrayView arguments to send all array kinds into
+// the same instantiated implementation.
 #[cfg(not(feature="blas"))]
 use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature="blas")]
-fn mat_mul_impl<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
-    -> OwnedArray<A, (Ix, Ix)>
+fn mat_mul_impl<A>(alpha: A,
+                   lhs: &ArrayView<A, (Ix, Ix)>,
+                   rhs: &ArrayView<A, (Ix, Ix)>,
+                   beta: A,
+                   c: &mut ArrayViewMut<A, (Ix, Ix)>)
     where A: LinalgScalar,
-          S: Data<Elem=A>,
 {
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
     let ((mut m, a), (_, mut n)) = (lhs.dim, rhs.dim);
     if !(m > cut || n > cut || a > cut) ||
         !(same_type::<A, f32>() || same_type::<A, f64>()) {
-        return mat_mul_general(lhs, rhs);
+        return mat_mul_general(alpha, lhs, rhs, beta, c);
     }
-    // Use `c` for c-order and `f` for an f-order matrix
-    // We can handle c * c, f * f generally and
-    // c * f and f * c if the `f` matrix is square.
-    let mut lhs_ = lhs.view();
-    let mut rhs_ = rhs.view();
-    let lhs_s0 = lhs_.strides()[0];
-    let rhs_s0 = rhs_.strides()[0];
-    let both_f = lhs_s0 == 1 && rhs_s0 == 1;
-    let mut lhs_trans = CblasNoTrans;
-    let mut rhs_trans = CblasNoTrans;
-    if both_f {
-        // A^t B^t = C^t => B A = C
-        lhs_ = lhs_.reversed_axes();
-        rhs_ = rhs_.reversed_axes();
-        swap(&mut lhs_, &mut rhs_);
-        swap(&mut m, &mut n);
-    } else if lhs_s0 == 1 && m == a {
-        lhs_ = lhs_.reversed_axes();
-        lhs_trans = CblasTrans;
-    } else if rhs_s0 == 1 && a == n {
-        rhs_ = rhs_.reversed_axes();
-        rhs_trans = CblasTrans;
-    }
+    {
+        // Use `c` for c-order and `f` for an f-order matrix
+        // We can handle c * c, f * f generally and
+        // c * f and f * c if the `f` matrix is square.
+        let mut lhs_ = lhs.view();
+        let mut rhs_ = rhs.view();
+        let mut c_ = c.view_mut();
+        let lhs_s0 = lhs_.strides()[0];
+        let rhs_s0 = rhs_.strides()[0];
+        let both_f = lhs_s0 == 1 && rhs_s0 == 1;
+        let mut lhs_trans = CblasNoTrans;
+        let mut rhs_trans = CblasNoTrans;
+        if both_f {
+            // A^t B^t = C^t => B A = C
+            lhs_ = lhs_.reversed_axes();
+            rhs_ = rhs_.reversed_axes();
+            c_ = c_.reversed_axes();
+            swap(&mut lhs_, &mut rhs_);
+            swap(&mut m, &mut n);
+        } else if lhs_s0 == 1 && m == a {
+            lhs_ = lhs_.reversed_axes();
+            lhs_trans = CblasTrans;
+        } else if rhs_s0 == 1 && a == n {
+            rhs_ = rhs_.reversed_axes();
+            rhs_trans = CblasTrans;
+        }
 
-    macro_rules! gemm {
-        ($ty:ty, $gemm:ident) => {
-        if blas_row_major_2d::<$ty, _>(&lhs_) && blas_row_major_2d::<$ty, _>(&rhs_) {
-            let mut elems = Vec::<A>::with_capacity(m * n);
-            let c;
-            unsafe {
-                elems.set_len(m * n);
-                c = OwnedArray::from_vec_dim_unchecked((m, n), elems);
-            }
-            {
-                let (m, k) = match lhs_trans {
-                    CblasNoTrans => lhs_.dim(),
-                    _ => {
-                        let (rows, cols) = lhs_.dim();
-                        (cols, rows)
+        macro_rules! gemm {
+            ($ty:ty, $gemm:ident) => {
+                if blas_row_major_2d::<$ty, _>(&lhs_)
+                    && blas_row_major_2d::<$ty, _>(&rhs_)
+                    && blas_row_major_2d::<$ty, _>(&c_)
+                {
+                    let (m, k) = match lhs_trans {
+                        CblasNoTrans => lhs_.dim(),
+                        _ => {
+                            let (rows, cols) = lhs_.dim();
+                            (cols, rows)
+                        }
+                    };
+                    let n = match rhs_trans {
+                        CblasNoTrans => rhs_.dim().1,
+                        _ => rhs_.dim().0,
+                    };
+                    // adjust strides, these may [1, 1] for column matrices
+                    let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
+                    let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+
+                    // gemm is C ← αA^Op B^Op + βC
+                    // Where Op is notrans/trans/conjtrans
+                    unsafe {
+                        blas_sys::c::$gemm(
+                        CblasRowMajor,
+                        lhs_trans,
+                        rhs_trans,
+                        m as blas_index, // m, rows of Op(a)
+                        n as blas_index, // n, cols of Op(b)
+                        k as blas_index, // k, cols of Op(a)
+                        1.0,                  // alpha
+                        lhs_.ptr as *const _, // a
+                        lhs_stride, // lda
+                        rhs_.ptr as *const _, // b
+                        rhs_stride, // ldb
+                        0.0,                   // beta
+                        c_.ptr as *mut _,       // c
+                        c_.strides()[0] as blas_index, // ldc
+                    );
                     }
-                };
-                let n = match rhs_trans {
-                    CblasNoTrans => rhs_.dim().1,
-                    _ => rhs_.dim().0,
-                };
-                // adjust strides, these may [1, 1] for column matrices
-                let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
-                let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
-
-                // gemm is C ← αA^Op B^Op + βC
-                // Where Op is notrans/trans/conjtrans
-                unsafe {
-                    blas_sys::c::$gemm(
-                    CblasRowMajor,
-                    lhs_trans,
-                    rhs_trans,
-                    m as blas_index, // m, rows of Op(a)
-                    n as blas_index, // n, cols of Op(b)
-                    k as blas_index, // k, cols of Op(a)
-                    1.0,                  // alpha
-                    lhs_.ptr as *const _, // a
-                    lhs_stride, // lda
-                    rhs_.ptr as *const _, // b
-                    rhs_stride, // ldb
-                    0.0,                   // beta
-                    c.ptr as *mut _,       // c
-                    c.strides()[0] as blas_index, // ldc
-                );
+                return;
                 }
             }
-            return if both_f {
-                c.reversed_axes()
-            } else {
-                c
-            };
         }
-        }
+        gemm!(f32, cblas_sgemm);
+        gemm!(f64, cblas_dgemm);
     }
-    gemm!(f32, cblas_sgemm);
-    gemm!(f64, cblas_dgemm);
-    return mat_mul_general(lhs, rhs);
+    mat_mul_general(alpha, lhs, rhs, beta, c)
 }
 
-fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
-    -> OwnedArray<A, (Ix, Ix)>
+/// C ← α A B + β C
+fn mat_mul_general<A>(alpha: A,
+                      lhs: &ArrayView<A, (Ix, Ix)>,
+                      rhs: &ArrayView<A, (Ix, Ix)>,
+                      beta: A,
+                      c: &mut ArrayViewMut<A, (Ix, Ix)>)
     where A: LinalgScalar,
-          S: Data<Elem=A>,
 {
     let ((m, k), (_, n)) = (lhs.dim, rhs.dim);
-
-    let lhs_s0 = lhs.strides()[0];
-    let rhs_s0 = rhs.strides()[0];
-    let column_major = lhs_s0 == 1 && rhs_s0 == 1;
-
-    // Avoid initializing the memory in vec -- set it during iteration
-    // Panic safe because A: Copy
-    let mut res_elems = Vec::<A>::with_capacity(m * n);
-    unsafe {
-        res_elems.set_len(m * n);
-    }
 
     // common parameters for gemm
     let ap = lhs.as_ptr();
     let bp = rhs.as_ptr();
-    let c = res_elems.as_mut_ptr();
-    let (rsc, csc) = if column_major {
-        (1, m as isize)
-    } else {
-        (n as isize, 1)
-    };
+    let cp = c.as_mut_ptr();
+    let (rsc, csc) = (c.strides()[0], c.strides()[1]);
     if same_type::<A, f32>() {
         unsafe {
             ::matrixmultiply::sgemm(
                 m, k, n,
-                1.,
+                cast_as(&alpha),
                 ap as *const _,
                 lhs.strides()[0],
                 lhs.strides()[1],
                 bp as *const _,
                 rhs.strides()[0],
                 rhs.strides()[1],
-                0.,
-                c as *mut _,
+                cast_as(&beta),
+                cp as *mut _,
                 rsc, csc
             );
         }
@@ -431,48 +434,67 @@ fn mat_mul_general<A, S>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, I
         unsafe {
             ::matrixmultiply::dgemm(
                 m, k, n,
-                1.,
+                cast_as(&alpha),
                 ap as *const _,
                 lhs.strides()[0],
                 lhs.strides()[1],
                 bp as *const _,
                 rhs.strides()[0],
                 rhs.strides()[1],
-                0.,
-                c as *mut _,
+                cast_as(&beta),
+                cp as *mut _,
                 rsc, csc
             );
         }
     } else {
+        // initialize memory if beta is zero
+        if beta.is_zero() {
+            c.assign_scalar(&beta);
+        }
+
         let mut i = 0;
         let mut j = 0;
-        for rr in &mut res_elems {
+        loop {
             unsafe {
-                *rr = (0..k).fold(A::zero(),
+                let elt = c.uget_mut((i, j));
+                *elt = *elt * beta + alpha * (0..k).fold(A::zero(),
                     move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
             }
-            if !column_major {
-                j += 1;
-                if j == n {
-                    j = 0;
-                    i += 1;
-                }
-            } else {
+            j += 1;
+            if j == n {
+                j = 0;
                 i += 1;
                 if i == m {
-                    i = 0;
-                    j += 1;
+                    break;
                 }
             }
         }
     }
-    unsafe {
-        if !column_major {
-            ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
-        } else {
-            ArrayBase::from_vec_dim_unchecked_f((m, n), res_elems)
-        }
-    }
+}
+
+/// General matrix multiplication.
+///
+/// Compute C ← α A B + β C
+///
+/// The array shapes must agree in the way that
+/// if `a` is *M* × *N*, then `b` is *N* × *K* and `c` is *M* × *K*.
+///
+/// ***Panics*** if array shapes are not compatible
+pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
+                                      a: &ArrayBase<S1, (Ix, Ix)>,
+                                      b: &ArrayBase<S2, (Ix, Ix)>,
+                                      beta: A,
+                                      c: &mut ArrayBase<S3, (Ix, Ix)>)
+    where S1: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          S3: DataMut<Elem=A>,
+          A: LinalgScalar,
+{
+    let ((m, k), (k2, n)) = (a.dim(), b.dim());
+    let (m2, n2) = c.dim();
+    assert!(k == k2);
+    assert!(m == m2 && n == n2);
+    mat_mul_impl(alpha, &a.view(), &b.view(), beta, &mut c.view_mut());
 }
 
 #[inline(always)]
@@ -481,7 +503,6 @@ fn same_type<A: Any, B: Any>() -> bool {
     TypeId::of::<A>() == TypeId::of::<B>()
 }
 
-#[cfg(feature="blas")]
 // Read pointer to type `A` as type `B`.
 //
 // **Panics** if `A` and `B` are not the same type
