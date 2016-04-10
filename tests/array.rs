@@ -18,6 +18,7 @@ use ndarray::{
 };
 use ndarray::Indexes;
 use ndarray::Axis;
+use itertools::free::enumerate;
 
 #[test]
 fn test_matmul_rcarray()
@@ -706,9 +707,37 @@ fn reshape_error1() {
 fn reshape_error2() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
-    let mut u = v.into_shape((4, 2)).unwrap();
+    let mut u = v.into_shape((2, 2, 2)).unwrap();
     u.swap_axes(0, 1);
     let _s = u.into_shape((2, 4)).unwrap();
+}
+
+#[test]
+fn reshape_f() {
+    let mut u = OwnedArray::zeros_f((3, 4));
+    for (i, elt) in enumerate(u.as_slice_memory_order_mut().unwrap()) {
+        *elt = i as i32;
+    }
+    let v = u.view();
+    println!("{:?}", v);
+
+    // noop ok
+    let v2 = v.into_shape((3, 4));
+    assert!(v2.is_ok());
+    assert_eq!(v, v2.unwrap());
+
+    let u = v.into_shape((3, 2, 2));
+    assert!(u.is_ok());
+    let u = u.unwrap();
+    println!("{:?}", u);
+    assert_eq!(u.shape(), &[3, 2, 2]);
+    let s = u.into_shape((4, 3)).unwrap();
+    println!("{:?}", s);
+    assert_eq!(s.shape(), &[4, 3]);
+    assert_eq!(s, aview2(&[[0, 4, 8],
+                           [1, 5, 9],
+                           [2, 6,10],
+                           [3, 7,11]]));
 }
 
 #[test]
