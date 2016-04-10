@@ -750,8 +750,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous, otherwise we cannot rearrange the dimension.
     ///
     /// **Errors** if the shapes don't have the same number of elements.<br>
-    /// **Errors** if the input array is not c-contiguous (this will be
-    /// slightly improved in the future).
+    /// **Errors** if the input array is not c- or f-contiguous.
     ///
     /// ```
     /// use ndarray::{aview1, aview2};
@@ -774,6 +773,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 data: self.data,
                 ptr: self.ptr,
                 strides: shape.default_strides(),
+                dim: shape,
+            })
+        } else if self.ndim() > 1 && self.view().reversed_axes().is_standard_layout() {
+            Ok(ArrayBase {
+                data: self.data,
+                ptr: self.ptr,
+                strides: shape.fortran_strides(),
                 dim: shape,
             })
         } else {
