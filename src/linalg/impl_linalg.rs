@@ -307,8 +307,11 @@ impl<A, S, D> ArrayBase<S, D>
 use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature="blas")]
-fn mat_mul_impl<A>(lhs: &ArrayView<A, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
-    -> OwnedArray<A, (Ix, Ix)>
+fn mat_mul_impl<A>(alpha: A,
+                   lhs: &ArrayView<A, (Ix, Ix)>,
+                   rhs: &ArrayView<A, (Ix, Ix)>,
+                   beta: A,
+                   c: &mut ArrayViewMut<A, (Ix, Ix)>)
     where A: LinalgScalar,
 {
     // size cutoff for using BLAS
@@ -316,89 +319,84 @@ fn mat_mul_impl<A>(lhs: &ArrayView<A, (Ix, Ix)>, rhs: &ArrayView<A, (Ix, Ix)>)
     let ((mut m, a), (_, mut n)) = (lhs.dim, rhs.dim);
     if !(m > cut || n > cut || a > cut) ||
         !(same_type::<A, f32>() || same_type::<A, f64>()) {
-        return mat_mul_general(lhs, rhs);
+        return mat_mul_general(alpha, lhs, rhs, beta, c);
     }
-    // Use `c` for c-order and `f` for an f-order matrix
-    // We can handle c * c, f * f generally and
-    // c * f and f * c if the `f` matrix is square.
-    let mut lhs_ = lhs.view();
-    let mut rhs_ = rhs.view();
-    let lhs_s0 = lhs_.strides()[0];
-    let rhs_s0 = rhs_.strides()[0];
-    let both_f = lhs_s0 == 1 && rhs_s0 == 1;
-    let mut lhs_trans = CblasNoTrans;
-    let mut rhs_trans = CblasNoTrans;
-    if both_f {
-        // A^t B^t = C^t => B A = C
-        lhs_ = lhs_.reversed_axes();
-        rhs_ = rhs_.reversed_axes();
-        swap(&mut lhs_, &mut rhs_);
-        swap(&mut m, &mut n);
-    } else if lhs_s0 == 1 && m == a {
-        lhs_ = lhs_.reversed_axes();
-        lhs_trans = CblasTrans;
-    } else if rhs_s0 == 1 && a == n {
-        rhs_ = rhs_.reversed_axes();
-        rhs_trans = CblasTrans;
-    }
+    {
+        // Use `c` for c-order and `f` for an f-order matrix
+        // We can handle c * c, f * f generally and
+        // c * f and f * c if the `f` matrix is square.
+        let mut lhs_ = lhs.view();
+        let mut rhs_ = rhs.view();
+        let mut c_ = c.view_mut();
+        let lhs_s0 = lhs_.strides()[0];
+        let rhs_s0 = rhs_.strides()[0];
+        let both_f = lhs_s0 == 1 && rhs_s0 == 1;
+        let mut lhs_trans = CblasNoTrans;
+        let mut rhs_trans = CblasNoTrans;
+        if both_f {
+            // A^t B^t = C^t => B A = C
+            lhs_ = lhs_.reversed_axes();
+            rhs_ = rhs_.reversed_axes();
+            c_ = c_.reversed_axes();
+            swap(&mut lhs_, &mut rhs_);
+            swap(&mut m, &mut n);
+        } else if lhs_s0 == 1 && m == a {
+            lhs_ = lhs_.reversed_axes();
+            lhs_trans = CblasTrans;
+        } else if rhs_s0 == 1 && a == n {
+            rhs_ = rhs_.reversed_axes();
+            rhs_trans = CblasTrans;
+        }
 
-    macro_rules! gemm {
-        ($ty:ty, $gemm:ident) => {
-        if blas_row_major_2d::<$ty, _>(&lhs_) && blas_row_major_2d::<$ty, _>(&rhs_) {
-            let mut elems = Vec::<A>::with_capacity(m * n);
-            let c;
-            unsafe {
-                elems.set_len(m * n);
-                c = OwnedArray::from_vec_dim_unchecked((m, n), elems);
-            }
-            {
-                let (m, k) = match lhs_trans {
-                    CblasNoTrans => lhs_.dim(),
-                    _ => {
-                        let (rows, cols) = lhs_.dim();
-                        (cols, rows)
+        macro_rules! gemm {
+            ($ty:ty, $gemm:ident) => {
+                if blas_row_major_2d::<$ty, _>(&lhs_)
+                    && blas_row_major_2d::<$ty, _>(&rhs_)
+                    && blas_row_major_2d::<$ty, _>(&c_)
+                {
+                    let (m, k) = match lhs_trans {
+                        CblasNoTrans => lhs_.dim(),
+                        _ => {
+                            let (rows, cols) = lhs_.dim();
+                            (cols, rows)
+                        }
+                    };
+                    let n = match rhs_trans {
+                        CblasNoTrans => rhs_.dim().1,
+                        _ => rhs_.dim().0,
+                    };
+                    // adjust strides, these may [1, 1] for column matrices
+                    let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
+                    let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+
+                    // gemm is C ← αA^Op B^Op + βC
+                    // Where Op is notrans/trans/conjtrans
+                    unsafe {
+                        blas_sys::c::$gemm(
+                        CblasRowMajor,
+                        lhs_trans,
+                        rhs_trans,
+                        m as blas_index, // m, rows of Op(a)
+                        n as blas_index, // n, cols of Op(b)
+                        k as blas_index, // k, cols of Op(a)
+                        1.0,                  // alpha
+                        lhs_.ptr as *const _, // a
+                        lhs_stride, // lda
+                        rhs_.ptr as *const _, // b
+                        rhs_stride, // ldb
+                        0.0,                   // beta
+                        c_.ptr as *mut _,       // c
+                        c_.strides()[0] as blas_index, // ldc
+                    );
                     }
-                };
-                let n = match rhs_trans {
-                    CblasNoTrans => rhs_.dim().1,
-                    _ => rhs_.dim().0,
-                };
-                // adjust strides, these may [1, 1] for column matrices
-                let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
-                let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
-
-                // gemm is C ← αA^Op B^Op + βC
-                // Where Op is notrans/trans/conjtrans
-                unsafe {
-                    blas_sys::c::$gemm(
-                    CblasRowMajor,
-                    lhs_trans,
-                    rhs_trans,
-                    m as blas_index, // m, rows of Op(a)
-                    n as blas_index, // n, cols of Op(b)
-                    k as blas_index, // k, cols of Op(a)
-                    1.0,                  // alpha
-                    lhs_.ptr as *const _, // a
-                    lhs_stride, // lda
-                    rhs_.ptr as *const _, // b
-                    rhs_stride, // ldb
-                    0.0,                   // beta
-                    c.ptr as *mut _,       // c
-                    c.strides()[0] as blas_index, // ldc
-                );
+                return;
                 }
             }
-            return if both_f {
-                c.reversed_axes()
-            } else {
-                c
-            };
         }
-        }
+        gemm!(f32, cblas_sgemm);
+        gemm!(f64, cblas_dgemm);
     }
-    gemm!(f32, cblas_sgemm);
-    gemm!(f64, cblas_dgemm);
-    return mat_mul_general(lhs, rhs);
+    mat_mul_general(alpha, lhs, rhs, beta, c)
 }
 
 /// C ← α A B + β C
