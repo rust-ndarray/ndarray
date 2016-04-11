@@ -3,6 +3,8 @@ extern crate num as libnum;
 
 use ndarray::prelude::*;
 use ndarray::{arr0, rcarr1, rcarr2};
+use ndarray::{LinalgScalar, Data};
+use ndarray::linalg::general_mat_mul;
 
 use std::fmt;
 use libnum::Float;
@@ -113,6 +115,25 @@ fn assert_approx_eq<F: fmt::Debug + Float>(f: F, g: F, tol: F) -> bool {
     true
 }
 
+fn assert_close<D>(a: ArrayView<f64, D>, b: ArrayView<f64, D>)
+    where D: Dimension,
+{
+    let diff = (&a - &b).mapv_into(f64::abs);
+
+    let rtol = 1e-7;
+    let atol = 1e-12;
+    let crtol = b.mapv(|x| x.abs() * rtol);
+    let tol = crtol + atol;
+    let tol_m_diff = &diff - &tol;
+    let maxdiff = tol_m_diff.fold(0./0., |x, y| f64::max(x, *y));
+    println!("diff offset from tolerance level= {:.2e}", maxdiff);
+    if maxdiff > 0. {
+        println!("{:.4?}", a);
+        println!("{:.4?}", b);
+        panic!("results differ");
+    }
+}
+
 fn reference_dot<'a,A, V1, V2>(a: V1, b: V2) -> A
     where A: NdFloat,
           V1: AsArray<'a, A>,
@@ -207,7 +228,45 @@ fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
     OwnedArray::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
 }
 
-#[cfg(has_assign)]
+fn range_mat64(m: Ix, n: Ix) -> OwnedArray<f64, (Ix, Ix)> {
+    OwnedArray::linspace(0., (m * n - 1) as f64, m * n).into_shape((m, n)).unwrap()
+}
+
+fn range_i32(m: Ix, n: Ix) -> OwnedArray<i32, (Ix, Ix)> {
+    OwnedArray::from_iter(0..(m * n) as i32).into_shape((m, n)).unwrap()
+}
+
+// simple, slow, correct (hopefully) mat mul
+fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2, (Ix, Ix)>)
+    -> OwnedArray<A, (Ix, Ix)>
+    where A: LinalgScalar,
+          S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+{
+    let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
+    let mut res_elems = Vec::<A>::with_capacity(m * n);
+    unsafe {
+        res_elems.set_len(m * n);
+    }
+
+    let mut i = 0;
+    let mut j = 0;
+    for rr in &mut res_elems {
+        unsafe {
+            *rr = (0..k).fold(A::zero(),
+                move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
+        }
+        j += 1;
+        if j == n {
+            j = 0;
+            i += 1;
+        }
+    }
+    unsafe {
+        ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
+    }
+}
+
 #[test]
 fn mat_mul() {
     let (m, n, k) = (8, 8, 8);
@@ -336,4 +395,52 @@ fn scaled_add() {
     let d = alpha * &b + &a;
     assert_eq!(c, d);
 
+}
+
+#[test]
+fn gen_mat_mul() {
+    let alpha = -2.3;
+    let beta = 3.14;
+    let sizes = vec![(4, 4, 4), (8, 8, 8),
+                     (17, 15, 16),
+                     (4, 17, 3),
+                     (17, 3, 22),
+                     (19, 18, 2),
+                     (16, 17, 15),
+                     (15, 16, 17),
+                     (67, 63, 62),
+        ];
+    for &(m, k, n) in &sizes {
+        let a = range_mat64(m, k);
+        let b = range_mat64(k, n);
+        let mut c = range_mat64(m, n);
+
+        let answer = alpha * reference_mat_mul(&a, &b) + beta * &c;
+        general_mat_mul(alpha, &a, &b, beta, &mut c);
+        assert_close(c.view(), answer.view());
+    }
+}
+
+#[test]
+fn gen_mat_mul_i32() {
+    let alpha = -1;
+    let beta = 2;
+    let sizes = vec![(4, 4, 4), (8, 8, 8),
+                     (17, 15, 16),
+                     (4, 17, 3),
+                     (17, 3, 22),
+                     (19, 18, 2),
+                     (16, 17, 15),
+                     (15, 16, 17),
+                     (67, 63, 62),
+        ];
+    for &(m, k, n) in &sizes {
+        let a = range_i32(m, k);
+        let b = range_i32(k, n);
+        let mut c = range_i32(m, n);
+
+        let answer = alpha * reference_mat_mul(&a, &b) + beta * &c;
+        general_mat_mul(alpha, &a, &b, beta, &mut c);
+        assert_eq!(&c, &answer);
+    }
 }
