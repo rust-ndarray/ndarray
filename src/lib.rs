@@ -139,15 +139,8 @@ mod stacking;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
+    pub use prelude::*;
     pub use {
-        Axis,
-        ArrayBase,
-        ArrayView,
-        ArrayViewMut,
-        OwnedArray,
-        RcArray,
-        Ix, Ixs,
-        Dimension,
         RemoveAxis,
         Data,
         DataMut,
@@ -160,6 +153,8 @@ mod imp_prelude {
     #[derive(Copy, Clone, Debug)]
     pub struct Priv<T>(pub T);
 }
+
+pub mod prelude;
 
 /// Array index type
 pub type Ix = usize;
