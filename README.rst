@@ -87,6 +87,15 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.5.0-alpha.1
+
+  - Add .swap(i, j) for swapping two elements
+  - Add a prelude module ``use ndarray::prelude::*;``
+  - Add ndarray::linalg::general_mat_mul which computes *C ← α A B + β C*,
+    i.e matrix multiplication into an existing array, with optional scaling.
+  - Add .fold_axis(Axis, folder)
+  - Implement .into_shape() for f-order arrays
+
 - 0.5.0-alpha.0
 
   - Requires Rust 1.8. Compound assignment operators are now enabled by default.
@@ -97,6 +106,9 @@ Recent Changes (ndarray)
   - Remove deprecated crate features: rblas, assign_ops
   - A few consuming arithmetic ops with ArrayViewMut were removed (this
     was missed in the last version).
+  - **Change .fold() to use arbitrary order.** Its specification and
+    implementation has changed, to pick the most appropriate element traversal
+    order depending on memory layout.
 
 - 0.4.8
 
