@@ -24,7 +24,7 @@ use ScalarOperand;
 /// semantics or destructors, and the rest are numerical traits.
 pub trait LinalgScalar :
     Any +
-    Copy +
+    Copy + Send + Sync +
     Zero + One +
     Add<Output=Self> +
     Sub<Output=Self> +
@@ -35,7 +35,7 @@ pub trait LinalgScalar :
 impl<T> LinalgScalar for T
     where T:
     Any +
-    Copy +
+    Copy + Send + Sync +
     Zero + One +
     Add<Output=T> +
     Sub<Output=T> +
