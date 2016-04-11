@@ -15,7 +15,6 @@ use numeric_util;
 
 use {
     LinalgScalar,
-    aview0,
 };
 
 /// Numerical methods for arrays.

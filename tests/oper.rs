@@ -1,15 +1,8 @@
 #[macro_use(s)] extern crate ndarray;
 extern crate num as libnum;
 
-use ndarray::RcArray;
+use ndarray::prelude::*;
 use ndarray::{arr0, rcarr1, rcarr2};
-use ndarray::{
-    OwnedArray,
-    Ix, Ixs,
-    AsArray,
-    NdFloat,
-    aview0,
-};
 
 use std::fmt;
 use libnum::Float;

@@ -1,10 +1,7 @@
 #[macro_use]
 extern crate ndarray;
 
-use ndarray::{
-    RcArray,
-    Ix,
-};
+use ndarray::prelude::*;
 
 type Ix2 = (Ix, Ix);
 

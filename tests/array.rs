@@ -986,3 +986,18 @@ fn test_all_close() {
     assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
     assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
 }
+
+#[test]
+fn test_swap() {
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9]]);
+    let b = a.clone();
+
+    for i in 0..a.rows() {
+        for j in i + 1..a.cols() {
+            a.swap((i, j), (j, i));
+        }
+    }
+    assert_eq!(a, b.t());
+}

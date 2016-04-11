@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::cmp;
+use std::ptr as std_ptr;
 use std::slice;
 
 use imp_prelude::*;
@@ -259,6 +260,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         arraytraits::debug_bounds_check(self, &index);
         let off = D::stride_offset(&index, &self.strides);
         &mut *self.ptr.offset(off)
+    }
+
+    /// Swap elements at indices `index1` and `index2`.
+    ///
+    /// Indices may be equal.
+    ///
+    /// ***Panics*** if an index is out of bounds.
+    pub fn swap<I>(&mut self, index1: I, index2: I)
+        where S: DataMut,
+              I: NdIndex<Dim=D>,
+    {
+        let ptr1: *mut _ = &mut self[index1];
+        let ptr2: *mut _ = &mut self[index2];
+        unsafe {
+            std_ptr::swap(ptr1, ptr2);
+        }
     }
 
     // `get` for zero-dimensional arrays
