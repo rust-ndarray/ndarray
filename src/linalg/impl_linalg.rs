@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use rayon;
 use libnum::Zero;
 use itertools::free::enumerate;
 
@@ -413,6 +414,8 @@ fn mat_mul_impl<A>(alpha: A,
     mat_mul_general(alpha, lhs, rhs, beta, c)
 }
 
+const SPLIT: usize = 64;
+
 /// C ← α A B + β C
 fn mat_mul_general<A>(alpha: A,
                       lhs: &ArrayView<A, (Ix, Ix)>,
@@ -421,7 +424,27 @@ fn mat_mul_general<A>(alpha: A,
                       c: &mut ArrayViewMut<A, (Ix, Ix)>)
     where A: LinalgScalar,
 {
-    let ((m, k), (_, n)) = (lhs.dim, rhs.dim);
+    let ((m, k), (k2, n)) = (lhs.dim, rhs.dim);
+
+    debug_assert_eq!(k, k2);
+    if m > SPLIT {
+        // [ A0 ] B = [ C0 ]
+        // [ A1 ]     [ C1 ]
+        let mid = m / 2;
+        let (a0, a1) = lhs.split_at(Axis(0), mid);
+        let (mut c0, mut c1) = c.view_mut().split_at(Axis(0), mid);
+        rayon::join(move || mat_mul_general(alpha, &a0, rhs, beta, &mut c0),
+                    move || mat_mul_general(alpha, &a1, rhs, beta, &mut c1));
+        return;
+    } else if n > SPLIT {
+        // A [ B0 B1 ] = [ C0 C1 ]
+        let mid = n / 2;
+        let (b0, b1) = rhs.split_at(Axis(1), mid);
+        let (mut c0, mut c1) = c.view_mut().split_at(Axis(1), mid);
+        rayon::join(move || mat_mul_general(alpha, lhs, &b0, beta, &mut c0),
+                    move || mat_mul_general(alpha, lhs, &b1, beta, &mut c1));
+        return;
+    }
 
     // common parameters for gemm
     let ap = lhs.as_ptr();

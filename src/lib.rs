@@ -73,6 +73,7 @@ extern crate rustc_serialize as serialize;
 extern crate blas_sys;
 
 extern crate matrixmultiply;
+extern crate rayon;
 
 extern crate itertools;
 extern crate num as libnum;
