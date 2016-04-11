@@ -379,12 +379,12 @@ fn mat_mul_impl<A>(alpha: A,
                         m as blas_index, // m, rows of Op(a)
                         n as blas_index, // n, cols of Op(b)
                         k as blas_index, // k, cols of Op(a)
-                        1.0,                  // alpha
-                        lhs_.ptr as *const _, // a
+                        cast_as(&alpha),        // alpha
+                        lhs_.ptr as *const _,   // a
                         lhs_stride, // lda
-                        rhs_.ptr as *const _, // b
+                        rhs_.ptr as *const _,   // b
                         rhs_stride, // ldb
-                        0.0,                   // beta
+                        cast_as(&beta),         // beta
                         c_.ptr as *mut _,       // c
                         c_.strides()[0] as blas_index, // ldc
                     );
