@@ -69,6 +69,8 @@ def mkdocs():
     run_shell("cp -r %s %s" % (target_doc, dest))
     run_shell("cp %s/*.svg %s/ndarray/" % (images_dir, dest))
     run_shell("cat %s/custom.css >> %s/main.css" % (doc_home(), dest))
+    # remove empty files
+    run_shell("find %s -size 0 -delete" % (dest, ))
 
 def main():
     path = sys.argv[0]
