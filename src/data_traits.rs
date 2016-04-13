@@ -26,7 +26,8 @@ pub unsafe trait Data {
     /// The array element type.
     type Elem;
     #[doc(hidden)]
-    fn slice(&self) -> &[Self::Elem];
+    // This method is only used for debugging
+    fn _data_slice(&self) -> &[Self::Elem];
 }
 
 /// Array representation trait.
@@ -62,7 +63,7 @@ pub unsafe trait DataClone : Data {
 
 unsafe impl<A> Data for Rc<Vec<A>> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         self
     }
 }
@@ -111,7 +112,7 @@ unsafe impl<A> DataClone for Rc<Vec<A>> {
 
 unsafe impl<A> Data for Vec<A> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         self
     }
 }
@@ -132,7 +133,7 @@ unsafe impl<A> DataClone for Vec<A>
 
 unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         &[]
     }
 }
@@ -145,7 +146,7 @@ unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
 
 unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         &[]
     }
 }
