@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name="ndarray"]
-#![cfg_attr(has_deprecated, feature(deprecated))]
 #![doc(html_root_url = "http://bluss.github.io/rust-ndarray/master/")]
 
 //! The `ndarray` crate provides an N-dimensional container for general elements
