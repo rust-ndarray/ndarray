@@ -346,6 +346,27 @@ fn mat_mul_order() {
     assert_eq!(ff.strides()[0], 1);
 }
 
+// test matrix multiplication shape mismatch
+#[test]
+#[should_panic]
+fn mat_mul_shape_mismatch() {
+    let (m, k, k2, n) = (8, 8, 9, 8);
+    let a = range_mat(m, k);
+    let b = range_mat(k2, n);
+    a.dot(&b);
+}
+
+// test matrix multiplication shape mismatch
+#[test]
+#[should_panic]
+fn mat_mul_shape_mismatch_2() {
+    let (m, k, k2, n) = (8, 8, 8, 8);
+    let a = range_mat(m, k);
+    let b = range_mat(k2, n);
+    let mut c = range_mat(m, n + 1);
+    general_mat_mul(1., &a, &b, 1., &mut c);
+}
+
 // Check that matrix multiplication
 // supports broadcast arrays.
 #[test]
