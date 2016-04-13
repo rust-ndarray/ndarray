@@ -21,6 +21,8 @@ macro_rules! as_expr(
 
 macro_rules! impl_binary_op_inplace(
     ($trt:ident, $operator:tt, $mth:ident, $imethod:ident, $imth_scalar:ident, $doc:expr) => (
+    #[cfg_attr(all(has_deprecated, has_assign), deprecated(note=
+      "Use augmented assignments (+= and similar) instead."))]
     /// Perform elementwise
     #[doc=$doc]
     /// between `self` and `rhs`,
@@ -38,6 +40,8 @@ macro_rules! impl_binary_op_inplace(
         });
     }
 
+    #[cfg_attr(all(has_deprecated, has_assign), deprecated(note=
+      "Use augmented assignments (+= and similar) instead."))]
     /// Perform elementwise
     #[doc=$doc]
     /// between `self` and the scalar `x`,
@@ -73,6 +77,8 @@ impl_binary_op_inplace!(BitXor, ^, bitxor, ibitxor, ibitxor_scalar, "bit xor");
 impl_binary_op_inplace!(Shl, <<, shl, ishl, ishl_scalar, "left shift");
 impl_binary_op_inplace!(Shr, >>, shr, ishr, ishr_scalar, "right shift");
 
+    #[cfg_attr(all(has_deprecated, has_assign), deprecated(note=
+      "Use augmented assignments (+= and similar) instead."))]
     /// Perform an elementwise negation of `self`, *in place*.
     pub fn ineg(&mut self)
         where A: Clone + Neg<Output=A>,
@@ -82,6 +88,8 @@ impl_binary_op_inplace!(Shr, >>, shr, ishr, ishr_scalar, "right shift");
         });
     }
 
+    #[cfg_attr(all(has_deprecated, has_assign), deprecated(note=
+      "Use augmented assignments (+= and similar) instead."))]
     /// Perform an elementwise unary not of `self`, *in place*.
     pub fn inot(&mut self)
         where A: Clone + Not<Output=A>,

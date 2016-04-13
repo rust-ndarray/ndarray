@@ -37,6 +37,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[allow(deprecated)]
     pub fn sum(&self, axis: Axis) -> OwnedArray<A, <D as RemoveAxis>::Smaller>
         where A: Clone + Add<Output=A>,
               D: RemoveAxis,

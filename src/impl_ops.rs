@@ -91,6 +91,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
           E: Dimension,
 {
     type Output = ArrayBase<S, D>;
+    #[allow(deprecated)]
     fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         self.$imth(rhs);
@@ -281,6 +282,7 @@ mod arithmetic_ops {
     {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
+        #[allow(deprecated)]
         fn neg(mut self) -> Self {
             self.ineg();
             self
@@ -294,6 +296,7 @@ mod arithmetic_ops {
     {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
+        #[allow(deprecated)]
         fn not(mut self) -> Self {
             self.inot();
             self
