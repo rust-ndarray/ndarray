@@ -26,7 +26,8 @@ pub unsafe trait Data {
     /// The array element type.
     type Elem;
     #[doc(hidden)]
-    fn slice(&self) -> &[Self::Elem];
+    // This method is only used for debugging
+    fn _data_slice(&self) -> &[Self::Elem];
 }
 
 /// Array representation trait.
@@ -35,8 +36,6 @@ pub unsafe trait Data {
 /// 
 /// ***Internal trait, see `Data`.***
 pub unsafe trait DataMut : Data {
-    #[doc(hidden)]
-    fn slice_mut(&mut self) -> &mut [Self::Elem];
     #[doc(hidden)]
     #[inline]
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
@@ -64,7 +63,7 @@ pub unsafe trait DataClone : Data {
 
 unsafe impl<A> Data for Rc<Vec<A>> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         self
     }
 }
@@ -73,10 +72,6 @@ unsafe impl<A> Data for Rc<Vec<A>> {
 unsafe impl<A> DataMut for Rc<Vec<A>>
     where A: Clone
 {
-    fn slice_mut(&mut self) -> &mut [A] {
-        &mut Rc::make_mut(self)[..]
-    }
-
     fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
         where Self: Sized,
               D: Dimension
@@ -117,16 +112,12 @@ unsafe impl<A> DataClone for Rc<Vec<A>> {
 
 unsafe impl<A> Data for Vec<A> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         self
     }
 }
 
-unsafe impl<A> DataMut for Vec<A> {
-    fn slice_mut(&mut self) -> &mut [A] {
-        self
-    }
-}
+unsafe impl<A> DataMut for Vec<A> { }
 
 unsafe impl<A> DataClone for Vec<A>
     where A: Clone
@@ -142,7 +133,7 @@ unsafe impl<A> DataClone for Vec<A>
 
 unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         &[]
     }
 }
@@ -155,16 +146,12 @@ unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
 
 unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     type Elem = A;
-    fn slice(&self) -> &[A] {
+    fn _data_slice(&self) -> &[A] {
         &[]
     }
 }
 
-unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
-    fn slice_mut(&mut self) -> &mut [A] {
-        &mut []
-    }
-}
+unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> { }
 
 /// Array representation trait.
 ///

@@ -930,7 +930,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     fn pointer_is_inbounds(&self) -> bool {
-        let slc = self.data.slice();
+        let slc = self.data._data_slice();
         if slc.is_empty() {
             // special case for data-less views
             return true;

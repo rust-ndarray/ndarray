@@ -346,6 +346,27 @@ fn mat_mul_order() {
     assert_eq!(ff.strides()[0], 1);
 }
 
+// test matrix multiplication shape mismatch
+#[test]
+#[should_panic]
+fn mat_mul_shape_mismatch() {
+    let (m, k, k2, n) = (8, 8, 9, 8);
+    let a = range_mat(m, k);
+    let b = range_mat(k2, n);
+    a.dot(&b);
+}
+
+// test matrix multiplication shape mismatch
+#[test]
+#[should_panic]
+fn mat_mul_shape_mismatch_2() {
+    let (m, k, k2, n) = (8, 8, 8, 8);
+    let a = range_mat(m, k);
+    let b = range_mat(k2, n);
+    let mut c = range_mat(m, n + 1);
+    general_mat_mul(1., &a, &b, 1., &mut c);
+}
+
 // Check that matrix multiplication
 // supports broadcast arrays.
 #[test]
@@ -410,14 +431,28 @@ fn gen_mat_mul() {
                      (15, 16, 17),
                      (67, 63, 62),
         ];
-    for &(m, k, n) in &sizes {
-        let a = range_mat64(m, k);
-        let b = range_mat64(k, n);
-        let mut c = range_mat64(m, n);
+    // test different strides
+    for &s1 in &[1, 2, -1, -2] {
+        for &s2 in &[1, 2, -1, -2] {
+            for &(m, k, n) in &sizes {
+                let a = range_mat64(m, k);
+                let b = range_mat64(k, n);
+                let mut c = range_mat64(m, n);
+                let mut answer = c.clone();
 
-        let answer = alpha * reference_mat_mul(&a, &b) + beta * &c;
-        general_mat_mul(alpha, &a, &b, beta, &mut c);
-        assert_close(c.view(), answer.view());
+                {
+                    let a = a.slice(s![..;s1, ..;s2]);
+                    let b = b.slice(s![..;s2, ..;s2]);
+                    let mut cv = c.slice_mut(s![..;s1, ..;s2]);
+
+                    let answer_part = alpha * reference_mat_mul(&a, &b) + beta * &cv;
+                    answer.slice_mut(s![..;s1, ..;s2]).assign(&answer_part);
+
+                    general_mat_mul(alpha, &a, &b, beta, &mut cv);
+                }
+                assert_close(c.view(), answer.view());
+            }
+        }
     }
 }
 
