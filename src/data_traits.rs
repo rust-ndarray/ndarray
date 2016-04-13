@@ -36,8 +36,6 @@ pub unsafe trait Data {
 /// ***Internal trait, see `Data`.***
 pub unsafe trait DataMut : Data {
     #[doc(hidden)]
-    fn slice_mut(&mut self) -> &mut [Self::Elem];
-    #[doc(hidden)]
     #[inline]
     fn ensure_unique<D>(&mut ArrayBase<Self, D>)
         where Self: Sized,
@@ -73,10 +71,6 @@ unsafe impl<A> Data for Rc<Vec<A>> {
 unsafe impl<A> DataMut for Rc<Vec<A>>
     where A: Clone
 {
-    fn slice_mut(&mut self) -> &mut [A] {
-        &mut Rc::make_mut(self)[..]
-    }
-
     fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
         where Self: Sized,
               D: Dimension
@@ -122,11 +116,7 @@ unsafe impl<A> Data for Vec<A> {
     }
 }
 
-unsafe impl<A> DataMut for Vec<A> {
-    fn slice_mut(&mut self) -> &mut [A] {
-        self
-    }
-}
+unsafe impl<A> DataMut for Vec<A> { }
 
 unsafe impl<A> DataClone for Vec<A>
     where A: Clone
@@ -160,11 +150,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     }
 }
 
-unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {
-    fn slice_mut(&mut self) -> &mut [A] {
-        &mut []
-    }
-}
+unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> { }
 
 /// Array representation trait.
 ///
