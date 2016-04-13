@@ -98,6 +98,11 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.4.9
+
+  - Fix a namespace bug in the stack![] macro.
+  - Add deprecation messages to .iadd() and similar methods (use += instead).
+
 - 0.4.8
 
   - Fix an error in ``.dot()`` when using BLAS and arrays with negative stride.
