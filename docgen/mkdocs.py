@@ -65,7 +65,7 @@ def mkdocs():
     dest = dest_dir()
     target_doc = P.join(target_dir(), "doc")
     images_dir = image_dir()
-    run_shell("rm -rvf %s" % dest)
+    run_shell("rm -rvf ./%s" % dest)
     run_shell("cp -r %s %s" % (target_doc, dest))
     run_shell("cp %s/*.svg %s/ndarray/" % (images_dir, dest))
     run_shell("cat %s/custom.css >> %s/main.css" % (doc_home(), dest))
