@@ -29,6 +29,7 @@ use {
     AxisIter,
     AxisIterMut,
 };
+use stacking::stack;
 
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 {
@@ -194,6 +195,26 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             self.ptr = self.ptr.offset(offset);
         }
         debug_assert!(self.pointer_is_inbounds());
+    }
+
+    pub fn select_along(&self, axis: Axis, indices: &[Ix]) -> OwnedArray<A, D>
+        where A: Copy,
+              D: RemoveAxis,
+    {
+        let v = self.view();
+        let mut subs = vec![v; indices.len()];
+        for (&i, sub) in zipsl(indices, &mut subs[..]) {
+            sub.isubview(axis, i);
+        }
+        if subs.is_empty() {
+            let mut dim = self.dim();
+            dim.set_axis(axis, 0);
+            unsafe {
+                OwnedArray::from_vec_dim_unchecked(dim, vec![])
+            }
+        } else {
+            stack(axis, &subs).unwrap()
+        }
     }
 
     /// Return a reference to the element at `index`, or return `None`
@@ -619,7 +640,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a pointer to the first element in the array.
     ///
     /// Raw access to array elements needs to follow the strided indexing
-    /// scheme: an element at multi-index *I* in an array with strides *S* is 
+    /// scheme: an element at multi-index *I* in an array with strides *S* is
     /// located at offset
     ///
     /// *Σ<sub>0 ≤ k < d</sub> I<sub>k</sub> × S<sub>k</sub>*
