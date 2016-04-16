@@ -222,6 +222,33 @@ fn test_sub()
     assert_eq!(m, mat.subview(Axis(1), 1));
 }
 
+
+#[test]
+fn test_select(){
+    // test for 2-d array
+    let x = arr2(&[[0., 1.], [1.,0.],[1.,0.],[1.,0.],[1.,0.],[0., 1.],[0., 1.]]);
+    let r = x.select(Axis(0),&[1,3,5]);
+    let c = x.select(Axis(1),&[1]);
+    let r_target = arr2(&[[1.,0.],[1.,0.],[0., 1.]]);
+    let c_target = arr2(&[[1.,0.,0.,0.,0., 1., 1.]]);
+    assert!(r.all_close(&r_target,1e-8));
+    assert!(c.all_close(&c_target.t(),1e-8));
+
+    // test for 3-d array
+    let y = arr3(&[[[1., 2., 3.],
+                    [1.5, 1.5, 3.]],
+                    [[1., 2., 8.],
+                    [1., 2.5, 3.]]]);
+    let r = y.select(Axis(1),&[1]);
+    let c = y.select(Axis(2),&[1]);
+    let r_target = arr3(&[[[1.5, 1.5, 3.]], [[1., 2.5, 3.]]]);
+    let c_target = arr3(&[[[2.],[1.5]],[[2.],[2.5]]]);
+    assert!(r.all_close(&r_target,1e-8));
+    assert!(c.all_close(&c_target,1e-8));
+
+}
+
+
 #[test]
 fn diag()
 {
@@ -985,29 +1012,4 @@ fn test_all_close() {
                     [1., 2.5, 3.]]]);
     assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
     assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
-}
-
-#[test]
-fn test_select_along(){
-    // test for 2-d array
-    let x = arr2(&[[0., 1.], [1.,0.],[1.,0.],[1.,0.],[1.,0.],[0., 1.],[0., 1.]]);
-    let r = x.select_along(Axis(0),&[1,3,5]);
-    let c = x.select_along(Axis(1),&[1]);
-    let r_target = arr2(&[[1.,0.],[1.,0.],[0., 1.]]);
-    let c_target = arr2(&[[1.,0.,0.,0.,0., 1., 1.]]);
-    assert!(r.all_close(&r_target,1e-8));
-    assert!(c.all_close(&c_target.t(),1e-8));
-
-    // test for 3-d array
-    let y = arr3(&[[[1., 2., 3.],
-                    [1.5, 1.5, 3.]],
-                    [[1., 2., 8.],
-                    [1., 2.5, 3.]]]);
-    let r = y.select_along(Axis(1),&[1]);
-    let c = y.select_along(Axis(2),&[1]);
-    let r_target = arr3(&[[[1.5, 1.5, 3.]], [[1., 2.5, 3.]]]);
-    let c_target = arr3(&[[[2.],[1.5]],[[2.],[2.5]]]);
-    assert!(r.all_close(&r_target,1e-8));
-    assert!(c.all_close(&c_target,1e-8));
-
 }
