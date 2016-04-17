@@ -42,3 +42,8 @@ pub use {
     arr1, arr2,
     aview0, aview1, aview2,
 };
+
+#[doc(no_inline)]
+pub use {
+    ShapeBuilder,
+};

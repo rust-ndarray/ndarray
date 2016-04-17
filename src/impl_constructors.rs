@@ -8,12 +8,102 @@
 
 //! Constructor methods for ndarray
 //!
+
 use libnum;
 
 use imp_prelude::*;
 use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
+
+/// A contiguous array shape of n dimensions.
+///
+/// Either c- or f- memory ordered.
+pub struct Shape<D> {
+    dim: D,
+    is_c: bool,
+}
+
+/// An array shape of n dimensions with possibly custom strides.
+pub struct StrideShape<D> {
+    dim: D,
+    strides: D,
+    custom: bool,
+}
+
+pub trait ShapeBuilder {
+    type Dim: Dimension;
+
+    fn f(self) -> Shape<Self::Dim>;
+    fn strides(self, st: Self::Dim) -> StrideShape<Self::Dim>;
+}
+
+impl<D> From<D> for Shape<D>
+    where D: Dimension
+{
+    fn from(d: D) -> Self {
+        Shape {
+            dim: d,
+            is_c: true,
+        }
+    }
+}
+
+impl<D> From<D> for StrideShape<D>
+    where D: Dimension
+{
+    fn from(d: D) -> Self {
+        StrideShape {
+            strides: d.default_strides(),
+            dim: d,
+            custom: false,
+        }
+    }
+}
+
+impl<D> From<Shape<D>> for StrideShape<D>
+    where D: Dimension
+{
+    fn from(shape: Shape<D>) -> Self {
+        let d = shape.dim;
+        let st = if shape.is_c { d.default_strides() } else { d.fortran_strides() };
+        StrideShape {
+            strides: st,
+            dim: d,
+            custom: false,
+        }
+    }
+}
+
+impl<D> ShapeBuilder for D
+    where D: Dimension
+{
+    type Dim = D;
+    fn f(self) -> Shape<D> {
+        Shape::from(self).f()
+    }
+    fn strides(self, st: D) -> StrideShape<D> {
+        Shape::from(self).strides(st)
+    }
+}
+
+impl<D> ShapeBuilder for Shape<D>
+    where D: Dimension
+{
+    type Dim = D;
+    fn f(mut self) -> Self {
+        self.is_c = false;
+        self
+    }
+    fn strides(self, st: D) -> StrideShape<D> {
+        StrideShape {
+            dim: self.dim,
+            strides: st,
+            custom: true,
+        }
+    }
+}
+
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -187,6 +277,25 @@ impl<S, A, D> ArrayBase<S, D>
     {
         let v = (0..dim.size()).map(|_| A::default()).collect();
         unsafe { Self::from_vec_dim_unchecked(dim, v) }
+    }
+
+    /// Create an array with the given shape from a vector (no copying needed).
+    ///
+    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
+    pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
+        where Sh: Into<StrideShape<D>>,
+    {
+        let shape = shape.into();
+        if shape.custom {
+            Self::from_vec_dim_stride(shape.dim, shape.strides, v)
+        } else {
+            let dim = shape.dim;
+            let strides = shape.strides;
+            if dim.size_checked() != Some(v.len()) {
+                return Err(error::incompatible_shapes(&v.len(), &dim));
+            }
+            unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
+        }
     }
 
     /// Create an array from a vector (no copying needed).

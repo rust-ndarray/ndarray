@@ -108,6 +108,10 @@ pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
+pub use impl_constructors::{
+    ShapeBuilder, Shape, StrideShape,
+};
+
 mod arraytraits;
 #[cfg(feature = "serde")]
 mod arrayserialize;

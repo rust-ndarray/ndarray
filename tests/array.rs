@@ -4,20 +4,14 @@
 extern crate ndarray;
 extern crate itertools;
 
-use ndarray::{RcArray, S, Si,
-    OwnedArray,
-};
+use ndarray::{S, Si};
+use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
-    arr0, arr1, arr2, arr3,
-    aview0,
-    aview1,
-    aview2,
+    arr0, arr3,
     aview_mut1,
-    Dimension,
 };
 use ndarray::Indexes;
-use ndarray::Axis;
 use itertools::free::enumerate;
 
 #[test]
@@ -1027,4 +1021,18 @@ fn test_swap() {
         }
     }
     assert_eq!(a, b.t());
+}
+
+#[test]
+fn test_shape() {
+    let data = [0, 1, 2, 3, 4, 5];
+    let a = OwnedArray::from_shape_vec((1, 2, 3), data.to_vec()).unwrap();
+    let b = OwnedArray::from_shape_vec((1, 2, 3).f(), data.to_vec()).unwrap();
+    let c = OwnedArray::from_shape_vec((1, 2, 3).strides((1, 3, 1)), data.to_vec()).unwrap();
+    println!("{:?}", a);
+    println!("{:?}", b);
+    println!("{:?}", c);
+    assert_eq!(a.strides(), &[6, 3, 1]);
+    assert_eq!(b.strides(), &[1, 1, 2]);
+    assert_eq!(c.strides(), &[1, 3, 1]);
 }
