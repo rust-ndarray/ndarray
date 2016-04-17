@@ -110,6 +110,7 @@ fn is_inner_contiguous<S, D>(a: &ArrayBase<S, D>) -> bool
 
 /// If the array is not in the standard layout, copy all elements
 /// into the standard layout so that the array is C-contiguous.
+#[allow(deprecated)] // from_vec_dim
 fn ensure_standard_layout<A, S, D>(a: &mut ArrayBase<S, D>)
     where S: DataOwned<Elem=A>,
           D: Dimension,

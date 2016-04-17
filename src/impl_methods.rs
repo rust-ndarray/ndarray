@@ -1260,7 +1260,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Fold along an axis
+    /// Fold along an axis.
+    ///
+    /// Combine the elements of each subview with the previous using the `fold`
+    /// function and initial value `init`.
+    ///
+    /// Return the result as an `OwnedArray`.
     pub fn fold_axis<B, F>(&self, axis: Axis, init: B, mut fold: F)
         -> OwnedArray<B, D::Smaller>
         where D: RemoveAxis,
