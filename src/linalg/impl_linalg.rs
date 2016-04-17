@@ -230,11 +230,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            if !column_major {
-                c = OwnedArray::from_vec_dim_unchecked((m, n), v);
-            } else {
-                c = OwnedArray::from_vec_dim_unchecked_f((m, n), v);
-            }
+            c = OwnedArray::from_shape_vec_unchecked((m, n).set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -293,7 +289,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, (Ix, Ix)>
             }
         }
         unsafe {
-            ArrayBase::from_vec_dim_unchecked(m, res_elems)
+            ArrayBase::from_shape_vec_unchecked(m, res_elems)
         }
     }
 }
@@ -353,10 +349,10 @@ fn mat_mul_impl<A>(alpha: A,
         let mut rhs_trans = CblasNoTrans;
         if both_f {
             // A^t B^t = C^t => B A = C
-            lhs_ = lhs_.reversed_axes();
-            rhs_ = rhs_.reversed_axes();
+            let lhs_t = lhs_.reversed_axes();
+            lhs_ = rhs_.reversed_axes();
+            rhs_ = lhs_t;
             c_ = c_.reversed_axes();
-            swap(&mut lhs_, &mut rhs_);
             swap(&mut m, &mut n);
         } else if lhs_s0 == 1 && m == a {
             lhs_ = lhs_.reversed_axes();

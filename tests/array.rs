@@ -4,20 +4,14 @@
 extern crate ndarray;
 extern crate itertools;
 
-use ndarray::{RcArray, S, Si,
-    OwnedArray,
-};
+use ndarray::{S, Si};
+use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
-    arr0, arr1, arr2, arr3,
-    aview0,
-    aview1,
-    aview2,
+    arr0, arr3,
     aview_mut1,
-    Dimension,
 };
 use ndarray::Indexes;
-use ndarray::Axis;
 use itertools::free::enumerate;
 
 #[test]
@@ -38,7 +32,7 @@ fn test_matmul_rcarray()
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
     unsafe {
-        let result = RcArray::from_vec_dim_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
+        let result = RcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);
@@ -454,7 +448,7 @@ fn owned_array_with_stride() {
     let dim = (2, 3, 2);
     let strides = (1, 4, 2);
 
-    let a = OwnedArray::from_vec_dim_stride(dim, strides, v).unwrap();
+    let a = OwnedArray::from_shape_vec(dim.strides(strides), v).unwrap();
     assert_eq!(a.strides(), &[1, 4, 2]);
 }
 
@@ -471,7 +465,7 @@ macro_rules! assert_matches {
 #[test]
 fn from_vec_dim_stride_empty_1d() {
     let empty: [f32; 0] = [];
-    assert_matches!(OwnedArray::from_vec_dim_stride(0, 1, empty.to_vec()),
+    assert_matches!(OwnedArray::from_shape_vec(0.strides(1), empty.to_vec()),
                     Ok(_));
 }
 
@@ -481,11 +475,11 @@ fn from_vec_dim_stride_0d() {
     let one = [1.];
     let two = [1., 2.];
     // too few elements
-    assert_matches!(OwnedArray::from_vec_dim_stride((), (), empty.to_vec()), Err(_));
+    assert_matches!(OwnedArray::from_shape_vec(().strides(()), empty.to_vec()), Err(_));
     // exact number of elements
-    assert_matches!(OwnedArray::from_vec_dim_stride((), (), one.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(().strides(()), one.to_vec()), Ok(_));
     // too many are ok
-    assert_matches!(OwnedArray::from_vec_dim_stride((), (), two.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(().strides(()), two.to_vec()), Ok(_));
 }
 
 #[test]
@@ -493,7 +487,7 @@ fn from_vec_dim_stride_2d_1() {
     let two = [1., 2.];
     let d = (2, 1);
     let s = d.default_strides();
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), two.to_vec()), Ok(_));
 }
 
 #[test]
@@ -501,7 +495,7 @@ fn from_vec_dim_stride_2d_2() {
     let two = [1., 2.];
     let d = (1, 2);
     let s = d.default_strides();
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), two.to_vec()), Ok(_));
 }
 
 #[test]
@@ -511,7 +505,7 @@ fn from_vec_dim_stride_2d_3() {
                    [[3]]]);
     let d = a.dim();
     let s = d.default_strides();
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.as_slice().unwrap().to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
 
 #[test]
@@ -521,7 +515,7 @@ fn from_vec_dim_stride_2d_4() {
                    [[3]]]);
     let d = a.dim();
     let s = d.fortran_strides();
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.as_slice().unwrap().to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
 
 #[test]
@@ -529,7 +523,7 @@ fn from_vec_dim_stride_2d_5() {
     let a = arr3(&[[[1, 2, 3]]]);
     let d = a.dim();
     let s = d.fortran_strides();
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.as_slice().unwrap().to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
 
 #[test]
@@ -537,11 +531,11 @@ fn from_vec_dim_stride_2d_6() {
     let a = [1., 2., 3., 4., 5., 6.];
     let d = (2, 1, 1);
     let s = (2, 2, 1);
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.to_vec()), Ok(_));
 
     let d = (1, 2, 1);
     let s = (2, 2, 1);
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.to_vec()), Ok(_));
 }
 
 #[test]
@@ -551,7 +545,7 @@ fn from_vec_dim_stride_2d_7() {
     // [[]] shape=[4, 0], strides=[0, 1]
     let d = (4, 0);
     let s = (0, 1);
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Ok(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.to_vec()), Ok(_));
 }
 
 #[test]
@@ -560,7 +554,7 @@ fn from_vec_dim_stride_2d_8() {
     let a = [1.];
     let d = (1, 1);
     let s = (0, 1);
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, a.to_vec()), Err(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), a.to_vec()), Err(_));
 }
 
 #[test]
@@ -568,11 +562,11 @@ fn from_vec_dim_stride_2d_rejects() {
     let two = [1., 2.];
     let d = (2, 2);
     let s = (1, 0);
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Err(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), two.to_vec()), Err(_));
 
     let d = (2, 2);
     let s = (0, 1);
-    assert_matches!(OwnedArray::from_vec_dim_stride(d, s, two.to_vec()), Err(_));
+    assert_matches!(OwnedArray::from_shape_vec(d.strides(s), two.to_vec()), Err(_));
 }
 
 #[test]
@@ -741,7 +735,7 @@ fn reshape_error2() {
 
 #[test]
 fn reshape_f() {
-    let mut u = OwnedArray::zeros_f((3, 4));
+    let mut u = OwnedArray::zeros((3, 4).f());
     for (i, elt) in enumerate(u.as_slice_memory_order_mut().unwrap()) {
         *elt = i as i32;
     }
@@ -825,9 +819,9 @@ fn scalar_ops() {
 #[test]
 fn deny_wraparound_from_vec() {
     let five = vec![0; 5];
-    let _five_large = OwnedArray::from_vec_dim((3, 7, 29, 36760123, 823996703), five.clone());
-    assert!(_five_large.is_err());
-    let six = OwnedArray::from_vec_dim(6, five.clone());
+    let five_large = OwnedArray::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
+    assert!(five_large.is_err());
+    let six = OwnedArray::from_shape_vec(6, five.clone());
     assert!(six.is_err());
 }
 
@@ -924,7 +918,7 @@ fn test_f_order() {
     // even if the underlying memory order is different
     let c = arr2(&[[1, 2, 3],
                    [4, 5, 6]]);
-    let mut f = OwnedArray::zeros_f(c.dim());
+    let mut f = OwnedArray::zeros(c.dim().f());
     f.assign(&c);
     assert_eq!(f, c);
     assert_eq!(f.shape(), c.shape());
@@ -991,7 +985,7 @@ fn test_contiguous() {
     assert!(v.as_slice_memory_order().is_some());
 
     let a = OwnedArray::<f32, _>::zeros((20, 1));
-    let b = OwnedArray::<f32, _>::zeros_f((20, 1));
+    let b = OwnedArray::<f32, _>::zeros((20, 1).f());
     assert!(a.as_slice().is_some());
     assert!(b.as_slice().is_some());
     assert!(a.as_slice_memory_order().is_some());
@@ -1027,4 +1021,18 @@ fn test_swap() {
         }
     }
     assert_eq!(a, b.t());
+}
+
+#[test]
+fn test_shape() {
+    let data = [0, 1, 2, 3, 4, 5];
+    let a = OwnedArray::from_shape_vec((1, 2, 3), data.to_vec()).unwrap();
+    let b = OwnedArray::from_shape_vec((1, 2, 3).f(), data.to_vec()).unwrap();
+    let c = OwnedArray::from_shape_vec((1, 2, 3).strides((1, 3, 1)), data.to_vec()).unwrap();
+    println!("{:?}", a);
+    println!("{:?}", b);
+    println!("{:?}", c);
+    assert_eq!(a.strides(), &[6, 3, 1]);
+    assert_eq!(b.strides(), &[1, 1, 2]);
+    assert_eq!(c.strides(), &[1, 3, 1]);
 }

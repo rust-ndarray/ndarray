@@ -91,7 +91,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             (self.iter().cloned().collect(), self.dim.default_strides())
         };
         unsafe {
-            ArrayBase::from_vec_dim_stride_unchecked(self.dim.clone(), strides, data)
+            ArrayBase::from_shape_vec_unchecked(self.dim.clone().strides(strides), data)
         }
     }
 
@@ -427,7 +427,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             let mut dim = self.dim();
             dim.set_axis(axis, 0);
             unsafe {
-                OwnedArray::from_vec_dim_unchecked(dim, vec![])
+                OwnedArray::from_shape_vec_unchecked(dim, vec![])
             }
         } else {
             stack(axis, &subs).unwrap()
@@ -800,7 +800,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else {
             let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
             unsafe {
-                ArrayBase::from_vec_dim_unchecked(shape, v)
+                ArrayBase::from_shape_vec_unchecked(shape, v)
             }
         }
     }
@@ -1150,13 +1150,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         if let Some(slc) = self.as_slice_memory_order() {
             let v = ::iterators::to_vec(slc.iter().map(f));
             unsafe {
-                ArrayBase::from_vec_dim_stride_unchecked(
-                    self.dim.clone(), self.strides.clone(), v)
+                ArrayBase::from_shape_vec_unchecked(
+                    self.dim.clone().strides(self.strides.clone()), v)
             }
         } else {
             let v = ::iterators::to_vec(self.iter().map(f));
             unsafe {
-                ArrayBase::from_vec_dim_unchecked(self.dim.clone(), v)
+                ArrayBase::from_shape_vec_unchecked(self.dim.clone(), v)
             }
         }
     }

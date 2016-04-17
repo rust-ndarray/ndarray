@@ -13,7 +13,7 @@ use imp_prelude::*;
 /// Create a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> OwnedArray<A, ()>
 {
-    unsafe { ArrayBase::from_vec_dim_unchecked((), vec![x]) }
+    unsafe { ArrayBase::from_shape_vec_unchecked((), vec![x]) }
 }
 
 /// Create a one-dimensional array with elements from `xs`.
@@ -129,7 +129,7 @@ pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> OwnedArray<A, 
         result.extend_from_slice(snd.as_init_slice());
     }
     unsafe {
-        ArrayBase::from_vec_dim_unchecked(dim, result)
+        ArrayBase::from_shape_vec_unchecked(dim, result)
     }
 }
 
@@ -167,7 +167,7 @@ pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(
         }
     }
     unsafe {
-        ArrayBase::from_vec_dim_unchecked(dim, result)
+        ArrayBase::from_shape_vec_unchecked(dim, result)
     }
 }
 

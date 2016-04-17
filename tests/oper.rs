@@ -243,7 +243,9 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2,
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
+    let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
+    assert!(m.checked_mul(n).is_some());
+    assert_eq!(k, k2);
     let mut res_elems = Vec::<A>::with_capacity(m * n);
     unsafe {
         res_elems.set_len(m * n);
@@ -263,7 +265,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2,
         }
     }
     unsafe {
-        ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
+        ArrayBase::from_shape_vec_unchecked((m, n), res_elems)
     }
 }
 
@@ -279,8 +281,8 @@ fn mat_mul() {
     }
     let ab = a.dot(&b);
 
-    let mut af = OwnedArray::zeros_f(a.dim());
-    let mut bf = OwnedArray::zeros_f(b.dim());
+    let mut af = OwnedArray::zeros(a.dim().f());
+    let mut bf = OwnedArray::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -298,8 +300,8 @@ fn mat_mul() {
     }
     let ab = a.dot(&b);
 
-    let mut af = OwnedArray::zeros_f(a.dim());
-    let mut bf = OwnedArray::zeros_f(b.dim());
+    let mut af = OwnedArray::zeros(a.dim().f());
+    let mut bf = OwnedArray::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -317,8 +319,8 @@ fn mat_mul() {
     }
     let ab = a.dot(&b);
 
-    let mut af = OwnedArray::zeros_f(a.dim());
-    let mut bf = OwnedArray::zeros_f(b.dim());
+    let mut af = OwnedArray::zeros(a.dim().f());
+    let mut bf = OwnedArray::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -334,8 +336,8 @@ fn mat_mul_order() {
     let (m, n, k) = (8, 8, 8);
     let a = range_mat(m, n);
     let b = range_mat(n, k);
-    let mut af = OwnedArray::zeros_f(a.dim());
-    let mut bf = OwnedArray::zeros_f(b.dim());
+    let mut af = OwnedArray::zeros(a.dim().f());
+    let mut bf = OwnedArray::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 

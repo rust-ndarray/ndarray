@@ -57,7 +57,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     unsafe {
         v.set_len(size);
     }
-    let mut res = try!(OwnedArray::from_vec_dim(res_dim, v));
+    let mut res = try!(OwnedArray::from_shape_vec(res_dim, v));
 
     {
         let mut assign_view = res.view_mut();
