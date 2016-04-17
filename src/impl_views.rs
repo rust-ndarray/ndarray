@@ -10,6 +10,8 @@ use imp_prelude::*;
 use dimension::{self, stride_offset};
 use error::ShapeError;
 
+use StrideShape;
+
 /// # Methods for Array Views
 ///
 /// Methods for read-only array views `ArrayView<'a, A, D>`
@@ -21,17 +23,17 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 {
     /// Create a read-only array view borrowing its data from a slice.
     ///
-    /// Checks whether `dim` and `strides` are compatible with the slice's
+    /// Checks whether `shape` are compatible with the slice's
     /// length, returning an `Err` if not compatible.
     ///
     /// ```
     /// use ndarray::ArrayView;
     /// use ndarray::arr3;
+    /// use ndarray::ShapeBuilder;
     ///
     /// let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    /// let a = ArrayView::from_slice_dim_stride((2, 3, 2),
-    ///                                          (1, 4, 2),
-    ///                                          &s).unwrap();
+    /// let a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)),
+    ///                               &s).unwrap();
     ///
     /// assert!(
     ///     a == arr3(&[[[0, 2],
@@ -43,6 +45,22 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
+    pub fn from_shape<Sh>(shape: Sh, xs: &'a [A])
+        -> Result<Self, ShapeError>
+        where Sh: Into<StrideShape<D>>,
+    {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides;
+        dimension::can_index_slice(xs, &dim, &strides).map(|_| {
+            unsafe {
+                Self::new_(xs.as_ptr(), dim, strides)
+            }
+        })
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape instead."))]
+    /// ***Deprecated: Use from_shape instead***
     pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a [A])
         -> Result<Self, ShapeError>
     {
@@ -111,11 +129,11 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// ```
     /// use ndarray::ArrayViewMut;
     /// use ndarray::arr3;
+    /// use ndarray::ShapeBuilder;
     ///
     /// let mut s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    /// let mut a = ArrayViewMut::from_slice_dim_stride((2, 3, 2),
-    ///                                                 (1, 4, 2),
-    ///                                                 &mut s).unwrap();
+    /// let mut a = ArrayViewMut::from_shape((2, 3, 2).strides((1, 4, 2)),
+    ///                                      &mut s).unwrap();
     ///
     /// a[[0, 0, 0]] = 1;
     /// assert!(
@@ -128,6 +146,22 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
+    pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A])
+        -> Result<Self, ShapeError>
+        where Sh: Into<StrideShape<D>>,
+    {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides;
+        dimension::can_index_slice(xs, &dim, &strides).map(|_| {
+            unsafe {
+                Self::new_(xs.as_mut_ptr(), dim, strides)
+            }
+        })
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape instead."))]
+    /// ***Deprecated: Use from_shape instead***
     pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a mut [A])
         -> Result<Self, ShapeError>
     {

@@ -108,9 +108,7 @@ pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
-pub use impl_constructors::{
-    ShapeBuilder, Shape, StrideShape,
-};
+pub use shape_builder::{ ShapeBuilder };
 
 mod arraytraits;
 #[cfg(feature = "serde")]
@@ -138,6 +136,7 @@ mod linspace;
 mod numeric_util;
 mod si;
 mod error;
+mod shape_builder;
 mod stacking;
 
 /// Implementation's prelude. Common types used everywhere.
@@ -700,4 +699,22 @@ fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
 enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
+}
+
+
+/// A contiguous array shape of n dimensions.
+///
+/// Either c- or f- memory ordered (*c* a.k.a *row major* is the default).
+#[derive(Copy, Clone, Debug)]
+pub struct Shape<D> {
+    dim: D,
+    is_c: bool,
+}
+
+/// An array shape of n dimensions c-order, f-order or custom strides.
+#[derive(Copy, Clone, Debug)]
+pub struct StrideShape<D> {
+    dim: D,
+    strides: D,
+    custom: bool,
 }
