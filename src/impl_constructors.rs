@@ -8,6 +8,9 @@
 
 //! Constructor methods for ndarray
 //!
+//!
+
+#![allow(deprecated)] // from_shape_vec
 
 use libnum::{Zero, One, Float};
 
@@ -39,7 +42,8 @@ pub trait ShapeBuilder {
     type Dim: Dimension;
 
     fn f(self) -> Shape<Self::Dim>;
-    fn strides(self, st: Self::Dim) -> StrideShape<Self::Dim>;
+    fn set_f(self, is_f: bool) -> Shape<Self::Dim>;
+    fn strides(self, strides: Self::Dim) -> StrideShape<Self::Dim>;
 }
 
 impl<D> From<D> for Shape<D>
@@ -83,8 +87,9 @@ impl<D> ShapeBuilder for D
     where D: Dimension
 {
     type Dim = D;
-    fn f(self) -> Shape<D> {
-        Shape::from(self).f()
+    fn f(self) -> Shape<D> { self.set_f(true) }
+    fn set_f(self, is_f: bool) -> Shape<D> {
+        Shape::from(self).set_f(is_f)
     }
     fn strides(self, st: D) -> StrideShape<D> {
         Shape::from(self).strides(st)
@@ -95,8 +100,9 @@ impl<D> ShapeBuilder for Shape<D>
     where D: Dimension
 {
     type Dim = D;
-    fn f(mut self) -> Self {
-        self.is_c = false;
+    fn f(self) -> Self { self.set_f(true) }
+    fn set_f(mut self, is_f: bool) -> Self {
+        self.is_c = !is_f;
         self
     }
     fn strides(self, st: D) -> StrideShape<D> {
@@ -124,7 +130,7 @@ impl<S> ArrayBase<S, Ix>
     /// let array = OwnedArray::from_vec(vec![1., 2., 3., 4.]);
     /// ```
     pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
-        unsafe { Self::from_vec_dim_unchecked(v.len() as Ix, v) }
+        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
 
     /// Create a one-dimensional array from an iterable.

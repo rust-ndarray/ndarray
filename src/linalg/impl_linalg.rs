@@ -230,11 +230,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            if !column_major {
-                c = OwnedArray::from_vec_dim_unchecked((m, n), v);
-            } else {
-                c = OwnedArray::from_vec_dim_unchecked_f((m, n), v);
-            }
+            c = OwnedArray::from_shape_vec_unchecked((m, n).set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -293,7 +289,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, (Ix, Ix)>
             }
         }
         unsafe {
-            ArrayBase::from_vec_dim_unchecked(m, res_elems)
+            ArrayBase::from_shape_vec_unchecked(m, res_elems)
         }
     }
 }

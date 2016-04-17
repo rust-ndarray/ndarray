@@ -83,8 +83,8 @@ unsafe impl<A> DataMut for Rc<Vec<A>>
             // Create a new vec if the current view is less than half of
             // backing data.
             unsafe {
-                *self_ = ArrayBase::from_vec_dim_unchecked(self_.dim.clone(),
-                                                           self_.iter()
+                *self_ = ArrayBase::from_shape_vec_unchecked(self_.dim.clone(),
+                                                             self_.iter()
                                                             .cloned()
                                                             .collect());
             }
