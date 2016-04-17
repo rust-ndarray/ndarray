@@ -9,7 +9,7 @@
 //! Constructor methods for ndarray
 //!
 
-use libnum;
+use libnum::{Zero, One, Float};
 
 use imp_prelude::*;
 use dimension;
@@ -148,7 +148,7 @@ impl<S> ArrayBase<S, Ix>
     /// ```
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
-              F: libnum::Float,
+              F: Float,
     {
         Self::from_vec(::iterators::to_vec(linspace::linspace(start, end, n)))
     }
@@ -164,7 +164,7 @@ impl<S> ArrayBase<S, Ix>
     /// ```
     pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
-              F: libnum::Float,
+              F: Float,
     {
         Self::from_vec(::iterators::to_vec(linspace::range(start, end, step)))
     }
@@ -179,7 +179,7 @@ impl<S, A> ArrayBase<S, (Ix, Ix)>
     /// **Panics** if `n * n` would overflow usize.
     pub fn eye(n: Ix) -> ArrayBase<S, (Ix, Ix)>
         where S: DataMut,
-              A: Clone + libnum::Zero + libnum::One,
+              A: Clone + Zero + One,
     {
         let mut eye = Self::zeros((n, n));
         for a_ii in eye.diag_mut() {
@@ -221,15 +221,17 @@ impl<S, A, D> ArrayBase<S, D>
     /// );
     /// assert!(a.strides() == &[4, 2, 1]);
     /// ```
-    pub fn from_elem(dim: D, elem: A) -> ArrayBase<S, D>
-        where A: Clone
+    pub fn from_elem<Sh>(shape: Sh, elem: A) -> ArrayBase<S, D>
+        where A: Clone,
+              Sh: Into<Shape<D>>,
     {
         // Note: We don't need to check the case of a size between
         // isize::MAX -> usize::MAX; in this case, the vec constructor itself
         // panics.
-        let size = size_checked_unwrap!(dim);
+        let shape = shape.into();
+        let size = size_checked_unwrap!(shape.dim);
         let v = vec![elem; size];
-        unsafe { Self::from_vec_dim_unchecked(dim, v) }
+        unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
     /// Create an array with copies of `elem`, dimension `dim` and fortran
@@ -246,27 +248,26 @@ impl<S, A, D> ArrayBase<S, D>
     pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>
         where A: Clone
     {
-        let size = size_checked_unwrap!(dim);
-        let v = vec![elem; size];
-        unsafe { Self::from_vec_dim_unchecked_f(dim, v) }
+        Self::from_elem(dim.f(), elem)
     }
 
     /// Create an array with zeros, dimension `dim`.
     ///
     /// **Panics** if the number of elements in `dim` would overflow usize.
-    pub fn zeros(dim: D) -> ArrayBase<S, D>
-        where A: Clone + libnum::Zero
+    pub fn zeros<Sh>(shape: Sh) -> ArrayBase<S, D>
+        where A: Clone + Zero,
+              Sh: Into<Shape<D>>,
     {
-        Self::from_elem(dim, libnum::zero())
+        Self::from_elem(shape, A::zero())
     }
 
     /// Create an array with zeros, dimension `dim` and fortran memory order.
     ///
     /// **Panics** if the number of elements in `dim` would overflow usize.
     pub fn zeros_f(dim: D) -> ArrayBase<S, D>
-        where A: Clone + libnum::Zero
+        where A: Clone + Zero
     {
-        Self::from_elem_f(dim, libnum::zero())
+        Self::from_elem_f(dim, A::zero())
     }
 
     /// Create an array with default values, dimension `dim`.
@@ -296,6 +297,14 @@ impl<S, A, D> ArrayBase<S, D>
             }
             unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
         }
+    }
+
+    /// Create an array with the given shape from a vector (no copying needed).
+    pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> ArrayBase<S, D>
+        where Sh: Into<StrideShape<D>>,
+    {
+        let shape = shape.into();
+        Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
     }
 
     /// Create an array from a vector (no copying needed).
