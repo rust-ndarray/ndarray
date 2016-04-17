@@ -353,10 +353,10 @@ fn mat_mul_impl<A>(alpha: A,
         let mut rhs_trans = CblasNoTrans;
         if both_f {
             // A^t B^t = C^t => B A = C
-            lhs_ = lhs_.reversed_axes();
-            rhs_ = rhs_.reversed_axes();
+            let lhs_t = lhs_.reversed_axes();
+            lhs_ = rhs_.reversed_axes();
+            rhs_ = lhs_t;
             c_ = c_.reversed_axes();
-            swap(&mut lhs_, &mut rhs_);
             swap(&mut m, &mut n);
         } else if lhs_s0 == 1 && m == a {
             lhs_ = lhs_.reversed_axes();
