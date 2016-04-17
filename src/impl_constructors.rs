@@ -188,6 +188,20 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Errors** if strides and dimensions can point out of bounds of `v`.<br>
     /// **Errors** if strides allow multiple indices to point to the same element.
+    ///
+    /// ```
+    /// use ndarray::prelude::*;
+    ///
+    /// let a = OwnedArray::from_shape_vec((2, 2), vec![1., 2., 3., 4.]);
+    /// assert!(a.is_ok());
+    ///
+    /// let b = OwnedArray::from_shape_vec((2, 2).strides((1, 2)),
+    ///                                    vec![1., 2., 3., 4.]).unwrap();
+    /// assert!(
+    ///     b == arr2(&[[1., 3.],
+    ///                 [2., 4.]])
+    /// );
+    /// ```
     pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
         where Sh: Into<StrideShape<D>>,
     {
