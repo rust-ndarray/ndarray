@@ -87,6 +87,12 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.5.0-alpha.2
+
+  - Fix a namespace bug in the stack![] macro.
+  - Add method .select() that can pick an arbitrary set of rows (for example)
+    into a new array.
+
 - 0.4.9
 
   - Fix a namespace bug in the stack![] macro.
