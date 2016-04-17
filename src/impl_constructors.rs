@@ -286,7 +286,12 @@ impl<S, A, D> ArrayBase<S, D>
     pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
         where Sh: Into<StrideShape<D>>,
     {
-        let shape = shape.into();
+        // eliminate the type parameter Sh as soon as possible
+        Self::from_shape_vec_impl(shape.into(), v)
+    }
+
+    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
+    {
         if shape.custom {
             Self::from_vec_dim_stride(shape.dim, shape.strides, v)
         } else {
