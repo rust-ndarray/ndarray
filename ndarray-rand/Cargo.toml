@@ -1,6 +1,6 @@
 [package]
 name = "ndarray-rand"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
@@ -13,4 +13,4 @@ keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
 rand = "0.3"
-ndarray = { version = ">= 0.4.4, <= 0.5.0-alpha.10", path = ".." }
+ndarray = { version = ">= 0.4.9, < 0.6", path = ".." }

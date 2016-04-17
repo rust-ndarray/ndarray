@@ -75,6 +75,7 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
         Self::random_using(dim, dist, &mut rand::weak_rng())
     }
 
+    #[allow(deprecated)] // from_vec_dim
     fn random_using<IdS, R>(dim: D, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
               R: Rng
