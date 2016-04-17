@@ -87,6 +87,20 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.5.0
+
+  - Require Rust 1.8 and exable +=, -= and other assign operators.
+    All ``iadd, iadd_scalar`` and similar methods are now deprecated.
+  - ndarray now has a prelude: ``use ndarray::prelude::*;``.
+  - Constructors from_elem, zeros, from_shape_vec now all support passing a custom
+    memory layout. A lot of specific constructors were deprecated.
+  - Add method ``.select(Axis, &[Ix]) -> OwnedArray``, to create an array
+    from a non-contiguous pick of subviews along an axis.
+  - Rename ``.mat_mul()`` to just ``.dot()`` and add a function ``general_mat_mul``
+    for matrix multiplication with scaling into an existing array.
+  - **Change .fold() to use arbitrary order.**
+  - See below for more details
+
 - 0.5.0-alpha.2
 
   - Fix a namespace bug in the stack![] macro.
