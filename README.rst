@@ -89,7 +89,7 @@ Recent Changes (ndarray)
 
 - 0.5.0
 
-  - Require Rust 1.8 and exable +=, -= and other assign operators.
+  - Require Rust 1.8 and enable +=, -=, and the other assign operators.
     All ``iadd, iadd_scalar`` and similar methods are now deprecated.
   - ndarray now has a prelude: ``use ndarray::prelude::*;``.
   - Constructors from_elem, zeros, from_shape_vec now all support passing a custom
