@@ -18,19 +18,23 @@ use error::{self, ShapeError, ErrorKind};
 
 /// A contiguous array shape of n dimensions.
 ///
-/// Either c- or f- memory ordered.
+/// Either c- or f- memory ordered (*c* a.k.a *row major* is the default).
+#[derive(Copy, Clone, Debug)]
 pub struct Shape<D> {
     dim: D,
     is_c: bool,
 }
 
-/// An array shape of n dimensions with possibly custom strides.
+/// An array shape of n dimensions c-order, f-order or custom strides.
+#[derive(Copy, Clone, Debug)]
 pub struct StrideShape<D> {
     dim: D,
     strides: D,
     custom: bool,
 }
 
+/// A trait for `Shape` and `D where D: Dimension` that allows
+/// customizing the memory layout (strides) of an array shape.
 pub trait ShapeBuilder {
     type Dim: Dimension;
 
@@ -203,13 +207,12 @@ impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
           D: Dimension,
 {
-    /// Create an array with copies of `elem`, dimension `dim`.
+    /// Create an array with copies of `elem`, shape `shape`.
     ///
-    /// **Panics** if the number of elements in `dim` would overflow usize.
+    /// **Panics** if the number of elements in `shape` would overflow usize.
     ///
     /// ```
-    /// use ndarray::OwnedArray;
-    /// use ndarray::arr3;
+    /// use ndarray::{OwnedArray, arr3, ShapeBuilder};
     ///
     /// let a = OwnedArray::from_elem((2, 2, 2), 1.);
     ///
@@ -220,6 +223,9 @@ impl<S, A, D> ArrayBase<S, D>
     ///                  [1., 1.]]])
     /// );
     /// assert!(a.strides() == &[4, 2, 1]);
+    ///
+    /// let b = OwnedArray::from_elem((2, 2, 2).f(), 1.);
+    /// assert!(b.strides() == &[1, 2, 4]);
     /// ```
     pub fn from_elem<Sh>(shape: Sh, elem: A) -> ArrayBase<S, D>
         where A: Clone,
@@ -234,26 +240,9 @@ impl<S, A, D> ArrayBase<S, D>
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
-    /// Create an array with copies of `elem`, dimension `dim` and fortran
-    /// memory order.
+    /// Create an array with zeros, shape `shape`.
     ///
-    /// **Panics** if the number of elements would overflow usize.
-    ///
-    /// ```
-    /// use ndarray::OwnedArray;
-    ///
-    /// let a = OwnedArray::from_elem_f((2, 2, 2), 1.);
-    /// assert!(a.strides() == &[1, 2, 4]);
-    /// ```
-    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>
-        where A: Clone
-    {
-        Self::from_elem(dim.f(), elem)
-    }
-
-    /// Create an array with zeros, dimension `dim`.
-    ///
-    /// **Panics** if the number of elements in `dim` would overflow usize.
+    /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn zeros<Sh>(shape: Sh) -> ArrayBase<S, D>
         where A: Clone + Zero,
               Sh: Into<Shape<D>>,
@@ -261,28 +250,33 @@ impl<S, A, D> ArrayBase<S, D>
         Self::from_elem(shape, A::zero())
     }
 
-    /// Create an array with zeros, dimension `dim` and fortran memory order.
+    /// Create an array with default values, shape `shape`
     ///
-    /// **Panics** if the number of elements in `dim` would overflow usize.
-    pub fn zeros_f(dim: D) -> ArrayBase<S, D>
-        where A: Clone + Zero
+    /// **Panics** if the number of elements in `shape` would overflow usize.
+    pub fn default<Sh>(shape: Sh) -> ArrayBase<S, D>
+        where A: Default,
+              Sh: Into<Shape<D>>,
     {
-        Self::from_elem_f(dim, A::zero())
+        let shape = shape.into();
+        let v = (0..shape.dim.size()).map(|_| A::default()).collect();
+        unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
-    /// Create an array with default values, dimension `dim`.
+    /// Create an array with the given shape from a vector. (No cloning of
+    /// elements needed.)
     ///
-    /// **Panics** if the number of elements in `dim` would overflow usize.
-    pub fn default(dim: D) -> ArrayBase<S, D>
-        where A: Default
-    {
-        let v = (0..dim.size()).map(|_| A::default()).collect();
-        unsafe { Self::from_vec_dim_unchecked(dim, v) }
-    }
-
-    /// Create an array with the given shape from a vector (no copying needed).
+    /// ---- 
     ///
-    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
+    /// For a contiguous c- or f-order shape, the following applies:
+    ///
+    /// **Errors** if `shape` does not correspond to the number of elements in `v`.
+    ///
+    /// ---- 
+    ///
+    /// For custom strides, the following applies:
+    ///
+    /// **Errors** if strides and dimensions can point out of bounds of `v`.<br>
+    /// **Errors** if strides allow multiple indices to point to the same element.
     pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
         where Sh: Into<StrideShape<D>>,
     {
@@ -304,7 +298,10 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
-    /// Create an array with the given shape from a vector (no copying needed).
+    /// Create an array from a vector and interpret it according to the
+    /// provided dimensions and strides. (No cloning of elements needed.)
+    ///
+    /// Unsafe because dimension and strides are unchecked.
     pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> ArrayBase<S, D>
         where Sh: Into<StrideShape<D>>,
     {
@@ -312,9 +309,24 @@ impl<S, A, D> ArrayBase<S, D>
         Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
     }
 
-    /// Create an array from a vector (no copying needed).
-    ///
-    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_elem instead."))]
+    /// ***Deprecated: Use from_elem instead***
+    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>
+        where A: Clone
+    {
+        Self::from_elem(dim.f(), elem)
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="Use zeros instead."))]
+    /// ***Deprecated: Use zeros instead***
+    pub fn zeros_f(dim: D) -> ArrayBase<S, D>
+        where A: Clone + Zero
+    {
+        Self::from_elem_f(dim, A::zero())
+    }
+
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec instead."))]
+    /// ***Deprecated: Use from_shape_vec instead***
     pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
         if dim.size_checked() != Some(v.len()) {
             return Err(error::incompatible_shapes(&v.len(), &dim));
@@ -322,10 +334,8 @@ impl<S, A, D> ArrayBase<S, D>
         unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
     }
 
-    /// Create an array from a vector (no copying needed) using fortran
-    /// memory order to interpret the data.
-    ///
-    /// **Errors** if `dim` does not correspond to the number of elements in `v`.
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec instead."))]
+    /// ***Deprecated: Use from_shape_vec instead***
     pub fn from_vec_dim_f(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
         if dim.size_checked() != Some(v.len()) {
             return Err(error::incompatible_shapes(&v.len(), &dim));
@@ -333,9 +343,8 @@ impl<S, A, D> ArrayBase<S, D>
         unsafe { Ok(Self::from_vec_dim_unchecked_f(dim, v)) }
     }
 
-    /// Create an array from a vector (no copying needed).
-    ///
-    /// Unsafe because dimension is unchecked, and must be correct.
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec_unchecked instead."))]
+    /// ***Deprecated: Use from_shape_vec_unchecked instead***
     pub unsafe fn from_vec_dim_unchecked(dim: D, mut v: Vec<A>) -> ArrayBase<S, D> {
         debug_assert!(dim.size_checked() == Some(v.len()));
         ArrayBase {
@@ -346,24 +355,16 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
-    /// Create an array from a vector (with no copying needed),
-    /// using fortran memory order to interpret the data.
-    ///
-    /// Unsafe because dimension is unchecked, and must be correct.
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec_unchecked instead."))]
+    /// ***Deprecated: Use from_shape_vec_unchecked instead***
     pub unsafe fn from_vec_dim_unchecked_f(dim: D, v: Vec<A>) -> ArrayBase<S, D> {
         debug_assert!(dim.size_checked() == Some(v.len()));
         let strides = dim.fortran_strides();
         Self::from_vec_dim_stride_unchecked(dim, strides, v)
     }
 
-    /// Create an array from a vector and interpret it according to the
-    /// provided dimensions and strides. No allocation needed.
-    ///
-    /// Checks whether `dim` and `strides` are compatible with the vector's
-    /// length, returning an `Err` if not compatible.
-    ///
-    /// **Errors** if strides and dimensions can point out of bounds of `v`.<br>
-    /// **Errors** if strides allow multiple indices to point to the same element.
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec instead."))]
+    /// ***Deprecated: Use from_shape_vec instead***
     pub fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
         -> Result<ArrayBase<S, D>, ShapeError>
     {
@@ -374,10 +375,9 @@ impl<S, A, D> ArrayBase<S, D>
         })
     }
 
-    /// Create an array from a vector and interpret it according to the
-    /// provided dimensions and strides. No allocation needed.
+    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec_unchecked instead."))]
+    /// ***Deprecated: Use from_shape_vec_unchecked instead***
     ///
-    /// Unsafe because dimension and strides are unchecked.
     pub unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
         -> ArrayBase<S, D>
     {
