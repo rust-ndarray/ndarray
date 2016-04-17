@@ -394,8 +394,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Along `axis`, select an arbitrary subview corresponding to `indices`
-    /// and return a uniquely owned copy of that array.
+    /// Along `axis`, select arbitrary subviews corresponding to `indices`
+    /// and and copy them into a new array.
     ///
     /// **Panics** if `axis` or an element of `indices` is out of bounds.
     ///
@@ -403,23 +403,23 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// use ndarray::{arr2, Axis};
     ///
     /// let x = arr2(&[[0., 1.],
-    ///                   [3.,5.],
-    ///                   [7.,6.],
-    ///                   [2.,4.],
-    ///                   [1.,0.]]);
+    ///                [2., 3.],
+    ///                [4., 5.],
+    ///                [6., 7.],
+    ///                [8., 9.]]);
     ///
-    /// let r = x.select(Axis(0),&[0,4]);
+    /// let r = x.select(Axis(0), &[0, 4, 3]);
     /// assert!(
-    ///         r == arr2(&[[0.,1.],
-    ///                   [1.,0.]])
+    ///         r == arr2(&[[0., 1.],
+    ///                     [8., 9.],
+    ///                     [6., 7.]])
     ///);
     /// ```
     pub fn select(&self, axis: Axis, indices: &[Ix]) -> OwnedArray<A, D>
         where A: Copy,
               D: RemoveAxis,
     {
-        let v = self.view();
-        let mut subs = vec![v; indices.len()];
+        let mut subs = vec![self.view(); indices.len()];
         for (&i, sub) in zipsl(indices, &mut subs[..]) {
             sub.isubview(axis, i);
         }
