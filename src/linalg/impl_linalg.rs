@@ -416,6 +416,46 @@ fn mat_mul_impl<A>(alpha: A,
 
 const SPLIT: usize = 64;
 
+#[inline(never)]
+fn mat_mul_par_start<A>(alpha: A,
+                  lhs: &ArrayView<A, (Ix, Ix)>,
+                  rhs: &ArrayView<A, (Ix, Ix)>,
+                  beta: A,
+                  c: &mut ArrayViewMut<A, (Ix, Ix)>)
+    where A: LinalgScalar,
+{
+    mat_mul_par(alpha, lhs, rhs, beta, c);
+}
+
+fn mat_mul_par<A>(alpha: A,
+                  lhs: &ArrayView<A, (Ix, Ix)>,
+                  rhs: &ArrayView<A, (Ix, Ix)>,
+                  beta: A,
+                  c: &mut ArrayViewMut<A, (Ix, Ix)>)
+    where A: LinalgScalar,
+{
+    let ((m, k), (k2, n)) = (lhs.dim, rhs.dim);
+    debug_assert_eq!(k, k2);
+    if m > SPLIT {
+        // [ A0 ] B = [ C0 ]
+        // [ A1 ]     [ C1 ]
+        let mid = m / 2;
+        let (a0, a1) = lhs.split_at(Axis(0), mid);
+        let (mut c0, mut c1) = c.view_mut().split_at(Axis(0), mid);
+        rayon::join(move || mat_mul_par(alpha, &a0, rhs, beta, &mut c0),
+                    move || mat_mul_par(alpha, &a1, rhs, beta, &mut c1));
+    } else if n > SPLIT {
+        // A [ B0 B1 ] = [ C0 C1 ]
+        let mid = n / 2;
+        let (b0, b1) = rhs.split_at(Axis(1), mid);
+        let (mut c0, mut c1) = c.view_mut().split_at(Axis(1), mid);
+        rayon::join(move || mat_mul_par(alpha, lhs, &b0, beta, &mut c0),
+                    move || mat_mul_par(alpha, lhs, &b1, beta, &mut c1));
+    } else {
+        mat_mul_general(alpha, lhs, rhs, beta, c);
+    }
+}
+
 /// C ← α A B + β C
 fn mat_mul_general<A>(alpha: A,
                       lhs: &ArrayView<A, (Ix, Ix)>,
@@ -427,23 +467,8 @@ fn mat_mul_general<A>(alpha: A,
     let ((m, k), (k2, n)) = (lhs.dim, rhs.dim);
 
     debug_assert_eq!(k, k2);
-    if m > SPLIT {
-        // [ A0 ] B = [ C0 ]
-        // [ A1 ]     [ C1 ]
-        let mid = m / 2;
-        let (a0, a1) = lhs.split_at(Axis(0), mid);
-        let (mut c0, mut c1) = c.view_mut().split_at(Axis(0), mid);
-        rayon::join(move || mat_mul_general(alpha, &a0, rhs, beta, &mut c0),
-                    move || mat_mul_general(alpha, &a1, rhs, beta, &mut c1));
-        return;
-    } else if n > SPLIT {
-        // A [ B0 B1 ] = [ C0 C1 ]
-        let mid = n / 2;
-        let (b0, b1) = rhs.split_at(Axis(1), mid);
-        let (mut c0, mut c1) = c.view_mut().split_at(Axis(1), mid);
-        rayon::join(move || mat_mul_general(alpha, lhs, &b0, beta, &mut c0),
-                    move || mat_mul_general(alpha, lhs, &b1, beta, &mut c1));
-        return;
+    if m > SPLIT || n > SPLIT {
+        return mat_mul_par_start(alpha, lhs, rhs, beta, c);
     }
 
     // common parameters for gemm
