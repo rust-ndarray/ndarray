@@ -22,7 +22,7 @@ use {
 /// ***Note:*** `Data` is not an extension interface at this point.
 /// Traits in Rust can serve many different roles. This trait is public because
 /// it is used as a bound on public methods.
-pub unsafe trait Data {
+pub unsafe trait Data : Sized {
     /// The array element type.
     type Elem;
     #[doc(hidden)]
