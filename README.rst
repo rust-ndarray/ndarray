@@ -87,6 +87,10 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.5.1
+
+  - Fix theoretical well-formedness issue with Data trait
+
 - 0.5.0
 
   - Require Rust 1.8 and enable +=, -=, and the other assign operators.
