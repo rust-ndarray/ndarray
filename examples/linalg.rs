@@ -4,11 +4,12 @@
 //! purposes.
 
 extern crate ndarray;
-extern crate num as libnum;
+extern crate num_traits;
+extern crate num_complex;
 
-use libnum::{Num, zero, Zero, One};
-use libnum::Float;
-use libnum::Complex;
+use num_traits::{Num, Zero, One};
+use num_traits::Float;
+use num_complex::Complex;
 use std::ops::{Add, Sub, Mul, Div};
 
 use ndarray::{RcArray, Ix};
@@ -55,7 +56,7 @@ impl<A: LinalgScalar + Float +  Num> ComplexField for Complex<A>
 {
     #[inline]
     fn conjugate(self) -> Complex<A> { self.conj() }
-    fn sqrt_real(self) -> Complex<A> { Complex::new(self.re.sqrt(), zero()) }
+    fn sqrt_real(self) -> Complex<A> { Complex::new(self.re.sqrt(), A::zero()) }
     #[inline]
     fn is_complex() -> bool { true }
 }
@@ -208,7 +209,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 /// Return L.
 pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 {
-    let z = zero::<A>();
+    let z = A::zero();
     let (m, n) = a.dim();
     assert!(m == n);
     // Perform the operation in-place on `a`

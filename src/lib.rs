@@ -75,7 +75,8 @@ extern crate blas_sys;
 extern crate matrixmultiply;
 
 extern crate itertools;
-extern crate num as libnum;
+extern crate num_traits as libnum;
+extern crate num_complex;
 
 use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
