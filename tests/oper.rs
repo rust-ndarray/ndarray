@@ -1,5 +1,5 @@
 #[macro_use(s)] extern crate ndarray;
-extern crate num as libnum;
+extern crate num_traits;
 
 use ndarray::prelude::*;
 use ndarray::{arr0, rcarr1, rcarr2};
@@ -7,7 +7,7 @@ use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
 
 use std::fmt;
-use libnum::Float;
+use num_traits::Float;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
 {

@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use std::any::Any;
-use libnum::Complex;
+use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
 ///
@@ -218,7 +218,7 @@ mod arithmetic_ops {
     use imp_prelude::*;
 
     use std::ops::*;
-    use libnum::Complex;
+    use num_complex::Complex;
 
     impl_binary_op!(Add, +, add, +=, "addition");
     impl_binary_op!(Sub, -, sub, -=, "subtraction");

@@ -1,10 +1,12 @@
 
-extern crate num;
+extern crate num_traits;
+extern crate num_complex;
 extern crate ndarray;
 
 use ndarray::{arr1, arr2, Axis};
 use ndarray::OwnedArray;
-use num::{Num, Complex};
+use num_traits::Num;
+use num_complex::Complex;
 
 fn c<T: Clone + Num>(re: T, im: T) -> Complex<T> {
     Complex::new(re, im)

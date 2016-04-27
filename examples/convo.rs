@@ -1,9 +1,9 @@
 #![allow(unused)]
 #[macro_use(s)]
 extern crate ndarray;
-extern crate num;
+extern crate num_traits;
 
-use num::Float;
+use num_traits::Float;
 
 use ndarray::{
     ArrayView,
