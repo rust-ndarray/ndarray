@@ -696,8 +696,7 @@ impl RemoveAxis for Vec<Ix> {
 /// assert_eq!(a[[1, 1]], 1);
 /// ```
 ///
-/// **Note** the blanket implementation that's not visible in rustdoc:
-/// `impl<D> NdIndex for D where D: Dimension { ... }`
+/// **Note** that `NdIndex` is implemented for all `D where D: Dimension`.
 pub unsafe trait NdIndex : Debug {
     type Dim: Dimension;
     #[doc(hidden)]
