@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use libnum::Zero;
 use itertools::free::enumerate;
 
 use imp_prelude::*;
