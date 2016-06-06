@@ -10,8 +10,6 @@
 //!
 //!
 
-#![allow(deprecated)] // from_shape_vec
-
 use libnum::{Zero, One, Float};
 
 use imp_prelude::*;
@@ -234,63 +232,7 @@ impl<S, A, D> ArrayBase<S, D>
         Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
     }
 
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_elem instead."))]
-    /// ***Deprecated: Use from_elem instead***
-    pub fn from_elem_f(dim: D, elem: A) -> ArrayBase<S, D>
-        where A: Clone
-    {
-        Self::from_elem(dim.f(), elem)
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use zeros instead."))]
-    /// ***Deprecated: Use zeros instead***
-    pub fn zeros_f(dim: D) -> ArrayBase<S, D>
-        where A: Clone + Zero
-    {
-        Self::from_elem_f(dim, A::zero())
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec instead."))]
-    /// ***Deprecated: Use from_shape_vec instead***
-    pub fn from_vec_dim(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
-        if dim.size_checked() != Some(v.len()) {
-            return Err(error::incompatible_shapes(&v.len(), &dim));
-        }
-        unsafe { Ok(Self::from_vec_dim_unchecked(dim, v)) }
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec instead."))]
-    /// ***Deprecated: Use from_shape_vec instead***
-    pub fn from_vec_dim_f(dim: D, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError> {
-        if dim.size_checked() != Some(v.len()) {
-            return Err(error::incompatible_shapes(&v.len(), &dim));
-        }
-        unsafe { Ok(Self::from_vec_dim_unchecked_f(dim, v)) }
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec_unchecked instead."))]
-    /// ***Deprecated: Use from_shape_vec_unchecked instead***
-    pub unsafe fn from_vec_dim_unchecked(dim: D, mut v: Vec<A>) -> ArrayBase<S, D> {
-        debug_assert!(dim.size_checked() == Some(v.len()));
-        ArrayBase {
-            ptr: v.as_mut_ptr(),
-            data: DataOwned::new(v),
-            strides: dim.default_strides(),
-            dim: dim,
-        }
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec_unchecked instead."))]
-    /// ***Deprecated: Use from_shape_vec_unchecked instead***
-    pub unsafe fn from_vec_dim_unchecked_f(dim: D, v: Vec<A>) -> ArrayBase<S, D> {
-        debug_assert!(dim.size_checked() == Some(v.len()));
-        let strides = dim.fortran_strides();
-        Self::from_vec_dim_stride_unchecked(dim, strides, v)
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec instead."))]
-    /// ***Deprecated: Use from_shape_vec instead***
-    pub fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
+    fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
         -> Result<ArrayBase<S, D>, ShapeError>
     {
         dimension::can_index_slice(&v, &dim, &strides).map(|_| {
@@ -300,10 +242,7 @@ impl<S, A, D> ArrayBase<S, D>
         })
     }
 
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape_vec_unchecked instead."))]
-    /// ***Deprecated: Use from_shape_vec_unchecked instead***
-    ///
-    pub unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
+    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
         -> ArrayBase<S, D>
     {
         // debug check for issues that indicates wrong use of this constructor
