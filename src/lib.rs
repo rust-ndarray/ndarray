@@ -576,7 +576,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
-    #[cfg_attr(has_deprecated, deprecated(note="This method will be replaced."))]
+    #[deprecated(note="This method will be replaced.")]
     pub fn into_outer_iter(self) -> AxisIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
@@ -640,7 +640,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
-    #[cfg_attr(has_deprecated, deprecated(note="This method will be replaced."))]
+    #[deprecated(note="This method will be replaced.")]
     pub fn into_outer_iter(self) -> AxisIterMut<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
