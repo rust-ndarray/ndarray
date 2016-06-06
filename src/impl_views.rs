@@ -59,18 +59,6 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         })
     }
 
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape instead."))]
-    /// ***Deprecated: Use from_shape instead***
-    pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a [A])
-        -> Result<Self, ShapeError>
-    {
-        dimension::can_index_slice(xs, &dim, &strides).map(|_| {
-            unsafe {
-                Self::new_(xs.as_ptr(), dim, strides)
-            }
-        })
-    }
-
     /// Split the array along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
@@ -153,18 +141,6 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         let shape = shape.into();
         let dim = shape.dim;
         let strides = shape.strides;
-        dimension::can_index_slice(xs, &dim, &strides).map(|_| {
-            unsafe {
-                Self::new_(xs.as_mut_ptr(), dim, strides)
-            }
-        })
-    }
-
-    #[cfg_attr(has_deprecated, deprecated(note="Use from_shape instead."))]
-    /// ***Deprecated: Use from_shape instead***
-    pub fn from_slice_dim_stride(dim: D, strides: D, xs: &'a mut [A])
-        -> Result<Self, ShapeError>
-    {
         dimension::can_index_slice(xs, &dim, &strides).map(|_| {
             unsafe {
                 Self::new_(xs.as_mut_ptr(), dim, strides)
