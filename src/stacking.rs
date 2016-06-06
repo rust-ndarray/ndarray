@@ -30,7 +30,7 @@ use error::{ShapeError, ErrorKind, from_kind};
 /// );
 /// ```
 pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
-    -> Result<OwnedArray<A, D>, ShapeError>
+    -> Result<Array<A, D>, ShapeError>
     where A: Copy,
           D: RemoveAxis
 {
@@ -57,7 +57,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     unsafe {
         v.set_len(size);
     }
-    let mut res = try!(OwnedArray::from_shape_vec(res_dim, v));
+    let mut res = try!(Array::from_shape_vec(res_dim, v));
 
     {
         let mut assign_view = res.view_mut();

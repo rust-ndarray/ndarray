@@ -11,13 +11,13 @@ use std::slice;
 use imp_prelude::*;
 
 /// Create a zero-dimensional array with the element `x`.
-pub fn arr0<A>(x: A) -> OwnedArray<A, ()>
+pub fn arr0<A>(x: A) -> Array<A, ()>
 {
     unsafe { ArrayBase::from_shape_vec_unchecked((), vec![x]) }
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn arr1<A: Clone>(xs: &[A]) -> OwnedArray<A, Ix> {
+pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix> {
     ArrayBase::from_vec(xs.to_vec())
 }
 
@@ -121,7 +121,7 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> OwnedArray<A, (Ix, Ix)> {
+pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, Ix)> {
     let (m, n) = (xs.len() as Ix, V::len() as Ix);
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
@@ -157,7 +157,7 @@ pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, (
 /// );
 /// ```
 pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> OwnedArray<A, (Ix, Ix, Ix)>
+    -> Array<A, (Ix, Ix, Ix)>
 {
     let dim = (xs.len() as Ix, V::len() as Ix, U::len() as Ix);
     let mut result = Vec::<A>::with_capacity(dim.size());

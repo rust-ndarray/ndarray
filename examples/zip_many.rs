@@ -2,7 +2,7 @@
 extern crate ndarray;
 
 use ndarray::{
-    OwnedArray,
+    Array,
     ArrayBase,
     DataMut,
     Dimension,
@@ -66,12 +66,12 @@ define_zip!(zip_3, B, C);
 
 fn main() {
     let n = 16;
-    let mut a = OwnedArray::<f32, _>::zeros((n, n));
-    let mut b = OwnedArray::<f32, _>::from_elem((n, n), 1.);
+    let mut a = Array::<f32, _>::zeros((n, n));
+    let mut b = Array::<f32, _>::from_elem((n, n), 1.);
     for ((i, j), elt) in b.indexed_iter_mut() {
         *elt /= 1. + (i + j) as f32;
     }
-    let c = OwnedArray::<f32, _>::from_elem((n, n), 1.7);
+    let c = Array::<f32, _>::from_elem((n, n), 1.7);
 
     for _ in 0..1000 {
         zip_3(&mut a, b.view(), c.view(), |x, &y, &z| *x += y * z).unwrap();

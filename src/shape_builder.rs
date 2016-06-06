@@ -6,7 +6,7 @@ use {Shape, StrideShape};
 /// customizing the memory layout (strides) of an array shape.
 ///
 /// This trait is used together with array constructor methods like
-/// `OwnedArray::from_shape_vec`.
+/// `Array::from_shape_vec`.
 pub trait ShapeBuilder {
     type Dim: Dimension;
 

@@ -148,7 +148,7 @@ fn reference_dot<'a,A, V1, V2>(a: V1, b: V2) -> A
 
 #[test]
 fn dot_product() {
-    let a = OwnedArray::range(0., 69., 1.);
+    let a = Array::range(0., 69., 1.);
     let b = &a * 2. - 7.;
     let dot = 197846.;
     assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
@@ -187,7 +187,7 @@ fn dot_product() {
 // test that we can dot product with a broadcast array
 #[test]
 fn dot_product_0() {
-    let a = OwnedArray::range(0., 69., 1.);
+    let a = Array::range(0., 69., 1.);
     let x = 1.5;
     let b = aview0(&x);
     let b = b.broadcast(a.dim()).unwrap();
@@ -208,7 +208,7 @@ fn dot_product_0() {
 #[test]
 fn dot_product_neg_stride() {
     // test that we can dot with negative stride
-    let a = OwnedArray::range(0., 69., 1.);
+    let a = Array::range(0., 69., 1.);
     let b = &a * 2. - 7.;
     for stride in -10..0 {
         // both negative
@@ -224,21 +224,21 @@ fn dot_product_neg_stride() {
     }
 }
 
-fn range_mat(m: Ix, n: Ix) -> OwnedArray<f32, (Ix, Ix)> {
-    OwnedArray::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
+fn range_mat(m: Ix, n: Ix) -> Array<f32, (Ix, Ix)> {
+    Array::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
 }
 
-fn range_mat64(m: Ix, n: Ix) -> OwnedArray<f64, (Ix, Ix)> {
-    OwnedArray::linspace(0., (m * n - 1) as f64, m * n).into_shape((m, n)).unwrap()
+fn range_mat64(m: Ix, n: Ix) -> Array<f64, (Ix, Ix)> {
+    Array::linspace(0., (m * n - 1) as f64, m * n).into_shape((m, n)).unwrap()
 }
 
-fn range_i32(m: Ix, n: Ix) -> OwnedArray<i32, (Ix, Ix)> {
-    OwnedArray::from_iter(0..(m * n) as i32).into_shape((m, n)).unwrap()
+fn range_i32(m: Ix, n: Ix) -> Array<i32, (Ix, Ix)> {
+    Array::from_iter(0..(m * n) as i32).into_shape((m, n)).unwrap()
 }
 
 // simple, slow, correct (hopefully) mat mul
 fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2, (Ix, Ix)>)
-    -> OwnedArray<A, (Ix, Ix)>
+    -> Array<A, (Ix, Ix)>
     where A: LinalgScalar,
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
@@ -281,8 +281,8 @@ fn mat_mul() {
     }
     let ab = a.dot(&b);
 
-    let mut af = OwnedArray::zeros(a.dim().f());
-    let mut bf = OwnedArray::zeros(b.dim().f());
+    let mut af = Array::zeros(a.dim().f());
+    let mut bf = Array::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -300,8 +300,8 @@ fn mat_mul() {
     }
     let ab = a.dot(&b);
 
-    let mut af = OwnedArray::zeros(a.dim().f());
-    let mut bf = OwnedArray::zeros(b.dim().f());
+    let mut af = Array::zeros(a.dim().f());
+    let mut bf = Array::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -319,8 +319,8 @@ fn mat_mul() {
     }
     let ab = a.dot(&b);
 
-    let mut af = OwnedArray::zeros(a.dim().f());
-    let mut bf = OwnedArray::zeros(b.dim().f());
+    let mut af = Array::zeros(a.dim().f());
+    let mut bf = Array::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -336,8 +336,8 @@ fn mat_mul_order() {
     let (m, n, k) = (8, 8, 8);
     let a = range_mat(m, n);
     let b = range_mat(n, k);
-    let mut af = OwnedArray::zeros(a.dim().f());
-    let mut bf = OwnedArray::zeros(b.dim().f());
+    let mut af = Array::zeros(a.dim().f());
+    let mut bf = Array::zeros(b.dim().f());
     af.assign(&a);
     bf.assign(&b);
 
@@ -376,11 +376,11 @@ fn mat_mul_broadcast() {
     let (m, n, k) = (16, 16, 16);
     let a = range_mat(m, n);
     let x1 = 1.;
-    let x = OwnedArray::from_vec(vec![x1]);
+    let x = Array::from_vec(vec![x1]);
     let b0 = x.broadcast((n, k)).unwrap();
-    let b1 = OwnedArray::from_elem(n, x1);
+    let b1 = Array::from_elem(n, x1);
     let b1 = b1.broadcast((n, k)).unwrap();
-    let b2 = OwnedArray::from_elem((n, k), x1);
+    let b2 = Array::from_elem((n, k), x1);
 
     let c2 = a.dot(&b2);
     let c1 = a.dot(&b1);
@@ -395,7 +395,7 @@ fn mat_mul_rev() {
     let (m, n, k) = (16, 16, 16);
     let a = range_mat(m, n);
     let b = range_mat(n, k);
-    let mut rev = OwnedArray::zeros(b.dim());
+    let mut rev = Array::zeros(b.dim());
     let mut rev = rev.slice_mut(s![..;-1, ..]);
     rev.assign(&b);
     println!("{:.?}", rev);

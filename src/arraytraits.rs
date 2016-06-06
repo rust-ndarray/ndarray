@@ -271,7 +271,7 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
                     })
             }));
             unsafe {
-                Ok(ArrayBase::from_vec_dim_unchecked(dim, elements))
+                Ok(ArrayBase::from_shape_vec_unchecked(dim, elements))
             }
         })
     }

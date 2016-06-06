@@ -10,7 +10,7 @@ from subprocess import PIPE
 crates = {
     "ndarray": ("docs", ""),
     "ndarray-rand": ("", "ndarray-rand"),
-    "ndarray-rblas": ("", "ndarray-rblas"),
+    #"ndarray-rblas": ("", "ndarray-rblas"),
 }
 
 def crate_name(s):

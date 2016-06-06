@@ -7,7 +7,7 @@ extern crate test;
 
 use rand::distributions::Range;
 use rand::distributions::Normal;
-use ndarray::OwnedArray;
+use ndarray::Array;
 use ndarray_rand::RandomExt;
 use ndarray_rand::F32;
 
@@ -17,7 +17,7 @@ use test::Bencher;
 fn norm_f32(b: &mut Bencher) {
     let m = 100;
     b.iter(|| {
-        let a = OwnedArray::random((m, m), F32(Normal::new(0., 1.)));
+        let a = Array::random((m, m), F32(Normal::new(0., 1.)));
         a
     });
 }
@@ -26,7 +26,7 @@ fn norm_f32(b: &mut Bencher) {
 fn norm_f64(b: &mut Bencher) {
     let m = 100;
     b.iter(|| {
-        let a = OwnedArray::random((m, m), (Normal::new(0., 1.)));
+        let a = Array::random((m, m), (Normal::new(0., 1.)));
         a
     });
 }

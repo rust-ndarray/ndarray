@@ -82,7 +82,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return an uniquely owned copy of the array
-    pub fn to_owned(&self) -> OwnedArray<A, D>
+    pub fn to_owned(&self) -> Array<A, D>
         where A: Clone
     {
         let (data, strides) = if let Some(slc) = self.as_slice_memory_order() {
@@ -415,7 +415,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                     [6., 7.]])
     ///);
     /// ```
-    pub fn select(&self, axis: Axis, indices: &[Ix]) -> OwnedArray<A, D>
+    pub fn select(&self, axis: Axis, indices: &[Ix]) -> Array<A, D>
         where A: Copy,
               D: RemoveAxis,
     {
@@ -427,7 +427,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             let mut dim = self.dim();
             dim.set_axis(axis, 0);
             unsafe {
-                OwnedArray::from_shape_vec_unchecked(dim, vec![])
+                Array::from_shape_vec_unchecked(dim, vec![])
             }
         } else {
             stack(axis, &subs).unwrap()
@@ -553,10 +553,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `axis` is out of bounds.
     ///
     /// ```
-    /// use ndarray::OwnedArray;
+    /// use ndarray::Array;
     /// use ndarray::{arr3, Axis};
     ///
-    /// let a = OwnedArray::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
+    /// let a = Array::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
     /// let mut iter = a.axis_chunks_iter(Axis(1), 2);
     ///
     /// // first iteration yields a 2 × 2 × 2 view
@@ -1143,7 +1143,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///               [false, true]])
     /// );
     /// ```
-    pub fn map<'a, B, F>(&'a self, f: F) -> OwnedArray<B, D>
+    pub fn map<'a, B, F>(&'a self, f: F) -> Array<B, D>
         where F: FnMut(&'a A) -> B,
               A: 'a,
     {
@@ -1178,7 +1178,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                                [1., 2.]])
     /// );
     /// ```
-    pub fn mapv<B, F>(&self, f: F) -> OwnedArray<B, D>
+    pub fn mapv<B, F>(&self, f: F) -> Array<B, D>
         where F: Fn(A) -> B,
               A: Clone,
     {
@@ -1265,14 +1265,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Combine the elements of each subview with the previous using the `fold`
     /// function and initial value `init`.
     ///
-    /// Return the result as an `OwnedArray`.
+    /// Return the result as an `Array`.
     pub fn fold_axis<B, F>(&self, axis: Axis, init: B, mut fold: F)
-        -> OwnedArray<B, D::Smaller>
+        -> Array<B, D::Smaller>
         where D: RemoveAxis,
               F: FnMut(&B, &A) -> B,
               B: Clone,
     {
-        let mut res = OwnedArray::from_elem(self.dim().remove_axis(axis), init);
+        let mut res = Array::from_elem(self.dim().remove_axis(axis), init);
         for subview in self.axis_iter(axis) {
             res.zip_mut_with(&subview, |x, y| *x = fold(x, y));
         }

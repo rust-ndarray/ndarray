@@ -43,11 +43,11 @@ pub trait RandomExt<S, D>
     /// extern crate ndarray_rand;
     ///
     /// use rand::distributions::Range;
-    /// use ndarray::OwnedArray;
+    /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
     ///
     /// # fn main() {
-    /// let a = OwnedArray::random((2, 5), Range::new(0., 10.));
+    /// let a = Array::random((2, 5), Range::new(0., 10.));
     /// println!("{:8.4}", a);
     /// // Example Output:
     /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],
@@ -75,13 +75,12 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
         Self::random_using(dim, dist, &mut rand::weak_rng())
     }
 
-    #[allow(deprecated)] // from_vec_dim
     fn random_using<IdS, R>(dim: D, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
               R: Rng
     {
         let elements = Vec::from_iter((0..dim.size()).map(move |_| dist.ind_sample(rng)));
-        Self::from_vec_dim(dim, elements).unwrap()
+        Self::from_shape_vec(dim, elements).unwrap()
     }
 }
 
@@ -93,11 +92,11 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
 /// extern crate ndarray_rand;
 ///
 /// use rand::distributions::Normal;
-/// use ndarray::OwnedArray;
+/// use ndarray::Array;
 /// use ndarray_rand::{RandomExt, F32};
 ///
 /// # fn main() {
-/// let a = OwnedArray::random((2, 5), F32(Normal::new(0., 1.)));
+/// let a = Array::random((2, 5), F32(Normal::new(0., 1.)));
 /// println!("{:8.4}", a);
 /// // Example Output:
 /// // [[ -0.6910,   1.1730,   1.0902,  -0.4092,  -1.7340],
