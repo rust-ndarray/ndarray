@@ -17,7 +17,6 @@ matrix:
 branches:
   only:
     - master
-    - 0.4
 addons:
   apt:
     packages:
