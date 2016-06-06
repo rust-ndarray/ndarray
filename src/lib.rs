@@ -519,8 +519,6 @@ mod numeric;
 
 pub mod linalg;
 
-mod impl_ops_inplace;
-
 mod impl_ops;
 pub use impl_ops::ScalarOperand;
 
