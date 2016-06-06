@@ -2,11 +2,12 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.8.
+and for numerics.  Requires Rust 1.9.
 
-Please read the API documentation here: `(0.5 / master)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
+Please read the API documentation here: `(0.6 / master)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
 __ http://bluss.github.io/rust-ndarray/
+__ http://bluss.github.io/rust-ndarray/0.5/
 __ http://bluss.github.io/rust-ndarray/0.4/
 __ http://bluss.github.io/rust-ndarray/0.3/
 __ http://bluss.github.io/rust-ndarray/0.2/
@@ -86,6 +87,15 @@ How to use with cargo::
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.6.0
+
+  - Remove deprecated constructor methods. Use zeros, from_elem, from_shape_vec
+    or from_shape_vec_unchecked instead.
+  - Remove deprecated in place arithmetic methods like iadd et.c. Use += et.c.
+    instead.
+  - Remove deprecated method mat_mul, use dot instead.
+  - Require Rust 1.9
 
 - 0.5.2
 
