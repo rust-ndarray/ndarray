@@ -21,11 +21,16 @@
 #[doc(no_inline)]
 pub use {
     ArrayBase,
-    OwnedArray,
+    Array,
     RcArray,
     ArrayView,
     ArrayViewMut,
 };
+
+#[doc(no_inline)]
+#[allow(deprecated)]
+pub use OwnedArray;
+
 #[doc(no_inline)]
 pub use {
     Axis,

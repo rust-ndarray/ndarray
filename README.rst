@@ -28,7 +28,7 @@ Highlights
 
   - ``ArrayBase``:
     The N-dimensional array type itself.
-  - ``OwnedArray``:
+  - ``Array``:
     An array where the data is owned uniquely.
   - ``RcArray``:
     An array where the data has shared ownership and is copy on write.
@@ -90,6 +90,7 @@ Recent Changes (ndarray)
 
 - 0.6.0
 
+  - Rename ``OwnedArray`` to ``Array``. The old name is deprecated.
   - Remove deprecated constructor methods. Use zeros, from_elem, from_shape_vec
     or from_shape_vec_unchecked instead.
   - Remove deprecated in place arithmetic methods like iadd et.c. Use += et.c.

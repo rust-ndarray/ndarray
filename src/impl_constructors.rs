@@ -20,7 +20,7 @@ use error::{self, ShapeError, ErrorKind};
 
 /// Constructor methods for one-dimensional arrays.
 ///
-/// Note that the constructor methods apply to `OwnedArray` and `RcArray`,
+/// Note that the constructor methods apply to `Array` and `RcArray`,
 /// the two array types that have owned storage.
 impl<S> ArrayBase<S, Ix>
     where S: DataOwned
@@ -28,9 +28,9 @@ impl<S> ArrayBase<S, Ix>
     /// Create a one-dimensional array from a vector (no copying needed).
     ///
     /// ```rust
-    /// use ndarray::OwnedArray;
+    /// use ndarray::Array;
     ///
-    /// let array = OwnedArray::from_vec(vec![1., 2., 3., 4.]);
+    /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
     pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
@@ -39,9 +39,9 @@ impl<S> ArrayBase<S, Ix>
     /// Create a one-dimensional array from an iterable.
     ///
     /// ```rust
-    /// use ndarray::{OwnedArray, arr1};
+    /// use ndarray::{Array, arr1};
     ///
-    /// let array = OwnedArray::from_iter((0..5).map(|x| x * x));
+    /// let array = Array::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
     pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
@@ -54,9 +54,9 @@ impl<S> ArrayBase<S, Ix>
     /// `[start, end]` with `n` elements. `F` must be a floating point type.
     ///
     /// ```rust
-    /// use ndarray::{OwnedArray, arr1};
+    /// use ndarray::{Array, arr1};
     ///
-    /// let array = OwnedArray::linspace(0., 1., 5);
+    /// let array = Array::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
     pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
@@ -70,9 +70,9 @@ impl<S> ArrayBase<S, Ix>
     /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
     ///
     /// ```rust
-    /// use ndarray::{OwnedArray, arr1};
+    /// use ndarray::{Array, arr1};
     ///
-    /// let array = OwnedArray::range(0., 5., 1.);
+    /// let array = Array::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
     pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
@@ -121,9 +121,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `shape` would overflow usize.
     ///
     /// ```
-    /// use ndarray::{OwnedArray, arr3, ShapeBuilder};
+    /// use ndarray::{Array, arr3, ShapeBuilder};
     ///
-    /// let a = OwnedArray::from_elem((2, 2, 2), 1.);
+    /// let a = Array::from_elem((2, 2, 2), 1.);
     ///
     /// assert!(
     ///     a == arr3(&[[[1., 1.],
@@ -133,7 +133,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// );
     /// assert!(a.strides() == &[4, 2, 1]);
     ///
-    /// let b = OwnedArray::from_elem((2, 2, 2).f(), 1.);
+    /// let b = Array::from_elem((2, 2, 2).f(), 1.);
     /// assert!(b.strides() == &[1, 2, 4]);
     /// ```
     pub fn from_elem<Sh>(shape: Sh, elem: A) -> ArrayBase<S, D>
@@ -190,10 +190,10 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     /// use ndarray::prelude::*;
     ///
-    /// let a = OwnedArray::from_shape_vec((2, 2), vec![1., 2., 3., 4.]);
+    /// let a = Array::from_shape_vec((2, 2), vec![1., 2., 3., 4.]);
     /// assert!(a.is_ok());
     ///
-    /// let b = OwnedArray::from_shape_vec((2, 2).strides((1, 2)),
+    /// let b = Array::from_shape_vec((2, 2).strides((1, 2)),
     ///                                    vec![1., 2., 3., 4.]).unwrap();
     /// assert!(
     ///     b == arr2(&[[1., 3.],

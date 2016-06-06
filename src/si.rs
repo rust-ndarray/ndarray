@@ -111,10 +111,10 @@ pub const S: Si = Si(0, None, 1);
 /// use ndarray::{
 ///     ArrayView,
 ///     Ix,
-///     OwnedArray,
+///     Array,
 /// };
 ///
-/// fn laplacian(v: &ArrayView<f32, (Ix, Ix)>) -> OwnedArray<f32, (Ix, Ix)> {
+/// fn laplacian(v: &ArrayView<f32, (Ix, Ix)>) -> Array<f32, (Ix, Ix)> {
 ///     -4. * &v.slice(s![1..-1, 1..-1])
 ///     + v.slice(s![ ..-2, 1..-1])
 ///     + v.slice(s![1..-1,  ..-2])

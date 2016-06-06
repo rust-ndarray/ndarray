@@ -56,7 +56,7 @@ macro_rules! impl_binary_op(
 /// between `self` and `rhs`,
 /// and return the result (based on `self`).
 ///
-/// `self` must be an `OwnedArray` or `RcArray`.
+/// `self` must be an `Array` or `RcArray`.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -103,7 +103,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 /// Perform elementwise
 #[doc=$doc]
 /// between references `self` and `rhs`,
-/// and return the result as a new `OwnedArray`.
+/// and return the result as a new `Array`.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -115,8 +115,8 @@ impl<'a, 'b, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'b ArrayBase<S, D>
           D: Dimension,
           E: Dimension,
 {
-    type Output = OwnedArray<A, D>;
-    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> OwnedArray<A, D> {
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Array<A, D> {
         // FIXME: Can we co-broadcast arrays here? And how?
         self.to_owned().$mth(rhs)
     }
@@ -127,7 +127,7 @@ impl<'a, 'b, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'b ArrayBase<S, D>
 /// between `self` and the scalar `x`,
 /// and return the result (based on `self`).
 ///
-/// `self` must be an `OwnedArray` or `RcArray`.
+/// `self` must be an `Array` or `RcArray`.
 impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
           S: DataOwned<Elem=A> + DataMut,
@@ -146,15 +146,15 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
 /// Perform elementwise
 #[doc=$doc]
 /// between the reference `self` and the scalar `x`,
-/// and return the result as a new `OwnedArray`.
+/// and return the result as a new `Array`.
 impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
           S: Data<Elem=A>,
           D: Dimension,
           B: ScalarOperand,
 {
-    type Output = OwnedArray<A, D>;
-    fn $mth(self, x: B) -> OwnedArray<A, D> {
+    type Output = Array<A, D>;
+    fn $mth(self, x: B) -> Array<A, D> {
         self.to_owned().$mth(x)
     }
 }
@@ -195,13 +195,13 @@ impl<S, D> $trt<ArrayBase<S, D>> for $scalar
 
 // Perform elementwise
 // between the scalar `self` and array `rhs`,
-// and return the result as a new `OwnedArray`.
+// and return the result as a new `Array`.
 impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
     where S: Data<Elem=$scalar>,
           D: Dimension,
 {
-    type Output = OwnedArray<$scalar, D>;
-    fn $mth(self, rhs: &ArrayBase<S, D>) -> OwnedArray<$scalar, D> {
+    type Output = Array<$scalar, D>;
+    fn $mth(self, rhs: &ArrayBase<S, D>) -> Array<$scalar, D> {
         if_commutative!($commutative {
             rhs.$mth(self)
         } or {

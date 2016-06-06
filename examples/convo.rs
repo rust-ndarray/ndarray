@@ -8,7 +8,7 @@ use num_traits::Float;
 use ndarray::{
     ArrayView,
     ArrayViewMut,
-    OwnedArray,
+    Array,
     Ix,
 };
 
@@ -48,7 +48,7 @@ fn conv_3x3<F>(a: &ArrayView<F, Ix2>, out: &mut ArrayViewMut<F, Ix2>, kernel: &K
 
 fn main() {
     let n = 16;
-    let mut a = OwnedArray::zeros((n, n));
+    let mut a = Array::zeros((n, n));
     // make a circle
     let c = (8., 8.);
     for ((i, j), elt) in a.indexed_iter_mut() {
@@ -60,7 +60,7 @@ fn main() {
         }
     }
     println!("{:2}", a);
-    let mut res = OwnedArray::zeros(a.dim());
+    let mut res = Array::zeros(a.dim());
     for _ in 0..1000 {
         conv_3x3(&a.view(), &mut res.view_mut(), &SOBEL_X);
     }

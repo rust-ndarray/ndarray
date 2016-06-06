@@ -13,7 +13,7 @@
 //!
 //! - [`ArrayBase`](struct.ArrayBase.html):
 //!   The N-dimensional array type itself.
-//! - [`OwnedArray`](type.OwnedArray.html):
+//! - [`Array`](type.Array.html):
 //!   An array where the data is owned uniquely.
 //! - [`RcArray`](type.RcArray.html):
 //!   An array where the data has shared ownership and is copy on write.
@@ -26,7 +26,7 @@
 //! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
 //! - There is both a copy on write array (`RcArray`), or a regular uniquely owned array
-//!   (`OwnedArray`), and both can use read-only and read-write array views.
+//!   (`Array`), and both can use read-only and read-write array views.
 //! - Iteration and most operations are efficient on arrays with contiguous
 //!   innermost dimension.
 //! - Array views can be used to slice and mutate any `[T]` data using
@@ -173,17 +173,17 @@ pub type Ixs = isize;
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.
 ///
-/// Type aliases [`OwnedArray`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
+/// Type aliases [`Array`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
 /// to `ArrayBase` with different types for the data container.
 ///
-/// [`OwnedArray`]: type.OwnedArray.html
+/// [`Array`]: type.Array.html
 /// [`RcArray`]: type.RcArray.html
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
 /// ## Contents
 ///
-/// + [OwnedArray and RcArray](#ownedarray-and-rcarray)
+/// + [Array and RcArray](#ownedarray-and-rcarray)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Slicing](#slicing)
 /// + [Subviews](#subviews)
@@ -192,9 +192,9 @@ pub type Ixs = isize;
 /// + [Methods](#methods)
 /// + [Methods for Array Views](#methods-for-array-views)
 ///
-/// ## `OwnedArray` and `RcArray`
+/// ## `Array` and `RcArray`
 ///
-/// `OwnedArray` owns the underlying array elements directly (just like
+/// `Array` owns the underlying array elements directly (just like
 /// a `Vec`), while [`RcArray`](type.RcArray.html) is a an array with reference
 /// counted data. `RcArray` can act both as an owner or as a view in that regard.
 /// Sharing requires that it uses copy-on-write for mutable operations.
@@ -351,14 +351,14 @@ pub type Ixs = isize;
 /// Since the trait implementations are hard to overview, here is a summary.
 ///
 /// Let `A` be an array or view of any kind. Let `B` be an array
-/// with owned storage (either `OwnedArray` or `RcArray`).
-/// Let `C` be an array with mutable data (either `OwnedArray`, `RcArray`
+/// with owned storage (either `Array` or `RcArray`).
+/// Let `C` be an array with mutable data (either `Array`, `RcArray`
 /// or `ArrayViewMut`).
 /// The following combinations of operands
 /// are supported for an arbitrary binary operator denoted by `@` (it can be
 /// `+`, `-`, `*`, `/` and so on).
 ///
-/// - `&A @ &A` which produces a new `OwnedArray`
+/// - `&A @ &A` which produces a new `Array`
 /// - `B @ A` which consumes `B`, updates it with the result, and returns it
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
@@ -368,7 +368,7 @@ pub type Ixs = isize;
 /// are supported (scalar can be on either the left or right side, but
 /// `ScalarOperand` docs has the detailed condtions).
 ///
-/// - `&A @ K` or `K @ &A` which produces a new `OwnedArray`
+/// - `&A @ K` or `K @ &A` which produces a new `Array`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
 /// - `C @= K` which performs an arithmetic operation in place
 ///
@@ -413,6 +413,10 @@ pub struct ArrayBase<S, D>
 /// can act as both an owner as the data as well as a lightweight view.
 pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 
+/// Array where the data is owned uniquely.
+pub type Array<A, D> = ArrayBase<Vec<A>, D>;
+
+#[deprecated(note="Use the type alias `Array` instead")]
 /// Array where the data is owned uniquely.
 pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 

@@ -8,7 +8,7 @@ use ndarray::{
     arr2,
     Axis,
     Ix,
-    OwnedArray,
+    Array,
     ErrorKind,
 };
 
@@ -39,6 +39,6 @@ fn stacking() {
     let res = ndarray::stack(Axis(2), &[a.view(), c.view()]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::OutOfBounds);
 
-    let res: Result<OwnedArray<f64, (Ix, Ix)>, _> = ndarray::stack(Axis(0), &[]);
+    let res: Result<Array<f64, (Ix, Ix)>, _> = ndarray::stack(Axis(0), &[]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::Unsupported);
 }

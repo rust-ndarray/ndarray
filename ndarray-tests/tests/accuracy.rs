@@ -9,7 +9,7 @@ use rand::Rng;
 
 use ndarray::{
     ArrayBase,
-    OwnedArray,
+    Array,
     Dimension,
     Data,
     DataMut,
@@ -22,7 +22,7 @@ use rand::distributions::Normal;
 
 // simple, slow, correct (hopefully) mat mul
 fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2, (Ix, Ix)>)
-    -> OwnedArray<A, (Ix, Ix)>
+    -> Array<A, (Ix, Ix)>
     where A: LinalgScalar,
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
@@ -51,21 +51,21 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2,
     }
 }
 
-fn gen<D>(d: D) -> OwnedArray<f32, D>
+fn gen<D>(d: D) -> Array<f32, D>
     where D: Dimension,
 {
-    OwnedArray::random(d, F32(Normal::new(0., 1.)))
+    Array::random(d, F32(Normal::new(0., 1.)))
 }
-fn gen_f64<D>(d: D) -> OwnedArray<f64, D>
+fn gen_f64<D>(d: D) -> Array<f64, D>
     where D: Dimension,
 {
-    OwnedArray::random(d, Normal::new(0., 1.))
+    Array::random(d, Normal::new(0., 1.))
 }
 
 #[test]
 fn accurate_eye_f32() {
     for i in 0..20 {
-        let eye = OwnedArray::eye(i);
+        let eye = Array::eye(i);
         for j in 0..20 {
             let a = gen((i, j));
             let a2 = eye.dot(&a);
@@ -85,7 +85,7 @@ fn accurate_eye_f32() {
         let j = rng.gen_range(15, 512);
         println!("Testing size {} by {}", i, j);
         let a = gen((i, j));
-        let eye = OwnedArray::eye(i);
+        let eye = Array::eye(i);
         let a2 = eye.dot(&a);
         if !a.all_close(&a2, 1e-6) {
             panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
@@ -101,7 +101,7 @@ fn accurate_eye_f32() {
 fn accurate_eye_f64() {
     let abs_tol = 1e-15;
     for i in 0..20 {
-        let eye = OwnedArray::eye(i);
+        let eye = Array::eye(i);
         for j in 0..20 {
             let a = gen_f64((i, j));
             let a2 = eye.dot(&a);
@@ -121,7 +121,7 @@ fn accurate_eye_f64() {
         let j = rng.gen_range(15, 512);
         println!("Testing size {} by {}", i, j);
         let a = gen_f64((i, j));
-        let eye = OwnedArray::eye(i);
+        let eye = Array::eye(i);
         let a2 = eye.dot(&a);
         if !a.all_close(&a2, 1e-6) {
             panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
@@ -212,7 +212,7 @@ trait Utils {
     fn lift<F>(&mut self, F)
         where F: FnMut(Self::Elem) -> Self::Elem, Self::Elem: Copy,
               Self::Data: DataMut;
-    fn fold_axis<F>(&self, axis: Axis, f: F) -> OwnedArray<Self::Elem, <Self::Dim as RemoveAxis>::Smaller>
+    fn fold_axis<F>(&self, axis: Axis, f: F) -> Array<Self::Elem, <Self::Dim as RemoveAxis>::Smaller>
         where Self::Dim: RemoveAxis,
               Self::Elem: Clone,
               F: FnMut(&Self::Elem, &Self::Elem) -> Self::Elem;
@@ -251,7 +251,7 @@ impl<A, S, D> Utils for ArrayBase<S, D>
         }
     }
 
-    fn fold_axis<F>(&self, axis: Axis, mut f: F) -> OwnedArray<A, D::Smaller>
+    fn fold_axis<F>(&self, axis: Axis, mut f: F) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               F: FnMut(&A, &A) -> A,
               A: Clone,

@@ -9,7 +9,7 @@ use rblas::attribute::Transpose;
 use num::Float;
 
 use ndarray::{
-    OwnedArray,
+    Array,
     ArrayView,
     ArrayViewMut,
     arr2,
@@ -23,9 +23,9 @@ use ndarray_rblas::AsBlas;
 fn strided_matrix() {
     // smoke test, a matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let mut a = OwnedArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).into_shape((n, m)).unwrap();
-    let mut b = OwnedArray::eye(m);
-    let mut res = OwnedArray::zeros(a.dim());
+    let mut a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).into_shape((n, m)).unwrap();
+    let mut b = Array::eye(m);
+    let mut res = Array::zeros(a.dim());
     Gemm::gemm(&1., Transpose::NoTrans, &a.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
     assert_eq!(res, a);
@@ -35,16 +35,16 @@ fn strided_matrix() {
     aprim.islice(s![0..12, 0..11]);
     println!("{:?}", aprim.shape());
     println!("{:?}", aprim.strides());
-    let mut b = OwnedArray::eye(aprim.shape()[1]);
-    let mut res = OwnedArray::zeros(aprim.dim());
+    let mut b = Array::eye(aprim.shape()[1]);
+    let mut res = Array::zeros(aprim.dim());
     Gemm::gemm(&1., Transpose::NoTrans, &aprim.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
     assert_eq!(res, aprim);
 
     // Transposed matrix multiply
     let (np, mp) = aprim.dim();
-    let mut res = OwnedArray::zeros((mp, np));
-    let mut b = OwnedArray::eye(np);
+    let mut res = Array::zeros((mp, np));
+    let mut b = Array::eye(np);
     Gemm::gemm(&1., Transpose::Trans, &aprim.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
     let mut at = aprim.clone();
@@ -56,8 +56,8 @@ fn strided_matrix() {
     abis.islice(s![0..12, ..;2]);
     println!("{:?}", abis.shape());
     println!("{:?}", abis.strides());
-    let mut b = OwnedArray::eye(abis.shape()[1]);
-    let mut res = OwnedArray::zeros(abis.dim());
+    let mut b = Array::eye(abis.shape()[1]);
+    let mut res = Array::zeros(abis.dim());
     Gemm::gemm(&1., Transpose::NoTrans, &abis.blas(), Transpose::NoTrans, &b.blas(),
                &0., &mut res.blas());
     assert_eq!(res, abis);
@@ -67,9 +67,9 @@ fn strided_matrix() {
 fn strided_view() {
     // smoke test, a matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let mut a = OwnedArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).into_shape((n, m)).unwrap();
-    let mut b = OwnedArray::eye(m);
-    let mut res = OwnedArray::zeros(a.dim());
+    let mut a = Array::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).into_shape((n, m)).unwrap();
+    let mut b = Array::eye(m);
+    let mut res = Array::zeros(a.dim());
     Gemm::gemm(&1.,
                Transpose::NoTrans, &a.blas_view_mut_checked().unwrap(),
                Transpose::NoTrans, &b.blas_view_mut_checked().unwrap(),
@@ -78,8 +78,8 @@ fn strided_view() {
 
     // matrix multiplication, strided
     let aprim = a.slice(s![0..12, 0..11]);
-    let mut b = OwnedArray::eye(aprim.shape()[1]);
-    let mut res = OwnedArray::zeros(aprim.dim());
+    let mut b = Array::eye(aprim.shape()[1]);
+    let mut res = Array::zeros(aprim.dim());
     Gemm::gemm(&1.,
                Transpose::NoTrans, &aprim.bv(),
                Transpose::NoTrans, &b.blas(),
@@ -89,7 +89,7 @@ fn strided_view() {
     // test out with matrices where lower axis is strided but has length 1
     let mut a3 = arr2(&[[1., 2., 3.]]);
     a3.swap_axes(0, 1);
-    let mut b = OwnedArray::eye(a3.shape()[1]);
+    let mut b = Array::eye(a3.shape()[1]);
     let mut res = arr2(&[[0., 0., 0.]]);
     res.swap_axes(0, 1);
     Gemm::gemm(&1.,
@@ -101,7 +101,7 @@ fn strided_view() {
 
 #[test]
 fn as_blas() {
-    let mut a = OwnedArray::<f32, _>::zeros((4, 4));
+    let mut a = Array::<f32, _>::zeros((4, 4));
     assert!(a.blas_view_mut_checked().is_ok());
     a.swap_axes(0, 1);
     assert!(a.blas_view_mut_checked().is_err());

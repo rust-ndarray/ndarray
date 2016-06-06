@@ -2,7 +2,7 @@ extern crate ndarray;
 
 use ndarray::{
     RcArray,
-    OwnedArray,
+    Array,
     RemoveAxis,
     arr2,
     Axis,
@@ -31,14 +31,14 @@ fn remove_axis()
 fn dyn_dimension()
 {
     let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape(vec![2, 2]).unwrap();
-    assert_eq!(&a - &a, OwnedArray::zeros(vec![2, 2]));
+    assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
     assert_eq!(a[&[0, 0][..]], 1.);
     assert_eq!(a[vec![0, 0]], 1.);
 
     let mut dim = vec![1; 1024];
     dim[16] = 4;
     dim[17] = 3;
-    let z = OwnedArray::<f32, _>::zeros(dim.clone());
+    let z = Array::<f32, _>::zeros(dim.clone());
     assert_eq!(z.shape(), &dim[..]);
 }
 

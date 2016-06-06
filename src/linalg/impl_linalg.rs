@@ -194,9 +194,9 @@ impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
           S2: Data<Elem=A>,
           A: LinalgScalar,
 {
-    type Output = OwnedArray<A, (Ix, Ix)>;
+    type Output = Array<A, (Ix, Ix)>;
     fn dot(&self, b: &ArrayBase<S2, (Ix, Ix)>)
-        -> OwnedArray<A, (Ix, Ix)>
+        -> Array<A, (Ix, Ix)>
     {
         let a = self.view();
         let b = b.view();
@@ -213,7 +213,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = OwnedArray::from_shape_vec_unchecked((m, n).set_f(column_major), v);
+            c = Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -251,8 +251,8 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, (Ix, Ix)>
           S2: Data<Elem=A>,
           A: LinalgScalar,
 {
-    type Output = OwnedArray<A, Ix>;
-    fn dot(&self, rhs: &ArrayBase<S2, Ix>) -> OwnedArray<A, Ix>
+    type Output = Array<A, Ix>;
+    fn dot(&self, rhs: &ArrayBase<S2, Ix>) -> Array<A, Ix>
     {
         let ((m, a), n) = (self.dim(), rhs.dim());
         if a != n {
