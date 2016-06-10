@@ -936,9 +936,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if the axes are out of bounds.
     ///
-    /// ***Compatibility notice:*** This function will use `Axis` arguments
-    /// in the next version.
-    ///
     /// ```
     /// use ndarray::arr2;
     ///
