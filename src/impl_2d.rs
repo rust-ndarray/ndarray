@@ -31,7 +31,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     }
 
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
-    pub fn rows(&self) -> Ix {
+    pub fn rows(&self) -> usize {
         self.shape().axis(Axis(0))
     }
 
@@ -53,7 +53,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     }
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
-    pub fn cols(&self) -> Ix {
+    pub fn cols(&self) -> usize {
         self.shape().axis(Axis(1))
     }
 }
