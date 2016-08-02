@@ -69,6 +69,19 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         ArrayView::new_(ptr, dim, strides)
     }
 
+    /// Create an ArrayView from a raw pointer and shape information
+    ///
+    /// The caller is responsible for ensuring that the pointer is valid
+    /// and coherent with the dim and stride information.
+    pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
+        where Sh: Into<StrideShape<D>>
+    {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides;
+        ArrayView::new_(ptr, dim, strides)
+    }
+
     /// Split the array along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
@@ -165,6 +178,19 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     ///
     /// This is the recommended way for interfacing with FFI arrays.
     pub unsafe fn from_raw_parts(ptr: *mut A, dim: D, strides: D) -> Self {
+        ArrayViewMut::new_(ptr, dim, strides)
+    }
+
+    /// Create an ArrayViewMut from a raw pointer and shape information
+    ///
+    /// The caller is responsible for ensuring that the pointer is valid
+    /// and coherent with the dim and stride information.
+    pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
+        where Sh: Into<StrideShape<D>>
+    {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides;
         ArrayViewMut::new_(ptr, dim, strides)
     }
 
