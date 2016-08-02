@@ -59,6 +59,16 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         })
     }
 
+    /// Create an ArrayView from a raw pointer, dim and stride information.
+    ///
+    /// The caller is responsible for ensuring that the pointer is valid
+    /// and coherent with the dim and stride information.
+    ///
+    /// This is the recommended way for interfacing with FFI arrays.
+    pub unsafe fn from_ptr(ptr: *const A, dim: D, strides: D) -> Self {
+        ArrayView::new_(ptr, dim, strides)
+    }
+
     /// Split the array along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
@@ -146,6 +156,16 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
                 Self::new_(xs.as_mut_ptr(), dim, strides)
             }
         })
+    }
+
+    /// Create an ArrayView from a raw pointer, dim and stride information.
+    ///
+    /// The caller is responsible for ensuring that the pointer is valid
+    /// and coherent with the dim and stride information.
+    ///
+    /// This is the recommended way for interfacing with FFI arrays.
+    pub unsafe fn from_ptr(ptr: *mut A, dim: D, strides: D) -> Self {
+        ArrayViewMut::new_(ptr, dim, strides)
     }
 
     /// Split the array along `axis` and return one mutable view strictly
