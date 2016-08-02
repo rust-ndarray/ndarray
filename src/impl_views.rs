@@ -65,7 +65,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// and coherent with the dim and stride information.
     ///
     /// This is the recommended way for interfacing with FFI arrays.
-    pub unsafe fn from_ptr(ptr: *const A, dim: D, strides: D) -> Self {
+    pub unsafe fn from_raw_parts(ptr: *const A, dim: D, strides: D) -> Self {
         ArrayView::new_(ptr, dim, strides)
     }
 
@@ -158,13 +158,13 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         })
     }
 
-    /// Create an ArrayView from a raw pointer, dim and stride information.
+    /// Create an ArrayViewMut from a raw pointer, shape and stride information.
     ///
     /// The caller is responsible for ensuring that the pointer is valid
     /// and coherent with the dim and stride information.
     ///
     /// This is the recommended way for interfacing with FFI arrays.
-    pub unsafe fn from_ptr(ptr: *mut A, dim: D, strides: D) -> Self {
+    pub unsafe fn from_raw_parts(ptr: *mut A, dim: D, strides: D) -> Self {
         ArrayViewMut::new_(ptr, dim, strides)
     }
 
