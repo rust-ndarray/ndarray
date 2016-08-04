@@ -63,7 +63,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// raw pointer to the elements.
     ///
     /// Unsafe because caller is responsible for ensuring that the pointer is
-    /// valid, not mutable aliased and coherent with the dim and stride information.
+    /// valid, not mutably aliased and coherent with the dimension and stride information.
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
         where Sh: Into<StrideShape<D>>
     {
@@ -166,7 +166,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     /// raw pointer to the elements.
     ///
     /// Unsafe because caller is responsible for ensuring that the pointer is
-    /// valid, not aliased and coherent with the dim and stride information.
+    /// valid, not aliased and coherent with the dimension and stride information.
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
         where Sh: Into<StrideShape<D>>
     {
