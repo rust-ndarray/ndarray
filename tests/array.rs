@@ -1038,20 +1038,15 @@ fn test_shape() {
 }
 
 #[test]
-fn test_view_from_raw_parts() {
+fn test_view_from_shape_ptr() {
     let data = [0, 1, 2, 3, 4, 5];
-    let ptr = &data[0] as *const i32;
-    let view = unsafe { ArrayView::from_raw_parts(ptr, (2, 3), (3, 1)) };
-    assert_eq!(view[[1, 2]], 5);
-    let view = unsafe { ArrayView::from_shape_ptr((2, 3), ptr) };
-    assert_eq!(view[[0, 1]], 1);
+    let view = unsafe { ArrayView::from_shape_ptr((2, 3), data.as_ptr()) };
+    assert_eq!(view, aview2(&[[0, 1, 2], [3, 4, 5]]));
 
     let mut data = data;
-    let ptr = &mut data[0] as *mut i32;
-    let mut view = unsafe { ArrayViewMut::from_raw_parts(ptr, (2, 3), (3, 1)) };
+    let mut view = unsafe { ArrayViewMut::from_shape_ptr((2, 3), data.as_mut_ptr()) };
     view[[1, 2]] = 6;
-    assert_eq!(view[[1, 2]], 6);
-    let mut view = unsafe { ArrayViewMut::from_shape_ptr((2, 3), ptr) };
+    assert_eq!(view, aview2(&[[0, 1, 2], [3, 4, 6]]));
     view[[0, 1]] = 0;
-    assert_eq!(view[[0, 1]], 0);
+    assert_eq!(view, aview2(&[[0, 0, 2], [3, 4, 6]]));
 }

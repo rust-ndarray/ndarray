@@ -88,6 +88,12 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.1
+
+  - Add ``unsafe`` array view constructors ``ArrayView::from_shape_ptr``
+    for read-only and read-write array views. These make it easier to
+    create views from raw pointers.
+
 - 0.6.0
 
   - Rename ``OwnedArray`` to ``Array``. The old name is deprecated.
