@@ -59,20 +59,11 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         })
     }
 
-    /// Create an ArrayView from a raw pointer, dim and stride information.
+    /// Create an `ArrayView<A, D>` from shape information and a
+    /// raw pointer to the elements.
     ///
-    /// The caller is responsible for ensuring that the pointer is valid
-    /// and coherent with the dim and stride information.
-    ///
-    /// This is the recommended way for interfacing with FFI arrays.
-    pub unsafe fn from_raw_parts(ptr: *const A, dim: D, strides: D) -> Self {
-        ArrayView::new_(ptr, dim, strides)
-    }
-
-    /// Create an ArrayView from a raw pointer and shape information
-    ///
-    /// The caller is responsible for ensuring that the pointer is valid
-    /// and coherent with the dim and stride information.
+    /// Unsafe because caller is responsible for ensuring that the pointer is
+    /// valid, not mutable aliased and coherent with the dim and stride information.
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
         where Sh: Into<StrideShape<D>>
     {
@@ -171,20 +162,11 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         })
     }
 
-    /// Create an ArrayViewMut from a raw pointer, shape and stride information.
+    /// Create an `ArrayViewMut<A, D>` from shape information and a
+    /// raw pointer to the elements.
     ///
-    /// The caller is responsible for ensuring that the pointer is valid
-    /// and coherent with the dim and stride information.
-    ///
-    /// This is the recommended way for interfacing with FFI arrays.
-    pub unsafe fn from_raw_parts(ptr: *mut A, dim: D, strides: D) -> Self {
-        ArrayViewMut::new_(ptr, dim, strides)
-    }
-
-    /// Create an ArrayViewMut from a raw pointer and shape information
-    ///
-    /// The caller is responsible for ensuring that the pointer is valid
-    /// and coherent with the dim and stride information.
+    /// Unsafe because caller is responsible for ensuring that the pointer is
+    /// valid, not aliased and coherent with the dim and stride information.
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
         where Sh: Into<StrideShape<D>>
     {
