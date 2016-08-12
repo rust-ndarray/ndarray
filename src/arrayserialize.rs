@@ -15,7 +15,7 @@ use super::Elements;
 impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
           D: Dimension + Serialize,
-          S: DataOwned<Elem = A>
+          S: Data<Elem = A>
 
 {
     fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
