@@ -24,20 +24,24 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
         let mut struct_state = try!(serializer.serialize_struct("Array", 3));
         try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
         try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.dim()));
-        try!(serializer.serialize_struct_elt(&mut struct_state, "data", self.iter()));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "data", Sequence(self.iter())));
         serializer.serialize_struct_end(struct_state)
     }
 }
 
-impl<'a, A, D> Serialize for Elements<'a, A, D>
+// private iterator wrapper
+struct Sequence<'a, A: 'a, D>(Elements<'a, A, D>);
+
+impl<'a, A, D> Serialize for Sequence<'a, A, D>
     where A: Serialize,
           D: Dimension + Serialize
 {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
         where S: serde::Serializer
     {
-        let mut seq_state = try!(serializer.serialize_seq(Some(self.len())));
-        for elt in self.clone() {
+        let iter = &self.0;
+        let mut seq_state = try!(serializer.serialize_seq(Some(iter.len())));
+        for elt in iter.clone() {
             try!(serializer.serialize_seq_elt(&mut seq_state, elt));
         }
         serializer.serialize_seq_end(seq_state)
