@@ -13,7 +13,7 @@ use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 
-struct ArrayVisitor<S,Di> {
+struct ArrayVisitor<S, Di> {
     _marker_a: PhantomData<S>,
     _marker_b: PhantomData<Di>,
 }
@@ -24,7 +24,7 @@ enum ArrayField {
     Data,
 }
 
-impl<S,Di> ArrayVisitor<S,Di> {
+impl<S, Di> ArrayVisitor<S, Di> {
     pub fn new() -> Self {
         ArrayVisitor { _marker_a: PhantomData, _marker_b: PhantomData, }
     }
@@ -35,7 +35,7 @@ impl<A, Di, S> Deserialize for ArrayBase<S, Di>
           Di: Deserialize + Dimension,
           S: DataOwned<Elem = A>
 {
-    fn deserialize<D>(deserializer: &mut D) -> Result<ArrayBase<S,Di>, D::Error>
+    fn deserialize<D>(deserializer: &mut D) -> Result<ArrayBase<S, Di>, D::Error>
         where D: serde::de::Deserializer
     {
         static FIELDS: &'static [&'static str] = &["v", "dim", "data"];
@@ -76,7 +76,7 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
 {
     type Value = ArrayBase<S, Di>;
 
-    fn visit_map<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S,Di>, V::Error>
+    fn visit_map<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
         where V: serde::de::MapVisitor,
     {
         let mut v: Option<u8> = None;
