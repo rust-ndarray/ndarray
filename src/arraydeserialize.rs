@@ -111,14 +111,11 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
             None => try!(visitor.missing_field("dim")),
         };
 
-        if data.len() != dim.size() {
-            try!(Err(serde::de::Error::custom("data and dimension must match in size")));
-        }
-
-        try!(visitor.end());
-
-        unsafe {
-            Ok(ArrayBase::from_shape_vec_unchecked(dim, data))
+        if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
+            try!(visitor.end());
+            Ok(array)
+        } else {
+            Err(serde::de::Error::custom("data and dimension must match in size"))
         }
     }
 }
