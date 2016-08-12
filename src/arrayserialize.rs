@@ -12,6 +12,7 @@ use imp_prelude::*;
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Elements;
 
+/// **Requires crate feature `"serde"`**
 impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
           D: Dimension + Serialize,

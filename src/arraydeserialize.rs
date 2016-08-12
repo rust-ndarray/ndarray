@@ -30,6 +30,7 @@ impl<S, Di> ArrayVisitor<S, Di> {
     }
 }
 
+/// **Requires crate feature `"serde"`**
 impl<A, Di, S> Deserialize for ArrayBase<S, Di>
     where A: Deserialize,
           Di: Deserialize + Dimension,

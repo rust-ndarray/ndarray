@@ -72,7 +72,12 @@ your `Cargo.toml`.
 - ``rustc-serialize``
 
   - Optional, compatible with Rust stable
-  - Enables serialization support
+  - Enables serialization support for rustc-serialize 0.3
+
+- ``serde``
+
+  - Optional, compatible with Rust stable
+  - Enables serialization support for serde 0.8
 
 - ``blas``
 
