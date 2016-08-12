@@ -126,7 +126,7 @@ fn serial_many_dim_serde()
 
 #[cfg(feature = "serde")]
 #[test]
-fn serial_wrong_count()
+fn serial_wrong_count_serde()
 {
     // one element too few
     let text = r##"{"v":1,"dim":[2,3],"data":[3,1,2.2,3.1,4]}"##;

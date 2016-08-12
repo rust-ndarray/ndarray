@@ -5,20 +5,12 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use serde::ser::impls::SeqIteratorVisitor;
 use serde::{self, Serialize};
 
 use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Elements;
-
-struct AVisitor<'a, D: 'a, S: 'a>
-    where S: Data
-{
-    arr: &'a ArrayBase<S, D>,
-    state: u32,
-}
 
 impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
@@ -29,11 +21,11 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
     fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
         where Se: serde::Serializer
     {
-        serializer.serialize_struct("Array",
-            AVisitor {
-                arr: self,
-                state: 0,
-        })
+        let mut struct_state = try!(serializer.serialize_struct("Array", 3));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.dim()));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "data", self.iter()));
+        serializer.serialize_struct_end(struct_state)
     }
 }
 
@@ -44,35 +36,10 @@ impl<'a, A, D> Serialize for Elements<'a, A, D>
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
         where S: serde::Serializer
     {
-        serializer.serialize_seq(SeqIteratorVisitor::new(
-            self.clone(),
-            None,
-        ))
-    }
-}
-
-impl<'a, A, D, S> serde::ser::MapVisitor for AVisitor<'a, D, S>
-    where A: Serialize,
-          D: Serialize + Dimension,
-          S: DataOwned<Elem = A>
-{
-    fn visit<Se>(&mut self, serializer: &mut Se) -> Result<Option<()>, Se::Error>
-        where Se: serde::Serializer
-    {
-        match self.state {
-            0 => {
-                self.state +=1;
-                Ok(Some(try!(serializer.serialize_map_elt("v", ARRAY_FORMAT_VERSION))))
-            },
-            1 => {
-                self.state += 1;
-                Ok(Some(try!(serializer.serialize_struct_elt("dim", self.arr.dim()))))
-            },
-            2 => {
-                self.state += 1;
-                Ok(Some(try!(serializer.serialize_struct_elt("data", self.arr.iter()))))
-            },
-            _ => Ok(None),
+        let mut seq_state = try!(serializer.serialize_seq(Some(self.len())));
+        for elt in self.clone() {
+            try!(serializer.serialize_seq_elt(&mut seq_state, elt));
         }
+        serializer.serialize_seq_end(seq_state)
     }
 }
