@@ -124,7 +124,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
 ///
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
-pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync {
+pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///

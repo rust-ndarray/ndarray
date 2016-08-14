@@ -292,3 +292,25 @@ impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
     where T: Into<ArrayView<'a, A, D>>,
           D: Dimension,
 { }
+
+/// Create an owned array with a default state.
+///
+/// The array is created with dimension `D::default()`, which results
+/// in for example dimensions `0` and `(0, 0)` with zero elements for the
+/// one-dimensional and two-dimensional cases respectively, while for example
+/// the zero dimensional case uses `()` (or `Vec::new()`) which
+/// results in an array with one element.
+///
+/// Since arrays cannot grow, the intention is to use the default value as
+/// placeholder.
+impl<A, S, D> Default for ArrayBase<S, D>
+    where S: DataOwned<Elem=A>,
+          D: Dimension,
+          A: Default,
+{
+    // NOTE: We can implement Default for non-zero dimensional array views by
+    // using an empty slice, however we need a trait for nonzero Dimension.
+    fn default() -> Self {
+        ArrayBase::default(D::default())
+    }
+}
