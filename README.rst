@@ -93,6 +93,10 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.2
+
+  - Add serialization support for serde 0.8, under the crate feature name ``serde``
+
 - 0.6.1
 
   - Add ``unsafe`` array view constructors ``ArrayView::from_shape_ptr``
