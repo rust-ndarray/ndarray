@@ -39,15 +39,23 @@ optional = true
 blas-sys = { version = "0.6.3", optional = true, default-features = false }
 matrixmultiply = { version = "0.1.8" }
 
+[dependencies.serde]
+version = "0.8"
+optional = true
+
+[dev-dependencies.serde_json]
+version = "0.8"
+
+
 [features]
 blas = ["blas-sys"]
 
 # These features are used for testing
 blas-openblas-sys = ["blas"]
-test = ["blas-openblas-sys", "rustc-serialize"]
+test = ["blas-openblas-sys", "rustc-serialize", "serde"]
 
 # This feature is used for docs
-docs = ["rustc-serialize"]
+docs = ["rustc-serialize", "serde"]
 
 [profile.release]
 [profile.bench]

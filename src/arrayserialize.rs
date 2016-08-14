@@ -5,63 +5,46 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use serde::ser::impls::SeqIteratorVisitor;
-use serde::{self, Serialize, Deserialize};
+use serde::{self, Serialize};
 
-use super::{
-    Array,
-    Dimension,
-    Ix,
-    Elements,
-};
+use imp_prelude::*;
 
-struct AVisitor<'a, A: 'a, D: 'a> {
-    arr: &'a RcArray<A, D>,
-    state: u32,
-}
+use super::arraytraits::ARRAY_FORMAT_VERSION;
+use super::Elements;
 
-impl<A: Serialize, D: Serialize> Serialize for RcArray<A, D>
-    where D: Dimension
-{
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: serde::Serializer
-    {
-        serializer.visit_named_map("Array",
-                                   AVisitor {
-                                       arr: self,
-                                       state: 0,
-                                   })
-    }
-}
-
-impl<'a, A: Serialize, D: Serialize> Serialize for Elements<'a, A, D>
-    where D: Dimension
-{
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: serde::Serializer
-    {
-        serializer.visit_seq(SeqIteratorVisitor::new(self.clone(), None))
-    }
-}
-
-impl<'a, A, D> serde::ser::MapVisitor for AVisitor<'a, A, D>
+/// **Requires crate feature `"serde"`**
+impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
-          D: Serialize + Dimension
+          D: Dimension + Serialize,
+          S: Data<Elem = A>
+
 {
-    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+    fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
+        where Se: serde::Serializer
+    {
+        let mut struct_state = try!(serializer.serialize_struct("Array", 3));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.dim()));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "data", Sequence(self.iter())));
+        serializer.serialize_struct_end(struct_state)
+    }
+}
+
+// private iterator wrapper
+struct Sequence<'a, A: 'a, D>(Elements<'a, A, D>);
+
+impl<'a, A, D> Serialize for Sequence<'a, A, D>
+    where A: Serialize,
+          D: Dimension + Serialize
+{
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
         where S: serde::Serializer
     {
-        match self.state {
-            0 => {
-                self.state += 1;
-                Ok(Some(try!(serializer.visit_map_elt("shape", self.arr.dim()))))
-            }
-            1 => {
-                self.state += 1;
-                Ok(Some(try!(serializer.visit_map_elt("data", self.arr.iter()))))
-            }
-            _ => Ok(None),
+        let iter = &self.0;
+        let mut seq_state = try!(serializer.serialize_seq(Some(iter.len())));
+        for elt in iter.clone() {
+            try!(serializer.serialize_seq_elt(&mut seq_state, elt));
         }
-
+        serializer.serialize_seq_end(seq_state)
     }
 }
