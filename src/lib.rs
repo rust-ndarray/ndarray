@@ -116,9 +116,9 @@ pub use shape_builder::{ ShapeBuilder };
 
 mod arraytraits;
 #[cfg(feature = "serde")]
-mod arrayserialize;
-#[cfg(feature = "serde")]
-mod arraydeserialize;
+mod array_serde;
+#[cfg(feature = "rustc-serialize")]
+mod array_serialize;
 mod arrayformat;
 mod data_traits;
 

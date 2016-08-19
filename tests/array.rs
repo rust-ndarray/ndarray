@@ -1050,3 +1050,15 @@ fn test_view_from_shape_ptr() {
     view[[0, 1]] = 0;
     assert_eq!(view, aview2(&[[0, 0, 2], [3, 4, 6]]));
 }
+
+#[test]
+fn test_default() {
+    let a = <Array<f32, (Ix, Ix)> as Default>::default();
+    assert_eq!(a, aview2(&[[0.0; 0]; 0]));
+
+
+    #[derive(Default, Debug, PartialEq)]
+    struct Foo(i32);
+    let b = <Array<Foo, ()> as Default>::default();
+    assert_eq!(b, arr0(Foo::default()));
+}

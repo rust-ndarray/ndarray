@@ -212,71 +212,6 @@ unsafe impl<S, D> Send for ArrayBase<S, D>
 // Use version number so we can add a packed format later.
 pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
-/// **Requires crate feature `"rustc-serialize"`**
-#[cfg(feature = "rustc-serialize")]
-impl<A, S, D> Encodable for ArrayBase<S, D>
-    where A: Encodable,
-          D: Dimension + Encodable,
-          S: Data<Elem = A>
-{
-    fn encode<E: Encoder>(&self, s: &mut E) -> Result<(), E::Error> {
-        s.emit_struct("Array", 3, |e| {
-            try!(e.emit_struct_field("v", 0, |e| ARRAY_FORMAT_VERSION.encode(e)));
-            // FIXME: Write self.dim as a slice (self.shape)
-            // The problem is decoding it.
-            try!(e.emit_struct_field("dim", 1, |e| self.dim.encode(e)));
-            try!(e.emit_struct_field("data", 2, |e| {
-                let sz = self.dim.size();
-                e.emit_seq(sz, |e| {
-                    for (i, elt) in self.iter().enumerate() {
-                        try!(e.emit_seq_elt(i, |e| elt.encode(e)))
-                    }
-                    Ok(())
-                })
-            }));
-            Ok(())
-        })
-    }
-}
-
-/// **Requires crate feature `"rustc-serialize"`**
-#[cfg(feature = "rustc-serialize")]
-impl<A, S, D> Decodable for ArrayBase<S, D>
-    where A: Decodable,
-          D: Dimension + Decodable,
-          S: DataOwned<Elem = A>
-{
-    fn decode<E: Decoder>(d: &mut E) -> Result<ArrayBase<S, D>, E::Error> {
-        d.read_struct("Array", 3, |d| {
-            let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));
-            if version > ARRAY_FORMAT_VERSION {
-                return Err(d.error("unknown array version"))
-            }
-            let dim: D = try!(d.read_struct_field("dim", 1, |d| {
-                Decodable::decode(d)
-            }));
-
-            let elements = try!(
-                d.read_struct_field("data", 2, |d| {
-                    d.read_seq(|d, len| {
-                        if len != dim.size() {
-                            Err(d.error("data and dimension must match in size"))
-                        } else {
-                            let mut elements = Vec::with_capacity(len);
-                            for i in 0..len {
-                                elements.push(try!(d.read_seq_elt::<A, _>(i, Decodable::decode)))
-                            }
-                            Ok(elements)
-                        }
-                    })
-            }));
-            unsafe {
-                Ok(ArrayBase::from_shape_vec_unchecked(dim, elements))
-            }
-        })
-    }
-}
-
 
 // use "raw" form instead of type aliases here so that they show up in docs
 /// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
@@ -357,3 +292,25 @@ impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
     where T: Into<ArrayView<'a, A, D>>,
           D: Dimension,
 { }
+
+/// Create an owned array with a default state.
+///
+/// The array is created with dimension `D::default()`, which results
+/// in for example dimensions `0` and `(0, 0)` with zero elements for the
+/// one-dimensional and two-dimensional cases respectively, while for example
+/// the zero dimensional case uses `()` (or `Vec::new()`) which
+/// results in an array with one element.
+///
+/// Since arrays cannot grow, the intention is to use the default value as
+/// placeholder.
+impl<A, S, D> Default for ArrayBase<S, D>
+    where S: DataOwned<Elem=A>,
+          D: Dimension,
+          A: Default,
+{
+    // NOTE: We can implement Default for non-zero dimensional array views by
+    // using an empty slice, however we need a trait for nonzero Dimension.
+    fn default() -> Self {
+        ArrayBase::default(D::default())
+    }
+}
