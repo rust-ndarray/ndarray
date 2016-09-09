@@ -81,7 +81,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     /// Below, an illustration of `.split_at(Axis(2), 2)` on
     /// an array with shape 3 × 5 × 5.
     ///
-    /// <img src="split_at.svg" width="300px" height="271px">
+    /// <img src="https://bluss.github.io/ndarray/images/split_at.svg" width="300px" height="271px">
     pub fn split_at(self, axis: Axis, index: Ix)
         -> (Self, Self)
     {

@@ -50,8 +50,8 @@ def dest_dir():
 
 def doc_home():
     return P.dirname(sys.argv[0])
-def image_dir():
 
+def image_dir():
     return P.join(doc_home(), "images")
 
 def mkdocs():
@@ -64,10 +64,8 @@ def mkdocs():
                   % (docdir, version(crate)))
     dest = dest_dir()
     target_doc = P.join(target_dir(), "doc")
-    images_dir = image_dir()
     run_shell("rm -rvf ./%s" % dest)
     run_shell("cp -r %s %s" % (target_doc, dest))
-    run_shell("cp %s/*.svg %s/ndarray/" % (images_dir, dest))
     run_shell("cat %s/custom.css >> %s/main.css" % (doc_home(), dest))
     # remove empty files
     run_shell("find %s -size 0 -delete" % (dest, ))

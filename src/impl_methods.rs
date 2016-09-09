@@ -519,7 +519,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` is out of bounds.
     ///
-    /// <img src="axis_iter.svg" height="250px">
+    /// <img src="https://bluss.github.io/ndarray/images/axis_iter.svg" height="250px">
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
