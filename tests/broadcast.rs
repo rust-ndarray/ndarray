@@ -1,7 +1,7 @@
 
 extern crate ndarray;
 
-use ndarray::{RcArray, Dimension};
+use ndarray::prelude::*;
 
 #[test]
 fn broadcast_1()
@@ -48,4 +48,24 @@ fn test_add_incompat()
     let mut a = RcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
     let incompat = RcArray::from_elem(3, 1.0f32);
     a += &incompat;
+}
+
+#[test]
+fn test_broadcast() {
+    let (_, n, k) = (16, 16, 16);
+    let x1 = 1.;
+    // b0 broadcast 1 -> n, k
+    let x = Array::from_vec(vec![x1]);
+    let b0 = x.broadcast((n, k)).unwrap();
+    // b1 broadcast n -> n, k
+    let b1 = Array::from_elem(n, x1);
+    let b1 = b1.broadcast((n, k)).unwrap();
+    // b2 is n, k
+    let b2 = Array::from_elem((n, k), x1);
+
+    println!("b0=\n{:?}", b0);
+    println!("b1=\n{:?}", b1);
+    println!("b2=\n{:?}", b2);
+    assert_eq!(b0, b1);
+    assert_eq!(b0, b2);
 }
