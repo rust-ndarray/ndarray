@@ -47,7 +47,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2,
         }
     }
     unsafe {
-        ArrayBase::from_vec_dim_unchecked((m, n), res_elems)
+        ArrayBase::from_shape_vec_unchecked((m, n), res_elems)
     }
 }
 

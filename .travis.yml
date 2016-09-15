@@ -23,8 +23,7 @@ addons:
       - libopenblas-dev
 script:
   - |
-      cargo build --verbose &&
-      cargo test --verbose &&
-      ([ -z "$FEATURES" ] || cargo build --verbose --features "$FEATURES") &&
-      ([ -z "$FEATURES" ] || cargo test --verbose --features "$FEATURES") &&
+      cargo build --verbose --features "$FEATURES" &&
+      cargo test --verbose --features "$FEATURES" &&
+      cargo test --release --verbose --features "" &&
       ([ "$BENCH" != 1 ] || cargo bench --no-run --verbose --features "$FEATURES")

@@ -896,10 +896,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
 
             {
-                let mut new_stride_iter = new_stride.slice_mut().iter_mut().rev();
                 for ((er, es), dr) in from.slice().iter().rev()
                                         .zip(stride.slice().iter().rev())
-                                        .zip(new_stride_iter.by_ref())
+                                        .zip(new_stride.slice_mut().iter_mut().rev())
                 {
                     /* update strides */
                     if *dr == *er {
@@ -914,7 +913,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
 
                 /* set remaining strides to zero */
-                for dr in new_stride_iter {
+                let tail_len = to.ndim() - from.ndim();
+                for dr in &mut new_stride.slice_mut()[..tail_len] {
                     *dr = 0;
                 }
             }
