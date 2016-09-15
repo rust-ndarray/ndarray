@@ -69,3 +69,17 @@ fn test_broadcast() {
     assert_eq!(b0, b1);
     assert_eq!(b0, b2);
 }
+
+#[test]
+fn test_broadcast_1d() {
+    let n = 16;
+    let x1 = 1.;
+    // b0 broadcast 1 -> n
+    let x = Array::from_vec(vec![x1]);
+    let b0 = x.broadcast(n).unwrap();
+    let b2 = Array::from_elem(n, x1);
+
+    println!("b0=\n{:?}", b0);
+    println!("b2=\n{:?}", b2);
+    assert_eq!(b0, b2);
+}
