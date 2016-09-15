@@ -93,6 +93,11 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.3
+
+  - Work around compilation issues in nightly (issue #217)
+  - Add ``Default`` implementations for owned arrays
+
 - 0.6.2
 
   - Add serialization support for serde 0.8, under the crate feature name ``serde``
