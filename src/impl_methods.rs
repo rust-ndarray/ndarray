@@ -1275,4 +1275,27 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
         res
     }
+
+    /// Reduce the values along an axis into just one value, producing a new
+    /// array with one less dimension.
+    ///
+    /// Return the result as an `Array`.
+    pub fn map_axis<B, F>(&self, axis: Axis, mut mapping: F) -> Array<B, D::Smaller>
+        where D: RemoveAxis,
+              F: FnMut(ArrayView<A, Ix>) -> B,
+    {
+        let result_dim = self.dim().remove_axis(axis);
+        let view_len = self.shape().axis(axis);
+        let view_stride = self.strides.axis(axis);
+        let mut result = Vec::with_capacity(result_dim.size());
+        for map in self.subview(axis, 0) {
+            unsafe {
+                let view = ArrayView::new_(map, view_len, view_stride);
+                result.push(mapping(view));
+            }
+        }
+        unsafe {
+            Array::from_shape_vec_unchecked(result_dim, result)
+        }
+    }
 }
