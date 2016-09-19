@@ -1062,3 +1062,18 @@ fn test_default() {
     let b = <Array<Foo, ()> as Default>::default();
     assert_eq!(b, arr0(Foo::default()));
 }
+
+#[test]
+fn test_map_axis() {
+    let a = arr2(&[[1, 2, 3],
+                   [4, 5, 6],
+                   [7, 8, 9],
+                   [10,11,12]]);
+
+    let b = a.map_axis(Axis(0), |view| view.scalar_sum());
+    let answer1 = arr1(&[22, 26, 30]);
+    assert_eq!(b, answer1);
+    let c = a.map_axis(Axis(1), |view| view.scalar_sum());
+    let answer2 = arr1(&[6, 15, 24, 33]);
+    assert_eq!(c, answer2);
+}
