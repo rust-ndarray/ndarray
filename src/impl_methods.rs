@@ -1280,22 +1280,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// array with one less dimension.
     ///
     /// Return the result as an `Array`.
-    pub fn map_axis<B, F>(&self, axis: Axis, mut mapping: F) -> Array<B, D::Smaller>
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn map_axis<'a, B, F>(&'a self, axis: Axis, mut mapping: F)
+        -> Array<B, D::Smaller>
         where D: RemoveAxis,
-              F: FnMut(ArrayView<A, Ix>) -> B,
+              F: FnMut(ArrayView<'a, A, Ix>) -> B,
+              A: 'a,
     {
-        let result_dim = self.dim().remove_axis(axis);
         let view_len = self.shape().axis(axis);
         let view_stride = self.strides.axis(axis);
-        let mut result = Vec::with_capacity(result_dim.size());
-        for map in self.subview(axis, 0) {
+        // use the 0th subview as a map to each 1d array view extended from
+        // the 0th element.
+        self.subview(axis, 0).map(|first_elt| {
             unsafe {
-                let view = ArrayView::new_(map, view_len, view_stride);
-                result.push(mapping(view));
+                mapping(ArrayView::new_(first_elt, view_len, view_stride))
             }
-        }
-        unsafe {
-            Array::from_shape_vec_unchecked(result_dim, result)
-        }
+        })
     }
 }
