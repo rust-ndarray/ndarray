@@ -1279,6 +1279,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Reduce the values along an axis into just one value, producing a new
     /// array with one less dimension.
     ///
+    /// Elements are visited in arbitrary order.
+    ///
     /// Return the result as an `Array`.
     ///
     /// **Panics** if `axis` is out of bounds.
