@@ -93,6 +93,11 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.4
+
+  - Add method ``.map_axis()`` which is used to flatten an array along
+    one axis by mapping it to a scalar.
+
 - 0.6.3
 
   - Work around compilation issues in nightly (issue #217)
