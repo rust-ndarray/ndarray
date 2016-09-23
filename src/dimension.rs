@@ -8,11 +8,12 @@
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::slice;
-use itertools::free::enumerate;
+use itertools::{enumerate, zip};
 
 use super::{Si, Ix, Ixs};
-use super::zipsl;
+use super::{zipsl, zipsl_mut};
 use error::{from_kind, ErrorKind, ShapeError};
+use ZipExt;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -102,7 +103,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
     where D: Dimension
 {
     let mut offset = 0;
-    for ((&d, &i), &s) in zipsl(zipsl(dim.slice(), index.slice()), strides.slice()) {
+    for (&d, &i, &s) in zipsl(dim.slice(), index.slice()).zip_cons(strides.slice()) {
         if i >= d {
             return None;
         }
@@ -232,7 +233,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut index = index;
         let mut done = false;
-        for (&dim, ix) in zipsl(self.slice(), index.slice_mut()).rev() {
+        for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
             *ix += 1;
             if *ix == dim {
                 *ix = 0;
@@ -262,8 +263,8 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     /// Return stride offset for this dimension and index.
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
         let mut offset = 0;
-        for ((&d, &i), &s) in zipsl(zipsl(self.slice(), index.slice()),
-                                    strides.slice()) {
+        for (&d, &i, &s) in zipsl(self.slice(), index.slice()).zip_cons(strides.slice())
+        {
             if i >= d {
                 return None;
             }
@@ -286,8 +287,8 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
         let slices = slices.as_ref();
         let mut offset = 0;
         assert!(slices.len() == dim.slice().len());
-        for ((dr, sr), &slc) in zipsl(zipsl(dim.slice_mut(), strides.slice_mut()),
-                                      slices) {
+        for (dr, sr, &slc) in zipsl_mut(dim.slice_mut(), strides.slice_mut()).zip_cons(slices)
+        {
             let m = *dr;
             let mi = m as Ixs;
             let Si(b1, opt_e1, s1) = slc;
@@ -782,7 +783,7 @@ unsafe impl<'a> NdIndex for &'a [Ix] {
     type Dim = Vec<Ix>;
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         let mut offset = 0;
-        for ((&d, &i), &s) in zipsl(zipsl(&dim[..], &self[..]), strides.slice()) {
+        for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {
             if i >= d {
                 return None;
             }
