@@ -85,8 +85,6 @@ use std::rc::Rc;
 use std::slice::{self, Iter, IterMut};
 use std::marker::PhantomData;
 
-use itertools::ZipSlices;
-
 pub use dimension::{
     Dimension,
     RemoveAxis,
@@ -699,11 +697,30 @@ pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
 pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
-fn zipsl<T, U>(t: T, u: U) -> ZipSlices<T, U>
-    where T: itertools::misc::Slice, U: itertools::misc::Slice
-{
-    ZipSlices::from_slices(t, u)
+use std::slice::Iter as SliceIter;
+use std::slice::IterMut as SliceIterMut;
+use std::iter::Zip;
+fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
+    -> Zip<SliceIter<'a, A>, SliceIter<'b, B>> {
+    t.iter().zip(u)
 }
+fn zipsl_mut<'a, 'b, A, B>(t: &'a mut [A], u: &'b mut [B])
+    -> Zip<SliceIterMut<'a, A>, SliceIterMut<'b, B>> {
+    t.iter_mut().zip(u)
+}
+
+use itertools::{cons_tuples, ConsTuples};
+
+trait ZipExt : Iterator {
+    fn zip_cons<J>(self, iter: J) -> ConsTuples<Zip<Self, J::IntoIter>, (Self::Item, J::Item)>
+        where J: IntoIterator,
+              Self: Sized,
+    {
+        cons_tuples(self.zip(iter))
+    }
+}
+
+impl<I> ZipExt for I where I: Iterator { }
 
 enum ElementsRepr<S, C> {
     Slice(S),
