@@ -48,7 +48,7 @@
 //!     ``.zip_mut_with()`` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
 //!   + ``.iter()`` is efficient for c-contiguous arrays.
-//!   + Can use BLAS in some operations (`dot` and `mat_mul`).
+//!   + Can use BLAS in matrix multiplication.
 //!
 //! ## Crate Feature Flags
 //!
