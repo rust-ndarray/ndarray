@@ -467,6 +467,7 @@ mod impl_clone;
 mod impl_constructors;
 
 mod impl_methods;
+mod impl_owned_array;
 
 /// Private Methods
 impl<A, S, D> ArrayBase<S, D>
