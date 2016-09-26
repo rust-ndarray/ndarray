@@ -93,6 +93,11 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.5
+
+  - Add method ``.into_raw_vec()`` to turn an ``Array`` into the its
+    underlying element storage vector, in whatever element order it is using.
+
 - 0.6.4
 
   - Add method ``.map_axis()`` which is used to flatten an array along
