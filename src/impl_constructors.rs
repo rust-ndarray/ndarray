@@ -17,6 +17,7 @@ use {Shape, StrideShape};
 use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
+use Indexes;
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -168,6 +169,20 @@ impl<S, A, D> ArrayBase<S, D>
     {
         let shape = shape.into();
         let v = (0..shape.dim.size()).map(|_| A::default()).collect();
+        unsafe { Self::from_shape_vec_unchecked(shape, v) }
+    }
+
+    /// Create an array with values created by the function `f`.
+    ///
+    /// The elements are visited in arbitirary order.
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow usize.
+    pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> ArrayBase<S, D>
+        where Sh: Into<Shape<D>>,
+              F: FnMut(D) -> A,
+    {
+        let shape = shape.into();
+        let v = Indexes::new(shape.dim.clone()).map(f).collect();
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
