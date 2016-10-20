@@ -112,6 +112,7 @@ pub use stacking::stack;
 
 pub use shape_builder::{ ShapeBuilder };
 
+mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde")]
 mod array_serde;
@@ -119,6 +120,8 @@ mod array_serde;
 mod array_serialize;
 mod arrayformat;
 mod data_traits;
+
+pub use aliases::*;
 
 pub use data_traits::{
     Data,
