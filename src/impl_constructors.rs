@@ -169,7 +169,7 @@ impl<S, A, D> ArrayBase<S, D>
               Sh: Into<Shape<D>>,
     {
         let shape = shape.into();
-        let v = (0..shape.dim.size()).map(|_| A::default()).collect();
+        let v = to_vec((0..shape.dim.size()).map(|_| A::default()));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 

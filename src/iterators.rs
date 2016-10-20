@@ -905,6 +905,7 @@ unsafe impl<'a, A, D> TrustedIterator for Elements<'a, A, D> { }
 unsafe impl<I, F> TrustedIterator for iter::Map<I, F>
     where I: TrustedIterator { }
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
+unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
 
 
 /// Like Iterator::collect, but only for trusted length iterators
