@@ -18,6 +18,7 @@ use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
 use Indexes;
+use iterators::to_vec;
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -64,7 +65,7 @@ impl<S> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: Float,
     {
-        Self::from_vec(::iterators::to_vec(linspace::linspace(start, end, n)))
+        Self::from_vec(to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array from the half-open interval
@@ -80,7 +81,7 @@ impl<S> ArrayBase<S, Ix>
         where S: Data<Elem=F>,
               F: Float,
     {
-        Self::from_vec(::iterators::to_vec(linspace::range(start, end, step)))
+        Self::from_vec(to_vec(linspace::range(start, end, step)))
     }
 }
 
