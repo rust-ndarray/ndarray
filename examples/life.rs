@@ -2,7 +2,7 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-use ndarray::alias::Array2;
+use ndarray::Array2;
 
 const INPUT: &'static [u8] = include_bytes!("life.txt");
 //const INPUT: &'static [u8] = include_bytes!("lifelite.txt");

@@ -6,7 +6,7 @@ extern crate num_traits;
 use num_traits::Float;
 
 use ndarray::prelude::*;
-use ndarray::alias::{ArrayView2, ArrayViewMut2};
+use ndarray::{ArrayView2, ArrayViewMut2};
 
 const SOBEL_X: [[f32; 3]; 3] = [[-1., 0., 1.], [-2., 0., 2.], [-1., 0., 1.]];
 const SOBEL_Y: [[f32; 3]; 3] = [[ 1., 2., 1.], [ 0., 0., 0.], [-1., -2., -1.]];
