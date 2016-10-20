@@ -2,8 +2,7 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-
-type Ix2 = (Ix, Ix);
+use ndarray::alias::Array2;
 
 const INPUT: &'static [u8] = include_bytes!("life.txt");
 //const INPUT: &'static [u8] = include_bytes!("lifelite.txt");
@@ -11,18 +10,18 @@ const INPUT: &'static [u8] = include_bytes!("life.txt");
 const N: usize = 100;
 //const N: usize = 8;
 
-type Board = RcArray<u8, Ix2>;
+type Board = Array2<u8>;
 
 fn parse(x: &[u8]) -> Board {
     // make a border of 0 cells
-    let mut map = RcArray::from_elem(((N + 2) as Ix, (N + 2) as Ix), 0);
-    let a: RcArray<u8, Ix> = x.iter().filter_map(|&b| match b {
+    let mut map = Board::from_elem(((N + 2) as Ix, (N + 2) as Ix), 0);
+    let a = Array::from_iter(x.iter().filter_map(|&b| match b {
         b'#' => Some(1),
         b'.' => Some(0),
         _ => None,
-    }).collect();
+    }));
 
-    let a = a.reshape((N as Ix, N as Ix));
+    let a = a.into_shape((N as Ix, N as Ix)).unwrap();
     map.slice_mut(s![1..-1, 1..-1]).assign(&a);
     map
 }
@@ -82,7 +81,7 @@ fn render(a: &Board) {
 fn main() {
     let mut a = parse(INPUT);
     let mut scratch = Board::zeros((N as Ix, N as Ix));
-    let steps = 100;
+    let steps = 10000;
     turn_on_corners(&mut a);
     for _ in 0..steps {
         iterate(&mut a, &mut scratch);

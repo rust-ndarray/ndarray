@@ -5,14 +5,9 @@ extern crate num_traits;
 
 use num_traits::Float;
 
-use ndarray::{
-    ArrayView,
-    ArrayViewMut,
-    Array,
-    Ix,
-};
+use ndarray::prelude::*;
+use ndarray::alias::{ArrayView2, ArrayViewMut2};
 
-type Ix2 = (Ix, Ix);
 const SOBEL_X: [[f32; 3]; 3] = [[-1., 0., 1.], [-2., 0., 2.], [-1., 0., 1.]];
 const SOBEL_Y: [[f32; 3]; 3] = [[ 1., 2., 1.], [ 0., 0., 0.], [-1., -2., -1.]];
 const SHARPEN: [[f32; 3]; 3] = [[0., -1., 0.], [ -1., 5., -1.], [0., -1., 0.]];
@@ -20,7 +15,7 @@ const SHARPEN: [[f32; 3]; 3] = [[0., -1., 0.], [ -1., 5., -1.], [0., -1., 0.]];
 type Kernel3x3<A> = [[A; 3]; 3];
 
 #[inline(never)]
-fn conv_3x3<F>(a: &ArrayView<F, Ix2>, out: &mut ArrayViewMut<F, Ix2>, kernel: &Kernel3x3<F>) 
+fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3<F>) 
     where F: Float,
 {
     let (n, m) = a.dim();
