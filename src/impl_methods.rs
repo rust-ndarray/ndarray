@@ -10,8 +10,6 @@ use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
 
-use itertools::zip;
-
 use imp_prelude::*;
 
 use arraytraits;
@@ -19,8 +17,6 @@ use dimension;
 use iterators;
 use error::{self, ShapeError};
 use super::zipsl;
-use super::ZipExt;
-
 use {
     NdIndex,
     AxisChunksIter,
@@ -424,7 +420,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               D: RemoveAxis,
     {
         let mut subs = vec![self.view(); indices.len()];
-        for (&i, sub) in zip(indices, &mut subs[..]) {
+        for (&i, sub) in zipsl(indices, &mut subs[..]) {
             sub.isubview(axis, i);
         }
         if subs.is_empty() {
@@ -648,8 +644,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
         if self.ndim() == 1 { return false; }
         // check all dimensions -- a dimension of length 1 can have unequal strides
-        for (&dim, &s, &ds) in zipsl(self.dim.slice(), self.strides())
-            .zip_cons(defaults.slice())
+        for (&dim, (&s, &ds)) in zipsl(self.dim.slice(),
+                                       zipsl(self.strides(), defaults.slice()))
         {
             if dim != 1 && s != (ds as Ixs) {
                 return false;
