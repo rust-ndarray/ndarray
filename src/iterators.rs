@@ -89,6 +89,32 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
             }
         }
     }
+
+    fn fold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
+        where G: FnMut(Acc, *mut A) -> Acc,
+    {
+        let ndim = self.dim.ndim();
+        assert!(ndim > 0);
+        let mut accum = init;
+        loop {
+            if let Some(mut index) = self.index.clone() {
+                let stride = self.strides.last_elem() as isize;
+                let elem_index = index.last_elem();
+                let len = self.dim.last_elem();
+                let offset = D::stride_offset(&index, &self.strides);
+                for i in elem_index..len {
+                    unsafe {
+                        accum = g(accum, self.ptr.offset(offset + i as isize * stride));
+                    }
+                }
+                index.slice_mut()[ndim - 1] = len - 1;
+                self.index = self.dim.next_for(index);
+            } else {
+                break;
+            };
+        }
+        accum
+    }
 }
 
 impl<'a, A> Baseiter<'a, A, Ix> {
@@ -147,6 +173,14 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
         let len = self.inner.size_hint();
         (len, Some(len))
     }
+
+    fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        unsafe {
+            self.inner.fold(init, |acc, ptr| g(acc, &*ptr))
+        }
+    }
 }
 
 impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix> {
@@ -161,10 +195,10 @@ impl<'a, A, D> ExactSizeIterator for ElementsBase<'a, A, D>
 {}
 
 macro_rules! either {
-    ($value:expr, $inner:ident => $result:expr) => (
+    ($value:expr, $inner:pat => $result:expr) => (
         match $value {
-            ElementsRepr::Slice(ref $inner) => $result,
-            ElementsRepr::Counted(ref $inner) => $result,
+            ElementsRepr::Slice($inner) => $result,
+            ElementsRepr::Counted($inner) => $result,
         }
     )
 }
@@ -177,6 +211,7 @@ macro_rules! either_mut {
         }
     )
 }
+
 
 impl<'a, A, D: Clone> Clone for Elements<'a, A, D> {
     fn clone(&self) -> Elements<'a, A, D> {
@@ -199,7 +234,13 @@ impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        either!(self.inner, iter => iter.size_hint())
+        either!(self.inner, ref iter => iter.size_hint())
+    }
+
+    fn fold<Acc, G>(self, init: Acc, g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc
+    {
+        either!(self.inner, iter => iter.fold(init, g))
     }
 }
 
@@ -243,7 +284,13 @@ impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        either!(self.inner, iter => iter.size_hint())
+        either!(self.inner, ref iter => iter.size_hint())
+    }
+
+    fn fold<Acc, G>(self, init: Acc, g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc
+    {
+        either!(self.inner, iter => iter.fold(init, g))
     }
 }
 
@@ -268,6 +315,14 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let len = self.inner.size_hint();
         (len, Some(len))
+    }
+
+    fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc
+    {
+        unsafe {
+            self.inner.fold(init, move |acc, ptr| g(acc, &mut *ptr))
+        }
     }
 }
 

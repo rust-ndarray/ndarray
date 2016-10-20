@@ -2,6 +2,7 @@
 extern crate ndarray;
 extern crate itertools;
 
+use ndarray::{Array0, Array2};
 use ndarray::RcArray;
 use ndarray::{Ix, Si, S};
 use ndarray::{
@@ -479,4 +480,17 @@ fn iterators_are_send_sync() {
     _send_sync(&a.axis_chunks_iter(Axis(1), 1));
     _send_sync(&a.axis_chunks_iter_mut(Axis(1), 1));
     _send_sync(&Indexes::new(a.dim()));
+}
+
+#[test]
+fn test_fold() {
+    let mut a = Array2::<i32>::default((20, 20));
+    a += 1;
+    let mut iter = a.iter();
+    iter.next();
+    assert_eq!(iter.fold(0, |acc, &x| acc + x), a.scalar_sum() - 1);
+
+    let mut a = Array0::<i32>::default(());
+    a += 1;
+    assert_eq!(a.iter().fold(0, |acc, &x| acc + x), 1);
 }

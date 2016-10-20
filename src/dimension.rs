@@ -274,6 +274,11 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     }
 
     #[doc(hidden)]
+    fn last_elem(&self) -> usize {
+        if self.ndim() == 0 { 0 } else { self.slice()[self.ndim() - 1] }
+    }
+
+    #[doc(hidden)]
     /// Modify dimension, strides and return data pointer offset
     ///
     /// **Panics** if `slices` does not correspond to the number of axes,
