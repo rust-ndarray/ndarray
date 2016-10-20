@@ -183,7 +183,7 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D) -> A,
     {
         let shape = shape.into();
-        let v = Indexes::new(shape.dim.clone()).map(f).collect();
+        let v = to_vec(Indexes::new(shape.dim.clone()).map(f));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
