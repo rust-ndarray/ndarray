@@ -93,6 +93,14 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.6
+
+  - Add dimensionality specific type aliases: ``Array0, Array1, Array2, ...``
+    and so on (there are many), also ``Ix0, Ix1, Ix2, ...``.
+  - Add constructor ``Array::from_shape_fn(D, |D| -> A)``.
+  - Improve performance of ``Array::default``, and ``.fold()`` for noncontiguous
+    array iterators.
+
 - 0.6.5
 
   - Add method ``.into_raw_vec()`` to turn an ``Array`` into the its
