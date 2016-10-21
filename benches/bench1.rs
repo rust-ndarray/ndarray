@@ -15,15 +15,6 @@ use ndarray::{arr0, arr1, arr2};
 use test::black_box;
 
 #[bench]
-fn map(bench: &mut test::Bencher)
-{
-    let a = Array::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
-    bench.iter(|| {
-        a.map(|&x| 2. * x)
-    });
-}
-
-#[bench]
 fn iter_sum_1d_regular(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros(64 * 64);
@@ -217,6 +208,37 @@ fn scalar_sum_2d_float_cutout(bench: &mut test::Bencher)
     let a = black_box(av);
     bench.iter(|| {
         a.scalar_sum()
+    });
+}
+
+#[bench]
+fn fold_sum_i32_2d_regular(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        a.fold(0, |acc, &x| acc + x)
+    });
+}
+
+#[bench]
+fn fold_sum_i32_2d_cutout(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((66, 66));
+    let av = a.slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        a.fold(0, |acc, &x| acc + x)
+    });
+}
+
+#[bench]
+fn fold_sum_i32_2d_stride(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((64, 128));
+    let av = a.slice(s![.., ..;2]);
+    let a = black_box(av);
+    bench.iter(|| {
+        a.fold(0, |acc, &x| acc + x)
     });
 }
 

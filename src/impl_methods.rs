@@ -1112,18 +1112,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            // FIXME: Use for loop when slice iterator is perf is restored
-            for i in 0..slc.len() {
-                init = f(init, &slc[i]);
+            slc.iter().fold(init, f)
+        } else {
+            for row in self.inner_iter() {
+                init = row.into_iter_().fold(init, &mut f);
             }
-            return init;
+            init
         }
-        for row in self.inner_iter() {
-            for elt in row {
-                init = f(init, elt);
-            }
-        }
-        init
     }
 
     /// Call `f` by reference on each element and create a new array
@@ -1155,7 +1150,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                     self.dim.clone().strides(self.strides.clone()), v)
             }
         } else {
-            let v = ::iterators::to_vec(self.iter().map(f));
+            let v = ::iterators::to_vec_mapped(self.iter(), f);
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(self.dim.clone(), v)
             }
