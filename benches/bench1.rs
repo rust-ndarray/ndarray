@@ -415,6 +415,25 @@ fn add_1d_strided(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn iadd_2d_regular(bench: &mut test::Bencher)
+{
+    let mut a = Array::<f32, _>::zeros((64, 64));
+    bench.iter(|| {
+        a += 1.;
+    });
+}
+
+#[bench]
+fn iadd_2d_strided(bench: &mut test::Bencher)
+{
+    let mut a = Array::<f32, _>::zeros((64, 128));
+    let mut a = a.slice_mut(s![.., ..;2]);
+    bench.iter(|| {
+        a += 1.;
+    });
+}
+
+#[bench]
 fn scaled_add_2d_f32_regular(bench: &mut test::Bencher)
 {
     let mut av = Array::<f32, _>::zeros((64, 64));
