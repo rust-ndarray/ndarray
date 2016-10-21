@@ -508,17 +508,8 @@ impl<A, S, D> ArrayBase<S, D>
             }
             return;
         }
-        for mut row in self.inner_iter_mut() {
-            if let Some(slc) = row.as_slice_mut() {
-                // FIXME: Use for loop when slice iterator is perf is restored
-                for i in 0..slc.len() {
-                    f(&mut slc[i]);
-                }
-                continue;
-            }
-            for elt in row {
-                f(elt);
-            }
+        for row in self.inner_iter_mut() {
+            row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
 }
