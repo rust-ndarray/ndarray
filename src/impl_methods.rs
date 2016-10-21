@@ -1243,15 +1243,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
         } else {
             for row in self.inner_iter() {
-                if let Some(slc) = row.into_slice() {
-                    for i in 0..slc.len() {
-                        f(&slc[i]);
-                    }
-                } else {
-                    for elt in row {
-                        f(elt);
-                    }
-                }
+                row.into_iter_().fold((), |(), elt| f(elt));
             }
         }
     }
