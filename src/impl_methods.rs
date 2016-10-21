@@ -92,7 +92,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let (data, strides) = if let Some(slc) = self.as_slice_memory_order() {
             (slc.to_vec(), self.strides.clone())
         } else {
-            (self.iter().cloned().collect(), self.dim.default_strides())
+            (iterators::to_vec_mapped(self.iter(), Clone::clone),
+             self.dim.default_strides())
         };
         unsafe {
             ArrayBase::from_shape_vec_unchecked(self.dim.clone().strides(strides), data)
