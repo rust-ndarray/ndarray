@@ -15,15 +15,6 @@ use ndarray::{arr0, arr1, arr2};
 use test::black_box;
 
 #[bench]
-fn map(bench: &mut test::Bencher)
-{
-    let a = Array::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
-    bench.iter(|| {
-        a.map(|&x| 2. * x)
-    });
-}
-
-#[bench]
 fn iter_sum_1d_regular(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros(64 * 64);
