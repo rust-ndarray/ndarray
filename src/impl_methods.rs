@@ -1150,7 +1150,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                     self.dim.clone().strides(self.strides.clone()), v)
             }
         } else {
-            let v = ::iterators::to_vec(self.iter().map(f));
+            let v = ::iterators::to_vec_mapped(self.iter(), f);
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(self.dim.clone(), v)
             }

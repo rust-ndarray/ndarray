@@ -18,7 +18,7 @@ use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
 use Indexes;
-use iterators::to_vec;
+use iterators::{to_vec, to_vec_mapped};
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -183,7 +183,7 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D) -> A,
     {
         let shape = shape.into();
-        let v = to_vec(Indexes::new(shape.dim.clone()).map(f));
+        let v = to_vec_mapped(Indexes::new(shape.dim.clone()), f);
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 

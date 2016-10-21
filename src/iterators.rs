@@ -969,6 +969,14 @@ unsafe impl<D> TrustedIterator for Indexes<D> where D: Dimension { }
 pub fn to_vec<I>(iter: I) -> Vec<I::Item>
     where I: TrustedIterator + ExactSizeIterator
 {
+    to_vec_mapped(iter, |x| x)
+}
+
+/// Like Iterator::collect, but only for trusted length iterators
+pub fn to_vec_mapped<I, F, B>(iter: I, mut f: F) -> Vec<B>
+    where I: TrustedIterator + ExactSizeIterator,
+          F: FnMut(I::Item) -> B,
+{
     // Use an `unsafe` block to do this efficiently.
     // We know that iter will produce exactly .size() elements,
     // and the loop can vectorize if it's clean (without branch to grow the vector).
@@ -976,14 +984,14 @@ pub fn to_vec<I>(iter: I) -> Vec<I::Item>
     let mut result = Vec::with_capacity(size);
     let mut out_ptr = result.as_mut_ptr();
     let mut len = 0;
-    for elt in iter {
+    iter.fold((), |(), elt| {
         unsafe {
-            ptr::write(out_ptr, elt);
+            ptr::write(out_ptr, f(elt));
             len += 1;
             result.set_len(len);
             out_ptr = out_ptr.offset(1);
         }
-    }
+    });
     debug_assert_eq!(size, result.len());
     result
 }
