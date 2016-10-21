@@ -2,7 +2,7 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.9.
+and for numerics.  Requires Rust 1.11.
 
 Please read the API documentation here: `(0.6 / master)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
@@ -92,6 +92,13 @@ How to use with cargo::
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.6.7
+
+  - Improve performance of a lot of basic operations for arrays where
+    the innermost dimension is not contiguous (``.fold(), .map(),
+    .to_owned()``, arithmetic operations with scalars).
+  - Require Rust 1.11
 
 - 0.6.6
 
