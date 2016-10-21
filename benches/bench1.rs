@@ -610,6 +610,13 @@ fn bench_to_owned_t(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn bench_to_owned_strided(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros((32, 64));
+    let a = a.slice(s![.., ..;2]);
+    bench.iter(|| a.to_owned());
+}
+#[bench]
 fn equality_i32(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros((64, 64));
