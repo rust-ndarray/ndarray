@@ -34,7 +34,7 @@ impl<S> ArrayBase<S, Ix1>
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
-    pub fn from_vec(v: Vec<S::Elem>) -> ArrayBase<S, Ix> {
+    pub fn from_vec(v: Vec<S::Elem>) -> Self {
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
 
@@ -46,7 +46,7 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
-    pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
+    pub fn from_iter<I>(iterable: I) -> Self
         where I: IntoIterator<Item=S::Elem>
     {
         Self::from_vec(iterable.into_iter().collect())
@@ -61,7 +61,7 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
-    pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix1>
+    pub fn linspace<F>(start: F, end: F, n: usize) -> Self
         where S: Data<Elem=F>,
               F: Float,
     {
@@ -77,7 +77,7 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
-    pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix1>
+    pub fn range<F>(start: F, end: F, step: F) -> Self
         where S: Data<Elem=F>,
               F: Float,
     {
@@ -92,7 +92,7 @@ impl<S, A> ArrayBase<S, Ix2>
     /// Create an identity matrix of size `n` (square 2D array).
     ///
     /// **Panics** if `n * n` would overflow usize.
-    pub fn eye(n: Ix) -> ArrayBase<S, Ix2>
+    pub fn eye(n: Ix) -> Self
         where S: DataMut,
               A: Clone + Zero + One,
     {
@@ -138,7 +138,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// let b = Array::from_elem((2, 2, 2).f(), 1.);
     /// assert!(b.strides() == &[1, 2, 4]);
     /// ```
-    pub fn from_elem<Sh>(shape: Sh, elem: A) -> ArrayBase<S, D>
+    pub fn from_elem<Sh>(shape: Sh, elem: A) -> Self
         where A: Clone,
               Sh: Into<Shape<D>>,
     {
@@ -154,7 +154,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array with zeros, shape `shape`.
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
-    pub fn zeros<Sh>(shape: Sh) -> ArrayBase<S, D>
+    pub fn zeros<Sh>(shape: Sh) -> Self
         where A: Clone + Zero,
               Sh: Into<Shape<D>>,
     {
@@ -164,7 +164,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array with default values, shape `shape`
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
-    pub fn default<Sh>(shape: Sh) -> ArrayBase<S, D>
+    pub fn default<Sh>(shape: Sh) -> Self
         where A: Default,
               Sh: Into<Shape<D>>,
     {
@@ -178,7 +178,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// The elements are visited in arbitirary order.
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
-    pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> ArrayBase<S, D>
+    pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
         where Sh: Into<Shape<D>>,
               F: FnMut(D) -> A,
     {
@@ -216,14 +216,14 @@ impl<S, A, D> ArrayBase<S, D>
     ///                 [2., 4.]])
     /// );
     /// ```
-    pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
+    pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<Self, ShapeError>
         where Sh: Into<StrideShape<D>>,
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_vec_impl(shape.into(), v)
     }
 
-    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<ArrayBase<S, D>, ShapeError>
+    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError>
     {
         if shape.custom {
             Self::from_vec_dim_stride(shape.dim, shape.strides, v)
@@ -241,7 +241,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// provided dimensions and strides. (No cloning of elements needed.)
     ///
     /// Unsafe because dimension and strides are unchecked.
-    pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> ArrayBase<S, D>
+    pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
         where Sh: Into<StrideShape<D>>,
     {
         let shape = shape.into();
@@ -249,7 +249,7 @@ impl<S, A, D> ArrayBase<S, D>
     }
 
     fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
-        -> Result<ArrayBase<S, D>, ShapeError>
+        -> Result<Self, ShapeError>
     {
         dimension::can_index_slice(&v, &dim, &strides).map(|_| {
             unsafe {
@@ -259,7 +259,7 @@ impl<S, A, D> ArrayBase<S, D>
     }
 
     unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
-        -> ArrayBase<S, D>
+        -> Self
     {
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(match dimension::can_index_slice(&v, &dim, &strides) {

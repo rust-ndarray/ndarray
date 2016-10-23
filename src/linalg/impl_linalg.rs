@@ -194,9 +194,8 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
           S2: Data<Elem=A>,
           A: LinalgScalar,
 {
-    type Output = Array<A, Ix2>;
-    fn dot(&self, b: &ArrayBase<S2, Ix2>)
-        -> Array<A, Ix2>
+    type Output = Array2<A>;
+    fn dot(&self, b: &ArrayBase<S2, Ix2>) -> Array2<A>
     {
         let a = self.view();
         let b = b.view();
@@ -305,10 +304,10 @@ use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature="blas")]
 fn mat_mul_impl<A>(alpha: A,
-                   lhs: &ArrayView<A, Ix2>,
-                   rhs: &ArrayView<A, Ix2>,
+                   lhs: &ArrayView2<A>,
+                   rhs: &ArrayView2<A>,
                    beta: A,
-                   c: &mut ArrayViewMut<A, Ix2>)
+                   c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
     // size cutoff for using BLAS
@@ -398,10 +397,10 @@ fn mat_mul_impl<A>(alpha: A,
 
 /// C ← α A B + β C
 fn mat_mul_general<A>(alpha: A,
-                      lhs: &ArrayView<A, Ix2>,
-                      rhs: &ArrayView<A, Ix2>,
+                      lhs: &ArrayView2<A>,
+                      rhs: &ArrayView2<A>,
                       beta: A,
-                      c: &mut ArrayViewMut<A, Ix2>)
+                      c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
     let ((m, k), (_, n)) = (lhs.dim, rhs.dim);
