@@ -242,6 +242,25 @@ fn fold_and_sum() {
             assert_approx_eq(sum, a1.scalar_sum(), 1e-5);
         }
     }
+
+    // skip a few elements
+    let max = 8 as Ixs;
+    for i in 1..max {
+        for skip in 1..max {
+            let a1 = a.slice(s![.., ..;i]);
+            let mut iter1 = a1.iter();
+            for _ in 0..skip {
+                iter1.next();
+            }
+            let iter2 = iter1.clone();
+
+            let mut sum = 0.;
+            for elt in iter1 {
+                sum += *elt;
+            }
+            assert_approx_eq(iter2.fold(0., |acc, &x| acc +x), sum, 1e-5);
+        }
+    }
 }
 
 fn range_mat(m: Ix, n: Ix) -> Array<f32, (Ix, Ix)> {
