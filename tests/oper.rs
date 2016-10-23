@@ -224,6 +224,26 @@ fn dot_product_neg_stride() {
     }
 }
 
+#[test]
+fn fold_and_sum() {
+    let a = Array::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
+    assert_approx_eq(a.fold(0., |acc, &x| acc +x), a.scalar_sum(), 1e-5);
+
+    // test different strides
+    let max = 8 as Ixs;
+    for i in 1..max {
+        for j in 1..max {
+            let a1 = a.slice(s![..;i, ..;j]);
+            let mut sum = 0.;
+            for elt in a1.iter() {
+                sum += *elt;
+            }
+            assert_approx_eq(a1.fold(0., |acc, &x| acc +x), sum, 1e-5);
+            assert_approx_eq(sum, a1.scalar_sum(), 1e-5);
+        }
+    }
+}
+
 fn range_mat(m: Ix, n: Ix) -> Array<f32, (Ix, Ix)> {
     Array::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
 }
