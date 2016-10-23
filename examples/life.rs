@@ -81,7 +81,7 @@ fn render(a: &Board) {
 fn main() {
     let mut a = parse(INPUT);
     let mut scratch = Board::zeros((N as Ix, N as Ix));
-    let steps = 10000;
+    let steps = 100;
     turn_on_corners(&mut a);
     for _ in 0..steps {
         iterate(&mut a, &mut scratch);
