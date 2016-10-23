@@ -1,4 +1,5 @@
 
+use Ix;
 use Dimension;
 use {Shape, StrideShape};
 

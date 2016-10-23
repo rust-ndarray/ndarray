@@ -8,6 +8,8 @@
 use std::marker::PhantomData;
 use std::ptr;
 
+use Ix1;
+
 use super::{Dimension, Ix, Ixs};
 use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
 use super::{
@@ -117,7 +119,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
     }
 }
 
-impl<'a, A> Baseiter<'a, A, Ix> {
+impl<'a, A> Baseiter<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<*mut A> {
         let index = match self.index {
@@ -183,7 +185,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     }
 }
 
-impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix> {
+impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A> {
         self.inner.next_back_ref()
@@ -244,7 +246,7 @@ impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D> {
     }
 }
 
-impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix> {
+impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A> {
         either_mut!(self.inner, iter => iter.next_back())
@@ -294,7 +296,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D> {
     }
 }
 
-impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix> {
+impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
         either_mut!(self.inner, iter => iter.next_back())
@@ -326,7 +328,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     }
 }
 
-impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix> {
+impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
         self.inner.next_back_ref_mut()
@@ -389,7 +391,7 @@ pub fn new_inner_iter<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
 impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     where D: Dimension
 {
-    type Item = ArrayView<'a, A, Ix>;
+    type Item = ArrayView<'a, A, Ix1>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
             unsafe { ArrayView::new_(ptr, self.inner_len, self.inner_stride as Ix) }
@@ -446,7 +448,7 @@ pub fn new_inner_iter_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
 impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     where D: Dimension,
 {
-    type Item = ArrayViewMut<'a, A, Ix>;
+    type Item = ArrayViewMut<'a, A, Ix1>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
             unsafe {

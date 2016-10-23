@@ -17,12 +17,12 @@ pub fn arr0<A>(x: A) -> Array<A, ()>
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix> {
+pub fn arr1<A: Clone>(xs: &[A]) -> Array<A, Ix1> {
     ArrayBase::from_vec(xs.to_vec())
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix1> {
     arr1(xs).into_shared()
 }
 
@@ -45,12 +45,12 @@ pub fn aview0<A>(x: &A) -> ArrayView<A, ()> {
 ///     a2d.scalar_sum() == 1024.0
 /// );
 /// ```
-pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix> {
+pub fn aview1<A>(xs: &[A]) -> ArrayView<A, Ix1> {
     ArrayView::from(xs)
 }
 
 /// Create a two-dimensional array view with elements borrowing `xs`.
-pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)> {
+pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, Ix2> {
     let cols = V::len();
     let rows = xs.len();
     let data = unsafe {
@@ -81,7 +81,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView<A, (Ix, Ix)
 ///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
 /// }
 /// ```
-pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix> {
+pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut<A, Ix1> {
     ArrayViewMut::from(xs)
 }
 
@@ -121,7 +121,7 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, Ix)> {
+pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> Array<A, Ix2> {
     let (m, n) = (xs.len() as Ix, V::len() as Ix);
     let dim = (m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
@@ -135,7 +135,7 @@ pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> Array<A, (Ix, 
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, (Ix, Ix)> {
+pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, Ix2> {
     arr2(xs).into_shared()
 }
 
@@ -157,7 +157,7 @@ pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, (
 /// );
 /// ```
 pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> Array<A, (Ix, Ix, Ix)>
+    -> Array<A, Ix3>
 {
     let dim = (xs.len() as Ix, V::len() as Ix, U::len() as Ix);
     let mut result = Vec::<A>::with_capacity(dim.size());
@@ -173,7 +173,7 @@ pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(
 
 /// Create a three-dimensional array with elements from `xs`.
 pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> RcArray<A, (Ix, Ix, Ix)>
+    -> RcArray<A, Ix3>
 {
     arr3(xs).into_shared()
 }

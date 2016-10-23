@@ -150,6 +150,7 @@ mod stacking;
 mod imp_prelude {
     pub use prelude::*;
     pub use {
+        Ix1, Ix2, Ix3,
         RemoveAxis,
         Data,
         DataMut,

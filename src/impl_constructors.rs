@@ -24,7 +24,7 @@ use iterators::{to_vec, to_vec_mapped};
 ///
 /// Note that the constructor methods apply to `Array` and `RcArray`,
 /// the two array types that have owned storage.
-impl<S> ArrayBase<S, Ix>
+impl<S> ArrayBase<S, Ix1>
     where S: DataOwned
 {
     /// Create a one-dimensional array from a vector (no copying needed).
@@ -46,7 +46,7 @@ impl<S> ArrayBase<S, Ix>
     /// let array = Array::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
-    pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
+    pub fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
         where I: IntoIterator<Item=S::Elem>
     {
         Self::from_vec(iterable.into_iter().collect())
@@ -61,7 +61,7 @@ impl<S> ArrayBase<S, Ix>
     /// let array = Array::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
-    pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix>
+    pub fn linspace<F>(start: F, end: F, n: usize) -> ArrayBase<S, Ix1>
         where S: Data<Elem=F>,
               F: Float,
     {
@@ -77,7 +77,7 @@ impl<S> ArrayBase<S, Ix>
     /// let array = Array::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
-    pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix>
+    pub fn range<F>(start: F, end: F, step: F) -> ArrayBase<S, Ix1>
         where S: Data<Elem=F>,
               F: Float,
     {
@@ -86,13 +86,13 @@ impl<S> ArrayBase<S, Ix>
 }
 
 /// Constructor methods for two-dimensional arrays.
-impl<S, A> ArrayBase<S, (Ix, Ix)>
+impl<S, A> ArrayBase<S, Ix2>
     where S: DataOwned<Elem=A>,
 {
     /// Create an identity matrix of size `n` (square 2D array).
     ///
     /// **Panics** if `n * n` would overflow usize.
-    pub fn eye(n: Ix) -> ArrayBase<S, (Ix, Ix)>
+    pub fn eye(n: Ix) -> ArrayBase<S, Ix2>
         where S: DataMut,
               A: Clone + Zero + One,
     {

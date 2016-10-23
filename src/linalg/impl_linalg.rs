@@ -155,7 +155,7 @@ pub trait Dot<Rhs> {
     fn dot(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<A, S> ArrayBase<S, (Ix, Ix)>
+impl<A, S> ArrayBase<S, Ix2>
     where S: Data<Elem=A>,
 {
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
@@ -189,14 +189,14 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     }
 }
 
-impl<A, S, S2> Dot<ArrayBase<S2, (Ix, Ix)>> for ArrayBase<S, (Ix, Ix)>
+impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
     where S: Data<Elem=A>,
           S2: Data<Elem=A>,
           A: LinalgScalar,
 {
-    type Output = Array<A, (Ix, Ix)>;
-    fn dot(&self, b: &ArrayBase<S2, (Ix, Ix)>)
-        -> Array<A, (Ix, Ix)>
+    type Output = Array<A, Ix2>;
+    fn dot(&self, b: &ArrayBase<S2, Ix2>)
+        -> Array<A, Ix2>
     {
         let a = self.view();
         let b = b.view();
@@ -246,7 +246,7 @@ fn general_dot_shape_error(m: usize, k: usize, k2: usize, n: usize, c1: usize, c
 /// Return a result array with shape *M*.
 ///
 /// **Panics** if shapes are incompatible.
-impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, (Ix, Ix)>
+impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, Ix2>
     where S: Data<Elem=A>,
           S2: Data<Elem=A>,
           A: LinalgScalar,
@@ -305,10 +305,10 @@ use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature="blas")]
 fn mat_mul_impl<A>(alpha: A,
-                   lhs: &ArrayView<A, (Ix, Ix)>,
-                   rhs: &ArrayView<A, (Ix, Ix)>,
+                   lhs: &ArrayView<A, Ix2>,
+                   rhs: &ArrayView<A, Ix2>,
                    beta: A,
-                   c: &mut ArrayViewMut<A, (Ix, Ix)>)
+                   c: &mut ArrayViewMut<A, Ix2>)
     where A: LinalgScalar,
 {
     // size cutoff for using BLAS
@@ -398,10 +398,10 @@ fn mat_mul_impl<A>(alpha: A,
 
 /// C ← α A B + β C
 fn mat_mul_general<A>(alpha: A,
-                      lhs: &ArrayView<A, (Ix, Ix)>,
-                      rhs: &ArrayView<A, (Ix, Ix)>,
+                      lhs: &ArrayView<A, Ix2>,
+                      rhs: &ArrayView<A, Ix2>,
                       beta: A,
-                      c: &mut ArrayViewMut<A, (Ix, Ix)>)
+                      c: &mut ArrayViewMut<A, Ix2>)
     where A: LinalgScalar,
 {
     let ((m, k), (_, n)) = (lhs.dim, rhs.dim);
@@ -478,10 +478,10 @@ fn mat_mul_general<A>(alpha: A,
 ///
 /// ***Panics*** if array shapes are not compatible
 pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
-                                      a: &ArrayBase<S1, (Ix, Ix)>,
-                                      b: &ArrayBase<S2, (Ix, Ix)>,
+                                      a: &ArrayBase<S1, Ix2>,
+                                      b: &ArrayBase<S2, Ix2>,
                                       beta: A,
-                                      c: &mut ArrayBase<S3, (Ix, Ix)>)
+                                      c: &mut ArrayBase<S3, Ix2>)
     where S1: Data<Elem=A>,
           S2: Data<Elem=A>,
           S3: DataMut<Elem=A>,
@@ -532,7 +532,7 @@ fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix>) -> bool
 }
 
 #[cfg(feature="blas")]
-fn blas_row_major_2d<A, S>(a: &ArrayBase<S, (Ix, Ix)>) -> bool
+fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     where S: Data,
           A: Any,
           S::Elem: Any,

@@ -445,7 +445,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// For example, in a 2 × 2 × 3 array, the iterator element
     /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
     ///
-    /// Iterator element is `ArrayView<A, Ix>` (1D array view).
+    /// Iterator element is `ArrayView<A, Ix1>` (1D array view).
     ///
     /// ```
     /// use ndarray::arr3;
@@ -464,7 +464,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over all dimensions but the innermost,
     /// and yields each inner row.
     ///
-    /// Iterator element is `ArrayViewMut<A, Ix>` (1D read-write array view).
+    /// Iterator element is `ArrayViewMut<A, Ix1>` (1D read-write array view).
     pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
         where S: DataMut
     {
@@ -604,19 +604,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
     /// *(1, 1, ..., 1)* etc as long as all axes have elements.
-    pub fn diag(&self) -> ArrayView<A, Ix> {
+    pub fn diag(&self) -> ArrayView<A, Ix1> {
         self.view().into_diag()
     }
 
     /// Return a read-write view over the diagonal elements of the array.
-    pub fn diag_mut(&mut self) -> ArrayViewMut<A, Ix>
+    pub fn diag_mut(&mut self) -> ArrayViewMut<A, Ix1>
         where S: DataMut,
     {
         self.view_mut().into_diag()
     }
 
     /// Return the diagonal as a one-dimensional array.
-    pub fn into_diag(self) -> ArrayBase<S, Ix> {
+    pub fn into_diag(self) -> ArrayBase<S, Ix1> {
         let (len, stride) = self.diag_params();
         ArrayBase {
             data: self.data,
@@ -1279,7 +1279,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn map_axis<'a, B, F>(&'a self, axis: Axis, mut mapping: F)
         -> Array<B, D::Smaller>
         where D: RemoveAxis,
-              F: FnMut(ArrayView<'a, A, Ix>) -> B,
+              F: FnMut(ArrayView<'a, A, Ix1>) -> B,
               A: 'a,
     {
         let view_len = self.shape().axis(axis);

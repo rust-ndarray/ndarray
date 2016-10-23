@@ -112,10 +112,10 @@ impl<S, D> Eq for ArrayBase<S, D>
           S::Elem: Eq,
 { }
 
-impl<A, S> FromIterator<A> for ArrayBase<S, Ix>
+impl<A, S> FromIterator<A> for ArrayBase<S, Ix1>
     where S: DataOwned<Elem=A>
 {
-    fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix>
+    fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
         where I: IntoIterator<Item=A>,
     {
         ArrayBase::from_iter(iterable)
@@ -215,7 +215,7 @@ pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 /// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
 ///
 /// Create a one-dimensional read-only array view of the data in `slice`.
-impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayBase<ViewRepr<&'a A>, Ix>
+impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayBase<ViewRepr<&'a A>, Ix1>
     where Slice: AsRef<[A]>
 {
     fn from(slice: &'a Slice) -> Self {
@@ -241,7 +241,7 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayBase<ViewRepr<&'a A>, D>
 /// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or slicable.
 ///
 /// Create a one-dimensional read-write array view of the data in `slice`.
-impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayBase<ViewRepr<&'a mut A>, Ix>
+impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayBase<ViewRepr<&'a mut A>, Ix1>
     where Slice: AsMut<[A]>
 {
     fn from(slice: &'a mut Slice) -> Self {
@@ -285,7 +285,7 @@ impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayBase<ViewRepr<&'a mut A
 /// );
 ///
 /// ```
-pub trait AsArray<'a, A: 'a, D = Ix> : Into<ArrayView<'a, A, D>> where D: Dimension { }
+pub trait AsArray<'a, A: 'a, D = Ix1> : Into<ArrayView<'a, A, D>> where D: Dimension { }
 impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
     where T: Into<ArrayView<'a, A, D>>,
           D: Dimension,

@@ -10,13 +10,13 @@
 //! Methods for two-dimensional arrays.
 use imp_prelude::*;
 
-impl<A, S> ArrayBase<S, (Ix, Ix)>
+impl<A, S> ArrayBase<S, Ix2>
     where S: Data<Elem=A>,
 {
     /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn row(&self, index: Ix) -> ArrayView<A, Ix>
+    pub fn row(&self, index: Ix) -> ArrayView<A, Ix1>
     {
         self.subview(Axis(0), index)
     }
@@ -24,7 +24,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a mutable array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
+    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix1>
         where S: DataMut
     {
         self.subview_mut(Axis(0), index)
@@ -38,7 +38,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn column(&self, index: Ix) -> ArrayView<A, Ix>
+    pub fn column(&self, index: Ix) -> ArrayView<A, Ix1>
     {
         self.subview(Axis(1), index)
     }
@@ -46,7 +46,7 @@ impl<A, S> ArrayBase<S, (Ix, Ix)>
     /// Return a mutable array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix>
+    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut<A, Ix1>
         where S: DataMut
     {
         self.subview_mut(Axis(1), index)
