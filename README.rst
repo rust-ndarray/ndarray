@@ -93,6 +93,13 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.8
+
+  - Fix a bug in a partially consumed elements iterator's ``.fold()``.
+    (**Note** that users are recommended to use not use the elements iterator,
+    but the higher level functions which are the maps, folds and other methods
+    of the array types themselves.)
+
 - 0.6.7
 
   - Improve performance of a lot of basic operations for arrays where
