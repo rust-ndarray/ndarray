@@ -424,8 +424,12 @@ unsafe impl Dimension for () {
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
+    #[inline]
     fn slice(&self) -> &[Ix] { &[] }
+    #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
+    #[inline]
+    fn _fastest_varying_stride_order(&self) -> Self { }
 }
 
 unsafe impl Dimension for Ix {
@@ -439,6 +443,11 @@ unsafe impl Dimension for Ix {
 
     #[inline]
     fn default_strides(&self) -> Self { 1 }
+
+    #[inline]
+    fn _fastest_varying_stride_order(&self) -> Self {
+        0
+    }
 
     #[inline]
     fn first_index(&self) -> Option<Ix> {
