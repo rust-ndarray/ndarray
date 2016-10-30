@@ -2,6 +2,7 @@
 use Dimension;
 use {Shape, StrideShape};
 use Ix;
+use dimension::IntoDimension;
 
 /// A trait for `Shape` and `D where D: Dimension` that allows
 /// customizing the memory layout (strides) of an array shape.
@@ -21,17 +22,18 @@ pub trait IntoShape {
     fn into_shape(self) -> Shape<Self::Dim>;
 }
 
-impl<D: Dimension> IntoShape for D {
-    type Dim = D;
+impl<D> IntoShape for D
+    where D: IntoDimension,
+{
+    type Dim = D::Dim;
     fn into_shape(self) -> Shape<Self::Dim> {
         Shape {
-            dim: self,
+            dim: self.into_dimension(),
             is_c: true,
         }
     }
 }
 /*
-*/
 
 impl IntoShape for () {
     type Dim = [Ix; 0];
@@ -62,6 +64,7 @@ impl IntoShape for (Ix, Ix) {
         }
     }
 }
+*/
 
 impl<D> From<D> for Shape<D>
     where D: Dimension

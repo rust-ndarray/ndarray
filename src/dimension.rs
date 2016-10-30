@@ -468,6 +468,12 @@ impl IntoDimension for (Ix, Ix) {
     fn into_dimension(self) -> [Ix; 2] { [self.0, self.1] }
 }
 
+impl<D> IntoDimension for D where D: Dimension {
+    type Dim = D;
+    #[inline]
+    fn into_dimension(self) -> Self { self }
+}
+
 pub trait Convert<T = usize> {
     type To;
     fn convert(self) -> Self::To;

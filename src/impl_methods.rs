@@ -20,6 +20,8 @@ use iterators;
 use error::{self, ShapeError};
 use super::zipsl;
 use super::ZipExt;
+use shape_builder::IntoShape;
+use dimension::IntoDimension;
 
 use {
     NdIndex,
@@ -836,9 +838,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                 [3., 4.]])
     /// );
     /// ```
-    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E>, ShapeError>
-        where E: Dimension
+    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+        where E: IntoDimension,
     {
+        let shape = shape.into_dimension();
         if shape.size_checked() != Some(self.dim.size()) {
             return Err(error::incompatible_shapes(&self.dim, &shape));
         }
