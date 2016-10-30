@@ -18,7 +18,7 @@ use {Ix0, Ix1, Ix2};
 use {ArrayView1, ArrayViewMut1};
 
 /// Calculate offset from `Ix` stride converting sign properly
-#[inline]
+#[inline(always)]
 pub fn stride_offset(n: Ix, stride: Ix) -> isize {
     (n as isize) * ((stride as Ixs) as isize)
 }
@@ -658,7 +658,7 @@ unsafe impl Dimension for [Ix; 1] {
     }
 
     /// Self is an index, return the stride offset
-    #[inline]
+    #[inline(always)]
     fn stride_offset(index: &Self, stride: &Self) -> isize {
         stride_offset(index[0], stride[0])
     }
@@ -739,7 +739,7 @@ unsafe impl Dimension for [Ix; 2] {
     }
 
     /// Self is an index, return the stride offset
-    #[inline]
+    #[inline(always)]
     fn stride_offset(index: &Self, strides: &Self) -> isize {
         let i = index[0];
         let j = index[1];
