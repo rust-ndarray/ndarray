@@ -52,7 +52,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     pub fn dim_tuple(&self) -> D::Tuple {
-        self.dim.as_tuple()
+        self.dim.clone().into_tuple()
     }
 
     /// Return the shape of the array as a slice.

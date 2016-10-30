@@ -152,7 +152,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
         }
     }
 
-    fn as_tuple(&self) -> Self::Tuple {
+    fn into_tuple(self) -> Self::Tuple {
         panic!()
     }
 
@@ -648,7 +648,7 @@ unsafe impl Dimension for [Ix; 2] {
     #[inline]
     fn ndim(&self) -> usize { 2 }
     #[inline]
-    fn as_tuple(&self) -> Self::Tuple {
+    fn into_tuple(self) -> Self::Tuple {
         self.convert()
     }
     #[inline]
@@ -821,6 +821,10 @@ unsafe impl Dimension for Vec<Ix>
     fn ndim(&self) -> usize { self.len() }
     fn slice(&self) -> &[Ix] { self }
     fn slice_mut(&mut self) -> &mut [Ix] { self }
+    #[inline]
+    fn into_tuple(self) -> Self::Tuple {
+        self
+    }
 }
 
 /// Array shape with a next smaller dimension.
