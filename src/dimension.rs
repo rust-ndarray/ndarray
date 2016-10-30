@@ -503,7 +503,7 @@ impl IntoDimension for () {
 */
 impl IntoDimension for Ix {
     type Dim = [Ix; 1];
-    #[inline]
+    #[inline(always)]
     fn into_dimension(self) -> [Ix; 1] { [self] }
 }
 /*
@@ -522,7 +522,7 @@ impl IntoDimension for (Ix, Ix, Ix) {
 
 impl<D> IntoDimension for D where D: Dimension {
     type Dim = D;
-    #[inline]
+    #[inline(always)]
     fn into_dimension(self) -> Self { self }
 }
 
@@ -579,7 +579,7 @@ macro_rules! tuple_to_array {
 
         impl IntoDimension for index!(tuple_type [Ix] $n) {
             type Dim = [Ix; $n];
-            #[inline]
+            #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
                 index!(array_expr [self] $n)
             }
@@ -1074,6 +1074,9 @@ impl RemoveAxis for Vec<Ix> {
 pub unsafe trait NdIndex : Debug + IntoDimension {
     #[doc(hidden)]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;
+    fn index_unchecked(&self, strides: &Self::Dim) -> isize {
+        panic!()
+    }
 }
 
 unsafe impl<D> NdIndex for D
@@ -1081,6 +1084,9 @@ unsafe impl<D> NdIndex for D
 {
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, self)
+    }
+    fn index_unchecked(&self, strides: &Self::Dim) -> isize {
+        D::stride_offset(self, strides)
     }
 }
 
@@ -1102,6 +1108,10 @@ unsafe impl NdIndex for (Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix2(self.0, self.1))
+    }
+    fn index_unchecked(&self, strides: &Self::Dim) -> isize {
+        stride_offset(self.0, strides[0]) + 
+        stride_offset(self.1, strides[1])
     }
 }
 unsafe impl NdIndex for (Ix, Ix, Ix) {

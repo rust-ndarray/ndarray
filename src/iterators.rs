@@ -375,7 +375,8 @@ pub struct InnerIter<'a, A: 'a, D> {
 pub fn new_inner_iter<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
     where D: Dimension
 {
-    if v.shape().len() == 0 {
+    let ndim = v.ndim();
+    if ndim == 0 {
         InnerIter {
             inner_len: 1,
             inner_stride: 1,
@@ -383,10 +384,9 @@ pub fn new_inner_iter<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
         }
     } else {
         // Set length of innerest dimension to 1, start iteration
-        let ndim = v.shape().len();
-        let len = v.shape()[ndim - 1];
-        let stride = v.strides()[ndim - 1];
-        v.dim.slice_mut()[ndim - 1] = 1;
+        let len = v.dim.last_elem();
+        let stride = v.strides.last_elem() as isize;
+        v.dim.set_last_elem(1);
         InnerIter {
             inner_len: len,
             inner_stride: stride,
@@ -432,7 +432,8 @@ pub struct InnerIterMut<'a, A: 'a, D> {
 pub fn new_inner_iter_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
     where D: Dimension,
 {
-    if v.shape().len() == 0 {
+    let ndim = v.ndim();
+    if ndim == 0 {
         InnerIterMut {
             inner_len: 1,
             inner_stride: 1,
@@ -440,10 +441,9 @@ pub fn new_inner_iter_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
         }
     } else {
         // Set length of innerest dimension to 1, start iteration
-        let ndim = v.shape().len();
-        let len = v.shape()[ndim - 1];
-        let stride = v.strides()[ndim - 1];
-        v.dim.slice_mut()[ndim - 1] = 1;
+        let len = v.dim.last_elem();
+        let stride = v.strides.last_elem() as isize;
+        v.dim.set_last_elem(1);
         InnerIterMut {
             inner_len: len,
             inner_stride: stride,

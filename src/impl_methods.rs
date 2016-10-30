@@ -260,7 +260,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let index = index.into_dimension();
         arraytraits::debug_bounds_check(self, &index);
-        let off = D::stride_offset(&index, &self.strides);
+        //let off = D::stride_offset(&index, &self.strides);
+        let off = index.index_unchecked(&self.strides);
         &*self.ptr.offset(off)
     }
 
@@ -278,7 +279,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let index = index.into_dimension();
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
-        let off = D::stride_offset(&index, &self.strides);
+        //let off = D::stride_offset(&index, &self.strides);
+        let off = index.index_unchecked(&self.strides);
         &mut *self.ptr.offset(off)
     }
 
@@ -1048,7 +1050,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // otherwise, break the arrays up into their inner rows
         let mut try_slices = true;
         let mut rows = self.inner_iter_mut().zip(rhs.inner_iter());
-        for (mut s_row, r_row) in &mut rows {
+        for (mut s_row, r_row) in rows {
             if try_slices {
                 if let Some(self_s) = s_row.as_slice_mut() {
                     if let Some(rhs_s) = r_row.as_slice() {
