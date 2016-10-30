@@ -632,8 +632,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         ArrayBase {
             data: self.data,
             ptr: self.ptr,
-            dim: [len],
-            strides: [stride as Ix],
+            dim: Ix1(len),
+            strides: Ix1(stride as Ix),
         }
     }
 
@@ -1046,7 +1046,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
         // otherwise, break the arrays up into their inner rows
         let mut try_slices = true;
-        let mut rows = self.inner_iter_mut().zip(rhs.inner_iter());
+        let rows = self.inner_iter_mut().zip(rhs.inner_iter());
         for (mut s_row, r_row) in rows {
             if try_slices {
                 if let Some(self_s) = s_row.as_slice_mut() {

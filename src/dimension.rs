@@ -16,6 +16,7 @@ use error::{from_kind, ErrorKind, ShapeError};
 use ZipExt;
 use {Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, IxDyn};
 use {ArrayView1, ArrayViewMut1};
+use aliases::Dim;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
@@ -496,9 +497,9 @@ pub trait IntoDimension {
 }
 
 impl IntoDimension for Ix {
-    type Dim = [Ix; 1];
+    type Dim = Ix1;
     #[inline(always)]
-    fn into_dimension(self) -> [Ix; 1] { [self] }
+    fn into_dimension(self) -> Ix1 { Ix1(self) }
 }
 
 impl<D> IntoDimension for D where D: Dimension {
@@ -507,14 +508,20 @@ impl<D> IntoDimension for D where D: Dimension {
     fn into_dimension(self) -> Self { self }
 }
 
+impl IntoDimension for Vec<usize> {
+    type Dim = IxDyn;
+    #[inline(always)]
+    fn into_dimension(self) -> Self::Dim { Dim(self) }
+}
+
 trait Convert<T = usize> {
     type To;
     fn convert(self) -> Self::To;
 }
 
 impl Convert<usize> for Ix {
-    type To = [Ix; 1];
-    fn convert(self) -> Self::To { [self] }
+    type To = Ix1;
+    fn convert(self) -> Self::To { Ix1(self) }
 }
 /*
 */
@@ -552,17 +559,17 @@ macro_rules! tuple_to_array {
         }
         
         impl<T: Copy> Convert<T> for index!(tuple_type [T] $n) {
-            type To = [T; $n];
+            type To = Dim<[T; $n]>;
             fn convert(self) -> Self::To {
-                index!(array_expr [self] $n)
+                Dim(index!(array_expr [self] $n))
             }
         }
 
         impl IntoDimension for index!(tuple_type [Ix] $n) {
-            type Dim = [Ix; $n];
+            type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
-                index!(array_expr [self] $n)
+                Dim(index!(array_expr [self] $n))
             }
         }
 
@@ -572,18 +579,18 @@ macro_rules! tuple_to_array {
 
 index_item!(tuple_to_array [] 6);
 
-unsafe impl Dimension for [Ix; 0] {
+unsafe impl Dimension for Ix0 {
     type SliceArg = [Si; 0];
     type Pattern = ();
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
     #[inline]
-    fn slice(&self) -> &[Ix] { self }
+    fn slice(&self) -> &[Ix] { &self.0 }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
     #[inline]
-    fn _fastest_varying_stride_order(&self) -> Self { [] }
+    fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self.convert()
@@ -594,15 +601,15 @@ unsafe impl Dimension for [Ix; 0] {
     }
 }
 
-unsafe impl Dimension for [Ix; 1] {
+unsafe impl Dimension for Ix1 {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
-    fn slice(&self) -> &[Ix] { self }
+    fn slice(&self) -> &[Ix] { &self.0 }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self[0]
@@ -663,7 +670,7 @@ unsafe impl Dimension for [Ix; 1] {
     }
 }
 
-unsafe impl Dimension for [Ix; 2] {
+unsafe impl Dimension for Ix2 {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
     #[inline]
@@ -673,9 +680,9 @@ unsafe impl Dimension for [Ix; 2] {
         self.convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { self }
+    fn slice(&self) -> &[Ix] { &self.0 }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = index[0];
@@ -690,7 +697,7 @@ unsafe impl Dimension for [Ix; 2] {
                 return None;
             }
         }
-        Some([i, j])
+        Some(Ix2(i, j))
     }
 
     #[inline]
@@ -797,7 +804,7 @@ unsafe impl Dimension for [Ix; 2] {
     }
 }
 
-unsafe impl Dimension for [Ix; 3] {
+unsafe impl Dimension for Ix3 {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
     #[inline]
@@ -807,9 +814,9 @@ unsafe impl Dimension for [Ix; 3] {
         self.convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { self }
+    fn slice(&self) -> &[Ix] { &self.0 }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
 
     #[inline]
     fn size(&self) -> usize {
@@ -839,7 +846,7 @@ unsafe impl Dimension for [Ix; 3] {
                 }
             }
         }
-        Some([i, j, k])
+        Some(Ix3(i, j, k))
     }
 
     /// Self is an index, return the stride offset
@@ -857,7 +864,7 @@ unsafe impl Dimension for [Ix; 3] {
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut stride = *self;
-        let mut order = [0, 1, 2];
+        let mut order = Ix3(0, 1, 2);
         macro_rules! swap {
             ($stride:expr, $order:expr, $x:expr, $y:expr) => {
                 if $stride[$x] > $stride[$y] {
@@ -879,7 +886,7 @@ unsafe impl Dimension for [Ix; 3] {
 
 macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
-        unsafe impl Dimension for [Ix; $n] {
+        unsafe impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
             #[inline]
@@ -889,9 +896,9 @@ macro_rules! large_dim {
                 self.convert()
             }
             #[inline]
-            fn slice(&self) -> &[Ix] { self }
+            fn slice(&self) -> &[Ix] { &self.0 }
             #[inline]
-            fn slice_mut(&mut self) -> &mut [Ix] { self }
+            fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
         }
     )
 }
@@ -910,7 +917,7 @@ large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 
 /// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
-unsafe impl Dimension for Vec<Ix>
+unsafe impl Dimension for Dim<Vec<Ix>>
 {
     type SliceArg = [Si];
     type Pattern = Self;
@@ -951,12 +958,12 @@ impl RemoveAxis for Ix2 {
 macro_rules! impl_remove_axis_array(
     ($($n:expr),*) => (
     $(
-        impl RemoveAxis for [Ix; $n]
+        impl RemoveAxis for Dim<[Ix; $n]>
         {
-            type Smaller = [Ix; $n - 1];
+            type Smaller = Dim<[Ix; $n - 1]>;
             #[inline]
             fn remove_axis(&self, axis: Axis) -> Self::Smaller {
-                let mut tup = [0; $n - 1];
+                let mut tup = Dim([0; $n - 1]);
                 {
                     let mut it = tup.slice_mut().iter_mut();
                     for (i, &d) in self.slice().iter().enumerate() {
@@ -980,9 +987,9 @@ macro_rules! impl_remove_axis_array(
 impl_remove_axis_array!(3, 4, 5);
 
 
-impl RemoveAxis for Vec<Ix> {
-    type Smaller = Vec<Ix>;
-    fn remove_axis(&self, axis: Axis) -> Vec<Ix> {
+impl RemoveAxis for Dim<Vec<Ix>> {
+    type Smaller = Self;
+    fn remove_axis(&self, axis: Axis) -> Self {
         let mut res = self.clone();
         res.remove(axis.axis());
         res
@@ -1004,9 +1011,7 @@ impl RemoveAxis for Vec<Ix> {
 pub unsafe trait NdIndex<E> : Debug {
     #[doc(hidden)]
     fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;
-    fn index_unchecked(&self, strides: &E) -> isize {
-        unimplemented!()
-    }
+    fn index_unchecked(&self, strides: &E) -> isize;
 }
 
 unsafe impl<D> NdIndex<D> for D
@@ -1055,6 +1060,12 @@ unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
     fn index_checked(&self, dim: &Ix3, strides: &Ix3) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
+
+    fn index_unchecked(&self, strides: &Ix3) -> isize {
+        stride_offset(self.0, strides[0]) + 
+        stride_offset(self.1, strides[1]) +
+        stride_offset(self.2, strides[2])
+    }
 }
 
 unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
@@ -1062,18 +1073,47 @@ unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
     fn index_checked(&self, dim: &Ix4, strides: &Ix4) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
+    fn index_unchecked(&self, strides: &Ix4) -> isize {
+        zip(&**strides, &*self.convert()).map(|(&s, &i)| stride_offset(i, s)).sum()
+    }
 }
 unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Ix5, strides: &Ix5) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
+    fn index_unchecked(&self, strides: &Ix5) -> isize {
+        zip(&**strides, &*self.convert()).map(|(&s, &i)| stride_offset(i, s)).sum()
+    }
+}
+
+unsafe impl NdIndex<Ix2> for [Ix; 2] {
+    #[inline]
+    fn index_checked(&self, dim: &Ix2, strides: &Ix2) -> Option<isize> {
+        dim.stride_offset_checked(strides, &Ix2(self[0], self[1]))
+    }
+    fn index_unchecked(&self, strides: &Ix2) -> isize {
+        stride_offset(self[0], strides[0]) + 
+        stride_offset(self[1], strides[1])
+    }
+}
+
+unsafe impl NdIndex<Ix3> for [Ix; 3] {
+    #[inline]
+    fn index_checked(&self, dim: &Ix3, strides: &Ix3) -> Option<isize> {
+        dim.stride_offset_checked(strides, &Ix3(self[0], self[1], self[2]))
+    }
+    fn index_unchecked(&self, strides: &Ix3) -> isize {
+        stride_offset(self[0], strides[0]) + 
+        stride_offset(self[1], strides[1]) +
+        stride_offset(self[2], strides[2])
+    }
 }
 
 impl<'a> IntoDimension for &'a [Ix] {
-    type Dim = Vec<Ix>;
+    type Dim = Dim<Vec<Ix>>;
     fn into_dimension(self) -> Self::Dim {
-        self.to_vec()
+        Dim(self.to_vec())
     }
 }
 
@@ -1087,6 +1127,25 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
             offset += stride_offset(i, s);
         }
         Some(offset)
+    }
+    fn index_unchecked(&self, strides: &IxDyn) -> isize {
+        zip(&**strides, *self).map(|(&s, &i)| stride_offset(i, s)).sum()
+    }
+}
+
+unsafe impl<'a> NdIndex<IxDyn> for Vec<Ix> {
+    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
+        let mut offset = 0;
+        for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {
+            if i >= d {
+                return None;
+            }
+            offset += stride_offset(i, s);
+        }
+        Some(offset)
+    }
+    fn index_unchecked(&self, strides: &IxDyn) -> isize {
+        zip(&**strides, self).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 

@@ -7,17 +7,18 @@ use ndarray::{
     arr2,
     Axis,
     Dimension,
+    Dim,
 };
 
 #[test]
 fn remove_axis()
 {
-    assert_eq!([3].remove_axis(Axis(0)), []);
-    assert_eq!([1, 2].remove_axis(Axis(0)), [2]);
-    assert_eq!([4, 5, 6].remove_axis(Axis(1)), [4, 6]);
+    assert_eq!(Dim([3]).remove_axis(Axis(0)), Dim([]));
+    assert_eq!(Dim([1, 2]).remove_axis(Axis(0)), Dim([2]));
+    assert_eq!(Dim([4, 5, 6]).remove_axis(Axis(1)), Dim([4, 6]));
 
-    assert_eq!(vec![1,2].remove_axis(Axis(0)), vec![2]);
-    assert_eq!(vec![4, 5, 6].remove_axis(Axis(1)), vec![4, 6]);
+    assert_eq!(Dim(vec![1,2]).remove_axis(Axis(0)), Dim(vec![2]));
+    assert_eq!(Dim(vec![4, 5, 6]).remove_axis(Axis(1)), Dim(vec![4, 6]));
 
     let a = RcArray::<f32, _>::zeros((4,5));
     a.subview(Axis(1), 0);
@@ -46,18 +47,18 @@ fn dyn_dimension()
 
 #[test]
 fn fastest_varying_order() {
-    let strides = [2, 8, 4, 1];
+    let strides = Dim([2, 8, 4, 1]);
     let order = strides._fastest_varying_stride_order();
     assert_eq!(order.slice(), &[3, 0, 2, 1]);
 
-    assert_eq!([1, 3]._fastest_varying_stride_order(), [0, 1]);
-    assert_eq!([7, 2]._fastest_varying_stride_order(), [1, 0]);
-    assert_eq!([6, 1, 3]._fastest_varying_stride_order(), [1, 2, 0]);
+    assert_eq!(Dim([1, 3])._fastest_varying_stride_order(), Dim([0, 1]));
+    assert_eq!(Dim([7, 2])._fastest_varying_stride_order(), Dim([1, 0]));
+    assert_eq!(Dim([6, 1, 3])._fastest_varying_stride_order(), Dim([1, 2, 0]));
 
     // it's important that it produces distinct indices. Prefer the stable order
     // where 0 is before 1 when they are equal.
-    assert_eq!([2, 2]._fastest_varying_stride_order(), [0, 1]);
-    assert_eq!([2, 2, 1]._fastest_varying_stride_order(), [2, 0, 1]);
-    assert_eq!([2, 2, 3, 1, 2]._fastest_varying_stride_order(), [3, 0, 1, 4, 2]);
+    assert_eq!(Dim([2, 2])._fastest_varying_stride_order(), [0, 1]);
+    assert_eq!(Dim([2, 2, 1])._fastest_varying_stride_order(), [2, 0, 1]);
+    assert_eq!(Dim([2, 2, 3, 1, 2])._fastest_varying_stride_order(), [3, 0, 1, 4, 2]);
 }
 

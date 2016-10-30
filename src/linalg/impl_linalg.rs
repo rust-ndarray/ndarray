@@ -212,7 +212,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = Array::from_shape_vec_unchecked([m, n].set_f(column_major), v);
+            c = Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -266,7 +266,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
         for (i, rr) in enumerate(&mut res_elems) {
             unsafe {
                 *rr = (0..a).fold(A::zero(),
-                    move |s, k| s + *self.uget([i, k]) * *rhs.uget(k)
+                    move |s, k| s + *self.uget(Ix2(i, k)) * *rhs.uget(k)
                 );
             }
         }

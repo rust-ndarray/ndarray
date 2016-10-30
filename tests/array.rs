@@ -61,7 +61,7 @@ fn test_slice()
     }
 
     let vi = A.slice(s![1.., ..;2]);
-    assert_eq!(vi.dim(), [2, 2]);
+    assert_eq!(vi.shape(), &[2, 2]);
     let vi = A.slice(&[S, S]);
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
@@ -486,7 +486,7 @@ fn from_vec_dim_stride_0d() {
 #[test]
 fn from_vec_dim_stride_2d_1() {
     let two = [1., 2.];
-    let d = [2, 1];
+    let d = Ix2(2, 1);
     let s = d.default_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), two.to_vec()), Ok(_));
 }
@@ -494,7 +494,7 @@ fn from_vec_dim_stride_2d_1() {
 #[test]
 fn from_vec_dim_stride_2d_2() {
     let two = [1., 2.];
-    let d = [1, 2];
+    let d = Ix2(1, 2);
     let s = d.default_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), two.to_vec()), Ok(_));
 }
