@@ -126,7 +126,7 @@ impl<'a, A> Baseiter<'a, A, Ix1> {
             None => return None,
             Some(ix) => ix,
         };
-        self.dim -= 1;
+        self.dim[0] -= 1;
         let offset = <_>::stride_offset(&self.dim, &self.strides);
         if index == self.dim {
             self.index = None;
@@ -394,7 +394,7 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     type Item = ArrayView<'a, A, Ix1>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
-            unsafe { ArrayView::new_(ptr, self.inner_len, self.inner_stride as Ix) }
+            unsafe { ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) }
         })
     }
 
@@ -452,7 +452,7 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
             unsafe {
-                ArrayViewMut::new_(ptr, self.inner_len, self.inner_stride as Ix)
+                ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
             }
         })
     }

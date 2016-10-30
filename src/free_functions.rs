@@ -28,7 +28,7 @@ pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix1> {
 
 /// Create a zero-dimensional array view borrowing `x`.
 pub fn aview0<A>(x: &A) -> ArrayView0<A> {
-    unsafe { ArrayView::new_(x, (), ()) }
+    unsafe { ArrayView::new_(x, Ix0(), Ix0()) }
 }
 
 /// Create a one-dimensional array view with elements borrowing `xs`.

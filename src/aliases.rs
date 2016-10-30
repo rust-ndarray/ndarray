@@ -3,6 +3,11 @@
 
 use ::{Ix, Array, ArrayView, ArrayViewMut};
 
+#[allow(non_snake_case)]
+pub fn Ix0() -> Ix0 { [] }
+#[allow(non_snake_case)]
+pub fn Ix1(i0: Ix) -> Ix1 { [i0] }
+
 /// zero-dimensionial
 pub type Ix0 = [Ix; 0];
 /// one-dimensional

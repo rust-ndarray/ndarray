@@ -232,7 +232,7 @@ impl<S, A, D> ArrayBase<S, D>
             let dim = shape.dim;
             let strides = shape.strides;
             if dim.size_checked() != Some(v.len()) {
-                return Err(error::incompatible_shapes(&v.len(), &dim));
+                return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
             }
             unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
         }

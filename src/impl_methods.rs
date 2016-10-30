@@ -1298,7 +1298,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // the 0th element.
         self.subview(axis, 0).map(|first_elt| {
             unsafe {
-                mapping(ArrayView::new_(first_elt, view_len, view_stride))
+                mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
     }
