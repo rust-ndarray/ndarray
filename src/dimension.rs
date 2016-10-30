@@ -141,6 +141,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
     type SliceArg: ?Sized + AsRef<[Si]>;
+    type Tuple;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
     #[doc(hidden)]
@@ -148,6 +149,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
         unsafe {
             slice::from_raw_parts(self as *const _ as *const Ix, self.ndim())
         }
+    }
+
+    fn as_tuple(&self) -> Self::Tuple {
+        panic!()
     }
 
     #[doc(hidden)]
@@ -418,9 +423,126 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
     }
 }
 
+// Tuple to array conversion
 
+/// $m: macro callback
+/// $m is called with $arg and then the indices corresponding to the size argument
+macro_rules! index {
+    ($m:ident $arg:tt 0) => ($m!($arg));
+    ($m:ident $arg:tt 1) => ($m!($arg 0));
+    ($m:ident $arg:tt 2) => ($m!($arg 0 1));
+    ($m:ident $arg:tt 3) => ($m!($arg 0 1 2));
+    ($m:ident $arg:tt 4) => ($m!($arg 0 1 2 3));
+    ($m:ident $arg:tt 5) => ($m!($arg 0 1 2 3 4));
+    ($m:ident $arg:tt 6) => ($m!($arg 0 1 2 3 4 5));
+}
+
+macro_rules! index_item {
+    ($m:ident $arg:tt 0) => ();
+    ($m:ident $arg:tt 1) => ($m!($arg 0););
+    ($m:ident $arg:tt 2) => ($m!($arg 0 1););
+    ($m:ident $arg:tt 3) => ($m!($arg 0 1 2););
+    ($m:ident $arg:tt 4) => ($m!($arg 0 1 2 3););
+    ($m:ident $arg:tt 5) => ($m!($arg 0 1 2 3 4););
+    ($m:ident $arg:tt 6) => ($m!($arg 0 1 2 3 4 5););
+}
+
+pub trait IntoDimension {
+    type Dim: Dimension;
+    fn into_dimension(self) -> Self::Dim;
+}
+
+impl IntoDimension for () {
+    type Dim = [Ix; 0];
+    #[inline]
+    fn into_dimension(self) -> [Ix; 0] { [] }
+}
+impl IntoDimension for Ix {
+    type Dim = [Ix; 1];
+    #[inline]
+    fn into_dimension(self) -> [Ix; 1] { [self] }
+}
+impl IntoDimension for (Ix, Ix) {
+    type Dim = [Ix; 2];
+    #[inline]
+    fn into_dimension(self) -> [Ix; 2] { [self.0, self.1] }
+}
+
+pub trait Convert<T = usize> {
+    type To;
+    fn convert(self) -> Self::To;
+}
+
+pub trait ToIndex<D> {
+    fn to_index(self) -> D;
+}
+
+impl<T> ToIndex<T> for T where T: Dimension {
+    fn to_index(self) -> Self { self }
+}
+
+impl ToIndex<[Ix; 1]> for Ix {
+    fn to_index(self) -> [Ix; 1] { [self] }
+}
+impl ToIndex<[Ix; 2]> for (Ix, Ix) {
+    fn to_index(self) -> [Ix; 2] { [self.0, self.1] }
+}
+
+impl Convert<usize> for Ix {
+    type To = [Ix; 1];
+    fn convert(self) -> Self::To { [self] }
+}
+/*
+*/
+
+macro_rules! sub {
+    ($_x:tt $y:tt) => ($y);
+}
+
+macro_rules! tuple_type {
+    ([$T:ident] $($index:tt)*) => (
+        ( $(sub!($index $T), )* )
+    )
+}
+
+macro_rules! tuple_expr {
+    ([$self_:expr] $($index:tt)*) => (
+        ( $($self_[$index], )* )
+    )
+}
+
+macro_rules! array_expr {
+    ([$self_:expr] $($index:tt)*) => (
+        [$($self_ . $index, )*]
+    )
+}
+
+macro_rules! tuple_to_array {
+    ([] $($n:tt)*) => {
+        $(
+        impl<T: Copy> Convert<T> for [T; $n] {
+            type To = index!(tuple_type [T] $n);
+            fn convert(self) -> Self::To {
+                index!(tuple_expr [self] $n)
+            }
+        }
+        
+        impl<T: Copy> Convert<T> for index!(tuple_type [T] $n) {
+            type To = [T; $n];
+            fn convert(self) -> Self::To {
+                index!(array_expr [self] $n)
+            }
+        }
+        )*
+    }
+}
+
+index_item!(tuple_to_array [] 6);
+
+/*
 unsafe impl Dimension for () {
     type SliceArg = [Si; 0];
+    type Tuple = ();
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
@@ -431,9 +553,37 @@ unsafe impl Dimension for () {
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { }
 }
+*/
 
+unsafe impl Dimension for [Ix; 0] {
+    type SliceArg = [Si; 0];
+    type Tuple = ();
+    // empty product is 1 -> size is 1
+    #[inline]
+    fn ndim(&self) -> usize { 0 }
+    #[inline]
+    fn slice(&self) -> &[Ix] { self }
+    #[inline]
+    fn slice_mut(&mut self) -> &mut [Ix] { self }
+    #[inline]
+    fn _fastest_varying_stride_order(&self) -> Self { [] }
+}
+
+unsafe impl Dimension for [Ix; 1] {
+    type SliceArg = [Si; 1];
+    type Tuple = Ix;
+    #[inline]
+    fn ndim(&self) -> usize { 1 }
+    #[inline]
+    fn slice(&self) -> &[Ix] { self }
+    #[inline]
+    fn slice_mut(&mut self) -> &mut [Ix] { self }
+}
+
+/*
 unsafe impl Dimension for Ix {
     type SliceArg = [Si; 1];
+    type Tuple = Ix;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
@@ -483,7 +633,25 @@ unsafe impl Dimension for Ix {
         }
     }
 }
+*/
 
+unsafe impl Dimension for [Ix; 2] {
+    type SliceArg = [Si; 2];
+    type Tuple = (Ix, Ix);
+    #[inline]
+    fn ndim(&self) -> usize { 2 }
+    #[inline]
+    fn as_tuple(&self) -> Self::Tuple {
+        self.convert()
+    }
+    #[inline]
+    fn slice(&self) -> &[Ix] { self }
+    #[inline]
+    fn slice_mut(&mut self) -> &mut [Ix] { self }
+}
+
+
+/*
 unsafe impl Dimension for (Ix, Ix) {
     type SliceArg = [Si; 2];
     #[inline]
@@ -556,9 +724,11 @@ unsafe impl Dimension for (Ix, Ix) {
         }
     }
 }
+*/
 
 unsafe impl Dimension for (Ix, Ix, Ix) {
     type SliceArg = [Si; 3];
+    type Tuple = Self;
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
@@ -618,6 +788,7 @@ macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
         unsafe impl Dimension for ($($ix),+) {
             type SliceArg = [Si; $n];
+            type Tuple = Self;
             #[inline]
             fn ndim(&self) -> usize { $n }
         }
@@ -639,6 +810,7 @@ large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 unsafe impl Dimension for Vec<Ix>
 {
     type SliceArg = [Si];
+    type Tuple = Self;
     fn ndim(&self) -> usize { self.len() }
     fn slice(&self) -> &[Ix] { self }
     fn slice_mut(&mut self) -> &mut [Ix] { self }
@@ -682,6 +854,7 @@ impl RemoveAxis for ($from $(,$more)*)
     )
 );
 
+/*
 impl RemoveAxis for Ix {
     type Smaller = ();
     #[inline]
@@ -697,6 +870,7 @@ impl RemoveAxis for (Ix, Ix) {
         if axis == 0 { self.1 } else { self.0 }
     }
 }
+*/
 
 macro_rules! impl_shrink_recursive(
     ($ix:ident, ) => (impl_shrink!($ix,););
@@ -706,8 +880,36 @@ macro_rules! impl_shrink_recursive(
     )
 );
 
+macro_rules! impl_remove_axis_array(
+    ($n:expr) => (
+impl RemoveAxis for [Ix; $n]
+{
+    type Smaller = [Ix; $n - 1];
+    #[inline]
+    fn remove_axis(&self, axis: Axis) -> Self::Smaller {
+        let mut tup = [0; $n - 1];
+        {
+            let mut it = tup.slice_mut().iter_mut();
+            for (i, &d) in self.slice().iter().enumerate() {
+                if i == axis.axis() {
+                    continue;
+                }
+                for rr in it.by_ref() {
+                    *rr = d;
+                    break
+                }
+            }
+        }
+        tup
+    }
+}
+    );
+);
+
+impl_remove_axis_array!(2);
+
 // 12 is the maximum number for having the Eq trait from libstd
-impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
+//impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
 
 impl RemoveAxis for Vec<Ix> {
     type Smaller = Vec<Ix>;
@@ -745,6 +947,7 @@ unsafe impl<D> NdIndex for D
     }
 }
 
+/*
 unsafe impl NdIndex for [Ix; 0] {
     type Dim = ();
     #[inline]
@@ -752,7 +955,9 @@ unsafe impl NdIndex for [Ix; 0] {
         dim.stride_offset_checked(strides, &())
     }
 }
+*/
 
+/*
 unsafe impl NdIndex for [Ix; 1] {
     type Dim = Ix;
     #[inline]
@@ -760,7 +965,9 @@ unsafe impl NdIndex for [Ix; 1] {
         dim.stride_offset_checked(strides, &self[0])
     }
 }
+*/
 
+/*
 unsafe impl NdIndex for [Ix; 2] {
     type Dim = (Ix, Ix);
     #[inline]
@@ -769,6 +976,7 @@ unsafe impl NdIndex for [Ix; 2] {
         dim.stride_offset_checked(strides, &index)
     }
 }
+*/
 
 unsafe impl NdIndex for [Ix; 3] {
     type Dim = (Ix, Ix, Ix);

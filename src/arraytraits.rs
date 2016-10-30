@@ -221,7 +221,7 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayBase<ViewRepr<&'a A>, Ix1>
     fn from(slice: &'a Slice) -> Self {
         let xs = slice.as_ref();
         unsafe {
-            Self::new_(xs.as_ptr(), xs.len(), 1)
+            Self::new_(xs.as_ptr(), [xs.len()], [1])
         }
     }
 }
@@ -247,7 +247,7 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayBase<ViewRepr<&'a mut A>
     fn from(slice: &'a mut Slice) -> Self {
         let xs = slice.as_mut();
         unsafe {
-            Self::new_(xs.as_mut_ptr(), xs.len(), 1)
+            Self::new_(xs.as_mut_ptr(), [xs.len()], [1])
         }
     }
 }

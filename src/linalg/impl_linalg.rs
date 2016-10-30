@@ -40,7 +40,7 @@ const GEMM_BLAS_CUTOFF: usize = 7;
 type blas_index = c_int; // blas index type
 
 
-impl<A, S> ArrayBase<S, Ix>
+impl<A, S> ArrayBase<S, Ix1>
     where S: Data<Elem=A>,
 {
     /// Compute the dot product of one-dimensional arrays.
@@ -49,14 +49,14 @@ impl<A, S> ArrayBase<S, Ix>
     /// of complex operands, and thus not their inner product).
     ///
     /// **Panics** if the arrays are not of the same length.
-    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
         self.dot_impl(rhs)
     }
 
-    fn dot_generic<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+    fn dot_generic<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
@@ -77,7 +77,7 @@ impl<A, S> ArrayBase<S, Ix>
     }
 
     #[cfg(not(feature="blas"))]
-    fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+    fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
@@ -85,7 +85,7 @@ impl<A, S> ArrayBase<S, Ix>
     }
 
     #[cfg(feature="blas")]
-    fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix>) -> A
+    fn dot_impl<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
     {
@@ -199,7 +199,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
     {
         let a = self.view();
         let b = b.view();
-        let ((m, k), (k2, n)) = (a.dim(), b.dim());
+        let ((m, k), (k2, n)) = (a.dim_tuple(), b.dim_tuple());
         if k != k2 || m.checked_mul(n).is_none() {
             return dot_shape_error(m, k, k2, n);
         }
@@ -212,7 +212,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
+            c = Array::from_shape_vec_unchecked([m, n].set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -245,15 +245,15 @@ fn general_dot_shape_error(m: usize, k: usize, k2: usize, n: usize, c1: usize, c
 /// Return a result array with shape *M*.
 ///
 /// **Panics** if shapes are incompatible.
-impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, Ix2>
+impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
     where S: Data<Elem=A>,
           S2: Data<Elem=A>,
           A: LinalgScalar,
 {
-    type Output = Array<A, Ix>;
-    fn dot(&self, rhs: &ArrayBase<S2, Ix>) -> Array<A, Ix>
+    type Output = Array<A, Ix1>;
+    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
     {
-        let ((m, a), n) = (self.dim(), rhs.dim());
+        let ((m, a), n) = (self.dim_tuple(), rhs.dim_tuple());
         if a != n {
             return dot_shape_error(m, a, n, 1);
         }
@@ -266,7 +266,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix>> for ArrayBase<S, Ix2>
         for (i, rr) in enumerate(&mut res_elems) {
             unsafe {
                 *rr = (0..a).fold(A::zero(),
-                    move |s, k| s + *self.uget((i, k)) * *rhs.uget(k)
+                    move |s, k| s + *self.uget([i, k]) * *rhs.uget(k)
                 );
             }
         }
@@ -312,7 +312,7 @@ fn mat_mul_impl<A>(alpha: A,
 {
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
-    let ((mut m, a), (_, mut n)) = (lhs.dim, rhs.dim);
+    let ((mut m, a), (_, mut n)) = (lhs.dim_tuple(), rhs.dim_tuple());
     if !(m > cut || n > cut || a > cut) ||
         !(same_type::<A, f32>() || same_type::<A, f64>()) {
         return mat_mul_general(alpha, lhs, rhs, beta, c);
@@ -351,15 +351,15 @@ fn mat_mul_impl<A>(alpha: A,
                     && blas_row_major_2d::<$ty, _>(&c_)
                 {
                     let (m, k) = match lhs_trans {
-                        CblasNoTrans => lhs_.dim(),
+                        CblasNoTrans => lhs_.dim_tuple(),
                         _ => {
-                            let (rows, cols) = lhs_.dim();
+                            let (rows, cols) = lhs_.dim_tuple();
                             (cols, rows)
                         }
                     };
                     let n = match rhs_trans {
-                        CblasNoTrans => rhs_.dim().1,
-                        _ => rhs_.dim().0,
+                        CblasNoTrans => rhs_.dim()[1],
+                        _ => rhs_.dim()[0],
                     };
                     // adjust strides, these may [1, 1] for column matrices
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
@@ -403,7 +403,7 @@ fn mat_mul_general<A>(alpha: A,
                       c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
-    let ((m, k), (_, n)) = (lhs.dim, rhs.dim);
+    let ((m, k), (_, n)) = (lhs.dim_tuple(), rhs.dim_tuple());
 
     // common parameters for gemm
     let ap = lhs.as_ptr();
@@ -486,8 +486,8 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
           S3: DataMut<Elem=A>,
           A: LinalgScalar,
 {
-    let ((m, k), (k2, n)) = (a.dim(), b.dim());
-    let (m2, n2) = c.dim();
+    let ((m, k), (k2, n)) = (a.dim_tuple(), b.dim_tuple());
+    let (m2, n2) = c.dim_tuple();
     if k != k2 || m != m2 || n != n2 {
         return general_dot_shape_error(m, k, k2, n, m2, n2);
     }
@@ -511,7 +511,7 @@ fn cast_as<A: Any + Copy, B: Any + Copy>(a: &A) -> B {
 }
 
 #[cfg(feature="blas")]
-fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix>) -> bool
+fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix1>) -> bool
     where S: Data,
           A: Any,
           S::Elem: Any,
@@ -552,7 +552,7 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     {
         return false;
     }
-    let (m, n) = a.dim();
+    let (m, n) = a.dim_tuple();
     if m > blas_index::max_value() as usize ||
         n > blas_index::max_value() as usize
     {

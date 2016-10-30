@@ -46,6 +46,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return the shape of the array.
     pub fn dim(&self) -> D {
         self.dim.clone()
+        //self.dim.as_tuple()
+    }
+
+    pub fn dim_tuple(&self) -> D::Tuple {
+        self.dim.as_tuple()
     }
 
     /// Return the shape of the array as a slice.
@@ -248,7 +253,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
-    pub unsafe fn uget(&self, index: D) -> &A {
+    pub unsafe fn uget<I>(&self, index: I) -> &A
+        where I: ::dimension::ToIndex<D>,
+    {
+        let index = index.to_index();
         arraytraits::debug_bounds_check(self, &index);
         let off = D::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
@@ -261,9 +269,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
     /// **Note:** The array must be uniquely held when mutating it.
     #[inline]
-    pub unsafe fn uget_mut(&mut self, index: D) -> &mut A
-        where S: DataMut
+    pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
+        where S: DataMut,
+              I: ::dimension::ToIndex<D>,
     {
+        let index = index.to_index();
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
         let off = D::stride_offset(&index, &self.strides);
@@ -621,8 +631,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         ArrayBase {
             data: self.data,
             ptr: self.ptr,
-            dim: len,
-            strides: stride as Ix,
+            dim: [len],
+            strides: [stride as Ix],
         }
     }
 

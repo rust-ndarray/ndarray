@@ -4,11 +4,11 @@
 use ::{Ix, Array, ArrayView, ArrayViewMut};
 
 /// zero-dimensionial
-pub type Ix0 = ();
+pub type Ix0 = [Ix; 0];
 /// one-dimensional
-pub type Ix1 = Ix;
+pub type Ix1 = [Ix; 1];
 /// two-dimensional
-pub type Ix2 = (Ix, Ix);
+pub type Ix2 = [Ix; 2];
 /// three-dimensional
 pub type Ix3 = (Ix, Ix, Ix);
 /// four-dimensional

@@ -19,6 +19,7 @@ use linspace;
 use error::{self, ShapeError, ErrorKind};
 use Indexes;
 use iterators::{to_vec, to_vec_mapped};
+use shape_builder::IntoShape;
 
 /// Constructor methods for one-dimensional arrays.
 ///
@@ -140,12 +141,12 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem<Sh>(shape: Sh, elem: A) -> Self
         where A: Clone,
-              Sh: Into<Shape<D>>,
+              Sh: IntoShape<Dim=D>,
     {
         // Note: We don't need to check the case of a size between
         // isize::MAX -> usize::MAX; in this case, the vec constructor itself
         // panics.
-        let shape = shape.into();
+        let shape = shape.into_shape();
         let size = size_checked_unwrap!(shape.dim);
         let v = vec![elem; size];
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
@@ -156,7 +157,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn zeros<Sh>(shape: Sh) -> Self
         where A: Clone + Zero,
-              Sh: Into<Shape<D>>,
+              Sh: IntoShape<Dim=D>,
     {
         Self::from_elem(shape, A::zero())
     }
@@ -166,9 +167,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn default<Sh>(shape: Sh) -> Self
         where A: Default,
-              Sh: Into<Shape<D>>,
+              Sh: IntoShape<Dim=D>,
     {
-        let shape = shape.into();
+        let shape = shape.into_shape();
         let v = to_vec((0..shape.dim.size()).map(|_| A::default()));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
@@ -179,10 +180,10 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
-        where Sh: Into<Shape<D>>,
+        where Sh: IntoShape<Dim=D>,
               F: FnMut(D) -> A,
     {
-        let shape = shape.into();
+        let shape = shape.into_shape();
         let v = to_vec_mapped(Indexes::new(shape.dim.clone()), f);
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }

@@ -1,6 +1,7 @@
 
 use Dimension;
 use {Shape, StrideShape};
+use Ix;
 
 /// A trait for `Shape` and `D where D: Dimension` that allows
 /// customizing the memory layout (strides) of an array shape.
@@ -15,6 +16,53 @@ pub trait ShapeBuilder {
     fn strides(self, strides: Self::Dim) -> StrideShape<Self::Dim>;
 }
 
+pub trait IntoShape {
+    type Dim: Dimension;
+    fn into_shape(self) -> Shape<Self::Dim>;
+}
+
+impl<D: Dimension> IntoShape for D {
+    type Dim = D;
+    fn into_shape(self) -> Shape<Self::Dim> {
+        Shape {
+            dim: self,
+            is_c: true,
+        }
+    }
+}
+/*
+*/
+
+impl IntoShape for () {
+    type Dim = [Ix; 0];
+    fn into_shape(self) -> Shape<Self::Dim> {
+        Shape {
+            dim: [],
+            is_c: true,
+        }
+    }
+}
+
+impl IntoShape for Ix {
+    type Dim = [Ix; 1];
+    fn into_shape(self) -> Shape<Self::Dim> {
+        Shape {
+            dim: [self],
+            is_c: true,
+        }
+    }
+}
+
+impl IntoShape for (Ix, Ix) {
+    type Dim = [Ix; 2];
+    fn into_shape(self) -> Shape<Self::Dim> {
+        Shape {
+            dim: [self.0, self.1],
+            is_c: true,
+        }
+    }
+}
+
 impl<D> From<D> for Shape<D>
     where D: Dimension
 {
@@ -26,15 +74,33 @@ impl<D> From<D> for Shape<D>
     }
 }
 
-impl<D> From<D> for StrideShape<D>
-    where D: Dimension
+impl From<Ix> for Shape<[Ix; 1]>
 {
-    fn from(d: D) -> Self {
-        StrideShape {
-            strides: d.default_strides(),
-            dim: d,
-            custom: false,
+    fn from(ix: Ix) -> Self {
+        Shape {
+            dim: [ix],
+            is_c: true,
         }
+    }
+}
+
+impl From<(Ix, Ix)> for Shape<[Ix; 2]>
+{
+    fn from(ix: (Ix, Ix)) -> Self {
+        Shape {
+            dim: [ix.0, ix.1],
+            is_c: true,
+        }
+    }
+}
+
+impl<T, D> From<T> for StrideShape<D>
+    where D: Dimension,
+          T: IntoShape<Dim=D>,
+{
+    fn from(d: T) -> Self {
+        let shape = d.into_shape();
+        StrideShape::from(shape)
     }
 }
 
