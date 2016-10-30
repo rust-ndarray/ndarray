@@ -96,7 +96,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
         where G: FnMut(Acc, *mut A) -> Acc,
     {
         let ndim = self.dim.ndim();
-        assert!(ndim > 0);
+        debug_assert!(ndim > 0);
         let mut accum = init;
         loop {
             if let Some(mut index) = self.index.clone() {
@@ -104,12 +104,19 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
                 let elem_index = index.last_elem();
                 let len = self.dim.last_elem();
                 let offset = D::stride_offset(&index, &self.strides);
-                for i in 0..len - elem_index {
-                    unsafe {
-                        accum = g(accum, self.ptr.offset(offset + i as isize * stride));
+                unsafe {
+                    let mut ptr = self.ptr.offset(offset);
+                    let mut i = elem_index;
+                    loop {
+                        accum = g(accum, ptr);
+                        i += 1;
+                        if i >= len {
+                            break;
+                        }
+                        ptr = ptr.offset(stride);
                     }
                 }
-                index.slice_mut()[ndim - 1] = len - 1;
+                index.set_last_elem(len - 1);
                 self.index = self.dim.next_for(index);
             } else {
                 break;
@@ -180,7 +187,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
         where G: FnMut(Acc, Self::Item) -> Acc,
     {
         unsafe {
-            self.inner.fold(init, |acc, ptr| g(acc, &*ptr))
+            self.inner.fold(init, move |acc, ptr| g(acc, &*ptr))
         }
     }
 }
