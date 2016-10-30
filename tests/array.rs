@@ -10,6 +10,7 @@ use ndarray::{
     rcarr2,
     arr0, arr3,
     aview_mut1,
+    Ix2,
 };
 use ndarray::Indexes;
 use itertools::free::enumerate;
@@ -1053,7 +1054,7 @@ fn test_view_from_shape_ptr() {
 
 #[test]
 fn test_default() {
-    let a = <Array<f32, (Ix, Ix)> as Default>::default();
+    let a = <Array<f32, Ix2> as Default>::default();
     assert_eq!(a, aview2(&[[0.0; 0]; 0]));
 
 
