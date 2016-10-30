@@ -148,14 +148,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator of indexes and references to the elements of the array.
     ///
-    /// Iterator element type is `(D, &A)`.
+    /// Iterator element type is `(D::Tuple, &A)`.
     pub fn indexed_iter(&self) -> Indexed<A, D> {
         Indexed(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
-    /// Iterator element type is `(D, &mut A)`.
+    /// Iterator element type is `(D::Tuple, &mut A)`.
     pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {

@@ -142,7 +142,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
     type SliceArg: ?Sized + AsRef<[Si]>;
-    type Tuple;
+    type Tuple: IntoDimension<Dim=Self>;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
     #[doc(hidden)]
