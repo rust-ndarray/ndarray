@@ -33,6 +33,14 @@ impl<D> IntoShape for D
         }
     }
 }
+impl<D> IntoShape for Shape<D>
+    where D: Dimension,
+{
+    type Dim = D;
+    fn into_shape(self) -> Shape<Self::Dim> {
+        self
+    }
+}
 /*
 
 impl IntoShape for () {
@@ -101,12 +109,19 @@ impl<T, D> From<T> for StrideShape<D>
     where D: Dimension,
           T: IntoShape<Dim=D>,
 {
-    fn from(d: T) -> Self {
-        let shape = d.into_shape();
-        StrideShape::from(shape)
+    fn from(value: T) -> Self {
+        let shape = value.into_shape();
+        let d = shape.dim;
+        let st = if shape.is_c { d.default_strides() } else { d.fortran_strides() };
+        StrideShape {
+            strides: st,
+            dim: d,
+            custom: false,
+        }
     }
 }
 
+/*
 impl<D> From<Shape<D>> for StrideShape<D>
     where D: Dimension
 {
@@ -120,6 +135,7 @@ impl<D> From<Shape<D>> for StrideShape<D>
         }
     }
 }
+*/
 
 impl<D> ShapeBuilder for D
     where D: Dimension

@@ -795,11 +795,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                 [3., 4.]])
     /// );
     /// ```
-    pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E>
+    pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E::Dim>
         where S: DataShared + DataOwned,
               A: Clone,
-              E: Dimension,
+              E: IntoDimension,
     {
+        let shape = shape.into_dimension();
         if shape.size_checked() != Some(self.dim.size()) {
             panic!("ndarray: incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(),
@@ -894,8 +895,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     == aview2(&[[1., 0.]; 10])
     /// );
     /// ```
-    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<A, E>>
-        where E: Dimension
+    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<A, E::Dim>>
+        where E: IntoDimension
     {
         /// Return new stride when trying to grow `from` into shape `to`
         ///
@@ -938,6 +939,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
             Some(new_stride)
         }
+        let dim = dim.into_dimension();
 
         // Note: zero strides are safe precisely because we return an read-only view
         let broadcast_strides = match upcast(&dim, &self.dim, &self.strides) {
