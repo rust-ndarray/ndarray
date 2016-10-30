@@ -22,7 +22,9 @@ pub type Ix2 = [Ix; 2];
 /// three-dimensional
 pub type Ix3 = [Ix; 3];
 /// four-dimensional
-pub type Ix4 = (Ix, Ix, Ix, Ix);
+pub type Ix4 = [Ix; 4];
+/// five-dimensional
+pub type Ix5 = [Ix; 5];
 /// dynamic-dimensional
 pub type IxDyn = Vec<Ix>;
 

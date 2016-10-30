@@ -48,7 +48,7 @@ macro_rules! debug_bounds_check {
 #[inline(always)]
 pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
     where D: Dimension,
-          I: NdIndex<Dim=D>,
+          I: NdIndex<D>,
           S: Data,
 {
     debug_bounds_check!(_a, *_index);
@@ -59,7 +59,7 @@ pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
 /// **Panics** if index is out of bounds.
 impl<S, D, I> Index<I> for ArrayBase<S, D>
     where D: Dimension,
-          I: NdIndex<Dim=D>,
+          I: NdIndex<D>,
           S: Data,
 {
     type Output = S::Elem;
@@ -75,7 +75,7 @@ impl<S, D, I> Index<I> for ArrayBase<S, D>
 /// **Panics** if index is out of bounds.
 impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
     where D: Dimension,
-          I: NdIndex<Dim=D>,
+          I: NdIndex<D>,
           S: DataMut,
 {
     #[inline]

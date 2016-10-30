@@ -231,7 +231,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// );
     /// ```
     pub fn get<I>(&self, index: I) -> Option<&A>
-        where I: NdIndex<Dim=D>,
+        where I: NdIndex<D>,
     {
         let ptr = self.ptr;
         index.index_checked(&self.dim, &self.strides)
@@ -242,7 +242,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// if the index is out of bounds.
     pub fn get_mut<I>(&mut self, index: I) -> Option<&mut A>
         where S: DataMut,
-              I: NdIndex<Dim=D>,
+              I: NdIndex<D>,
     {
         let ptr = self.as_mut_ptr();
         index.index_checked(&self.dim, &self.strides)
@@ -256,11 +256,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
     pub unsafe fn uget<I>(&self, index: I) -> &A
-        where I: NdIndex<Dim=D>,
+        where I: NdIndex<D>,
     {
-        let index = index.into_dimension();
         arraytraits::debug_bounds_check(self, &index);
-        //let off = D::stride_offset(&index, &self.strides);
         let off = index.index_unchecked(&self.strides);
         &*self.ptr.offset(off)
     }
@@ -274,12 +272,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
         where S: DataMut,
-              I: NdIndex<Dim=D>,
+              I: NdIndex<D>,
     {
-        let index = index.into_dimension();
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
-        //let off = D::stride_offset(&index, &self.strides);
         let off = index.index_unchecked(&self.strides);
         &mut *self.ptr.offset(off)
     }
@@ -291,7 +287,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ***Panics*** if an index is out of bounds.
     pub fn swap<I>(&mut self, index1: I, index2: I)
         where S: DataMut,
-              I: NdIndex<Dim=D>,
+              I: NdIndex<D>,
     {
         let ptr1: *mut _ = &mut self[index1];
         let ptr2: *mut _ = &mut self[index2];

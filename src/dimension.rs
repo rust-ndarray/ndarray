@@ -14,7 +14,7 @@ use super::{Si, Ix, Ixs};
 use super::{zipsl, zipsl_mut};
 use error::{from_kind, ErrorKind, ShapeError};
 use ZipExt;
-use {Ix0, Ix1, Ix2};
+use {Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, IxDyn};
 use {ArrayView1, ArrayViewMut1};
 
 /// Calculate offset from `Ix` stride converting sign properly
@@ -1000,65 +1000,71 @@ impl RemoveAxis for Vec<Ix> {
 /// ```
 ///
 /// **Note** that `NdIndex` is implemented for all `D where D: Dimension`.
-pub unsafe trait NdIndex : Debug + IntoDimension {
+pub unsafe trait NdIndex<E> : Debug {
     #[doc(hidden)]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;
-    fn index_unchecked(&self, strides: &Self::Dim) -> isize {
+    fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;
+    fn index_unchecked(&self, strides: &E) -> isize {
         unimplemented!()
     }
 }
 
-unsafe impl<D> NdIndex for D
+unsafe impl<D> NdIndex<D> for D
     where D: Dimension
 {
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &D, strides: &D) -> Option<isize> {
         dim.stride_offset_checked(strides, self)
     }
-    fn index_unchecked(&self, strides: &Self::Dim) -> isize {
+    fn index_unchecked(&self, strides: &D) -> isize {
         D::stride_offset(self, strides)
     }
 }
 
-unsafe impl NdIndex for () {
+unsafe impl NdIndex<Ix0> for () {
     #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &Ix0, strides: &Ix0) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix0())
     }
+    fn index_unchecked(&self, strides: &Ix0) -> isize {
+        0
+    }
 }
 
-unsafe impl NdIndex for Ix {
+unsafe impl NdIndex<Ix1> for Ix {
     #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &Ix1, strides: &Ix1) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix1(*self))
     }
+    fn index_unchecked(&self, strides: &Ix1) -> isize {
+        stride_offset(*self, strides[0])
+    }
 }
 
-unsafe impl NdIndex for (Ix, Ix) {
+unsafe impl NdIndex<Ix2> for (Ix, Ix) {
     #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &Ix2, strides: &Ix2) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix2(self.0, self.1))
     }
-    fn index_unchecked(&self, strides: &Self::Dim) -> isize {
+    fn index_unchecked(&self, strides: &Ix2) -> isize {
         stride_offset(self.0, strides[0]) + 
         stride_offset(self.1, strides[1])
     }
 }
-unsafe impl NdIndex for (Ix, Ix, Ix) {
+unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
     #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &Ix3, strides: &Ix3) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
 }
 
-unsafe impl NdIndex for (Ix, Ix, Ix, Ix) {
+unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
     #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &Ix4, strides: &Ix4) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
 }
-unsafe impl NdIndex for (Ix, Ix, Ix, Ix, Ix) {
+unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+    fn index_checked(&self, dim: &Ix5, strides: &Ix5) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
 }
@@ -1070,8 +1076,8 @@ impl<'a> IntoDimension for &'a [Ix] {
     }
 }
 
-unsafe impl<'a> NdIndex for &'a [Ix] {
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
+    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
         let mut offset = 0;
         for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {
             if i >= d {
