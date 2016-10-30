@@ -494,31 +494,11 @@ pub trait IntoDimension {
     fn into_dimension(self) -> Self::Dim;
 }
 
-/*
-impl IntoDimension for () {
-    type Dim = [Ix; 0];
-    #[inline]
-    fn into_dimension(self) -> [Ix; 0] { [] }
-}
-*/
 impl IntoDimension for Ix {
     type Dim = [Ix; 1];
     #[inline(always)]
     fn into_dimension(self) -> [Ix; 1] { [self] }
 }
-/*
-impl IntoDimension for (Ix, Ix) {
-    type Dim = [Ix; 2];
-    #[inline]
-    fn into_dimension(self) -> [Ix; 2] { [self.0, self.1] }
-}
-
-impl IntoDimension for (Ix, Ix, Ix) {
-    type Dim = [Ix; 3];
-    #[inline]
-    fn into_dimension(self) -> [Ix; 3] { [self.0, self.1, self.2] }
-}
-*/
 
 impl<D> IntoDimension for D where D: Dimension {
     type Dim = D;
@@ -590,22 +570,6 @@ macro_rules! tuple_to_array {
 }
 
 index_item!(tuple_to_array [] 6);
-
-/*
-unsafe impl Dimension for () {
-    type SliceArg = [Si; 0];
-    type Tuple = ();
-    // empty product is 1 -> size is 1
-    #[inline]
-    fn ndim(&self) -> usize { 0 }
-    #[inline]
-    fn slice(&self) -> &[Ix] { &[] }
-    #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
-    #[inline]
-    fn _fastest_varying_stride_order(&self) -> Self { }
-}
-*/
 
 unsafe impl Dimension for [Ix; 0] {
     type SliceArg = [Si; 0];
@@ -845,20 +809,23 @@ unsafe impl Dimension for [Ix; 3] {
     fn slice(&self) -> &[Ix] { self }
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self }
-}
 
-/*
-unsafe impl Dimension for (Ix, Ix, Ix) {
-    type SliceArg = [Si; 3];
-    type Tuple = Self;
     #[inline]
-    fn ndim(&self) -> usize { 3 }
+    fn size(&self) -> usize {
+        let m = self[0];
+        let n = self[1];
+        let o = self[2];
+        m as usize * n as usize * o as usize
+    }
+
     #[inline]
-    fn size(&self) -> usize { let (m, n, o) = *self; m as usize * n as usize * o as usize }
-    #[inline]
-    fn next_for(&self, index: (Ix, Ix, Ix)) -> Option<(Ix, Ix, Ix)> {
-        let (mut i, mut j, mut k) = index;
-        let (imax, jmax, kmax) = *self;
+    fn next_for(&self, index: Self) -> Option<Self> {
+        let mut i = index[0];
+        let mut j = index[1];
+        let mut k = index[2];
+        let imax = self[0];
+        let jmax = self[1];
+        let kmax = self[2];
         k += 1;
         if k == kmax {
             k = 0;
@@ -871,21 +838,25 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
                 }
             }
         }
-        Some((i, j, k))
+        Some([i, j, k])
     }
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &(Ix, Ix, Ix), strides: &(Ix, Ix, Ix)) -> isize {
-        let (i, j, k) = *index;
-        let (s, t, u) = *strides;
+    fn stride_offset(index: &Self, strides: &Self) -> isize {
+        let i = index[0];
+        let j = index[1];
+        let k = index[2];
+        let s = strides[0];
+        let t = strides[1];
+        let u = strides[2];
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
 
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut stride = *self;
-        let mut order = (0, 1, 2);
+        let mut order = [0, 1, 2];
         macro_rules! swap {
             ($stride:expr, $order:expr, $x:expr, $y:expr) => {
                 if $stride[$x] > $stride[$y] {
@@ -896,7 +867,6 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
         }
         {
             // stable sorting network for 3 elements
-            let order = order.slice_mut();
             let strides = stride.slice_mut();
             swap![strides, order, 1, 2];
             swap![strides, order, 0, 1];
@@ -905,7 +875,6 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
         order
     }
 }
-*/
 
 macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
@@ -962,35 +931,6 @@ pub trait RemoveAxis : Dimension {
     fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
-macro_rules! impl_shrink(
-    ($_a:ident, ) => {}; // implement this case manually below
-    ($_a:ident, $_b:ident, ) => {}; // implement this case manually below
-    ($from:ident, $($more:ident,)*) => (
-impl RemoveAxis for ($from $(,$more)*)
-{
-    type Smaller = ($($more),*);
-    #[allow(unused_parens)]
-    #[inline]
-    fn remove_axis(&self, axis: Axis) -> ($($more),*) {
-        let mut tup = ($(0 as $more),*);
-        {
-            let mut it = tup.slice_mut().iter_mut();
-            for (i, &d) in self.slice().iter().enumerate() {
-                if i == axis.axis() {
-                    continue;
-                }
-                for rr in it.by_ref() {
-                    *rr = d;
-                    break
-                }
-            }
-        }
-        tup
-    }
-}
-    )
-);
-
 impl RemoveAxis for Ix1 {
     type Smaller = Ix0;
     #[inline]
@@ -1006,16 +946,6 @@ impl RemoveAxis for Ix2 {
         if axis == 0 { Ix1(self[1]) } else { Ix1(self[0]) }
     }
 }
-
-/*
-macro_rules! impl_shrink_recursive(
-    ($ix:ident, ) => (impl_shrink!($ix,););
-    ($ix1:ident, $($ix:ident,)*) => (
-        impl_shrink_recursive!($($ix,)*);
-        impl_shrink!($ix1, $($ix,)*);
-    )
-);
-*/
 
 macro_rules! impl_remove_axis_array(
     ($($n:expr),*) => (
@@ -1045,10 +975,9 @@ macro_rules! impl_remove_axis_array(
     );
 );
 
-impl_remove_axis_array!(3);
-
 // 12 is the maximum number for having the Eq trait from libstd
-//impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
+impl_remove_axis_array!(3, 4, 5);
+
 
 impl RemoveAxis for Vec<Ix> {
     type Smaller = Vec<Ix>;
@@ -1075,7 +1004,7 @@ pub unsafe trait NdIndex : Debug + IntoDimension {
     #[doc(hidden)]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;
     fn index_unchecked(&self, strides: &Self::Dim) -> isize {
-        panic!()
+        unimplemented!()
     }
 }
 
