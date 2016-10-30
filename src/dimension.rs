@@ -579,6 +579,7 @@ macro_rules! tuple_to_array {
 
         impl IntoDimension for index!(tuple_type [Ix] $n) {
             type Dim = [Ix; $n];
+            #[inline]
             fn into_dimension(self) -> Self::Dim {
                 index!(array_expr [self] $n)
             }
