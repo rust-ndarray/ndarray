@@ -14,6 +14,7 @@ use super::{Si, Ix, Ixs};
 use super::{zipsl, zipsl_mut};
 use error::{from_kind, ErrorKind, ShapeError};
 use ZipExt;
+use {Ix0, Ix1, Ix2};
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -860,24 +861,23 @@ impl RemoveAxis for ($from $(,$more)*)
     )
 );
 
-/*
-impl RemoveAxis for Ix {
-    type Smaller = ();
+impl RemoveAxis for Ix1 {
+    type Smaller = Ix0;
     #[inline]
-    fn remove_axis(&self, _: Axis) { }
+    fn remove_axis(&self, _: Axis) -> Ix0 { Ix0() }
 }
 
-impl RemoveAxis for (Ix, Ix) {
-    type Smaller = Ix;
+impl RemoveAxis for Ix2 {
+    type Smaller = Ix1;
     #[inline]
-    fn remove_axis(&self, axis: Axis) -> Ix {
+    fn remove_axis(&self, axis: Axis) -> Ix1 {
         let axis = axis.axis();
         debug_assert!(axis < self.ndim());
-        if axis == 0 { self.1 } else { self.0 }
+        if axis == 0 { Ix1(self[1]) } else { Ix1(self[0]) }
     }
 }
-*/
 
+/*
 macro_rules! impl_shrink_recursive(
     ($ix:ident, ) => (impl_shrink!($ix,););
     ($ix1:ident, $($ix:ident,)*) => (
@@ -885,34 +885,37 @@ macro_rules! impl_shrink_recursive(
         impl_shrink!($ix1, $($ix,)*);
     )
 );
+*/
 
 macro_rules! impl_remove_axis_array(
-    ($n:expr) => (
-impl RemoveAxis for [Ix; $n]
-{
-    type Smaller = [Ix; $n - 1];
-    #[inline]
-    fn remove_axis(&self, axis: Axis) -> Self::Smaller {
-        let mut tup = [0; $n - 1];
+    ($($n:expr),*) => (
+    $(
+        impl RemoveAxis for [Ix; $n]
         {
-            let mut it = tup.slice_mut().iter_mut();
-            for (i, &d) in self.slice().iter().enumerate() {
-                if i == axis.axis() {
-                    continue;
+            type Smaller = [Ix; $n - 1];
+            #[inline]
+            fn remove_axis(&self, axis: Axis) -> Self::Smaller {
+                let mut tup = [0; $n - 1];
+                {
+                    let mut it = tup.slice_mut().iter_mut();
+                    for (i, &d) in self.slice().iter().enumerate() {
+                        if i == axis.axis() {
+                            continue;
+                        }
+                        for rr in it.by_ref() {
+                            *rr = d;
+                            break
+                        }
+                    }
                 }
-                for rr in it.by_ref() {
-                    *rr = d;
-                    break
-                }
+                tup
             }
         }
-        tup
-    }
-}
+    )*
     );
 );
 
-impl_remove_axis_array!(2);
+impl_remove_axis_array!();
 
 // 12 is the maximum number for having the Eq trait from libstd
 //impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
