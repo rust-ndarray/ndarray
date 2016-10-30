@@ -604,6 +604,10 @@ unsafe impl Dimension for [Ix; 0] {
     fn into_tuple(self) -> Self::Tuple {
         self.convert()
     }
+    #[inline]
+    fn next_for(&self, _index: Self) -> Option<Self> {
+        None
+    }
 }
 
 unsafe impl Dimension for [Ix; 1] {
@@ -619,40 +623,35 @@ unsafe impl Dimension for [Ix; 1] {
     fn into_tuple(self) -> Self::Tuple {
         self[0]
     }
-}
-
-/*
-unsafe impl Dimension for Ix {
-    type SliceArg = [Si; 1];
-    type Tuple = Ix;
     #[inline]
-    fn ndim(&self) -> usize { 1 }
-    #[inline]
-    fn size(&self) -> usize { *self as usize }
-    #[inline]
-    fn size_checked(&self) -> Option<usize> { Some(*self as usize) }
-
-    #[inline]
-    fn default_strides(&self) -> Self { 1 }
-
-    #[inline]
-    fn _fastest_varying_stride_order(&self) -> Self {
-        0
-    }
-
-    #[inline]
-    fn first_index(&self) -> Option<Ix> {
-        if *self != 0 {
-            Some(0)
+    fn next_for(&self, mut index: Self) -> Option<Self> {
+        index[0] += 1;
+        if index[0] < self[0] {
+            Some(index)
         } else {
             None
         }
     }
+
     #[inline]
-    fn next_for(&self, mut index: Ix) -> Option<Ix> {
-        index += 1;
-        if index < *self {
-            Some(index)
+    fn size(&self) -> usize { self[0] }
+    #[inline]
+    fn size_checked(&self) -> Option<usize> { Some(self[0]) }
+
+    #[inline]
+    fn default_strides(&self) -> Self {
+        Ix1(1)
+    }
+
+    #[inline]
+    fn _fastest_varying_stride_order(&self) -> Self {
+        Ix1(0)
+    }
+
+    #[inline]
+    fn first_index(&self) -> Option<Self> {
+        if self[0] != 0 {
+            Some(Ix1(0))
         } else {
             None
         }
@@ -660,21 +659,20 @@ unsafe impl Dimension for Ix {
 
     /// Self is an index, return the stride offset
     #[inline]
-    fn stride_offset(index: &Ix, stride: &Ix) -> isize {
-        stride_offset(*index, *stride)
+    fn stride_offset(index: &Self, stride: &Self) -> isize {
+        stride_offset(index[0], stride[0])
     }
 
     /// Return stride offset for this dimension and index.
     #[inline]
-    fn stride_offset_checked(&self, stride: &Ix, index: &Ix) -> Option<isize> {
-        if *index < *self {
-            Some(stride_offset(*index, *stride))
+    fn stride_offset_checked(&self, stride: &Self, index: &Self) -> Option<isize> {
+        if index[0] < self[0] {
+            Some(stride_offset(index[0], stride[0]))
         } else {
             None
         }
     }
 }
-*/
 
 unsafe impl Dimension for [Ix; 2] {
     type SliceArg = [Si; 2];
@@ -689,6 +687,83 @@ unsafe impl Dimension for [Ix; 2] {
     fn slice(&self) -> &[Ix] { self }
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self }
+    #[inline]
+    fn next_for(&self, index: Self) -> Option<Self> {
+        let mut i = index[0];
+        let mut j = index[1];
+        let imax = self[0];
+        let jmax = self[1];
+        j += 1;
+        if j == jmax {
+            j = 0;
+            i += 1;
+            if i == imax {
+                return None;
+            }
+        }
+        Some([i, j])
+    }
+
+
+    #[inline]
+    fn size(&self) -> usize { self[0] * self[1] }
+
+    #[inline]
+    fn size_checked(&self) -> Option<usize> {
+        let m = self[0];
+        let n = self[1];
+        (m as usize).checked_mul(n as usize)
+    }
+
+    #[inline]
+    fn default_strides(&self) -> Self {
+        // Compute default array strides
+        // Shape (a, b, c) => Give strides (b * c, c, 1)
+        Ix2(self[1], 1)
+    }
+
+    #[inline]
+    fn _fastest_varying_stride_order(&self) -> Self {
+        if self[0] as Ixs <= self[1] as Ixs { Ix2(0, 1) } else { Ix2(1, 0) }
+    }
+
+    #[inline]
+    fn first_index(&self) -> Option<Self> {
+        let m = self[0];
+        let n = self[1];
+        if m != 0 && n != 0 {
+            Some(Ix2(0, 0))
+        } else {
+            None
+        }
+    }
+
+    /// Self is an index, return the stride offset
+    #[inline]
+    fn stride_offset(index: &Self, strides: &Self) -> isize {
+        let i = index[0];
+        let j = index[1];
+        let s = strides[0];
+        let t = strides[1];
+        stride_offset(i, s) + stride_offset(j, t)
+    }
+
+    /// Return stride offset for this dimension and index.
+    #[inline]
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
+    {
+        let m = self[0];
+        let n = self[1];
+        let i = index[0];
+        let j = index[1];
+        let s = strides[0];
+        let t = strides[1];
+        if i < m && j < n {
+            Some(stride_offset(i, s) + stride_offset(j, t))
+        } else {
+            None
+        }
+    }
 }
 
 unsafe impl Dimension for [Ix; 3] {
@@ -705,82 +780,6 @@ unsafe impl Dimension for [Ix; 3] {
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self }
 }
-
-
-/*
-unsafe impl Dimension for (Ix, Ix) {
-    type SliceArg = [Si; 2];
-    #[inline]
-    fn ndim(&self) -> usize { 2 }
-
-    #[inline]
-    fn size(&self) -> usize { let (m, n) = *self; m as usize * n as usize }
-
-    #[inline]
-    fn size_checked(&self) -> Option<usize> {
-        let (m, n) = *self;
-        (m as usize).checked_mul(n as usize)
-    }
-
-    #[inline]
-    fn default_strides(&self) -> Self {
-        // Compute default array strides
-        // Shape (a, b, c) => Give strides (b * c, c, 1)
-        (self.1, 1)
-    }
-
-    #[inline]
-    fn _fastest_varying_stride_order(&self) -> Self {
-        if self.0 as Ixs <= self.1 as Ixs { (0, 1) } else { (1, 0) }
-    }
-
-    #[inline]
-    fn first_index(&self) -> Option<(Ix, Ix)> {
-        let (m, n) = *self;
-        if m != 0 && n != 0 {
-            Some((0, 0))
-        } else {
-            None
-        }
-    }
-    #[inline]
-    fn next_for(&self, index: (Ix, Ix)) -> Option<(Ix, Ix)> {
-        let (mut i, mut j) = index;
-        let (imax, jmax) = *self;
-        j += 1;
-        if j == jmax {
-            j = 0;
-            i += 1;
-            if i == imax {
-                return None;
-            }
-        }
-        Some((i, j))
-    }
-
-    /// Self is an index, return the stride offset
-    #[inline]
-    fn stride_offset(index: &(Ix, Ix), strides: &(Ix, Ix)) -> isize {
-        let (i, j) = *index;
-        let (s, t) = *strides;
-        stride_offset(i, s) + stride_offset(j, t)
-    }
-
-    /// Return stride offset for this dimension and index.
-    #[inline]
-    fn stride_offset_checked(&self, strides: &(Ix, Ix), index: &(Ix, Ix)) -> Option<isize>
-    {
-        let (m, n) = *self;
-        let (i, j) = *index;
-        let (s, t) = *strides;
-        if i < m && j < n {
-            Some(stride_offset(i, s) + stride_offset(j, t))
-        } else {
-            None
-        }
-    }
-}
-*/
 
 /*
 unsafe impl Dimension for (Ix, Ix, Ix) {
