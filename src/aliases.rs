@@ -20,7 +20,7 @@ pub type Ix1 = [Ix; 1];
 /// two-dimensional
 pub type Ix2 = [Ix; 2];
 /// three-dimensional
-pub type Ix3 = (Ix, Ix, Ix);
+pub type Ix3 = [Ix; 3];
 /// four-dimensional
 pub type Ix4 = (Ix, Ix, Ix, Ix);
 /// dynamic-dimensional

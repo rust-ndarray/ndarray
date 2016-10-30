@@ -159,7 +159,7 @@ pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, I
 pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
     -> Array3<A>
 {
-    let dim = (xs.len() as Ix, V::len() as Ix, U::len() as Ix);
+    let dim = [xs.len() as Ix, V::len() as Ix, U::len() as Ix];
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
         for thr in snd.as_init_slice() {

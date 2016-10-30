@@ -469,6 +469,12 @@ impl IntoDimension for (Ix, Ix) {
     fn into_dimension(self) -> [Ix; 2] { [self.0, self.1] }
 }
 
+impl IntoDimension for (Ix, Ix, Ix) {
+    type Dim = [Ix; 3];
+    #[inline]
+    fn into_dimension(self) -> [Ix; 3] { [self.0, self.1, self.2] }
+}
+
 impl<D> IntoDimension for D where D: Dimension {
     type Dim = D;
     #[inline]
@@ -657,6 +663,21 @@ unsafe impl Dimension for [Ix; 2] {
     fn slice_mut(&mut self) -> &mut [Ix] { self }
 }
 
+unsafe impl Dimension for [Ix; 3] {
+    type SliceArg = [Si; 3];
+    type Tuple = (Ix, Ix, Ix);
+    #[inline]
+    fn ndim(&self) -> usize { 3 }
+    #[inline]
+    fn into_tuple(self) -> Self::Tuple {
+        self.convert()
+    }
+    #[inline]
+    fn slice(&self) -> &[Ix] { self }
+    #[inline]
+    fn slice_mut(&mut self) -> &mut [Ix] { self }
+}
+
 
 /*
 unsafe impl Dimension for (Ix, Ix) {
@@ -733,6 +754,7 @@ unsafe impl Dimension for (Ix, Ix) {
 }
 */
 
+/*
 unsafe impl Dimension for (Ix, Ix, Ix) {
     type SliceArg = [Si; 3];
     type Tuple = Self;
@@ -790,6 +812,7 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
         order
     }
 }
+*/
 
 macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
