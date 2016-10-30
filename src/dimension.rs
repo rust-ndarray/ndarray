@@ -498,21 +498,6 @@ trait Convert<T = usize> {
     fn convert(self) -> Self::To;
 }
 
-pub trait ToIndex<D> {
-    fn to_index(self) -> D;
-}
-
-impl<T> ToIndex<T> for T where T: Dimension {
-    fn to_index(self) -> Self { self }
-}
-
-impl ToIndex<[Ix; 1]> for Ix {
-    fn to_index(self) -> [Ix; 1] { [self] }
-}
-impl ToIndex<[Ix; 2]> for (Ix, Ix) {
-    fn to_index(self) -> [Ix; 2] { [self.0, self.1] }
-}
-
 impl Convert<usize> for Ix {
     type To = [Ix; 1];
     fn convert(self) -> Self::To { [self] }
@@ -1005,8 +990,7 @@ impl RemoveAxis for Vec<Ix> {
 /// ```
 ///
 /// **Note** that `NdIndex` is implemented for all `D where D: Dimension`.
-pub unsafe trait NdIndex : Debug {
-    type Dim: Dimension;
+pub unsafe trait NdIndex : Debug + IntoDimension {
     #[doc(hidden)]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize>;
 }
@@ -1014,14 +998,12 @@ pub unsafe trait NdIndex : Debug {
 unsafe impl<D> NdIndex for D
     where D: Dimension
 {
-    type Dim = D;
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, self)
     }
 }
 
 unsafe impl NdIndex for () {
-    type Dim = Ix0;
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix0())
@@ -1029,7 +1011,6 @@ unsafe impl NdIndex for () {
 }
 
 unsafe impl NdIndex for Ix {
-    type Dim = Ix1;
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix1(*self))
@@ -1037,14 +1018,12 @@ unsafe impl NdIndex for Ix {
 }
 
 unsafe impl NdIndex for (Ix, Ix) {
-    type Dim = Ix2;
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix2(self.0, self.1))
     }
 }
 unsafe impl NdIndex for (Ix, Ix, Ix) {
-    type Dim = [Ix; 3];
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
@@ -1052,22 +1031,26 @@ unsafe impl NdIndex for (Ix, Ix, Ix) {
 }
 
 unsafe impl NdIndex for (Ix, Ix, Ix, Ix) {
-    type Dim = [Ix; 4];
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
 }
 unsafe impl NdIndex for (Ix, Ix, Ix, Ix, Ix) {
-    type Dim = [Ix; 5];
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
 }
 
-unsafe impl<'a> NdIndex for &'a [Ix] {
+impl<'a> IntoDimension for &'a [Ix] {
     type Dim = Vec<Ix>;
+    fn into_dimension(self) -> Self::Dim {
+        self.to_vec()
+    }
+}
+
+unsafe impl<'a> NdIndex for &'a [Ix] {
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         let mut offset = 0;
         for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {

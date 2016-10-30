@@ -256,9 +256,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
     pub unsafe fn uget<I>(&self, index: I) -> &A
-        where I: ::dimension::ToIndex<D>,
+        where I: NdIndex<Dim=D>,
     {
-        let index = index.to_index();
+        let index = index.into_dimension();
         arraytraits::debug_bounds_check(self, &index);
         let off = D::stride_offset(&index, &self.strides);
         &*self.ptr.offset(off)
@@ -273,9 +273,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
         where S: DataMut,
-              I: ::dimension::ToIndex<D>,
+              I: NdIndex<Dim=D>,
     {
-        let index = index.to_index();
+        let index = index.into_dimension();
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
         let off = D::stride_offset(&index, &self.strides);
