@@ -12,7 +12,7 @@ fn broadcast_1()
     let b = RcArray::linspace(0., 1., b_dim.size()).reshape(b_dim);
     assert!(b.broadcast(a.dim()).is_some());
 
-    let c_dim = (2, 1);
+    let c_dim = [2, 1];
     let c = RcArray::linspace(0., 1., c_dim.size()).reshape(c_dim);
     assert!(c.broadcast(1).is_none());
     assert!(c.broadcast(()).is_none());
