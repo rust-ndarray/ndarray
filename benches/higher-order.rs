@@ -30,7 +30,7 @@ pub fn double_array(mut a: ArrayViewMut2<f64>) {
 #[bench]
 fn map_stride_double_f64(bench: &mut Bencher)
 {
-    let mut a = Array::linspace(0., 127., N * 2).into_shape((X, Y * 2)).unwrap();
+    let mut a = Array::linspace(0., 127., N * 2).into_shape([X, Y * 2]).unwrap();
     let mut av = a.slice_mut(s![.., ..;2]);
     bench.iter(|| {
         double_array(av.view_mut());
@@ -41,7 +41,7 @@ fn map_stride_double_f64(bench: &mut Bencher)
 #[bench]
 fn map_stride_f64(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 127., N * 2).into_shape((X, Y * 2)).unwrap();
+    let a = Array::linspace(0., 127., N * 2).into_shape([X, Y * 2]).unwrap();
     let av = a.slice(s![.., ..;2]);
     bench.iter(|| {
         av.map(|&x| 2. * x)
@@ -51,7 +51,7 @@ fn map_stride_f64(bench: &mut Bencher)
 #[bench]
 fn map_stride_u32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 127., N * 2).into_shape((X, Y * 2)).unwrap();
+    let a = Array::linspace(0., 127., N * 2).into_shape([X, Y * 2]).unwrap();
     let b = a.mapv(|x| x as u32);
     let av = b.slice(s![.., ..;2]);
     bench.iter(|| {
