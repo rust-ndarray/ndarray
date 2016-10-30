@@ -580,6 +580,10 @@ unsafe impl Dimension for [Ix; 0] {
     fn slice_mut(&mut self) -> &mut [Ix] { self }
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { [] }
+    #[inline]
+    fn into_tuple(self) -> Self::Tuple {
+        self.convert()
+    }
 }
 
 unsafe impl Dimension for [Ix; 1] {
@@ -591,6 +595,10 @@ unsafe impl Dimension for [Ix; 1] {
     fn slice(&self) -> &[Ix] { self }
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self }
+    #[inline]
+    fn into_tuple(self) -> Self::Tuple {
+        self[0]
+    }
 }
 
 /*
@@ -942,7 +950,7 @@ macro_rules! impl_remove_axis_array(
     );
 );
 
-impl_remove_axis_array!();
+impl_remove_axis_array!(3);
 
 // 12 is the maximum number for having the Eq trait from libstd
 //impl_shrink_recursive!(Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix,);
