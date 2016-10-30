@@ -461,16 +461,19 @@ pub trait IntoDimension {
     fn into_dimension(self) -> Self::Dim;
 }
 
+/*
 impl IntoDimension for () {
     type Dim = [Ix; 0];
     #[inline]
     fn into_dimension(self) -> [Ix; 0] { [] }
 }
+*/
 impl IntoDimension for Ix {
     type Dim = [Ix; 1];
     #[inline]
     fn into_dimension(self) -> [Ix; 1] { [self] }
 }
+/*
 impl IntoDimension for (Ix, Ix) {
     type Dim = [Ix; 2];
     #[inline]
@@ -482,6 +485,7 @@ impl IntoDimension for (Ix, Ix, Ix) {
     #[inline]
     fn into_dimension(self) -> [Ix; 3] { [self.0, self.1, self.2] }
 }
+*/
 
 impl<D> IntoDimension for D where D: Dimension {
     type Dim = D;
@@ -489,7 +493,7 @@ impl<D> IntoDimension for D where D: Dimension {
     fn into_dimension(self) -> Self { self }
 }
 
-pub trait Convert<T = usize> {
+trait Convert<T = usize> {
     type To;
     fn convert(self) -> Self::To;
 }
@@ -554,6 +558,14 @@ macro_rules! tuple_to_array {
                 index!(array_expr [self] $n)
             }
         }
+
+        impl IntoDimension for index!(tuple_type [Ix] $n) {
+            type Dim = [Ix; $n];
+            fn into_dimension(self) -> Self::Dim {
+                index!(array_expr [self] $n)
+            }
+        }
+
         )*
     }
 }
@@ -832,17 +844,26 @@ unsafe impl Dimension for (Ix, Ix, Ix) {
 
 macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
-        unsafe impl Dimension for ($($ix),+) {
+        unsafe impl Dimension for [Ix; $n] {
             type SliceArg = [Si; $n];
-            type Tuple = Self;
+            type Tuple = ($($ix,)*);
             #[inline]
             fn ndim(&self) -> usize { $n }
+            #[inline]
+            fn into_tuple(self) -> Self::Tuple {
+                self.convert()
+            }
+            #[inline]
+            fn slice(&self) -> &[Ix] { self }
+            #[inline]
+            fn slice_mut(&mut self) -> &mut [Ix] { self }
         }
     )
 }
 
 large_dim!(4, Ix, Ix, Ix, Ix);
 large_dim!(5, Ix, Ix, Ix, Ix, Ix);
+/*
 large_dim!(6, Ix, Ix, Ix, Ix, Ix, Ix);
 large_dim!(7, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 large_dim!(8, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
@@ -850,6 +871,7 @@ large_dim!(9, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 large_dim!(10, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 large_dim!(11, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
+*/
 
 /// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
@@ -1020,6 +1042,28 @@ unsafe impl NdIndex for (Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix2(self.0, self.1))
+    }
+}
+unsafe impl NdIndex for (Ix, Ix, Ix) {
+    type Dim = [Ix; 3];
+    #[inline]
+    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+        dim.stride_offset_checked(strides, &self.convert())
+    }
+}
+
+unsafe impl NdIndex for (Ix, Ix, Ix, Ix) {
+    type Dim = [Ix; 4];
+    #[inline]
+    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+        dim.stride_offset_checked(strides, &self.convert())
+    }
+}
+unsafe impl NdIndex for (Ix, Ix, Ix, Ix, Ix) {
+    type Dim = [Ix; 5];
+    #[inline]
+    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+        dim.stride_offset_checked(strides, &self.convert())
     }
 }
 
