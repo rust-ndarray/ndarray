@@ -11,10 +11,11 @@ use dimension::IntoDimension;
 /// `Array::from_shape_vec`.
 pub trait ShapeBuilder {
     type Dim: Dimension;
+    type Strides;
 
     fn f(self) -> Shape<Self::Dim>;
     fn set_f(self, is_f: bool) -> Shape<Self::Dim>;
-    fn strides(self, strides: Self::Dim) -> StrideShape<Self::Dim>;
+    fn strides(self, strides: Self::Strides) -> StrideShape<Self::Dim>;
 }
 
 pub trait IntoShape {
@@ -137,16 +138,17 @@ impl<D> From<Shape<D>> for StrideShape<D>
 }
 */
 
-impl<D> ShapeBuilder for D
-    where D: Dimension
+impl<T> ShapeBuilder for T
+    where T: IntoDimension
 {
-    type Dim = D;
-    fn f(self) -> Shape<D> { self.set_f(true) }
-    fn set_f(self, is_f: bool) -> Shape<D> {
-        Shape::from(self).set_f(is_f)
+    type Dim = T::Dim;
+    type Strides = T;
+    fn f(self) -> Shape<Self::Dim> { self.set_f(true) }
+    fn set_f(self, is_f: bool) -> Shape<Self::Dim> {
+        self.into_shape().set_f(is_f)
     }
-    fn strides(self, st: D) -> StrideShape<D> {
-        Shape::from(self).strides(st)
+    fn strides(self, st: T) -> StrideShape<Self::Dim> {
+        self.into_shape().strides(st.into_dimension())
     }
 }
 
@@ -154,6 +156,7 @@ impl<D> ShapeBuilder for Shape<D>
     where D: Dimension
 {
     type Dim = D;
+    type Strides = D;
     fn f(self) -> Self { self.set_f(true) }
     fn set_f(mut self, is_f: bool) -> Self {
         self.is_c = !is_f;
