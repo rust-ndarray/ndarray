@@ -15,6 +15,7 @@ use super::{zipsl, zipsl_mut};
 use error::{from_kind, ErrorKind, ShapeError};
 use ZipExt;
 use {Ix0, Ix1, Ix2};
+use {ArrayView1, ArrayViewMut1};
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline]
@@ -161,6 +162,13 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
         unsafe {
             slice::from_raw_parts_mut(self as *mut _ as *mut Ix, self.ndim())
         }
+    }
+
+    fn array_view(&self) -> ArrayView1<Ix> {
+        ArrayView1::from(self.slice())
+    }
+    fn array_view_mut(&mut self) -> ArrayViewMut1<Ix> {
+        ArrayViewMut1::from(self.slice_mut())
     }
 
     #[doc(hidden)]
