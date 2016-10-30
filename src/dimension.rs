@@ -548,6 +548,20 @@ macro_rules! array_expr {
     )
 }
 
+impl<I> From<I> for Dim<I>
+    where Dim<I>: ::Dimension
+{
+    fn from(x: I) -> Self {
+        Dim(x)
+    }
+}
+
+impl From<usize> for Dim<[usize; 1]> {
+    fn from(x: usize) -> Self {
+        Dim([x])
+    }
+}
+
 macro_rules! tuple_to_array {
     ([] $($n:tt)*) => {
         $(
@@ -570,6 +584,12 @@ macro_rules! tuple_to_array {
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
                 Dim(index!(array_expr [self] $n))
+            }
+        }
+
+        impl From<index!(tuple_type [Ix] $n)> for Dim<[usize; $n]> {
+            fn from(x: index!(tuple_type [Ix] $n)) -> Self {
+                x.convert()
             }
         }
 

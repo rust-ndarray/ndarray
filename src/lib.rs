@@ -110,7 +110,7 @@ pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
-pub use shape_builder::{ ShapeBuilder };
+pub use shape_builder::{ ShapeBuilder, IntoShape };
 
 mod aliases;
 mod arraytraits;
