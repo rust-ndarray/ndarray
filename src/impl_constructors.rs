@@ -181,7 +181,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
         where Sh: IntoShape<Dim=D>,
-              F: FnMut(D) -> A,
+              F: FnMut(D::Tuple) -> A,
     {
         let shape = shape.into_shape();
         let v = to_vec_mapped(Indexes::new(shape.dim.clone()), f);

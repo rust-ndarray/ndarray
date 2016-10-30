@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use super::Dimension;
+use dimension::IntoDimension;
 
 /// An iterator over the indexes of an array shape.
 ///
@@ -18,7 +19,10 @@ pub struct Indexes<D> {
 
 impl<D: Dimension> Indexes<D> {
     /// Create an iterator over the array shape `dim`.
-    pub fn new(dim: D) -> Indexes<D> {
+    pub fn new<E>(shape: E) -> Indexes<D>
+        where E: IntoDimension<Dim=D>,
+    {
+        let dim = shape.into_dimension();
         Indexes {
             index: dim.first_index(),
             dim: dim,
@@ -29,15 +33,15 @@ impl<D: Dimension> Indexes<D> {
 impl<D> Iterator for Indexes<D>
     where D: Dimension,
 {
-    type Item = D;
+    type Item = D::Tuple;
     #[inline]
-    fn next(&mut self) -> Option<D> {
+    fn next(&mut self) -> Option<Self::Item> {
         let index = match self.index {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
         self.index = self.dim.next_for(index.clone());
-        Some(index)
+        Some(index.into_tuple())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
