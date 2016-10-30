@@ -960,52 +960,27 @@ unsafe impl<D> NdIndex for D
     }
 }
 
-/*
-unsafe impl NdIndex for [Ix; 0] {
-    type Dim = ();
+unsafe impl NdIndex for () {
+    type Dim = Ix0;
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
-        dim.stride_offset_checked(strides, &())
-    }
-}
-*/
-
-/*
-unsafe impl NdIndex for [Ix; 1] {
-    type Dim = Ix;
-    #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
-        dim.stride_offset_checked(strides, &self[0])
-    }
-}
-*/
-
-/*
-unsafe impl NdIndex for [Ix; 2] {
-    type Dim = (Ix, Ix);
-    #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
-        let index = (self[0], self[1]);
-        dim.stride_offset_checked(strides, &index)
-    }
-}
-*/
-
-unsafe impl NdIndex for [Ix; 3] {
-    type Dim = (Ix, Ix, Ix);
-    #[inline]
-    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
-        let index = (self[0], self[1], self[2]);
-        dim.stride_offset_checked(strides, &index)
+        dim.stride_offset_checked(strides, &Ix0())
     }
 }
 
-unsafe impl NdIndex for [Ix; 4] {
-    type Dim = (Ix, Ix, Ix, Ix);
+unsafe impl NdIndex for Ix {
+    type Dim = Ix1;
     #[inline]
     fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
-        let index = (self[0], self[1], self[2], self[3]);
-        dim.stride_offset_checked(strides, &index)
+        dim.stride_offset_checked(strides, &Ix1(*self))
+    }
+}
+
+unsafe impl NdIndex for (Ix, Ix) {
+    type Dim = Ix2;
+    #[inline]
+    fn index_checked(&self, dim: &Self::Dim, strides: &Self::Dim) -> Option<isize> {
+        dim.stride_offset_checked(strides, &Ix2(self.0, self.1))
     }
 }
 

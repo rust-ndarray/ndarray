@@ -4,9 +4,14 @@
 use ::{Ix, Array, ArrayView, ArrayViewMut};
 
 #[allow(non_snake_case)]
+#[inline(always)]
 pub fn Ix0() -> Ix0 { [] }
 #[allow(non_snake_case)]
+#[inline(always)]
 pub fn Ix1(i0: Ix) -> Ix1 { [i0] }
+#[allow(non_snake_case)]
+#[inline(always)]
+pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 { [i0, i1] }
 
 /// zero-dimensionial
 pub type Ix0 = [Ix; 0];
