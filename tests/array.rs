@@ -128,7 +128,7 @@ fn test_multidim()
             *elt = i as u8;
         }
     }
-    assert_eq!(mat.dim(), (2,3,4,5,6));
+    assert_eq!(mat.shape(), &[2,3,4,5,6]);
 }
 
 

@@ -46,7 +46,7 @@ fn dyn_dimension()
 
 #[test]
 fn fastest_varying_order() {
-    let strides = (2, 8, 4, 1);
+    let strides = [2, 8, 4, 1];
     let order = strides._fastest_varying_stride_order();
     assert_eq!(order.slice(), &[3, 0, 2, 1]);
 
