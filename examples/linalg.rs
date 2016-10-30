@@ -178,7 +178,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     if <A as ComplexField>::is_complex() {
         // conjugate transpose
         // only elements below the diagonal have imag part
-        let (m, _) = L.dim_tuple();
+        let (m, _) = L.dim_pattern();
         for i in 1..m {
             for j in 0..i {
                 let elt = &mut L[[i, j]];
@@ -210,7 +210,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 {
     let z = A::zero();
-    let (m, n) = a.dim_tuple();
+    let (m, n) = a.dim_pattern();
     assert!(m == n);
     // Perform the operation in-place on `a`
     let mut L = a;
@@ -259,7 +259,7 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 /// Solve *L x = b* where *L* is a lower triangular matrix.
 pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 {
-    let (m, n) = l.dim_tuple();
+    let (m, n) = l.dim_pattern();
     assert!(m == n);
     assert!(m == b.len());
     let mut x = Col::zeros(m);
@@ -277,7 +277,7 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 /// Solve *U x = b* where *U* is an upper triangular matrix.
 pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
 {
-    let (m, n) = u.dim_tuple();
+    let (m, n) = u.dim_pattern();
     assert!(m == n);
     assert!(m == b.len());
     let mut x = Col::zeros(m);

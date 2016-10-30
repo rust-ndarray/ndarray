@@ -33,7 +33,7 @@ impl<D: Dimension> Indexes<D> {
 impl<D> Iterator for Indexes<D>
     where D: Dimension,
 {
-    type Item = D::Tuple;
+    type Item = D::Pattern;
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = match self.index {
@@ -41,7 +41,7 @@ impl<D> Iterator for Indexes<D>
             Some(ref ix) => ix.clone(),
         };
         self.index = self.dim.next_for(index.clone());
-        Some(index.into_tuple())
+        Some(index.into_pattern())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

@@ -199,7 +199,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
     {
         let a = self.view();
         let b = b.view();
-        let ((m, k), (k2, n)) = (a.dim_tuple(), b.dim_tuple());
+        let ((m, k), (k2, n)) = (a.dim_pattern(), b.dim_pattern());
         if k != k2 || m.checked_mul(n).is_none() {
             return dot_shape_error(m, k, k2, n);
         }
@@ -253,7 +253,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
     type Output = Array<A, Ix1>;
     fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
     {
-        let ((m, a), n) = (self.dim_tuple(), rhs.dim_tuple());
+        let ((m, a), n) = (self.dim_pattern(), rhs.dim_pattern());
         if a != n {
             return dot_shape_error(m, a, n, 1);
         }
@@ -312,7 +312,7 @@ fn mat_mul_impl<A>(alpha: A,
 {
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
-    let ((mut m, a), (_, mut n)) = (lhs.dim_tuple(), rhs.dim_tuple());
+    let ((mut m, a), (_, mut n)) = (lhs.dim_pattern(), rhs.dim_pattern());
     if !(m > cut || n > cut || a > cut) ||
         !(same_type::<A, f32>() || same_type::<A, f64>()) {
         return mat_mul_general(alpha, lhs, rhs, beta, c);
@@ -351,9 +351,9 @@ fn mat_mul_impl<A>(alpha: A,
                     && blas_row_major_2d::<$ty, _>(&c_)
                 {
                     let (m, k) = match lhs_trans {
-                        CblasNoTrans => lhs_.dim_tuple(),
+                        CblasNoTrans => lhs_.dim_pattern(),
                         _ => {
-                            let (rows, cols) = lhs_.dim_tuple();
+                            let (rows, cols) = lhs_.dim_pattern();
                             (cols, rows)
                         }
                     };
@@ -403,7 +403,7 @@ fn mat_mul_general<A>(alpha: A,
                       c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
-    let ((m, k), (_, n)) = (lhs.dim_tuple(), rhs.dim_tuple());
+    let ((m, k), (_, n)) = (lhs.dim_pattern(), rhs.dim_pattern());
 
     // common parameters for gemm
     let ap = lhs.as_ptr();
@@ -486,8 +486,8 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
           S3: DataMut<Elem=A>,
           A: LinalgScalar,
 {
-    let ((m, k), (k2, n)) = (a.dim_tuple(), b.dim_tuple());
-    let (m2, n2) = c.dim_tuple();
+    let ((m, k), (k2, n)) = (a.dim_pattern(), b.dim_pattern());
+    let (m2, n2) = c.dim_pattern();
     if k != k2 || m != m2 || n != n2 {
         return general_dot_shape_error(m, k, k2, n, m2, n2);
     }
@@ -552,7 +552,7 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     {
         return false;
     }
-    let (m, n) = a.dim_tuple();
+    let (m, n) = a.dim_pattern();
     if m > blas_index::max_value() as usize ||
         n > blas_index::max_value() as usize
     {

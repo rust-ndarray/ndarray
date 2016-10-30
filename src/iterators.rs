@@ -266,7 +266,7 @@ impl<'a, A, D> ExactSizeIterator for Elements<'a, A, D>
 
 
 impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
-    type Item = (D::Tuple, &'a A);
+    type Item = (D::Pattern, &'a A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = match self.0.inner.index {
@@ -275,7 +275,7 @@ impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
         };
         match self.0.inner.next_ref() {
             None => None,
-            Some(p) => Some((index.into_tuple(), p)),
+            Some(p) => Some((index.into_pattern(), p)),
         }
     }
 
@@ -343,7 +343,7 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
 }
 
 impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
-    type Item = (D::Tuple, &'a mut A);
+    type Item = (D::Pattern, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = match self.0.inner.index {
@@ -352,7 +352,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
         };
         match self.0.inner.next_ref_mut() {
             None => None,
-            Some(p) => Some((index.into_tuple(), p)),
+            Some(p) => Some((index.into_pattern(), p)),
         }
     }
 

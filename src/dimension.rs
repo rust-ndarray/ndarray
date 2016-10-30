@@ -131,19 +131,22 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///
-    /// For the fixed size dimensions (tuples) it is a fixed size array
-    /// of the correct size, which you pass by reference. For the `Vec`
-    /// dimension it is a slice.
+    /// For the fixed size dimensions it is a fixed size array of the correct
+    /// size, which you pass by reference. For the `Vec` dimension it is
+    /// a slice.
     ///
-    /// - For `Ix`: `[Si; 1]`
-    /// - For `(Ix, Ix)`: `[Si; 2]`
+    /// - For `Ix1`: `[Si; 1]`
+    /// - For `Ix2`: `[Si; 2]`
     /// - and so on..
     /// - For `Vec<Ix>`: `[Si]`
     ///
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
     type SliceArg: ?Sized + AsRef<[Si]>;
-    type Tuple: IntoDimension<Dim=Self>;
+    /// Pattern matching friendly form of the dimension value.
+    ///
+    /// Usually a tuple.
+    type Pattern: IntoDimension<Dim=Self>;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
     #[doc(hidden)]
@@ -157,9 +160,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
         self.slice() == rhs.slice()
     }
 
-    fn into_tuple(self) -> Self::Tuple {
-        panic!()
-    }
+    fn into_pattern(self) -> Self::Pattern;
 
     #[doc(hidden)]
     fn slice_mut(&mut self) -> &mut [Ix] {
@@ -573,7 +574,7 @@ index_item!(tuple_to_array [] 6);
 
 unsafe impl Dimension for [Ix; 0] {
     type SliceArg = [Si; 0];
-    type Tuple = ();
+    type Pattern = ();
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
@@ -584,7 +585,7 @@ unsafe impl Dimension for [Ix; 0] {
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { [] }
     #[inline]
-    fn into_tuple(self) -> Self::Tuple {
+    fn into_pattern(self) -> Self::Pattern {
         self.convert()
     }
     #[inline]
@@ -595,7 +596,7 @@ unsafe impl Dimension for [Ix; 0] {
 
 unsafe impl Dimension for [Ix; 1] {
     type SliceArg = [Si; 1];
-    type Tuple = Ix;
+    type Pattern = Ix;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
@@ -603,7 +604,7 @@ unsafe impl Dimension for [Ix; 1] {
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self }
     #[inline]
-    fn into_tuple(self) -> Self::Tuple {
+    fn into_pattern(self) -> Self::Pattern {
         self[0]
     }
     #[inline]
@@ -664,11 +665,11 @@ unsafe impl Dimension for [Ix; 1] {
 
 unsafe impl Dimension for [Ix; 2] {
     type SliceArg = [Si; 2];
-    type Tuple = (Ix, Ix);
+    type Pattern = (Ix, Ix);
     #[inline]
     fn ndim(&self) -> usize { 2 }
     #[inline]
-    fn into_tuple(self) -> Self::Tuple {
+    fn into_pattern(self) -> Self::Pattern {
         self.convert()
     }
     #[inline]
@@ -798,11 +799,11 @@ unsafe impl Dimension for [Ix; 2] {
 
 unsafe impl Dimension for [Ix; 3] {
     type SliceArg = [Si; 3];
-    type Tuple = (Ix, Ix, Ix);
+    type Pattern = (Ix, Ix, Ix);
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
-    fn into_tuple(self) -> Self::Tuple {
+    fn into_pattern(self) -> Self::Pattern {
         self.convert()
     }
     #[inline]
@@ -880,11 +881,11 @@ macro_rules! large_dim {
     ($n:expr, $($ix:ident),+) => (
         unsafe impl Dimension for [Ix; $n] {
             type SliceArg = [Si; $n];
-            type Tuple = ($($ix,)*);
+            type Pattern = ($($ix,)*);
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
-            fn into_tuple(self) -> Self::Tuple {
+            fn into_pattern(self) -> Self::Pattern {
                 self.convert()
             }
             #[inline]
@@ -912,12 +913,12 @@ large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
 unsafe impl Dimension for Vec<Ix>
 {
     type SliceArg = [Si];
-    type Tuple = Self;
+    type Pattern = Self;
     fn ndim(&self) -> usize { self.len() }
     fn slice(&self) -> &[Ix] { self }
     fn slice_mut(&mut self) -> &mut [Ix] { self }
     #[inline]
-    fn into_tuple(self) -> Self::Tuple {
+    fn into_pattern(self) -> Self::Pattern {
         self
     }
 }

@@ -248,14 +248,14 @@ fn test_select(){
 fn diag()
 {
     let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
-    assert_eq!(d.dim_tuple(), 1);
+    assert_eq!(d.dim_pattern(), 1);
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
     let d = a.view().into_diag();
-    assert_eq!(d.dim_tuple(), 2);
+    assert_eq!(d.dim_pattern(), 2);
     let d = arr2::<f32, _>(&[[]]).into_diag();
-    assert_eq!(d.dim_tuple(), 0);
+    assert_eq!(d.dim_pattern(), 0);
     let d = RcArray::<f32, _>::zeros(()).into_diag();
-    assert_eq!(d.dim_tuple(), 1);
+    assert_eq!(d.dim_pattern(), 1);
 }
 
 #[test]
@@ -378,7 +378,7 @@ fn zero_axes()
 
     // we can even get a subarray of b
     let bsub = b.subview(Axis(0), 2);
-    assert_eq!(bsub.dim_tuple(), 0);
+    assert_eq!(bsub.dim_pattern(), 0);
 }
 
 #[test]
