@@ -656,7 +656,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         let defaults = self.dim.default_strides();
-        if self.strides == defaults {
+        if self.strides.equal(&defaults) {
             return true;
         }
         if self.ndim() == 1 { return false; }
@@ -672,25 +672,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     fn is_contiguous(&self) -> bool {
-        let defaults = self.dim.default_strides();
-        if self.strides == defaults {
-            return true;
-        }
-        if self.ndim() == 1 { return false; }
-        let order = self.strides._fastest_varying_stride_order();
-        let strides = self.strides.slice();
-
-        // FIXME: Negative strides
-        let dim = self.dim.slice();
-        let mut cstride = 1;
-        for &i in order.slice() {
-            // a dimension of length 1 can have unequal strides
-            if dim[i] != 1 && strides[i] != cstride {
-                return false;
-            }
-            cstride *= dim[i];
-        }
-        true
+        D::is_contiguous(&self.dim, &self.strides)
     }
 
     /// Return a pointer to the first element in the array.

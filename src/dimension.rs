@@ -153,6 +153,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
         }
     }
 
+    fn equal(&self, rhs: &Self) -> bool {
+        self.slice() == rhs.slice()
+    }
+
     fn into_tuple(self) -> Self::Tuple {
         panic!()
     }
@@ -293,6 +297,12 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     }
 
     #[doc(hidden)]
+    fn set_last_elem(&mut self, i: usize) {
+        let nd = self.ndim();
+        self.slice_mut()[nd - 1] = i;
+    }
+
+    #[doc(hidden)]
     /// Modify dimension, strides and return data pointer offset
     ///
     /// **Panics** if `slices` does not correspond to the number of axes,
@@ -343,6 +353,29 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
             *sr = s_prim as Ix;
         }
         offset
+    }
+
+    #[doc(hidden)]
+    fn is_contiguous(dim: &Self, strides: &Self) -> bool {
+        let defaults = dim.default_strides();
+        if strides.equal(&defaults) {
+            return true;
+        }
+        if dim.ndim() == 1 { return false; }
+        let order = strides._fastest_varying_stride_order();
+        let strides = strides.slice();
+
+        // FIXME: Negative strides
+        let dim_slice = dim.slice();
+        let mut cstride = 1;
+        for &i in order.slice() {
+            // a dimension of length 1 can have unequal strides
+            if dim_slice[i] != 1 && strides[i] != cstride {
+                return false;
+            }
+            cstride *= dim_slice[i];
+        }
+        true
     }
 
     /// Return the axis ordering corresponding to the fastest variation
@@ -619,6 +652,11 @@ unsafe impl Dimension for [Ix; 1] {
     }
 
     #[inline]
+    fn equal(&self, rhs: &Self) -> bool {
+        self[0] == rhs[0]
+    }
+
+    #[inline]
     fn size(&self) -> usize { self[0] }
     #[inline]
     fn size_checked(&self) -> Option<usize> { Some(self[0]) }
@@ -679,16 +717,20 @@ unsafe impl Dimension for [Ix; 2] {
         let imax = self[0];
         let jmax = self[1];
         j += 1;
-        if j == jmax {
+        if j >= jmax {
             j = 0;
             i += 1;
-            if i == imax {
+            if i >= imax {
                 return None;
             }
         }
         Some([i, j])
     }
 
+    #[inline]
+    fn equal(&self, rhs: &Self) -> bool {
+        self[0] == rhs[0] && self[1] == rhs[1]
+    }
 
     #[inline]
     fn size(&self) -> usize { self[0] * self[1] }
@@ -701,15 +743,53 @@ unsafe impl Dimension for [Ix; 2] {
     }
 
     #[inline]
+    fn last_elem(&self) -> usize {
+        self[1]
+    }
+
+    #[inline]
+    fn set_last_elem(&mut self, i: usize) {
+        self[1] = i;
+    }
+
+    #[inline]
     fn default_strides(&self) -> Self {
         // Compute default array strides
         // Shape (a, b, c) => Give strides (b * c, c, 1)
         Ix2(self[1], 1)
     }
+    #[inline]
+    fn fortran_strides(&self) -> Self {
+        Ix2(1, self[0])
+    }
 
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         if self[0] as Ixs <= self[1] as Ixs { Ix2(0, 1) } else { Ix2(1, 0) }
+    }
+
+    #[inline]
+    fn is_contiguous(dim: &Self, strides: &Self) -> bool {
+        let defaults = dim.default_strides();
+        if strides.equal(&defaults) {
+            return true;
+        }
+        
+        if dim.ndim() == 1 { return false; }
+        let order = strides._fastest_varying_stride_order();
+        let strides = strides.slice();
+
+        // FIXME: Negative strides
+        let dim_slice = dim.slice();
+        let mut cstride = 1;
+        for &i in order.slice() {
+            // a dimension of length 1 can have unequal strides
+            if dim_slice[i] != 1 && strides[i] != cstride {
+                return false;
+            }
+            cstride *= dim_slice[i];
+        }
+        true
     }
 
     #[inline]
