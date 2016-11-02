@@ -172,3 +172,11 @@ impl<D> ShapeBuilder for Shape<D>
 }
 
 
+impl<D> Shape<D>
+    where D: Dimension,
+{
+    // Return a reference to the dimension
+    //pub fn dimension(&self) -> &D { &self.dim }
+    /// Return the size of the shape in number of elements
+    pub fn size(&self) -> usize { self.dim.size() }
+}
