@@ -21,6 +21,7 @@ use ndarray::{
     Dimension,
     DataOwned,
 };
+use ndarray::IntoShape;
 
 /// Constructors for n-dimensional arrays with random elements.
 ///
@@ -53,34 +54,39 @@ pub trait RandomExt<S, D>
     /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],
     /// //  [  0.0914,   5.5186,   5.8135,   5.2361,   3.1879]]
     /// # }
-    fn random<IdS>(dim: D, distribution: IdS) -> ArrayBase<S, D>
-        where IdS: IndependentSample<S::Elem>;
+    fn random<Sh, IdS>(shape: Sh, distribution: IdS) -> ArrayBase<S, D>
+        where IdS: IndependentSample<S::Elem>,
+              Sh: IntoShape<Dim=D>;
 
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
     ///
     /// ***Panics*** if the number of elements overflows usize.
-    fn random_using<IdS, R>(dim: D, distribution: IdS, rng: &mut R) -> ArrayBase<S, D>
+    fn random_using<Sh, IdS, R>(shape: Sh, distribution: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
-              R: Rng;
+              R: Rng,
+              Sh: IntoShape<Dim=D>;
 }
 
 impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
     where S: DataOwned,
           D: Dimension,
 {
-    fn random<IdS>(dim: D, dist: IdS) -> ArrayBase<S, D>
-        where IdS: IndependentSample<S::Elem>
+    fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
+        where IdS: IndependentSample<S::Elem>,
+              Sh: IntoShape<Dim=D>,
     {
-        Self::random_using(dim, dist, &mut rand::weak_rng())
+        Self::random_using(shape, dist, &mut rand::weak_rng())
     }
 
-    fn random_using<IdS, R>(dim: D, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
+    fn random_using<Sh, IdS, R>(shape: Sh, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
-              R: Rng
+              R: Rng,
+              Sh: IntoShape<Dim=D>,
     {
-        let elements = Vec::from_iter((0..dim.size()).map(move |_| dist.ind_sample(rng)));
-        Self::from_shape_vec(dim, elements).unwrap()
+        let shape = shape.into_shape();
+        let elements = Vec::from_iter((0..shape.size()).map(move |_| dist.ind_sample(rng)));
+        Self::from_shape_vec(shape, elements).unwrap()
     }
 }
 
