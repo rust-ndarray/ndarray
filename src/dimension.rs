@@ -133,11 +133,13 @@ use std::ops::{Range, RangeTo, RangeFrom, RangeFull};
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
 pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
+/*
     IndexMut<usize, Output=usize> +
     IndexMut<Range<usize>, Output=[usize]> +
     IndexMut<RangeTo<usize>, Output=[usize]> +
     IndexMut<RangeFrom<usize>, Output=[usize]> +
     IndexMut<RangeFull, Output=[usize]> +
+    */
     Add<usize, Output=Self> + Add<Self, Output=Self> +
     AddAssign + for<'x> AddAssign<&'x Self> + AddAssign<usize> + 
     Sub<usize, Output=Self> + Sub<Self, Output=Self> +
@@ -1306,6 +1308,7 @@ pub mod dim {
         fn deref_mut(&mut self) -> &mut I { &mut self.index }
     }
 
+    /*
     impl<I, J> Index<J> for Dim<I>
         where [usize]: Index<J>,
               Dim<I>: Dimension,
@@ -1324,6 +1327,7 @@ pub mod dim {
             self.slice_mut().index_mut(index)
         }
     }
+    */
 
     use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
