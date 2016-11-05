@@ -145,7 +145,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
     type SliceArg: ?Sized + AsRef<[Si]>;
     /// Pattern matching friendly form of the dimension value.
     ///
-    /// Usually a tuple.
+    /// - For `Ix1`: `usize`,
+    /// - For `Ix2`: `(usize, usize)`
+    /// - and so on..
+    /// - For `Vec<Ix>`: `Vec<usize>`,
     type Pattern: IntoDimension<Dim=Self>;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
