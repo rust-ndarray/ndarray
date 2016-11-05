@@ -1039,7 +1039,8 @@ unsafe impl NdIndex<Ix0> for () {
     fn index_checked(&self, dim: &Ix0, strides: &Ix0) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix0())
     }
-    fn index_unchecked(&self, strides: &Ix0) -> isize {
+    #[inline(always)]
+    fn index_unchecked(&self, _strides: &Ix0) -> isize {
         0
     }
 }
@@ -1049,6 +1050,7 @@ unsafe impl NdIndex<Ix1> for Ix {
     fn index_checked(&self, dim: &Ix1, strides: &Ix1) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix1(*self))
     }
+    #[inline(always)]
     fn index_unchecked(&self, strides: &Ix1) -> isize {
         stride_offset(*self, strides[0])
     }
@@ -1059,6 +1061,7 @@ unsafe impl NdIndex<Ix2> for (Ix, Ix) {
     fn index_checked(&self, dim: &Ix2, strides: &Ix2) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix2(self.0, self.1))
     }
+    #[inline]
     fn index_unchecked(&self, strides: &Ix2) -> isize {
         stride_offset(self.0, strides[0]) + 
         stride_offset(self.1, strides[1])
@@ -1070,6 +1073,7 @@ unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
         dim.stride_offset_checked(strides, &self.convert())
     }
 
+    #[inline]
     fn index_unchecked(&self, strides: &Ix3) -> isize {
         stride_offset(self.0, strides[0]) + 
         stride_offset(self.1, strides[1]) +
@@ -1082,6 +1086,7 @@ unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
     fn index_checked(&self, dim: &Ix4, strides: &Ix4) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
+    #[inline]
     fn index_unchecked(&self, strides: &Ix4) -> isize {
         zip(&**strides, &*self.convert()).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
@@ -1091,6 +1096,7 @@ unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     fn index_checked(&self, dim: &Ix5, strides: &Ix5) -> Option<isize> {
         dim.stride_offset_checked(strides, &self.convert())
     }
+    #[inline]
     fn index_unchecked(&self, strides: &Ix5) -> isize {
         zip(&**strides, &*self.convert()).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
@@ -1101,6 +1107,7 @@ unsafe impl NdIndex<Ix2> for [Ix; 2] {
     fn index_checked(&self, dim: &Ix2, strides: &Ix2) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix2(self[0], self[1]))
     }
+    #[inline]
     fn index_unchecked(&self, strides: &Ix2) -> isize {
         stride_offset(self[0], strides[0]) + 
         stride_offset(self[1], strides[1])
@@ -1112,6 +1119,7 @@ unsafe impl NdIndex<Ix3> for [Ix; 3] {
     fn index_checked(&self, dim: &Ix3, strides: &Ix3) -> Option<isize> {
         dim.stride_offset_checked(strides, &Ix3(self[0], self[1], self[2]))
     }
+    #[inline]
     fn index_unchecked(&self, strides: &Ix3) -> isize {
         stride_offset(self[0], strides[0]) + 
         stride_offset(self[1], strides[1]) +
