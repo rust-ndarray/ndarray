@@ -510,7 +510,7 @@ impl<D> IntoDimension for D where D: Dimension {
 impl IntoDimension for Vec<usize> {
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim { Dim { index: self } }
+    fn into_dimension(self) -> Self::Dim { Dim::new(self) }
 }
 
 trait Convert {
@@ -568,9 +568,7 @@ macro_rules! tuple_to_array {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
-                Dim {
-                    index: self,
-                }
+                Dim::new(self)
             }
         }
 
@@ -578,7 +576,7 @@ macro_rules! tuple_to_array {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
-                Dim { index: index!(array_expr [self] $n) }
+                Dim::new(index!(array_expr [self] $n))
             }
         }
 
@@ -1235,32 +1233,52 @@ derive_cmp!{PartialEq for Axis, eq -> bool}
 derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
 clone_from_copy!{Axis}
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
-pub struct Dim<I: ?Sized> {
-    index: I,
-}
-pub fn Dim<T>(index: T) -> T::Dim
-    where T: IntoDimension
-{
-    index.into_dimension()
+trait DimNew<I> {
+    fn new(index: I) -> Self;
 }
 
-impl<I: ?Sized> PartialEq<I> for Dim<I>
-    where I: PartialEq,
-{
-    fn eq(&self, rhs: &I) -> bool {
-        self.index == *rhs
+pub use self::dim::*;
+pub mod dim {
+    use super::IntoDimension;
+    use super::DimNew;
+
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+    pub struct Dim<I: ?Sized> {
+        index: I,
     }
-}
 
-use std::ops::{Deref, DerefMut};
+    impl<I> DimNew<I> for Dim<I> {
+        fn new(index: I) -> Dim<I> {
+            Dim {
+                index: index,
+            }
+        }
+    }
 
-impl<I: ?Sized> Deref for Dim<I> {
-    type Target = I;
-    fn deref(&self) -> &I { &self.index }
-}
-impl<I: ?Sized> DerefMut for Dim<I>
-{
-    fn deref_mut(&mut self) -> &mut I { &mut self.index }
+    pub fn Dim<T>(index: T) -> T::Dim
+        where T: IntoDimension
+    {
+        index.into_dimension()
+    }
+
+    impl<I: ?Sized> PartialEq<I> for Dim<I>
+        where I: PartialEq,
+    {
+        fn eq(&self, rhs: &I) -> bool {
+            self.index == *rhs
+        }
+    }
+
+    use std::ops::{Deref, DerefMut};
+
+    impl<I: ?Sized> Deref for Dim<I> {
+        type Target = I;
+        fn deref(&self) -> &I { &self.index }
+    }
+    impl<I: ?Sized> DerefMut for Dim<I>
+    {
+        fn deref_mut(&mut self) -> &mut I { &mut self.index }
+    }
+
 }
 

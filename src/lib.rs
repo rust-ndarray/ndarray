@@ -91,6 +91,7 @@ pub use dimension::{
     RemoveAxis,
     Axis,
 };
+pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
 pub use indexes::Indexes;

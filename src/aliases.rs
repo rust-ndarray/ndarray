@@ -2,7 +2,7 @@
 //!
 
 use ::{Ix, Array, ArrayView, ArrayViewMut};
-pub use ::dimension::Dim;
+use ::dimension::Dim;
 
 #[allow(non_snake_case)]
 #[inline(always)]
