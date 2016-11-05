@@ -745,12 +745,12 @@ unsafe impl Dimension for Ix2 {
 
     #[inline]
     fn last_elem(&self) -> usize {
-        self[1]
+        (**self)[1]
     }
 
     #[inline]
     fn set_last_elem(&mut self, i: usize) {
-        self[1] = i;
+        (**self)[1] = i;
     }
 
     #[inline]
