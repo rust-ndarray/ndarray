@@ -16,7 +16,6 @@ use error::{from_kind, ErrorKind, ShapeError};
 use ZipExt;
 use {Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, IxDyn};
 use {ArrayView1, ArrayViewMut1};
-use aliases::Dim;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
@@ -511,15 +510,15 @@ impl<D> IntoDimension for D where D: Dimension {
 impl IntoDimension for Vec<usize> {
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim { Dim(self) }
+    fn into_dimension(self) -> Self::Dim { Dim { index: self } }
 }
 
-trait Convert<T = usize> {
+trait Convert {
     type To;
     fn convert(self) -> Self::To;
 }
 
-impl Convert<usize> for Ix {
+impl Convert for Ix {
     type To = Ix1;
     fn convert(self) -> Self::To { Ix1(self) }
 }
@@ -548,34 +547,30 @@ macro_rules! array_expr {
     )
 }
 
-impl<I> From<I> for Dim<I>
-    where Dim<I>: ::Dimension
-{
-    fn from(x: I) -> Self {
-        Dim(x)
-    }
-}
-
-impl From<usize> for Dim<[usize; 1]> {
-    fn from(x: usize) -> Self {
-        Dim([x])
-    }
-}
-
 macro_rules! tuple_to_array {
     ([] $($n:tt)*) => {
         $(
-        impl<T: Copy> Convert<T> for [T; $n] {
-            type To = index!(tuple_type [T] $n);
+        impl Convert for [Ix; $n] {
+            type To = index!(tuple_type [Ix] $n);
             fn convert(self) -> Self::To {
                 index!(tuple_expr [self] $n)
             }
         }
         
-        impl<T: Copy> Convert<T> for index!(tuple_type [T] $n) {
-            type To = Dim<[T; $n]>;
+        impl Convert for index!(tuple_type [Ix] $n) {
+            type To = Dim<[Ix; $n]>;
             fn convert(self) -> Self::To {
                 Dim(index!(array_expr [self] $n))
+            }
+        }
+
+        impl IntoDimension for [Ix; $n] {
+            type Dim = Dim<[Ix; $n]>;
+            #[inline(always)]
+            fn into_dimension(self) -> Self::Dim {
+                Dim {
+                    index: self,
+                }
             }
         }
 
@@ -583,13 +578,7 @@ macro_rules! tuple_to_array {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
-                Dim(index!(array_expr [self] $n))
-            }
-        }
-
-        impl From<index!(tuple_type [Ix] $n)> for Dim<[usize; $n]> {
-            fn from(x: index!(tuple_type [Ix] $n)) -> Self {
-                x.convert()
+                Dim { index: index!(array_expr [self] $n) }
             }
         }
 
@@ -606,9 +595,9 @@ unsafe impl Dimension for Ix0 {
     #[inline]
     fn ndim(&self) -> usize { 0 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self.0 }
+    fn slice(&self) -> &[Ix] { &self[..] }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
@@ -627,9 +616,9 @@ unsafe impl Dimension for Ix1 {
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self.0 }
+    fn slice(&self) -> &[Ix] { &self[..] }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self[0]
@@ -700,9 +689,9 @@ unsafe impl Dimension for Ix2 {
         self.convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self.0 }
+    fn slice(&self) -> &[Ix] { &self[..] }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = index[0];
@@ -834,9 +823,9 @@ unsafe impl Dimension for Ix3 {
         self.convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self.0 }
+    fn slice(&self) -> &[Ix] { &self[..] }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
 
     #[inline]
     fn size(&self) -> usize {
@@ -916,9 +905,9 @@ macro_rules! large_dim {
                 self.convert()
             }
             #[inline]
-            fn slice(&self) -> &[Ix] { &self.0 }
+            fn slice(&self) -> &[Ix] { &self[..] }
             #[inline]
-            fn slice_mut(&mut self) -> &mut [Ix] { &mut self.0 }
+            fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
         }
     )
 }
@@ -1237,4 +1226,33 @@ macro_rules! derive_cmp {
 derive_cmp!{PartialEq for Axis, eq -> bool}
 derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
 clone_from_copy!{Axis}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+pub struct Dim<I: ?Sized> {
+    index: I,
+}
+pub fn Dim<T>(index: T) -> T::Dim
+    where T: IntoDimension
+{
+    index.into_dimension()
+}
+
+impl<I: ?Sized> PartialEq<I> for Dim<I>
+    where I: PartialEq,
+{
+    fn eq(&self, rhs: &I) -> bool {
+        self.index == *rhs
+    }
+}
+
+use std::ops::{Deref, DerefMut};
+
+impl<I: ?Sized> Deref for Dim<I> {
+    type Target = I;
+    fn deref(&self) -> &I { &self.index }
+}
+impl<I: ?Sized> DerefMut for Dim<I>
+{
+    fn deref_mut(&mut self) -> &mut I { &mut self.index }
+}
 

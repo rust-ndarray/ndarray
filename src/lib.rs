@@ -87,6 +87,7 @@ use std::marker::PhantomData;
 
 pub use dimension::{
     Dimension,
+    IntoDimension,
     RemoveAxis,
     Axis,
 };

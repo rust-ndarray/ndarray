@@ -2,6 +2,8 @@
 //!
 
 use ::{Ix, Array, ArrayView, ArrayViewMut};
+use ::dimension::IntoDimension;
+pub use ::dimension::Dim;
 
 #[allow(non_snake_case)]
 #[inline(always)]
@@ -16,8 +18,6 @@ pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 { Dim([i0, i1]) }
 #[inline(always)]
 pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 { Dim([i0, i1, i2]) }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
-pub struct Dim<I: ?Sized>(pub I);
 /// zero-dimensionial
 pub type Ix0 = Dim<[Ix; 0]>;
 /// one-dimensional
@@ -32,25 +32,6 @@ pub type Ix4 = Dim<[Ix; 4]>;
 pub type Ix5 = Dim<[Ix; 5]>;
 /// dynamic-dimensional
 pub type IxDyn = Dim<Vec<Ix>>;
-
-impl<I: ?Sized> PartialEq<I> for Dim<I>
-    where I: PartialEq,
-{
-    fn eq(&self, rhs: &I) -> bool {
-        self.0 == *rhs
-    }
-}
-
-use std::ops::{Deref, DerefMut};
-
-impl<I: ?Sized> Deref for Dim<I> {
-    type Target = I;
-    fn deref(&self) -> &I { &self.0 }
-}
-impl<I: ?Sized> DerefMut for Dim<I>
-{
-    fn deref_mut(&mut self) -> &mut I { &mut self.0 }
-}
 
 /// zero-dimensional array
 pub type Array0<A> = Array<A, Ix0>;
