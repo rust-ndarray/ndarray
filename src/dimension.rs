@@ -1255,6 +1255,7 @@ pub mod dim {
         }
     }
 
+    #[allow(non_snake_case)]
     pub fn Dim<T>(index: T) -> T::Dim
         where T: IntoDimension
     {
