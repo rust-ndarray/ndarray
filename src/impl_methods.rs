@@ -20,7 +20,6 @@ use iterators;
 use error::{self, ShapeError};
 use super::zipsl;
 use super::ZipExt;
-use shape_builder::IntoShape;
 use dimension::IntoDimension;
 
 use {

@@ -2,7 +2,6 @@
 //!
 
 use ::{Ix, Array, ArrayView, ArrayViewMut};
-use ::dimension::IntoDimension;
 pub use ::dimension::Dim;
 
 #[allow(non_snake_case)]
