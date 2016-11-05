@@ -21,7 +21,7 @@ use ndarray::{
     Dimension,
     DataOwned,
 };
-use ndarray::IntoShape;
+use ndarray::ShapeBuilder;
 
 /// Constructors for n-dimensional arrays with random elements.
 ///
@@ -56,7 +56,7 @@ pub trait RandomExt<S, D>
     /// # }
     fn random<Sh, IdS>(shape: Sh, distribution: IdS) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
-              Sh: IntoShape<Dim=D>;
+              Sh: ShapeBuilder<Dim=D>;
 
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
@@ -65,7 +65,7 @@ pub trait RandomExt<S, D>
     fn random_using<Sh, IdS, R>(shape: Sh, distribution: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
               R: Rng,
-              Sh: IntoShape<Dim=D>;
+              Sh: ShapeBuilder<Dim=D>;
 }
 
 impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
@@ -74,7 +74,7 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
-              Sh: IntoShape<Dim=D>,
+              Sh: ShapeBuilder<Dim=D>,
     {
         Self::random_using(shape, dist, &mut rand::weak_rng())
     }
@@ -82,7 +82,7 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
     fn random_using<Sh, IdS, R>(shape: Sh, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
         where IdS: IndependentSample<S::Elem>,
               R: Rng,
-              Sh: IntoShape<Dim=D>,
+              Sh: ShapeBuilder<Dim=D>,
     {
         let shape = shape.into_shape();
         let elements = Vec::from_iter((0..shape.size()).map(move |_| dist.ind_sample(rng)));
