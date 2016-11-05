@@ -62,3 +62,29 @@ fn fastest_varying_order() {
     assert_eq!(Dim([2, 2, 3, 1, 2])._fastest_varying_stride_order(), [3, 0, 1, 4, 2]);
 }
 
+#[test]
+fn test_indexing() {
+    let mut x = Dim([1, 2]);
+
+    assert_eq!(x[0], 1);
+    assert_eq!(x[1], 2);
+
+    x[0] = 7;
+    assert_eq!(x, [7, 2]);
+}
+
+#[test]
+fn test_operations() {
+    let mut x = Dim([1, 2]);
+    let mut y = Dim([1, 1]);
+
+    assert_eq!(x + y, [2, 3]);
+
+    x += y;
+    assert_eq!(x, [2, 3]);
+    x *= 2;
+    assert_eq!(x, [4, 6]);
+
+    y -= 1;
+    assert_eq!(y, [0, 0]);
+}

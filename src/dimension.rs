@@ -8,6 +8,8 @@
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::slice;
+use std::ops::{Index, IndexMut};
+
 use itertools::{enumerate, zip};
 
 use super::{Si, Ix, Ixs};
@@ -127,7 +129,9 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
 ///
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
-pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default {
+pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default
+    + IndexMut<usize>
+{
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///
@@ -596,9 +600,9 @@ unsafe impl Dimension for Ix0 {
     #[inline]
     fn ndim(&self) -> usize { 0 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self[..] }
+    fn slice(&self) -> &[Ix] { &**self }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
@@ -617,9 +621,9 @@ unsafe impl Dimension for Ix1 {
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self[..] }
+    fn slice(&self) -> &[Ix] { &**self }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self[0]
@@ -690,9 +694,9 @@ unsafe impl Dimension for Ix2 {
         self.convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self[..] }
+    fn slice(&self) -> &[Ix] { &**self }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = index[0];
@@ -824,9 +828,9 @@ unsafe impl Dimension for Ix3 {
         self.convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { &self[..] }
+    fn slice(&self) -> &[Ix] { &**self }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
 
     #[inline]
     fn size(&self) -> usize {
@@ -906,9 +910,9 @@ macro_rules! large_dim {
                 self.convert()
             }
             #[inline]
-            fn slice(&self) -> &[Ix] { &self[..] }
+            fn slice(&self) -> &[Ix] { &**self }
             #[inline]
-            fn slice_mut(&mut self) -> &mut [Ix] { &mut self[..] }
+            fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
         }
     )
 }
@@ -1244,6 +1248,10 @@ pub use self::dim::*;
 pub mod dim {
     use super::IntoDimension;
     use super::DimNew;
+    use super::Dimension;
+    use Ix;
+
+    use itertools::{enumerate, zip};
 
     #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
     pub struct Dim<I: ?Sized> {
@@ -1273,7 +1281,7 @@ pub mod dim {
         }
     }
 
-    use std::ops::{Deref, DerefMut};
+    use std::ops::{Deref, DerefMut, Index, IndexMut};
 
     impl<I: ?Sized> Deref for Dim<I> {
         type Target = I;
@@ -1284,5 +1292,94 @@ pub mod dim {
         fn deref_mut(&mut self) -> &mut I { &mut self.index }
     }
 
+    impl<I, J> Index<J> for Dim<I>
+        where [usize]: Index<J>,
+              Dim<I>: Dimension,
+    {
+        type Output = <[usize] as Index<J>>::Output;
+        fn index(&self, index: J) -> &Self::Output {
+            self.slice().index(index)
+        }
+    }
+
+    impl<I, J> IndexMut<J> for Dim<I>
+        where [usize]: IndexMut<J>,
+              Dim<I>: Dimension,
+    {
+        fn index_mut(&mut self, index: J) -> &mut Self::Output {
+            self.slice_mut().index_mut(index)
+        }
+    }
+
+    use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
+
+    macro_rules! impl_op {
+        ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
+        impl<I> $op for Dim<I>
+            where Dim<I>: Dimension,
+        {
+            type Output = Self;
+            fn $op_m(mut self, rhs: Self) -> Self {
+                $expr!(self, &rhs);
+                self
+            }
+        }
+
+        impl<I> $op<Ix> for Dim<I>
+            where Dim<I>: Dimension,
+        {
+            type Output = Self;
+            fn $op_m(mut self, rhs: Ix) -> Self {
+                $expr!(self, rhs);
+                self
+            }
+        }
+
+        impl<I> $opassign for Dim<I>
+            where Dim<I>: Dimension,
+        {
+            fn $opassign_m(&mut self, rhs: Self) {
+                $expr!(*self, &rhs);
+            }
+        }
+
+        impl<'a, I> $opassign<&'a Dim<I>> for Dim<I>
+            where Dim<I>: Dimension,
+        {
+            fn $opassign_m(&mut self, rhs: &Self) {
+                for (x, &y) in zip(self.slice_mut(), rhs.slice()) {
+                    $expr!(*x, y);
+                }
+            }
+        }
+
+        impl<I> $opassign<Ix> for Dim<I>
+            where Dim<I>: Dimension,
+        {
+            fn $opassign_m(&mut self, rhs: Ix) {
+                for x in self.slice_mut() {
+                    $expr!(*x, rhs);
+                }
+            }
+        }
+        }
+    }
+
+    macro_rules! add {
+        ($x:expr, $y:expr) => { $x += $y; }
+    }
+    macro_rules! sub {
+        ($x:expr, $y:expr) => { $x -= $y; }
+    }
+    macro_rules! mul {
+        ($x:expr, $y:expr) => { $x *= $y; }
+    }
+    impl_op!(Add, add, AddAssign, add_assign, add);
+    impl_op!(Sub, sub, SubAssign, sub_assign, sub);
+    impl_op!(Mul, mul, MulAssign, mul_assign, mul);
 }
 
+
+#[test]
+fn test_dim() {
+}
