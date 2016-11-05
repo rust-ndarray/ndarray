@@ -88,3 +88,22 @@ fn test_operations() {
     y -= 1;
     assert_eq!(y, [0, 0]);
 }
+
+#[test]
+fn test_generic_operations() {
+    fn test_dim<D: Dimension>(d: &D) {
+        let mut x = d.clone();
+        assert_eq!(x[0], 2);
+        x += 1;
+        assert_eq!(x[0], 3);
+        x += d;
+        assert_eq!(x[0], 5);
+
+        assert_eq!(x[..].len(), x.ndim());
+        assert_eq!(&x[..], x.slice());
+    }
+
+    test_dim(&Dim([2, 3, 4]));
+    test_dim(&Dim(vec![2, 3, 4, 1]));
+    test_dim(&Dim(2));
+}

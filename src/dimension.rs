@@ -123,14 +123,28 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
     Some(offset)
 }
 
+use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
+use std::ops::{Range, RangeTo, RangeFrom, RangeFull};
+
 /// Array shape and index trait.
 ///
 /// `unsafe` because of the assumptions in the default methods.
 ///
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
-pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default
-    + IndexMut<usize>
+pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
+    IndexMut<usize, Output=usize> +
+    IndexMut<Range<usize>, Output=[usize]> +
+    IndexMut<RangeTo<usize>, Output=[usize]> +
+    IndexMut<RangeFrom<usize>, Output=[usize]> +
+    IndexMut<RangeFull, Output=[usize]> +
+    Add<usize, Output=Self> + Add<Self, Output=Self> +
+    AddAssign + for<'x> AddAssign<&'x Self> + AddAssign<usize> + 
+    Sub<usize, Output=Self> + Sub<Self, Output=Self> +
+    SubAssign + for<'x> SubAssign<&'x Self> + SubAssign<usize> + 
+    Mul<usize, Output=Self> + Mul<Self, Output=Self> +
+    MulAssign + for<'x> MulAssign<&'x Self> + MulAssign<usize> 
+
 {
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
