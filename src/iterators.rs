@@ -105,15 +105,9 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
                 let len = self.dim.last_elem();
                 let offset = D::stride_offset(&index, &self.strides);
                 unsafe {
-                    let mut ptr = self.ptr.offset(offset);
-                    let mut i = elem_index;
-                    loop {
-                        accum = g(accum, ptr);
-                        i += 1;
-                        if i >= len {
-                            break;
-                        }
-                        ptr = ptr.offset(stride);
+                    let row_ptr = self.ptr.offset(offset);
+                    for i in 0..(len - elem_index) {
+                        accum = g(accum, row_ptr.offset(i as isize * stride));
                     }
                 }
                 index.set_last_elem(len - 1);
