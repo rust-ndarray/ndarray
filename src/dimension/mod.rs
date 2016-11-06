@@ -22,12 +22,14 @@ pub use self::axis::Axis;
 pub use self::ndindex::NdIndex;
 pub use self::conversion::IntoDimension;
 use self::conversion::Convert;
+pub use self::remove_axis::RemoveAxis;
 
 pub mod dim;
 #[macro_use] mod macros;
 mod axis;
 mod conversion;
 mod ndindex;
+mod remove_axis;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
@@ -845,71 +847,6 @@ impl<J> IndexMut<J> for Dim<Vec<usize>>
 {
     fn index_mut(&mut self, index: J) -> &mut Self::Output {
         &mut self.ixm()[index]
-    }
-}
-
-/// Array shape with a next smaller dimension.
-///
-/// `RemoveAxis` defines a larger-than relation for array shapes:
-/// removing one axis from *Self* gives smaller dimension *Smaller*.
-pub trait RemoveAxis : Dimension {
-    type Smaller: Dimension;
-    fn remove_axis(&self, axis: Axis) -> Self::Smaller;
-}
-
-impl RemoveAxis for Dim<[Ix; 1]> {
-    type Smaller = Ix0;
-    #[inline]
-    fn remove_axis(&self, _: Axis) -> Ix0 { Ix0() }
-}
-
-impl RemoveAxis for Dim<[Ix; 2]> {
-    type Smaller = Ix1;
-    #[inline]
-    fn remove_axis(&self, axis: Axis) -> Ix1 {
-        let axis = axis.axis();
-        debug_assert!(axis < self.ndim());
-        if axis == 0 { Ix1(get!(self, 1)) } else { Ix1(get!(self, 0)) }
-    }
-}
-
-macro_rules! impl_remove_axis_array(
-    ($($n:expr),*) => (
-    $(
-        impl RemoveAxis for Dim<[Ix; $n]>
-        {
-            type Smaller = Dim<[Ix; $n - 1]>;
-            #[inline]
-            fn remove_axis(&self, axis: Axis) -> Self::Smaller {
-                let mut tup = Dim([0; $n - 1]);
-                {
-                    let mut it = tup.slice_mut().iter_mut();
-                    for (i, &d) in self.slice().iter().enumerate() {
-                        if i == axis.axis() {
-                            continue;
-                        }
-                        for rr in it.by_ref() {
-                            *rr = d;
-                            break
-                        }
-                    }
-                }
-                tup
-            }
-        }
-    )*
-    );
-);
-
-impl_remove_axis_array!(3, 4, 5, 6);
-
-
-impl RemoveAxis for Dim<Vec<Ix>> {
-    type Smaller = Self;
-    fn remove_axis(&self, axis: Axis) -> Self {
-        let mut res = self.clone();
-        res.ixm().remove(axis.axis());
-        res
     }
 }
 
