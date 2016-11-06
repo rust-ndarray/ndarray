@@ -13,10 +13,12 @@ use super::DimPrivate;
 /// ```
 /// use ndarray::arr2;
 ///
-/// let mut a = arr2(&[[0, 1], [0, 0]]);
-/// a[[1, 1]] = 1;
+/// let mut a = arr2(&[[0, 1],
+///                    [2, 3]]);
 /// assert_eq!(a[[0, 1]], 1);
-/// assert_eq!(a[[1, 1]], 1);
+/// assert_eq!(a[[1, 1]], 3);
+/// a[[1, 1]] += 1;
+/// assert_eq!(a[(1, 1)], 4);
 /// ```
 ///
 /// **Note** that `NdIndex` is implemented for all `D where D: Dimension`.
