@@ -132,6 +132,37 @@ unsafe impl NdIndex<Ix3> for [Ix; 3] {
     }
 }
 
+unsafe impl NdIndex<Ix4> for [Ix; 4] {
+    #[inline]
+    fn index_checked(&self, dim: &Ix4, strides: &Ix4) -> Option<isize> {
+        dim.stride_offset_checked(strides, &self.into_dimension())
+    }
+    #[inline]
+    fn index_unchecked(&self, strides: &Ix4) -> isize {
+        stride_offset(self[0], get!(strides, 0)) + 
+        stride_offset(self[1], get!(strides, 1)) +
+        stride_offset(self[2], get!(strides, 2)) +
+        stride_offset(self[3], get!(strides, 3)) +
+        0
+    }
+}
+
+unsafe impl NdIndex<Ix5> for [Ix; 5] {
+    #[inline]
+    fn index_checked(&self, dim: &Ix5, strides: &Ix5) -> Option<isize> {
+        dim.stride_offset_checked(strides, &self.into_dimension())
+    }
+    #[inline]
+    fn index_unchecked(&self, strides: &Ix5) -> isize {
+        stride_offset(self[0], get!(strides, 0)) + 
+        stride_offset(self[1], get!(strides, 1)) +
+        stride_offset(self[2], get!(strides, 2)) +
+        stride_offset(self[3], get!(strides, 3)) +
+        stride_offset(self[4], get!(strides, 4)) +
+        0
+    }
+}
+
 impl<'a> IntoDimension for &'a [Ix] {
     type Dim = Dim<Vec<Ix>>;
     fn into_dimension(self) -> Self::Dim {
