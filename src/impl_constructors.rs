@@ -20,6 +20,8 @@ use error::{self, ShapeError, ErrorKind};
 use Indexes;
 use iterators::{to_vec, to_vec_mapped};
 
+/// # Constructor Methods for Owned Arrays
+///
 /// Constructor methods for one-dimensional arrays.
 ///
 /// Note that the constructor methods apply to `Array` and `RcArray`,

@@ -198,8 +198,9 @@ pub type Ixs = isize;
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
 /// + [Broadcasting](#broadcasting)
-/// + [Methods](#methods)
-/// + [Methods for Array Views](#methods-for-array-views)
+/// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
+/// + [Methods For All Array Types](#methods-for-all-array-types)
+/// + [Methods Specific to Array Views](#methods-specific-to-array-views)
 ///
 /// ## `Array` and `RcArray`
 ///

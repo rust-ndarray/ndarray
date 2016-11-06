@@ -37,6 +37,7 @@ use {
 };
 use stacking::stack;
 
+/// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 {
     /// Return the total number of elements in the array.
