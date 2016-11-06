@@ -7,7 +7,6 @@
 // except according to those terms.
 use std::cmp::Ordering;
 use std::fmt::Debug;
-use std::slice;
 use std::ops::{Index, IndexMut};
 
 use itertools::{enumerate, zip};
@@ -1290,7 +1289,7 @@ pub mod dim {
     use super::Dimension;
     use Ix;
 
-    use itertools::{enumerate, zip};
+    use itertools::zip;
 
     #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
     pub struct Dim<I: ?Sized> {
