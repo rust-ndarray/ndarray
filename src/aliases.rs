@@ -1,7 +1,7 @@
 //! Type aliases for common array sizes
 //!
 
-use ::{Ix, Array, ArrayView, ArrayViewMut};
+use ::{Ix, Array, ArrayView, ArrayViewMut, RcArray};
 use ::dimension::Dim;
 use dimension::DimPrivate;
 
@@ -105,3 +105,8 @@ pub type ArrayViewMut5<'a, A> = ArrayViewMut<'a, A, Ix5>;
 pub type ArrayViewMut6<'a, A> = ArrayViewMut<'a, A, Ix6>;
 /// dynamic-dimensional read-write array view
 pub type ArrayViewMutD<'a, A> = ArrayViewMut<'a, A, IxDyn>;
+
+/// one-dimensional shared ownership array
+pub type RcArray1<A> = RcArray<A, Ix1>;
+/// two-dimensional shared ownership array
+pub type RcArray2<A> = RcArray<A, Ix2>;
