@@ -591,14 +591,14 @@ macro_rules! tuple_to_array {
             type Output = usize;
             #[inline(always)]
             fn index(&self, index: usize) -> &Self::Output {
-                &(**self)[index]
+                &self.ix()[index]
             }
         }
 
         impl IndexMut<usize> for Dim<[Ix; $n]> {
             #[inline(always)]
             fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut (**self)[index]
+                &mut self.ixm()[index]
             }
         }
 
@@ -625,15 +625,13 @@ unsafe impl Dimension for Ix0 {
     #[inline]
     fn ndim(&self) -> usize { 0 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &**self }
+    fn slice(&self) -> &[Ix] { &[] }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
+    fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern {
-        self.convert()
-    }
+    fn into_pattern(self) -> Self::Pattern { }
     #[inline]
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
@@ -643,7 +641,10 @@ unsafe impl Dimension for Ix0 {
 /// Indexing macro for Dim<[usize; N]> this
 /// gets the index at `$i` in the underlying array
 macro_rules! get {
-    ($dim:expr, $i:expr) => { (**$dim)[$i] }
+    ($dim:expr, $i:expr) => { $dim.ix()[$i] }
+}
+macro_rules! getm {
+    ($dim:expr, $i:expr) => { $dim.ixm()[$i] }
 }
 
 unsafe impl Dimension for Ix1 {
@@ -652,16 +653,16 @@ unsafe impl Dimension for Ix1 {
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &**self }
+    fn slice(&self) -> &[Ix] { self.ix() }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
+    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         get!(&self, 0)
     }
     #[inline]
     fn next_for(&self, mut index: Self) -> Option<Self> {
-        get!(&mut index, 0) += 1;
+        getm!(index, 0) += 1;
         if get!(&index, 0) < get!(self, 0) {
             Some(index)
         } else {
@@ -722,12 +723,12 @@ unsafe impl Dimension for Ix2 {
     fn ndim(&self) -> usize { 2 }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
-        self.convert()
+        self.ix().convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { &**self }
+    fn slice(&self) -> &[Ix] { self.ix() }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
+    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = get!(&index, 0);
@@ -762,12 +763,12 @@ unsafe impl Dimension for Ix2 {
 
     #[inline]
     fn last_elem(&self) -> usize {
-        (**self)[1]
+        get!(self, 1)
     }
 
     #[inline]
     fn set_last_elem(&mut self, i: usize) {
-        (**self)[1] = i;
+        getm!(self, 1) = i;
     }
 
     #[inline]
@@ -856,12 +857,12 @@ unsafe impl Dimension for Ix3 {
     fn ndim(&self) -> usize { 3 }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
-        self.convert()
+        self.ix().convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { &**self }
+    fn slice(&self) -> &[Ix] { self.ix() }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
+    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
 
     #[inline]
     fn size(&self) -> usize {
@@ -914,7 +915,7 @@ unsafe impl Dimension for Ix3 {
             ($stride:expr, $order:expr, $x:expr, $y:expr) => {
                 if $stride[$x] > $stride[$y] {
                     $stride.swap($x, $y);
-                    $order.swap($x, $y);
+                    $order.ixm().swap($x, $y);
                 }
             }
         }
@@ -938,12 +939,12 @@ macro_rules! large_dim {
             fn ndim(&self) -> usize { $n }
             #[inline]
             fn into_pattern(self) -> Self::Pattern {
-                self.convert()
+                self.ix().convert()
             }
             #[inline]
-            fn slice(&self) -> &[Ix] { &**self }
+            fn slice(&self) -> &[Ix] { self.ix() }
             #[inline]
-            fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
+            fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
         }
     )
 }
@@ -958,9 +959,9 @@ unsafe impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
-    fn ndim(&self) -> usize { self.len() }
-    fn slice(&self) -> &[Ix] { self }
-    fn slice_mut(&mut self) -> &mut [Ix] { self }
+    fn ndim(&self) -> usize { self.ix().len() }
+    fn slice(&self) -> &[Ix] { self.ix() }
+    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self
@@ -972,7 +973,7 @@ impl<J> Index<J> for Dim<Vec<usize>>
 {
     type Output = <Vec<usize> as Index<J>>::Output;
     fn index(&self, index: J) -> &Self::Output {
-        &(**self)[index]
+        &self.ix()[index]
     }
 }
 
@@ -980,7 +981,7 @@ impl<J> IndexMut<J> for Dim<Vec<usize>>
     where Vec<usize>: IndexMut<J>,
 {
     fn index_mut(&mut self, index: J) -> &mut Self::Output {
-        &mut (**self)[index]
+        &mut self.ixm()[index]
     }
 }
 
@@ -1044,7 +1045,7 @@ impl RemoveAxis for Dim<Vec<Ix>> {
     type Smaller = Self;
     fn remove_axis(&self, axis: Axis) -> Self {
         let mut res = self.clone();
-        res.remove(axis.axis());
+        res.ixm().remove(axis.axis());
         res
     }
 }
@@ -1132,7 +1133,7 @@ unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix4) -> isize {
-        zip(&**strides, &*self.into_dimension()).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), self.into_dimension().ix()).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
@@ -1142,7 +1143,7 @@ unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix5) -> isize {
-        zip(&**strides, &*self.into_dimension()).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), self.into_dimension().ix()).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 
@@ -1190,7 +1191,7 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
         Some(offset)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
-        zip(&**strides, *self).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), *self).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 
@@ -1206,7 +1207,7 @@ unsafe impl NdIndex<IxDyn> for Vec<Ix> {
         Some(offset)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
-        zip(&**strides, self).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), self).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 
@@ -1279,14 +1280,16 @@ derive_cmp!{PartialEq for Axis, eq -> bool}
 derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
 clone_from_copy!{Axis}
 
-trait DimNew<I> {
+trait DimPrivate<I> {
     fn new(index: I) -> Self;
+    fn ix(&self) -> &I;
+    fn ixm(&mut self) -> &mut I;
 }
 
 pub use self::dim::*;
 pub mod dim {
     use super::IntoDimension;
-    use super::DimNew;
+    use super::DimPrivate;
     use super::Dimension;
     use Ix;
 
@@ -1297,12 +1300,14 @@ pub mod dim {
         index: I,
     }
 
-    impl<I> DimNew<I> for Dim<I> {
+    impl<I> DimPrivate<I> for Dim<I> {
         fn new(index: I) -> Dim<I> {
             Dim {
                 index: index,
             }
         }
+        fn ix(&self) -> &I { &self.index }
+        fn ixm(&mut self) -> &mut I { &mut self.index }
     }
 
     /// Create a new dimension value.
@@ -1319,17 +1324,6 @@ pub mod dim {
         fn eq(&self, rhs: &I) -> bool {
             self.index == *rhs
         }
-    }
-
-    use std::ops::{Deref, DerefMut};
-
-    impl<I: ?Sized> Deref for Dim<I> {
-        type Target = I;
-        fn deref(&self) -> &I { &self.index }
-    }
-    impl<I: ?Sized> DerefMut for Dim<I>
-    {
-        fn deref_mut(&mut self) -> &mut I { &mut self.index }
     }
 
     use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
