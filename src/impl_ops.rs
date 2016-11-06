@@ -47,10 +47,6 @@ impl ScalarOperand for f64 { }
 impl ScalarOperand for Complex<f32> { }
 impl ScalarOperand for Complex<f64> { }
 
-macro_rules! as_expr(
-    ($e:expr) => ($e)
-);
-
 macro_rules! impl_binary_op(
     ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
 /// Perform elementwise
@@ -96,7 +92,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
     fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
     {
         self.zip_mut_with(rhs, |x, y| {
-            *x = as_expr!(x.clone() $operator y.clone());
+            *x = x.clone() $operator y.clone();
         });
         self
     }
@@ -139,7 +135,7 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
     type Output = ArrayBase<S, D>;
     fn $mth(mut self, x: B) -> ArrayBase<S, D> {
         self.unordered_foreach_mut(move |elt| {
-            *elt = as_expr!(elt.clone() $operator x.clone());
+            *elt = elt.clone() $operator x.clone();
         });
         self
     }
@@ -188,7 +184,7 @@ impl<S, D> $trt<ArrayBase<S, D>> for $scalar
         } or {{
             let mut rhs = rhs;
             rhs.unordered_foreach_mut(move |elt| {
-                *elt = as_expr!(self $operator *elt);
+                *elt = self $operator *elt;
             });
             rhs
         }})
