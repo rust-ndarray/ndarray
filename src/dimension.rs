@@ -124,7 +124,6 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
 }
 
 use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
-use std::ops::{Range, RangeTo, RangeFrom, RangeFull};
 
 /// Array shape and index trait.
 ///
@@ -133,13 +132,7 @@ use std::ops::{Range, RangeTo, RangeFrom, RangeFull};
 /// ***Don't implement or call methods in this trait, its interface is internal
 /// to the crate and will evolve at will.***
 pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
-/*
     IndexMut<usize, Output=usize> +
-    IndexMut<Range<usize>, Output=[usize]> +
-    IndexMut<RangeTo<usize>, Output=[usize]> +
-    IndexMut<RangeFrom<usize>, Output=[usize]> +
-    IndexMut<RangeFull, Output=[usize]> +
-    */
     Add<usize, Output=Self> + Add<Self, Output=Self> +
     AddAssign + for<'x> AddAssign<&'x Self> + AddAssign<usize> + 
     Sub<usize, Output=Self> + Sub<Self, Output=Self> +
@@ -595,6 +588,21 @@ macro_rules! tuple_to_array {
             }
         }
 
+        impl Index<usize> for Dim<[Ix; $n]> {
+            type Output = usize;
+            #[inline(always)]
+            fn index(&self, index: usize) -> &Self::Output {
+                &(**self)[index]
+            }
+        }
+
+        impl IndexMut<usize> for Dim<[Ix; $n]> {
+            #[inline(always)]
+            fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+                &mut (**self)[index]
+            }
+        }
+
         )*
     }
 }
@@ -958,6 +966,23 @@ unsafe impl Dimension for Dim<Vec<Ix>>
     }
 }
 
+impl<J> Index<J> for Dim<Vec<usize>>
+    where Vec<usize>: Index<J>,
+{
+    type Output = <Vec<usize> as Index<J>>::Output;
+    fn index(&self, index: J) -> &Self::Output {
+        &(**self)[index]
+    }
+}
+
+impl<J> IndexMut<J> for Dim<Vec<usize>>
+    where Vec<usize>: IndexMut<J>,
+{
+    fn index_mut(&mut self, index: J) -> &mut Self::Output {
+        &mut (**self)[index]
+    }
+}
+
 /// Array shape with a next smaller dimension.
 ///
 /// `RemoveAxis` defines a larger-than relation for array shapes:
@@ -1295,7 +1320,7 @@ pub mod dim {
         }
     }
 
-    use std::ops::{Deref, DerefMut, Index, IndexMut};
+    use std::ops::{Deref, DerefMut};
 
     impl<I: ?Sized> Deref for Dim<I> {
         type Target = I;
@@ -1305,27 +1330,6 @@ pub mod dim {
     {
         fn deref_mut(&mut self) -> &mut I { &mut self.index }
     }
-
-    /*
-    impl<I, J> Index<J> for Dim<I>
-        where [usize]: Index<J>,
-              Dim<I>: Dimension,
-    {
-        type Output = <[usize] as Index<J>>::Output;
-        fn index(&self, index: J) -> &Self::Output {
-            self.slice().index(index)
-        }
-    }
-
-    impl<I, J> IndexMut<J> for Dim<I>
-        where [usize]: IndexMut<J>,
-              Dim<I>: Dimension,
-    {
-        fn index_mut(&mut self, index: J) -> &mut Self::Output {
-            self.slice_mut().index_mut(index)
-        }
-    }
-    */
 
     use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 

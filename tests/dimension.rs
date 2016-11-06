@@ -94,12 +94,24 @@ fn test_generic_operations() {
     fn test_dim<D: Dimension>(d: &D) {
         let mut x = d.clone();
         x += 1;
-        assert_eq!(x.as_array_view()[0], 3);
+        assert_eq!(x[0], 3);
         x += d;
-        assert_eq!(x.as_array_view()[0], 5);
+        assert_eq!(x[0], 5);
     }
 
     test_dim(&Dim([2, 3, 4]));
     test_dim(&Dim(vec![2, 3, 4, 1]));
     test_dim(&Dim(2));
+}
+
+#[test]
+fn test_array_view() {
+    fn test_dim<D: Dimension>(d: &D) {
+        assert_eq!(d.as_array_view().scalar_sum(), 7);
+        assert_eq!(d.as_array_view().strides(), &[1]);
+    }
+
+    test_dim(&Dim([1, 2, 4]));
+    test_dim(&Dim(vec![1, 1, 2, 3]));
+    test_dim(&Dim(7));
 }
