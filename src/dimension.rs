@@ -497,6 +497,7 @@ macro_rules! index_item {
     ($m:ident $arg:tt 6) => ($m!($arg 0 1 2 3 4 5););
 }
 
+/// Convert a value into a dimension.
 pub trait IntoDimension {
     type Dim: Dimension;
     fn into_dimension(self) -> Self::Dim;
@@ -1304,6 +1305,7 @@ pub mod dim {
         }
     }
 
+    /// Create a new dimension value.
     #[allow(non_snake_case)]
     pub fn Dim<T>(index: T) -> T::Dim
         where T: IntoDimension

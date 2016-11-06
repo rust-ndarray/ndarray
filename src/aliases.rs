@@ -4,18 +4,26 @@
 use ::{Ix, Array, ArrayView, ArrayViewMut};
 use ::dimension::Dim;
 
+/// Create a zero-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
 pub fn Ix0() -> Ix0 { Dim([]) }
+/// Create a one-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
 pub fn Ix1(i0: Ix) -> Ix1 { Dim([i0]) }
+/// Create a two-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
 pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 { Dim([i0, i1]) }
+/// Create a three-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
 pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 { Dim([i0, i1, i2]) }
+/// Create a four-dimensional index
+#[allow(non_snake_case)]
+#[inline(always)]
+pub fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4 { Dim([i0, i1, i2, i3]) }
 
 /// zero-dimensionial
 pub type Ix0 = Dim<[Ix; 0]>;
