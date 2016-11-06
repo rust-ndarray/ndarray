@@ -23,6 +23,24 @@ pub trait DimPrivate<I> {
 ///
 /// `Dim` describes the number of axes and the length of each axis
 /// in an array. It is also used as an index type.
+///
+/// The commonly you want to use the methods of the `Dimension` trait. See its
+/// documentation for more information.
+///
+/// # Examples
+///
+/// To create an array with a particular dimension, you'd just pass
+/// a tuple (in this example (3, 2) is used), which is converted to
+/// `Dim` by the array constructor.
+///
+/// ```
+/// use ndarray::Array2;
+/// use ndarray::Dim;
+///
+/// let mut array = Array2::zeros((3, 2));
+/// array[[0, 0]] = 1.;
+/// assert_eq!(array.dim(), Dim([3, 2]));
+/// ```
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 pub struct Dim<I: ?Sized> {
     index: I,
