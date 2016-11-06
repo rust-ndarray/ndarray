@@ -128,8 +128,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 ///
 /// `unsafe` because of the assumptions in the default methods.
 ///
-/// ***Don't implement or call methods in this trait, its interface is internal
-/// to the crate and will evolve at will.***
+/// ***Don't implement this trait, it will evolve at will.***
 pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     IndexMut<usize, Output=usize> +
     Add<usize, Output=Self> + Add<Self, Output=Self> +
@@ -164,11 +163,19 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     type Pattern: IntoDimension<Dim=Self>;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
-    fn equal(&self, rhs: &Self) -> bool {
-        self.slice() == rhs.slice()
+
+    /// Convert the dimension into a pattern matching friendly value.
+    fn into_pattern(self) -> Self::Pattern;
+
+    /// Compute the size of the dimension (number of elements)
+    fn size(&self) -> usize {
+        self.slice().iter().fold(1, |s, &a| s * a as usize)
     }
 
-    fn into_pattern(self) -> Self::Pattern;
+    /// Compute the size while checking for overflow.
+    fn size_checked(&self) -> Option<usize> {
+        self.slice().iter().fold(Some(1), |s, &a| s.and_then(|s_| s_.checked_mul(a)))
+    }
 
     #[doc(hidden)]
     fn slice(&self) -> &[Ix];
@@ -176,22 +183,19 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     #[doc(hidden)]
     fn slice_mut(&mut self) -> &mut [Ix];
 
+    /// Borrow as a read-only array view.
     fn as_array_view(&self) -> ArrayView1<Ix> {
         ArrayView1::from(self.slice())
     }
+
+    /// Borrow as a read-write array view.
     fn as_array_view_mut(&mut self) -> ArrayViewMut1<Ix> {
         ArrayViewMut1::from(self.slice_mut())
     }
 
     #[doc(hidden)]
-    fn size(&self) -> usize {
-        self.slice().iter().fold(1, |s, &a| s * a as usize)
-    }
-
-    #[doc(hidden)]
-    /// Compute the size while checking for overflow
-    fn size_checked(&self) -> Option<usize> {
-        self.slice().iter().fold(Some(1), |s, &a| s.and_then(|s_| s_.checked_mul(a)))
+    fn equal(&self, rhs: &Self) -> bool {
+        self.slice() == rhs.slice()
     }
 
     #[doc(hidden)]
