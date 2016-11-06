@@ -15,7 +15,7 @@ use super::{Si, Ix, Ixs};
 use super::{zipsl, zipsl_mut};
 use error::{from_kind, ErrorKind, ShapeError};
 use ZipExt;
-use {Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, IxDyn};
+use {Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 use {ArrayView1, ArrayViewMut1};
 
 /// Calculate offset from `Ix` stride converting sign properly
@@ -489,6 +489,7 @@ macro_rules! index {
     ($m:ident $arg:tt 4) => ($m!($arg 0 1 2 3));
     ($m:ident $arg:tt 5) => ($m!($arg 0 1 2 3 4));
     ($m:ident $arg:tt 6) => ($m!($arg 0 1 2 3 4 5));
+    ($m:ident $arg:tt 7) => ($m!($arg 0 1 2 3 4 5 6));
 }
 
 macro_rules! index_item {
@@ -499,6 +500,7 @@ macro_rules! index_item {
     ($m:ident $arg:tt 4) => ($m!($arg 0 1 2 3););
     ($m:ident $arg:tt 5) => ($m!($arg 0 1 2 3 4););
     ($m:ident $arg:tt 6) => ($m!($arg 0 1 2 3 4 5););
+    ($m:ident $arg:tt 7) => ($m!($arg 0 1 2 3 4 5 6););
 }
 
 /// Convert a value into a dimension.
@@ -611,7 +613,7 @@ macro_rules! tuple_to_array {
     }
 }
 
-index_item!(tuple_to_array [] 6);
+index_item!(tuple_to_array [] 7);
 
 unsafe impl Dimension for Ix0 {
     type SliceArg = [Si; 0];
@@ -925,8 +927,8 @@ unsafe impl Dimension for Ix3 {
 }
 
 macro_rules! large_dim {
-    ($n:expr, $($ix:ident),+) => (
-        unsafe impl Dimension for Dim<[Ix; $n]> {
+    ($n:expr, $name:ident, $($ix:ident),+) => (
+        unsafe impl Dimension for $name {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
             #[inline]
@@ -943,21 +945,13 @@ macro_rules! large_dim {
     )
 }
 
-large_dim!(4, Ix, Ix, Ix, Ix);
-large_dim!(5, Ix, Ix, Ix, Ix, Ix);
-/*
-large_dim!(6, Ix, Ix, Ix, Ix, Ix, Ix);
-large_dim!(7, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-large_dim!(8, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-large_dim!(9, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-large_dim!(10, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-large_dim!(11, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-large_dim!(12, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix, Ix);
-*/
+large_dim!(4, Ix4, Ix, Ix, Ix, Ix);
+large_dim!(5, Ix5, Ix, Ix, Ix, Ix, Ix);
+large_dim!(6, Ix6, Ix, Ix, Ix, Ix, Ix, Ix);
 
 /// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
-unsafe impl Dimension for Dim<Vec<Ix>>
+unsafe impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
@@ -996,13 +990,13 @@ pub trait RemoveAxis : Dimension {
     fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
-impl RemoveAxis for Ix1 {
+impl RemoveAxis for Dim<[Ix; 1]> {
     type Smaller = Ix0;
     #[inline]
     fn remove_axis(&self, _: Axis) -> Ix0 { Ix0() }
 }
 
-impl RemoveAxis for Ix2 {
+impl RemoveAxis for Dim<[Ix; 2]> {
     type Smaller = Ix1;
     #[inline]
     fn remove_axis(&self, axis: Axis) -> Ix1 {
@@ -1040,8 +1034,7 @@ macro_rules! impl_remove_axis_array(
     );
 );
 
-// 12 is the maximum number for having the Eq trait from libstd
-impl_remove_axis_array!(3, 4, 5);
+impl_remove_axis_array!(3, 4, 5, 6);
 
 
 impl RemoveAxis for Dim<Vec<Ix>> {
