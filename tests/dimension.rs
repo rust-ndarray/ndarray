@@ -93,14 +93,15 @@ fn test_operations() {
 fn test_generic_operations() {
     fn test_dim<D: Dimension>(d: &D) {
         let mut x = d.clone();
-        assert_eq!(x[0], 2);
-        x += 1;
-        assert_eq!(x[0], 3);
-        x += d;
-        assert_eq!(x[0], 5);
+        let mut v = x.as_array_view_mut();
+        assert_eq!(v[0], 2);
+        v += 1;
+        assert_eq!(v[0], 3);
+        v += &d.as_array_view();
+        assert_eq!(v[0], 5);
 
-        assert_eq!(x[..].len(), x.ndim());
-        assert_eq!(&x[..], x.slice());
+        assert_eq!(v[..].len(), x.ndim());
+        assert_eq!(&v[..], x.slice());
     }
 
     test_dim(&Dim([2, 3, 4]));

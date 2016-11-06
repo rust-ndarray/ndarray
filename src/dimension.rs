@@ -184,10 +184,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     #[doc(hidden)]
     fn slice_mut(&mut self) -> &mut [Ix];
 
-    fn array_view(&self) -> ArrayView1<Ix> {
+    fn as_array_view(&self) -> ArrayView1<Ix> {
         ArrayView1::from(self.slice())
     }
-    fn array_view_mut(&mut self) -> ArrayViewMut1<Ix> {
+    fn as_array_view_mut(&mut self) -> ArrayViewMut1<Ix> {
         ArrayViewMut1::from(self.slice_mut())
     }
 
