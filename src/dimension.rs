@@ -1193,7 +1193,7 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
     }
 }
 
-unsafe impl<'a> NdIndex<IxDyn> for Vec<Ix> {
+unsafe impl NdIndex<IxDyn> for Vec<Ix> {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
         let mut offset = 0;
         for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {
