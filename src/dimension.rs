@@ -532,13 +532,6 @@ trait Convert {
     fn convert(self) -> Self::To;
 }
 
-impl Convert for Ix {
-    type To = Ix1;
-    fn convert(self) -> Self::To { Ix1(self) }
-}
-/*
-*/
-
 macro_rules! sub {
     ($_x:tt $y:tt) => ($y);
 }
@@ -571,13 +564,6 @@ macro_rules! tuple_to_array {
             }
         }
         
-        impl Convert for index!(tuple_type [Ix] $n) {
-            type To = Dim<[Ix; $n]>;
-            fn convert(self) -> Self::To {
-                Dim(index!(array_expr [self] $n))
-            }
-        }
-
         impl IntoDimension for [Ix; $n] {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
@@ -1111,7 +1097,7 @@ unsafe impl NdIndex<Ix2> for (Ix, Ix) {
 unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Ix3, strides: &Ix3) -> Option<isize> {
-        dim.stride_offset_checked(strides, &self.convert())
+        dim.stride_offset_checked(strides, &self.into_dimension())
     }
 
     #[inline]
@@ -1125,21 +1111,21 @@ unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
 unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Ix4, strides: &Ix4) -> Option<isize> {
-        dim.stride_offset_checked(strides, &self.convert())
+        dim.stride_offset_checked(strides, &self.into_dimension())
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix4) -> isize {
-        zip(&**strides, &*self.convert()).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(&**strides, &*self.into_dimension()).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Ix5, strides: &Ix5) -> Option<isize> {
-        dim.stride_offset_checked(strides, &self.convert())
+        dim.stride_offset_checked(strides, &self.into_dimension())
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix5) -> isize {
-        zip(&**strides, &*self.convert()).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(&**strides, &*self.into_dimension()).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
 
