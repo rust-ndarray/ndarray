@@ -205,13 +205,15 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Errors** if strides allow multiple indices to point to the same element.
     ///
     /// ```
-    /// use ndarray::prelude::*;
+    /// use ndarray::Array;
+    /// use ndarray::ShapeBuilder; // Needed for .strides() method
+    /// use ndarray::arr2;
     ///
     /// let a = Array::from_shape_vec((2, 2), vec![1., 2., 3., 4.]);
     /// assert!(a.is_ok());
     ///
     /// let b = Array::from_shape_vec((2, 2).strides((1, 2)),
-    ///                                    vec![1., 2., 3., 4.]).unwrap();
+    ///                               vec![1., 2., 3., 4.]).unwrap();
     /// assert!(
     ///     b == arr2(&[[1., 3.],
     ///                 [2., 4.]])
