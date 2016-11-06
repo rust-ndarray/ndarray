@@ -40,6 +40,8 @@ impl ScalarOperand for i32 { }
 impl ScalarOperand for u32 { }
 impl ScalarOperand for i64 { }
 impl ScalarOperand for u64 { }
+impl ScalarOperand for isize { }
+impl ScalarOperand for usize { }
 impl ScalarOperand for f32 { }
 impl ScalarOperand for f64 { }
 impl ScalarOperand for Complex<f32> { }
