@@ -3,35 +3,40 @@
 
 use ::{Ix, Array, ArrayView, ArrayViewMut};
 use ::dimension::Dim;
+use dimension::DimPrivate;
 
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix0() -> Ix0 { Dim([]) }
+pub fn Ix0() -> Ix0 { Dim::new([]) }
 /// Create a one-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix1(i0: Ix) -> Ix1 { Dim([i0]) }
+pub fn Ix1(i0: Ix) -> Ix1 { Dim::new([i0]) }
 /// Create a two-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 { Dim([i0, i1]) }
+pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 { Dim::new([i0, i1]) }
 /// Create a three-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 { Dim([i0, i1, i2]) }
+pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 { Dim::new([i0, i1, i2]) }
 /// Create a four-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4 { Dim([i0, i1, i2, i3]) }
+pub fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4 { Dim::new([i0, i1, i2, i3]) }
 /// Create a five-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix5(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix) -> Ix5 { Dim([i0, i1, i2, i3, i4]) }
+pub fn Ix5(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix) -> Ix5 {
+    Dim::new([i0, i1, i2, i3, i4])
+}
 /// Create a six-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix6(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix, i5: Ix) -> Ix6 { Dim([i0, i1, i2, i3, i4, i5]) }
+pub fn Ix6(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix, i5: Ix) -> Ix6 {
+    Dim::new([i0, i1, i2, i3, i4, i5])
+}
 
 /// zero-dimensionial
 pub type Ix0 = Dim<[Ix; 0]>;

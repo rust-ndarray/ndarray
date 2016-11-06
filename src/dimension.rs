@@ -1280,7 +1280,7 @@ derive_cmp!{PartialEq for Axis, eq -> bool}
 derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
 clone_from_copy!{Axis}
 
-trait DimPrivate<I> {
+pub trait DimPrivate<I> {
     fn new(index: I) -> Self;
     fn ix(&self) -> &I;
     fn ixm(&mut self) -> &mut I;
