@@ -1,0 +1,152 @@
+// Copyright 2016 bluss and ndarray developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+use super::IntoDimension;
+use super::Dimension;
+use Ix;
+
+use itertools::zip;
+
+/// Private constructor and accessors for Dim
+pub trait DimPrivate<I> {
+    fn new(index: I) -> Self;
+    fn ix(&self) -> &I;
+    fn ixm(&mut self) -> &mut I;
+}
+
+/// Dimension description.
+///
+/// `Dim` describes the number of axes and the length of each axis
+/// in an array. It is also used as an index type.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+pub struct Dim<I: ?Sized> {
+    index: I,
+}
+
+impl<I> DimPrivate<I> for Dim<I> {
+    fn new(index: I) -> Dim<I> {
+        Dim {
+            index: index,
+        }
+    }
+    fn ix(&self) -> &I { &self.index }
+    fn ixm(&mut self) -> &mut I { &mut self.index }
+}
+
+/// Create a new dimension value.
+#[allow(non_snake_case)]
+pub fn Dim<T>(index: T) -> T::Dim
+    where T: IntoDimension
+{
+    index.into_dimension()
+}
+
+impl<I: ?Sized> PartialEq<I> for Dim<I>
+    where I: PartialEq,
+{
+    fn eq(&self, rhs: &I) -> bool {
+        self.index == *rhs
+    }
+}
+
+use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
+
+macro_rules! impl_op {
+    ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
+    impl<I> $op for Dim<I>
+        where Dim<I>: Dimension,
+    {
+        type Output = Self;
+        fn $op_m(mut self, rhs: Self) -> Self {
+            $expr!(self, &rhs);
+            self
+        }
+    }
+
+    impl<I> $opassign for Dim<I>
+        where Dim<I>: Dimension,
+    {
+        fn $opassign_m(&mut self, rhs: Self) {
+            $expr!(*self, &rhs);
+        }
+    }
+
+    impl<'a, I> $opassign<&'a Dim<I>> for Dim<I>
+        where Dim<I>: Dimension,
+    {
+        fn $opassign_m(&mut self, rhs: &Self) {
+            for (x, &y) in zip(self.slice_mut(), rhs.slice()) {
+                $expr!(*x, y);
+            }
+        }
+    }
+
+    }
+}
+
+macro_rules! impl_single_op {
+    ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
+    impl $op<Ix> for Dim<[Ix; 1]>
+    {
+        type Output = Self;
+        #[inline]
+        fn $op_m(mut self, rhs: Ix) -> Self {
+            $expr!(self, rhs);
+            self
+        }
+    }
+
+    impl $opassign<Ix> for Dim<[Ix; 1]> {
+        #[inline]
+        fn $opassign_m(&mut self, rhs: Ix) {
+            $expr!((*self)[0], rhs);
+        }
+    }
+    };
+}
+
+macro_rules! impl_scalar_op {
+    ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
+    impl<I> $op<Ix> for Dim<I>
+        where Dim<I>: Dimension,
+    {
+        type Output = Self;
+        fn $op_m(mut self, rhs: Ix) -> Self {
+            $expr!(self, rhs);
+            self
+        }
+    }
+
+    impl<I> $opassign<Ix> for Dim<I>
+        where Dim<I>: Dimension,
+    {
+        fn $opassign_m(&mut self, rhs: Ix) {
+            for x in self.slice_mut() {
+                $expr!(*x, rhs);
+            }
+        }
+    }
+    };
+}
+
+macro_rules! add {
+    ($x:expr, $y:expr) => { $x += $y; }
+}
+macro_rules! sub {
+    ($x:expr, $y:expr) => { $x -= $y; }
+}
+macro_rules! mul {
+    ($x:expr, $y:expr) => { $x *= $y; }
+}
+impl_op!(Add, add, AddAssign, add_assign, add);
+impl_single_op!(Add, add, AddAssign, add_assign, add);
+impl_op!(Sub, sub, SubAssign, sub_assign, sub);
+impl_single_op!(Sub, sub, SubAssign, sub_assign, sub);
+impl_op!(Mul, mul, MulAssign, mul_assign, mul);
+impl_scalar_op!(Mul, mul, MulAssign, mul_assign, mul);
+
