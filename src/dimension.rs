@@ -623,6 +623,12 @@ unsafe impl Dimension for Ix0 {
     }
 }
 
+/// Indexing macro for Dim<[usize; N]> this
+/// gets the index at `$i` in the underlying array
+macro_rules! get {
+    ($dim:expr, $i:expr) => { (**$dim)[$i] }
+}
+
 unsafe impl Dimension for Ix1 {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
@@ -634,12 +640,12 @@ unsafe impl Dimension for Ix1 {
     fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
-        self[0]
+        get!(&self, 0)
     }
     #[inline]
     fn next_for(&self, mut index: Self) -> Option<Self> {
-        index[0] += 1;
-        if index[0] < self[0] {
+        get!(&mut index, 0) += 1;
+        if get!(&index, 0) < get!(self, 0) {
             Some(index)
         } else {
             None
@@ -648,13 +654,13 @@ unsafe impl Dimension for Ix1 {
 
     #[inline]
     fn equal(&self, rhs: &Self) -> bool {
-        self[0] == rhs[0]
+        get!(self, 0) == get!(rhs, 0)
     }
 
     #[inline]
-    fn size(&self) -> usize { self[0] }
+    fn size(&self) -> usize { get!(self, 0) }
     #[inline]
-    fn size_checked(&self) -> Option<usize> { Some(self[0]) }
+    fn size_checked(&self) -> Option<usize> { Some(get!(self, 0)) }
 
     #[inline]
     fn default_strides(&self) -> Self {
@@ -668,7 +674,7 @@ unsafe impl Dimension for Ix1 {
 
     #[inline]
     fn first_index(&self) -> Option<Self> {
-        if self[0] != 0 {
+        if get!(self, 0) != 0 {
             Some(Ix1(0))
         } else {
             None
@@ -678,14 +684,14 @@ unsafe impl Dimension for Ix1 {
     /// Self is an index, return the stride offset
     #[inline(always)]
     fn stride_offset(index: &Self, stride: &Self) -> isize {
-        stride_offset(index[0], stride[0])
+        stride_offset(get!(index, 0), get!(stride, 0))
     }
 
     /// Return stride offset for this dimension and index.
     #[inline]
     fn stride_offset_checked(&self, stride: &Self, index: &Self) -> Option<isize> {
-        if index[0] < self[0] {
-            Some(stride_offset(index[0], stride[0]))
+        if get!(index, 0) < get!(self, 0) {
+            Some(stride_offset(get!(index, 0), get!(stride, 0)))
         } else {
             None
         }
@@ -707,10 +713,10 @@ unsafe impl Dimension for Ix2 {
     fn slice_mut(&mut self) -> &mut [Ix] { &mut **self }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
-        let mut i = index[0];
-        let mut j = index[1];
-        let imax = self[0];
-        let jmax = self[1];
+        let mut i = get!(&index, 0);
+        let mut j = get!(&index, 1);
+        let imax = get!(self, 0);
+        let jmax = get!(self, 1);
         j += 1;
         if j >= jmax {
             j = 0;
@@ -724,16 +730,16 @@ unsafe impl Dimension for Ix2 {
 
     #[inline]
     fn equal(&self, rhs: &Self) -> bool {
-        self[0] == rhs[0] && self[1] == rhs[1]
+        get!(self, 0) == get!(rhs, 0) && get!(self, 1) == get!(rhs, 1)
     }
 
     #[inline]
-    fn size(&self) -> usize { self[0] * self[1] }
+    fn size(&self) -> usize { get!(self, 0) * get!(self, 1) }
 
     #[inline]
     fn size_checked(&self) -> Option<usize> {
-        let m = self[0];
-        let n = self[1];
+        let m = get!(self, 0);
+        let n = get!(self, 1);
         (m as usize).checked_mul(n as usize)
     }
 
@@ -751,16 +757,16 @@ unsafe impl Dimension for Ix2 {
     fn default_strides(&self) -> Self {
         // Compute default array strides
         // Shape (a, b, c) => Give strides (b * c, c, 1)
-        Ix2(self[1], 1)
+        Ix2(get!(self, 1), 1)
     }
     #[inline]
     fn fortran_strides(&self) -> Self {
-        Ix2(1, self[0])
+        Ix2(1, get!(self, 0))
     }
 
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
-        if self[0] as Ixs <= self[1] as Ixs { Ix2(0, 1) } else { Ix2(1, 0) }
+        if get!(self, 0) as Ixs <= get!(self, 1) as Ixs { Ix2(0, 1) } else { Ix2(1, 0) }
     }
 
     #[inline]
@@ -789,8 +795,8 @@ unsafe impl Dimension for Ix2 {
 
     #[inline]
     fn first_index(&self) -> Option<Self> {
-        let m = self[0];
-        let n = self[1];
+        let m = get!(self, 0);
+        let n = get!(self, 1);
         if m != 0 && n != 0 {
             Some(Ix2(0, 0))
         } else {
@@ -801,10 +807,10 @@ unsafe impl Dimension for Ix2 {
     /// Self is an index, return the stride offset
     #[inline(always)]
     fn stride_offset(index: &Self, strides: &Self) -> isize {
-        let i = index[0];
-        let j = index[1];
-        let s = strides[0];
-        let t = strides[1];
+        let i = get!(index, 0);
+        let j = get!(index, 1);
+        let s = get!(strides, 0);
+        let t = get!(strides, 1);
         stride_offset(i, s) + stride_offset(j, t)
     }
 
@@ -812,12 +818,12 @@ unsafe impl Dimension for Ix2 {
     #[inline]
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
     {
-        let m = self[0];
-        let n = self[1];
-        let i = index[0];
-        let j = index[1];
-        let s = strides[0];
-        let t = strides[1];
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        let i = get!(index, 0);
+        let j = get!(index, 1);
+        let s = get!(strides, 0);
+        let t = get!(strides, 1);
         if i < m && j < n {
             Some(stride_offset(i, s) + stride_offset(j, t))
         } else {
@@ -842,20 +848,20 @@ unsafe impl Dimension for Ix3 {
 
     #[inline]
     fn size(&self) -> usize {
-        let m = self[0];
-        let n = self[1];
-        let o = self[2];
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        let o = get!(self, 2);
         m as usize * n as usize * o as usize
     }
 
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
-        let mut i = index[0];
-        let mut j = index[1];
-        let mut k = index[2];
-        let imax = self[0];
-        let jmax = self[1];
-        let kmax = self[2];
+        let mut i = get!(&index, 0);
+        let mut j = get!(&index, 1);
+        let mut k = get!(&index, 2);
+        let imax = get!(self, 0);
+        let jmax = get!(self, 1);
+        let kmax = get!(self, 2);
         k += 1;
         if k == kmax {
             k = 0;
@@ -874,12 +880,12 @@ unsafe impl Dimension for Ix3 {
     /// Self is an index, return the stride offset
     #[inline]
     fn stride_offset(index: &Self, strides: &Self) -> isize {
-        let i = index[0];
-        let j = index[1];
-        let k = index[2];
-        let s = strides[0];
-        let t = strides[1];
-        let u = strides[2];
+        let i = get!(index, 0);
+        let j = get!(index, 1);
+        let k = get!(index, 2);
+        let s = get!(strides, 0);
+        let t = get!(strides, 1);
+        let u = get!(strides, 2);
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
 
@@ -973,7 +979,7 @@ impl RemoveAxis for Ix2 {
     fn remove_axis(&self, axis: Axis) -> Ix1 {
         let axis = axis.axis();
         debug_assert!(axis < self.ndim());
-        if axis == 0 { Ix1(self[1]) } else { Ix1(self[0]) }
+        if axis == 0 { Ix1(get!(self, 1)) } else { Ix1(get!(self, 0)) }
     }
 }
 
@@ -1065,7 +1071,7 @@ unsafe impl NdIndex<Ix1> for Ix {
     }
     #[inline(always)]
     fn index_unchecked(&self, strides: &Ix1) -> isize {
-        stride_offset(*self, strides[0])
+        stride_offset(*self, get!(strides, 0))
     }
 }
 
@@ -1076,8 +1082,8 @@ unsafe impl NdIndex<Ix2> for (Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix2) -> isize {
-        stride_offset(self.0, strides[0]) + 
-        stride_offset(self.1, strides[1])
+        stride_offset(self.0, get!(strides, 0)) + 
+        stride_offset(self.1, get!(strides, 1))
     }
 }
 unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
@@ -1088,9 +1094,9 @@ unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
 
     #[inline]
     fn index_unchecked(&self, strides: &Ix3) -> isize {
-        stride_offset(self.0, strides[0]) + 
-        stride_offset(self.1, strides[1]) +
-        stride_offset(self.2, strides[2])
+        stride_offset(self.0, get!(strides, 0)) + 
+        stride_offset(self.1, get!(strides, 1)) +
+        stride_offset(self.2, get!(strides, 2))
     }
 }
 
@@ -1122,8 +1128,8 @@ unsafe impl NdIndex<Ix2> for [Ix; 2] {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix2) -> isize {
-        stride_offset(self[0], strides[0]) + 
-        stride_offset(self[1], strides[1])
+        stride_offset(self[0], get!(strides, 0)) + 
+        stride_offset(self[1], get!(strides, 1))
     }
 }
 
@@ -1134,9 +1140,9 @@ unsafe impl NdIndex<Ix3> for [Ix; 3] {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix3) -> isize {
-        stride_offset(self[0], strides[0]) + 
-        stride_offset(self[1], strides[1]) +
-        stride_offset(self[2], strides[2])
+        stride_offset(self[0], get!(strides, 0)) + 
+        stride_offset(self[1], get!(strides, 1)) +
+        stride_offset(self[2], get!(strides, 2))
     }
 }
 
