@@ -24,8 +24,8 @@ use iterators::{to_vec, to_vec_mapped};
 ///
 /// Note that the constructor methods apply to `Array` and `RcArray`,
 /// the two array types that have owned storage.
-impl<S> ArrayBase<S, Ix1>
-    where S: DataOwned
+impl<S, A> ArrayBase<S, Ix1>
+    where S: DataOwned<Elem=A>,
 {
     /// Create a one-dimensional array from a vector (no copying needed).
     ///
@@ -34,7 +34,7 @@ impl<S> ArrayBase<S, Ix1>
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
-    pub fn from_vec(v: Vec<S::Elem>) -> Self {
+    pub fn from_vec(v: Vec<A>) -> Self {
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
 
@@ -47,13 +47,13 @@ impl<S> ArrayBase<S, Ix1>
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
     pub fn from_iter<I>(iterable: I) -> Self
-        where I: IntoIterator<Item=S::Elem>
+        where I: IntoIterator<Item=A>
     {
         Self::from_vec(iterable.into_iter().collect())
     }
 
     /// Create a one-dimensional array from the inclusive interval
-    /// `[start, end]` with `n` elements. `F` must be a floating point type.
+    /// `[start, end]` with `n` elements. `A` must be a floating point type.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -61,15 +61,15 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
-    pub fn linspace<F>(start: F, end: F, n: usize) -> Self
-        where S: Data<Elem=F>,
-              F: Float,
+    pub fn linspace(start: A, end: A, n: usize) -> Self
+        where A: Float,
     {
         Self::from_vec(to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array from the half-open interval
-    /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
+    /// `[start, end)` with elements spaced by `step`. `A` must be a floating
+    /// point type.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -77,9 +77,8 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
-    pub fn range<F>(start: F, end: F, step: F) -> Self
-        where S: Data<Elem=F>,
-              F: Float,
+    pub fn range(start: A, end: A, step: A) -> Self
+        where A: Float,
     {
         Self::from_vec(to_vec(linspace::range(start, end, step)))
     }
