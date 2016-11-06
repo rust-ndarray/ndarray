@@ -85,15 +85,15 @@ fn test_operations() {
     x *= 2;
     assert_eq!(x, [4, 6]);
 
-    y -= 1;
-    assert_eq!(y, [0, 0]);
+    y[0] -= 1;
+    assert_eq!(y, [0, 1]);
 }
 
 #[test]
 fn test_generic_operations() {
     fn test_dim<D: Dimension>(d: &D) {
         let mut x = d.clone();
-        x += 1;
+        x[0] += 1;
         assert_eq!(x[0], 3);
         x += d;
         assert_eq!(x[0], 5);

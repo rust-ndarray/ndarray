@@ -10,6 +10,7 @@ use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 
 use itertools::{enumerate, zip};
+use libnum::Zero;
 
 use super::{Si, Ix, Ixs};
 use super::{zipsl, zipsl_mut};
@@ -131,12 +132,12 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 /// ***Don't implement this trait, it will evolve at will.***
 pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     IndexMut<usize, Output=usize> +
-    Add<usize, Output=Self> + Add<Self, Output=Self> +
-    AddAssign + for<'x> AddAssign<&'x Self> + AddAssign<usize> + 
-    Sub<usize, Output=Self> + Sub<Self, Output=Self> +
-    SubAssign + for<'x> SubAssign<&'x Self> + SubAssign<usize> + 
+    Add<Self, Output=Self> +
+    AddAssign + for<'x> AddAssign<&'x Self> +
+    Sub<Self, Output=Self> +
+    SubAssign + for<'x> SubAssign<&'x Self> +
     Mul<usize, Output=Self> + Mul<Self, Output=Self> +
-    MulAssign + for<'x> MulAssign<&'x Self> + MulAssign<usize> 
+    MulAssign + for<'x> MulAssign<&'x Self> + MulAssign<usize>
 
 {
     /// `SliceArg` is the type which is used to specify slicing for this
@@ -554,6 +555,12 @@ macro_rules! array_expr {
     )
 }
 
+macro_rules! array_zero {
+    ([] $($index:tt)*) => (
+        [$(sub!($index 0), )*]
+    )
+}
+
 macro_rules! tuple_to_array {
     ([] $($n:tt)*) => {
         $(
@@ -592,6 +599,16 @@ macro_rules! tuple_to_array {
             #[inline(always)]
             fn index_mut(&mut self, index: usize) -> &mut Self::Output {
                 &mut (**self)[index]
+            }
+        }
+
+        impl Zero for Dim<[Ix; $n]> {
+            #[inline]
+            fn zero() -> Self {
+                Dim::new(index!(array_zero [] $n))
+            }
+            fn is_zero(&self) -> bool {
+                self.slice().iter().all(|x| *x == 0)
             }
         }
 
@@ -1329,16 +1346,6 @@ pub mod dim {
             }
         }
 
-        impl<I> $op<Ix> for Dim<I>
-            where Dim<I>: Dimension,
-        {
-            type Output = Self;
-            fn $op_m(mut self, rhs: Ix) -> Self {
-                $expr!(self, rhs);
-                self
-            }
-        }
-
         impl<I> $opassign for Dim<I>
             where Dim<I>: Dimension,
         {
@@ -1357,6 +1364,42 @@ pub mod dim {
             }
         }
 
+        }
+    }
+
+    macro_rules! impl_single_op {
+        ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
+        impl $op<Ix> for Dim<[Ix; 1]>
+        {
+            type Output = Self;
+            #[inline]
+            fn $op_m(mut self, rhs: Ix) -> Self {
+                $expr!(self, rhs);
+                self
+            }
+        }
+
+        impl $opassign<Ix> for Dim<[Ix; 1]> {
+            #[inline]
+            fn $opassign_m(&mut self, rhs: Ix) {
+                $expr!((*self)[0], rhs);
+            }
+        }
+        };
+    }
+
+    macro_rules! impl_scalar_op {
+        ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
+        impl<I> $op<Ix> for Dim<I>
+            where Dim<I>: Dimension,
+        {
+            type Output = Self;
+            fn $op_m(mut self, rhs: Ix) -> Self {
+                $expr!(self, rhs);
+                self
+            }
+        }
+
         impl<I> $opassign<Ix> for Dim<I>
             where Dim<I>: Dimension,
         {
@@ -1366,7 +1409,7 @@ pub mod dim {
                 }
             }
         }
-        }
+        };
     }
 
     macro_rules! add {
@@ -1379,8 +1422,11 @@ pub mod dim {
         ($x:expr, $y:expr) => { $x *= $y; }
     }
     impl_op!(Add, add, AddAssign, add_assign, add);
+    impl_single_op!(Add, add, AddAssign, add_assign, add);
     impl_op!(Sub, sub, SubAssign, sub_assign, sub);
+    impl_single_op!(Sub, sub, SubAssign, sub_assign, sub);
     impl_op!(Mul, mul, MulAssign, mul_assign, mul);
+    impl_scalar_op!(Mul, mul, MulAssign, mul_assign, mul);
 }
 
 
