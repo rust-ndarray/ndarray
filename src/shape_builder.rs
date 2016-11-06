@@ -1,7 +1,6 @@
 
 use Dimension;
 use {Shape, StrideShape};
-use Ix;
 use dimension::IntoDimension;
 
 /// A trait for `Shape` and `D where D: Dimension` that allows
