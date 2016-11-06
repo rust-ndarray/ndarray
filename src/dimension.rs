@@ -1295,6 +1295,10 @@ pub mod dim {
 
     use itertools::zip;
 
+    /// Dimension description.
+    ///
+    /// `Dim` describes the number of axes and the length of each axis
+    /// in an array. It is also used as an index type.
     #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
     pub struct Dim<I: ?Sized> {
         index: I,
