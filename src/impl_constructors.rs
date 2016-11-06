@@ -13,7 +13,7 @@
 use libnum::{Zero, One, Float};
 
 use imp_prelude::*;
-use {Shape, StrideShape};
+use StrideShape;
 use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
