@@ -172,13 +172,6 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     type Pattern: IntoDimension<Dim=Self>;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
-    #[doc(hidden)]
-    fn slice(&self) -> &[Ix] {
-        unsafe {
-            slice::from_raw_parts(self as *const _ as *const Ix, self.ndim())
-        }
-    }
-
     fn equal(&self, rhs: &Self) -> bool {
         self.slice() == rhs.slice()
     }
@@ -186,11 +179,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     fn into_pattern(self) -> Self::Pattern;
 
     #[doc(hidden)]
-    fn slice_mut(&mut self) -> &mut [Ix] {
-        unsafe {
-            slice::from_raw_parts_mut(self as *mut _ as *mut Ix, self.ndim())
-        }
-    }
+    fn slice(&self) -> &[Ix];
+
+    #[doc(hidden)]
+    fn slice_mut(&mut self) -> &mut [Ix];
 
     fn array_view(&self) -> ArrayView1<Ix> {
         ArrayView1::from(self.slice())
