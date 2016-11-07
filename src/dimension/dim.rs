@@ -11,14 +11,8 @@ use itertools::zip;
 
 use super::IntoDimension;
 use super::Dimension;
+use super::DimPrivate;
 use Ix;
-
-/// Private constructor and accessors for Dim
-pub trait DimPrivate<I> {
-    fn new(index: I) -> Self;
-    fn ix(&self) -> &I;
-    fn ixm(&mut self) -> &mut I;
-}
 
 /// Dimension description.
 ///

@@ -10,7 +10,7 @@ use {Ix, Ixs};
 use error::{from_kind, ErrorKind, ShapeError};
 use {zipsl, ZipExt};
 
-pub use self::dim::{Dim, DimPrivate};
+pub use self::dim::*;
 pub use self::axis::Axis;
 pub use self::conversion::IntoDimension;
 pub use self::dimension_trait::Dimension;
@@ -24,6 +24,13 @@ pub mod dim;
 mod dimension_trait;
 mod ndindex;
 mod remove_axis;
+
+/// Private constructor and accessors for Dim
+pub trait DimPrivate<I> {
+    fn new(index: I) -> Self;
+    fn ix(&self) -> &I;
+    fn ixm(&mut self) -> &mut I;
+}
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
