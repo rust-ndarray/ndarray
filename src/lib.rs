@@ -192,7 +192,9 @@ pub type Ixs = isize;
 ///
 /// ## Contents
 ///
-/// + [Array and RcArray](#ownedarray-and-rcarray)
+/// + [Array](#array)
+/// + [RcArray](#rcarray)
+/// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Slicing](#slicing)
 /// + [Subviews](#subviews)
@@ -202,15 +204,50 @@ pub type Ixs = isize;
 /// + [Methods For All Array Types](#methods-for-all-array-types)
 /// + [Methods Specific to Array Views](#methods-specific-to-array-views)
 ///
-/// ## `Array` and `RcArray`
 ///
-/// `Array` owns the underlying array elements directly (just like
-/// a `Vec`), while [`RcArray`](type.RcArray.html) is a an array with reference
-/// counted data. `RcArray` can act both as an owner or as a view in that regard.
+///
+///
+/// ## `Array`
+///
+/// [`Array`](type.Array.html) is an owned array that ows the underlying array
+/// elements directly (just like a `Vec`) and it is the default way to create and
+/// store n-dimensional data. `Array<A, D>` has two type parameters: `A` for
+/// the element type, and `D` for the dimensionality. A particular
+/// dimensionality's type alias like `Array3<A>` just has the type parameter
+/// `A` for element type.
+///
+/// An example:
+///
+/// ```
+/// // Create a three-dimensional f64 array, initialized with zeros
+/// use ndarray::Array3;
+/// let mut temperature = Array3::<f64>::zeros((3, 4, 5));
+/// // Increase the temperature in this location
+/// temperature[[2, 2, 2]] += 0.5;
+/// ```
+///
+/// ## `RcArray`
+///
+/// [`RcArray`](type.RcArray.html) is an owned array with reference counted
+/// data (shared ownership).
 /// Sharing requires that it uses copy-on-write for mutable operations.
 /// Calling a method for mutating elements on `RcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
+///
+/// ## Array Views
+///
+/// `ArrayView` and `ArrayViewMut` are read-only and read-write array views
+/// respectively. They use dimensionality, indexing, and almost all other
+/// methods the same was as the other array types.
+///
+/// A view is created from an array using `.view()`, `.view_mut()`, using
+/// slicing (`.slice()`, `.slice_mut()`) or from one of the many iterators
+/// that yield array views.
+///
+/// You can also create an array view from a regular slice of data not
+/// allocated with `Array` — see [Methods Specific to Array
+/// Views](#methods-specific-to-array-views).
 ///
 /// Note that all `ArrayBase` variants can change their view (slicing) of the
 /// data freely, even when their data can’t be mutated.
