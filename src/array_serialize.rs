@@ -11,6 +11,27 @@ use super::arraytraits::ARRAY_FORMAT_VERSION;
 
 use imp_prelude::*;
 
+use Dim;
+use dimension::DimPrivate;
+
+/// **Requires crate feature `"rustc-serialize"`**
+impl<I> Encodable for Dim<I>
+    where I: Encodable,
+{
+    fn encode<E: Encoder>(&self, s: &mut E) -> Result<(), E::Error> {
+        self.ix().encode(s)
+    }
+}
+
+/// **Requires crate feature `"rustc-serialize"`**
+impl<I> Decodable for Dim<I>
+    where I: Decodable,
+{
+    fn decode<E: Decoder>(d: &mut E) -> Result<Self, E::Error> {
+        I::decode(d).map(Dim::new)
+    }
+}
+
 /// **Requires crate feature `"rustc-serialize"`**
 impl<A, S, D> Encodable for ArrayBase<S, D>
     where A: Encodable,
@@ -43,7 +64,7 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
           D: Dimension + Decodable,
           S: DataOwned<Elem = A>
 {
-    fn decode<E: Decoder>(d: &mut E) -> Result<ArrayBase<S, D>, E::Error> {
+    fn decode<E: Decoder>(d: &mut E) -> Result<Self, E::Error> {
         d.read_struct("Array", 3, |d| {
             let version: u8 = try!(d.read_struct_field("v", 0, Decodable::decode));
             if version > ARRAY_FORMAT_VERSION {
