@@ -217,29 +217,36 @@ pub type Ixs = isize;
 ///
 /// ## Indexing and Dimension
 ///
-/// Array indexes are represented by the types `Ix` and `Ixs` (signed).
-///
 /// The dimensionality of the array determines the number of *axes*, for example
 /// a 2D array has two axes. These are listed in “big endian” order, so that
 /// the greatest dimension is listed first, the lowest dimension with the most
 /// rapidly varying index is the last.
 ///
-/// In a 2D array the index of each element is `(row, column)`
-/// as seen in this 3 × 3 example:
+/// In a 2D array the index of each element is `[row, column]` as seen in this
+/// 4 × 3 example:
 ///
 /// ```ignore
-/// [[ (0, 0), (0, 1), (0, 2)],  // row 0
-///  [ (1, 0), (1, 1), (1, 2)],  // row 1
-///  [ (2, 0), (2, 1), (2, 2)]]  // row 2
+/// [[ [0, 0], [0, 1], [0, 2] ],  // row 0
+///  [ [1, 0], [1, 1], [1, 2] ],  // row 1
+///  [ [2, 0], [2, 1], [2, 2] ],  // row 2
+///  [ [3, 0], [3, 1], [3, 2] ]]  // row 3
 /// //    \       \       \
 /// //   column 0  \     column 2
 /// //            column 1
 /// ```
 ///
-/// The number of axes for an array is fixed by the `D` parameter: `Ix` for
-/// a 1D array, `(Ix, Ix)` for a 2D array etc. The `D` type is also used
-/// for element indices in `.get()` and `array[index]`. The dimension type `Vec<Ix>`
-/// allows a dynamic number of axes.
+/// The number of axes for an array is fixed by its `D` type parameter: `Ix1`
+/// for a 1D array, `Ix2` for a 2D array etc. The dimension type `IxDyn` allows
+/// a dynamic number of axes.
+///
+/// An array of the corresponding dimensionality is used to index the array,
+/// making the syntax `array[[` i, j,  ...`]]`
+///
+/// ```
+/// use ndarray::Array2;
+/// let mut array = Array2::zeros((4, 3));
+/// array[[1, 1]] = 7;
+/// ```
 ///
 /// The default memory order of an array is *row major* order (a.k.a “c” order),
 /// where each row is contiguous in memory.
