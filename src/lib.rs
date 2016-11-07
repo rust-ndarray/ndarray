@@ -285,6 +285,20 @@ pub type Ixs = isize;
 /// array[[1, 1]] = 7;
 /// ```
 ///
+/// Important traits and types for dimension and indexing:
+///
+/// - A [`Dim`](Dim.t.html) value represents a dimensionality or index.
+/// - Trait [`Dimension`](Dimension.t.html) is implemented by all
+/// dimensionalities. It defines many operations for dimensions and indices.
+/// - Trait [`IntoDimension`](IntoDimension.t.html) is used to convert into a
+/// `Dim` value.
+/// - Trait [`ShapeBuilder`](ShapeBuilder.t.html) is an extension of
+/// `IntoDimension` and is used when constructing an array. A shape describes
+/// not just the extent of each axis but also their strides.
+/// - Trait [`NdIndex`](NdIndex.t.html) is an extension of `Dimension` and is
+/// for values that can be used with indexing syntax.
+///
+///
 /// The default memory order of an array is *row major* order (a.k.a “c” order),
 /// where each row is contiguous in memory.
 /// A *column major* (a.k.a. “f” or fortran) memory order array has

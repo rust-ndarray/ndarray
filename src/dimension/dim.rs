@@ -19,8 +19,8 @@ use Ix;
 /// `Dim` describes the number of axes and the length of each axis
 /// in an array. It is also used as an index type.
 ///
-/// The commonly you want to use the methods of the `Dimension` trait. See its
-/// documentation for more information.
+/// See also the [`Dimension` trait](Dimension.t.html) for its methods and
+/// operations.
 ///
 /// # Examples
 ///

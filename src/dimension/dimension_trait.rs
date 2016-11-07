@@ -26,9 +26,10 @@ use super::conversion::Convert;
 
 /// Array shape and index trait.
 ///
-/// `unsafe` because of the assumptions in the default methods.
+/// This trait defines a number of methods and operations that can be used on
+/// dimensions and indices.
 ///
-/// ***Don't implement this trait, it will evolve at will.***
+/// ***Note:*** *Don't implement this trait.*
 pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     IndexMut<usize, Output=usize> +
     Add<Self, Output=Self> +
