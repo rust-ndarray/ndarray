@@ -3,9 +3,8 @@ use std::fmt::Debug;
 
 use itertools::zip;
 
-use {Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, IxDyn, Dim, Dimension, IntoDimension};
-use {zipsl, ZipExt};
-use super::{stride_offset};
+use {Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Dimension, IntoDimension};
+use super::{stride_offset, stride_offset_checked};
 use super::DimPrivate;
 
 /// Tuple or fixed size arrays that can be used to index an array.
@@ -47,17 +46,6 @@ unsafe impl NdIndex<Ix0> for () {
     #[inline(always)]
     fn index_unchecked(&self, _strides: &Ix0) -> isize {
         0
-    }
-}
-
-unsafe impl NdIndex<Ix1> for Ix {
-    #[inline]
-    fn index_checked(&self, dim: &Ix1, strides: &Ix1) -> Option<isize> {
-        dim.stride_offset_checked(strides, &Ix1(*self))
-    }
-    #[inline(always)]
-    fn index_unchecked(&self, strides: &Ix1) -> isize {
-        stride_offset(*self, get!(strides, 0))
     }
 }
 
@@ -107,60 +95,115 @@ unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     }
 }
 
-unsafe impl NdIndex<Ix2> for [Ix; 2] {
+unsafe impl NdIndex<Ix1> for Ix {
     #[inline]
-    fn index_checked(&self, dim: &Ix2, strides: &Ix2) -> Option<isize> {
-        dim.stride_offset_checked(strides, &Ix2(self[0], self[1]))
+    fn index_checked(&self, dim: &Ix1, strides: &Ix1) -> Option<isize> {
+        dim.stride_offset_checked(strides, &Ix1(*self))
     }
-    #[inline]
-    fn index_unchecked(&self, strides: &Ix2) -> isize {
-        stride_offset(self[0], get!(strides, 0)) + 
-        stride_offset(self[1], get!(strides, 1))
-    }
-}
-
-unsafe impl NdIndex<Ix3> for [Ix; 3] {
-    #[inline]
-    fn index_checked(&self, dim: &Ix3, strides: &Ix3) -> Option<isize> {
-        dim.stride_offset_checked(strides, &Ix3(self[0], self[1], self[2]))
-    }
-    #[inline]
-    fn index_unchecked(&self, strides: &Ix3) -> isize {
-        stride_offset(self[0], get!(strides, 0)) + 
-        stride_offset(self[1], get!(strides, 1)) +
-        stride_offset(self[2], get!(strides, 2))
+    #[inline(always)]
+    fn index_unchecked(&self, strides: &Ix1) -> isize {
+        stride_offset(*self, get!(strides, 0))
     }
 }
 
-unsafe impl NdIndex<Ix4> for [Ix; 4] {
+unsafe impl NdIndex<IxDyn> for Ix {
     #[inline]
-    fn index_checked(&self, dim: &Ix4, strides: &Ix4) -> Option<isize> {
-        dim.stride_offset_checked(strides, &self.into_dimension())
+    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
+        debug_assert_eq!(dim.ndim(), 1);
+        stride_offset_checked(dim.ix(), strides.ix(), &[*self])
     }
-    #[inline]
-    fn index_unchecked(&self, strides: &Ix4) -> isize {
-        stride_offset(self[0], get!(strides, 0)) + 
-        stride_offset(self[1], get!(strides, 1)) +
-        stride_offset(self[2], get!(strides, 2)) +
-        stride_offset(self[3], get!(strides, 3)) +
-        0
+    #[inline(always)]
+    fn index_unchecked(&self, strides: &IxDyn) -> isize {
+        debug_assert_eq!(strides.ndim(), 1);
+        stride_offset(*self, get!(strides, 0))
     }
 }
 
-unsafe impl NdIndex<Ix5> for [Ix; 5] {
+unsafe impl NdIndex<IxDyn> for Ix1 {
     #[inline]
-    fn index_checked(&self, dim: &Ix5, strides: &Ix5) -> Option<isize> {
-        dim.stride_offset_checked(strides, &self.into_dimension())
+    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
+        debug_assert_eq!(dim.ndim(), 1);
+        stride_offset_checked(dim.ix(), strides.ix(), self.ix())
     }
-    #[inline]
-    fn index_unchecked(&self, strides: &Ix5) -> isize {
-        stride_offset(self[0], get!(strides, 0)) + 
-        stride_offset(self[1], get!(strides, 1)) +
-        stride_offset(self[2], get!(strides, 2)) +
-        stride_offset(self[3], get!(strides, 3)) +
-        stride_offset(self[4], get!(strides, 4)) +
-        0
+    #[inline(always)]
+    fn index_unchecked(&self, strides: &IxDyn) -> isize {
+        debug_assert_eq!(strides.ndim(), 1);
+        stride_offset(get!(self, 0), get!(strides, 0))
     }
+}
+
+macro_rules! ndindex_with_array {
+    ($([$n:expr, $ix_n:ident $($index:tt)*])+) => {
+        $(
+        // implement NdIndex<Ix2> for [Ix; 2] and so on
+        unsafe impl NdIndex<$ix_n> for [Ix; $n] {
+            #[inline]
+            fn index_checked(&self, dim: &$ix_n, strides: &$ix_n) -> Option<isize> {
+                dim.stride_offset_checked(strides, &self.into_dimension())
+            }
+
+            #[inline]
+            fn index_unchecked(&self, strides: &$ix_n) -> isize {
+                $(
+                stride_offset(self[$index], get!(strides, $index)) + 
+                )+
+                0
+            }
+        }
+
+        // implement NdIndex<IxDyn> for Dim<[Ix; 2]> and so on
+        unsafe impl NdIndex<IxDyn> for Dim<[Ix; $n]> {
+            #[inline]
+            fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
+                debug_assert!(strides.ndim() == $n,
+                              "Attempted to index with {:?} in array with {} axes",
+                              self, strides.ndim());
+                stride_offset_checked(dim.ix(), strides.ix(), self.ix())
+            }
+
+            #[inline]
+            fn index_unchecked(&self, strides: &IxDyn) -> isize {
+                debug_assert!(strides.ndim() == $n,
+                              "Attempted to index with {:?} in array with {} axes",
+                              self, strides.ndim());
+                $(
+                stride_offset(get!(self, $index), get!(strides, $index)) + 
+                )+
+                0
+            }
+        }
+
+        // implement NdIndex<IxDyn> for [Ix; 2] and so on
+        unsafe impl NdIndex<IxDyn> for [Ix; $n] {
+            #[inline]
+            fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
+                debug_assert!(strides.ndim() == $n,
+                              "Attempted to index with {:?} in array with {} axes",
+                              self, strides.ndim());
+                stride_offset_checked(dim.ix(), strides.ix(), self)
+            }
+
+            #[inline]
+            fn index_unchecked(&self, strides: &IxDyn) -> isize {
+                debug_assert!(strides.ndim() == $n,
+                              "Attempted to index with {:?} in array with {} axes",
+                              self, strides.ndim());
+                $(
+                stride_offset(self[$index], get!(strides, $index)) + 
+                )+
+                0
+            }
+        }
+        )+
+    };
+}
+
+ndindex_with_array!{
+    [2, Ix2 0 1]
+    [3, Ix3 0 1 2]
+    [4, Ix4 0 1 2 3]
+    [5, Ix5 0 1 2 3 4]
+    [6, Ix6 0 1 2 3 4 5]
 }
 
 impl<'a> IntoDimension for &'a [Ix] {
@@ -172,14 +215,7 @@ impl<'a> IntoDimension for &'a [Ix] {
 
 unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
-        let mut offset = 0;
-        for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {
-            if i >= d {
-                return None;
-            }
-            offset += stride_offset(i, s);
-        }
-        Some(offset)
+        stride_offset_checked(dim.ix(), strides.ix(), *self)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
         zip(strides.ix(), *self).map(|(&s, &i)| stride_offset(i, s)).sum()
@@ -188,14 +224,7 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
 
 unsafe impl NdIndex<IxDyn> for Vec<Ix> {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
-        let mut offset = 0;
-        for (&d, &i, &s) in zipsl(&dim[..], &self[..]).zip_cons(strides.slice()) {
-            if i >= d {
-                return None;
-            }
-            offset += stride_offset(i, s);
-        }
-        Some(offset)
+        stride_offset_checked(dim.ix(), strides.ix(), self)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
         zip(strides.ix(), self).map(|(&s, &i)| stride_offset(i, s)).sum()

@@ -129,6 +129,21 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
     Some(offset)
 }
 
+/// Stride offset checked general version (slices)
+pub fn stride_offset_checked(dim: &[Ix], strides: &[Ix], index: &[Ix]) -> Option<isize> {
+    if index.len() != dim.len() {
+        return None;
+    }
+    let mut offset = 0;
+    for (&d, &i, &s) in zipsl(dim, index).zip_cons(strides)
+    {
+        if i >= d {
+            return None;
+        }
+        offset += stride_offset(i, s);
+    }
+    Some(offset)
+}
 
 /// Implementation-specific extensions to `Dimension`
 pub trait DimensionExt {

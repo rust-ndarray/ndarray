@@ -19,6 +19,7 @@ use {ArrayView1, ArrayViewMut1};
 use {zipsl, zipsl_mut, ZipExt};
 use super::{
     stride_offset,
+    stride_offset_checked,
     DimPrivate,
 };
 use super::conversion::Convert;
@@ -191,15 +192,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     #[doc(hidden)]
     /// Return stride offset for this dimension and index.
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
-        let mut offset = 0;
-        for (&d, &i, &s) in zipsl(self.slice(), index.slice()).zip_cons(strides.slice())
-        {
-            if i >= d {
-                return None;
-            }
-            offset += stride_offset(i, s);
-        }
-        Some(offset)
+        stride_offset_checked(self.slice(), strides.slice(), index.slice())
     }
 
     #[doc(hidden)]
