@@ -6,11 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::fmt;
+use itertools::zip;
+
 use super::IntoDimension;
 use super::Dimension;
 use Ix;
-
-use itertools::zip;
 
 /// Private constructor and accessors for Dim
 pub trait DimPrivate<I> {
@@ -41,7 +42,7 @@ pub trait DimPrivate<I> {
 /// array[[0, 0]] = 1.;
 /// assert_eq!(array.dim(), Dim([3, 2]));
 /// ```
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Default)]
 pub struct Dim<I: ?Sized> {
     index: I,
 }
@@ -69,6 +70,14 @@ impl<I: ?Sized> PartialEq<I> for Dim<I>
 {
     fn eq(&self, rhs: &I) -> bool {
         self.index == *rhs
+    }
+}
+
+impl<I> fmt::Debug for Dim<I>
+    where I: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.index)
     }
 }
 
