@@ -96,7 +96,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -737,11 +737,11 @@
          sodipodi:role="line"
          x="602.84332"
          y="185.57912"
-         id="tspan8614-6">Input shape: (3, 5, 5)</tspan><tspan
+         id="tspan8614-6">Input shape: (3, 4, 5)</tspan><tspan
          sodipodi:role="line"
          x="602.84332"
          y="216.75595"
-         id="tspan8640">Output shapes: (3, 5)</tspan></text>
+         id="tspan8640">Output shapes: (3, 4)</tspan></text>
     <path
        style="opacity:0.59600004;fill:#000aa3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 139.75668,540.85629 65.83322,0 -0.71428,-333.35034 92.81148,-93.52577 -65.71068,0 -92.21974,92.93404 z"
@@ -831,5 +831,11 @@
            x="429.68304"
            sodipodi:role="line">4</tspan></text>
     </g>
+    <path
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 139.34906,541.54505 335.11893,-1.07143 96.14832,-91.62802 -3.15826,-67.12309 -93.0321,93.21429 -335.07689,-1.61953 z"
+       id="path6813-55-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccc" />
   </g>
 </svg>
