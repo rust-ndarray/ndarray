@@ -174,12 +174,12 @@ impl<D> DimensionExt for D
 {
     #[inline]
     fn axis(&self, axis: Axis) -> Ix {
-        self.slice()[axis.axis()]
+        self[axis.axis()]
     }
 
     #[inline]
     fn set_axis(&mut self, axis: Axis, value: Ix) {
-        self.slice_mut()[axis.axis()] = value;
+        self[axis.axis()] = value;
     }
 }
 
