@@ -524,9 +524,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over `axis`
     /// and yields each subview along it.
     ///
-    /// For example, in a 3 × 5 × 5 array, with `axis` equal to `Axis(2)`,
+    /// For example, in a 3 × 4 × 5 array, with `axis` equal to `Axis(2)`,
     /// the iterator element
-    /// is a 3 × 5 subview (and there are 5 in total), as shown
+    /// is a 3 × 4 subview (and there are 5 in total), as shown
     /// in the picture below.
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
@@ -535,7 +535,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` is out of bounds.
     ///
-    /// <img src="https://bluss.github.io/ndarray/images/axis_iter.svg" height="250px">
+    /// <img src="https://bluss.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
