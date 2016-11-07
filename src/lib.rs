@@ -239,8 +239,8 @@ pub type Ixs = isize;
 /// for a 1D array, `Ix2` for a 2D array etc. The dimension type `IxDyn` allows
 /// a dynamic number of axes.
 ///
-/// An array of the corresponding dimensionality is used to index the array,
-/// making the syntax `array[[` i, j,  ...`]]`
+/// A fixed size array (`[usize; N]`) of the corresponding dimensionality is
+/// used to index the `Array`, making the syntax `array[[` i, j,  ...`]]`
 ///
 /// ```
 /// use ndarray::Array2;
