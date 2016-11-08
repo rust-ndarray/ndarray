@@ -7,12 +7,36 @@
 // except according to those terms.
 use serde::{self, Serialize, Deserialize};
 
+use std::marker::PhantomData;
+
 use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Elements;
+use Dim;
+use dimension::DimPrivate;
 
-use std::marker::PhantomData;
+/// **Requires crate feature `"serde"`**
+impl<I> Serialize for Dim<I>
+    where I: Serialize,
+{
+    fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
+        where Se: serde::Serializer
+    {
+        self.ix().serialize(serializer)
+    }
+}
+
+/// **Requires crate feature `"serde"`**
+impl<I> Deserialize for Dim<I>
+    where I: Deserialize,
+{
+    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+        where D: serde::de::Deserializer
+    {
+        I::deserialize(deserializer).map(Dim::new)
+    }
+}
 
 /// **Requires crate feature `"serde"`**
 impl<A, D, S> Serialize for ArrayBase<S, D>

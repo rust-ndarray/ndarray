@@ -28,7 +28,7 @@ pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix1> {
 
 /// Create a zero-dimensional array view borrowing `x`.
 pub fn aview0<A>(x: &A) -> ArrayView0<A> {
-    unsafe { ArrayView::new_(x, (), ()) }
+    unsafe { ArrayView::new_(x, Ix0(), Ix0()) }
 }
 
 /// Create a one-dimensional array view with elements borrowing `xs`.
@@ -56,7 +56,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
     let data = unsafe {
         slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows)
     };
-    let dim = (rows as Ix, cols as Ix);
+    let dim = Ix2(rows, cols);
     unsafe {
         let strides = dim.default_strides();
         ArrayView::new_(data.as_ptr(), dim, strides)
@@ -122,8 +122,8 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 /// );
 /// ```
 pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> Array2<A> {
-    let (m, n) = (xs.len() as Ix, V::len() as Ix);
-    let dim = (m, n);
+    let (m, n) = (xs.len(), V::len());
+    let dim = Ix2(m, n);
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
         result.extend_from_slice(snd.as_init_slice());
@@ -159,7 +159,7 @@ pub fn rcarr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, I
 pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
     -> Array3<A>
 {
-    let dim = (xs.len() as Ix, V::len() as Ix, U::len() as Ix);
+    let dim = Ix3(xs.len(), V::len(), U::len());
     let mut result = Vec::<A>::with_capacity(dim.size());
     for snd in xs {
         for thr in snd.as_init_slice() {

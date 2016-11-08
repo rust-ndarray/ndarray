@@ -20,6 +20,7 @@ use iterators;
 use error::{self, ShapeError};
 use super::zipsl;
 use super::ZipExt;
+use dimension::IntoDimension;
 
 use {
     NdIndex,
@@ -36,6 +37,7 @@ use {
 };
 use stacking::stack;
 
+/// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 {
     /// Return the total number of elements in the array.
@@ -46,6 +48,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return the shape of the array.
     pub fn dim(&self) -> D {
         self.dim.clone()
+        //self.dim.as_tuple()
+    }
+
+    /// Return the shape of the array as the "pattern" type (usually a tuple).
+    pub fn dim_pattern(&self) -> D::Pattern {
+        self.dim.clone().into_pattern()
     }
 
     /// Return the shape of the array as a slice.
@@ -141,14 +149,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator of indexes and references to the elements of the array.
     ///
-    /// Iterator element type is `(D, &A)`.
+    /// Iterator element type is `(D::Pattern, &A)`.
     pub fn indexed_iter(&self) -> Indexed<A, D> {
         Indexed(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
-    /// Iterator element type is `(D, &mut A)`.
+    /// Iterator element type is `(D::Pattern, &mut A)`.
     pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
         where S: DataMut,
     {
@@ -224,7 +232,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// );
     /// ```
     pub fn get<I>(&self, index: I) -> Option<&A>
-        where I: NdIndex<Dim=D>,
+        where I: NdIndex<D>,
     {
         let ptr = self.ptr;
         index.index_checked(&self.dim, &self.strides)
@@ -235,7 +243,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// if the index is out of bounds.
     pub fn get_mut<I>(&mut self, index: I) -> Option<&mut A>
         where S: DataMut,
-              I: NdIndex<Dim=D>,
+              I: NdIndex<D>,
     {
         let ptr = self.as_mut_ptr();
         index.index_checked(&self.dim, &self.strides)
@@ -248,9 +256,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     #[inline]
-    pub unsafe fn uget(&self, index: D) -> &A {
+    pub unsafe fn uget<I>(&self, index: I) -> &A
+        where I: NdIndex<D>,
+    {
         arraytraits::debug_bounds_check(self, &index);
-        let off = D::stride_offset(&index, &self.strides);
+        let off = index.index_unchecked(&self.strides);
         &*self.ptr.offset(off)
     }
 
@@ -261,12 +271,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
     /// **Note:** The array must be uniquely held when mutating it.
     #[inline]
-    pub unsafe fn uget_mut(&mut self, index: D) -> &mut A
-        where S: DataMut
+    pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
+        where S: DataMut,
+              I: NdIndex<D>,
     {
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
-        let off = D::stride_offset(&index, &self.strides);
+        let off = index.index_unchecked(&self.strides);
         &mut *self.ptr.offset(off)
     }
 
@@ -277,7 +288,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ***Panics*** if an index is out of bounds.
     pub fn swap<I>(&mut self, index1: I, index2: I)
         where S: DataMut,
-              I: NdIndex<Dim=D>,
+              I: NdIndex<D>,
     {
         let ptr1: *mut _ = &mut self[index1];
         let ptr2: *mut _ = &mut self[index2];
@@ -513,9 +524,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over `axis`
     /// and yields each subview along it.
     ///
-    /// For example, in a 3 × 5 × 5 array, with `axis` equal to `Axis(2)`,
+    /// For example, in a 3 × 4 × 5 array, with `axis` equal to `Axis(2)`,
     /// the iterator element
-    /// is a 3 × 5 subview (and there are 5 in total), as shown
+    /// is a 3 × 4 subview (and there are 5 in total), as shown
     /// in the picture below.
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
@@ -524,7 +535,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` is out of bounds.
     ///
-    /// <img src="https://bluss.github.io/ndarray/images/axis_iter.svg" height="250px">
+    /// <img src="https://bluss.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
@@ -621,8 +632,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         ArrayBase {
             data: self.data,
             ptr: self.ptr,
-            dim: len,
-            strides: stride as Ix,
+            dim: Ix1(len),
+            strides: Ix1(stride as Ix),
         }
     }
 
@@ -644,7 +655,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         let defaults = self.dim.default_strides();
-        if self.strides == defaults {
+        if self.strides.equal(&defaults) {
             return true;
         }
         if self.ndim() == 1 { return false; }
@@ -660,25 +671,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     fn is_contiguous(&self) -> bool {
-        let defaults = self.dim.default_strides();
-        if self.strides == defaults {
-            return true;
-        }
-        if self.ndim() == 1 { return false; }
-        let order = self.strides._fastest_varying_stride_order();
-        let strides = self.strides.slice();
-
-        // FIXME: Negative strides
-        let dim = self.dim.slice();
-        let mut cstride = 1;
-        for &i in order.slice() {
-            // a dimension of length 1 can have unequal strides
-            if dim[i] != 1 && strides[i] != cstride {
-                return false;
-            }
-            cstride *= dim[i];
-        }
-        true
+        D::is_contiguous(&self.dim, &self.strides)
     }
 
     /// Return a pointer to the first element in the array.
@@ -783,11 +776,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                 [3., 4.]])
     /// );
     /// ```
-    pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E>
+    pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E::Dim>
         where S: DataShared + DataOwned,
               A: Clone,
-              E: Dimension,
+              E: IntoDimension,
     {
+        let shape = shape.into_dimension();
         if shape.size_checked() != Some(self.dim.size()) {
             panic!("ndarray: incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(),
@@ -826,9 +820,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                 [3., 4.]])
     /// );
     /// ```
-    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E>, ShapeError>
-        where E: Dimension
+    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+        where E: IntoDimension,
     {
+        let shape = shape.into_dimension();
         if shape.size_checked() != Some(self.dim.size()) {
             return Err(error::incompatible_shapes(&self.dim, &shape));
         }
@@ -881,8 +876,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     == aview2(&[[1., 0.]; 10])
     /// );
     /// ```
-    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<A, E>>
-        where E: Dimension
+    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<A, E::Dim>>
+        where E: IntoDimension
     {
         /// Return new stride when trying to grow `from` into shape `to`
         ///
@@ -901,9 +896,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
 
             {
+                let mut new_stride_iter = new_stride.slice_mut().iter_mut().rev();
                 for ((er, es), dr) in from.slice().iter().rev()
                                         .zip(stride.slice().iter().rev())
-                                        .zip(new_stride.slice_mut().iter_mut().rev())
+                                        .zip(new_stride_iter.by_ref())
                 {
                     /* update strides */
                     if *dr == *er {
@@ -918,13 +914,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
 
                 /* set remaining strides to zero */
-                let tail_len = to.ndim() - from.ndim();
-                for dr in &mut new_stride.slice_mut()[..tail_len] {
+                for dr in new_stride_iter {
                     *dr = 0;
                 }
             }
             Some(new_stride)
         }
+        let dim = dim.into_dimension();
 
         // Note: zero strides are safe precisely because we return an read-only view
         let broadcast_strides = match upcast(&dim, &self.dim, &self.strides) {
@@ -1050,8 +1046,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
         // otherwise, break the arrays up into their inner rows
         let mut try_slices = true;
-        let mut rows = self.inner_iter_mut().zip(rhs.inner_iter());
-        for (mut s_row, r_row) in &mut rows {
+        let rows = self.inner_iter_mut().zip(rhs.inner_iter());
+        for (mut s_row, r_row) in rows {
             if try_slices {
                 if let Some(self_s) = s_row.as_slice_mut() {
                     if let Some(rhs_s) = r_row.as_slice() {
@@ -1288,7 +1284,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // the 0th element.
         self.subview(axis, 0).map(|first_elt| {
             unsafe {
-                mapping(ArrayView::new_(first_elt, view_len, view_stride))
+                mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
     }

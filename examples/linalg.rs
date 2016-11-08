@@ -12,14 +12,14 @@ use num_traits::Float;
 use num_complex::Complex;
 use std::ops::{Add, Sub, Mul, Div};
 
-use ndarray::{RcArray, Ix};
+use ndarray::{RcArray, Ix1, Ix2};
 use ndarray::{rcarr1, rcarr2};
 use ndarray::LinalgScalar;
 
 /// Column vector.
-pub type Col<A> = RcArray<A, Ix>;
+pub type Col<A> = RcArray<A, Ix1>;
 /// Rectangular matrix.
-pub type Mat<A> = RcArray<A, (Ix, Ix)>;
+pub type Mat<A> = RcArray<A, Ix2>;
 
 /// Trait union for a ring with 1.
 pub trait Ring : Clone + Zero + Add<Output=Self> + Sub<Output=Self>
@@ -178,7 +178,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
     if <A as ComplexField>::is_complex() {
         // conjugate transpose
         // only elements below the diagonal have imag part
-        let (m, _) = L.dim();
+        let (m, _) = L.dim_pattern();
         for i in 1..m {
             for j in 0..i {
                 let elt = &mut L[[i, j]];
@@ -210,7 +210,7 @@ pub fn least_squares<A: ComplexField>(a: &Mat<A>, b: &Col<A>) -> Col<A>
 pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 {
     let z = A::zero();
-    let (m, n) = a.dim();
+    let (m, n) = a.dim_pattern();
     assert!(m == n);
     // Perform the operation in-place on `a`
     let mut L = a;
@@ -259,9 +259,9 @@ pub fn cholesky<A: ComplexField>(a: Mat<A>) -> Mat<A>
 /// Solve *L x = b* where *L* is a lower triangular matrix.
 pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 {
-    let (m, n) = l.dim();
+    let (m, n) = l.dim_pattern();
     assert!(m == n);
-    assert!(m == b.dim());
+    assert!(m == b.len());
     let mut x = Col::zeros(m);
     for i in 0..m {
         // b_lx_sum = b[i] - Sum(for j = 0 .. i) L_ij x_j
@@ -277,9 +277,9 @@ pub fn subst_fw<A: Copy + Field>(l: &Mat<A>, b: &Col<A>) -> Col<A>
 /// Solve *U x = b* where *U* is an upper triangular matrix.
 pub fn subst_bw<A: Copy + Field>(u: &Mat<A>, b: &Col<A>) -> Col<A>
 {
-    let (m, n) = u.dim();
+    let (m, n) = u.dim_pattern();
     assert!(m == n);
-    assert!(m == b.dim());
+    assert!(m == b.len());
     let mut x = Col::zeros(m);
     for i in (0..m).rev() {
         // b_ux_sum = b[i] - Sum(for j = i .. m) U_ij x_j

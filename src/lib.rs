@@ -87,9 +87,11 @@ use std::marker::PhantomData;
 
 pub use dimension::{
     Dimension,
+    IntoDimension,
     RemoveAxis,
     Axis,
 };
+pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
 pub use indexes::Indexes;
@@ -110,7 +112,7 @@ pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
-pub use shape_builder::{ ShapeBuilder };
+pub use shape_builder::{ ShapeBuilder};
 
 mod aliases;
 mod arraytraits;
@@ -190,53 +192,112 @@ pub type Ixs = isize;
 ///
 /// ## Contents
 ///
-/// + [Array and RcArray](#ownedarray-and-rcarray)
+/// + [Array](#array)
+/// + [RcArray](#rcarray)
+/// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Slicing](#slicing)
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
 /// + [Broadcasting](#broadcasting)
-/// + [Methods](#methods)
-/// + [Methods for Array Views](#methods-for-array-views)
+/// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
+/// + [Methods For All Array Types](#methods-for-all-array-types)
+/// + [Methods Specific to Array Views](#methods-specific-to-array-views)
 ///
-/// ## `Array` and `RcArray`
 ///
-/// `Array` owns the underlying array elements directly (just like
-/// a `Vec`), while [`RcArray`](type.RcArray.html) is a an array with reference
-/// counted data. `RcArray` can act both as an owner or as a view in that regard.
+///
+///
+/// ## `Array`
+///
+/// [`Array`](type.Array.html) is an owned array that ows the underlying array
+/// elements directly (just like a `Vec`) and it is the default way to create and
+/// store n-dimensional data. `Array<A, D>` has two type parameters: `A` for
+/// the element type, and `D` for the dimensionality. A particular
+/// dimensionality's type alias like `Array3<A>` just has the type parameter
+/// `A` for element type.
+///
+/// An example:
+///
+/// ```
+/// // Create a three-dimensional f64 array, initialized with zeros
+/// use ndarray::Array3;
+/// let mut temperature = Array3::<f64>::zeros((3, 4, 5));
+/// // Increase the temperature in this location
+/// temperature[[2, 2, 2]] += 0.5;
+/// ```
+///
+/// ## `RcArray`
+///
+/// [`RcArray`](type.RcArray.html) is an owned array with reference counted
+/// data (shared ownership).
 /// Sharing requires that it uses copy-on-write for mutable operations.
 /// Calling a method for mutating elements on `RcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
+///
+/// ## Array Views
+///
+/// `ArrayView` and `ArrayViewMut` are read-only and read-write array views
+/// respectively. They use dimensionality, indexing, and almost all other
+/// methods the same was as the other array types.
+///
+/// A view is created from an array using `.view()`, `.view_mut()`, using
+/// slicing (`.slice()`, `.slice_mut()`) or from one of the many iterators
+/// that yield array views.
+///
+/// You can also create an array view from a regular slice of data not
+/// allocated with `Array` — see [Methods Specific to Array
+/// Views](#methods-specific-to-array-views).
 ///
 /// Note that all `ArrayBase` variants can change their view (slicing) of the
 /// data freely, even when their data can’t be mutated.
 ///
 /// ## Indexing and Dimension
 ///
-/// Array indexes are represented by the types `Ix` and `Ixs` (signed).
-///
 /// The dimensionality of the array determines the number of *axes*, for example
 /// a 2D array has two axes. These are listed in “big endian” order, so that
 /// the greatest dimension is listed first, the lowest dimension with the most
 /// rapidly varying index is the last.
 ///
-/// In a 2D array the index of each element is `(row, column)`
-/// as seen in this 3 × 3 example:
+/// In a 2D array the index of each element is `[row, column]` as seen in this
+/// 4 × 3 example:
 ///
 /// ```ignore
-/// [[ (0, 0), (0, 1), (0, 2)],  // row 0
-///  [ (1, 0), (1, 1), (1, 2)],  // row 1
-///  [ (2, 0), (2, 1), (2, 2)]]  // row 2
+/// [[ [0, 0], [0, 1], [0, 2] ],  // row 0
+///  [ [1, 0], [1, 1], [1, 2] ],  // row 1
+///  [ [2, 0], [2, 1], [2, 2] ],  // row 2
+///  [ [3, 0], [3, 1], [3, 2] ]]  // row 3
 /// //    \       \       \
 /// //   column 0  \     column 2
 /// //            column 1
 /// ```
 ///
-/// The number of axes for an array is fixed by the `D` parameter: `Ix` for
-/// a 1D array, `(Ix, Ix)` for a 2D array etc. The `D` type is also used
-/// for element indices in `.get()` and `array[index]`. The dimension type `Vec<Ix>`
-/// allows a dynamic number of axes.
+/// The number of axes for an array is fixed by its `D` type parameter: `Ix1`
+/// for a 1D array, `Ix2` for a 2D array etc. The dimension type `IxDyn` allows
+/// a dynamic number of axes.
+///
+/// A fixed size array (`[usize; N]`) of the corresponding dimensionality is
+/// used to index the `Array`, making the syntax `array[[` i, j,  ...`]]`
+///
+/// ```
+/// use ndarray::Array2;
+/// let mut array = Array2::zeros((4, 3));
+/// array[[1, 1]] = 7;
+/// ```
+///
+/// Important traits and types for dimension and indexing:
+///
+/// - A [`Dim`](Dim.t.html) value represents a dimensionality or index.
+/// - Trait [`Dimension`](Dimension.t.html) is implemented by all
+/// dimensionalities. It defines many operations for dimensions and indices.
+/// - Trait [`IntoDimension`](IntoDimension.t.html) is used to convert into a
+/// `Dim` value.
+/// - Trait [`ShapeBuilder`](ShapeBuilder.t.html) is an extension of
+/// `IntoDimension` and is used when constructing an array. A shape describes
+/// not just the extent of each axis but also their strides.
+/// - Trait [`NdIndex`](NdIndex.t.html) is an extension of `Dimension` and is
+/// for values that can be used with indexing syntax.
+///
 ///
 /// The default memory order of an array is *row major* order (a.k.a “c” order),
 /// where each row is contiguous in memory.
@@ -434,7 +495,7 @@ pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
 ///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
-/// See also specific [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
+/// See also [**Methods Specific To Array Views**](struct.ArrayBase.html#methods-specific-to-array-views)
 ///
 /// [ab]: struct.ArrayBase.html
 pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
@@ -445,7 +506,7 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 ///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
-/// See also specific [**Methods for Array Views**](struct.ArrayBase.html#methods-for-array-views).
+/// See also [**Methods Specific To Array Views**](struct.ArrayBase.html#methods-specific-to-array-views)
 ///
 /// [ab]: struct.ArrayBase.html
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;

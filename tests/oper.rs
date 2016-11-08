@@ -5,6 +5,8 @@ use ndarray::prelude::*;
 use ndarray::{arr0, rcarr1, rcarr2};
 use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
+use ndarray::Array2;
+use ndarray::Ix2;
 
 use std::fmt;
 use num_traits::Float;
@@ -263,26 +265,26 @@ fn fold_and_sum() {
     }
 }
 
-fn range_mat(m: Ix, n: Ix) -> Array<f32, (Ix, Ix)> {
+fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     Array::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
 }
 
-fn range_mat64(m: Ix, n: Ix) -> Array<f64, (Ix, Ix)> {
+fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
     Array::linspace(0., (m * n - 1) as f64, m * n).into_shape((m, n)).unwrap()
 }
 
-fn range_i32(m: Ix, n: Ix) -> Array<i32, (Ix, Ix)> {
+fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
     Array::from_iter(0..(m * n) as i32).into_shape((m, n)).unwrap()
 }
 
 // simple, slow, correct (hopefully) mat mul
-fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2, (Ix, Ix)>)
-    -> Array<A, (Ix, Ix)>
+fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>)
+    -> Array2<A>
     where A: LinalgScalar,
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
+    let ((m, k), (k2, n)) = (lhs.dim_pattern(), rhs.dim_pattern());
     assert!(m.checked_mul(n).is_some());
     assert_eq!(k, k2);
     let mut res_elems = Vec::<A>::with_capacity(m * n);

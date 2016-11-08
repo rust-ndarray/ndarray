@@ -11,6 +11,7 @@ use super::{
     Data,
     Dimension,
 };
+use dimension::IntoDimension;
 
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
                             mut format: F)
@@ -37,6 +38,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
     // Simply use the indexed iterator, and take the index wraparounds
     // as cues for when to add []'s and how many to add.
     for (index, elt) in view.indexed_iter() {
+        let index = index.into_dimension();
         let take_n = if ndim == 0 { 1 } else { ndim - 1 };
         let mut update_index = false;
         for (i, (a, b)) in index.slice()

@@ -108,13 +108,9 @@ pub const S: Si = Si(0, None, 1);
 /// #[macro_use]
 /// extern crate ndarray;
 ///
-/// use ndarray::{
-///     ArrayView,
-///     Ix,
-///     Array,
-/// };
+/// use ndarray::{Array2, ArrayView2};
 ///
-/// fn laplacian(v: &ArrayView<f32, (Ix, Ix)>) -> Array<f32, (Ix, Ix)> {
+/// fn laplacian(v: &ArrayView2<f32>) -> Array2<f32> {
 ///     -4. * &v.slice(s![1..-1, 1..-1])
 ///     + v.slice(s![ ..-2, 1..-1])
 ///     + v.slice(s![1..-1,  ..-2])
@@ -125,14 +121,13 @@ pub const S: Si = Si(0, None, 1);
 /// ```
 #[macro_export]
 macro_rules! s(
-    (@as_expr $e:expr) => ($e);
     // convert a..b;c into @step(a..b, c), final item
     (@parse [$($stack:tt)*] $r:expr;$s:expr) => {
-        s![@as_expr &[$($stack)* s!(@step $r, $s)]]
+        &[$($stack)* s!(@step $r, $s)]
     };
     // convert a..b into @step(a..b, 1), final item
     (@parse [$($stack:tt)*] $r:expr) => {
-        s![@as_expr &[$($stack)* s!(@step $r, 1)]]
+        &[$($stack)* s!(@step $r, 1)]
     };
     // convert a..b;c into @step(a..b, c)
     (@parse [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {

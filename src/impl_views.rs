@@ -12,7 +12,7 @@ use error::ShapeError;
 
 use StrideShape;
 
-/// # Methods for Array Views
+/// # Methods Specific to Array Views
 ///
 /// Methods for read-only array views `ArrayView<'a, A, D>`
 ///

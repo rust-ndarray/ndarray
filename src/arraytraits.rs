@@ -48,7 +48,7 @@ macro_rules! debug_bounds_check {
 #[inline(always)]
 pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
     where D: Dimension,
-          I: NdIndex<Dim=D>,
+          I: NdIndex<D>,
           S: Data,
 {
     debug_bounds_check!(_a, *_index);
@@ -59,7 +59,7 @@ pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
 /// **Panics** if index is out of bounds.
 impl<S, D, I> Index<I> for ArrayBase<S, D>
     where D: Dimension,
-          I: NdIndex<Dim=D>,
+          I: NdIndex<D>,
           S: Data,
 {
     type Output = S::Elem;
@@ -75,7 +75,7 @@ impl<S, D, I> Index<I> for ArrayBase<S, D>
 /// **Panics** if index is out of bounds.
 impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
     where D: Dimension,
-          I: NdIndex<Dim=D>,
+          I: NdIndex<D>,
           S: DataMut,
 {
     #[inline]
@@ -221,7 +221,7 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayBase<ViewRepr<&'a A>, Ix1>
     fn from(slice: &'a Slice) -> Self {
         let xs = slice.as_ref();
         unsafe {
-            Self::new_(xs.as_ptr(), xs.len(), 1)
+            Self::new_(xs.as_ptr(), Ix1(xs.len()), Ix1(1))
         }
     }
 }
@@ -247,7 +247,7 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayBase<ViewRepr<&'a mut A>
     fn from(slice: &'a mut Slice) -> Self {
         let xs = slice.as_mut();
         unsafe {
-            Self::new_(xs.as_mut_ptr(), xs.len(), 1)
+            Self::new_(xs.as_mut_ptr(), Ix1(xs.len()), Ix1(1))
         }
     }
 }

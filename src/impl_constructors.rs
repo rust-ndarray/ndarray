@@ -13,19 +13,21 @@
 use libnum::{Zero, One, Float};
 
 use imp_prelude::*;
-use {Shape, StrideShape};
+use StrideShape;
 use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
 use Indexes;
 use iterators::{to_vec, to_vec_mapped};
 
+/// # Constructor Methods for Owned Arrays
+///
 /// Constructor methods for one-dimensional arrays.
 ///
 /// Note that the constructor methods apply to `Array` and `RcArray`,
 /// the two array types that have owned storage.
-impl<S> ArrayBase<S, Ix1>
-    where S: DataOwned
+impl<S, A> ArrayBase<S, Ix1>
+    where S: DataOwned<Elem=A>,
 {
     /// Create a one-dimensional array from a vector (no copying needed).
     ///
@@ -34,7 +36,7 @@ impl<S> ArrayBase<S, Ix1>
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
-    pub fn from_vec(v: Vec<S::Elem>) -> Self {
+    pub fn from_vec(v: Vec<A>) -> Self {
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
 
@@ -47,13 +49,13 @@ impl<S> ArrayBase<S, Ix1>
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
     pub fn from_iter<I>(iterable: I) -> Self
-        where I: IntoIterator<Item=S::Elem>
+        where I: IntoIterator<Item=A>
     {
         Self::from_vec(iterable.into_iter().collect())
     }
 
     /// Create a one-dimensional array from the inclusive interval
-    /// `[start, end]` with `n` elements. `F` must be a floating point type.
+    /// `[start, end]` with `n` elements. `A` must be a floating point type.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -61,15 +63,15 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
-    pub fn linspace<F>(start: F, end: F, n: usize) -> Self
-        where S: Data<Elem=F>,
-              F: Float,
+    pub fn linspace(start: A, end: A, n: usize) -> Self
+        where A: Float,
     {
         Self::from_vec(to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array from the half-open interval
-    /// `[start, end)` with elements spaced by `step`. `F` must be a floating point type.
+    /// `[start, end)` with elements spaced by `step`. `A` must be a floating
+    /// point type.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -77,9 +79,8 @@ impl<S> ArrayBase<S, Ix1>
     /// let array = Array::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
-    pub fn range<F>(start: F, end: F, step: F) -> Self
-        where S: Data<Elem=F>,
-              F: Float,
+    pub fn range(start: A, end: A, step: A) -> Self
+        where A: Float,
     {
         Self::from_vec(to_vec(linspace::range(start, end, step)))
     }
@@ -140,12 +141,12 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     pub fn from_elem<Sh>(shape: Sh, elem: A) -> Self
         where A: Clone,
-              Sh: Into<Shape<D>>,
+              Sh: ShapeBuilder<Dim=D>,
     {
         // Note: We don't need to check the case of a size between
         // isize::MAX -> usize::MAX; in this case, the vec constructor itself
         // panics.
-        let shape = shape.into();
+        let shape = shape.into_shape();
         let size = size_checked_unwrap!(shape.dim);
         let v = vec![elem; size];
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
@@ -156,7 +157,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn zeros<Sh>(shape: Sh) -> Self
         where A: Clone + Zero,
-              Sh: Into<Shape<D>>,
+              Sh: ShapeBuilder<Dim=D>,
     {
         Self::from_elem(shape, A::zero())
     }
@@ -166,9 +167,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn default<Sh>(shape: Sh) -> Self
         where A: Default,
-              Sh: Into<Shape<D>>,
+              Sh: ShapeBuilder<Dim=D>,
     {
-        let shape = shape.into();
+        let shape = shape.into_shape();
         let v = to_vec((0..shape.dim.size()).map(|_| A::default()));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
@@ -179,10 +180,10 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
-        where Sh: Into<Shape<D>>,
-              F: FnMut(D) -> A,
+        where Sh: ShapeBuilder<Dim=D>,
+              F: FnMut(D::Pattern) -> A,
     {
-        let shape = shape.into();
+        let shape = shape.into_shape();
         let v = to_vec_mapped(Indexes::new(shape.dim.clone()), f);
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
@@ -204,13 +205,15 @@ impl<S, A, D> ArrayBase<S, D>
     /// **Errors** if strides allow multiple indices to point to the same element.
     ///
     /// ```
-    /// use ndarray::prelude::*;
+    /// use ndarray::Array;
+    /// use ndarray::ShapeBuilder; // Needed for .strides() method
+    /// use ndarray::arr2;
     ///
     /// let a = Array::from_shape_vec((2, 2), vec![1., 2., 3., 4.]);
     /// assert!(a.is_ok());
     ///
     /// let b = Array::from_shape_vec((2, 2).strides((1, 2)),
-    ///                                    vec![1., 2., 3., 4.]).unwrap();
+    ///                               vec![1., 2., 3., 4.]).unwrap();
     /// assert!(
     ///     b == arr2(&[[1., 3.],
     ///                 [2., 4.]])
@@ -231,7 +234,7 @@ impl<S, A, D> ArrayBase<S, D>
             let dim = shape.dim;
             let strides = shape.strides;
             if dim.size_checked() != Some(v.len()) {
-                return Err(error::incompatible_shapes(&v.len(), &dim));
+                return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
             }
             unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
         }
