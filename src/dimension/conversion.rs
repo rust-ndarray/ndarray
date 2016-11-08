@@ -27,8 +27,19 @@ macro_rules! index {
     ($m:ident $arg:tt 7) => ($m!($arg 0 1 2 3 4 5 6));
 }
 
+macro_rules! index_item_ix {
+    ($m:ident $arg:tt 0) => ($m!($arg););
+    ($m:ident $arg:tt 1) => ($m!($arg Ix););
+    ($m:ident $arg:tt 2) => ($m!($arg Ix Ix););
+    ($m:ident $arg:tt 3) => ($m!($arg Ix Ix Ix););
+    ($m:ident $arg:tt 4) => ($m!($arg Ix Ix Ix Ix););
+    ($m:ident $arg:tt 5) => ($m!($arg Ix Ix Ix Ix Ix););
+    ($m:ident $arg:tt 6) => ($m!($arg Ix Ix Ix Ix Ix Ix););
+    ($m:ident $arg:tt 7) => ($m!($arg Ix Ix Ix Ix Ix Ix Ix););
+}
+
 macro_rules! index_item {
-    ($m:ident $arg:tt 0) => ();
+    ($m:ident $arg:tt 0) => ($m!($arg););
     ($m:ident $arg:tt 1) => ($m!($arg 0););
     ($m:ident $arg:tt 2) => ($m!($arg 0 1););
     ($m:ident $arg:tt 3) => ($m!($arg 0 1 2););
@@ -98,8 +109,14 @@ macro_rules! array_zero {
 macro_rules! tuple_to_array {
     ([] $($n:tt)*) => {
         $(
+        index_item_ix!(impl_tuple_to_array [$n] $n);
+        )*
+    }
+}
+macro_rules! impl_tuple_to_array {
+    ([$n:tt] $($ix:tt)*) => {
         impl Convert for [Ix; $n] {
-            type To = index!(tuple_type [Ix] $n);
+            type To = ($($ix ,)*);
             fn convert(self) -> Self::To {
                 index!(tuple_expr [self] $n)
             }
@@ -113,7 +130,7 @@ macro_rules! tuple_to_array {
             }
         }
 
-        impl IntoDimension for index!(tuple_type [Ix] $n) {
+        impl IntoDimension for ($($ix ,)*) {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
@@ -145,8 +162,6 @@ macro_rules! tuple_to_array {
                 self.slice().iter().all(|x| *x == 0)
             }
         }
-
-        )*
     }
 }
 
