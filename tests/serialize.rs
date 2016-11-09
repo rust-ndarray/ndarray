@@ -19,7 +19,6 @@ use ndarray::{arr0, arr1, arr2, RcArray, RcArray1, RcArray2};
 #[test]
 fn serial_many_dim()
 {
-    /* rustc-serialize does not support serializing [T; 0]
     {
         let a = arr0::<f32>(2.72);
         let serial = json::encode(&a).unwrap();
@@ -28,7 +27,6 @@ fn serial_many_dim()
         println!("{:?}", res);
         assert_eq!(a, res.unwrap());
     }
-    */
 
     {
         let a = arr1::<f32>(&[2.72, 1., 2.]);
