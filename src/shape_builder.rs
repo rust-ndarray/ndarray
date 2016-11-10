@@ -18,6 +18,15 @@ pub trait ShapeBuilder {
     fn strides(self, strides: Self::Strides) -> StrideShape<Self::Dim>;
 }
 
+impl<D> From<D> for Shape<D>
+    where D: Dimension,
+{
+    /// Create a `Shape` from `dimension`, using the default memory layout.
+    fn from(dimension: D) -> Shape<D> {
+        dimension.into_shape()
+    }
+}
+
 impl<T, D> From<T> for StrideShape<D>
     where D: Dimension,
           T: ShapeBuilder<Dim=D>,
