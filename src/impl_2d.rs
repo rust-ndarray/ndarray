@@ -56,5 +56,10 @@ impl<A, S> ArrayBase<S, Ix2>
     pub fn cols(&self) -> usize {
         self.shape().axis(Axis(1))
     }
+
+    /// Return true if the array is square, false otherwise.
+    pub fn is_square(&self) -> bool {
+        self.rows() == self.cols()
+    }
 }
 
