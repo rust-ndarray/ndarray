@@ -15,7 +15,7 @@ use {
     LinalgScalar,
 };
 
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 
 #[cfg(feature="blas")]
 use std::cmp;
@@ -496,14 +496,14 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
 
 #[inline(always)]
 /// Return `true` if `A` and `B` are the same type
-fn same_type<A: Any, B: Any>() -> bool {
+fn same_type<A: 'static, B: 'static>() -> bool {
     TypeId::of::<A>() == TypeId::of::<B>()
 }
 
 // Read pointer to type `A` as type `B`.
 //
 // **Panics** if `A` and `B` are not the same type
-fn cast_as<A: Any + Copy, B: Any + Copy>(a: &A) -> B {
+fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
     assert!(same_type::<A, B>());
     unsafe {
         ::std::ptr::read(a as *const _ as *const B)
@@ -513,8 +513,8 @@ fn cast_as<A: Any + Copy, B: Any + Copy>(a: &A) -> B {
 #[cfg(feature="blas")]
 fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix1>) -> bool
     where S: Data,
-          A: Any,
-          S::Elem: Any,
+          A: 'static,
+          S::Elem: 'static,
 {
     if !same_type::<A, S::Elem>() {
         return false;
@@ -533,8 +533,8 @@ fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix1>) -> bool
 #[cfg(feature="blas")]
 fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     where S: Data,
-          A: Any,
-          S::Elem: Any,
+          A: 'static,
+          S::Elem: 'static,
 {
     if !same_type::<A, S::Elem>() {
         return false;

@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::any::Any;
 use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
@@ -30,7 +29,7 @@ use num_complex::Complex;
 /// This trait ***does not*** limit which elements can be stored in an array in general.
 /// Non-`ScalarOperand` types can still participate in arithmetic as array elements in
 /// in array-array operations.
-pub trait ScalarOperand : Any + Clone { }
+pub trait ScalarOperand : 'static + Clone { }
 impl ScalarOperand for bool { }
 impl ScalarOperand for i8 { }
 impl ScalarOperand for u8 { }
