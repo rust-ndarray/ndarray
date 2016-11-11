@@ -16,8 +16,8 @@ use std::ops::{
 
 use imp_prelude::*;
 use {
-    Elements,
-    ElementsMut,
+    Iter,
+    IterMut,
     NdIndex,
 };
 
@@ -127,7 +127,7 @@ impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
           S: Data,
 {
     type Item = &'a S::Elem;
-    type IntoIter = Elements<'a, S::Elem, D>;
+    type IntoIter = Iter<'a, S::Elem, D>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -139,7 +139,7 @@ impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
           S: DataMut
 {
     type Item = &'a mut S::Elem;
-    type IntoIter = ElementsMut<'a, S::Elem, D>;
+    type IntoIter = IterMut<'a, S::Elem, D>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
@@ -150,7 +150,7 @@ impl<'a, A, D> IntoIterator for ArrayView<'a, A, D>
     where D: Dimension
 {
     type Item = &'a A;
-    type IntoIter = Elements<'a, A, D>;
+    type IntoIter = Iter<'a, A, D>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.into_iter_()
@@ -161,7 +161,7 @@ impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A, D>
     where D: Dimension
 {
     type Item = &'a mut A;
-    type IntoIter = ElementsMut<'a, A, D>;
+    type IntoIter = IterMut<'a, A, D>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.into_iter_()
