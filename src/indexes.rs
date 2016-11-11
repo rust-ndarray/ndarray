@@ -12,25 +12,33 @@ use dimension::IntoDimension;
 ///
 /// Iterator element type is `D`.
 #[derive(Clone)]
-pub struct Indexes<D> {
+pub struct Indices<D> {
     dim: D,
     index: Option<D>,
 }
 
-impl<D: Dimension> Indexes<D> {
-    /// Create an iterator over the array shape `dim`.
-    pub fn new<E>(shape: E) -> Indexes<D>
-        where E: IntoDimension<Dim=D>,
-    {
-        let dim = shape.into_dimension();
-        Indexes {
-            index: dim.first_index(),
-            dim: dim,
-        }
+/// Create an iterator over the array shape `shape`.
+pub fn indices<E>(shape: E) -> Indices<E::Dim>
+    where E: IntoDimension,
+{
+    let dim = shape.into_dimension();
+    Indices {
+        index: dim.first_index(),
+        dim: dim,
     }
 }
 
-impl<D> Iterator for Indexes<D>
+impl<D: Dimension> Indices<D> {
+    /// Create an iterator over the array shape `dim`.
+    #[deprecated(note = "replaced by indices()")]
+    pub fn new<E>(shape: E) -> Indices<D>
+        where E: IntoDimension<Dim=D>,
+    {
+        indices(shape)
+    }
+}
+
+impl<D> Iterator for Indices<D>
     where D: Dimension,
 {
     type Item = D::Pattern;
@@ -61,6 +69,6 @@ impl<D> Iterator for Indexes<D>
     }
 }
 
-impl<D> ExactSizeIterator for Indexes<D>
+impl<D> ExactSizeIterator for Indices<D>
     where D: Dimension
 {}
