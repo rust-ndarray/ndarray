@@ -93,6 +93,10 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.9
+
+  - Implement ``ExactSizeIterator`` for the indexed iterators
+
 - 0.6.8
 
   - Fix a bug in a partially consumed elements iterator's ``.fold()``.
