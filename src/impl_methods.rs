@@ -491,6 +491,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
     ///
+    /// The outer iterator is equivalent to `.axis_iter(Axis(0))`.
     /// For example, in a 2 × 2 × 3 array, the iterator element
     /// is a 2 × 3 subview (and there are 2 in total).
     ///
@@ -517,6 +518,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
+    ///
+    /// The outer iterator is equivalent to `.axis_iter_mut(Axis(0))`.
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
     #[allow(deprecated)]
