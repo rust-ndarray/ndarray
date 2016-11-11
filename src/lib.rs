@@ -749,11 +749,11 @@ struct ElementsBaseMut<'a, A: 'a, D> {
 ///
 /// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
 #[derive(Clone)]
-pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
+pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// An iterator over the indexes and elements of an array (mutable).
 ///
 /// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
-pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
+pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 use std::slice::Iter as SliceIter;
 use std::slice::IterMut as SliceIterMut;

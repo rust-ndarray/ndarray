@@ -11,7 +11,7 @@ use std::ptr;
 use Ix1;
 
 use super::{Dimension, Ix, Ixs};
-use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
+use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, IndexedIter, IndexedIterMut};
 use super::{
     ArrayBase,
     Data,
@@ -259,7 +259,7 @@ impl<'a, A, D> ExactSizeIterator for Elements<'a, A, D>
 {}
 
 
-impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
+impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
     type Item = (D::Pattern, &'a A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -279,7 +279,7 @@ impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for Indexed<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for IndexedIter<'a, A, D>
     where D: Dimension
 {}
 
@@ -340,7 +340,7 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     }
 }
 
-impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
+impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
     type Item = (D::Pattern, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -360,7 +360,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for IndexedMut<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
     where D: Dimension
 {}
 
@@ -947,13 +947,13 @@ macro_rules! send_sync_read_write {
 }
 
 send_sync_read_only!(Elements);
-send_sync_read_only!(Indexed);
+send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
 
 send_sync_read_write!(ElementsMut);
-send_sync_read_write!(IndexedMut);
+send_sync_read_write!(IndexedIterMut);
 send_sync_read_write!(InnerIterMut);
 send_sync_read_write!(AxisIterMut);
 send_sync_read_write!(AxisChunksIterMut);

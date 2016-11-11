@@ -28,8 +28,8 @@ use {
     AxisChunksIterMut,
     Elements,
     ElementsMut,
-    Indexed,
-    IndexedMut,
+    IndexedIter,
+    IndexedIterMut,
     InnerIter,
     InnerIterMut,
     AxisIter,
@@ -150,17 +150,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator of indexes and references to the elements of the array.
     ///
     /// Iterator element type is `(D::Pattern, &A)`.
-    pub fn indexed_iter(&self) -> Indexed<A, D> {
-        Indexed(self.view().into_elements_base())
+    pub fn indexed_iter(&self) -> IndexedIter<A, D> {
+        IndexedIter(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is `(D::Pattern, &mut A)`.
-    pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
+    pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
         where S: DataMut,
     {
-        IndexedMut(self.view_mut().into_elements_base())
+        IndexedIterMut(self.view_mut().into_elements_base())
     }
 
 
