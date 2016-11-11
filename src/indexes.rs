@@ -5,6 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+use {ArrayBase, Data};
 use super::Dimension;
 use dimension::IntoDimension;
 
@@ -18,6 +19,9 @@ pub struct Indices<D> {
 }
 
 /// Create an iterator over the array shape `shape`.
+///
+/// *Note:* prefer higher order methods, arithmetic operations and
+/// non-indexed iteration before using indices.
 pub fn indices<E>(shape: E) -> Indices<E::Dim>
     where E: IntoDimension,
 {
@@ -26,6 +30,16 @@ pub fn indices<E>(shape: E) -> Indices<E::Dim>
         index: dim.first_index(),
         dim: dim,
     }
+}
+
+/// Create an iterator over the indices of the passed-in array.
+///
+/// *Note:* prefer higher order methods, arithmetic operations and
+/// non-indexed iteration before using indices.
+pub fn indices_of<S, D>(array: &ArrayBase<S, D>) -> Indices<D>
+    where S: Data, D: Dimension,
+{
+    indices(array.dim())
 }
 
 impl<D: Dimension> Indices<D> {
