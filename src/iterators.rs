@@ -279,6 +279,10 @@ impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for Indexed<'a, A, D>
+    where D: Dimension
+{}
+
 impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D> {
     type Item = &'a mut A;
     #[inline]
@@ -355,6 +359,10 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
         (len, Some(len))
     }
 }
+
+impl<'a, A, D> ExactSizeIterator for IndexedMut<'a, A, D>
+    where D: Dimension
+{}
 
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
