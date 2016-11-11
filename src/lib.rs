@@ -307,7 +307,8 @@ pub type Ixs = isize;
 /// A *column major* (a.k.a. “f” or fortran) memory order array has
 /// columns (or, in general, the outermost axis) with contiguous elements.
 ///
-/// The logical order of any array’s elements is the row major order.
+/// The logical order of any array’s elements is the row major order 
+/// (the rightmost index is varying the fastest).
 /// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
 ///
 /// ## Slicing

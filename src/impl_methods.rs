@@ -132,6 +132,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator of references to the elements of the array.
     ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
+    ///
     /// Iterator element type is `&A`.
     pub fn iter(&self) -> Iter<A, D> {
         debug_assert!(self.pointer_is_inbounds());
@@ -139,6 +142,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return an iterator of mutable references to the elements of the array.
+    ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `&mut A`.
     pub fn iter_mut(&mut self) -> IterMut<A, D>
