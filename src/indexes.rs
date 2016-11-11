@@ -42,16 +42,6 @@ pub fn indices_of<S, D>(array: &ArrayBase<S, D>) -> Indices<D>
     indices(array.dim())
 }
 
-impl<D: Dimension> Indices<D> {
-    /// Create an iterator over the array shape `dim`.
-    #[deprecated(note = "replaced by indices()")]
-    pub fn new<E>(shape: E) -> Indices<D>
-        where E: IntoDimension<Dim=D>,
-    {
-        indices(shape)
-    }
-}
-
 impl<D> Iterator for Indices<D>
     where D: Dimension,
 {

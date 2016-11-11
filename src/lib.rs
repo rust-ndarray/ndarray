@@ -96,7 +96,6 @@ pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
 pub use indexes::Indices;
-pub use indexes::Indices as Indexes;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
 pub use si::{Si, S};
