@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::slice;
+
 use imp_prelude::*;
 use dimension::{self, stride_offset};
 use error::ShapeError;
@@ -113,6 +115,18 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         (left, right)
     }
 
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
+    pub fn into_slice(&self) -> Option<&'a [A]> {
+        if self.is_standard_layout() {
+            unsafe {
+                Some(slice::from_raw_parts(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
+    }
+
 }
 
 /// Methods for read-write array views `ArrayViewMut<'a, A, D>`
@@ -209,6 +223,19 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         };
 
         (left, right)
+    }
+
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
+    pub fn into_slice(self) -> Option<&'a mut [A]>
+    {
+        if self.is_standard_layout() {
+            unsafe {
+                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            None
+        }
     }
 
 }

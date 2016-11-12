@@ -631,16 +631,6 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         }
     }
 
-    fn into_slice(&self) -> Option<&'a [A]> {
-        if self.is_standard_layout() {
-            unsafe {
-                Some(slice::from_raw_parts(self.ptr, self.len()))
-            }
-        } else {
-            None
-        }
-    }
-
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[deprecated(note="This method will be replaced.")]
@@ -691,17 +681,6 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
                 } else {
                     ElementsRepr::Counted(self.into_elements_base())
                 }
-        }
-    }
-
-    fn _into_slice_mut(self) -> Option<&'a mut [A]>
-    {
-        if self.is_standard_layout() {
-            unsafe {
-                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
-            }
-        } else {
-            None
         }
     }
 
