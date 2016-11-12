@@ -12,7 +12,7 @@ use ndarray::{
     aview_mut1,
     Ix0, Ix2,
 };
-use ndarray::Indexes;
+use ndarray::indices;
 use itertools::free::enumerate;
 
 #[test]
@@ -90,13 +90,13 @@ fn test_index()
         *elt = i;
     }
 
-    for ((i, j), a) in Indexes::new((2, 3)).zip(A.iter()) {
+    for ((i, j), a) in indices((2, 3)).zip(A.iter()) {
         assert_eq!(*a, A[[i, j]]);
     }
 
     let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
-    for ((i, j), x) in Indexes::new((1, 2)).zip(it.by_ref()) {
+    for ((i, j), x) in indices((1, 2)).zip(it.by_ref()) {
         assert_eq!(*x, vi[[i, j]]);
     }
     assert!(it.next().is_none());

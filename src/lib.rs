@@ -81,9 +81,10 @@ extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
-use std::rc::Rc;
-use std::slice::{self, Iter, IterMut};
+use std::iter::Zip;
 use std::marker::PhantomData;
+use std::rc::Rc;
+use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 pub use dimension::{
     Dimension,
@@ -94,7 +95,8 @@ pub use dimension::{
 pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
-pub use indexes::Indexes;
+pub use indexes::Indices;
+pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
 pub use si::{Si, S};
 
@@ -304,7 +306,8 @@ pub type Ixs = isize;
 /// A *column major* (a.k.a. “f” or fortran) memory order array has
 /// columns (or, in general, the outermost axis) with contiguous elements.
 ///
-/// The logical order of any array’s elements is the row major order.
+/// The logical order of any array’s elements is the row major order 
+/// (the rightmost index is varying the fastest).
 /// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
 ///
 /// ## Slicing
@@ -618,8 +621,8 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         ElementsBase { inner: self.into_base_iter() }
     }
 
-    fn into_iter_(self) -> Elements<'a, A, D> {
-        Elements {
+    fn into_iter_(self) -> Iter<'a, A, D> {
+        Iter {
             inner: if let Some(slc) = self.into_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
@@ -677,8 +680,8 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         ElementsBaseMut { inner: self.into_base_iter() }
     }
 
-    fn into_iter_(self) -> ElementsMut<'a, A, D> {
-        ElementsMut {
+    fn into_iter_(self) -> IterMut<'a, A, D> {
+        IterMut {
             inner:
                 if self.is_standard_layout() {
                     let slc = unsafe {
@@ -718,8 +721,8 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
 /// Iterator element type is `&'a A`.
 ///
 /// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
-pub struct Elements<'a, A: 'a, D> {
-    inner: ElementsRepr<Iter<'a, A>, ElementsBase<'a, A, D>>,
+pub struct Iter<'a, A: 'a, D> {
+    inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
 }
 
 /// Counted read only iterator
@@ -732,8 +735,8 @@ struct ElementsBase<'a, A: 'a, D> {
 /// Iterator element type is `&'a mut A`.
 ///
 /// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
-pub struct ElementsMut<'a, A: 'a, D> {
-    inner: ElementsRepr<IterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
+pub struct IterMut<'a, A: 'a, D> {
+    inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
 }
 
 /// An iterator over the elements of an array.
@@ -747,15 +750,12 @@ struct ElementsBaseMut<'a, A: 'a, D> {
 ///
 /// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
 #[derive(Clone)]
-pub struct Indexed<'a, A: 'a, D>(ElementsBase<'a, A, D>);
+pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// An iterator over the indexes and elements of an array (mutable).
 ///
 /// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
-pub struct IndexedMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
+pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
-use std::slice::Iter as SliceIter;
-use std::slice::IterMut as SliceIterMut;
-use std::iter::Zip;
 fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
     -> Zip<SliceIter<'a, A>, SliceIter<'b, B>> {
     t.iter().zip(u)

@@ -11,7 +11,7 @@ use std::ptr;
 use Ix1;
 
 use super::{Dimension, Ix, Ixs};
-use super::{Elements, ElementsRepr, ElementsBase, ElementsBaseMut, ElementsMut, Indexed, IndexedMut};
+use super::{Iter, ElementsRepr, ElementsBase, ElementsBaseMut, IterMut, IndexedIter, IndexedIterMut};
 use super::{
     ArrayBase,
     Data,
@@ -216,9 +216,9 @@ macro_rules! either_mut {
 }
 
 
-impl<'a, A, D: Clone> Clone for Elements<'a, A, D> {
-    fn clone(&self) -> Elements<'a, A, D> {
-        Elements {
+impl<'a, A, D: Clone> Clone for Iter<'a, A, D> {
+    fn clone(&self) -> Iter<'a, A, D> {
+        Iter {
             inner: match self.inner {
                 ElementsRepr::Slice(ref iter) => ElementsRepr::Slice(iter.clone()),
                 ElementsRepr::Counted(ref iter) => {
@@ -229,7 +229,7 @@ impl<'a, A, D: Clone> Clone for Elements<'a, A, D> {
     }
 }
 
-impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D> {
+impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
     type Item = &'a A;
     #[inline]
     fn next(&mut self) -> Option<&'a A> {
@@ -247,19 +247,19 @@ impl<'a, A, D: Dimension> Iterator for Elements<'a, A, D> {
     }
 }
 
-impl<'a, A> DoubleEndedIterator for Elements<'a, A, Ix1> {
+impl<'a, A> DoubleEndedIterator for Iter<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A> {
         either_mut!(self.inner, iter => iter.next_back())
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for Elements<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for Iter<'a, A, D>
     where D: Dimension
 {}
 
 
-impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
+impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
     type Item = (D::Pattern, &'a A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -279,11 +279,11 @@ impl<'a, A, D: Dimension> Iterator for Indexed<'a, A, D> {
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for Indexed<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for IndexedIter<'a, A, D>
     where D: Dimension
 {}
 
-impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D> {
+impl<'a, A, D: Dimension> Iterator for IterMut<'a, A, D> {
     type Item = &'a mut A;
     #[inline]
     fn next(&mut self) -> Option<&'a mut A> {
@@ -301,14 +301,14 @@ impl<'a, A, D: Dimension> Iterator for ElementsMut<'a, A, D> {
     }
 }
 
-impl<'a, A> DoubleEndedIterator for ElementsMut<'a, A, Ix1> {
+impl<'a, A> DoubleEndedIterator for IterMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
         either_mut!(self.inner, iter => iter.next_back())
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for ElementsMut<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for IterMut<'a, A, D>
     where D: Dimension
 {}
 
@@ -340,7 +340,7 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     }
 }
 
-impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
+impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
     type Item = (D::Pattern, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -360,7 +360,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedMut<'a, A, D> {
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for IndexedMut<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
     where D: Dimension
 {}
 
@@ -946,14 +946,14 @@ macro_rules! send_sync_read_write {
     }
 }
 
-send_sync_read_only!(Elements);
-send_sync_read_only!(Indexed);
+send_sync_read_only!(Iter);
+send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
 
-send_sync_read_write!(ElementsMut);
-send_sync_read_write!(IndexedMut);
+send_sync_read_write!(IterMut);
+send_sync_read_write!(IndexedIterMut);
 send_sync_read_write!(InnerIterMut);
 send_sync_read_write!(AxisIterMut);
 send_sync_read_write!(AxisChunksIterMut);
@@ -965,15 +965,15 @@ pub unsafe trait TrustedIterator { }
 use std::slice;
 use std::iter;
 use linspace::Linspace;
-use indexes::Indexes;
+use indexes::Indices;
 
 unsafe impl<F> TrustedIterator for Linspace<F> { }
-unsafe impl<'a, A, D> TrustedIterator for Elements<'a, A, D> { }
+unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }
 unsafe impl<I, F> TrustedIterator for iter::Map<I, F>
     where I: TrustedIterator { }
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
 unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
-unsafe impl<D> TrustedIterator for Indexes<D> where D: Dimension { }
+unsafe impl<D> TrustedIterator for Indices<D> where D: Dimension { }
 
 
 /// Like Iterator::collect, but only for trusted length iterators

@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
-use super::Elements;
+use super::Iter;
 use Dim;
 use dimension::DimPrivate;
 
@@ -57,7 +57,7 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
 }
 
 // private iterator wrapper
-struct Sequence<'a, A: 'a, D>(Elements<'a, A, D>);
+struct Sequence<'a, A: 'a, D>(Iter<'a, A, D>);
 
 impl<'a, A, D> Serialize for Sequence<'a, A, D>
     where A: Serialize,

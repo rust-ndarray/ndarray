@@ -26,10 +26,10 @@ use {
     NdIndex,
     AxisChunksIter,
     AxisChunksIterMut,
-    Elements,
-    ElementsMut,
-    Indexed,
-    IndexedMut,
+    Iter,
+    IterMut,
+    IndexedIter,
+    IndexedIterMut,
     InnerIter,
     InnerIterMut,
     AxisIter,
@@ -132,16 +132,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator of references to the elements of the array.
     ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
+    ///
     /// Iterator element type is `&A`.
-    pub fn iter(&self) -> Elements<A, D> {
+    pub fn iter(&self) -> Iter<A, D> {
         debug_assert!(self.pointer_is_inbounds());
         self.view().into_iter_()
     }
 
     /// Return an iterator of mutable references to the elements of the array.
     ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
+    ///
     /// Iterator element type is `&mut A`.
-    pub fn iter_mut(&mut self) -> ElementsMut<A, D>
+    pub fn iter_mut(&mut self) -> IterMut<A, D>
         where S: DataMut,
     {
         self.view_mut().into_iter_()
@@ -150,17 +156,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator of indexes and references to the elements of the array.
     ///
     /// Iterator element type is `(D::Pattern, &A)`.
-    pub fn indexed_iter(&self) -> Indexed<A, D> {
-        Indexed(self.view().into_elements_base())
+    pub fn indexed_iter(&self) -> IndexedIter<A, D> {
+        IndexedIter(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
     ///
     /// Iterator element type is `(D::Pattern, &mut A)`.
-    pub fn indexed_iter_mut(&mut self) -> IndexedMut<A, D>
+    pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
         where S: DataMut,
     {
-        IndexedMut(self.view_mut().into_elements_base())
+        IndexedIterMut(self.view_mut().into_elements_base())
     }
 
 
@@ -485,6 +491,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
     ///
+    /// The outer iterator is equivalent to `.axis_iter(Axis(0))`.
     /// For example, in a 2 × 2 × 3 array, the iterator element
     /// is a 2 × 3 subview (and there are 2 in total).
     ///
@@ -511,6 +518,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
+    ///
+    /// The outer iterator is equivalent to `.axis_iter_mut(Axis(0))`.
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
     #[allow(deprecated)]

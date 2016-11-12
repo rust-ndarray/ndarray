@@ -13,7 +13,7 @@ use ndarray::{
     arr2,
     arr3,
     Axis,
-    Indexes,
+    indices,
 };
 
 use itertools::assert_equal;
@@ -479,7 +479,7 @@ fn iterators_are_send_sync() {
     _send_sync(&a.axis_iter_mut(Axis(1)));
     _send_sync(&a.axis_chunks_iter(Axis(1), 1));
     _send_sync(&a.axis_chunks_iter_mut(Axis(1), 1));
-    _send_sync(&Indexes::new(a.dim()));
+    _send_sync(&indices(a.dim()));
 }
 
 #[test]

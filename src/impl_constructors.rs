@@ -17,7 +17,7 @@ use StrideShape;
 use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
-use Indexes;
+use indices;
 use iterators::{to_vec, to_vec_mapped};
 
 /// # Constructor Methods for Owned Arrays
@@ -184,7 +184,7 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
-        let v = to_vec_mapped(Indexes::new(shape.dim.clone()), f);
+        let v = to_vec_mapped(indices(shape.dim.clone()), f);
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
