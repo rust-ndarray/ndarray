@@ -87,7 +87,7 @@ fn scalar_operations()
         let mut x = a.clone();
         let mut y = arr0(0.);
         x += 1.;
-        y.assign_scalar(&2.);
+        y.fill(2.);
         assert_eq!(x, a + arr0(1.));
         assert_eq!(x, y);
     }
@@ -96,7 +96,7 @@ fn scalar_operations()
         let mut x = b.clone();
         let mut y = rcarr1(&[0., 0.]);
         x += 1.;
-        y.assign_scalar(&2.);
+        y.fill(2.);
         assert_eq!(x, b + arr0(1.));
         assert_eq!(x, y);
     }
@@ -105,7 +105,7 @@ fn scalar_operations()
         let mut x = c.clone();
         let mut y = RcArray::zeros((2, 2));
         x += 1.;
-        y.assign_scalar(&2.);
+        y.fill(2.);
         assert_eq!(x, c + arr0(1.));
         assert_eq!(x, y);
     }

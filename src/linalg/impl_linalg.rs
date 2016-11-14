@@ -445,7 +445,7 @@ fn mat_mul_general<A>(alpha: A,
     } else {
         // initialize memory if beta is zero
         if beta.is_zero() {
-            c.assign_scalar(&beta);
+            c.fill(beta);
         }
 
         let mut i = 0;

@@ -151,13 +151,13 @@ fn test_dot() {
 
     let b = a.clone();
     let mut res = a.clone();
-    res.assign_scalar(&0.);
+    res.fill(0.);
 
     dot(a.view(), b.view(), &mut res.view_mut()).unwrap();
     println!("{:?}", res);
 
     a.swap_axes(0, 1);
-    res.assign_scalar(&0.);
+    res.fill(0.);
 
     let result = dot(a.view(), b.view(), &mut res.view_mut());
     assert!(result.is_err());

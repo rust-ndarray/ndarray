@@ -462,7 +462,7 @@ fn assign_scalar_2d_corder(bench: &mut test::Bencher)
     let a = Array::zeros((64, 64));
     let mut a = black_box(a);
     let s = 3.;
-    bench.iter(move || a.assign_scalar(&s))
+    bench.iter(move || a.fill(s))
 }
 
 #[bench]
@@ -472,7 +472,7 @@ fn assign_scalar_2d_cutout(bench: &mut test::Bencher)
     let a = a.slice_mut(s![1..-1, 1..-1]);
     let mut a = black_box(a);
     let s = 3.;
-    bench.iter(move || a.assign_scalar(&s))
+    bench.iter(move || a.fill(s))
 }
 
 #[bench]
@@ -482,7 +482,7 @@ fn assign_scalar_2d_forder(bench: &mut test::Bencher)
     a.swap_axes(0, 1);
     let mut a = black_box(a);
     let s = 3.;
-    bench.iter(move || a.assign_scalar(&s))
+    bench.iter(move || a.fill(s))
 }
 
 #[bench]
@@ -490,7 +490,7 @@ fn assign_zero_2d_corder(bench: &mut test::Bencher)
 {
     let a = Array::zeros((64, 64));
     let mut a = black_box(a);
-    bench.iter(|| a.assign_scalar(&0.))
+    bench.iter(|| a.fill(0.))
 }
 
 #[bench]
@@ -499,7 +499,7 @@ fn assign_zero_2d_cutout(bench: &mut test::Bencher)
     let mut a = Array::zeros((66, 66));
     let a = a.slice_mut(s![1..-1, 1..-1]);
     let mut a = black_box(a);
-    bench.iter(|| a.assign_scalar(&0.))
+    bench.iter(|| a.fill(0.))
 }
 
 #[bench]
@@ -508,7 +508,7 @@ fn assign_zero_2d_forder(bench: &mut test::Bencher)
     let mut a = Array::zeros((64, 64));
     a.swap_axes(0, 1);
     let mut a = black_box(a);
-    bench.iter(|| a.assign_scalar(&0.))
+    bench.iter(|| a.fill(0.))
 }
 
 #[bench]
