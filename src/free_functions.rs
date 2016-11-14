@@ -76,7 +76,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
 ///     let mut data = [0; 1024];
 ///     {
 ///         let mut a = aview_mut1(&mut data).into_shape((32, 32)).unwrap();
-///         a.slice_mut(s![.., ..;3]).assign_scalar(&5);
+///         a.slice_mut(s![.., ..;3]).fill(5);
 ///     }
 ///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
 /// }

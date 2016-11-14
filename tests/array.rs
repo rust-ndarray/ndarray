@@ -308,7 +308,7 @@ fn assign()
     {
         let mut v = a.view_mut();
         v.islice(&[Si(0, Some(1), 1), S]);
-        v.assign_scalar(&0);
+        v.fill(0);
     }
     assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
 }

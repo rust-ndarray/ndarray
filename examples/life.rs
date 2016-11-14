@@ -35,7 +35,7 @@ fn parse(x: &[u8]) -> Board {
 fn iterate(z: &mut Board, scratch: &mut Board) {
     // compute number of neighbors
     let mut neigh = scratch.view_mut();
-    neigh.assign_scalar(&0);
+    neigh.fill(0);
     neigh += &z.slice(s![0..-2, 0..-2]);
     neigh += &z.slice(s![0..-2, 1..-1]);
     neigh += &z.slice(s![0..-2, 2..  ]);
