@@ -2,7 +2,7 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.11.
+and for numerics.  Requires Rust 1.11. (0.7-pre / master: Rust 1.13)
 
 Please read the API documentation here: `(0.6 / master)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
@@ -92,6 +92,21 @@ How to use with cargo::
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.7-pre
+
+  - Not yet released
+  - Big overhaul of dimensions! Instead of ``Ix`` for dimension use ``Ix1``,
+    ``(Ix, Ix)`` use ``Ix2``, and so on!
+  - The dimension type ``Dim`` supports indexing and arithmetic; dimensions
+    can now be added and multiplied.
+  - Constructors and methods that take tuples for array sizes, like ``Array::zeros,``
+    ``Array::from_shape_vec``, ``.into_shape()`` and so on will continue to work
+    with tuples.
+  - Renamed iterators for consistency (each iterator is named for the
+    method that creates it, for example ``.iter()`` returns ``Iter``).
+  - The index iterator is now created with free functions ``indices`` or
+    ``indices_of``.
 
 - 0.6.9
 
