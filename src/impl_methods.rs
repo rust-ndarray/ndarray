@@ -45,6 +45,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim.size()
     }
 
+    /// Return the length of `axis`.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    pub fn len_of(&self, axis: Axis) -> usize {
+        self.dim[axis.axis()]
+    }
+
     /// Return the shape of the array.
     pub fn dim(&self) -> D {
         self.dim.clone()
