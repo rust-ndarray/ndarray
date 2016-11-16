@@ -201,7 +201,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
         let b = b.view();
         let ((m, k), (k2, n)) = (a.dim_pattern(), b.dim_pattern());
         if k != k2 || m.checked_mul(n).is_none() {
-            return dot_shape_error(m, k, k2, n);
+            dot_shape_error(m, k, k2, n);
         }
 
         let lhs_s0 = a.strides()[0];
@@ -255,7 +255,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
     {
         let ((m, a), n) = (self.dim_pattern(), rhs.dim_pattern());
         if a != n {
-            return dot_shape_error(m, a, n, 1);
+            dot_shape_error(m, a, n, 1);
         }
 
         // Avoid initializing the memory in vec -- set it during iteration
@@ -489,9 +489,10 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
     let ((m, k), (k2, n)) = (a.dim_pattern(), b.dim_pattern());
     let (m2, n2) = c.dim_pattern();
     if k != k2 || m != m2 || n != n2 {
-        return general_dot_shape_error(m, k, k2, n, m2, n2);
+        general_dot_shape_error(m, k, k2, n, m2, n2);
+    } else {
+        mat_mul_impl(alpha, &a.view(), &b.view(), beta, &mut c.view_mut());
     }
-    mat_mul_impl(alpha, &a.view(), &b.view(), beta, &mut c.view_mut());
 }
 
 #[inline(always)]
