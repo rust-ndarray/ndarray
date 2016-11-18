@@ -50,7 +50,7 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
     {
         let mut struct_state = try!(serializer.serialize_struct("Array", 3));
         try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
-        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.dim()));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.raw_dimension()));
         try!(serializer.serialize_struct_elt(&mut struct_state, "data", Sequence(self.iter())));
         serializer.serialize_struct_end(struct_state)
     }
