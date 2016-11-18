@@ -2,7 +2,7 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.11. (0.7-pre / master: Rust 1.13)
+and for numerics.  Requires Rust 1.11. (0.7.0-alpha / master: Rust 1.13)
 
 Please read the API documentation here: `(0.6 / master)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
@@ -93,9 +93,9 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
-- 0.7-pre
+- 0.7.0-alpha.0
 
-  - Not yet released
+  - **Prerelease**
   - Big overhaul of dimensions: Add type ``Dim`` with aliases
     ``Ix1, Ix2, Ix3, ...`` etc for specific dimensionalities.
     Instead of ``Ix`` for dimension use ``Ix1``, instead of ``(Ix, Ix)`` use
