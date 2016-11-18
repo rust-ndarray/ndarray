@@ -106,7 +106,7 @@ Recent Changes (ndarray)
     ``Array::from_shape_vec``, ``.into_shape()`` and so on will continue to work
     with tuples.
   - The array method ``.dim()`` returns the dimension as it is. To get
-    a tuple, use ``.dim_pattern()``.
+    a tuple, use ``.dim()``.
   - Renamed iterators for consistency (each iterator is named for the
     method that creates it, for example ``.iter()`` returns ``Iter``).
   - The index iterator is now created with free functions ``indices`` or

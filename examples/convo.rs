@@ -18,8 +18,8 @@ type Kernel3x3<A> = [[A; 3]; 3];
 fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3<F>) 
     where F: Float,
 {
-    let (n, m) = a.dim_pattern();
-    let (np, mp) = out.dim_pattern();
+    let (n, m) = a.dim();
+    let (np, mp) = out.dim();
     if n < 3 || m < 3 {
         return;
     }
