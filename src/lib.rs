@@ -772,7 +772,7 @@ pub struct Shape<D> {
     is_c: bool,
 }
 
-/// An array shape of n dimensions c-order, f-order or custom strides.
+/// An array shape of n dimensions in c-order, f-order or custom strides.
 #[derive(Copy, Clone, Debug)]
 pub struct StrideShape<D> {
     dim: D,

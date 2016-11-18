@@ -284,7 +284,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, k), (k2, n)) = (lhs.dim_pattern(), rhs.dim_pattern());
+    let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
     assert!(m.checked_mul(n).is_some());
     assert_eq!(k, k2);
     let mut res_elems = Vec::<A>::with_capacity(m * n);

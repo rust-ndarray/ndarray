@@ -259,14 +259,14 @@ fn test_select(){
 fn diag()
 {
     let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
-    assert_eq!(d.dim_pattern(), 1);
+    assert_eq!(d.dim(), 1);
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
     let d = a.view().into_diag();
-    assert_eq!(d.dim_pattern(), 2);
+    assert_eq!(d.dim(), 2);
     let d = arr2::<f32, _>(&[[]]).into_diag();
-    assert_eq!(d.dim_pattern(), 0);
+    assert_eq!(d.dim(), 0);
     let d = RcArray::<f32, _>::zeros(()).into_diag();
-    assert_eq!(d.dim_pattern(), 1);
+    assert_eq!(d.dim(), 1);
 }
 
 #[test]
@@ -389,7 +389,7 @@ fn zero_axes()
 
     // we can even get a subarray of b
     let bsub = b.subview(Axis(0), 2);
-    assert_eq!(bsub.dim_pattern(), 0);
+    assert_eq!(bsub.dim(), 0);
 }
 
 #[test]
@@ -515,7 +515,7 @@ fn from_vec_dim_stride_2d_3() {
     let a = arr3(&[[[1]],
                    [[2]],
                    [[3]]]);
-    let d = a.dim();
+    let d = a.raw_dimension();
     let s = d.default_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
@@ -525,7 +525,7 @@ fn from_vec_dim_stride_2d_4() {
     let a = arr3(&[[[1]],
                    [[2]],
                    [[3]]]);
-    let d = a.dim();
+    let d = a.raw_dimension();
     let s = d.fortran_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
@@ -533,7 +533,7 @@ fn from_vec_dim_stride_2d_4() {
 #[test]
 fn from_vec_dim_stride_2d_5() {
     let a = arr3(&[[[1, 2, 3]]]);
-    let d = a.dim();
+    let d = a.raw_dimension();
     let s = d.fortran_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }

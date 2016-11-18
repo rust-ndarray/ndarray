@@ -199,7 +199,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
     {
         let a = self.view();
         let b = b.view();
-        let ((m, k), (k2, n)) = (a.dim_pattern(), b.dim_pattern());
+        let ((m, k), (k2, n)) = (a.dim(), b.dim());
         if k != k2 || m.checked_mul(n).is_none() {
             dot_shape_error(m, k, k2, n);
         }
@@ -253,7 +253,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
     type Output = Array<A, Ix1>;
     fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
     {
-        let ((m, a), n) = (self.dim_pattern(), rhs.dim_pattern());
+        let ((m, a), n) = (self.dim(), rhs.dim());
         if a != n {
             dot_shape_error(m, a, n, 1);
         }
@@ -312,7 +312,7 @@ fn mat_mul_impl<A>(alpha: A,
 {
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
-    let ((mut m, a), (_, mut n)) = (lhs.dim_pattern(), rhs.dim_pattern());
+    let ((mut m, a), (_, mut n)) = (lhs.dim(), rhs.dim());
     if !(m > cut || n > cut || a > cut) ||
         !(same_type::<A, f32>() || same_type::<A, f64>()) {
         return mat_mul_general(alpha, lhs, rhs, beta, c);
@@ -351,15 +351,15 @@ fn mat_mul_impl<A>(alpha: A,
                     && blas_row_major_2d::<$ty, _>(&c_)
                 {
                     let (m, k) = match lhs_trans {
-                        CblasNoTrans => lhs_.dim_pattern(),
+                        CblasNoTrans => lhs_.dim(),
                         _ => {
-                            let (rows, cols) = lhs_.dim_pattern();
+                            let (rows, cols) = lhs_.dim();
                             (cols, rows)
                         }
                     };
                     let n = match rhs_trans {
-                        CblasNoTrans => rhs_.dim()[1],
-                        _ => rhs_.dim()[0],
+                        CblasNoTrans => rhs_.raw_dimension()[1],
+                        _ => rhs_.raw_dimension()[0],
                     };
                     // adjust strides, these may [1, 1] for column matrices
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
@@ -403,7 +403,7 @@ fn mat_mul_general<A>(alpha: A,
                       c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
-    let ((m, k), (_, n)) = (lhs.dim_pattern(), rhs.dim_pattern());
+    let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
 
     // common parameters for gemm
     let ap = lhs.as_ptr();
@@ -486,8 +486,8 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
           S3: DataMut<Elem=A>,
           A: LinalgScalar,
 {
-    let ((m, k), (k2, n)) = (a.dim_pattern(), b.dim_pattern());
-    let (m2, n2) = c.dim_pattern();
+    let ((m, k), (k2, n)) = (a.dim(), b.dim());
+    let (m2, n2) = c.dim();
     if k != k2 || m != m2 || n != n2 {
         general_dot_shape_error(m, k, k2, n, m2, n2);
     } else {
@@ -553,7 +553,7 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     {
         return false;
     }
-    let (m, n) = a.dim_pattern();
+    let (m, n) = a.dim();
     if m > blas_index::max_value() as usize ||
         n > blas_index::max_value() as usize
     {

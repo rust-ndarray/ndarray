@@ -34,7 +34,7 @@ use Ix;
 ///
 /// let mut array = Array2::zeros((3, 2));
 /// array[[0, 0]] = 1.;
-/// assert_eq!(array.dim(), Dim([3, 2]));
+/// assert_eq!(array.raw_dimension(), Dim([3, 2]));
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, Default)]
 pub struct Dim<I: ?Sized> {

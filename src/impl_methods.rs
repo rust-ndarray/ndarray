@@ -47,19 +47,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return the length of `axis`.
     ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
     /// ***Panics*** if the axis is out of bounds.
     pub fn len_of(&self, axis: Axis) -> usize {
         self.dim[axis.axis()]
     }
 
-    /// Return the shape of the array.
-    pub fn dim(&self) -> D {
-        self.dim.clone()
-        //self.dim.as_tuple()
-    }
-
-    /// Return the shape of the array as the "pattern" type (usually a tuple).
-    pub fn dim_pattern(&self) -> D::Pattern {
+    /// Return the shape of the array in its “pattern” form,
+    /// an integer in the one-dimensional case, tuple in the n-dimensional cases
+    /// and so on.
+    pub fn dim(&self) -> D::Pattern {
         self.dim.clone().into_pattern()
     }
 
@@ -68,7 +67,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim.slice()
     }
 
-    /// Return the strides of the array
+    /// Return the strides of the array as a slice
     pub fn strides(&self) -> &[Ixs] {
         let s = self.strides.slice();
         // reinterpret unsigned integer as signed
@@ -80,6 +79,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return the number of dimensions (axes) in the array
     pub fn ndim(&self) -> usize {
         self.dim.ndim()
+    }
+
+    /// Return the shape of the array as it stored in the array.
+    pub fn raw_dimension(&self) -> D {
+        self.dim.clone()
     }
 
     /// Return a read-only view of the array
@@ -453,7 +457,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             sub.isubview(axis, i);
         }
         if subs.is_empty() {
-            let mut dim = self.dim();
+            let mut dim = self.raw_dimension();
             dim.set_axis(axis, 0);
             unsafe {
                 Array::from_shape_vec_unchecked(dim, vec![])
@@ -1120,7 +1124,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
             self.zip_mut_with_same_shape(rhs, f);
         } else {
-            let rhs_broadcast = rhs.broadcast_unwrap(self.dim());
+            let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dimension());
             self.zip_mut_with_by_rows(&rhs_broadcast, f);
         }
     }
@@ -1281,7 +1285,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: FnMut(&B, &A) -> B,
               B: Clone,
     {
-        let mut res = Array::from_elem(self.dim().remove_axis(axis), init);
+        let mut res = Array::from_elem(self.raw_dimension().remove_axis(axis), init);
         for subview in self.axis_iter(axis) {
             res.zip_mut_with(&subview, |x, y| *x = fold(x, y));
         }

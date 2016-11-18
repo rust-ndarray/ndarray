@@ -37,12 +37,12 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     if arrays.len() == 0 {
         return Err(from_kind(ErrorKind::Unsupported));
     }
-    let mut res_dim = arrays[0].dim();
+    let mut res_dim = arrays[0].raw_dimension();
     if axis.axis() >= res_dim.ndim() {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
     let common_dim = res_dim.remove_axis(axis);
-    if arrays.iter().any(|a| a.dim().remove_axis(axis) != common_dim) {
+    if arrays.iter().any(|a| a.raw_dimension().remove_axis(axis) != common_dim) {
         return Err(from_kind(ErrorKind::IncompatibleShape));
     }
 
