@@ -7,6 +7,7 @@ extern crate itertools;
 use ndarray::{S, Si};
 use ndarray::prelude::*;
 use ndarray::{
+    Array1,
     rcarr2,
     arr0, arr3,
     aview_mut1,
@@ -100,6 +101,16 @@ fn test_index()
         assert_eq!(*x, vi[[i, j]]);
     }
     assert!(it.next().is_none());
+}
+
+#[test]
+fn test_index_arrays() {
+    let a = Array1::from_iter(0..12);
+    assert_eq!(a[1], a[[1]]);
+    let v = a.view().into_shape((3, 4)).unwrap();
+    assert_eq!(a[1], v[[0, 1]]);
+    let w = v.into_shape((2, 2, 3)).unwrap();
+    assert_eq!(a[1], w[[0, 0, 1]]);
 }
 
 #[test]

@@ -119,19 +119,6 @@ unsafe impl NdIndex<IxDyn> for Ix {
     }
 }
 
-unsafe impl NdIndex<IxDyn> for Ix1 {
-    #[inline]
-    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
-        debug_assert_eq!(dim.ndim(), 1);
-        stride_offset_checked(dim.ix(), strides.ix(), self.ix())
-    }
-    #[inline(always)]
-    fn index_unchecked(&self, strides: &IxDyn) -> isize {
-        debug_assert_eq!(strides.ndim(), 1);
-        stride_offset(get!(self, 0), get!(strides, 0))
-    }
-}
-
 macro_rules! ndindex_with_array {
     ($([$n:expr, $ix_n:ident $($index:tt)*])+) => {
         $(
@@ -199,6 +186,7 @@ macro_rules! ndindex_with_array {
 }
 
 ndindex_with_array!{
+    [1, Ix1 0]
     [2, Ix2 0 1]
     [3, Ix3 0 1 2]
     [4, Ix4 0 1 2 3]
