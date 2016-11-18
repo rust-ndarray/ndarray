@@ -38,7 +38,7 @@ impl ShapeError {
 #[derive(Copy, Clone, Debug)]
 pub enum ErrorKind {
     /// incompatible shape
-    IncompatibleShape,
+    IncompatibleShape = 1,
     /// incompatible memory layout
     IncompatibleLayout,
     /// the shape does not fit inside type limits
