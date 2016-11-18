@@ -96,13 +96,17 @@ Recent Changes (ndarray)
 - 0.7-pre
 
   - Not yet released
-  - Big overhaul of dimensions! Instead of ``Ix`` for dimension use ``Ix1``,
-    ``(Ix, Ix)`` use ``Ix2``, and so on!
-  - The dimension type ``Dim`` supports indexing and arithmetic; dimensions
-    can now be added and multiplied.
+  - Big overhaul of dimensions: Add type ``Dim`` with aliases
+    ``Ix1, Ix2, Ix3, ...`` etc for specific dimensionalities.
+    Instead of ``Ix`` for dimension use ``Ix1``, instead of ``(Ix, Ix)`` use
+    ``Ix2``, and so on.
+  - The dimension type ``Dim`` supports indexing and arithmetic. See
+    ``Dimension`` trait for new methods and inherited traits.
   - Constructors and methods that take tuples for array sizes, like ``Array::zeros,``
     ``Array::from_shape_vec``, ``.into_shape()`` and so on will continue to work
     with tuples.
+  - The array method ``.dim()`` returns the dimension as it is. To get
+    a tuple, use ``.dim_pattern()``.
   - Renamed iterators for consistency (each iterator is named for the
     method that creates it, for example ``.iter()`` returns ``Iter``).
   - The index iterator is now created with free functions ``indices`` or
