@@ -47,12 +47,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return the length of `axis`.
     ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
     /// ***Panics*** if the axis is out of bounds.
     pub fn len_of(&self, axis: Axis) -> usize {
         self.dim[axis.axis()]
     }
 
-    /// Return the shape of the array.
+    /// Return the shape of the array in its “pattern” form,
+    /// an integer in the one-dimensional case, tuple in the n-dimensional cases
+    /// and so on.
     pub fn dim(&self) -> D::Pattern {
         self.dim.clone().into_pattern()
     }
@@ -62,7 +67,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim.slice()
     }
 
-    /// Return the strides of the array
+    /// Return the strides of the array as a slice
     pub fn strides(&self) -> &[Ixs] {
         let s = self.strides.slice();
         // reinterpret unsigned integer as signed
