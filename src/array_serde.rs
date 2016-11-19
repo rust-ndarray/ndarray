@@ -146,14 +146,14 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
         let mut data: Option<Vec<A>> = None;
         let mut dim: Option<Di> = None;
 
-        loop {
-            match try!(visitor.visit_key()) {
-                Some(ArrayField::Version) => { v = Some(try!(visitor.visit_value())); },
-                Some(ArrayField::Data) => { data = Some(try!(visitor.visit_value())); },
-                Some(ArrayField::Dim) => { dim = Some(try!(visitor.visit_value())); },
-                None => { break; },
+        while let Some(key) = try!(visitor.visit_key::<ArrayField>()) {
+            match key {
+                ArrayField::Version => { v = Some(try!(visitor.visit_value())); },
+                ArrayField::Data => { data = Some(try!(visitor.visit_value())); },
+                ArrayField::Dim => { dim = Some(try!(visitor.visit_value())); },
             }
         }
+        try!(visitor.end());
 
         let v = match v {
             Some(v) => v,
@@ -175,7 +175,6 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
         };
 
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
-            try!(visitor.end());
             Ok(array)
         } else {
             Err(serde::de::Error::custom("data and dimension must match in size"))
