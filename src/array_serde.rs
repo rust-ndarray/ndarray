@@ -17,6 +17,19 @@ use super::Iter;
 use Dim;
 use dimension::DimPrivate;
 
+/// Verifies that the version of the deserialized array matches the current
+/// `ARRAY_FORMAT_VERSION`.
+pub fn verify_version<E>(v: u8) -> Result<(), E>
+        where E: de::Error
+{
+    if v != ARRAY_FORMAT_VERSION {
+        let err_msg = format!("unknown array version: {}", v);
+        try!(Err(de::Error::custom(err_msg)));
+    }
+
+    Ok(())
+}
+
 /// **Requires crate feature `"serde"`**
 impl<I> Serialize for Dim<I>
     where I: Serialize,
@@ -151,9 +164,7 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
             }
         };
 
-        if v != ARRAY_FORMAT_VERSION {
-            try!(Err(de::Error::custom(format!("unknown array version: {}", v))));
-        }
+        try!(verify_version(v));
 
         let dim: Di = match try!(visitor.visit()) {
             Some(value) => value,
@@ -191,10 +202,7 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
             match key {
                 ArrayField::Version => {
                     let val = try!(visitor.visit_value());
-                    if val != ARRAY_FORMAT_VERSION {
-                        let err_msg = format!("unknown array version: {}", val);
-                        try!(Err(de::Error::custom(err_msg)));
-                    }
+                    try!(verify_version(val));
                     v = Some(val);
                 },
                 ArrayField::Data => {
