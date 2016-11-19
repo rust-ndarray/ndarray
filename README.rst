@@ -93,7 +93,7 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
-- 0.7.0-alpha.0
+- 0.7.0-alpha.1
 
   - **Prerelease**
   - Big overhaul of dimensions: Add type ``Dim`` with aliases
@@ -111,6 +111,8 @@ Recent Changes (ndarray)
     method that creates it, for example ``.iter()`` returns ``Iter``).
   - The index iterator is now created with free functions ``indices`` or
     ``indices_of``.
+  - Expanded the ``ndarray::prelude`` module with the dimensionality-specific
+    type aliases, and some other items
 
 - 0.6.9
 
