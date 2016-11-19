@@ -13,7 +13,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Si};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si};
 use IntoDimension;
 use {ArrayView1, ArrayViewMut1};
 use {zipsl, zipsl_mut, ZipExt};
