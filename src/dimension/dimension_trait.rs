@@ -315,7 +315,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 // Dimension impls
 
 
-unsafe impl Dimension for Ix0 {
+unsafe impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
     type Pattern = ();
     // empty product is 1 -> size is 1
@@ -336,7 +336,7 @@ unsafe impl Dimension for Ix0 {
 }
 
 
-unsafe impl Dimension for Ix1 {
+unsafe impl Dimension for Dim<[Ix; 1]> {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
     #[inline]
@@ -405,7 +405,7 @@ unsafe impl Dimension for Ix1 {
     }
 }
 
-unsafe impl Dimension for Ix2 {
+unsafe impl Dimension for Dim<[Ix; 2]> {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
     #[inline]
@@ -539,7 +539,7 @@ unsafe impl Dimension for Ix2 {
     }
 }
 
-unsafe impl Dimension for Ix3 {
+unsafe impl Dimension for Dim<[Ix; 3]> {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
     #[inline]
@@ -621,7 +621,7 @@ unsafe impl Dimension for Ix3 {
 
 macro_rules! large_dim {
     ($n:expr, $name:ident, $($ix:ident),+) => (
-        unsafe impl Dimension for $name {
+        unsafe impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
             #[inline]
