@@ -515,7 +515,7 @@ fn from_vec_dim_stride_2d_3() {
     let a = arr3(&[[[1]],
                    [[2]],
                    [[3]]]);
-    let d = a.raw_dimension();
+    let d = a.raw_dim();
     let s = d.default_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
@@ -525,7 +525,7 @@ fn from_vec_dim_stride_2d_4() {
     let a = arr3(&[[[1]],
                    [[2]],
                    [[3]]]);
-    let d = a.raw_dimension();
+    let d = a.raw_dim();
     let s = d.fortran_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }
@@ -533,7 +533,7 @@ fn from_vec_dim_stride_2d_4() {
 #[test]
 fn from_vec_dim_stride_2d_5() {
     let a = arr3(&[[[1, 2, 3]]]);
-    let d = a.raw_dimension();
+    let d = a.raw_dim();
     let s = d.fortran_strides();
     assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
 }

@@ -105,7 +105,7 @@ Recent Changes (ndarray)
   - Constructors and methods that take tuples for array sizes, like ``Array::zeros,``
     ``Array::from_shape_vec``, ``.into_shape()`` and so on will continue to work
     with tuples.
-  - The array method ``.raw_dimension()`` returns the shape description
+  - The array method ``.raw_dim()`` returns the shape description
     ``D`` as it is.
   - Renamed iterators for consistency (each iterator is named for the
     method that creates it, for example ``.iter()`` returns ``Iter``).

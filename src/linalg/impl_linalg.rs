@@ -358,8 +358,8 @@ fn mat_mul_impl<A>(alpha: A,
                         }
                     };
                     let n = match rhs_trans {
-                        CblasNoTrans => rhs_.raw_dimension()[1],
-                        _ => rhs_.raw_dimension()[0],
+                        CblasNoTrans => rhs_.raw_dim()[1],
+                        _ => rhs_.raw_dim()[0],
                     };
                     // adjust strides, these may [1, 1] for column matrices
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);

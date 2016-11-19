@@ -82,7 +82,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return the shape of the array as it stored in the array.
-    pub fn raw_dimension(&self) -> D {
+    pub fn raw_dim(&self) -> D {
         self.dim.clone()
     }
 
@@ -457,7 +457,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             sub.isubview(axis, i);
         }
         if subs.is_empty() {
-            let mut dim = self.raw_dimension();
+            let mut dim = self.raw_dim();
             dim.set_axis(axis, 0);
             unsafe {
                 Array::from_shape_vec_unchecked(dim, vec![])
@@ -1124,7 +1124,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
             self.zip_mut_with_same_shape(rhs, f);
         } else {
-            let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dimension());
+            let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dim());
             self.zip_mut_with_by_rows(&rhs_broadcast, f);
         }
     }
@@ -1285,7 +1285,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: FnMut(&B, &A) -> B,
               B: Clone,
     {
-        let mut res = Array::from_elem(self.raw_dimension().remove_axis(axis), init);
+        let mut res = Array::from_elem(self.raw_dim().remove_axis(axis), init);
         for subview in self.axis_iter(axis) {
             res.zip_mut_with(&subview, |x, y| *x = fold(x, y));
         }
