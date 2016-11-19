@@ -166,12 +166,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator of indexes and references to the elements of the array.
     ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
+    ///
     /// Iterator element type is `(D::Pattern, &A)`.
     pub fn indexed_iter(&self) -> IndexedIter<A, D> {
         IndexedIter(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
+    ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `(D::Pattern, &mut A)`.
     pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
