@@ -5,7 +5,8 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use serde::{self, Serialize, Deserialize};
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use serde::de::{self, Visitor, SeqVisitor, MapVisitor};
 
 use std::marker::PhantomData;
 
@@ -15,12 +16,25 @@ use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Iter;
 use dimension::DimPrivate;
 
+/// Verifies that the version of the deserialized array matches the current
+/// `ARRAY_FORMAT_VERSION`.
+pub fn verify_version<E>(v: u8) -> Result<(), E>
+        where E: de::Error
+{
+    if v != ARRAY_FORMAT_VERSION {
+        let err_msg = format!("unknown array version: {}", v);
+        try!(Err(de::Error::custom(err_msg)));
+    }
+
+    Ok(())
+}
+
 /// **Requires crate feature `"serde"`**
 impl<I> Serialize for Dim<I>
     where I: Serialize,
 {
     fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
-        where Se: serde::Serializer
+        where Se: Serializer
     {
         self.ix().serialize(serializer)
     }
@@ -31,7 +45,7 @@ impl<I> Deserialize for Dim<I>
     where I: Deserialize,
 {
     fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-        where D: serde::de::Deserializer
+        where D: Deserializer
     {
         I::deserialize(deserializer).map(Dim::new)
     }
@@ -45,7 +59,7 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
 
 {
     fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
-        where Se: serde::Serializer
+        where Se: Serializer
     {
         let mut struct_state = try!(serializer.serialize_struct("Array", 3));
         try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
@@ -63,7 +77,7 @@ impl<'a, A, D> Serialize for Sequence<'a, A, D>
           D: Dimension + Serialize
 {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: serde::Serializer
+        where S: Serializer
     {
         let iter = &self.0;
         let mut seq_state = try!(serializer.serialize_seq(Some(iter.len())));
@@ -98,7 +112,7 @@ impl<A, Di, S> Deserialize for ArrayBase<S, Di>
           S: DataOwned<Elem = A>
 {
     fn deserialize<D>(deserializer: &mut D) -> Result<ArrayBase<S, Di>, D::Error>
-        where D: serde::de::Deserializer
+        where D: Deserializer
     {
         static FIELDS: &'static [&'static str] = &["v", "dim", "data"];
 
@@ -106,23 +120,23 @@ impl<A, Di, S> Deserialize for ArrayBase<S, Di>
     }
 }
 
-impl serde::de::Deserialize for ArrayField {
+impl Deserialize for ArrayField {
     fn deserialize<D>(deserializer: &mut D) -> Result<ArrayField, D::Error>
-        where D: serde::de::Deserializer
+        where D: Deserializer
     {
         struct ArrayFieldVisitor;
 
-        impl serde::de::Visitor for ArrayFieldVisitor {
+        impl Visitor for ArrayFieldVisitor {
             type Value = ArrayField;
 
             fn visit_str<E>(&mut self, value: &str) -> Result<ArrayField, E>
-                where E: serde::de::Error
+                where E: de::Error
             {
                 match value {
                     "v" => Ok(ArrayField::Version),
                     "data" => Ok(ArrayField::Data),
                     "dim" => Ok(ArrayField::Dim),
-                    _ => Err(serde::de::Error::custom("expected v, data, or dim")),
+                    _ => Err(de::Error::custom("expected v, data, or dim")),
                 }
             }
         }
@@ -131,53 +145,94 @@ impl serde::de::Deserialize for ArrayField {
     }
 }
 
-impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
+impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
     where A: Deserialize,
           Di: Deserialize + Dimension,
           S: DataOwned<Elem = A>
 {
     type Value = ArrayBase<S, Di>;
 
+    fn visit_seq<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
+        where V: SeqVisitor
+    {
+        let v: u8 = match try!(visitor.visit()) {
+            Some(value) => value,
+            None => {
+                try!(visitor.end());
+                return Err(de::Error::invalid_length(0));
+            }
+        };
+
+        try!(verify_version(v));
+
+        let dim: Di = match try!(visitor.visit()) {
+            Some(value) => value,
+            None => {
+                try!(visitor.end());
+                return Err(de::Error::invalid_length(1));
+            }
+        };
+
+        let data: Vec<A> = match try!(visitor.visit()) {
+            Some(value) => value,
+            None => {
+                try!(visitor.end());
+                return Err(de::Error::invalid_length(2));
+            }
+        };
+
+        try!(visitor.end());
+
+        if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
+            Ok(array)
+        } else {
+            Err(de::Error::custom("data and dimension must match in size"))
+        }
+    }
+
     fn visit_map<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
-        where V: serde::de::MapVisitor,
+        where V: MapVisitor,
     {
         let mut v: Option<u8> = None;
         let mut data: Option<Vec<A>> = None;
         let mut dim: Option<Di> = None;
 
-        loop {
-            match try!(visitor.visit_key()) {
-                Some(ArrayField::Version) => { v = Some(try!(visitor.visit_value())); },
-                Some(ArrayField::Data) => { data = Some(try!(visitor.visit_value())); },
-                Some(ArrayField::Dim) => { dim = Some(try!(visitor.visit_value())); },
-                None => { break; },
+        while let Some(key) = try!(visitor.visit_key()) {
+            match key {
+                ArrayField::Version => {
+                    let val = try!(visitor.visit_value());
+                    try!(verify_version(val));
+                    v = Some(val);
+                },
+                ArrayField::Data => {
+                    data = Some(try!(visitor.visit_value()));
+                },
+                ArrayField::Dim => {
+                    dim = Some(try!(visitor.visit_value()));
+                },
             }
         }
+        try!(visitor.end());
 
-        let v = match v {
+        let _v = match v {
             Some(v) => v,
-            None => try!(visitor.missing_field("v")),
+            None => try!(Err(de::Error::missing_field("v"))),
         };
-
-        if v != ARRAY_FORMAT_VERSION {
-            try!(Err(serde::de::Error::custom(format!("unknown array version: {}", v))));
-        }
 
         let data = match data {
             Some(data) => data,
-            None => try!(visitor.missing_field("data")),
+            None => try!(Err(de::Error::missing_field("data"))),
         };
 
         let dim = match dim {
             Some(dim) => dim,
-            None => try!(visitor.missing_field("dim")),
+            None => try!(Err(de::Error::missing_field("dim"))),
         };
 
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
-            try!(visitor.end());
             Ok(array)
         } else {
-            Err(serde::de::Error::custom("data and dimension must match in size"))
+            Err(de::Error::custom("data and dimension must match in size"))
         }
     }
 }

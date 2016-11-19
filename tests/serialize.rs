@@ -10,6 +10,9 @@ extern crate serde;
 #[cfg(feature = "serde")]
 extern crate serde_json;
 
+#[cfg(feature = "serde")]
+extern crate rmp_serde;
+
 #[cfg(feature = "rustc-serialize")]
 use serialize::json;
 
@@ -140,4 +143,59 @@ fn serial_wrong_count_serde()
     let arr = serde_json::from_str::<RcArray2<f32>>(text);
     println!("{:?}", arr);
     assert!(arr.is_err());
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn serial_many_dim_serde_msgpack()
+{
+    {
+        let a = arr0::<f32>(2.72);
+
+        let mut buf = Vec::new();
+        serde::Serialize::serialize(&a, &mut rmp_serde::Serializer::new(&mut buf)).ok().unwrap();
+
+        let mut deserializer = rmp_serde::Deserializer::new(&buf[..]);
+        let a_de: RcArray<f32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+
+    {
+        let a = arr1::<f32>(&[2.72, 1., 2.]);
+
+        let mut buf = Vec::new();
+        serde::Serialize::serialize(&a, &mut rmp_serde::Serializer::new(&mut buf)).ok().unwrap();
+
+        let mut deserializer = rmp_serde::Deserializer::new(&buf[..]);
+        let a_de: RcArray<f32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+
+    {
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]]);
+
+        let mut buf = Vec::new();
+        serde::Serialize::serialize(&a, &mut rmp_serde::Serializer::new(&mut buf)).ok().unwrap();
+
+        let mut deserializer = rmp_serde::Deserializer::new(&buf[..]);
+        let a_de: RcArray<f32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+
+    {
+        // Test a sliced array.
+        let mut a = RcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
+        a.islice(s![..;-1, .., .., ..2]);
+
+        let mut buf = Vec::new();
+        serde::Serialize::serialize(&a, &mut rmp_serde::Serializer::new(&mut buf)).ok().unwrap();
+
+        let mut deserializer = rmp_serde::Deserializer::new(&buf[..]);
+        let a_de: RcArray<f32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(a, a_de);
+    }
 }
