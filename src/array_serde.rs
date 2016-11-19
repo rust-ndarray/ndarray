@@ -186,7 +186,7 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
         let mut data: Option<Vec<A>> = None;
         let mut dim: Option<Di> = None;
 
-        while let Some(key) = try!(visitor.visit_key::<ArrayField>()) {
+        while let Some(key) = try!(visitor.visit_key()) {
             match key {
                 ArrayField::Version => { v = Some(try!(visitor.visit_value())); },
                 ArrayField::Data => { data = Some(try!(visitor.visit_value())); },
