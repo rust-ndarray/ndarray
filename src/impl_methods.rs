@@ -55,11 +55,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim[axis.axis()]
     }
 
+    /// Return the number of dimensions (axes) in the array
+    pub fn ndim(&self) -> usize {
+        self.dim.ndim()
+    }
+
     /// Return the shape of the array in its “pattern” form,
     /// an integer in the one-dimensional case, tuple in the n-dimensional cases
     /// and so on.
     pub fn dim(&self) -> D::Pattern {
         self.dim.clone().into_pattern()
+    }
+
+    /// Return the shape of the array as it stored in the array.
+    pub fn raw_dim(&self) -> D {
+        self.dim.clone()
     }
 
     /// Return the shape of the array as a slice.
@@ -74,16 +84,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe {
             slice::from_raw_parts(s.as_ptr() as *const _, s.len())
         }
-    }
-
-    /// Return the number of dimensions (axes) in the array
-    pub fn ndim(&self) -> usize {
-        self.dim.ndim()
-    }
-
-    /// Return the shape of the array as it stored in the array.
-    pub fn raw_dim(&self) -> D {
-        self.dim.clone()
     }
 
     /// Return a read-only view of the array
