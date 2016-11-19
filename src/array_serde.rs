@@ -139,6 +139,46 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
 {
     type Value = ArrayBase<S, Di>;
 
+    fn visit_seq<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
+        where V: serde::de::SeqVisitor
+    {
+        let v: u8 = match try!(visitor.visit()) {
+            Some(value) => value,
+            None => {
+                try!(visitor.end());
+                return Err(serde::de::Error::invalid_length(0));
+            }
+        };
+
+        let dim: Di = match try!(visitor.visit()) {
+            Some(value) => value,
+            None => {
+                try!(visitor.end());
+                return Err(serde::de::Error::invalid_length(1));
+            }
+        };
+
+        let data: Vec<A> = match try!(visitor.visit()) {
+            Some(value) => value,
+            None => {
+                try!(visitor.end());
+                return Err(serde::de::Error::invalid_length(2));
+            }
+        };
+
+        try!(visitor.end());
+
+        if v != ARRAY_FORMAT_VERSION {
+            try!(Err(serde::de::Error::custom(format!("unknown array version: {}", v))));
+        }
+
+        if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
+            Ok(array)
+        } else {
+            Err(serde::de::Error::custom("data and dimension must match in size"))
+        }
+    }
+
     fn visit_map<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
         where V: serde::de::MapVisitor,
     {
