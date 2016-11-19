@@ -789,6 +789,52 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted, but the source array or view must be
+    /// contiguous, otherwise we cannot rearrange the dimension.
+    ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    /// **Errors** if the input array is not c- or f-contiguous.
+    ///
+    /// ```
+    /// use ndarray::{aview1, aview2};
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
+    ///     == aview2(&[[1., 2.],
+    ///                 [3., 4.]])
+    /// );
+    /// ```
+    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+        where E: IntoDimension,
+    {
+        let shape = shape.into_dimension();
+        if shape.size_checked() != Some(self.dim.size()) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+        // Check if contiguous, if not => copy all, else just adapt strides
+        if self.is_standard_layout() {
+            Ok(ArrayBase {
+                data: self.data,
+                ptr: self.ptr,
+                strides: shape.default_strides(),
+                dim: shape,
+            })
+        } else if self.ndim() > 1 && self.view().reversed_axes().is_standard_layout() {
+            Ok(ArrayBase {
+                data: self.data,
+                ptr: self.ptr,
+                strides: shape.fortran_strides(),
+                dim: shape,
+            })
+        } else {
+            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+        }
+    }
+
+    /// *Note: Reshape is for `RcArray` only. Use `.into_shape()` for
+    /// other arrays and array views.*
+    ///
+    /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted.
     ///
     /// May clone all elements if needed to arrange elements in standard
@@ -830,49 +876,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(shape, v)
             }
-        }
-    }
-
-    /// Transform the array into `shape`; any shape with the same number of
-    /// elements is accepted, but the source array or view must be
-    /// contiguous, otherwise we cannot rearrange the dimension.
-    ///
-    /// **Errors** if the shapes don't have the same number of elements.<br>
-    /// **Errors** if the input array is not c- or f-contiguous.
-    ///
-    /// ```
-    /// use ndarray::{aview1, aview2};
-    ///
-    /// assert!(
-    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
-    ///     == aview2(&[[1., 2.],
-    ///                 [3., 4.]])
-    /// );
-    /// ```
-    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
-        where E: IntoDimension,
-    {
-        let shape = shape.into_dimension();
-        if shape.size_checked() != Some(self.dim.size()) {
-            return Err(error::incompatible_shapes(&self.dim, &shape));
-        }
-        // Check if contiguous, if not => copy all, else just adapt strides
-        if self.is_standard_layout() {
-            Ok(ArrayBase {
-                data: self.data,
-                ptr: self.ptr,
-                strides: shape.default_strides(),
-                dim: shape,
-            })
-        } else if self.ndim() > 1 && self.view().reversed_axes().is_standard_layout() {
-            Ok(ArrayBase {
-                data: self.data,
-                ptr: self.ptr,
-                strides: shape.fortran_strides(),
-                dim: shape,
-            })
-        } else {
-            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
         }
     }
 
