@@ -195,7 +195,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D> {
         let mut arr = self.view();
         arr.islice(indexes);
@@ -209,7 +209,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn slice_mut(&mut self, indexes: &D::SliceArg) -> ArrayViewMut<A, D>
         where S: DataMut
     {
@@ -225,7 +225,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn islice(&mut self, indexes: &D::SliceArg) {
         let offset = D::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
