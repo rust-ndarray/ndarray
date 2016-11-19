@@ -150,6 +150,10 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
             }
         };
 
+        if v != ARRAY_FORMAT_VERSION {
+            try!(Err(serde::de::Error::custom(format!("unknown array version: {}", v))));
+        }
+
         let dim: Di = match try!(visitor.visit()) {
             Some(value) => value,
             None => {
@@ -168,10 +172,6 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
 
         try!(visitor.end());
 
-        if v != ARRAY_FORMAT_VERSION {
-            try!(Err(serde::de::Error::custom(format!("unknown array version: {}", v))));
-        }
-
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
             Ok(array)
         } else {
@@ -188,21 +188,28 @@ impl<A, Di, S> serde::de::Visitor for ArrayVisitor<S,Di>
 
         while let Some(key) = try!(visitor.visit_key()) {
             match key {
-                ArrayField::Version => { v = Some(try!(visitor.visit_value())); },
-                ArrayField::Data => { data = Some(try!(visitor.visit_value())); },
-                ArrayField::Dim => { dim = Some(try!(visitor.visit_value())); },
+                ArrayField::Version => {
+                    let val = try!(visitor.visit_value());
+                    if val != ARRAY_FORMAT_VERSION {
+                        let err_msg = format!("unknown array version: {}", val);
+                        try!(Err(serde::de::Error::custom(err_msg)));
+                    }
+                    v = Some(val);
+                },
+                ArrayField::Data => {
+                    data = Some(try!(visitor.visit_value()));
+                },
+                ArrayField::Dim => {
+                    dim = Some(try!(visitor.visit_value()));
+                },
             }
         }
         try!(visitor.end());
 
-        let v = match v {
+        let _v = match v {
             Some(v) => v,
             None => try!(visitor.missing_field("v")),
         };
-
-        if v != ARRAY_FORMAT_VERSION {
-            try!(Err(serde::de::Error::custom(format!("unknown array version: {}", v))));
-        }
 
         let data = match data {
             Some(data) => data,
