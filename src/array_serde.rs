@@ -13,7 +13,6 @@ use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Iter;
-use Dim;
 use dimension::DimPrivate;
 
 /// **Requires crate feature `"serde"`**

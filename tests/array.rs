@@ -7,11 +7,8 @@ extern crate itertools;
 use ndarray::{S, Si};
 use ndarray::prelude::*;
 use ndarray::{
-    Array1,
     rcarr2,
-    arr0, arr3,
-    aview_mut1,
-    Ix0, Ix2,
+    arr3,
 };
 use ndarray::indices;
 use itertools::free::enumerate;

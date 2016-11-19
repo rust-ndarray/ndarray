@@ -28,27 +28,41 @@ pub use {
 };
 
 #[doc(no_inline)]
-#[allow(deprecated)]
-pub use OwnedArray;
-
-#[doc(no_inline)]
 pub use {
     Axis,
+    Dim,
     Ix, Ixs,
     Dimension,
 };
+
+#[doc(no_inline)]
+pub use {Array0, Array1, Array2, Array3, Array4, Array5, Array6, ArrayD};
+
+#[doc(no_inline)]
+pub use {ArrayView0, ArrayView1, ArrayView2, ArrayView3, ArrayView4, ArrayView5,
+ArrayView6, ArrayViewD};
+
+#[doc(no_inline)]
+pub use {ArrayViewMut0, ArrayViewMut1, ArrayViewMut2, ArrayViewMut3,
+ArrayViewMut4, ArrayViewMut5, ArrayViewMut6, ArrayViewMutD};
+
+#[doc(no_inline)]
+pub use {Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
+
 #[doc(no_inline)]
 pub use {
-    NdFloat,
-    AsArray,
-};
-#[doc(no_inline)]
-pub use {
-    arr1, arr2,
+    arr0, arr1, arr2,
     aview0, aview1, aview2,
+    aview_mut1,
 };
 
 #[doc(no_inline)]
 pub use {
     ShapeBuilder,
+};
+
+#[doc(no_inline)]
+pub use {
+    NdFloat,
+    AsArray,
 };

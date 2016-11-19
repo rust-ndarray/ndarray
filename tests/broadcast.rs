@@ -2,7 +2,6 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-use ndarray::Dim;
 
 #[test]
 fn broadcast_1()

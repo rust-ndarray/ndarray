@@ -6,7 +6,6 @@ use test::Bencher;
 #[macro_use(s)]
 extern crate ndarray;
 use ndarray::prelude::*;
-use ndarray::Array2;
 
 #[bench]
 fn iter_sum_2d_regular(bench: &mut Bencher)
