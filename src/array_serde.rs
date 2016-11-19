@@ -13,7 +13,6 @@ use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Iter;
-use Dim;
 use dimension::DimPrivate;
 
 /// **Requires crate feature `"serde"`**
@@ -50,7 +49,7 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
     {
         let mut struct_state = try!(serializer.serialize_struct("Array", 3));
         try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
-        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.raw_dimension()));
+        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.raw_dim()));
         try!(serializer.serialize_struct_elt(&mut struct_state, "data", Sequence(self.iter())));
         serializer.serialize_struct_end(struct_state)
     }

@@ -11,7 +11,6 @@ use super::arraytraits::ARRAY_FORMAT_VERSION;
 
 use imp_prelude::*;
 
-use Dim;
 use dimension::DimPrivate;
 
 /// **Requires crate feature `"rustc-serialize"`**

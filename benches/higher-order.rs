@@ -7,7 +7,6 @@ use test::Bencher;
 #[macro_use(s)]
 extern crate ndarray;
 use ndarray::prelude::*;
-use ndarray::ArrayViewMut2;
 
 const N: usize = 1024;
 const X: usize = 64;

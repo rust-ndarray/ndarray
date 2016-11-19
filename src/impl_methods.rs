@@ -55,11 +55,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim[axis.axis()]
     }
 
+    /// Return the number of dimensions (axes) in the array
+    pub fn ndim(&self) -> usize {
+        self.dim.ndim()
+    }
+
     /// Return the shape of the array in its “pattern” form,
     /// an integer in the one-dimensional case, tuple in the n-dimensional cases
     /// and so on.
     pub fn dim(&self) -> D::Pattern {
         self.dim.clone().into_pattern()
+    }
+
+    /// Return the shape of the array as it stored in the array.
+    pub fn raw_dim(&self) -> D {
+        self.dim.clone()
     }
 
     /// Return the shape of the array as a slice.
@@ -74,16 +84,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         unsafe {
             slice::from_raw_parts(s.as_ptr() as *const _, s.len())
         }
-    }
-
-    /// Return the number of dimensions (axes) in the array
-    pub fn ndim(&self) -> usize {
-        self.dim.ndim()
-    }
-
-    /// Return the shape of the array as it stored in the array.
-    pub fn raw_dimension(&self) -> D {
-        self.dim.clone()
     }
 
     /// Return a read-only view of the array
@@ -166,12 +166,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return an iterator of indexes and references to the elements of the array.
     ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
+    ///
     /// Iterator element type is `(D::Pattern, &A)`.
     pub fn indexed_iter(&self) -> IndexedIter<A, D> {
         IndexedIter(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
+    ///
+    /// Elements are visited in the *logical order* of the array, which
+    /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `(D::Pattern, &mut A)`.
     pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
@@ -189,7 +195,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D> {
         let mut arr = self.view();
         arr.islice(indexes);
@@ -203,7 +209,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn slice_mut(&mut self, indexes: &D::SliceArg) -> ArrayViewMut<A, D>
         where S: DataMut
     {
@@ -219,7 +225,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `Vec` and `indexes` does not match the number of array axes.)
+    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn islice(&mut self, indexes: &D::SliceArg) {
         let offset = D::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
@@ -352,11 +358,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::{arr2, ArrayView, Axis};
     ///
-    /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
-    ///                [3., 4.],    // -- axis 0, row 1
-    ///                [5., 6.]]);  // -- axis 0, row 2
-    /// //               \   \
-    /// //                \   axis 1, column 1
+    /// let a = arr2(&[[1., 2. ],    // ... axis 0, row 0
+    ///                [3., 4. ],    // --- axis 0, row 1
+    ///                [5., 6. ]]);  // ... axis 0, row 2
+    /// //               .   \
+    /// //                .   axis 1, column 1
     /// //                 axis 1, column 0
     /// assert!(
     ///     a.subview(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
@@ -378,8 +384,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::{arr2, aview2, Axis};
     ///
-    /// let mut a = arr2(&[[1., 2.],
-    ///                    [3., 4.]]);
+    /// let mut a = arr2(&[[1., 2. ],
+    ///                    [3., 4. ]]);
+    /// //                   .   \
+    /// //                    .   axis 1, column 1
+    /// //                     axis 1, column 0
     ///
     /// {
     ///     let mut column1 = a.subview_mut(Axis(1), 1);
@@ -457,7 +466,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             sub.isubview(axis, i);
         }
         if subs.is_empty() {
-            let mut dim = self.raw_dimension();
+            let mut dim = self.raw_dim();
             dim.set_axis(axis, 0);
             unsafe {
                 Array::from_shape_vec_unchecked(dim, vec![])
@@ -780,6 +789,52 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted, but the source array or view must be
+    /// contiguous, otherwise we cannot rearrange the dimension.
+    ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    /// **Errors** if the input array is not c- or f-contiguous.
+    ///
+    /// ```
+    /// use ndarray::{aview1, aview2};
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
+    ///     == aview2(&[[1., 2.],
+    ///                 [3., 4.]])
+    /// );
+    /// ```
+    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+        where E: IntoDimension,
+    {
+        let shape = shape.into_dimension();
+        if shape.size_checked() != Some(self.dim.size()) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+        // Check if contiguous, if not => copy all, else just adapt strides
+        if self.is_standard_layout() {
+            Ok(ArrayBase {
+                data: self.data,
+                ptr: self.ptr,
+                strides: shape.default_strides(),
+                dim: shape,
+            })
+        } else if self.ndim() > 1 && self.view().reversed_axes().is_standard_layout() {
+            Ok(ArrayBase {
+                data: self.data,
+                ptr: self.ptr,
+                strides: shape.fortran_strides(),
+                dim: shape,
+            })
+        } else {
+            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+        }
+    }
+
+    /// *Note: Reshape is for `RcArray` only. Use `.into_shape()` for
+    /// other arrays and array views.*
+    ///
+    /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted.
     ///
     /// May clone all elements if needed to arrange elements in standard
@@ -821,49 +876,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(shape, v)
             }
-        }
-    }
-
-    /// Transform the array into `shape`; any shape with the same number of
-    /// elements is accepted, but the source array or view must be
-    /// contiguous, otherwise we cannot rearrange the dimension.
-    ///
-    /// **Errors** if the shapes don't have the same number of elements.<br>
-    /// **Errors** if the input array is not c- or f-contiguous.
-    ///
-    /// ```
-    /// use ndarray::{aview1, aview2};
-    ///
-    /// assert!(
-    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
-    ///     == aview2(&[[1., 2.],
-    ///                 [3., 4.]])
-    /// );
-    /// ```
-    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
-        where E: IntoDimension,
-    {
-        let shape = shape.into_dimension();
-        if shape.size_checked() != Some(self.dim.size()) {
-            return Err(error::incompatible_shapes(&self.dim, &shape));
-        }
-        // Check if contiguous, if not => copy all, else just adapt strides
-        if self.is_standard_layout() {
-            Ok(ArrayBase {
-                data: self.data,
-                ptr: self.ptr,
-                strides: shape.default_strides(),
-                dim: shape,
-            })
-        } else if self.ndim() > 1 && self.view().reversed_axes().is_standard_layout() {
-            Ok(ArrayBase {
-                data: self.data,
-                ptr: self.ptr,
-                strides: shape.fortran_strides(),
-                dim: shape,
-            })
-        } else {
-            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
         }
     }
 
@@ -1124,7 +1136,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         } else if self.dim.ndim() == rhs.dim.ndim() && self.shape() == rhs.shape() {
             self.zip_mut_with_same_shape(rhs, f);
         } else {
-            let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dimension());
+            let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dim());
             self.zip_mut_with_by_rows(&rhs_broadcast, f);
         }
     }
@@ -1285,7 +1297,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: FnMut(&B, &A) -> B,
               B: Clone,
     {
-        let mut res = Array::from_elem(self.raw_dimension().remove_axis(axis), init);
+        let mut res = Array::from_elem(self.raw_dim().remove_axis(axis), init);
         for subview in self.axis_iter(axis) {
             res.zip_mut_with(&subview, |x, y| *x = fold(x, y));
         }

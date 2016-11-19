@@ -11,44 +11,40 @@
 //! The `ndarray` crate provides an N-dimensional container for general elements
 //! and for numerics.
 //!
-//! - [`ArrayBase`](struct.ArrayBase.html):
-//!   The N-dimensional array type itself.
-//! - [`Array`](type.Array.html):
-//!   An array where the data is owned uniquely.
-//! - [`RcArray`](type.RcArray.html):
-//!   An array where the data has shared ownership and is copy on write.
-//! - [`ArrayView`](type.ArrayView.html), [`ArrayViewMut`](type.ArrayViewMut.html):
-//!   Lightweight array views.
+//! - [**`ArrayBase`**](struct.ArrayBase.html):
+//!   The N-dimensional array type itself.<br>
+//!   It is used to implement both the owned arrays and the views; see its docs
+//!   for an overview of all array features.  
+//! - The main specific array type is [**`Array`**](type.Array.html), which owns
+//! its elements.
 //!
 //! ## Highlights
 //!
 //! - Generic N-dimensional array
 //! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
-//! - There is both a copy on write array (`RcArray`), or a regular uniquely owned array
-//!   (`Array`), and both can use read-only and read-write array views.
-//! - Iteration and most operations are efficient on arrays with contiguous
-//!   innermost dimension.
+//! - Views and subviews of arrays; iterators that yield subviews.
+//! - Higher order operations and arithmetic are performant
 //! - Array views can be used to slice and mutate any `[T]` data using
 //!   `ArrayView::from` and `ArrayViewMut::from`.
 //!
 //! ## Crate Status
 //!
-//! - Still iterating on and evolving the API
+//! - Still iterating on and evolving the crate
 //!   + The crate is continuously developing, and breaking changes are expected
-//!     during evolution from version to version. We adhere to semver,
-//!     but alpha releases break at will.
-//!   + We adopt the newest stable rust features we need.
-//! - Performance status:
-//!   + Performance of an operation depends on the memory layout of the array
-//!     or array view. Especially if it's a binary operation, which
-//!     needs matching memory layout to be efficient (with some exceptions).
-//!   + Arithmetic optimizes very well if the arrays are have contiguous inner dimension.
+//!     during evolution from version to version. We adopt the newest stable
+//!     rust features if we need them.
+//! - Performance:
+//!   + Prefer higher order methods and arithmetic operations on arrays first,
+//!     then iteration, and as a last priority using indexed algorithms.
 //!   + The higher order functions like ``.map()``, ``.map_inplace()`` and
 //!     ``.zip_mut_with()`` are the most efficient ways to
 //!     perform single traversal and lock step traversal respectively.
-//!   + ``.iter()`` is efficient for c-contiguous arrays.
-//!   + Can use BLAS in matrix multiplication.
+//!   + Performance of an operation depends on the memory layout of the array
+//!     or array view. Especially if it's a binary operation, which
+//!     needs matching memory layout to be efficient (with some exceptions).
+//!   + Efficient floating point matrix multiplication even for very large
+//!     matrices; can optionally use BLAS to improve it further.
 //!
 //! ## Crate Feature Flags
 //!
@@ -153,7 +149,6 @@ mod stacking;
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
     pub use prelude::*;
-    pub use aliases::*;
     pub use {
         RemoveAxis,
         Data,
@@ -480,11 +475,27 @@ pub struct ArrayBase<S, D>
     strides: D,
 }
 
-/// Array where the data is reference counted and copy on write, it
-/// can act as both an owner as the data as well as a lightweight view.
+/// An array where the data has shared ownership and is copy on write.
+/// It can act as both an owner as the data as well as a shared reference (view
+/// like).
 pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 
-/// Array where the data is owned uniquely.
+/// An array that owns its data uniquely.
+///
+/// `Array` is the main n-dimensional array type, and it owns all its array
+/// elements.
+///
+/// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
+/// arrays and the views; see its docs for an overview of all array features.  
+///
+/// See also:
+///
+/// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
+/// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
+/// + Dimensionality-specific type alises
+/// [`Array1`](Array1.t.html),
+/// [`Array2`](Array2.t.html),
+/// [`Array3`](Array3.t.html) and so on.
 pub type Array<A, D> = ArrayBase<Vec<A>, D>;
 
 #[deprecated(note="Use the type alias `Array` instead")]

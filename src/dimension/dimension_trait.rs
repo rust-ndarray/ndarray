@@ -13,7 +13,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Si};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si};
 use IntoDimension;
 use {ArrayView1, ArrayViewMut1};
 use {zipsl, zipsl_mut, ZipExt};
@@ -315,7 +315,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 // Dimension impls
 
 
-unsafe impl Dimension for Ix0 {
+unsafe impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
     type Pattern = ();
     // empty product is 1 -> size is 1
@@ -336,7 +336,7 @@ unsafe impl Dimension for Ix0 {
 }
 
 
-unsafe impl Dimension for Ix1 {
+unsafe impl Dimension for Dim<[Ix; 1]> {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
     #[inline]
@@ -405,7 +405,7 @@ unsafe impl Dimension for Ix1 {
     }
 }
 
-unsafe impl Dimension for Ix2 {
+unsafe impl Dimension for Dim<[Ix; 2]> {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
     #[inline]
@@ -539,7 +539,7 @@ unsafe impl Dimension for Ix2 {
     }
 }
 
-unsafe impl Dimension for Ix3 {
+unsafe impl Dimension for Dim<[Ix; 3]> {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
     #[inline]
@@ -621,7 +621,7 @@ unsafe impl Dimension for Ix3 {
 
 macro_rules! large_dim {
     ($n:expr, $name:ident, $($ix:ident),+) => (
-        unsafe impl Dimension for $name {
+        unsafe impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
             #[inline]
