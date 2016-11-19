@@ -358,11 +358,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::{arr2, ArrayView, Axis};
     ///
-    /// let a = arr2(&[[1., 2.],    // -- axis 0, row 0
-    ///                [3., 4.],    // -- axis 0, row 1
-    ///                [5., 6.]]);  // -- axis 0, row 2
-    /// //               \   \
-    /// //                \   axis 1, column 1
+    /// let a = arr2(&[[1., 2. ],    // ... axis 0, row 0
+    ///                [3., 4. ],    // --- axis 0, row 1
+    ///                [5., 6. ]]);  // ... axis 0, row 2
+    /// //               .   \
+    /// //                .   axis 1, column 1
     /// //                 axis 1, column 0
     /// assert!(
     ///     a.subview(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
@@ -384,8 +384,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ```
     /// use ndarray::{arr2, aview2, Axis};
     ///
-    /// let mut a = arr2(&[[1., 2.],
-    ///                    [3., 4.]]);
+    /// let mut a = arr2(&[[1., 2. ],
+    ///                    [3., 4. ]]);
+    /// //                   .   \
+    /// //                    .   axis 1, column 1
+    /// //                     axis 1, column 0
     ///
     /// {
     ///     let mut column1 = a.subview_mut(Axis(1), 1);
