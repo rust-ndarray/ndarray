@@ -209,17 +209,17 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
 
         let _v = match v {
             Some(v) => v,
-            None => try!(visitor.missing_field("v")),
+            None => try!(Err(de::Error::missing_field("v"))),
         };
 
         let data = match data {
             Some(data) => data,
-            None => try!(visitor.missing_field("data")),
+            None => try!(Err(de::Error::missing_field("data"))),
         };
 
         let dim = match dim {
             Some(dim) => dim,
-            None => try!(visitor.missing_field("dim")),
+            None => try!(Err(de::Error::missing_field("dim"))),
         };
 
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
