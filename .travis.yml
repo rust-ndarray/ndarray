@@ -27,4 +27,5 @@ script:
       cargo test --verbose --features "$FEATURES" &&
       cargo test --release --verbose --features "" &&
       CARGO_TARGET_DIR=target/ cargo test --manifest-path=serialization-tests/Cargo.toml --verbose &&
+      CARGO_TARGET_DIR=target/ cargo test --manifest-path=numeric-tests/Cargo.toml --verbose &&
       ([ "$BENCH" != 1 ] || cargo bench --no-run --verbose --features "$FEATURES")
