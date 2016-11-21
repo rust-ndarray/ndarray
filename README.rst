@@ -2,11 +2,12 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.11. (0.7.0-alpha / master: Rust 1.13)
+and for numerics.  Requires Rust 1.13.
 
-Please read the API documentation here: `(0.6 / master)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
+Please read the API documentation here: `(0.7)`__, `(0.6)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
 __ http://bluss.github.io/rust-ndarray/
+__ http://bluss.github.io/rust-ndarray/0.6/
 __ http://bluss.github.io/rust-ndarray/0.5/
 __ http://bluss.github.io/rust-ndarray/0.4/
 __ http://bluss.github.io/rust-ndarray/0.3/
@@ -88,14 +89,13 @@ your `Cargo.toml`.
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.6"
+    ndarray = "0.7"
 
 Recent Changes (ndarray)
 ------------------------
 
-- 0.7.0-alpha.1
+- 0.7.0
 
-  - **Prerelease**
   - Big overhaul of dimensions: Add type ``Dim`` with aliases
     ``Ix1, Ix2, Ix3, ...`` etc for specific dimensionalities.
     Instead of ``Ix`` for dimension use ``Ix1``, instead of ``(Ix, Ix)`` use
@@ -106,13 +106,18 @@ Recent Changes (ndarray)
     ``Array::from_shape_vec``, ``.into_shape()`` and so on will continue to work
     with tuples.
   - The array method ``.raw_dim()`` returns the shape description
-    ``D`` as it is.
+    ``D`` as it is. ``.dim()`` continues to return the dimension as a tuple.
   - Renamed iterators for consistency (each iterator is named for the
     method that creates it, for example ``.iter()`` returns ``Iter``).
   - The index iterator is now created with free functions ``indices`` or
     ``indices_of``.
   - Expanded the ``ndarray::prelude`` module with the dimensionality-specific
     type aliases, and some other items
+  - ``LinalgScalar`` and related features no longer need to use ``Any`` for
+    static type dispatch.
+  - Serialization with ``serde`` now supports binary encoders like bincode
+    and others.
+  - Require Rust 1.13
 
 - 0.6.9
 
