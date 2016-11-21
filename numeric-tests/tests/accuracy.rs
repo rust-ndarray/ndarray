@@ -7,22 +7,19 @@ extern crate rand;
 use ndarray_rand::{RandomExt, F32};
 use rand::Rng;
 
+use ndarray::prelude::*;
 use ndarray::{
-    ArrayBase,
-    Array,
-    Dimension,
     Data,
     DataMut,
-    Axis, RemoveAxis,
+    RemoveAxis,
     LinalgScalar,
-    Ix,
 };
 
 use rand::distributions::Normal;
 
 // simple, slow, correct (hopefully) mat mul
-fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, (Ix, Ix)>, rhs: &ArrayBase<S2, (Ix, Ix)>)
-    -> Array<A, (Ix, Ix)>
+fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>)
+    -> Array<A, Ix2>
     where A: LinalgScalar,
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
@@ -67,7 +64,7 @@ fn accurate_eye_f32() {
     for i in 0..20 {
         let eye = Array::eye(i);
         for j in 0..20 {
-            let a = gen((i, j));
+            let a = gen(Ix2(i, j));
             let a2 = eye.dot(&a);
             if !a.all_close(&a2, 1e-6) {
                 panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
@@ -84,7 +81,7 @@ fn accurate_eye_f32() {
         let i = rng.gen_range(15, 512);
         let j = rng.gen_range(15, 512);
         println!("Testing size {} by {}", i, j);
-        let a = gen((i, j));
+        let a = gen(Ix2(i, j));
         let eye = Array::eye(i);
         let a2 = eye.dot(&a);
         if !a.all_close(&a2, 1e-6) {
@@ -103,7 +100,7 @@ fn accurate_eye_f64() {
     for i in 0..20 {
         let eye = Array::eye(i);
         for j in 0..20 {
-            let a = gen_f64((i, j));
+            let a = gen_f64(Ix2(i, j));
             let a2 = eye.dot(&a);
             if !a.all_close(&a2, abs_tol) {
                 panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
@@ -120,7 +117,7 @@ fn accurate_eye_f64() {
         let i = rng.gen_range(15, 512);
         let j = rng.gen_range(15, 512);
         println!("Testing size {} by {}", i, j);
-        let a = gen_f64((i, j));
+        let a = gen_f64(Ix2(i, j));
         let eye = Array::eye(i);
         let a2 = eye.dot(&a);
         if !a.all_close(&a2, 1e-6) {
@@ -141,8 +138,8 @@ fn accurate_mul_f32() {
         let m = rng.gen_range(15, 512);
         let k = rng.gen_range(15, 512);
         let n = rng.gen_range(15, 1560);
-        let a = gen((m, k));
-        let b = gen((n, k));
+        let a = gen(Ix2(m, k));
+        let b = gen(Ix2(n, k));
         let b = b.t();
         let (a, b) = if i > 10 {
             (a.slice(s![..;2, ..;2]),
@@ -175,8 +172,8 @@ fn accurate_mul_f64() {
         let m = rng.gen_range(15, 512);
         let k = rng.gen_range(15, 512);
         let n = rng.gen_range(15, 1560);
-        let a = gen_f64((m, k));
-        let b = gen_f64((n, k));
+        let a = gen_f64(Ix2(m, k));
+        let b = gen_f64(Ix2(n, k));
         let b = b.t();
         let (a, b) = if i > 10 {
             (a.slice(s![..;2, ..;2]),
