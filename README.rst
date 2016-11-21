@@ -554,13 +554,6 @@ __ https://bluss.github.io/rust-ndarray/master/ndarray/struct.ArrayBase.html#ari
   - First release on crates.io
   - Starting point for evolution to come
 
-Recent Changes (ndarray-rblas)
-------------------------------
-
-- 0.1.0
-
-  - Initial release, identical to ndarray 0.4.1's version.
-
 Recent Changes (ndarray-rand)
 -----------------------------
 
