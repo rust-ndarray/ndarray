@@ -1,5 +1,5 @@
 [package]
-name = "ndarray-serialization-tests"
+name = "serialization-tests"
 version = "0.1.0"
 authors = ["bluss"]
 publish = false
