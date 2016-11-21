@@ -48,7 +48,7 @@ blas = ["blas-sys"]
 
 # These features are used for testing
 blas-openblas-sys = ["blas"]
-test = ["blas-openblas-sys", "rustc-serialize", "serde"]
+test = ["blas-openblas-sys"]
 
 # This feature is used for docs
 docs = ["rustc-serialize", "serde"]
