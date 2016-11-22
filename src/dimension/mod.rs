@@ -24,6 +24,7 @@ pub mod dim;
 mod dimension_trait;
 mod ndindex;
 mod remove_axis;
+mod axes;
 
 /// Private constructor and accessors for Dim
 pub trait DimPrivate<I> {
