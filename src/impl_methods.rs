@@ -512,24 +512,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
     ///
-    /// The outer iterator is equivalent to `.axis_iter(Axis(0))`.
-    /// For example, in a 2 × 2 × 3 array, the iterator element
-    /// is a 2 × 3 subview (and there are 2 in total).
+    /// This is equivalent to `.axis_iter(Axis(0))`.
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
-    ///
-    /// ```
-    /// use ndarray::{arr3, Axis};
-    ///
-    /// let a = arr3(&[[[ 0,  1,  2],    // \ axis 0, submatrix 0
-    ///                 [ 3,  4,  5]],   // /
-    ///                [[ 6,  7,  8],    // \ axis 0, submatrix 1
-    ///                 [ 9, 10, 11]]]); // /
-    /// // `outer_iter` yields the two submatrices along axis 0.
-    /// let mut iter = a.outer_iter();
-    /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 0));
-    /// assert_eq!(iter.next().unwrap(), a.subview(Axis(0), 1));
-    /// ```
     #[allow(deprecated)]
     pub fn outer_iter(&self) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
@@ -540,7 +525,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
     ///
-    /// The outer iterator is equivalent to `.axis_iter_mut(Axis(0))`.
+    /// This is equivalent to `.axis_iter_mut(Axis(0))`.
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
     #[allow(deprecated)]
