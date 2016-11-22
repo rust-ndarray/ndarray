@@ -25,8 +25,10 @@ pub struct Axes<'a, D: 'a> {
 }
 
 /// Description of the axis, its length and its stride.
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug)]
 pub struct AxisDescription(pub Axis, pub Ix, pub Ixs);
+
+copy_and_clone!(AxisDescription);
 
 impl AxisDescription {
     /// Return axis
@@ -40,10 +42,7 @@ impl AxisDescription {
     pub fn stride(self) -> Ixs { self.2 }
 }
 
-impl<'a, D> Copy for Axes<'a, D> { }
-impl<'a, D> Clone for Axes<'a, D> {
-    fn clone(&self) -> Self { *self }
-}
+copy_and_clone!(['a, D] Axes<'a, D>);
 
 impl<'a, D> Iterator for Axes<'a, D>
     where D: Dimension,

@@ -15,7 +15,7 @@ use std::cmp::Ordering;
 ///
 /// All array axis arguments use this type to make the code easier to write
 /// correctly and easier to understand.
-#[derive(Copy, Eq, Ord, Hash, Debug)]
+#[derive(Eq, Ord, Hash, Debug)]
 pub struct Axis(pub usize);
 
 impl Axis {
@@ -23,14 +23,7 @@ impl Axis {
     pub fn axis(&self) -> usize { self.0 }
 }
 
-macro_rules! clone_from_copy {
-    ($typename:ident) => {
-        impl Clone for $typename {
-            #[inline]
-            fn clone(&self) -> Self { *self }
-        }
-    }
-}
+copy_and_clone!{Axis}
 
 macro_rules! derive_cmp {
     ($traitname:ident for $typename:ident, $method:ident -> $ret:ty) => {
@@ -45,5 +38,4 @@ macro_rules! derive_cmp {
 
 derive_cmp!{PartialEq for Axis, eq -> bool}
 derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
-clone_from_copy!{Axis}
 

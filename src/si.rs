@@ -12,7 +12,7 @@ use super::Ixs;
 // [0,:] -- first row of matrix
 // [:,0] -- first column of matrix
 
-#[derive(Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 /// A slice, a description of a range of an array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
@@ -76,12 +76,7 @@ impl Si {
     }
 }
 
-impl Clone for Si {
-    #[inline]
-    fn clone(&self) -> Self {
-        *self
-    }
-}
+copy_and_clone!{Si}
 
 /// Slice value for the full range of an axis.
 pub const S: Si = Si(0, None, 1);

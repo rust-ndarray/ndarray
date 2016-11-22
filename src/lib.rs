@@ -114,6 +114,7 @@ pub use stacking::stack;
 
 pub use shape_builder::{ ShapeBuilder};
 
+#[macro_use] mod macro_utils;
 mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde")]
