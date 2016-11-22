@@ -21,6 +21,7 @@ use error::{self, ShapeError};
 use super::zipsl;
 use super::ZipExt;
 use dimension::IntoDimension;
+use dimension::{axes_of, Axes};
 
 use {
     NdIndex,
@@ -1001,6 +1002,25 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn t(&self) -> ArrayView<A, D> {
         self.view().reversed_axes()
     }
+
+    /// Return an iterator over the length and stride of each axis.
+    pub fn axes(&self) -> Axes<D> {
+        axes_of(&self.dim, &self.strides)
+    }
+
+    /*
+    /// Return the axis with the least stride (by absolute value)
+    pub fn min_stride_axis(&self) -> Axis {
+        self.dim.min_stride_axis(&self.strides)
+    }
+    */
+
+    /// Return the axis with the greatest stride (by absolute value),
+    /// preferring axes with len > 1.
+    pub fn max_stride_axis(&self) -> Axis {
+        self.dim.max_stride_axis(&self.strides)
+    }
+
 
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data._data_slice();

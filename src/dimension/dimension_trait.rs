@@ -17,12 +17,14 @@ use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si};
 use IntoDimension;
 use {ArrayView1, ArrayViewMut1};
 use {zipsl, zipsl_mut, ZipExt};
+use Axis;
 use super::{
     stride_offset,
     stride_offset_checked,
     DimPrivate,
 };
 use super::conversion::Convert;
+use super::axes_of;
 
 /// Array shape and index trait.
 ///
@@ -298,6 +300,36 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         indices.slice_mut().sort_by_key(|&i| strides[i]);
         indices
     }
+
+    /// Compute the minimum stride axis (absolute value), under the constraint
+    /// that the length of the axis is > 1;
+    #[doc(hidden)]
+    fn min_stride_axis(&self, strides: &Self) -> Axis {
+        let n = match self.ndim() {
+            0 => panic!("min_stride_axis: Array must have ndim > 0"),
+            1 => return Axis(0),
+            n => n,
+        };
+        axes_of(self, strides)
+            .rev()
+            .min_by_key(|ax| ax.stride().abs())
+            .map_or(Axis(n - 1), |ax| ax.axis())
+    }
+
+    /// Compute the maximum stride axis (absolute value), under the constraint
+    /// that the length of the axis is > 1;
+    #[doc(hidden)]
+    fn max_stride_axis(&self, strides: &Self) -> Axis {
+        match self.ndim() {
+            0 => panic!("max_stride_axis: Array must have ndim > 0"),
+            1 => return Axis(0),
+            _ => { }
+        }
+        axes_of(self, strides)
+            .filter(|ax| ax.len() > 1)
+            .max_by_key(|ax| ax.stride().abs())
+            .map_or(Axis(0), |ax| ax.axis())
+    }
 }
 
 // utility functions
@@ -377,6 +409,16 @@ unsafe impl Dimension for Dim<[Ix; 1]> {
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         Ix1(0)
+    }
+
+    #[inline(always)]
+    fn min_stride_axis(&self, _: &Self) -> Axis {
+        Axis(0)
+    }
+
+    #[inline(always)]
+    fn max_stride_axis(&self, _: &Self) -> Axis {
+        Axis(0)
     }
 
     #[inline]
@@ -476,6 +518,17 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
         if get!(self, 0) as Ixs <= get!(self, 1) as Ixs { Ix2(0, 1) } else { Ix2(1, 0) }
     }
 
+    #[inline]
+    fn min_stride_axis(&self, strides: &Self) -> Axis {
+        let s = get!(strides, 0) as Ixs;
+        let t = get!(strides, 1) as Ixs;
+        if s.abs() < t.abs() {
+            Axis(0)
+        } else {
+            Axis(1)
+        }
+    }
+    
     #[inline]
     fn is_contiguous(dim: &Self, strides: &Self) -> bool {
         let defaults = dim.default_strides();

@@ -16,6 +16,7 @@ pub use self::conversion::IntoDimension;
 pub use self::dimension_trait::Dimension;
 pub use self::ndindex::NdIndex;
 pub use self::remove_axis::RemoveAxis;
+pub use self::axes::{axes_of, Axes, AxisDescription};
 
 #[macro_use] mod macros;
 mod axis;
