@@ -117,6 +117,8 @@ Recent Changes (ndarray)
     static type dispatch.
   - Serialization with ``serde`` now supports binary encoders like bincode
     and others.
+  - ``.assign_scalar()`` was deprecated and replaced by ``.fill()``, which
+    takes an element by value.
   - Require Rust 1.13
 
 - 0.6.9
