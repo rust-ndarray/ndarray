@@ -16,6 +16,22 @@ pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
 /// An iterator over the length and stride of each axis of an array.
 ///
 /// See [`.axes()`](struct.ArrayBase.html#method.axes) for more information.
+///
+/// Iterator element type is `AxisDescription`.
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::Array3;
+/// use ndarray::Axis;
+///
+/// let a = Array3::<f32>::zeros((3, 5, 4));
+///
+/// let largest_axis = a.axes()
+///                     .max_by_key(|ax| ax.len())
+///                     .unwrap().axis();
+/// assert_eq!(largest_axis, Axis(1));
+/// ```
 #[derive(Debug)]
 pub struct Axes<'a, D: 'a> {
     dim: &'a D,
