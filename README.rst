@@ -94,6 +94,11 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.6.10
+
+  - Fix two bugs in ``Array::clone()``; it did not support zero-size elements
+    like ``()``, and it did not update the offset of the first element correctly.
+
 - 0.7.0
 
   - Big overhaul of dimensions: Add type ``Dim`` with aliases
