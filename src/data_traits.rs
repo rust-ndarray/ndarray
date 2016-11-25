@@ -126,7 +126,7 @@ unsafe impl<A> DataClone for Vec<A>
         let mut u = self.clone();
         let mut new_ptr = u.as_mut_ptr();
         if size_of::<A>() != 0 {
-            let our_off = (self.as_ptr() as isize - ptr as isize) /
+            let our_off = (ptr as isize - self.as_ptr() as isize) /
                           mem::size_of::<A>() as isize;
             new_ptr = new_ptr.offset(our_off);
         }
