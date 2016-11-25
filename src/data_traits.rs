@@ -8,7 +8,7 @@
 
 //! The data (inner representation) traits for ndarray
 
-use std::mem;
+use std::mem::{self, size_of};
 use std::rc::Rc;
 
 use {
@@ -124,9 +124,12 @@ unsafe impl<A> DataClone for Vec<A>
 {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         let mut u = self.clone();
-        let our_off = (self.as_ptr() as isize - ptr as isize) /
-                      mem::size_of::<A>() as isize;
-        let new_ptr = u.as_mut_ptr().offset(our_off);
+        let mut new_ptr = u.as_mut_ptr();
+        if size_of::<A>() != 0 {
+            let our_off = (self.as_ptr() as isize - ptr as isize) /
+                          mem::size_of::<A>() as isize;
+            new_ptr = new_ptr.offset(our_off);
+        }
         (u, new_ptr)
     }
 }
