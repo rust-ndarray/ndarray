@@ -94,6 +94,14 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.7.1
+
+  - Fix two bugs in ``Array::clone()``; it did not support zero-size elements
+    like ``()``, and it did not update the offset of the first element correctly.
+  - Add ``.axes()`` which is an iterator over the axes of an array, yielding
+    its index, length and stride.
+  - Add method ``.max_stride_axis()``.
+
 - 0.6.10
 
   - Fix two bugs in ``Array::clone()``; it did not support zero-size elements
