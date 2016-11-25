@@ -1086,3 +1086,20 @@ fn test_map_axis() {
     let answer2 = arr1(&[6, 15, 24, 33]);
     assert_eq!(c, answer2);
 }
+
+#[test]
+fn test_array_clone_unalias() {
+    let a = Array2::<i32>::zeros((3, 3));
+    let mut b = a.clone();
+    b.fill(1);
+    assert!(a != b);
+    assert_eq!(a, Array2::zeros((3, 3)));
+}
+
+#[test]
+fn test_array_clone_same_view() {
+    let mut a = Array::from_iter(0..9).into_shape((3, 3)).unwrap();
+    a.islice(s![..;-1, ..;-1]);
+    let b = a.clone();
+    assert_eq!(a, b);
+}
