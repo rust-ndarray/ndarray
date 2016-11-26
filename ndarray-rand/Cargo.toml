@@ -5,7 +5,7 @@ authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
 repository = "https://github.com/bluss/rust-ndarray"
-documentation = "http://bluss.github.io/rust-ndarray/"
+documentation = "http://bluss.github.io/rust-ndarray/master/ndarray_rand/"
 
 description = "Constructors for randomized arrays. `rand` integration for `ndarray`."
 

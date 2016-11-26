@@ -6,7 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
+//! Constructors for randomized arrays. `rand` integration for `ndarray`.
+//!
+//! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
 extern crate rand;
 extern crate ndarray;
 
