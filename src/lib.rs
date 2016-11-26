@@ -59,8 +59,9 @@
 //!   - Enables serialization support for serde 0.8
 //! - `blas`
 //!   - Optional and experimental, compatible with Rust stable
-//!   - Enable transparent BLAS support for matrix multiplication. Pluggable
-//!     backend via `blas-sys`.
+//!   - Enable transparent BLAS support for matrix multiplication.
+//!     Uses ``blas-sys`` for pluggable backend, which needs to be configured
+//!     separately.
 //!
 
 #[cfg(feature = "serde")]

@@ -25,44 +25,26 @@ Highlights
 ----------
 
 - Generic N-dimensional array
-- Owned arrays and views
-
-  - ``ArrayBase``:
-    The N-dimensional array type itself.
-  - ``Array``:
-    An array where the data is owned uniquely.
-  - ``RcArray``:
-    An array where the data has shared ownership and is copy on write.
-  - ``ArrayView``, ``ArrayViewMut``:
-    Lightweight array views.
-
+- Owned arrays and array views
 - Slicing, also with arbitrary step size, and negative indices to mean
   elements from the end of the axis.
-- Iteration and most operations are efficient on arrays with contiguous
-  innermost dimension.
-- Array views can be used to slice and mutate any ``[T]`` data.
+- Views and subviews of arrays; iterators that yield subviews.
 
 Status and Lookout
 ------------------
 
-- Still iterating on and evolving the API
+- Still iterating on and evolving the crate
 
   + The crate is continuously developing, and breaking changes are expected
-    during evolution from version to version. We adhere to semver,
-    but alpha releases break at will.
-  + We adopt the newest stable rust features we need.
+    during evolution from version to version. We adopt the newest stable
+    rust features if we need them.
 
-- Performance status:
+- Performance:
 
-  + Performance of an operation depends on the memory layout of the array
-    or array view. Especially if it's a binary operation, which
-    needs matching memory layout to be efficient (with some exceptions).
-  + Arithmetic optimizes very well if the arrays are have contiguous inner dimension.
-  + The higher order functions like ``.map()``, ``.map_inplace()`` and
-    ``.zip_mut_with()`` are the most efficient ways to
-    perform single traversal and lock step traversal respectively.
-  + ``.iter()`` is efficient for c-contiguous arrays.
-  + Can use BLAS in matrix multiplication
+  + Prefer higher order methods and arithmetic operations on arrays first,
+    then iteration, and as a last priority using indexed algorithms.
+  + Efficient floating point matrix multiplication even for very large
+    matrices; can optionally use BLAS to improve it further.
 
 Crate Feature Flags
 -------------------
@@ -83,8 +65,9 @@ your `Cargo.toml`.
 - ``blas``
 
   - Optional and experimental, compatible with Rust stable
-  - Enable transparent BLAS support for matrix multiplication. Pluggable
-    backend via ``blas-sys``.
+  - Enable transparent BLAS support for matrix multiplication.
+    Uses ``blas-sys`` for pluggable backend, which needs to be configured
+    separately.
 
 How to use with cargo::
 
