@@ -1,6 +1,6 @@
 [package]
 name = "ndarray-rand"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
@@ -12,5 +12,5 @@ description = "Constructors for randomized arrays. `rand` integration for `ndarr
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
-rand = "0.3"
-ndarray = { version = "0.7", path = ".." }
+rand = "0.3.14"
+ndarray = { version = "0.7.1", path = ".." }
