@@ -2,6 +2,7 @@
 extern crate ndarray;
 
 use ndarray::arr2;
+use ndarray::RcArray;
 
 #[test]
 fn test_swap() {
@@ -15,4 +16,11 @@ fn test_swap() {
         }
     }
     assert_eq!(a, b.t());
+}
+
+#[test]
+fn test() {
+    let c = RcArray::<(), _>::default((3, 4));
+    let mut d = c.clone();
+    for _ in d.iter_mut() {}
 }

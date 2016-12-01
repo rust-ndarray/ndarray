@@ -90,8 +90,10 @@ unsafe impl<A> DataMut for Rc<Vec<A>>
             }
             return;
         }
-        let our_off = (self_.ptr as isize - self_.data.as_ptr() as isize) /
-                      mem::size_of::<A>() as isize;
+        let a_size = mem::size_of::<A>() as isize;
+        let our_off = if a_size != 0 {
+            (self_.ptr as isize - self_.data.as_ptr() as isize) / a_size
+        } else { 0 };
         let rvec = Rc::make_mut(&mut self_.data);
         unsafe {
             self_.ptr = rvec.as_mut_ptr().offset(our_off);
