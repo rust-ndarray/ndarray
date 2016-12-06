@@ -47,7 +47,9 @@ impl<I> DimPrivate<I> for Dim<I> {
             index: index,
         }
     }
+    #[inline(always)]
     fn ix(&self) -> &I { &self.index }
+    #[inline(always)]
     fn ixm(&mut self) -> &mut I { &mut self.index }
 }
 
