@@ -1290,6 +1290,25 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    fn visit_mut<'a, F>(&'a mut self, mut f: F)
+        where F: FnMut(*mut A),
+              S: DataMut,
+              A: 'a,
+    {
+        if let Some(mut slc) = self.as_slice_memory_order_mut() {
+            // FIXME: Use for loop when slice iterator is perf is restored
+            for i in 0..slc.len() {
+                unsafe {
+                    f(slc.get_unchecked_mut(i));
+                }
+            }
+            return;
+        }
+        for row in self.inner_iter_mut() {
+            row.into_iter_().fold((), |(), elt| f(elt));
+        }
+    }
+
     /// Fold along an axis.
     ///
     /// Combine the elements of each subview with the previous using the `fold`
@@ -1330,6 +1349,39 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.subview(axis, 0).map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
+            }
+        })
+    }
+
+    fn lanes_along<'a, F>(&'a self, axis: Axis, mut visit: F)
+        where D: RemoveAxis,
+              F: FnMut(ArrayView1<'a, A>),
+              A: 'a,
+    {
+        let view_len = self.shape().axis(axis);
+        let view_stride = self.strides.axis(axis);
+        // use the 0th subview as a map to each 1d array view extended from
+        // the 0th element.
+        self.subview(axis, 0).visit(move |first_elt| {
+            unsafe {
+                visit(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
+            }
+        })
+    }
+
+    fn lanes_along_mut<'a, F>(&'a mut self, axis: Axis, mut visit: F)
+        where D: RemoveAxis,
+              S: DataMut,
+              F: FnMut(ArrayViewMut1<'a, A>),
+              A: 'a,
+    {
+        let view_len = self.shape().axis(axis);
+        let view_stride = self.strides.axis(axis);
+        // use the 0th subview as a map to each 1d array view extended from
+        // the 0th element.
+        self.subview_mut(axis, 0).visit_mut(move |first_elt| {
+            unsafe {
+                visit(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
     }
