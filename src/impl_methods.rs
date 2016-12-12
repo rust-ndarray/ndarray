@@ -669,20 +669,23 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return `false` otherwise, i.e the array is possibly not
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
-        let defaults = self.dim.default_strides();
-        if self.strides.equal(&defaults) {
-            return true;
-        }
-        if self.ndim() == 1 { return false; }
-        // check all dimensions -- a dimension of length 1 can have unequal strides
-        for (&dim, &s, &ds) in zipsl(self.dim.slice(), self.strides())
-            .zip_cons(defaults.slice())
-        {
-            if dim != 1 && s != (ds as Ixs) {
-                return false;
+        fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
+            let defaults = dim.default_strides();
+            if strides.equal(&defaults) {
+                return true;
             }
+            if dim.ndim() == 1 { return false; }
+            // check all dimensions -- a dimension of length 1 can have unequal strides
+            for (&dim, &s, &ds) in zipsl(dim.slice(), strides.slice())
+                .zip_cons(defaults.slice())
+            {
+                if dim != 1 && s != ds {
+                    return false;
+                }
+            }
+            true
         }
-        true
+        is_standard_layout(&self.dim, &self.strides)
     }
 
     fn is_contiguous(&self) -> bool {
