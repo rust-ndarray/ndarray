@@ -39,7 +39,7 @@ optional = true
 blas-sys = { version = "0.6.5", optional = true, default-features = false }
 matrixmultiply = { version = "0.1.13" }
 
-rayon = { version = "0.5.0", optional = true, default-features = false }
+rayon = { git = "https://github.com/nikomatsakis/rayon", optional = true }
 
 [dependencies.serde]
 version = "0.8.20"

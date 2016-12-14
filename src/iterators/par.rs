@@ -7,8 +7,10 @@ use rayon::par_iter::ExactParallelIterator;
 use rayon::par_iter::BoundedParallelIterator;
 use rayon::par_iter::internal::{Consumer, UnindexedConsumer};
 use rayon::par_iter::internal::bridge;
+use rayon::par_iter::internal::bridge_unindexed;
 use rayon::par_iter::internal::ProducerCallback;
 use rayon::par_iter::internal::Producer;
+use rayon::par_iter::internal::UnindexedProducer;
 
 use super::AxisIter;
 use super::AxisIterMut;
@@ -116,3 +118,55 @@ macro_rules! par_iter_wrapper {
 
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
+
+macro_rules! par_iter_view_wrapper {
+    // thread_bounds are either Sync or Send + Sync
+    ($view_name:ident, [$($thread_bounds:tt)*]) => {
+    impl<'a, A, D> IntoParallelIterator for $view_name<'a, A, D>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <Self as IntoIterator>::Item;
+        type Iter = Parallel<Self>;
+        fn into_par_iter(self) -> Self::Iter {
+            Parallel {
+                iter: self,
+            }
+        }
+    }
+
+
+    impl<'a, A, D> ParallelIterator for Parallel<$view_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <$view_name<'a, A, D> as IntoIterator>::Item;
+        fn drive_unindexed<C>(self, consumer: C) -> C::Result
+            where C: UnindexedConsumer<Self::Item>
+        {
+            bridge_unindexed(self.iter, consumer)
+        }
+    }
+
+    impl<'a, A, D> UnindexedProducer for $view_name<'a, A, D>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        fn can_split(&self) -> bool {
+            self.len() > 1
+        }
+
+        fn split(self) -> (Self, Self) {
+            let max_axis = self.max_stride_axis();
+            let mid = self.len_of(max_axis);
+            self.split_at(max_axis, mid)
+        }
+    }
+
+    }
+}
+
+use super::Iter;
+
+par_iter_view_wrapper!(ArrayView, [Sync]);
+par_iter_view_wrapper!(ArrayViewMut, [Sync + Send]);
