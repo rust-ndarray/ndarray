@@ -50,10 +50,10 @@ blas = ["blas-sys"]
 
 # These features are used for testing
 blas-openblas-sys = ["blas"]
-test = ["blas-openblas-sys"]
+test = ["blas-openblas-sys", "rayon"]
 
 # This feature is used for docs
-docs = ["rustc-serialize", "serde"]
+docs = ["rustc-serialize", "serde", "rayon"]
 
 [profile.release]
 [profile.bench]
