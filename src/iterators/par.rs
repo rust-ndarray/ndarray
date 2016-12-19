@@ -11,6 +11,7 @@ use rayon::par_iter::internal::bridge_unindexed;
 use rayon::par_iter::internal::ProducerCallback;
 use rayon::par_iter::internal::Producer;
 use rayon::par_iter::internal::UnindexedProducer;
+use rayon::par_iter::internal::Folder;
 
 use super::AxisIter;
 use super::AxisIterMut;
@@ -146,6 +147,10 @@ macro_rules! par_iter_view_wrapper {
         {
             bridge_unindexed(self.iter, consumer)
         }
+
+        fn opt_len(&mut self) -> Option<usize> {
+            Some(self.iter.len())
+        }
     }
 
     impl<'a, A, D> UnindexedProducer for $view_name<'a, A, D>
@@ -153,13 +158,23 @@ macro_rules! par_iter_view_wrapper {
               A: $($thread_bounds)*,
     {
         fn can_split(&self) -> bool {
-            self.len() > 1
+            // FIXME: Bad to hardcode any limit here
+            self.len() > 128
         }
 
         fn split(self) -> (Self, Self) {
             let max_axis = self.max_stride_axis();
-            let mid = self.len_of(max_axis);
-            self.split_at(max_axis, mid)
+            let mid = self.len_of(max_axis) / 2;
+            let (a, b) = self.split_at(max_axis, mid);
+            //println!("Split along axis {:?} at {}", max_axis, mid);
+            //println!("Result shapes {:?}, {:?}", a.shape(), b.shape());
+            (a, b)
+        }
+
+        fn fold_with<F>(self, folder: F) -> F
+            where F: Folder<Self::Item>,
+        {
+            self.into_iter().fold(folder, |f, elt| f.consume(elt))
         }
     }
 
