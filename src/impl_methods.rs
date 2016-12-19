@@ -23,6 +23,8 @@ use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes};
 
+use impl_views::ArrayViewPrivate;
+
 use {
     NdIndex,
     AxisChunksIter,
@@ -686,10 +688,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             true
         }
         is_standard_layout(&self.dim, &self.strides)
-    }
-
-    fn is_contiguous(&self) -> bool {
-        D::is_contiguous(&self.dim, &self.strides)
     }
 
     /// Return a pointer to the first element in the array.

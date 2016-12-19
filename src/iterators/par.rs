@@ -120,6 +120,8 @@ macro_rules! par_iter_wrapper {
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
 
+use impl_views::ArrayViewPrivate;
+
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($view_name:ident, [$($thread_bounds:tt)*]) => {
@@ -173,7 +175,7 @@ macro_rules! par_iter_view_wrapper {
         fn fold_with<F>(self, folder: F) -> F
             where F: Folder<Self::Item>,
         {
-            self.into_iter().fold(folder, move |f, elt| f.consume(elt))
+            self.into_fold(folder, move |f, elt| f.consume(elt))
         }
     }
 

@@ -587,6 +587,9 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    fn is_contiguous(&self) -> bool {
+        D::is_contiguous(&self.dim, &self.strides)
+    }
 
     /// Apply closure `f` to each element in the array, in whatever
     /// order is the fastest to visit.

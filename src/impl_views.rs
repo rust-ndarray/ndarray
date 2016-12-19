@@ -14,6 +14,62 @@ use error::ShapeError;
 
 use StrideShape;
 
+pub trait ArrayViewPrivate {
+    type Item;
+    type Slice: IntoIterator<Item=Self::Item>;
+    unsafe fn into_slice_memory_order(self) -> Self::Slice;
+
+    fn into_fold<Acc, F>(self, acc: Acc, f: F) -> Acc
+        where F: FnMut(Acc, Self::Item) -> Acc;
+}
+
+impl<'a, A, D> ArrayViewPrivate for ArrayView<'a, A, D>
+    where D: Dimension,
+{
+    type Item = &'a A;
+    type Slice = &'a [A];
+    unsafe fn into_slice_memory_order(self) -> Self::Slice {
+        debug_assert!(self.is_contiguous());
+        slice::from_raw_parts(self.ptr, self.len())
+    }
+
+    fn into_fold<Acc, F>(self, acc: Acc, f: F) -> Acc
+        where F: FnMut(Acc, Self::Item) -> Acc
+    {
+        if self.is_contiguous() {
+            unsafe {
+                self.into_slice_memory_order().into_iter().fold(acc, f)
+            }
+        } else {
+            self.into_iter().fold(acc, f)
+        }
+    }
+}
+
+
+impl<'a, A, D> ArrayViewPrivate for ArrayViewMut<'a, A, D>
+    where D: Dimension,
+{
+    type Item = &'a mut A;
+    type Slice = &'a mut [A];
+    unsafe fn into_slice_memory_order(self) -> Self::Slice {
+        debug_assert!(self.is_contiguous());
+        slice::from_raw_parts_mut(self.ptr, self.len())
+    }
+
+    fn into_fold<Acc, F>(self, acc: Acc, f: F) -> Acc
+        where F: FnMut(Acc, Self::Item) -> Acc
+    {
+        if self.is_contiguous() {
+            unsafe {
+                self.into_slice_memory_order().into_iter().fold(acc, f)
+            }
+        } else {
+            self.into_iter().fold(acc, f)
+        }
+    }
+}
+
 /// # Methods Specific to Array Views
 ///
 /// Methods for read-only array views `ArrayView<'a, A, D>`
@@ -126,7 +182,6 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
             None
         }
     }
-
 }
 
 /// Methods for read-write array views `ArrayViewMut<'a, A, D>`
@@ -237,6 +292,5 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
             None
         }
     }
-
 }
 
