@@ -159,15 +159,14 @@ macro_rules! par_iter_view_wrapper {
     {
         fn can_split(&self) -> bool {
             // FIXME: Bad to hardcode any limit here
-            self.len() > 128
+            self.len() > 1
         }
 
         fn split(self) -> (Self, Self) {
             let max_axis = self.max_stride_axis();
             let mid = self.len_of(max_axis) / 2;
             let (a, b) = self.split_at(max_axis, mid);
-            //println!("Split along axis {:?} at {}", max_axis, mid);
-            //println!("Result shapes {:?}, {:?}", a.shape(), b.shape());
+            //println!("Split along axis {:?} at {}\nshapes {:?}, {:?}", max_axis, mid, a.shape(), b.shape());
             (a, b)
         }
 

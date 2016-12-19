@@ -1,6 +1,7 @@
 
 #![feature(test)]
 
+extern crate num_cpus;
 extern crate test;
 use test::Bencher;
 
@@ -12,6 +13,14 @@ extern crate rayon;
 use rayon::prelude::*;
 
 const EXP_N: usize = 128;
+
+use std::cmp::max;
+
+fn set_threads() {
+    let n = max(1, num_cpus::get() / 2);
+    let cfg = rayon::Configuration::new().set_num_threads(n);
+    let _ = rayon::initialize(cfg);
+}
 
 #[bench]
 fn map_exp_regular(bench: &mut Bencher)
@@ -26,6 +35,7 @@ fn map_exp_regular(bench: &mut Bencher)
 #[bench]
 fn rayon_exp_regular(bench: &mut Bencher)
 {
+    set_threads();
     let mut a = Array2::<f64>::zeros((EXP_N, EXP_N));
     a.swap_axes(0, 1);
     bench.iter(|| {
@@ -33,7 +43,7 @@ fn rayon_exp_regular(bench: &mut Bencher)
     });
 }
 
-const FASTEXP: usize = 900;
+const FASTEXP: usize = 800;
 
 #[inline]
 fn fastexp(x: f64) -> f64 {
@@ -44,6 +54,7 @@ fn fastexp(x: f64) -> f64 {
 #[bench]
 fn map_fastexp_regular(bench: &mut Bencher)
 {
+    set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     let mut a = a.slice_mut(s![.., ..-1]);
     bench.iter(|| {

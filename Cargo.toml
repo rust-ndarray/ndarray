@@ -45,6 +45,9 @@ rayon = { git = "https://github.com/bluss/rayon", branch = "fold-using", optiona
 version = "0.8.20"
 optional = true
 
+[dev-dependencies]
+num_cpus = "1.2"
+
 [features]
 blas = ["blas-sys"]
 
