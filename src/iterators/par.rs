@@ -1,6 +1,7 @@
 
 
 use rayon::par_iter::ParallelIterator;
+use rayon::par_iter::IntoParallelIterator;
 use rayon::par_iter::IndexedParallelIterator;
 use rayon::par_iter::ExactParallelIterator;
 use rayon::par_iter::BoundedParallelIterator;
@@ -12,13 +13,40 @@ use rayon::par_iter::internal::Producer;
 use super::AxisIter;
 use imp_prelude::*;
 
+/// Parallel iterator wrapper.
+pub struct Parallel<I> {
+    pub iter: I,
+}
 
+impl<I> From<I> for Parallel<I::IntoIter>
+    where I: IntoIterator,
+{
+    fn from(iter: I) -> Self {
+        Parallel {
+            iter: iter.into_iter()
+        }
+    }
+}
 
-impl<'a, A, D> ParallelIterator for AxisIter<'a, A, D>
+impl<'a, A, D> IntoParallelIterator for AxisIter<'a, A, D>
     where D: Dimension,
           A: Sync,
 {
     type Item = <Self as Iterator>::Item;
+    type Iter = Parallel<Self>;
+    fn into_par_iter(self) -> Self::Iter {
+        Parallel {
+            iter: self,
+        }
+    }
+}
+
+
+impl<'a, A, D> ParallelIterator for Parallel<AxisIter<'a, A, D>>
+    where D: Dimension,
+          A: Sync,
+{
+    type Item = <AxisIter<'a, A, D> as Iterator>::Item;
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
         where C: UnindexedConsumer<Self::Item>
     {
@@ -26,27 +54,27 @@ impl<'a, A, D> ParallelIterator for AxisIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> IndexedParallelIterator for AxisIter<'a, A, D>
+impl<'a, A, D> IndexedParallelIterator for Parallel<AxisIter<'a, A, D>>
     where D: Dimension,
           A: Sync,
 {
     fn with_producer<Cb>(self, callback: Cb) -> Cb::Output
         where Cb: ProducerCallback<Self::Item>
     {
-        callback.callback(self)
+        callback.callback(self.iter)
     }
 }
 
-impl<'a, A, D> ExactParallelIterator for AxisIter<'a, A, D>
+impl<'a, A, D> ExactParallelIterator for Parallel<AxisIter<'a, A, D>>
     where D: Dimension,
           A: Sync,
 {
     fn len(&mut self) -> usize {
-        self.size_hint().0
+        self.iter.len()
     }
 }
 
-impl<'a, A, D> BoundedParallelIterator for AxisIter<'a, A, D>
+impl<'a, A, D> BoundedParallelIterator for Parallel<AxisIter<'a, A, D>>
     where D: Dimension,
           A: Sync,
 {
