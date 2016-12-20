@@ -1281,16 +1281,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where F: FnMut(&'a A),
               A: 'a,
     {
-        if let Some(slc) = self.as_slice_memory_order() {
-            // FIXME: Use for loop when slice iterator is perf is restored
-            for i in 0..slc.len() {
-                f(&slc[i]);
-            }
-        } else {
-            for row in self.inner_iter() {
-                row.into_iter_().fold((), |(), elt| f(elt));
-            }
-        }
+        self.fold((), move |(), elt| f(elt))
     }
 
     /// Fold along an axis.
