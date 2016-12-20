@@ -255,6 +255,18 @@ fn fold_sum_i32_2d_transpose(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn fold_sum_i32_2d_cutout_transpose(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((66, 66));
+    let mut av = a.slice(s![1..-1, 1..-1]);
+    av.swap_axes(0, 1);
+    let a = black_box(av);
+    bench.iter(|| {
+        a.fold(0, |acc, &x| acc + x)
+    });
+}
+
+#[bench]
 fn add_2d_regular(bench: &mut test::Bencher)
 {
     let mut a = Array::<i32, _>::zeros((64, 64));
