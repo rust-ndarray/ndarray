@@ -25,16 +25,6 @@ pub struct Parallel<I> {
     iter: I,
 }
 
-impl<I> From<I> for Parallel<I::IntoIter>
-    where I: IntoIterator,
-{
-    fn from(iter: I) -> Self {
-        Parallel {
-            iter: iter.into_iter()
-        }
-    }
-}
-
 macro_rules! par_iter_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($iter_name:ident, [$($thread_bounds:tt)*]) => {
@@ -48,7 +38,9 @@ macro_rules! par_iter_wrapper {
         type Item = <Self as Iterator>::Item;
         type Iter = Parallel<Self>;
         fn into_par_iter(self) -> Self::Iter {
-            Parallel::from(self)
+            Parallel {
+                iter: self,
+            }
         }
     }
 
