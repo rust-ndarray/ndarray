@@ -633,7 +633,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     #[inline]
     fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
-            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+            Baseiter::new(self.ptr, self.dim, self.strides)
         }
     }
 
@@ -682,7 +682,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     #[inline]
     fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
-            Baseiter::new(self.ptr, self.dim.clone(), self.strides.clone())
+            Baseiter::new(self.ptr, self.dim, self.strides)
         }
     }
 
