@@ -36,11 +36,11 @@ optional = true
 
 [dependencies]
 # Use via the `blas` crate feature!
-blas-sys = { version = "0.6.3", optional = true, default-features = false }
-matrixmultiply = { version = "0.1.11" }
+blas-sys = { version = "0.6.5", optional = true, default-features = false }
+matrixmultiply = { version = "0.1.13" }
 
 [dependencies.serde]
-version = "0.8"
+version = "0.8.20"
 optional = true
 
 [features]
