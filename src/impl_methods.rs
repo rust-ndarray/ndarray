@@ -1153,16 +1153,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// returning the resulting value.
     ///
     /// Elements are visited in arbitrary order.
-    pub fn fold<'a, F, B>(&'a self, mut init: B, mut f: F) -> B
+    pub fn fold<'a, F, B>(&'a self, init: B, f: F) -> B
         where F: FnMut(B, &'a A) -> B, A: 'a
     {
         if let Some(slc) = self.as_slice_memory_order() {
             slc.iter().fold(init, f)
         } else {
-            for row in self.inner_iter() {
-                init = row.into_iter_().fold(init, &mut f);
-            }
-            init
+            self.view().into_elements_base().fold(init, f)
         }
     }
 
