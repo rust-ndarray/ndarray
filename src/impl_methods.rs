@@ -1159,7 +1159,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         if let Some(slc) = self.as_slice_memory_order() {
             slc.iter().fold(init, f)
         } else {
-            self.view().into_elements_base().fold(init, f)
+            let mut v = self.view();
+            // put the narrowest axis at the last position
+            if v.ndim() > 1 {
+                let last = v.ndim() - 1;
+                let narrow_axis = v.axes()
+                                   .filter(|ax| ax.len() > 1)
+                                   .min_by_key(|ax| ax.stride().abs())
+                                   .map_or(last, |ax| ax.axis().axis());
+                v.swap_axes(last, narrow_axis);
+            }
+            v.into_elements_base().fold(init, f)
         }
     }
 
