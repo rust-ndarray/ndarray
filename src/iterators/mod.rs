@@ -77,7 +77,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
         unsafe { self.next().map(|p| &mut *p) }
     }
 
-    fn size_hint(&self) -> usize {
+    fn len(&self) -> usize {
         match self.index {
             None => 0,
             Some(ref ix) => {
@@ -173,7 +173,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.inner.size_hint();
+        let len = self.inner.len();
         (len, Some(len))
     }
 
@@ -195,7 +195,11 @@ impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1> {
 
 impl<'a, A, D> ExactSizeIterator for ElementsBase<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        self.inner.len()
+    }
+}
 
 macro_rules! either {
     ($value:expr, $inner:pat => $result:expr) => (
@@ -256,7 +260,11 @@ impl<'a, A> DoubleEndedIterator for Iter<'a, A, Ix1> {
 
 impl<'a, A, D> ExactSizeIterator for Iter<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        either!(self.inner, ref iter => iter.len())
+    }
+}
 
 
 impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
@@ -274,14 +282,18 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.0.inner.size_hint();
+        let len = self.0.inner.len();
         (len, Some(len))
     }
 }
 
 impl<'a, A, D> ExactSizeIterator for IndexedIter<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        self.0.inner.len()
+    }
+}
 
 impl<'a, A, D: Dimension> Iterator for IterMut<'a, A, D> {
     type Item = &'a mut A;
@@ -310,7 +322,11 @@ impl<'a, A> DoubleEndedIterator for IterMut<'a, A, Ix1> {
 
 impl<'a, A, D> ExactSizeIterator for IterMut<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        either!(self.inner, ref iter => iter.len())
+    }
+}
 
 impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     type Item = &'a mut A;
@@ -320,7 +336,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.inner.size_hint();
+        let len = self.inner.len();
         (len, Some(len))
     }
 
@@ -340,6 +356,15 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     }
 }
 
+impl<'a, A, D> ExactSizeIterator for ElementsBaseMut<'a, A, D>
+    where D: Dimension
+{
+    fn len(&self) -> usize {
+        self.inner.len()
+    }
+}
+
+
 impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
     type Item = (D::Pattern, &'a mut A);
     #[inline]
@@ -355,14 +380,18 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.0.inner.size_hint();
+        let len = self.0.inner.len();
         (len, Some(len))
     }
 }
 
 impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        self.0.inner.len()
+    }
+}
 
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
@@ -408,14 +437,18 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.iter.size_hint();
+        let len = self.iter.len();
         (len, Some(len))
     }
 }
 
 impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
 
 // NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
@@ -467,14 +500,18 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.iter.size_hint();
+        let len = self.iter.len();
         (len, Some(len))
     }
 }
 
 impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
     where D: Dimension,
-{ }
+{
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
 
 pub struct OuterIterCore<A, D> {
     index: Ix,
@@ -667,7 +704,11 @@ impl<'a, A, D> DoubleEndedIterator for AxisIter<'a, A, D>
 
 impl<'a, A, D> ExactSizeIterator for AxisIter<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        self.size_hint().0
+    }
+}
 
 pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> AxisIter<A, D::Smaller>
     where D: RemoveAxis
@@ -746,7 +787,11 @@ impl<'a, A, D> DoubleEndedIterator for AxisIterMut<'a, A, D>
 
 impl<'a, A, D> ExactSizeIterator for AxisIterMut<'a, A, D>
     where D: Dimension
-{}
+{
+    fn len(&self) -> usize {
+        self.size_hint().0
+    }
+}
 
 pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> AxisIterMut<A, D::Smaller>
     where D: RemoveAxis
