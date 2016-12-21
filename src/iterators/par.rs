@@ -14,7 +14,9 @@ use super::AxisIter;
 use super::AxisIterMut;
 use imp_prelude::*;
 
-/// Parallel iterator wrapper.
+/// Iterator wrapper for parallelized implementations.
+///
+/// **Requires crate feature `"rayon"`**
 #[derive(Copy, Clone, Debug)]
 pub struct Parallel<I> {
     iter: I,
@@ -33,6 +35,9 @@ impl<I> From<I> for Parallel<I::IntoIter>
 macro_rules! par_iter_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($iter_name:ident, [$($thread_bounds:tt)*]) => {
+    /// This iterator can be turned into a parallel iterator (rayon crate).
+    ///
+    /// **Requires crate feature `"rayon"`**
     impl<'a, A, D> IntoParallelIterator for $iter_name<'a, A, D>
         where D: Dimension,
               A: $($thread_bounds)*,
@@ -43,7 +48,6 @@ macro_rules! par_iter_wrapper {
             Parallel::from(self)
         }
     }
-
 
     impl<'a, A, D> ParallelIterator for Parallel<$iter_name<'a, A, D>>
         where D: Dimension,

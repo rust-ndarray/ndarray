@@ -62,6 +62,9 @@
 //!   - Enable transparent BLAS support for matrix multiplication.
 //!     Uses ``blas-sys`` for pluggable backend, which needs to be configured
 //!     separately.
+//! - `rayon`
+//!   - Optional.
+//!   - Implement rayon 0.5 parallelization traits for `AxisIter`.
 //!
 
 #[cfg(feature = "serde")]
@@ -126,6 +129,8 @@ mod array_serde;
 mod array_serialize;
 mod arrayformat;
 mod data_traits;
+#[cfg(feature = "rayon")]
+pub mod par;
 
 pub use aliases::*;
 

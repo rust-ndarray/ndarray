@@ -69,6 +69,11 @@ your `Cargo.toml`.
     Uses ``blas-sys`` for pluggable backend, which needs to be configured
     separately.
 
+- ``rayon``
+
+  - Optional, compatible with Rust stable
+  - Implement rayon 0.5 parallelization traits for ``AxisIter``.
+
 How to use with cargo::
 
     [dependencies]

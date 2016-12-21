@@ -22,7 +22,7 @@ use super::{
 };
 
 #[cfg(feature = "rayon")]
-mod par;
+pub mod par;
 
 /// Base for array iterators
 ///
