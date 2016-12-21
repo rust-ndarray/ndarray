@@ -176,7 +176,5 @@ macro_rules! par_iter_view_wrapper {
     }
 }
 
-use super::Iter;
-
 par_iter_view_wrapper!(ArrayView, [Sync]);
 par_iter_view_wrapper!(ArrayViewMut, [Sync + Send]);
