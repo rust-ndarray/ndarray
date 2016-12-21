@@ -90,3 +90,25 @@ fn rayon_fastexp_cut(bench: &mut Bencher)
         a.view_mut().into_par_iter().for_each(|x| *x = fastexp(*x));
     });
 }
+
+#[bench]
+fn map_fastexp_by_axis(bench: &mut Bencher)
+{
+    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    bench.iter(|| {
+        for mut sheet in a.axis_iter_mut(Axis(0)) {
+            sheet.mapv_inplace(fastexp)
+        }
+    });
+}
+
+#[bench]
+fn rayon_fastexp_by_axis(bench: &mut Bencher)
+{
+    set_threads();
+    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    bench.iter(|| {
+        a.axis_iter_mut(Axis(0)).into_par_iter()
+            .for_each(|mut sheet| sheet.mapv_inplace(fastexp));
+    });
+}
