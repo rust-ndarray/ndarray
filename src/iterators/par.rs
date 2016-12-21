@@ -11,6 +11,7 @@ use rayon::par_iter::internal::bridge_unindexed;
 use rayon::par_iter::internal::ProducerCallback;
 use rayon::par_iter::internal::Producer;
 use rayon::par_iter::internal::UnindexedProducer;
+#[cfg(rayon_fold_with)]
 use rayon::par_iter::internal::Folder;
 
 use super::AxisIter;
