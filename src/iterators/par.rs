@@ -18,7 +18,7 @@ use super::AxisIter;
 use super::AxisIterMut;
 use imp_prelude::*;
 
-/// Iterator wrapper for parallelized implementations.
+/// Wrapper type for parallelized implementations.
 ///
 /// **Requires crate feature `"rayon"`**
 #[derive(Copy, Clone, Debug)]
