@@ -130,7 +130,7 @@ mod array_serialize;
 mod arrayformat;
 mod data_traits;
 #[cfg(feature = "rayon")]
-pub mod par;
+pub mod parallel;
 
 pub use aliases::*;
 
