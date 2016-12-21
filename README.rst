@@ -72,7 +72,7 @@ your `Cargo.toml`.
 - ``rayon``
 
   - Optional, compatible with Rust stable
-  - Implement rayon 0.5 parallelization traits for ``AxisIter``.
+  - Implement rayon 0.6 parallelization.
 
 How to use with cargo::
 
