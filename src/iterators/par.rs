@@ -116,8 +116,6 @@ macro_rules! par_iter_wrapper {
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
 
-use impl_views::ArrayViewPrivate;
-
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($view_name:ident, [$($thread_bounds:tt)*]) => {
