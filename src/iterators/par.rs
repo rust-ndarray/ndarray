@@ -54,6 +54,10 @@ macro_rules! par_iter_wrapper {
         {
             bridge(self, consumer)
         }
+
+        fn opt_len(&mut self) -> Option<usize> {
+            Some(self.iter.len())
+        }
     }
 
     impl<'a, A, D> IndexedParallelIterator for Parallel<$iter_name<'a, A, D>>
@@ -152,7 +156,6 @@ macro_rules! par_iter_view_wrapper {
               A: $($thread_bounds)*,
     {
         fn can_split(&self) -> bool {
-            // FIXME: Bad to hardcode any limit here
             self.len() > 1
         }
 
@@ -164,6 +167,7 @@ macro_rules! par_iter_view_wrapper {
             (a, b)
         }
 
+        #[cfg(rayon_fold_with)]
         fn fold_with<F>(self, folder: F) -> F
             where F: Folder<Self::Item>,
         {
