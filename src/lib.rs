@@ -77,6 +77,8 @@ extern crate matrixmultiply;
 extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+#[cfg(feature = "rayon")]
+extern crate rayon;
 
 use std::iter::Zip;
 use std::marker::PhantomData;
