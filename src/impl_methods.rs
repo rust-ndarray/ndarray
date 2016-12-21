@@ -109,14 +109,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn to_owned(&self) -> Array<A, D>
         where A: Clone
     {
-        let (data, strides) = if let Some(slc) = self.as_slice_memory_order() {
-            (slc.to_vec(), self.strides.clone())
+        if let Some(slc) = self.as_slice_memory_order() {
+            unsafe {
+                Array::from_shape_vec_unchecked(self.dim.clone()
+                                                .strides(self.strides.clone()),
+                                                slc.to_vec())
+            }
         } else {
-            (iterators::to_vec_mapped(self.iter(), |x| x.clone()),
-             self.dim.default_strides())
-        };
-        unsafe {
-            ArrayBase::from_shape_vec_unchecked(self.dim.clone().strides(strides), data)
+            self.map(|x| x.clone())
         }
     }
 
@@ -1191,13 +1191,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///               [false, true]])
     /// );
     /// ```
-    pub fn map<'a, B, F>(&'a self, f: F) -> Array<B, D>
+    pub fn map<'a, B, F>(&'a self, mut f: F) -> Array<B, D>
         where F: FnMut(&'a A) -> B,
               A: 'a,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            let v = ::iterators::to_vec(slc.iter().map(f));
+            // FIXME: Why is this (= indexed loop) optimizing the best?
+            let mut v = Vec::with_capacity(slc.len());
             unsafe {
+                for i in 0..slc.len() {
+                    *v.get_unchecked_mut(i) = f(&slc[i]);
+                    v.set_len(i);
+                }
                 ArrayBase::from_shape_vec_unchecked(
                     self.dim.clone().strides(self.strides.clone()), v)
             }
