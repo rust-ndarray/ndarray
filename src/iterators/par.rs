@@ -11,11 +11,13 @@ use rayon::par_iter::internal::ProducerCallback;
 use rayon::par_iter::internal::Producer;
 
 use super::AxisIter;
+use super::AxisIterMut;
 use imp_prelude::*;
 
 /// Parallel iterator wrapper.
+#[derive(Copy, Clone, Debug)]
 pub struct Parallel<I> {
-    pub iter: I,
+    iter: I,
 }
 
 impl<I> From<I> for Parallel<I::IntoIter>
@@ -28,79 +30,85 @@ impl<I> From<I> for Parallel<I::IntoIter>
     }
 }
 
-impl<'a, A, D> IntoParallelIterator for AxisIter<'a, A, D>
-    where D: Dimension,
-          A: Sync,
-{
-    type Item = <Self as Iterator>::Item;
-    type Iter = Parallel<Self>;
-    fn into_par_iter(self) -> Self::Iter {
-        Parallel {
-            iter: self,
+macro_rules! par_iter_wrapper {
+    // thread_bounds are either Sync or Send + Sync
+    ($iter_name:ident, [$($thread_bounds:tt)*]) => {
+    impl<'a, A, D> IntoParallelIterator for $iter_name<'a, A, D>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <Self as Iterator>::Item;
+        type Iter = Parallel<Self>;
+        fn into_par_iter(self) -> Self::Iter {
+            Parallel::from(self)
         }
     }
-}
 
 
-impl<'a, A, D> ParallelIterator for Parallel<AxisIter<'a, A, D>>
-    where D: Dimension,
-          A: Sync,
-{
-    type Item = <AxisIter<'a, A, D> as Iterator>::Item;
-    fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    impl<'a, A, D> ParallelIterator for Parallel<$iter_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
     {
-        bridge(self, consumer)
+        type Item = <$iter_name<'a, A, D> as Iterator>::Item;
+        fn drive_unindexed<C>(self, consumer: C) -> C::Result
+            where C: UnindexedConsumer<Self::Item>
+        {
+            bridge(self, consumer)
+        }
     }
-}
 
-impl<'a, A, D> IndexedParallelIterator for Parallel<AxisIter<'a, A, D>>
-    where D: Dimension,
-          A: Sync,
-{
-    fn with_producer<Cb>(self, callback: Cb) -> Cb::Output
-        where Cb: ProducerCallback<Self::Item>
+    impl<'a, A, D> IndexedParallelIterator for Parallel<$iter_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
     {
-        callback.callback(self.iter)
-    }
-}
-
-impl<'a, A, D> ExactParallelIterator for Parallel<AxisIter<'a, A, D>>
-    where D: Dimension,
-          A: Sync,
-{
-    fn len(&mut self) -> usize {
-        self.iter.len()
-    }
-}
-
-impl<'a, A, D> BoundedParallelIterator for Parallel<AxisIter<'a, A, D>>
-    where D: Dimension,
-          A: Sync,
-{
-    fn upper_bound(&mut self) -> usize {
-        ExactParallelIterator::len(self)
+        fn with_producer<Cb>(self, callback: Cb) -> Cb::Output
+            where Cb: ProducerCallback<Self::Item>
+        {
+            callback.callback(self.iter)
+        }
     }
 
-    fn drive<C>(self, consumer: C) -> C::Result
-        where C: Consumer<Self::Item>
+    impl<'a, A, D> ExactParallelIterator for Parallel<$iter_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
     {
-        bridge(self, consumer)
+        fn len(&mut self) -> usize {
+            ExactSizeIterator::len(&self.iter)
+        }
+    }
+
+    impl<'a, A, D> BoundedParallelIterator for Parallel<$iter_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        fn upper_bound(&mut self) -> usize {
+            ExactSizeIterator::len(&self.iter)
+        }
+
+        fn drive<C>(self, consumer: C) -> C::Result
+            where C: Consumer<Self::Item>
+        {
+            bridge(self, consumer)
+        }
+    }
+
+    // This is the real magic, I guess
+
+    impl<'a, A, D> Producer for $iter_name<'a, A, D>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        fn cost(&mut self, len: usize) -> f64 {
+            // FIXME: No idea about what this is
+            len as f64
+        }
+
+        fn split_at(self, i: usize) -> (Self, Self) {
+            self.split_at(i)
+        }
+    }
     }
 }
 
-// This is the real magic, I guess
-
-impl<'a, A, D> Producer for AxisIter<'a, A, D>
-    where D: Dimension,
-          A: Sync,
-{
-    fn cost(&mut self, len: usize) -> f64 {
-        // FIXME: No idea about what this is
-        len as f64
-    }
-
-    fn split_at(self, i: usize) -> (Self, Self) {
-        self.split_at(i)
-    }
-}
+par_iter_wrapper!(AxisIter, [Sync]);
+par_iter_wrapper!(AxisIterMut, [Send + Sync]);
