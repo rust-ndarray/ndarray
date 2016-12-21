@@ -23,8 +23,6 @@ use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes};
 
-use impl_views::ArrayViewPrivate;
-
 use {
     NdIndex,
     AxisChunksIter,
