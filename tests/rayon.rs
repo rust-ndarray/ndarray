@@ -37,7 +37,7 @@ fn test_regular_iter() {
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
     }
-    let s = a.view().into_par_iter().map(|&x| x).sum();
+    let s = a.par_iter().map(|&x| x).sum();
     println!("{:?}", a.slice(s![..10, ..5]));
     assert_eq!(s, a.scalar_sum());
 }
