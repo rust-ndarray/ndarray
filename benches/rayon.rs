@@ -54,9 +54,7 @@ fn fastexp(x: f64) -> f64 {
 #[bench]
 fn map_fastexp_regular(bench: &mut Bencher)
 {
-    set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
-    let mut a = a.slice_mut(s![.., ..-1]);
     bench.iter(|| {
         a.mapv_inplace(|x| fastexp(x))
     });
@@ -65,6 +63,27 @@ fn map_fastexp_regular(bench: &mut Bencher)
 #[bench]
 fn rayon_fastexp_regular(bench: &mut Bencher)
 {
+    set_threads();
+    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    bench.iter(|| {
+        a.view_mut().into_par_iter().for_each(|x| *x = fastexp(*x));
+    });
+}
+
+#[bench]
+fn map_fastexp_cut(bench: &mut Bencher)
+{
+    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = a.slice_mut(s![.., ..-1]);
+    bench.iter(|| {
+        a.mapv_inplace(|x| fastexp(x))
+    });
+}
+
+#[bench]
+fn rayon_fastexp_cut(bench: &mut Bencher)
+{
+    set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     let mut a = a.slice_mut(s![.., ..-1]);
     bench.iter(|| {
