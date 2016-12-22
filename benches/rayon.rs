@@ -112,3 +112,33 @@ fn rayon_fastexp_by_axis(bench: &mut Bencher)
             .for_each(|mut sheet| sheet.mapv_inplace(fastexp));
     });
 }
+
+#[bench]
+fn par_map_inplace_fastexp(bench: &mut Bencher)
+{
+    set_threads();
+    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    bench.iter(|| {
+        a.par_map_inplace(|x| *x = fastexp(*x));
+    });
+}
+
+#[bench]
+fn map_fastexp(bench: &mut Bencher)
+{
+    set_threads();
+    let a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    bench.iter(|| {
+        a.map(|x| fastexp(*x))
+    });
+}
+
+#[bench]
+fn par_map_fastexp(bench: &mut Bencher)
+{
+    set_threads();
+    let a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    bench.iter(|| {
+        a.par_map(|x| fastexp(*x))
+    });
+}

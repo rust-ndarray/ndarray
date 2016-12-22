@@ -41,3 +41,22 @@ fn test_regular_iter() {
     println!("{:?}", a.slice(s![..10, ..5]));
     assert_eq!(s, a.scalar_sum());
 }
+
+
+#[test]
+fn test_map() {
+    let mut a = Array::linspace(0., 1.0f64, M * N).into_shape((M, N)).unwrap();
+    let b = a.par_map(|x| x.exp());
+    let c = a.map(|x| x.exp());
+    assert!(b.all_close(&c, 1e-6));
+    a.islice(s![.., ..;-1]);
+    let b = a.par_map(|x| x.exp());
+    let c = a.map(|x| x.exp());
+    assert!(b.all_close(&c, 1e-6));
+    a.swap_axes(0, 1);
+    let b = a.par_map(|x| x.exp());
+    let c = a.map(|x| x.exp());
+    assert!(b.all_close(&c, 1e-6));
+    println!("{:.8?}", a.slice(s![..10, ..10]));
+    println!("{:.8?}", b.slice(s![..10, ..10]));
+}
