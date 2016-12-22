@@ -19,6 +19,9 @@ use std::cmp::Ordering;
 pub struct Axis(pub usize);
 
 impl Axis {
+    /// Return the index of the axis.
+    #[inline(always)]
+    pub fn index(&self) -> usize { self.0 }
     #[inline(always)]
     pub fn axis(&self) -> usize { self.0 }
 }

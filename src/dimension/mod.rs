@@ -216,6 +216,21 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
 }
 
 
+pub fn merge_axes<D>(dim: &mut D, strides: &mut D, take: Axis, into: Axis) -> bool
+    where D: Dimension,
+{
+    let il = dim.axis(into);
+    let is = strides.axis(into) as Ixs;
+    let tl = dim.axis(take);
+    let ts = strides.axis(take) as Ixs;
+    if il as Ixs * is != ts {
+        return false;
+    }
+    // merge them
+    dim.set_axis(into, il * tl);
+    dim.set_axis(take, 1);
+    true
+}
 
 
 // NOTE: These tests are not compiled & tested

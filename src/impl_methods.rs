@@ -21,7 +21,7 @@ use error::{self, ShapeError};
 use super::zipsl;
 use super::ZipExt;
 use dimension::IntoDimension;
-use dimension::{axes_of, Axes};
+use dimension::{axes_of, Axes, merge_axes, stride_offset};
 
 use {
     NdIndex,
@@ -1009,6 +1009,35 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim.max_stride_axis(&self.strides)
     }
 
+    /// Reverse the stride of `axis`.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    pub fn invert_axis(&mut self, axis: Axis) {
+        unsafe {
+            let s = self.strides.axis(axis) as Ixs;
+            let m = self.dim.axis(axis);
+            if m != 0 {
+                self.ptr = self.ptr.offset(stride_offset(m - 1, s as Ix));
+            }
+            self.strides.set_axis(axis, (-s) as Ix);
+        }
+    }
+
+    /// If possible, merge in the axis `take` to `into`.
+    ///
+    /// ```
+    /// use ndarray::Array3;
+    /// use ndarray::Axis;
+    ///
+    /// let mut a = Array3::<f64>::zeros((2, 3, 4));
+    /// a.merge_axes(Axis(1), Axis(2));
+    /// assert_eq!(a.shape(), &[2, 1, 12]);
+    /// ```
+    ///
+    /// ***Panics*** if an axis is out of bounds.
+    pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool {
+        merge_axes(&mut self.dim, &mut self.strides, take, into)
+    }
 
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data._data_slice();
