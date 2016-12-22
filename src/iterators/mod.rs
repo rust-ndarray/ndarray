@@ -925,6 +925,24 @@ macro_rules! chunk_iter_impl {
                     }
                 })
             }
+
+            fn split_at(self, index: Ix) -> (Self, Self) {
+                // don't allow last place split (not implemented)
+                assert!(index == 0 || index != self.iter.len);
+                let (li, ri) = self.iter.split_at(index);
+                ($iter {
+                    last_dim: li.inner_dim.clone(),
+                    last_ptr: li.ptr, // doesn't matter
+                    iter: li,
+                    life: self.life,
+                },
+                $iter {
+                    iter: ri,
+                    last_dim: self.last_dim,
+                    last_ptr: self.last_ptr,
+                    life: self.life,
+                })
+            }
         }
 
         impl<'a, A, D> Iterator for $iter<'a, A, D>
