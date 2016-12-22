@@ -16,6 +16,7 @@ use rayon::par_iter::internal::Folder;
 
 use super::AxisIter;
 use super::AxisIterMut;
+use super::{AxisChunksIter, AxisChunksIterMut};
 use imp_prelude::*;
 
 /// Wrapper type for parallelized implementations.
@@ -116,6 +117,8 @@ macro_rules! par_iter_wrapper {
 
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
+par_iter_wrapper!(AxisChunksIter, [Sync]);
+par_iter_wrapper!(AxisChunksIterMut, [Send + Sync]);
 
 impl<'a, A, D> IntoParallelIterator for &'a Array<A, D>
     where D: Dimension,
