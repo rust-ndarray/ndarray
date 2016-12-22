@@ -958,6 +958,15 @@ fn to_owned_memory_order() {
 }
 
 #[test]
+fn to_owned_neg_stride() {
+    let mut c = arr2(&[[1, 2, 3],
+                       [4, 5, 6]]);
+    c.islice(s![.., ..;-1]);
+    let co = c.to_owned();
+    assert_eq!(c, co);
+}
+
+#[test]
 fn map_memory_order() {
     let a = arr3(&[[[1, 2, 3],
                     [4, 5, 6]],
