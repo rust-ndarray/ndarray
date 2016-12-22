@@ -38,7 +38,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
         return Err(from_kind(ErrorKind::Unsupported));
     }
     let mut res_dim = arrays[0].raw_dim();
-    if axis.axis() >= res_dim.ndim() {
+    if axis.index() >= res_dim.ndim() {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
     let common_dim = res_dim.remove_axis(axis);

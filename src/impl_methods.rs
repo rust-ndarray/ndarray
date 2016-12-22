@@ -21,7 +21,7 @@ use error::{self, ShapeError};
 use super::zipsl;
 use super::ZipExt;
 use dimension::IntoDimension;
-use dimension::{axes_of, Axes};
+use dimension::{axes_of, Axes, merge_axes, stride_offset};
 
 use {
     NdIndex,
@@ -53,7 +53,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// ***Panics*** if the axis is out of bounds.
     pub fn len_of(&self, axis: Axis) -> usize {
-        self.dim[axis.axis()]
+        self.dim[axis.index()]
     }
 
     /// Return the number of dimensions (axes) in the array
@@ -415,26 +415,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `index` is past the length of the axis.
     pub fn isubview(&mut self, axis: Axis, index: Ix) {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
-                          axis.axis(), index)
+                          axis.index(), index)
     }
 
     /// Along `axis`, select the subview `index` and return `self`
     /// with that axis removed.
     ///
     /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: Axis, index: Ix)
-        -> ArrayBase<S, <D as RemoveAxis>::Smaller>
+    pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
         self.isubview(axis, index);
-        // don't use reshape -- we always know it will fit the size,
-        // and we can use remove_axis on the strides as well
-        ArrayBase {
-            data: self.data,
-            ptr: self.ptr,
-            dim: self.dim.remove_axis(axis),
-            strides: self.strides.remove_axis(axis),
-        }
+        self.remove_axis(axis)
     }
 
     /// Along `axis`, select arbitrary subviews corresponding to `indices`
@@ -554,7 +546,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
-        iterators::new_axis_iter(self.view(), axis.axis())
+        iterators::new_axis_iter(self.view(), axis.index())
     }
 
 
@@ -569,7 +561,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               D: RemoveAxis,
     {
-        iterators::new_axis_iter_mut(self.view_mut(), axis.axis())
+        iterators::new_axis_iter_mut(self.view_mut(), axis.index())
     }
 
 
@@ -600,7 +592,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                                              [[26, 27]]]));
     /// ```
     pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<A, D> {
-        iterators::new_chunk_iter(self.view(), axis.axis(), size)
+        iterators::new_chunk_iter(self.view(), axis.index(), size)
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
@@ -613,7 +605,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         -> AxisChunksIterMut<A, D>
         where S: DataMut
     {
-        iterators::new_chunk_iter_mut(self.view_mut(), axis.axis(), size)
+        iterators::new_chunk_iter_mut(self.view_mut(), axis.index(), size)
     }
 
     // Return (length, stride) for diagonal
@@ -1009,6 +1001,50 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim.max_stride_axis(&self.strides)
     }
 
+    /// Reverse the stride of `axis`.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    pub fn invert_axis(&mut self, axis: Axis) {
+        unsafe {
+            let s = self.strides.axis(axis) as Ixs;
+            let m = self.dim.axis(axis);
+            if m != 0 {
+                self.ptr = self.ptr.offset(stride_offset(m - 1, s as Ix));
+            }
+            self.strides.set_axis(axis, (-s) as Ix);
+        }
+    }
+
+    /// If possible, merge in the axis `take` to `into`.
+    ///
+    /// ```
+    /// use ndarray::Array3;
+    /// use ndarray::Axis;
+    ///
+    /// let mut a = Array3::<f64>::zeros((2, 3, 4));
+    /// a.merge_axes(Axis(1), Axis(2));
+    /// assert_eq!(a.shape(), &[2, 1, 12]);
+    /// ```
+    ///
+    /// ***Panics*** if an axis is out of bounds.
+    pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool {
+        merge_axes(&mut self.dim, &mut self.strides, take, into)
+    }
+
+    /// Remove array axis `axis` and return the result.
+    pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
+        where D: RemoveAxis,
+    {
+        assert!(self.ndim() != 0);
+        let d = self.dim.remove_axis(axis);
+        let s = self.strides.remove_axis(axis);
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim: d,
+            strides: s,
+        }
+    }
 
     fn pointer_is_inbounds(&self) -> bool {
         let slc = self.data._data_slice();
@@ -1166,7 +1202,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 let narrow_axis = v.axes()
                                    .filter(|ax| ax.len() > 1)
                                    .min_by_key(|ax| ax.stride().abs())
-                                   .map_or(last, |ax| ax.axis().axis());
+                                   .map_or(last, |ax| ax.axis().index());
                 v.swap_axes(last, narrow_axis);
             }
             v.into_elements_base().fold(init, f)

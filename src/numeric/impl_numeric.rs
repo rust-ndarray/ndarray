@@ -70,10 +70,10 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let n = self.shape().axis(axis);
         let mut res = self.subview(axis, 0).to_owned();
-        let stride = self.strides()[axis.axis()];
+        let stride = self.strides()[axis.index()];
         if self.ndim() == 2 && stride == 1 {
             // contiguous along the axis we are summing
-            let ax = axis.axis();
+            let ax = axis.index();
             for (i, elt) in enumerate(&mut res) {
                 *elt = self.subview(Axis(1 - ax), i).scalar_sum();
             }

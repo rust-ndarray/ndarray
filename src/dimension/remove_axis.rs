@@ -29,7 +29,7 @@ impl RemoveAxis for Dim<[Ix; 2]> {
     type Smaller = Ix1;
     #[inline]
     fn remove_axis(&self, axis: Axis) -> Ix1 {
-        let axis = axis.axis();
+        let axis = axis.index();
         debug_assert!(axis < self.ndim());
         if axis == 0 { Ix1(get!(self, 1)) } else { Ix1(get!(self, 0)) }
     }
@@ -47,7 +47,7 @@ macro_rules! impl_remove_axis_array(
                 {
                     let mut it = tup.slice_mut().iter_mut();
                     for (i, &d) in self.slice().iter().enumerate() {
-                        if i == axis.axis() {
+                        if i == axis.index() {
                             continue;
                         }
                         for rr in it.by_ref() {
@@ -70,7 +70,7 @@ impl RemoveAxis for Dim<Vec<Ix>> {
     type Smaller = Self;
     fn remove_axis(&self, axis: Axis) -> Self {
         let mut res = self.clone();
-        res.ixm().remove(axis.axis());
+        res.ixm().remove(axis.index());
         res
     }
 }
