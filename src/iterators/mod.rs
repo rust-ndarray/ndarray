@@ -850,6 +850,26 @@ pub struct AxisChunksIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+impl<'a, A, D> Clone for AxisChunksIter<'a, A, D>
+    where D: Dimension
+{
+    fn clone(&self) -> Self {
+        AxisChunksIter {
+            iter: OuterIterCore {
+                index: self.iter.index,
+                len: self.iter.len,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim.clone(),
+                inner_strides: self.iter.inner_strides.clone(),
+                ptr: self.iter.ptr,
+            },
+            last_ptr: self.last_ptr,
+            last_dim: self.last_dim.clone(),
+            life: self.life,
+        }
+    }
+}
+
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> (OuterIterCore<A, D>, *mut A, D)
 {
