@@ -1228,6 +1228,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         impl<T> Copy for SendPtr<T> { }
         impl<T> Clone for SendPtr<T> { fn clone(&self) -> Self { *self } }
 
+        // FIXME
+        // parallelization along one array axis — the widest axis,
+        // is not enough if that axis is either short, or the only in the array.
+
         let mut result = Vec::with_capacity(self.len());
         let ax = self.max_stride_axis();
         let base_ptr = SendPtr(result.as_mut_ptr());
