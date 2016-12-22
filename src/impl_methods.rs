@@ -422,19 +422,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// with that axis removed.
     ///
     /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: Axis, index: Ix)
-        -> ArrayBase<S, <D as RemoveAxis>::Smaller>
+    pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
         self.isubview(axis, index);
-        // don't use reshape -- we always know it will fit the size,
-        // and we can use remove_axis on the strides as well
-        ArrayBase {
-            data: self.data,
-            ptr: self.ptr,
-            dim: self.dim.remove_axis(axis),
-            strides: self.strides.remove_axis(axis),
-        }
+        self.remove_axis(axis)
     }
 
     /// Along `axis`, select arbitrary subviews corresponding to `indices`
@@ -1037,6 +1029,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// ***Panics*** if an axis is out of bounds.
     pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool {
         merge_axes(&mut self.dim, &mut self.strides, take, into)
+    }
+
+    /// Remove array axis `axis` and return the result.
+    pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
+        where D: RemoveAxis,
+    {
+        assert!(self.ndim() != 0);
+        let d = self.dim.remove_axis(axis);
+        let s = self.strides.remove_axis(axis);
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim: d,
+            strides: s,
+        }
     }
 
     fn pointer_is_inbounds(&self) -> bool {
