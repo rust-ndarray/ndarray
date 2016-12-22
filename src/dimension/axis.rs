@@ -22,6 +22,7 @@ impl Axis {
     /// Return the index of the axis.
     #[inline(always)]
     pub fn index(&self) -> usize { self.0 }
+    #[deprecated(note = "Renamed to .index()")]
     #[inline(always)]
     pub fn axis(&self) -> usize { self.0 }
 }

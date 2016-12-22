@@ -176,12 +176,12 @@ impl<D> DimensionExt for D
 {
     #[inline]
     fn axis(&self, axis: Axis) -> Ix {
-        self[axis.axis()]
+        self[axis.index()]
     }
 
     #[inline]
     fn set_axis(&mut self, axis: Axis, value: Ix) {
-        self[axis.axis()] = value;
+        self[axis.index()] = value;
     }
 }
 
@@ -189,12 +189,12 @@ impl<'a> DimensionExt for [Ix]
 {
     #[inline]
     fn axis(&self, axis: Axis) -> Ix {
-        self[axis.axis()]
+        self[axis.index()]
     }
 
     #[inline]
     fn set_axis(&mut self, axis: Axis, value: Ix) {
-        self[axis.axis()] = value;
+        self[axis.index()] = value;
     }
 }
 

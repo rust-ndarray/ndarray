@@ -53,7 +53,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// ***Panics*** if the axis is out of bounds.
     pub fn len_of(&self, axis: Axis) -> usize {
-        self.dim[axis.axis()]
+        self.dim[axis.index()]
     }
 
     /// Return the number of dimensions (axes) in the array
@@ -415,7 +415,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if `index` is past the length of the axis.
     pub fn isubview(&mut self, axis: Axis, index: Ix) {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
-                          axis.axis(), index)
+                          axis.index(), index)
     }
 
     /// Along `axis`, select the subview `index` and return `self`
@@ -546,7 +546,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
-        iterators::new_axis_iter(self.view(), axis.axis())
+        iterators::new_axis_iter(self.view(), axis.index())
     }
 
 
@@ -561,7 +561,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               D: RemoveAxis,
     {
-        iterators::new_axis_iter_mut(self.view_mut(), axis.axis())
+        iterators::new_axis_iter_mut(self.view_mut(), axis.index())
     }
 
 
@@ -592,7 +592,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                                              [[26, 27]]]));
     /// ```
     pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<A, D> {
-        iterators::new_chunk_iter(self.view(), axis.axis(), size)
+        iterators::new_chunk_iter(self.view(), axis.index(), size)
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
@@ -605,7 +605,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         -> AxisChunksIterMut<A, D>
         where S: DataMut
     {
-        iterators::new_chunk_iter_mut(self.view_mut(), axis.axis(), size)
+        iterators::new_chunk_iter_mut(self.view_mut(), axis.index(), size)
     }
 
     // Return (length, stride) for diagonal
@@ -1202,7 +1202,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 let narrow_axis = v.axes()
                                    .filter(|ax| ax.len() > 1)
                                    .min_by_key(|ax| ax.stride().abs())
-                                   .map_or(last, |ax| ax.axis().axis());
+                                   .map_or(last, |ax| ax.axis().index());
                 v.swap_axes(last, narrow_axis);
             }
             v.into_elements_base().fold(init, f)
