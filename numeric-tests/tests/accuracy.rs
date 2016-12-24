@@ -10,8 +10,6 @@ use rand::Rng;
 use ndarray::prelude::*;
 use ndarray::{
     Data,
-    DataMut,
-    RemoveAxis,
     LinalgScalar,
 };
 
@@ -206,13 +204,6 @@ trait Utils {
     type Data;
     fn max(&self) -> &Self::Elem
         where Self::Elem: PartialOrd;
-    fn lift<F>(&mut self, F)
-        where F: FnMut(Self::Elem) -> Self::Elem, Self::Elem: Copy,
-              Self::Data: DataMut;
-    fn fold_axis<F>(&self, axis: Axis, f: F) -> Array<Self::Elem, <Self::Dim as RemoveAxis>::Smaller>
-        where Self::Dim: RemoveAxis,
-              Self::Elem: Clone,
-              F: FnMut(&Self::Elem, &Self::Elem) -> Self::Elem;
 }
 
 impl<A, S, D> Utils for ArrayBase<S, D>
@@ -237,30 +228,5 @@ impl<A, S, D> Utils for ArrayBase<S, D>
         } else {
             panic!("empty");
         }
-    }
-    fn lift<F>(&mut self, mut f: F)
-        where F: FnMut(A) -> A, A: Copy,
-              S: DataMut<Elem=A>
-
-    {
-        for elt in self {
-            *elt = f(*elt);
-        }
-    }
-
-    fn fold_axis<F>(&self, axis: Axis, mut f: F) -> Array<A, D::Smaller>
-        where D: RemoveAxis,
-              F: FnMut(&A, &A) -> A,
-              A: Clone,
-    {
-        let len = self.shape()[axis.axis()];
-        let mut row = self.subview(axis, 0).to_owned();
-        for i in 1..len {
-            let r2 = self.subview(axis, i);
-            for (a, b) in row.iter_mut().zip(r2) {
-                *a = f(a, b);
-            }
-        }
-        row
     }
 }

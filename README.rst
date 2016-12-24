@@ -72,10 +72,15 @@ your `Cargo.toml`.
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.7"
+    ndarray = "0.7.2"
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.7.2
+
+  - Add array methods ``.remove_axis()``, ``.merge_axes()`` and ``.invert_axis()``
+  - Rename ``Axis``’ accessor ``axis`` to ``index``, old name is deprecated.
 
 - 0.7.1
 
