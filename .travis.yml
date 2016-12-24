@@ -26,6 +26,7 @@ addons:
       - libopenblas-dev
 script:
   - |
+      cargo build --verbose --no-default-features &&
       cargo build --verbose --features "$FEATURES" &&
       cargo test --verbose --features "$FEATURES" &&
       cargo test --release --verbose --features "" &&
