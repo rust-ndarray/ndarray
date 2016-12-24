@@ -143,12 +143,16 @@ impl<A, V> From<Vec<V>> for Array2<A>
         let ptr = xs.as_mut_ptr();
         let len = xs.len();
         let cap = xs.capacity();
+        let expand_len = len * V::len();
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
-                Vec::from_raw_parts(ptr as *mut A, len * V::len(), cap)
+                Vec::from_raw_parts(ptr as *mut A, expand_len, expand_len)
+            } else if V::len() == 0 {
+                Vec::new()
             } else {
-                Vec::from_raw_parts(ptr as *mut A, len * V::len(), cap * V::len())
+                let expand_cap = cap * V::len();
+                Vec::from_raw_parts(ptr as *mut A, expand_len, expand_cap)
             };
             ArrayBase::from_shape_vec_unchecked(dim, v)
         }
@@ -164,14 +168,16 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
         let ptr = xs.as_mut_ptr();
         let len = xs.len();
         let cap = xs.capacity();
+        let expand_len = len * V::len() * U::len();
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
-                Vec::from_raw_parts(ptr as *mut A, len * V::len(), cap)
+                Vec::from_raw_parts(ptr as *mut A, expand_len, expand_len)
+            } else if V::len() == 0 || U::len() == 0 {
+                Vec::new()
             } else {
-                let len = len * V::len() * U::len();
-                let cap = cap * V::len() * U::len();
-                Vec::from_raw_parts(ptr as *mut A, len, cap)
+                let expand_cap = cap * V::len() * U::len();
+                Vec::from_raw_parts(ptr as *mut A, expand_len, expand_cap)
             };
             ArrayBase::from_shape_vec_unchecked(dim, v)
         }
