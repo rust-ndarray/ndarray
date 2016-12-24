@@ -1376,6 +1376,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         })
     }
 
+    #[cfg(lanes_along)]
     fn lanes_along<'a, F>(&'a self, axis: Axis, mut visit: F)
         where D: RemoveAxis,
               F: FnMut(ArrayView1<'a, A>),
@@ -1392,6 +1393,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         })
     }
 
+    #[cfg(lanes_along)]
     fn lanes_along_mut<'a, F>(&'a mut self, axis: Axis, mut visit: F)
         where D: RemoveAxis,
               S: DataMut,
