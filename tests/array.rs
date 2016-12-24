@@ -1112,11 +1112,3 @@ fn test_array_clone_same_view() {
     let b = a.clone();
     assert_eq!(a, b);
 }
-
-#[test]
-fn test_dimension_zero() {
-    let a: Array2<f32> = arr2(&[[], [], []]);
-    assert_eq!(vec![0.; 0], a.into_raw_vec());
-    let a: Array3<f32> = arr3(&[[[]], [[]], [[]]]);
-    assert_eq!(vec![0.; 0], a.into_raw_vec());
-}
