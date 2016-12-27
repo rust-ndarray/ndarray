@@ -601,6 +601,7 @@ impl<A, S, D> ArrayBase<S, D>
 }
 
 
+mod impl_1d;
 mod impl_2d;
 
 mod numeric;

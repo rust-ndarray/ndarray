@@ -1097,6 +1097,20 @@ fn test_map_axis() {
 }
 
 #[test]
+fn test_to_vec() {
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9],
+                       [10,11,12]]);
+
+    a.islice(s![..;-1, ..]);
+    assert_eq!(a.row(3).to_vec(), vec![1, 2, 3]);
+    assert_eq!(a.column(2).to_vec(), vec![12, 9, 6, 3]);
+    a.islice(s![.., ..;-1]);
+    assert_eq!(a.row(3).to_vec(), vec![3, 2, 1]);
+}
+
+#[test]
 fn test_array_clone_unalias() {
     let a = Array::<i32, _>::zeros((3, 3));
     let mut b = a.clone();
