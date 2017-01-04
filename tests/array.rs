@@ -1136,4 +1136,12 @@ fn array_macros() {
     assert_eq!(a2, arr2(&[[1, 2], [3, 4], [5, 6]]));
     let a3 = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
     assert_eq!(a3, arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]));
+
+    let s = String::from("abc");
+    let a2s = array![[String::from("w"), s],
+                     [String::from("x"), String::from("y")]];
+    assert_eq!(a2s[[0, 0]], "w");
+    assert_eq!(a2s[[0, 1]], "abc");
+    assert_eq!(a2s[[1, 0]], "x");
+    assert_eq!(a2s[[1, 1]], "y");
 }
