@@ -11,6 +11,40 @@ use std::mem::{size_of, forget};
 
 use imp_prelude::*;
 
+/// Create an [**`Array`**](type.Array.html) with one, two or
+/// three dimensions.
+///
+/// ```
+/// #[macro_use(array)]
+/// extern crate ndarray;
+///
+/// fn main() {
+///     let a1 = array![1, 2, 3, 4];
+///
+///     let a2 = array![[1, 2],
+///                     [3, 4]];
+///
+///     let a3 = array![[[1, 2], [3, 4]],
+///                     [[5, 6], [7, 8]]];
+///
+///     assert_eq!(a1.shape(), &[4]);
+///     assert_eq!(a2.shape(), &[2, 2]);
+///     assert_eq!(a3.shape(), &[2, 2, 2]);
+/// }
+/// ```
+#[macro_export]
+macro_rules! array {
+    ($([$([$($x:expr),*]),*]),*) => {{
+        $crate::Array3::from(vec![$([$([$($x,)*],)*],)*])
+    }};
+    ($([$($x:expr),*]),*) => {{
+        $crate::Array2::from(vec![$([$($x,)*],)*])
+    }};
+    ($($x:expr),*) => {{
+        $crate::Array::from_vec(vec![$($x,)*])
+    }};
+}
+
 /// Create a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array0<A>
 {
