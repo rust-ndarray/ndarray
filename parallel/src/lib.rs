@@ -1,11 +1,14 @@
 //! Parallelization features for ndarray.
 //!
 //! The array views and references to owned arrays all implement
-//! `IntoParallelIterator`; the default parallel iterators (each element by
-//! reference or mutable reference) have no ordering guarantee in their parallel
-//! implementations.
+//! `NdarrayIntoParallelIterator` (*); the default parallel iterators (each element
+//! by reference or mutable reference) have no ordering guarantee in their
+//! parallel implementations.
 //!
 //! `.axis_iter()` and `.axis_iter_mut()` also have parallel counterparts.
+//!
+//! (*) This regime of a custom trait instead of rayon’s own is since we
+//! use this intermediate ndarray-parallel crate.
 //!
 //! # Examples
 //!
@@ -50,6 +53,7 @@
 extern crate ndarray;
 extern crate rayon;
 
+/// Into- traits for creating parallelized iterators.
 pub mod prelude {
     // happy and insane; ignorance is bluss
     pub use NdarrayIntoParallelIterator;
