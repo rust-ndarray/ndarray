@@ -1,8 +1,14 @@
 
 extern crate ndarray;
-extern crate rayon;
+pub extern crate rayon;
 
 use rayon::par_iter::ParallelIterator;
+
+pub mod prelude {
+    pub use NdarrayIntoParallelIterator;
+    #[doc(no_inline)]
+    pub use rayon::prelude::{ParallelIterator};
+}
 
 pub trait NdarrayIntoParallelIterator {
     type Iter: ParallelIterator<Item=Self::Item>;
