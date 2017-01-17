@@ -30,7 +30,6 @@ fn test_axis_iter_mut() {
     assert!(a.all_close(&b, 0.001));
 }
 
-/*
 #[test]
 fn test_regular_iter() {
     let mut a = Array2::<f64>::zeros((M, N));
@@ -41,4 +40,3 @@ fn test_regular_iter() {
     println!("{:?}", a.slice(s![..10, ..5]));
     assert_eq!(s, a.scalar_sum());
 }
-*/
