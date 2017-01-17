@@ -1,0 +1,8 @@
+[package]
+name = "ndarray-parallel"
+version = "0.1.0"
+authors = ["bluss"]
+
+[dependencies]
+rayon = "0.6"
+ndarray = { version = "0.7.2", path = "../" }
