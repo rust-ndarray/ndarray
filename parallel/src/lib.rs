@@ -48,22 +48,25 @@
 
 
 extern crate ndarray;
-pub extern crate rayon;
-
-use rayon::par_iter::ParallelIterator;
+extern crate rayon;
 
 pub mod prelude {
+    // happy and insane; ignorance is bluss
     pub use NdarrayIntoParallelIterator;
-    #[doc(no_inline)]
-    pub use rayon::prelude::{ParallelIterator};
-}
+    pub use NdarrayIntoParallelRefIterator;
+    pub use NdarrayIntoParallelRefMutIterator;
 
-pub trait NdarrayIntoParallelIterator {
-    type Iter: ParallelIterator<Item=Self::Item>;
-    type Item: Send;
-    fn into_par_iter(self) -> Self::Iter;
+    #[doc(no_inline)]
+    pub use rayon::prelude::{ParallelIterator, ExactParallelIterator};
 }
 
 pub use par::Parallel;
+pub use into_traits::{
+    NdarrayIntoParallelIterator,
+    NdarrayIntoParallelRefIterator,
+    NdarrayIntoParallelRefMutIterator,
+};
 
 mod par;
+mod into_traits;
+mod into_impls;
