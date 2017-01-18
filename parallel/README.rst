@@ -47,9 +47,10 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
-- *
+- 0.1.0
 
-  - Not yet released
+  - Initial release
+  - Elementwise parallel iterator (no order) and parallel axis iterators.
 
 License
 =======
