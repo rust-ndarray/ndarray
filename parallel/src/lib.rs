@@ -61,7 +61,7 @@ pub mod prelude {
     pub use NdarrayIntoParallelRefMutIterator;
 
     #[doc(no_inline)]
-    pub use rayon::prelude::{ParallelIterator, ExactParallelIterator};
+    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator, ExactParallelIterator};
 }
 
 pub use par::Parallel;
