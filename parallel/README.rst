@@ -19,7 +19,8 @@ __ http://docs.rs/ndarray-parallel/
 Highlights
 ----------
 
-- Parallel elementwise (no order) and axis iterators
+- Parallel elementwise (no order) iterator
+- Parallel `.axis_iter()` (and `_mut`)
 
 Status and Lookout
 ------------------
@@ -27,9 +28,9 @@ Status and Lookout
 - Still iterating on and evolving the crate
 
   + A separate crate is less convenient (doesn't use rayon IntoParallelIterator
-    trait, but a separate crate) but allows rapid iteration and we can follow
+    trait, but a separate trait) but allows rapid iteration and we can follow
     the evolution of rayon's internals.
-  + This crate is double pace: For every ndarray or rayon major version, this
+    This crate is double pace: For every ndarray or rayon major version, this
     crate goes up one major version.
 
 - Performance:
