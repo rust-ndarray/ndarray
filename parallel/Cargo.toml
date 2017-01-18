@@ -1,0 +1,20 @@
+[package]
+name = "ndarray-parallel"
+version = "0.1.0"
+authors = ["bluss"]
+license = "MIT/Apache-2.0"
+
+repository = "https://github.com/bluss/rust-ndarray"
+documentation = "https://docs.rs/ndarray-parallel/"
+
+description = "Parallelization for ndarray (using rayon)."
+
+keywords = ["data-structure", "multidimensional", "parallel", "concurrent"]
+
+[dependencies]
+rayon = "0.6"
+ndarray = { version = "0.7.2", path = "../" }
+
+[dev-dependencies]
+num_cpus = "1.2"
+
