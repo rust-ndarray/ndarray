@@ -14,6 +14,7 @@ impl<'a, A, D> IntoParallelIterator for &'a Array<A, D>
     }
 }
 
+// This is allowed: goes through `.view()`
 impl<'a, A, D> IntoParallelIterator for &'a RcArray<A, D>
     where D: Dimension,
           A: Sync
@@ -36,6 +37,7 @@ impl<'a, A, D> IntoParallelIterator for &'a mut Array<A, D>
     }
 }
 
+// This is allowed: goes through `.view_mut()`, which is unique access
 impl<'a, A, D> IntoParallelIterator for &'a mut RcArray<A, D>
     where D: Dimension,
           A: Sync + Send + Clone,
