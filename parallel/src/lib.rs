@@ -5,7 +5,8 @@
 //! by reference or mutable reference) have no ordering guarantee in their
 //! parallel implementations.
 //!
-//! `.axis_iter()` and `.axis_iter_mut()` also have parallel counterparts.
+//! `.axis_iter()` and `.axis_iter_mut()` also have parallel counterparts,
+//! and their parallel iterators are indexed (and thus ordered) and exact length.
 //!
 //! (*) This regime of a custom trait instead of rayon’s own is since we
 //! use this intermediate ndarray-parallel crate.
