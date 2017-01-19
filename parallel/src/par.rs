@@ -94,17 +94,14 @@ macro_rules! par_iter_wrapper {
         }
     }
 
-    impl<'a, A, D> Iterator for ParallelProducer<$iter_name<'a, A, D>>
+    impl<'a, A, D> IntoIterator for ParallelProducer<$iter_name<'a, A, D>>
         where D: Dimension,
     {
-        type Item = <$iter_name<'a, A, D> as Iterator>::Item;
-        #[inline(always)]
-        fn next(&mut self) -> Option<Self::Item> {
-            self.0.next()
-        }
+        type IntoIter = $iter_name<'a, A, D>;
+        type Item = <Self::IntoIter as Iterator>::Item;
 
-        fn size_hint(&self) -> (usize, Option<usize>) {
-            self.0.size_hint()
+        fn into_iter(self) -> Self::IntoIter {
+            self.0
         }
     }
 
