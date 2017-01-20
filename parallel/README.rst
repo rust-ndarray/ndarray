@@ -47,6 +47,11 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- 0.1.1
+
+  - Clarify docs
+  - Add categories
+
 - 0.1.0
 
   - Initial release
