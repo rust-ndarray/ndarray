@@ -10,6 +10,7 @@ documentation = "https://docs.rs/ndarray-parallel/"
 description = "Parallelization for ndarray (using rayon)."
 
 keywords = ["data-structure", "multidimensional", "parallel", "concurrent"]
+categories = ["data-structures", "science", "concurrency"]
 
 [dependencies]
 rayon = "0.6"
