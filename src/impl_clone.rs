@@ -20,6 +20,17 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D> {
             }
         }
     }
+
+    /// `Array` implements `.clone_from()` to reuse an array's existing
+    /// allocation. Semantically equivalent to `*self = other.clone()`, but
+    /// potentially more efficient.
+    fn clone_from(&mut self, other: &Self) {
+        unsafe {
+            self.ptr = self.data.clone_from_with_ptr(&other.data, other.ptr);
+            self.dim.clone_from(&other.dim);
+            self.strides.clone_from(&other.strides);
+        }
+    }
 }
 
 impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> {}
