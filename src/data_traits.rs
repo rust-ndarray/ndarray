@@ -59,6 +59,13 @@ pub unsafe trait DataClone : Data {
     #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
+
+    #[doc(hidden)]
+    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: *mut Self::Elem) -> *mut Self::Elem {
+        let (data, ptr) = other.clone_with_ptr(ptr);
+        *self = data;
+        ptr
+    }
 }
 
 unsafe impl<A> Data for Rc<Vec<A>> {
@@ -133,6 +140,17 @@ unsafe impl<A> DataClone for Vec<A>
             new_ptr = new_ptr.offset(our_off);
         }
         (u, new_ptr)
+    }
+
+    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: *mut Self::Elem) -> *mut Self::Elem {
+        let our_off = if size_of::<A>() != 0 {
+            (ptr as isize - other.as_ptr() as isize) /
+                          mem::size_of::<A>() as isize
+        } else {
+            0
+        };
+        self.clone_from(other);
+        self.as_mut_ptr().offset(our_off)
     }
 }
 
