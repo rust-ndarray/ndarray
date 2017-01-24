@@ -18,3 +18,14 @@ fn test_dimension_zero() {
     let a: Array3<f32> = Array3::from(vec![[[]], [[]], [[]]]);
     assert_eq!(vec![0.; 0], a.into_raw_vec());
 }
+
+#[test]
+fn test_rc_into_owned() {
+    let a = Array2::from_elem((5, 5), 1.).into_shared();
+    let mut b = a.clone();
+    b.fill(0.);
+    let mut c = b.into_owned();
+    c.fill(2.);
+    // test that they are unshared
+    assert!(!a.all_close(&c, 0.01));
+}
