@@ -84,7 +84,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
 /// #[macro_use(stack)]
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, Axis, stack};
+/// use ndarray::{arr2, Axis};
 ///
 /// # fn main() {
 ///
