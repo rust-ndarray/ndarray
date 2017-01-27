@@ -1126,3 +1126,14 @@ fn test_array_clone_same_view() {
     let b = a.clone();
     assert_eq!(a, b);
 }
+
+#[test]
+fn array_macros() {
+    // array
+    let a1 = array![1, 2, 3];
+    assert_eq!(a1, arr1(&[1, 2, 3]));
+    let a2 = array![[1, 2], [3, 4], [5, 6]];
+    assert_eq!(a2, arr2(&[[1, 2], [3, 4], [5, 6]]));
+    let a3 = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
+    assert_eq!(a3, arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]));
+}
