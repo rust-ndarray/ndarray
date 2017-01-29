@@ -1144,4 +1144,9 @@ fn array_macros() {
     assert_eq!(a2s[[0, 1]], "abc");
     assert_eq!(a2s[[1, 0]], "x");
     assert_eq!(a2s[[1, 1]], "y");
+
+    let empty1: Array<f32, Ix1> = array![];
+    assert_eq!(empty1, array![]);
+    let empty2: Array<f32, Ix2> = array![[]];
+    assert_eq!(empty2, array![[]]);
 }
