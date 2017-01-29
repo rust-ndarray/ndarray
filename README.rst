@@ -77,6 +77,16 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.7.3
+
+  - Add macro `array![]` for creating one-, two-, or three-dimensional arrays
+    (with ownership semantics like `vec![]`)
+  - `Array` now implements `Clone::clone_from()` specifically, so that its
+    allocation is (possibly) reused.
+  - Add `.to_vec()` for one-dimensional arrays
+  - Add `RcArray::into_owned(self) -> Array`.
+  - Add crate categories
+
 - 0.7.2
 
   - Add array methods ``.remove_axis()``, ``.merge_axes()`` and ``.invert_axis()``
