@@ -11,8 +11,9 @@ use std::mem::{size_of, forget};
 
 use imp_prelude::*;
 
-/// Easily create an [**`Array`**](type.Array.html) of up to 3 dimensions.
-/// 
+/// Create an [**`Array`**](type.Array.html) with one, two or
+/// three dimensions.
+///
 /// ```
 /// #[macro_use(array)]
 /// extern crate ndarray;
@@ -20,9 +21,10 @@ use imp_prelude::*;
 /// fn main() {
 ///     let a1 = array![1, 2, 3, 4];
 ///
-///     let a2 = array![[1, 2], [3, 4]];
-/// 
-///     let a3 = array![[[1, 2], [3, 4]], 
+///     let a2 = array![[1, 2],
+///                     [3, 4]];
+///
+///     let a3 = array![[[1, 2], [3, 4]],
 ///                     [[5, 6], [7, 8]]];
 ///
 ///     assert_eq!(a1.shape(), &[4]);
@@ -30,12 +32,17 @@ use imp_prelude::*;
 ///     assert_eq!(a3.shape(), &[2, 2, 2]);
 /// }
 /// ```
+///
+/// This macro uses `vec![]`, and has the same ownership semantics;
+/// elements are moved into the resulting `Array`.
+///
+/// Use `array![...].into_shared()` to create an `RcArray`.
 #[macro_export]
 macro_rules! array {
-    ($([$([$($x:expr),*]),*]),*) => {{
+    ($([$([$($x:expr),*]),+]),+) => {{
         $crate::Array3::from(vec![$([$([$($x,)*],)*],)*])
     }};
-    ($([$($x:expr),*]),*) => {{
+    ($([$($x:expr),*]),+) => {{
         $crate::Array2::from(vec![$([$($x,)*],)*])
     }};
     ($($x:expr),*) => {{
