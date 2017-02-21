@@ -7,7 +7,9 @@
 // except according to those terms.
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use serde::de::{self, Visitor, SeqVisitor, MapVisitor};
+use serde::ser::{SerializeSeq, SerializeStruct};
 
+use std::fmt;
 use std::marker::PhantomData;
 
 use imp_prelude::*;
@@ -33,7 +35,7 @@ pub fn verify_version<E>(v: u8) -> Result<(), E>
 impl<I> Serialize for Dim<I>
     where I: Serialize,
 {
-    fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
+    fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
         where Se: Serializer
     {
         self.ix().serialize(serializer)
@@ -44,7 +46,7 @@ impl<I> Serialize for Dim<I>
 impl<I> Deserialize for Dim<I>
     where I: Deserialize,
 {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer
     {
         I::deserialize(deserializer).map(Dim::new)
@@ -58,14 +60,14 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
           S: Data<Elem = A>
 
 {
-    fn serialize<Se>(&self, serializer: &mut Se) -> Result<(), Se::Error>
+    fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
         where Se: Serializer
     {
-        let mut struct_state = try!(serializer.serialize_struct("Array", 3));
-        try!(serializer.serialize_struct_elt(&mut struct_state, "v", ARRAY_FORMAT_VERSION));
-        try!(serializer.serialize_struct_elt(&mut struct_state, "dim", self.raw_dim()));
-        try!(serializer.serialize_struct_elt(&mut struct_state, "data", Sequence(self.iter())));
-        serializer.serialize_struct_end(struct_state)
+        let mut state = try!(serializer.serialize_struct("Array", 3));
+        try!(state.serialize_field("v", &ARRAY_FORMAT_VERSION));
+        try!(state.serialize_field("dim", &self.raw_dim()));
+        try!(state.serialize_field("data", &Sequence(self.iter())));
+        state.end()
     }
 }
 
@@ -76,15 +78,15 @@ impl<'a, A, D> Serialize for Sequence<'a, A, D>
     where A: Serialize,
           D: Dimension + Serialize
 {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let iter = &self.0;
-        let mut seq_state = try!(serializer.serialize_seq(Some(iter.len())));
+        let mut seq = try!(serializer.serialize_seq(Some(iter.len())));
         for elt in iter.clone() {
-            try!(serializer.serialize_seq_elt(&mut seq_state, elt));
+            try!(seq.serialize_element(elt));
         }
-        serializer.serialize_seq_end(seq_state)
+        seq.end()
     }
 }
 
@@ -105,23 +107,23 @@ impl<S, Di> ArrayVisitor<S, Di> {
     }
 }
 
+static ARRAY_FIELDS: &'static [&'static str] = &["v", "dim", "data"];
+
 /// **Requires crate feature `"serde"`**
 impl<A, Di, S> Deserialize for ArrayBase<S, Di>
     where A: Deserialize,
           Di: Deserialize + Dimension,
           S: DataOwned<Elem = A>
 {
-    fn deserialize<D>(deserializer: &mut D) -> Result<ArrayBase<S, Di>, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<ArrayBase<S, Di>, D::Error>
         where D: Deserializer
     {
-        static FIELDS: &'static [&'static str] = &["v", "dim", "data"];
-
-        deserializer.deserialize_struct("Array", FIELDS, ArrayVisitor::new())
+        deserializer.deserialize_struct("Array", ARRAY_FIELDS, ArrayVisitor::new())
     }
 }
 
 impl Deserialize for ArrayField {
-    fn deserialize<D>(deserializer: &mut D) -> Result<ArrayField, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<ArrayField, D::Error>
         where D: Deserializer
     {
         struct ArrayFieldVisitor;
@@ -129,19 +131,23 @@ impl Deserialize for ArrayField {
         impl Visitor for ArrayFieldVisitor {
             type Value = ArrayField;
 
-            fn visit_str<E>(&mut self, value: &str) -> Result<ArrayField, E>
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str(r#""v", "dim", or "data""#)
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<ArrayField, E>
                 where E: de::Error
             {
                 match value {
                     "v" => Ok(ArrayField::Version),
-                    "data" => Ok(ArrayField::Data),
                     "dim" => Ok(ArrayField::Dim),
-                    _ => Err(de::Error::custom("expected v, data, or dim")),
+                    "data" => Ok(ArrayField::Data),
+                    other => Err(de::Error::unknown_field(other, ARRAY_FIELDS)),
                 }
             }
         }
 
-        deserializer.deserialize(ArrayFieldVisitor)
+        deserializer.deserialize_struct_field(ArrayFieldVisitor)
     }
 }
 
@@ -152,14 +158,17 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
 {
     type Value = ArrayBase<S, Di>;
 
-    fn visit_seq<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("ndarray representation")
+    }
+
+    fn visit_seq<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
         where V: SeqVisitor
     {
         let v: u8 = match try!(visitor.visit()) {
             Some(value) => value,
             None => {
-                try!(visitor.end());
-                return Err(de::Error::invalid_length(0));
+                return Err(de::Error::invalid_length(0, &self));
             }
         };
 
@@ -168,20 +177,16 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
         let dim: Di = match try!(visitor.visit()) {
             Some(value) => value,
             None => {
-                try!(visitor.end());
-                return Err(de::Error::invalid_length(1));
+                return Err(de::Error::invalid_length(1, &self));
             }
         };
 
         let data: Vec<A> = match try!(visitor.visit()) {
             Some(value) => value,
             None => {
-                try!(visitor.end());
-                return Err(de::Error::invalid_length(2));
+                return Err(de::Error::invalid_length(2, &self));
             }
         };
-
-        try!(visitor.end());
 
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
             Ok(array)
@@ -190,7 +195,7 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
         }
     }
 
-    fn visit_map<V>(&mut self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
+    fn visit_map<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
         where V: MapVisitor,
     {
         let mut v: Option<u8> = None;
@@ -212,7 +217,6 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
                 },
             }
         }
-        try!(visitor.end());
 
         let _v = match v {
             Some(v) => v,
