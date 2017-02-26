@@ -41,7 +41,7 @@ blas-sys = { version = "0.6.5", optional = true, default-features = false }
 matrixmultiply = { version = "0.1.13" }
 
 [dependencies.serde]
-version = "0.8.20"
+version = "0.9"
 optional = true
 
 [features]

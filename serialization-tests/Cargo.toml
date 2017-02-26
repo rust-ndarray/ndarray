@@ -14,11 +14,11 @@ ndarray = { version = "0.7", path = "../", features = ["serde", "rustc-serialize
 version = "0.3.21"
 
 [dev-dependencies.serde]
-version = "0.8"
+version = "0.9"
 
 [dev-dependencies.serde_json]
-version = "0.8"
+version = "0.9"
 
 [dev-dependencies.rmp-serde]
-version = "0.10"
+version = "0.12"
 
