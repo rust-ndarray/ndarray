@@ -4,9 +4,11 @@ ndarray
 The ``ndarray`` crate provides an N-dimensional container for general elements
 and for numerics.  Requires Rust 1.13.
 
-Please read the API documentation here: `(0.7)`__, `(0.6)`__, `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
+Please read the API documentation here: `(0.8)`__, `(0.7)`__, `(0.6)`__,
+`(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
 __ http://bluss.github.io/rust-ndarray/
+__ http://bluss.github.io/rust-ndarray/0.7/
 __ http://bluss.github.io/rust-ndarray/0.6/
 __ http://bluss.github.io/rust-ndarray/0.5/
 __ http://bluss.github.io/rust-ndarray/0.4/
