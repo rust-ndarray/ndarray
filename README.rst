@@ -60,7 +60,7 @@ your `Cargo.toml`.
 - ``serde``
 
   - Optional, compatible with Rust stable
-  - Enables serialization support for serde 0.8
+  - Enables serialization support for serde 0.9
 
 - ``blas``
 
@@ -72,10 +72,16 @@ your `Cargo.toml`.
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.7.2"
+    ndarray = "0.8"
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.8
+
+  - Update serde dependency to 0.9
+  - Remove deprecated type alias ``OwnedArray`` (use ``Array``)
+  - Remove deprecated ``.assign_scalar()`` (use ``fill``)
 
 - 0.7.3
 
