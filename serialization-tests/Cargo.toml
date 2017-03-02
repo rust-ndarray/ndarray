@@ -8,7 +8,7 @@ publish = false
 test = false
 
 [dependencies]
-ndarray = { version = "0.7", path = "../", features = ["serde", "rustc-serialize"] }
+ndarray = { version = "*", path = "../", features = ["serde", "rustc-serialize"] }
 
 [dev-dependencies.rustc-serialize]
 version = "0.3.21"
