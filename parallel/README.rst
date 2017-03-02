@@ -47,6 +47,10 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- 0.2.0
+
+  - Require for ndarray 0.8
+
 - 0.1.1
 
   - Clarify docs
