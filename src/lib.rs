@@ -508,10 +508,6 @@ pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 /// [`Array3`](Array3.t.html) and so on.
 pub type Array<A, D> = ArrayBase<Vec<A>, D>;
 
-#[deprecated(note="Use the type alias `Array` instead")]
-/// Array where the data is owned uniquely.
-pub type OwnedArray<A, D> = ArrayBase<Vec<A>, D>;
-
 /// A lightweight array view.
 ///
 /// An array view represents an array or a part of it, created from
