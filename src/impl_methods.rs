@@ -1072,14 +1072,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.zip_mut_with(rhs, |x, y| *x = y.clone());
     }
 
-    /// Perform an elementwise assigment to `self` from scalar `x`.
-    #[deprecated(note="This method is replaced with ArrayBase::fill and will be removed.")]
-    pub fn assign_scalar(&mut self, x: &A)
-        where S: DataMut, A: Clone,
-    {
-        self.unordered_foreach_mut(move |elt| *elt = x.clone());
-    }
-
     /// Perform an elementwise assigment to `self` from element `x`.
     pub fn fill(&mut self, x: A)
         where S: DataMut, A: Clone,
