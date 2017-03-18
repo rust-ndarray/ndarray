@@ -43,6 +43,18 @@ fn dyn_dimension()
 }
 
 #[test]
+fn equidistance_strides() {
+    let strides = Dim([4,2,1]);
+    assert_eq!(Dimension::equispaced_stride(&Dim([2,2,2]), &strides), Some(1));
+
+    let strides = Dim([8,4,2]);
+    assert_eq!(Dimension::equispaced_stride(&Dim([2,2,2]), &strides), Some(2));
+
+    let strides = Dim([16,4,1]);
+    assert_eq!(Dimension::equispaced_stride(&Dim([2,2,2]), &strides), None);
+}
+
+#[test]
 fn fastest_varying_order() {
     let strides = Dim([2, 8, 4, 1]);
     let order = strides._fastest_varying_stride_order();

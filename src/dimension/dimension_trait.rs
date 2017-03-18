@@ -269,20 +269,33 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             return true;
         }
         if dim.ndim() == 1 { return false; }
+
+        match Self::equispaced_stride(dim, strides) {
+            Some(1) => true,
+            _ => false,
+        }
+    }
+
+    /// Return the equispaced stride between all the array elements.
+    ///
+    /// Returns `Some(n)` if the strides in all dimensions are equispaced. Returns `None` if not.
+    #[doc(hidden)]
+    fn equispaced_stride(dim: &Self, strides: &Self) -> Option<usize> {
         let order = strides._fastest_varying_stride_order();
-        let strides = strides.slice();
+        let base_stride = strides[order[0]];
 
         // FIXME: Negative strides
         let dim_slice = dim.slice();
-        let mut cstride = 1;
+        let mut next_stride = base_stride;
+        let strides = strides.slice();
         for &i in order.slice() {
             // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && strides[i] != cstride {
-                return false;
+            if dim_slice[i] != 1 && strides[i] != next_stride {
+                return None;
             }
-            cstride *= dim_slice[i];
+            next_stride *= dim_slice[i];
         }
-        true
+        Some(base_stride)
     }
 
     /// Return the axis ordering corresponding to the fastest variation
