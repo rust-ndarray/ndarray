@@ -1,6 +1,7 @@
 #![feature(test)]
 #![allow(unused_imports)]
 
+extern crate blas_sys;
 extern crate test;
 #[macro_use(s)]
 extern crate ndarray;
@@ -467,6 +468,18 @@ fn scaled_add_2d_f32_regular(bench: &mut test::Bencher)
         av.scaled_add(scalar, &bv);
     });
 }
+
+#[bench]
+fn scaled_add_2d_f32_axpy(bench: &mut test::Bencher)
+{
+    let mut av = Array::<f32, _>::zeros((64, 64));
+    let bv = Array::<f32, _>::zeros((64, 64));
+    let scalar = 3.1415926535;
+    bench.iter(|| {
+        av.scaled_add_axpy(scalar, &bv);
+    });
+}
+
 
 #[bench]
 fn assign_scalar_2d_corder(bench: &mut test::Bencher)

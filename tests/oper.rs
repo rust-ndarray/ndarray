@@ -459,6 +459,22 @@ fn scaled_add() {
 
 }
 
+#[cfg(blas)]
+#[test]
+fn scaled_add_axpy() {
+    let a = range_mat(16, 15);
+    let mut b = range_mat(16, 15);
+    b.mapv_inplace(f32::exp);
+
+    let alpha = 0.2_f32;
+    let mut c = a.clone();
+    c.scaled_add(alpha, &b);
+
+    let mut d = a.clone();
+    d.scaled_add_axpy(alpha, &b);
+    assert_eq!(c, d);
+}
+
 #[test]
 fn gen_mat_mul() {
     let alpha = -2.3;

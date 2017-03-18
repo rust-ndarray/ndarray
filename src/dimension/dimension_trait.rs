@@ -280,7 +280,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     ///
     /// Returns `Some(n)` if the strides in all dimensions are equispaced. Returns `None` if not.
     #[doc(hidden)]
-    fn equispaced_stride(dim: &Self, strides: &Self) -> Option<usize> {
+    fn equispaced_stride(dim: &Self, strides: &Self) -> Option<isize> {
         let order = strides._fastest_varying_stride_order();
         let base_stride = strides[order[0]];
 
@@ -295,7 +295,8 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             }
             next_stride *= dim_slice[i];
         }
-        Some(base_stride)
+
+       Some(base_stride as isize)
     }
 
     /// Return the axis ordering corresponding to the fastest variation
