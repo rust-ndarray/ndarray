@@ -293,26 +293,37 @@ impl<A, S, D> ArrayBase<S, D>
               A: LinalgScalar,
               E: Dimension,
     {
+        self.scaled_add_impl(alpha, rhs);
+    }
+
+    fn scaled_add_generic<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
+        where S: DataMut,
+              S2: Data<Elem=A>,
+              A: LinalgScalar,
+              E: Dimension,
+    {
         self.zip_mut_with(rhs, move |y, &x| *y = *y + (alpha * x));
     }
 
-    /// Perform the operation `self += alpha * rhs` efficiently, where
-    /// `alpha` is a scalar and `rhs` is another array. This operation is
-    /// also known as `axpy` in BLAS.
-    ///
-    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
-    ///
-    /// **Panics** if broadcasting isn’t possible.
-    #[cfg(feature="blas")]
-    pub fn scaled_add_axpy<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
+    #[cfg(not(feature = "blas"))]
+    fn scaled_add_impl<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
         where S: DataMut,
               S2: Data<Elem=A>,
-              A: LinalgScalar + ::std::fmt::Debug,
+              A: LinalgScalar,
+              E: Dimension,
+    {
+        self.scaled_add_generic(alpha, rhs);
+    }
+
+    #[cfg(feature = "blas")]
+    fn scaled_add_impl<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
+        where S: DataMut,
+              S2: Data<Elem=A>,
+              A: LinalgScalar,
               E: Dimension,
     {
         debug_assert_eq!(self.len(), rhs.len());
         assert!(self.len() == rhs.len());
-
         {
             macro_rules! axpy {
                 ($ty:ty, $func:ident) => {{
@@ -342,12 +353,10 @@ impl<A, S, D> ArrayBase<S, D>
             }
                 }}
             }
-
             axpy!{f32, cblas_saxpy};
             axpy!{f64, cblas_daxpy};
         }
-
-        self.scaled_add(alpha, rhs);
+        self.scaled_add_generic(alpha, rhs);
     }
 }
 
@@ -596,13 +605,9 @@ fn blas_compat<A, S, D>(a: &ArrayBase<S, D>) -> bool
         return false;
     }
 
-    if a.len() > blas_index::max_value() as usize {
-        return false;
-    }
-
     match D::equispaced_stride(&a.raw_dim(), &a.strides) {
         Some(stride) => {
-            if stride > blas_index::max_value() as isize ||
+            if a.len() as isize * stride > blas_index::max_value() as isize ||
                 stride < blas_index::min_value() as isize {
                 return false;
             }
@@ -611,6 +616,7 @@ fn blas_compat<A, S, D>(a: &ArrayBase<S, D>) -> bool
             return false;
         }
     }
+
     true
 }
 
