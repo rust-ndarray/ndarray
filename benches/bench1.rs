@@ -457,17 +457,31 @@ fn iadd_2d_strided(bench: &mut test::Bencher)
     });
 }
 
+const SCALE_ADD_SZ: usize = 64;
+
 #[bench]
 fn scaled_add_2d_f32_regular(bench: &mut test::Bencher)
 {
-    let mut av = Array::<f32, _>::zeros((64, 64));
-    let bv = Array::<f32, _>::zeros((64, 64));
+    let mut av = Array::<f32, _>::zeros((SCALE_ADD_SZ, SCALE_ADD_SZ));
+    let bv = Array::<f32, _>::zeros((SCALE_ADD_SZ, SCALE_ADD_SZ));
     let scalar = 3.1415926535;
     bench.iter(|| {
         av.scaled_add(scalar, &bv);
     });
 }
 
+#[bench]
+fn scaled_add_2d_f32_stride(bench: &mut test::Bencher)
+{
+    let mut av = Array::<f32, _>::zeros((SCALE_ADD_SZ, 2 * SCALE_ADD_SZ));
+    let bv = Array::<f32, _>::zeros((SCALE_ADD_SZ, 2 * SCALE_ADD_SZ));
+    let mut av = av.slice_mut(s![.., ..;2]);
+    let bv = bv.slice(s![.., ..;2]);
+    let scalar = 3.1415926535;
+    bench.iter(|| {
+        av.scaled_add(scalar, &bv);
+    });
+}
 
 #[bench]
 fn assign_scalar_2d_corder(bench: &mut test::Bencher)
