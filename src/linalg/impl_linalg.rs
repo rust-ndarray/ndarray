@@ -293,70 +293,7 @@ impl<A, S, D> ArrayBase<S, D>
               A: LinalgScalar,
               E: Dimension,
     {
-        self.scaled_add_impl(alpha, rhs);
-    }
-
-    fn scaled_add_generic<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
-        where S: DataMut,
-              S2: Data<Elem=A>,
-              A: LinalgScalar,
-              E: Dimension,
-    {
         self.zip_mut_with(rhs, move |y, &x| *y = *y + (alpha * x));
-    }
-
-    #[cfg(not(feature = "blas"))]
-    fn scaled_add_impl<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
-        where S: DataMut,
-              S2: Data<Elem=A>,
-              A: LinalgScalar,
-              E: Dimension,
-    {
-        self.scaled_add_generic(alpha, rhs);
-    }
-
-    #[cfg(feature = "blas")]
-    fn scaled_add_impl<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
-        where S: DataMut,
-              S2: Data<Elem=A>,
-              A: LinalgScalar,
-              E: Dimension,
-    {
-        debug_assert_eq!(self.len(), rhs.len());
-        assert!(self.len() == rhs.len());
-        {
-            macro_rules! axpy {
-                ($ty:ty, $func:ident) => {{
-            if blas_compat::<$ty, _, _>(self) && blas_compat::<$ty, _, _>(rhs) {
-                let order = Dimension::_fastest_varying_stride_order(&self.strides);
-                let incx = self.strides()[order[0]];
-
-                let order = Dimension::_fastest_varying_stride_order(&rhs.strides);
-                let incy = self.strides()[order[0]];
-
-                unsafe {
-                    let (lhs_ptr, n, incx) = blas_1d_params(self.ptr,
-                                                            self.len(),
-                                                            incx);
-                    let (rhs_ptr, _, incy) = blas_1d_params(rhs.ptr,
-                                                            rhs.len(),
-                                                            incy);
-                    blas_sys::c::$func(
-                        n,
-                        cast_as(&alpha),
-                        rhs_ptr as *const $ty,
-                        incy,
-                        lhs_ptr as *mut $ty,
-                        incx);
-                    return;
-                }
-            }
-                }}
-            }
-            axpy!{f32, cblas_saxpy};
-            axpy!{f64, cblas_daxpy};
-        }
-        self.scaled_add_generic(alpha, rhs);
     }
 }
 
@@ -591,32 +528,6 @@ fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix1>) -> bool
         stride < blas_index::min_value() as isize {
         return false;
     }
-    true
-}
-
-#[cfg(feature="blas")]
-fn blas_compat<A, S, D>(a: &ArrayBase<S, D>) -> bool
-    where S: Data,
-          A: 'static,
-          S::Elem: 'static,
-          D: Dimension,
-{
-    if !same_type::<A, S::Elem>() {
-        return false;
-    }
-
-    match D::equispaced_stride(&a.raw_dim(), &a.strides) {
-        Some(stride) => {
-            if a.len() as isize * stride > blas_index::max_value() as isize ||
-                stride < blas_index::min_value() as isize {
-                return false;
-            }
-        },
-        None => {
-            return false;
-        }
-    }
-
     true
 }
 
