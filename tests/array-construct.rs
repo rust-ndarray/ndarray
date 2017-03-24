@@ -29,3 +29,16 @@ fn test_rc_into_owned() {
     // test that they are unshared
     assert!(!a.all_close(&c, 0.01));
 }
+
+#[test]
+fn test_uninit() {
+    unsafe {
+        let mut a = Array::<f32, _>::uninitialized((3, 4).f());
+        assert_eq!(a.dim(), (3, 4));
+        assert_eq!(a.strides(), &[1, 3]);
+        let b = Array::<f32, _>::linspace(0., 25., a.len()).into_shape(a.dim()).unwrap();
+        a.assign(&b);
+        assert_eq!(&a, &b);
+        assert_eq!(a.t(), b.t());
+    }
+}

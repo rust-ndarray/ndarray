@@ -281,4 +281,43 @@ impl<S, A, D> ArrayBase<S, D>
         }
     }
 
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow usize.
+    ///
+    /// ## Safety
+    ///
+    /// Accessing uninitalized values is undefined behaviour. You must
+    /// overwrite *all* the elements in the array after it is created; for
+    /// example using the methods `.fill()` or `.assign()`.
+    ///
+    /// The contents of the array is indeterminate before initialization and it
+    /// is an error to perform operations that use the previous values. For
+    /// example it would not be legal to use `a += 1.;` on such an array.
+    ///
+    /// This constructor is limited to elements where `A: Copy` (no destructors)
+    /// to avoid users shooting themselves too hard in the foot; it is not
+    /// a problem to drop an array created with this method even before elements
+    /// are initialized. (Note that constructors `from_shape_vec` and
+    /// `from_shape_vec_unchecked` allow the user yet more control).
+    ///
+    /// ```
+    /// use ndarray::Array;
+    ///
+    /// let mut a = unsafe { Array::uninitialized((4, 5)) };
+    /// a.fill(1.);
+    ///
+    /// // `a` is safe to use with all operations at this point
+    /// ```
+    pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
+        where A: Copy,
+              Sh: ShapeBuilder<Dim=D>,
+    {
+        let shape = shape.into_shape();
+        let size = size_checked_unwrap!(shape.dim);
+        let mut v = Vec::with_capacity(size);
+        v.set_len(size);
+        Self::from_shape_vec_unchecked(shape, v)
+    }
+
 }
