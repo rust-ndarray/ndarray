@@ -170,7 +170,8 @@ impl<S, A, D> ArrayBase<S, D>
               Sh: ShapeBuilder<Dim=D>,
     {
         let shape = shape.into_shape();
-        let v = to_vec((0..shape.dim.size()).map(|_| A::default()));
+        let size = size_checked_unwrap!(shape.dim);
+        let v = to_vec((0..size).map(|_| A::default()));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
