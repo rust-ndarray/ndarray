@@ -826,30 +826,6 @@ fn scalar_ops() {
 }
 
 #[test]
-fn deny_wraparound_from_vec() {
-    let five = vec![0; 5];
-    let five_large = Array::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
-    assert!(five_large.is_err());
-    let six = Array::from_shape_vec(6, five.clone());
-    assert!(six.is_err());
-}
-
-#[should_panic]
-#[test]
-fn deny_wraparound_zeros() {
-    //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
-    let _five_large = Array::<f32, _>::zeros((3, 7, 29, 36760123, 823996703));
-}
-
-#[should_panic]
-#[test]
-fn deny_wraparound_reshape() {
-    //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
-    let five = Array::<f32, _>::zeros(5);
-    let _five_large = five.into_shape((3, 7, 29, 36760123, 823996703)).unwrap();
-}
-
-#[test]
 fn split_at() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
 
