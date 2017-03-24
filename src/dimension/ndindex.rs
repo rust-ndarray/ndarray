@@ -19,8 +19,6 @@ use super::DimPrivate;
 /// a[[1, 1]] += 1;
 /// assert_eq!(a[(1, 1)], 4);
 /// ```
-///
-/// **Note** that `NdIndex` is implemented for all `D where D: Dimension`.
 pub unsafe trait NdIndex<E> : Debug {
     #[doc(hidden)]
     fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;
