@@ -23,6 +23,8 @@ use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes, merge_axes, stride_offset};
 
+use rayon::prelude::*;
+
 use {
     NdIndex,
     AxisChunksIter,
@@ -1242,6 +1244,51 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    pub fn par_map<B, F>(&self, f: F) -> Array<B, D>
+        where F: Fn(&A) -> B + Sync,
+              D: RemoveAxis,
+              A: Sync,
+              B: Send + Sync + Copy,
+    {
+        struct SendPtr<T>(*mut T);
+        unsafe impl<T: Send> Send for SendPtr<T> { }
+        unsafe impl<T: Sync> Sync for SendPtr<T> { }
+        impl<T> Copy for SendPtr<T> { }
+        impl<T> Clone for SendPtr<T> { fn clone(&self) -> Self { *self } }
+
+        // FIXME
+        // parallelization along one array axis — the widest axis,
+        // is not enough if that axis is either short, or the only in the array.
+
+        let mut result = Vec::with_capacity(self.len());
+        let ax = self.max_stride_axis();
+        let base_ptr = SendPtr(result.as_mut_ptr());
+        let f = &f;
+        self.axis_iter(ax)
+            .into_par_iter()
+            .enumerate()
+            .for_each(move |(i, sheet)| {
+            unsafe {
+                let ptr = base_ptr.0.offset((sheet.len() * i) as isize);
+                let mut j = 0;
+                for elt in sheet {
+                    *ptr.offset(j) = f(elt);
+                    j += 1;
+                }
+            }
+        });
+        unsafe {
+            result.set_len(self.len());
+
+            // swap the largest axis in place
+            let mut dim = self.dim.clone();
+            dim.slice_mut().swap(0, ax.axis());
+            let mut a = Array::from_shape_vec_unchecked(dim, result);
+            a.swap_axes(0, ax.axis());
+            a
+        }
+    }
+
     /// Call `f` by **v**alue on each element and create a new array
     /// with the new values.
     ///
@@ -1287,6 +1334,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: Fn(&mut A),
     {
         self.unordered_foreach_mut(f);
+    }
+
+    pub fn par_map_inplace<F>(&mut self, f: F)
+        where S: DataMut,
+              F: Fn(&mut A) + Sync,
+              A: Send + Sync,
+    {
+        self.view_mut().into_par_iter().for_each(f)
     }
 
     /// Modify the array in place by calling `f` by **v**alue on each element.

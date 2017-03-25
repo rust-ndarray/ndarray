@@ -62,6 +62,9 @@
 //!   - Enable transparent BLAS support for matrix multiplication.
 //!     Uses ``blas-sys`` for pluggable backend, which needs to be configured
 //!     separately.
+//! - `rayon`
+//!   - Optional.
+//!   - Implement rayon 0.6 parallelization.
 //!
 
 #[cfg(feature = "serde")]
@@ -77,6 +80,8 @@ extern crate matrixmultiply;
 extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+#[cfg(feature = "rayon")]
+extern crate rayon;
 
 use std::iter::Zip;
 use std::marker::PhantomData;
@@ -124,6 +129,8 @@ mod array_serde;
 mod array_serialize;
 mod arrayformat;
 mod data_traits;
+#[cfg(feature = "rayon")]
+pub mod parallel;
 
 pub use aliases::*;
 

@@ -21,6 +21,9 @@ use super::{
     Axis,
 };
 
+#[cfg(feature = "rayon")]
+pub mod par;
+
 /// Base for array iterators
 ///
 /// Iterator element type is `&'a A`.
@@ -540,11 +543,43 @@ fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
     }
 }
 
-impl<A, D> OuterIterCore<A, D> {
+impl<A, D> OuterIterCore<A, D>
+    where D: Dimension,
+{
     unsafe fn offset(&self, index: usize) -> *mut A {
         debug_assert!(index <= self.len,
                       "index={}, len={}, stride={}", index, self.len, self.stride);
         self.ptr.offset(index as isize * self.stride)
+    }
+
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// *panics* if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: Ix) -> (Self, Self) {
+        assert!(index <= self.len);
+        let right_ptr = if index != self.len {
+            unsafe { self.offset(index) } 
+        }
+        else {
+            self.ptr
+        };
+        let left = OuterIterCore {
+            index: 0,
+            len: index,
+            stride: self.stride,
+            inner_dim: self.inner_dim.clone(),
+            inner_strides: self.inner_strides.clone(),
+            ptr: self.ptr,
+        };
+        let right = OuterIterCore {
+            index: 0,
+            len: self.len - index,
+            stride: self.stride,
+            inner_dim: self.inner_dim,
+            inner_strides: self.inner_strides,
+            ptr: right_ptr,
+        };
+        (left, right)
     }
 }
 
@@ -564,7 +599,7 @@ impl<A, D> Iterator for OuterIterCore<A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.len - self.index;
+        let len = self.len();
         (len, Some(len))
     }
 }
@@ -580,6 +615,14 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
             let ptr = unsafe { self.offset(self.len) };
             Some(ptr)
         }
+    }
+}
+
+impl<A, D> ExactSizeIterator for OuterIterCore<A, D>
+    where D: Dimension,
+{
+    fn len(&self) -> usize {
+        self.len - self.index
     }
 }
 
@@ -610,36 +653,14 @@ macro_rules! outer_iter_split_at_impl {
             /// Split the iterator at index, yielding two disjoint iterators.
             ///
             /// *panics* if `index` is strictly greater than the iterator's length
-            pub fn split_at(self, index: Ix)
-                -> ($iter<'a, A, D>, $iter<'a, A, D>)
-            {
-                assert!(index <= self.iter.len);
-                let right_ptr = if index != self.iter.len {
-                    unsafe { self.iter.offset(index) } 
-                }
-                else {
-                    self.iter.ptr
-                };
+            pub fn split_at(self, index: Ix) -> (Self, Self) {
+                let (li, ri) = self.iter.split_at(index);
                 let left = $iter {
-                    iter: OuterIterCore {
-                        index: 0,
-                        len: index,
-                        stride: self.iter.stride,
-                        inner_dim: self.iter.inner_dim.clone(),
-                        inner_strides: self.iter.inner_strides.clone(),
-                        ptr: self.iter.ptr,
-                    },
+                    iter: li,
                     life: self.life,
                 };
                 let right = $iter {
-                    iter: OuterIterCore {
-                        index: 0,
-                        len: self.iter.len - index,
-                        stride: self.iter.stride,
-                        inner_dim: self.iter.inner_dim,
-                        inner_strides: self.iter.inner_strides,
-                        ptr: right_ptr,
-                    },
+                    iter: ri,
                     life: self.life,
                 };
                 (left, right)
@@ -829,6 +850,26 @@ pub struct AxisChunksIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+impl<'a, A, D> Clone for AxisChunksIter<'a, A, D>
+    where D: Dimension
+{
+    fn clone(&self) -> Self {
+        AxisChunksIter {
+            iter: OuterIterCore {
+                index: self.iter.index,
+                len: self.iter.len,
+                stride: self.iter.stride,
+                inner_dim: self.iter.inner_dim.clone(),
+                inner_strides: self.iter.inner_strides.clone(),
+                ptr: self.iter.ptr,
+            },
+            last_ptr: self.last_ptr,
+            last_dim: self.last_dim.clone(),
+            life: self.life,
+        }
+    }
+}
+
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> (OuterIterCore<A, D>, *mut A, D)
 {
@@ -904,6 +945,24 @@ macro_rules! chunk_iter_impl {
                     }
                 })
             }
+
+            fn split_at(self, index: Ix) -> (Self, Self) {
+                // don't allow last place split (not implemented)
+                assert!(index == 0 || index != self.iter.len);
+                let (li, ri) = self.iter.split_at(index);
+                ($iter {
+                    last_dim: li.inner_dim.clone(),
+                    last_ptr: li.ptr, // doesn't matter
+                    iter: li,
+                    life: self.life,
+                },
+                $iter {
+                    iter: ri,
+                    last_dim: self.last_dim,
+                    last_ptr: self.last_ptr,
+                    life: self.life,
+                })
+            }
         }
 
         impl<'a, A, D> Iterator for $iter<'a, A, D>
@@ -932,7 +991,11 @@ macro_rules! chunk_iter_impl {
 
         impl<'a, A, D> ExactSizeIterator for $iter<'a, A, D>
             where D: Dimension,
-        { }
+        {
+            fn len(&self) -> usize {
+                self.iter.len()
+            }
+        }
     )
 }
 
