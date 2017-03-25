@@ -680,10 +680,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         is_standard_layout(&self.dim, &self.strides)
     }
 
-    fn is_contiguous(&self) -> bool {
-        D::is_contiguous(&self.dim, &self.strides)
-    }
-
     /// Return a pointer to the first element in the array.
     ///
     /// Raw access to array elements needs to follow the strided indexing
