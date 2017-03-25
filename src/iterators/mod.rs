@@ -21,6 +21,9 @@ use super::{
     Axis,
 };
 
+#[cfg(feature = "rayon")]
+pub mod par;
+
 /// Base for array iterators
 ///
 /// Iterator element type is `&'a A`.
