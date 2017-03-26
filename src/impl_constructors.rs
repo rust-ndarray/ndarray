@@ -286,7 +286,7 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
     ///
-    /// ## Safety
+    /// ### Safety
     ///
     /// Accessing uninitalized values is undefined behaviour. You must
     /// overwrite *all* the elements in the array after it is created; for
@@ -302,13 +302,31 @@ impl<S, A, D> ArrayBase<S, D>
     /// are initialized. (Note that constructors `from_shape_vec` and
     /// `from_shape_vec_unchecked` allow the user yet more control).
     ///
+    /// ### Examples
+    ///
     /// ```
-    /// use ndarray::Array;
+    /// #[macro_use(s)]
+    /// extern crate ndarray;
     ///
-    /// let mut a = unsafe { Array::uninitialized((4, 5)) };
-    /// a.fill(1.);
+    /// use ndarray::Array2;
     ///
-    /// // `a` is safe to use with all operations at this point
+    /// // Example Task: Let's create a column shifted copy of a in b
+    ///
+    /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
+    ///     let mut b = unsafe { Array2::uninitialized(a.dim()) };
+    ///
+    ///     // two first columns in b are two last in a
+    ///     // rest of columns in b are the initial columns in a
+    ///     b.slice_mut(s![.., ..2]).assign(&a.slice(s![.., -2..]));
+    ///     b.slice_mut(s![.., 2..]).assign(&a.slice(s![.., ..-2]));
+    ///
+    ///     // `b` is safe to use with all operations at this point
+    ///     b
+    /// }
+    ///
+    /// # fn main() {
+    /// #   shift_by_two(&Array2::zeros((8, 8)));
+    /// # }
     /// ```
     pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
         where A: Copy,
