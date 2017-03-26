@@ -57,3 +57,12 @@ fn map_stride_u32(bench: &mut Bencher)
         av.map(|&x| 2 * x)
     });
 }
+
+#[bench]
+fn fold_axis(bench: &mut Bencher)
+{
+    let a = Array::linspace(0., 127., N * 2).into_shape([X, Y * 2]).unwrap();
+    bench.iter(|| {
+        a.fold_axis(Axis(0), 0., |&acc, &elt| acc + elt)
+    });
+}
