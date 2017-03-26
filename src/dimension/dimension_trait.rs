@@ -262,6 +262,8 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         offset
     }
 
+    wtf_is_wrong!{ }
+
     #[doc(hidden)]
     fn is_contiguous(dim: &Self, strides: &Self) -> bool {
         let defaults = dim.default_strides();
