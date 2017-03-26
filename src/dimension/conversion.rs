@@ -100,6 +100,7 @@ macro_rules! tuple_to_array {
         $(
         impl Convert for [Ix; $n] {
             type To = index!(tuple_type [Ix] $n);
+            #[inline]
             fn convert(self) -> Self::To {
                 index!(tuple_expr [self] $n)
             }
