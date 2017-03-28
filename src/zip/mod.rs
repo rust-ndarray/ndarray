@@ -28,28 +28,35 @@ pub struct Layout(u32);
 
 impl Layout {
     #[doc(hidden)]
+    #[inline(always)]
     pub fn one_dimensional() -> Layout {
         Layout(CORDER | FORDER)
     }
     #[doc(hidden)]
+    #[inline(always)]
     pub fn c() -> Layout {
         Layout(CORDER)
     }
     #[doc(hidden)]
+    #[inline(always)]
     pub fn f() -> Layout {
         Layout(FORDER)
     }
+    #[inline(always)]
     #[doc(hidden)]
     pub fn none() -> Layout {
         Layout(0)
     }
+    #[inline(always)]
     fn is(self, flag: u32) -> bool {
         self.0 & flag != 0
     }
+    #[inline(always)]
     fn and(self, flag: Layout) -> Layout {
         Layout(self.0 & flag.0)
     }
 
+    #[inline(always)]
     fn flag(self) -> u32 {
         self.0
     }
