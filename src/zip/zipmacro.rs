@@ -48,14 +48,14 @@
 ///
 /// type M = Array2<f32>;
 ///
-/// # fn main() {
+/// fn main() {
+///     let mut a = M::zeros((16, 16));
+///     let b = M::from_elem(a.dim(), 1.);
+///     let c = M::from_elem(a.dim(), 2.);
 ///
-/// let mut a = M::zeros((16, 16));
-/// let b = M::from_elem(a.dim(), 1.);
-/// let c = M::from_elem(a.dim(), 2.);
-///
-/// azip!(mut a, b, c in { *a = b + c });
-/// # }
+///     azip!(mut a, b, c in { *a = b + c });
+///     assert_eq!(a, &b + &c);
+/// }
 /// ```
 macro_rules! azip {
     // Final Rule
