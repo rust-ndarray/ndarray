@@ -176,6 +176,8 @@ pub trait View {
     unsafe fn as_ref(*mut Self::Elem) -> Self::Ref;
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem;
     fn stride_of(&self, axis: Axis) -> isize;
+    #[doc(hidden)]
+    fn ensure_unique(&mut self) { }
     private_decl!{}
 }
 
@@ -256,6 +258,12 @@ impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
 
     fn stride_of(&self, axis: Axis) -> isize {
         self.strides()[axis.index()]
+    }
+
+    #[doc(hidden)]
+    fn ensure_unique(&mut self) {
+        // calls ensure_unique for RcArray
+        self.as_mut_ptr();
     }
 }
 
@@ -386,11 +394,12 @@ impl<Parts, D> Zip<Parts, D>
     where D: Dimension,
 {
 
-    fn check<P>(&self, part: &P)
+    fn check<P>(&self, part: &mut P)
         where P: View<Dim=D>
     {
         debug_assert_eq!(&self.dimension, part.raw_dim());
         assert!(self.dimension.equal(part.raw_dim()));
+        part.ensure_unique();
     }
 
     fn prepare<P>(&self, part: P) -> P::Output
@@ -657,10 +666,10 @@ macro_rules! map_impl {
             /// Include the array `array` in the Zip.
             ///
             /// ***Panics*** if `array`’s shape doen't match the Zip’s exactly.
-            pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part, ), Dim>
+            pub fn and<Part>(self, mut array: Part) -> Zip<($($p,)* Part, ), Dim>
                 where Part: View<Dim=Dim>,
             {
-                self.check(&array);
+                self.check(&mut array);
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
                 Zip {
