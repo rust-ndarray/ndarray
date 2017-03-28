@@ -21,7 +21,7 @@
 ///
 /// Explanation of the shorthand for captures:
 ///
-/// + `mut a`: the array is `&mut a` and the variable pattern is `a`.
+/// + `mut a`: the array is `&mut a` and the variable pattern is `mut a`.
 /// + `b`: the array is `&b` and the variable pattern is `&b` (same for `c`).
 ///
 /// The syntax is `array_zip!(` *capture [, capture [, ...] ]* `in {` *expression* `})`
@@ -32,7 +32,7 @@
 /// More capture rules:
 ///
 /// + `ref c`: the array is `&c` and the variable pattern is `c`.
-/// + `mut a (expr)`: the array is `expr` and the variable pattern is `a`.
+/// + `mut a (expr)`: the array is `expr` and the variable pattern is `mut a`.
 /// + `b (expr)`: the array is `expr` and the variable pattern is `&b`.
 /// + `ref c (expr)`: the array is `expr` and the variable pattern is `c`.
 ///
