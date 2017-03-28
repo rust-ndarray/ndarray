@@ -416,6 +416,7 @@ impl<Parts, D> Zip<Parts, D>
         part.ensure_unique();
     }
 
+    /// Return a reference to the dimension of the Zip
     pub fn raw_dim(&self) -> &D {
         &self.dimension
     }
@@ -612,7 +613,7 @@ macro_rules! map_impl {
     ($([$($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: View<Dim=Dim>),*> Zip<($($p,)*), Dim> {
+        impl<D: Dimension, $($p: View<Dim=D>),*> Zip<($($p,)*), D> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
             pub fn apply<Func>(&mut self, mut function: Func)
@@ -642,8 +643,8 @@ macro_rules! map_impl {
             /// Include the array `array` in the Zip.
             ///
             /// ***Panics*** if `array`’s shape doen't match the Zip’s exactly.
-            pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), Dim>
-                where Part: AsArrayViewAny<Dim=Dim>,
+            pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), D>
+                where Part: AsArrayViewAny<Dim=D>,
             {
                 let mut array = array.as_array_view_any();
                 self.check(&mut array);
@@ -661,10 +662,10 @@ macro_rules! map_impl {
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
             ///
             /// ***Panics*** if broadcasting isn’t possible.
-            pub fn and_broadcast<'a, Part, Dim2, Elem>(self, array: Part)
-                -> Zip<($($p,)* ArrayView<'a, Elem, Dim>, ), Dim>
-                where Part: AsArrayViewAny<Dim=Dim2, Output=ArrayView<'a, Elem, Dim2>>,
-                      Dim2: Dimension,
+            pub fn and_broadcast<'a, Part, D2, Elem>(self, array: Part)
+                -> Zip<($($p,)* ArrayView<'a, Elem, D>, ), D>
+                where Part: AsArrayViewAny<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
+                      D2: Dimension,
             {
                 let array = array.as_array_view_any().broadcast_unwrap(self.dimension.clone());
                 let part_layout = array.layout();
@@ -701,12 +702,12 @@ macro_rules! map_impl {
 }
 
 map_impl!{
-    [A],
-    [A B],
-    [A B C],
-    [A B C D],
-    [A B C D E],
-    [A B C D E F],
+    [P1],
+    [P1 P2],
+    [P1 P2 P3],
+    [P1 P2 P3 P4],
+    [P1 P2 P3 P4 P5],
+    [P1 P2 P3 P4 P5 P6],
 }
 
 pub enum FoldWhile<T> {
