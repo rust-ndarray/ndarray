@@ -55,8 +55,34 @@ impl<'a, A, D> Producer for WholeChunks<'a, A, D>
     }
 
     #[doc(hidden)]
-    fn split_at(self, _axis: Axis, _index: usize) -> (Self, Self) {
-        unimplemented!()
+    fn split_at(mut self, axis: Axis, index: usize) -> (Self, Self) {
+        let len = self.size[axis.index()];
+        let right_ptr = if index != len {
+            unsafe { self.ptr.offset(self.stride_of(axis) * index as isize) } 
+        }
+        else {
+            self.ptr
+        };
+        let mut right_size = self.size.clone();
+        self.size[axis.index()] = index;
+        right_size[axis.index()] = len - index;
+        let left = WholeChunks {
+            size: self.size,
+            chunk: self.chunk.clone(),
+            strides: self.strides.clone(),
+            inner_strides: self.inner_strides.clone(),
+            ptr: self.ptr,
+            life: self.life,
+        };
+        let right = WholeChunks {
+            size: right_size,
+            chunk: self.chunk,
+            strides: self.strides,
+            inner_strides: self.inner_strides,
+            ptr: right_ptr,
+            life: self.life,
+        };
+        (left, right)
     }
     private_impl!{}
 }

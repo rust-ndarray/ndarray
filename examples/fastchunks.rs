@@ -4,6 +4,7 @@ extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Zip;
+use ndarray::Producer;
 
 fn main() {
     let a = <Array1<f32>>::linspace(1., 100., 10 * 10).into_shape((10, 10)).unwrap();
@@ -27,5 +28,13 @@ fn main() {
     });
     println!("{:?}", b);
 
-    //azip!(mut a (a), mut b in { *b = a.scalar_sum() });
+    let c0 = a.whole_chunks((3, 2)); // 3, 5
+
+    let (c1, c2) = c0.split_at(Axis(0), 2);
+    for elt in c1 {
+        println!("c1: {:?}", elt);
+    }
+    for elt in c2 {
+        println!("c2: {:?}", elt);
+    }
 }
