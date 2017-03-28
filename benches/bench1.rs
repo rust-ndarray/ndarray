@@ -2,7 +2,7 @@
 #![allow(unused_imports)]
 
 extern crate test;
-#[macro_use(s)]
+#[macro_use(s, array_zip)]
 extern crate ndarray;
 
 use ndarray::{
@@ -285,6 +285,30 @@ fn add_2d_zip(bench: &mut test::Bencher)
     let b = Array::<i32, _>::zeros((64, 64));
     bench.iter(|| {
         Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+    });
+}
+
+#[bench]
+fn add_2d_alloc(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        &a + &b
+    });
+}
+
+#[bench]
+fn add_2d_zip_alloc(bench: &mut test::Bencher)
+{
+    let a = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        unsafe {
+            let mut c = Array::uninitialized(a.dim());
+            array_zip!(a, b, mut c in { *c = a + b });
+            c
+        }
     });
 }
 
