@@ -1,14 +1,15 @@
 
-use rayon::par_iter::ParallelIterator;
-use rayon::par_iter::IndexedParallelIterator;
-use rayon::par_iter::ExactParallelIterator;
-use rayon::par_iter::BoundedParallelIterator;
-use rayon::par_iter::internal::{Consumer, UnindexedConsumer};
-use rayon::par_iter::internal::bridge;
-use rayon::par_iter::internal::ProducerCallback;
-use rayon::par_iter::internal::Producer;
-use rayon::par_iter::internal::UnindexedProducer;
-use rayon::par_iter::internal::bridge_unindexed;
+use rayon::iter::ParallelIterator;
+use rayon::iter::IndexedParallelIterator;
+use rayon::iter::ExactParallelIterator;
+use rayon::iter::BoundedParallelIterator;
+use rayon::iter::internal::{Consumer, UnindexedConsumer};
+use rayon::iter::internal::bridge;
+use rayon::iter::internal::ProducerCallback;
+use rayon::iter::internal::Producer;
+use rayon::iter::internal::UnindexedProducer;
+use rayon::iter::internal::bridge_unindexed;
+use rayon::iter::internal::Folder;
 
 use ndarray::iter::AxisIter;
 use ndarray::iter::AxisIterMut;
@@ -110,9 +111,11 @@ macro_rules! par_iter_wrapper {
         where D: Dimension,
               A: $($thread_bounds)*,
     {
-        fn cost(&mut self, len: usize) -> f64 {
-            // FIXME: No idea about what this is
-            len as f64
+        type IntoIter = $iter_name<'a, A, D>;
+        type Item = <Self::IntoIter as Iterator>::Item;
+
+        fn into_iter(self) -> Self::IntoIter {
+            self.0
         }
 
         fn split_at(self, i: usize) -> (Self, Self) {
@@ -167,19 +170,18 @@ macro_rules! par_iter_view_wrapper {
         where D: Dimension,
               A: $($thread_bounds)*,
     {
-        fn can_split(&self) -> bool {
-            self.0.len() > 1
-        }
-
-        fn split(self) -> (Self, Self) {
+        type Item = <$view_name<'a, A, D> as IntoIterator>::Item;
+        fn split(self) -> (Self, Option<Self>) {
+            if self.0.len() <= 1 {
+                return (self, None)
+            }
             let array = self.0;
             let max_axis = array.max_stride_axis();
             let mid = array.len_of(max_axis) / 2;
             let (a, b) = array.split_at(max_axis, mid);
-            (ParallelProducer(a), ParallelProducer(b))
+            (ParallelProducer(a), Some(ParallelProducer(b)))
         }
 
-        #[cfg(rayon_fold_with)]
         fn fold_with<F>(self, folder: F) -> F
             where F: Folder<Self::Item>,
         {
@@ -203,3 +205,82 @@ macro_rules! par_iter_view_wrapper {
 
 par_iter_view_wrapper!(ArrayView, [Sync]);
 par_iter_view_wrapper!(ArrayViewMut, [Sync + Send]);
+
+
+use ndarray::{Zip, NdProducer, FoldWhile};
+
+macro_rules! zip_impl {
+    ($([$($p:ident)*],)+) => {
+        $(
+        #[allow(non_snake_case)]
+        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> NdarrayIntoParallelIterator for Zip<($($p,)*), Dim>
+            where $($p::Item : Send , )*
+                  $($p : Send , )*
+        {
+            type Item = ($($p::Item ,)*);
+            type Iter = Parallel<Self>;
+            fn into_par_iter(self) -> Self::Iter {
+                Parallel {
+                    iter: self,
+                }
+            }
+        }
+
+        #[allow(non_snake_case)]
+        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> ParallelIterator for Parallel<Zip<($($p,)*), Dim>>
+            where $($p::Item : Send , )*
+                  $($p : Send , )*
+        {
+            type Item = ($($p::Item ,)*);
+
+            fn drive_unindexed<Cons>(self, consumer: Cons) -> Cons::Result
+                where Cons: UnindexedConsumer<Self::Item>
+            {
+                bridge_unindexed(ParallelProducer(self.iter), consumer)
+            }
+
+            fn opt_len(&mut self) -> Option<usize> {
+                None
+            }
+        }
+
+        #[allow(non_snake_case)]
+        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> UnindexedProducer for ParallelProducer<Zip<($($p,)*), Dim>>
+            where $($p : Send , )*
+                  $($p::Item : Send , )*
+        {
+            type Item = ($($p::Item ,)*);
+
+            fn split(self) -> (Self, Option<Self>) {
+                if self.0.size() <= 1 {
+                    return (self, None)
+                }
+                let (a, b) = self.0.split();
+                (ParallelProducer(a), Some(ParallelProducer(b)))
+            }
+
+            fn fold_with<Fold>(self, folder: Fold) -> Fold
+                where Fold: Folder<Self::Item>,
+            {
+                self.0.fold_while(folder, |mut folder, $($p),*| {
+                    folder = folder.consume(($($p ,)*));
+                    if folder.full() {
+                        FoldWhile::Done(folder)
+                    } else {
+                        FoldWhile::Continue(folder)
+                    }
+                }).into_inner()
+            }
+        }
+        )+
+    }
+}
+
+zip_impl!{
+    [P1],
+    [P1 P2],
+    [P1 P2 P3],
+    [P1 P2 P3 P4],
+    [P1 P2 P3 P4 P5],
+    [P1 P2 P3 P4 P5 P6],
+}
