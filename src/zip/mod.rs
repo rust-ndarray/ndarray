@@ -394,10 +394,14 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
 /// view etc).
 ///
 /// If all the input arrays are of the same memory order the zip performs
-/// much better and the compiler can usually vectorize the loop.
+/// much better and the compiler can usually vectorize the loop (if applicable).
 ///
 /// The order elements are visited is not specified. The producers don’t
 /// have to have the same element type.
+///
+/// The `Zip` has two methods for function application: `apply` and
+/// `fold_while`. These can be called several times on the same zip object. The
+/// zip object can be split, which allows parallelization.
 ///
 /// See also the [`azip!()` macro][az] which offers a convenient shorthand
 /// to common ways to use `Zip`.
@@ -683,8 +687,8 @@ macro_rules! map_impl {
         impl<D: Dimension, $($p: NdProducer<Dim=D>),*> Zip<($($p,)*), D> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
-            pub fn apply<Func>(&mut self, mut function: Func)
-                where Func: FnMut($($p::Item),*)
+            pub fn apply<F>(&mut self, mut function: F)
+                where F: FnMut($($p::Item),*)
             {
                 self.apply_core((), move |(), args| {
                     let ($($p,)*) = args;
@@ -697,9 +701,9 @@ macro_rules! map_impl {
             ///
             /// The fold continues while the return value is a
             /// `FoldWhile::Continue`.
-            pub fn fold_while<Func, Acc>(&mut self, acc: Acc, mut function: Func)
+            pub fn fold_while<F, Acc>(&mut self, acc: Acc, mut function: F)
                 -> FoldWhile<Acc>
-                where Func: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
+                where F: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
             {
                 self.apply_core(acc, move |acc, args| {
                     let ($($p,)*) = args;
@@ -709,13 +713,13 @@ macro_rules! map_impl {
 
             macroif!{ $choice
 
-            /// Include the array `array` in the Zip.
+            /// Include the producer `p` in the Zip.
             ///
-            /// ***Panics*** if `array`’s shape doen't match the Zip’s exactly.
-            pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), D>
-                where Part: IntoNdProducer<Dim=D>,
+            /// ***Panics*** if `p`’s shape doen't match the Zip’s exactly.
+            pub fn and<P>(self, p: P) -> Zip<($($p,)* P::Output, ), D>
+                where P: IntoNdProducer<Dim=D>,
             {
-                let array = array.into_producer();
+                let array = p.into_producer();
                 self.check(&array);
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
@@ -726,17 +730,17 @@ macro_rules! map_impl {
                 }
             }
 
-            /// Include the array `array` in the Zip, broadcasting if needed.
+            /// Include the producer `p` in the Zip, broadcasting if needed.
             ///
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
             ///
             /// ***Panics*** if broadcasting isn’t possible.
-            pub fn and_broadcast<'a, Part, D2, Elem>(self, array: Part)
+            pub fn and_broadcast<'a, P, D2, Elem>(self, p: P)
                 -> Zip<($($p,)* ArrayView<'a, Elem, D>, ), D>
-                where Part: IntoNdProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
+                where P: IntoNdProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
                       D2: Dimension,
             {
-                let array = array.into_producer().broadcast_unwrap(self.dimension.clone());
+                let array = p.into_producer().broadcast_unwrap(self.dimension.clone());
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
                 Zip {
@@ -748,9 +752,10 @@ macro_rules! map_impl {
 
             }
 
-            /// Split the `Zip` evenly in two
-            pub fn split(self) -> (Self, Self)
-            {
+            /// Split the `Zip` evenly in two.
+            ///
+            /// It will be split in the way that best preserves element locality.
+            pub fn split(self) -> (Self, Self) {
                 // Always split in a way that preserves layout (if any)
                 let axis = self.max_stride_axis();
                 let index = self.len_of(axis) / 2;
@@ -781,8 +786,11 @@ map_impl!{
     [false P1 P2 P3 P4 P5 P6],
 }
 
+/// Value controlling the execution of `.fold_while` on `Zip`.
 pub enum FoldWhile<T> {
+    /// Continue folding with this value
     Continue(T),
+    /// Fold is complete and will return this value
     Done(T),
 }
 
