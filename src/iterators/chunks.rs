@@ -3,10 +3,10 @@ use std::marker::PhantomData;
 
 use imp_prelude::*;
 use IntoDimension;
-use {Producer, Layout, NdIndex};
+use {NdProducer, Layout, NdIndex};
 use Iter;
 
-impl<'a, A, D> Producer for WholeChunks<'a, A, D>
+impl<'a, A, D> NdProducer for WholeChunks<'a, A, D>
     where D: Dimension,
 {
     type Item = ArrayView<'a, A, D>;

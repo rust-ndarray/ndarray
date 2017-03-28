@@ -3,7 +3,7 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-use ndarray::Producer;
+use ndarray::NdProducer;
 
 #[test]
 fn chunks() {

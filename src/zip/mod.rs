@@ -82,7 +82,7 @@ trait LayoutImpl {
 trait Broadcast<E>
     where E: IntoDimension,
 {
-    type Output: Producer<Dim=E::Dim>;
+    type Output: NdProducer<Dim=E::Dim>;
     /// Broadcast the array to the new dimensions `shape`.
     ///
     /// ***Panics*** if broadcasting isn’t possible.
@@ -158,13 +158,13 @@ impl<D> Splittable for D
 /// Argument conversion into a producer.
 ///
 /// Slices and vectors can be used (equivalent to 1-dimensional array views).
-pub trait IntoProducer {
+pub trait IntoNdProducer {
     type Dim: Dimension;
-    type Output: Producer<Dim=Self::Dim>;
+    type Output: NdProducer<Dim=Self::Dim>;
     fn into_producer(self) -> Self::Output;
 }
 
-impl<P> IntoProducer for P where P: Producer {
+impl<P> IntoNdProducer for P where P: NdProducer {
     type Dim = P::Dim;
     type Output = Self;
     fn into_producer(self) -> Self::Output { self }
@@ -175,7 +175,7 @@ impl<P> IntoProducer for P where P: Producer {
 /// that yields chunks.
 ///
 /// Producers are used as a arguments to `Zip` and `azip!()`.
-pub trait Producer {
+pub trait NdProducer {
     type Item;
     type Elem;
     /// Dimension type
@@ -221,7 +221,7 @@ trait ZippableTuple : Sized {
 
 /// An array reference is an n-dimensional producer of element references
 /// (like ArrayView).
-impl<'a, A: 'a, S, D> IntoProducer for &'a ArrayBase<S, D>
+impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
     where D: Dimension,
           S: Data<Elem=A>,
 {
@@ -234,7 +234,7 @@ impl<'a, A: 'a, S, D> IntoProducer for &'a ArrayBase<S, D>
 
 /// A mutable array reference is an n-dimensional producer of mutable element
 /// references (like ArrayViewMut).
-impl<'a, A: 'a, S, D> IntoProducer for &'a mut ArrayBase<S, D>
+impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
     where D: Dimension,
           S: DataMut<Elem=A>,
 {
@@ -246,7 +246,7 @@ impl<'a, A: 'a, S, D> IntoProducer for &'a mut ArrayBase<S, D>
 }
 
 /// A slice is a one-dimensional producer
-impl<'a, A: 'a> IntoProducer for &'a [A] {
+impl<'a, A: 'a> IntoNdProducer for &'a [A] {
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
     fn into_producer(self) -> Self::Output {
@@ -255,7 +255,7 @@ impl<'a, A: 'a> IntoProducer for &'a [A] {
 }
 
 /// A mutable slice is a mutable one-dimensional producer
-impl<'a, A: 'a> IntoProducer for &'a mut [A] {
+impl<'a, A: 'a> IntoNdProducer for &'a mut [A] {
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
     fn into_producer(self) -> Self::Output {
@@ -264,7 +264,7 @@ impl<'a, A: 'a> IntoProducer for &'a mut [A] {
 }
 
 /// A Vec is a one-dimensional producer
-impl<'a, A: 'a> IntoProducer for &'a Vec<A> {
+impl<'a, A: 'a> IntoNdProducer for &'a Vec<A> {
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
     fn into_producer(self) -> Self::Output {
@@ -273,7 +273,7 @@ impl<'a, A: 'a> IntoProducer for &'a Vec<A> {
 }
 
 /// A mutable Vec is a mutable one-dimensional producer
-impl<'a, A: 'a> IntoProducer for &'a mut Vec<A> {
+impl<'a, A: 'a> IntoNdProducer for &'a mut Vec<A> {
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
     fn into_producer(self) -> Self::Output {
@@ -281,7 +281,7 @@ impl<'a, A: 'a> IntoProducer for &'a mut Vec<A> {
     }
 }
 
-impl<'a, A, D> Producer for ArrayView<'a, A, D>
+impl<'a, A, D> NdProducer for ArrayView<'a, A, D>
     where D: Dimension,
 {
     type Item = &'a A;
@@ -330,7 +330,7 @@ impl<'a, A, D> Producer for ArrayView<'a, A, D>
     }
 }
 
-impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
+impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     type Item = &'a mut A;
@@ -388,8 +388,8 @@ impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
 /// a time).
 ///
 /// In general, the zip uses a tuple of producers
-/// ([`Producer`](trait.Producer.html) trait) that all have to be of the same
-/// shape. The Producer implementation defines what its element type is
+/// ([`NdProducer`](trait.NdProducer.html) trait) that all have to be of the same
+/// shape. The NdProducer implementation defines what its element type is
 /// (for example if it's a shared reference, mutable reference or an array
 /// view etc).
 ///
@@ -428,14 +428,14 @@ pub struct Zip<Parts, D> {
 
 impl<P, D> Zip<(P, ), D>
     where D: Dimension,
-          P: Producer<Dim=D>
+          P: NdProducer<Dim=D>
 {
     /// Create a new `Zip` from the input array `array`.
     ///
     /// The Zip will take the exact dimension of `array` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     pub fn from<Part>(array: Part) -> Self
-        where Part: IntoProducer<Dim=D, Output=P>
+        where Part: IntoNdProducer<Dim=D, Output=P>
     {
         let array = array.into_producer();
         let dim = array.raw_dim();
@@ -452,7 +452,7 @@ impl<Parts, D> Zip<Parts, D>
 {
 
     fn check<P>(&self, part: &P)
-        where P: Producer<Dim=D>
+        where P: NdProducer<Dim=D>
     {
         debug_assert_eq!(&self.dimension, &part.raw_dim());
         assert!(part.equal_dim(&self.dimension));
@@ -616,7 +616,7 @@ macro_rules! zipt_impl {
     ($([$($p:ident)*][ $($q:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: Producer<Dim=Dim>),*> ZippableTuple for ($($p, )*) {
+        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> ZippableTuple for ($($p, )*) {
             type Item = ($($p::Item, )*);
             type Ptr = ($(*mut $p::Elem, )*);
             type Dim = Dim;
@@ -680,7 +680,7 @@ macro_rules! map_impl {
     ($([$choice:ident $($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<D: Dimension, $($p: Producer<Dim=D>),*> Zip<($($p,)*), D> {
+        impl<D: Dimension, $($p: NdProducer<Dim=D>),*> Zip<($($p,)*), D> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
             pub fn apply<Func>(&mut self, mut function: Func)
@@ -713,7 +713,7 @@ macro_rules! map_impl {
             ///
             /// ***Panics*** if `array`’s shape doen't match the Zip’s exactly.
             pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), D>
-                where Part: IntoProducer<Dim=D>,
+                where Part: IntoNdProducer<Dim=D>,
             {
                 let array = array.into_producer();
                 self.check(&array);
@@ -733,7 +733,7 @@ macro_rules! map_impl {
             /// ***Panics*** if broadcasting isn’t possible.
             pub fn and_broadcast<'a, Part, D2, Elem>(self, array: Part)
                 -> Zip<($($p,)* ArrayView<'a, Elem, D>, ), D>
-                where Part: IntoProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
+                where Part: IntoNdProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
                       D2: Dimension,
             {
                 let array = array.into_producer().broadcast_unwrap(self.dimension.clone());

@@ -23,7 +23,7 @@ use super::{
     ArrayViewMut,
     RemoveAxis,
     Axis,
-    Producer,
+    NdProducer,
 };
 
 pub use self::chunks::{WholeChunks, WholeChunksIter, whole_chunks_of};
@@ -813,7 +813,7 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
     }
 }
 
-impl<'a, A, D> Producer for AxisIter<'a, A, D>
+impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
     where D: Dimension
 {
     type Item = <Self as Iterator>::Item;
@@ -860,7 +860,7 @@ impl<'a, A, D> Producer for AxisIter<'a, A, D>
     private_impl!{}
 }
 
-impl<'a, A, D> Producer for AxisIterMut<'a, A, D>
+impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
     where D: Dimension
 {
     type Item = <Self as Iterator>::Item;

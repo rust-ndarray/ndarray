@@ -156,8 +156,8 @@ mod zip;
 
 pub use zip::{
     Zip,
-    Producer,
-    IntoProducer,
+    NdProducer,
+    IntoNdProducer,
     Layout,
     FoldWhile,
 };
