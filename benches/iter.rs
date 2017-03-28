@@ -94,7 +94,7 @@ fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
 const ZIPSZ: usize = 10_000;
 
 #[bench]
-fn sum_3_std_zip1(bench: &mut Bencher)
+fn scalar_sum_3_std_zip1(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -107,7 +107,7 @@ fn sum_3_std_zip1(bench: &mut Bencher)
 }
 
 #[bench]
-fn sum_3_std_zip2(bench: &mut Bencher)
+fn scalar_sum_3_std_zip2(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -120,7 +120,35 @@ fn sum_3_std_zip2(bench: &mut Bencher)
 }
 
 #[bench]
-fn sum_3_azip(bench: &mut Bencher)
+fn scalar_sum_3_std_zip3(bench: &mut Bencher)
+{
+    let a = vec![1; ZIPSZ];
+    let b = vec![1; ZIPSZ];
+    let c = vec![1; ZIPSZ];
+    bench.iter(|| {
+        let mut s = 0;
+        for ((&a, &b), &c) in a.iter().zip(b.iter()).zip(&c) {
+            s += a + b + c
+        }
+        s
+    });
+}
+
+#[bench]
+fn vector_sum_3_std_zip(bench: &mut Bencher)
+{
+    let a = vec![1.; ZIPSZ];
+    let b = vec![1.; ZIPSZ];
+    let mut c = vec![1.; ZIPSZ];
+    bench.iter(|| {
+        for ((&a, &b), c) in a.iter().zip(b.iter()).zip(&mut c) {
+            *c += a + b;
+        }
+    });
+}
+
+#[bench]
+fn scalar_sum_3_azip(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -135,7 +163,7 @@ fn sum_3_azip(bench: &mut Bencher)
 }
 
 #[bench]
-fn sum_3_azip_fold(bench: &mut Bencher)
+fn scalar_sum_3_azip_fold(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -144,5 +172,33 @@ fn sum_3_azip_fold(bench: &mut Bencher)
         Zip::from(&a).and(&b).and(&c).fold_while(0, |acc, &a, &b, &c| {
             FoldWhile::Continue(acc + a + b + c)
         }).into_inner()
+    });
+}
+
+#[bench]
+fn vector_sum_3_azip(bench: &mut Bencher)
+{
+    let a = vec![1.; ZIPSZ];
+    let b = vec![1.; ZIPSZ];
+    let mut c = vec![1.; ZIPSZ];
+    bench.iter(|| {
+        azip!(a, b, mut c in {
+            *c += a + b;
+        });
+    });
+}
+
+#[bench]
+fn vector_sum_3_zip_unchecked(bench: &mut Bencher)
+{
+    let a = vec![1.; ZIPSZ];
+    let b = vec![1.; ZIPSZ];
+    let mut c = vec![1.; ZIPSZ];
+    bench.iter(|| {
+        for i in 0..c.len() {
+            unsafe {
+                *c.get_unchecked_mut(i) += *a.get_unchecked(i) + *b.get_unchecked(i);
+            }
+        }
     });
 }
