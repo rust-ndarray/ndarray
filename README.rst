@@ -79,7 +79,24 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
-- 0.8
+- 0.8.1
+
+  - Add ``Zip`` and macro ``azip!()`` which implement lock step function
+    application across elements from one up to six arrays (or in general
+    producers)
+
+    + Apart from array views, axis iterators and the whole chunks iterable are
+      also producers
+
+  - Add constructor ``Array::uninitialized``
+  - Add iterable and producer ``.whole_chunks(size)``
+  - Implement a prettier ``Debug`` for ``Si``.
+  - Fix ``Array::default`` so that it panics as documented if the size of the
+    array would wrap around integer type limits.
+  - Output more verbose panics for errors when slicing arrays (only in debug
+    mode).
+
+- 0.8.0
 
   - Update serde dependency to 0.9
   - Remove deprecated type alias ``OwnedArray`` (use ``Array``)
