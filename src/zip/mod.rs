@@ -671,8 +671,13 @@ zipt_impl!{
     [A B C D E F][ a b c d e f],
 }
 
+macro_rules! macroif {
+    (true $($x:tt)*) => { $($x)* };
+    (false $($x:tt)*) => {  };
+}
+
 macro_rules! map_impl {
-    ($([$($p:ident)*],)+) => {
+    ($([$choice:ident $($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
         impl<D: Dimension, $($p: Producer<Dim=D>),*> Zip<($($p,)*), D> {
@@ -701,6 +706,8 @@ macro_rules! map_impl {
                     function(acc, $($p),*)
                 })
             }
+
+            macroif!{ $choice
 
             /// Include the array `array` in the Zip.
             ///
@@ -739,6 +746,8 @@ macro_rules! map_impl {
                 }
             }
 
+            }
+
             /// Split the `Zip` evenly in two
             pub fn split(self) -> (Self, Self)
             {
@@ -764,12 +773,12 @@ macro_rules! map_impl {
 }
 
 map_impl!{
-    [P1],
-    [P1 P2],
-    [P1 P2 P3],
-    [P1 P2 P3 P4],
-    [P1 P2 P3 P4 P5],
-    [P1 P2 P3 P4 P5 P6],
+    [true P1],
+    [true P1 P2],
+    [true P1 P2 P3],
+    [true P1 P2 P3 P4],
+    [true P1 P2 P3 P4 P5],
+    [false P1 P2 P3 P4 P5 P6],
 }
 
 pub enum FoldWhile<T> {
