@@ -23,6 +23,8 @@ macro_rules! fold_while {
     }
 }
 
+// public but users don't interact with it
+#[doc(hidden)]
 /// Memory layout description
 #[derive(Copy, Clone)]
 pub struct Layout(u32);
