@@ -155,7 +155,7 @@ mod zip;
 pub use zip::{
     Zip,
     Producer,
-    AsArrayViewAny,
+    IntoProducer,
     Layout,
     Offset,
 };

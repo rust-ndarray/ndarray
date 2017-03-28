@@ -157,10 +157,10 @@ impl<'a, A, D> Splittable for ArrayViewMut<'a, A, D>
 }
 
 /// Argument conversion into a producer.
-pub trait AsArrayViewAny {
+pub trait IntoProducer {
     type Dim: Dimension;
     type Output: Producer<Dim=Self::Dim>;
-    fn as_array_view_any(self) -> Self::Output;
+    fn into_producer(self) -> Self::Output;
 }
 
 /// A producer of an n-dimensional set of elements;
@@ -210,62 +210,62 @@ trait ZippableTuple : Sized {
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self);
 }
 
-impl<'a, A: 'a, S, D> AsArrayViewAny for &'a ArrayBase<S, D>
+impl<'a, A: 'a, S, D> IntoProducer for &'a ArrayBase<S, D>
     where D: Dimension,
           S: Data<Elem=A>,
 {
     type Dim = D;
     type Output = ArrayView<'a, A, D>;
-    fn as_array_view_any(self) -> Self::Output {
+    fn into_producer(self) -> Self::Output {
         self.view()
     }
 }
 
-impl<'a, A: 'a, S, D> AsArrayViewAny for &'a mut ArrayBase<S, D>
+impl<'a, A: 'a, S, D> IntoProducer for &'a mut ArrayBase<S, D>
     where D: Dimension,
           S: DataMut<Elem=A>,
 {
     type Dim = D;
     type Output = ArrayViewMut<'a, A, D>;
-    fn as_array_view_any(self) -> Self::Output {
+    fn into_producer(self) -> Self::Output {
         self.view_mut()
     }
 }
 
-impl<'a, A: 'a, D> AsArrayViewAny for ArrayView<'a, A, D>
+impl<'a, A: 'a, D> IntoProducer for ArrayView<'a, A, D>
     where D: Dimension,
 {
     type Dim = D;
     type Output = Self;
-    fn as_array_view_any(self) -> Self::Output {
+    fn into_producer(self) -> Self::Output {
         self
     }
 }
 
-impl<'a, A: 'a, D> AsArrayViewAny for ArrayViewMut<'a, A, D>
+impl<'a, A: 'a, D> IntoProducer for ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     type Dim = D;
     type Output = Self;
-    fn as_array_view_any(self) -> Self::Output {
+    fn into_producer(self) -> Self::Output {
         self
     }
 }
 
-impl<'a, A: 'a> AsArrayViewAny for &'a [A]
+impl<'a, A: 'a> IntoProducer for &'a [A]
 {
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
-    fn as_array_view_any(self) -> Self::Output {
+    fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
 }
 
-impl<'a, A: 'a> AsArrayViewAny for &'a mut [A]
+impl<'a, A: 'a> IntoProducer for &'a mut [A]
 {
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
-    fn as_array_view_any(self) -> Self::Output {
+    fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
 }
@@ -418,9 +418,9 @@ impl<P, D> Zip<(P, ), D>
     /// The Zip will take the exact dimension of `array` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     pub fn from<Part>(array: Part) -> Self
-        where Part: AsArrayViewAny<Dim=D, Output=P>
+        where Part: IntoProducer<Dim=D, Output=P>
     {
-        let array = array.as_array_view_any();
+        let array = array.into_producer();
         let dim = array.raw_dim();
         Zip {
             dimension: dim,
@@ -701,9 +701,9 @@ macro_rules! map_impl {
             ///
             /// ***Panics*** if `array`’s shape doen't match the Zip’s exactly.
             pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), D>
-                where Part: AsArrayViewAny<Dim=D>,
+                where Part: IntoProducer<Dim=D>,
             {
-                let array = array.as_array_view_any();
+                let array = array.into_producer();
                 self.check(&array);
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
@@ -721,10 +721,10 @@ macro_rules! map_impl {
             /// ***Panics*** if broadcasting isn’t possible.
             pub fn and_broadcast<'a, Part, D2, Elem>(self, array: Part)
                 -> Zip<($($p,)* ArrayView<'a, Elem, D>, ), D>
-                where Part: AsArrayViewAny<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
+                where Part: IntoProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
                       D2: Dimension,
             {
-                let array = array.as_array_view_any().broadcast_unwrap(self.dimension.clone());
+                let array = array.into_producer().broadcast_unwrap(self.dimension.clone());
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
                 Zip {
