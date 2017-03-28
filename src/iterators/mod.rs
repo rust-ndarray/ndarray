@@ -822,7 +822,7 @@ impl<'a, A, D> Producer for AxisIter<'a, A, D>
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
-        ::Layout::one_dim()
+        ::Layout::one_dimensional()
     }
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
@@ -869,7 +869,7 @@ impl<'a, A, D> Producer for AxisIterMut<'a, A, D>
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
-        ::Layout::one_dim()
+        ::Layout::one_dimensional()
     }
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {

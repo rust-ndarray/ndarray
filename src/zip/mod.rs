@@ -22,19 +22,24 @@ macro_rules! fold_while {
     }
 }
 
+/// Memory layout
 #[derive(Copy, Clone, Debug)]
 pub struct Layout(u32);
 
 impl Layout {
-    pub fn one_dim() -> Layout {
+    #[doc(hidden)]
+    pub fn one_dimensional() -> Layout {
         Layout(CORDER | FORDER)
     }
+    #[doc(hidden)]
     pub fn c() -> Layout {
         Layout(CORDER)
     }
+    #[doc(hidden)]
     pub fn f() -> Layout {
         Layout(FORDER)
     }
+    #[doc(hidden)]
     pub fn none() -> Layout {
         Layout(0)
     }
