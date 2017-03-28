@@ -573,18 +573,6 @@ impl<P, D> Zip<P, D>
     }
 }
 
-macro_rules! array_zip {
-    ($($x:pat),* in ($a:expr, $($array:expr),*) { $($t:tt)* }) => {
-        Zip::from($a)
-         $(
-             .and($array)
-         )*
-        .map(|$($x),*| {
-            $($t)*
-        })
-    }
-}
-
 trait Offset {
     type Args;
     unsafe fn offset(self, off: isize) -> Self;
