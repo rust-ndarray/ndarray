@@ -12,3 +12,15 @@ macro_rules! copy_and_clone {
         copy_and_clone!{ [] $type_ }
     }
 }
+
+/// This assertion is always enabled but only verbose (formatting when
+/// debug assertions are enabled).
+#[cfg(debug_assertions)]
+macro_rules! ndassert {
+    ($e:expr, $($t:tt)*) => { assert!($e, $($t)*) }
+}
+
+#[cfg(not(debug_assertions))]
+macro_rules! ndassert {
+    ($e:expr, $($_ignore:tt)*) => { assert!($e) }
+}

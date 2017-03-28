@@ -217,7 +217,9 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     fn do_slices(dim: &mut Self, strides: &mut Self, slices: &Self::SliceArg) -> isize {
         let slices = slices.as_ref();
         let mut offset = 0;
-        assert!(slices.len() == dim.slice().len());
+        ndassert!(slices.len() == dim.slice().len(),
+                  "SliceArg {:?}'s length does not match dimension {:?}",
+                  slices, dim);
         for (dr, sr, &slc) in zipsl_mut(dim.slice_mut(), strides.slice_mut()).zip_cons(slices)
         {
             let m = *dr;
@@ -229,8 +231,14 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             let mut e1 = abs_index(mi, e1);
             if e1 < b1 { e1 = b1; }
 
-            assert!(b1 <= m);
-            assert!(e1 <= m);
+            ndassert!(b1 <= m,
+                      concat!("Slice begin {} is past end of axis of length {}",
+                              " (for SliceArg {:?})"),
+                      b1, m, slices);
+            ndassert!(e1 <= m,
+                      concat!("Slice end {} is past end of axis of length {}",
+                              " (for SliceArg {:?})"),
+                      e1, m, slices);
 
             let m = e1 - b1;
             // stride
@@ -239,7 +247,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             // Data pointer offset
             offset += stride_offset(b1, *sr);
             // Adjust for strides
-            assert!(s1 != 0);
+            ndassert!(s1 != 0,
+                      concat!("Slice stride must not be none", 
+                              "(for SliceArg {:?})"),
+                      slices);
             // How to implement negative strides:
             //
             // Increase start pointer by

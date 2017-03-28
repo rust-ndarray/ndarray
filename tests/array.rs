@@ -80,6 +80,14 @@ fn slice_oob()
     let _vi = a.slice(&[Si(0, Some(10), 1), S]);
 }
 
+#[should_panic]
+#[test]
+fn slice_wrong_dim()
+{
+    let a = RcArray::<i32, _>::zeros(vec![3, 4, 5]);
+    let _vi = a.slice(s![.., ..]);
+}
+
 #[test]
 fn test_index()
 {
