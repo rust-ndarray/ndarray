@@ -24,4 +24,7 @@ fn chunks() {
             assert_eq!(c2.into_iter().count(), (m / i - (m / i) / 2) * (n / j));
         }
     }
+    let c = a.whole_chunks((m + 1, n));
+    assert_eq!(c.raw_dim().size(), 0);
+    assert_eq!(c.into_iter().count(), 0);
 }

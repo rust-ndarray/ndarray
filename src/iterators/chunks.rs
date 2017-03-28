@@ -123,7 +123,6 @@ pub fn whole_chunks_of<A, D, E>(a: ArrayView<A, D>, chunk: E) -> WholeChunks<A, 
     let mut size = a.raw_dim();
     for (sz, ch) in size.slice_mut().iter_mut().zip(chunk.slice_mut()) {
         assert!(*ch != 0, "Chunk size must not be zero");
-        if *ch > *sz { *ch = *sz; }
         *sz /= *ch;
     }
     let mut strides = a.raw_dim();
