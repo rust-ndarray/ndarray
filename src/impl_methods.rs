@@ -568,8 +568,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a whole chunks producer (and iterable).
     ///
-    /// Only produces whole chunks (skipping the remainder along each
-    /// dimension that doesn't fit evenly).
+    /// It produces the whole chunks of a given n-dimensional chunk size,
+    /// skipping the remainder along each dimension that doesn't fit evenly.
     ///
     /// **Panics** if any dimension of `chunk_size` is zero
     pub fn whole_chunks<E>(&self, chunk_size: E) -> WholeChunks<A, D> 

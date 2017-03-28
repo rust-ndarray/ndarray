@@ -12,9 +12,13 @@ impl<'a, A, D> Producer for WholeChunks<'a, A, D>
     type Item = ArrayView<'a, A, D>;
     type Elem = A;
     type Dim = D;
+
+    #[doc(hidden)]
     fn raw_dim(&self) -> D {
         self.size.clone()
     }
+
+    #[doc(hidden)]
     fn layout(&self) -> Layout {
         if Dimension::is_contiguous(&self.size, &self.strides) {
             Layout::c()
@@ -23,34 +27,44 @@ impl<'a, A, D> Producer for WholeChunks<'a, A, D>
         }
     }
 
+    #[doc(hidden)]
     fn as_ptr(&self) -> *mut A {
         self.ptr
     }
 
+    #[doc(hidden)]
     fn contiguous_stride(&self) -> isize {
         let n = self.strides.ndim();
         let s = self.strides[n - 1] as isize;
         s
     }
 
+    #[doc(hidden)]
     unsafe fn as_ref(&self, p: *mut A) -> Self::Item {
         ArrayView::from_shape_ptr(self.chunk.clone().strides(self.inner_strides.clone()), p)
     }
 
+    #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
         self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
+    #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize {
         self.strides[axis.index()] as isize
     }
 
+    #[doc(hidden)]
     fn split_at(self, _axis: Axis, _index: usize) -> (Self, Self) {
         unimplemented!()
     }
     private_impl!{}
 }
 
+/// Whole chunks producer and iterable.
+///
+/// See [`.whole_chunks()`](struct.ArrayBase.html#method.whole_chunks) for more
+/// information.
 #[derive(Debug)]
 pub struct WholeChunks<'a, A: 'a, D> {
     size: D,
@@ -123,6 +137,10 @@ impl<'a, A, D> IntoIterator for WholeChunks<'a, A, D>
     }
 }
 
+/// Whole chunks iterator.
+///
+/// See [`.whole_chunks()`](struct.ArrayBase.html#method.whole_chunks) for more
+/// information.
 pub struct WholeChunksIter<'a, A: 'a, D> {
     iter: Iter<'a, A, D>,
     chunk: D,
