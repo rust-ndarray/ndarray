@@ -7,7 +7,7 @@
 /// This example:
 ///
 /// ```rust,ignore
-/// array_zip!(mut a, b, c in { *a = b + c })
+/// azip!(mut a, b, c in { *a = b + c })
 /// ```
 ///
 /// Is equivalent to:
@@ -24,7 +24,7 @@
 /// + `mut a`: the array is `&mut a` and the variable pattern is `mut a`.
 /// + `b`: the array is `&b` and the variable pattern is `&b` (same for `c`).
 ///
-/// The syntax is `array_zip!(` *capture [, capture [, ...] ]* `in {` *expression* `})`
+/// The syntax is `azip!(` *capture [, capture [, ...] ]* `in {` *expression* `})`
 /// where the captures are a sequence of pattern-like items that indicate which
 /// arrays are used for the zip. The *expression* is evaluated elementwise,
 /// with the value of an element from each array in their respective variable.
@@ -41,7 +41,7 @@
 /// ## Examples
 ///
 /// ```rust
-/// #[macro_use(array_zip)]
+/// #[macro_use(azip)]
 /// extern crate ndarray;
 ///
 /// use ndarray::Array2;
@@ -54,10 +54,10 @@
 /// let b = M::from_elem(a.dim(), 1.);
 /// let c = M::from_elem(a.dim(), 2.);
 ///
-/// array_zip!(mut a, b, c in { *a = b + c });
+/// azip!(mut a, b, c in { *a = b + c });
 /// # }
 /// ```
-macro_rules! array_zip {
+macro_rules! azip {
     // Final Rule
     (@parse [$a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
         $crate::Zip::from($a)
@@ -70,29 +70,29 @@ macro_rules! array_zip {
     };
     // parsing stack: [expressions] [patterns] (one per operand)
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
+        azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
+        azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] , $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
+        azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident ($e:expr) $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
+        azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
+        azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident ($e:expr) $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
+        azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
+        azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $($t:tt)*) => { };
     ($($t:tt)*) => {
-        array_zip!(@parse [] [] $($t)*);
+        azip!(@parse [] [] $($t)*);
     }
 }
 

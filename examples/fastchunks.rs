@@ -21,12 +21,12 @@ fn main() {
         Zip::from(&mut b).and(iter.clone())
     );
 
-    array_zip!(mut b, ref a (iter) in { println!("{:6.2?}", a); *b = a.row(0).scalar_sum() });
+    azip!(mut b, ref a (iter) in { println!("{:6.2?}", a); *b = a.row(0).scalar_sum() });
     println!("{:?}", b);
     Zip::from(b.view_mut().reversed_axes()).and(a.whole_chunks([4, 5])).apply(|b, a| {
         println!("{:6.2?}", a);
         *b = a.row(0).scalar_sum();
     });
     println!("{:?}", b);
-    //array_zip!(mut a (a), mut b in { *b = a.scalar_sum() });
+    //azip!(mut a (a), mut b in { *b = a.scalar_sum() });
 }
