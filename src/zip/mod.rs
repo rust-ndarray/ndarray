@@ -168,9 +168,9 @@ pub trait IntoProducer {
 /// that yields chunks.
 pub trait Producer {
     type Item;
+    type Elem;
     /// Dimension type
     type Dim: Dimension;
-    type Ptr: Offset;
     #[doc(hidden)]
     fn layout(&self) -> Layout;
     #[doc(hidden)]
@@ -180,11 +180,11 @@ pub trait Producer {
         self.raw_dim() == *dim
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> Self::Ptr;
+    fn as_ptr(&self) -> *mut Self::Elem;
     #[doc(hidden)]
-    unsafe fn as_ref(&self, Self::Ptr) -> Self::Item;
+    unsafe fn as_ref(&self, *mut Self::Elem) -> Self::Item;
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem;
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize;
     #[doc(hidden)]
@@ -275,7 +275,7 @@ impl<'a, A, D> Producer for ArrayView<'a, A, D>
 {
     type Item = &'a A;
     type Dim = D;
-    type Ptr = *mut A;
+    type Elem = A;
 
     private_impl!{}
     #[doc(hidden)]
@@ -324,7 +324,7 @@ impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
 {
     type Item = &'a mut A;
     type Dim = D;
-    type Ptr = *mut A;
+    type Elem = A;
 
     private_impl!{}
     #[doc(hidden)]
@@ -529,28 +529,16 @@ impl<P, D> Zip<P, D>
     }
 }
 
-pub trait Offset : Copy {
+trait Offset : Copy {
     unsafe fn offset(self, off: isize) -> Self;
     unsafe fn stride_offset(self, index: usize, stride: isize) -> Self {
         self.offset(index as isize * stride)
     }
 }
 
-impl<T> Offset for *const T {
-    unsafe fn offset(self, off: isize) -> Self {
-        self.offset(off)
-    }
-}
-
 impl<T> Offset for *mut T {
     unsafe fn offset(self, off: isize) -> Self {
         self.offset(off)
-    }
-}
-
-impl Offset for isize {
-    unsafe fn offset(self, off: isize) -> Self {
-        self + off
     }
 }
 
@@ -613,7 +601,7 @@ macro_rules! zipt_impl {
         #[allow(non_snake_case)]
         impl<Dim: Dimension, $($p: Producer<Dim=Dim>),*> ZippableTuple for ($($p, )*) {
             type Item = ($($p::Item, )*);
-            type Ptr = ($($p::Ptr, )*);
+            type Ptr = ($(*mut $p::Elem, )*);
             type Dim = Dim;
             type Stride = ($(sub!($p [isize]),)* );
 

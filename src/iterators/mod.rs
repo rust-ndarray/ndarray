@@ -611,7 +611,7 @@ impl<'a, A, D> Producer for AxisIter<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
-    type Ptr = *mut A;
+    type Elem = A;
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
@@ -622,7 +622,7 @@ impl<'a, A, D> Producer for AxisIter<'a, A, D>
         Ix1(self.len())
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> Self::Ptr {
+    fn as_ptr(&self) -> *mut Self::Elem {
         self.iter.ptr
     }
 
@@ -631,13 +631,13 @@ impl<'a, A, D> Producer for AxisIter<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
+    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
         ArrayView::new_(ptr,
                         self.iter.inner_dim.clone(),
                         self.iter.inner_strides.clone())
     }
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
         self.iter.ptr.offset(self.iter.stride * i[0] as isize)
     }
 

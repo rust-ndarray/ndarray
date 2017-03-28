@@ -157,7 +157,6 @@ pub use zip::{
     Producer,
     IntoProducer,
     Layout,
-    Offset,
 };
 
 /// Implementation's prelude. Common types used everywhere.
