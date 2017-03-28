@@ -5,24 +5,12 @@ extern crate ndarray;
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-macro_rules! array_zip {
-    ($($x:pat),* in ($a:expr, $($array:expr),*) { $($t:tt)* }) => {
-        Zip::from($a)
-         $(
-             .and($array)
-         )*
-        .apply(|$($x),*| {
-            $($t)*
-        })
-    }
-}
-
 fn main() {
     let n = 16;
     let mut a = Array::<f32, _>::zeros((n, n));
     let mut b = Array::<f32, _>::from_elem((n, n), 1.);
     for ((i, j), elt) in b.indexed_iter_mut() {
-        *elt /= 1. + (i + j) as f32;
+        *elt /= 1. + (i + 2 * j) as f32;
     }
     let c = Array::<f32, _>::from_elem((n, n + 1), 1.7);
     let c = c.slice(s![.., ..-1]);
@@ -37,22 +25,18 @@ fn main() {
     assert!(a.iter().all(|&x| x == 3.));
 
     {
-        let mut z = Zip::from(b.t()).and(a.view_mut().reversed_axes());
-        z.apply(|&x, y| *y = x);
+        let a = a.view_mut().reversed_axes();
+        array_zip!(mut a (a), b (b.t()) in { *a = b });
 
     }
     assert_eq!(a, b);
 
-    array_zip!(x, &y, &z in (&mut a, &b, &c) {
-        *x = y + z;
-    });
+    array_zip!(mut a, b, c in { *a = b + c; });
     assert_eq!(a, &b + &c);
 
     a.fill(0.);
     for _ in 0..10_000 {
-        array_zip!(x, &y, &z in (&mut a, &b, &c) {
-            *x += y * z;
-        });
+        array_zip!(mut a, b, c in { *a += b * c });
     }
-    println!("{:4.2?}", a);
+    println!("{:8.2?}", a);
 }
