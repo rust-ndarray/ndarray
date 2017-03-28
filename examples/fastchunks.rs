@@ -21,10 +21,7 @@ fn main() {
         Zip::from(&mut b).and(iter.clone())
     );
 
-    Zip::from(&mut b).and(iter).apply(|b, a| {
-        println!("{:6.2?}", a);
-        *b = a.row(0).scalar_sum();
-    });
+    array_zip!(mut b, ref a (iter) in { println!("{:6.2?}", a); *b = a.row(0).scalar_sum() });
     println!("{:?}", b);
     Zip::from(b.view_mut().reversed_axes()).and(a.whole_chunks([4, 5])).apply(|b, a| {
         println!("{:6.2?}", a);

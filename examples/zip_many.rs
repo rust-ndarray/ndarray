@@ -35,8 +35,8 @@ fn main() {
     assert_eq!(a, &b + &c);
 
     let ax = Axis(0);
-    println!("{:?}", Zip::from(b.row_mut(0)).and_view(a.axis_iter(ax)));
-    Zip::from(b.row_mut(0)).and_view(a.axis_iter(ax)).apply(|x, y| {
+    println!("{:?}", Zip::from(b.row_mut(0)).and(a.axis_iter(ax)));
+    Zip::from(b.row_mut(0)).and(a.axis_iter(ax)).apply(|x, y| {
         println!("{:6.2?}", y);
         *x = y.scalar_sum();
     });
