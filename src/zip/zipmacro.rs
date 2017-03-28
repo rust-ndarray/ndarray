@@ -70,10 +70,10 @@ macro_rules! array_zip {
     };
     // parsing stack: [expressions] [patterns] (one per operand)
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
+        array_zip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident $($t:tt)*) => {
-        array_zip!(@parse [$($exprs)* &mut $x,] [$($pats)* $x,] $($t)*);
+        array_zip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] , $($t:tt)*) => {
         array_zip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
