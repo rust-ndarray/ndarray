@@ -1,8 +1,8 @@
 
 #[macro_export]
-/// Array zip macro.
+/// Array zip macro: lock step function application across several arrays.
 ///
-/// This is a shorthand for lock step iteration across many arrays.
+/// This is a shorthand for [`Zip`](struct.Zip.html).
 ///
 /// This example:
 ///
