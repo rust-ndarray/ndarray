@@ -4,6 +4,8 @@ extern crate ndarray;
 extern crate itertools;
 
 use ndarray::prelude::*;
+use ndarray::Zip;
+
 use itertools::{assert_equal, cloned, enumerate};
 
 use std::mem::swap;
@@ -70,4 +72,25 @@ fn test_azip3_slices() {
     });
     let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
     assert!(res.all_close(&ArrayView::from(&c), 1e-4));
+}
+
+#[test]
+fn test_broadcast() {
+    let n = 16;
+    let mut a = Array::<f32, _>::zeros((n, n));
+    let mut b = Array::<f32, _>::from_elem((1, n), 1.);
+    for ((i, j), elt) in b.indexed_iter_mut() {
+        *elt /= 1. + (i + 2 * j) as f32;
+    }
+    let d = Array::from_elem((1, n), 1.);
+    let e = Array::from_elem((), 2.);
+
+    {
+        let mut z = Zip::from(a.view_mut())
+            .and_broadcast(&b)
+            .and_broadcast(&d)
+            .and_broadcast(&e);
+        z.apply(|x, &y, &z, &w| *x = y + z + w);
+    }
+    assert!(a.all_close(&(&b + &d + &e), 1e-4));
 }

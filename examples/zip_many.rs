@@ -3,7 +3,6 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-use ndarray::Zip;
 
 fn main() {
     let n = 16;
@@ -15,15 +14,6 @@ fn main() {
     let c = Array::<f32, _>::from_elem((n, n + 1), 1.7);
     let c = c.slice(s![.., ..-1]);
 
-    let d = Array::from_elem((1, n), 1.);
-    let e = Array::from_elem((), 2.);
-
-    {
-        let mut z = Zip::from(a.view_mut()).and_broadcast(&d).and_broadcast(&e);
-        z.apply(|x, &y, &z| *x = y + z);
-    }
-    assert!(a.iter().all(|&x| x == 3.));
-
     {
         let a = a.view_mut().reversed_axes();
         azip!(mut a (a), b (b.t()) in { *a = b });
@@ -33,26 +23,15 @@ fn main() {
 
     azip!(mut a, b, c in { *a = b + c; });
     assert_eq!(a, &b + &c);
-
+    
+    // sum of each row
     let ax = Axis(0);
-    println!("{:?}", Zip::from(b.row_mut(0)).and(a.axis_iter(ax)));
-    Zip::from(b.row_mut(0)).and(a.axis_iter(ax)).apply(|x, y| {
-        println!("{:6.2?}", y);
-        *x = y.scalar_sum();
-    });
+    let mut sums = Array::zeros(a.len_of(ax));
+    azip!(mut sums, ref a (a.axis_iter(ax)) in { *sums = a.scalar_sum() });
 
-    Zip::from(b.row(0)).and(a.axis_iter_mut(ax)).apply(|&x, mut y| {
-        println!("{:6.2?}", y);
-        y.fill(x);
-    });
-    azip!(b (b.row(0)), mut a (a.axis_iter_mut(Axis(1))) in { a.fill(b) });
-    println!("{:6.2?}", b.row(0));
-    println!("{:6.2?}", a);
-    //azip!(a (a.axis_iter(Axis(0))), b (b.column(0)) in { } );
-
-    a.fill(0.);
-    for _ in 0..10_000 {
-        azip!(mut a, b, c in { *a += b * c });
-    }
-    println!("{:8.2?}", a);
+    // sum of each chunk
+    let chunk_sz = (2, 2);
+    let nchunks = (n / chunk_sz.0, n / chunk_sz.1);
+    let mut sums = Array::zeros(nchunks);
+    azip!(mut sums, ref a (a.whole_chunks(chunk_sz)) in { *sums = a.scalar_sum() });
 }
