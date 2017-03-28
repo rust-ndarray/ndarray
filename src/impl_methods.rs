@@ -22,6 +22,7 @@ use super::zipsl;
 use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes, merge_axes, stride_offset};
+use iterators::whole_chunks_of;
 
 use {
     NdIndex,
@@ -35,6 +36,7 @@ use {
     InnerIterMut,
     AxisIter,
     AxisIterMut,
+    WholeChunks,
 };
 use stacking::stack;
 
@@ -606,6 +608,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         iterators::new_chunk_iter_mut(self.view_mut(), axis.index(), size)
+    }
+
+    /// Return a whole chunks producer (and iterable).
+    ///
+    /// It produces the whole chunks of a given n-dimensional chunk size,
+    /// skipping the remainder along each dimension that doesn't fit evenly.
+    ///
+    /// Iterator element is `ArrayView<A, D>`
+    ///
+    /// **Panics** if any dimension of `chunk_size` is zero
+    pub fn whole_chunks<E>(&self, chunk_size: E) -> WholeChunks<A, D> 
+        where E: IntoDimension<Dim=D>,
+    {
+        whole_chunks_of(self.view(), chunk_size)
     }
 
     // Return (length, stride) for diagonal

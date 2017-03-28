@@ -5,6 +5,8 @@ version = "0.8.0"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
+readme = "README.rst"
+
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "https://bluss.github.io/rust-ndarray/"
 

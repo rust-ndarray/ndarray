@@ -5,6 +5,10 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
+
+mod chunks;
+
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -19,7 +23,10 @@ use super::{
     ArrayViewMut,
     RemoveAxis,
     Axis,
+    Producer,
 };
+
+pub use self::chunks::{WholeChunks, WholeChunksIter, whole_chunks_of};
 
 /// Base for array iterators
 ///
@@ -513,6 +520,7 @@ impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
     }
 }
 
+#[derive(Debug)]
 pub struct OuterIterCore<A, D> {
     index: Ix,
     len: Ix,
@@ -597,6 +605,7 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 /// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
 /// or [`.axis_iter()`](struct.ArrayBase.html#method.axis_iter)
 /// for more information.
+#[derive(Debug)]
 pub struct AxisIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a A>,
@@ -676,9 +685,7 @@ impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
             unsafe {
-                ArrayView::new_(ptr,
-                                self.iter.inner_dim.clone(),
-                                self.iter.inner_strides.clone())
+                self.as_ref(ptr)
             }
         })
     }
@@ -694,9 +701,7 @@ impl<'a, A, D> DoubleEndedIterator for AxisIter<'a, A, D>
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter.next_back().map(|ptr| {
             unsafe {
-                ArrayView::new_(ptr,
-                                self.iter.inner_dim.clone(),
-                                self.iter.inner_strides.clone())
+                self.as_ref(ptr)
             }
         })
     }
@@ -759,9 +764,7 @@ impl<'a, A, D> Iterator for AxisIterMut<'a, A, D>
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|ptr| {
             unsafe {
-                ArrayViewMut::new_(ptr,
-                                   self.iter.inner_dim.clone(),
-                                   self.iter.inner_strides.clone())
+                self.as_ref(ptr)
             }
         })
     }
@@ -777,9 +780,7 @@ impl<'a, A, D> DoubleEndedIterator for AxisIterMut<'a, A, D>
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter.next_back().map(|ptr| {
             unsafe {
-                ArrayViewMut::new_(ptr,
-                                   self.iter.inner_dim.clone(),
-                                   self.iter.inner_strides.clone())
+                self.as_ref(ptr)
             }
         })
     }
@@ -810,6 +811,100 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
         iter: new_outer_core(v, axis),
         life: PhantomData,
     }
+}
+
+impl<'a, A, D> Producer for AxisIter<'a, A, D>
+    where D: Dimension
+{
+    type Item = <Self as Iterator>::Item;
+    type Dim = Ix1;
+    type Elem = A;
+
+    #[doc(hidden)]
+    fn layout(&self) -> ::Layout {
+        ::Layout::one_dimensional()
+    }
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        Ix1(self.len())
+    }
+    #[doc(hidden)]
+    fn as_ptr(&self) -> *mut Self::Elem {
+        self.iter.ptr
+    }
+
+    fn contiguous_stride(&self) -> isize {
+        self.iter.stride
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
+        ArrayView::new_(ptr,
+                        self.iter.inner_dim.clone(),
+                        self.iter.inner_strides.clone())
+    }
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+        self.iter.ptr.offset(self.iter.stride * i[0] as isize)
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, _axis: Axis) -> isize {
+        self.contiguous_stride()
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, _axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(index)
+    }
+    private_impl!{}
+}
+
+impl<'a, A, D> Producer for AxisIterMut<'a, A, D>
+    where D: Dimension
+{
+    type Item = <Self as Iterator>::Item;
+    type Dim = Ix1;
+    type Elem = A;
+
+    #[doc(hidden)]
+    fn layout(&self) -> ::Layout {
+        ::Layout::one_dimensional()
+    }
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        Ix1(self.len())
+    }
+    #[doc(hidden)]
+    fn as_ptr(&self) -> *mut Self::Elem {
+        self.iter.ptr
+    }
+
+    fn contiguous_stride(&self) -> isize {
+        self.iter.stride
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
+        ArrayViewMut::new_(ptr,
+                           self.iter.inner_dim.clone(),
+                           self.iter.inner_strides.clone())
+    }
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+        self.iter.ptr.offset(self.iter.stride * i[0] as isize)
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, _axis: Axis) -> isize {
+        self.contiguous_stride()
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, _axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(index)
+    }
+    private_impl!{}
 }
 
 /// An iterator that traverses over the specified axis
@@ -996,6 +1091,8 @@ send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
+send_sync_read_only!(WholeChunks);
+send_sync_read_only!(WholeChunksIter);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);

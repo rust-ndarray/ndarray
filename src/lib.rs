@@ -78,7 +78,7 @@ extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
-use std::iter::Zip;
+use std::iter::Zip as ZipIter;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
@@ -107,6 +107,8 @@ pub use iterators::{
     AxisIterMut,
     AxisChunksIter,
     AxisChunksIterMut,
+    WholeChunks,
+    WholeChunksIter,
 };
 
 pub use arraytraits::AsArray;
@@ -116,6 +118,7 @@ pub use stacking::stack;
 pub use shape_builder::{ ShapeBuilder};
 
 #[macro_use] mod macro_utils;
+#[macro_use] mod private;
 mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde")]
@@ -149,6 +152,15 @@ mod si;
 mod error;
 mod shape_builder;
 mod stacking;
+mod zip;
+
+pub use zip::{
+    Zip,
+    Producer,
+    IntoProducer,
+    Layout,
+    FoldWhile,
+};
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
@@ -754,18 +766,18 @@ pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
-    -> Zip<SliceIter<'a, A>, SliceIter<'b, B>> {
+    -> ZipIter<SliceIter<'a, A>, SliceIter<'b, B>> {
     t.iter().zip(u)
 }
 fn zipsl_mut<'a, 'b, A, B>(t: &'a mut [A], u: &'b mut [B])
-    -> Zip<SliceIterMut<'a, A>, SliceIterMut<'b, B>> {
+    -> ZipIter<SliceIterMut<'a, A>, SliceIterMut<'b, B>> {
     t.iter_mut().zip(u)
 }
 
 use itertools::{cons_tuples, ConsTuples};
 
 trait ZipExt : Iterator {
-    fn zip_cons<J>(self, iter: J) -> ConsTuples<Zip<Self, J::IntoIter>, (Self::Item, J::Item)>
+    fn zip_cons<J>(self, iter: J) -> ConsTuples<ZipIter<Self, J::IntoIter>, (Self::Item, J::Item)>
         where J: IntoIterator,
               Self: Sized,
     {
