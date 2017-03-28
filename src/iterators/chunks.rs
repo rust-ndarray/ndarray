@@ -59,8 +59,7 @@ impl<'a, A, D> Producer for WholeChunks<'a, A, D>
         let len = self.size[axis.index()];
         let right_ptr = if index != len {
             unsafe { self.ptr.offset(self.stride_of(axis) * index as isize) } 
-        }
-        else {
+        } else {
             self.ptr
         };
         let mut right_size = self.size.clone();
@@ -153,11 +152,12 @@ impl<'a, A, D> IntoIterator for WholeChunks<'a, A, D>
     type IntoIter = WholeChunksIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
         unsafe {
-        WholeChunksIter {
-            iter: ArrayView::from_shape_ptr(self.size.strides(self.strides), self.ptr).into_iter(),
-            chunk: self.chunk,
-            inner_strides: self.inner_strides,
-        }
+            WholeChunksIter {
+                iter: ArrayView::from_shape_ptr(
+                    self.size.strides(self.strides), self.ptr).into_iter(),
+                chunk: self.chunk,
+                inner_strides: self.inner_strides,
+            }
         }
     }
 }
