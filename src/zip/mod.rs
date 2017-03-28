@@ -67,7 +67,7 @@ trait LayoutImpl {
 trait Broadcast<E>
     where E: IntoDimension,
 {
-    type Output: View<Dim=E::Dim>;
+    type Output: Producer<Dim=E::Dim>;
     /// Broadcast the array to the new dimensions `shape`.
     ///
     /// ***Panics*** if broadcasting isn’t possible.
@@ -162,47 +162,48 @@ impl<'a, A, D> Splittable for ArrayViewMut<'a, A, D>
 /// as appropriate.
 pub trait AsArrayViewAny {
     type Dim: Dimension;
-    type Output: View<Dim=Self::Dim>;
+    type Output: Producer<Dim=Self::Dim>;
     fn as_array_view_any(self) -> Self::Output;
 }
 
 /// An array view or a reference to an array
-pub trait View {
-    /// Element type
-    type Elem;
-    /// Native reference type (shared/mutable as appropriate)
-    type Ref;
+pub trait Producer {
+    type Item;
     /// Dimension type
     type Dim: Dimension;
+    type Ptr: Offset;
     #[doc(hidden)]
     fn layout(&self) -> Layout;
     #[doc(hidden)]
-    fn raw_dim(&self) -> &Self::Dim;
+    fn raw_dim(&self) -> Self::Dim;
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem;
+    fn as_ptr(&self) -> Self::Ptr;
     #[doc(hidden)]
-    unsafe fn as_ref(*mut Self::Elem) -> Self::Ref;
+    unsafe fn as_ref(&self, Self::Ptr) -> Self::Item;
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem;
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize;
     #[doc(hidden)]
-    fn ensure_unique(&mut self) { }
+    #[inline(always)]
+    fn contiguous_stride(&self) -> isize {
+        1
+    }
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) where Self: Sized;
     private_decl!{}
 }
 
 trait ZippableTuple : Sized {
-    type Elem;
-    type Ref;
-    type Ptr: Offset<Args=Self::Stride> + Copy;
+    type Item;
+    type Ptr: OffsetTuple<Args=Self::Stride> + Copy;
     type Dim: Dimension;
     type Stride: Copy;
     fn as_ptr(&self) -> Self::Ptr;
-    unsafe fn as_ref(Self::Ptr) -> Self::Ref;
+    unsafe fn as_ref(&self, Self::Ptr) -> Self::Item;
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     fn stride_of(&self, index: usize) -> Self::Stride;
+    fn contiguous_stride(&self) -> Self::Stride;
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self);
 }
 
@@ -266,21 +267,21 @@ impl<'a, A: 'a> AsArrayViewAny for &'a mut [A]
     }
 }
 
-impl<'a, A, D> View for ArrayView<'a, A, D>
+impl<'a, A, D> Producer for ArrayView<'a, A, D>
     where D: Dimension,
 {
-    type Elem = A;
-    type Ref = &'a A;
+    type Item = &'a A;
     type Dim = D;
+    type Ptr = *mut A;
 
     private_impl!{}
     #[doc(hidden)]
-    fn raw_dim(&self) -> &Self::Dim {
-        &self.dim
+    fn raw_dim(&self) -> Self::Dim {
+        self.raw_dim()
     }
 
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
+    fn as_ptr(&self) -> *mut A {
         self.as_ptr() as _
     }
 
@@ -290,12 +291,12 @@ impl<'a, A, D> View for ArrayView<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(ptr: *mut Self::Elem) -> Self::Ref {
+    unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item {
         &*ptr
     }
 
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
         self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
@@ -310,21 +311,21 @@ impl<'a, A, D> View for ArrayView<'a, A, D>
     }
 }
 
-impl<'a, A, D> View for ArrayViewMut<'a, A, D>
+impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
-    type Elem = A;
-    type Ref = &'a mut A;
+    type Item = &'a mut A;
     type Dim = D;
+    type Ptr = *mut A;
 
     private_impl!{}
     #[doc(hidden)]
-    fn raw_dim(&self) -> &Self::Dim {
-        &self.dim
+    fn raw_dim(&self) -> Self::Dim {
+        self.raw_dim()
     }
 
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
+    fn as_ptr(&self) -> *mut A {
         self.as_ptr() as _
     }
 
@@ -334,12 +335,12 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(ptr: *mut Self::Elem) -> Self::Ref {
+    unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item {
         &mut *ptr
     }
 
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
         self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
@@ -397,7 +398,7 @@ pub struct Zip<Parts, D> {
 
 impl<P, D> Zip<(P, ), D>
     where D: Dimension,
-          P: View<Dim=D>
+          P: Producer<Dim=D>
 {
     /// Create a new `Zip` from the input array `array`.
     ///
@@ -407,7 +408,7 @@ impl<P, D> Zip<(P, ), D>
         where Part: AsArrayViewAny<Dim=D, Output=P>
     {
         let array = array.as_array_view_any();
-        let dim = array.raw_dim().clone();
+        let dim = array.raw_dim();
         Zip {
             dimension: dim,
             layout: array.layout(),
@@ -421,16 +422,15 @@ impl<Parts, D> Zip<Parts, D>
 {
 
     fn check<P>(&self, part: &mut P)
-        where P: View<Dim=D>
+        where P: Producer<Dim=D>
     {
-        debug_assert_eq!(&self.dimension, part.raw_dim());
-        assert!(self.dimension.equal(part.raw_dim()));
-        part.ensure_unique();
+        debug_assert_eq!(&self.dimension, &part.raw_dim());
+        assert!(self.dimension.equal(&part.raw_dim()));
     }
 
-    /// Return a reference to the dimension of the Zip
-    pub fn raw_dim(&self) -> &D {
-        &self.dimension
+    /// Return a the number of element tuples in the Zip
+    pub fn size(&self) -> usize {
+        self.dimension.size()
     }
 
     /// Return the length of `axis`
@@ -460,7 +460,7 @@ impl<P, D> Zip<P, D>
     where D: Dimension,
 {
     fn apply_core<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
-        where F: FnMut(Acc, P::Ref) -> FoldWhile<Acc>,
+        where F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
               P: ZippableTuple<Dim=D>,
     {
         if self.layout.is(CORDER | FORDER) {
@@ -470,23 +470,24 @@ impl<P, D> Zip<P, D>
         }
     }
     fn apply_core_contiguous<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
-        where F: FnMut(Acc, P::Ref) -> FoldWhile<Acc>,
+        where F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
               P: ZippableTuple<Dim=D>,
     {
         debug_assert!(self.layout.is(CORDER | FORDER));
         let size = self.dimension.size();
         let ptrs = self.parts.as_ptr();
+        let inner_strides = self.parts.contiguous_stride();
         for i in 0..size {
             unsafe {
-                let ptr_i = ptrs.offset(i as isize);
-                acc = fold_while![function(acc, P::as_ref(ptr_i))];
+                let ptr_i = ptrs.stride_offset(i, inner_strides);
+                acc = fold_while![function(acc, self.parts.as_ref(ptr_i))];
             }
         }
         FoldWhile::Continue(acc)
     }
 
     fn apply_core_strided<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
-        where F: FnMut(Acc, P::Ref) -> FoldWhile<Acc>,
+        where F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
               P: ZippableTuple<Dim=D>,
     {
         let n = self.dimension.ndim();
@@ -503,8 +504,8 @@ impl<P, D> Zip<P, D>
             unsafe {
                 let ptr = self.parts.uget_ptr(&index);
                 for i in 0..inner_len {
-                    let p = ptr.offset_stride(i, inner_strides);
-                    acc = fold_while!(function(acc, P::as_ref(p)));
+                    let p = ptr.stride_offset(i, inner_strides);
+                    acc = fold_while!(function(acc, self.parts.as_ref(p)));
                 }
             }
 
@@ -515,19 +516,45 @@ impl<P, D> Zip<P, D>
     }
 }
 
-trait Offset {
-    type Args;
+pub trait Offset : Copy {
     unsafe fn offset(self, off: isize) -> Self;
-    unsafe fn offset_stride(self, index: usize, stride: Self::Args) -> Self;
+    unsafe fn stride_offset(self, index: usize, stride: isize) -> Self {
+        self.offset(index as isize * stride)
+    }
+}
+
+impl<T> Offset for *const T {
+    unsafe fn offset(self, off: isize) -> Self {
+        self.offset(off)
+    }
 }
 
 impl<T> Offset for *mut T {
+    unsafe fn offset(self, off: isize) -> Self {
+        self.offset(off)
+    }
+}
+
+impl Offset for isize {
+    unsafe fn offset(self, off: isize) -> Self {
+        self + off
+    }
+}
+
+
+trait OffsetTuple {
+    type Args;
+    unsafe fn offset(self, off: isize) -> Self;
+    unsafe fn stride_offset(self, index: usize, stride: Self::Args) -> Self;
+}
+
+impl<T> OffsetTuple for *mut T {
     type Args = isize;
     unsafe fn offset(self, off: isize) -> Self {
         self.offset(off)
     }
 
-    unsafe fn offset_stride(self, index: usize, stride: isize) -> Self {
+    unsafe fn stride_offset(self, index: usize, stride: isize) -> Self {
         self.offset(index as isize * stride)
     }
 }
@@ -541,17 +568,17 @@ macro_rules! offset_impl {
     ($([$($param:ident)*][ $($q:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<$($param),*> Offset for ($(*mut $param, )*) {
+        impl<$($param: Offset),*> OffsetTuple for ($($param, )*) {
             type Args = ($(sub!($param [isize]),)*);
             unsafe fn offset(self, off: isize) -> Self {
                 let ($($param, )*) = self;
                 ($($param . offset(off),)*)
             }
 
-            unsafe fn offset_stride(self, index: usize, stride: Self::Args) -> Self {
+            unsafe fn stride_offset(self, index: usize, stride: Self::Args) -> Self {
                 let ($($param, )*) = self;
                 let ($($q, )*) = stride;
-                ($(Offset::offset_stride($param, index, $q),)*)
+                ($(Offset::stride_offset($param, index, $q),)*)
             }
         }
         )+
@@ -568,13 +595,12 @@ offset_impl!{
 }
 
 macro_rules! zipt_impl {
-    ($([$($p:ident)*],)+) => {
+    ($([$($p:ident)*][ $($q:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: View<Dim=Dim>),*> ZippableTuple for ($($p, )*) {
-            type Elem = ($($p::Elem, )*);
-            type Ref = ($($p::Ref, )*);
-            type Ptr = ($(*mut $p::Elem, )*);
+        impl<Dim: Dimension, $($p: Producer<Dim=Dim>),*> ZippableTuple for ($($p, )*) {
+            type Item = ($($p::Item, )*);
+            type Ptr = ($($p::Ptr, )*);
             type Dim = Dim;
             type Stride = ($(sub!($p [isize]),)* );
 
@@ -583,13 +609,19 @@ macro_rules! zipt_impl {
                 ($($p.stride_of(Axis(index)), )*)
             }
 
+            fn contiguous_stride(&self) -> Self::Stride {
+                let ($(ref $p,)*) = *self;
+                ($($p.contiguous_stride(), )*)
+            }
+
             fn as_ptr(&self) -> Self::Ptr {
                 let ($(ref $p,)*) = *self;
                 ($($p.as_ptr(), )*)
             }
-            unsafe fn as_ref(ptr: Self::Ptr) -> Self::Ref {
+            unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
+                let ($(ref $q ,)*) = *self;
                 let ($($p,)*) = ptr;
-                ($($p::as_ref($p),)*)
+                ($($q.as_ref($p),)*)
             }
 
             unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
@@ -613,23 +645,23 @@ macro_rules! zipt_impl {
 }
 
 zipt_impl!{
-    [A],
-    [A B],
-    [A B C],
-    [A B C D],
-    [A B C D E],
-    [A B C D E F],
+    [A ][ a],
+    [A B][ a b],
+    [A B C][ a b c],
+    [A B C D][ a b c d],
+    [A B C D E][ a b c d e],
+    [A B C D E F][ a b c d e f],
 }
 
 macro_rules! map_impl {
     ($([$($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<D: Dimension, $($p: View<Dim=D>),*> Zip<($($p,)*), D> {
+        impl<D: Dimension, $($p: Producer<Dim=D>),*> Zip<($($p,)*), D> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
             pub fn apply<Func>(&mut self, mut function: Func)
-                where Func: FnMut($($p::Ref),*)
+                where Func: FnMut($($p::Item),*)
             {
                 self.apply_core((), move |(), args| {
                     let ($($p,)*) = args;
@@ -644,7 +676,7 @@ macro_rules! map_impl {
             /// `FoldWhile::Continue`.
             pub fn fold_while<Func, Acc>(&mut self, acc: Acc, mut function: Func)
                 -> FoldWhile<Acc>
-                where Func: FnMut(Acc, $($p::Ref),*) -> FoldWhile<Acc>
+                where Func: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
             {
                 self.apply_core(acc, move |acc, args| {
                     let ($($p,)*) = args;
