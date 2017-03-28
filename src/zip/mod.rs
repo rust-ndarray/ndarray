@@ -147,6 +147,12 @@ pub trait IntoProducer {
     fn into_producer(self) -> Self::Output;
 }
 
+impl<P> IntoProducer for P where P: Producer {
+    type Dim = P::Dim;
+    type Output = Self;
+    fn into_producer(self) -> Self::Output { self }
+}
+
 /// A producer of an n-dimensional set of elements;
 /// for example an array view, mutable array view or an iterator
 /// that yields chunks.
@@ -213,26 +219,6 @@ impl<'a, A: 'a, S, D> IntoProducer for &'a mut ArrayBase<S, D>
     type Output = ArrayViewMut<'a, A, D>;
     fn into_producer(self) -> Self::Output {
         self.view_mut()
-    }
-}
-
-impl<'a, A: 'a, D> IntoProducer for ArrayView<'a, A, D>
-    where D: Dimension,
-{
-    type Dim = D;
-    type Output = Self;
-    fn into_producer(self) -> Self::Output {
-        self
-    }
-}
-
-impl<'a, A: 'a, D> IntoProducer for ArrayViewMut<'a, A, D>
-    where D: Dimension,
-{
-    type Dim = D;
-    type Output = Self;
-    fn into_producer(self) -> Self::Output {
-        self
     }
 }
 

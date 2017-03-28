@@ -107,6 +107,8 @@ pub use iterators::{
     AxisIterMut,
     AxisChunksIter,
     AxisChunksIterMut,
+    WholeChunks,
+    WholeChunksIter,
 };
 
 pub use arraytraits::AsArray;

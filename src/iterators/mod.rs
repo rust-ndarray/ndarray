@@ -5,6 +5,10 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
+
+mod chunks;
+
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -20,6 +24,8 @@ use super::{
     RemoveAxis,
     Axis,
 };
+
+pub use self::chunks::{WholeChunks, WholeChunksIter, whole_chunks_of};
 
 /// Base for array iterators
 ///
@@ -1047,6 +1053,8 @@ send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
+send_sync_read_only!(WholeChunks);
+send_sync_read_only!(WholeChunksIter);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);
