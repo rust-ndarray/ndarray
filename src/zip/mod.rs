@@ -26,6 +26,18 @@ macro_rules! fold_while {
 pub struct Layout(u32);
 
 impl Layout {
+    pub fn one_dim() -> Layout {
+        Layout(CORDER | FORDER)
+    }
+    pub fn c() -> Layout {
+        Layout(CORDER)
+    }
+    pub fn f() -> Layout {
+        Layout(FORDER)
+    }
+    pub fn none() -> Layout {
+        Layout(0)
+    }
     fn is(self, flag: u32) -> bool {
         self.0 & flag != 0
     }
