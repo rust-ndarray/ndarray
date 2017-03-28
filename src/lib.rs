@@ -157,6 +157,7 @@ pub use zip::{
     Producer,
     AsArrayViewAny,
     Layout,
+    Offset,
 };
 
 /// Implementation's prelude. Common types used everywhere.
