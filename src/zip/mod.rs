@@ -734,3 +734,12 @@ pub enum FoldWhile<T> {
     Continue(T),
     Done(T),
 }
+
+impl<T> FoldWhile<T> {
+    /// Return the inner value
+    pub fn into_inner(self) -> T {
+        match self {
+            FoldWhile::Continue(x) | FoldWhile::Done(x) => x
+        }
+    }
+}

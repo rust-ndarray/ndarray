@@ -159,6 +159,7 @@ pub use zip::{
     Producer,
     IntoProducer,
     Layout,
+    FoldWhile,
 };
 
 /// Implementation's prelude. Common types used everywhere.
