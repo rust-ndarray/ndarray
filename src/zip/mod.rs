@@ -10,6 +10,7 @@ mod zipmacro;
 
 use imp_prelude::*;
 use IntoDimension;
+use NdIndex;
 
 /// Return if the expression is a break value.
 macro_rules! try_control {
@@ -232,7 +233,7 @@ impl<'a, A: 'a, S, D> View for &'a ArrayBase<S, D>
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        (**self).uget(i.clone()) as *const _ as _
+        self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
@@ -272,7 +273,7 @@ impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        (**self).uget(i.clone()) as *const _ as _
+        self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
@@ -317,7 +318,7 @@ impl<'a, A, D> View for ArrayView<'a, A, D>
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        self.uget(i.clone()) as *const _ as _
+        self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
@@ -356,7 +357,7 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        self.uget(i.clone()) as *const _ as _
+        self.ptr.offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
