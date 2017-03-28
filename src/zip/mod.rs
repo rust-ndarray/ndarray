@@ -13,12 +13,11 @@ use IntoDimension;
 use NdIndex;
 
 /// Return if the expression is a break value.
-macro_rules! try_control {
+macro_rules! fold_while {
     ($e:expr) => {
         match $e {
-            x => if x.should_break() {
-                return x;
-            }
+            FoldWhile::Continue(x) => x,
+            x => return x,
         }
     }
 }
@@ -447,20 +446,18 @@ impl<Parts, D> Zip<Parts, D>
 impl<P, D> Zip<P, D>
     where D: Dimension,
 {
-    fn apply_core<F, R>(&mut self, function: F) -> R
-        where F: FnMut(P::Ref) -> R,
-              R: ControlFlow,
+    fn apply_core<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
+        where F: FnMut(Acc, P::Ref) -> FoldWhile<Acc>,
               P: ZippableTuple<Dim=D>,
     {
         if self.layout.is(CORDER | FORDER) {
-            self.apply_core_contiguous(function)
+            self.apply_core_contiguous(acc, function)
         } else {
-            self.apply_core_strided(function)
+            self.apply_core_strided(acc, function)
         }
     }
-    fn apply_core_contiguous<F, R>(&mut self, mut function: F) -> R
-        where F: FnMut(P::Ref) -> R,
-              R: ControlFlow,
+    fn apply_core_contiguous<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+        where F: FnMut(Acc, P::Ref) -> FoldWhile<Acc>,
               P: ZippableTuple<Dim=D>,
     {
         debug_assert!(self.layout.is(CORDER | FORDER));
@@ -469,15 +466,14 @@ impl<P, D> Zip<P, D>
         for i in 0..size {
             unsafe {
                 let ptr_i = ptrs.offset(i as isize);
-                try_control![function(P::as_ref(ptr_i))];
+                acc = fold_while![function(acc, P::as_ref(ptr_i))];
             }
         }
-        R::continuing()
+        FoldWhile::Continue(acc)
     }
 
-    fn apply_core_strided<F, R>(&mut self, mut function: F) -> R
-        where F: FnMut(P::Ref) -> R,
-              R: ControlFlow,
+    fn apply_core_strided<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+        where F: FnMut(Acc, P::Ref) -> FoldWhile<Acc>,
               P: ZippableTuple<Dim=D>,
     {
         let n = self.dimension.ndim();
@@ -495,14 +491,14 @@ impl<P, D> Zip<P, D>
                 let ptr = self.parts.uget_ptr(&index);
                 for i in 0..inner_len {
                     let p = ptr.offset_stride(i, inner_strides);
-                    try_control!(function(P::as_ref(p)));
+                    acc = fold_while!(function(acc, P::as_ref(p)));
                 }
             }
 
             index_ = self.dimension.next_for(index);
         }
         self.dimension[unroll_axis] = inner_len;
-        R::continuing()
+        FoldWhile::Continue(acc)
     }
 }
 
@@ -622,9 +618,24 @@ macro_rules! map_impl {
             pub fn apply<Func>(&mut self, mut function: Func)
                 where Func: FnMut($($p::Ref),*)
             {
-                self.apply_core(move |args| {
+                self.apply_core((), move |(), args| {
                     let ($($p,)*) = args;
-                    function($($p),*)
+                    FoldWhile::Continue(function($($p),*))
+                });
+            }
+
+            /// Apply a fold function to all elements of the input arrays,
+            /// visiting elements in lock step.
+            ///
+            /// The fold continues while the return value is a
+            /// `FoldWhile::Continue`.
+            pub fn fold_while<Func, Acc>(&mut self, acc: Acc, mut function: Func)
+                -> FoldWhile<Acc>
+                where Func: FnMut(Acc, $($p::Ref),*) -> FoldWhile<Acc>
+            {
+                self.apply_core(acc, move |acc, args| {
+                    let ($($p,)*) = args;
+                    function(acc, $($p),*)
                 })
             }
 
@@ -698,20 +709,7 @@ map_impl!{
     [A B C D E F],
 }
 
-/// Control flow for callbacks.
-///
-/// **ControlFlow** allows breaking and returning using a callback, as an opt-in
-/// feature. The default return value `()` means that the callback should
-/// always continue.
-///
-/// Use the `Control` enum to have early break behavior.
-trait ControlFlow {
-    fn continuing() -> Self;
-    fn should_break(&self) -> bool;
-}
-
-impl ControlFlow for () {
-    fn continuing() { }
-    #[inline]
-    fn should_break(&self) -> bool { false }
+pub enum FoldWhile<T> {
+    Continue(T),
+    Done(T),
 }
