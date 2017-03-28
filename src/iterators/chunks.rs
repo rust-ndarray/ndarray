@@ -51,7 +51,7 @@ impl<'a, A, D> Producer for WholeChunks<'a, A, D>
     private_impl!{}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct WholeChunks<'a, A: 'a, D> {
     size: D,
     chunk: D,
@@ -59,6 +59,19 @@ pub struct WholeChunks<'a, A: 'a, D> {
     inner_strides: D,
     ptr: *mut A,
     life: PhantomData<&'a A>,
+}
+
+impl<'a, A, D: Clone> Clone for WholeChunks<'a, A, D> {
+    fn clone(&self) -> Self {
+        WholeChunks {
+            size: self.size.clone(),
+            chunk: self.chunk.clone(),
+            strides: self.strides.clone(),
+            inner_strides: self.inner_strides.clone(),
+            ptr: self.ptr,
+            life: self.life,
+        }
+    }
 }
 
 /// **Panics** if any chunk dimension is zero<br>
@@ -114,6 +127,16 @@ pub struct WholeChunksIter<'a, A: 'a, D> {
     iter: Iter<'a, A, D>,
     chunk: D,
     inner_strides: D,
+}
+
+impl<'a, A, D: Clone> Clone for WholeChunksIter<'a, A, D> {
+    fn clone(&self) -> Self {
+        WholeChunksIter {
+            iter: self.iter.clone(),
+            chunk: self.chunk.clone(),
+            inner_strides: self.inner_strides.clone(),
+        }
+    }
 }
 
 impl<'a, A, D> Iterator for WholeChunksIter<'a, A, D>
