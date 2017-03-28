@@ -225,6 +225,40 @@ impl<'a, A: 'a, S, D> View for &'a ArrayBase<S, D>
     }
 }
 
+impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
+    where D: Dimension,
+          S: DataMut<Elem=A>,
+{
+    type Elem = A;
+    type Ref = &'a mut A;
+    type Dim = D;
+
+    private_impl!{}
+    fn raw_dim(&self) -> &Self::Dim {
+        &self.dim
+    }
+
+    fn as_ptr(&self) -> *mut Self::Elem {
+        (**self).as_ptr() as _
+    }
+
+    fn layout(&self) -> Layout {
+        LayoutImpl::layout(*self)
+    }
+
+    unsafe fn as_ref(ptr: *mut Self::Elem) -> Self::Ref {
+        &mut *ptr
+    }
+
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+        (**self).uget(i.clone()) as *const _ as _
+    }
+
+    fn stride_of(&self, axis: Axis) -> isize {
+        self.strides()[axis.index()]
+    }
+}
+
 impl<'a, A, D> View for ArrayView<'a, A, D>
     where D: Dimension,
 {
@@ -291,39 +325,6 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
     }
 }
 
-impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
-    where D: Dimension,
-          S: DataMut<Elem=A>,
-{
-    type Elem = A;
-    type Ref = &'a mut A;
-    type Dim = D;
-
-    private_impl!{}
-    fn raw_dim(&self) -> &Self::Dim {
-        &self.dim
-    }
-
-    fn as_ptr(&self) -> *mut Self::Elem {
-        (**self).as_ptr() as _
-    }
-
-    fn layout(&self) -> Layout {
-        LayoutImpl::layout(*self)
-    }
-
-    unsafe fn as_ref(ptr: *mut Self::Elem) -> Self::Ref {
-        &mut *ptr
-    }
-
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        (**self).uget(i.clone()) as *const _ as _
-    }
-
-    fn stride_of(&self, axis: Axis) -> isize {
-        self.strides()[axis.index()]
-    }
-}
 
 
 /// N-ary lock step iteration or function application for arrays.
