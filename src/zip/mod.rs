@@ -146,6 +146,8 @@ impl<D> Splittable for D
 }
 
 /// Argument conversion into a producer.
+///
+/// Slices and vectors can be used (equivalent to 1-dimensional array views).
 pub trait IntoProducer {
     type Dim: Dimension;
     type Output: Producer<Dim=Self::Dim>;
@@ -161,6 +163,8 @@ impl<P> IntoProducer for P where P: Producer {
 /// A producer of an n-dimensional set of elements;
 /// for example an array view, mutable array view or an iterator
 /// that yields chunks.
+///
+/// Producers are used as a arguments to `Zip` and `azip!()`.
 pub trait Producer {
     type Item;
     type Elem;
@@ -205,6 +209,8 @@ trait ZippableTuple : Sized {
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self);
 }
 
+/// An array reference is an n-dimensional producer of element references
+/// (like ArrayView).
 impl<'a, A: 'a, S, D> IntoProducer for &'a ArrayBase<S, D>
     where D: Dimension,
           S: Data<Elem=A>,
@@ -216,6 +222,8 @@ impl<'a, A: 'a, S, D> IntoProducer for &'a ArrayBase<S, D>
     }
 }
 
+/// A mutable array reference is an n-dimensional producer of mutable element
+/// references (like ArrayViewMut).
 impl<'a, A: 'a, S, D> IntoProducer for &'a mut ArrayBase<S, D>
     where D: Dimension,
           S: DataMut<Elem=A>,
@@ -227,8 +235,8 @@ impl<'a, A: 'a, S, D> IntoProducer for &'a mut ArrayBase<S, D>
     }
 }
 
-impl<'a, A: 'a> IntoProducer for &'a [A]
-{
+/// A slice is a one-dimensional producer
+impl<'a, A: 'a> IntoProducer for &'a [A] {
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
     fn into_producer(self) -> Self::Output {
@@ -236,8 +244,26 @@ impl<'a, A: 'a> IntoProducer for &'a [A]
     }
 }
 
-impl<'a, A: 'a> IntoProducer for &'a mut [A]
-{
+/// A mutable slice is a mutable one-dimensional producer
+impl<'a, A: 'a> IntoProducer for &'a mut [A] {
+    type Dim = Ix1;
+    type Output = ArrayViewMut1<'a, A>;
+    fn into_producer(self) -> Self::Output {
+        <_>::from(self)
+    }
+}
+
+/// A Vec is a one-dimensional producer
+impl<'a, A: 'a> IntoProducer for &'a Vec<A> {
+    type Dim = Ix1;
+    type Output = ArrayView1<'a, A>;
+    fn into_producer(self) -> Self::Output {
+        <_>::from(self)
+    }
+}
+
+/// A mutable Vec is a mutable one-dimensional producer
+impl<'a, A: 'a> IntoProducer for &'a mut Vec<A> {
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
     fn into_producer(self) -> Self::Output {
