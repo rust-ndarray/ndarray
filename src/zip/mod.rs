@@ -378,21 +378,28 @@ impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
 
 
 
-/// N-ary lock step iteration or function application for arrays.
+/// Lock step function application across several arrays or other producers.
 ///
 /// Zip allows matching several arrays to each other elementwise and applying
 /// a function over all tuples of elements (one element from each input at
 /// a time).
 ///
-/// Arrays yield shared or mutable references according to how they are input
-/// (as a shared reference to an array, mutable reference to an array, or
-/// a read-only or read-write array view).
+/// In general, the zip uses a tuple of producers
+/// ([`Producer`](trait.Producer.html) trait) that all have to be of the same
+/// shape. The Producer implementation defines what its element type is
+/// (for example if it's a shared reference, mutable reference or an array
+/// view etc).
 ///
 /// If all the input arrays are of the same memory order the zip performs
 /// much better and the compiler can usually vectorize the loop.
 ///
-/// The order elements are visited is not specified. The arrays don’t
+/// The order elements are visited is not specified. The producers don’t
 /// have to have the same element type.
+///
+/// See also the [`azip!()` macro][az] which offers a convenient shorthand
+/// to common ways to use `Zip`.
+///
+/// [az]: macro.azip.html
 ///
 /// ```
 /// use ndarray::Zip;
@@ -408,7 +415,6 @@ impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
 /// Zip::from(&mut a).and(&b).and(&c).and(&d).apply(|w, &x, &y, &z| {
 ///     *w += x + y * z;
 /// });
-///
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {
