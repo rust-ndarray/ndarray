@@ -1,4 +1,5 @@
 
+#[macro_use(s)]
 extern crate ndarray;
 
 use ndarray::prelude::*;
@@ -12,8 +13,14 @@ fn chunks() {
     for i in 1..m + 1 {
         for j in 1..n + 1 {
             let c = a.whole_chunks((i, j));
-            for elt in c {
+
+            let ly = n / j;
+            for (index, elt) in c.into_iter().enumerate() {
                 assert_eq!(elt.dim(), (i, j));
+                let cindex = (index / ly, index % ly);
+                let cx = (cindex.0 * i) as isize;
+                let cy = (cindex.1 * j) as isize;
+                assert_eq!(elt, a.slice(s![cx.., cy..]).slice(s![..i as isize, ..j as isize]));
             }
             let c = a.whole_chunks((i, j));
             assert_eq!(c.into_iter().count(), (m / i) * (n / j));
