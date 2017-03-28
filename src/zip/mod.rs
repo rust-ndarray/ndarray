@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+mod layoutfmt;
 mod zipmacro;
 
 use imp_prelude::*;
@@ -22,8 +23,8 @@ macro_rules! fold_while {
     }
 }
 
-/// Memory layout
-#[derive(Copy, Clone, Debug)]
+/// Memory layout description
+#[derive(Copy, Clone)]
 pub struct Layout(u32);
 
 impl Layout {
