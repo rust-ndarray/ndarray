@@ -34,6 +34,12 @@ fn main() {
     array_zip!(mut a, b, c in { *a = b + c; });
     assert_eq!(a, &b + &c);
 
+    Zip::from(b.column_mut(0)).and_view(a.axis_iter(Axis(1))).apply(|x, y| {
+        println!("{:6.2?}", y);
+        *x = y.scalar_sum();
+    });
+    //array_zip!(a (a.axis_iter(Axis(0))), b (b.column(0)) in { } );
+
     a.fill(0.);
     for _ in 0..10_000 {
         array_zip!(mut a, b, c in { *a += b * c });
