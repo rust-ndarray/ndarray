@@ -33,18 +33,14 @@ impl Layout {
     fn and(self, flag: Layout) -> Layout {
         Layout(self.0 & flag.0)
     }
-    #[cfg(experimental)]
+
     fn flag(self) -> u32 {
         self.0
     }
 }
 
-#[cfg(experimental)]
-const BOTH: u32 = 0b11;
 const CORDER: u32 = 1 << 0;
 const FORDER: u32 = 1 << 1;
-#[cfg(experimental)]
-const NO_ORDER: u32 = 0;
 
 //use ndarray::Axis;
 
@@ -115,14 +111,12 @@ impl<'a, A, D, E> Broadcast<E> for ArrayView<'a, A, D>
     private_impl!{}
 }
 
-#[cfg(experimental)]
 trait Splittable : Sized {
     fn split_at(self, Axis, Ix) -> (Self, Self);
 }
 
-#[cfg(experimental)]
-impl<I> Splittable for Dim<I>
-    where Dim<I>: Dimension,
+impl<D> Splittable for D
+    where D: Dimension,
 {
     fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
         let mut d1 = self;
@@ -135,7 +129,6 @@ impl<I> Splittable for Dim<I>
     }
 }
 
-#[cfg(experimental)]
 impl<'a, A, D> Splittable for ArrayView<'a, A, D>
     where D: Dimension,
 {
@@ -144,7 +137,6 @@ impl<'a, A, D> Splittable for ArrayView<'a, A, D>
     }
 }
 
-#[cfg(experimental)]
 impl<'a, A, D> Splittable for ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
@@ -185,10 +177,12 @@ pub trait View {
     fn stride_of(&self, axis: Axis) -> isize;
     #[doc(hidden)]
     fn ensure_unique(&mut self) { }
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) where Self: Sized;
     private_decl!{}
 }
 
-trait ZippableTuple {
+trait ZippableTuple : Sized {
     type Elem;
     type Ref;
     type Ptr: Offset<Args=Self::Stride> + Copy;
@@ -198,6 +192,7 @@ trait ZippableTuple {
     unsafe fn as_ref(Self::Ptr) -> Self::Ref;
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     fn stride_of(&self, index: usize) -> Self::Stride;
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self);
 }
 
 impl<'a, A: 'a, S, D> AsArrayViewAny for &'a ArrayBase<S, D>
@@ -260,92 +255,6 @@ impl<'a, A: 'a> AsArrayViewAny for &'a mut [A]
     }
 }
 
-impl<'a, A: 'a, S, D> View for &'a ArrayBase<S, D>
-    where D: Dimension,
-          S: Data<Elem=A>,
-{
-    type Elem = A;
-    type Ref = &'a A;
-    type Dim = D;
-
-    private_impl!{}
-    #[doc(hidden)]
-    fn raw_dim(&self) -> &Self::Dim {
-        &self.dim
-    }
-
-    #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
-        (**self).as_ptr() as _
-    }
-
-    #[doc(hidden)]
-    fn layout(&self) -> Layout {
-        LayoutImpl::layout_impl(*self)
-    }
-
-    #[doc(hidden)]
-    unsafe fn as_ref(ptr: *mut Self::Elem) -> Self::Ref {
-        &*ptr
-    }
-
-    #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        self.ptr.offset(i.index_unchecked(&self.strides))
-    }
-
-    #[doc(hidden)]
-    fn stride_of(&self, axis: Axis) -> isize {
-        self.strides()[axis.index()]
-    }
-}
-
-impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
-    where D: Dimension,
-          S: DataMut<Elem=A>,
-{
-    type Elem = A;
-    type Ref = &'a mut A;
-    type Dim = D;
-
-    private_impl!{}
-    #[doc(hidden)]
-    fn raw_dim(&self) -> &Self::Dim {
-        &self.dim
-    }
-
-    #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
-        (**self).as_ptr() as _
-    }
-
-    #[doc(hidden)]
-    fn layout(&self) -> Layout {
-        LayoutImpl::layout_impl(*self)
-    }
-
-    #[doc(hidden)]
-    unsafe fn as_ref(ptr: *mut Self::Elem) -> Self::Ref {
-        &mut *ptr
-    }
-
-    #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
-        self.ptr.offset(i.index_unchecked(&self.strides))
-    }
-
-    #[doc(hidden)]
-    fn stride_of(&self, axis: Axis) -> isize {
-        self.strides()[axis.index()]
-    }
-
-    #[doc(hidden)]
-    fn ensure_unique(&mut self) {
-        // calls ensure_unique for RcArray
-        self.as_mut_ptr();
-    }
-}
-
 impl<'a, A, D> View for ArrayView<'a, A, D>
     where D: Dimension,
 {
@@ -382,6 +291,11 @@ impl<'a, A, D> View for ArrayView<'a, A, D>
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize {
         self.strides()[axis.index()]
+    }
+    
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(axis, index)
     }
 }
 
@@ -421,6 +335,11 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize {
         self.strides()[axis.index()]
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(axis, index)
     }
 }
 
@@ -473,8 +392,10 @@ impl<P, D> Zip<(P, ), D>
     ///
     /// The Zip will take the exact dimension of `array` and all inputs
     /// must have the same dimensions (or be broadcast to them).
-    pub fn from(array: P) -> Self
+    pub fn from<Part>(array: Part) -> Self
+        where Part: AsArrayViewAny<Dim=D, Output=P>
     {
+        let array = array.as_array_view_any();
         let dim = array.raw_dim().clone();
         Zip {
             dimension: dim,
@@ -496,17 +417,10 @@ impl<Parts, D> Zip<Parts, D>
         part.ensure_unique();
     }
 
-    #[cfg(experimental)]
-    fn dim(&self) -> D::Pattern {
-        self.dimension.clone().into_pattern()
-    }
-
-    #[cfg(experimental)]
-    fn raw_dim(&self) -> &D {
+    pub fn raw_dim(&self) -> &D {
         &self.dimension
     }
 
-    #[cfg(experimental)]
     /// Return the length of `axis`
     ///
     /// ***Panics*** if `axis` is out of bounds.
@@ -514,7 +428,6 @@ impl<Parts, D> Zip<Parts, D>
         self.dimension[axis.index()]
     }
 
-    #[cfg(experimental)]
     /// Return an *approximation* to the max stride axis; if
     /// component arrays disagree, there may be no choice better than the
     /// others.
@@ -529,40 +442,6 @@ impl<Parts, D> Zip<Parts, D>
         Axis(i)
     }
 
-    #[cfg(experimental)]
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
-        where Parts: Splittable,
-              D: Splittable,
-    {
-        let (p1, p2) = self.parts.split_at(axis, index);
-        let (d1, d2) = self.dimension.split_at(axis, index);
-        let mut dim_layout = NO_ORDER;
-        let ndim = d1.ndim();
-        if ndim <= 1 || index == 0 {
-            dim_layout |= BOTH;
-        } else {
-            if axis == Axis(0) ||
-                d1.slice()[..axis.index()].iter().all(|&l| l == 1)
-            {
-                dim_layout |= CORDER
-            }
-            if axis == Axis(ndim - 1) ||
-                d1.slice()[axis.index() + 1..].iter().all(|&l| l == 1)
-            {
-                dim_layout |= FORDER
-            }
-        }
-        (Zip {
-            dimension: d1,
-            layout: self.layout.and(Layout(dim_layout)),
-            parts: p1,
-        },
-        Zip {
-            dimension: d2,
-            layout: self.layout.and(Layout(dim_layout)),
-            parts: p2,
-        })
-    }
 }
 
 impl<P, D> Zip<P, D>
@@ -708,6 +587,17 @@ macro_rules! zipt_impl {
                 let ($(ref $p,)*) = *self;
                 ($($p.uget_ptr(i), )*)
             }
+
+            fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
+                let ($($p,)*) = self;
+                let ($($p,)*) = (
+                    $($p.split_at(axis, index), )*
+                );
+                (
+                    ($($p.0,)*),
+                    ($($p.1,)*)
+                )
+            }
         }
         )+
     }
@@ -774,6 +664,26 @@ macro_rules! map_impl {
                     dimension: self.dimension,
                 }
             }
+
+            /// Split the `Zip` evenly in two
+            pub fn split(self) -> (Self, Self)
+            {
+                // Always split in a way that preserves layout (if any)
+                let axis = self.max_stride_axis();
+                let index = self.len_of(axis) / 2;
+                let (p1, p2) = self.parts.split_at(axis, index);
+                let (d1, d2) = self.dimension.split_at(axis, index);
+                (Zip {
+                    dimension: d1,
+                    layout: self.layout,
+                    parts: p1,
+                },
+                Zip {
+                    dimension: d2,
+                    layout: self.layout,
+                    parts: p2,
+                })
+            }
         }
         )+
     }
@@ -786,34 +696,6 @@ map_impl!{
     [A B C D],
     [A B C D E],
     [A B C D E F],
-}
-
-macro_rules! split_impl {
-    ([]) => { };
-    ([$($p:ident)+]) => {
-        split_impl!{@recur [$($p)*]}
-        #[allow(non_snake_case)]
-        impl<$($p: Splittable),*> Splittable for ($($p,)*) {
-            fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
-                let ($($p,)*) = self;
-                let ($($p,)*) = (
-                    $($p.split_at(axis, index), )*
-                );
-                (
-                    ($($p.0,)*),
-                    ($($p.1,)*)
-                )
-            }
-        }
-    };
-    (@recur [$p1:ident $($p:ident)*]) => {
-        split_impl!([$($p)*]);
-    };
-}
-
-#[cfg(experimental)]
-split_impl!{
-    [A B C D E F]
 }
 
 /// Control flow for callbacks.
