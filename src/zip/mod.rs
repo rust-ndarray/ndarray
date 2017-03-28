@@ -378,18 +378,21 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
 /// If all the input arrays are of the same memory order the zip performs
 /// much better and the compiler can usually vectorize the loop.
 ///
-/// The order elements are visited is not specified.
+/// The order elements are visited is not specified. The arrays don’t
+/// have to have the same element type.
 ///
 /// ```
 /// use ndarray::Zip;
 /// use ndarray::Array2;
 ///
-/// let mut a = Array2::zeros((64, 64));
-/// let b = Array2::zeros((64, 64));
-/// let c = Array2::zeros((64, 64));
-/// let d = Array2::zeros((64, 64));
+/// type M = Array2<f64>;
 ///
-/// Zip::from(&mut a).and(&b).and(&c).and(&d).map(|w, &x, &y, &z| {
+/// let mut a = M::zeros((64, 64));
+/// let b = M::zeros((64, 64));
+/// let c = M::zeros((64, 64));
+/// let d = M::zeros((64, 64));
+///
+/// Zip::from(&mut a).and(&b).and(&c).and(&d).apply(|w, &x, &y, &z| {
 ///     *w += x + y * z;
 /// });
 ///
@@ -684,7 +687,7 @@ macro_rules! map_impl {
         impl<Dim: Dimension, $($p: View<Dim=Dim>),*> Zip<($($p,)*), Dim> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
-            pub fn map<Func>(&mut self, mut function: Func)
+            pub fn apply<Func>(&mut self, mut function: Func)
                 where Func: FnMut($($p::Ref),*)
             {
                 self.apply_core(move |args| {
