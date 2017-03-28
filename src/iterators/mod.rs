@@ -513,6 +513,7 @@ impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
     }
 }
 
+#[derive(Debug)]
 pub struct OuterIterCore<A, D> {
     index: Ix,
     len: Ix,
@@ -597,9 +598,59 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 /// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
 /// or [`.axis_iter()`](struct.ArrayBase.html#method.axis_iter)
 /// for more information.
+#[derive(Debug)]
 pub struct AxisIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     life: PhantomData<&'a A>,
+}
+
+use Producer;
+
+impl<'a, A, D> Producer for AxisIter<'a, A, D>
+    where D: Dimension
+{
+    type Item = <Self as Iterator>::Item;
+    type Dim = Ix1;
+    type Ptr = *mut A;
+
+    #[doc(hidden)]
+    fn layout(&self) -> ::Layout {
+        ::Layout::one_dim()
+    }
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        Ix1(self.len())
+    }
+    #[doc(hidden)]
+    fn as_ptr(&self) -> Self::Ptr {
+        self.iter.ptr
+    }
+
+    fn contiguous_stride(&self) -> isize {
+        self.iter.stride
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
+        ArrayView::new_(ptr,
+                        self.iter.inner_dim.clone(),
+                        self.iter.inner_strides.clone())
+    }
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
+        self.iter.ptr.offset(self.iter.stride * i[0] as isize)
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, _axis: Axis) -> isize {
+        self.contiguous_stride()
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, _axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(index)
+    }
+    private_impl!{}
 }
 
 macro_rules! outer_iter_split_at_impl {
