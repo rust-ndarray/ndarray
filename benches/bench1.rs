@@ -11,6 +11,7 @@ use ndarray::{
     Ix,
     Array1,
     Array2,
+    Zip,
 };
 use ndarray::{arr0, arr1, arr2};
 
@@ -278,6 +279,16 @@ fn add_2d_regular(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_zip(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+    });
+}
+
+#[bench]
 fn add_2d_assign_ops(bench: &mut test::Bencher)
 {
     let mut a = Array::<i32, _>::zeros((64, 64));
@@ -299,6 +310,17 @@ fn add_2d_cutout(bench: &mut test::Bencher)
     let bv = b.view();
     bench.iter(|| {
         acut += &bv;
+    });
+}
+
+#[bench]
+fn add_2d_zip_cutout(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((66, 66));
+    let mut acut = a.slice_mut(s![1..-1, 1..-1]);
+    let b = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        Zip::from(&mut acut).and(&b).apply(|a, &b| *a += b);
     });
 }
 
@@ -393,6 +415,17 @@ fn add_2d_strided(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_zip_strided(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((64, 128));
+    let mut a = a.slice_mut(s![.., ..;2]);
+    let b = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+    });
+}
+
+#[bench]
 fn add_2d_transposed(bench: &mut test::Bencher)
 {
     let mut a = Array::<i32, _>::zeros((64, 64));
@@ -401,6 +434,17 @@ fn add_2d_transposed(bench: &mut test::Bencher)
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
+    });
+}
+
+#[bench]
+fn add_2d_zip_transposed(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((64, 64));
+    a.swap_axes(0, 1);
+    let b = Array::<i32, _>::zeros((64, 64));
+    bench.iter(|| {
+        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
     });
 }
 
