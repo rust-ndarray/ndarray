@@ -47,6 +47,11 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- (Not Yet Released)
+
+  - ParallelIterator for Zip
+  - Require next version of rayon
+
 - 0.2.0
 
   - Require for ndarray 0.8
