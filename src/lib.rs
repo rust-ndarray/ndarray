@@ -152,7 +152,7 @@ mod shape_builder;
 mod stacking;
 mod zip;
 
-pub use zip::{Zip, View, Broadcast, Layout};
+pub use zip::{Zip, View, AsArrayViewAny, Layout};
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {

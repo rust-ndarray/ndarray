@@ -49,7 +49,7 @@ const NO_ORDER: u32 = 0;
 //use ndarray::Axis;
 
 trait LayoutImpl {
-    fn layout(&self) -> Layout;
+    fn layout_impl(&self) -> Layout;
 }
 
 /// Broadcast an array so that it acts like a larger size and/or shape array.
@@ -57,7 +57,7 @@ trait LayoutImpl {
 /// See [broadcasting][1] for more information.
 ///
 /// [1]: struct.ArrayBase.html#broadcasting
-pub trait Broadcast<E>
+trait Broadcast<E>
     where E: IntoDimension,
 {
     type Output: View<Dim=E::Dim>;
@@ -68,23 +68,11 @@ pub trait Broadcast<E>
     private_decl!{}
 }
 
-impl<'a, S, D, E> Broadcast<E> for &'a ArrayBase<S, D>
-    where S: 'a + Data,
-          D: Dimension,
-          E: IntoDimension,
-{
-    type Output = ArrayView<'a, S::Elem, E::Dim>;
-    fn broadcast_unwrap(self, shape: E) -> Self::Output {
-        (self).broadcast_unwrap(shape.into_dimension())
-    }
-    private_impl!{}
-}
-
 impl<S, D> LayoutImpl for ArrayBase<S, D>
     where S: Data,
           D: Dimension,
 {
-    fn layout(&self) -> Layout {
+    fn layout_impl(&self) -> Layout {
         Layout(if self.is_standard_layout() {
             if self.ndim() <= 1 {
                 FORDER | CORDER
@@ -101,21 +89,21 @@ impl<S, D> LayoutImpl for ArrayBase<S, D>
 
 impl<'a, L> LayoutImpl for &'a L where L: LayoutImpl
 {
-    fn layout(&self) -> Layout {
-        (**self).layout()
+    fn layout_impl(&self) -> Layout {
+        (**self).layout_impl()
     }
 }
 
 impl<'a, L> LayoutImpl for &'a mut L where L: LayoutImpl
 {
-    fn layout(&self) -> Layout {
-        (**self).layout()
+    fn layout_impl(&self) -> Layout {
+        (**self).layout_impl()
     }
 }
 
 impl<'a, A, D, E> Broadcast<E> for ArrayView<'a, A, D>
     where E: IntoDimension,
-          D: 'a + Dimension,
+          D: Dimension,
 {
     type Output = ArrayView<'a, A, E::Dim>;
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
@@ -165,6 +153,16 @@ impl<'a, A, D> Splittable for ArrayViewMut<'a, A, D>
     }
 }
 
+/// Argument conversion into a read-only or read-write array view.
+///
+/// Create an array view from the input; the view is read-only or read-write
+/// as appropriate.
+pub trait AsArrayViewAny {
+    type Dim: Dimension;
+    type Output: View<Dim=Self::Dim>;
+    fn as_array_view_any(self) -> Self::Output;
+}
+
 /// An array view or a reference to an array
 pub trait View {
     /// Element type
@@ -202,6 +200,66 @@ trait ZippableTuple {
     fn stride_of(&self, index: usize) -> Self::Stride;
 }
 
+impl<'a, A: 'a, S, D> AsArrayViewAny for &'a ArrayBase<S, D>
+    where D: Dimension,
+          S: Data<Elem=A>,
+{
+    type Dim = D;
+    type Output = ArrayView<'a, A, D>;
+    fn as_array_view_any(self) -> Self::Output {
+        self.view()
+    }
+}
+
+impl<'a, A: 'a, S, D> AsArrayViewAny for &'a mut ArrayBase<S, D>
+    where D: Dimension,
+          S: DataMut<Elem=A>,
+{
+    type Dim = D;
+    type Output = ArrayViewMut<'a, A, D>;
+    fn as_array_view_any(self) -> Self::Output {
+        self.view_mut()
+    }
+}
+
+impl<'a, A: 'a, D> AsArrayViewAny for ArrayView<'a, A, D>
+    where D: Dimension,
+{
+    type Dim = D;
+    type Output = Self;
+    fn as_array_view_any(self) -> Self::Output {
+        self
+    }
+}
+
+impl<'a, A: 'a, D> AsArrayViewAny for ArrayViewMut<'a, A, D>
+    where D: Dimension,
+{
+    type Dim = D;
+    type Output = Self;
+    fn as_array_view_any(self) -> Self::Output {
+        self
+    }
+}
+
+impl<'a, A: 'a> AsArrayViewAny for &'a [A]
+{
+    type Dim = Ix1;
+    type Output = ArrayView1<'a, A>;
+    fn as_array_view_any(self) -> Self::Output {
+        <_>::from(self)
+    }
+}
+
+impl<'a, A: 'a> AsArrayViewAny for &'a mut [A]
+{
+    type Dim = Ix1;
+    type Output = ArrayViewMut1<'a, A>;
+    fn as_array_view_any(self) -> Self::Output {
+        <_>::from(self)
+    }
+}
+
 impl<'a, A: 'a, S, D> View for &'a ArrayBase<S, D>
     where D: Dimension,
           S: Data<Elem=A>,
@@ -223,7 +281,7 @@ impl<'a, A: 'a, S, D> View for &'a ArrayBase<S, D>
 
     #[doc(hidden)]
     fn layout(&self) -> Layout {
-        LayoutImpl::layout(*self)
+        LayoutImpl::layout_impl(*self)
     }
 
     #[doc(hidden)]
@@ -263,7 +321,7 @@ impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
 
     #[doc(hidden)]
     fn layout(&self) -> Layout {
-        LayoutImpl::layout(*self)
+        LayoutImpl::layout_impl(*self)
     }
 
     #[doc(hidden)]
@@ -308,7 +366,7 @@ impl<'a, A, D> View for ArrayView<'a, A, D>
 
     #[doc(hidden)]
     fn layout(&self) -> Layout {
-        LayoutImpl::layout(self)
+        LayoutImpl::layout_impl(self)
     }
 
     #[doc(hidden)]
@@ -347,7 +405,7 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
 
     #[doc(hidden)]
     fn layout(&self) -> Layout {
-        LayoutImpl::layout(self)
+        LayoutImpl::layout_impl(self)
     }
 
     #[doc(hidden)]
@@ -436,13 +494,6 @@ impl<Parts, D> Zip<Parts, D>
         debug_assert_eq!(&self.dimension, part.raw_dim());
         assert!(self.dimension.equal(part.raw_dim()));
         part.ensure_unique();
-    }
-
-    fn prepare<P>(&self, part: P) -> P::Output
-        where P: Broadcast<D>,
-    {
-        let ret = part.broadcast_unwrap(self.dimension.clone());
-        ret
     }
 
     #[cfg(experimental)]
@@ -690,9 +741,10 @@ macro_rules! map_impl {
             /// Include the array `array` in the Zip.
             ///
             /// ***Panics*** if `array`’s shape doen't match the Zip’s exactly.
-            pub fn and<Part>(self, mut array: Part) -> Zip<($($p,)* Part, ), Dim>
-                where Part: View<Dim=Dim>,
+            pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), Dim>
+                where Part: AsArrayViewAny<Dim=Dim>,
             {
+                let mut array = array.as_array_view_any();
                 self.check(&mut array);
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
@@ -708,10 +760,12 @@ macro_rules! map_impl {
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
             ///
             /// ***Panics*** if broadcasting isn’t possible.
-            pub fn and_broadcast<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), Dim>
-                where Part: Broadcast<Dim>,
+            pub fn and_broadcast<'a, Part, Dim2, Elem>(self, array: Part)
+                -> Zip<($($p,)* ArrayView<'a, Elem, Dim>, ), Dim>
+                where Part: AsArrayViewAny<Dim=Dim2, Output=ArrayView<'a, Elem, Dim2>>,
+                      Dim2: Dimension,
             {
-                let array = self.prepare(array);
+                let array = array.as_array_view_any().broadcast_unwrap(self.dimension.clone());
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
                 Zip {
