@@ -62,6 +62,7 @@ pub trait Broadcast<E>
     ///
     /// ***Panics*** if broadcasting isn’t possible.
     fn broadcast_unwrap(self, shape: E) -> Self::Output;
+    private_decl!{}
 }
 
 impl<'a, S, D, E> Broadcast<E> for &'a ArrayBase<S, D>
@@ -73,7 +74,7 @@ impl<'a, S, D, E> Broadcast<E> for &'a ArrayBase<S, D>
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
         (self).broadcast_unwrap(shape.into_dimension())
     }
-
+    private_impl!{}
 }
 
 impl<S, D> LayoutImpl for ArrayBase<S, D>
@@ -120,6 +121,7 @@ impl<'a, A, D, E> Broadcast<E> for ArrayView<'a, A, D>
             ArrayView::new_(res.ptr, res.dim, res.strides)
         }
     }
+    private_impl!{}
 }
 
 #[cfg(experimental)]
