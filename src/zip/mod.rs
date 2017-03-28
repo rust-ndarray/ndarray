@@ -140,22 +140,6 @@ impl<D> Splittable for D
     }
 }
 
-impl<'a, A, D> Splittable for ArrayView<'a, A, D>
-    where D: Dimension,
-{
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
-        self.split_at(axis, index)
-    }
-}
-
-impl<'a, A, D> Splittable for ArrayViewMut<'a, A, D>
-    where D: Dimension,
-{
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
-        self.split_at(axis, index)
-    }
-}
-
 /// Argument conversion into a producer.
 pub trait IntoProducer {
     type Dim: Dimension;
