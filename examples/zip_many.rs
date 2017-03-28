@@ -40,6 +40,14 @@ fn main() {
         println!("{:6.2?}", y);
         *x = y.scalar_sum();
     });
+
+    Zip::from(b.row(0)).and(a.axis_iter_mut(ax)).apply(|&x, mut y| {
+        println!("{:6.2?}", y);
+        y.fill(x);
+    });
+    array_zip!(b (b.row(0)), mut a (a.axis_iter_mut(Axis(1))) in { a.fill(b) });
+    println!("{:6.2?}", b.row(0));
+    println!("{:6.2?}", a);
     //array_zip!(a (a.axis_iter(Axis(0))), b (b.column(0)) in { } );
 
     a.fill(0.);
