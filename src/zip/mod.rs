@@ -156,17 +156,16 @@ impl<'a, A, D> Splittable for ArrayViewMut<'a, A, D>
     }
 }
 
-/// Argument conversion into a read-only or read-write array view.
-///
-/// Create an array view from the input; the view is read-only or read-write
-/// as appropriate.
+/// Argument conversion into a producer.
 pub trait AsArrayViewAny {
     type Dim: Dimension;
     type Output: Producer<Dim=Self::Dim>;
     fn as_array_view_any(self) -> Self::Output;
 }
 
-/// An array view or a reference to an array
+/// A producer of an n-dimensional set of elements;
+/// for example an array view, mutable array view or an iterator
+/// that yields chunks.
 pub trait Producer {
     type Item;
     /// Dimension type
@@ -176,6 +175,10 @@ pub trait Producer {
     fn layout(&self) -> Layout;
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim;
+    #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.raw_dim() == *dim
+    }
     #[doc(hidden)]
     fn as_ptr(&self) -> Self::Ptr;
     #[doc(hidden)]
@@ -281,6 +284,11 @@ impl<'a, A, D> Producer for ArrayView<'a, A, D>
     }
 
     #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.dim.equal(dim)
+    }
+
+    #[doc(hidden)]
     fn as_ptr(&self) -> *mut A {
         self.as_ptr() as _
     }
@@ -322,6 +330,11 @@ impl<'a, A, D> Producer for ArrayViewMut<'a, A, D>
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
         self.raw_dim()
+    }
+
+    #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.dim.equal(dim)
     }
 
     #[doc(hidden)]
@@ -421,11 +434,11 @@ impl<Parts, D> Zip<Parts, D>
     where D: Dimension,
 {
 
-    fn check<P>(&self, part: &mut P)
+    fn check<P>(&self, part: &P)
         where P: Producer<Dim=D>
     {
         debug_assert_eq!(&self.dimension, &part.raw_dim());
-        assert!(self.dimension.equal(&part.raw_dim()));
+        assert!(part.equal_dim(&self.dimension));
     }
 
     /// Return a the number of element tuples in the Zip
@@ -690,8 +703,8 @@ macro_rules! map_impl {
             pub fn and<Part>(self, array: Part) -> Zip<($($p,)* Part::Output, ), D>
                 where Part: AsArrayViewAny<Dim=D>,
             {
-                let mut array = array.as_array_view_any();
-                self.check(&mut array);
+                let array = array.as_array_view_any();
+                self.check(&array);
                 let part_layout = array.layout();
                 let ($($p,)*) = self.parts;
                 Zip {
