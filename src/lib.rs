@@ -37,9 +37,9 @@
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
-//!   + The higher order functions like ``.map()``, ``.map_inplace()`` and
-//!     ``.zip_mut_with()`` are the most efficient ways to
-//!     perform single traversal and lock step traversal respectively.
+//!   + The higher order functions like ``.map()``, ``.map_inplace()``, 
+//!     ``.zip_mut_with()``, ``Zip`` and ``azip!()`` are the most efficient ways
+//!     to perform single traversal and lock step traversal respectively.
 //!   + Performance of an operation depends on the memory layout of the array
 //!     or array view. Especially if it's a binary operation, which
 //!     needs matching memory layout to be efficient (with some exceptions).
