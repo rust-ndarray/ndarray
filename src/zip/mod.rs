@@ -174,6 +174,7 @@ pub trait View {
     unsafe fn as_ref(*mut Self::Elem) -> Self::Ref;
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem;
     fn stride_of(&self, axis: Axis) -> isize;
+    private_decl!{}
 }
 
 trait ZippableTuple {
@@ -196,6 +197,7 @@ impl<'a, A: 'a, S, D> View for &'a ArrayBase<S, D>
     type Ref = &'a A;
     type Dim = D;
 
+    private_impl!{}
     fn raw_dim(&self) -> &Self::Dim {
         &self.dim
     }
@@ -228,6 +230,7 @@ impl<'a, A, D> View for ArrayView<'a, A, D>
     type Ref = &'a A;
     type Dim = D;
 
+    private_impl!{}
     fn raw_dim(&self) -> &Self::Dim {
         &self.dim
     }
@@ -260,6 +263,7 @@ impl<'a, A, D> View for ArrayViewMut<'a, A, D>
     type Ref = &'a mut A;
     type Dim = D;
 
+    private_impl!{}
     fn raw_dim(&self) -> &Self::Dim {
         &self.dim
     }
@@ -293,6 +297,7 @@ impl<'a, A: 'a, S, D> View for &'a mut ArrayBase<S, D>
     type Ref = &'a mut A;
     type Dim = D;
 
+    private_impl!{}
     fn raw_dim(&self) -> &Self::Dim {
         &self.dim
     }
