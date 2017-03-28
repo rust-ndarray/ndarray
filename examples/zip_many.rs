@@ -34,7 +34,9 @@ fn main() {
     array_zip!(mut a, b, c in { *a = b + c; });
     assert_eq!(a, &b + &c);
 
-    Zip::from(b.column_mut(0)).and_view(a.axis_iter(Axis(1))).apply(|x, y| {
+    let ax = Axis(0);
+    println!("{:?}", Zip::from(b.row_mut(0)).and_view(a.axis_iter(ax)));
+    Zip::from(b.row_mut(0)).and_view(a.axis_iter(ax)).apply(|x, y| {
         println!("{:6.2?}", y);
         *x = y.scalar_sum();
     });
