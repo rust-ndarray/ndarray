@@ -53,6 +53,32 @@ pub type Ix5 = Dim<[Ix; 5]>;
 /// six-dimensional
 pub type Ix6 = Dim<[Ix; 6]>;
 /// dynamic-dimensional
+///
+/// `Vec<Ix>` and `&[usize]` implement `IntoDimension` to produce `IxDyn`;
+/// use them to create arrays with a dynamic number of axes.
+///
+/// ```
+/// use ndarray::ArrayD;
+///
+/// // Create a 5 × 6 × 3 × 4 array using the dynamic dimension type
+/// let mut a = ArrayD::<f64>::zeros(vec![5, 6, 3, 4]);
+/// // Create a 1 × 3 × 4 array using the dynamic dimension type
+/// let mut b = ArrayD::<f64>::zeros(vec![1, 3, 4]);
+///
+/// // We can use broadcasting to add arrays of compatible shapes together:
+/// a += &b;
+///
+/// // We can index into a, b using fixed size arrays:
+/// a[[0, 0, 0, 0]] = 0.;
+/// b[[0, 2, 3]] = a[[0, 0, 2, 3]];
+///
+/// // Note: It will panic at runtime if the number of indices given does
+/// // not match the array.
+///
+/// // We can keep them in the same vector because both the arrays have
+/// // the same type `Array<f64, IxDyn>` a.k.a `ArrayD<f64>`:
+/// let arrays = vec![a, b];
+/// ```
 pub type IxDyn = Dim<Vec<Ix>>;
 
 /// zero-dimensional array
