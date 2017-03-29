@@ -434,14 +434,14 @@ impl<P, D> Zip<(P, ), D>
     where D: Dimension,
           P: NdProducer<Dim=D>
 {
-    /// Create a new `Zip` from the input array `array`.
+    /// Create a new `Zip` from the input array or other producer `p`.
     ///
-    /// The Zip will take the exact dimension of `array` and all inputs
+    /// The Zip will take the exact dimension of `p` and all inputs
     /// must have the same dimensions (or be broadcast to them).
-    pub fn from<Part>(array: Part) -> Self
-        where Part: IntoNdProducer<Dim=D, Output=P>
+    pub fn from<IP>(p: IP) -> Self
+        where IP: IntoNdProducer<Dim=D, Output=P>
     {
-        let array = array.into_producer();
+        let array = p.into_producer();
         let dim = array.raw_dim();
         Zip {
             dimension: dim,
