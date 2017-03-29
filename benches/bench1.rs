@@ -439,6 +439,19 @@ fn add_2d_strided(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_strided_dyn(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros(&[64, 64 * 2][..]);
+    let mut a = a.slice_mut(s![.., ..;2]);
+    let b = Array::<i32, _>::zeros(&[64, 64][..]);
+    let bv = b.view();
+    bench.iter(|| {
+        a += &bv;
+    });
+}
+
+
+#[bench]
 fn add_2d_zip_strided(bench: &mut test::Bencher)
 {
     let mut a = Array::<i32, _>::zeros((64, 128));

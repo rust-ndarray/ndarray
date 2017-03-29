@@ -15,6 +15,7 @@ use itertools::{enumerate, zip};
 
 use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si};
 use IntoDimension;
+use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
 use {zipsl, zipsl_mut, ZipExt};
 use Axis;
@@ -64,6 +65,9 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - and so on..
     /// - For `Vec<Ix>`: `Vec<usize>`,
     type Pattern: IntoDimension<Dim=Self>;
+    // Next smaller dimension (if it exists)
+    #[doc(hidden)]
+    type TrySmaller: Dimension;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
 
@@ -341,6 +345,9 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             .max_by_key(|ax| ax.stride().abs())
             .map_or(Axis(0), |ax| ax.axis())
     }
+
+    #[doc(hidden)]
+    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller;
 }
 
 // utility functions
@@ -361,6 +368,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 unsafe impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
     type Pattern = ();
+    type TrySmaller = Self;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
@@ -376,12 +384,17 @@ unsafe impl Dimension for Dim<[Ix; 0]> {
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
     }
+    #[inline]
+    fn try_remove_axis(&self, _ignore: Axis) -> Self::TrySmaller {
+        *self
+    }
 }
 
 
 unsafe impl Dimension for Dim<[Ix; 1]> {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
+    type TrySmaller = <Self as RemoveAxis>::Smaller;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
@@ -456,11 +469,16 @@ unsafe impl Dimension for Dim<[Ix; 1]> {
             None
         }
     }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+        self.remove_axis(axis)
+    }
 }
 
 unsafe impl Dimension for Dim<[Ix; 2]> {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
+    type TrySmaller = <Self as RemoveAxis>::Smaller;
     #[inline]
     fn ndim(&self) -> usize { 2 }
     #[inline]
@@ -601,11 +619,16 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
             None
         }
     }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+        self.remove_axis(axis)
+    }
 }
 
 unsafe impl Dimension for Dim<[Ix; 3]> {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
+    type TrySmaller = <Self as RemoveAxis>::Smaller;
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
@@ -681,6 +704,10 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
         }
         order
     }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+        self.remove_axis(axis)
+    }
 }
 
 macro_rules! large_dim {
@@ -688,6 +715,7 @@ macro_rules! large_dim {
         unsafe impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
+            type TrySmaller = <Self as RemoveAxis>::Smaller;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -698,6 +726,10 @@ macro_rules! large_dim {
             fn slice(&self) -> &[Ix] { self.ix() }
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+            #[inline]
+            fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+                self.remove_axis(axis)
+            }
         }
     )
 }
@@ -712,12 +744,24 @@ unsafe impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
+    type TrySmaller = <Self as RemoveAxis>::Smaller;
+    #[inline]
     fn ndim(&self) -> usize { self.ix().len() }
+    #[inline]
     fn slice(&self) -> &[Ix] { self.ix() }
+    #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self
+    }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+        if self.ndim() > 0 {
+            self.remove_axis(axis)
+        } else {
+            self.clone()
+        }
     }
 }
 

@@ -606,6 +606,20 @@ impl<A, S, D> ArrayBase<S, D>
             row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
+
+    /// Remove array axis `axis` and return the result.
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::TrySmaller>
+    {
+        let d = self.dim.try_remove_axis(axis);
+        let s = self.strides.try_remove_axis(axis);
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim: d,
+            strides: s,
+        }
+    }
+
 }
 
 
