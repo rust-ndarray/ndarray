@@ -712,8 +712,11 @@ unsafe impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
+    #[inline]
     fn ndim(&self) -> usize { self.ix().len() }
+    #[inline]
     fn slice(&self) -> &[Ix] { self.ix() }
+    #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
