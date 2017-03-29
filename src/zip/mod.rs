@@ -458,8 +458,9 @@ impl<Parts, D> Zip<Parts, D>
     fn check<P>(&self, part: &P)
         where P: NdProducer<Dim=D>
     {
-        debug_assert_eq!(&self.dimension, &part.raw_dim());
-        assert!(part.equal_dim(&self.dimension));
+        ndassert!(part.equal_dim(&self.dimension),
+            "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
+            self.dimension, part.raw_dim());
     }
 
     /// Return a the number of element tuples in the Zip
