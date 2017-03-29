@@ -23,6 +23,10 @@ use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes, merge_axes, stride_offset};
 use iterators::whole_chunks_of;
+use iterators::{
+    new_inner_iter_smaller,
+    new_inner_iter_smaller_mut,
+};
 
 use {
     NdIndex,
@@ -1138,7 +1142,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
         // otherwise, break the arrays up into their inner rows
         let mut try_slices = true;
-        let rows = self.inner_iter_mut().zip(rhs.inner_iter());
+        let rows = new_inner_iter_smaller_mut(self.view_mut()).zip(
+                    new_inner_iter_smaller(rhs.view()));
         for (mut s_row, r_row) in rows {
             if try_slices {
                 if let Some(self_s) = s_row.as_slice_mut() {
