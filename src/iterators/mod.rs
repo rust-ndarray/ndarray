@@ -520,6 +520,55 @@ impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
     }
 }
 
+/// Create an InnerIter one dimension smaller than D (if possible)
+pub fn new_inner_iter_smaller<A, D>(v: ArrayView<A, D>)
+    -> InnerIter<A, D::TrySmaller>
+    where D: Dimension
+{
+    let ndim = v.ndim();
+    let len;
+    let stride;
+    let iter_v;
+    if ndim == 0 {
+        len = 1;
+        stride = 0;
+        iter_v = v.try_remove_axis(Axis(0))
+    } else {
+        len = v.dim.last_elem();
+        stride = v.strides.last_elem() as isize;
+        iter_v = v.try_remove_axis(Axis(ndim - 1))
+    }
+    InnerIter {
+        inner_len: len,
+        inner_stride: stride,
+        iter: iter_v.into_base_iter(),
+    }
+}
+
+pub fn new_inner_iter_smaller_mut<A, D>(v: ArrayViewMut<A, D>)
+    -> InnerIterMut<A, D::TrySmaller>
+    where D: Dimension,
+{
+    let ndim = v.ndim();
+    let len;
+    let stride;
+    let iter_v;
+    if ndim == 0 {
+        len = 1;
+        stride = 0;
+        iter_v = v.try_remove_axis(Axis(0))
+    } else {
+        len = v.dim.last_elem();
+        stride = v.strides.last_elem() as isize;
+        iter_v = v.try_remove_axis(Axis(ndim - 1))
+    }
+    InnerIterMut {
+        inner_len: len,
+        inner_stride: stride,
+        iter: iter_v.into_base_iter(),
+    }
+}
+
 #[derive(Debug)]
 pub struct OuterIterCore<A, D> {
     index: Ix,
