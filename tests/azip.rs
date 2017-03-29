@@ -94,3 +94,13 @@ fn test_broadcast() {
     }
     assert!(a.all_close(&(&b + &d + &e), 1e-4));
 }
+
+#[should_panic]
+#[test]
+fn test_zip_dim_mismatch_1() {
+    let mut a = Array::zeros((5, 7));
+    let mut d = a.raw_dim();
+    d[0] += 1;
+    let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2*j) as f32);
+    azip!(mut a, b in { *a = b; });
+}
