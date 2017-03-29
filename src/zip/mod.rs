@@ -715,7 +715,7 @@ macro_rules! map_impl {
 
             /// Include the producer `p` in the Zip.
             ///
-            /// ***Panics*** if `p`’s shape doen't match the Zip’s exactly.
+            /// ***Panics*** if `p`’s shape doesn’t match the Zip’s exactly.
             pub fn and<P>(self, p: P) -> Zip<($($p,)* P::Output, ), D>
                 where P: IntoNdProducer<Dim=D>,
             {
