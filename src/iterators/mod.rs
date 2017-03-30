@@ -1129,8 +1129,6 @@ send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
-send_sync_read_only!(WholeChunks);
-send_sync_read_only!(WholeChunksIter);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);
