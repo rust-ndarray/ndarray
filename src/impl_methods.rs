@@ -1432,39 +1432,4 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
         })
     }
-
-    #[cfg(lanes_along)]
-    fn lanes_along<'a, F>(&'a self, axis: Axis, mut visit: F)
-        where D: RemoveAxis,
-              F: FnMut(ArrayView1<'a, A>),
-              A: 'a,
-    {
-        let view_len = self.shape().axis(axis);
-        let view_stride = self.strides.axis(axis);
-        // use the 0th subview as a map to each 1d array view extended from
-        // the 0th element.
-        self.subview(axis, 0).visit(move |first_elt| {
-            unsafe {
-                visit(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            }
-        })
-    }
-
-    #[cfg(lanes_along)]
-    fn lanes_along_mut<'a, F>(&'a mut self, axis: Axis, mut visit: F)
-        where D: RemoveAxis,
-              S: DataMut,
-              F: FnMut(ArrayViewMut1<'a, A>),
-              A: 'a,
-    {
-        let view_len = self.shape().axis(axis);
-        let view_stride = self.strides.axis(axis);
-        // use the 0th subview as a map to each 1d array view extended from
-        // the 0th element.
-        self.subview_mut(axis, 0).unordered_foreach_mut(move |first_elt| {
-            unsafe {
-                visit(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            }
-        })
-    }
 }
