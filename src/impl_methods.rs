@@ -23,11 +23,12 @@ use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes, merge_axes, stride_offset};
 use iterators::{
-    new_inner_iter_smaller,
-    new_inner_iter_smaller_mut,
+    new_inners,
+    new_inners_mut,
     whole_chunks_of,
     whole_chunks_mut_of,
 };
+use zip::Zip;
 
 use {
     NdIndex,
@@ -1184,32 +1185,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
             return;
         }
+
         // otherwise, break the arrays up into their inner rows
-        let mut try_slices = true;
-        let rows = new_inner_iter_smaller_mut(self.view_mut()).zip(
-                    new_inner_iter_smaller(rhs.view()));
-        for (mut s_row, r_row) in rows {
-            if try_slices {
-                if let Some(self_s) = s_row.as_slice_mut() {
-                    if let Some(rhs_s) = r_row.as_slice() {
-                        let len = cmp::min(self_s.len(), rhs_s.len());
-                        let s = &mut self_s[..len];
-                        let r = &rhs_s[..len];
-                        for i in 0..len {
-                            f(&mut s[i], &r[i]);
-                        }
-                        continue;
-                    }
-                }
-                try_slices = false;
-            }
-            unsafe {
-                for i in 0..s_row.len() {
-                    f(s_row.uget_mut(i), r_row.uget(i))
-                }
-            }
-        }
+        let n = self.ndim();
+        let dim = self.raw_dim();
+        Zip::from(new_inners_mut(self.view_mut(), Axis(n - 1)))
+            .and(new_inners(rhs.broadcast_assume(dim), Axis(n - 1)))
+            .apply(move |s_row, r_row| {
+                Zip::from(s_row).and(r_row).apply(|a, b| f(a, b))
+            });
     }
+
 
     fn zip_mut_with_elem<B, F>(&mut self, rhs_elem: &B, mut f: F)
         where S: DataMut,
@@ -1429,41 +1415,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.subview(axis, 0).map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            }
-        })
-    }
-
-    #[cfg(lanes_along)]
-    fn lanes_along<'a, F>(&'a self, axis: Axis, mut visit: F)
-        where D: RemoveAxis,
-              F: FnMut(ArrayView1<'a, A>),
-              A: 'a,
-    {
-        let view_len = self.shape().axis(axis);
-        let view_stride = self.strides.axis(axis);
-        // use the 0th subview as a map to each 1d array view extended from
-        // the 0th element.
-        self.subview(axis, 0).visit(move |first_elt| {
-            unsafe {
-                visit(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            }
-        })
-    }
-
-    #[cfg(lanes_along)]
-    fn lanes_along_mut<'a, F>(&'a mut self, axis: Axis, mut visit: F)
-        where D: RemoveAxis,
-              S: DataMut,
-              F: FnMut(ArrayViewMut1<'a, A>),
-              A: 'a,
-    {
-        let view_len = self.shape().axis(axis);
-        let view_stride = self.strides.axis(axis);
-        // use the 0th subview as a map to each 1d array view extended from
-        // the 0th element.
-        self.subview_mut(axis, 0).unordered_foreach_mut(move |first_elt| {
-            unsafe {
-                visit(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
     }

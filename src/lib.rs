@@ -590,6 +590,22 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    // Broadcast to dimension `E`, without checking that the dimensions match
+    // (Checked in debug assertions).
+    #[inline]
+    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<A, E>
+        where E: Dimension,
+    {
+        let dim = dim.into_dimension();
+        debug_assert_eq!(self.shape(), dim.slice());
+        let ptr = self.ptr;
+        let mut strides = dim.clone();
+        strides.slice_mut().copy_from_slice(self.strides.slice());
+        unsafe {
+            ArrayView::new_(ptr, dim, strides)
+        }
+    }
+
     fn raw_strides(&self) -> D {
         self.strides.clone()
     }
