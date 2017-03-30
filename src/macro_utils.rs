@@ -13,6 +13,28 @@ macro_rules! copy_and_clone {
     }
 }
 
+macro_rules! clone_bounds {
+    ([$($parmbounds:tt)*] $typename:ident [$($parm:tt)*] {
+        @copy {
+            $($copyfield:ident,)*
+        }
+        $($field:ident,)*
+    }) => {
+        impl<$($parmbounds)*> Clone for $typename<$($parm)*> {
+            fn clone(&self) -> Self {
+                $typename {
+                $(
+                    $copyfield: self.$copyfield,
+                )*
+                $(
+                    $field: self.$field.clone(),
+                )*
+                }
+            }
+        }
+    };
+}
+
 /// This assertion is always enabled but only verbose (formatting when
 /// debug assertions are enabled).
 #[cfg(debug_assertions)]

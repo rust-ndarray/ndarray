@@ -813,6 +813,7 @@ trait ZipExt : Iterator {
 
 impl<I> ZipExt for I where I: Iterator { }
 
+#[derive(Clone)]
 enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),

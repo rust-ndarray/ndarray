@@ -162,23 +162,27 @@ impl<'a, A> Baseiter<'a, A, Ix1> {
     }
 }
 
-impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D> {
-    fn clone(&self) -> Baseiter<'a, A, D> {
-        Baseiter {
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
-            index: self.index.clone(),
-            life: self.life,
+clone_bounds!(
+    ['a, A, D: Clone]
+    Baseiter['a, A, D] {
+        @copy {
+            ptr,
+            life,
         }
+        dim,
+        strides,
+        index,
     }
-}
+);
 
-impl<'a, A, D: Clone> Clone for ElementsBase<'a, A, D> {
-    fn clone(&self) -> ElementsBase<'a, A, D> {
-        ElementsBase { inner: self.inner.clone() }
+clone_bounds!(
+    ['a, A, D: Clone]
+    ElementsBase['a, A, D] {
+        @copy {
+        }
+        inner,
     }
-}
+);
 
 impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     type Item = &'a A;
@@ -234,19 +238,14 @@ macro_rules! either_mut {
     )
 }
 
-
-impl<'a, A, D: Clone> Clone for Iter<'a, A, D> {
-    fn clone(&self) -> Iter<'a, A, D> {
-        Iter {
-            inner: match self.inner {
-                ElementsRepr::Slice(ref iter) => ElementsRepr::Slice(iter.clone()),
-                ElementsRepr::Counted(ref iter) => {
-                    ElementsRepr::Counted(iter.clone())
-                }
-            },
+clone_bounds!(
+    ['a, A, D: Clone]
+    Iter['a, A, D] {
+        @copy {
         }
+        inner,
     }
-}
+);
 
 impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
     type Item = &'a A;
@@ -587,6 +586,20 @@ pub struct OuterIterCore<A, D> {
     ptr: *mut A,
 }
 
+clone_bounds!(
+    [A, D: Clone]
+    OuterIterCore[A, D] {
+        @copy {
+            index,
+            len,
+            stride,
+            ptr,
+        }
+        inner_dim,
+        inner_strides,
+    }
+);
+
 fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
     -> OuterIterCore<A, D::Smaller>
     where D: RemoveAxis,
@@ -668,6 +681,17 @@ pub struct AxisIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+clone_bounds!(
+    ['a, A, D: Clone]
+    AxisIter['a, A, D] {
+        @copy {
+            life,
+        }
+        iter,
+    }
+);
+
+
 macro_rules! outer_iter_split_at_impl {
     ($iter: ident) => (
         impl<'a, A, D> $iter<'a, A, D>
@@ -715,24 +739,6 @@ macro_rules! outer_iter_split_at_impl {
 }
 
 outer_iter_split_at_impl!(AxisIter);
-
-impl<'a, A, D> Clone for AxisIter<'a, A, D>
-    where D: Dimension
-{
-    fn clone(&self) -> Self {
-        AxisIter {
-            iter: OuterIterCore {
-                index: self.iter.index,
-                len: self.iter.len,
-                stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim.clone(),
-                inner_strides: self.iter.inner_strides.clone(),
-                ptr: self.iter.ptr,
-            },
-            life: self.life,
-        }
-    }
-}
 
 impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     where D: Dimension
@@ -980,6 +986,18 @@ pub struct AxisChunksIter<'a, A: 'a, D> {
     last_dim: D,
     life: PhantomData<&'a A>,
 }
+
+clone_bounds!(
+    ['a, A, D: Clone]
+    AxisChunksIter['a, A, D] {
+        @copy {
+            life,
+            last_ptr,
+        }
+        iter,
+        last_dim,
+    }
+);
 
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> (OuterIterCore<A, D>, *mut A, D)
