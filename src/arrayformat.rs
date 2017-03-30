@@ -10,6 +10,7 @@ use super::{
     ArrayBase,
     Data,
     Dimension,
+    NdProducer,
 };
 use dimension::IntoDimension;
 
@@ -109,7 +110,8 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Add extra information for Debug
         try!(format_array(self, f, <_>::fmt));
-        try!(write!(f, " shape={:?}, strides={:?}", self.shape(), self.strides()));
+        try!(write!(f, " shape={:?}, strides={:?}, layout={:?}",
+                    self.shape(), self.strides(), layout=self.view().layout()));
         Ok(())
     }
 }
