@@ -9,6 +9,7 @@
 
 #[macro_use] mod macros;
 mod chunks;
+mod inners;
 
 use std::marker::PhantomData;
 use std::ptr;
@@ -34,6 +35,10 @@ pub use self::chunks::{
     WholeChunksMut,
     WholeChunksIterMut,
     whole_chunks_mut_of,
+};
+pub use self::inners::{
+    new_inners,
+    new_inners_mut,
 };
 
 /// Base for array iterators
