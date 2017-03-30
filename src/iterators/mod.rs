@@ -532,6 +532,7 @@ impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
     }
 }
 
+#[cfg(next_version)]
 /// Create an InnerIter one dimension smaller than D (if possible)
 pub fn new_inner_iter_smaller<A, D>(v: ArrayView<A, D>)
     -> InnerIter<A, D::TrySmaller>
@@ -557,6 +558,7 @@ pub fn new_inner_iter_smaller<A, D>(v: ArrayView<A, D>)
     }
 }
 
+#[cfg(next_version)]
 pub fn new_inner_iter_smaller_mut<A, D>(v: ArrayViewMut<A, D>)
     -> InnerIterMut<A, D::TrySmaller>
     where D: Dimension,
