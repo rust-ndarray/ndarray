@@ -120,6 +120,10 @@ pub fn whole_chunks_of<A, D, E>(a: ArrayView<A, D>, chunk: E) -> WholeChunks<A, 
 {
     let mut chunk = chunk.into_dimension();
     let mut size = a.raw_dim();
+    ndassert!(a.ndim() == chunk.ndim(),
+              concat!("Chunk dimension {} does not match array dimension {} ",
+                      "(with array of shape {:?})"),
+             chunk.ndim(), a.ndim(), a.shape());
     for (sz, ch) in size.slice_mut().iter_mut().zip(chunk.slice_mut()) {
         assert!(*ch != 0, "Chunk size must not be zero");
         *sz /= *ch;

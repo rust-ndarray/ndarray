@@ -621,7 +621,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element is `ArrayView<A, D>`
     ///
-    /// **Panics** if any dimension of `chunk_size` is zero
+    /// **Panics** if any dimension of `chunk_size` is zero<br>
+    /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
+    /// number of array axes.)
     pub fn whole_chunks<E>(&self, chunk_size: E) -> WholeChunks<A, D> 
         where E: IntoDimension<Dim=D>,
     {
