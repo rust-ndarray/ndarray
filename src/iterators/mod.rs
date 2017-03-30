@@ -116,7 +116,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
         where G: FnMut(Acc, *mut A) -> Acc,
     {
         let ndim = self.dim.ndim();
-        debug_assert!(ndim > 0);
+        debug_assert_eq!(ndim, 0);
         let mut accum = init;
         loop {
             if let Some(mut index) = self.index.clone() {
