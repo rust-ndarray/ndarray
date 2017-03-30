@@ -349,6 +349,45 @@ fn add_2d_zip_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn add_2d_cutouts_by_4(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((64 * 1, 64 * 1));
+    let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
+    let chunksz = (4, 4);
+    bench.iter(|| {
+        Zip::from(a.whole_chunks_mut(chunksz))
+            .and(b.whole_chunks(chunksz))
+            .apply(|mut a, b| a += &b);
+    });
+}
+
+#[bench]
+fn add_2d_cutouts_by_16(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((64 * 1, 64 * 1));
+    let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
+    let chunksz = (16, 16);
+    bench.iter(|| {
+        Zip::from(a.whole_chunks_mut(chunksz))
+            .and(b.whole_chunks(chunksz))
+            .apply(|mut a, b| a += &b);
+    });
+}
+
+#[bench]
+fn add_2d_cutouts_by_32(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((64 * 1, 64 * 1));
+    let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
+    let chunksz = (32, 32);
+    bench.iter(|| {
+        Zip::from(a.whole_chunks_mut(chunksz))
+            .and(b.whole_chunks(chunksz))
+            .apply(|mut a, b| a += &b);
+    });
+}
+
+#[bench]
 fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
 {
     let mut a = Array2::<i32>::zeros((64, 64));

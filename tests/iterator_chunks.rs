@@ -1,5 +1,5 @@
 
-#[macro_use(s)]
+#[macro_use(array, s)]
 extern crate ndarray;
 
 use ndarray::prelude::*;
@@ -34,4 +34,56 @@ fn chunks() {
     let c = a.whole_chunks((m + 1, n));
     assert_eq!(c.raw_dim().size(), 0);
     assert_eq!(c.into_iter().count(), 0);
+}
+
+#[should_panic]
+#[test]
+fn chunks_different_size_1() {
+    let a = Array::<f32, _>::zeros(vec![2, 3]);
+    a.whole_chunks(vec![2]);
+}
+
+#[test]
+fn chunks_ok_size() {
+    let mut a = Array::<f32, _>::zeros(vec![2, 3]);
+    a.fill(1.);
+    let mut c = 0;
+    for elt in a.whole_chunks(vec![2, 1]) {
+        assert!(elt.iter().all(|&x| x == 1.));
+        assert_eq!(elt.dim(), vec![2, 1]);
+        c += 1;
+    }
+    assert_eq!(c, 3);
+}
+
+#[should_panic]
+#[test]
+fn chunks_different_size_2() {
+    let a = Array::<f32, _>::zeros(vec![2, 3]);
+    a.whole_chunks(vec![2, 3, 4]);
+}
+
+#[test]
+fn chunks_mut() {
+    let mut a = Array::zeros((7, 8));
+    for (i, mut chunk) in a.whole_chunks_mut((2, 3)).into_iter().enumerate() {
+        chunk.fill(i);
+    }
+    println!("{:?}", a);
+    let ans = array![
+       [0, 0, 0, 1, 1, 1, 0, 0],
+       [0, 0, 0, 1, 1, 1, 0, 0],
+       [2, 2, 2, 3, 3, 3, 0, 0],
+       [2, 2, 2, 3, 3, 3, 0, 0],
+       [4, 4, 4, 5, 5, 5, 0, 0],
+       [4, 4, 4, 5, 5, 5, 0, 0],
+       [0, 0, 0, 0, 0, 0, 0, 0]];
+    assert_eq!(a, ans);
+}
+
+#[should_panic]
+#[test]
+fn chunks_different_size_3() {
+    let mut a = Array::<f32, _>::zeros(vec![2, 3]);
+    a.whole_chunks_mut(vec![2, 3, 4]);
 }

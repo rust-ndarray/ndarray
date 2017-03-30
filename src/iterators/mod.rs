@@ -7,6 +7,7 @@
 // except according to those terms.
 
 
+#[macro_use] mod macros;
 mod chunks;
 
 use std::marker::PhantomData;
@@ -26,7 +27,14 @@ use super::{
     NdProducer,
 };
 
-pub use self::chunks::{WholeChunks, WholeChunksIter, whole_chunks_of};
+pub use self::chunks::{
+    WholeChunks,
+    WholeChunksIter,
+    whole_chunks_of,
+    WholeChunksMut,
+    WholeChunksIterMut,
+    whole_chunks_mut_of,
+};
 
 /// Base for array iterators
 ///
@@ -154,23 +162,27 @@ impl<'a, A> Baseiter<'a, A, Ix1> {
     }
 }
 
-impl<'a, A, D: Clone> Clone for Baseiter<'a, A, D> {
-    fn clone(&self) -> Baseiter<'a, A, D> {
-        Baseiter {
-            ptr: self.ptr,
-            dim: self.dim.clone(),
-            strides: self.strides.clone(),
-            index: self.index.clone(),
-            life: self.life,
+clone_bounds!(
+    ['a, A, D: Clone]
+    Baseiter['a, A, D] {
+        @copy {
+            ptr,
+            life,
         }
+        dim,
+        strides,
+        index,
     }
-}
+);
 
-impl<'a, A, D: Clone> Clone for ElementsBase<'a, A, D> {
-    fn clone(&self) -> ElementsBase<'a, A, D> {
-        ElementsBase { inner: self.inner.clone() }
+clone_bounds!(
+    ['a, A, D: Clone]
+    ElementsBase['a, A, D] {
+        @copy {
+        }
+        inner,
     }
-}
+);
 
 impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     type Item = &'a A;
@@ -226,19 +238,14 @@ macro_rules! either_mut {
     )
 }
 
-
-impl<'a, A, D: Clone> Clone for Iter<'a, A, D> {
-    fn clone(&self) -> Iter<'a, A, D> {
-        Iter {
-            inner: match self.inner {
-                ElementsRepr::Slice(ref iter) => ElementsRepr::Slice(iter.clone()),
-                ElementsRepr::Counted(ref iter) => {
-                    ElementsRepr::Counted(iter.clone())
-                }
-            },
+clone_bounds!(
+    ['a, A, D: Clone]
+    Iter['a, A, D] {
+        @copy {
         }
+        inner,
     }
-}
+);
 
 impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
     type Item = &'a A;
@@ -579,6 +586,20 @@ pub struct OuterIterCore<A, D> {
     ptr: *mut A,
 }
 
+clone_bounds!(
+    [A, D: Clone]
+    OuterIterCore[A, D] {
+        @copy {
+            index,
+            len,
+            stride,
+            ptr,
+        }
+        inner_dim,
+        inner_strides,
+    }
+);
+
 fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
     -> OuterIterCore<A, D::Smaller>
     where D: RemoveAxis,
@@ -660,6 +681,17 @@ pub struct AxisIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+clone_bounds!(
+    ['a, A, D: Clone]
+    AxisIter['a, A, D] {
+        @copy {
+            life,
+        }
+        iter,
+    }
+);
+
+
 macro_rules! outer_iter_split_at_impl {
     ($iter: ident) => (
         impl<'a, A, D> $iter<'a, A, D>
@@ -707,24 +739,6 @@ macro_rules! outer_iter_split_at_impl {
 }
 
 outer_iter_split_at_impl!(AxisIter);
-
-impl<'a, A, D> Clone for AxisIter<'a, A, D>
-    where D: Dimension
-{
-    fn clone(&self) -> Self {
-        AxisIter {
-            iter: OuterIterCore {
-                index: self.iter.index,
-                len: self.iter.len,
-                stride: self.iter.stride,
-                inner_dim: self.iter.inner_dim.clone(),
-                inner_strides: self.iter.inner_strides.clone(),
-                ptr: self.iter.ptr,
-            },
-            life: self.life,
-        }
-    }
-}
 
 impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     where D: Dimension
@@ -973,6 +987,18 @@ pub struct AxisChunksIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+clone_bounds!(
+    ['a, A, D: Clone]
+    AxisChunksIter['a, A, D] {
+        @copy {
+            life,
+            last_ptr,
+        }
+        iter,
+        last_dim,
+    }
+);
+
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> (OuterIterCore<A, D>, *mut A, D)
 {
@@ -986,7 +1012,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     let mut inner_dim = v.dim.clone();
     inner_dim.slice_mut()[axis] = size;
 
-    let mut last_dim = v.dim.clone();
+    let mut last_dim = v.dim;
     last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
     let last_ptr = if rem != 0 {
@@ -1002,7 +1028,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
         len: shape,
         stride: stride,
         inner_dim: inner_dim,
-        inner_strides: v.strides.clone(),
+        inner_strides: v.strides,
         ptr: v.ptr,
     };
 
@@ -1013,7 +1039,7 @@ pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> AxisChunksIter<A, D>
     where D: Dimension
 {
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v, axis, size);
 
     AxisChunksIter {
         iter: iter,
@@ -1102,7 +1128,7 @@ pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
     -> AxisChunksIterMut<A, D>
     where D: Dimension
 {
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
 
     AxisChunksIterMut {
         iter: iter,
@@ -1116,32 +1142,11 @@ chunk_iter_impl!(AxisChunksIter, ArrayView);
 chunk_iter_impl!(AxisChunksIterMut, ArrayViewMut);
 
 
-// Send and Sync
-// All the iterators are thread safe the same way the slice's iterator are
-
-// read-only iterators use Sync => Send rules, same as `std::slice::Iter`.
-macro_rules! send_sync_read_only {
-    ($name:ident) => {
-        unsafe impl<'a, A, D> Send for $name<'a, A, D> where A: Sync, D: Send { }
-        unsafe impl<'a, A, D> Sync for $name<'a, A, D> where A: Sync, D: Sync { }
-    }
-}
-
-// read-write iterators use Send => Send rules, same as `std::slice::IterMut`.
-macro_rules! send_sync_read_write {
-    ($name:ident) => {
-        unsafe impl<'a, A, D> Send for $name<'a, A, D> where A: Send, D: Send { }
-        unsafe impl<'a, A, D> Sync for $name<'a, A, D> where A: Sync, D: Sync { }
-    }
-}
-
 send_sync_read_only!(Iter);
 send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
-send_sync_read_only!(WholeChunks);
-send_sync_read_only!(WholeChunksIter);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);

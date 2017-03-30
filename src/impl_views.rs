@@ -75,7 +75,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         ArrayView::new_(ptr, dim, strides)
     }
 
-    /// Split the array along `axis` and return one view strictly before the
+    /// Split the array view along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
@@ -190,7 +190,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         ArrayViewMut::new_(ptr, dim, strides)
     }
 
-    /// Split the array along `axis` and return one mutable view strictly
+    /// Split the array view along `axis` and return one mutable view strictly
     /// before the split and one mutable view after the split.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.

@@ -109,6 +109,8 @@ pub use iterators::{
     AxisChunksIterMut,
     WholeChunks,
     WholeChunksIter,
+    WholeChunksMut,
+    WholeChunksIterMut,
 };
 
 pub use arraytraits::AsArray;
@@ -588,6 +590,9 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    fn raw_strides(&self) -> D {
+        self.strides.clone()
+    }
 
     /// Apply closure `f` to each element in the array, in whatever
     /// order is the fastest to visit.
@@ -702,6 +707,13 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         }
     }
 
+    // Convert into a read-only view
+    fn into_view(self) -> ArrayView<'a, A, D> {
+        unsafe {
+            ArrayView::new_(self.ptr, self.dim, self.strides)
+        }
+    }
+
     #[inline]
     fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
@@ -801,6 +813,7 @@ trait ZipExt : Iterator {
 
 impl<I> ZipExt for I where I: Iterator { }
 
+#[derive(Clone)]
 enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),

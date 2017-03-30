@@ -676,13 +676,8 @@ zipt_impl!{
     [A B C D E F][ a b c d e f],
 }
 
-macro_rules! macroif {
-    (true $($x:tt)*) => { $($x)* };
-    (false $($x:tt)*) => {  };
-}
-
 macro_rules! map_impl {
-    ($([$choice:ident $($p:ident)*],)+) => {
+    ($([$notlast:ident $($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
         impl<D: Dimension, $($p: NdProducer<Dim=D>),*> Zip<($($p,)*), D> {
@@ -712,7 +707,7 @@ macro_rules! map_impl {
                 })
             }
 
-            macroif!{ $choice
+            expand_if!(@bool [$notlast]
 
             /// Include the producer `p` in the Zip.
             ///
@@ -750,8 +745,7 @@ macro_rules! map_impl {
                     dimension: self.dimension,
                 }
             }
-
-            }
+            );
 
             /// Split the `Zip` evenly in two.
             ///
