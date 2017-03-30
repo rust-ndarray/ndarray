@@ -27,7 +27,14 @@ use super::{
     NdProducer,
 };
 
-pub use self::chunks::{WholeChunks, WholeChunksIter, whole_chunks_of};
+pub use self::chunks::{
+    WholeChunks,
+    WholeChunksIter,
+    whole_chunks_of,
+    WholeChunksMut,
+    WholeChunksIterMut,
+    whole_chunks_mut_of,
+};
 
 /// Base for array iterators
 ///

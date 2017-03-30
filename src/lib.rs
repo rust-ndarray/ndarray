@@ -109,6 +109,8 @@ pub use iterators::{
     AxisChunksIterMut,
     WholeChunks,
     WholeChunksIter,
+    WholeChunksMut,
+    WholeChunksIterMut,
 };
 
 pub use arraytraits::AsArray;
@@ -588,6 +590,9 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    fn raw_strides(&self) -> D {
+        self.strides.clone()
+    }
 
     /// Apply closure `f` to each element in the array, in whatever
     /// order is the fastest to visit.
