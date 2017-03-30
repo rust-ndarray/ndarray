@@ -1175,6 +1175,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: FnMut(&mut A, &B)
     {
         debug_assert_eq!(self.shape(), rhs.shape());
+        debug_assert_ne!(self.ndim(), 0);
 
         // The one dimensional case is simple; we know they are not contig
         if self.ndim() == 1 {
