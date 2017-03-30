@@ -994,7 +994,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     let mut inner_dim = v.dim.clone();
     inner_dim.slice_mut()[axis] = size;
 
-    let mut last_dim = v.dim.clone();
+    let mut last_dim = v.dim;
     last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
 
     let last_ptr = if rem != 0 {
@@ -1010,7 +1010,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
         len: shape,
         stride: stride,
         inner_dim: inner_dim,
-        inner_strides: v.strides.clone(),
+        inner_strides: v.strides,
         ptr: v.ptr,
     };
 
@@ -1021,7 +1021,7 @@ pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
     -> AxisChunksIter<A, D>
     where D: Dimension
 {
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v, axis, size);
 
     AxisChunksIter {
         iter: iter,
@@ -1110,7 +1110,7 @@ pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
     -> AxisChunksIterMut<A, D>
     where D: Dimension
 {
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.view(), axis, size);
+    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
 
     AxisChunksIterMut {
         iter: iter,

@@ -707,6 +707,13 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         }
     }
 
+    // Convert into a read-only view
+    fn into_view(self) -> ArrayView<'a, A, D> {
+        unsafe {
+            ArrayView::new_(self.ptr, self.dim, self.strides)
+        }
+    }
+
     #[inline]
     fn into_base_iter(self) -> Baseiter<'a, A, D> {
         unsafe {
