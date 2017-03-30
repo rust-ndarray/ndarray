@@ -22,6 +22,7 @@ use super::DimPrivate;
 pub unsafe trait NdIndex<E> : Debug {
     #[doc(hidden)]
     fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;
+    #[doc(hidden)]
     fn index_unchecked(&self, strides: &E) -> isize;
 }
 
