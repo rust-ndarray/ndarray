@@ -24,3 +24,12 @@ macro_rules! ndassert {
 macro_rules! ndassert {
     ($e:expr, $($_ignore:tt)*) => { assert!($e) }
 }
+
+macro_rules! expand_if {
+    (@bool [true] $($body:tt)*) => { $($body)* };
+    (@bool [false] $($body:tt)*) => { };
+    (@nonempty [$($if_present:tt)+] $($body:tt)*) => {
+        $($body)*
+    };
+    (@nonempty [] $($body:tt)*) => { };
+}
