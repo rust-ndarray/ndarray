@@ -621,7 +621,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// It produces the whole chunks of a given n-dimensional chunk size,
     /// skipping the remainder along each dimension that doesn't fit evenly.
     ///
-    /// Iterator element is `ArrayView<A, D>`
+    /// The produced element is a `ArrayView<A, D>` with exactly the dimension
+    /// `chunk_size`.
     ///
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
@@ -637,11 +638,33 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// It produces the whole chunks of a given n-dimensional chunk size,
     /// skipping the remainder along each dimension that doesn't fit evenly.
     ///
-    /// Iterator element is `ArrayViewMut<A, D>`
+    /// The produced element is a `ArrayViewMut<A, D>` with exactly
+    /// the dimension `chunk_size`.
     ///
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
+    ///
+    /// ```rust
+    /// use ndarray::Array;
+    /// use ndarray::arr2;
+    /// let mut a = Array::zeros((6, 7));
+    ///
+    /// // Fill each 2 × 2 chunk with the index of where it appeared in iteration
+    /// for (i, mut chunk) in a.whole_chunks_mut((2, 2)).into_iter().enumerate() {
+    ///     chunk.fill(i);
+    /// }
+    ///
+    /// // The resulting array is:
+    /// assert_eq!(
+    ///   a,
+    ///   arr2(&[[0, 0, 1, 1, 2, 2, 0],
+    ///          [0, 0, 1, 1, 2, 2, 0],
+    ///          [3, 3, 4, 4, 5, 5, 0],
+    ///          [3, 3, 4, 4, 5, 5, 0],
+    ///          [6, 6, 7, 7, 8, 8, 0],
+    ///          [6, 6, 7, 7, 8, 8, 0]]));
+    /// ```
     pub fn whole_chunks_mut<E>(&mut self, chunk_size: E) -> WholeChunksMut<A, D> 
         where E: IntoDimension<Dim=D>,
               S: DataMut

@@ -108,8 +108,8 @@ impl_ndproducer! {
 
 /// Whole chunks producer and iterable.
 ///
-/// See [`.whole_chunks()`](struct.ArrayBase.html#method.whole_chunks) for more
-/// information.
+/// See [`.whole_chunks_mut()`](struct.ArrayBase.html#method.whole_chunks_mut)
+/// for more information.
 //#[derive(Debug)]
 pub struct WholeChunksMut<'a, A: 'a, D> {
     base: BaseProducerMut<'a, A, D>,
