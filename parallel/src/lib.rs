@@ -63,6 +63,15 @@ pub mod prelude {
 
     #[doc(no_inline)]
     pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator, ExactParallelIterator};
+
+    pub use ext_traits::{
+        ParApply1,
+        ParApply2,
+        ParApply3,
+        ParApply4,
+        ParApply5,
+        ParApply6,
+    };
 }
 
 pub use par::Parallel;
@@ -73,5 +82,6 @@ pub use into_traits::{
 };
 
 mod par;
+mod ext_traits;
 mod into_traits;
 mod into_impls;
