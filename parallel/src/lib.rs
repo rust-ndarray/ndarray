@@ -8,10 +8,16 @@
 //! `.axis_iter()` and `.axis_iter_mut()` also have parallel counterparts,
 //! and their parallel iterators are indexed (and thus ordered) and exact length.
 //!
+//! `Zip` also implements `NdarrayIntoParallelIterator`, and there is an
+//! extension trait so that it can use a method `.par_apply` directly.
+//!
 //! (*) This regime of a custom trait instead of rayon’s own is since we
 //! use this intermediate ndarray-parallel crate.
 //!
 //! # Examples
+//!
+//!
+//! ## Arrays and array views
 //!
 //! Compute the exponential of each element in an array, parallelized.
 //!
@@ -27,6 +33,8 @@
 //!     a.par_iter_mut().for_each(|x| *x = x.exp());
 //! }
 //! ```
+//!
+//! ## Axis iterators
 //!
 //! Use the parallel `.axis_iter()` to compute the sum of each row.
 //!
@@ -47,6 +55,35 @@
 //!      .collect_into(&mut sums);
 //!
 //!     assert_eq!(sums, [120., 376., 632., 888.]);
+//! }
+//! ```
+//!
+//! ## Zip
+//!
+//! Use zip for lock step function application across several arrays
+//!
+//! ```
+//! extern crate ndarray;
+//! extern crate ndarray_parallel;
+//!
+//! use ndarray::Array3;
+//! use ndarray::Zip;
+//! use ndarray_parallel::prelude::*;
+//!
+//! type Array3f64 = Array3<f64>;
+//!
+//! fn main() {
+//!     const N: usize = 128;
+//!     let a = Array3f64::from_elem((N, N, N), 1.);
+//!     let b = Array3f64::from_elem(a.dim(), 2.);
+//!     let mut c = Array3f64::zeros(a.dim());
+//!
+//!     Zip::from(&mut c)
+//!         .and(&a)
+//!         .and(&b)
+//!         .par_apply(|c, &a, &b| {
+//!             *c += a - b;
+//!         });
 //! }
 //! ```
 
