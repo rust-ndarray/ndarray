@@ -37,7 +37,7 @@ pub fn new_inners<A, D>(v: ArrayView<A, D>, axis: Axis)
     let iter_v;
     if ndim == 0 {
         len = 1;
-        stride = 0;
+        stride = 1;
         iter_v = v.try_remove_axis(Axis(0))
     } else {
         len = v.dim.last_elem();
@@ -86,7 +86,7 @@ pub fn new_inners_mut<A, D>(v: ArrayViewMut<A, D>, axis: Axis)
     let iter_v;
     if ndim == 0 {
         len = 1;
-        stride = 0;
+        stride = 1;
         iter_v = v.try_remove_axis(Axis(0))
     } else {
         len = v.dim.last_elem();
