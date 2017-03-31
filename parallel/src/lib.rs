@@ -52,7 +52,7 @@
 
 
 extern crate ndarray;
-extern crate rayon;
+pub extern crate rayon;
 
 /// Into- traits for creating parallelized iterators.
 pub mod prelude {
