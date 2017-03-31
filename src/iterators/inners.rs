@@ -40,8 +40,9 @@ pub fn new_inners<A, D>(v: ArrayView<A, D>, axis: Axis)
         stride = 1;
         iter_v = v.try_remove_axis(Axis(0))
     } else {
-        len = v.dim.last_elem();
-        stride = v.strides.last_elem() as isize;
+        let i = axis.index();
+        len = v.dim[i];
+        stride = v.strides[i] as isize;
         iter_v = v.try_remove_axis(axis)
     }
     Inners {
@@ -89,8 +90,9 @@ pub fn new_inners_mut<A, D>(v: ArrayViewMut<A, D>, axis: Axis)
         stride = 1;
         iter_v = v.try_remove_axis(Axis(0))
     } else {
-        len = v.dim.last_elem();
-        stride = v.strides.last_elem() as isize;
+        let i = axis.index();
+        len = v.dim[i];
+        stride = v.strides[i] as isize;
         iter_v = v.try_remove_axis(axis)
     }
     InnersMut {
