@@ -1,6 +1,7 @@
 
 #[macro_export]
-/// Array zip macro: lock step function application across several arrays.
+/// Array zip macro: lock step function application across several arrays and
+/// producers.
 ///
 /// This is a shorthand for [`Zip`](struct.Zip.html).
 ///
@@ -21,20 +22,20 @@
 ///
 /// Explanation of the shorthand for captures:
 ///
-/// + `mut a`: the array is `&mut a` and the variable pattern is `mut a`.
-/// + `b`: the array is `&b` and the variable pattern is `&b` (same for `c`).
+/// + `mut a`: the producer is `&mut a` and the variable pattern is `mut a`.
+/// + `b`: the producer is `&b` and the variable pattern is `&b` (same for `c`).
 ///
 /// The syntax is `azip!(` *capture [, capture [, ...] ]* `in {` *expression* `})`
 /// where the captures are a sequence of pattern-like items that indicate which
 /// arrays are used for the zip. The *expression* is evaluated elementwise,
-/// with the value of an element from each array in their respective variable.
+/// with the value of an element from each producer in their respective variable.
 ///
 /// More capture rules:
 ///
-/// + `ref c`: the array is `&c` and the variable pattern is `c`.
-/// + `mut a (expr)`: the array is `expr` and the variable pattern is `mut a`.
-/// + `b (expr)`: the array is `expr` and the variable pattern is `&b`.
-/// + `ref c (expr)`: the array is `expr` and the variable pattern is `c`.
+/// + `ref c`: the producer is `&c` and the variable pattern is `c`.
+/// + `mut a (expr)`: the producer is `expr` and the variable pattern is `mut a`.
+/// + `b (expr)`: the producer is `expr` and the variable pattern is `&b`.
+/// + `ref c (expr)`: the producer is `expr` and the variable pattern is `c`.
 ///
 /// **Panics** if any of the arrays are not of the same shape.
 ///
@@ -53,7 +54,11 @@
 ///     let b = M::from_elem(a.dim(), 1.);
 ///     let c = M::from_elem(a.dim(), 2.);
 ///
+///     // Compute a simple ternary operation:
+///     // elementwise addition of b and c, stored in a
+///
 ///     azip!(mut a, b, c in { *a = b + c });
+///
 ///     assert_eq!(a, &b + &c);
 /// }
 /// ```

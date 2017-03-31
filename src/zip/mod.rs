@@ -419,7 +419,11 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
 /// let c = M::zeros((64, 64));
 /// let d = M::zeros((64, 64));
 ///
-/// Zip::from(&mut a).and(&b).and(&c).and(&d).apply(|w, &x, &y, &z| {
+/// Zip::from(&mut a)
+///     .and(&b)
+///     .and(&c)
+///     .and(&d)
+///     .apply(|w, &x, &y, &z| {
 ///     *w += x + y * z;
 /// });
 /// ```
