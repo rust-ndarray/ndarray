@@ -19,6 +19,7 @@ use StrideShape;
 /// Methods for read-only array views `ArrayView<'a, A, D>`
 ///
 /// Note that array views implement traits like [`From`][f] and `IntoIterator` too.
+///
 /// [f]: #method.from
 impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     where D: Dimension,
