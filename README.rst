@@ -79,6 +79,21 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.8.2
+
+  - Add more documentation and an example for dynamic dimensions: see
+    `IxDyn`__. ``IxDyn`` will have a representation change next incompatible
+    version. Use it as a type alias for best forward compatibility.
+  - Add iterable and producer ``.whole_chunks_mut(size)``.
+  - Fix a bug in ``whole_chunks``: it didn't check the dimensionality of the
+    requested chunk size properly (an ``IxDyn``-only bug).
+  - Improve performance of ``zip_mut_with`` (and thus all binary operators) for
+    block slices of row major arrays.
+  - ``AxisChunksIter`` creation sped up and it implements ``Clone``.
+  - Dimension mismatch in ``Zip`` has a better panic message.
+
+  __ https://bluss.github.io/rust-ndarray/master/ndarray/type.IxDyn.html
+
 - 0.8.1
 
   - Add ``Zip`` and macro ``azip!()`` which implement lock step function
