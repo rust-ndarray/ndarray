@@ -30,6 +30,12 @@
 //!
 //! fn main() {
 //!     let mut a = Array2::<f64>::zeros((128, 128));
+//!
+//!     // Parallel versions of regular array methods (ParMap trait)
+//!     a.par_map_inplace(|x| *x = x.exp());
+//!     a.par_mapv_inplace(f64::exp);
+//!
+//!     // You can also use the parallel iterator directly
 //!     a.par_iter_mut().for_each(|x| *x = x.exp());
 //! }
 //! ```
@@ -109,6 +115,7 @@ pub mod prelude {
         ParApply5,
         ParApply6,
     };
+    pub use ext_traits::ParMap;
 }
 
 pub use par::Parallel;

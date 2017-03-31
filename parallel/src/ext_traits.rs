@@ -3,9 +3,48 @@ use ndarray::{
     Dimension,
     NdProducer,
     Zip,
+    ArrayBase,
+    DataMut,
 };
 
 use prelude::*;
+
+// Arrays
+
+/// Parallel versions of `map_inplace` and `mapv_inplace`.
+pub trait ParMap {
+    type Item;
+    fn par_map_inplace<F>(&mut self, f: F)
+        where F: Fn(&mut Self::Item) + Sync;
+    fn par_mapv_inplace<F>(&mut self, f: F)
+        where F: Fn(Self::Item) -> Self::Item + Sync,
+              Self::Item: Clone;
+}
+
+impl<A, S, D> ParMap for ArrayBase<S, D>
+    where S: DataMut<Elem=A>,
+          D: Dimension,
+          A: Send + Sync,
+{
+    type Item = A;
+    fn par_map_inplace<F>(&mut self, f: F)
+        where F: Fn(&mut Self::Item) + Sync
+    {
+        self.view_mut().into_par_iter().for_each(f)
+    }
+    fn par_mapv_inplace<F>(&mut self, f: F)
+        where F: Fn(Self::Item) -> Self::Item + Sync,
+              Self::Item: Clone
+    {
+        self.view_mut().into_par_iter()
+            .for_each(move |x| *x = f(x.clone()))
+    }
+}
+
+
+
+
+// Zip
 
 macro_rules! zip_impl {
     ($([$name:ident $($p:ident)*],)+) => {
