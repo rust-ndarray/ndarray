@@ -3,6 +3,7 @@ extern crate ndarray;
 
 use ndarray::Array;
 use ndarray::Ix3;
+use ndarray::ShapeBuilder;
 
 #[test]
 fn test_ixdyn() {
@@ -28,6 +29,26 @@ fn test_ixdyn_out_of_bounds() {
     let a = Array::<f32, _>::zeros(vec![2, 3, 4]);
     let res = a.get([0, 3, 0]);
     assert_eq!(res, None);
+}
+
+#[test]
+fn test_ixdyn_iterate() {
+    for &rev in &[false, true] {
+        let mut a = Array::zeros((2, 3, 4).set_f(rev));
+        let dim = a.shape().to_vec();
+        for (i, elt) in a.iter_mut().enumerate() {
+            *elt = i;
+        }
+        println!("{:?}", a.dim());
+        let mut a = a.into_shape(dim).unwrap();
+        println!("{:?}", a.dim());
+        let mut c = 0;
+        for (i, elt) in a.iter_mut().enumerate() {
+            assert_eq!(i, *elt);
+            c += 1;
+        }
+        assert_eq!(c, a.len());
+    }
 }
 
 #[test]
