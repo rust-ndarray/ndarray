@@ -267,11 +267,13 @@ fn fold_sum_i32_2d_cutout_transpose(bench: &mut test::Bencher)
     });
 }
 
+const ADD2DSZ: usize = 64;
+
 #[bench]
 fn add_2d_regular(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
-    let b = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -281,8 +283,8 @@ fn add_2d_regular(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_zip(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
-    let b = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
     });
@@ -291,8 +293,8 @@ fn add_2d_zip(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_alloc(bench: &mut test::Bencher)
 {
-    let a = Array::<i32, _>::zeros((64, 64));
-    let b = Array::<i32, _>::zeros((64, 64));
+    let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         &a + &b
     });
@@ -301,8 +303,8 @@ fn add_2d_alloc(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_zip_alloc(bench: &mut test::Bencher)
 {
-    let a = Array::<i32, _>::zeros((64, 64));
-    let b = Array::<i32, _>::zeros((64, 64));
+    let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         unsafe {
             let mut c = Array::uninitialized(a.dim());
@@ -315,8 +317,8 @@ fn add_2d_zip_alloc(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_assign_ops(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
-    let b = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = b.view();
     bench.iter(|| {
         let mut x = a.view_mut();
@@ -328,9 +330,9 @@ fn add_2d_assign_ops(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_cutout(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((66, 66));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ + 2, ADD2DSZ + 2));
     let mut acut = a.slice_mut(s![1..-1, 1..-1]);
-    let b = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = b.view();
     bench.iter(|| {
         acut += &bv;
@@ -340,9 +342,9 @@ fn add_2d_cutout(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_zip_cutout(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((66, 66));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ + 2, ADD2DSZ + 2));
     let mut acut = a.slice_mut(s![1..-1, 1..-1]);
-    let b = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         Zip::from(&mut acut).and(&b).apply(|a, &b| *a += b);
     });
@@ -390,8 +392,8 @@ fn add_2d_cutouts_by_32(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
 {
-    let mut a = Array2::<i32>::zeros((64, 64));
-    let b = Array1::<i32>::zeros(64);
+    let mut a = Array2::<i32>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array1::<i32>::zeros(ADD2DSZ);
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -401,7 +403,7 @@ fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_broadcast_0_to_2(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros(());
     let bv = b.view();
     bench.iter(|| {
@@ -458,7 +460,7 @@ fn scalar_sub_2(bench: &mut test::Bencher) {
 #[bench]
 fn add_2d_0_to_2_iadd_scalar(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let n = black_box(0);
     bench.iter(|| {
         a += n;
@@ -468,9 +470,20 @@ fn add_2d_0_to_2_iadd_scalar(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_strided(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 128));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ * 2));
     let mut a = a.slice_mut(s![.., ..;2]);
-    let b = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let bv = b.view();
+    bench.iter(|| {
+        a += &bv;
+    });
+}
+
+#[bench]
+fn add_2d_regular_dyn(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros(&[ADD2DSZ, ADD2DSZ][..]);
+    let b = Array::<i32, _>::zeros(&[ADD2DSZ, ADD2DSZ][..]);
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -480,9 +493,9 @@ fn add_2d_strided(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_strided_dyn(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros(&[64, 64 * 2][..]);
+    let mut a = Array::<i32, _>::zeros(&[ADD2DSZ, ADD2DSZ * 2][..]);
     let mut a = a.slice_mut(s![.., ..;2]);
-    let b = Array::<i32, _>::zeros(&[64, 64][..]);
+    let b = Array::<i32, _>::zeros(&[ADD2DSZ, ADD2DSZ][..]);
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -493,9 +506,9 @@ fn add_2d_strided_dyn(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_zip_strided(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 128));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ * 2));
     let mut a = a.slice_mut(s![.., ..;2]);
-    let b = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
     });
@@ -504,9 +517,9 @@ fn add_2d_zip_strided(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_transposed(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     a.swap_axes(0, 1);
-    let b = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -516,9 +529,9 @@ fn add_2d_transposed(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_zip_transposed(bench: &mut test::Bencher)
 {
-    let mut a = Array::<i32, _>::zeros((64, 64));
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     a.swap_axes(0, 1);
-    let b = Array::<i32, _>::zeros((64, 64));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
     });
@@ -527,8 +540,8 @@ fn add_2d_zip_transposed(bench: &mut test::Bencher)
 #[bench]
 fn add_2d_f32_regular(bench: &mut test::Bencher)
 {
-    let mut a = Array::<f32, _>::zeros((64, 64));
-    let b = Array::<f32, _>::zeros((64, 64));
+    let mut a = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -559,18 +572,37 @@ fn add_1d_strided(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn iadd_2d_regular(bench: &mut test::Bencher)
+fn iadd_scalar_2d_regular(bench: &mut test::Bencher)
 {
-    let mut a = Array::<f32, _>::zeros((64, 64));
+    let mut a = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
         a += 1.;
     });
 }
 
 #[bench]
-fn iadd_2d_strided(bench: &mut test::Bencher)
+fn iadd_scalar_2d_strided(bench: &mut test::Bencher)
 {
-    let mut a = Array::<f32, _>::zeros((64, 128));
+    let mut a = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ * 2));
+    let mut a = a.slice_mut(s![.., ..;2]);
+    bench.iter(|| {
+        a += 1.;
+    });
+}
+
+#[bench]
+fn iadd_scalar_2d_regular_dyn(bench: &mut test::Bencher)
+{
+    let mut a = Array::<f32, _>::zeros(vec![ADD2DSZ, ADD2DSZ]);
+    bench.iter(|| {
+        a += 1.;
+    });
+}
+
+#[bench]
+fn iadd_scalar_2d_strided_dyn(bench: &mut test::Bencher)
+{
+    let mut a = Array::<f32, _>::zeros(vec![ADD2DSZ, ADD2DSZ * 2]);
     let mut a = a.slice_mut(s![.., ..;2]);
     bench.iter(|| {
         a += 1.;
@@ -580,8 +612,8 @@ fn iadd_2d_strided(bench: &mut test::Bencher)
 #[bench]
 fn scaled_add_2d_f32_regular(bench: &mut test::Bencher)
 {
-    let mut av = Array::<f32, _>::zeros((64, 64));
-    let bv = Array::<f32, _>::zeros((64, 64));
+    let mut av = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let bv = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let scalar = 3.1415926535;
     bench.iter(|| {
         av.scaled_add(scalar, &bv);
@@ -591,7 +623,7 @@ fn scaled_add_2d_f32_regular(bench: &mut test::Bencher)
 #[bench]
 fn assign_scalar_2d_corder(bench: &mut test::Bencher)
 {
-    let a = Array::zeros((64, 64));
+    let a = Array::zeros((ADD2DSZ, ADD2DSZ));
     let mut a = black_box(a);
     let s = 3.;
     bench.iter(move || a.fill(s))
@@ -610,7 +642,7 @@ fn assign_scalar_2d_cutout(bench: &mut test::Bencher)
 #[bench]
 fn assign_scalar_2d_forder(bench: &mut test::Bencher)
 {
-    let mut a = Array::zeros((64, 64));
+    let mut a = Array::zeros((ADD2DSZ, ADD2DSZ));
     a.swap_axes(0, 1);
     let mut a = black_box(a);
     let s = 3.;
@@ -620,7 +652,7 @@ fn assign_scalar_2d_forder(bench: &mut test::Bencher)
 #[bench]
 fn assign_zero_2d_corder(bench: &mut test::Bencher)
 {
-    let a = Array::zeros((64, 64));
+    let a = Array::zeros((ADD2DSZ, ADD2DSZ));
     let mut a = black_box(a);
     bench.iter(|| a.fill(0.))
 }
@@ -637,7 +669,7 @@ fn assign_zero_2d_cutout(bench: &mut test::Bencher)
 #[bench]
 fn assign_zero_2d_forder(bench: &mut test::Bencher)
 {
-    let mut a = Array::zeros((64, 64));
+    let mut a = Array::zeros((ADD2DSZ, ADD2DSZ));
     a.swap_axes(0, 1);
     let mut a = black_box(a);
     bench.iter(|| a.fill(0.))
