@@ -51,7 +51,7 @@
 //! ```
 
 
-extern crate ndarray;
+pub extern crate ndarray;
 pub extern crate rayon;
 
 /// Into- traits for creating parallelized iterators.
