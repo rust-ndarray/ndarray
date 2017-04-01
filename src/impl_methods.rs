@@ -339,25 +339,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    // `uget` for one-dimensional arrays
-    unsafe fn uget_1d(&self, i: Ix) -> &A {
-        debug_assert!(self.ndim() <= 1);
-        debug_assert!(i < self.len());
-        let offset = self.strides()[0] * (i as Ixs);
-        &*self.as_ptr().offset(offset)
-    }
-
-    // `uget_mut` for one-dimensional arrays
-    unsafe fn uget_mut_1d(&mut self, i: Ix) -> &mut A
-        where S: DataMut
-    {
-        debug_assert!(self.ndim() <= 1);
-        debug_assert!(i < self.len());
-        let offset = self.strides()[0] * (i as Ixs);
-        &mut *self.as_mut_ptr().offset(offset)
-    }
-
-
     /// Along `axis`, select the subview `index` and return a
     /// view with that axis removed.
     ///
@@ -1177,17 +1158,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         debug_assert_eq!(self.shape(), rhs.shape());
         debug_assert_ne!(self.ndim(), 0);
 
-        // The one dimensional case is simple; we know they are not contig
-        if self.ndim() == 1 {
-            unsafe {
-                for i in 0..self.len() {
-                    f(self.uget_mut_1d(i), rhs.uget_1d(i));
-                }
-            }
-            return;
-        }
-
-        // otherwise, break the arrays up into their inner rows
+        // break the arrays up into their inner rows
         let n = self.ndim();
         let dim = self.raw_dim();
         Zip::from(new_inners_mut(self.view_mut(), Axis(n - 1)))
