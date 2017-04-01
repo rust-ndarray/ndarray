@@ -527,23 +527,46 @@ fn add_2d_zip_strided(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn add_2d_transposed(bench: &mut test::Bencher)
+fn add_2d_one_transposed(bench: &mut test::Bencher)
 {
     let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     a.swap_axes(0, 1);
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
-    let bv = b.view();
     bench.iter(|| {
-        a += &bv;
+        a += &b;
     });
 }
 
 #[bench]
-fn add_2d_zip_transposed(bench: &mut test::Bencher)
+fn add_2d_zip_one_transposed(bench: &mut test::Bencher)
 {
     let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     a.swap_axes(0, 1);
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    bench.iter(|| {
+        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+    });
+}
+
+#[bench]
+fn add_2d_both_transposed(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    a.swap_axes(0, 1);
+    let mut b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    b.swap_axes(0, 1);
+    bench.iter(|| {
+        a += &b;
+    });
+}
+
+#[bench]
+fn add_2d_zip_both_transposed(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    a.swap_axes(0, 1);
+    let mut b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    b.swap_axes(0, 1);
     bench.iter(|| {
         Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
     });
