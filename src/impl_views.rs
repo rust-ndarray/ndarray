@@ -228,15 +228,8 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
-    pub fn into_slice(self) -> Option<&'a mut [A]>
-    {
-        if self.is_standard_layout() {
-            unsafe {
-                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
-            }
-        } else {
-            None
-        }
+    pub fn into_slice(self) -> Option<&'a mut [A]> {
+        self.into_slice_().ok()
     }
 
 }

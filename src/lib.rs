@@ -756,17 +756,23 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         ElementsBaseMut { inner: self.into_base_iter() }
     }
 
+    fn into_slice_(self) -> Result<&'a mut [A], Self> {
+        if self.is_standard_layout() {
+            unsafe {
+                Ok(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            Err(self)
+        }
+    }
+
     fn into_iter_(self) -> IterMut<'a, A, D> {
         IterMut {
             inner:
-                if self.is_standard_layout() {
-                    let slc = unsafe {
-                        slice::from_raw_parts_mut(self.ptr, self.len())
-                    };
-                    ElementsRepr::Slice(slc.iter_mut())
-                } else {
-                    ElementsRepr::Counted(self.into_elements_base())
-                }
+            match self.into_slice_() {
+                Ok(x) => ElementsRepr::Slice(x.into_iter()),
+                Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
+            }
         }
     }
 
