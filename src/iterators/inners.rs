@@ -1,6 +1,7 @@
 
 use imp_prelude::*;
 use {NdProducer, Layout};
+use super::InnerIter;
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
@@ -66,6 +67,20 @@ impl_ndproducer! {
 
         unsafe fn item(&self, ptr) {
             ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+        }
+    }
+}
+
+impl<'a, A, D> IntoIterator for Inners<'a, A, D>
+    where D: Dimension,
+{
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = InnerIter<'a, A, D>;
+    fn into_iter(self) -> Self::IntoIter {
+        InnerIter {
+            iter: self.base.into_base_iter(),
+            inner_len: self.inner_len,
+            inner_stride: self.inner_stride,
         }
     }
 }
