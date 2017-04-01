@@ -216,6 +216,17 @@ fn scalar_sum_2d_float_cutout(bench: &mut test::Bencher)
 }
 
 #[bench]
+fn scalar_sum_2d_float_t_cutout(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros((66, 66));
+    let av = a.slice(s![1..-1, 1..-1]).reversed_axes();
+    let a = black_box(av);
+    bench.iter(|| {
+        a.scalar_sum()
+    });
+}
+
+#[bench]
 fn fold_sum_i32_2d_regular(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros((64, 64));
