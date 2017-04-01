@@ -1247,13 +1247,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               A: 'a,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            // FIXME: Why is this (= indexed loop) optimizing the best?
-            let mut v = Vec::with_capacity(slc.len());
+            let v = ::iterators::to_vec_mapped(slc.iter(), f);
             unsafe {
-                for i in 0..slc.len() {
-                    *v.get_unchecked_mut(i) = f(&slc[i]);
-                    v.set_len(i + 1);
-                }
                 ArrayBase::from_shape_vec_unchecked(
                     self.dim.clone().strides(self.strides.clone()), v)
             }
