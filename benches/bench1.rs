@@ -14,6 +14,7 @@ use ndarray::{
     Zip,
 };
 use ndarray::{arr0, arr1, arr2};
+use ndarray::ShapeBuilder;
 
 use test::black_box;
 
@@ -805,6 +806,14 @@ fn equality_f32(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((64, 64));
     let b = Array::<f32, _>::zeros((64, 64));
+    bench.iter(|| a == b);
+}
+
+#[bench]
+fn equality_f32_mixorder(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros((64, 64));
+    let b = Array::<f32, _>::zeros((64, 64).f());
     bench.iter(|| a == b);
 }
 
