@@ -1156,12 +1156,14 @@ send_sync_read_only!(IndexedIter);
 send_sync_read_only!(InnerIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
+send_sync_read_only!(ElementsBase);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);
 send_sync_read_write!(InnerIterMut);
 send_sync_read_write!(AxisIterMut);
 send_sync_read_write!(AxisChunksIterMut);
+send_sync_read_write!(ElementsBaseMut);
 
 /// (Trait used internally) An iterator that we trust
 /// to deliver exactly as many items as it said it would.
