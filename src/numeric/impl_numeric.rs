@@ -38,7 +38,7 @@ impl<A, S, D> ArrayBase<S, D>
             return numeric_util::unrolled_sum(slc);
         }
         let mut sum = A::zero();
-        for row in self.inner_iter() {
+        for row in self.inner_rows() {
             if let Some(slc) = row.as_slice() {
                 sum = sum + numeric_util::unrolled_sum(slc);
             } else {

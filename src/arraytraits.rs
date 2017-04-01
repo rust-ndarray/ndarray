@@ -22,6 +22,7 @@ use {
 };
 
 use numeric_util;
+use {Zip, FoldWhile};
 
 #[cold]
 #[inline(never)]
@@ -102,7 +103,14 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
                 return numeric_util::unrolled_eq(self_s, rhs_s);
             }
         }
-        self.iter().zip(rhs.iter()).all(|(a, b)| a == b)
+        Zip::from(self)
+            .and(rhs)
+            .fold_while(true, |_, a, b|
+            if a != b {
+                FoldWhile::Done(false)
+            } else {
+                FoldWhile::Continue(true)
+            }).into_inner()
     }
 }
 
@@ -173,12 +181,13 @@ impl<'a, S, D> hash::Hash for ArrayBase<S, D>
           S: Data,
           S::Elem: hash::Hash
 {
+    // Note: elements are hashed in the logical order
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.shape().hash(state);
         if let Some(self_s) = self.as_slice() {
             hash::Hash::hash_slice(self_s, state);
         } else {
-            for row in self.inner_iter() {
+            for row in self.inner_rows() {
                 if let Some(row_s) = row.as_slice() {
                     hash::Hash::hash_slice(row_s, state);
                 } else {

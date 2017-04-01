@@ -14,6 +14,7 @@ use ndarray::{
     Zip,
 };
 use ndarray::{arr0, arr1, arr2};
+use ndarray::ShapeBuilder;
 
 use test::black_box;
 
@@ -208,6 +209,17 @@ fn scalar_sum_2d_float_cutout(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]);
+    let a = black_box(av);
+    bench.iter(|| {
+        a.scalar_sum()
+    });
+}
+
+#[bench]
+fn scalar_sum_2d_float_t_cutout(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros((66, 66));
+    let av = a.slice(s![1..-1, 1..-1]).reversed_axes();
     let a = black_box(av);
     bench.iter(|| {
         a.scalar_sum()
@@ -805,6 +817,14 @@ fn equality_f32(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((64, 64));
     let b = Array::<f32, _>::zeros((64, 64));
+    bench.iter(|| a == b);
+}
+
+#[bench]
+fn equality_f32_mixorder(bench: &mut test::Bencher)
+{
+    let a = Array::<f32, _>::zeros((64, 64));
+    let b = Array::<f32, _>::zeros((64, 64).f());
     bench.iter(|| a == b);
 }
 

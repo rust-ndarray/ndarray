@@ -623,7 +623,7 @@ impl<A, S, D> ArrayBase<S, D>
             }
             return;
         }
-        for row in self.inner_iter_mut() {
+        for row in self.inner_rows_mut() {
             row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
@@ -641,6 +641,20 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    /// n-d generalization of rows, just like inner iter
+    fn inner_rows(&self) -> iterators::Inners<A, D::TrySmaller>
+    {
+        let n = self.ndim();
+        iterators::new_inners(self.view(), Axis(n.saturating_sub(1)))
+    }
+
+    /// n-d generalization of rows, just like inner iter
+    fn inner_rows_mut(&mut self) -> iterators::InnersMut<A, D::TrySmaller>
+        where S: DataMut
+    {
+        let n = self.ndim();
+        iterators::new_inners_mut(self.view_mut(), Axis(n.saturating_sub(1)))
+    }
 }
 
 
@@ -742,17 +756,23 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         ElementsBaseMut { inner: self.into_base_iter() }
     }
 
+    fn into_slice_(self) -> Result<&'a mut [A], Self> {
+        if self.is_standard_layout() {
+            unsafe {
+                Ok(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            Err(self)
+        }
+    }
+
     fn into_iter_(self) -> IterMut<'a, A, D> {
         IterMut {
             inner:
-                if self.is_standard_layout() {
-                    let slc = unsafe {
-                        slice::from_raw_parts_mut(self.ptr, self.len())
-                    };
-                    ElementsRepr::Slice(slc.iter_mut())
-                } else {
-                    ElementsRepr::Counted(self.into_elements_base())
-                }
+            match self.into_slice_() {
+                Ok(x) => ElementsRepr::Slice(x.into_iter()),
+                Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
+            }
         }
     }
 
