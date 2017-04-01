@@ -641,6 +641,13 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    /// n-d generalization of rows, just like inner iter
+    fn inner_rows(&self) -> iterators::Inners<A, D::TrySmaller>
+    {
+        let n = self.ndim();
+        iterators::new_inners(self.view(), Axis(n.saturating_sub(1)))
+    }
+
 }
 
 

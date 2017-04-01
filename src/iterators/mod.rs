@@ -39,6 +39,7 @@ pub use self::chunks::{
 pub use self::inners::{
     new_inners,
     new_inners_mut,
+    Inners,
 };
 
 /// Base for array iterators
