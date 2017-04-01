@@ -623,7 +623,7 @@ impl<A, S, D> ArrayBase<S, D>
             }
             return;
         }
-        for row in self.inner_iter_mut() {
+        for row in self.inner_rows_mut() {
             row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
