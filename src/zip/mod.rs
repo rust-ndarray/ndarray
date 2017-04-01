@@ -60,7 +60,7 @@ impl<S, D> LayoutImpl for ArrayBase<S, D>
             } else {
                 CORDER
             }
-        } else if self.as_slice_memory_order().is_some() {
+        } else if self.ndim() > 1 && self.t().is_standard_layout() {
             FORDER
         } else {
             0
