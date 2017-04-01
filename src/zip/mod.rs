@@ -6,12 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-mod layoutfmt;
 mod zipmacro;
 
 use imp_prelude::*;
 use IntoDimension;
 use NdIndex;
+use Layout;
+
+use layout::{CORDER, FORDER};
+use layout::LayoutPriv;
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -23,50 +26,6 @@ macro_rules! fold_while {
     }
 }
 
-// public but users don't interact with it
-#[doc(hidden)]
-/// Memory layout description
-#[derive(Copy, Clone)]
-pub struct Layout(u32);
-
-impl Layout {
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn one_dimensional() -> Layout {
-        Layout(CORDER | FORDER)
-    }
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn c() -> Layout {
-        Layout(CORDER)
-    }
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn f() -> Layout {
-        Layout(FORDER)
-    }
-    #[inline(always)]
-    #[doc(hidden)]
-    pub fn none() -> Layout {
-        Layout(0)
-    }
-    #[inline(always)]
-    fn is(self, flag: u32) -> bool {
-        self.0 & flag != 0
-    }
-    #[inline(always)]
-    fn and(self, flag: Layout) -> Layout {
-        Layout(self.0 & flag.0)
-    }
-
-    #[inline(always)]
-    fn flag(self) -> u32 {
-        self.0
-    }
-}
-
-const CORDER: u32 = 1 << 0;
-const FORDER: u32 = 1 << 1;
 
 //use ndarray::Axis;
 
@@ -95,7 +54,7 @@ impl<S, D> LayoutImpl for ArrayBase<S, D>
           D: Dimension,
 {
     fn layout_impl(&self) -> Layout {
-        Layout(if self.is_standard_layout() {
+        Layout::new(if self.is_standard_layout() {
             if self.ndim() <= 1 {
                 FORDER | CORDER
             } else {

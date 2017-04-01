@@ -9,6 +9,7 @@
 
 use itertools::Itertools;
 use super::Layout;
+use super::LayoutPriv;
 
 const LAYOUT_NAMES: &'static [&'static str] = &["C", "F"];
 
