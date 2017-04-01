@@ -40,6 +40,7 @@ pub use self::inners::{
     new_inners,
     new_inners_mut,
     Inners,
+    InnersMut,
 };
 
 /// Base for array iterators
