@@ -2,6 +2,7 @@
 use imp_prelude::*;
 use {NdProducer, Layout};
 use super::InnerIter;
+use super::InnerIterMut;
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
@@ -114,5 +115,19 @@ pub fn new_inners_mut<A, D>(v: ArrayViewMut<A, D>, axis: Axis)
         inner_len: len,
         inner_stride: stride,
         base: iter_v,
+    }
+}
+
+impl<'a, A, D> IntoIterator for InnersMut<'a, A, D>
+    where D: Dimension,
+{
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = InnerIterMut<'a, A, D>;
+    fn into_iter(self) -> Self::IntoIter {
+        InnerIterMut {
+            iter: self.base.into_base_iter(),
+            inner_len: self.inner_len,
+            inner_stride: self.inner_stride,
+        }
     }
 }
