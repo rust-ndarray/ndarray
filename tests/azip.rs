@@ -104,3 +104,30 @@ fn test_zip_dim_mismatch_1() {
     let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2*j) as f32);
     azip!(mut a, b in { *a = b; });
 }
+
+// Test that Zip handles memory layout correctly for
+// Zip::from(A).and(B)
+// where A is F-contiguous and B contiguous but neither F nor C contiguous.
+#[test]
+fn test_contiguous_but_not_c_or_f() {
+    let a = Array::from_iter(0..27).into_shape((3, 3, 3)).unwrap();
+
+    // both F order
+    let a = a.reversed_axes();
+    let mut b = a.clone();
+    assert_eq!(a.strides(), b.strides());
+    assert_eq!(a.strides(), &[1, 3, 9]);
+    b.swap_axes(0, 1);
+    // test single elem so that test keeps working if array `+` impl changes
+    let correct = &a + &b;
+    let correct_012 = a[[0, 1, 2]] + b[[0, 1, 2]];
+
+    let mut ans = Array::zeros(a.dim().f());
+    azip!(mut ans, a, b in { *ans = a + b });
+    println!("{:?}", a);
+    println!("{:?}", b);
+    println!("{:?}", ans);
+
+    assert_eq!(ans[[0, 1, 2]], correct_012);
+    assert_eq!(ans, correct);
+}
