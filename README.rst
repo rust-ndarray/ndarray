@@ -79,6 +79,15 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.8.3
+
+  - Fix a bug in ``Zip`` / ``NdProducer`` if an array of at least 3 dimensions
+    was contig but not c- nor f-contig.
+  - ``WholeChunksIter/Mut`` now impl ``Send/Sync`` as appropriate
+  - Misc cleanup and using dimension-reducing versions of inner_iter
+    internally. Remove a special case in ``zip_mut_with`` that only made it
+    slower (1D not-contig arrays).
+
 - 0.8.2
 
   - Add more documentation and an example for dynamic dimensions: see
