@@ -302,7 +302,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a mutable reference to the element at `index`.
     ///
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** The array must be uniquely held when mutating it.
+    /// **Note:** (For `RcArray`) The array must be uniquely held when mutating it.
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
         where S: DataMut,
@@ -1242,7 +1242,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///               [false, true]])
     /// );
     /// ```
-    pub fn map<'a, B, F>(&'a self, mut f: F) -> Array<B, D>
+    pub fn map<'a, B, F>(&'a self, f: F) -> Array<B, D>
         where F: FnMut(&'a A) -> B,
               A: 'a,
     {

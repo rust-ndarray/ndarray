@@ -145,6 +145,7 @@ mod dimension;
 mod free_functions;
 pub use free_functions::*;
 
+mod layout;
 mod indexes;
 mod iterators;
 mod linalg_traits;
@@ -160,9 +161,10 @@ pub use zip::{
     Zip,
     NdProducer,
     IntoNdProducer,
-    Layout,
     FoldWhile,
 };
+
+pub use layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
