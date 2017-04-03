@@ -15,6 +15,8 @@ use numeric_util;
 
 use {
     LinalgScalar,
+    FoldWhile,
+    Zip,
 };
 
 /// Numerical methods for arrays.
@@ -124,8 +126,20 @@ impl<A, S, D> ArrayBase<S, D>
               S2: Data<Elem=A>,
               E: Dimension,
     {
-        let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dim());
-        self.iter().zip(rhs_broadcast.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
+        let result =
+            Zip::from(self)
+            .and(rhs.broadcast_unwrap(self.raw_dim()))
+            .fold_while((), |_, x, y| {
+                if (*x - *y).abs() <= tol {
+                    FoldWhile::Continue(())
+                } else {
+                    FoldWhile::Done(())
+                }
+            });
+        match result {
+            FoldWhile::Continue(_) => true,
+            FoldWhile::Done(_) => false,
+        }
     }
 }
 
