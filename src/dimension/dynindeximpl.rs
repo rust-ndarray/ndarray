@@ -6,6 +6,7 @@ use std::ops::{
     DerefMut,
 };
 use imp_prelude::*;
+use dimension::DimPrivate;
 
 const CAP: usize = 4;
 
@@ -124,8 +125,24 @@ unsafe impl Send for IxDynImpl {}
 unsafe impl Sync for IxDynImpl {}
 
 impl IxDynImpl {
-    pub fn remove(&mut self, i: usize) {
-        unimplemented!()
+    fn remove(&self, i: usize) -> Self {
+        IxDynImpl(match self.0 {
+            IxDynRepr::Inline(0, _) => IxDynRepr::Inline(0, [0; CAP]),
+            IxDynRepr::Inline(1, _) => IxDynRepr::Inline(0, [0; CAP]),
+            IxDynRepr::Inline(2, ref arr) => {
+                let mut out = [0; CAP];
+                out[0] = arr[1 - i];
+                IxDynRepr::Inline(1, out)
+            }
+            ref ixdyn => {
+                let len = ixdyn.len();
+                let mut result = IxDynRepr::copy_from(&ixdyn[..len - 1]);
+                for j in i..len - 1 {
+                    result[j] = ixdyn[j + 1]
+                }
+                result
+            }
+        })
     }
 }
 
@@ -181,5 +198,13 @@ impl<'a> IntoIterator for &'a IxDynImpl {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self[..].into_iter()
+    }
+}
+
+impl RemoveAxis for Dim<IxDynImpl> {
+    type Smaller = Self;
+    fn remove_axis(&self, axis: Axis) -> Self {
+        debug_assert!(axis.index() < self.ndim());
+        Dim::new(self.ix().remove(axis.index()))
     }
 }
