@@ -8,6 +8,7 @@ use ndarray::{
     Axis,
     Dimension,
     Dim,
+    IntoDimension,
 };
 
 #[test]
@@ -171,4 +172,38 @@ fn test_array_view() {
     test_dim(&Dim([1, 2, 4]));
     test_dim(&Dim(vec![1, 1, 2, 3]));
     test_dim(&Dim(7));
+}
+
+#[test]
+fn test_all_ndindex() {
+macro_rules! ndindex {
+    ($($i:expr),*) => {
+        for &rev in &[false, true] {
+            // rev is for C / F order
+            let size = $($i *)* 1;
+            let mut a = Array::linspace(0., (size - 1) as f64, size);
+            if rev {
+                a = a.reversed_axes();
+            }
+            for (i, &elt) in a.indexed_iter() {
+                let dim = i.into_dimension();
+                assert_eq!(elt, a[i]);
+                assert_eq!(elt, a[dim]);
+            }
+            let dim = a.shape().to_vec();
+            let b = a.broadcast(dim).unwrap();
+            for (i, &elt) in a.indexed_iter() {
+                let dim = i.into_dimension();
+                assert_eq!(elt, b[dim]);
+                assert_eq!(elt, b[dim.slice()]);
+            }
+        }
+    }
+}
+    ndindex!(10);
+    ndindex!(10, 4);
+    ndindex!(10, 4, 3);
+    ndindex!(10, 4, 3, 2);
+    ndindex!(10, 4, 3, 2, 2);
+    ndindex!(10, 4, 3, 2, 2, 2);
 }
