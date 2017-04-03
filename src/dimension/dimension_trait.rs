@@ -659,6 +659,26 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
 
+    /// Return stride offset for this dimension and index.
+    #[inline]
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
+    {
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        let l = get!(self, 2);
+        let i = get!(index, 0);
+        let j = get!(index, 1);
+        let k = get!(index, 2);
+        let s = get!(strides, 0);
+        let t = get!(strides, 1);
+        let u = get!(strides, 2);
+        if i < m && j < n && k < l {
+            Some(stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u))
+        } else {
+            None
+        }
+    }
+
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut stride = *self;
