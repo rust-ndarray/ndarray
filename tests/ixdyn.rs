@@ -3,6 +3,7 @@ extern crate ndarray;
 
 use ndarray::Array;
 use ndarray::Ix3;
+use ndarray::IntoDimension;
 use ndarray::ShapeBuilder;
 
 #[test]
@@ -97,4 +98,51 @@ fn test_ixdyn_uget() {
         }
     }
     assert_eq!(sum, 10.);
+}
+
+#[test]
+fn test_0() {
+    let mut a = Array::zeros(vec![]);
+    let z = vec![].into_dimension();
+    assert_eq!(a[z.clone()], 0.);
+    a[[]] = 1.;
+    assert_eq!(a[[]], 1.);
+    assert_eq!(a.len(), 1);
+    assert_eq!(a.as_slice().unwrap(), &[1.]);
+
+    let mut a = Array::zeros(vec![].f());
+    assert_eq!(a[[]], 0.);
+    a[[]] = 1.;
+    assert_eq!(a[[]], 1.);
+    assert_eq!(a.len(), 1);
+    assert_eq!(a.as_slice().unwrap(), &[1.]);
+}
+
+#[test]
+fn test_0_add() {
+    let mut a = Array::zeros(vec![]);
+    a += 1.;
+    assert_eq!(a[[]], 1.);
+    a += 2.;
+    assert_eq!(a[[]], 3.);
+}
+
+#[test]
+fn test_0_add_add() {
+    let mut a = Array::zeros(vec![]);
+    a += 1.;
+    let mut b = Array::zeros(vec![]);
+    b += 1.;
+    a += &b;
+    assert_eq!(a[[]], 2.);
+}
+
+#[test]
+fn test_0_add_broad() {
+    let mut b = Array::from_vec(vec![5., 6.]);
+    let mut a = Array::zeros(vec![]);
+    a += 1.;
+    b += &a;
+    assert_eq!(b[0], 6.);
+    assert_eq!(b[1], 7.);
 }

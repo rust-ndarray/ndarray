@@ -132,10 +132,10 @@ macro_rules! ndindex_with_array {
             }
 
             #[inline]
-            fn index_unchecked(&self, strides: &$ix_n) -> isize {
+            fn index_unchecked(&self, _strides: &$ix_n) -> isize {
                 $(
-                stride_offset(self[$index], get!(strides, $index)) + 
-                )+
+                stride_offset(self[$index], get!(_strides, $index)) + 
+                )*
                 0
             }
         }
@@ -157,7 +157,7 @@ macro_rules! ndindex_with_array {
                               self, strides.ndim());
                 $(
                 stride_offset(get!(self, $index), get!(strides, $index)) + 
-                )+
+                )*
                 0
             }
         }
@@ -179,7 +179,7 @@ macro_rules! ndindex_with_array {
                               self, strides.ndim());
                 $(
                 stride_offset(self[$index], get!(strides, $index)) + 
-                )+
+                )*
                 0
             }
         }
@@ -188,6 +188,7 @@ macro_rules! ndindex_with_array {
 }
 
 ndindex_with_array!{
+    [0, Ix0]
     [1, Ix1 0]
     [2, Ix2 0 1]
     [3, Ix3 0 1 2]
