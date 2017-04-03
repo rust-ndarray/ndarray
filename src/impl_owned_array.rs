@@ -2,8 +2,12 @@
 use std::rc::Rc;
 
 use imp_prelude::*;
+use {
+    OwnedRepr,
+    OwnedRcRepr,
+};
 
-impl<A, D> ArrayBase<Vec<A>, D>
+impl<A, D> ArrayBase<OwnedRepr<A>, D>
     where D: Dimension
 {
     /// Return a vector of the elements in the array, in the way they are
@@ -17,7 +21,7 @@ impl<A, D> ArrayBase<Vec<A>, D>
 }
 
 // RcArray
-impl<A, D> ArrayBase<Rc<Vec<A>>, D>
+impl<A, D> ArrayBase<OwnedRcRepr<A>, D>
     where A: Clone,
           D: Dimension
 {

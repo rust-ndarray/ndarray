@@ -15,6 +15,8 @@ use {
     ArrayBase,
     Dimension,
     ViewRepr,
+    OwnedRepr,
+    OwnedRcRepr,
 };
 
 /// Array representation trait.
@@ -68,7 +70,7 @@ pub unsafe trait DataClone : Data {
     }
 }
 
-unsafe impl<A> Data for Rc<Vec<A>> {
+unsafe impl<A> Data for OwnedRcRepr<A> {
     type Elem = A;
     fn _data_slice(&self) -> &[A] {
         self
@@ -76,7 +78,7 @@ unsafe impl<A> Data for Rc<Vec<A>> {
 }
 
 // NOTE: Copy on write
-unsafe impl<A> DataMut for Rc<Vec<A>>
+unsafe impl<A> DataMut for OwnedRcRepr<A>
     where A: Clone
 {
     fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
@@ -112,23 +114,23 @@ unsafe impl<A> DataMut for Rc<Vec<A>>
     }
 }
 
-unsafe impl<A> DataClone for Rc<Vec<A>> {
+unsafe impl<A> DataClone for OwnedRcRepr<A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         // pointer is preserved
         (self.clone(), ptr)
     }
 }
 
-unsafe impl<A> Data for Vec<A> {
+unsafe impl<A> Data for OwnedRepr<A> {
     type Elem = A;
     fn _data_slice(&self) -> &[A] {
         self
     }
 }
 
-unsafe impl<A> DataMut for Vec<A> { }
+unsafe impl<A> DataMut for OwnedRepr<A> { }
 
-unsafe impl<A> DataClone for Vec<A>
+unsafe impl<A> DataClone for OwnedRepr<A>
     where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
@@ -185,7 +187,7 @@ pub unsafe trait DataOwned : Data {
     #[doc(hidden)]
     fn new(elements: Vec<Self::Elem>) -> Self;
     #[doc(hidden)]
-    fn into_shared(self) -> Rc<Vec<Self::Elem>>;
+    fn into_shared(self) -> OwnedRcRepr<Self::Elem>;
 }
 
 /// Array representation trait.
@@ -195,23 +197,23 @@ pub unsafe trait DataOwned : Data {
 /// ***Internal trait, see `Data`.***
 pub unsafe trait DataShared : Clone + DataClone { }
 
-unsafe impl<A> DataShared for Rc<Vec<A>> {}
+unsafe impl<A> DataShared for OwnedRcRepr<A> {}
 unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
 
-unsafe impl<A> DataOwned for Vec<A> {
+unsafe impl<A> DataOwned for OwnedRepr<A> {
     fn new(elements: Vec<A>) -> Self {
         elements
     }
-    fn into_shared(self) -> Rc<Vec<A>> {
+    fn into_shared(self) -> OwnedRcRepr<A> {
         Rc::new(self)
     }
 }
 
-unsafe impl<A> DataOwned for Rc<Vec<A>> {
+unsafe impl<A> DataOwned for OwnedRcRepr<A> {
     fn new(elements: Vec<A>) -> Self {
         Rc::new(elements)
     }
-    fn into_shared(self) -> Rc<Vec<A>> {
+    fn into_shared(self) -> OwnedRcRepr<A> {
         self
     }
 }

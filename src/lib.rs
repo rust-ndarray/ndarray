@@ -504,7 +504,7 @@ pub struct ArrayBase<S, D>
 /// An array where the data has shared ownership and is copy on write.
 /// It can act as both an owner as the data as well as a shared reference (view
 /// like).
-pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
+pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array that owns its data uniquely.
 ///
@@ -522,7 +522,7 @@ pub type RcArray<A, D> = ArrayBase<Rc<Vec<A>>, D>;
 /// [`Array1`](Array1.t.html),
 /// [`Array2`](Array2.t.html),
 /// [`Array3`](Array3.t.html) and so on.
-pub type Array<A, D> = ArrayBase<Vec<A>, D>;
+pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
 /// A lightweight array view.
 ///
@@ -546,6 +546,12 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 ///
 /// [ab]: struct.ArrayBase.html
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
+
+/// Array's representation.
+type OwnedRepr<A> = Vec<A>;
+
+/// RcArray's representation.
+type OwnedRcRepr<A> = Rc<Vec<A>>;
 
 /// Array view’s representation.
 #[derive(Copy, Clone)]
