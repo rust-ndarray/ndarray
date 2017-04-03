@@ -8,6 +8,7 @@
 
 
 use {Ix, Ix0, Ix1, Dimension, Dim, Axis};
+use IxDyn;
 use super::DimPrivate;
 
 /// Array shape with a next smaller dimension.
@@ -66,7 +67,7 @@ macro_rules! impl_remove_axis_array(
 impl_remove_axis_array!(3, 4, 5, 6);
 
 
-impl RemoveAxis for Dim<Vec<Ix>> {
+impl RemoveAxis for IxDyn {
     type Smaller = Self;
     fn remove_axis(&self, axis: Axis) -> Self {
         let mut res = self.clone();

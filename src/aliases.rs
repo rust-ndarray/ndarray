@@ -1,7 +1,14 @@
 //! Type aliases for common array sizes
 //!
 
-use ::{Ix, Array, ArrayView, ArrayViewMut, RcArray};
+use ::{
+    Ix,
+    Array,
+    ArrayView,
+    ArrayViewMut,
+    RcArray,
+    IxDynImpl,
+};
 use ::dimension::Dim;
 use dimension::DimPrivate;
 
@@ -78,7 +85,7 @@ pub type Ix6 = Dim<[Ix; 6]>;
 /// // the same type `Array<f64, IxDyn>` a.k.a `ArrayD<f64>`:
 /// let arrays = vec![a, b];
 /// ```
-pub type IxDyn = Dim<Vec<Ix>>;
+pub type IxDyn = Dim<IxDynImpl>;
 
 /// zero-dimensional array
 pub type Array0<A> = Array<A, Ix0>;

@@ -4,6 +4,9 @@ use std::fmt::Debug;
 use itertools::zip;
 
 use {Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Dimension, IntoDimension};
+use {
+    IxDynImpl,
+};
 use super::{stride_offset, stride_offset_checked};
 use super::DimPrivate;
 
@@ -194,9 +197,9 @@ ndindex_with_array!{
 }
 
 impl<'a> IntoDimension for &'a [Ix] {
-    type Dim = Dim<Vec<Ix>>;
+    type Dim = IxDyn;
     fn into_dimension(self) -> Self::Dim {
-        Dim(self.to_vec())
+        Dim(IxDynImpl::from(self))
     }
 }
 
@@ -209,7 +212,7 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
     }
 }
 
-unsafe impl NdIndex<IxDyn> for Vec<Ix> {
+unsafe impl NdIndex<IxDyn> for IxDynImpl {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
         stride_offset_checked(dim.ix(), strides.ix(), self)
     }
