@@ -68,7 +68,7 @@ pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix1> {
 
 /// Create a zero-dimensional array view borrowing `x`.
 pub fn aview0<A>(x: &A) -> ArrayView0<A> {
-    unsafe { ArrayView::new_(x, Ix0(), Ix0()) }
+    unsafe { ArrayView::from_shape_ptr(Ix0(), x) }
 }
 
 /// Create a one-dimensional array view with elements borrowing `xs`.
@@ -98,8 +98,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
     };
     let dim = Ix2(rows, cols);
     unsafe {
-        let strides = dim.default_strides();
-        ArrayView::new_(data.as_ptr(), dim, strides)
+        ArrayView::from_shape_ptr(dim, data.as_ptr())
     }
 }
 

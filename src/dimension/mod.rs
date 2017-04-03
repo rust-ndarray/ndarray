@@ -139,6 +139,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
 }
 
 /// Stride offset checked general version (slices)
+#[inline]
 pub fn stride_offset_checked(dim: &[Ix], strides: &[Ix], index: &[Ix]) -> Option<isize> {
     if index.len() != dim.len() {
         return None;

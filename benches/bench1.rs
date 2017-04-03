@@ -583,6 +583,33 @@ fn add_2d_f32_regular(bench: &mut test::Bencher)
     });
 }
 
+const ADD3DSZ: usize = 16;
+
+#[bench]
+fn add_3d_strided(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros((ADD3DSZ, ADD3DSZ, ADD3DSZ * 2));
+    let mut a = a.slice_mut(s![.., .., ..;2]);
+    let b = Array::<i32, _>::zeros(a.dim());
+    let bv = b.view();
+    bench.iter(|| {
+        a += &bv;
+    });
+}
+
+#[bench]
+fn add_3d_strided_dyn(bench: &mut test::Bencher)
+{
+    let mut a = Array::<i32, _>::zeros(&[ADD3DSZ, ADD3DSZ, ADD3DSZ * 2][..]);
+    let mut a = a.slice_mut(s![.., .., ..;2]);
+    let b = Array::<i32, _>::zeros(a.dim());
+    let bv = b.view();
+    bench.iter(|| {
+        a += &bv;
+    });
+}
+
+
 const ADD1D_SIZE: usize = 64 * 64;
 
 #[bench]

@@ -113,7 +113,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         {
             let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
-            for rs in it.by_ref() {
+            while let Some(rs) = it.next() {
                 *rs = 1;
                 break;
             }
@@ -134,12 +134,12 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         {
             let mut it = strides.slice_mut().iter_mut();
             // Set first element to 1
-            for rs in it.by_ref() {
+            while let Some(rs) = it.next() {
                 *rs = 1;
                 break;
             }
             let mut cum_prod = 1;
-            for (rs, dim) in it.zip(self.slice().iter()) {
+            for (rs, dim) in it.zip(self.slice()) {
                 cum_prod *= *dim;
                 *rs = cum_prod;
             }
@@ -559,30 +559,6 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
     }
     
     #[inline]
-    fn is_contiguous(dim: &Self, strides: &Self) -> bool {
-        let defaults = dim.default_strides();
-        if strides.equal(&defaults) {
-            return true;
-        }
-        
-        if dim.ndim() == 1 { return false; }
-        let order = strides._fastest_varying_stride_order();
-        let strides = strides.slice();
-
-        // FIXME: Negative strides
-        let dim_slice = dim.slice();
-        let mut cstride = 1;
-        for &i in order.slice() {
-            // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && strides[i] != cstride {
-                return false;
-            }
-            cstride *= dim_slice[i];
-        }
-        true
-    }
-
-    #[inline]
     fn first_index(&self) -> Option<Self> {
         let m = get!(self, 0);
         let n = get!(self, 1);
@@ -681,6 +657,26 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
         let t = get!(strides, 1);
         let u = get!(strides, 2);
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
+    }
+
+    /// Return stride offset for this dimension and index.
+    #[inline]
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
+    {
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        let l = get!(self, 2);
+        let i = get!(index, 0);
+        let j = get!(index, 1);
+        let k = get!(index, 2);
+        let s = get!(strides, 0);
+        let t = get!(strides, 1);
+        let u = get!(strides, 2);
+        if i < m && j < n && k < l {
+            Some(stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u))
+        } else {
+            None
+        }
     }
 
     #[inline]

@@ -71,8 +71,7 @@ pub type Ix6 = Dim<[Ix; 6]>;
 /// // We can index into a, b using fixed size arrays:
 /// a[[0, 0, 0, 0]] = 0.;
 /// b[[0, 2, 3]] = a[[0, 0, 2, 3]];
-///
-/// // Note: It will panic at runtime if the number of indices given does
+/// // Note: indexing will panic at runtime if the number of indices given does
 /// // not match the array.
 ///
 /// // We can keep them in the same vector because both the arrays have
