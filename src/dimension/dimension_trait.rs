@@ -559,30 +559,6 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
     }
     
     #[inline]
-    fn is_contiguous(dim: &Self, strides: &Self) -> bool {
-        let defaults = dim.default_strides();
-        if strides.equal(&defaults) {
-            return true;
-        }
-        
-        if dim.ndim() == 1 { return false; }
-        let order = strides._fastest_varying_stride_order();
-        let strides = strides.slice();
-
-        // FIXME: Negative strides
-        let dim_slice = dim.slice();
-        let mut cstride = 1;
-        for &i in order.slice() {
-            // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && strides[i] != cstride {
-                return false;
-            }
-            cstride *= dim_slice[i];
-        }
-        true
-    }
-
-    #[inline]
     fn first_index(&self) -> Option<Self> {
         let m = get!(self, 0);
         let n = get!(self, 1);
