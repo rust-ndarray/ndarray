@@ -113,7 +113,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         {
             let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
-            for rs in it.by_ref() {
+            while let Some(rs) = it.next() {
                 *rs = 1;
                 break;
             }
@@ -134,12 +134,12 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         {
             let mut it = strides.slice_mut().iter_mut();
             // Set first element to 1
-            for rs in it.by_ref() {
+            while let Some(rs) = it.next() {
                 *rs = 1;
                 break;
             }
             let mut cum_prod = 1;
-            for (rs, dim) in it.zip(self.slice().iter()) {
+            for (rs, dim) in it.zip(self.slice()) {
                 cum_prod *= *dim;
                 *rs = cum_prod;
             }
