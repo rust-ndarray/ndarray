@@ -202,3 +202,35 @@ fn vector_sum_3_zip_unchecked(bench: &mut Bencher)
         }
     });
 }
+
+// index iterator size
+const ISZ: usize = 16;
+
+#[bench]
+fn indexed_iter_3d_ix3(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
+    for ((i, j, k), elt) in a.indexed_iter_mut() {
+        *elt = (i + 100 * j + 10000 * k) as _;
+    }
+
+    bench.iter(|| {
+        for (i, &elt) in a.indexed_iter() {
+            assert!(a[i] == elt);
+        }
+    })
+}
+
+#[bench]
+fn indexed_iter_3d_dyn(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
+    for ((i, j, k), elt) in a.indexed_iter_mut() {
+        *elt = (i + 100 * j + 10000 * k) as _;
+    }
+    let a = a.into_shape(&[ISZ; 3][..]).unwrap();
+
+    bench.iter(|| {
+        for (i, &elt) in a.indexed_iter() {
+            assert!(a[i] == elt);
+        }
+    })
+}
