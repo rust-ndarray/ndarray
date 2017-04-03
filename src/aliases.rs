@@ -45,6 +45,13 @@ pub fn Ix6(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix, i5: Ix) -> Ix6 {
     Dim::new([i0, i1, i2, i3, i4, i5])
 }
 
+/// Create a dynamic-dimensional index
+#[allow(non_snake_case)]
+#[inline(always)]
+pub fn IxDyn(ix: &[Ix]) -> IxDyn {
+    Dim(ix)
+}
+
 /// zero-dimensionial
 pub type Ix0 = Dim<[Ix; 0]>;
 /// one-dimensional
