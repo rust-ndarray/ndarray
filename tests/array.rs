@@ -233,6 +233,13 @@ fn test_sub()
     assert_eq!(m, mat.subview(Axis(1), 1));
 }
 
+#[should_panic]
+#[test]
+fn test_sub_oob_1() {
+    let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
+    let s1 = mat.subview(Axis(0), 2);
+}
+
 
 #[test]
 fn test_select(){

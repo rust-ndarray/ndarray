@@ -208,7 +208,10 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
                                axis: usize, index: Ix) {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
-    assert!(index < dim);
+    ndassert!(index < dim,
+              concat!("subview: Index {} must be less than axis length {} ",
+                      "for array with shape {:?}"),
+             index, dim, *dims);
     dims.slice_mut()[axis] = 1;
     let off = stride_offset(index, stride);
     unsafe {
