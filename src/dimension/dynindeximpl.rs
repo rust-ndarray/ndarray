@@ -113,6 +113,11 @@ impl<T: PartialEq> PartialEq for IxDynRepr<T> {
     }
 }
 
+/// Dynamic dimension or index type.
+///
+/// Use `IxDyn` directly. This type implements a dynamic number of
+/// dimensions or indices. Short dimensions are stored inline and don't need
+/// any dynamic memory allocation.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct IxDynImpl(IxDynRepr<Ix>);
 unsafe impl Send for IxDynImpl {}
