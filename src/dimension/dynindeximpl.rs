@@ -44,6 +44,7 @@ impl<T> DerefMut for IxDynRepr<T> {
     }
 }
 
+/// The default is equivalent to `Self::from(&[0])`.
 impl Default for IxDynRepr<Ix> {
     fn default() -> Self {
         Self::copy_from(&[0])
