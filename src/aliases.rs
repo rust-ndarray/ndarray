@@ -68,16 +68,18 @@ pub type Ix5 = Dim<[Ix; 5]>;
 pub type Ix6 = Dim<[Ix; 6]>;
 /// dynamic-dimensional
 ///
-/// `Vec<Ix>` and `&[usize]` implement `IntoDimension` to produce `IxDyn`;
-/// use them to create arrays with a dynamic number of axes.
+/// You can use the `IxDyn` function to create a dimension for an array with
+/// dynamic number of dimensions.  (`Vec<Ix>` and `&[usize]` also implement
+/// `IntoDimension` to produce `IxDyn`).
 ///
 /// ```
 /// use ndarray::ArrayD;
+/// use ndarray::IxDyn;
 ///
 /// // Create a 5 × 6 × 3 × 4 array using the dynamic dimension type
-/// let mut a = ArrayD::<f64>::zeros(vec![5, 6, 3, 4]);
+/// let mut a = ArrayD::<f64>::zeros(IxDyn(&[5, 6, 3, 4]));
 /// // Create a 1 × 3 × 4 array using the dynamic dimension type
-/// let mut b = ArrayD::<f64>::zeros(vec![1, 3, 4]);
+/// let mut b = ArrayD::<f64>::zeros(IxDyn(&[1, 3, 4]));
 ///
 /// // We can use broadcasting to add arrays of compatible shapes together:
 /// a += &b;
