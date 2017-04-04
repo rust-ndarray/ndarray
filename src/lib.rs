@@ -177,6 +177,7 @@ mod imp_prelude {
         DataOwned,
         DataShared,
         ViewRepr,
+        Ix, Ixs,
     };
     pub use dimension::DimensionExt;
     /// Wrapper type for private methods

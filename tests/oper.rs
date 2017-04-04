@@ -6,6 +6,7 @@ use ndarray::{rcarr1, rcarr2};
 use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
 use ndarray::Si;
+use ndarray::{Ix, Ixs};
 
 use std::fmt;
 use num_traits::Float;
