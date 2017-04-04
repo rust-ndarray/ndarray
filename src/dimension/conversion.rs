@@ -38,7 +38,7 @@ macro_rules! index_item {
     ($m:ident $arg:tt 7) => ($m!($arg 0 1 2 3 4 5 6););
 }
 
-/// Convert a value into a dimension.
+/// Argument conversion a dimension.
 pub trait IntoDimension {
     type Dim: Dimension;
     fn into_dimension(self) -> Self::Dim;
