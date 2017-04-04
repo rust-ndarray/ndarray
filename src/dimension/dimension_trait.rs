@@ -47,13 +47,13 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// dimension.
     ///
     /// For the fixed size dimensions it is a fixed size array of the correct
-    /// size, which you pass by reference. For the `Vec` dimension it is
+    /// size, which you pass by reference. For the dynamic dimension it is
     /// a slice.
     ///
     /// - For `Ix1`: `[Si; 1]`
     /// - For `Ix2`: `[Si; 2]`
     /// - and so on..
-    /// - For `IxDyn: `[Si]`
+    /// - For `IxDyn`: `[Si]`
     ///
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
@@ -63,7 +63,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - For `Ix1`: `usize`,
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
-    /// - For `IxDyn: `IxDyn`
+    /// - For `IxDyn`: `IxDyn`
     type Pattern: IntoDimension<Dim=Self>;
     /// Next smaller dimension (if applicable)
     type Smaller: Dimension;
