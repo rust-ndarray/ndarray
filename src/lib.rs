@@ -504,12 +504,26 @@ pub struct ArrayBase<S, D>
 /// An array where the data has shared ownership and is copy on write.
 /// It can act as both an owner as the data as well as a shared reference (view
 /// like).
+///
+/// The `RcArray<A, D>` is parameterized by `A` for the element type and `D` for
+/// the dimensionality.
+///
+/// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
+/// arrays and the views; see its docs for an overview of all array features.  
+///
+/// See also:
+///
+/// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
+/// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array that owns its data uniquely.
 ///
 /// `Array` is the main n-dimensional array type, and it owns all its array
 /// elements.
+///
+/// The `Array<A, D>` is parameterized by `A` for the element type and `D` for
+/// the dimensionality.
 ///
 /// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
 /// arrays and the views; see its docs for an overview of all array features.  
@@ -521,13 +535,18 @@ pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 /// + Dimensionality-specific type alises
 /// [`Array1`](Array1.t.html),
 /// [`Array2`](Array2.t.html),
-/// [`Array3`](Array3.t.html) and so on.
+/// [`Array3`](Array3.t.html), ...,
+/// [`ArrayD`](ArrayD.t.html),
+/// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
-/// A lightweight array view.
+/// A read-only array view.
 ///
 /// An array view represents an array or a part of it, created from
 /// an iterator, subview or slice of an array.
+///
+/// The `ArrayView<'a, A, D>` is parameterized by `'a` for the scope of the
+/// borrow, `A` for the element type and `D` for the dimensionality.
 ///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
@@ -535,10 +554,14 @@ pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 ///
 /// [ab]: struct.ArrayBase.html
 pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
-/// A lightweight read-write array view.
+
+/// A read-write array view.
 ///
 /// An array view represents an array or a part of it, created from
 /// an iterator, subview or slice of an array.
+///
+/// The `ArrayViewMut<'a, A, D>` is parameterized by `'a` for the scope of the
+/// borrow, `A` for the element type and `D` for the dimensionality.
 ///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
