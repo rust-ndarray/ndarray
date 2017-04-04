@@ -102,6 +102,8 @@ pub use si::{Si, S};
 
 use iterators::Baseiter;
 pub use iterators::{
+    Inners,
+    InnersMut,
     InnerIter,
     InnerIterMut,
     AxisIter,

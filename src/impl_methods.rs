@@ -27,6 +27,8 @@ use iterators::{
     new_inners_mut,
     whole_chunks_of,
     whole_chunks_mut_of,
+    Inners,
+    InnersMut,
 };
 use zip::Zip;
 
@@ -38,8 +40,6 @@ use {
     IterMut,
     IndexedIter,
     IndexedIterMut,
-    InnerIter,
-    InnerIterMut,
     AxisIter,
     AxisIterMut,
     WholeChunks,
@@ -459,36 +459,130 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return an iterator that traverses over all dimensions but the innermost,
-    /// and yields each inner row.
+    /// Return a producer and iterable that traverses over all lanes
+    /// pointing in the direction of `axis`.
     ///
     /// For example, in a 2 × 2 × 3 array, the iterator element
     /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
     ///
+    /// Iterator element is `ArrayView1<A>` (1D array view); note that it is
+    /// always 1D.
+    ///
+    /// ```
+    /// use ndarray::{arr3, aview1, Axis};
+    ///
+    /// let a = arr3(&[[[ 0,  1,  2],
+    ///                 [ 3,  4,  5]],
+    ///                [[ 6,  7,  8],
+    ///                 [ 9, 10, 11]]]);
+    ///
+    /// let inner0 = a.inners(Axis(0));
+    /// let inner1 = a.inners(Axis(1));
+    /// let inner2 = a.inners(Axis(2));
+    ///
+    /// // The first lane for axis 0 is [0, 6]
+    /// assert_eq!(inner0.into_iter().next().unwrap(), aview1(&[0, 6]));
+    /// // The first lane for axis 1 is [0, 3]
+    /// assert_eq!(inner1.into_iter().next().unwrap(), aview1(&[0, 3]));
+    /// // The first lane for axis 2 is [0, 1, 2]
+    /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
+    /// ```
+    pub fn inners(&self, axis: Axis) -> Inners<A, D::TrySmaller> {
+        new_inners(self.view(), axis)
+    }
+
+    /// Return a producer and iterable that traverses over all axes but the
+    /// selected axis.
+    ///
+    /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
+    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::TrySmaller>
+        where S: DataMut
+    {
+        new_inners_mut(self.view_mut(), axis)
+    }
+
+    /// Return a producer and iterable that traverses over the *generalized*
+    /// rows of the array. For a 2D array these are the regular rows.
+    ///
+    /// This is equivalent to `.inners(Axis(n - 1))` where *n* is `self.ndim()`.
+    ///
+    /// For an array of dimensions *a* × *b* × *c* × ... × *l* × *m*
+    /// it has *a* × *b* × *c* × ... × *l* rows each of length *m*.
+    ///
+    /// For example, in a 2 × 2 × 3 array, each row is 3 elements long
+    /// and there are 2 × 2 = 4 rows in total.
+    ///
     /// Iterator element is `ArrayView1<A>` (1D array view).
     ///
     /// ```
-    /// use ndarray::arr3;
+    /// use ndarray::{arr3, Axis, arr1};
+    ///
     /// let a = arr3(&[[[ 0,  1,  2],    // -- row 0, 0
     ///                 [ 3,  4,  5]],   // -- row 0, 1
     ///                [[ 6,  7,  8],    // -- row 1, 0
     ///                 [ 9, 10, 11]]]); // -- row 1, 1
-    /// // `inner_iter` yields the four inner rows of the 3D array.
-    /// let mut row_sums = a.inner_iter().map(|v| v.scalar_sum());
-    /// assert_eq!(row_sums.collect::<Vec<_>>(), vec![3, 12, 21, 30]);
+    ///
+    /// // `genrows` will yield the four generalized rows of the array.
+    /// for row in a.genrows() {
+    ///     /* loop body */
+    /// }
     /// ```
-    pub fn inner_iter(&self) -> InnerIter<A, D> {
-        iterators::new_inner_iter(self.view())
+    pub fn genrows(&self) -> Inners<A, D::TrySmaller> {
+        let mut n = self.ndim();
+        if n == 0 { n += 1; }
+        new_inners(self.view(), Axis(n - 1))
     }
 
-    /// Return an iterator that traverses over all dimensions but the innermost,
-    /// and yields each inner row.
+    /// Return a producer and iterable that traverses over the *generalized*
+    /// rows of the array and yields mutable array views.
     ///
-    /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn inner_iter_mut(&mut self) -> InnerIterMut<A, D>
+    /// Iterator element is `ArrayView1<A>` (1D read-write array view).
+    pub fn genrows_mut(&mut self) -> InnersMut<A, D::TrySmaller>
         where S: DataMut
     {
-        iterators::new_inner_iter_mut(self.view_mut())
+        let mut n = self.ndim();
+        if n == 0 { n += 1; }
+        new_inners_mut(self.view_mut(), Axis(n - 1))
+    }
+
+    /// Return a producer and iterable that traverses over the *generalized*
+    /// columns of the array. For a 2D array these are the regular columns.
+    ///
+    /// This is equivalent to `.inners(Axis(0))`.
+    ///
+    /// For an array of dimensions *a* × *b* × *c* × ... × *l* × *m*
+    /// it has *b* × *c* × ... × *l* × *m* columns each of length *a*.
+    ///
+    /// For example, in a 2 × 2 × 3 array, each column is 2 elements long
+    /// and there are 2 × 3 = 6 columns in total.
+    ///
+    /// Iterator element is `ArrayView1<A>` (1D array view).
+    ///
+    /// ```
+    /// use ndarray::{arr3, Axis, arr1};
+    ///
+    /// // The generalized columns of a 3D array:
+    /// // are directed along the 0th axis: 0 and 6, 1 and 7 and so on...
+    /// let a = arr3(&[[[ 0,  1,  2], [ 3,  4,  5]],
+    ///                [[ 6,  7,  8], [ 9, 10, 11]]]);
+    ///
+    /// // Here `gencolumns` will yield the six generalized columns of the array.
+    /// for row in a.gencolumns() {
+    ///     /* loop body */
+    /// }
+    /// ```
+    pub fn gencolumns(&self) -> Inners<A, D::TrySmaller> {
+        new_inners(self.view(), Axis(0))
+    }
+
+    /// Return a producer and iterable that traverses over the *generalized*
+    /// columns of the array and yields mutable array views.
+    ///
+    /// Iterator element is `ArrayView1<A>` (1D read-write array view).
+    pub fn gencolumns_mut(&mut self) -> InnersMut<A, D::TrySmaller>
+        where S: DataMut
+    {
+        new_inners_mut(self.view_mut(), Axis(0))
     }
 
     /// Return an iterator that traverses over the outermost dimension
