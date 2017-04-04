@@ -135,7 +135,10 @@ impl<P> IntoNdProducer for P where P: NdProducer {
 ///
 /// Producers are used as a arguments to `Zip` and `azip!()`.
 pub trait NdProducer {
+    /// The element produced per iteration.
     type Item;
+    // Internal use / Pointee type
+    #[doc(hidden)]
     type Elem;
     /// Dimension type
     type Dim: Dimension;
