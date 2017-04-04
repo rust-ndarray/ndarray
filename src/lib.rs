@@ -572,10 +572,19 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 
 /// Array's representation.
-type OwnedRepr<A> = Vec<A>;
+#[derive(Clone, Debug)]
+pub struct OwnedRepr<A>(Vec<A>);
 
 /// RcArray's representation.
-type OwnedRcRepr<A> = Rc<Vec<A>>;
+#[derive(Debug)]
+pub struct OwnedRcRepr<A>(Rc<Vec<A>>);
+
+
+impl<A> Clone for OwnedRcRepr<A> {
+    fn clone(&self) -> Self {
+        OwnedRcRepr(self.0.clone())
+    }
+}
 
 /// Array view’s representation.
 #[derive(Copy, Clone)]
