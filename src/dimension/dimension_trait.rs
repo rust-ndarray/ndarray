@@ -32,8 +32,8 @@ use super::axes_of;
 /// This trait defines a number of methods and operations that can be used on
 /// dimensions and indices.
 ///
-/// ***Note:*** *Don't implement this trait.*
-pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
+/// **Note:** *This trait can not be implemented outside the crate*
+pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     IndexMut<usize, Output=usize> +
     Add<Self, Output=Self> +
     AddAssign + for<'x> AddAssign<&'x Self> +
@@ -347,6 +347,8 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
 
     #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
+
+    private_decl!{}
 }
 
 // utility functions
@@ -364,7 +366,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 // Dimension impls
 
 
-unsafe impl Dimension for Dim<[Ix; 0]> {
+impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
     type Pattern = ();
     type Smaller = Self;
@@ -387,10 +389,12 @@ unsafe impl Dimension for Dim<[Ix; 0]> {
     fn try_remove_axis(&self, _ignore: Axis) -> Self::Smaller {
         *self
     }
+
+    private_impl!{}
 }
 
 
-unsafe impl Dimension for Dim<[Ix; 1]> {
+impl Dimension for Dim<[Ix; 1]> {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
     type Smaller = Ix0;
@@ -472,9 +476,10 @@ unsafe impl Dimension for Dim<[Ix; 1]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
+    private_impl!{}
 }
 
-unsafe impl Dimension for Dim<[Ix; 2]> {
+impl Dimension for Dim<[Ix; 2]> {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
@@ -598,9 +603,10 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
+    private_impl!{}
 }
 
-unsafe impl Dimension for Dim<[Ix; 3]> {
+impl Dimension for Dim<[Ix; 3]> {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
@@ -703,11 +709,12 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
+    private_impl!{}
 }
 
 macro_rules! large_dim {
     ($n:expr, $name:ident, $($ix:ident),+) => (
-        unsafe impl Dimension for Dim<[Ix; $n]> {
+        impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
             type Smaller = Dim<[Ix; $n - 1]>;
@@ -725,6 +732,7 @@ macro_rules! large_dim {
             fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
                 self.remove_axis(axis)
             }
+            private_impl!{}
         }
     )
 }
@@ -735,7 +743,7 @@ large_dim!(6, Ix6, Ix, Ix, Ix, Ix, Ix, Ix);
 
 /// IxDyn is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
-unsafe impl Dimension for IxDyn
+impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
@@ -758,6 +766,7 @@ unsafe impl Dimension for IxDyn
             self.clone()
         }
     }
+    private_impl!{}
 }
 
 impl<J> Index<J> for Dim<IxDynImpl>
