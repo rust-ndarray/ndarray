@@ -79,6 +79,13 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.8.4
+
+  - Use ``Zip`` in ``.all_close()`` (performance improvement)
+  - Use ``#[inline]`` on a function used for higher dimensional checked
+    indexing (performance improvement for arrays of ndim >= 3)
+  - ``.subview()`` has a more elaborate panic message
+
 - 0.8.3
 
   - Fix a bug in ``Zip`` / ``NdProducer`` if an array of at least 3 dimensions
