@@ -50,7 +50,7 @@ fn chunks_ok_size() {
     let mut c = 0;
     for elt in a.whole_chunks(vec![2, 1]) {
         assert!(elt.iter().all(|&x| x == 1.));
-        assert_eq!(elt.dim(), vec![2, 1]);
+        assert_eq!(elt.shape(), &[2, 1]);
         c += 1;
     }
     assert_eq!(c, 3);

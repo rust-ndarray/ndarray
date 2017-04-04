@@ -304,9 +304,11 @@ impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
 ///
 /// The array is created with dimension `D::default()`, which results
 /// in for example dimensions `0` and `(0, 0)` with zero elements for the
-/// one-dimensional and two-dimensional cases respectively, while for example
-/// the zero dimensional case uses `()` (or `Vec::new()`) which
-/// results in an array with one element.
+/// one-dimensional and two-dimensional cases respectively.
+///
+/// The default dimension for `IxDyn` is `IxDyn(&[0])` (array has zero
+/// elements). And the default for the dimension `()` is `()` (array has
+/// one element).
 ///
 /// Since arrays cannot grow, the intention is to use the default value as
 /// placeholder.

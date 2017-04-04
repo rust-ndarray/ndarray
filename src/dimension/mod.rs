@@ -17,12 +17,14 @@ pub use self::dimension_trait::Dimension;
 pub use self::ndindex::NdIndex;
 pub use self::remove_axis::RemoveAxis;
 pub use self::axes::{axes_of, Axes, AxisDescription};
+pub use self::dynindeximpl::IxDynImpl;
 
 #[macro_use] mod macros;
 mod axis;
 mod conversion;
 pub mod dim;
 mod dimension_trait;
+mod dynindeximpl;
 mod ndindex;
 mod remove_axis;
 mod axes;

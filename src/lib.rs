@@ -94,6 +94,7 @@ pub use dimension::{
 pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
+pub use dimension::IxDynImpl;
 pub use indexes::Indices;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};

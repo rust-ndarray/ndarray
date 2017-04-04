@@ -11,7 +11,7 @@
 use std::ops::{Index, IndexMut};
 use libnum::Zero;
 
-use {Ix, Ix1, IxDyn, Dimension, Dim};
+use {Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
 use super::DimPrivate;
 
 /// $m: macro callback
@@ -56,10 +56,16 @@ impl<D> IntoDimension for D where D: Dimension {
     fn into_dimension(self) -> Self { self }
 }
 
-impl IntoDimension for Vec<usize> {
+impl IntoDimension for IxDynImpl {
     type Dim = IxDyn;
     #[inline(always)]
     fn into_dimension(self) -> Self::Dim { Dim::new(self) }
+}
+
+impl IntoDimension for Vec<Ix> {
+    type Dim = IxDyn;
+    #[inline(always)]
+    fn into_dimension(self) -> Self::Dim { Dim::new(IxDynImpl::from(self)) }
 }
 
 pub trait Convert {

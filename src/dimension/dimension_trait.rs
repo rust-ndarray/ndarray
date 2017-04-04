@@ -13,7 +13,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si, IxDynImpl};
 use IntoDimension;
 use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
@@ -53,7 +53,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - For `Ix1`: `[Si; 1]`
     /// - For `Ix2`: `[Si; 2]`
     /// - and so on..
-    /// - For `Vec<Ix>`: `[Si]`
+    /// - For `IxDyn: `[Si]`
     ///
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
@@ -63,7 +63,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - For `Ix1`: `usize`,
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
-    /// - For `Vec<Ix>`: `Vec<usize>`,
+    /// - For `IxDyn: `IxDyn`
     type Pattern: IntoDimension<Dim=Self>;
     // Next smaller dimension (if it exists)
     #[doc(hidden)]
@@ -734,7 +734,7 @@ large_dim!(4, Ix4, Ix, Ix, Ix, Ix);
 large_dim!(5, Ix5, Ix, Ix, Ix, Ix, Ix);
 large_dim!(6, Ix6, Ix, Ix, Ix, Ix, Ix, Ix);
 
-/// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
+/// IxDyn is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 unsafe impl Dimension for IxDyn
 {
@@ -761,17 +761,17 @@ unsafe impl Dimension for IxDyn
     }
 }
 
-impl<J> Index<J> for Dim<Vec<usize>>
-    where Vec<usize>: Index<J>,
+impl<J> Index<J> for Dim<IxDynImpl>
+    where IxDynImpl: Index<J>,
 {
-    type Output = <Vec<usize> as Index<J>>::Output;
+    type Output = <IxDynImpl as Index<J>>::Output;
     fn index(&self, index: J) -> &Self::Output {
         &self.ix()[index]
     }
 }
 
-impl<J> IndexMut<J> for Dim<Vec<usize>>
-    where Vec<usize>: IndexMut<J>,
+impl<J> IndexMut<J> for Dim<IxDynImpl>
+    where IxDynImpl: IndexMut<J>,
 {
     fn index_mut(&mut self, index: J) -> &mut Self::Output {
         &mut self.ixm()[index]

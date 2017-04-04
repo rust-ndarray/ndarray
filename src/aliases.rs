@@ -1,7 +1,14 @@
 //! Type aliases for common array sizes
 //!
 
-use ::{Ix, Array, ArrayView, ArrayViewMut, RcArray};
+use ::{
+    Ix,
+    Array,
+    ArrayView,
+    ArrayViewMut,
+    RcArray,
+    IxDynImpl,
+};
 use ::dimension::Dim;
 use dimension::DimPrivate;
 
@@ -38,6 +45,13 @@ pub fn Ix6(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix, i5: Ix) -> Ix6 {
     Dim::new([i0, i1, i2, i3, i4, i5])
 }
 
+/// Create a dynamic-dimensional index
+#[allow(non_snake_case)]
+#[inline(always)]
+pub fn IxDyn(ix: &[Ix]) -> IxDyn {
+    Dim(ix)
+}
+
 /// zero-dimensionial
 pub type Ix0 = Dim<[Ix; 0]>;
 /// one-dimensional
@@ -54,16 +68,18 @@ pub type Ix5 = Dim<[Ix; 5]>;
 pub type Ix6 = Dim<[Ix; 6]>;
 /// dynamic-dimensional
 ///
-/// `Vec<Ix>` and `&[usize]` implement `IntoDimension` to produce `IxDyn`;
-/// use them to create arrays with a dynamic number of axes.
+/// You can use the `IxDyn` function to create a dimension for an array with
+/// dynamic number of dimensions.  (`Vec<Ix>` and `&[usize]` also implement
+/// `IntoDimension` to produce `IxDyn`).
 ///
 /// ```
 /// use ndarray::ArrayD;
+/// use ndarray::IxDyn;
 ///
 /// // Create a 5 × 6 × 3 × 4 array using the dynamic dimension type
-/// let mut a = ArrayD::<f64>::zeros(vec![5, 6, 3, 4]);
+/// let mut a = ArrayD::<f64>::zeros(IxDyn(&[5, 6, 3, 4]));
 /// // Create a 1 × 3 × 4 array using the dynamic dimension type
-/// let mut b = ArrayD::<f64>::zeros(vec![1, 3, 4]);
+/// let mut b = ArrayD::<f64>::zeros(IxDyn(&[1, 3, 4]));
 ///
 /// // We can use broadcasting to add arrays of compatible shapes together:
 /// a += &b;
@@ -78,7 +94,7 @@ pub type Ix6 = Dim<[Ix; 6]>;
 /// // the same type `Array<f64, IxDyn>` a.k.a `ArrayD<f64>`:
 /// let arrays = vec![a, b];
 /// ```
-pub type IxDyn = Dim<Vec<Ix>>;
+pub type IxDyn = Dim<IxDynImpl>;
 
 /// zero-dimensional array
 pub type Array0<A> = Array<A, Ix0>;

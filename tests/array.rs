@@ -1073,6 +1073,14 @@ fn test_default() {
 }
 
 #[test]
+fn test_default_ixdyn() {
+    let a = <Array<f32, IxDyn> as Default>::default();
+    let b = <Array<f32, _>>::zeros(IxDyn(&[0]));
+    assert_eq!(a, b);
+}
+
+
+#[test]
 fn test_map_axis() {
     let a = arr2(&[[1, 2, 3],
                    [4, 5, 6],

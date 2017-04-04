@@ -46,6 +46,9 @@ matrixmultiply = { version = "0.1.13" }
 version = "0.9"
 optional = true
 
+[dev-dependencies]
+defmac = "0.1"
+
 [features]
 blas = ["blas-sys"]
 
