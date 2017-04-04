@@ -360,8 +360,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     a.subview(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn subview(&self, axis: Axis, index: Ix)
-        -> ArrayView<A, <D as RemoveAxis>::Smaller>
+    pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<A, D::Smaller>
         where D: RemoveAxis,
     {
         self.view().into_subview(axis, index)
@@ -487,7 +486,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// // The first lane for axis 2 is [0, 1, 2]
     /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
     /// ```
-    pub fn inners(&self, axis: Axis) -> Inners<A, D::TrySmaller> {
+    pub fn inners(&self, axis: Axis) -> Inners<A, D::Smaller> {
         new_inners(self.view(), axis)
     }
 
@@ -495,7 +494,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// selected axis.
     ///
     /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::TrySmaller>
+    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
         where S: DataMut
     {
         new_inners_mut(self.view_mut(), axis)
@@ -527,7 +526,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     /* loop body */
     /// }
     /// ```
-    pub fn genrows(&self) -> Inners<A, D::TrySmaller> {
+    pub fn genrows(&self) -> Inners<A, D::Smaller> {
         let mut n = self.ndim();
         if n == 0 { n += 1; }
         new_inners(self.view(), Axis(n - 1))
@@ -537,7 +536,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// rows of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn genrows_mut(&mut self) -> InnersMut<A, D::TrySmaller>
+    pub fn genrows_mut(&mut self) -> InnersMut<A, D::Smaller>
         where S: DataMut
     {
         let mut n = self.ndim();
@@ -571,7 +570,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     /* loop body */
     /// }
     /// ```
-    pub fn gencolumns(&self) -> Inners<A, D::TrySmaller> {
+    pub fn gencolumns(&self) -> Inners<A, D::Smaller> {
         new_inners(self.view(), Axis(0))
     }
 
@@ -579,7 +578,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// columns of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn gencolumns_mut(&mut self) -> InnersMut<A, D::TrySmaller>
+    pub fn gencolumns_mut(&mut self) -> InnersMut<A, D::Smaller>
         where S: DataMut
     {
         new_inners_mut(self.view_mut(), Axis(0))

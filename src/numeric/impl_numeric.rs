@@ -66,7 +66,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn sum(&self, axis: Axis) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn sum(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
@@ -102,7 +102,7 @@ impl<A, S, D> ArrayBase<S, D>
     ///     a.mean(Axis(1)) == aview1(&[1.5, 3.5])
     /// );
     /// ```
-    pub fn mean(&self, axis: Axis) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn mean(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
     {

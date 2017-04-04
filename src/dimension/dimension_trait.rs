@@ -65,9 +65,8 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - and so on..
     /// - For `IxDyn: `IxDyn`
     type Pattern: IntoDimension<Dim=Self>;
-    // Next smaller dimension (if it exists)
-    #[doc(hidden)]
-    type TrySmaller: Dimension;
+    /// Next smaller dimension (if applicable)
+    type Smaller: Dimension;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
 
@@ -347,7 +346,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
-    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller;
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
 // utility functions
@@ -368,7 +367,7 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 unsafe impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
     type Pattern = ();
-    type TrySmaller = Self;
+    type Smaller = Self;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
@@ -385,7 +384,7 @@ unsafe impl Dimension for Dim<[Ix; 0]> {
         None
     }
     #[inline]
-    fn try_remove_axis(&self, _ignore: Axis) -> Self::TrySmaller {
+    fn try_remove_axis(&self, _ignore: Axis) -> Self::Smaller {
         *self
     }
 }
@@ -394,7 +393,7 @@ unsafe impl Dimension for Dim<[Ix; 0]> {
 unsafe impl Dimension for Dim<[Ix; 1]> {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
-    type TrySmaller = <Self as RemoveAxis>::Smaller;
+    type Smaller = Ix0;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
@@ -470,7 +469,7 @@ unsafe impl Dimension for Dim<[Ix; 1]> {
         }
     }
     #[inline]
-    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
 }
@@ -478,7 +477,7 @@ unsafe impl Dimension for Dim<[Ix; 1]> {
 unsafe impl Dimension for Dim<[Ix; 2]> {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
-    type TrySmaller = <Self as RemoveAxis>::Smaller;
+    type Smaller = Ix1;
     #[inline]
     fn ndim(&self) -> usize { 2 }
     #[inline]
@@ -596,7 +595,7 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
         }
     }
     #[inline]
-    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
 }
@@ -604,7 +603,7 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
 unsafe impl Dimension for Dim<[Ix; 3]> {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
-    type TrySmaller = <Self as RemoveAxis>::Smaller;
+    type Smaller = Ix2;
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
@@ -701,7 +700,7 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
         order
     }
     #[inline]
-    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
 }
@@ -711,7 +710,7 @@ macro_rules! large_dim {
         unsafe impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
-            type TrySmaller = <Self as RemoveAxis>::Smaller;
+            type Smaller = Dim<[Ix; $n - 1]>;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -723,7 +722,7 @@ macro_rules! large_dim {
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
             #[inline]
-            fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+            fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
                 self.remove_axis(axis)
             }
         }
@@ -740,7 +739,7 @@ unsafe impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
-    type TrySmaller = <Self as RemoveAxis>::Smaller;
+    type Smaller = Self;
     #[inline]
     fn ndim(&self) -> usize { self.ix().len() }
     #[inline]
@@ -752,7 +751,7 @@ unsafe impl Dimension for IxDyn
         self
     }
     #[inline]
-    fn try_remove_axis(&self, axis: Axis) -> Self::TrySmaller {
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         if self.ndim() > 0 {
             self.remove_axis(axis)
         } else {

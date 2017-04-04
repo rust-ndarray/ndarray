@@ -673,7 +673,7 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::TrySmaller>
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
@@ -686,14 +686,14 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Inners<A, D::TrySmaller>
+    fn inner_rows(&self) -> iterators::Inners<A, D::Smaller>
     {
         let n = self.ndim();
         iterators::new_inners(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::InnersMut<A, D::TrySmaller>
+    fn inner_rows_mut(&mut self) -> iterators::InnersMut<A, D::Smaller>
         where S: DataMut
     {
         let n = self.ndim();

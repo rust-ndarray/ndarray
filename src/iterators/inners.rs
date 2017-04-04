@@ -32,7 +32,7 @@ pub struct Inners<'a, A: 'a, D> {
 
 
 pub fn new_inners<A, D>(v: ArrayView<A, D>, axis: Axis)
-    -> Inners<A, D::TrySmaller>
+    -> Inners<A, D::Smaller>
     where D: Dimension
 {
     let ndim = v.ndim();
@@ -98,7 +98,7 @@ pub struct InnersMut<'a, A: 'a, D> {
 
 
 pub fn new_inners_mut<A, D>(v: ArrayViewMut<A, D>, axis: Axis)
-    -> InnersMut<A, D::TrySmaller>
+    -> InnersMut<A, D::Smaller>
     where D: Dimension
 {
     let ndim = v.ndim();
