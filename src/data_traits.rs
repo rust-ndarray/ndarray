@@ -30,6 +30,7 @@ pub unsafe trait Data : Sized {
     #[doc(hidden)]
     // This method is only used for debugging
     fn _data_slice(&self) -> &[Self::Elem];
+    private_decl!{}
 }
 
 /// Array representation trait.
@@ -75,6 +76,7 @@ unsafe impl<A> Data for OwnedRcRepr<A> {
     fn _data_slice(&self) -> &[A] {
         &self.0
     }
+    private_impl!{}
 }
 
 // NOTE: Copy on write
@@ -127,6 +129,7 @@ unsafe impl<A> Data for OwnedRepr<A> {
     fn _data_slice(&self) -> &[A] {
         &self.0
     }
+    private_impl!{}
 }
 
 unsafe impl<A> DataMut for OwnedRepr<A> { }
@@ -162,6 +165,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     fn _data_slice(&self) -> &[A] {
         &[]
     }
+    private_impl!{}
 }
 
 unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
@@ -175,6 +179,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     fn _data_slice(&self) -> &[A] {
         &[]
     }
+    private_impl!{}
 }
 
 unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> { }
