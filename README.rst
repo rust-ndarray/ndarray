@@ -2,7 +2,7 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.13.
+and for numerics.
 
 Please read the API documentation here: `(0.8)`__, `(0.7)`__, `(0.6)`__,
 `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
