@@ -21,8 +21,8 @@ fn formatting()
                "[[1, 2],\n [3, 4]]");
     assert_eq!(format!("{}", a),
                "[[1, 2],\n [3, 4]]");
-    assert_eq!(format!("{:#4}", a),
-               "[[   1,    2], [   3,    4]]");
+    assert_eq!(format!("{:4}", a),
+               "[[   1,    2],\n [   3,    4]]");
 
     let b = arr0::<f32>(3.5);
     assert_eq!(format!("{}", b),

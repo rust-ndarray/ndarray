@@ -45,6 +45,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
+//! - Requires Rust 1.15
 //!
 //! ## Crate Feature Flags
 //!
@@ -102,6 +103,8 @@ pub use si::{Si, S};
 
 use iterators::Baseiter;
 pub use iterators::{
+    Inners,
+    InnersMut,
     InnerIter,
     InnerIterMut,
     AxisIter,
@@ -177,6 +180,7 @@ mod imp_prelude {
         DataOwned,
         DataShared,
         ViewRepr,
+        Ix, Ixs,
     };
     pub use dimension::DimensionExt;
     /// Wrapper type for private methods
@@ -572,10 +576,19 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 
 /// Array's representation.
-type OwnedRepr<A> = Vec<A>;
+#[derive(Clone, Debug)]
+pub struct OwnedRepr<A>(Vec<A>);
 
 /// RcArray's representation.
-type OwnedRcRepr<A> = Rc<Vec<A>>;
+#[derive(Debug)]
+pub struct OwnedRcRepr<A>(Rc<Vec<A>>);
+
+
+impl<A> Clone for OwnedRcRepr<A> {
+    fn clone(&self) -> Self {
+        OwnedRcRepr(self.0.clone())
+    }
+}
 
 /// Array view’s representation.
 #[derive(Copy, Clone)]
@@ -661,7 +674,7 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::TrySmaller>
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
@@ -674,14 +687,14 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Inners<A, D::TrySmaller>
+    fn inner_rows(&self) -> iterators::Inners<A, D::Smaller>
     {
         let n = self.ndim();
         iterators::new_inners(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::InnersMut<A, D::TrySmaller>
+    fn inner_rows_mut(&mut self) -> iterators::InnersMut<A, D::Smaller>
         where S: DataMut
     {
         let n = self.ndim();

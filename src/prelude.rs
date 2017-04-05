@@ -31,7 +31,6 @@ pub use {
 pub use {
     Axis,
     Dim,
-    Ix, Ixs,
     Dimension,
 };
 

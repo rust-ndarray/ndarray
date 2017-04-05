@@ -417,34 +417,11 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
 ///
-/// See [`.inner_iter()`](struct.ArrayBase.html#method.inner_iter) for more information.
+/// See [`.inners()`](struct.ArrayBase.html#method.inners) for more information.
 pub struct InnerIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
-}
-
-pub fn new_inner_iter<A, D>(mut v: ArrayView<A, D>) -> InnerIter<A, D>
-    where D: Dimension
-{
-    let ndim = v.ndim();
-    if ndim == 0 {
-        InnerIter {
-            inner_len: 1,
-            inner_stride: 1,
-            iter: v.into_base_iter(),
-        }
-    } else {
-        // Set length of innerest dimension to 1, start iteration
-        let len = v.dim.last_elem();
-        let stride = v.strides.last_elem() as isize;
-        v.dim.set_last_elem(1);
-        InnerIter {
-            inner_len: len,
-            inner_stride: stride,
-            iter: v.into_base_iter(),
-        }
-    }
 }
 
 impl<'a, A, D> Iterator for InnerIter<'a, A, D>
@@ -477,35 +454,12 @@ impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row (mutable).
 ///
-/// See [`.inner_iter_mut()`](struct.ArrayBase.html#method.inner_iter_mut)
+/// See [`.inners_mut()`](struct.ArrayBase.html#method.inners_mut)
 /// for more information.
 pub struct InnerIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
-}
-
-pub fn new_inner_iter_mut<A, D>(mut v: ArrayViewMut<A, D>) -> InnerIterMut<A, D>
-    where D: Dimension,
-{
-    let ndim = v.ndim();
-    if ndim == 0 {
-        InnerIterMut {
-            inner_len: 1,
-            inner_stride: 1,
-            iter: v.into_base_iter(),
-        }
-    } else {
-        // Set length of innerest dimension to 1, start iteration
-        let len = v.dim.last_elem();
-        let stride = v.strides.last_elem() as isize;
-        v.dim.set_last_elem(1);
-        InnerIterMut {
-            inner_len: len,
-            inner_stride: stride,
-            iter: v.into_base_iter(),
-        }
-    }
 }
 
 impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
@@ -531,57 +485,6 @@ impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
 {
     fn len(&self) -> usize {
         self.iter.len()
-    }
-}
-
-#[cfg(next_version)]
-/// Create an InnerIter one dimension smaller than D (if possible)
-pub fn new_inner_iter_smaller<A, D>(v: ArrayView<A, D>)
-    -> InnerIter<A, D::TrySmaller>
-    where D: Dimension
-{
-    let ndim = v.ndim();
-    let len;
-    let stride;
-    let iter_v;
-    if ndim == 0 {
-        len = 1;
-        stride = 0;
-        iter_v = v.try_remove_axis(Axis(0))
-    } else {
-        len = v.dim.last_elem();
-        stride = v.strides.last_elem() as isize;
-        iter_v = v.try_remove_axis(Axis(ndim - 1))
-    }
-    InnerIter {
-        inner_len: len,
-        inner_stride: stride,
-        iter: iter_v.into_base_iter(),
-    }
-}
-
-#[cfg(next_version)]
-pub fn new_inner_iter_smaller_mut<A, D>(v: ArrayViewMut<A, D>)
-    -> InnerIterMut<A, D::TrySmaller>
-    where D: Dimension,
-{
-    let ndim = v.ndim();
-    let len;
-    let stride;
-    let iter_v;
-    if ndim == 0 {
-        len = 1;
-        stride = 0;
-        iter_v = v.try_remove_axis(Axis(0))
-    } else {
-        len = v.dim.last_elem();
-        stride = v.strides.last_elem() as isize;
-        iter_v = v.try_remove_axis(Axis(ndim - 1))
-    }
-    InnerIterMut {
-        inner_len: len,
-        inner_stride: stride,
-        iter: iter_v.into_base_iter(),
     }
 }
 

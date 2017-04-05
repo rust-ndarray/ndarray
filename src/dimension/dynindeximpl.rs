@@ -203,7 +203,6 @@ impl<'a> IntoIterator for &'a IxDynImpl {
 }
 
 impl RemoveAxis for Dim<IxDynImpl> {
-    type Smaller = Self;
     fn remove_axis(&self, axis: Axis) -> Self {
         debug_assert!(axis.index() < self.ndim());
         Dim::new(self.ix().remove(axis.index()))

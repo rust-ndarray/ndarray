@@ -22,6 +22,8 @@ impl_ndproducer! {
     }
 }
 
+/// See [`.inners()`](struct.ArrayBase.html#method.inners)
+/// for more information.
 pub struct Inners<'a, A: 'a, D> {
     base: ArrayView<'a, A, D>,
     inner_len: Ix,
@@ -30,7 +32,7 @@ pub struct Inners<'a, A: 'a, D> {
 
 
 pub fn new_inners<A, D>(v: ArrayView<A, D>, axis: Axis)
-    -> Inners<A, D::TrySmaller>
+    -> Inners<A, D::Smaller>
     where D: Dimension
 {
     let ndim = v.ndim();
@@ -86,6 +88,8 @@ impl<'a, A, D> IntoIterator for Inners<'a, A, D>
     }
 }
 
+/// See [`.inners_mut()`](struct.ArrayBase.html#method.inners_mut)
+/// for more information.
 pub struct InnersMut<'a, A: 'a, D> {
     base: ArrayViewMut<'a, A, D>,
     inner_len: Ix,
@@ -94,7 +98,7 @@ pub struct InnersMut<'a, A: 'a, D> {
 
 
 pub fn new_inners_mut<A, D>(v: ArrayViewMut<A, D>, axis: Axis)
-    -> InnersMut<A, D::TrySmaller>
+    -> InnersMut<A, D::Smaller>
     where D: Dimension
 {
     let ndim = v.ndim();

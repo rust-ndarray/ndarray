@@ -16,7 +16,7 @@ impl<A, D> ArrayBase<OwnedRepr<A>, D>
     /// If the array is in standard memory layout, the logical element order
     /// of the array (`.iter()` order) and of the returned vector will be the same.
     pub fn into_raw_vec(self) -> Vec<A> {
-        self.data
+        self.data.0
     }
 }
 
@@ -29,7 +29,7 @@ impl<A, D> ArrayBase<OwnedRcRepr<A>, D>
     /// them if necessary.
     pub fn into_owned(mut self) -> Array<A, D> {
         <_>::ensure_unique(&mut self);
-        let data = Rc::try_unwrap(self.data).ok().unwrap();
+        let data = OwnedRepr(Rc::try_unwrap(self.data.0).ok().unwrap());
         ArrayBase {
             data: data,
             ptr: self.ptr,

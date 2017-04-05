@@ -118,12 +118,16 @@ impl<D> Splittable for D
 ///
 /// Slices and vectors can be used (equivalent to 1-dimensional array views).
 pub trait IntoNdProducer {
+    /// The element produced per iteration.
+    type Item;
+    /// Dimension type of the producer
     type Dim: Dimension;
-    type Output: NdProducer<Dim=Self::Dim>;
+    type Output: NdProducer<Dim=Self::Dim, Item=Self::Item>;
     fn into_producer(self) -> Self::Output;
 }
 
 impl<P> IntoNdProducer for P where P: NdProducer {
+    type Item = P::Item;
     type Dim = P::Dim;
     type Output = Self;
     fn into_producer(self) -> Self::Output { self }
@@ -189,6 +193,7 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
 {
     type Dim = D;
     type Output = ArrayView<'a, A, D>;
+    type Item = &'a A;
     fn into_producer(self) -> Self::Output {
         self.view()
     }
@@ -202,6 +207,7 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
 {
     type Dim = D;
     type Output = ArrayViewMut<'a, A, D>;
+    type Item = &'a mut A;
     fn into_producer(self) -> Self::Output {
         self.view_mut()
     }
@@ -211,6 +217,7 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
 impl<'a, A: 'a> IntoNdProducer for &'a [A] {
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
+    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -220,6 +227,7 @@ impl<'a, A: 'a> IntoNdProducer for &'a [A] {
 impl<'a, A: 'a> IntoNdProducer for &'a mut [A] {
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
+    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -229,6 +237,7 @@ impl<'a, A: 'a> IntoNdProducer for &'a mut [A] {
 impl<'a, A: 'a> IntoNdProducer for &'a Vec<A> {
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
+    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -238,6 +247,7 @@ impl<'a, A: 'a> IntoNdProducer for &'a Vec<A> {
 impl<'a, A: 'a> IntoNdProducer for &'a mut Vec<A> {
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
+    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -362,8 +372,8 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
 /// have to have the same element type.
 ///
 /// The `Zip` has two methods for function application: `apply` and
-/// `fold_while`. These can be called several times on the same zip object. The
-/// zip object can be split, which allows parallelization.
+/// `fold_while`. The zip object can be split, which allows parallelization.
+/// A read-only zip object (no mutable producers) can be cloned.
 ///
 /// See also the [`azip!()` macro][az] which offers a convenient shorthand
 /// to common ways to use `Zip`.
@@ -405,7 +415,7 @@ impl<P, D> Zip<(P, ), D>
     /// The Zip will take the exact dimension of `p` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     pub fn from<IP>(p: IP) -> Self
-        where IP: IntoNdProducer<Dim=D, Output=P>
+        where IP: IntoNdProducer<Dim=D, Output=P, Item=P::Item>
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
@@ -649,7 +659,7 @@ macro_rules! map_impl {
         impl<D: Dimension, $($p: NdProducer<Dim=D>),*> Zip<($($p,)*), D> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
-            pub fn apply<F>(&mut self, mut function: F)
+            pub fn apply<F>(mut self, mut function: F)
                 where F: FnMut($($p::Item),*)
             {
                 self.apply_core((), move |(), args| {
@@ -663,7 +673,7 @@ macro_rules! map_impl {
             ///
             /// The fold continues while the return value is a
             /// `FoldWhile::Continue`.
-            pub fn fold_while<F, Acc>(&mut self, acc: Acc, mut function: F)
+            pub fn fold_while<F, Acc>(mut self, acc: Acc, mut function: F)
                 -> FoldWhile<Acc>
                 where F: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
             {
@@ -699,7 +709,7 @@ macro_rules! map_impl {
             /// ***Panics*** if broadcasting isn’t possible.
             pub fn and_broadcast<'a, P, D2, Elem>(self, p: P)
                 -> Zip<($($p,)* ArrayView<'a, Elem, D>, ), D>
-                where P: IntoNdProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>>,
+                where P: IntoNdProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>, Item=&'a Elem>,
                       D2: Dimension,
             {
                 let array = p.into_producer().broadcast_unwrap(self.dimension.clone());

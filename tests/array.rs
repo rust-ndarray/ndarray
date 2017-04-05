@@ -925,7 +925,7 @@ fn test_f_order() {
     assert_eq!(c.strides(), &[3, 1]);
     assert_eq!(f.strides(), &[1, 2]);
     itertools::assert_equal(f.iter(), c.iter());
-    itertools::assert_equal(f.inner_iter(), c.inner_iter());
+    itertools::assert_equal(f.genrows(), c.genrows());
     itertools::assert_equal(f.outer_iter(), c.outer_iter());
     itertools::assert_equal(f.axis_iter(Axis(0)), c.axis_iter(Axis(0)));
     itertools::assert_equal(f.axis_iter(Axis(1)), c.axis_iter(Axis(1)));

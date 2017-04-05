@@ -131,3 +131,21 @@ fn test_contiguous_but_not_c_or_f() {
     assert_eq!(ans[[0, 1, 2]], correct_012);
     assert_eq!(ans, correct);
 }
+
+
+#[test]
+fn test_clone() {
+    let a = Array::from_iter(0..27).into_shape((3, 3, 3)).unwrap();
+
+    let z = Zip::from(&a).and(a.whole_chunks((1, 1, 1)));
+    let w = z.clone();
+    let mut result = Vec::new();
+    z.apply(|x, y| {
+        result.push((x, y));
+    });
+    let mut i = 0;
+    w.apply(|x, y| {
+        assert_eq!(result[i], (x, y));
+        i += 1;
+    });
+}

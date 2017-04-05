@@ -68,7 +68,7 @@ fn iter_sum_2d_by_row(bench: &mut test::Bencher)
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
-        for row in a.inner_iter() {
+        for row in a.genrows() {
             for &elt in row {
                 sum += elt;
             }
@@ -132,7 +132,7 @@ fn iter_sum_2d_cutout_outer_iter(bench: &mut test::Bencher)
     let a = black_box(av);
     bench.iter(|| {
         let mut sum = 0;
-        for row in a.inner_iter() {
+        for row in a.genrows() {
             for &elt in row {
                 sum += elt;
             }
