@@ -372,8 +372,8 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
 /// have to have the same element type.
 ///
 /// The `Zip` has two methods for function application: `apply` and
-/// `fold_while`. These can be called several times on the same zip object. The
-/// zip object can be split, which allows parallelization.
+/// `fold_while`. The zip object can be split, which allows parallelization.
+/// A read-only zip object (no mutable producers) can be cloned.
 ///
 /// See also the [`azip!()` macro][az] which offers a convenient shorthand
 /// to common ways to use `Zip`.
@@ -659,7 +659,7 @@ macro_rules! map_impl {
         impl<D: Dimension, $($p: NdProducer<Dim=D>),*> Zip<($($p,)*), D> {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
-            pub fn apply<F>(&mut self, mut function: F)
+            pub fn apply<F>(mut self, mut function: F)
                 where F: FnMut($($p::Item),*)
             {
                 self.apply_core((), move |(), args| {
@@ -673,7 +673,7 @@ macro_rules! map_impl {
             ///
             /// The fold continues while the return value is a
             /// `FoldWhile::Continue`.
-            pub fn fold_while<F, Acc>(&mut self, acc: Acc, mut function: F)
+            pub fn fold_while<F, Acc>(mut self, acc: Acc, mut function: F)
                 -> FoldWhile<Acc>
                 where F: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
             {
