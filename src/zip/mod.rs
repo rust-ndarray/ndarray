@@ -142,10 +142,11 @@ pub trait NdProducer {
     /// The element produced per iteration.
     type Item;
     // Internal use / Pointee type
-    #[doc(hidden)]
-    type Elem;
     /// Dimension type
     type Dim: Dimension;
+    type Ptr: Offset<Stride=Self::Stride>;
+    type Stride: Copy;
+
     #[doc(hidden)]
     fn layout(&self) -> Layout;
     #[doc(hidden)]
@@ -155,21 +156,33 @@ pub trait NdProducer {
         self.raw_dim() == *dim
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem;
+    fn as_ptr(&self) -> Self::Ptr;
     #[doc(hidden)]
-    unsafe fn as_ref(&self, *mut Self::Elem) -> Self::Item;
+    unsafe fn as_ref(&self, Self::Ptr) -> Self::Item;
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem;
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     #[doc(hidden)]
-    fn stride_of(&self, axis: Axis) -> isize;
+    fn stride_of(&self, axis: Axis) -> <Self::Ptr as Offset>::Stride;
     #[doc(hidden)]
     #[inline(always)]
-    fn contiguous_stride(&self) -> isize {
-        1
-    }
+    fn contiguous_stride(&self) -> Self::Stride;
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) where Self: Sized;
     private_decl!{}
+}
+
+pub trait Offset : Copy {
+    type Stride: Copy;
+    unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self;
+    private_decl!{}
+}
+
+impl<T> Offset for *mut T {
+    type Stride = isize;
+    unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self {
+        self.offset(s * (index as isize))
+    }
+    private_impl!{}
 }
 
 trait ZippableTuple : Sized {
@@ -258,7 +271,8 @@ impl<'a, A, D> NdProducer for ArrayView<'a, A, D>
 {
     type Item = &'a A;
     type Dim = D;
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
 
     private_impl!{}
     #[doc(hidden)]
@@ -295,6 +309,9 @@ impl<'a, A, D> NdProducer for ArrayView<'a, A, D>
     fn stride_of(&self, axis: Axis) -> isize {
         self.strides()[axis.index()]
     }
+
+    #[inline(always)]
+    fn contiguous_stride(&self) -> Self::Stride { 1 }
     
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
@@ -307,7 +324,8 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
 {
     type Item = &'a mut A;
     type Dim = D;
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
 
     private_impl!{}
     #[doc(hidden)]
@@ -344,6 +362,9 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
     fn stride_of(&self, axis: Axis) -> isize {
         self.strides()[axis.index()]
     }
+
+    #[inline(always)]
+    fn contiguous_stride(&self) -> Self::Stride { 1 }
 
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
@@ -490,7 +511,7 @@ impl<P, D> Zip<P, D>
         let inner_strides = self.parts.contiguous_stride();
         for i in 0..size {
             unsafe {
-                let ptr_i = ptrs.stride_offset(i, inner_strides);
+                let ptr_i = ptrs.stride_offset(inner_strides, i);
                 acc = fold_while![function(acc, self.parts.as_ref(ptr_i))];
             }
         }
@@ -515,7 +536,7 @@ impl<P, D> Zip<P, D>
             unsafe {
                 let ptr = self.parts.uget_ptr(&index);
                 for i in 0..inner_len {
-                    let p = ptr.stride_offset(i, inner_strides);
+                    let p = ptr.stride_offset(inner_strides, i);
                     acc = fold_while!(function(acc, self.parts.as_ref(p)));
                 }
             }
@@ -527,6 +548,7 @@ impl<P, D> Zip<P, D>
     }
 }
 
+/*
 trait Offset : Copy {
     unsafe fn offset(self, off: isize) -> Self;
     unsafe fn stride_offset(self, index: usize, stride: isize) -> Self {
@@ -539,21 +561,17 @@ impl<T> Offset for *mut T {
         self.offset(off)
     }
 }
+*/
 
 
 trait OffsetTuple {
     type Args;
-    unsafe fn offset(self, off: isize) -> Self;
-    unsafe fn stride_offset(self, index: usize, stride: Self::Args) -> Self;
+    unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self;
 }
 
 impl<T> OffsetTuple for *mut T {
     type Args = isize;
-    unsafe fn offset(self, off: isize) -> Self {
-        self.offset(off)
-    }
-
-    unsafe fn stride_offset(self, index: usize, stride: isize) -> Self {
+    unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self {
         self.offset(index as isize * stride)
     }
 }
@@ -568,16 +586,11 @@ macro_rules! offset_impl {
         $(
         #[allow(non_snake_case)]
         impl<$($param: Offset),*> OffsetTuple for ($($param, )*) {
-            type Args = ($(sub!($param [isize]),)*);
-            unsafe fn offset(self, off: isize) -> Self {
-                let ($($param, )*) = self;
-                ($($param . offset(off),)*)
-            }
-
-            unsafe fn stride_offset(self, index: usize, stride: Self::Args) -> Self {
+            type Args = ($($param::Stride,)*);
+            unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self {
                 let ($($param, )*) = self;
                 let ($($q, )*) = stride;
-                ($(Offset::stride_offset($param, index, $q),)*)
+                ($(Offset::stride_offset($param, $q, index),)*)
             }
         }
         )+
@@ -599,9 +612,9 @@ macro_rules! zipt_impl {
         #[allow(non_snake_case)]
         impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> ZippableTuple for ($($p, )*) {
             type Item = ($($p::Item, )*);
-            type Ptr = ($(*mut $p::Elem, )*);
+            type Ptr = ($($p::Ptr, )*);
             type Dim = Dim;
-            type Stride = ($(sub!($p [isize]),)* );
+            type Stride = ($($p::Stride,)* );
 
             fn stride_of(&self, index: usize) -> Self::Stride {
                 let ($(ref $p,)*) = *self;

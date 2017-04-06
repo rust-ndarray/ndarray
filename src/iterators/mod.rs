@@ -793,7 +793,8 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
@@ -804,7 +805,7 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
         Ix1(self.len())
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
+    fn as_ptr(&self) -> Self::Ptr {
         self.iter.ptr
     }
 
@@ -813,13 +814,13 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ArrayView::new_(ptr,
                         self.iter.inner_dim.clone(),
                         self.iter.inner_strides.clone())
     }
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         self.iter.ptr.offset(self.iter.stride * i[0] as isize)
     }
 
@@ -840,7 +841,8 @@ impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
@@ -851,7 +853,7 @@ impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
         Ix1(self.len())
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
+    fn as_ptr(&self) -> Self::Ptr {
         self.iter.ptr
     }
 
@@ -860,13 +862,13 @@ impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ArrayViewMut::new_(ptr,
                            self.iter.inner_dim.clone(),
                            self.iter.inner_strides.clone())
     }
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         self.iter.ptr.offset(self.iter.stride * i[0] as isize)
     }
 
