@@ -86,7 +86,7 @@ fn test_broadcast() {
     let e = Array::from_elem((), 2.);
 
     {
-        let mut z = Zip::from(a.view_mut())
+        let z = Zip::from(a.view_mut())
             .and_broadcast(&b)
             .and_broadcast(&d)
             .and_broadcast(&e);
