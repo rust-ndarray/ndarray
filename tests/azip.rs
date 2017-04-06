@@ -242,3 +242,32 @@ fn test_indices_3() {
     });
     assert_eq!(count, len);
 }
+
+#[test]
+fn test_indices_split_1() {
+    for m in (0..4).chain(10..12) {
+        for n in (0..4).chain(10..12) {
+            let a1 = Array::<f64, _>::default((m, n));
+            let (a, b) = Zip::indexed(&a1).split();
+            let mut seen = Vec::new();
+
+            let mut ac = 0;
+            a.apply(|i, _| {
+                ac += 1;
+                seen.push(i);
+            });
+            let mut bc = 0;
+            b.apply(|i, _| {
+                bc += 1;
+                seen.push(i);
+            });
+
+            assert_eq!(a1.len(), ac + bc);
+
+            seen.sort();
+            assert_eq!(seen.len(), a1.len());
+            seen.dedup();
+            assert_eq!(seen.len(), a1.len());
+        }
+    }
+}
