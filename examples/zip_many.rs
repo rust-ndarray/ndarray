@@ -3,6 +3,7 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
+use ndarray::Zip;
 
 fn main() {
     let n = 16;
@@ -34,4 +35,18 @@ fn main() {
     let nchunks = (n / chunk_sz.0, n / chunk_sz.1);
     let mut sums = Array::zeros(nchunks);
     azip!(mut sums, ref a (a.whole_chunks(chunk_sz)) in { *sums = a.scalar_sum() });
+
+
+    // Let's imagine we split to parallelize
+    {
+        let (x, y) = Zip::indexed(&mut a).split();
+        x.apply(|(_, j), elt| {
+            *elt = elt.powi(j as i32);
+        });
+
+        y.apply(|(_, j), elt| {
+            *elt = elt.powi(j as i32);
+        });
+    }
+    println!("{:8.3?}", a);
 }
