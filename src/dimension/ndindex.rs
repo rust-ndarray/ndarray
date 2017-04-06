@@ -204,20 +204,20 @@ impl<'a> IntoDimension for &'a [Ix] {
     }
 }
 
+unsafe impl<'a> NdIndex<IxDyn> for &'a IxDyn {
+    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
+        (**self).index_checked(dim, strides)
+    }
+    fn index_unchecked(&self, strides: &IxDyn) -> isize {
+        (**self).index_unchecked(strides)
+    }
+}
+
 unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
         stride_offset_checked(dim.ix(), strides.ix(), *self)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
         zip(strides.ix(), *self).map(|(&s, &i)| stride_offset(i, s)).sum()
-    }
-}
-
-unsafe impl NdIndex<IxDyn> for IxDynImpl {
-    fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
-        stride_offset_checked(dim.ix(), strides.ix(), self)
-    }
-    fn index_unchecked(&self, strides: &IxDyn) -> isize {
-        zip(strides.ix(), self).map(|(&s, &i)| stride_offset(i, s)).sum()
     }
 }
