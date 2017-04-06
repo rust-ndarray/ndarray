@@ -204,6 +204,7 @@ pub type Ixs = isize;
 /// + [RcArray](#rcarray)
 /// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
+/// + [Loops, Producers and Iterators](#loops-producers-and-iterators)
 /// + [Slicing](#slicing)
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
@@ -315,6 +316,90 @@ pub type Ixs = isize;
 /// The logical order of any array’s elements is the row major order 
 /// (the rightmost index is varying the fastest).
 /// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
+///
+/// ## Loops, Producers and Iterators
+///
+/// Using [`Zip`](struct.Zip.html) is the most general way to apply a procedure
+/// across one or several arrays or *producers*.
+///
+/// [`NdProducer`](trait.NdProducer.html) is like an iterable but for
+/// multidimensional data. All producers have dimensions and axes, like an
+/// array view, and they can be split and used with parallelization using `Zip`.
+///
+/// For example, `ArrayView<A, D>` is a producer, it has the same dimensions
+/// as the array view and for each iteration it produces a reference to
+/// the array element (`&A` in this case).
+///
+/// Another example, if we have a 10 × 10 array and use `.exact_chunks((2, 2))`
+/// we get a producer of chunks which has the dimensions 5 × 5 (because
+/// there are *10 / 2 = 5* chunks in either direction). The 5 × 5 chunks producer
+/// can be paired with any other producers of the same dimension with `Zip`, for
+/// example 5 × 5 arrays.
+///
+/// ### `.iter()` and `.iter_mut()`
+///
+/// These are the element iterators of arrays and they produce an element
+/// sequence in the logical order of the array, that means that the elements
+/// will be visited in the sequence that corresponds to increasing the 
+/// last index first: *0, ..., 0,  0*; *0, ..., 0, 1*; *0, ...0, 2* and so on.
+///
+/// ### `.outer_iter()` and `.axis_iter()`
+///
+/// These iterators produce array views of one smaller dimension.
+///
+/// For example, for a 2D array, `.outer_iter()` will produce the 1D rows.
+/// For a 3D array, `.outer_iter()` produces 2D subviews.
+///
+/// `.axis_iter()` is like `outer_iter()` but allows you to pick which
+/// axis to traverse.
+///
+/// The `outer_iter` and `axis_iter` are one dimensional producers.
+/// 
+/// ## `.genrows()`, `.gencolumns()` and `.lanes()`
+///
+/// [`.genrows()`][gr] is a producer (and iterable) of all rows in an array.
+///
+/// ```
+/// use ndarray::Array;
+///
+/// // 1. Loop over the rows of a 2D array
+/// let mut a = Array::zeros((10, 10));
+/// for mut row in a.genrows_mut() {
+///     row.fill(1.);
+/// }
+///
+/// // 2. Use Zip to pair each row in 2D `a` with elements in 1D `b`
+/// use ndarray::Zip;
+/// let mut b = Array::zeros(a.rows());
+///
+/// Zip::from(a.genrows())
+///     .and(&mut b)
+///     .apply(|a_row, b_elt| {
+///         *b_elt = a_row[a.cols() - 1] - a_row[0];
+///     });
+/// ```
+///
+/// The *lanes* of an array are 1D segments along an axis and when pointed
+/// along the last axis they are *rows*, when pointed along the first axis
+/// they are *columns*.
+///
+/// A *m* × *n* array has *m* rows each of length *n* and conversely
+/// *n* columns each of length *m*.
+///
+/// To generalize this, we say that an array of dimension *a* × *m* × *n*
+/// has *a m* rows. It's composed of *a* times the previous array, so it
+/// has *a* times as many rows.
+///
+/// All methods: [`.genrows()`][gr], [`.genrows_mut()`][grm],
+/// [`.gencolumns()`][gc], [`.gencolumns_mut()`][gcm],
+/// [`.lanes(axis)`][l], [`.lanes_mut(axis)`][lm].
+///
+/// [gr]: #method.genrows
+/// [grm]: #method.genrows_mut
+/// [gc]: #method.gencolumns
+/// [gcm]: #method.gencolumns_mut
+/// [l]: #method.lanes
+/// [lm]: #method.lanes_mut
 ///
 /// ## Slicing
 ///
