@@ -34,7 +34,7 @@ fn windows_iterator_oversized() {
     let a = Array::from_iter(10..37)
         .into_shape((3, 3, 3))
         .unwrap();
-    let mut iter = a.windows(Dim((4, 3, 2))); // (4,3,2) doesn't fit into (3,3,3) => oversized!
+    let mut iter = a.windows((4, 3, 2)).into_iter(); // (4,3,2) doesn't fit into (3,3,3) => oversized!
     assert_eq!(iter.next(), None);
 }
 

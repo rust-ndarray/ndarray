@@ -714,12 +714,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         exact_chunks_of(self.view(), chunk_size)
     }
 
-    /// Return a windows iterator.
+    /// Return a window producer and iterable.
+    ///
+    /// The windows are all distinct overlapping views of size `window_size`
+    /// that fit into the array's shape.
     /// 
-    /// Will iterate over no elements if window size is larger
+    /// Will yield over no elements if window size is larger
     /// than the actual array size of any dimension.
+    ///
+    /// The produced element is an `ArrayView<A, D>` with exactly the dimension
+    /// `window_size`.
     /// 
     /// **Panics** if any dimension of `window_size` is zero.
+    /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
+    /// number of array axes.)
     pub fn windows<E>(&self, window_size: E) -> Windows<A, D>
         where E: IntoDimension<Dim=D>
     {

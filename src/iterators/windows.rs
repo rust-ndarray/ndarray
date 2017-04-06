@@ -1,11 +1,18 @@
 
 use imp_prelude::*;
+use super::ElementsBase;
 use IntoDimension;
+use Layout;
+use NdProducer;
 
+/// Window producer and iterable
+///
+/// See [`.windows()`](../struct.ArrayBase.html#method.windows) for more
+/// information.
 pub struct Windows<'a, A: 'a, D> {
-    iter  : ::iter::Iter<'a, A, D>,
+    base: ArrayView<'a, A, D>,
     window: D,
-    stride: D,
+    strides: D,
 }
 
 pub fn windows<A, D, E>(a: ArrayView<A, D>, window_size: E) -> Windows<A, D>
@@ -17,7 +24,7 @@ pub fn windows<A, D, E>(a: ArrayView<A, D>, window_size: E) -> Windows<A, D>
         concat!("Window dimension {} does not match array dimension {} ",
         "(with array of shape {:?})"),
         window.ndim(), a.ndim(), a.shape());
-    let mut size = a.raw_dim();
+    let mut size = a.dim;
     for (sz, &ws) in size.slice_mut().iter_mut().zip(window.slice())
     {
         if ws == 0 { panic!("window-size must not be zero!"); }
@@ -25,31 +32,79 @@ pub fn windows<A, D, E>(a: ArrayView<A, D>, window_size: E) -> Windows<A, D>
         *sz = if *sz < ws { 0 } else { *sz - ws + 1 };
     }
 
-    let mut strides = a.raw_dim();
-    for (a, b) in strides.slice_mut().iter_mut().zip(a.strides()) {
-        *a = *b as Ix;
-    }
-
-    let mult_strides = strides.clone();
+    let window_strides = a.strides.clone();
 
     unsafe {
         Windows {
-            iter  : ArrayView::from_shape_ptr(size.clone().strides(mult_strides), a.as_ptr()).into_iter(),
+            base: ArrayView::from_shape_ptr(size.clone().strides(a.strides), a.ptr),
             window: window,
-            stride: strides,
+            strides: window_strides,
         }
     }
 }
 
-impl<'a, A, D> Iterator for Windows<'a, A, D>
+impl_ndproducer! {
+    ['a, A, D: Dimension]
+    [Clone => 'a, A, D: Clone ]
+    Windows {
+        base,
+        window,
+        strides,
+    }
+    Windows<'a, A, D> {
+        type Dim = D;
+        type Item = ArrayView<'a, A, D>;
+
+        unsafe fn item(&self, ptr) {
+            ArrayView::new_(ptr, self.window.clone(),
+                            self.strides.clone())
+        }
+    }
+}
+
+impl<'a, A, D> IntoIterator for Windows<'a, A, D>
     where D: Dimension,
+          A: 'a,
 {
-    type Item = ArrayView<'a, A, D>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|elt| {
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = WindowsIter<'a, A, D>;
+    fn into_iter(self) -> Self::IntoIter {
+        WindowsIter {
+            iter: self.base.into_elements_base(),
+            window: self.window,
+            strides: self.strides,
+        }
+    }
+}
+
+/// Window iterator.
+///
+/// See [`.windows()`](../struct.ArrayBase.html#method.windows) for more
+/// information.
+pub struct WindowsIter<'a, A: 'a, D> {
+    iter: ElementsBase<'a, A, D>,
+    window: D,
+    strides: D,
+}
+
+impl_iterator!{
+    ['a, A, D: Dimension]
+    [Clone => 'a, A, D: Clone]
+    WindowsIter {
+        iter,
+        window,
+        strides,
+    }
+    WindowsIter<'a, A, D> {
+        type Item = ArrayView<'a, A, D>;
+
+        fn item(&mut self, elt) {
             unsafe {
-                ArrayView::from_shape_ptr(self.window.clone().strides(self.stride.clone()), elt)
+                ArrayView::new_(
+                    elt,
+                    self.window.clone(),
+                    self.strides.clone())
             }
-        })
+        }
     }
 }
