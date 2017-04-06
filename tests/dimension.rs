@@ -213,10 +213,11 @@ macro_rules! ndindex {
             }
             let dim = a.shape().to_vec();
             let b = a.broadcast(dim).unwrap();
-            for (i, &elt) in a.indexed_iter() {
+            for (i, &elt) in b.indexed_iter() {
                 let dim = i.into_dimension();
-                assert_eq!(elt, b[dim]);
                 assert_eq!(elt, b[dim.slice()]);
+                assert_eq!(elt, b[&dim]);
+                assert_eq!(elt, b[dim]);
             }
         }
     }
