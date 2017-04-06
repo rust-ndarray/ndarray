@@ -13,8 +13,9 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, IxDyn, Dim, Si, IxDynImpl};
 use IntoDimension;
+use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
 use {zipsl, zipsl_mut, ZipExt};
 use Axis;
@@ -31,8 +32,8 @@ use super::axes_of;
 /// This trait defines a number of methods and operations that can be used on
 /// dimensions and indices.
 ///
-/// ***Note:*** *Don't implement this trait.*
-pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
+/// **Note:** *This trait can not be implemented outside the crate*
+pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     IndexMut<usize, Output=usize> +
     Add<Self, Output=Self> +
     AddAssign + for<'x> AddAssign<&'x Self> +
@@ -46,13 +47,13 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// dimension.
     ///
     /// For the fixed size dimensions it is a fixed size array of the correct
-    /// size, which you pass by reference. For the `Vec` dimension it is
+    /// size, which you pass by reference. For the dynamic dimension it is
     /// a slice.
     ///
     /// - For `Ix1`: `[Si; 1]`
     /// - For `Ix2`: `[Si; 2]`
     /// - and so on..
-    /// - For `Vec<Ix>`: `[Si]`
+    /// - For `IxDyn`: `[Si]`
     ///
     /// The easiest way to create a `&SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
@@ -62,8 +63,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - For `Ix1`: `usize`,
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
-    /// - For `Vec<Ix>`: `Vec<usize>`,
+    /// - For `IxDyn`: `IxDyn`
     type Pattern: IntoDimension<Dim=Self>;
+    /// Next smaller dimension (if applicable)
+    type Smaller: Dimension;
     #[doc(hidden)]
     fn ndim(&self) -> usize;
 
@@ -109,7 +112,7 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         {
             let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
-            for rs in it.by_ref() {
+            while let Some(rs) = it.next() {
                 *rs = 1;
                 break;
             }
@@ -130,17 +133,23 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         {
             let mut it = strides.slice_mut().iter_mut();
             // Set first element to 1
-            for rs in it.by_ref() {
+            while let Some(rs) = it.next() {
                 *rs = 1;
                 break;
             }
             let mut cum_prod = 1;
-            for (rs, dim) in it.zip(self.slice().iter()) {
+            for (rs, dim) in it.zip(self.slice()) {
                 cum_prod *= *dim;
                 *rs = cum_prod;
             }
         }
         strides
+    }
+
+    #[doc(hidden)]
+    // Return an index of same dimensionality
+    fn zero_index(&self) -> Self {
+        Self::default()
     }
 
     #[doc(hidden)]
@@ -217,7 +226,9 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     fn do_slices(dim: &mut Self, strides: &mut Self, slices: &Self::SliceArg) -> isize {
         let slices = slices.as_ref();
         let mut offset = 0;
-        assert!(slices.len() == dim.slice().len());
+        ndassert!(slices.len() == dim.slice().len(),
+                  "SliceArg {:?}'s length does not match dimension {:?}",
+                  slices, dim);
         for (dr, sr, &slc) in zipsl_mut(dim.slice_mut(), strides.slice_mut()).zip_cons(slices)
         {
             let m = *dr;
@@ -229,8 +240,14 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             let mut e1 = abs_index(mi, e1);
             if e1 < b1 { e1 = b1; }
 
-            assert!(b1 <= m);
-            assert!(e1 <= m);
+            ndassert!(b1 <= m,
+                      concat!("Slice begin {} is past end of axis of length {}",
+                              " (for SliceArg {:?})"),
+                      b1, m, slices);
+            ndassert!(e1 <= m,
+                      concat!("Slice end {} is past end of axis of length {}",
+                              " (for SliceArg {:?})"),
+                      e1, m, slices);
 
             let m = e1 - b1;
             // stride
@@ -239,7 +256,10 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             // Data pointer offset
             offset += stride_offset(b1, *sr);
             // Adjust for strides
-            assert!(s1 != 0);
+            ndassert!(s1 != 0,
+                      concat!("Slice stride must not be none", 
+                              "(for SliceArg {:?})"),
+                      slices);
             // How to implement negative strides:
             //
             // Increase start pointer by
@@ -330,6 +350,11 @@ pub unsafe trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             .max_by_key(|ax| ax.stride().abs())
             .map_or(Axis(0), |ax| ax.axis())
     }
+
+    #[doc(hidden)]
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
+
+    private_decl!{}
 }
 
 // utility functions
@@ -347,9 +372,10 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 // Dimension impls
 
 
-unsafe impl Dimension for Dim<[Ix; 0]> {
+impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
     type Pattern = ();
+    type Smaller = Self;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize { 0 }
@@ -365,12 +391,19 @@ unsafe impl Dimension for Dim<[Ix; 0]> {
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
     }
+    #[inline]
+    fn try_remove_axis(&self, _ignore: Axis) -> Self::Smaller {
+        *self
+    }
+
+    private_impl!{}
 }
 
 
-unsafe impl Dimension for Dim<[Ix; 1]> {
+impl Dimension for Dim<[Ix; 1]> {
     type SliceArg = [Si; 1];
     type Pattern = Ix;
+    type Smaller = Ix0;
     #[inline]
     fn ndim(&self) -> usize { 1 }
     #[inline]
@@ -445,11 +478,17 @@ unsafe impl Dimension for Dim<[Ix; 1]> {
             None
         }
     }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
+        self.remove_axis(axis)
+    }
+    private_impl!{}
 }
 
-unsafe impl Dimension for Dim<[Ix; 2]> {
+impl Dimension for Dim<[Ix; 2]> {
     type SliceArg = [Si; 2];
     type Pattern = (Ix, Ix);
+    type Smaller = Ix1;
     #[inline]
     fn ndim(&self) -> usize { 2 }
     #[inline]
@@ -530,30 +569,6 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
     }
     
     #[inline]
-    fn is_contiguous(dim: &Self, strides: &Self) -> bool {
-        let defaults = dim.default_strides();
-        if strides.equal(&defaults) {
-            return true;
-        }
-        
-        if dim.ndim() == 1 { return false; }
-        let order = strides._fastest_varying_stride_order();
-        let strides = strides.slice();
-
-        // FIXME: Negative strides
-        let dim_slice = dim.slice();
-        let mut cstride = 1;
-        for &i in order.slice() {
-            // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && strides[i] != cstride {
-                return false;
-            }
-            cstride *= dim_slice[i];
-        }
-        true
-    }
-
-    #[inline]
     fn first_index(&self) -> Option<Self> {
         let m = get!(self, 0);
         let n = get!(self, 1);
@@ -590,11 +605,17 @@ unsafe impl Dimension for Dim<[Ix; 2]> {
             None
         }
     }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
+        self.remove_axis(axis)
+    }
+    private_impl!{}
 }
 
-unsafe impl Dimension for Dim<[Ix; 3]> {
+impl Dimension for Dim<[Ix; 3]> {
     type SliceArg = [Si; 3];
     type Pattern = (Ix, Ix, Ix);
+    type Smaller = Ix2;
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
@@ -649,6 +670,26 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
         stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u)
     }
 
+    /// Return stride offset for this dimension and index.
+    #[inline]
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
+    {
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        let l = get!(self, 2);
+        let i = get!(index, 0);
+        let j = get!(index, 1);
+        let k = get!(index, 2);
+        let s = get!(strides, 0);
+        let t = get!(strides, 1);
+        let u = get!(strides, 2);
+        if i < m && j < n && k < l {
+            Some(stride_offset(i, s) + stride_offset(j, t) + stride_offset(k, u))
+        } else {
+            None
+        }
+    }
+
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut stride = *self;
@@ -670,13 +711,19 @@ unsafe impl Dimension for Dim<[Ix; 3]> {
         }
         order
     }
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
+        self.remove_axis(axis)
+    }
+    private_impl!{}
 }
 
 macro_rules! large_dim {
     ($n:expr, $name:ident, $($ix:ident),+) => (
-        unsafe impl Dimension for Dim<[Ix; $n]> {
+        impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = ($($ix,)*);
+            type Smaller = Dim<[Ix; $n - 1]>;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -687,6 +734,11 @@ macro_rules! large_dim {
             fn slice(&self) -> &[Ix] { self.ix() }
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+            #[inline]
+            fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
+                self.remove_axis(axis)
+            }
+            private_impl!{}
         }
     )
 }
@@ -695,32 +747,56 @@ large_dim!(4, Ix4, Ix, Ix, Ix, Ix);
 large_dim!(5, Ix5, Ix, Ix, Ix, Ix, Ix);
 large_dim!(6, Ix6, Ix, Ix, Ix, Ix, Ix, Ix);
 
-/// Vec<Ix> is a "dynamic" index, pretty hard to use when indexing,
+/// IxDyn is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
-unsafe impl Dimension for IxDyn
+impl Dimension for IxDyn
 {
     type SliceArg = [Si];
     type Pattern = Self;
+    type Smaller = Self;
+    #[inline]
     fn ndim(&self) -> usize { self.ix().len() }
+    #[inline]
     fn slice(&self) -> &[Ix] { self.ix() }
+    #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self
     }
+
+    fn zero_index(&self) -> Self {
+        const ZEROS: &'static [usize] = &[0; 4];
+        let n = self.ndim();
+        if n <= ZEROS.len() {
+            Dim(&ZEROS[..n])
+        } else {
+            Dim(vec![0; n])
+        }
+    }
+
+    #[inline]
+    fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
+        if self.ndim() > 0 {
+            self.remove_axis(axis)
+        } else {
+            self.clone()
+        }
+    }
+    private_impl!{}
 }
 
-impl<J> Index<J> for Dim<Vec<usize>>
-    where Vec<usize>: Index<J>,
+impl<J> Index<J> for Dim<IxDynImpl>
+    where IxDynImpl: Index<J>,
 {
-    type Output = <Vec<usize> as Index<J>>::Output;
+    type Output = <IxDynImpl as Index<J>>::Output;
     fn index(&self, index: J) -> &Self::Output {
         &self.ix()[index]
     }
 }
 
-impl<J> IndexMut<J> for Dim<Vec<usize>>
-    where Vec<usize>: IndexMut<J>,
+impl<J> IndexMut<J> for Dim<IxDynImpl>
+    where IxDynImpl: IndexMut<J>,
 {
     fn index_mut(&mut self, index: J) -> &mut Self::Output {
         &mut self.ixm()[index]

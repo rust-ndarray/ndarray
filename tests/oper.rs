@@ -5,6 +5,8 @@ use ndarray::prelude::*;
 use ndarray::{rcarr1, rcarr2};
 use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
+use ndarray::Si;
+use ndarray::{Ix, Ixs};
 
 use std::fmt;
 use num_traits::Float;
@@ -458,6 +460,88 @@ fn scaled_add() {
     assert_eq!(c, d);
 
 }
+
+#[test]
+fn scaled_add_2() {
+    let beta = -2.3;
+    let sizes = vec![(4, 4, 1, 4),
+                     (8, 8, 1, 8),
+                     (17, 15, 17, 15),
+                     (4, 17, 4, 17),
+                     (17, 3, 1, 3),
+                     (19, 18, 19, 18),
+                     (16, 17, 16, 17),
+                     (15, 16, 15, 16),
+                     (67, 63, 1, 63),
+        ];
+    // test different strides
+    for &s1 in &[1, 2, -1, -2] {
+        for &s2 in &[1, 2, -1, -2] {
+            for &(m, k, n, q) in &sizes {
+                let mut a = range_mat64(m, k);
+                let mut answer = a.clone();
+                let c = range_mat64(n, q);
+
+                {
+                    let mut av = a.slice_mut(s![..;s1, ..;s2]);
+                    let c = c.slice(s![..;s1, ..;s2]);
+
+                    let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
+                    answerv += &(beta * &c);
+                    av.scaled_add(beta, &c);
+                }
+                assert_close(a.view(), answer.view());
+            }
+        }
+    }
+}
+
+#[test]
+fn scaled_add_3() {
+    let beta = -2.3;
+    let sizes = vec![(4, 4, 1, 4),
+                     (8, 8, 1, 8),
+                     (17, 15, 17, 15),
+                     (4, 17, 4, 17),
+                     (17, 3, 1, 3),
+                     (19, 18, 19, 18),
+                     (16, 17, 16, 17),
+                     (15, 16, 15, 16),
+                     (67, 63, 1, 63),
+        ];
+    // test different strides
+    for &s1 in &[1, 2, -1, -2] {
+        for &s2 in &[1, 2, -1, -2] {
+            for &(m, k, n, q) in &sizes {
+                let mut a = range_mat64(m, k);
+                let mut answer = a.clone();
+                let cdim = if n == 1 {
+                    vec![q]
+                } else {
+                    vec![n, q]
+                };
+                let cslice = if n == 1 {
+                    vec![Si(0, None, s2)]
+                } else {
+                    vec![Si(0, None, s1), Si(0, None, s2)]
+                };
+
+                let c = range_mat64(n, q).into_shape(cdim).unwrap();
+
+                {
+                    let mut av = a.slice_mut(s![..;s1, ..;s2]);
+                    let c = c.slice(&cslice);
+
+                    let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
+                    answerv += &(beta * &c);
+                    av.scaled_add(beta, &c);
+                }
+                assert_close(a.view(), answer.view());
+            }
+        }
+    }
+}
+
 
 #[test]
 fn gen_mat_mul() {

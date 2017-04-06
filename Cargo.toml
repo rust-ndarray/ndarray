@@ -1,9 +1,11 @@
 [package]
 
 name = "ndarray"
-version = "0.8.0"
+version = "0.9.0-alpha.1"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
+
+readme = "README.rst"
 
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "https://bluss.github.io/rust-ndarray/"
@@ -29,7 +31,7 @@ version = "0.1.32"
 default-features = false
 
 [dependencies.itertools]
-version = "0.5.0"
+version = "0.6.0"
 
 [dependencies.rustc-serialize]
 version = "0.3.20"
@@ -44,6 +46,9 @@ matrixmultiply = { version = "0.1.13" }
 version = "0.9"
 optional = true
 
+[dev-dependencies]
+defmac = "0.1"
+
 [features]
 blas = ["blas-sys"]
 
@@ -57,3 +62,6 @@ docs = ["rustc-serialize", "serde"]
 [profile.release]
 [profile.bench]
 debug = true
+
+[package.metadata.release]
+no-dev-version = true

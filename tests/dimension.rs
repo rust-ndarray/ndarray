@@ -1,4 +1,6 @@
 extern crate ndarray;
+#[macro_use]
+extern crate defmac;
 
 use ndarray::{
     RcArray,
@@ -8,6 +10,7 @@ use ndarray::{
     Axis,
     Dimension,
     Dim,
+    IntoDimension,
 };
 
 #[test]
@@ -17,7 +20,7 @@ fn remove_axis()
     assert_eq!(Dim([1, 2]).remove_axis(Axis(0)), Dim([2]));
     assert_eq!(Dim([4, 5, 6]).remove_axis(Axis(1)), Dim([4, 6]));
 
-    assert_eq!(Dim(vec![1,2]).remove_axis(Axis(0)), Dim(vec![2]));
+    assert_eq!(Dim(vec![1, 2]).remove_axis(Axis(0)), Dim(vec![2]));
     assert_eq!(Dim(vec![4, 5, 6]).remove_axis(Axis(1)), Dim(vec![4, 6]));
 
     let a = RcArray::<f32, _>::zeros((4,5));
@@ -33,13 +36,32 @@ fn dyn_dimension()
     let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape(vec![2, 2]).unwrap();
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
     assert_eq!(a[&[0, 0][..]], 1.);
-    assert_eq!(a[vec![0, 0]], 1.);
+    assert_eq!(a[[0, 0]], 1.);
 
     let mut dim = vec![1; 1024];
     dim[16] = 4;
     dim[17] = 3;
     let z = Array::<f32, _>::zeros(dim.clone());
     assert_eq!(z.shape(), &dim[..]);
+}
+
+#[test]
+fn dyn_remove() {
+    let mut v = vec![1, 2, 3, 4, 5, 6, 7];
+    let mut dim = Dim(v.clone());
+    defmac!(test_remove index => {
+        dim = dim.remove_axis(Axis(index));
+        v.remove(index);
+        assert_eq!(dim.slice(), &v[..]);
+    });
+
+    test_remove!(1);
+    test_remove!(2);
+    test_remove!(3);
+    test_remove!(0);
+    test_remove!(2);
+    test_remove!(0);
+    test_remove!(0);
 }
 
 #[test]
@@ -171,4 +193,39 @@ fn test_array_view() {
     test_dim(&Dim([1, 2, 4]));
     test_dim(&Dim(vec![1, 1, 2, 3]));
     test_dim(&Dim(7));
+}
+
+#[test]
+fn test_all_ndindex() {
+macro_rules! ndindex {
+    ($($i:expr),*) => {
+        for &rev in &[false, true] {
+            // rev is for C / F order
+            let size = $($i *)* 1;
+            let mut a = Array::linspace(0., (size - 1) as f64, size);
+            if rev {
+                a = a.reversed_axes();
+            }
+            for (i, &elt) in a.indexed_iter() {
+                let dim = i.into_dimension();
+                assert_eq!(elt, a[i]);
+                assert_eq!(elt, a[dim]);
+            }
+            let dim = a.shape().to_vec();
+            let b = a.broadcast(dim).unwrap();
+            for (i, &elt) in b.indexed_iter() {
+                let dim = i.into_dimension();
+                assert_eq!(elt, b[dim.slice()]);
+                assert_eq!(elt, b[&dim]);
+                assert_eq!(elt, b[dim]);
+            }
+        }
+    }
+}
+    ndindex!(10);
+    ndindex!(10, 4);
+    ndindex!(10, 4, 3);
+    ndindex!(10, 4, 3, 2);
+    ndindex!(10, 4, 3, 2, 2);
+    ndindex!(10, 4, 3, 2, 2, 2);
 }

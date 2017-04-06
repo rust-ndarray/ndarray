@@ -11,7 +11,7 @@ use ndarray::{
     arr3,
 };
 use ndarray::indices;
-use itertools::free::enumerate;
+use itertools::{enumerate, zip};
 
 #[test]
 fn test_matmul_rcarray()
@@ -80,6 +80,14 @@ fn slice_oob()
     let _vi = a.slice(&[Si(0, Some(10), 1), S]);
 }
 
+#[should_panic]
+#[test]
+fn slice_wrong_dim()
+{
+    let a = RcArray::<i32, _>::zeros(vec![3, 4, 5]);
+    let _vi = a.slice(s![.., ..]);
+}
+
 #[test]
 fn test_index()
 {
@@ -88,13 +96,13 @@ fn test_index()
         *elt = i;
     }
 
-    for ((i, j), a) in indices((2, 3)).zip(A.iter()) {
+    for ((i, j), a) in zip(indices((2, 3)), &A) {
         assert_eq!(*a, A[[i, j]]);
     }
 
     let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
-    for ((i, j), x) in indices((1, 2)).zip(it.by_ref()) {
+    for ((i, j), x) in zip(indices((1, 2)), &mut it) {
         assert_eq!(*x, vi[[i, j]]);
     }
     assert!(it.next().is_none());
@@ -223,6 +231,13 @@ fn test_sub()
     assert_eq!(n, s2);
     let m = RcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.subview(Axis(1), 1));
+}
+
+#[should_panic]
+#[test]
+fn test_sub_oob_1() {
+    let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
+    mat.subview(Axis(0), 2);
 }
 
 
@@ -826,30 +841,6 @@ fn scalar_ops() {
 }
 
 #[test]
-fn deny_wraparound_from_vec() {
-    let five = vec![0; 5];
-    let five_large = Array::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
-    assert!(five_large.is_err());
-    let six = Array::from_shape_vec(6, five.clone());
-    assert!(six.is_err());
-}
-
-#[should_panic]
-#[test]
-fn deny_wraparound_zeros() {
-    //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
-    let _five_large = Array::<f32, _>::zeros((3, 7, 29, 36760123, 823996703));
-}
-
-#[should_panic]
-#[test]
-fn deny_wraparound_reshape() {
-    //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
-    let five = Array::<f32, _>::zeros(5);
-    let _five_large = five.into_shape((3, 7, 29, 36760123, 823996703)).unwrap();
-}
-
-#[test]
 fn split_at() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
 
@@ -934,7 +925,7 @@ fn test_f_order() {
     assert_eq!(c.strides(), &[3, 1]);
     assert_eq!(f.strides(), &[1, 2]);
     itertools::assert_equal(f.iter(), c.iter());
-    itertools::assert_equal(f.inner_iter(), c.inner_iter());
+    itertools::assert_equal(f.genrows(), c.genrows());
     itertools::assert_equal(f.outer_iter(), c.outer_iter());
     itertools::assert_equal(f.axis_iter(Axis(0)), c.axis_iter(Axis(0)));
     itertools::assert_equal(f.axis_iter(Axis(1)), c.axis_iter(Axis(1)));
@@ -1080,6 +1071,14 @@ fn test_default() {
     let b = <Array<Foo, Ix0> as Default>::default();
     assert_eq!(b, arr0(Foo::default()));
 }
+
+#[test]
+fn test_default_ixdyn() {
+    let a = <Array<f32, IxDyn> as Default>::default();
+    let b = <Array<f32, _>>::zeros(IxDyn(&[0]));
+    assert_eq!(a, b);
+}
+
 
 #[test]
 fn test_map_axis() {

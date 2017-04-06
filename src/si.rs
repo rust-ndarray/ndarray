@@ -6,13 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
+use std::fmt;
 use super::Ixs;
 
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix
 // [:,0] -- first column of matrix
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash)]
 /// A slice, a description of a range of an array axis.
 ///
 /// Fields are `begin`, `end` and `stride`, where
@@ -39,6 +40,25 @@ use super::Ixs;
 /// The constant [`S`] is a shorthand for the full range of an axis.
 /// [`S`]: constant.S.html
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
+
+impl fmt::Debug for Si {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Si(0, _, _) => { }
+            Si(i, _, _) => { try!(write!(f, "{}", i)); }
+        }
+        try!(write!(f, ".."));
+        match *self {
+            Si(_, None, _) => { }
+            Si(_, Some(i), _) => { try!(write!(f, "{}", i)); }
+        }
+        match *self {
+            Si(_, _, 1) => { }
+            Si(_, _, s) => { try!(write!(f, ";{}", s)); }
+        }
+        Ok(())
+    }
+}
 
 impl From<Range<Ixs>> for Si {
     #[inline]

@@ -15,18 +15,15 @@ use super::DimPrivate;
 /// `RemoveAxis` defines a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
 pub trait RemoveAxis : Dimension {
-    type Smaller: Dimension;
     fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
 impl RemoveAxis for Dim<[Ix; 1]> {
-    type Smaller = Ix0;
     #[inline]
     fn remove_axis(&self, _: Axis) -> Ix0 { Ix0() }
 }
 
 impl RemoveAxis for Dim<[Ix; 2]> {
-    type Smaller = Ix1;
     #[inline]
     fn remove_axis(&self, axis: Axis) -> Ix1 {
         let axis = axis.index();
@@ -40,7 +37,6 @@ macro_rules! impl_remove_axis_array(
     $(
         impl RemoveAxis for Dim<[Ix; $n]>
         {
-            type Smaller = Dim<[Ix; $n - 1]>;
             #[inline]
             fn remove_axis(&self, axis: Axis) -> Self::Smaller {
                 let mut tup = Dim([0; $n - 1]);
@@ -66,12 +62,4 @@ macro_rules! impl_remove_axis_array(
 impl_remove_axis_array!(3, 4, 5, 6);
 
 
-impl RemoveAxis for Dim<Vec<Ix>> {
-    type Smaller = Self;
-    fn remove_axis(&self, axis: Axis) -> Self {
-        let mut res = self.clone();
-        res.ixm().remove(axis.index());
-        res
-    }
-}
 

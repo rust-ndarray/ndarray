@@ -19,6 +19,7 @@ use StrideShape;
 /// Methods for read-only array views `ArrayView<'a, A, D>`
 ///
 /// Note that array views implement traits like [`From`][f] and `IntoIterator` too.
+///
 /// [f]: #method.from
 impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     where D: Dimension,
@@ -75,7 +76,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
         ArrayView::new_(ptr, dim, strides)
     }
 
-    /// Split the array along `axis` and return one view strictly before the
+    /// Split the array view along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
@@ -190,7 +191,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         ArrayViewMut::new_(ptr, dim, strides)
     }
 
-    /// Split the array along `axis` and return one mutable view strictly
+    /// Split the array view along `axis` and return one mutable view strictly
     /// before the split and one mutable view after the split.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
@@ -227,15 +228,8 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
-    pub fn into_slice(self) -> Option<&'a mut [A]>
-    {
-        if self.is_standard_layout() {
-            unsafe {
-                Some(slice::from_raw_parts_mut(self.ptr, self.len()))
-            }
-        } else {
-            None
-        }
+    pub fn into_slice(self) -> Option<&'a mut [A]> {
+        self.into_slice_().ok()
     }
 
 }

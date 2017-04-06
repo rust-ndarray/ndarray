@@ -4,7 +4,7 @@ sudo: required
 dist: trusty
 matrix:
   include:
-    - rust: 1.13.0
+    - rust: 1.15.0
       env:
        - FEATURES='test'
     - rust: stable
@@ -27,9 +27,10 @@ addons:
 script:
   - |
       cargo build --verbose --no-default-features &&
+      cargo test --verbose --no-default-features &&
+      cargo test --release --verbose --no-default-features &&
       cargo build --verbose --features "$FEATURES" &&
       cargo test --verbose --features "$FEATURES" &&
-      cargo test --release --verbose --features "" &&
       CARGO_TARGET_DIR=target/ cargo test --manifest-path=serialization-tests/Cargo.toml --verbose &&
       CARGO_TARGET_DIR=target/ cargo test --manifest-path=numeric-tests/Cargo.toml --verbose &&
       CARGO_TARGET_DIR=target/ cargo test --manifest-path=parallel/Cargo.toml --verbose &&

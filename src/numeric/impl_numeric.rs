@@ -15,6 +15,8 @@ use numeric_util;
 
 use {
     LinalgScalar,
+    FoldWhile,
+    Zip,
 };
 
 /// Numerical methods for arrays.
@@ -38,7 +40,7 @@ impl<A, S, D> ArrayBase<S, D>
             return numeric_util::unrolled_sum(slc);
         }
         let mut sum = A::zero();
-        for row in self.inner_iter() {
+        for row in self.inner_rows() {
             if let Some(slc) = row.as_slice() {
                 sum = sum + numeric_util::unrolled_sum(slc);
             } else {
@@ -64,7 +66,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn sum(&self, axis: Axis) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn sum(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
@@ -100,7 +102,7 @@ impl<A, S, D> ArrayBase<S, D>
     ///     a.mean(Axis(1)) == aview1(&[1.5, 3.5])
     /// );
     /// ```
-    pub fn mean(&self, axis: Axis) -> Array<A, <D as RemoveAxis>::Smaller>
+    pub fn mean(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
     {
@@ -124,8 +126,15 @@ impl<A, S, D> ArrayBase<S, D>
               S2: Data<Elem=A>,
               E: Dimension,
     {
-        let rhs_broadcast = rhs.broadcast_unwrap(self.raw_dim());
-        self.iter().zip(rhs_broadcast.iter()).all(|(x, y)| (*x - *y).abs() <= tol)
+        !Zip::from(self)
+            .and(rhs.broadcast_unwrap(self.raw_dim()))
+            .fold_while((), |_, x, y| {
+                if (*x - *y).abs() <= tol {
+                    FoldWhile::Continue(())
+                } else {
+                    FoldWhile::Done(())
+                }
+            }).is_done()
     }
 }
 

@@ -10,6 +10,7 @@ use super::{
     ArrayBase,
     Data,
     Dimension,
+    NdProducer,
 };
 use dimension::IntoDimension;
 
@@ -54,9 +55,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
                     try!(write!(f, "]"));
                 }
                 try!(write!(f, ","));
-                if !f.alternate() {
-                    try!(write!(f, "\n"));
-                }
+                try!(write!(f, "\n"));
                 for _ in 0..ndim - n {
                     try!(write!(f, " "));
                 }
@@ -88,8 +87,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
 /// Format the array using `Display` and apply the formatting parameters used
 /// to each element.
 ///
-/// The array is shown in multiline style, unless the alternate form 
-/// is used, `{:#}`.
+/// The array is shown in multiline style.
 impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
@@ -101,15 +99,15 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
 /// Format the array using `Debug` and apply the formatting parameters used
 /// to each element.
 ///
-/// The array is shown in multiline style, unless the alternate form 
-/// is used, `{:#?}`.
+/// The array is shown in multiline style.
 impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Add extra information for Debug
         try!(format_array(self, f, <_>::fmt));
-        try!(write!(f, " shape={:?}, strides={:?}", self.shape(), self.strides()));
+        try!(write!(f, " shape={:?}, strides={:?}, layout={:?}",
+                    self.shape(), self.strides(), layout=self.view().layout()));
         Ok(())
     }
 }
@@ -117,8 +115,7 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 /// Format the array using `LowerExp` and apply the formatting parameters used
 /// to each element.
 ///
-/// The array is shown in multiline style, unless the alternate form
-/// is used, `{:#e}`.
+/// The array is shown in multiline style.
 impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
@@ -130,8 +127,7 @@ impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
 /// Format the array using `UpperExp` and apply the formatting parameters used
 /// to each element.
 ///
-/// The array is shown in multiline style, unless the alternate form
-/// is used, `{:#E}`.
+/// The array is shown in multiline style.
 impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
@@ -142,8 +138,7 @@ impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
 /// Format the array using `LowerHex` and apply the formatting parameters used
 /// to each element.
 ///
-/// The array is shown in multiline style, unless the alternate form
-/// is used, `{:#x}`.
+/// The array is shown in multiline style.
 impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {

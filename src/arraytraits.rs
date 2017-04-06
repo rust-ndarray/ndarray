@@ -15,13 +15,16 @@ use std::ops::{
 };
 
 use imp_prelude::*;
-use {
+use iter::{
     Iter,
     IterMut,
+};
+use {
     NdIndex,
 };
 
 use numeric_util;
+use {Zip, FoldWhile};
 
 #[cold]
 #[inline(never)]
@@ -102,7 +105,14 @@ impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
                 return numeric_util::unrolled_eq(self_s, rhs_s);
             }
         }
-        self.iter().zip(rhs.iter()).all(|(a, b)| a == b)
+        Zip::from(self)
+            .and(rhs)
+            .fold_while(true, |_, a, b|
+            if a != b {
+                FoldWhile::Done(false)
+            } else {
+                FoldWhile::Continue(true)
+            }).into_inner()
     }
 }
 
@@ -173,12 +183,13 @@ impl<'a, S, D> hash::Hash for ArrayBase<S, D>
           S: Data,
           S::Elem: hash::Hash
 {
+    // Note: elements are hashed in the logical order
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.shape().hash(state);
         if let Some(self_s) = self.as_slice() {
             hash::Hash::hash_slice(self_s, state);
         } else {
-            for row in self.inner_iter() {
+            for row in self.inner_rows() {
                 if let Some(row_s) = row.as_slice() {
                     hash::Hash::hash_slice(row_s, state);
                 } else {
@@ -221,7 +232,7 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayBase<ViewRepr<&'a A>, Ix1>
     fn from(slice: &'a Slice) -> Self {
         let xs = slice.as_ref();
         unsafe {
-            Self::new_(xs.as_ptr(), Ix1(xs.len()), Ix1(1))
+            Self::from_shape_ptr(xs.len(), xs.as_ptr())
         }
     }
 }
@@ -247,7 +258,7 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayBase<ViewRepr<&'a mut A>
     fn from(slice: &'a mut Slice) -> Self {
         let xs = slice.as_mut();
         unsafe {
-            Self::new_(xs.as_mut_ptr(), Ix1(xs.len()), Ix1(1))
+            Self::from_shape_ptr(xs.len(), xs.as_mut_ptr())
         }
     }
 }
@@ -295,9 +306,11 @@ impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
 ///
 /// The array is created with dimension `D::default()`, which results
 /// in for example dimensions `0` and `(0, 0)` with zero elements for the
-/// one-dimensional and two-dimensional cases respectively, while for example
-/// the zero dimensional case uses `()` (or `Vec::new()`) which
-/// results in an array with one element.
+/// one-dimensional and two-dimensional cases respectively.
+///
+/// The default dimension for `IxDyn` is `IxDyn(&[0])` (array has zero
+/// elements). And the default for the dimension `()` is `()` (array has
+/// one element).
 ///
 /// Since arrays cannot grow, the intention is to use the default value as
 /// placeholder.

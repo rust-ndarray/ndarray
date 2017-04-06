@@ -2,7 +2,7 @@ ndarray
 =========
 
 The ``ndarray`` crate provides an N-dimensional container for general elements
-and for numerics.  Requires Rust 1.13.
+and for numerics.
 
 Please read the API documentation here: `(0.8)`__, `(0.7)`__, `(0.6)`__,
 `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
@@ -74,12 +74,80 @@ your `Cargo.toml`.
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.8"
+    ndarray = "0.8.4"
 
 Recent Changes (ndarray)
 ------------------------
 
-- 0.8
+- 0.9.0-alpha.1
+
+  - Add ``Zip::indexed``
+  - New methods ``genrows/_mut, gencolumns/_mut, lanes/_mut`` that
+    return iterable producers (producer means ``Zip`` compatibile).
+  - ``Zip::apply`` and ``fold_while`` now take ``self`` as the first argument
+  - ``indices/_of`` now returns an iterable producers (not iterator)
+  - No allocation for short dynamic dimensions
+  - Remove ``Ix, Ixs`` from the prelude
+  - Remove deprecated ``Axis::axis`` method (use ``.index()``)
+  - Rename ``.whole_chunks`` to ``.exact_chunks``.
+  - Remove ``.inner_iter`` in favour of the new ``.genrows()`` method.
+  - Iterator and similar structs are now scoped under ``ndarray::iter``
+  - Internal changes. ``NdProducer`` generalized. ``Dimension`` gets
+    the ``Smaller`` type parameter. Internal traits have the private marker now.
+  - ``IntoNdProducer`` now has the ``Item`` associated type
+  - Owned array storage types are now encapsulated in newtypes
+  - ``FoldWhile`` has the method ``is_done``.
+  - Require Rust 1.15
+
+- 0.8.4
+
+  - Use ``Zip`` in ``.all_close()`` (performance improvement)
+  - Use ``#[inline]`` on a function used for higher dimensional checked
+    indexing (performance improvement for arrays of ndim >= 3)
+  - ``.subview()`` has a more elaborate panic message
+
+- 0.8.3
+
+  - Fix a bug in ``Zip`` / ``NdProducer`` if an array of at least 3 dimensions
+    was contig but not c- nor f-contig.
+  - ``WholeChunksIter/Mut`` now impl ``Send/Sync`` as appropriate
+  - Misc cleanup and using dimension-reducing versions of inner_iter
+    internally. Remove a special case in ``zip_mut_with`` that only made it
+    slower (1D not-contig arrays).
+
+- 0.8.2
+
+  - Add more documentation and an example for dynamic dimensions: see
+    `IxDyn`__. ``IxDyn`` will have a representation change next incompatible
+    version. Use it as a type alias for best forward compatibility.
+  - Add iterable and producer ``.whole_chunks_mut(size)``.
+  - Fix a bug in ``whole_chunks``: it didn't check the dimensionality of the
+    requested chunk size properly (an ``IxDyn``-only bug).
+  - Improve performance of ``zip_mut_with`` (and thus all binary operators) for
+    block slices of row major arrays.
+  - ``AxisChunksIter`` creation sped up and it implements ``Clone``.
+  - Dimension mismatch in ``Zip`` has a better panic message.
+
+  __ https://bluss.github.io/rust-ndarray/master/ndarray/type.IxDyn.html
+
+- 0.8.1
+
+  - Add ``Zip`` and macro ``azip!()`` which implement lock step function
+    application across elements from one up to six arrays (or in general
+    producers)
+
+    + Apart from array views, axis iterators and the whole chunks iterable are
+      also producers
+
+  - Add constructor ``Array::uninitialized``
+  - Add iterable and producer ``.whole_chunks(size)``
+  - Implement a prettier ``Debug`` for ``Si``.
+  - Fix ``Array::default`` so that it panics as documented if the size of the
+    array would wrap around integer type limits.
+  - Output more verbose panics for errors when slicing arrays (only in debug
+    mode).
+
+- 0.8.0
 
   - Update serde dependency to 0.9
   - Remove deprecated type alias ``OwnedArray`` (use ``Array``)

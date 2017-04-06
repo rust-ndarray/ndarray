@@ -15,7 +15,7 @@ pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
 
 /// An iterator over the length and stride of each axis of an array.
 ///
-/// See [`.axes()`](struct.ArrayBase.html#method.axes) for more information.
+/// See [`.axes()`](../struct.ArrayBase.html#method.axes) for more information.
 ///
 /// Iterator element type is `AxisDescription`.
 ///

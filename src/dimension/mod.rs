@@ -17,12 +17,14 @@ pub use self::dimension_trait::Dimension;
 pub use self::ndindex::NdIndex;
 pub use self::remove_axis::RemoveAxis;
 pub use self::axes::{axes_of, Axes, AxisDescription};
+pub use self::dynindeximpl::IxDynImpl;
 
 #[macro_use] mod macros;
 mod axis;
 mod conversion;
 pub mod dim;
 mod dimension_trait;
+mod dynindeximpl;
 mod ndindex;
 mod remove_axis;
 mod axes;
@@ -139,6 +141,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
 }
 
 /// Stride offset checked general version (slices)
+#[inline]
 pub fn stride_offset_checked(dim: &[Ix], strides: &[Ix], index: &[Ix]) -> Option<isize> {
     if index.len() != dim.len() {
         return None;
@@ -207,7 +210,10 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
                                axis: usize, index: Ix) {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
-    assert!(index < dim);
+    ndassert!(index < dim,
+              concat!("subview: Index {} must be less than axis length {} ",
+                      "for array with shape {:?}"),
+             index, dim, *dims);
     dims.slice_mut()[axis] = 1;
     let off = stride_offset(index, stride);
     unsafe {

@@ -11,7 +11,7 @@
 use std::ops::{Index, IndexMut};
 use libnum::Zero;
 
-use {Ix, Ix1, IxDyn, Dimension, Dim};
+use {Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
 use super::DimPrivate;
 
 /// $m: macro callback
@@ -38,7 +38,7 @@ macro_rules! index_item {
     ($m:ident $arg:tt 7) => ($m!($arg 0 1 2 3 4 5 6););
 }
 
-/// Convert a value into a dimension.
+/// Argument conversion a dimension.
 pub trait IntoDimension {
     type Dim: Dimension;
     fn into_dimension(self) -> Self::Dim;
@@ -56,10 +56,16 @@ impl<D> IntoDimension for D where D: Dimension {
     fn into_dimension(self) -> Self { self }
 }
 
-impl IntoDimension for Vec<usize> {
+impl IntoDimension for IxDynImpl {
     type Dim = IxDyn;
     #[inline(always)]
     fn into_dimension(self) -> Self::Dim { Dim::new(self) }
+}
+
+impl IntoDimension for Vec<Ix> {
+    type Dim = IxDyn;
+    #[inline(always)]
+    fn into_dimension(self) -> Self::Dim { Dim::new(IxDynImpl::from(self)) }
 }
 
 pub trait Convert {
@@ -100,6 +106,7 @@ macro_rules! tuple_to_array {
         $(
         impl Convert for [Ix; $n] {
             type To = index!(tuple_type [Ix] $n);
+            #[inline]
             fn convert(self) -> Self::To {
                 index!(tuple_expr [self] $n)
             }

@@ -170,7 +170,8 @@ impl<S, A, D> ArrayBase<S, D>
               Sh: ShapeBuilder<Dim=D>,
     {
         let shape = shape.into_shape();
-        let v = to_vec((0..shape.dim.size()).map(|_| A::default()));
+        let size = size_checked_unwrap!(shape.dim);
+        let v = to_vec((0..size).map(|_| A::default()));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
@@ -184,7 +185,7 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
-        let v = to_vec_mapped(indices(shape.dim.clone()), f);
+        let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
@@ -279,6 +280,63 @@ impl<S, A, D> ArrayBase<S, D>
             strides: strides,
             dim: dim
         }
+    }
+
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow usize.
+    ///
+    /// ### Safety
+    ///
+    /// Accessing uninitalized values is undefined behaviour. You must
+    /// overwrite *all* the elements in the array after it is created; for
+    /// example using the methods `.fill()` or `.assign()`.
+    ///
+    /// The contents of the array is indeterminate before initialization and it
+    /// is an error to perform operations that use the previous values. For
+    /// example it would not be legal to use `a += 1.;` on such an array.
+    ///
+    /// This constructor is limited to elements where `A: Copy` (no destructors)
+    /// to avoid users shooting themselves too hard in the foot; it is not
+    /// a problem to drop an array created with this method even before elements
+    /// are initialized. (Note that constructors `from_shape_vec` and
+    /// `from_shape_vec_unchecked` allow the user yet more control).
+    ///
+    /// ### Examples
+    ///
+    /// ```
+    /// #[macro_use(s)]
+    /// extern crate ndarray;
+    ///
+    /// use ndarray::Array2;
+    ///
+    /// // Example Task: Let's create a column shifted copy of a in b
+    ///
+    /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
+    ///     let mut b = unsafe { Array2::uninitialized(a.dim()) };
+    ///
+    ///     // two first columns in b are two last in a
+    ///     // rest of columns in b are the initial columns in a
+    ///     b.slice_mut(s![.., ..2]).assign(&a.slice(s![.., -2..]));
+    ///     b.slice_mut(s![.., 2..]).assign(&a.slice(s![.., ..-2]));
+    ///
+    ///     // `b` is safe to use with all operations at this point
+    ///     b
+    /// }
+    ///
+    /// # fn main() {
+    /// #   shift_by_two(&Array2::zeros((8, 8)));
+    /// # }
+    /// ```
+    pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
+        where A: Copy,
+              Sh: ShapeBuilder<Dim=D>,
+    {
+        let shape = shape.into_shape();
+        let size = size_checked_unwrap!(shape.dim);
+        let mut v = Vec::with_capacity(size);
+        v.set_len(size);
+        Self::from_shape_vec_unchecked(shape, v)
     }
 
 }

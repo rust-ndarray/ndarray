@@ -129,13 +129,13 @@ fn inner_iter() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.inner_iter(),
+    assert_equal(a.genrows(),
                  vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
                       aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
     let mut b = RcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
-    assert_equal(b.inner_iter(),
+    assert_equal(b.genrows(),
                  vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
                       aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
 }
@@ -143,14 +143,14 @@ fn inner_iter() {
 #[test]
 fn inner_iter_corner_cases() {
     let a0 = RcArray::zeros(());
-    assert_equal(a0.inner_iter(), vec![aview1(&[0])]);
+    assert_equal(a0.genrows(), vec![aview1(&[0])]);
 
     let a2 = RcArray::<i32, _>::zeros((0, 3));
-    assert_equal(a2.inner_iter(),
+    assert_equal(a2.genrows(),
                  vec![aview1(&[]); 0]);
 
     let a2 = RcArray::<i32, _>::zeros((3, 0));
-    assert_equal(a2.inner_iter(),
+    assert_equal(a2.genrows(),
                  vec![aview1(&[]); 3]);
 }
 
@@ -159,7 +159,7 @@ fn inner_iter_size_hint() {
     // Check that the size hint is correctly computed
     let a = RcArray::from_iter(0..24).reshape((2, 3, 4));
     let mut len = 6;
-    let mut it = a.inner_iter();
+    let mut it = a.genrows().into_iter();
     assert_eq!(it.len(), len);
     while len > 0 {
         it.next();
@@ -193,7 +193,7 @@ fn outer_iter() {
             found_rows.push(row);
         }
     }
-    assert_equal(a.inner_iter(), found_rows.clone());
+    assert_equal(a.genrows(), found_rows.clone());
 
     let mut found_rows_rev = Vec::new();
     for sub in b.outer_iter().rev() {
@@ -219,7 +219,7 @@ fn outer_iter() {
         }
     }
     println!("{:#?}", found_rows);
-    assert_equal(a.inner_iter(), found_rows);
+    assert_equal(a.genrows(), found_rows);
 }
 
 #[test]
@@ -272,7 +272,7 @@ fn outer_iter_mut() {
             found_rows.push(row);
         }
     }
-    assert_equal(a.inner_iter(), found_rows);
+    assert_equal(a.genrows(), found_rows);
 }
 
 #[test]
@@ -471,8 +471,8 @@ fn iterators_are_send_sync() {
     _send_sync(&a.iter_mut());
     _send_sync(&a.indexed_iter());
     _send_sync(&a.indexed_iter_mut());
-    _send_sync(&a.inner_iter());
-    _send_sync(&a.inner_iter_mut());
+    _send_sync(&a.genrows());
+    _send_sync(&a.genrows_mut());
     _send_sync(&a.outer_iter());
     _send_sync(&a.outer_iter_mut());
     _send_sync(&a.axis_iter(Axis(1)));
@@ -480,6 +480,10 @@ fn iterators_are_send_sync() {
     _send_sync(&a.axis_chunks_iter(Axis(1), 1));
     _send_sync(&a.axis_chunks_iter_mut(Axis(1), 1));
     _send_sync(&indices(a.dim()));
+    _send_sync(&a.exact_chunks((1, 1, 1)));
+    _send_sync(&a.exact_chunks_mut((1, 1, 1)));
+    _send_sync(&a.exact_chunks((1, 1, 1)).into_iter());
+    _send_sync(&a.exact_chunks_mut((1, 1, 1)).into_iter());
 }
 
 #[test]
