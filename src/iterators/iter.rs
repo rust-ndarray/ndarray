@@ -3,6 +3,9 @@
 //!
 //! This module collects all concrete producer, iterable and iterator
 //! implementation structs.
+//!
+//!
+//! See also [`NdProducer`](../trait.NdProducer.html).
 
 
 pub use indexes::{

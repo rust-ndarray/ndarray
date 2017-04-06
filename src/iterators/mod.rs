@@ -886,8 +886,7 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
     }
 }
 
-impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
-    where D: Dimension
+impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
@@ -934,8 +933,7 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
     private_impl!{}
 }
 
-impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
-    where D: Dimension
+impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;

@@ -290,8 +290,7 @@ impl<'a, A: 'a> IntoNdProducer for &'a mut Vec<A> {
     }
 }
 
-impl<'a, A, D> NdProducer for ArrayView<'a, A, D>
-    where D: Dimension,
+impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 {
     type Item = &'a A;
     type Dim = D;
@@ -343,9 +342,7 @@ impl<'a, A, D> NdProducer for ArrayView<'a, A, D>
     }
 }
 
-impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
-    where D: Dimension,
-{
+impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
     type Item = &'a mut A;
     type Dim = D;
     type Ptr = *mut A;

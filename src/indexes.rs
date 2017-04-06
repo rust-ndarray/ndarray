@@ -125,10 +125,7 @@ impl<D> Offset for IndexPtr<D>
     private_impl!{}
 }
 
-impl<D> NdProducer for Indices<D>
-    where D: Dimension,
-          D: Copy,
-{
+impl<D: Dimension + Copy> NdProducer for Indices<D> {
     type Item = D::Pattern;
     type Dim = D;
     type Ptr = IndexPtr<D>;
