@@ -185,7 +185,7 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
-        let v = to_vec_mapped(indices(shape.dim.clone()), f);
+        let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 

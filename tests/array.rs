@@ -11,7 +11,7 @@ use ndarray::{
     arr3,
 };
 use ndarray::indices;
-use itertools::free::enumerate;
+use itertools::{enumerate, zip};
 
 #[test]
 fn test_matmul_rcarray()
@@ -96,13 +96,13 @@ fn test_index()
         *elt = i;
     }
 
-    for ((i, j), a) in indices((2, 3)).zip(A.iter()) {
+    for ((i, j), a) in zip(indices((2, 3)), &A) {
         assert_eq!(*a, A[[i, j]]);
     }
 
     let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
     let mut it = vi.iter();
-    for ((i, j), x) in indices((1, 2)).zip(it.by_ref()) {
+    for ((i, j), x) in zip(indices((1, 2)), &mut it) {
         assert_eq!(*x, vi[[i, j]]);
     }
     assert!(it.next().is_none());

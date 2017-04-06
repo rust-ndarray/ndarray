@@ -22,25 +22,25 @@ pub struct IndicesIter<D> {
     index: Option<D>,
 }
 
-/// Create an iterator over the array shape `shape`.
+/// Create an iterable of the array shape `shape`.
 ///
 /// *Note:* prefer higher order methods, arithmetic operations and
 /// non-indexed iteration before using indices.
-pub fn indices<E>(shape: E) -> IndicesIter<E::Dim>
+pub fn indices<E>(shape: E) -> Indices<E::Dim>
     where E: IntoDimension,
 {
     let dim = shape.into_dimension();
-    IndicesIter {
-        index: dim.first_index(),
+    Indices {
+        start: dim.zero_index(),
         dim: dim,
     }
 }
 
-/// Create an iterator over the indices of the passed-in array.
+/// Return an iterable of the indices of the passed-in array.
 ///
 /// *Note:* prefer higher order methods, arithmetic operations and
 /// non-indexed iteration before using indices.
-pub fn indices_of<S, D>(array: &ArrayBase<S, D>) -> IndicesIter<D>
+pub fn indices_of<S, D>(array: &ArrayBase<S, D>) -> Indices<D>
     where S: Data, D: Dimension,
 {
     indices(array.dim())
