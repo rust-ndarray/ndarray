@@ -476,7 +476,7 @@ impl<P, D> Zip<(Indices<D>, P), D>
     /// The Zip will take the exact dimension of `p` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     ///
-    /// *Note:* Indexed zip has significant overhead.
+    /// *Note:* Indexed zip has overhead.
     pub fn indexed<IP>(p: IP) -> Self
         where IP: IntoNdProducer<Dim=D, Output=P, Item=P::Item>
     {
