@@ -545,11 +545,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         new_inners_mut(self.view_mut(), Axis(0))
     }
 
-    /// Return a producer and iterable that traverses over all lanes
+    /// Return a producer and iterable that traverses over all 1D lanes
     /// pointing in the direction of `axis`.
-    ///
-    /// For example, in a 2 × 2 × 3 array, the iterator element
-    /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
     ///
     /// Iterator element is `ArrayView1<A>` (1D array view); note that it is
     /// always 1D.
@@ -577,8 +574,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         new_inners(self.view(), axis)
     }
 
-    /// Return a producer and iterable that traverses over all axes but the
-    /// selected axis.
+    /// Return a producer and iterable that traverses over all 1D lanes
+    /// pointing in the direction of `axis`.
     ///
     /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
     pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
