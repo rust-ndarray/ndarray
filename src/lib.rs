@@ -135,7 +135,6 @@ mod free_functions;
 pub use free_functions::*;
 pub use iterators::iter;
 
-#[macro_use]
 mod si;
 mod layout;
 mod indexes;

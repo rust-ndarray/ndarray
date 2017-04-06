@@ -27,6 +27,7 @@ use iterators::{
     new_inners_mut,
     exact_chunks_of,
     exact_chunks_mut_of,
+    windows
 };
 use zip::Zip;
 
@@ -46,6 +47,7 @@ use iter::{
     AxisIterMut,
     ExactChunks,
     ExactChunksMut,
+    Windows
 };
 use stacking::stack;
 use PrivateNew;
@@ -710,6 +712,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where E: IntoDimension<Dim=D>,
     {
         exact_chunks_of(self.view(), chunk_size)
+    }
+
+    /// Return a windows iterator.
+    /// 
+    /// Will iterate over no elements if window size is larger
+    /// than the actual array size of any dimension.
+    /// 
+    /// **Panics** if any dimension of `window_size` is zero.
+    pub fn windows<E>(&self, window_size: E) -> Windows<A, D>
+        where E: IntoDimension<Dim=D>
+    {
+        windows(self.view(), window_size)
     }
 
     #[doc(hidden)]
