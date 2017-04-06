@@ -1,8 +1,10 @@
 
+#[macro_use(s)]
 extern crate ndarray;
 extern crate itertools;
 
 use ndarray::prelude::*;
+use ndarray::Zip;
 
 // Edge Cases for Windows iterator:
 // 
@@ -96,4 +98,28 @@ fn windows_iterator_3d() {
             arr3(&[ [[22, 23], [25, 26]], [[31, 32], [34, 35]] ]),
             arr3(&[ [[23, 24], [26, 27]], [[32, 33], [35, 36]] ]),
         ]);
+}
+
+#[test]
+fn test_window_zip() {
+    let a = Array::from_iter(0..64).into_shape((4, 4, 4)).unwrap();
+
+    for x in 1..4 {
+        for y in 1..4 {
+            for z in 1..4 {
+                Zip::indexed(a.windows((x, y, z)))
+                    .apply(|(i, j, k), window| {
+                        let x = x as isize;
+                        let y = y as isize;
+                        let z = z as isize;
+                        let i = i as isize;
+                        let j = j as isize;
+                        let k = k as isize;
+                        assert_eq!(window, a.slice(s![i .. i + x,
+                                                      j .. j + y,
+                                                      k .. k + z]));
+                    })
+            }
+        }
+    }
 }
