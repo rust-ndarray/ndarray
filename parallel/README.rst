@@ -47,10 +47,11 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
-- (Not Yet Released)
+- 0.3.0-alpha.1
 
-  - ParallelIterator for Zip
-  - Require next version of rayon
+  - ParallelIterator for Zip, including ``.par_apply``.
+  - ``.par_map_inplace`` and ``.par_mav_inplace`` for arrays
+  - Require ndarray 0.9 (when released) and rayon 0.7
 
 - 0.2.0
 
