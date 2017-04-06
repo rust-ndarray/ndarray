@@ -15,6 +15,7 @@ use Layout;
 
 use layout::{CORDER, FORDER};
 use layout::LayoutPriv;
+use indexes::{Indices, indices_new};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -96,7 +97,7 @@ impl<'a, A, D, E> Broadcast<E> for ArrayView<'a, A, D>
     private_impl!{}
 }
 
-trait Splittable : Sized {
+pub trait Splittable : Sized {
     fn split_at(self, Axis, Ix) -> (Self, Self);
 }
 
@@ -373,7 +374,6 @@ impl<'a, A, D> NdProducer for ArrayViewMut<'a, A, D>
 }
 
 
-
 /// Lock step function application across several arrays or other producers.
 ///
 /// Zip allows matching several arrays to each other elementwise and applying
@@ -445,6 +445,24 @@ impl<P, D> Zip<(P, ), D>
             layout: array.layout(),
             parts: (array, ),
         }
+    }
+}
+impl<P, D> Zip<(Indices<D>, P), D>
+    where D: Dimension + Copy,
+          P: NdProducer<Dim=D>,
+{
+    /// Create a new `Zip` with an index producer and the producer `p`.
+    ///
+    /// The Zip will take the exact dimension of `p` and all inputs
+    /// must have the same dimensions (or be broadcast to them).
+    ///
+    /// *Note:* Indexed zip has significant overhead.
+    pub fn indexed<IP>(p: IP) -> Self
+        where IP: IntoNdProducer<Dim=D, Output=P, Item=P::Item>
+    {
+        let array = p.into_producer();
+        let dim = array.raw_dim();
+        Zip::from(indices_new(dim)).and(array)
     }
 }
 
