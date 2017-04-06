@@ -96,6 +96,9 @@ impl<D> IntoIterator for Indices<D>
     }
 }
 
+/// Indices producer and iterable.
+///
+/// `Indices` is an `NdProducer` that produces the indices of an array shape.
 #[derive(Copy, Clone, Debug)]
 pub struct Indices<D>
     where D: Dimension
