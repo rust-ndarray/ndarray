@@ -140,12 +140,13 @@ mod dimension;
 mod free_functions;
 pub use free_functions::*;
 
+#[macro_use]
+mod si;
 mod indexes;
 mod iterators;
 mod linalg_traits;
 mod linspace;
 mod numeric_util;
-mod si;
 mod error;
 mod shape_builder;
 mod stacking;
