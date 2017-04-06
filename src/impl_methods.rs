@@ -461,48 +461,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return a producer and iterable that traverses over all lanes
-    /// pointing in the direction of `axis`.
-    ///
-    /// For example, in a 2 × 2 × 3 array, the iterator element
-    /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
-    ///
-    /// Iterator element is `ArrayView1<A>` (1D array view); note that it is
-    /// always 1D.
-    ///
-    /// ```
-    /// use ndarray::{arr3, aview1, Axis};
-    ///
-    /// let a = arr3(&[[[ 0,  1,  2],
-    ///                 [ 3,  4,  5]],
-    ///                [[ 6,  7,  8],
-    ///                 [ 9, 10, 11]]]);
-    ///
-    /// let inner0 = a.inners(Axis(0));
-    /// let inner1 = a.inners(Axis(1));
-    /// let inner2 = a.inners(Axis(2));
-    ///
-    /// // The first lane for axis 0 is [0, 6]
-    /// assert_eq!(inner0.into_iter().next().unwrap(), aview1(&[0, 6]));
-    /// // The first lane for axis 1 is [0, 3]
-    /// assert_eq!(inner1.into_iter().next().unwrap(), aview1(&[0, 3]));
-    /// // The first lane for axis 2 is [0, 1, 2]
-    /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
-    /// ```
-    pub fn inners(&self, axis: Axis) -> Inners<A, D::Smaller> {
-        new_inners(self.view(), axis)
-    }
-
-    /// Return a producer and iterable that traverses over all axes but the
-    /// selected axis.
-    ///
-    /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
-        where S: DataMut
-    {
-        new_inners_mut(self.view_mut(), axis)
-    }
-
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array. For a 2D array these are the regular rows.
     ///
@@ -586,6 +544,49 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         new_inners_mut(self.view_mut(), Axis(0))
     }
+
+    /// Return a producer and iterable that traverses over all lanes
+    /// pointing in the direction of `axis`.
+    ///
+    /// For example, in a 2 × 2 × 3 array, the iterator element
+    /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
+    ///
+    /// Iterator element is `ArrayView1<A>` (1D array view); note that it is
+    /// always 1D.
+    ///
+    /// ```
+    /// use ndarray::{arr3, aview1, Axis};
+    ///
+    /// let a = arr3(&[[[ 0,  1,  2],
+    ///                 [ 3,  4,  5]],
+    ///                [[ 6,  7,  8],
+    ///                 [ 9, 10, 11]]]);
+    ///
+    /// let inner0 = a.inners(Axis(0));
+    /// let inner1 = a.inners(Axis(1));
+    /// let inner2 = a.inners(Axis(2));
+    ///
+    /// // The first lane for axis 0 is [0, 6]
+    /// assert_eq!(inner0.into_iter().next().unwrap(), aview1(&[0, 6]));
+    /// // The first lane for axis 1 is [0, 3]
+    /// assert_eq!(inner1.into_iter().next().unwrap(), aview1(&[0, 3]));
+    /// // The first lane for axis 2 is [0, 1, 2]
+    /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
+    /// ```
+    pub fn inners(&self, axis: Axis) -> Inners<A, D::Smaller> {
+        new_inners(self.view(), axis)
+    }
+
+    /// Return a producer and iterable that traverses over all axes but the
+    /// selected axis.
+    ///
+    /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
+    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
+        where S: DataMut
+    {
+        new_inners_mut(self.view_mut(), axis)
+    }
+
 
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
