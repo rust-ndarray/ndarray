@@ -89,7 +89,6 @@ pub use dimension::{
     IntoDimension,
     RemoveAxis,
     Axis,
-    Axes,
     AxisDescription,
 };
 pub use dimension::dim::*;

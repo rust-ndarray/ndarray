@@ -8,6 +8,9 @@
 //! See also [`NdProducer`](../trait.NdProducer.html).
 
 
+pub use dimension::{
+    Axes,
+};
 pub use indexes::{
     Indices,
     IndicesIter,
