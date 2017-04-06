@@ -107,13 +107,6 @@ pub struct Indices<D>
     dim: D,
 }
 
-pub fn indices_new<D: Dimension>(dim: D) -> Indices<D> {
-    Indices {
-        start: D::default(),
-        dim: dim,
-    }
-}
-
 #[derive(Copy, Clone, Debug)]
 pub struct IndexPtr<D> {
     index: D,

@@ -15,7 +15,7 @@ use Layout;
 
 use layout::{CORDER, FORDER};
 use layout::LayoutPriv;
-use indexes::{Indices, indices_new};
+use indexes::{Indices, indices};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -462,7 +462,7 @@ impl<P, D> Zip<(Indices<D>, P), D>
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
-        Zip::from(indices_new(dim)).and(array)
+        Zip::from(indices(dim)).and(array)
     }
 }
 
