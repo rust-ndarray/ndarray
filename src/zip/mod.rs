@@ -139,13 +139,36 @@ impl<P> IntoNdProducer for P where P: NdProducer {
 /// that yields chunks.
 ///
 /// Producers are used as a arguments to `Zip` and `azip!()`.
+///
+/// # Comparison to `IntoIterator`
+///
+/// Most `NdProducers` are *iterable* (implement `IntoIterator`) but not directly
+/// iterators. This separation is needed because the producer represents
+/// a multidimensional set of items, it can be split along a particular axis for
+/// parallelization, and it has no fixed correspondance to a sequence.
+///
+/// The natural exception is one dimensional producers, like `AxisIter`, which
+/// implement `Iterator` directly
+/// (`AxisIter` traverses a one dimensional sequence, along an axis, while
+/// *producing* multidimensional items).
+///
+/// See also [`IntoNdProducer`](trait.IntoNdProducer.html)
 pub trait NdProducer {
     /// The element produced per iteration.
     type Item;
     // Internal use / Pointee type
     /// Dimension type
     type Dim: Dimension;
+
+    // The pointer Ptr is used by an array view to simply point to the
+    // current element. It doesn't have to be a pointer (see Indices).
+    // Its main function is that it can be incremented with a particular
+    // stride (= along a particular axis)
+    #[doc(hidden)]
+    /// Pointer or stand-in for pointer
     type Ptr: Offset<Stride=Self::Stride>;
+    #[doc(hidden)]
+    /// Pointer stride
     type Stride: Copy;
 
     #[doc(hidden)]
