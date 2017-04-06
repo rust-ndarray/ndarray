@@ -149,3 +149,96 @@ fn test_clone() {
         i += 1;
     });
 }
+
+#[test]
+fn test_indices_1() {
+    let mut a1 = Array::default(12);
+    for (i, elt) in a1.indexed_iter_mut() {
+        *elt = i;
+    }
+
+    let mut count = 0;
+    Zip::indexed(&a1)
+        .apply(|i, elt| {
+            count += 1;
+            assert_eq!(*elt, i);
+        });
+    assert_eq!(count, a1.len());
+
+    let mut count = 0;
+    let len = a1.len();
+    let (x, y) = Zip::indexed(&mut a1).split();
+
+    x.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len / 2);
+    y.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len);
+}
+
+#[test]
+fn test_indices_2() {
+    let mut a1 = Array::default((10, 12));
+    for (i, elt) in a1.indexed_iter_mut() {
+        *elt = i;
+    }
+
+    let mut count = 0;
+    Zip::indexed(&a1)
+        .apply(|i, elt| {
+            count += 1;
+            assert_eq!(*elt, i);
+        });
+    assert_eq!(count, a1.len());
+
+    let mut count = 0;
+    let len = a1.len();
+    let (x, y) = Zip::indexed(&mut a1).split();
+
+    x.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len / 2);
+    y.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len);
+}
+
+#[test]
+fn test_indices_3() {
+    let mut a1 = Array::default((4, 5, 6));
+    for (i, elt) in a1.indexed_iter_mut() {
+        *elt = i;
+    }
+
+    let mut count = 0;
+    Zip::indexed(&a1)
+        .apply(|i, elt| {
+            count += 1;
+            assert_eq!(*elt, i);
+        });
+    assert_eq!(count, a1.len());
+
+    let mut count = 0;
+    let len = a1.len();
+    let (x, y) = Zip::indexed(&mut a1).split();
+
+    x.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len / 2);
+    y.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len);
+}
