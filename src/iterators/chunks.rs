@@ -29,7 +29,7 @@ type BaseProducerMut<'a, A, D> = ArrayViewMut<'a, A, D>;
 
 /// Exact chunks producer and iterable.
 ///
-/// See [`.exact_chunks()`](struct.ArrayBase.html#method.exact_chunks) for more
+/// See [`.exact_chunks()`](../struct.ArrayBase.html#method.exact_chunks) for more
 /// information.
 //#[derive(Debug)]
 pub struct ExactChunks<'a, A: 'a, D> {
@@ -78,7 +78,7 @@ impl<'a, A, D> IntoIterator for ExactChunks<'a, A, D>
 
 /// Exact chunks iterator.
 ///
-/// See [`.exact_chunks()`](struct.ArrayBase.html#method.exact_chunks) for more
+/// See [`.exact_chunks()`](../struct.ArrayBase.html#method.exact_chunks) for more
 /// information.
 pub struct ExactChunksIter<'a, A: 'a, D> {
     iter: ElementsBase<'a, A, D>,
@@ -108,7 +108,7 @@ impl_ndproducer! {
 
 /// Exact chunks producer and iterable.
 ///
-/// See [`.exact_chunks_mut()`](struct.ArrayBase.html#method.exact_chunks_mut)
+/// See [`.exact_chunks_mut()`](../struct.ArrayBase.html#method.exact_chunks_mut)
 /// for more information.
 //#[derive(Debug)]
 pub struct ExactChunksMut<'a, A: 'a, D> {
@@ -249,7 +249,7 @@ impl_iterator!{
 
 /// Exact chunks iterator.
 ///
-/// See [`.exact_chunks_mut()`](struct.ArrayBase.html#method.exact_chunks_mut)
+/// See [`.exact_chunks_mut()`](../struct.ArrayBase.html#method.exact_chunks_mut)
 /// for more information.
 pub struct ExactChunksIterMut<'a, A: 'a, D> {
     iter: ElementsBaseMut<'a, A, D>,

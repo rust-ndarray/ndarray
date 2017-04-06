@@ -298,7 +298,7 @@ pub enum ElementsRepr<S, C> {
 ///
 /// Iterator element type is `&'a A`.
 ///
-/// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
+/// See [`.iter()`](../struct.ArrayBase.html#method.iter) for more information.
 pub struct Iter<'a, A: 'a, D> {
     inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
 }
@@ -312,7 +312,7 @@ pub struct ElementsBase<'a, A: 'a, D> {
 ///
 /// Iterator element type is `&'a mut A`.
 ///
-/// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
+/// See [`.iter_mut()`](../struct.ArrayBase.html#method.iter_mut) for more information.
 pub struct IterMut<'a, A: 'a, D> {
     inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
 }
@@ -327,12 +327,12 @@ pub struct ElementsBaseMut<'a, A: 'a, D> {
 
 /// An iterator over the indexes and elements of an array.
 ///
-/// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
+/// See [`.indexed_iter()`](../struct.ArrayBase.html#method.indexed_iter) for more information.
 #[derive(Clone)]
 pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// An iterator over the indexes and elements of an array (mutable).
 ///
-/// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
+/// See [`.indexed_iter_mut()`](../struct.ArrayBase.html#method.indexed_iter_mut) for more information.
 pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 impl<'a, A, D> PrivateNew<ElementsBase<'a, A, D>> for IndexedIter<'a, A, D>
@@ -515,7 +515,7 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
 ///
-/// See [`.inners()`](struct.ArrayBase.html#method.inners) for more information.
+/// See [`.inners()`](../struct.ArrayBase.html#method.inners) for more information.
 pub struct InnerIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
@@ -552,7 +552,7 @@ impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row (mutable).
 ///
-/// See [`.inners_mut()`](struct.ArrayBase.html#method.inners_mut)
+/// See [`.inners_mut()`](../struct.ArrayBase.html#method.inners_mut)
 /// for more information.
 pub struct InnerIterMut<'a, A: 'a, D> {
     inner_len: Ix,
@@ -682,8 +682,8 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 ///
-/// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
-/// or [`.axis_iter()`](struct.ArrayBase.html#method.axis_iter)
+/// See [`.outer_iter()`](../struct.ArrayBase.html#method.outer_iter)
+/// or [`.axis_iter()`](../struct.ArrayBase.html#method.axis_iter)
 /// for more information.
 #[derive(Debug)]
 pub struct AxisIter<'a, A: 'a, D> {
@@ -819,8 +819,8 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 ///
-/// See [`.outer_iter_mut()`](struct.ArrayBase.html#method.outer_iter_mut)
-/// or [`.axis_iter_mut()`](struct.ArrayBase.html#method.axis_iter_mut)
+/// See [`.outer_iter_mut()`](../struct.ArrayBase.html#method.outer_iter_mut)
+/// or [`.axis_iter_mut()`](../struct.ArrayBase.html#method.axis_iter_mut)
 /// for more information.
 pub struct AxisIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
@@ -989,7 +989,7 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 ///
-/// See [`.axis_chunks_iter()`](struct.ArrayBase.html#method.axis_chunks_iter) for more information.
+/// See [`.axis_chunks_iter()`](../struct.ArrayBase.html#method.axis_chunks_iter) for more information.
 pub struct AxisChunksIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     last_ptr: *mut A,
@@ -1125,7 +1125,7 @@ macro_rules! chunk_iter_impl {
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 ///
-/// See [`.axis_chunks_iter_mut()`](struct.ArrayBase.html#method.axis_chunks_iter_mut)
+/// See [`.axis_chunks_iter_mut()`](../struct.ArrayBase.html#method.axis_chunks_iter_mut)
 /// for more information.
 pub struct AxisChunksIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,

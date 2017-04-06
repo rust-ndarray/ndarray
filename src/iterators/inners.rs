@@ -22,7 +22,7 @@ impl_ndproducer! {
     }
 }
 
-/// See [`.inners()`](struct.ArrayBase.html#method.inners)
+/// See [`.inners()`](../struct.ArrayBase.html#method.inners)
 /// for more information.
 pub struct Inners<'a, A: 'a, D> {
     base: ArrayView<'a, A, D>,
@@ -88,7 +88,7 @@ impl<'a, A, D> IntoIterator for Inners<'a, A, D>
     }
 }
 
-/// See [`.inners_mut()`](struct.ArrayBase.html#method.inners_mut)
+/// See [`.inners_mut()`](../struct.ArrayBase.html#method.inners_mut)
 /// for more information.
 pub struct InnersMut<'a, A: 'a, D> {
     base: ArrayViewMut<'a, A, D>,
