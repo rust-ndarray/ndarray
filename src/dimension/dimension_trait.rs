@@ -147,6 +147,12 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
+    // Return an index of same dimensionality
+    fn zero_index(&self) -> Self {
+        Self::default()
+    }
+
+    #[doc(hidden)]
     #[inline]
     fn first_index(&self) -> Option<Self> {
         for ax in self.slice().iter() {
@@ -758,6 +764,17 @@ impl Dimension for IxDyn
     fn into_pattern(self) -> Self::Pattern {
         self
     }
+
+    fn zero_index(&self) -> Self {
+        const ZEROS: &'static [usize] = &[0; 4];
+        let n = self.ndim();
+        if n <= ZEROS.len() {
+            Dim(&ZEROS[..n])
+        } else {
+            Dim(vec![0; n])
+        }
+    }
+
     #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         if self.ndim() > 0 {

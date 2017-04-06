@@ -9,15 +9,17 @@
 
 #[macro_use] mod macros;
 mod chunks;
-mod inners;
+mod lanes;
+pub mod iter;
 
 use std::marker::PhantomData;
 use std::ptr;
 
 use Ix1;
 
+use PrivateNew;
+
 use super::{Dimension, Ix, Ixs};
-use super::{Iter, ElementsRepr, ElementsBase, ElementsBaseMut, IterMut, IndexedIter, IndexedIterMut};
 use super::{
     ArrayBase,
     Data,
@@ -29,19 +31,21 @@ use super::{
 };
 
 pub use self::chunks::{
-    WholeChunks,
-    WholeChunksIter,
-    whole_chunks_of,
-    WholeChunksMut,
-    WholeChunksIterMut,
-    whole_chunks_mut_of,
+    ExactChunks,
+    ExactChunksIter,
+    exact_chunks_of,
+    ExactChunksMut,
+    ExactChunksIterMut,
+    exact_chunks_mut_of,
 };
-pub use self::inners::{
+pub use self::lanes::{
     new_inners,
     new_inners_mut,
     Inners,
     InnersMut,
 };
+
+use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 /// Base for array iterators
 ///
@@ -254,6 +258,100 @@ clone_bounds!(
     }
 );
 
+impl<'a, A, D> PrivateNew<ArrayView<'a, A, D>> for Iter<'a, A, D>
+    where D: Dimension
+{
+    fn new(self_: ArrayView<'a, A, D>) -> Self {
+        Iter {
+            inner: if let Some(slc) = self_.into_slice() {
+                ElementsRepr::Slice(slc.iter())
+            } else {
+                ElementsRepr::Counted(self_.into_elements_base())
+            },
+        }
+    }
+}
+
+
+
+impl<'a, A, D> PrivateNew<ArrayViewMut<'a, A, D>> for IterMut<'a, A, D>
+    where D: Dimension
+{
+    fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
+        IterMut {
+            inner:
+            match self_.into_slice_() {
+                Ok(x) => ElementsRepr::Slice(x.into_iter()),
+                Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum ElementsRepr<S, C> {
+    Slice(S),
+    Counted(C),
+}
+
+/// An iterator over the elements of an array.
+///
+/// Iterator element type is `&'a A`.
+///
+/// See [`.iter()`](../struct.ArrayBase.html#method.iter) for more information.
+pub struct Iter<'a, A: 'a, D> {
+    inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
+}
+
+/// Counted read only iterator
+pub struct ElementsBase<'a, A: 'a, D> {
+    pub inner: Baseiter<'a, A, D>,
+}
+
+/// An iterator over the elements of an array (mutable).
+///
+/// Iterator element type is `&'a mut A`.
+///
+/// See [`.iter_mut()`](../struct.ArrayBase.html#method.iter_mut) for more information.
+pub struct IterMut<'a, A: 'a, D> {
+    inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
+}
+
+/// An iterator over the elements of an array.
+///
+/// Iterator element type is `&'a mut A`.
+pub struct ElementsBaseMut<'a, A: 'a, D> {
+    pub inner: Baseiter<'a, A, D>,
+}
+
+
+/// An iterator over the indexes and elements of an array.
+///
+/// See [`.indexed_iter()`](../struct.ArrayBase.html#method.indexed_iter) for more information.
+#[derive(Clone)]
+pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
+/// An iterator over the indexes and elements of an array (mutable).
+///
+/// See [`.indexed_iter_mut()`](../struct.ArrayBase.html#method.indexed_iter_mut) for more information.
+pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
+
+impl<'a, A, D> PrivateNew<ElementsBase<'a, A, D>> for IndexedIter<'a, A, D>
+    where D: Dimension
+{
+    fn new(x: ElementsBase<'a, A, D>) -> Self {
+        IndexedIter(x)
+    }
+}
+
+impl<'a, A, D> PrivateNew<ElementsBaseMut<'a, A, D>> for IndexedIterMut<'a, A, D>
+    where D: Dimension
+{
+    fn new(x: ElementsBaseMut<'a, A, D>) -> Self {
+        IndexedIterMut(x)
+    }
+}
+
+
 impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
     type Item = &'a A;
     #[inline]
@@ -417,14 +515,14 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row.
 ///
-/// See [`.inners()`](struct.ArrayBase.html#method.inners) for more information.
-pub struct InnerIter<'a, A: 'a, D> {
+/// See [`.lanes()`](../struct.ArrayBase.html#method.lanes) for more information.
+pub struct LaneIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
 }
 
-impl<'a, A, D> Iterator for InnerIter<'a, A, D>
+impl<'a, A, D> Iterator for LaneIter<'a, A, D>
     where D: Dimension
 {
     type Item = ArrayView<'a, A, Ix1>;
@@ -440,7 +538,7 @@ impl<'a, A, D> Iterator for InnerIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for LaneIter<'a, A, D>
     where D: Dimension
 {
     fn len(&self) -> usize {
@@ -448,21 +546,21 @@ impl<'a, A, D> ExactSizeIterator for InnerIter<'a, A, D>
     }
 }
 
-// NOTE: InnerIterMut is a mutable iterator and must not expose aliasing
+// NOTE: LaneIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
 // anyway).
 /// An iterator that traverses over all dimensions but the innermost,
 /// and yields each inner row (mutable).
 ///
-/// See [`.inners_mut()`](struct.ArrayBase.html#method.inners_mut)
+/// See [`.lanes_mut()`](../struct.ArrayBase.html#method.lanes_mut)
 /// for more information.
-pub struct InnerIterMut<'a, A: 'a, D> {
+pub struct LaneIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
 }
 
-impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
+impl<'a, A, D> Iterator for LaneIterMut<'a, A, D>
     where D: Dimension,
 {
     type Item = ArrayViewMut<'a, A, Ix1>;
@@ -480,7 +578,7 @@ impl<'a, A, D> Iterator for InnerIterMut<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for InnerIterMut<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for LaneIterMut<'a, A, D>
     where D: Dimension,
 {
     fn len(&self) -> usize {
@@ -584,8 +682,8 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 ///
-/// See [`.outer_iter()`](struct.ArrayBase.html#method.outer_iter)
-/// or [`.axis_iter()`](struct.ArrayBase.html#method.axis_iter)
+/// See [`.outer_iter()`](../struct.ArrayBase.html#method.outer_iter)
+/// or [`.axis_iter()`](../struct.ArrayBase.html#method.axis_iter)
 /// for more information.
 #[derive(Debug)]
 pub struct AxisIter<'a, A: 'a, D> {
@@ -721,8 +819,8 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 ///
-/// See [`.outer_iter_mut()`](struct.ArrayBase.html#method.outer_iter_mut)
-/// or [`.axis_iter_mut()`](struct.ArrayBase.html#method.axis_iter_mut)
+/// See [`.outer_iter_mut()`](../struct.ArrayBase.html#method.outer_iter_mut)
+/// or [`.axis_iter_mut()`](../struct.ArrayBase.html#method.axis_iter_mut)
 /// for more information.
 pub struct AxisIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
@@ -788,12 +886,12 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
     }
 }
 
-impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
-    where D: Dimension
+impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
@@ -804,7 +902,7 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
         Ix1(self.len())
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
+    fn as_ptr(&self) -> Self::Ptr {
         self.iter.ptr
     }
 
@@ -813,13 +911,13 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ArrayView::new_(ptr,
                         self.iter.inner_dim.clone(),
                         self.iter.inner_strides.clone())
     }
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         self.iter.ptr.offset(self.iter.stride * i[0] as isize)
     }
 
@@ -835,12 +933,12 @@ impl<'a, A, D> NdProducer for AxisIter<'a, A, D>
     private_impl!{}
 }
 
-impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
-    where D: Dimension
+impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
 
     #[doc(hidden)]
     fn layout(&self) -> ::Layout {
@@ -851,7 +949,7 @@ impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
         Ix1(self.len())
     }
     #[doc(hidden)]
-    fn as_ptr(&self) -> *mut Self::Elem {
+    fn as_ptr(&self) -> Self::Ptr {
         self.iter.ptr
     }
 
@@ -860,13 +958,13 @@ impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
     }
 
     #[doc(hidden)]
-    unsafe fn as_ref(&self, ptr: *mut Self::Elem) -> Self::Item {
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ArrayViewMut::new_(ptr,
                            self.iter.inner_dim.clone(),
                            self.iter.inner_strides.clone())
     }
     #[doc(hidden)]
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut Self::Elem {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         self.iter.ptr.offset(self.iter.stride * i[0] as isize)
     }
 
@@ -891,7 +989,7 @@ impl<'a, A, D> NdProducer for AxisIterMut<'a, A, D>
 ///
 /// Iterator element type is `ArrayView<'a, A, D>`.
 ///
-/// See [`.axis_chunks_iter()`](struct.ArrayBase.html#method.axis_chunks_iter) for more information.
+/// See [`.axis_chunks_iter()`](../struct.ArrayBase.html#method.axis_chunks_iter) for more information.
 pub struct AxisChunksIter<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
     last_ptr: *mut A,
@@ -1027,7 +1125,7 @@ macro_rules! chunk_iter_impl {
 ///
 /// Iterator element type is `ArrayViewMut<'a, A, D>`.
 ///
-/// See [`.axis_chunks_iter_mut()`](struct.ArrayBase.html#method.axis_chunks_iter_mut)
+/// See [`.axis_chunks_iter_mut()`](../struct.ArrayBase.html#method.axis_chunks_iter_mut)
 /// for more information.
 pub struct AxisChunksIterMut<'a, A: 'a, D> {
     iter: OuterIterCore<A, D>,
@@ -1056,14 +1154,14 @@ chunk_iter_impl!(AxisChunksIterMut, ArrayViewMut);
 
 send_sync_read_only!(Iter);
 send_sync_read_only!(IndexedIter);
-send_sync_read_only!(InnerIter);
+send_sync_read_only!(LaneIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
 send_sync_read_only!(ElementsBase);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);
-send_sync_read_write!(InnerIterMut);
+send_sync_read_write!(LaneIterMut);
 send_sync_read_write!(AxisIterMut);
 send_sync_read_write!(AxisChunksIterMut);
 send_sync_read_write!(ElementsBaseMut);
@@ -1072,18 +1170,17 @@ send_sync_read_write!(ElementsBaseMut);
 /// to deliver exactly as many items as it said it would.
 pub unsafe trait TrustedIterator { }
 
-use std::slice;
-use std::iter;
+use std;
 use linspace::Linspace;
-use indexes::Indices;
+use iter::IndicesIter;
 
 unsafe impl<F> TrustedIterator for Linspace<F> { }
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }
-unsafe impl<I, F> TrustedIterator for iter::Map<I, F>
+unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F>
     where I: TrustedIterator { }
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
 unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
-unsafe impl<D> TrustedIterator for Indices<D> where D: Dimension { }
+unsafe impl<D> TrustedIterator for IndicesIter<D> where D: Dimension { }
 
 
 /// Like Iterator::collect, but only for trusted length iterators

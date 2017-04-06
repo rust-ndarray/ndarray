@@ -86,7 +86,7 @@ fn test_broadcast() {
     let e = Array::from_elem((), 2.);
 
     {
-        let mut z = Zip::from(a.view_mut())
+        let z = Zip::from(a.view_mut())
             .and_broadcast(&b)
             .and_broadcast(&d)
             .and_broadcast(&e);
@@ -137,7 +137,7 @@ fn test_contiguous_but_not_c_or_f() {
 fn test_clone() {
     let a = Array::from_iter(0..27).into_shape((3, 3, 3)).unwrap();
 
-    let z = Zip::from(&a).and(a.whole_chunks((1, 1, 1)));
+    let z = Zip::from(&a).and(a.exact_chunks((1, 1, 1)));
     let w = z.clone();
     let mut result = Vec::new();
     z.apply(|x, y| {
@@ -148,4 +148,129 @@ fn test_clone() {
         assert_eq!(result[i], (x, y));
         i += 1;
     });
+}
+
+#[test]
+fn test_indices_1() {
+    let mut a1 = Array::default(12);
+    for (i, elt) in a1.indexed_iter_mut() {
+        *elt = i;
+    }
+
+    let mut count = 0;
+    Zip::indexed(&a1)
+        .apply(|i, elt| {
+            count += 1;
+            assert_eq!(*elt, i);
+        });
+    assert_eq!(count, a1.len());
+
+    let mut count = 0;
+    let len = a1.len();
+    let (x, y) = Zip::indexed(&mut a1).split();
+
+    x.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len / 2);
+    y.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len);
+}
+
+#[test]
+fn test_indices_2() {
+    let mut a1 = Array::default((10, 12));
+    for (i, elt) in a1.indexed_iter_mut() {
+        *elt = i;
+    }
+
+    let mut count = 0;
+    Zip::indexed(&a1)
+        .apply(|i, elt| {
+            count += 1;
+            assert_eq!(*elt, i);
+        });
+    assert_eq!(count, a1.len());
+
+    let mut count = 0;
+    let len = a1.len();
+    let (x, y) = Zip::indexed(&mut a1).split();
+
+    x.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len / 2);
+    y.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len);
+}
+
+#[test]
+fn test_indices_3() {
+    let mut a1 = Array::default((4, 5, 6));
+    for (i, elt) in a1.indexed_iter_mut() {
+        *elt = i;
+    }
+
+    let mut count = 0;
+    Zip::indexed(&a1)
+        .apply(|i, elt| {
+            count += 1;
+            assert_eq!(*elt, i);
+        });
+    assert_eq!(count, a1.len());
+
+    let mut count = 0;
+    let len = a1.len();
+    let (x, y) = Zip::indexed(&mut a1).split();
+
+    x.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len / 2);
+    y.apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
+    assert_eq!(count, len);
+}
+
+#[test]
+fn test_indices_split_1() {
+    for m in (0..4).chain(10..12) {
+        for n in (0..4).chain(10..12) {
+            let a1 = Array::<f64, _>::default((m, n));
+            if a1.len() <= 1 {
+                continue;
+            }
+            let (a, b) = Zip::indexed(&a1).split();
+            let mut seen = Vec::new();
+
+            let mut ac = 0;
+            a.apply(|i, _| {
+                ac += 1;
+                seen.push(i);
+            });
+            let mut bc = 0;
+            b.apply(|i, _| {
+                bc += 1;
+                seen.push(i);
+            });
+
+            assert_eq!(a1.len(), ac + bc);
+
+            seen.sort();
+            assert_eq!(seen.len(), a1.len());
+            seen.dedup();
+            assert_eq!(seen.len(), a1.len());
+        }
+    }
 }

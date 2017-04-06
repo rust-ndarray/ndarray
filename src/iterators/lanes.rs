@@ -1,8 +1,8 @@
 
 use imp_prelude::*;
 use {NdProducer, Layout};
-use super::InnerIter;
-use super::InnerIterMut;
+use super::LaneIter;
+use super::LaneIterMut;
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
@@ -22,7 +22,7 @@ impl_ndproducer! {
     }
 }
 
-/// See [`.inners()`](struct.ArrayBase.html#method.inners)
+/// See [`.lanes()`](../struct.ArrayBase.html#method.lanes)
 /// for more information.
 pub struct Inners<'a, A: 'a, D> {
     base: ArrayView<'a, A, D>,
@@ -78,9 +78,9 @@ impl<'a, A, D> IntoIterator for Inners<'a, A, D>
     where D: Dimension,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = InnerIter<'a, A, D>;
+    type IntoIter = LaneIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        InnerIter {
+        LaneIter {
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
             inner_stride: self.inner_stride,
@@ -88,7 +88,7 @@ impl<'a, A, D> IntoIterator for Inners<'a, A, D>
     }
 }
 
-/// See [`.inners_mut()`](struct.ArrayBase.html#method.inners_mut)
+/// See [`.lanes_mut()`](../struct.ArrayBase.html#method.lanes_mut)
 /// for more information.
 pub struct InnersMut<'a, A: 'a, D> {
     base: ArrayViewMut<'a, A, D>,
@@ -126,9 +126,9 @@ impl<'a, A, D> IntoIterator for InnersMut<'a, A, D>
     where D: Dimension,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = InnerIterMut<'a, A, D>;
+    type IntoIter = LaneIterMut<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        InnerIterMut {
+        LaneIterMut {
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
             inner_stride: self.inner_stride,

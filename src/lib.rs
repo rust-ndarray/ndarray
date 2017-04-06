@@ -89,33 +89,18 @@ pub use dimension::{
     IntoDimension,
     RemoveAxis,
     Axis,
-    Axes,
     AxisDescription,
 };
 pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
 pub use dimension::IxDynImpl;
-pub use indexes::Indices;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
 pub use si::{Si, S};
 
 use iterators::Baseiter;
-pub use iterators::{
-    Inners,
-    InnersMut,
-    InnerIter,
-    InnerIterMut,
-    AxisIter,
-    AxisIterMut,
-    AxisChunksIter,
-    AxisChunksIterMut,
-    WholeChunks,
-    WholeChunksIter,
-    WholeChunksMut,
-    WholeChunksIterMut,
-};
+use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
@@ -148,6 +133,7 @@ mod dimension;
 
 mod free_functions;
 pub use free_functions::*;
+pub use iterators::iter;
 
 mod layout;
 mod indexes;
@@ -218,6 +204,7 @@ pub type Ixs = isize;
 /// + [RcArray](#rcarray)
 /// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
+/// + [Loops, Producers and Iterators](#loops-producers-and-iterators)
 /// + [Slicing](#slicing)
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
@@ -329,6 +316,90 @@ pub type Ixs = isize;
 /// The logical order of any array’s elements is the row major order 
 /// (the rightmost index is varying the fastest).
 /// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
+///
+/// ## Loops, Producers and Iterators
+///
+/// Using [`Zip`](struct.Zip.html) is the most general way to apply a procedure
+/// across one or several arrays or *producers*.
+///
+/// [`NdProducer`](trait.NdProducer.html) is like an iterable but for
+/// multidimensional data. All producers have dimensions and axes, like an
+/// array view, and they can be split and used with parallelization using `Zip`.
+///
+/// For example, `ArrayView<A, D>` is a producer, it has the same dimensions
+/// as the array view and for each iteration it produces a reference to
+/// the array element (`&A` in this case).
+///
+/// Another example, if we have a 10 × 10 array and use `.exact_chunks((2, 2))`
+/// we get a producer of chunks which has the dimensions 5 × 5 (because
+/// there are *10 / 2 = 5* chunks in either direction). The 5 × 5 chunks producer
+/// can be paired with any other producers of the same dimension with `Zip`, for
+/// example 5 × 5 arrays.
+///
+/// ### `.iter()` and `.iter_mut()`
+///
+/// These are the element iterators of arrays and they produce an element
+/// sequence in the logical order of the array, that means that the elements
+/// will be visited in the sequence that corresponds to increasing the 
+/// last index first: *0, ..., 0,  0*; *0, ..., 0, 1*; *0, ...0, 2* and so on.
+///
+/// ### `.outer_iter()` and `.axis_iter()`
+///
+/// These iterators produce array views of one smaller dimension.
+///
+/// For example, for a 2D array, `.outer_iter()` will produce the 1D rows.
+/// For a 3D array, `.outer_iter()` produces 2D subviews.
+///
+/// `.axis_iter()` is like `outer_iter()` but allows you to pick which
+/// axis to traverse.
+///
+/// The `outer_iter` and `axis_iter` are one dimensional producers.
+/// 
+/// ## `.genrows()`, `.gencolumns()` and `.lanes()`
+///
+/// [`.genrows()`][gr] is a producer (and iterable) of all rows in an array.
+///
+/// ```
+/// use ndarray::Array;
+///
+/// // 1. Loop over the rows of a 2D array
+/// let mut a = Array::zeros((10, 10));
+/// for mut row in a.genrows_mut() {
+///     row.fill(1.);
+/// }
+///
+/// // 2. Use Zip to pair each row in 2D `a` with elements in 1D `b`
+/// use ndarray::Zip;
+/// let mut b = Array::zeros(a.rows());
+///
+/// Zip::from(a.genrows())
+///     .and(&mut b)
+///     .apply(|a_row, b_elt| {
+///         *b_elt = a_row[a.cols() - 1] - a_row[0];
+///     });
+/// ```
+///
+/// The *lanes* of an array are 1D segments along an axis and when pointed
+/// along the last axis they are *rows*, when pointed along the first axis
+/// they are *columns*.
+///
+/// A *m* × *n* array has *m* rows each of length *n* and conversely
+/// *n* columns each of length *m*.
+///
+/// To generalize this, we say that an array of dimension *a* × *m* × *n*
+/// has *a m* rows. It's composed of *a* times the previous array, so it
+/// has *a* times as many rows.
+///
+/// All methods: [`.genrows()`][gr], [`.genrows_mut()`][grm],
+/// [`.gencolumns()`][gc], [`.gencolumns_mut()`][gcm],
+/// [`.lanes(axis)`][l], [`.lanes_mut(axis)`][lm].
+///
+/// [gr]: #method.genrows
+/// [grm]: #method.genrows_mut
+/// [gc]: #method.gencolumns
+/// [gcm]: #method.gencolumns_mut
+/// [l]: #method.lanes
+/// [lm]: #method.lanes_mut
 ///
 /// ## Slicing
 ///
@@ -746,19 +817,13 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     }
 
     fn into_iter_(self) -> Iter<'a, A, D> {
-        Iter {
-            inner: if let Some(slc) = self.into_slice() {
-                ElementsRepr::Slice(slc.iter())
-            } else {
-                ElementsRepr::Counted(self.into_elements_base())
-            },
-        }
+        Iter::new(self)
     }
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[deprecated(note="This method will be replaced.")]
-    pub fn into_outer_iter(self) -> AxisIter<'a, A, D::Smaller>
+    pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_outer_iter(self)
@@ -812,65 +877,22 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     }
 
     fn into_iter_(self) -> IterMut<'a, A, D> {
-        IterMut {
-            inner:
-            match self.into_slice_() {
-                Ok(x) => ElementsRepr::Slice(x.into_iter()),
-                Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
-            }
-        }
+        IterMut::new(self)
     }
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[deprecated(note="This method will be replaced.")]
-    pub fn into_outer_iter(self) -> AxisIterMut<'a, A, D::Smaller>
+    pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_outer_iter_mut(self)
     }
 }
 
-
-/// An iterator over the elements of an array.
-///
-/// Iterator element type is `&'a A`.
-///
-/// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
-pub struct Iter<'a, A: 'a, D> {
-    inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
+trait PrivateNew<T> {
+    fn new(x: T) -> Self;
 }
-
-/// Counted read only iterator
-struct ElementsBase<'a, A: 'a, D> {
-    inner: Baseiter<'a, A, D>,
-}
-
-/// An iterator over the elements of an array (mutable).
-///
-/// Iterator element type is `&'a mut A`.
-///
-/// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
-pub struct IterMut<'a, A: 'a, D> {
-    inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
-}
-
-/// An iterator over the elements of an array.
-///
-/// Iterator element type is `&'a mut A`.
-struct ElementsBaseMut<'a, A: 'a, D> {
-    inner: Baseiter<'a, A, D>,
-}
-
-/// An iterator over the indexes and elements of an array.
-///
-/// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
-#[derive(Clone)]
-pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
-/// An iterator over the indexes and elements of an array (mutable).
-///
-/// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
-pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
     -> ZipIter<SliceIter<'a, A>, SliceIter<'b, B>> {
@@ -893,12 +915,6 @@ trait ZipExt : Iterator {
 }
 
 impl<I> ZipExt for I where I: Iterator { }
-
-#[derive(Clone)]
-enum ElementsRepr<S, C> {
-    Slice(S),
-    Counted(C),
-}
 
 
 /// A contiguous array shape of n dimensions.

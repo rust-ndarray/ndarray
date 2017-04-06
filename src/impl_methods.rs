@@ -25,27 +25,30 @@ use dimension::{axes_of, Axes, merge_axes, stride_offset};
 use iterators::{
     new_inners,
     new_inners_mut,
-    whole_chunks_of,
-    whole_chunks_mut_of,
-    Inners,
-    InnersMut,
+    exact_chunks_of,
+    exact_chunks_mut_of,
 };
 use zip::Zip;
 
 use {
     NdIndex,
+};
+use iter::{
     AxisChunksIter,
     AxisChunksIterMut,
     Iter,
     IterMut,
     IndexedIter,
     IndexedIterMut,
+    Inners,
+    InnersMut,
     AxisIter,
     AxisIterMut,
-    WholeChunks,
-    WholeChunksMut,
+    ExactChunks,
+    ExactChunksMut,
 };
 use stacking::stack;
+use PrivateNew;
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -181,7 +184,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element type is `(D::Pattern, &A)`.
     pub fn indexed_iter(&self) -> IndexedIter<A, D> {
-        IndexedIter(self.view().into_elements_base())
+        IndexedIter::new(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
@@ -193,7 +196,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
         where S: DataMut,
     {
-        IndexedIterMut(self.view_mut().into_elements_base())
+        IndexedIterMut::new(self.view_mut().into_elements_base())
     }
 
 
@@ -458,52 +461,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return a producer and iterable that traverses over all lanes
-    /// pointing in the direction of `axis`.
-    ///
-    /// For example, in a 2 × 2 × 3 array, the iterator element
-    /// is a row of 3 elements (and there are 2 × 2 = 4 rows in total).
-    ///
-    /// Iterator element is `ArrayView1<A>` (1D array view); note that it is
-    /// always 1D.
-    ///
-    /// ```
-    /// use ndarray::{arr3, aview1, Axis};
-    ///
-    /// let a = arr3(&[[[ 0,  1,  2],
-    ///                 [ 3,  4,  5]],
-    ///                [[ 6,  7,  8],
-    ///                 [ 9, 10, 11]]]);
-    ///
-    /// let inner0 = a.inners(Axis(0));
-    /// let inner1 = a.inners(Axis(1));
-    /// let inner2 = a.inners(Axis(2));
-    ///
-    /// // The first lane for axis 0 is [0, 6]
-    /// assert_eq!(inner0.into_iter().next().unwrap(), aview1(&[0, 6]));
-    /// // The first lane for axis 1 is [0, 3]
-    /// assert_eq!(inner1.into_iter().next().unwrap(), aview1(&[0, 3]));
-    /// // The first lane for axis 2 is [0, 1, 2]
-    /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
-    /// ```
-    pub fn inners(&self, axis: Axis) -> Inners<A, D::Smaller> {
-        new_inners(self.view(), axis)
-    }
-
-    /// Return a producer and iterable that traverses over all axes but the
-    /// selected axis.
-    ///
-    /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
-        where S: DataMut
-    {
-        new_inners_mut(self.view_mut(), axis)
-    }
-
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array. For a 2D array these are the regular rows.
     ///
-    /// This is equivalent to `.inners(Axis(n - 1))` where *n* is `self.ndim()`.
+    /// This is equivalent to `.lanes(Axis(n - 1))` where *n* is `self.ndim()`.
     ///
     /// For an array of dimensions *a* × *b* × *c* × ... × *l* × *m*
     /// it has *a* × *b* × *c* × ... × *l* rows each of length *m*.
@@ -547,7 +508,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a producer and iterable that traverses over the *generalized*
     /// columns of the array. For a 2D array these are the regular columns.
     ///
-    /// This is equivalent to `.inners(Axis(0))`.
+    /// This is equivalent to `.lanes(Axis(0))`.
     ///
     /// For an array of dimensions *a* × *b* × *c* × ... × *l* × *m*
     /// it has *b* × *c* × ... × *l* × *m* columns each of length *a*.
@@ -583,6 +544,49 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         new_inners_mut(self.view_mut(), Axis(0))
     }
+
+    /// Return a producer and iterable that traverses over all 1D lanes
+    /// pointing in the direction of `axis`.
+    ///
+    /// When the point in the direction of the first axis, they are *columns*,
+    /// in the direction of the last axis *rows*; in general they are all
+    /// *lanes* and are one dimensional.
+    ///
+    /// Iterator element is `ArrayView1<A>` (1D array view).
+    ///
+    /// ```
+    /// use ndarray::{arr3, aview1, Axis};
+    ///
+    /// let a = arr3(&[[[ 0,  1,  2],
+    ///                 [ 3,  4,  5]],
+    ///                [[ 6,  7,  8],
+    ///                 [ 9, 10, 11]]]);
+    ///
+    /// let inner0 = a.lanes(Axis(0));
+    /// let inner1 = a.lanes(Axis(1));
+    /// let inner2 = a.lanes(Axis(2));
+    ///
+    /// // The first lane for axis 0 is [0, 6]
+    /// assert_eq!(inner0.into_iter().next().unwrap(), aview1(&[0, 6]));
+    /// // The first lane for axis 1 is [0, 3]
+    /// assert_eq!(inner1.into_iter().next().unwrap(), aview1(&[0, 3]));
+    /// // The first lane for axis 2 is [0, 1, 2]
+    /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
+    /// ```
+    pub fn lanes(&self, axis: Axis) -> Inners<A, D::Smaller> {
+        new_inners(self.view(), axis)
+    }
+
+    /// Return a producer and iterable that traverses over all 1D lanes
+    /// pointing in the direction of `axis`.
+    ///
+    /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
+    pub fn lanes_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
+        where S: DataMut
+    {
+        new_inners_mut(self.view_mut(), axis)
+    }
+
 
     /// Return an iterator that traverses over the outermost dimension
     /// and yields each subview.
@@ -691,7 +695,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         iterators::new_chunk_iter_mut(self.view_mut(), axis.index(), size)
     }
 
-    /// Return a whole chunks producer (and iterable).
+    /// Return an exact chunks producer (and iterable).
     ///
     /// It produces the whole chunks of a given n-dimensional chunk size,
     /// skipping the remainder along each dimension that doesn't fit evenly.
@@ -702,13 +706,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
-    pub fn whole_chunks<E>(&self, chunk_size: E) -> WholeChunks<A, D> 
+    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
         where E: IntoDimension<Dim=D>,
     {
-        whole_chunks_of(self.view(), chunk_size)
+        exact_chunks_of(self.view(), chunk_size)
     }
 
-    /// Return a whole chunks producer (and iterable).
+    #[doc(hidden)]
+    #[deprecated(note="Renamed to exact_chunks")]
+    pub fn whole_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
+        where E: IntoDimension<Dim=D>,
+    {
+        self.exact_chunks(chunk_size)
+    }
+
+    /// Return an exact chunks producer (and iterable).
     ///
     /// It produces the whole chunks of a given n-dimensional chunk size,
     /// skipping the remainder along each dimension that doesn't fit evenly.
@@ -726,7 +738,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// let mut a = Array::zeros((6, 7));
     ///
     /// // Fill each 2 × 2 chunk with the index of where it appeared in iteration
-    /// for (i, mut chunk) in a.whole_chunks_mut((2, 2)).into_iter().enumerate() {
+    /// for (i, mut chunk) in a.exact_chunks_mut((2, 2)).into_iter().enumerate() {
     ///     chunk.fill(i);
     /// }
     ///
@@ -740,11 +752,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///          [6, 6, 7, 7, 8, 8, 0],
     ///          [6, 6, 7, 7, 8, 8, 0]]));
     /// ```
-    pub fn whole_chunks_mut<E>(&mut self, chunk_size: E) -> WholeChunksMut<A, D> 
+    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
         where E: IntoDimension<Dim=D>,
               S: DataMut
     {
-        whole_chunks_mut_of(self.view_mut(), chunk_size)
+        exact_chunks_mut_of(self.view_mut(), chunk_size)
+    }
+
+    #[doc(hidden)]
+    #[deprecated(note="Renamed to exact_chunks_mut")]
+    pub fn whole_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
+        where E: IntoDimension<Dim=D>,
+              S: DataMut
+    {
+        self.exact_chunks_mut(chunk_size)
     }
 
     // Return (length, stride) for diagonal

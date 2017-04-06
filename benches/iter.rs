@@ -2,6 +2,7 @@
 
 extern crate test;
 use test::Bencher;
+use test::black_box;
 
 #[macro_use(s, azip)]
 extern crate ndarray;
@@ -205,6 +206,70 @@ fn vector_sum_3_zip_unchecked(bench: &mut Bencher)
 
 // index iterator size
 const ISZ: usize = 16;
+const I2DSZ: usize = 64;
+
+#[bench]
+fn indexed_iter_1d_ix1(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros(I2DSZ * I2DSZ);
+    for (i, elt) in a.indexed_iter_mut() {
+        *elt = i as _;
+    }
+
+    bench.iter(|| {
+        for (i, &_elt) in a.indexed_iter() {
+            //assert!(a[i] == elt);
+            black_box(i);
+        }
+    })
+}
+
+#[bench]
+fn indexed_zip_1d_ix1(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros(I2DSZ * I2DSZ);
+    for (i, elt) in a.indexed_iter_mut() {
+        *elt = i as _;
+    }
+
+    bench.iter(|| {
+        Zip::indexed(&a)
+            .apply(|i, &_elt| {
+                black_box(i);
+                //assert!(a[i] == elt);
+            });
+    })
+}
+
+#[bench]
+fn indexed_iter_2d_ix2(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros((I2DSZ, I2DSZ));
+    for ((i, j), elt) in a.indexed_iter_mut() {
+        *elt = (i + 100 * j) as _;
+    }
+
+    bench.iter(|| {
+        for (i, &_elt) in a.indexed_iter() {
+            //assert!(a[i] == elt);
+            black_box(i);
+        }
+    })
+}
+#[bench]
+fn indexed_zip_2d_ix2(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros((I2DSZ, I2DSZ));
+    for ((i, j), elt) in a.indexed_iter_mut() {
+        *elt = (i + 100 * j) as _;
+    }
+
+    bench.iter(|| {
+        Zip::indexed(&a)
+            .apply(|i, &_elt| {
+                black_box(i);
+                //assert!(a[i] == elt);
+            });
+    })
+}
+
+
 
 #[bench]
 fn indexed_iter_3d_ix3(bench: &mut Bencher) {
@@ -214,9 +279,26 @@ fn indexed_iter_3d_ix3(bench: &mut Bencher) {
     }
 
     bench.iter(|| {
-        for (i, &elt) in a.indexed_iter() {
-            assert!(a[i] == elt);
+        for (i, &_elt) in a.indexed_iter() {
+            //assert!(a[i] == elt);
+            black_box(i);
         }
+    })
+}
+
+#[bench]
+fn indexed_zip_3d_ix3(bench: &mut Bencher) {
+    let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
+    for ((i, j, k), elt) in a.indexed_iter_mut() {
+        *elt = (i + 100 * j + 10000 * k) as _;
+    }
+
+    bench.iter(|| {
+        Zip::indexed(&a)
+            .apply(|i, &_elt| {
+                black_box(i);
+                //assert!(a[i] == elt);
+            });
     })
 }
 
@@ -229,8 +311,9 @@ fn indexed_iter_3d_dyn(bench: &mut Bencher) {
     let a = a.into_shape(&[ISZ; 3][..]).unwrap();
 
     bench.iter(|| {
-        for (i, &elt) in a.indexed_iter() {
-            assert!(a[i] == elt);
+        for (i, &_elt) in a.indexed_iter() {
+            //assert!(a[i] == elt);
+            black_box(i);
         }
     })
 }

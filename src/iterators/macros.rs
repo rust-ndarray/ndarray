@@ -38,7 +38,8 @@ macro_rules! impl_ndproducer {
         }
     }) => { 
 impl<$($typarm)*> NdProducer for $fulltype {
-    type Elem = A;
+    type Ptr = *mut A;
+    type Stride = isize;
     $(
         type $atyn = $atyv;
     )*

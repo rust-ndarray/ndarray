@@ -12,7 +12,7 @@ fn chunks() {
     let (m, n) = a.dim();
     for i in 1..m + 1 {
         for j in 1..n + 1 {
-            let c = a.whole_chunks((i, j));
+            let c = a.exact_chunks((i, j));
 
             let ly = n / j;
             for (index, elt) in c.into_iter().enumerate() {
@@ -22,16 +22,16 @@ fn chunks() {
                 let cy = (cindex.1 * j) as isize;
                 assert_eq!(elt, a.slice(s![cx.., cy..]).slice(s![..i as isize, ..j as isize]));
             }
-            let c = a.whole_chunks((i, j));
+            let c = a.exact_chunks((i, j));
             assert_eq!(c.into_iter().count(), (m / i) * (n / j));
 
-            let c = a.whole_chunks((i, j));
+            let c = a.exact_chunks((i, j));
             let (c1, c2) = c.split_at(Axis(0), (m / i) / 2);
             assert_eq!(c1.into_iter().count(), ((m / i) / 2) * (n / j));
             assert_eq!(c2.into_iter().count(), (m / i - (m / i) / 2) * (n / j));
         }
     }
-    let c = a.whole_chunks((m + 1, n));
+    let c = a.exact_chunks((m + 1, n));
     assert_eq!(c.raw_dim().size(), 0);
     assert_eq!(c.into_iter().count(), 0);
 }
@@ -40,7 +40,7 @@ fn chunks() {
 #[test]
 fn chunks_different_size_1() {
     let a = Array::<f32, _>::zeros(vec![2, 3]);
-    a.whole_chunks(vec![2]);
+    a.exact_chunks(vec![2]);
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn chunks_ok_size() {
     let mut a = Array::<f32, _>::zeros(vec![2, 3]);
     a.fill(1.);
     let mut c = 0;
-    for elt in a.whole_chunks(vec![2, 1]) {
+    for elt in a.exact_chunks(vec![2, 1]) {
         assert!(elt.iter().all(|&x| x == 1.));
         assert_eq!(elt.shape(), &[2, 1]);
         c += 1;
@@ -60,13 +60,13 @@ fn chunks_ok_size() {
 #[test]
 fn chunks_different_size_2() {
     let a = Array::<f32, _>::zeros(vec![2, 3]);
-    a.whole_chunks(vec![2, 3, 4]);
+    a.exact_chunks(vec![2, 3, 4]);
 }
 
 #[test]
 fn chunks_mut() {
     let mut a = Array::zeros((7, 8));
-    for (i, mut chunk) in a.whole_chunks_mut((2, 3)).into_iter().enumerate() {
+    for (i, mut chunk) in a.exact_chunks_mut((2, 3)).into_iter().enumerate() {
         chunk.fill(i);
     }
     println!("{:?}", a);
@@ -85,5 +85,5 @@ fn chunks_mut() {
 #[test]
 fn chunks_different_size_3() {
     let mut a = Array::<f32, _>::zeros(vec![2, 3]);
-    a.whole_chunks_mut(vec![2, 3, 4]);
+    a.exact_chunks_mut(vec![2, 3, 4]);
 }

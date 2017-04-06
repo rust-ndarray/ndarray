@@ -126,8 +126,7 @@ impl<A, S, D> ArrayBase<S, D>
               S2: Data<Elem=A>,
               E: Dimension,
     {
-        let result =
-            Zip::from(self)
+        !Zip::from(self)
             .and(rhs.broadcast_unwrap(self.raw_dim()))
             .fold_while((), |_, x, y| {
                 if (*x - *y).abs() <= tol {
@@ -135,11 +134,7 @@ impl<A, S, D> ArrayBase<S, D>
                 } else {
                     FoldWhile::Done(())
                 }
-            });
-        match result {
-            FoldWhile::Continue(_) => true,
-            FoldWhile::Done(_) => false,
-        }
+            }).is_done()
     }
 }
 
