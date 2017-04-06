@@ -9,6 +9,7 @@
 
 #[macro_use] mod macros;
 mod chunks;
+mod windows;
 mod lanes;
 pub mod iter;
 
@@ -30,6 +31,10 @@ use super::{
     NdProducer,
 };
 
+pub use self::windows::{
+    Windows,
+    windows
+};
 pub use self::chunks::{
     ExactChunks,
     ExactChunksIter,

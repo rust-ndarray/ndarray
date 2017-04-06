@@ -32,4 +32,5 @@ pub use iterators::{
     ExactChunksIter,
     ExactChunksMut,
     ExactChunksIterMut,
+    Windows
 };

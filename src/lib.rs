@@ -135,13 +135,13 @@ mod free_functions;
 pub use free_functions::*;
 pub use iterators::iter;
 
+mod si;
 mod layout;
 mod indexes;
 mod iterators;
 mod linalg_traits;
 mod linspace;
 mod numeric_util;
-mod si;
 mod error;
 mod shape_builder;
 mod stacking;
