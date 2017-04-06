@@ -8,12 +8,12 @@ use ::ElementsBaseMut;
 impl_ndproducer! {
     ['a, A, D: Dimension]
     [Clone => 'a, A, D: Clone ]
-    WholeChunks {
+    ExactChunks {
         base,
         chunk,
         inner_strides,
     }
-    WholeChunks<'a, A, D> {
+    ExactChunks<'a, A, D> {
         type Dim = D;
         type Item = ArrayView<'a, A, D>;
 
@@ -27,19 +27,19 @@ impl_ndproducer! {
 type BaseProducerRef<'a, A, D> = ArrayView<'a, A, D>;
 type BaseProducerMut<'a, A, D> = ArrayViewMut<'a, A, D>;
 
-/// Whole chunks producer and iterable.
+/// Exact chunks producer and iterable.
 ///
-/// See [`.whole_chunks()`](struct.ArrayBase.html#method.whole_chunks) for more
+/// See [`.exact_chunks()`](struct.ArrayBase.html#method.exact_chunks) for more
 /// information.
 //#[derive(Debug)]
-pub struct WholeChunks<'a, A: 'a, D> {
+pub struct ExactChunks<'a, A: 'a, D> {
     base: BaseProducerRef<'a, A, D>,
     chunk: D,
     inner_strides: D,
 }
 
 /// **Panics** if any chunk dimension is zero<br>
-pub fn whole_chunks_of<A, D, E>(mut a: ArrayView<A, D>, chunk: E) -> WholeChunks<A, D>
+pub fn exact_chunks_of<A, D, E>(mut a: ArrayView<A, D>, chunk: E) -> ExactChunks<A, D>
     where D: Dimension,
           E: IntoDimension<Dim=D>,
 {
@@ -54,21 +54,21 @@ pub fn whole_chunks_of<A, D, E>(mut a: ArrayView<A, D>, chunk: E) -> WholeChunks
     let inner_strides = a.raw_strides();
     a.strides *= &chunk;
 
-    WholeChunks {
+    ExactChunks {
         base: a,
         chunk: chunk,
         inner_strides: inner_strides,
     }
 }
 
-impl<'a, A, D> IntoIterator for WholeChunks<'a, A, D>
+impl<'a, A, D> IntoIterator for ExactChunks<'a, A, D>
     where D: Dimension,
           A: 'a,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = WholeChunksIter<'a, A, D>;
+    type IntoIter = ExactChunksIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        WholeChunksIter {
+        ExactChunksIter {
             iter: self.base.into_elements_base(),
             chunk: self.chunk,
             inner_strides: self.inner_strides,
@@ -76,11 +76,11 @@ impl<'a, A, D> IntoIterator for WholeChunks<'a, A, D>
     }
 }
 
-/// Whole chunks iterator.
+/// Exact chunks iterator.
 ///
-/// See [`.whole_chunks()`](struct.ArrayBase.html#method.whole_chunks) for more
+/// See [`.exact_chunks()`](struct.ArrayBase.html#method.exact_chunks) for more
 /// information.
-pub struct WholeChunksIter<'a, A: 'a, D> {
+pub struct ExactChunksIter<'a, A: 'a, D> {
     iter: ElementsBase<'a, A, D>,
     chunk: D,
     inner_strides: D,
@@ -89,12 +89,12 @@ pub struct WholeChunksIter<'a, A: 'a, D> {
 impl_ndproducer! {
     ['a, A, D: Dimension]
     [Clone => ]
-    WholeChunksMut {
+    ExactChunksMut {
         base,
         chunk,
         inner_strides,
     }
-    WholeChunksMut<'a, A, D> {
+    ExactChunksMut<'a, A, D> {
         type Dim = D;
         type Item = ArrayViewMut<'a, A, D>;
 
@@ -106,20 +106,20 @@ impl_ndproducer! {
     }
 }
 
-/// Whole chunks producer and iterable.
+/// Exact chunks producer and iterable.
 ///
-/// See [`.whole_chunks_mut()`](struct.ArrayBase.html#method.whole_chunks_mut)
+/// See [`.exact_chunks_mut()`](struct.ArrayBase.html#method.exact_chunks_mut)
 /// for more information.
 //#[derive(Debug)]
-pub struct WholeChunksMut<'a, A: 'a, D> {
+pub struct ExactChunksMut<'a, A: 'a, D> {
     base: BaseProducerMut<'a, A, D>,
     chunk: D,
     inner_strides: D,
 }
 
 /// **Panics** if any chunk dimension is zero<br>
-pub fn whole_chunks_mut_of<A, D, E>(mut a: ArrayViewMut<A, D>, chunk: E)
-    -> WholeChunksMut<A, D>
+pub fn exact_chunks_mut_of<A, D, E>(mut a: ArrayViewMut<A, D>, chunk: E)
+    -> ExactChunksMut<A, D>
     where D: Dimension,
           E: IntoDimension<Dim=D>,
 {
@@ -134,21 +134,21 @@ pub fn whole_chunks_mut_of<A, D, E>(mut a: ArrayViewMut<A, D>, chunk: E)
     let inner_strides = a.raw_strides();
     a.strides *= &chunk;
 
-    WholeChunksMut {
+    ExactChunksMut {
         base: a,
         chunk: chunk,
         inner_strides: inner_strides,
     }
 }
 
-impl<'a, A, D> IntoIterator for WholeChunksMut<'a, A, D>
+impl<'a, A, D> IntoIterator for ExactChunksMut<'a, A, D>
     where D: Dimension,
           A: 'a,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = WholeChunksIterMut<'a, A, D>;
+    type IntoIter = ExactChunksIterMut<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        WholeChunksIterMut {
+        ExactChunksIterMut {
             iter: self.base.into_elements_base(),
             chunk: self.chunk,
             inner_strides: self.inner_strides,
@@ -206,12 +206,12 @@ macro_rules! impl_iterator {
 impl_iterator!{
     ['a, A, D: Dimension]
     [Clone => 'a, A, D: Clone]
-    WholeChunksIter {
+    ExactChunksIter {
         iter,
         chunk,
         inner_strides,
     }
-    WholeChunksIter<'a, A, D> {
+    ExactChunksIter<'a, A, D> {
         type Item = ArrayView<'a, A, D>;
 
         fn item(&mut self, elt) {
@@ -228,12 +228,12 @@ impl_iterator!{
 impl_iterator!{
     ['a, A, D: Dimension]
     [Clone => ]
-    WholeChunksIterMut {
+    ExactChunksIterMut {
         iter,
         chunk,
         inner_strides,
     }
-    WholeChunksIterMut<'a, A, D> {
+    ExactChunksIterMut<'a, A, D> {
         type Item = ArrayViewMut<'a, A, D>;
 
         fn item(&mut self, elt) {
@@ -247,11 +247,11 @@ impl_iterator!{
     }
 }
 
-/// Whole chunks iterator.
+/// Exact chunks iterator.
 ///
-/// See [`.whole_chunks_mut()`](struct.ArrayBase.html#method.whole_chunks_mut)
+/// See [`.exact_chunks_mut()`](struct.ArrayBase.html#method.exact_chunks_mut)
 /// for more information.
-pub struct WholeChunksIterMut<'a, A: 'a, D> {
+pub struct ExactChunksIterMut<'a, A: 'a, D> {
     iter: ElementsBaseMut<'a, A, D>,
     chunk: D,
     inner_strides: D,

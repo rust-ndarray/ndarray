@@ -31,12 +31,12 @@ use super::{
 };
 
 pub use self::chunks::{
-    WholeChunks,
-    WholeChunksIter,
-    whole_chunks_of,
-    WholeChunksMut,
-    WholeChunksIterMut,
-    whole_chunks_mut_of,
+    ExactChunks,
+    ExactChunksIter,
+    exact_chunks_of,
+    ExactChunksMut,
+    ExactChunksIterMut,
+    exact_chunks_mut_of,
 };
 pub use self::inners::{
     new_inners,

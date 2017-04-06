@@ -137,7 +137,7 @@ fn test_contiguous_but_not_c_or_f() {
 fn test_clone() {
     let a = Array::from_iter(0..27).into_shape((3, 3, 3)).unwrap();
 
-    let z = Zip::from(&a).and(a.whole_chunks((1, 1, 1)));
+    let z = Zip::from(&a).and(a.exact_chunks((1, 1, 1)));
     let w = z.clone();
     let mut result = Vec::new();
     z.apply(|x, y| {

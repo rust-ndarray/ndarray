@@ -25,8 +25,8 @@ use dimension::{axes_of, Axes, merge_axes, stride_offset};
 use iterators::{
     new_inners,
     new_inners_mut,
-    whole_chunks_of,
-    whole_chunks_mut_of,
+    exact_chunks_of,
+    exact_chunks_mut_of,
 };
 use zip::Zip;
 
@@ -44,8 +44,8 @@ use iter::{
     InnersMut,
     AxisIter,
     AxisIterMut,
-    WholeChunks,
-    WholeChunksMut,
+    ExactChunks,
+    ExactChunksMut,
 };
 use stacking::stack;
 use PrivateNew;
@@ -694,7 +694,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         iterators::new_chunk_iter_mut(self.view_mut(), axis.index(), size)
     }
 
-    /// Return a whole chunks producer (and iterable).
+    /// Return an exact chunks producer (and iterable).
     ///
     /// It produces the whole chunks of a given n-dimensional chunk size,
     /// skipping the remainder along each dimension that doesn't fit evenly.
@@ -705,13 +705,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
-    pub fn whole_chunks<E>(&self, chunk_size: E) -> WholeChunks<A, D> 
+    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
         where E: IntoDimension<Dim=D>,
     {
-        whole_chunks_of(self.view(), chunk_size)
+        exact_chunks_of(self.view(), chunk_size)
     }
 
-    /// Return a whole chunks producer (and iterable).
+    #[doc(hidden)]
+    #[deprecated(note="Renamed to exact_chunks")]
+    pub fn whole_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
+        where E: IntoDimension<Dim=D>,
+    {
+        self.exact_chunks(chunk_size)
+    }
+
+    /// Return an exact chunks producer (and iterable).
     ///
     /// It produces the whole chunks of a given n-dimensional chunk size,
     /// skipping the remainder along each dimension that doesn't fit evenly.
@@ -729,7 +737,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// let mut a = Array::zeros((6, 7));
     ///
     /// // Fill each 2 × 2 chunk with the index of where it appeared in iteration
-    /// for (i, mut chunk) in a.whole_chunks_mut((2, 2)).into_iter().enumerate() {
+    /// for (i, mut chunk) in a.exact_chunks_mut((2, 2)).into_iter().enumerate() {
     ///     chunk.fill(i);
     /// }
     ///
@@ -743,11 +751,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///          [6, 6, 7, 7, 8, 8, 0],
     ///          [6, 6, 7, 7, 8, 8, 0]]));
     /// ```
-    pub fn whole_chunks_mut<E>(&mut self, chunk_size: E) -> WholeChunksMut<A, D> 
+    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
         where E: IntoDimension<Dim=D>,
               S: DataMut
     {
-        whole_chunks_mut_of(self.view_mut(), chunk_size)
+        exact_chunks_mut_of(self.view_mut(), chunk_size)
+    }
+
+    #[doc(hidden)]
+    #[deprecated(note="Renamed to exact_chunks_mut")]
+    pub fn whole_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
+        where E: IntoDimension<Dim=D>,
+              S: DataMut
+    {
+        self.exact_chunks_mut(chunk_size)
     }
 
     // Return (length, stride) for diagonal

@@ -22,8 +22,8 @@ pub use iterators::{
     AxisIterMut,
     AxisChunksIter,
     AxisChunksIterMut,
-    WholeChunks,
-    WholeChunksIter,
-    WholeChunksMut,
-    WholeChunksIterMut,
+    ExactChunks,
+    ExactChunksIter,
+    ExactChunksMut,
+    ExactChunksIterMut,
 };
