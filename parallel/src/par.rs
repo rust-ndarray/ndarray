@@ -10,8 +10,8 @@ use rayon::par_iter::internal::Producer;
 use rayon::par_iter::internal::UnindexedProducer;
 use rayon::par_iter::internal::bridge_unindexed;
 
-use ndarray::AxisIter;
-use ndarray::AxisIterMut;
+use ndarray::iter::AxisIter;
+use ndarray::iter::AxisIterMut;
 use ndarray::{Dimension};
 use ndarray::{ArrayView, ArrayViewMut};
 
