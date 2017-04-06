@@ -515,11 +515,11 @@ impl<Parts, D> Zip<Parts, D>
     /// others.
     fn max_stride_axis(&self) -> Axis {
         let i = match self.layout.flag() {
-            CORDER => self.dimension.slice().iter()
-                          .position(|&len| len > 1).unwrap_or(0),
             FORDER => self.dimension.slice().iter()
                           .rposition(|&len| len > 1).unwrap_or(self.dimension.ndim() - 1),
-            _ => 0,
+            /* corder or default */
+            _ => self.dimension.slice().iter()
+                          .position(|&len| len > 1).unwrap_or(0),
         };
         Axis(i)
     }
