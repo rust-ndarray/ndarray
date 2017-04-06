@@ -464,7 +464,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array. For a 2D array these are the regular rows.
     ///
-    /// This is equivalent to `.inners(Axis(n - 1))` where *n* is `self.ndim()`.
+    /// This is equivalent to `.lanes(Axis(n - 1))` where *n* is `self.ndim()`.
     ///
     /// For an array of dimensions *a* × *b* × *c* × ... × *l* × *m*
     /// it has *a* × *b* × *c* × ... × *l* rows each of length *m*.
@@ -508,7 +508,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a producer and iterable that traverses over the *generalized*
     /// columns of the array. For a 2D array these are the regular columns.
     ///
-    /// This is equivalent to `.inners(Axis(0))`.
+    /// This is equivalent to `.lanes(Axis(0))`.
     ///
     /// For an array of dimensions *a* × *b* × *c* × ... × *l* × *m*
     /// it has *b* × *c* × ... × *l* × *m* columns each of length *a*.
@@ -559,9 +559,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                [[ 6,  7,  8],
     ///                 [ 9, 10, 11]]]);
     ///
-    /// let inner0 = a.inners(Axis(0));
-    /// let inner1 = a.inners(Axis(1));
-    /// let inner2 = a.inners(Axis(2));
+    /// let inner0 = a.lanes(Axis(0));
+    /// let inner1 = a.lanes(Axis(1));
+    /// let inner2 = a.lanes(Axis(2));
     ///
     /// // The first lane for axis 0 is [0, 6]
     /// assert_eq!(inner0.into_iter().next().unwrap(), aview1(&[0, 6]));
@@ -570,7 +570,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// // The first lane for axis 2 is [0, 1, 2]
     /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
     /// ```
-    pub fn inners(&self, axis: Axis) -> Inners<A, D::Smaller> {
+    pub fn lanes(&self, axis: Axis) -> Inners<A, D::Smaller> {
         new_inners(self.view(), axis)
     }
 
@@ -578,7 +578,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// pointing in the direction of `axis`.
     ///
     /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn inners_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
+    pub fn lanes_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
         where S: DataMut
     {
         new_inners_mut(self.view_mut(), axis)
