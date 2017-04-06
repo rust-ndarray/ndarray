@@ -96,27 +96,12 @@ pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
 pub use dimension::IxDynImpl;
-pub use indexes::Indices;
-pub use indexes::{IndicesIter};
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
 pub use si::{Si, S};
 
 use iterators::Baseiter;
-pub use iterators::{
-    Inners,
-    InnersMut,
-    InnerIter,
-    InnerIterMut,
-    AxisIter,
-    AxisIterMut,
-    AxisChunksIter,
-    AxisChunksIterMut,
-    WholeChunks,
-    WholeChunksIter,
-    WholeChunksMut,
-    WholeChunksIterMut,
-};
+use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
@@ -149,6 +134,7 @@ mod dimension;
 
 mod free_functions;
 pub use free_functions::*;
+pub use iterators::iter;
 
 mod layout;
 mod indexes;
@@ -747,19 +733,13 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
     }
 
     fn into_iter_(self) -> Iter<'a, A, D> {
-        Iter {
-            inner: if let Some(slc) = self.into_slice() {
-                ElementsRepr::Slice(slc.iter())
-            } else {
-                ElementsRepr::Counted(self.into_elements_base())
-            },
-        }
+        Iter::new(self)
     }
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[deprecated(note="This method will be replaced.")]
-    pub fn into_outer_iter(self) -> AxisIter<'a, A, D::Smaller>
+    pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_outer_iter(self)
@@ -813,65 +793,22 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
     }
 
     fn into_iter_(self) -> IterMut<'a, A, D> {
-        IterMut {
-            inner:
-            match self.into_slice_() {
-                Ok(x) => ElementsRepr::Slice(x.into_iter()),
-                Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
-            }
-        }
+        IterMut::new(self)
     }
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
     #[deprecated(note="This method will be replaced.")]
-    pub fn into_outer_iter(self) -> AxisIterMut<'a, A, D::Smaller>
+    pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
         iterators::new_outer_iter_mut(self)
     }
 }
 
-
-/// An iterator over the elements of an array.
-///
-/// Iterator element type is `&'a A`.
-///
-/// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
-pub struct Iter<'a, A: 'a, D> {
-    inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
+trait PrivateNew<T> {
+    fn new(x: T) -> Self;
 }
-
-/// Counted read only iterator
-struct ElementsBase<'a, A: 'a, D> {
-    inner: Baseiter<'a, A, D>,
-}
-
-/// An iterator over the elements of an array (mutable).
-///
-/// Iterator element type is `&'a mut A`.
-///
-/// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
-pub struct IterMut<'a, A: 'a, D> {
-    inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
-}
-
-/// An iterator over the elements of an array.
-///
-/// Iterator element type is `&'a mut A`.
-struct ElementsBaseMut<'a, A: 'a, D> {
-    inner: Baseiter<'a, A, D>,
-}
-
-/// An iterator over the indexes and elements of an array.
-///
-/// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
-#[derive(Clone)]
-pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
-/// An iterator over the indexes and elements of an array (mutable).
-///
-/// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
-pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
 fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
     -> ZipIter<SliceIter<'a, A>, SliceIter<'b, B>> {
@@ -894,12 +831,6 @@ trait ZipExt : Iterator {
 }
 
 impl<I> ZipExt for I where I: Iterator { }
-
-#[derive(Clone)]
-enum ElementsRepr<S, C> {
-    Slice(S),
-    Counted(C),
-}
 
 
 /// A contiguous array shape of n dimensions.

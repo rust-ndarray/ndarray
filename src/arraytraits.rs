@@ -15,9 +15,11 @@ use std::ops::{
 };
 
 use imp_prelude::*;
-use {
+use iter::{
     Iter,
     IterMut,
+};
+use {
     NdIndex,
 };
 

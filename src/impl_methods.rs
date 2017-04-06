@@ -27,25 +27,28 @@ use iterators::{
     new_inners_mut,
     whole_chunks_of,
     whole_chunks_mut_of,
-    Inners,
-    InnersMut,
 };
 use zip::Zip;
 
 use {
     NdIndex,
+};
+use iter::{
     AxisChunksIter,
     AxisChunksIterMut,
     Iter,
     IterMut,
     IndexedIter,
     IndexedIterMut,
+    Inners,
+    InnersMut,
     AxisIter,
     AxisIterMut,
     WholeChunks,
     WholeChunksMut,
 };
 use stacking::stack;
+use PrivateNew;
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
@@ -181,7 +184,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Iterator element type is `(D::Pattern, &A)`.
     pub fn indexed_iter(&self) -> IndexedIter<A, D> {
-        IndexedIter(self.view().into_elements_base())
+        IndexedIter::new(self.view().into_elements_base())
     }
 
     /// Return an iterator of indexes and mutable references to the elements of the array.
@@ -193,7 +196,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
         where S: DataMut,
     {
-        IndexedIterMut(self.view_mut().into_elements_base())
+        IndexedIterMut::new(self.view_mut().into_elements_base())
     }
 
 

@@ -10,14 +10,16 @@
 #[macro_use] mod macros;
 mod chunks;
 mod inners;
+pub mod iter;
 
 use std::marker::PhantomData;
 use std::ptr;
 
 use Ix1;
 
+use PrivateNew;
+
 use super::{Dimension, Ix, Ixs};
-use super::{Iter, ElementsRepr, ElementsBase, ElementsBaseMut, IterMut, IndexedIter, IndexedIterMut};
 use super::{
     ArrayBase,
     Data,
@@ -42,6 +44,8 @@ pub use self::inners::{
     Inners,
     InnersMut,
 };
+
+use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 /// Base for array iterators
 ///
@@ -253,6 +257,100 @@ clone_bounds!(
         inner,
     }
 );
+
+impl<'a, A, D> PrivateNew<ArrayView<'a, A, D>> for Iter<'a, A, D>
+    where D: Dimension
+{
+    fn new(self_: ArrayView<'a, A, D>) -> Self {
+        Iter {
+            inner: if let Some(slc) = self_.into_slice() {
+                ElementsRepr::Slice(slc.iter())
+            } else {
+                ElementsRepr::Counted(self_.into_elements_base())
+            },
+        }
+    }
+}
+
+
+
+impl<'a, A, D> PrivateNew<ArrayViewMut<'a, A, D>> for IterMut<'a, A, D>
+    where D: Dimension
+{
+    fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
+        IterMut {
+            inner:
+            match self_.into_slice_() {
+                Ok(x) => ElementsRepr::Slice(x.into_iter()),
+                Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum ElementsRepr<S, C> {
+    Slice(S),
+    Counted(C),
+}
+
+/// An iterator over the elements of an array.
+///
+/// Iterator element type is `&'a A`.
+///
+/// See [`.iter()`](struct.ArrayBase.html#method.iter) for more information.
+pub struct Iter<'a, A: 'a, D> {
+    inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
+}
+
+/// Counted read only iterator
+pub struct ElementsBase<'a, A: 'a, D> {
+    pub inner: Baseiter<'a, A, D>,
+}
+
+/// An iterator over the elements of an array (mutable).
+///
+/// Iterator element type is `&'a mut A`.
+///
+/// See [`.iter_mut()`](struct.ArrayBase.html#method.iter_mut) for more information.
+pub struct IterMut<'a, A: 'a, D> {
+    inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
+}
+
+/// An iterator over the elements of an array.
+///
+/// Iterator element type is `&'a mut A`.
+pub struct ElementsBaseMut<'a, A: 'a, D> {
+    pub inner: Baseiter<'a, A, D>,
+}
+
+
+/// An iterator over the indexes and elements of an array.
+///
+/// See [`.indexed_iter()`](struct.ArrayBase.html#method.indexed_iter) for more information.
+#[derive(Clone)]
+pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
+/// An iterator over the indexes and elements of an array (mutable).
+///
+/// See [`.indexed_iter_mut()`](struct.ArrayBase.html#method.indexed_iter_mut) for more information.
+pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
+
+impl<'a, A, D> PrivateNew<ElementsBase<'a, A, D>> for IndexedIter<'a, A, D>
+    where D: Dimension
+{
+    fn new(x: ElementsBase<'a, A, D>) -> Self {
+        IndexedIter(x)
+    }
+}
+
+impl<'a, A, D> PrivateNew<ElementsBaseMut<'a, A, D>> for IndexedIterMut<'a, A, D>
+    where D: Dimension
+{
+    fn new(x: ElementsBaseMut<'a, A, D>) -> Self {
+        IndexedIterMut(x)
+    }
+}
+
 
 impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
     type Item = &'a A;
@@ -1074,14 +1172,13 @@ send_sync_read_write!(ElementsBaseMut);
 /// to deliver exactly as many items as it said it would.
 pub unsafe trait TrustedIterator { }
 
-use std::slice;
-use std::iter;
+use std;
 use linspace::Linspace;
-use IndicesIter;
+use iter::IndicesIter;
 
 unsafe impl<F> TrustedIterator for Linspace<F> { }
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }
-unsafe impl<I, F> TrustedIterator for iter::Map<I, F>
+unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F>
     where I: TrustedIterator { }
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
 unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
