@@ -548,8 +548,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a producer and iterable that traverses over all 1D lanes
     /// pointing in the direction of `axis`.
     ///
-    /// Iterator element is `ArrayView1<A>` (1D array view); note that it is
-    /// always 1D.
+    /// When the point in the direction of the first axis, they are *columns*,
+    /// in the direction of the last axis *rows*; in general they are all
+    /// *lanes* and are one dimensional.
+    ///
+    /// Iterator element is `ArrayView1<A>` (1D array view).
     ///
     /// ```
     /// use ndarray::{arr3, aview1, Axis};
