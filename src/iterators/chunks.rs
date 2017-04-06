@@ -156,52 +156,6 @@ impl<'a, A, D> IntoIterator for ExactChunksMut<'a, A, D>
     }
 }
 
-macro_rules! impl_iterator {
-    (
-    [$($typarm:tt)*]
-    [Clone => $($cloneparm:tt)*]
-     $typename:ident {
-         $base:ident,
-         $(
-             $fieldname:ident,
-         )*
-     }
-     $fulltype:ty {
-        type Item = $ity:ty;
-
-        fn item(&mut $self_:ident, $elt:pat) {
-            $refexpr:expr
-        }
-    }) => { 
-         expand_if!(@nonempty [$($cloneparm)*] 
-
-            impl<$($cloneparm)*> Clone for $fulltype {
-                fn clone(&self) -> Self {
-                    $typename {
-                        $base: self.$base.clone(),
-                        $(
-                            $fieldname: self.$fieldname.clone(),
-                        )*
-                    }
-                }
-            }
-
-         );
-        impl<$($typarm)*> Iterator for $fulltype {
-            type Item = $ity;
-
-            fn next(&mut $self_) -> Option<Self::Item> {
-                $self_.$base.next().map(|$elt| {
-                    $refexpr
-                })
-            }
-
-            fn size_hint(&self) -> (usize, Option<usize>) {
-                self.$base.size_hint()
-            }
-        }
-    }
-}
 
 impl_iterator!{
     ['a, A, D: Dimension]
