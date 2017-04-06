@@ -480,10 +480,10 @@ fn iterators_are_send_sync() {
     _send_sync(&a.axis_chunks_iter(Axis(1), 1));
     _send_sync(&a.axis_chunks_iter_mut(Axis(1), 1));
     _send_sync(&indices(a.dim()));
-    _send_sync(&a.whole_chunks((1, 1, 1)));
-    _send_sync(&a.whole_chunks_mut((1, 1, 1)));
-    _send_sync(&a.whole_chunks((1, 1, 1)).into_iter());
-    _send_sync(&a.whole_chunks_mut((1, 1, 1)).into_iter());
+    _send_sync(&a.exact_chunks((1, 1, 1)));
+    _send_sync(&a.exact_chunks_mut((1, 1, 1)));
+    _send_sync(&a.exact_chunks((1, 1, 1)).into_iter());
+    _send_sync(&a.exact_chunks_mut((1, 1, 1)).into_iter());
 }
 
 #[test]
