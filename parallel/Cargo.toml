@@ -1,6 +1,6 @@
 [package]
 name = "ndarray-parallel"
-version = "0.2.0"
+version = "0.3.0-alpha.0"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
@@ -14,7 +14,7 @@ categories = ["data-structures", "science", "concurrency"]
 
 [dependencies]
 rayon = "0.6"
-ndarray = { version = "0.8.0", path = "../" }
+ndarray = { version = "0.9.0-alpha.1", path = "../" }
 
 [dev-dependencies]
 num_cpus = "1.2"
