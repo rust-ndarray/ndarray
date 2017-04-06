@@ -803,4 +803,12 @@ impl<T> FoldWhile<T> {
             FoldWhile::Continue(x) | FoldWhile::Done(x) => x
         }
     }
+
+    /// Return true if it is `Done`, false if `Continue
+    pub fn is_done(&self) -> bool {
+        match *self {
+            FoldWhile::Continue(_) => false,
+            FoldWhile::Done(_) => true,
+        }
+    }
 }
