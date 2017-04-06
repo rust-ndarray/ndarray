@@ -248,6 +248,9 @@ fn test_indices_split_1() {
     for m in (0..4).chain(10..12) {
         for n in (0..4).chain(10..12) {
             let a1 = Array::<f64, _>::default((m, n));
+            if a1.len() <= 1 {
+                continue;
+            }
             let (a, b) = Zip::indexed(&a1).split();
             let mut seen = Vec::new();
 

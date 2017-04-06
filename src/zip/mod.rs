@@ -778,6 +778,8 @@ macro_rules! map_impl {
             ///
             /// It will be split in the way that best preserves element locality.
             pub fn split(self) -> (Self, Self) {
+                debug_assert_ne!(self.size(), 0, "Attempt to split empty zip");
+                debug_assert_ne!(self.size(), 1, "Attempt to split zip with 1 elem");
                 // Always split in a way that preserves layout (if any)
                 let axis = self.max_stride_axis();
                 let index = self.len_of(axis) / 2;
