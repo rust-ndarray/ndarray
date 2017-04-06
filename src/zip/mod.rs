@@ -437,8 +437,8 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///     .and(&c)
 ///     .and(&d)
 ///     .apply(|w, &x, &y, &z| {
-///     *w += x + y * z;
-/// });
+///         *w += x + y * z;
+///     });
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {
