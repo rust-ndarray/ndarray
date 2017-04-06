@@ -1,5 +1,5 @@
 
-use rayon::par_iter::ParallelIterator;
+use rayon::iter::ParallelIterator;
 
 pub trait NdarrayIntoParallelIterator {
     type Iter: ParallelIterator<Item=Self::Item>;
