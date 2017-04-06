@@ -31,7 +31,7 @@ version = "0.1.32"
 default-features = false
 
 [dependencies.itertools]
-version = "0.5.0"
+version = "0.6.0"
 
 [dependencies.rustc-serialize]
 version = "0.3.20"
