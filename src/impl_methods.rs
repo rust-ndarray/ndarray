@@ -550,7 +550,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a producer and iterable that traverses over all 1D lanes
     /// pointing in the direction of `axis`.
     ///
-    /// When the point in the direction of the first axis, they are *columns*,
+    /// When the pointing in the direction of the first axis, they are *columns*,
     /// in the direction of the last axis *rows*; in general they are all
     /// *lanes* and are one dimensional.
     ///
