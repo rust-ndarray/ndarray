@@ -79,24 +79,26 @@ How to use with cargo::
 Recent Changes (ndarray)
 ------------------------
 
-- 0.9.0-alpha.1
+- 0.9.0-alpha.x
 
   - Add ``Zip::indexed``
   - New methods ``genrows/_mut, gencolumns/_mut, lanes/_mut`` that
     return iterable producers (producer means ``Zip`` compatibile).
+  - New method ``.windows()`` by @Robbepop, returns an iterable producer
   - ``Zip::apply`` and ``fold_while`` now take ``self`` as the first argument
-  - ``indices/_of`` now returns an iterable producers (not iterator)
-  - No allocation for short dynamic dimensions
+  - ``indices/_of`` now return iterable producers (not iterator)
+  - No allocation for short ``IxDyn``.
   - Remove ``Ix, Ixs`` from the prelude
   - Remove deprecated ``Axis::axis`` method (use ``.index()``)
   - Rename ``.whole_chunks`` to ``.exact_chunks``.
   - Remove ``.inner_iter`` in favour of the new ``.genrows()`` method.
-  - Iterator and similar structs are now scoped under ``ndarray::iter``
-  - Internal changes. ``NdProducer`` generalized. ``Dimension`` gets
-    the ``Smaller`` type parameter. Internal traits have the private marker now.
+  - Iterators and similar structs are now scoped under ``ndarray::iter``
   - ``IntoNdProducer`` now has the ``Item`` associated type
   - Owned array storage types are now encapsulated in newtypes
-  - ``FoldWhile`` has the method ``is_done``.
+  - ``FoldWhile`` got the method ``is_done``.
+  - Arrays now implement formatting trait ``Binary`` if elements do
+  - Internal changes. ``NdProducer`` generalized. ``Dimension`` gets
+    the ``Smaller`` type parameter. Internal traits have the private marker now.
   - Require Rust 1.15
 
 - 0.8.4
