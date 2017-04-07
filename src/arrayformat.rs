@@ -147,3 +147,14 @@ impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
     }
 }
 
+/// Format the array using `Binary` and apply the formatting parameters used
+/// to each element.
+///
+/// The array is shown in multiline style.
+impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
+    where S: Data<Elem=A>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        format_array(self, f, <_>::fmt)
+    }
+}
