@@ -786,19 +786,17 @@ impl Dimension for IxDyn
     private_impl!{}
 }
 
-impl<J> Index<J> for Dim<IxDynImpl>
-    where IxDynImpl: Index<J>,
+impl Index<usize> for Dim<IxDynImpl>
 {
-    type Output = <IxDynImpl as Index<J>>::Output;
-    fn index(&self, index: J) -> &Self::Output {
+    type Output = <IxDynImpl as Index<usize>>::Output;
+    fn index(&self, index: usize) -> &Self::Output {
         &self.ix()[index]
     }
 }
 
-impl<J> IndexMut<J> for Dim<IxDynImpl>
-    where IxDynImpl: IndexMut<J>,
+impl IndexMut<usize> for Dim<IxDynImpl>
 {
-    fn index_mut(&mut self, index: J) -> &mut Self::Output {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.ixm()[index]
     }
 }
