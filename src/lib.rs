@@ -758,18 +758,18 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Inners<A, D::Smaller>
+    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller>
     {
         let n = self.ndim();
-        iterators::new_inners(self.view(), Axis(n.saturating_sub(1)))
+        iterators::new_lanes(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::InnersMut<A, D::Smaller>
+    fn inner_rows_mut(&mut self) -> iterators::LanesMut<A, D::Smaller>
         where S: DataMut
     {
         let n = self.ndim();
-        iterators::new_inners_mut(self.view_mut(), Axis(n.saturating_sub(1)))
+        iterators::new_lanes_mut(self.view_mut(), Axis(n.saturating_sub(1)))
     }
 }
 

@@ -44,10 +44,10 @@ pub use self::chunks::{
     exact_chunks_mut_of,
 };
 pub use self::lanes::{
-    new_inners,
-    new_inners_mut,
-    Inners,
-    InnersMut,
+    new_lanes,
+    new_lanes_mut,
+    Lanes,
+    LanesMut,
 };
 
 use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
@@ -521,13 +521,13 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
 /// and yields each inner row.
 ///
 /// See [`.lanes()`](../struct.ArrayBase.html#method.lanes) for more information.
-pub struct LaneIter<'a, A: 'a, D> {
+pub struct LanesIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
 }
 
-impl<'a, A, D> Iterator for LaneIter<'a, A, D>
+impl<'a, A, D> Iterator for LanesIter<'a, A, D>
     where D: Dimension
 {
     type Item = ArrayView<'a, A, Ix1>;
@@ -543,7 +543,7 @@ impl<'a, A, D> Iterator for LaneIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for LaneIter<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
     where D: Dimension
 {
     fn len(&self) -> usize {
@@ -551,7 +551,7 @@ impl<'a, A, D> ExactSizeIterator for LaneIter<'a, A, D>
     }
 }
 
-// NOTE: LaneIterMut is a mutable iterator and must not expose aliasing
+// NOTE: LanesIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
 // anyway).
 /// An iterator that traverses over all dimensions but the innermost,
@@ -559,13 +559,13 @@ impl<'a, A, D> ExactSizeIterator for LaneIter<'a, A, D>
 ///
 /// See [`.lanes_mut()`](../struct.ArrayBase.html#method.lanes_mut)
 /// for more information.
-pub struct LaneIterMut<'a, A: 'a, D> {
+pub struct LanesIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
     iter: Baseiter<'a, A, D>,
 }
 
-impl<'a, A, D> Iterator for LaneIterMut<'a, A, D>
+impl<'a, A, D> Iterator for LanesIterMut<'a, A, D>
     where D: Dimension,
 {
     type Item = ArrayViewMut<'a, A, Ix1>;
@@ -583,7 +583,7 @@ impl<'a, A, D> Iterator for LaneIterMut<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for LaneIterMut<'a, A, D>
+impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
     where D: Dimension,
 {
     fn len(&self) -> usize {
@@ -1159,14 +1159,14 @@ chunk_iter_impl!(AxisChunksIterMut, ArrayViewMut);
 
 send_sync_read_only!(Iter);
 send_sync_read_only!(IndexedIter);
-send_sync_read_only!(LaneIter);
+send_sync_read_only!(LanesIter);
 send_sync_read_only!(AxisIter);
 send_sync_read_only!(AxisChunksIter);
 send_sync_read_only!(ElementsBase);
 
 send_sync_read_write!(IterMut);
 send_sync_read_write!(IndexedIterMut);
-send_sync_read_write!(LaneIterMut);
+send_sync_read_write!(LanesIterMut);
 send_sync_read_write!(AxisIterMut);
 send_sync_read_write!(AxisChunksIterMut);
 send_sync_read_write!(ElementsBaseMut);

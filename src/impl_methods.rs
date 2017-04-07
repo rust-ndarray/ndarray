@@ -23,8 +23,8 @@ use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes, merge_axes, stride_offset};
 use iterators::{
-    new_inners,
-    new_inners_mut,
+    new_lanes,
+    new_lanes_mut,
     exact_chunks_of,
     exact_chunks_mut_of,
     windows
@@ -41,8 +41,8 @@ use iter::{
     IterMut,
     IndexedIter,
     IndexedIterMut,
-    Inners,
-    InnersMut,
+    Lanes,
+    LanesMut,
     AxisIter,
     AxisIterMut,
     ExactChunks,
@@ -489,22 +489,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     /* loop body */
     /// }
     /// ```
-    pub fn genrows(&self) -> Inners<A, D::Smaller> {
+    pub fn genrows(&self) -> Lanes<A, D::Smaller> {
         let mut n = self.ndim();
         if n == 0 { n += 1; }
-        new_inners(self.view(), Axis(n - 1))
+        new_lanes(self.view(), Axis(n - 1))
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn genrows_mut(&mut self) -> InnersMut<A, D::Smaller>
+    pub fn genrows_mut(&mut self) -> LanesMut<A, D::Smaller>
         where S: DataMut
     {
         let mut n = self.ndim();
         if n == 0 { n += 1; }
-        new_inners_mut(self.view_mut(), Axis(n - 1))
+        new_lanes_mut(self.view_mut(), Axis(n - 1))
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -533,18 +533,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///     /* loop body */
     /// }
     /// ```
-    pub fn gencolumns(&self) -> Inners<A, D::Smaller> {
-        new_inners(self.view(), Axis(0))
+    pub fn gencolumns(&self) -> Lanes<A, D::Smaller> {
+        new_lanes(self.view(), Axis(0))
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
     /// columns of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn gencolumns_mut(&mut self) -> InnersMut<A, D::Smaller>
+    pub fn gencolumns_mut(&mut self) -> LanesMut<A, D::Smaller>
         where S: DataMut
     {
-        new_inners_mut(self.view_mut(), Axis(0))
+        new_lanes_mut(self.view_mut(), Axis(0))
     }
 
     /// Return a producer and iterable that traverses over all 1D lanes
@@ -575,18 +575,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// // The first lane for axis 2 is [0, 1, 2]
     /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
     /// ```
-    pub fn lanes(&self, axis: Axis) -> Inners<A, D::Smaller> {
-        new_inners(self.view(), axis)
+    pub fn lanes(&self, axis: Axis) -> Lanes<A, D::Smaller> {
+        new_lanes(self.view(), axis)
     }
 
     /// Return a producer and iterable that traverses over all 1D lanes
     /// pointing in the direction of `axis`.
     ///
     /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn lanes_mut(&mut self, axis: Axis) -> InnersMut<A, D::Smaller>
+    pub fn lanes_mut(&mut self, axis: Axis) -> LanesMut<A, D::Smaller>
         where S: DataMut
     {
-        new_inners_mut(self.view_mut(), axis)
+        new_lanes_mut(self.view_mut(), axis)
     }
 
 
@@ -1297,8 +1297,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // break the arrays up into their inner rows
         let n = self.ndim();
         let dim = self.raw_dim();
-        Zip::from(new_inners_mut(self.view_mut(), Axis(n - 1)))
-            .and(new_inners(rhs.broadcast_assume(dim), Axis(n - 1)))
+        Zip::from(new_lanes_mut(self.view_mut(), Axis(n - 1)))
+            .and(new_lanes(rhs.broadcast_assume(dim), Axis(n - 1)))
             .apply(move |s_row, r_row| {
                 Zip::from(s_row).and(r_row).apply(|a, b| f(a, b))
             });
