@@ -781,7 +781,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.
     /// 
-    /// **Panics** if any dimension of `window_size` is zero.
+    /// **Panics** if any dimension of `window_size` is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
     /// number of array axes.)
     pub fn windows<E>(&self, window_size: E) -> Windows<A, D>
