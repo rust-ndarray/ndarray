@@ -399,21 +399,21 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 
 /// Lock step function application across several arrays or other producers.
 ///
-/// Zip allows matching several arrays to each other elementwise and applying
-/// a function over all tuples of elements (one element from each input at
+/// Zip allows matching several producers to each other elementwise and applying
+/// a function over all tuples of elements (one item from each input at
 /// a time).
 ///
 /// In general, the zip uses a tuple of producers
-/// ([`NdProducer`](trait.NdProducer.html) trait) that all have to be of the same
-/// shape. The NdProducer implementation defines what its element type is
+/// ([`NdProducer`](trait.NdProducer.html) trait) that all have to be of the
+/// same shape. The NdProducer implementation defines what its item type is
 /// (for example if it's a shared reference, mutable reference or an array
 /// view etc).
 ///
-/// If all the input arrays are of the same memory order the zip performs
-/// much better and the compiler can usually vectorize the loop (if applicable).
+/// If all the input arrays are of the same memory layout the zip performs much
+/// better and the compiler can usually vectorize the loop (if applicable).
 ///
-/// The order elements are visited is not specified. The producers don’t
-/// have to have the same element type.
+/// The order elements are visited is not specified. The producers don’t have to
+/// have the same item type.
 ///
 /// The `Zip` has two methods for function application: `apply` and
 /// `fold_while`. The zip object can be split, which allows parallelization.
