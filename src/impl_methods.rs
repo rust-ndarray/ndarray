@@ -185,6 +185,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `(D::Pattern, &A)`.
+    ///
+    /// See also [`Zip::indexed`](struct.Zip.html)
     pub fn indexed_iter(&self) -> IndexedIter<A, D> {
         IndexedIter::new(self.view().into_elements_base())
     }
