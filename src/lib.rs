@@ -45,6 +45,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
+//!   + See also `ndarray-parallel` crate for integration with rayon.
 //! - Requires Rust 1.15
 //!
 //! ## Crate Feature Flags
