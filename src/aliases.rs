@@ -69,7 +69,7 @@ pub type Ix6 = Dim<[Ix; 6]>;
 /// dynamic-dimensional
 ///
 /// You can use the `IxDyn` function to create a dimension for an array with
-/// dynamic number of dimensions.  (`Vec<Ix>` and `&[usize]` also implement
+/// dynamic number of dimensions.  (`Vec<usize>` and `&[usize]` also implement
 /// `IntoDimension` to produce `IxDyn`).
 ///
 /// ```
