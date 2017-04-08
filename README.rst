@@ -99,6 +99,7 @@ Recent Changes (ndarray)
   - Arrays now implement formatting trait ``Binary`` if elements do
   - Internal changes. ``NdProducer`` generalized. ``Dimension`` gets
     the ``Smaller`` type parameter. Internal traits have the private marker now.
+  - ``#`` (alternate) in formatting does nothing now.
   - Require Rust 1.15
 
 - 0.8.4
