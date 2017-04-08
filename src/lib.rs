@@ -401,6 +401,12 @@ pub type Ixs = isize;
 /// [l]: #method.lanes
 /// [lm]: #method.lanes_mut
 ///
+/// Yes, for 2D arrays `.genrows()` and `.outer_iter()` have about the same
+/// effect:
+///
+///  + `genrows()` is a producer with *n* - 1 dimensions of 1 dimensional items
+///  + `outer_iter()` is a producer with 1 dimension of *n* - 1 dimensional items
+///
 /// ## Slicing
 ///
 /// You can use slicing to create a view of a subset of the data in
