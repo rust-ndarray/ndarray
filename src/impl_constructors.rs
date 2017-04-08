@@ -22,10 +22,10 @@ use iterators::{to_vec, to_vec_mapped};
 
 /// # Constructor Methods for Owned Arrays
 ///
-/// Constructor methods for one-dimensional arrays.
-///
 /// Note that the constructor methods apply to `Array` and `RcArray`,
 /// the two array types that have owned storage.
+///
+/// ## Constructor methods for one-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix1>
     where S: DataOwned<Elem=A>,
 {
@@ -86,7 +86,7 @@ impl<S, A> ArrayBase<S, Ix1>
     }
 }
 
-/// Constructor methods for two-dimensional arrays.
+/// ## Constructor methods for two-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix2>
     where S: DataOwned<Elem=A>,
 {
@@ -114,7 +114,22 @@ macro_rules! size_checked_unwrap {
     }
 }
 
-/// Constructor methods for n-dimensional arrays.
+/// ## Constructor methods for n-dimensional arrays.
+///
+/// The `shape` argument can be an integer or a tuple of integers to specify
+/// a static size. For example `10` makes a length 10 one-dimensional array
+/// (dimension type `Ix1`) and `(5, 6)` a 5 × 6 array (dimension type `Ix2`).
+///
+/// With the trait `ShapeBuilder` in scope, there is the method `.f()` to select
+/// column major (“f” order) memory layout instead of the default row major.
+/// For example `Array::zeros((5, 6).f())` makes a column major 5 × 6 array.
+///
+/// Use [`IxDyn`](type.IxDyn.html) for the shape to create an array with dynamic
+/// number of axes.
+///
+/// Finally, the few constructors that take a completely general
+/// `Into<StrideShape>` argument *optionally* support custom strides, for
+/// example a shape given like `(10, 2, 2).strides((1, 10, 20))` is valid.
 impl<S, A, D> ArrayBase<S, D>
     where S: DataOwned<Elem=A>,
           D: Dimension,
