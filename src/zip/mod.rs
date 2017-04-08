@@ -118,12 +118,15 @@ impl<D> Splittable for D
 /// Argument conversion into a producer.
 ///
 /// Slices and vectors can be used (equivalent to 1-dimensional array views).
+///
+/// This trait is like `IntoIterator` for `NdProducers` instead of iterators.
 pub trait IntoNdProducer {
     /// The element produced per iteration.
     type Item;
     /// Dimension type of the producer
     type Dim: Dimension;
     type Output: NdProducer<Dim=Self::Dim, Item=Self::Item>;
+    /// Convert the value into an `NdProducer`.
     fn into_producer(self) -> Self::Output;
 }
 
