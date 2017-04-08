@@ -519,6 +519,51 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
     if k != k2 || m != m2 {
         general_dot_shape_error(m, k, k2, 1, m2, 1);
     } else {
+        macro_rules! gemv {
+            ($ty:ty, $gemv:ident) => {
+                if blas_row_major_2d::<$ty, _>(&a)
+                    && blas_compat_1d::<$ty, _>(&x)
+                    && blas_compat_1d::<$ty, _>(&y)
+                {
+                    let mut a_trans = CblasNoTrans;
+                    let mut a = a.view();
+                    let a_s0 = a.strides()[0];
+                    if a_s0 == 1 && m == k {
+                        a = a.reversed_axes();
+                        a_trans = CblasTrans;
+                    }
+                    // adjust strides, these may [1, 1] for column matrices
+                    let a_stride = cmp::max(a.strides()[0] as blas_index, k as blas_index);
+                    let x_stride = x.strides()[0] as blas_index;
+                    let y_stride = y.strides()[0] as blas_index;
+
+                    unsafe {
+                        blas_sys::c::$gemv(
+                        CblasRowMajor,
+                        a_trans,
+                        m as blas_index, // m, rows of Op(a)
+                        k as blas_index, // n, cols of Op(a)
+                        cast_as(&alpha),     // alpha
+                        a.ptr as *const _,   // a
+                        a_stride, // lda
+                        x.ptr as *const _,   // x
+                        x_stride,
+                        cast_as(&beta),      // beta
+                        y.ptr as *mut _,     // x
+                        y_stride,
+                    );
+                    }
+                return;
+                }
+            }
+        }
+        #[cfg(feature = "blas")]
+        gemv!(f32, cblas_sgemv);
+        #[cfg(feature = "blas")]
+        gemv!(f64, cblas_dgemv);
+
+        /* general */
+
         if beta.is_zero() {
             Zip::from(a.outer_iter())
                 .and(y)

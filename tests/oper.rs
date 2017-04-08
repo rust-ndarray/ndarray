@@ -640,22 +640,28 @@ fn gen_mat_vec_mul() {
     for &s1 in &[1, 2, -1, -2] {
         for &s2 in &[1, 2, -1, -2] {
             for &(m, k) in &sizes {
-                let a = range_mat64(m, k);
-                let b = range1_mat64(k);
-                let mut c = range1_mat64(m);
-                let mut answer = c.clone();
+                for &rev in &[false, true] {
+                    let mut a = range_mat64(m, k);
+                    if rev {
+                        a = a.reversed_axes();
+                    }
+                    let (m, k) = a.dim();
+                    let b = range1_mat64(k);
+                    let mut c = range1_mat64(m);
+                    let mut answer = c.clone();
 
-                {
-                    let a = a.slice(s![..;s1, ..;s2]);
-                    let b = b.slice(s![..;s2]);
-                    let mut cv = c.slice_mut(s![..;s1]);
+                    {
+                        let a = a.slice(s![..;s1, ..;s2]);
+                        let b = b.slice(s![..;s2]);
+                        let mut cv = c.slice_mut(s![..;s1]);
 
-                    let answer_part = alpha * reference_mat_vec_mul(&a, &b) + beta * &cv;
-                    answer.slice_mut(s![..;s1]).assign(&answer_part);
+                        let answer_part = alpha * reference_mat_vec_mul(&a, &b) + beta * &cv;
+                        answer.slice_mut(s![..;s1]).assign(&answer_part);
 
-                    general_mat_vec_mul(alpha, &a, &b, beta, &mut cv);
+                        general_mat_vec_mul(alpha, &a, &b, beta, &mut cv);
+                    }
+                    assert_close(c.view(), answer.view());
                 }
-                assert_close(c.view(), answer.view());
             }
         }
     }
