@@ -369,8 +369,8 @@ fn add_2d_cutouts_by_4(bench: &mut test::Bencher)
     let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
     let chunksz = (4, 4);
     bench.iter(|| {
-        Zip::from(a.whole_chunks_mut(chunksz))
-            .and(b.whole_chunks(chunksz))
+        Zip::from(a.exact_chunks_mut(chunksz))
+            .and(b.exact_chunks(chunksz))
             .apply(|mut a, b| a += &b);
     });
 }
@@ -382,8 +382,8 @@ fn add_2d_cutouts_by_16(bench: &mut test::Bencher)
     let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
     let chunksz = (16, 16);
     bench.iter(|| {
-        Zip::from(a.whole_chunks_mut(chunksz))
-            .and(b.whole_chunks(chunksz))
+        Zip::from(a.exact_chunks_mut(chunksz))
+            .and(b.exact_chunks(chunksz))
             .apply(|mut a, b| a += &b);
     });
 }
@@ -395,8 +395,8 @@ fn add_2d_cutouts_by_32(bench: &mut test::Bencher)
     let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
     let chunksz = (32, 32);
     bench.iter(|| {
-        Zip::from(a.whole_chunks_mut(chunksz))
-            .and(b.whole_chunks(chunksz))
+        Zip::from(a.exact_chunks_mut(chunksz))
+            .and(b.exact_chunks(chunksz))
             .apply(|mut a, b| a += &b);
     });
 }
