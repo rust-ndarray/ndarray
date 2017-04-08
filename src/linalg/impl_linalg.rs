@@ -13,6 +13,7 @@ use numeric_util;
 
 use {
     LinalgScalar,
+    Zip,
 };
 
 use std::any::TypeId;
@@ -468,7 +469,7 @@ fn mat_mul_general<A>(alpha: A,
     }
 }
 
-/// General matrix multiplication.
+/// General matrix-matrix multiplication.
 ///
 /// Compute C ← α A B + β C
 ///
@@ -492,6 +493,45 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
         general_dot_shape_error(m, k, k2, n, m2, n2);
     } else {
         mat_mul_impl(alpha, &a.view(), &b.view(), beta, &mut c.view_mut());
+    }
+}
+
+/// General matrix-vector multiplication.
+///
+/// Compute y ← α A x + β y
+///
+/// where A is a *M* × *N* matrix and x is a *N* column vector and y a *M*
+/// column vector (one dimensional arrays).
+///
+/// ***Panics*** if array shapes are not compatible
+pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
+                                          a: &ArrayBase<S1, Ix2>,
+                                          x: &ArrayBase<S2, Ix1>,
+                                          beta: A,
+                                          y: &mut ArrayBase<S3, Ix1>)
+    where S1: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          S3: DataMut<Elem=A>,
+          A: LinalgScalar,
+{
+    let ((m, k), k2) = (a.dim(), x.dim());
+    let m2 = y.dim();
+    if k != k2 || m != m2 {
+        general_dot_shape_error(m, k, k2, 1, m2, 1);
+    } else {
+        if beta.is_zero() {
+            Zip::from(a.outer_iter())
+                .and(y)
+                .apply(|row, elt| {
+                    *elt = row.dot(x) * alpha;
+                });
+        } else {
+            Zip::from(a.outer_iter())
+                .and(y)
+                .apply(|row, elt| {
+                    *elt = *elt * beta + row.dot(x) * alpha;
+                });
+        }
     }
 }
 

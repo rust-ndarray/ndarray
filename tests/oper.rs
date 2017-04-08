@@ -5,6 +5,7 @@ use ndarray::prelude::*;
 use ndarray::{rcarr1, rcarr2};
 use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
+use ndarray::linalg::general_mat_vec_mul;
 use ndarray::Si;
 use ndarray::{Ix, Ixs};
 
@@ -273,6 +274,10 @@ fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
     Array::linspace(0., (m * n - 1) as f64, m * n).into_shape((m, n)).unwrap()
 }
 
+fn range1_mat64(m: Ix) -> Array1<f64> {
+    Array::linspace(0., (m - 1) as f64, m)
+}
+
 fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
     Array::from_iter(0..(m * n) as i32).into_shape((m, n)).unwrap()
 }
@@ -308,6 +313,18 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
     unsafe {
         ArrayBase::from_shape_vec_unchecked((m, n), res_elems)
     }
+}
+
+// simple, slow, correct (hopefully) mat mul
+fn reference_mat_vec_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix1>)
+    -> Array1<A>
+    where A: LinalgScalar,
+          S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+{
+    let ((m, _), k) = (lhs.dim(), rhs.dim());
+    reference_mat_mul(lhs, &rhs.to_owned().into_shape((k, 1)).unwrap())
+        .into_shape(m).unwrap()
 }
 
 #[test]
@@ -602,5 +619,44 @@ fn gen_mat_mul_i32() {
         let answer = alpha * reference_mat_mul(&a, &b) + beta * &c;
         general_mat_mul(alpha, &a, &b, beta, &mut c);
         assert_eq!(&c, &answer);
+    }
+}
+
+#[test]
+fn gen_mat_vec_mul() {
+    let alpha = -2.3;
+    let beta = 3.14;
+    let sizes = vec![(4, 4),
+                     (8, 8),
+                     (17, 15),
+                     (4, 17),
+                     (17, 3),
+                     (19, 18),
+                     (16, 17),
+                     (15, 16),
+                     (67, 63),
+        ];
+    // test different strides
+    for &s1 in &[1, 2, -1, -2] {
+        for &s2 in &[1, 2, -1, -2] {
+            for &(m, k) in &sizes {
+                let a = range_mat64(m, k);
+                let b = range1_mat64(k);
+                let mut c = range1_mat64(m);
+                let mut answer = c.clone();
+
+                {
+                    let a = a.slice(s![..;s1, ..;s2]);
+                    let b = b.slice(s![..;s2]);
+                    let mut cv = c.slice_mut(s![..;s1]);
+
+                    let answer_part = alpha * reference_mat_vec_mul(&a, &b) + beta * &cv;
+                    answer.slice_mut(s![..;s1]).assign(&answer_part);
+
+                    general_mat_vec_mul(alpha, &a, &b, beta, &mut cv);
+                }
+                assert_close(c.view(), answer.view());
+            }
+        }
     }
 }

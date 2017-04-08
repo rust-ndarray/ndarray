@@ -11,5 +11,6 @@
 
 pub use self::impl_linalg::Dot;
 pub use self::impl_linalg::general_mat_mul;
+pub use self::impl_linalg::general_mat_vec_mul;
 
 mod impl_linalg;
