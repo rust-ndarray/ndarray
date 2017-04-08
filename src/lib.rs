@@ -654,10 +654,16 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 
 /// Array's representation.
+///
+/// *Don’t use this type directly—use the type alias
+/// [`Array`](type.Array.html) for the array type!*
 #[derive(Clone, Debug)]
 pub struct OwnedRepr<A>(Vec<A>);
 
 /// RcArray's representation.
+///
+/// *Don’t use this type directly—use the type alias
+/// [`RcArray`](type.RcArray.html) for the array type!*
 #[derive(Debug)]
 pub struct OwnedRcRepr<A>(Rc<Vec<A>>);
 
@@ -669,6 +675,10 @@ impl<A> Clone for OwnedRcRepr<A> {
 }
 
 /// Array view’s representation.
+///
+/// *Don’t use this type directly—use the type aliases
+/// [`ArrayView`](type.ArrayView.html)
+/// / [`ArrayViewMut`](type.ArrayViewMut.html) for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the lifetime parameter.
 pub struct ViewRepr<A> {
