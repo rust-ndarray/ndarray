@@ -6,13 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use itertools::free::enumerate;
-
 use imp_prelude::*;
 use numeric_util;
 
 use {
     LinalgScalar,
+    Zip,
 };
 
 use std::any::TypeId;
@@ -48,7 +47,9 @@ impl<A, S> ArrayBase<S, Ix1>
     /// The dot product is a sum of the elementwise products (no conjugation
     /// of complex operands, and thus not their inner product).
     ///
-    /// **Panics** if the arrays are not of the same length.
+    /// **Panics** if the arrays are not of the same length.<br>
+    /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
+    /// layout allows.
     pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
@@ -167,7 +168,10 @@ impl<A, S> ArrayBase<S, Ix2>
     ///
     /// Return a result array with shape *M* × *K*.
     ///
-    /// **Panics** if shapes are incompatible.
+    /// **Panics** if shapes are incompatible.<br>
+    /// *Note:* If enabled, uses blas `gemv/gemm` for elements of `f32, f64`
+    /// when memory layout allows. The default matrixmultiply backend
+    /// is otherwise used for `f32, f64` for all memory layouts.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -259,19 +263,10 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
         }
 
         // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::<A>::with_capacity(m as usize);
         unsafe {
-            res_elems.set_len(m as usize);
-        }
-        for (i, rr) in enumerate(&mut res_elems) {
-            unsafe {
-                *rr = (0..a).fold(A::zero(),
-                    move |s, k| s + *self.uget(Ix2(i, k)) * *rhs.uget(k)
-                );
-            }
-        }
-        unsafe {
-            ArrayBase::from_shape_vec_unchecked(m, res_elems)
+            let mut c = Array::uninitialized(m);
+            general_mat_vec_mul(A::one(), self, rhs, A::zero(), &mut c);
+            c
         }
     }
 }
@@ -364,6 +359,7 @@ fn mat_mul_impl<A>(alpha: A,
                     // adjust strides, these may [1, 1] for column matrices
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
                     let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+                    let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
 
                     // gemm is C ← αA^Op B^Op + βC
                     // Where Op is notrans/trans/conjtrans
@@ -382,7 +378,7 @@ fn mat_mul_impl<A>(alpha: A,
                         rhs_stride, // ldb
                         cast_as(&beta),         // beta
                         c_.ptr as *mut _,       // c
-                        c_.strides()[0] as blas_index, // ldc
+                        c_stride, // ldc
                     );
                     }
                 return;
@@ -468,14 +464,17 @@ fn mat_mul_general<A>(alpha: A,
     }
 }
 
-/// General matrix multiplication.
+/// General matrix-matrix multiplication.
 ///
 /// Compute C ← α A B + β C
 ///
 /// The array shapes must agree in the way that
 /// if `a` is *M* × *N*, then `b` is *N* × *K* and `c` is *M* × *K*.
 ///
-/// ***Panics*** if array shapes are not compatible
+/// ***Panics*** if array shapes are not compatible<br>
+/// *Note:* If enabled, uses blas `gemm` for elements of `f32, f64` when memory
+/// layout allows.  The default matrixmultiply backend is otherwise used for
+/// `f32, f64` for all memory layouts.
 pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
                                       a: &ArrayBase<S1, Ix2>,
                                       b: &ArrayBase<S2, Ix2>,
@@ -492,6 +491,92 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
         general_dot_shape_error(m, k, k2, n, m2, n2);
     } else {
         mat_mul_impl(alpha, &a.view(), &b.view(), beta, &mut c.view_mut());
+    }
+}
+
+/// General matrix-vector multiplication.
+///
+/// Compute y ← α A x + β y
+///
+/// where A is a *M* × *N* matrix and x is a *N* column vector and y a *M*
+/// column vector (one dimensional arrays).
+///
+/// ***Panics*** if array shapes are not compatible<br>
+/// *Note:* If enabled, uses blas `gemv` for elements of `f32, f64` when memory
+/// layout allows.
+pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
+                                          a: &ArrayBase<S1, Ix2>,
+                                          x: &ArrayBase<S2, Ix1>,
+                                          beta: A,
+                                          y: &mut ArrayBase<S3, Ix1>)
+    where S1: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          S3: DataMut<Elem=A>,
+          A: LinalgScalar,
+{
+    let ((m, k), k2) = (a.dim(), x.dim());
+    let m2 = y.dim();
+    if k != k2 || m != m2 {
+        general_dot_shape_error(m, k, k2, 1, m2, 1);
+    } else {
+        macro_rules! gemv {
+            ($ty:ty, $gemv:ident) => {
+                if blas_row_major_2d::<$ty, _>(&a)
+                    && blas_compat_1d::<$ty, _>(&x)
+                    && blas_compat_1d::<$ty, _>(&y)
+                {
+                    let mut a_trans = CblasNoTrans;
+                    let mut a = a.view();
+                    let a_s0 = a.strides()[0];
+                    if a_s0 == 1 && m == k {
+                        a = a.reversed_axes();
+                        a_trans = CblasTrans;
+                    }
+                    // adjust strides, these may [1, 1] for column matrices
+                    let a_stride = cmp::max(a.strides()[0] as blas_index, k as blas_index);
+                    let x_stride = x.strides()[0] as blas_index;
+                    let y_stride = y.strides()[0] as blas_index;
+
+                    unsafe {
+                        blas_sys::c::$gemv(
+                        CblasRowMajor,
+                        a_trans,
+                        m as blas_index, // m, rows of Op(a)
+                        k as blas_index, // n, cols of Op(a)
+                        cast_as(&alpha),     // alpha
+                        a.ptr as *const _,   // a
+                        a_stride, // lda
+                        x.ptr as *const _,   // x
+                        x_stride,
+                        cast_as(&beta),      // beta
+                        y.ptr as *mut _,     // x
+                        y_stride,
+                    );
+                    }
+                return;
+                }
+            }
+        }
+        #[cfg(feature = "blas")]
+        gemv!(f32, cblas_sgemv);
+        #[cfg(feature = "blas")]
+        gemv!(f64, cblas_dgemv);
+
+        /* general */
+
+        if beta.is_zero() {
+            Zip::from(a.outer_iter())
+                .and(y)
+                .apply(|row, elt| {
+                    *elt = row.dot(x) * alpha;
+                });
+        } else {
+            Zip::from(a.outer_iter())
+                .and(y)
+                .apply(|row, elt| {
+                    *elt = *elt * beta + row.dot(x) * alpha;
+                });
+        }
     }
 }
 
