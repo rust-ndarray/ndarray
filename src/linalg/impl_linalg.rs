@@ -498,8 +498,8 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
 ///
 /// Compute y ← α A x + β y
 ///
-/// where A is a *M* × *N* matrix and x is a *N* column vector and y a *M*
-/// column vector (one dimensional arrays).
+/// where A is a *M* × *N* matrix and x is an *N*-element column vector and
+/// y an *M*-element column vector (one dimensional arrays).
 ///
 /// ***Panics*** if array shapes are not compatible<br>
 /// *Note:* If enabled, uses blas `gemv` for elements of `f32, f64` when memory
