@@ -162,7 +162,7 @@ macro_rules! par_iter_view_wrapper {
         }
 
         fn opt_len(&mut self) -> Option<usize> {
-            Some(self.iter.len())
+            None
         }
     }
 

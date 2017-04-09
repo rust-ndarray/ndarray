@@ -40,3 +40,13 @@ fn test_regular_iter() {
     println!("{:?}", a.slice(s![..10, ..5]));
     assert_eq!(s, a.scalar_sum());
 }
+
+#[test]
+fn test_regular_iter_collect() {
+    let mut a = Array2::<f64>::zeros((M, N));
+    for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
+        v.fill(i as _);
+    }
+    let v = a.view().into_par_iter().map(|&x| x).collect::<Vec<_>>();
+    assert_eq!(v.len(), a.len());
+}
