@@ -74,17 +74,18 @@ your `Cargo.toml`.
 How to use with cargo::
 
     [dependencies]
-    ndarray = "0.8.4"
+    ndarray = "0.9.0"
 
 Recent Changes (ndarray)
 ------------------------
 
-- 0.9.0-alpha.x
+- 0.9.0
 
   - Add ``Zip::indexed``
   - New methods ``genrows/_mut, gencolumns/_mut, lanes/_mut`` that
     return iterable producers (producer means ``Zip`` compatibile).
   - New method ``.windows()`` by @Robbepop, returns an iterable producer
+  - New function ``general_mat_vec_mul`` (with fast default and blas acceleration)
   - ``Zip::apply`` and ``fold_while`` now take ``self`` as the first argument
   - ``indices/_of`` now return iterable producers (not iterator)
   - No allocation for short ``IxDyn``.
