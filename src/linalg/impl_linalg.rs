@@ -365,6 +365,7 @@ fn mat_mul_impl<A>(alpha: A,
                     // adjust strides, these may [1, 1] for column matrices
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
                     let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+                    let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
 
                     // gemm is C ← αA^Op B^Op + βC
                     // Where Op is notrans/trans/conjtrans
@@ -383,7 +384,7 @@ fn mat_mul_impl<A>(alpha: A,
                         rhs_stride, // ldb
                         cast_as(&beta),         // beta
                         c_.ptr as *mut _,       // c
-                        c_.strides()[0] as blas_index, // ldc
+                        c_stride, // ldc
                     );
                     }
                 return;

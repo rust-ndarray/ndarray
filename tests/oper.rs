@@ -598,6 +598,20 @@ fn gen_mat_mul() {
     }
 }
 
+
+// Test y = A x where A is f-order
+#[test]
+fn gemm_64_1_f() {
+    let a = range_mat64(64, 64).reversed_axes();
+    let (m, n) = a.dim();
+    // m x n  times n x 1  == m x 1
+    let x = range_mat64(n, 1);
+    let mut y = range_mat64(m, 1);
+    let answer = reference_mat_mul(&a, &x) + &y;
+    general_mat_mul(1.0, &a, &x, 1.0, &mut y);
+    assert_close(y.view(), answer.view());
+}
+
 #[test]
 fn gen_mat_mul_i32() {
     let alpha = -1;
