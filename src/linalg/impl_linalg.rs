@@ -47,7 +47,9 @@ impl<A, S> ArrayBase<S, Ix1>
     /// The dot product is a sum of the elementwise products (no conjugation
     /// of complex operands, and thus not their inner product).
     ///
-    /// **Panics** if the arrays are not of the same length.
+    /// **Panics** if the arrays are not of the same length.<br>
+    /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
+    /// layout allows.
     pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
         where S2: Data<Elem=A>,
               A: LinalgScalar,
@@ -166,7 +168,10 @@ impl<A, S> ArrayBase<S, Ix2>
     ///
     /// Return a result array with shape *M* × *K*.
     ///
-    /// **Panics** if shapes are incompatible.
+    /// **Panics** if shapes are incompatible.<br>
+    /// *Note:* If enabled, uses blas `gemv/gemm` for elements of `f32, f64`
+    /// when memory layout allows. The default matrixmultiply backend
+    /// is otherwise used for `f32, f64` for all memory layouts.
     ///
     /// ```
     /// use ndarray::arr2;
@@ -466,7 +471,10 @@ fn mat_mul_general<A>(alpha: A,
 /// The array shapes must agree in the way that
 /// if `a` is *M* × *N*, then `b` is *N* × *K* and `c` is *M* × *K*.
 ///
-/// ***Panics*** if array shapes are not compatible
+/// ***Panics*** if array shapes are not compatible<br>
+/// *Note:* If enabled, uses blas `gemm` for elements of `f32, f64` when memory
+/// layout allows.  The default matrixmultiply backend is otherwise used for
+/// `f32, f64` for all memory layouts.
 pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
                                       a: &ArrayBase<S1, Ix2>,
                                       b: &ArrayBase<S2, Ix2>,
@@ -493,7 +501,9 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
 /// where A is a *M* × *N* matrix and x is a *N* column vector and y a *M*
 /// column vector (one dimensional arrays).
 ///
-/// ***Panics*** if array shapes are not compatible
+/// ***Panics*** if array shapes are not compatible<br>
+/// *Note:* If enabled, uses blas `gemv` for elements of `f32, f64` when memory
+/// layout allows.
 pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
                                           a: &ArrayBase<S1, Ix2>,
                                           x: &ArrayBase<S2, Ix1>,
