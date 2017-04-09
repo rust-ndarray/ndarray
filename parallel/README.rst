@@ -19,8 +19,10 @@ __ http://docs.rs/ndarray-parallel/
 Highlights
 ----------
 
+- Parallel `Zip`
 - Parallel elementwise (no order) iterator
 - Parallel `.axis_iter()` (and `_mut`)
+- `.par_map_inplace()` for arrays.
 
 Status and Lookout
 ------------------
@@ -42,16 +44,16 @@ Status and Lookout
 How to use with cargo::
 
     [dependencies]
-    ndarray-parallel = "0.1"
+    ndarray-parallel = "0.3"
 
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
-- 0.3.0-alpha.1
+- 0.3.0
 
   - ParallelIterator for Zip, including ``.par_apply``.
   - ``.par_map_inplace`` and ``.par_mav_inplace`` for arrays
-  - Require ndarray 0.9 (when released) and rayon 0.7
+  - Require ndarray 0.9 and rayon 0.7
 
 - 0.2.0
 
