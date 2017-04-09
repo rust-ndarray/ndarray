@@ -6,8 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use itertools::free::enumerate;
-
 use imp_prelude::*;
 use numeric_util;
 
@@ -260,19 +258,10 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
         }
 
         // Avoid initializing the memory in vec -- set it during iteration
-        let mut res_elems = Vec::<A>::with_capacity(m as usize);
         unsafe {
-            res_elems.set_len(m as usize);
-        }
-        for (i, rr) in enumerate(&mut res_elems) {
-            unsafe {
-                *rr = (0..a).fold(A::zero(),
-                    move |s, k| s + *self.uget(Ix2(i, k)) * *rhs.uget(k)
-                );
-            }
-        }
-        unsafe {
-            ArrayBase::from_shape_vec_unchecked(m, res_elems)
+            let mut c = Array::uninitialized(m);
+            general_mat_vec_mul(A::one(), self, rhs, A::zero(), &mut c);
+            c
         }
     }
 }
