@@ -54,6 +54,7 @@ Recent Changes (ndarray-parallel)
   - ParallelIterator for Zip, including ``.par_apply``.
   - ``.par_map_inplace`` and ``.par_mav_inplace`` for arrays
   - Require ndarray 0.9 and rayon 0.7
+  - Fix bug with array ``par_iter()``'s ``.collect()``
 
 - 0.2.0
 
