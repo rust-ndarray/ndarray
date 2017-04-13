@@ -192,7 +192,8 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array with values created by the function `f`.
     ///
-    /// The elements are visited in arbitirary order.
+    /// `f` is called with the index of the element to create; the elements are
+    /// visited in arbitirary order.
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
