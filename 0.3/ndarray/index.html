@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `ndarray` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, ndarray">
+
+    <title>ndarray 0.3.1 - ndarray - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'ndarray', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>ndarray</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-0' class='srclink' href='../src/ndarray/lib.rs.html#1-2794' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>The <code>ndarray</code> crate provides an N-dimensional container similar to numpy’s
+ndarray.</p>
+
+<ul>
+<li><a href="struct.ArrayBase.html"><code>ArrayBase</code></a>:
+The N-dimensional array type itself.</li>
+<li><a href="type.Array.html"><code>Array</code></a>:
+An array where the data is shared and copy on write, it
+can act as both an owner of the data as well as a lightweight view.</li>
+<li><a href="type.OwnedArray.html"><code>OwnedArray</code></a>:
+An array where the data is owned uniquely.</li>
+<li><a href="type.ArrayView.html"><code>ArrayView</code></a>, <a href="type.ArrayViewMut.html"><code>ArrayViewMut</code></a>:
+Lightweight array views.</li>
+</ul>
+
+<h2 id='highlights' class='section-header'><a href='#highlights'>Highlights</a></h2>
+<ul>
+<li>Generic N-dimensional array</li>
+<li>Slicing, also with arbitrary step size, and negative indices to mean
+elements from the end of the axis.</li>
+<li>There is both a copy on write array (<code>Array</code>), or a regular uniquely owned array
+(<code>OwnedArray</code>), and both can use read-only and read-write array views.</li>
+<li>Iteration and most operations are efficient on arrays with contiguous
+innermost dimension.</li>
+<li>Array views can be used to slice and mutate any <code>[T]</code> data.</li>
+</ul>
+
+<h2 id='crate-status' class='section-header'><a href='#crate-status'>Crate Status</a></h2>
+<ul>
+<li>Still iterating on the API</li>
+<li>Performance status:
+
+<ul>
+<li>Arithmetic involving arrays of contiguous inner dimension optimizes very well.</li>
+<li><code>.fold()</code> and <code>.zip_mut_with()</code> are the most efficient ways to
+perform single traversal and lock step traversal respectively.</li>
+<li><code>.iter()</code> and <code>.iter_mut()</code> are efficient for contiguous arrays.</li>
+</ul></li>
+<li>There is experimental bridging to the linear algebra package <code>rblas</code>.</li>
+</ul>
+
+<h2 id='crate-feature-flags' class='section-header'><a href='#crate-feature-flags'>Crate Feature Flags</a></h2>
+<ul>
+<li><code>assign_ops</code>
+
+<ul>
+<li>Optional, requires nightly</li>
+<li>Enables the compound assignment operators</li>
+</ul></li>
+<li><code>rustc-serialize</code>
+
+<ul>
+<li>Optional, stable</li>
+<li>Enables serialization support</li>
+</ul></li>
+<li><code>rblas</code>
+
+<ul>
+<li>Optional, stable</li>
+<li>Enables <code>rblas</code> integration</li>
+</ul></li>
+</ul>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='blas/index.html'
+                               title='ndarray::blas'>blas</a></td>
+                        <td class='docblock short'>
+                             <p>Experimental BLAS (Basic Linear Algebra Subprograms) integration</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='linalg/index.html'
+                               title='ndarray::linalg'>linalg</a></td>
+                        <td class='docblock short'>
+                            [<em class='stab deprecated'>Deprecated</em>] <p><strong><em>Deprecated: linalg is not in good shape.</em></strong></p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='macro' href='macro.s!.html'
+                               title='ndarray::s!'>s!</a></td>
+                        <td class='docblock short'>
+                             <p>Slice argument constructor.</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.ArrayBase.html'
+                               title='ndarray::ArrayBase'>ArrayBase</a></td>
+                        <td class='docblock short'>
+                             <p>An <em>N</em>-dimensional array.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Elements.html'
+                               title='ndarray::Elements'>Elements</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator over the elements of an array.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.ElementsMut.html'
+                               title='ndarray::ElementsMut'>ElementsMut</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator over the elements of an array (mutable).</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Indexed.html'
+                               title='ndarray::Indexed'>Indexed</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator over the indexes and elements of an array.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.IndexedMut.html'
+                               title='ndarray::IndexedMut'>IndexedMut</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator over the indexes and elements of an array (mutable).</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Indexes.html'
+                               title='ndarray::Indexes'>Indexes</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator over the indexes of an array shape.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.InnerIter.html'
+                               title='ndarray::InnerIter'>InnerIter</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator that traverses over all dimensions but the innermost,
+and yields each inner row.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.InnerIterMut.html'
+                               title='ndarray::InnerIterMut'>InnerIterMut</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator that traverses over all dimensions but the innermost,
+and yields each inner row (mutable).</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.OuterIter.html'
+                               title='ndarray::OuterIter'>OuterIter</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator that traverses over the outermost dimension
+and yields each subview.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.OuterIterMut.html'
+                               title='ndarray::OuterIterMut'>OuterIterMut</a></td>
+                        <td class='docblock short'>
+                             <p>An iterator that traverses over the outermost dimension
+and yields each subview (mutable).</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Si.html'
+                               title='ndarray::Si'>Si</a></td>
+                        <td class='docblock short'>
+                             <p>A slice, a description of a range of an array axis.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.ViewRepr.html'
+                               title='ndarray::ViewRepr'>ViewRepr</a></td>
+                        <td class='docblock short'>
+                             <p>Array view’s representation.</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.ShapeError.html'
+                               title='ndarray::ShapeError'>ShapeError</a></td>
+                        <td class='docblock short'>
+                             <p>An error that can be produced by <code>.into_shape()</code></p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.S.html'
+                               title='ndarray::S'>S</a></td>
+                        <td class='docblock short'>
+                             <p>Slice value for the full range of an axis.</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.Data.html'
+                               title='ndarray::Data'>Data</a></td>
+                        <td class='docblock short'>
+                             <p>Array’s inner representation.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.DataClone.html'
+                               title='ndarray::DataClone'>DataClone</a></td>
+                        <td class='docblock short'>
+                             <p>Clone an Array’s storage.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.DataMut.html'
+                               title='ndarray::DataMut'>DataMut</a></td>
+                        <td class='docblock short'>
+                             <p>Array’s writable inner representation.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.DataOwned.html'
+                               title='ndarray::DataOwned'>DataOwned</a></td>
+                        <td class='docblock short'>
+                             <p>Array representation that is a unique or shared owner of its data.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.DataShared.html'
+                               title='ndarray::DataShared'>DataShared</a></td>
+                        <td class='docblock short'>
+                             <p>Array representation that is a lightweight view.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.Dimension.html'
+                               title='ndarray::Dimension'>Dimension</a></td>
+                        <td class='docblock short'>
+                             <p>Trait for the shape and index types of arrays.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.FixedInitializer.html'
+                               title='ndarray::FixedInitializer'>FixedInitializer</a></td>
+                        <td class='docblock short'>
+                             <p>Fixed-size array used for array initialization</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.Initializer.html'
+                               title='ndarray::Initializer'>Initializer</a></td>
+                        <td class='docblock short'>
+                             <p>Slice or fixed-size array used for array initialization</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.NdIndex.html'
+                               title='ndarray::NdIndex'>NdIndex</a></td>
+                        <td class='docblock short'>
+                             <p>A tuple or fixed size array that can be used to index an array.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.RemoveAxis.html'
+                               title='ndarray::RemoveAxis'>RemoveAxis</a></td>
+                        <td class='docblock short'>
+                             <p>Helper trait to define a larger-than relation for array shapes:
+removing one axis from <em>Self</em> gives smaller dimension <em>Smaller</em>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.Scalar.html'
+                               title='ndarray::Scalar'>Scalar</a></td>
+                        <td class='docblock short'>
+                             <p>Elements that can be used as direct operands in arithmetic with arrays.</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.arr0.html'
+                               title='ndarray::arr0'>arr0</a></td>
+                        <td class='docblock short'>
+                             <p>Return a zero-dimensional array with the element <code>x</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.arr1.html'
+                               title='ndarray::arr1'>arr1</a></td>
+                        <td class='docblock short'>
+                             <p>Return a one-dimensional array with elements from <code>xs</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.arr2.html'
+                               title='ndarray::arr2'>arr2</a></td>
+                        <td class='docblock short'>
+                             <p>Return a two-dimensional array with elements from <code>xs</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.arr3.html'
+                               title='ndarray::arr3'>arr3</a></td>
+                        <td class='docblock short'>
+                             <p>Return a three-dimensional array with elements from <code>xs</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.aview0.html'
+                               title='ndarray::aview0'>aview0</a></td>
+                        <td class='docblock short'>
+                             <p>Return a zero-dimensional array view borrowing <code>x</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.aview1.html'
+                               title='ndarray::aview1'>aview1</a></td>
+                        <td class='docblock short'>
+                             <p>Return a one-dimensional array view with elements borrowing <code>xs</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.aview2.html'
+                               title='ndarray::aview2'>aview2</a></td>
+                        <td class='docblock short'>
+                             <p>Return a two-dimensional array view with elements borrowing <code>xs</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.aview_mut1.html'
+                               title='ndarray::aview_mut1'>aview_mut1</a></td>
+                        <td class='docblock short'>
+                             <p>Return a one-dimensional read-write array view with elements borrowing <code>xs</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.zeros.html'
+                               title='ndarray::zeros'>zeros</a></td>
+                        <td class='docblock short'>
+                             <p>Return an array filled with zeros</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='type' href='type.Array.html'
+                               title='ndarray::Array'>Array</a></td>
+                        <td class='docblock short'>
+                             <p>Array where the data is reference counted and copy on write, it
+can act as both an owner as the data as well as a lightweight view.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='type' href='type.ArrayView.html'
+                               title='ndarray::ArrayView'>ArrayView</a></td>
+                        <td class='docblock short'>
+                             <p>A lightweight array view.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='type' href='type.ArrayViewMut.html'
+                               title='ndarray::ArrayViewMut'>ArrayViewMut</a></td>
+                        <td class='docblock short'>
+                             <p>A lightweight read-write array view.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='type' href='type.Ix.html'
+                               title='ndarray::Ix'>Ix</a></td>
+                        <td class='docblock short'>
+                             <p>Array index type</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='type' href='type.Ixs.html'
+                               title='ndarray::Ixs'>Ixs</a></td>
+                        <td class='docblock short'>
+                             <p>Array index type (signed)</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='type' href='type.OwnedArray.html'
+                               title='ndarray::OwnedArray'>OwnedArray</a></td>
+                        <td class='docblock short'>
+                             <p>Array where the data is owned uniquely.</p>
+
+                        </td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "ndarray";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

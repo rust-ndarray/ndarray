@@ -1,0 +1,67 @@
+[package]
+
+name = "ndarray"
+version = "0.9.1"
+authors = ["bluss"]
+license = "MIT/Apache-2.0"
+
+readme = "README.rst"
+
+repository = "https://github.com/bluss/rust-ndarray"
+documentation = "https://bluss.github.io/rust-ndarray/"
+
+description = "An N-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
+
+keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
+categories = ["data-structures", "science"]
+
+build = "build.rs"
+
+[lib]
+name = "ndarray"
+bench = false
+test = false
+
+[dependencies.num-traits]
+version = "0.1.32"
+default-features = false
+
+[dependencies.num-complex]
+version = "0.1.32"
+default-features = false
+
+[dependencies.itertools]
+version = "0.6.0"
+
+[dependencies.rustc-serialize]
+version = "0.3.20"
+optional = true
+
+[dependencies]
+# Use via the `blas` crate feature!
+blas-sys = { version = "0.6.5", optional = true, default-features = false }
+matrixmultiply = { version = "0.1.13" }
+
+[dependencies.serde]
+version = "0.9"
+optional = true
+
+[dev-dependencies]
+defmac = "0.1"
+
+[features]
+blas = ["blas-sys"]
+
+# These features are used for testing
+blas-openblas-sys = ["blas"]
+test = ["blas-openblas-sys"]
+
+# This feature is used for docs
+docs = ["rustc-serialize", "serde"]
+
+[profile.release]
+[profile.bench]
+debug = true
+
+[package.metadata.release]
+no-dev-version = true

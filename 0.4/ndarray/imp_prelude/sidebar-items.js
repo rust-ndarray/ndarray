@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Axis","An axis index."]],"trait":[["Data","Array representation trait."],["DataMut","Array representation trait."],["DataOwned","Array representation trait."],["DataShared","Array representation trait."],["Dimension","Array shape and index trait."],["RemoveAxis","Array shape with a next smaller dimension."]]});

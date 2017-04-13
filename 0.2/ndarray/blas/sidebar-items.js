@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["BlasArrayViewMut","***Requires `features = \"rblas\"`***"]],"trait":[["AsBlas","Convert an array into a blas friendly wrapper."]]});

@@ -1,0 +1,24 @@
+[package]
+name = "serialization-tests"
+version = "0.1.0"
+authors = ["bluss"]
+publish = false
+
+[lib]
+test = false
+
+[dependencies]
+ndarray = { version = "*", path = "../", features = ["serde", "rustc-serialize"] }
+
+[dev-dependencies.rustc-serialize]
+version = "0.3.21"
+
+[dev-dependencies.serde]
+version = "0.9"
+
+[dev-dependencies.serde_json]
+version = "0.9"
+
+[dev-dependencies.rmp-serde]
+version = "0.12"
+

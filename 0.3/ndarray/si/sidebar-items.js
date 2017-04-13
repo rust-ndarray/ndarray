@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["S","Slice value for the full range of an axis."]],"struct":[["Si","A slice, a description of a range of an array axis."]]});

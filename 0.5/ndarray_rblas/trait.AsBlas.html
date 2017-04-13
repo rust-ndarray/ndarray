@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `AsBlas` trait in crate `ndarray_rblas`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, AsBlas">
+
+    <title>0.1.1 - ndarray_rblas::AsBlas - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>ndarray_rblas</a></p><script>window.sidebarCurrent = {name: 'AsBlas', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='index.html'>ndarray_rblas</a>::<wbr><a class='trait' href=''>AsBlas</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-78' class='srclink' href='../src/ndarray_rblas/ndarray-rblas/src/lib.rs.html#184-266' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait AsBlas&lt;A, S, D&gt; {
+    fn <a href='#tymethod.blas_checked' class='fnname'>blas_checked</a>(&amp;mut self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt;, <a class='struct' href='../ndarray/error/struct.ShapeError.html' title='ndarray::error::ShapeError'>ShapeError</a>&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataOwned.html' title='ndarray::data_traits::DataOwned'>DataOwned</a> + <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a>, A: <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a></span>;
+    fn <a href='#tymethod.blas_view_checked' class='fnname'>blas_view_checked</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../ndarray_rblas/struct.BlasArrayView.html' title='ndarray_rblas::BlasArrayView'>BlasArrayView</a>&lt;A, D&gt;, <a class='struct' href='../ndarray/error/struct.ShapeError.html' title='ndarray::error::ShapeError'>ShapeError</a>&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.Data.html' title='ndarray::data_traits::Data'>Data</a></span>;
+    fn <a href='#tymethod.blas_view_mut_checked' class='fnname'>blas_view_mut_checked</a>(&amp;mut self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt;, <a class='struct' href='../ndarray/error/struct.ShapeError.html' title='ndarray::error::ShapeError'>ShapeError</a>&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a></span>;
+
+    fn <a href='#method.blas' class='fnname'>blas</a>(&amp;mut self) -&gt; <a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataOwned.html' title='ndarray::data_traits::DataOwned'>DataOwned</a>&lt;Elem=A&gt; + <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a>, A: <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a></span> { ... }
+    fn <a href='#method.bv' class='fnname'>bv</a>(&amp;self) -&gt; <a class='struct' href='../ndarray_rblas/struct.BlasArrayView.html' title='ndarray_rblas::BlasArrayView'>BlasArrayView</a>&lt;A, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.Data.html' title='ndarray::data_traits::Data'>Data</a></span> { ... }
+    fn <a href='#method.bvm' class='fnname'>bvm</a>(&amp;mut self) -&gt; <a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a></span> { ... }
+}</pre><div class='docblock'><p>Convert an array into a blas friendly wrapper.</p>
+
+<p>Note that <code>blas</code> suppors four different element types: <code>f32</code>, <code>f64</code>,
+<code>Complex&lt;f32&gt;</code>, and <code>Complex&lt;f64&gt;</code>.</p>
+
+<p><strong><em>Requires crate feature <code>&quot;rblas&quot;</code></em></strong></p>
+</div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.blas_checked' class='method stab '><code>fn <a href='#tymethod.blas_checked' class='fnname'>blas_checked</a>(&amp;mut self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt;, <a class='struct' href='../ndarray/error/struct.ShapeError.html' title='ndarray::error::ShapeError'>ShapeError</a>&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataOwned.html' title='ndarray::data_traits::DataOwned'>DataOwned</a> + <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a>, A: <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a></span></code></h3><div class='docblock'><p>Return an array view implementing Vector (1D) or Matrix (2D)
+traits.</p>
+
+<p>Elements are copied if needed to produce a contiguous matrix.<br>
+The result is always mutable, due to the requirement of having write
+access to update the layout either way. Breaks sharing if the array is
+an <code>RcArray</code>.</p>
+
+<p><strong>Errors</strong> if any dimension is larger than <code>c_int::MAX</code>.</p>
+</div><h3 id='tymethod.blas_view_checked' class='method stab '><code>fn <a href='#tymethod.blas_view_checked' class='fnname'>blas_view_checked</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../ndarray_rblas/struct.BlasArrayView.html' title='ndarray_rblas::BlasArrayView'>BlasArrayView</a>&lt;A, D&gt;, <a class='struct' href='../ndarray/error/struct.ShapeError.html' title='ndarray::error::ShapeError'>ShapeError</a>&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.Data.html' title='ndarray::data_traits::Data'>Data</a></span></code></h3><div class='docblock'><p>Return a read-only array view implementing Vector (1D) or Matrix (2D)
+traits.</p>
+
+<p>The array must already be in a blas compatible layout: its innermost
+dimension must be contiguous.</p>
+
+<p><strong>Errors</strong> if any dimension is larger than <code>c_int::MAX</code>.<br>
+<strong>Errors</strong> if the inner dimension is not c-contiguous.</p>
+
+<p>Layout requirements may be loosened in the future.</p>
+</div><h3 id='tymethod.blas_view_mut_checked' class='method stab '><code>fn <a href='#tymethod.blas_view_mut_checked' class='fnname'>blas_view_mut_checked</a>(&amp;mut self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt;, <a class='struct' href='../ndarray/error/struct.ShapeError.html' title='ndarray::error::ShapeError'>ShapeError</a>&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a></span></code></h3><div class='docblock'><p>Return a read-write array view implementing Vector (1D) or Matrix (2D)
+traits.</p>
+
+<p>The array must already be in a blas compatible layout: its innermost
+dimension must be contiguous.</p>
+
+<p><strong>Errors</strong> if any dimension is larger than <code>c_int::MAX</code>.<br>
+<strong>Errors</strong> if the inner dimension is not c-contiguous.</p>
+
+<p>Layout requirements may be loosened in the future.</p>
+</div></div>
+            <h2 id='provided-methods'>Provided Methods</h2>
+            <div class='methods'>
+        <h3 id='method.blas' class='method stab '><code>fn <a href='#method.blas' class='fnname'>blas</a>(&amp;mut self) -&gt; <a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataOwned.html' title='ndarray::data_traits::DataOwned'>DataOwned</a>&lt;Elem=A&gt; + <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a>, A: <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a></span></code></h3><div class='docblock'><p>Equivalent to <code>.blas_checked().unwrap()</code></p>
+
+<p><strong>Panics</strong> if there was a an error in <code>.blas_checked()</code>.</p>
+</div><h3 id='method.bv' class='method stab '><code>fn <a href='#method.bv' class='fnname'>bv</a>(&amp;self) -&gt; <a class='struct' href='../ndarray_rblas/struct.BlasArrayView.html' title='ndarray_rblas::BlasArrayView'>BlasArrayView</a>&lt;A, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.Data.html' title='ndarray::data_traits::Data'>Data</a></span></code></h3><div class='docblock'><p><code>bv</code> stands for <strong>b</strong>las <strong>v</strong>iew.</p>
+
+<p>Equivalent to <code>.blas_view_checked().unwrap()</code></p>
+
+<p><strong>Panics</strong> if there was a an error in <code>.blas_view_checked()</code>.</p>
+</div><h3 id='method.bvm' class='method stab '><code>fn <a href='#method.bvm' class='fnname'>bvm</a>(&amp;mut self) -&gt; <a class='struct' href='../ndarray_rblas/struct.BlasArrayViewMut.html' title='ndarray_rblas::BlasArrayViewMut'>BlasArrayViewMut</a>&lt;A, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.DataMut.html' title='ndarray::data_traits::DataMut'>DataMut</a></span></code></h3><div class='docblock'><p><code>bvm</code> stands for <strong>b</strong>las <strong>v</strong>iew <strong>m</strong>ut.</p>
+
+<p>Equivalent to <code>.blas_view_mut_checked().unwrap()</code></p>
+
+<p><strong>Panics</strong> if there was a an error in <code>.blas_view_mut_checked()</code>.</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl&lt;A, S, D&gt; AsBlas for <a class='struct' href='../ndarray/struct.ArrayBase.html' title='ndarray::ArrayBase'>ArrayBase</a>&lt;S, D&gt; <span class='where'>where S: <a class='trait' href='../ndarray/data_traits/trait.Data.html' title='ndarray::data_traits::Data'>Data</a>&lt;Elem=A&gt;, D: <a class='trait' href='../ndarray/dimension/trait.Dimension.html' title='ndarray::dimension::Dimension'>Dimension</a></span></code></li>
+</ul><script type="text/javascript" async
+                         src="../implementors/ndarray_rblas/trait.AsBlas.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "ndarray_rblas";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

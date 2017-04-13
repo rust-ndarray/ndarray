@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `s` macro in crate `ndarray`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, s">
+
+    <title>0.7.3 - ndarray::s - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>ndarray</a></p><script>window.sidebarCurrent = {name: 's', ty: 'macro', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content macro">
+<h1 class='fqn'><span class='in-band'>Macro <a href='index.html'>ndarray</a>::<wbr><a class='macro' href=''>s</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/ndarray/si.rs.html#118-142' title='goto source code'>[src]</a></span></h1>
+<pre class='rust macro'>
+<span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>s</span> {
+    (@<span class='ident'>parse</span> [$(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>stack</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>] <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>expr</span>;<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>s</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
+    (@<span class='ident'>parse</span> [$(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>stack</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>] <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
+    (@<span class='ident'>parse</span> [$(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>stack</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>] <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>expr</span>;<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>s</span>:<span class='ident'>expr</span>, $(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>t</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>) <span class='op'>=&gt;</span> { ... };
+    (@<span class='ident'>parse</span> [$(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>stack</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>] <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>expr</span>, $(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>t</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>) <span class='op'>=&gt;</span> { ... };
+    (@<span class='ident'>step</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>s</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> { ... };
+    ($(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>t</span>:<span class='ident'>tt</span>)<span class='kw-2'>*</span>) <span class='op'>=&gt;</span> { ... };
+}</pre>
+<div class='docblock'><p>Slice argument constructor.</p>
+
+<p><code>s![]</code> takes a list of ranges, separated by comma, with optional strides
+that are separated from the range by a semicolon.
+It is converted into a slice argument with type <code>&amp;[Si; N]</code>.</p>
+
+<p>Each range uses signed indices, where a negative value is counted from
+the end of the axis. Strides are also signed and may be negative, but
+must not be zero.</p>
+
+<p>For example <code>s![0..4;2, 1..5]</code> is a slice of rows 0..4 with step size 2,
+and columns 1..5 with default step size 1. The slice would have
+shape <code>[2, 4]</code>.</p>
+
+<p>If an array has two axes, the slice argument is passed as
+type <code>&amp;[Si; 2]</code>.  The macro expansion of <code>s![a..b;c, d..e]</code>
+is equivalent to <code>&amp;[Si(a, Some(b), c), Si(d, Some(e), 1)]</code>.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='attribute'>#[<span class='ident'>macro_use</span>]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>ndarray</span>;
+
+<span class='kw'>use</span> <span class='ident'>ndarray</span>::{<span class='ident'>Array2</span>, <span class='ident'>ArrayView2</span>};
+
+<span class='kw'>fn</span> <span class='ident'>laplacian</span>(<span class='ident'>v</span>: <span class='kw-2'>&amp;</span><span class='ident'>ArrayView2</span><span class='op'>&lt;</span><span class='ident'>f32</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>Array2</span><span class='op'>&lt;</span><span class='ident'>f32</span><span class='op'>&gt;</span> {
+    <span class='op'>-</span><span class='number'>4.</span> <span class='op'>*</span> <span class='kw-2'>&amp;</span><span class='ident'>v</span>.<span class='ident'>slice</span>(<span class='macro'>s</span><span class='macro'>!</span>[<span class='number'>1</span>..<span class='op'>-</span><span class='number'>1</span>, <span class='number'>1</span>..<span class='op'>-</span><span class='number'>1</span>])
+    <span class='op'>+</span> <span class='ident'>v</span>.<span class='ident'>slice</span>(<span class='macro'>s</span><span class='macro'>!</span>[ ..<span class='op'>-</span><span class='number'>2</span>, <span class='number'>1</span>..<span class='op'>-</span><span class='number'>1</span>])
+    <span class='op'>+</span> <span class='ident'>v</span>.<span class='ident'>slice</span>(<span class='macro'>s</span><span class='macro'>!</span>[<span class='number'>1</span>..<span class='op'>-</span><span class='number'>1</span>,  ..<span class='op'>-</span><span class='number'>2</span>])
+    <span class='op'>+</span> <span class='ident'>v</span>.<span class='ident'>slice</span>(<span class='macro'>s</span><span class='macro'>!</span>[<span class='number'>1</span>..<span class='op'>-</span><span class='number'>1</span>, <span class='number'>2</span>..  ])
+    <span class='op'>+</span> <span class='ident'>v</span>.<span class='ident'>slice</span>(<span class='macro'>s</span><span class='macro'>!</span>[<span class='number'>2</span>..  , <span class='number'>1</span>..<span class='op'>-</span><span class='number'>1</span>])
+}</pre>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "ndarray";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

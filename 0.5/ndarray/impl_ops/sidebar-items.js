@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["ScalarOperand","Elements that can be used as direct operands in arithmetic with arrays."]]});

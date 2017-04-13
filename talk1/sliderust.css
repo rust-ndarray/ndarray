@@ -1,0 +1,114 @@
+@font-face {
+    font-family: 'Fira Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Fira Sans'), url("FiraSans-Regular.woff") format('woff');
+}
+@font-face {
+    font-family: 'Fira Sans';
+    font-style: normal;
+    font-weight: 500;
+    src: local('Fira Sans Medium'), url("FiraSans-Medium.woff") format('woff');
+}
+
+/* See SourceSerifPro-LICENSE.txt for the Source Serif Pro license and
+ * Heuristica-LICENSE.txt for the Heuristica license. */
+@font-face {
+    font-family: 'Source Serif Pro';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Source Serif Pro'), url("SourceSerifPro-Regular.woff") format('woff');
+}
+@font-face {
+    font-family: 'Source Serif Pro';
+    font-style: italic;
+    font-weight: 400;
+    src: url("Heuristica-Italic.woff") format('woff');
+}
+@font-face {
+    font-family: 'Source Serif Pro';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Source Serif Pro Bold'), url("SourceSerifPro-Bold.woff") format('woff');
+}
+
+/* See SourceCodePro-LICENSE.txt for the Source Code Pro license. */
+@font-face {
+    font-family: 'Source Code Pro';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Source Code Pro'), url("SourceCodePro-Regular.woff") format('woff');
+}
+@font-face {
+    font-family: 'Source Code Pro';
+    font-style: normal;
+    font-weight: 600;
+    src: local('Source Code Pro Semibold'), url("SourceCodePro-Semibold.woff") format('woff');
+}
+
+body {
+    max-width: 1125px;
+}
+
+h1 {
+    font-size: 50px;
+}
+
+body, h5 {
+    font-size: 35px;
+}
+
+pre {
+    font-size: 30px;
+}
+
+section {
+    display: none;
+}
+
+section.current {
+    display: block;
+}
+
+section.title-slide {
+    text-align: center;
+    /*font-weight: bold;*/
+    font-size: 150%;
+}
+
+code.language-text {
+    /* Servo doesn't support pre-wrap yet */
+    white-space: normal;
+}
+
+body, h1, h2, h3, h4, h5, h6, nav {
+    font-family: "Source Serif Pro", Georgia, Times, serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Fira Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+pre, code {
+    /*font-family: monospace; */
+}
+
+ul {
+}
+
+li::before {
+}
+
+li {
+}
+
+/* A more saturated color for comments */
+pre.rust .comment { color: #242859; }
+pre.rust .ident { color: #111; }
+
+#pagenr {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: 20px;
+}

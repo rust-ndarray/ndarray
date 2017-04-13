@@ -1,0 +1,34 @@
+
+.docblock pre.rust { background: #eeeeff; }
+pre.trait, pre.macro, pre.fn, pre.struct, pre.enum, pre.typedef, pre.const { background: inherit; }
+
+/* Small “example” label for doc examples */
+.docblock pre.rust::before {
+    content: "example";
+    float: right;
+    font-style: italic;
+    font-size: 0.8em;
+    margin-top: -10px;
+    margin-right: -5px;
+}
+
+
+/* Fixup where display in trait listing */
+pre.trait .where::before {
+content: '\a         ';
+}
+
+.docblock code {
+    background-color: inherit;
+    font-weight: bold;
+    padding: 0 0.1em;
+}
+
+em.deprecated {
+    font-weight: bold;
+    font-style: italic;
+}
+
+a.test-arrow {
+    display: none;
+}

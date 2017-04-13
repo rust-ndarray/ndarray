@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Dimension","Trait for the shape and index types of arrays."],["RemoveAxis","Helper trait to define a larger-than relation for array shapes: removing one axis from *Self* gives smaller dimension *Smaller*."]]});
