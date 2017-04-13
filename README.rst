@@ -4,10 +4,11 @@ ndarray
 The ``ndarray`` crate provides an N-dimensional container for general elements
 and for numerics.
 
-Please read the API documentation here: `(0.8)`__, `(0.7)`__, `(0.6)`__,
+Please read the API documentation here: `(0.9)`__, `(0.8)`__, `(0.7)`__, `(0.6)`__,
 `(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
 
 __ http://bluss.github.io/rust-ndarray/
+__ http://bluss.github.io/rust-ndarray/0.8/
 __ http://bluss.github.io/rust-ndarray/0.7/
 __ http://bluss.github.io/rust-ndarray/0.6/
 __ http://bluss.github.io/rust-ndarray/0.5/
@@ -78,6 +79,11 @@ How to use with cargo::
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.9.1
+
+  - Fix ``Array::from_shape_fn`` to give correct indices for f-order shapes
+  - Fix ``Array::from_shape_fn`` to panic correctly on shape size overflow
 
 - 0.9.0
 
