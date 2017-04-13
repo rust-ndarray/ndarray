@@ -1178,6 +1178,7 @@ pub unsafe trait TrustedIterator { }
 use std;
 use linspace::Linspace;
 use iter::IndicesIter;
+use indexes::IndicesIterF;
 
 unsafe impl<F> TrustedIterator for Linspace<F> { }
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }
@@ -1185,7 +1186,9 @@ unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F>
     where I: TrustedIterator { }
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
 unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
+// FIXME: These indices iter are dubious -- size needs to be checked up front.
 unsafe impl<D> TrustedIterator for IndicesIter<D> where D: Dimension { }
+unsafe impl<D> TrustedIterator for IndicesIterF<D> where D: Dimension { }
 
 
 /// Like Iterator::collect, but only for trusted length iterators

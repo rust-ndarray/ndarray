@@ -44,6 +44,54 @@ fn test_uninit() {
 }
 
 #[test]
+fn test_from_fn_c1() {
+    let a = Array::from_shape_fn(28, |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
+fn test_from_fn_c() {
+    let a = Array::from_shape_fn((4, 7), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
+fn test_from_fn_c3() {
+    let a = Array::from_shape_fn((4, 3, 7), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
+fn test_from_fn_f1() {
+    let a = Array::from_shape_fn(28.f(), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
+fn test_from_fn_f() {
+    let a = Array::from_shape_fn((4, 7).f(), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
+fn test_from_fn_f3() {
+    let a = Array::from_shape_fn((4, 2, 7).f(), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
 fn deny_wraparound_from_vec() {
     let five = vec![0; 5];
     let five_large = Array::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
@@ -71,6 +119,12 @@ fn deny_wraparound_reshape() {
 #[test]
 fn deny_wraparound_default() {
     let _five_large = Array::<f32, _>::default((3, 7, 29, 36760123, 823996703));
+}
+
+#[should_panic]
+#[test]
+fn deny_wraparound_from_shape_fn() {
+    let _five_large = Array::<f32, _>::from_shape_fn((3, 7, 29, 36760123, 823996703), |_| 0.);
 }
 
 #[should_panic]

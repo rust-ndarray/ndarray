@@ -18,6 +18,7 @@ use dimension;
 use linspace;
 use error::{self, ShapeError, ErrorKind};
 use indices;
+use indexes;
 use iterators::{to_vec, to_vec_mapped};
 
 /// # Constructor Methods for Owned Arrays
@@ -192,7 +193,8 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array with values created by the function `f`.
     ///
-    /// The elements are visited in arbitirary order.
+    /// `f` is called with the index of the element to create; the elements are
+    /// visited in arbitirary order.
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
@@ -200,8 +202,15 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
-        let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
-        unsafe { Self::from_shape_vec_unchecked(shape, v) }
+        let _ = size_checked_unwrap!(shape.dim);
+        if shape.is_c {
+            let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
+            unsafe { Self::from_shape_vec_unchecked(shape, v) }
+        } else {
+            let dim = shape.dim.clone();
+            let v = to_vec_mapped(indexes::indices_iter_f(dim).into_iter(), f);
+            unsafe { Self::from_shape_vec_unchecked(shape, v) }
+        }
     }
 
     /// Create an array with the given shape from a vector. (No cloning of

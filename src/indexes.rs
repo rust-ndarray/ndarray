@@ -196,3 +196,59 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
     }
 }
 
+/// An iterator over the indexes of an array shape.
+///
+/// Iterator element type is `D`.
+#[derive(Clone)]
+pub struct IndicesIterF<D> {
+    dim: D,
+    index: D,
+    has_remaining: bool,
+}
+
+pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
+    where E: IntoDimension,
+{
+    let dim = shape.into_dimension();
+    let zero = dim.zero_index();
+    IndicesIterF {
+        has_remaining: zero != dim,
+        index: zero,
+        dim: dim,
+    }
+}
+
+impl<D> Iterator for IndicesIterF<D>
+    where D: Dimension,
+{
+    type Item = D::Pattern;
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if !self.has_remaining {
+            None
+        } else {
+            let elt = self.index.clone().into_pattern();
+            self.has_remaining = self.dim.next_for_f(&mut self.index);
+            Some(elt)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let l = match self.index {
+            ref ix => {
+                let gone = self.dim
+                               .default_strides()
+                               .slice()
+                               .iter()
+                               .zip(ix.slice().iter())
+                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                self.dim.size() - gone
+            }
+        };
+        (l, Some(l))
+    }
+}
+
+impl<D> ExactSizeIterator for IndicesIterF<D>
+    where D: Dimension
+{}
