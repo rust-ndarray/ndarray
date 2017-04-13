@@ -192,6 +192,27 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
+    /// Iteration -- Use self as size, and create the next index after `index`
+    /// Return false if iteration is done
+    ///
+    /// Next in f-order
+    #[inline]
+    fn next_for_f(&self, index: &mut Self) -> bool {
+        let mut end_iteration = true;
+        for (&dim, ix) in zip(self.slice(), index.slice_mut()) {
+            *ix += 1;
+            if *ix == dim {
+                *ix = 0;
+            } else {
+                end_iteration = false;
+                break;
+            }
+        }
+        !end_iteration
+    }
+
+
+    #[doc(hidden)]
     /// Return stride offset for index.
     fn stride_offset(index: &Self, strides: &Self) -> isize {
         let mut offset = 0;
