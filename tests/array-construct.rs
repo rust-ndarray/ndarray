@@ -44,6 +44,22 @@ fn test_uninit() {
 }
 
 #[test]
+fn test_from_fn_c() {
+    let a = Array::from_shape_fn((4, 7), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
+fn test_from_fn_f() {
+    let a = Array::from_shape_fn((4, 7).f(), |i| i);
+    for (i, elt) in a.indexed_iter() {
+        assert_eq!(i, *elt);
+    }
+}
+
+#[test]
 fn deny_wraparound_from_vec() {
     let five = vec![0; 5];
     let five_large = Array::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
