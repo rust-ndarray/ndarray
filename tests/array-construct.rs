@@ -123,6 +123,12 @@ fn deny_wraparound_default() {
 
 #[should_panic]
 #[test]
+fn deny_wraparound_from_shape_fn() {
+    let _five_large = Array::<f32, _>::from_shape_fn((3, 7, 29, 36760123, 823996703), |_| 0.);
+}
+
+#[should_panic]
+#[test]
 fn deny_wraparound_uninit() {
     unsafe {
         let _five_large = Array::<f32, _>::uninitialized((3, 7, 29, 36760123, 823996703));

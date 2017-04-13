@@ -202,6 +202,7 @@ impl<S, A, D> ArrayBase<S, D>
               F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
+        let _ = size_checked_unwrap!(shape.dim);
         if shape.is_c {
             let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
