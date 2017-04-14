@@ -234,6 +234,9 @@ impl<D> Iterator for IndicesIterF<D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
+        if !self.has_remaining {
+            return (0, Some(0));
+        }
         let l = match self.index {
             ref ix => {
                 let gone = self.dim
@@ -252,3 +255,36 @@ impl<D> Iterator for IndicesIterF<D>
 impl<D> ExactSizeIterator for IndicesIterF<D>
     where D: Dimension
 {}
+
+
+#[cfg(test)]
+mod tests {
+    use super::indices;
+    use super::indices_iter_f;
+
+    #[test]
+    fn test_indices_iter_c_size_hint() {
+        let dim = (3, 4);
+        let mut it = indices(dim).into_iter();
+        let mut len = dim.0 * dim.1;
+        assert_eq!(it.len(), len);
+        while let Some(_) = it.next() {
+            len -= 1;
+            assert_eq!(it.len(), len);
+        }
+        assert_eq!(len, 0);
+    }
+
+    #[test]
+    fn test_indices_iter_f_size_hint() {
+        let dim = (3, 4);
+        let mut it = indices_iter_f(dim);
+        let mut len = dim.0 * dim.1;
+        assert_eq!(it.len(), len);
+        while let Some(_) = it.next() {
+            len -= 1;
+            assert_eq!(it.len(), len);
+        }
+        assert_eq!(len, 0);
+    }
+}
