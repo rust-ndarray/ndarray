@@ -85,7 +85,7 @@ Recent Changes (ndarray)
   - Fix ``Array::from_shape_fn`` to give correct indices for f-order shapes
   - Fix ``Array::from_shape_fn`` to panic correctly on shape size overflow
 
-- 0.9.0
+- 0.9.0 `Release Announcement`__
 
   - Add ``Zip::indexed``
   - New methods ``genrows/_mut, gencolumns/_mut, lanes/_mut`` that
@@ -108,6 +108,8 @@ Recent Changes (ndarray)
     the ``Smaller`` type parameter. Internal traits have the private marker now.
   - ``#`` (alternate) in formatting does nothing now.
   - Require Rust 1.15
+
+__ https://bluss.github.io//rust/2017/04/09/ndarray-0.9/
 
 - 0.8.4
 
