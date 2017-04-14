@@ -106,11 +106,23 @@ impl<S, A> ArrayBase<S, Ix2>
     }
 }
 
+#[cfg(not(debug_assertions))]
 macro_rules! size_checked_unwrap {
     ($dim:expr) => {
         match $dim.size_checked() {
             Some(sz) => sz,
             None => panic!("ndarray: Shape too large, number of elements overflows usize"),
+        }
+    }
+}
+
+#[cfg(debug_assertions)]
+macro_rules! size_checked_unwrap {
+    ($dim:expr) => {
+        match $dim.size_checked() {
+            Some(sz) => sz,
+            None => panic!("ndarray: Shape too large, number of elements overflows usize in shape {:?}",
+                           $dim),
         }
     }
 }
