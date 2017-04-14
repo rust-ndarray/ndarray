@@ -72,10 +72,23 @@ your `Cargo.toml`.
     Uses ``blas-sys`` for pluggable backend, which needs to be configured
     separately.
 
-How to use with cargo::
+How to use with cargo
+---------------------
+
+::
 
     [dependencies]
-    ndarray = "0.9.0"
+    ndarray = "0.9.1"
+
+How to enable blas integration. Depend on ``blas-sys`` directly to pick a blas
+provider. Note that only end-user projects (not libraries) should select
+provider::
+
+
+    [dependencies]
+    ndarray = { version = "0.9.1", features = ["blas"] }
+    blas-sys = { version = "0.6", default-features = false, features = ["openblas"] }
+
 
 Recent Changes (ndarray)
 ------------------------
