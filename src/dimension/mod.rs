@@ -242,29 +242,29 @@ pub fn merge_axes<D>(dim: &mut D, strides: &mut D, take: Axis, into: Axis) -> bo
 // NOTE: These tests are not compiled & tested
 #[cfg(test)]
 mod test {
-    use super::Dimension;
+    use super::IntoDimension;
     use error::{from_kind, ErrorKind};
 
     #[test]
     fn slice_indexing_uncommon_strides() {
         let v: Vec<_> = (0..12).collect();
-        let dim = (2, 3, 2);
-        let strides = (1, 2, 6);
+        let dim = (2, 3, 2).into_dimension();
+        let strides = (1, 2, 6).into_dimension();
         assert!(super::can_index_slice(&v, &dim, &strides).is_ok());
 
-        let strides = (2, 4, 12);
+        let strides = (2, 4, 12).into_dimension();
         assert_eq!(super::can_index_slice(&v, &dim, &strides),
                    Err(from_kind(ErrorKind::OutOfBounds)));
     }
 
     #[test]
     fn overlapping_strides_dim() {
-        let dim = (2, 3, 2);
-        let strides = (5, 2, 1);
+        let dim = (2, 3, 2).into_dimension();
+        let strides = (5, 2, 1).into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
-        let strides = (6, 2, 1);
+        let strides = (6, 2, 1).into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
-        let strides = (6, 0, 1);
+        let strides = (6, 0, 1).into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
     }
 }
