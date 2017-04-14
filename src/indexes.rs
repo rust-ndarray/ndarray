@@ -237,7 +237,7 @@ impl<D> Iterator for IndicesIterF<D>
         let l = match self.index {
             ref ix => {
                 let gone = self.dim
-                               .default_strides()
+                               .fortran_strides()
                                .slice()
                                .iter()
                                .zip(ix.slice().iter())
