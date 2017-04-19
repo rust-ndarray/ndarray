@@ -23,11 +23,11 @@ bench = false
 test = false
 
 [dependencies.num-traits]
-version = "0.1.32"
+version = "0.1.35"
 default-features = false
 
 [dependencies.num-complex]
-version = "0.1.32"
+version = "0.1.35"
 default-features = false
 
 [dependencies.itertools]
