@@ -58,7 +58,7 @@
 //!   - Enables serialization support for rustc-serialize 0.3
 //! - `serde`
 //!   - Optional, compatible with Rust stable
-//!   - Enables serialization support for serde 0.9
+//!   - Enables serialization support for serde 1.0
 //! - `blas`
 //!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication.
