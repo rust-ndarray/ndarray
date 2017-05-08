@@ -56,7 +56,7 @@
 //! - `rustc-serialize`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support for rustc-serialize 0.3
-//! - `serde`
+//! - `serde-1`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support for serde 1.0
 //! - `blas`
@@ -66,7 +66,7 @@
 //!     separately.
 //!
 
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde-1")]
 extern crate serde;
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
@@ -113,7 +113,7 @@ pub use shape_builder::{ ShapeBuilder};
 #[macro_use] mod private;
 mod aliases;
 mod arraytraits;
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde-1")]
 mod array_serde;
 #[cfg(feature = "rustc-serialize")]
 mod array_serialize;

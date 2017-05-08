@@ -60,7 +60,7 @@ your `Cargo.toml`.
   - Optional, compatible with Rust stable
   - Enables serialization support for rustc-serialize 0.3
 
-- ``serde``
+- ``serde-1``
 
   - Optional, compatible with Rust stable
   - Enables serialization support for serde 1.0

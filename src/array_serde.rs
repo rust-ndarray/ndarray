@@ -31,7 +31,7 @@ pub fn verify_version<E>(v: u8) -> Result<(), E>
     Ok(())
 }
 
-/// **Requires crate feature `"serde"`**
+/// **Requires crate feature `"serde-1"`**
 impl<I> Serialize for Dim<I>
     where I: Serialize,
 {
@@ -42,7 +42,7 @@ impl<I> Serialize for Dim<I>
     }
 }
 
-/// **Requires crate feature `"serde"`**
+/// **Requires crate feature `"serde-1"`**
 impl<'de, I> Deserialize<'de> for Dim<I>
     where I: Deserialize<'de>,
 {
@@ -53,7 +53,7 @@ impl<'de, I> Deserialize<'de> for Dim<I>
     }
 }
 
-/// **Requires crate feature `"serde"`**
+/// **Requires crate feature `"serde-1"`**
 impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
           D: Dimension + Serialize,
@@ -109,7 +109,7 @@ impl<S, Di> ArrayVisitor<S, Di> {
 
 static ARRAY_FIELDS: &'static [&'static str] = &["v", "dim", "data"];
 
-/// **Requires crate feature `"serde"`**
+/// **Requires crate feature `"serde-1"`**
 impl<'de, A, Di, S> Deserialize<'de> for ArrayBase<S, Di>
     where A: Deserialize<'de>,
           Di: Deserialize<'de> + Dimension,

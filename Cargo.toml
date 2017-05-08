@@ -43,6 +43,7 @@ blas-sys = { version = "0.6.5", optional = true, default-features = false }
 matrixmultiply = { version = "0.1.13" }
 
 [dependencies.serde]
+# Use via the `serde-1` crate feature!
 version = "1.0"
 optional = true
 
@@ -50,14 +51,19 @@ optional = true
 defmac = "0.1"
 
 [features]
+# Enable blas usage
+# See README for more instructions
 blas = ["blas-sys"]
+
+# Serde 1.0
+serde-1 = ["serde"]
 
 # These features are used for testing
 blas-openblas-sys = ["blas"]
 test = ["blas-openblas-sys"]
 
 # This feature is used for docs
-docs = ["rustc-serialize", "serde"]
+docs = ["rustc-serialize", "serde-1"]
 
 [profile.release]
 [profile.bench]
