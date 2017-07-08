@@ -92,6 +92,7 @@
 //!         });
 //! }
 //! ```
+#![doc(html_root_url = "http://docs.rs/ndarray-parallel/0.4/")]
 
 
 pub extern crate ndarray;

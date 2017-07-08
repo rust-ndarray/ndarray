@@ -44,10 +44,14 @@ Status and Lookout
 How to use with cargo::
 
     [dependencies]
-    ndarray-parallel = "0.3"
+    ndarray-parallel = "0.4"
 
 Recent Changes (ndarray-parallel)
 ---------------------------------
+
+- 0.4.0
+
+  - Update Rayon dependency to 0.8.2
 
 - 0.3.0
 
