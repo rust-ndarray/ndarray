@@ -1,8 +1,6 @@
 
 use rayon::iter::ParallelIterator;
 use rayon::iter::IndexedParallelIterator;
-use rayon::iter::ExactParallelIterator;
-use rayon::iter::BoundedParallelIterator;
 use rayon::iter::internal::{Consumer, UnindexedConsumer};
 use rayon::iter::internal::bridge;
 use rayon::iter::internal::ProducerCallback;
@@ -69,22 +67,8 @@ macro_rules! par_iter_wrapper {
         {
             callback.callback(ParallelProducer(self.iter))
         }
-    }
 
-    impl<'a, A, D> ExactParallelIterator for Parallel<$iter_name<'a, A, D>>
-        where D: Dimension,
-              A: $($thread_bounds)*,
-    {
         fn len(&mut self) -> usize {
-            ExactSizeIterator::len(&self.iter)
-        }
-    }
-
-    impl<'a, A, D> BoundedParallelIterator for Parallel<$iter_name<'a, A, D>>
-        where D: Dimension,
-              A: $($thread_bounds)*,
-    {
-        fn upper_bound(&mut self) -> usize {
             ExactSizeIterator::len(&self.iter)
         }
 

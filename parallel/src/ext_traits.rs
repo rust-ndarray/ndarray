@@ -15,9 +15,9 @@ use prelude::*;
 pub trait ParMap {
     type Item;
     fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut Self::Item) + Sync;
+        where F: Fn(&mut Self::Item) + Sync + Send;
     fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(Self::Item) -> Self::Item + Sync,
+        where F: Fn(Self::Item) -> Self::Item + Sync + Send,
               Self::Item: Clone;
 }
 
@@ -28,12 +28,12 @@ impl<A, S, D> ParMap for ArrayBase<S, D>
 {
     type Item = A;
     fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut Self::Item) + Sync
+        where F: Fn(&mut Self::Item) + Sync + Send
     {
         self.view_mut().into_par_iter().for_each(f)
     }
     fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(Self::Item) -> Self::Item + Sync,
+        where F: Fn(Self::Item) -> Self::Item + Sync + Send,
               Self::Item: Clone
     {
         self.view_mut().into_par_iter()
@@ -55,7 +55,7 @@ macro_rules! zip_impl {
         /// `Zip`.
         pub trait $name<$($p),*> {
             fn par_apply<F>(self, function: F)
-                where F: Fn($($p),*) + Sync;
+                where F: Fn($($p),*) + Sync + Send;
         }
 
         #[allow(non_snake_case)]
@@ -64,7 +64,7 @@ macro_rules! zip_impl {
                   $($p : Send , )*
         {
             fn par_apply<F>(self, function: F)
-                where F: Fn($($p::Item),*) + Sync
+                where F: Fn($($p::Item),*) + Sync + Send
             {
                 self.into_par_iter().for_each(move |($($p,)*)| function($($p),*))
             }

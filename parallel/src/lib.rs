@@ -92,6 +92,7 @@
 //!         });
 //! }
 //! ```
+#![doc(html_root_url = "http://docs.rs/ndarray-parallel/0.4/")]
 
 
 pub extern crate ndarray;
@@ -105,7 +106,7 @@ pub mod prelude {
     pub use NdarrayIntoParallelRefMutIterator;
 
     #[doc(no_inline)]
-    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator, ExactParallelIterator};
+    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator};
 
     pub use ext_traits::{
         ParApply1,
