@@ -18,4 +18,4 @@ ndarray = { version = "0.9.0", path = "../" }
 
 [dev-dependencies]
 num_cpus = "1.2"
-
+itertools = "0.6"

@@ -130,3 +130,4 @@ mod par;
 mod ext_traits;
 mod into_traits;
 mod into_impls;
+mod zipmacro;
