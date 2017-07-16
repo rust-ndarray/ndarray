@@ -51,7 +51,6 @@
 /// #[macro_use(azip)]
 /// extern crate ndarray;
 ///
-/// use ndarray::Array;
 /// use ndarray::Array2;
 ///
 /// type M = Array2<f32>;
