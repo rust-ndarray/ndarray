@@ -14,6 +14,17 @@ use error::ShapeError;
 
 use StrideShape;
 
+use {
+    ElementsBase,
+    ElementsBaseMut,
+    Iter,
+    IterMut,
+    Baseiter,
+};
+
+use iter;
+use iterators;
+
 /// # Methods Specific to Array Views
 ///
 /// Methods for read-only array views `ArrayView<'a, A, D>`
@@ -232,5 +243,108 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
         self.into_slice_().ok()
     }
 
+}
+
+/// Private array view methods
+impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
+    where D: Dimension,
+{
+    /// Create a new `ArrayView`
+    ///
+    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
+    #[inline(always)]
+    pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
+        ArrayView {
+            data: ViewRepr::new(),
+            ptr: ptr as *mut A,
+            dim: dim,
+            strides: strides,
+        }
+    }
+
+    #[inline]
+    pub(crate) fn into_base_iter(self) -> Baseiter<'a, A, D> {
+        unsafe {
+            Baseiter::new(self.ptr, self.dim, self.strides)
+        }
+    }
+
+    #[inline]
+    pub(crate) fn into_elements_base(self) -> ElementsBase<'a, A, D> {
+        ElementsBase { inner: self.into_base_iter() }
+    }
+
+    pub(crate) fn into_iter_(self) -> Iter<'a, A, D> {
+        Iter::new(self)
+    }
+
+    /// Return an outer iterator for this view.
+    #[doc(hidden)] // not official
+    #[deprecated(note="This method will be replaced.")]
+    pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter(self)
+    }
+
+}
+
+impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
+    where D: Dimension,
+{
+    /// Create a new `ArrayView`
+    ///
+    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
+    #[inline(always)]
+    pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
+        ArrayViewMut {
+            data: ViewRepr::new(),
+            ptr: ptr,
+            dim: dim,
+            strides: strides,
+        }
+    }
+
+    // Convert into a read-only view
+    pub(crate) fn into_view(self) -> ArrayView<'a, A, D> {
+        unsafe {
+            ArrayView::new_(self.ptr, self.dim, self.strides)
+        }
+    }
+
+    #[inline]
+    pub(crate) fn into_base_iter(self) -> Baseiter<'a, A, D> {
+        unsafe {
+            Baseiter::new(self.ptr, self.dim, self.strides)
+        }
+    }
+
+    #[inline]
+    pub(crate) fn into_elements_base(self) -> ElementsBaseMut<'a, A, D> {
+        ElementsBaseMut { inner: self.into_base_iter() }
+    }
+
+    pub(crate) fn into_slice_(self) -> Result<&'a mut [A], Self> {
+        if self.is_standard_layout() {
+            unsafe {
+                Ok(slice::from_raw_parts_mut(self.ptr, self.len()))
+            }
+        } else {
+            Err(self)
+        }
+    }
+
+    pub(crate) fn into_iter_(self) -> IterMut<'a, A, D> {
+        IterMut::new(self)
+    }
+
+    /// Return an outer iterator for this view.
+    #[doc(hidden)] // not official
+    #[deprecated(note="This method will be replaced.")]
+    pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        iterators::new_outer_iter_mut(self)
+    }
 }
 

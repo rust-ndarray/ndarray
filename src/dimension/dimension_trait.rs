@@ -22,7 +22,6 @@ use Axis;
 use super::{
     stride_offset,
     stride_offset_checked,
-    DimPrivate,
 };
 use super::conversion::Convert;
 use super::axes_of;

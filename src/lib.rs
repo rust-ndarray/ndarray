@@ -83,7 +83,7 @@ extern crate num_complex;
 use std::iter::Zip as ZipIter;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
+use std::slice::{Iter as SliceIter, IterMut as SliceIterMut};
 
 pub use dimension::{
     Dimension,
@@ -170,9 +170,6 @@ mod imp_prelude {
         Ix, Ixs,
     };
     pub use dimension::DimensionExt;
-    /// Wrapper type for private methods
-    #[derive(Copy, Clone, Debug)]
-    pub struct Priv<T>(pub T);
 }
 
 pub mod prelude;
@@ -803,113 +800,6 @@ pub use impl_ops::ScalarOperand;
 
 // Array view methods
 mod impl_views;
-
-/// Private array view methods
-impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
-    where D: Dimension,
-{
-    /// Create a new `ArrayView`
-    ///
-    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
-    #[inline(always)]
-    unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
-        ArrayView {
-            data: ViewRepr::new(),
-            ptr: ptr as *mut A,
-            dim: dim,
-            strides: strides,
-        }
-    }
-
-    #[inline]
-    fn into_base_iter(self) -> Baseiter<'a, A, D> {
-        unsafe {
-            Baseiter::new(self.ptr, self.dim, self.strides)
-        }
-    }
-
-    #[inline]
-    fn into_elements_base(self) -> ElementsBase<'a, A, D> {
-        ElementsBase { inner: self.into_base_iter() }
-    }
-
-    fn into_iter_(self) -> Iter<'a, A, D> {
-        Iter::new(self)
-    }
-
-    /// Return an outer iterator for this view.
-    #[doc(hidden)] // not official
-    #[deprecated(note="This method will be replaced.")]
-    pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
-        where D: RemoveAxis,
-    {
-        iterators::new_outer_iter(self)
-    }
-
-}
-
-impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
-    where D: Dimension,
-{
-    /// Create a new `ArrayView`
-    ///
-    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
-    #[inline(always)]
-    unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
-        ArrayViewMut {
-            data: ViewRepr::new(),
-            ptr: ptr,
-            dim: dim,
-            strides: strides,
-        }
-    }
-
-    // Convert into a read-only view
-    fn into_view(self) -> ArrayView<'a, A, D> {
-        unsafe {
-            ArrayView::new_(self.ptr, self.dim, self.strides)
-        }
-    }
-
-    #[inline]
-    fn into_base_iter(self) -> Baseiter<'a, A, D> {
-        unsafe {
-            Baseiter::new(self.ptr, self.dim, self.strides)
-        }
-    }
-
-    #[inline]
-    fn into_elements_base(self) -> ElementsBaseMut<'a, A, D> {
-        ElementsBaseMut { inner: self.into_base_iter() }
-    }
-
-    fn into_slice_(self) -> Result<&'a mut [A], Self> {
-        if self.is_standard_layout() {
-            unsafe {
-                Ok(slice::from_raw_parts_mut(self.ptr, self.len()))
-            }
-        } else {
-            Err(self)
-        }
-    }
-
-    fn into_iter_(self) -> IterMut<'a, A, D> {
-        IterMut::new(self)
-    }
-
-    /// Return an outer iterator for this view.
-    #[doc(hidden)] // not official
-    #[deprecated(note="This method will be replaced.")]
-    pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
-        where D: RemoveAxis,
-    {
-        iterators::new_outer_iter_mut(self)
-    }
-}
-
-trait PrivateNew<T> {
-    fn new(x: T) -> Self;
-}
 
 fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
     -> ZipIter<SliceIter<'a, A>, SliceIter<'b, B>> {

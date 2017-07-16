@@ -12,7 +12,6 @@ use std::ops::{Index, IndexMut};
 use libnum::Zero;
 
 use {Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
-use super::DimPrivate;
 
 /// $m: macro callback
 /// $m is called with $arg and then the indices corresponding to the size argument

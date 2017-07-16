@@ -8,7 +8,6 @@
 
 
 use {Ix, Ix0, Ix1, Dimension, Dim, Axis};
-use super::DimPrivate;
 
 /// Array shape with a next smaller dimension.
 ///

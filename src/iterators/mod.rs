@@ -18,8 +18,6 @@ use std::ptr;
 
 use Ix1;
 
-use PrivateNew;
-
 use super::{Dimension, Ix, Ixs};
 use super::{
     ArrayBase,
@@ -263,10 +261,10 @@ clone_bounds!(
     }
 );
 
-impl<'a, A, D> PrivateNew<ArrayView<'a, A, D>> for Iter<'a, A, D>
+impl<'a, A, D> Iter<'a, A, D>
     where D: Dimension
 {
-    fn new(self_: ArrayView<'a, A, D>) -> Self {
+    pub(crate) fn new(self_: ArrayView<'a, A, D>) -> Self {
         Iter {
             inner: if let Some(slc) = self_.into_slice() {
                 ElementsRepr::Slice(slc.iter())
@@ -279,10 +277,10 @@ impl<'a, A, D> PrivateNew<ArrayView<'a, A, D>> for Iter<'a, A, D>
 
 
 
-impl<'a, A, D> PrivateNew<ArrayViewMut<'a, A, D>> for IterMut<'a, A, D>
+impl<'a, A, D> IterMut<'a, A, D>
     where D: Dimension
 {
-    fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
+    pub(crate) fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
         IterMut {
             inner:
             match self_.into_slice_() {
@@ -340,18 +338,18 @@ pub struct IndexedIter<'a, A: 'a, D>(ElementsBase<'a, A, D>);
 /// See [`.indexed_iter_mut()`](../struct.ArrayBase.html#method.indexed_iter_mut) for more information.
 pub struct IndexedIterMut<'a, A: 'a, D>(ElementsBaseMut<'a, A, D>);
 
-impl<'a, A, D> PrivateNew<ElementsBase<'a, A, D>> for IndexedIter<'a, A, D>
+impl<'a, A, D> IndexedIter<'a, A, D>
     where D: Dimension
 {
-    fn new(x: ElementsBase<'a, A, D>) -> Self {
+    pub(crate) fn new(x: ElementsBase<'a, A, D>) -> Self {
         IndexedIter(x)
     }
 }
 
-impl<'a, A, D> PrivateNew<ElementsBaseMut<'a, A, D>> for IndexedIterMut<'a, A, D>
+impl<'a, A, D> IndexedIterMut<'a, A, D>
     where D: Dimension
 {
-    fn new(x: ElementsBaseMut<'a, A, D>) -> Self {
+    pub(crate) fn new(x: ElementsBaseMut<'a, A, D>) -> Self {
         IndexedIterMut(x)
     }
 }

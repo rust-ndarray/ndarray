@@ -6,7 +6,6 @@ use std::ops::{
     DerefMut,
 };
 use imp_prelude::*;
-use dimension::DimPrivate;
 
 const CAP: usize = 4;
 

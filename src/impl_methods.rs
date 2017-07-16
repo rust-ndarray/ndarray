@@ -50,7 +50,6 @@ use iter::{
     Windows
 };
 use stacking::stack;
-use PrivateNew;
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
