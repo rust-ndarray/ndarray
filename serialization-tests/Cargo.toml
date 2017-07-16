@@ -20,5 +20,5 @@ version = "0.9"
 version = "0.9"
 
 [dev-dependencies.rmp-serde]
-version = "0.12"
+version = "=0.12.0"
 
