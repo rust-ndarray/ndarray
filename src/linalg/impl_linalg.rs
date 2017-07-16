@@ -519,6 +519,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
     if k != k2 || m != m2 {
         general_dot_shape_error(m, k, k2, 1, m2, 1);
     } else {
+        #[cfg(feature = "blas")]
         macro_rules! gemv {
             ($ty:ty, $gemv:ident) => {
                 if blas_row_major_2d::<$ty, _>(&a)

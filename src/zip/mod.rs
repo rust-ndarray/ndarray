@@ -617,11 +617,6 @@ impl<T> OffsetTuple for *mut T {
     }
 }
 
-macro_rules! sub {
-    ($i:ident [$($x:tt)*]) => { $($x)* };
-}
-
-
 macro_rules! offset_impl {
     ($([$($param:ident)*][ $($q:ident)*],)+) => {
         $(
