@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
-use serde::de::{self, Visitor, SeqVisitor, MapVisitor};
+use serde::de::{self, Visitor, SeqAccess, MapAccess};
 use serde::ser::{SerializeSeq, SerializeStruct};
 
 use std::fmt;
@@ -31,7 +31,7 @@ pub fn verify_version<E>(v: u8) -> Result<(), E>
     Ok(())
 }
 
-/// **Requires crate feature `"serde"`**
+/// **Requires crate feature `"serde-1"`**
 impl<I> Serialize for Dim<I>
     where I: Serialize,
 {
@@ -42,18 +42,18 @@ impl<I> Serialize for Dim<I>
     }
 }
 
-/// **Requires crate feature `"serde"`**
-impl<I> Deserialize for Dim<I>
-    where I: Deserialize,
+/// **Requires crate feature `"serde-1"`**
+impl<'de, I> Deserialize<'de> for Dim<I>
+    where I: Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         I::deserialize(deserializer).map(Dim::new)
     }
 }
 
-/// **Requires crate feature `"serde"`**
+/// **Requires crate feature `"serde-1"`**
 impl<A, D, S> Serialize for ArrayBase<S, D>
     where A: Serialize,
           D: Dimension + Serialize,
@@ -109,26 +109,26 @@ impl<S, Di> ArrayVisitor<S, Di> {
 
 static ARRAY_FIELDS: &'static [&'static str] = &["v", "dim", "data"];
 
-/// **Requires crate feature `"serde"`**
-impl<A, Di, S> Deserialize for ArrayBase<S, Di>
-    where A: Deserialize,
-          Di: Deserialize + Dimension,
+/// **Requires crate feature `"serde-1"`**
+impl<'de, A, Di, S> Deserialize<'de> for ArrayBase<S, Di>
+    where A: Deserialize<'de>,
+          Di: Deserialize<'de> + Dimension,
           S: DataOwned<Elem = A>
 {
     fn deserialize<D>(deserializer: D) -> Result<ArrayBase<S, Di>, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         deserializer.deserialize_struct("Array", ARRAY_FIELDS, ArrayVisitor::new())
     }
 }
 
-impl Deserialize for ArrayField {
+impl<'de> Deserialize<'de> for ArrayField {
     fn deserialize<D>(deserializer: D) -> Result<ArrayField, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         struct ArrayFieldVisitor;
 
-        impl Visitor for ArrayFieldVisitor {
+        impl<'de> Visitor<'de> for ArrayFieldVisitor {
             type Value = ArrayField;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -147,13 +147,13 @@ impl Deserialize for ArrayField {
             }
         }
 
-        deserializer.deserialize_struct_field(ArrayFieldVisitor)
+        deserializer.deserialize_identifier(ArrayFieldVisitor)
     }
 }
 
-impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
-    where A: Deserialize,
-          Di: Deserialize + Dimension,
+impl<'de, A, Di, S> Visitor<'de> for ArrayVisitor<S,Di>
+    where A: Deserialize<'de>,
+          Di: Deserialize<'de> + Dimension,
           S: DataOwned<Elem = A>
 {
     type Value = ArrayBase<S, Di>;
@@ -163,9 +163,9 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
     }
 
     fn visit_seq<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
-        where V: SeqVisitor
+        where V: SeqAccess<'de>,
     {
-        let v: u8 = match try!(visitor.visit()) {
+        let v: u8 = match try!(visitor.next_element()) {
             Some(value) => value,
             None => {
                 return Err(de::Error::invalid_length(0, &self));
@@ -174,14 +174,14 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
 
         try!(verify_version(v));
 
-        let dim: Di = match try!(visitor.visit()) {
+        let dim: Di = match try!(visitor.next_element()) {
             Some(value) => value,
             None => {
                 return Err(de::Error::invalid_length(1, &self));
             }
         };
 
-        let data: Vec<A> = match try!(visitor.visit()) {
+        let data: Vec<A> = match try!(visitor.next_element()) {
             Some(value) => value,
             None => {
                 return Err(de::Error::invalid_length(2, &self));
@@ -196,24 +196,24 @@ impl<A, Di, S> Visitor for ArrayVisitor<S,Di>
     }
 
     fn visit_map<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
-        where V: MapVisitor,
+        where V: MapAccess<'de>,
     {
         let mut v: Option<u8> = None;
         let mut data: Option<Vec<A>> = None;
         let mut dim: Option<Di> = None;
 
-        while let Some(key) = try!(visitor.visit_key()) {
+        while let Some(key) = try!(visitor.next_key()) {
             match key {
                 ArrayField::Version => {
-                    let val = try!(visitor.visit_value());
+                    let val = try!(visitor.next_value());
                     try!(verify_version(val));
                     v = Some(val);
                 },
                 ArrayField::Data => {
-                    data = Some(try!(visitor.visit_value()));
+                    data = Some(try!(visitor.next_value()));
                 },
                 ArrayField::Dim => {
-                    dim = Some(try!(visitor.visit_value()));
+                    dim = Some(try!(visitor.next_value()));
                 },
             }
         }
