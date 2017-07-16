@@ -83,19 +83,17 @@
 /// }
 /// ```
 macro_rules! azip {
-    // Final Rule (index)
-    (@parse [index => $a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
-        $crate::Zip::indexed($a)
-            $(
-                .and($aa)
-            )*
-            .apply(|$($p),+| {
-                $($t)*
-            })
+    // Build Zip Rule (index)
+    (@parse [index => $a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
+        azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
     };
-    // Final Rule (no index)
-    (@parse [$a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
-        $crate::Zip::from($a)
+    // Build Zip Rule (no index)
+    (@parse [$a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
+        azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
+    };
+    // Build Finish Rule (both)
+    (@finish ($z:expr) [$($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)*}) => {
+        ($z)
             $(
                 .and($aa)
             )*
