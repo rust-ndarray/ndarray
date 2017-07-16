@@ -10,7 +10,6 @@ use ::{
     IxDynImpl,
 };
 use ::dimension::Dim;
-use dimension::DimPrivate;
 
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]

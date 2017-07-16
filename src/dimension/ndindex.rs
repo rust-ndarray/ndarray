@@ -8,7 +8,6 @@ use {
     IxDynImpl,
 };
 use super::{stride_offset, stride_offset_checked};
-use super::DimPrivate;
 
 /// Tuple or fixed size arrays that can be used to index an array.
 ///

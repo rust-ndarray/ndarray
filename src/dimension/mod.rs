@@ -29,13 +29,6 @@ mod ndindex;
 mod remove_axis;
 mod axes;
 
-/// Private constructor and accessors for Dim
-pub trait DimPrivate<I> {
-    fn new(index: I) -> Self;
-    fn ix(&self) -> &I;
-    fn ixm(&mut self) -> &mut I;
-}
-
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
 pub fn stride_offset(n: Ix, stride: Ix) -> isize {

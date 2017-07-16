@@ -11,8 +11,6 @@ use super::arraytraits::ARRAY_FORMAT_VERSION;
 
 use imp_prelude::*;
 
-use dimension::DimPrivate;
-
 /// **Requires crate feature `"rustc-serialize"`**
 impl<I> Encodable for Dim<I>
     where I: Encodable,

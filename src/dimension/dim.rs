@@ -11,7 +11,6 @@ use itertools::zip;
 
 use super::IntoDimension;
 use super::Dimension;
-use super::DimPrivate;
 use Ix;
 
 /// Dimension description.
@@ -41,16 +40,17 @@ pub struct Dim<I: ?Sized> {
     index: I,
 }
 
-impl<I> DimPrivate<I> for Dim<I> {
-    fn new(index: I) -> Dim<I> {
+impl<I> Dim<I> {
+    /// Private constructor and accessors for Dim
+    pub(crate) fn new(index: I) -> Dim<I> {
         Dim {
             index: index,
         }
     }
     #[inline(always)]
-    fn ix(&self) -> &I { &self.index }
+    pub(crate) fn ix(&self) -> &I { &self.index }
     #[inline(always)]
-    fn ixm(&mut self) -> &mut I { &mut self.index }
+    pub(crate) fn ixm(&mut self) -> &mut I { &mut self.index }
 }
 
 /// Create a new dimension value.

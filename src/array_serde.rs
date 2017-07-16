@@ -16,7 +16,6 @@ use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Iter;
-use dimension::DimPrivate;
 
 /// Verifies that the version of the deserialized array matches the current
 /// `ARRAY_FORMAT_VERSION`.
