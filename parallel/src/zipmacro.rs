@@ -53,7 +53,8 @@
 /// ```
 macro_rules! par_azip {
     // Final Rule (index)
-    (@parse [index => $a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
+    (@parse [index => $a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {{
+        use $crate::prelude::*;
         $crate::ndarray::Zip::indexed($a)
             $(
                 .and($aa)
@@ -61,9 +62,10 @@ macro_rules! par_azip {
             .par_apply(|$($p),+| {
                 $($t)*
             })
-    };
+    }};
     // Final Rule (no index)
-    (@parse [$a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
+    (@parse [$a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {{
+        use $crate::prelude::*;
         $crate::ndarray::Zip::from($a)
             $(
                 .and($aa)
@@ -71,7 +73,7 @@ macro_rules! par_azip {
             .par_apply(|$($p),+| {
                 $($t)*
             })
-    };
+    }};
     // parsing stack: [expressions] [patterns] (one per operand)
     // index uses empty [] -- must be first
     (@parse [] [] index $i:pat, $($t:tt)*) => {

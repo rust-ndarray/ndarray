@@ -5,9 +5,7 @@ extern crate ndarray_parallel;
 extern crate itertools;
 
 use ndarray::prelude::*;
-use ndarray_parallel::prelude::*;
-
-use itertools::{assert_equal, cloned, enumerate};
+use itertools::{enumerate};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
@@ -60,7 +58,7 @@ fn test_indices_1() {
         *elt = i;
     }
 
-    let mut count = AtomicUsize::new(0);
+    let count = AtomicUsize::new(0);
     par_azip!(index i, elt (&a1) in {
         count.fetch_add(1, Ordering::SeqCst);
         assert_eq!(elt, i);
