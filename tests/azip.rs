@@ -1,4 +1,3 @@
-
 #[macro_use]
 extern crate ndarray;
 extern crate itertools;
@@ -189,11 +188,10 @@ fn test_indices_2() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1)
-        .apply(|i, elt| {
-            count += 1;
-            assert_eq!(*elt, i);
-        });
+    azip!(index i, a1 in {
+        count += 1;
+        assert_eq!(a1, i);
+    });
     assert_eq!(count, a1.len());
 
     let mut count = 0;

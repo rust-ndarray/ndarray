@@ -37,6 +37,12 @@
 /// + `b (expr)`: the producer is `expr` and the variable pattern is `&b`.
 /// + `ref c (expr)`: the producer is `expr` and the variable pattern is `c`.
 ///
+/// Special rule:
+///
+/// + `index i`: Use `Zip::indexed` instead. `i` is a pattern -- it can be
+///    a single variable name or something else that pattern matches the index.
+///    Must be first.
+///
 /// **Panics** if any of the arrays are not of the same shape.
 ///
 /// ## Examples
@@ -45,14 +51,21 @@
 /// #[macro_use(azip)]
 /// extern crate ndarray;
 ///
+/// use ndarray::Array;
 /// use ndarray::Array2;
 ///
 /// type M = Array2<f32>;
 ///
 /// fn main() {
 ///     let mut a = M::zeros((16, 16));
-///     let b = M::from_elem(a.dim(), 1.);
-///     let c = M::from_elem(a.dim(), 2.);
+///     let mut b = M::zeros(a.dim());
+///     let mut c = M::zeros(a.dim());
+///
+///     // set up values in b, c
+///     b.fill(1.);
+///     for ((i, j), elt) in c.indexed_iter_mut() {
+///         *elt = (i + 10 * j) as f32;
+///     }
 ///
 ///     // Compute a simple ternary operation:
 ///     // elementwise addition of b and c, stored in a
@@ -60,10 +73,28 @@
 ///     azip!(mut a, b, c in { *a = b + c });
 ///
 ///     assert_eq!(a, &b + &c);
+///
+///     // Example of azip!() with index
+///
+///     azip!(index (i, j), b, c in {
+///         a[[i, j]] = b - c;
+///     });
+///
+///     assert_eq!(a, &b - &c);
 /// }
 /// ```
 macro_rules! azip {
-    // Final Rule
+    // Final Rule (index)
+    (@parse [index => $a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
+        $crate::Zip::indexed($a)
+            $(
+                .and($aa)
+            )*
+            .apply(|$($p),+| {
+                $($t)*
+            })
+    };
+    // Final Rule (no index)
     (@parse [$a:expr, $($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)* }) => {
         $crate::Zip::from($a)
             $(
@@ -74,6 +105,10 @@ macro_rules! azip {
             })
     };
     // parsing stack: [expressions] [patterns] (one per operand)
+    // index uses empty [] -- must be first
+    (@parse [] [] index $i:pat, $($t:tt)*) => {
+        azip!(@parse [index =>] [$i,] $($t)*);
+    };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
         azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
     };
