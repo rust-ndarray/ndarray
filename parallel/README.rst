@@ -49,6 +49,11 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- 0.5.0
+
+  - Upgrade for ndarray 0.10.0
+  - Add ``par_azip!()`` macro by @msiglreith
+
 - 0.4.0
 
   - Update Rayon dependency to 0.8.2
