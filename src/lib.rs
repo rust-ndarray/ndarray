@@ -79,6 +79,8 @@ extern crate matrixmultiply;
 extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+extern crate num_bigint;
+extern crate num_rational;
 
 use std::iter::Zip as ZipIter;
 use std::marker::PhantomData;
