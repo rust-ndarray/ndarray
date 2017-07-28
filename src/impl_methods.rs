@@ -1043,6 +1043,25 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Convert a static dimensional array to a dynamic dimensional array.
+    ///
+    /// ```
+    /// use ndarray::{arr2, ArrayD};
+    ///
+    /// assert!(
+    ///     arr2(&[[1, 2], [3, 4]]).into_dyn()
+    ///     == ArrayD::from_shape_vec(vec![2, 2], vec![1, 2, 3, 4]).unwrap()
+    /// );
+    /// ```
+    pub fn into_dyn(self) -> ArrayBase<S, IxDyn> {
+        ArrayBase {
+            data: self.data,
+            ptr: self.ptr,
+            dim: self.dim.into_dyn(),
+            strides: self.strides.into_dyn(),
+        }
+    }
+
     /// Act like a larger size and/or shape array by *broadcasting*
     /// into a larger shape, if possible.
     ///
