@@ -260,3 +260,34 @@ pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>
 {
     arr3(xs).into_shared()
 }
+
+/// Convert a static dimensional array to a dynamic dimensional array.
+///
+/// ```
+/// use ndarray::{arr2, ArrayD};
+///
+/// let a = arr2(&[[1, 2, 3],
+///                [4, 5, 6]]);
+/// let b: ArrayD<_> = a.into();
+/// ```
+macro_rules! impl_from_arrN_to_arrD {
+    ($arr_type: ident) => (
+        impl<A> From<$arr_type<A>> for ArrayD<A> {
+            fn from(xs: $arr_type<A>) -> ArrayD<A> {
+                ArrayBase {
+                    data: xs.data,
+                    ptr: xs.ptr,
+                    dim: IxDyn(xs.dim.ix()),
+                    strides: IxDyn(xs.strides.ix()),
+                }
+            }
+        }
+    );
+    () => ();
+    ($x: ident, $($xs:ident,)*) => (
+        impl_from_arrN_to_arrD!($x);
+        impl_from_arrN_to_arrD!($($xs,)*);
+    )
+}
+
+impl_from_arrN_to_arrD!(Array0, Array1, Array2, Array3, Array4, Array5, Array6,);
