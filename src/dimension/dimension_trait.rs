@@ -371,6 +371,11 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             .map_or(Axis(0), |ax| ax.axis())
     }
 
+    /// Convert the dimensional into a dynamic dimensional (IxDyn).
+    fn into_dyn(self) -> IxDyn {
+        IxDyn(self.slice())
+    }
+
     #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 
