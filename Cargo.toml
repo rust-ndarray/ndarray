@@ -69,6 +69,10 @@ docs = ["rustc-serialize", "serde-1"]
 [profile.bench]
 debug = true
 
+[workspace]
+members = ["parallel", "ndarray-rand", "serialization-tests"]
+exclude = ["numeric-tests"]
+
 [package.metadata.release]
 no-dev-version = true
 
