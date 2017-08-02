@@ -13,7 +13,7 @@ use ndarray_parallel::prelude::*;
 
 use ndarray::Zip;
 
-const EXP_N: usize = 128;
+const EXP_N: usize = 256;
 const ADDN: usize = 512;
 
 use std::cmp::max;
@@ -46,7 +46,7 @@ fn rayon_exp_regular(bench: &mut Bencher)
     });
 }
 
-const FASTEXP: usize = 800;
+const FASTEXP: usize = EXP_N;
 
 #[inline]
 fn fastexp(x: f64) -> f64 {
