@@ -6,16 +6,15 @@ extern crate test;
 use test::Bencher;
 
 extern crate rayon;
-#[macro_use(s)]
-extern crate ndarray;
-extern crate ndarray_parallel;
+#[macro_use] extern crate ndarray;
+#[macro_use] extern crate ndarray_parallel;
 use ndarray::prelude::*;
 use ndarray_parallel::prelude::*;
 
 use ndarray::Zip;
 
 const EXP_N: usize = 128;
-const ADDN: usize = 1024;
+const ADDN: usize = 512;
 
 use std::cmp::max;
 
@@ -135,9 +134,9 @@ fn add(bench: &mut Bencher)
     let c = Array2::<f64>::zeros((ADDN, ADDN));
     let d = Array2::<f64>::zeros((ADDN, ADDN));
     bench.iter(|| {
-        Zip::from(&mut a).and(&b).and(&c).and(&d).apply(|a, &b, &c, &d| {
+        azip!(mut a, b, c, d in {
             *a += b.exp() + c.exp() + d.exp();
-        })
+        });
     });
 }
 
@@ -150,8 +149,8 @@ fn rayon_add(bench: &mut Bencher)
     let c = Array2::<f64>::zeros((ADDN, ADDN));
     let d = Array2::<f64>::zeros((ADDN, ADDN));
     bench.iter(|| {
-        Zip::from(&mut a).and(&b).and(&c).and(&d).into_par_iter().for_each(|(a, &b, &c, &d)| {
+        par_azip!(mut a, b, c, d in {
             *a += b.exp() + c.exp() + d.exp();
-        })
+        });
     });
 }
