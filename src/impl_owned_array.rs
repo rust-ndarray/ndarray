@@ -4,10 +4,14 @@ use std::rc::Rc;
 use imp_prelude::*;
 use {
     OwnedRepr,
-    OwnedRcRepr,
 };
 
-impl<A, D> ArrayBase<OwnedRepr<A>, D>
+/// Methods specific to `Array`.
+///
+/// ***See also all methods for [`ArrayBase`]***
+///
+/// [`ArrayBase`]: struct.ArrayBase.html
+impl<A, D> Array<A, D>
     where D: Dimension
 {
     /// Return a vector of the elements in the array, in the way they are
@@ -20,8 +24,12 @@ impl<A, D> ArrayBase<OwnedRepr<A>, D>
     }
 }
 
-// RcArray
-impl<A, D> ArrayBase<OwnedRcRepr<A>, D>
+/// Methods specific to `RcArray`.
+///
+/// ***See also all methods for [`ArrayBase`]***
+///
+/// [`ArrayBase`]: struct.ArrayBase.html
+impl<A, D> RcArray<A, D>
     where A: Clone,
           D: Dimension
 {

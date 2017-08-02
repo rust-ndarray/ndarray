@@ -209,9 +209,6 @@ pub type Ixs = isize;
 /// + [Broadcasting](#broadcasting)
 /// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](#methods-for-all-array-types)
-/// + [Methods Specific to Array Views](#methods-specific-to-array-views)
-///
-///
 ///
 ///
 /// ## `Array`
@@ -244,17 +241,22 @@ pub type Ixs = isize;
 ///
 /// ## Array Views
 ///
-/// `ArrayView` and `ArrayViewMut` are read-only and read-write array views
+/// [`ArrayView`] and [`ArrayViewMut`] are read-only and read-write array views
 /// respectively. They use dimensionality, indexing, and almost all other
 /// methods the same was as the other array types.
+///
+/// Methods for `ArrayBase` apply to array views too, when the trait bounds
+/// allow.
+///
+/// Please see the documentation for the respective array view for an overview
+/// of methods specific to array views: [`ArrayView`], [`ArrayViewMut`].
 ///
 /// A view is created from an array using `.view()`, `.view_mut()`, using
 /// slicing (`.slice()`, `.slice_mut()`) or from one of the many iterators
 /// that yield array views.
 ///
 /// You can also create an array view from a regular slice of data not
-/// allocated with `Array` — see [Methods Specific to Array
-/// Views](#methods-specific-to-array-views).
+/// allocated with `Array` — see array view methods or their `From` impls.
 ///
 /// Note that all `ArrayBase` variants can change their view (slicing) of the
 /// data freely, even when their data can’t be mutated.
@@ -630,7 +632,7 @@ pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 ///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
-/// See also [**Methods Specific To Array Views**](struct.ArrayBase.html#methods-specific-to-array-views)
+/// See also [`ArrayViewMut`](type.ArrayViewMut.html).
 ///
 /// [ab]: struct.ArrayBase.html
 pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
@@ -645,7 +647,7 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 ///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
-/// See also [**Methods Specific To Array Views**](struct.ArrayBase.html#methods-specific-to-array-views)
+/// See also [`ArrayView`](type.ArrayView.html).
 ///
 /// [ab]: struct.ArrayBase.html
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;

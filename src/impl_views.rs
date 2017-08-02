@@ -25,14 +25,8 @@ use {
 use iter;
 use iterators;
 
-/// # Methods Specific to Array Views
-///
-/// Methods for read-only array views `ArrayView<'a, A, D>`
-///
-/// Note that array views implement traits like [`From`][f] and `IntoIterator` too.
-///
-/// [f]: #method.from
-impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
+/// Methods for read-only array views.
+impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
     /// Create a read-only array view borrowing its data from a slice.
@@ -141,12 +135,8 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 
 }
 
-/// Methods for read-write array views `ArrayViewMut<'a, A, D>`
-///
-/// Note that array views implement traits like [`From`][f] and `IntoIterator` too.
-///
-/// [f]: #method.from
-impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
+/// Methods for read-write array views.
+impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     /// Create a read-write array view borrowing its data from a slice.
@@ -246,7 +236,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
 }
 
 /// Private array view methods
-impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
+impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
 {
     /// Create a new `ArrayView`
@@ -289,7 +279,7 @@ impl<'a, A, D> ArrayBase<ViewRepr<&'a A>, D>
 
 }
 
-impl<'a, A, D> ArrayBase<ViewRepr<&'a mut A>, D>
+impl<'a, A, D> ArrayViewMut<'a, A, D>
     where D: Dimension,
 {
     /// Create a new `ArrayView`
