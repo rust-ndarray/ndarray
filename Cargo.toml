@@ -49,6 +49,7 @@ optional = true
 
 [dev-dependencies]
 defmac = "0.1"
+rawpointer = "0.1"
 
 [features]
 # Enable blas usage
