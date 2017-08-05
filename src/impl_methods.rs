@@ -1043,15 +1043,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Convert a static dimensional array to a dynamic dimensional array.
+    /// Convert any array or array view to a dynamic dimensional array or
+    /// array view (respectively).
     ///
     /// ```
     /// use ndarray::{arr2, ArrayD};
     ///
-    /// assert!(
-    ///     arr2(&[[1, 2], [3, 4]]).into_dyn()
-    ///     == ArrayD::from_shape_vec(vec![2, 2], vec![1, 2, 3, 4]).unwrap()
-    /// );
+    /// let array: ArrayD<i32> = arr2(&[[1, 2],
+    ///                                 [3, 4]]).into_dyn();
     /// ```
     pub fn into_dyn(self) -> ArrayBase<S, IxDyn> {
         ArrayBase {
