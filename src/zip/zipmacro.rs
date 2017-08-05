@@ -41,7 +41,8 @@
 ///
 /// + `index i`: Use `Zip::indexed` instead. `i` is a pattern -- it can be
 ///    a single variable name or something else that pattern matches the index.
-///    Must be first.
+///    This rule must be the first if it is used, and it must be followed by
+///    at least one other rule.
 ///
 /// **Panics** if any of the arrays are not of the same shape.
 ///

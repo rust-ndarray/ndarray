@@ -430,10 +430,14 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///
 /// type M = Array2<f64>;
 ///
-/// let mut a = M::zeros((64, 64));
-/// let b = M::zeros((64, 64));
-/// let c = M::zeros((64, 64));
-/// let d = M::zeros((64, 64));
+/// // Create four 2d arrays of the same size
+/// let mut a = M::zeros((64, 32));
+/// let b = M::from_elem(a.dim(), 1.);
+/// let c = M::from_elem(a.dim(), 2.);
+/// let d = M::from_elem(a.dim(), 3.);
+///
+/// // Example 1: Perform an elementwise arithmetic operation across
+/// // the four arrays a, b, c, d.
 ///
 /// Zip::from(&mut a)
 ///     .and(&b)
@@ -442,6 +446,26 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///     .apply(|w, &x, &y, &z| {
 ///         *w += x + y * z;
 ///     });
+///
+/// // Example 2: Create a new array `e` with one entry per row of `a`.
+/// //  Use Zip to traverse the rows of `a` and assign to the corresponding
+/// //  entry in `e` with the sum across each row.
+/// //  This is possible because the producer for `e` and the row producer
+/// //  for `a` have the same shape and dimensionality.
+/// //  The rows producer yields one array view (`row`) per iteration.
+///
+/// use ndarray::{Array1, Axis};
+///
+/// let mut e = Array1::zeros(a.rows());
+///
+/// Zip::from(&mut e)
+///     .and(a.genrows())
+///     .apply(|e, row| {
+///         *e = row.scalar_sum();
+///     });
+///
+/// // Check the result against the built in `.sum()` along axis 1.
+/// assert_eq!(e, a.sum(Axis(1)));
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {
