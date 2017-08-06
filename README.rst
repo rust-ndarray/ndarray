@@ -94,6 +94,14 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.1
+
+  - Add method ``.into_dyn()`` to convert to a dynamic dimensionality array
+    or array view. By @bobogei81123
+  - Edit docs for the fact that type alias pages now show methods.
+    See the doc pages for ``Array`` and ``ArrayView`` and the other aliases.
+  - Edit docs for ``Zip``
+
 - 0.10.0
 
   - Upgrade to Serde 1.0. Crate feature name is ``serde-1``.
