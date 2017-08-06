@@ -38,11 +38,11 @@ macro_rules! impl_ndproducer {
         }
     }) => { 
 impl<$($typarm)*> NdProducer for $fulltype {
-    type Ptr = *mut A;
-    type Stride = isize;
     $(
         type $atyn = $atyv;
     )*
+    type Ptr = *mut A;
+    type Stride = isize;
 
     #[doc(hidden)]
     fn raw_dim(&self) -> D {

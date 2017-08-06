@@ -231,9 +231,9 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
     where D: Dimension,
           S: Data<Elem=A>,
 {
+    type Item = &'a A;
     type Dim = D;
     type Output = ArrayView<'a, A, D>;
-    type Item = &'a A;
     fn into_producer(self) -> Self::Output {
         self.view()
     }
@@ -245,9 +245,9 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
     where D: Dimension,
           S: DataMut<Elem=A>,
 {
+    type Item = &'a mut A;
     type Dim = D;
     type Output = ArrayViewMut<'a, A, D>;
-    type Item = &'a mut A;
     fn into_producer(self) -> Self::Output {
         self.view_mut()
     }
@@ -255,9 +255,9 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
 
 /// A slice is a one-dimensional producer
 impl<'a, A: 'a> IntoNdProducer for &'a [A] {
+    type Item = <Self::Output as NdProducer>::Item;
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
-    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -265,9 +265,9 @@ impl<'a, A: 'a> IntoNdProducer for &'a [A] {
 
 /// A mutable slice is a mutable one-dimensional producer
 impl<'a, A: 'a> IntoNdProducer for &'a mut [A] {
+    type Item = <Self::Output as NdProducer>::Item;
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
-    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -275,9 +275,9 @@ impl<'a, A: 'a> IntoNdProducer for &'a mut [A] {
 
 /// A Vec is a one-dimensional producer
 impl<'a, A: 'a> IntoNdProducer for &'a Vec<A> {
+    type Item = <Self::Output as NdProducer>::Item;
     type Dim = Ix1;
     type Output = ArrayView1<'a, A>;
-    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }
@@ -285,9 +285,9 @@ impl<'a, A: 'a> IntoNdProducer for &'a Vec<A> {
 
 /// A mutable Vec is a mutable one-dimensional producer
 impl<'a, A: 'a> IntoNdProducer for &'a mut Vec<A> {
+    type Item = <Self::Output as NdProducer>::Item;
     type Dim = Ix1;
     type Output = ArrayViewMut1<'a, A>;
-    type Item = <Self::Output as NdProducer>::Item;
     fn into_producer(self) -> Self::Output {
         <_>::from(self)
     }

@@ -52,8 +52,8 @@ impl_ndproducer! {
         strides,
     }
     Windows<'a, A, D> {
-        type Dim = D;
         type Item = ArrayView<'a, A, D>;
+        type Dim = D;
 
         unsafe fn item(&self, ptr) {
             ArrayView::new_(ptr, self.window.clone(),

@@ -13,8 +13,8 @@ impl_ndproducer! {
         inner_stride,
     }
     Lanes<'a, A, D> {
-        type Dim = D;
         type Item = ArrayView<'a, A, Ix1>;
+        type Dim = D;
 
         unsafe fn item(&self, ptr) {
             ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
@@ -65,8 +65,8 @@ impl_ndproducer! {
         inner_stride,
     }
     LanesMut<'a, A, D> {
-        type Dim = D;
         type Item = ArrayViewMut<'a, A, Ix1>;
+        type Dim = D;
 
         unsafe fn item(&self, ptr) {
             ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))

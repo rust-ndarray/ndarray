@@ -14,8 +14,8 @@ impl_ndproducer! {
         inner_strides,
     }
     ExactChunks<'a, A, D> {
-        type Dim = D;
         type Item = ArrayView<'a, A, D>;
+        type Dim = D;
 
         unsafe fn item(&self, ptr) {
             ArrayView::new_(ptr, self.chunk.clone(),
@@ -95,8 +95,8 @@ impl_ndproducer! {
         inner_strides,
     }
     ExactChunksMut<'a, A, D> {
-        type Dim = D;
         type Item = ArrayViewMut<'a, A, D>;
+        type Dim = D;
 
         unsafe fn item(&self, ptr) {
             ArrayViewMut::new_(ptr,
