@@ -21,6 +21,7 @@ impl<T> Deref for IxDynRepr<T> {
     fn deref(&self) -> &[T] {
         match *self {
             IxDynRepr::Inline(len, ref ar) => {
+                debug_assert!(len as (usize) <= ar.len());
                 unsafe {
                     ar.get_unchecked(..len as usize)
                 }
@@ -34,6 +35,7 @@ impl<T> DerefMut for IxDynRepr<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         match *self {
             IxDynRepr::Inline(len, ref mut ar) => {
+                debug_assert!(len as (usize) <= ar.len());
                 unsafe {
                     ar.get_unchecked_mut(..len as usize)
                 }
