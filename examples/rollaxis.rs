@@ -33,7 +33,7 @@ fn main() {
 
     println!("{:8.4?}", data);
 
-    let data = roll_axis(data, Axis(2), Axis(0));
+    data = roll_axis(data, Axis(2), Axis(0));
 
     println!("{:8.4?}", data);
 }
