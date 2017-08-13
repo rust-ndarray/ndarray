@@ -17,6 +17,8 @@ categories = ["data-structures", "science"]
 
 build = "build.rs"
 
+exclude = ["docgen/images/*"]
+
 [lib]
 name = "ndarray"
 bench = false
@@ -79,4 +81,3 @@ no-dev-version = true
 
 [package.metadata.docs.rs]
 features = ["docs"]
-rustdoc-args = [ "--html-in-header", "docgen/custom.css" ]
