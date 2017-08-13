@@ -79,3 +79,4 @@ no-dev-version = true
 
 [package.metadata.docs.rs]
 features = ["docs"]
+rustdoc-args = [ "--html-in-header", "docgen/custom.css" ]
