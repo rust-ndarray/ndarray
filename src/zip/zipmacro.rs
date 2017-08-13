@@ -25,7 +25,7 @@
 /// + `mut a`: the producer is `&mut a` and the variable pattern is `mut a`.
 /// + `b`: the producer is `&b` and the variable pattern is `&b` (same for `c`).
 ///
-/// The syntax is `azip!(` *capture [, capture [, ...] ]* `in {` *expression* `})`
+/// The syntax is `azip!(` *[* `index` *pattern* `,`*] capture [*`,` *capture [*`,` *...] ]* `in {` *expression* `})`
 /// where the captures are a sequence of pattern-like items that indicate which
 /// arrays are used for the zip. The *expression* is evaluated elementwise,
 /// with the value of an element from each producer in their respective variable.
