@@ -150,6 +150,14 @@ macro_rules! s(
     (@parse [$($stack:tt)*] $r:expr) => {
         &[$($stack)* s!(@step $r, 1)]
     };
+    // convert a..b;c into @step(a..b, c), final item, trailing comma
+    (@parse [$($stack:tt)*] $r:expr;$s:expr ,) => {
+        &[$($stack)* s!(@step $r, $s)]
+    };
+    // convert a..b into @step(a..b, 1), final item, trailing comma
+    (@parse [$($stack:tt)*] $r:expr ,) => {
+        &[$($stack)* s!(@step $r, 1)]
+    };
     // convert a..b;c into @step(a..b, c)
     (@parse [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         s![@parse [$($stack)* s!(@step $r, $s),] $($t)*]
