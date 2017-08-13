@@ -94,6 +94,13 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.2
+
+  - Support trailing commas in the ``s![]`` macro
+  - Some documentation improvements for the introduction, for ``azip!()`` and
+    other places.
+  - Added two more examples in the source
+
 - 0.10.1
 
   - Add method ``.into_dyn()`` to convert to a dynamic dimensionality array
