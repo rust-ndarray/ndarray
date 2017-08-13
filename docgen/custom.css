@@ -1,4 +1,5 @@
 
+<style>
 .docblock pre.rust { background: #eeeeff; }
 pre.trait, pre.macro, pre.fn, pre.struct, pre.enum, pre.typedef, pre.const { background: inherit; }
 
@@ -28,3 +29,4 @@ em.deprecated {
     font-weight: bold;
     font-style: italic;
 }
+</style>
