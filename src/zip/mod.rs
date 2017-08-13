@@ -28,12 +28,6 @@ macro_rules! fold_while {
 }
 
 
-//use ndarray::Axis;
-
-trait LayoutImpl {
-    fn layout_impl(&self) -> Layout;
-}
-
 /// Broadcast an array so that it acts like a larger size and/or shape array.
 ///
 /// See [broadcasting][1] for more information.
@@ -50,11 +44,11 @@ trait Broadcast<E>
     private_decl!{}
 }
 
-impl<S, D> LayoutImpl for ArrayBase<S, D>
+impl<S, D> ArrayBase<S, D>
     where S: Data,
           D: Dimension,
 {
-    fn layout_impl(&self) -> Layout {
+    pub(crate) fn layout_impl(&self) -> Layout {
         Layout::new(if self.is_standard_layout() {
             if self.ndim() <= 1 {
                 FORDER | CORDER
@@ -66,20 +60,6 @@ impl<S, D> LayoutImpl for ArrayBase<S, D>
         } else {
             0
         })
-    }
-}
-
-impl<'a, L> LayoutImpl for &'a L where L: LayoutImpl
-{
-    fn layout_impl(&self) -> Layout {
-        (**self).layout_impl()
-    }
-}
-
-impl<'a, L> LayoutImpl for &'a mut L where L: LayoutImpl
-{
-    fn layout_impl(&self) -> Layout {
-        (**self).layout_impl()
     }
 }
 
@@ -318,7 +298,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     #[doc(hidden)]
     fn layout(&self) -> Layout {
-        LayoutImpl::layout_impl(self)
+        self.layout_impl()
     }
 
     #[doc(hidden)]
@@ -369,7 +349,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 
     #[doc(hidden)]
     fn layout(&self) -> Layout {
-        LayoutImpl::layout_impl(self)
+        self.layout_impl()
     }
 
     #[doc(hidden)]
