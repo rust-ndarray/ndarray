@@ -848,7 +848,7 @@ impl<T> FoldWhile<T> {
         }
     }
 
-    /// Return true if it is `Done`, false if `Continue
+    /// Return true if it is `Done`, false if `Continue`
     pub fn is_done(&self) -> bool {
         match *self {
             FoldWhile::Continue(_) => false,
