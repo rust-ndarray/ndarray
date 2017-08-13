@@ -94,6 +94,10 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.3
+
+  - Fix docs.rs doc build
+
 - 0.10.2
 
   - Support trailing commas in the ``s![]`` macro
