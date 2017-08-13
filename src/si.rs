@@ -111,6 +111,12 @@ pub const S: Si = Si(0, None, 1);
 /// the end of the axis. Strides are also signed and may be negative, but
 /// must not be zero.
 ///
+/// The syntax is `s![` *[ axis-slice [, axis-slice [ , ... ] ] ]* `]`.
+/// Where *axis-slice* is either *i* `..` *j* or *i* `..` *j* `;` *step*,
+/// and *i* is the start index, *j* end index and *step* the element step
+/// size (which defaults to 1). The number of *axis-slice* must match the
+/// number of axes in the array.
+///
 /// For example `s![0..4;2, 1..5]` is a slice of rows 0..4 with step size 2,
 /// and columns 1..5 with default step size 1. The slice would have
 /// shape `[2, 4]`.
