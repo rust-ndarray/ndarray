@@ -10,7 +10,7 @@ readme = "README.rst"
 repository = "https://github.com/bluss/rust-ndarray"
 documentation = "https://docs.rs/ndarray/"
 
-description = "An N-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
+description = "An n-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
 
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 categories = ["data-structures", "science"]

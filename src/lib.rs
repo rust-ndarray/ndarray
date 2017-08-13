@@ -8,11 +8,16 @@
 #![crate_name="ndarray"]
 #![doc(html_root_url = "https://docs.rs/ndarray/0.10/")]
 
-//! The `ndarray` crate provides an N-dimensional container for general elements
+//! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
 //!
+//! In *n*-dimensional we include for example 1-dimensional rows or columns,
+//! 2-dimensional matrices, and higher dimensional arrays. If the array has *n*
+//! dimensions, then an element in the array is accessed by using that many indices.
+//! Each dimension is also called an *axis*.
+//!
 //! - [**`ArrayBase`**](struct.ArrayBase.html):
-//!   The N-dimensional array type itself.<br>
+//!   The *n*-dimensional array type itself.<br>
 //!   It is used to implement both the owned arrays and the views; see its docs
 //!   for an overview of all array features.  
 //! - The main specific array type is [**`Array`**](type.Array.html), which owns
@@ -20,7 +25,7 @@
 //!
 //! ## Highlights
 //!
-//! - Generic N-dimensional array
+//! - Generic *n*-dimensional array
 //! - Slicing, also with arbitrary step size, and negative indices to mean
 //!   elements from the end of the axis.
 //! - Views and subviews of arrays; iterators that yield subviews.
@@ -179,11 +184,15 @@ pub type Ix = usize;
 /// Array index type (signed)
 pub type Ixs = isize;
 
-/// An *N*-dimensional array.
+/// An *n*-dimensional array.
 ///
 /// The array is a general container of elements. It cannot grow or shrink, but
 /// can be sliced into subsets of its data.
 /// The array supports arithmetic operations by applying them elementwise.
+///
+/// In *n*-dimensional we include for example 1-dimensional rows or columns,
+/// 2-dimensional matrices, and higher dimensional arrays. If the array has *n*
+/// dimensions, then an element is accessed by using that many indices.
 ///
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.

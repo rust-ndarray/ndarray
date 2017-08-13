@@ -1,7 +1,7 @@
 ndarray
 =========
 
-The ``ndarray`` crate provides an N-dimensional container for general elements
+The ``ndarray`` crate provides an *n*-dimensional container for general elements
 and for numerics.
 
 Please read the API documentation here: `(0.10)`__, `(0.9)`__, `(0.8)`__, `(0.7)`__, `(0.6)`__,
@@ -28,7 +28,7 @@ __ https://bluss.github.io/rust-ndarray/0.2/
 Highlights
 ----------
 
-- Generic N-dimensional array
+- Generic 1, 2, ..., *n*-dimensional arrays
 - Owned arrays and array views
 - Slicing, also with arbitrary step size, and negative indices to mean
   elements from the end of the axis.
