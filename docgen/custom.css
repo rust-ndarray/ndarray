@@ -1,6 +1,6 @@
 
 <style>
-.docblock pre.rust { background: #eeeeff; }
+.docblock pre.rust { background: #f5f5ff; }
 pre.trait, pre.macro, pre.fn, pre.struct, pre.enum, pre.typedef, pre.const { background: inherit; }
 
 /* Small “example” label for doc examples */
