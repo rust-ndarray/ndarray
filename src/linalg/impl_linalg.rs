@@ -649,33 +649,29 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
 }
 
 #[cfg(test)]
-mod tests {
-
+#[cfg(feature="blas")]
+mod blas_tests {
     use super::*;
 
     #[test]
-    #[cfg(feature="blas")]
     fn blas_row_major_2d_normal_matrix() {
         let m: Array2<f32> = Array2::zeros((3, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
     }
     
     #[test]
-    #[cfg(feature="blas")]
     fn blas_row_major_2d_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
     }
     
     #[test]
-    #[cfg(feature="blas")]
     fn blas_row_major_2d_column_matrix() {
         let m: Array2<f32> = Array2::zeros((5, 1));
         assert!(blas_row_major_2d::<f32, _>(&m));
     }
     
     #[test]
-    #[cfg(feature="blas")]
     fn blas_row_major_2d_transposed_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         let m_t = m.t();
@@ -683,7 +679,6 @@ mod tests {
     }
     
     #[test]
-    #[cfg(feature="blas")]
     fn blas_row_major_2d_transposed_column_matrix() {
         let m: Array2<f32> = Array2::zeros((5, 1));
         let m_t = m.t();
