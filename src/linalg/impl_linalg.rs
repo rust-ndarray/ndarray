@@ -626,9 +626,10 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     if !same_type::<A, S::Elem>() {
         return false;
     }
+    let (m, n) = a.dim();
     let s0 = a.strides()[0];
     let s1 = a.strides()[1];
-    if s1 != 1 {
+    if !(s1 == 1 || n == 1) {
         return false;
     }
     if s0 < 1 || s1 < 1 {
@@ -639,11 +640,53 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     {
         return false;
     }
-    let (m, n) = a.dim();
     if m > blas_index::max_value() as usize ||
         n > blas_index::max_value() as usize
     {
         return false;
     }
     true
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    #[cfg(feature="blas")]
+    fn blas_row_major_2d_normal_matrix() {
+        let m: Array2<f32> = Array2::zeros((3, 5));
+        assert!(blas_row_major_2d::<f32, _>(&m));
+    }
+    
+    #[test]
+    #[cfg(feature="blas")]
+    fn blas_row_major_2d_row_matrix() {
+        let m: Array2<f32> = Array2::zeros((1, 5));
+        assert!(blas_row_major_2d::<f32, _>(&m));
+    }
+    
+    #[test]
+    #[cfg(feature="blas")]
+    fn blas_row_major_2d_column_matrix() {
+        let m: Array2<f32> = Array2::zeros((5, 1));
+        assert!(blas_row_major_2d::<f32, _>(&m));
+    }
+    
+    #[test]
+    #[cfg(feature="blas")]
+    fn blas_row_major_2d_transposed_row_matrix() {
+        let m: Array2<f32> = Array2::zeros((1, 5));
+        let m_t = m.t();
+        assert!(blas_row_major_2d::<f32, _>(&m_t));
+    }
+    
+    #[test]
+    #[cfg(feature="blas")]
+    fn blas_row_major_2d_transposed_column_matrix() {
+        let m: Array2<f32> = Array2::zeros((5, 1));
+        let m_t = m.t();
+        assert!(blas_row_major_2d::<f32, _>(&m_t));
+    }
 }
