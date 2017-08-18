@@ -17,7 +17,7 @@ use imp_prelude::*;
 use arraytraits;
 use dimension;
 use iterators;
-use error::{self, ShapeError};
+use error::{self, ShapeError, ErrorKind};
 use super::zipsl;
 use super::ZipExt;
 use dimension::IntoDimension;
@@ -1059,6 +1059,35 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             dim: self.dim.into_dyn(),
             strides: self.strides.into_dyn(),
         }
+    }
+
+    /// Convert an array or array view to another with the same type, but
+    /// different dimensionality type. Errors if the dimensions don't agree.
+    ///
+    /// ```
+    /// use ndarray::{ArrayD, Ix2, IxDyn};
+    ///
+    /// // Create a dynamic dimensionality array and convert it to an Array2
+    /// // (Ix2 dimension type).
+    ///
+    /// let array = ArrayD::<f64>::zeros(IxDyn(&[10, 10]));
+    ///
+    /// assert!(array.into_dimensionality::<Ix2>().is_ok());
+    /// ```
+    pub fn into_dimensionality<D2>(self) -> Result<ArrayBase<S, D2>, ShapeError>
+        where D2: Dimension
+    {
+        if let Some(dim) = D2::from_dimension(&self.dim) {
+            if let Some(strides) = D2::from_dimension(&self.strides) {
+                return Ok(ArrayBase {
+                    data: self.data,
+                    ptr: self.ptr,
+                    dim: dim,
+                    strides: strides,
+                });
+            }
+        }
+        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*

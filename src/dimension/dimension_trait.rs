@@ -377,6 +377,19 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
+    fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self> {
+        let mut s = Self::default();
+        if s.ndim() == d.ndim() {
+            for i in 0..d.ndim() {
+                s[i] = d[i];
+            }
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 
     private_decl!{}
@@ -790,14 +803,9 @@ impl Dimension for IxDyn
         self
     }
 
+    #[inline]
     fn zero_index(&self) -> Self {
-        const ZEROS: &'static [usize] = &[0; 4];
-        let n = self.ndim();
-        if n <= ZEROS.len() {
-            Dim(&ZEROS[..n])
-        } else {
-            Dim(vec![0; n])
-        }
+        IxDyn::zeros(self.ndim())
     }
 
     #[inline]
@@ -807,6 +815,10 @@ impl Dimension for IxDyn
         } else {
             self.clone()
         }
+    }
+
+    fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self> {
+        Some(IxDyn(d.slice()))
     }
     private_impl!{}
 }

@@ -2,7 +2,7 @@
 extern crate ndarray;
 
 use ndarray::Array;
-use ndarray::Ix3;
+use ndarray::{Ix0, Ix1, Ix2, Ix3, IxDyn};
 use ndarray::IntoDimension;
 use ndarray::ShapeBuilder;
 
@@ -145,4 +145,19 @@ fn test_0_add_broad() {
     b += &a;
     assert_eq!(b[0], 6.);
     assert_eq!(b[1], 7.);
+}
+
+#[test]
+fn test_into_dimension() {
+    let a = Array::linspace(0., 41., 6 * 7).into_shape((6, 7)).unwrap();
+    let a2 = a.clone().into_shape(IxDyn(&[6, 7])).unwrap();
+    let b = a2.clone().into_dimensionality::<Ix2>().unwrap();
+    assert_eq!(a, b);
+
+    assert!(a2.clone().into_dimensionality::<Ix0>().is_err());
+    assert!(a2.clone().into_dimensionality::<Ix1>().is_err());
+    assert!(a2.clone().into_dimensionality::<Ix3>().is_err());
+
+    let c = a2.clone().into_dimensionality::<IxDyn>().unwrap();
+    assert_eq!(a2, c);
 }

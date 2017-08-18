@@ -209,3 +209,16 @@ impl RemoveAxis for Dim<IxDynImpl> {
         Dim::new(self.ix().remove(axis.index()))
     }
 }
+
+impl IxDyn {
+    /// Create a new dimension value with `n` axes, all zeros
+    #[inline]
+    pub fn zeros(n: usize) -> IxDyn {
+        const ZEROS: &'static [usize] = &[0; 4];
+        if n <= ZEROS.len() {
+            Dim(&ZEROS[..n])
+        } else {
+            Dim(vec![0; n])
+        }
+    }
+}
