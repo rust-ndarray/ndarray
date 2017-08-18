@@ -87,7 +87,7 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
     }
     // check that the maximum index is in bounds
     let mut last_index = dim.clone();
-    for mut index in last_index.slice_mut().iter_mut() {
+    for index in last_index.slice_mut().iter_mut() {
         *index -= 1;
     }
     if let Some(offset) = stride_offset_checked_arithmetic(dim,
