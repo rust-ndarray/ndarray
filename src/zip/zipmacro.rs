@@ -94,6 +94,7 @@ macro_rules! azip {
     };
     // Build Finish Rule (both)
     (@finish ($z:expr) [$($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)*}) => {
+        #[allow(unused_mut)]
         ($z)
             $(
                 .and($aa)
