@@ -197,6 +197,62 @@ fn accurate_mul_f64() {
 }
 
 
+#[test]
+fn accurate_mul_with_column_f64() {
+    // pick a few random sizes
+    let mut rng = rand::weak_rng();
+    for i in 0..10 {
+        let m = rng.gen_range(1, 350);
+        let k = rng.gen_range(1, 350);
+        let a = gen_f64(Ix2(m, k));
+        let b_owner = gen_f64(Ix2(k, k));
+        let b_row_col;
+        let b_sq;
+
+        // pick dense square or broadcasted to square matrix
+        match i {
+            0 ... 3 => b_sq = b_owner.view(),
+            4 ... 7 => {
+                b_row_col = b_owner.column(0);
+                b_sq = b_row_col.broadcast((k, k)).unwrap();
+            }
+            _otherwise => {
+                b_row_col = b_owner.row(0);
+                b_sq = b_row_col.broadcast((k, k)).unwrap();
+            }
+        };
+
+        for j in 0..k {
+            for &flip in &[true, false] {
+                let j = j as isize;
+                let b = if flip {
+                    // one row in 2D
+                    b_sq.slice(s![j..j + 1, ..]).reversed_axes()
+                } else {
+                    // one column in 2D
+                    b_sq.slice(s![.., j..j + 1])
+                };
+                println!("Testing size ({} × {}) by ({} × {})", a.shape()[0], a.shape()[1], b.shape()[0], b.shape()[1]);
+                println!("Strides ({:?}) by ({:?})", a.strides(), b.strides());
+                let c = a.dot(&b);
+                let reference = reference_mat_mul(&a, &b);
+                let diff = (&c - &reference).mapv_into(f64::abs);
+
+                let rtol = 1e-7;
+                let atol = 1e-12;
+                let crtol = c.mapv(|x| x.abs() * rtol);
+                let tol = crtol + atol;
+                let tol_m_diff = &diff - &tol;
+                let maxdiff = *tol_m_diff.max();
+                println!("diff offset from tolerance level= {:.2e}", maxdiff);
+                if maxdiff > 0. {
+                    panic!("results differ");
+                }
+            }
+        }
+    }
+}
+
 
 trait Utils {
     type Elem;
