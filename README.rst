@@ -94,6 +94,12 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.4
+
+  - Fix unused mut warnings in ``azip!()`` macro
+  - Fix bug #340 by @lloydmeta; uses blas gemm for more memory layouts
+    of column matrices. Only relevant if using blas.
+
 - 0.10.3
 
   - Fix docs.rs doc build
