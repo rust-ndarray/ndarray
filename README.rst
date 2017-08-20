@@ -4,18 +4,9 @@ ndarray
 The ``ndarray`` crate provides an *n*-dimensional container for general elements
 and for numerics.
 
-Please read the API documentation here: `(0.10)`__, `(0.9)`__, `(0.8)`__, `(0.7)`__, `(0.6)`__,
-`(0.5)`__, `(0.4)`__, `(0.3)`__, `(0.2)`__
+Please read the `API documentation on docs.rs`__
 
 __ https://docs.rs/ndarray/
-__ https://bluss.github.io/rust-ndarray/0.9/
-__ https://bluss.github.io/rust-ndarray/0.8/
-__ https://bluss.github.io/rust-ndarray/0.7/
-__ https://bluss.github.io/rust-ndarray/0.6/
-__ https://bluss.github.io/rust-ndarray/0.5/
-__ https://bluss.github.io/rust-ndarray/0.4/
-__ https://bluss.github.io/rust-ndarray/0.3/
-__ https://bluss.github.io/rust-ndarray/0.2/
 
 |build_status|_ |crates|_
 
