@@ -1,132 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `ExactChunksMut` struct in crate `ndarray`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, ExactChunksMut">
+    <meta charset="UTF-8">
+    <title>ndarray</title>
+    <style type="text/css">
 
-    <title>0.9.1 - ndarray::iter::ExactChunksMut - Rust</title>
+        body {
+            font-family: sans-serif;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%, -50%);
+            margin-left: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
 
-    <link rel="stylesheet" type="text/css" href="../../normalize.css">
-    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../../main.css">
-    
-
-    
-    
+    </style>
+    <meta http-equiv="refresh" content="0; url=https://docs.rs/ndarray/*/ndarray/iter/struct.ExactChunksMut.html">
 </head>
-<body class="rustdoc struct">
-    <!--[if lte IE 8]>
-    <div class="warning">
-        This old browser is unsupported and will most likely display funky
-        things.
-    </div>
-    <![endif]-->
-
-    
-
-    <nav class="sidebar">
-        
-        <p class='location'><a href='../index.html'>ndarray</a>::<wbr><a href='index.html'>iter</a></p><script>window.sidebarCurrent = {name: 'ExactChunksMut', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
-    </nav>
-
-    <nav class="sub">
-        <form class="search-form js-only">
-            <div class="search-container">
-                <input class="search-input" name="search"
-                       autocomplete="off"
-                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
-                       type="search">
-            </div>
-        </form>
-    </nav>
-
-    <section id='main' class="content">
-<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>ndarray</a>::<wbr><a href='index.html'>iter</a>::<wbr><a class="struct" href=''>ExactChunksMut</a></span><span class='out-of-band'><span id='render-detail'>
-                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
-                       [<span class='inner'>&#x2212;</span>]
-                   </a>
-               </span><a class='srclink' href='../../src/ndarray/iterators/chunks.rs.html#114-118' title='goto source code'>[src]</a></span></h1>
-<pre class='rust struct'>pub struct ExactChunksMut&lt;'a, A:&nbsp;'a, D&gt; { /* fields omitted */ }</pre><div class='docblock'><p>Exact chunks producer and iterable.</p>
-<p>See <a href="../struct.ArrayBase.html#method.exact_chunks_mut"><code>.exact_chunks_mut()</code></a>
-for more information.</p>
-</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;'a, A, D:&nbsp;<a class="trait" href="../../ndarray/trait.Dimension.html" title="trait ndarray::Dimension">Dimension</a>&gt; <a class="trait" href="../../ndarray/trait.NdProducer.html" title="trait ndarray::NdProducer">NdProducer</a> for <a class="struct" href="../../ndarray/iter/struct.ExactChunksMut.html" title="struct ndarray::iter::ExactChunksMut">ExactChunksMut</a>&lt;'a, A, D&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/ndarray/iterators/macros.rs.html#40-99' title='goto source code'>[src]</a></span></h3>
-<div class='impl-items'><h4 id='associatedtype.Ptr' class="type"><span id='Ptr.t' class='invisible'><code>type <a href='../../ndarray/trait.NdProducer.html#associatedtype.Ptr' class="type">Ptr</a> = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html">*mut A</a></code></span></h4>
-<h4 id='associatedtype.Stride' class="type"><span id='Stride.t' class='invisible'><code>type <a href='../../ndarray/trait.NdProducer.html#associatedtype.Stride' class="type">Stride</a> = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.isize.html">isize</a></code></span></h4>
-<h4 id='associatedtype.Dim' class="type"><span id='Dim.t' class='invisible'><code>type <a href='../../ndarray/trait.NdProducer.html#associatedtype.Dim' class="type">Dim</a> = D</code></span></h4>
-<div class='docblock'><p>Dimension type</p>
-</div><h4 id='associatedtype.Item' class="type"><span id='Item.t' class='invisible'><code>type <a href='../../ndarray/trait.NdProducer.html#associatedtype.Item' class="type">Item</a> = <a class="type" href="../../ndarray/type.ArrayViewMut.html" title="type ndarray::ArrayViewMut">ArrayViewMut</a>&lt;'a, A, D&gt;</code></span></h4>
-<div class='docblock'><p>The element produced per iteration.</p>
-</div><h4 id='tymethod.__private__' class="tymethod"><span id='__private__.v' class='invisible'><code>fn <a href='../../ndarray/trait.NdProducer.html#tymethod.__private__' class='fnname'>__private__</a>(&amp;self) -&gt; PrivateMarker</code></span></h4>
-<div class='docblock'><p>This trait is private to implement; this method exists to make it impossible to implement outside the crate. <a href="../../ndarray/trait.NdProducer.html#tymethod.__private__">Read more</a></p>
-</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a, A, D&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html" title="trait core::iter::traits::IntoIterator">IntoIterator</a> for <a class="struct" href="../../ndarray/iter/struct.ExactChunksMut.html" title="struct ndarray::iter::ExactChunksMut">ExactChunksMut</a>&lt;'a, A, D&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;D: <a class="trait" href="../../ndarray/trait.Dimension.html" title="trait ndarray::Dimension">Dimension</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;A: 'a,&nbsp;</span></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/ndarray/iterators/chunks.rs.html#144-157' title='goto source code'>[src]</a></span></h3>
-<div class='impl-items'><h4 id='associatedtype.Item-1' class="type"><span id='Item.t-1' class='invisible'><code>type <a href='https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html#associatedtype.Item' class="type">Item</a> = Self::<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html" title="trait core::iter::traits::IntoIterator">IntoIter</a>::<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Item</a></code></span></h4>
-<div class='docblock'><p>The type of the elements being iterated over.</p>
-</div><h4 id='associatedtype.IntoIter' class="type"><span id='IntoIter.t' class='invisible'><code>type <a href='https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html#associatedtype.IntoIter' class="type">IntoIter</a> = <a class="struct" href="../../ndarray/iter/struct.ExactChunksIterMut.html" title="struct ndarray::iter::ExactChunksIterMut">ExactChunksIterMut</a>&lt;'a, A, D&gt;</code></span></h4>
-<div class='docblock'><p>Which kind of iterator are we turning this into?</p>
-</div><h4 id='method.into_iter' class="method"><span id='into_iter.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html#tymethod.into_iter' class='fnname'>into_iter</a>(self) -&gt; Self::<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html" title="trait core::iter::traits::IntoIterator">IntoIter</a></code></span></h4>
-<div class='docblock'><p>Creates an iterator from a value. <a href="https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html#tymethod.into_iter">Read more</a></p>
-</div></div></section>
-    <section id='search' class="content hidden"></section>
-
-    <section class="footer"></section>
-
-    <aside id="help" class="hidden">
-        <div>
-            <h1 class="hidden">Help</h1>
-
-            <div class="shortcuts">
-                <h2>Keyboard Shortcuts</h2>
-
-                <dl>
-                    <dt>?</dt>
-                    <dd>Show this help dialog</dd>
-                    <dt>S</dt>
-                    <dd>Focus the search field</dd>
-                    <dt>&larrb;</dt>
-                    <dd>Move up in search results</dd>
-                    <dt>&rarrb;</dt>
-                    <dd>Move down in search results</dd>
-                    <dt>&#9166;</dt>
-                    <dd>Go to active search result</dd>
-                    <dt>+</dt>
-                    <dd>Collapse/expand all sections</dd>
-                </dl>
-            </div>
-
-            <div class="infos">
-                <h2>Search Tricks</h2>
-
-                <p>
-                    Prefix searches with a type followed by a colon (e.g.
-                    <code>fn:</code>) to restrict the search to a given type.
-                </p>
-
-                <p>
-                    Accepted types are: <code>fn</code>, <code>mod</code>,
-                    <code>struct</code>, <code>enum</code>,
-                    <code>trait</code>, <code>type</code>, <code>macro</code>,
-                    and <code>const</code>.
-                </p>
-
-                <p>
-                    Search functions by type signature (e.g.
-                    <code>vec -> usize</code> or <code>* -> vec</code>)
-                </p>
-            </div>
-        </div>
-    </aside>
-
-    
-
-    <script>
-        window.rootPath = "../../";
-        window.currentCrate = "ndarray";
-    </script>
-    <script src="../../jquery.js"></script>
-    <script src="../../main.js"></script>
-    <script defer src="../../search-index.js"></script>
+<body>
+    <h1><a href="https://docs.rs/ndarray/*/ndarray/iter/struct.ExactChunksMut.html">Content Moved</a></h1>
+    <p>This documentation is now being hosted on <a href="https://docs.rs/">docs.rs</a>.  <a href="https://docs.rs/ndarray/*/ndarray/iter/struct.ExactChunksMut.html">Follow the redirection</a> if it does not work automatically.</p>
 </body>
 </html>
