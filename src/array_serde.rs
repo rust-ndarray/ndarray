@@ -144,6 +144,17 @@ impl<'de> Deserialize<'de> for ArrayField {
                     other => Err(de::Error::unknown_field(other, ARRAY_FIELDS)),
                 }
             }
+
+            fn visit_bytes<E>(self, value: &[u8]) -> Result<ArrayField, E>
+                where E: de::Error
+            {
+                match value {
+                    b"v" => Ok(ArrayField::Version),
+                    b"dim" => Ok(ArrayField::Dim),
+                    b"data" => Ok(ArrayField::Data),
+                    other => Err(de::Error::unknown_field(&format!("{:?}",other), ARRAY_FIELDS)),
+                }
+            }
         }
 
         deserializer.deserialize_identifier(ArrayFieldVisitor)
