@@ -8,7 +8,12 @@ extern crate serde_json;
 
 extern crate rmp_serde;
 
+extern crate ron;
+
 use serialize::json;
+
+use ron::ser::to_string as ron_serialize;
+use ron::de::from_str as ron_deserialize;
 
 use ndarray::{arr0, arr1, arr2, RcArray, RcArray1, RcArray2};
 
@@ -184,6 +189,52 @@ fn serial_many_dim_serde_msgpack()
 
         let mut deserializer = rmp_serde::Deserializer::new(&buf[..]);
         let a_de: RcArray<f32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+}
+
+#[test]
+fn serial_many_dim_ron()
+{
+    {
+        let a = arr0::<f32>(2.72);
+
+        let a_s = ron_serialize(&a).unwrap();
+
+        let a_de: RcArray<f32, _> = ron_deserialize(&a_s).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+
+    {
+        let a = arr1::<f32>(&[2.72, 1., 2.]);
+
+        let a_s = ron_serialize(&a).unwrap();
+
+        let a_de: RcArray<f32, _> = ron_deserialize(&a_s).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+
+    {
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]]);
+
+        let a_s = ron_serialize(&a).unwrap();
+
+        let a_de: RcArray<f32, _> = ron_deserialize(&a_s).unwrap();
+
+        assert_eq!(a, a_de);
+    }
+
+    {
+        // Test a sliced array.
+        let mut a = RcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
+        a.islice(s![..;-1, .., .., ..2]);
+
+        let a_s = ron_serialize(&a).unwrap();
+
+        let a_de: RcArray<f32, _> = ron_deserialize(&a_s).unwrap();
 
         assert_eq!(a, a_de);
     }

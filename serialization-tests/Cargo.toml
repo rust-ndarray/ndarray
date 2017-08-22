@@ -22,3 +22,5 @@ version = "1.0"
 [dev-dependencies.rmp-serde]
 version = "0.13.1"
 
+[dev-dependencies.ron]
+version = "0.1.1"
