@@ -444,8 +444,8 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///         *e = row.scalar_sum();
 ///     });
 ///
-/// // Check the result against the built in `.sum()` along axis 1.
-/// assert_eq!(e, a.sum(Axis(1)));
+/// // Check the result against the built in `.sum_axis()` along axis 1.
+/// assert_eq!(e, a.sum_axis(Axis(1)));
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {

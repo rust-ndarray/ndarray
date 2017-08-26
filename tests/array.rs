@@ -340,12 +340,12 @@ fn assign()
 fn sum_mean()
 {
     let a = arr2(&[[1., 2.], [3., 4.]]);
-    assert_eq!(a.sum(Axis(0)), arr1(&[4., 6.]));
-    assert_eq!(a.sum(Axis(1)), arr1(&[3., 7.]));
-    assert_eq!(a.mean(Axis(0)), arr1(&[2., 3.]));
-    assert_eq!(a.mean(Axis(1)), arr1(&[1.5, 3.5]));
-    assert_eq!(a.sum(Axis(1)).sum(Axis(0)), arr0(10.));
-    assert_eq!(a.view().mean(Axis(1)), aview1(&[1.5, 3.5]));
+    assert_eq!(a.sum_axis(Axis(0)), arr1(&[4., 6.]));
+    assert_eq!(a.sum_axis(Axis(1)), arr1(&[3., 7.]));
+    assert_eq!(a.mean_axis(Axis(0)), arr1(&[2., 3.]));
+    assert_eq!(a.mean_axis(Axis(1)), arr1(&[1.5, 3.5]));
+    assert_eq!(a.sum_axis(Axis(1)).sum_axis(Axis(0)), arr0(10.));
+    assert_eq!(a.view().mean_axis(Axis(1)), aview1(&[1.5, 3.5]));
     assert_eq!(a.scalar_sum(), 10.);
 }
 

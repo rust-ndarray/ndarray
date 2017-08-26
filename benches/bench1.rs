@@ -961,23 +961,23 @@ fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
 #[bench]
 fn mean_axis0(bench: &mut test::Bencher) {
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
-    bench.iter(|| a.mean(Axis(0)));
+    bench.iter(|| a.mean_axis(Axis(0)));
 }
 
 #[bench]
 fn mean_axis1(bench: &mut test::Bencher) {
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
-    bench.iter(|| a.mean(Axis(1)));
+    bench.iter(|| a.mean_axis(Axis(1)));
 }
 
 #[bench]
 fn sum_axis0(bench: &mut test::Bencher) {
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
-    bench.iter(|| a.sum(Axis(0)));
+    bench.iter(|| a.sum_axis(Axis(0)));
 }
 
 #[bench]
 fn sum_axis1(bench: &mut test::Bencher) {
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
-    bench.iter(|| a.sum(Axis(1)));
+    bench.iter(|| a.sum_axis(Axis(1)));
 }

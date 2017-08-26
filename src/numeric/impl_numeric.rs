@@ -58,15 +58,15 @@ impl<A, S, D> ArrayBase<S, D>
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.sum(Axis(0)) == aview1(&[4., 6.]) &&
-    ///     a.sum(Axis(1)) == aview1(&[3., 7.]) &&
+    ///     a.sum_axis(Axis(0)) == aview1(&[4., 6.]) &&
+    ///     a.sum_axis(Axis(1)) == aview1(&[3., 7.]) &&
     ///
-    ///     a.sum(Axis(0)).sum(Axis(0)) == aview0(&10.)
+    ///     a.sum_axis(Axis(0)).sum_axis(Axis(0)) == aview0(&10.)
     /// );
     /// ```
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn sum(&self, axis: Axis) -> Array<A, D::Smaller>
+    pub fn sum_axis(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
@@ -88,6 +88,15 @@ impl<A, S, D> ArrayBase<S, D>
         res
     }
 
+    /// Old name for `sum_axis`.
+    #[deprecated(note="Use new name .sum_axis()")]
+    pub fn sum(&self, axis: Axis) -> Array<A, D::Smaller>
+        where A: Clone + Zero + Add<Output=A>,
+              D: RemoveAxis,
+    {
+        self.sum_axis(axis)
+    }
+
     /// Return mean along `axis`.
     ///
     /// **Panics** if `axis` is out of bounds.
@@ -98,21 +107,30 @@ impl<A, S, D> ArrayBase<S, D>
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// assert!(
-    ///     a.mean(Axis(0)) == aview1(&[2.0, 3.0]) &&
-    ///     a.mean(Axis(1)) == aview1(&[1.5, 3.5])
+    ///     a.mean_axis(Axis(0)) == aview1(&[2.0, 3.0]) &&
+    ///     a.mean_axis(Axis(1)) == aview1(&[1.5, 3.5])
     /// );
     /// ```
-    pub fn mean(&self, axis: Axis) -> Array<A, D::Smaller>
+    pub fn mean_axis(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
     {
         let n = self.shape().axis(axis);
-        let sum = self.sum(axis);
+        let sum = self.sum_axis(axis);
         let mut cnt = A::one();
         for _ in 1..n {
             cnt = cnt + A::one();
         }
         sum / &aview0(&cnt)
+    }
+
+    /// Old name for `mean_axis`.
+    #[deprecated(note="Use new name .mean_axis()")]
+    pub fn mean(&self, axis: Axis) -> Array<A, D::Smaller>
+        where A: LinalgScalar,
+              D: RemoveAxis,
+    {
+        self.mean_axis(axis)
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
