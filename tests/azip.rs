@@ -52,7 +52,7 @@ fn test_azip2_sum() {
         let ax = Axis(i);
         let mut b = Array::zeros(c.len_of(ax));
         azip!(mut b, ref c (c.axis_iter(ax)) in { *b = c.scalar_sum() });
-        assert!(b.all_close(&c.sum(Axis(1 - i)), 1e-6));
+        assert!(b.all_close(&c.sum_axis(Axis(1 - i)), 1e-6));
     }
 }
 
