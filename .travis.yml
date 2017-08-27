@@ -2,6 +2,9 @@ language: rust
 # use trusty for newer openblas
 sudo: required
 dist: trusty
+
+cache: cargo
+
 matrix:
   include:
     - rust: 1.18.0
