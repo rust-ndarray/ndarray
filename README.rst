@@ -85,6 +85,15 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.5
+
+  - Add method ``.into_dimensionality::<D>()`` for dimensionality conversion
+    (From ``IxDyn`` to fixed size and back).
+  - New names ``.sum_axis`` and ``.mean_axis`` for sum and mean functions.
+    Old names deprecated to make room for scalar-returning methods, making
+    a proper convention.
+  - Fix deserialization using ron (#345) by @Libbum
+
 - 0.10.4
 
   - Fix unused mut warnings in ``azip!()`` macro
