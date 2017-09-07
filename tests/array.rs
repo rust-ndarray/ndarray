@@ -220,6 +220,41 @@ fn test_cow()
 }
 
 #[test]
+fn test_cow_shrink()
+{
+    // A test for clone-on-write in the case that
+    // mutation shrinks the array and gives it different strides
+    //
+    let mut mat = RcArray::zeros((2, 3));
+    //mat.islice(s![.., ..;2]);
+    mat[[0, 0]] = 1;
+    let n = mat.clone();
+    mat[[0, 1]] = 2;
+    mat[[0, 2]] = 3;
+    mat[[1, 0]] = 4;
+    mat[[1, 1]] = 5;
+    mat[[1, 2]] = 6;
+    assert_eq!(mat[[0, 0]], 1);
+    assert_eq!(mat[[0, 1]], 2);
+    assert_eq!(n[[0, 0]], 1);
+    assert_eq!(n[[0, 1]], 0);
+    assert_eq!(n.get((0, 1)), Some(&0));
+    // small has non-C strides this way
+    let mut small = mat.reshape(6);
+    small.islice(s![4..;-1]);
+    assert_eq!(small[0], 6);
+    assert_eq!(small[1], 5);
+    let before = small.clone();
+    // mutation
+    // small gets back C strides in CoW.
+    small[1] = 9;
+    assert_eq!(small[0], 6);
+    assert_eq!(small[1], 9);
+    assert_eq!(before[0], 6);
+    assert_eq!(before[1], 5);
+}
+
+#[test]
 fn test_sub()
 {
     let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));

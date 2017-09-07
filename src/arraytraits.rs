@@ -69,7 +69,10 @@ impl<S, D, I> Index<I> for ArrayBase<S, D>
     #[inline]
     fn index(&self, index: I) -> &S::Elem {
         debug_bounds_check!(self, index);
-        self.get(index).unwrap_or_else(|| array_out_of_bounds())
+        unsafe {
+            &*self.ptr.offset(index.index_checked(&self.dim, &self.strides)
+                                   .unwrap_or_else(|| array_out_of_bounds()))
+        }
     }
 }
 
@@ -84,7 +87,10 @@ impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut S::Elem {
         debug_bounds_check!(self, index);
-        self.get_mut(index).unwrap_or_else(|| array_out_of_bounds())
+        unsafe {
+            &mut *self.as_mut_ptr().offset(index.index_checked(&self.dim, &self.strides)
+                                                .unwrap_or_else(|| array_out_of_bounds()))
+        }
     }
 }
 
