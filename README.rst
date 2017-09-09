@@ -85,6 +85,12 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.6
+
+  - Tweak the implementation for (bounds checked) indexing of arrays
+    ([] operator). The new code will have the optimizer elide the bounds checks
+    in more situations.
+
 - 0.10.5
 
   - Add method ``.into_dimensionality::<D>()`` for dimensionality conversion
