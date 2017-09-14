@@ -2,6 +2,8 @@
 
 #[macro_use]
 extern crate ndarray;
+#[macro_use]
+extern crate defmac;
 extern crate itertools;
 
 use ndarray::{S, Si};
@@ -818,6 +820,86 @@ fn reshape_f() {
                            [1, 5, 9],
                            [2, 6,10],
                            [3, 7,11]]));
+}
+
+#[test]
+fn insert_axis() {
+    defmac!(test_insert orig, index, new => {
+        let res = orig.insert_axis(Axis(index));
+        assert_eq!(res, new);
+        assert!(res.is_standard_layout());
+    });
+
+    let v = 1;
+    test_insert!(aview0(&v), 0, arr1(&[1]));
+    assert!(::std::panic::catch_unwind(|| aview0(&v).insert_axis(Axis(1))).is_err());
+
+    test_insert!(arr1(&[1, 2, 3]), 0, arr2(&[[1, 2, 3]]));
+    test_insert!(arr1(&[1, 2, 3]), 1, arr2(&[[1], [2], [3]]));
+    assert!(::std::panic::catch_unwind(|| arr1(&[1, 2, 3]).insert_axis(Axis(2))).is_err());
+
+    test_insert!(arr2(&[[1, 2, 3], [4, 5, 6]]), 0, arr3(&[[[1, 2, 3], [4, 5, 6]]]));
+    test_insert!(arr2(&[[1, 2, 3], [4, 5, 6]]), 1, arr3(&[[[1, 2, 3]], [[4, 5, 6]]]));
+    test_insert!(arr2(&[[1, 2, 3], [4, 5, 6]]), 2, arr3(&[[[1], [2], [3]], [[4], [5], [6]]]));
+    assert!(::std::panic::catch_unwind(
+        || arr2(&[[1, 2, 3], [4, 5, 6]]).insert_axis(Axis(3))).is_err());
+
+    test_insert!(Array3::<u8>::zeros((3, 4, 5)), 0, Array4::<u8>::zeros((1, 3, 4, 5)));
+    test_insert!(Array3::<u8>::zeros((3, 4, 5)), 1, Array4::<u8>::zeros((3, 1, 4, 5)));
+    test_insert!(Array3::<u8>::zeros((3, 4, 5)), 3, Array4::<u8>::zeros((3, 4, 5, 1)));
+    assert!(::std::panic::catch_unwind(
+        || Array3::<u8>::zeros((3, 4, 5)).insert_axis(Axis(4))).is_err());
+
+    test_insert!(Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)), 0,
+                 ArrayD::<u8>::zeros(vec![1, 2, 3, 4, 3, 2, 3]));
+    test_insert!(Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)), 3,
+                 ArrayD::<u8>::zeros(vec![2, 3, 4, 1, 3, 2, 3]));
+    test_insert!(Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)), 6,
+                 ArrayD::<u8>::zeros(vec![2, 3, 4, 3, 2, 3, 1]));
+    assert!(::std::panic::catch_unwind(
+        || Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)).insert_axis(Axis(7))).is_err());
+
+    test_insert!(ArrayD::<u8>::zeros(vec![3, 4, 5]), 0, ArrayD::<u8>::zeros(vec![1, 3, 4, 5]));
+    test_insert!(ArrayD::<u8>::zeros(vec![3, 4, 5]), 1, ArrayD::<u8>::zeros(vec![3, 1, 4, 5]));
+    test_insert!(ArrayD::<u8>::zeros(vec![3, 4, 5]), 3, ArrayD::<u8>::zeros(vec![3, 4, 5, 1]));
+    assert!(::std::panic::catch_unwind(
+        || ArrayD::<u8>::zeros(vec![3, 4, 5]).insert_axis(Axis(4))).is_err());
+}
+
+#[test]
+fn insert_axis_f() {
+    defmac!(test_insert_f orig, index, new => {
+        let res = orig.insert_axis(Axis(index));
+        assert_eq!(res, new);
+        assert!(res.t().is_standard_layout());
+    });
+
+    test_insert_f!(Array0::from_shape_vec(().f(), vec![1]).unwrap(), 0, arr1(&[1]));
+    assert!(::std::panic::catch_unwind(
+        || Array0::from_shape_vec(().f(), vec![1]).unwrap().insert_axis(Axis(1))).is_err());
+
+    test_insert_f!(Array1::<u8>::zeros((3).f()), 0, Array2::<u8>::zeros((1, 3)));
+    test_insert_f!(Array1::<u8>::zeros((3).f()), 1, Array2::<u8>::zeros((3, 1)));
+    assert!(::std::panic::catch_unwind(
+        || Array1::<u8>::zeros((3).f()).insert_axis(Axis(2))).is_err());
+
+    test_insert_f!(Array3::<u8>::zeros((3, 4, 5).f()), 1, Array4::<u8>::zeros((3, 1, 4, 5)));
+    assert!(::std::panic::catch_unwind(
+        || Array3::<u8>::zeros((3, 4, 5).f()).insert_axis(Axis(4))).is_err());
+
+    test_insert_f!(ArrayD::<u8>::zeros(vec![3, 4, 5].f()), 1,
+                   ArrayD::<u8>::zeros(vec![3, 1, 4, 5]));
+    assert!(::std::panic::catch_unwind(
+        || ArrayD::<u8>::zeros(vec![3, 4, 5].f()).insert_axis(Axis(4))).is_err());
+}
+
+#[test]
+fn insert_axis_view() {
+    let a = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]];
+
+    assert_eq!(a.subview(Axis(1), 0).insert_axis(Axis(0)), array![[[1, 2], [5, 6], [9, 10]]]);
+    assert_eq!(a.subview(Axis(1), 0).insert_axis(Axis(1)), array![[[1, 2]], [[5, 6]], [[9, 10]]]);
+    assert_eq!(a.subview(Axis(1), 0).insert_axis(Axis(2)), array![[[1], [2]], [[5], [6]], [[9], [10]]]);
 }
 
 #[test]

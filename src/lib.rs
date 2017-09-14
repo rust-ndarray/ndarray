@@ -95,6 +95,7 @@ use std::slice::{Iter as SliceIter, IterMut as SliceIterMut};
 pub use dimension::{
     Dimension,
     IntoDimension,
+    InsertAxis,
     RemoveAxis,
     Axis,
     AxisDescription,
@@ -168,6 +169,7 @@ pub use layout::Layout;
 mod imp_prelude {
     pub use prelude::*;
     pub use {
+        InsertAxis,
         RemoveAxis,
         Data,
         DataMut,
