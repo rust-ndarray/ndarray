@@ -69,6 +69,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.dim[axis.index()]
     }
 
+    /// Return whether the array has any elements
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Return the number of dimensions (axes) in the array
     pub fn ndim(&self) -> usize {
         self.dim.ndim()
