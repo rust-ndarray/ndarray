@@ -15,7 +15,6 @@ pub use self::axis::Axis;
 pub use self::conversion::IntoDimension;
 pub use self::dimension_trait::Dimension;
 pub use self::ndindex::NdIndex;
-pub use self::insert_axis::InsertAxis;
 pub use self::remove_axis::RemoveAxis;
 pub use self::axes::{axes_of, Axes, AxisDescription};
 pub use self::dynindeximpl::IxDynImpl;
@@ -27,7 +26,6 @@ pub mod dim;
 mod dimension_trait;
 mod dynindeximpl;
 mod ndindex;
-mod insert_axis;
 mod remove_axis;
 mod axes;
 

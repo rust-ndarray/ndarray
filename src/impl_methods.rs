@@ -1283,11 +1283,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// ***Panics*** if the axis is out of bounds.
     pub fn insert_axis(self, axis: Axis) -> ArrayBase<S, D::Larger>
-        where D: InsertAxis,
     {
         assert!(axis.index() <= self.ndim());
-        let d = self.dim.insert_axis(axis);
-        let s = self.strides.insert_axis(axis);
+        fn dim_insert_axis<D: Dimension>(dim: D, axis: Axis) -> D::Larger {
+            let mut new = Vec::with_capacity(dim.ndim() + 1);
+            new.extend_from_slice(&dim.slice()[0..axis.index()]);
+            new.push(1);
+            new.extend_from_slice(&dim.slice()[axis.index()..dim.ndim()]);
+            D::Larger::from_dimension(&Dim(new)).unwrap()
+        }
+        let d = dim_insert_axis(self.dim, axis);
+        let s = dim_insert_axis(self.strides, axis);
         ArrayBase {
             ptr: self.ptr,
             data: self.data,
