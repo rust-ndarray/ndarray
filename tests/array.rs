@@ -945,6 +945,10 @@ fn test_range() {
     assert_eq!(d[0], 1.);
     assert_eq!(d[10], 2.);
     assert_eq!(d[12], 2.2);
+
+    let e = Array::range(1., 1., 1.);
+    assert_eq!(e.len(), 0);
+    assert!(e.is_empty());
 }
 
 #[test]

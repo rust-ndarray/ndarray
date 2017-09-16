@@ -12,6 +12,7 @@ fn test_ix0() {
     a[()] = 1.;
     assert_eq!(a[()], 1.);
     assert_eq!(a.len(), 1);
+    assert!(!a.is_empty());
     assert_eq!(a.as_slice().unwrap(), &[1.]);
 
     let mut a = Array::zeros(Ix0().f());
@@ -19,6 +20,7 @@ fn test_ix0() {
     a[()] = 1.;
     assert_eq!(a[()], 1.);
     assert_eq!(a.len(), 1);
+    assert!(!a.is_empty());
     assert_eq!(a.as_slice().unwrap(), &[1.]);
 }
 

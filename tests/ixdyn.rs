@@ -108,6 +108,7 @@ fn test_0() {
     a[[]] = 1.;
     assert_eq!(a[[]], 1.);
     assert_eq!(a.len(), 1);
+    assert!(!a.is_empty());
     assert_eq!(a.as_slice().unwrap(), &[1.]);
 
     let mut a = Array::zeros(vec![].f());
@@ -115,6 +116,7 @@ fn test_0() {
     a[[]] = 1.;
     assert_eq!(a[[]], 1.);
     assert_eq!(a.len(), 1);
+    assert!(!a.is_empty());
     assert_eq!(a.as_slice().unwrap(), &[1.]);
 }
 
