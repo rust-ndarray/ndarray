@@ -86,9 +86,7 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
               R: Rng,
               Sh: ShapeBuilder<Dim=D>,
     {
-        let shape = shape.into_shape();
-        let elements = Vec::from_iter((0..shape.size()).map(move |_| dist.ind_sample(rng)));
-        Self::from_shape_vec(shape, elements).unwrap()
+        Self::from_shape_fn(shape, |_| dist.ind_sample(rng))
     }
 }
 
