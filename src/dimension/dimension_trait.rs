@@ -392,6 +392,16 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
+    fn insert_axis(&self, axis: Axis) -> Self::Larger {
+        debug_assert!(axis.index() <= self.ndim());
+        let mut out = Vec::with_capacity(self.ndim() + 1);
+        out.extend_from_slice(&self.slice()[0..axis.index()]);
+        out.push(1);
+        out.extend_from_slice(&self.slice()[axis.index()..self.ndim()]);
+        Self::Larger::from_dimension(&Dim(out)).unwrap()
+    }
+
+    #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 
     private_decl!{}
@@ -411,6 +421,17 @@ fn abs_index(len: Ixs, index: Ixs) -> Ix {
 
 // Dimension impls
 
+macro_rules! impl_insert_axis_array(
+    ($n:expr) => (
+        fn insert_axis(&self, axis: Axis) -> Self::Larger {
+            debug_assert!(axis.index() <= $n);
+            let mut out = [1; $n + 1];
+            out[0..axis.index()].copy_from_slice(&self.slice()[0..axis.index()]);
+            out[axis.index()+1..$n+1].copy_from_slice(&self.slice()[axis.index()..$n]);
+            Dim(out)
+        }
+    );
+);
 
 impl Dimension for Dim<[Ix; 0]> {
     type SliceArg = [Si; 0];
@@ -432,6 +453,8 @@ impl Dimension for Dim<[Ix; 0]> {
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
     }
+    #[inline]
+    impl_insert_axis_array!(0);
     #[inline]
     fn try_remove_axis(&self, _ignore: Axis) -> Self::Smaller {
         *self
@@ -520,6 +543,8 @@ impl Dimension for Dim<[Ix; 1]> {
             None
         }
     }
+    #[inline]
+    impl_insert_axis_array!(1);
     #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
@@ -649,6 +674,8 @@ impl Dimension for Dim<[Ix; 2]> {
         }
     }
     #[inline]
+    impl_insert_axis_array!(2);
+    #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
@@ -756,6 +783,8 @@ impl Dimension for Dim<[Ix; 3]> {
         order
     }
     #[inline]
+    impl_insert_axis_array!(3);
+    #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
@@ -763,7 +792,7 @@ impl Dimension for Dim<[Ix; 3]> {
 }
 
 macro_rules! large_dim {
-    ($n:expr, $name:ident, $pattern:ty, $larger:ty) => (
+    ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
             type SliceArg = [Si; $n];
             type Pattern = $pattern;
@@ -780,6 +809,8 @@ macro_rules! large_dim {
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
             #[inline]
+            $($insert_axis)*
+            #[inline]
             fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
                 self.remove_axis(axis)
             }
@@ -788,9 +819,22 @@ macro_rules! large_dim {
     )
 }
 
-large_dim!(4, Ix4, (Ix, Ix, Ix, Ix), Ix5);
-large_dim!(5, Ix5, (Ix, Ix, Ix, Ix, Ix), Ix6);
-large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn);
+large_dim!(4, Ix4, (Ix, Ix, Ix, Ix), Ix5, {
+    impl_insert_axis_array!(4);
+});
+large_dim!(5, Ix5, (Ix, Ix, Ix, Ix, Ix), Ix6, {
+    impl_insert_axis_array!(5);
+});
+large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
+    fn insert_axis(&self, axis: Axis) -> Self::Larger {
+        debug_assert!(axis.index() <= self.ndim());
+        let mut out = Vec::with_capacity(self.ndim() + 1);
+        out.extend_from_slice(&self.slice()[0..axis.index()]);
+        out.push(1);
+        out.extend_from_slice(&self.slice()[axis.index()..self.ndim()]);
+        Dim(out)
+    }
+});
 
 /// IxDyn is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
@@ -814,6 +858,12 @@ impl Dimension for IxDyn
     #[inline]
     fn zero_index(&self) -> Self {
         IxDyn::zeros(self.ndim())
+    }
+
+    #[inline]
+    fn insert_axis(&self, axis: Axis) -> Self::Larger {
+        debug_assert!(axis.index() <= self.ndim());
+        Dim::new(self.ix().insert(axis.index()))
     }
 
     #[inline]

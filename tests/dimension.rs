@@ -14,6 +14,32 @@ use ndarray::{
 };
 
 #[test]
+fn insert_axis()
+{
+    assert_eq!(Dim([]).insert_axis(Axis(0)), Dim([1]));
+
+    assert_eq!(Dim([3]).insert_axis(Axis(0)), Dim([1, 3]));
+    assert_eq!(Dim([3]).insert_axis(Axis(1)), Dim([3, 1]));
+
+    assert_eq!(Dim([2, 3]).insert_axis(Axis(0)), Dim([1, 2, 3]));
+    assert_eq!(Dim([2, 3]).insert_axis(Axis(1)), Dim([2, 1, 3]));
+    assert_eq!(Dim([2, 3]).insert_axis(Axis(2)), Dim([2, 3, 1]));
+
+    assert_eq!(Dim([2, 3, 4]).insert_axis(Axis(2)), Dim([2, 3, 1, 4]));
+
+    assert_eq!(Dim([2, 3, 4, 5, 6, 7]).insert_axis(Axis(2)), Dim(vec![2, 3, 1, 4, 5, 6, 7]));
+
+    assert_eq!(Dim(vec![]).insert_axis(Axis(0)), Dim(vec![1]));
+
+    assert_eq!(Dim(vec![2, 3]).insert_axis(Axis(0)), Dim(vec![1, 2, 3]));
+    assert_eq!(Dim(vec![2, 3]).insert_axis(Axis(1)), Dim(vec![2, 1, 3]));
+    assert_eq!(Dim(vec![2, 3]).insert_axis(Axis(2)), Dim(vec![2, 3, 1]));
+
+    assert_eq!(Dim(vec![2, 3, 4, 5, 6]).insert_axis(Axis(2)), Dim(vec![2, 3, 1, 4, 5, 6]));
+    assert_eq!(Dim(vec![2, 3, 4, 5, 6, 7]).insert_axis(Axis(2)), Dim(vec![2, 3, 1, 4, 5, 6, 7]));
+}
+
+#[test]
 fn remove_axis()
 {
     assert_eq!(Dim([3]).remove_axis(Axis(0)), Dim([]));
@@ -43,6 +69,25 @@ fn dyn_dimension()
     dim[17] = 3;
     let z = Array::<f32, _>::zeros(dim.clone());
     assert_eq!(z.shape(), &dim[..]);
+}
+
+#[test]
+fn dyn_insert() {
+    let mut v = vec![2, 3, 4, 5];
+    let mut dim = Dim(v.clone());
+    defmac!(test_insert index => {
+        dim = dim.insert_axis(Axis(index));
+        v.insert(index, 1);
+        assert_eq!(dim.slice(), &v[..]);
+    });
+
+    test_insert!(1);
+    test_insert!(5);
+    test_insert!(0);
+    test_insert!(3);
+    test_insert!(2);
+    test_insert!(4);
+    test_insert!(7);
 }
 
 #[test]

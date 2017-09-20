@@ -1285,20 +1285,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn insert_axis(self, axis: Axis) -> ArrayBase<S, D::Larger>
     {
         assert!(axis.index() <= self.ndim());
-        fn dim_insert_axis<D: Dimension>(dim: D, axis: Axis) -> D::Larger {
-            let mut new = Vec::with_capacity(dim.ndim() + 1);
-            new.extend_from_slice(&dim.slice()[0..axis.index()]);
-            new.push(1);
-            new.extend_from_slice(&dim.slice()[axis.index()..dim.ndim()]);
-            D::Larger::from_dimension(&Dim(new)).unwrap()
-        }
-        let d = dim_insert_axis(self.dim, axis);
-        let s = dim_insert_axis(self.strides, axis);
+        let ArrayBase { ptr, data, dim, strides } = self;
         ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim: d,
-            strides: s,
+            ptr,
+            data,
+            dim: dim.insert_axis(axis),
+            strides: strides.insert_axis(axis),
         }
     }
 
