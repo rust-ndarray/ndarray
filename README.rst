@@ -85,6 +85,12 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.7
+
+  - Add method ``.is_empty()`` to arrays and array views by @iamed2
+  - Support optinal trailing commas in the ``array![]`` macro by Alex Burka
+  - Added an example of permuting/sorting along an axis to the sources
+
 - 0.10.6
 
   - Tweak the implementation for (bounds checked) indexing of arrays
