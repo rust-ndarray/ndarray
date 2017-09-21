@@ -1174,6 +1174,8 @@ fn array_macros() {
     assert_eq!(a2, arr2(&[[1, 2], [3, 4], [5, 6]]));
     let a3 = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
     assert_eq!(a3, arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]));
+    let a4 = array![[[1, 2,], [3, 4,]], [[5, 6,], [7, 8,],],]; // trailing commas
+    assert_eq!(a4, arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]));
 
     let s = String::from("abc");
     let a2s = array![[String::from("w"), s],

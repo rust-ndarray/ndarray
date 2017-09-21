@@ -39,13 +39,13 @@ use imp_prelude::*;
 /// Use `array![...].into_shared()` to create an `RcArray`.
 #[macro_export]
 macro_rules! array {
-    ($([$([$($x:expr),*]),+]),+) => {{
+    ($([$([$($x:expr),* $(,)*]),+ $(,)*]),+ $(,)*) => {{
         $crate::Array3::from(vec![$([$([$($x,)*],)*],)*])
     }};
-    ($([$($x:expr),*]),+) => {{
+    ($([$($x:expr),* $(,)*]),+ $(,)*) => {{
         $crate::Array2::from(vec![$([$($x,)*],)*])
     }};
-    ($($x:expr),*) => {{
+    ($($x:expr),* $(,)*) => {{
         $crate::Array::from_vec(vec![$($x,)*])
     }};
 }
