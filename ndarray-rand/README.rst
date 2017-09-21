@@ -4,6 +4,10 @@ ndarray-rand
 Recent Changes
 --------------
 
+- 0.6.1
+
+  - Clean up implementation of ``Array::random`` by @v-shmyhlo
+
 - 0.6.0
 
   - Require ndarray 0.10.0
