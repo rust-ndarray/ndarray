@@ -85,10 +85,14 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.8
+
+  - Add method ``.insert_axis()`` to arrays and array views by @jturner314
+
 - 0.10.7
 
   - Add method ``.is_empty()`` to arrays and array views by @iamed2
-  - Support optinal trailing commas in the ``array![]`` macro by Alex Burka
+  - Support optional trailing commas in the ``array![]`` macro by Alex Burka
   - Added an example of permuting/sorting along an axis to the sources
 
 - 0.10.6
