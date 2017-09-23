@@ -1266,6 +1266,39 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         merge_axes(&mut self.dim, &mut self.strides, take, into)
     }
 
+    /// Insert new array axis at `axis` and return the result.
+    ///
+    /// ```
+    /// use ndarray::{Array3, Axis, arr1, arr2};
+    ///
+    /// // Convert a 1-D array into a row vector (2-D).
+    /// let a = arr1(&[1, 2, 3]);
+    /// let row = a.insert_axis(Axis(0));
+    /// assert_eq!(row, arr2(&[[1, 2, 3]]));
+    ///
+    /// // Convert a 1-D array into a column vector (2-D).
+    /// let b = arr1(&[1, 2, 3]);
+    /// let col = b.insert_axis(Axis(1));
+    /// assert_eq!(col, arr2(&[[1], [2], [3]]));
+    ///
+    /// // The new axis always has length 1.
+    /// let b = Array3::<f64>::zeros((3, 4, 5));
+    /// assert_eq!(b.insert_axis(Axis(2)).shape(), &[3, 4, 1, 5]);
+    /// ```
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    pub fn insert_axis(self, axis: Axis) -> ArrayBase<S, D::Larger>
+    {
+        assert!(axis.index() <= self.ndim());
+        let ArrayBase { ptr, data, dim, strides } = self;
+        ArrayBase {
+            ptr,
+            data,
+            dim: dim.insert_axis(axis),
+            strides: strides.insert_axis(axis),
+        }
+    }
+
     /// Remove array axis `axis` and return the result.
     pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,

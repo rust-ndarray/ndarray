@@ -127,6 +127,25 @@ unsafe impl Send for IxDynImpl {}
 unsafe impl Sync for IxDynImpl {}
 
 impl IxDynImpl {
+    pub(crate) fn insert(&self, i: usize) -> Self {
+        let len = self.len();
+        debug_assert!(i <= len);
+        IxDynImpl(
+            if len < CAP {
+                let mut out = [1; CAP];
+                out[0..i].copy_from_slice(&self[0..i]);
+                out[i+1..len+1].copy_from_slice(&self[i..len]);
+                IxDynRepr::Inline((len + 1) as u32, out)
+            } else {
+                let mut out = Vec::with_capacity(len + 1);
+                out.extend_from_slice(&self[0..i]);
+                out.push(1);
+                out.extend_from_slice(&self[i..len]);
+                IxDynRepr::from_vec(out)
+            }
+        )
+    }
+
     fn remove(&self, i: usize) -> Self {
         IxDynImpl(match self.0 {
             IxDynRepr::Inline(0, _) => IxDynRepr::Inline(0, [0; CAP]),
