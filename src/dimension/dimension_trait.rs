@@ -392,14 +392,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
-    fn insert_axis(&self, axis: Axis) -> Self::Larger {
-        debug_assert!(axis.index() <= self.ndim());
-        let mut out = Vec::with_capacity(self.ndim() + 1);
-        out.extend_from_slice(&self.slice()[0..axis.index()]);
-        out.push(1);
-        out.extend_from_slice(&self.slice()[axis.index()..self.ndim()]);
-        Self::Larger::from_dimension(&Dim(out)).unwrap()
-    }
+    fn insert_axis(&self, axis: Axis) -> Self::Larger;
 
     #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
