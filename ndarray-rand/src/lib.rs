@@ -12,8 +12,6 @@
 extern crate rand;
 extern crate ndarray;
 
-use std::iter::FromIterator;
-
 use rand::Rng;
 use rand::distributions::Sample;
 use rand::distributions::IndependentSample;
