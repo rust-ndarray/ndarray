@@ -85,6 +85,11 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.9
+
+  - Fix crash in ``Array::from_shape_fn`` when creating an f-order array
+    with zero elements (#361) by @jturner314
+
 - 0.10.8
 
   - Add method ``.insert_axis()`` to arrays and array views by @jturner314
