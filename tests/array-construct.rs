@@ -1,4 +1,5 @@
-
+#[macro_use]
+extern crate defmac;
 extern crate ndarray;
 
 use ndarray::prelude::*;
@@ -81,6 +82,21 @@ fn test_from_fn_f() {
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt);
     }
+}
+
+#[test]
+fn test_from_fn_f_with_zero() {
+    defmac!(test_from_fn_f_with_zero shape => {
+        let a = Array::from_shape_fn(shape.f(), |i| i);
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.shape(), &shape);
+    });
+    test_from_fn_f_with_zero!([0]);
+    test_from_fn_f_with_zero!([0, 1]);
+    test_from_fn_f_with_zero!([2, 0]);
+    test_from_fn_f_with_zero!([0, 1, 2]);
+    test_from_fn_f_with_zero!([2, 0, 1]);
+    test_from_fn_f_with_zero!([1, 2, 0]);
 }
 
 #[test]

@@ -212,7 +212,7 @@ pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
     let dim = shape.into_dimension();
     let zero = dim.zero_index();
     IndicesIterF {
-        has_remaining: zero != dim,
+        has_remaining: dim.size_checked() != Some(0),
         index: zero,
         dim: dim,
     }
