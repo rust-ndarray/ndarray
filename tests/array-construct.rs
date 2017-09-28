@@ -45,6 +45,14 @@ fn test_uninit() {
 }
 
 #[test]
+fn test_from_fn_c0() {
+    let a = Array::from_shape_fn((), |i| i);
+    assert_eq!(a[()], ());
+    assert_eq!(a.len(), 1);
+    assert_eq!(a.shape(), &[]);
+}
+
+#[test]
 fn test_from_fn_c1() {
     let a = Array::from_shape_fn(28, |i| i);
     for (i, elt) in a.indexed_iter() {
@@ -66,6 +74,14 @@ fn test_from_fn_c3() {
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt);
     }
+}
+
+#[test]
+fn test_from_fn_f0() {
+    let a = Array::from_shape_fn(().f(), |i| i);
+    assert_eq!(a[()], ());
+    assert_eq!(a.len(), 1);
+    assert_eq!(a.shape(), &[]);
 }
 
 #[test]
