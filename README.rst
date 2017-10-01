@@ -85,6 +85,11 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.10
+
+  - Fix crash with zero size arrays in the fallback matrix multiplication code
+    (#365) by @jturner314
+
 - 0.10.9
 
   - Fix crash in ``Array::from_shape_fn`` when creating an f-order array
