@@ -399,6 +399,11 @@ fn mat_mul_general<A>(alpha: A,
                       c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
+    // It's a no-op if `c` has zero length.
+    if c.len() == 0 {
+        return;
+    }
+
     let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
 
     // common parameters for gemm
