@@ -1,3 +1,4 @@
+#[macro_use] extern crate defmac;
 #[macro_use(s)] extern crate ndarray;
 extern crate num_traits;
 
@@ -267,15 +268,15 @@ fn fold_and_sum() {
 }
 
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
-    Array::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
+    Array::linspace(0., (m * n) as f32 - 1., m * n).into_shape((m, n)).unwrap()
 }
 
 fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
-    Array::linspace(0., (m * n - 1) as f64, m * n).into_shape((m, n)).unwrap()
+    Array::linspace(0., (m * n) as f64 - 1., m * n).into_shape((m, n)).unwrap()
 }
 
 fn range1_mat64(m: Ix) -> Array1<f64> {
-    Array::linspace(0., (m - 1) as f64, m)
+    Array::linspace(0., m as f64 - 1., m)
 }
 
 fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
@@ -461,6 +462,28 @@ fn mat_mul_rev() {
     let c1 = a.dot(&b);
     let c2 = a.dot(&rev);
     assert_eq!(c1, c2);
+}
+
+// Check that matrix multiplication supports arrays with zero rows or columns
+#[test]
+fn mat_mut_zero_len() {
+    defmac!(mat_mul_zero_len range_mat_fn => {
+        for n in 0..4 {
+            for m in 0..4 {
+                let a = range_mat_fn(m, n);
+                let b = range_mat_fn(n, 0);
+                assert_eq!(a.dot(&b), Array2::zeros((m, 0)));
+            }
+            for k in 0..4 {
+                let a = range_mat_fn(0, n);
+                let b = range_mat_fn(n, k);
+                assert_eq!(a.dot(&b), Array2::zeros((0, k)));
+            }
+        }
+    });
+    mat_mul_zero_len!(range_mat);
+    mat_mul_zero_len!(range_mat64);
+    mat_mul_zero_len!(range_i32);
 }
 
 #[test]

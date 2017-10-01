@@ -439,6 +439,11 @@ fn mat_mul_general<A>(alpha: A,
             );
         }
     } else {
+        // It's a no-op if `c` has zero length.
+        if c.len() == 0 {
+            return;
+        }
+
         // initialize memory if beta is zero
         if beta.is_zero() {
             c.fill(beta);
