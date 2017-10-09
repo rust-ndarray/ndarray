@@ -31,14 +31,12 @@ default-features = false
 version = "0.1.32"
 default-features = false
 
-[dependencies.itertools]
-version = "0.7.0"
-
 [dependencies.rustc-serialize]
 version = "0.3.20"
 optional = true
 
 [dependencies]
+itertools = { version = "0.7.0", default-features = false }
 # Use via the `blas` crate feature!
 blas-sys = { version = "0.6.5", optional = true, default-features = false }
 matrixmultiply = { version = "0.1.13" }
