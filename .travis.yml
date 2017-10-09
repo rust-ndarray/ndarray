@@ -16,6 +16,7 @@ matrix:
     - rust: nightly
       env:
        - FEATURES='test'
+       - RUSTFLAGS='-Zthinlto -Ccodegen-units=32'
        - BENCH=1
 branches:
   only:
