@@ -1154,6 +1154,21 @@ fn test_swap() {
 }
 
 #[test]
+fn test_uswap() {
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9]]);
+    let b = a.clone();
+
+    for i in 0..a.rows() {
+        for j in i + 1..a.cols() {
+            unsafe { a.uswap((i, j), (j, i)) };
+        }
+    }
+    assert_eq!(a, b.t());
+}
+
+#[test]
 fn test_shape() {
     let data = [0, 1, 2, 3, 4, 5];
     let a = Array::from_shape_vec((1, 2, 3), data.to_vec()).unwrap();

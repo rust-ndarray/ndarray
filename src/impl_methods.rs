@@ -341,6 +341,24 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Swap elements *unchecked* at indices `index1` and `index2`.
+    ///
+    /// Indices may be equal.
+    ///
+    /// **Note:** only unchecked for non-debug builds of ndarray.<br>
+    /// **Note:** (For `RcArray`) The array must be uniquely held.
+    pub unsafe fn uswap<I>(&mut self, index1: I, index2: I)
+        where S: DataMut,
+              I: NdIndex<D>,
+    {
+        debug_assert!(self.data.is_unique());
+        arraytraits::debug_bounds_check(self, &index1);
+        arraytraits::debug_bounds_check(self, &index2);
+        let off1 = index1.index_unchecked(&self.strides);
+        let off2 = index2.index_unchecked(&self.strides);
+        std_ptr::swap(self.ptr.offset(off1), self.ptr.offset(off2));
+    }
+
     // `get` for zero-dimensional arrays
     // panics if dimension is not zero. otherwise an element is always present.
     fn get_0d(&self) -> &A {
