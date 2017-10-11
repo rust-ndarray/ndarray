@@ -85,6 +85,11 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.11
+
+  - Add method ``.uswap(a, b)`` for unchecked swap by @jturner314
+  - Bump private dependencies (itertools 0.7)
+
 - 0.10.10
 
   - Fix crash with zero size arrays in the fallback matrix multiplication code
