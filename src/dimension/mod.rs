@@ -8,7 +8,6 @@
 
 use {Ix, Ixs};
 use error::{from_kind, ErrorKind, ShapeError};
-use {zipsl, ZipExt};
 
 pub use self::dim::*;
 pub use self::axis::Axis;
@@ -117,7 +116,7 @@ fn stride_offset_checked_arithmetic<D>(dim: &D, strides: &D, index: &D)
     where D: Dimension
 {
     let mut offset = 0;
-    for (&d, &i, &s) in zipsl(dim.slice(), index.slice()).zip_cons(strides.slice()) {
+    for (&d, &i, &s) in izip!(dim.slice(), index.slice(), strides.slice()) {
         if i >= d {
             return None;
         }
@@ -140,8 +139,7 @@ pub fn stride_offset_checked(dim: &[Ix], strides: &[Ix], index: &[Ix]) -> Option
         return None;
     }
     let mut offset = 0;
-    for (&d, &i, &s) in zipsl(dim, index).zip_cons(strides)
-    {
+    for (&d, &i, &s) in izip!(dim, index, strides) {
         if i >= d {
             return None;
         }

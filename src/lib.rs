@@ -85,14 +85,12 @@ extern crate blas_sys;
 
 extern crate matrixmultiply;
 
-extern crate itertools;
+#[macro_use(izip)] extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
-use std::iter::Zip as ZipIter;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use std::slice::{Iter as SliceIter, IterMut as SliceIterMut};
 
 pub use dimension::{
     Dimension,
@@ -815,29 +813,6 @@ pub use impl_ops::ScalarOperand;
 
 // Array view methods
 mod impl_views;
-
-fn zipsl<'a, 'b, A, B>(t: &'a [A], u: &'b [B])
-    -> ZipIter<SliceIter<'a, A>, SliceIter<'b, B>> {
-    t.iter().zip(u)
-}
-fn zipsl_mut<'a, 'b, A, B>(t: &'a mut [A], u: &'b mut [B])
-    -> ZipIter<SliceIterMut<'a, A>, SliceIterMut<'b, B>> {
-    t.iter_mut().zip(u)
-}
-
-use itertools::{cons_tuples, ConsTuples};
-
-trait ZipExt : Iterator {
-    fn zip_cons<J>(self, iter: J) -> ConsTuples<ZipIter<Self, J::IntoIter>, (Self::Item, J::Item)>
-        where J: IntoIterator,
-              Self: Sized,
-    {
-        cons_tuples(self.zip(iter))
-    }
-}
-
-impl<I> ZipExt for I where I: Iterator { }
-
 
 /// A contiguous array shape of n dimensions.
 ///

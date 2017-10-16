@@ -18,8 +18,6 @@ use arraytraits;
 use dimension;
 use iterators;
 use error::{self, ShapeError, ErrorKind};
-use super::zipsl;
-use super::ZipExt;
 use dimension::IntoDimension;
 use dimension::{axes_of, Axes, merge_axes, stride_offset};
 use iterators::{
@@ -874,9 +872,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
             if dim.ndim() == 1 { return false; }
             // check all dimensions -- a dimension of length 1 can have unequal strides
-            for (&dim, &s, &ds) in zipsl(dim.slice(), strides.slice())
-                .zip_cons(defaults.slice())
-            {
+            for (&dim, &s, &ds) in izip!(dim.slice(), strides.slice(), defaults.slice()) {
                 if dim != 1 && s != ds {
                     return false;
                 }

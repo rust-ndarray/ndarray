@@ -17,7 +17,6 @@ use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Si, IxDynImpl};
 use IntoDimension;
 use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
-use {zipsl, zipsl_mut, ZipExt};
 use Axis;
 use super::{
     stride_offset,
@@ -217,7 +216,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// Return stride offset for index.
     fn stride_offset(index: &Self, strides: &Self) -> isize {
         let mut offset = 0;
-        for (&i, &s) in zipsl(index.slice(), strides.slice()) {
+        for (&i, &s) in izip!(index.slice(), strides.slice()) {
             offset += stride_offset(i, s);
         }
         offset
@@ -251,8 +250,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         ndassert!(slices.len() == dim.slice().len(),
                   "SliceArg {:?}'s length does not match dimension {:?}",
                   slices, dim);
-        for (dr, sr, &slc) in zipsl_mut(dim.slice_mut(), strides.slice_mut()).zip_cons(slices)
-        {
+        for (dr, sr, &slc) in izip!(dim.slice_mut(), strides.slice_mut(), slices) {
             let m = *dr;
             let mi = m as Ixs;
             let Si(b1, opt_e1, s1) = slc;
