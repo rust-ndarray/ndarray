@@ -14,7 +14,7 @@ extern crate ron;
 use serialize::json;
 
 
-use ndarray::{arr0, arr1, arr2, RcArray, RcArray1, RcArray2};
+use ndarray::{arr0, arr1, arr2, RcArray, RcArray1, RcArray2, ArrayD, IxDyn};
 
 #[test]
 fn serial_many_dim()
@@ -121,6 +121,46 @@ fn serial_many_dim_serde()
         println!("{:?}", res);
         assert_eq!(a, res.unwrap());
     }
+}
+
+#[test]
+fn serial_ixdyn_serde()
+{
+    {
+        let a = arr0::<f32>(2.72).into_dyn();
+        let serial = serde_json::to_string(&a).unwrap();
+        println!("Serde encode {:?} => {:?}", a, serial);
+        let res = serde_json::from_str::<RcArray<f32, _>>(&serial);
+        println!("{:?}", res);
+        assert_eq!(a, res.unwrap());
+    }
+
+    {
+        let a = arr1::<f32>(&[2.72, 1., 2.]).into_dyn();
+        let serial = serde_json::to_string(&a).unwrap();
+        println!("Serde encode {:?} => {:?}", a, serial);
+        let res = serde_json::from_str::<ArrayD<f32>>(&serial);
+        println!("{:?}", res);
+        assert_eq!(a, res.unwrap());
+    }
+
+    {
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]])
+                .into_shape(IxDyn(&[3, 1, 1, 1, 2, 1])).unwrap();
+        let serial = serde_json::to_string(&a).unwrap();
+        println!("Serde encode {:?} => {:?}", a, serial);
+        let res = serde_json::from_str::<ArrayD<f32>>(&serial);
+        println!("{:?}", res);
+        assert_eq!(a, res.unwrap());
+    }
+
+    {
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]]).into_dyn();
+        let text = r##"{"v":1,"dim":[2,3],"data":[3,1,2.2,3.1,4,7]}"##;
+        let b = serde_json::from_str::<ArrayD<f32>>(text);
+        assert_eq!(a, b.unwrap());
+    }
+
 }
 
 #[test]
