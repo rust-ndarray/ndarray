@@ -16,6 +16,7 @@ use imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Iter;
+use IntoDimension;
 
 /// Verifies that the version of the deserialized array matches the current
 /// `ARRAY_FORMAT_VERSION`.
@@ -49,6 +50,27 @@ impl<'de, I> Deserialize<'de> for Dim<I>
         where D: Deserializer<'de>
     {
         I::deserialize(deserializer).map(Dim::new)
+    }
+}
+
+/// **Requires crate feature `"serde-1"`**
+impl Serialize for IxDyn
+{
+    fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
+        where Se: Serializer
+    {
+        self.ix().serialize(serializer)
+    }
+}
+
+/// **Requires crate feature `"serde-1"`**
+impl<'de> Deserialize<'de> for IxDyn
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        let v = Vec::<Ix>::deserialize(deserializer)?;
+        Ok(v.into_dimension())
     }
 }
 
