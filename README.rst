@@ -85,6 +85,11 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.12
+
+  - Implement serde serialization for ``IxDyn``, so that arrays and array views
+    using it are serializable as well.
+
 - 0.10.11
 
   - Add method ``.uswap(a, b)`` for unchecked swap by @jturner314
