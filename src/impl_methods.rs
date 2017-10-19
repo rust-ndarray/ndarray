@@ -262,7 +262,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let info: &SliceInfo<_, _> = info.borrow();
         let indices: &[SliceOrIndex] = info.indices().borrow().borrow();
-        assert_eq!(indices.len(), self.ndim());
 
         // Slice and subview in-place without changing the number of dimensions.
         self.islice(indices);
