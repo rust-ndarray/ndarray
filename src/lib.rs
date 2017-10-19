@@ -105,7 +105,7 @@ pub use dimension::NdIndex;
 pub use dimension::IxDynImpl;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
-pub use si::{Si, S};
+pub use si::{Si, S, SliceInfo, SliceNextDim, SliceOrIndex};
 
 use iterators::Baseiter;
 use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
@@ -425,9 +425,9 @@ pub type Ixs = isize;
 /// `.slice_mut()`.
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
-/// which will be used in all examples. (The explicit form is a reference
-/// to a fixed size array of [`Si`]; see its docs for more information.)
-/// [`Si`]: struct.Si.html
+/// which will be used in all examples. (The explicit form is an instance of
+/// struct [`SliceInfo`]; see its docs for more information.)
+/// [`SliceInfo`]: struct.SliceInfo.html
 ///
 /// ```
 /// // import the s![] macro
@@ -478,12 +478,17 @@ pub type Ixs = isize;
 ///
 /// Subview methods allow you to restrict the array view while removing
 /// one axis from the array. Subview methods include `.subview()`,
-/// `.isubview()`, `.subview_mut()`.
+/// `.isubview()`, `.subview_mut()`. You can also take a subview by using a
+/// single index instead of a range when slicing.
 ///
 /// Subview takes two arguments: `axis` and `index`.
 ///
 /// ```
-/// use ndarray::{arr3, aview2, Axis};
+/// #[macro_use(s)] extern crate ndarray;
+///
+/// use ndarray::{arr3, aview1, aview2, Axis};
+///
+/// # fn main() {
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -513,6 +518,13 @@ pub type Ixs = isize;
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
 ///                              [ 7, 10]]));
+///
+/// // You can take multiple subviews at once (and slice at the same time)
+///
+/// let double_sub = a.slice(s![1, .., 0]);
+///
+/// assert_eq!(double_sub, aview1(&[7, 10]));
+/// # }
 /// ```
 ///
 /// `.isubview()` modifies the view in the same way as `subview()`, but

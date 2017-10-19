@@ -12,7 +12,7 @@ use error::{from_kind, ErrorKind, ShapeError};
 pub use self::dim::*;
 pub use self::axis::Axis;
 pub use self::conversion::IntoDimension;
-pub use self::dimension_trait::Dimension;
+pub use self::dimension_trait::{abs_index, Dimension};
 pub use self::ndindex::NdIndex;
 pub use self::remove_axis::RemoveAxis;
 pub use self::axes::{axes_of, Axes, AxisDescription};

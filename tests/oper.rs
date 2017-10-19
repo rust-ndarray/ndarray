@@ -7,7 +7,7 @@ use ndarray::{rcarr1, rcarr2};
 use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
-use ndarray::Si;
+use ndarray::{Si, SliceInfo};
 use ndarray::{Ix, Ixs};
 
 use std::fmt;
@@ -570,7 +570,7 @@ fn scaled_add_3() {
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(&cslice);
+                    let c = c.slice(SliceInfo::from(&*cslice));
 
                     let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
                     answerv += &(beta * &c);

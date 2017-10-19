@@ -6,7 +6,7 @@ extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
 
-use ndarray::{S, Si};
+use ndarray::{S, Si, SliceInfo};
 use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
@@ -62,9 +62,66 @@ fn test_slice()
 
     let vi = A.slice(s![1.., ..;2]);
     assert_eq!(vi.shape(), &[2, 2]);
-    let vi = A.slice(&[S, S]);
+    let vi = A.slice(SliceInfo::from([S, S]));
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
+}
+
+#[test]
+fn test_slice_with_subview()
+{
+    let mut A = RcArray::<usize, _>::zeros((3, 5, 4));
+    for (i, elt) in A.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let vi = A.slice(s![1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[2, 2]);
+    assert!(
+        vi.iter()
+            .zip(A.subview(Axis(1), 2).slice(s![1.., ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let vi = A.slice(s![1, 2, ..;2]);
+    assert_eq!(vi.shape(), &[2]);
+    assert!(
+        vi.iter()
+            .zip(
+                A.subview(Axis(0), 1)
+                    .subview(Axis(0), 2)
+                    .slice(s![..;2])
+                    .iter()
+            )
+            .all(|(a, b)| a == b)
+    );
+}
+
+#[test]
+fn test_islice_with_isubview()
+{
+    let mut A = RcArray::<usize, _>::zeros((3, 5, 4));
+    for (i, elt) in A.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let mut vi = A.view();
+    vi.islice(s![1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[2, 1, 2]);
+    assert!(
+        vi.iter()
+            .zip(A.slice(s![1.., 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let mut vi = A.view();
+    vi.islice(s![1, 2, ..;2]);
+    assert_eq!(vi.shape(), &[1, 1, 2]);
+    assert!(
+        vi.iter()
+            .zip(A.slice(s![1..2, 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
 }
 
 #[should_panic]
@@ -79,7 +136,14 @@ fn index_out_of_bounds() {
 fn slice_oob()
 {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice(&[Si(0, Some(10), 1), S]);
+    let _vi = a.slice(SliceInfo::from([Si(0, Some(10), 1), S]));
+}
+
+#[should_panic]
+#[test]
+fn slice_axis_oob() {
+    let a = RcArray::<i32, _>::zeros((3, 4));
+    let _vi = a.slice_axis(Axis(0), &Si(0, Some(10), 1));
 }
 
 #[should_panic]
@@ -102,7 +166,7 @@ fn test_index()
         assert_eq!(*a, A[[i, j]]);
     }
 
-    let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
+    let vi = A.slice(SliceInfo::from([Si(1, None, 1), Si(0, None, 2)]));
     let mut it = vi.iter();
     for ((i, j), x) in zip(indices((1, 2)), &mut it) {
         assert_eq!(*x, vi[[i, j]]);
@@ -171,7 +235,7 @@ fn test_negative_stride_rcarray()
     }
 
     {
-        let vi = mat.slice(&[S, Si(0, None, -1), Si(0, None, -1)]);
+        let vi = mat.slice(SliceInfo::from([S, Si(0, None, -1), Si(0, None, -1)]));
         assert_eq!(vi.shape(), &[2, 4, 2]);
         // Test against sequential iterator
         let seq = [7f32,6., 5.,4.,3.,2.,1.,0.,15.,14.,13., 12.,11.,  10.,   9.,   8.];
@@ -203,7 +267,7 @@ fn test_cow()
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
     let mut rev = mat.reshape(4);
-    rev.islice(&[Si(0, None, -1)]);
+    rev.islice(SliceInfo::from([Si(0, None, -1)]));
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -367,7 +431,7 @@ fn assign()
     let mut a = arr2(&[[1, 2], [3, 4]]);
     {
         let mut v = a.view_mut();
-        v.islice(&[Si(0, Some(1), 1), S]);
+        v.islice(SliceInfo::from([Si(0, Some(1), 1), S]));
         v.fill(0);
     }
     assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
@@ -667,7 +731,7 @@ fn view_mut() {
 #[test]
 fn slice_mut() {
     let mut a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
-    for elt in a.slice_mut(&[S, S]) {
+    for elt in a.slice_mut(SliceInfo::from([S, S])) {
         *elt = 0;
     }
     assert_eq!(a, aview2(&[[0, 0], [0, 0]]));
@@ -675,14 +739,14 @@ fn slice_mut() {
     let mut b = arr2(&[[1, 2, 3],
                        [4, 5, 6]]);
     let c = b.clone(); // make sure we can mutate b even if it has to be unshared first
-    for elt in b.slice_mut(&[S, Si(0, Some(1), 1)]) {
+    for elt in b.slice_mut(SliceInfo::from([S, Si(0, Some(1), 1)])) {
         *elt = 0;
     }
     assert_eq!(b, aview2(&[[0, 2, 3],
                            [0, 5, 6]]));
     assert!(c != b);
 
-    for elt in b.slice_mut(&[S, Si(0, None, 2)]) {
+    for elt in b.slice_mut(SliceInfo::from([S, Si(0, None, 2)])) {
         *elt = 99;
     }
     assert_eq!(b, aview2(&[[99, 2, 99],

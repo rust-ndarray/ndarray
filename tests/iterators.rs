@@ -4,7 +4,7 @@ extern crate itertools;
 
 use ndarray::{Array0, Array2};
 use ndarray::RcArray;
-use ndarray::{Ix, Si, S};
+use ndarray::{Ix, Si, S, SliceInfo};
 use ndarray::{
     ArrayBase,
     Data,
@@ -99,22 +99,22 @@ fn as_slice() {
     assert_slice_correct(&v.subview(Axis(0), 0));
     assert_slice_correct(&v.subview(Axis(0), 1));
 
-    assert!(v.slice(&[S, Si(0, Some(1), 1)]).as_slice().is_none());
-    println!("{:?}", v.slice(&[Si(0, Some(1), 2), S]));
-    assert!(v.slice(&[Si(0, Some(1), 2), S]).as_slice().is_some());
+    assert!(v.slice(SliceInfo::from([S, Si(0, Some(1), 1)])).as_slice().is_none());
+    println!("{:?}", v.slice(SliceInfo::from([Si(0, Some(1), 2), S])));
+    assert!(v.slice(SliceInfo::from([Si(0, Some(1), 2), S])).as_slice().is_some());
 
     // `u` is contiguous, because the column stride of `2` doesn't matter
     // when the result is just one row anyway -- length of that dimension is 1
-    let u = v.slice(&[Si(0, Some(1), 2), S]);
+    let u = v.slice(SliceInfo::from([Si(0, Some(1), 2), S]));
     println!("{:?}", u.shape());
     println!("{:?}", u.strides());
-    println!("{:?}", v.slice(&[Si(0, Some(1), 2), S]));
+    println!("{:?}", v.slice(SliceInfo::from([Si(0, Some(1), 2), S])));
     assert!(u.as_slice().is_some());
     assert_slice_correct(&u);
 
     let a = a.reshape((8, 1));
     assert_slice_correct(&a);
-    let u = a.slice(&[Si(0, None, 2), S]);
+    let u = a.slice(SliceInfo::from([Si(0, None, 2), S]));
     println!("u={:?}, shape={:?}, strides={:?}", u, u.shape(), u.strides());
     assert!(u.as_slice().is_none());
 }
