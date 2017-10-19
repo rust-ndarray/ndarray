@@ -192,9 +192,9 @@ impl<T, D: Dimension> SliceInfo<T, D> {
     }
 }
 
-impl<T: Borrow<[SliceOrIndex]>, D: Dimension> AsRef<[SliceOrIndex]> for SliceInfo<T, D> {
-    fn as_ref(&self) -> &[SliceOrIndex] {
-        self.indices.borrow()
+impl<T, D: Dimension> Borrow<T> for SliceInfo<T, D> {
+    fn borrow(&self) -> &T {
+        &self.indices
     }
 }
 
