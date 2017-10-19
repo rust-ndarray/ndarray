@@ -143,7 +143,7 @@ fn slice_oob()
 #[test]
 fn slice_axis_oob() {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice_axis(Axis(0), &Si(0, Some(10), 1));
+    let _vi = a.slice_axis(Axis(0), Si(0, Some(10), 1));
 }
 
 #[should_panic]

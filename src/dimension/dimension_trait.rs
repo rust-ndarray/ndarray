@@ -252,15 +252,14 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// Modify dimension, stride and return data pointer offset
     ///
     /// **Panics** if any stride is 0 or if any index is out of bounds.
-    fn do_slice(dim: &mut Ix, stride: &mut Ix, slice: &Si) -> isize {
+    fn do_slice(dim: &mut Ix, stride: &mut Ix, slice: Si) -> isize {
         let mut offset = 0;
         let dr = dim;
         let sr = stride;
-        let slc = *slice;
 
         let m = *dr;
         let mi = m as Ixs;
-        let Si(b1, opt_e1, s1) = slc;
+        let Si(b1, opt_e1, s1) = slice;
         let e1 = opt_e1.unwrap_or(mi);
 
         let b1 = abs_index(mi, b1);
