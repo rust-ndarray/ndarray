@@ -269,16 +269,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // Copy the dim and strides that remain after removing the subview axes.
         let mut new_dim = Do::zero_index_with_ndim(info.out_ndim());
         let mut new_strides = Do::zero_index_with_ndim(info.out_ndim());
-        izip!(self.dim.slice(), self.strides.slice(), indices)
-            .filter_map(|(d, s, slice_or_index)| match slice_or_index {
+        let remaining = izip!(self.dim.slice(), self.strides.slice(), indices).filter_map(
+            |(d, s, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice(_) => Some((d, s)),
                 &SliceOrIndex::Index(_) => None,
-            })
-            .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
-            .for_each(|((d, s), (new_d, new_s))| {
-                *new_d = *d;
-                *new_s = *s;
-            });
+            },
+        );
+        for ((d, s), (new_d, new_s)) in
+            remaining.zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
+        {
+            *new_d = *d;
+            *new_s = *s;
+        }
 
         ArrayBase {
             ptr: self.ptr,
@@ -301,16 +303,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         I: AsRef<[SliceOrIndex]>,
     {
         assert_eq!(info.as_ref().len(), self.ndim());
-        info.as_ref()
-            .iter()
-            .enumerate()
-            .for_each(|(axis, slice_or_index)| match slice_or_index {
+        for (axis, slice_or_index) in info.as_ref().iter().enumerate() {
+            match slice_or_index {
                 &SliceOrIndex::Slice(s) => self.islice_axis(Axis(axis), &s),
                 &SliceOrIndex::Index(i) => {
                     let i_usize = abs_index(self.shape()[axis] as Ixs, i);
                     self.isubview(Axis(axis), i_usize)
                 }
-            });
+            }
+        }
     }
 
     /// Return a view of the array, sliced along the specified axis.
