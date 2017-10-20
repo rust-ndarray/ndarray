@@ -124,6 +124,40 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
     ArrayViewMut::from(xs)
 }
 
+/// Create a two-dimensional read-write array view with elements borrowing `xs`.
+///
+/// # Example
+///
+/// ```
+/// use ndarray::aview_mut2;
+///
+/// fn main() {
+///     // The inner (nested) array must be of length 1 to 16, but the outer
+///     // can be of any length.
+///     let mut data = [[0.; 2]; 128];
+///     {
+///         // Make a 128 x 2 mut array view then turn it into 2 x 128
+///         let mut a = aview_mut2(&mut data).reversed_axes();
+///         // Make the first row ones and second row minus ones.
+///         a.row_mut(0).fill(1.);
+///         a.row_mut(1).fill(-1.);
+///     }
+///     // look at the start of the result
+///     assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
+/// }
+/// ```
+pub fn aview_mut2<A, V: FixedInitializer<Elem=A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
+    let cols = V::len();
+    let rows = xs.len();
+    let data = unsafe {
+        slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows)
+    };
+    let dim = Ix2(rows, cols);
+    unsafe {
+        ArrayViewMut::from_shape_ptr(dim, data.as_mut_ptr())
+    }
+}
+
 /// Fixed-size array used for array initialization
 pub unsafe trait FixedInitializer {
     type Elem;
