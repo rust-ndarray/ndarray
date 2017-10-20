@@ -219,10 +219,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice<I, T, Do>(&self, info: I) -> ArrayView<A, Do>
+    pub fn slice<I, Do>(&self, info: I) -> ArrayView<A, Do>
     where
-        I: Borrow<SliceInfo<T, Do>>,
-        T: Borrow<D::SliceArg>,
+        I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
     {
         self.view().slice_into(info)
@@ -236,10 +235,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_mut<I, T, Do>(&mut self, info: I) -> ArrayViewMut<A, Do>
+    pub fn slice_mut<I, Do>(&mut self, info: I) -> ArrayViewMut<A, Do>
     where
-        I: Borrow<SliceInfo<T, Do>>,
-        T: Borrow<D::SliceArg>,
+        I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
         S: DataMut,
     {
@@ -254,23 +252,22 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_into<I, T, Do>(mut self, info: I) -> ArrayBase<S, Do>
+    pub fn slice_into<I, Do>(mut self, info: I) -> ArrayBase<S, Do>
     where
-        I: Borrow<SliceInfo<T, Do>>,
-        T: Borrow<D::SliceArg>,
+        I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
     {
         let info: &SliceInfo<_, _> = info.borrow();
-        let indices: &D::SliceArg = info.indices().borrow();
+        let indices: &[SliceOrIndex] = info.indices().borrow();
 
         // Slice and subview in-place without changing the number of dimensions.
-        self.islice(indices);
+        self.islice(info.indices());
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
         let mut new_dim = Do::zero_index_with_ndim(out_ndim);
         let mut new_strides = Do::zero_index_with_ndim(out_ndim);
-        izip!(self.dim.slice(), self.strides.slice(), indices.borrow())
+        izip!(self.dim.slice(), self.strides.slice(), indices)
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice(_) => Some((d, s)),
                 &SliceOrIndex::Index(_) => None,
