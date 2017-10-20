@@ -257,17 +257,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
     {
-        let info: &SliceInfo<_, _> = info.borrow();
-        let indices: &[SliceOrIndex] = info.indices().borrow();
+        let info: &SliceInfo<D::SliceArg, Do> = info.borrow();
+        let indices: &D::SliceArg = info.borrow();
 
         // Slice and subview in-place without changing the number of dimensions.
-        self.islice(info.indices());
+        self.islice(indices);
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
         let mut new_dim = Do::zero_index_with_ndim(out_ndim);
         let mut new_strides = Do::zero_index_with_ndim(out_ndim);
-        izip!(self.dim.slice(), self.strides.slice(), indices)
+        izip!(self.dim.slice(), self.strides.slice(), indices.borrow())
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice(_) => Some((d, s)),
                 &SliceOrIndex::Index(_) => None,

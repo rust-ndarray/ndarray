@@ -8,6 +8,7 @@ use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::{Si, SliceInfo};
+use ndarray::SliceOrIndex::Slice;
 use ndarray::{Ix, Ixs};
 
 use std::fmt;
@@ -561,16 +562,16 @@ fn scaled_add_3() {
                     vec![n, q]
                 };
                 let cslice = if n == 1 {
-                    vec![Si(0, None, s2)]
+                    vec![Slice(Si(0, None, s2))]
                 } else {
-                    vec![Si(0, None, s1), Si(0, None, s2)]
+                    vec![Slice(Si(0, None, s1)), Slice(Si(0, None, s2))]
                 };
 
                 let c = range_mat64(n, q).into_shape(cdim).unwrap();
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(SliceInfo::from(&*cslice));
+                    let c = c.slice(SliceInfo::<_, IxDyn>::new(cslice));
 
                     let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
                     answerv += &(beta * &c);

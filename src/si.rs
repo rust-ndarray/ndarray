@@ -9,7 +9,7 @@ use std::borrow::Borrow;
 use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
 use std::fmt;
 use std::marker::PhantomData;
-use super::{Dim, Dimension, Ix, IxDyn, Ixs};
+use super::{Dimension, Ixs};
 
 // [a:b:s] syntax for example [:3], [::-1]
 // [0,:] -- first row of matrix
@@ -176,16 +176,16 @@ pub struct SliceInfo<T: ?Sized, D: Dimension> {
     indices: T,
 }
 
-impl<T, D: Dimension> SliceInfo<T, D> {
+impl<T, D> SliceInfo<T, D>
+where
+    D: Dimension,
+{
     /// Returns a new `SliceInfo` instance.
     ///
     /// If you call this method, you are guaranteeing that `out_dim` and
     /// `out_ndim` are consistent with `indices`.
     #[doc(hidden)]
-    pub unsafe fn new_unchecked(
-        indices: T,
-        out_dim: PhantomData<D>,
-    ) -> SliceInfo<T, D> {
+    pub unsafe fn new_unchecked(indices: T, out_dim: PhantomData<D>) -> SliceInfo<T, D> {
         SliceInfo {
             out_dim: out_dim,
             indices: indices,
@@ -193,67 +193,64 @@ impl<T, D: Dimension> SliceInfo<T, D> {
     }
 }
 
-impl<T: ?Sized + Borrow<[SliceOrIndex]>, D: Dimension> SliceInfo<T, D> {
-    /// Returns the number of dimensions after slicing.
+impl<T, D> SliceInfo<T, D>
+where
+    T: Borrow<[SliceOrIndex]>,
+    D: Dimension,
+{
+    /// Returns a new `SliceInfo` instance.
+    ///
+    /// **Panics** if `D` is not consistent with `indices`.
+    pub fn new(indices: T) -> SliceInfo<T, D> {
+        let out_ndim = indices.borrow().iter().filter(|s| s.is_slice()).count();
+        if let Some(ndim) = D::NDIM {
+            assert_eq!(out_ndim, ndim);
+        }
+        SliceInfo {
+            out_dim: PhantomData,
+            indices: indices,
+        }
+    }
+}
+
+impl<T: ?Sized, D> SliceInfo<T, D>
+where
+    T: Borrow<[SliceOrIndex]>,
+    D: Dimension,
+{
+    /// Returns the number of dimensions after slicing and taking subviews.
     pub fn out_ndim(&self) -> usize {
         D::NDIM.unwrap_or_else(|| {
-            self.indices.borrow().iter().filter(|s| s.is_slice()).count()
+            self.indices
+                .borrow()
+                .iter()
+                .filter(|s| s.is_slice())
+                .count()
         })
     }
 }
 
-impl<T: ?Sized, D: Dimension> SliceInfo<T, D> {
-    /// Returns a slice of the slice/index information.
-    pub fn indices(&self) -> &T {
-        &self.indices
-    }
-}
-
-impl<T: ?Sized, D: Dimension> Borrow<T> for SliceInfo<T, D> {
+impl<T: ?Sized, D> Borrow<T> for SliceInfo<T, D>
+where
+    D: Dimension,
+{
     fn borrow(&self) -> &T {
         &self.indices
     }
 }
 
-macro_rules! impl_sliceinfo_from_array {
-    ($ndim:expr) => {
-        impl From<[Si; $ndim]> for SliceInfo<[SliceOrIndex; $ndim], Dim<[Ix; $ndim]>> {
-            fn from(slices: [Si; $ndim]) -> Self {
-                let mut indices = [SliceOrIndex::Index(0); $ndim];
-                for (i, s) in slices.iter().enumerate() {
-                    indices[i] = SliceOrIndex::Slice(*s);
-                }
-                SliceInfo {
-                    out_dim: PhantomData,
-                    indices: indices,
-                }
-            }
-        }
-    }
-}
-
-impl_sliceinfo_from_array!{0}
-impl_sliceinfo_from_array!{1}
-impl_sliceinfo_from_array!{2}
-impl_sliceinfo_from_array!{3}
-impl_sliceinfo_from_array!{4}
-impl_sliceinfo_from_array!{5}
-impl_sliceinfo_from_array!{6}
-
-impl<'a> From<&'a [Si]> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
-    fn from(slices: &[Si]) -> Self {
-        SliceInfo {
-            out_dim: PhantomData,
-            indices: slices.iter().map(|s| SliceOrIndex::Slice(*s)).collect(),
-        }
-    }
-}
-
-impl From<Vec<SliceOrIndex>> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
-    fn from(indices: Vec<SliceOrIndex>) -> Self {
-        SliceInfo {
-            out_dim: PhantomData,
-            indices: indices,
+impl<T, D> Borrow<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
+where
+    T: Borrow<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn borrow(&self) -> &SliceInfo<[SliceOrIndex], D> {
+        unsafe {
+            // This is okay because the only non-zero-sized member of
+            // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
+            // should have the same bitwise representation as
+            // `&[SliceOrIndex]`.
+            ::std::mem::transmute(self.indices.borrow())
         }
     }
 }
