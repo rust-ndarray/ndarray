@@ -112,6 +112,20 @@ pub enum SliceOrIndex {
 copy_and_clone!{SliceOrIndex}
 
 impl SliceOrIndex {
+    pub fn is_slice(&self) -> bool {
+        match self {
+            &SliceOrIndex::Slice(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_index(&self) -> bool {
+        match self {
+            &SliceOrIndex::Index(_) => true,
+            _ => false,
+        }
+    }
+
     #[inline]
     pub fn step(self, step: Ixs) -> Self {
         match self {
@@ -230,6 +244,16 @@ impl<'a> From<&'a [Si]> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
             out_dim: PhantomData,
             out_ndim: slices.len(),
             indices: slices.iter().map(|s| SliceOrIndex::Slice(*s)).collect(),
+        }
+    }
+}
+
+impl From<Vec<SliceOrIndex>> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
+    fn from(indices: Vec<SliceOrIndex>) -> Self {
+        SliceInfo {
+            out_dim: PhantomData,
+            out_ndim: indices.iter().filter(|s| s.is_slice()).count(),
+            indices: indices,
         }
     }
 }
