@@ -171,7 +171,7 @@ impl From<RangeFull> for SliceOrIndex {
 }
 
 /// Represents all of the necessary information to perform a slice.
-pub struct SliceInfo<T, D: Dimension> {
+pub struct SliceInfo<T: ?Sized, D: Dimension> {
     out_dim: PhantomData<D>,
     out_ndim: usize,
     indices: T,
@@ -194,7 +194,9 @@ impl<T, D: Dimension> SliceInfo<T, D> {
             indices: indices,
         }
     }
+}
 
+impl<T: ?Sized, D: Dimension> SliceInfo<T, D> {
     /// Returns a slice of the slice/index information.
     pub fn indices(&self) -> &T {
         &self.indices
@@ -206,7 +208,7 @@ impl<T, D: Dimension> SliceInfo<T, D> {
     }
 }
 
-impl<T, D: Dimension> Borrow<T> for SliceInfo<T, D> {
+impl<T: ?Sized, D: Dimension> Borrow<T> for SliceInfo<T, D> {
     fn borrow(&self) -> &T {
         &self.indices
     }
