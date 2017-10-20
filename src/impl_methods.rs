@@ -267,8 +267,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.islice(indices);
 
         // Copy the dim and strides that remain after removing the subview axes.
-        let mut new_dim = Do::zero_index_with_ndim(info.out_ndim());
-        let mut new_strides = Do::zero_index_with_ndim(info.out_ndim());
+        let out_ndim = info.out_ndim();
+        let mut new_dim = Do::zero_index_with_ndim(out_ndim);
+        let mut new_strides = Do::zero_index_with_ndim(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices.borrow())
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice(_) => Some((d, s)),

@@ -173,7 +173,6 @@ impl From<RangeFull> for SliceOrIndex {
 /// Represents all of the necessary information to perform a slice.
 pub struct SliceInfo<T: ?Sized, D: Dimension> {
     out_dim: PhantomData<D>,
-    out_ndim: usize,
     indices: T,
 }
 
@@ -186,13 +185,20 @@ impl<T, D: Dimension> SliceInfo<T, D> {
     pub unsafe fn new_unchecked(
         indices: T,
         out_dim: PhantomData<D>,
-        out_ndim: usize,
     ) -> SliceInfo<T, D> {
         SliceInfo {
             out_dim: out_dim,
-            out_ndim: out_ndim,
             indices: indices,
         }
+    }
+}
+
+impl<T: ?Sized + Borrow<[SliceOrIndex]>, D: Dimension> SliceInfo<T, D> {
+    /// Returns the number of dimensions after slicing.
+    pub fn out_ndim(&self) -> usize {
+        D::NDIM.unwrap_or_else(|| {
+            self.indices.borrow().iter().filter(|s| s.is_slice()).count()
+        })
     }
 }
 
@@ -200,11 +206,6 @@ impl<T: ?Sized, D: Dimension> SliceInfo<T, D> {
     /// Returns a slice of the slice/index information.
     pub fn indices(&self) -> &T {
         &self.indices
-    }
-
-    /// Returns the number of dimensions after slicing.
-    pub fn out_ndim(&self) -> usize {
-        self.out_ndim
     }
 }
 
@@ -224,7 +225,6 @@ macro_rules! impl_sliceinfo_from_array {
                 }
                 SliceInfo {
                     out_dim: PhantomData,
-                    out_ndim: $ndim,
                     indices: indices,
                 }
             }
@@ -244,7 +244,6 @@ impl<'a> From<&'a [Si]> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
     fn from(slices: &[Si]) -> Self {
         SliceInfo {
             out_dim: PhantomData,
-            out_ndim: slices.len(),
             indices: slices.iter().map(|s| SliceOrIndex::Slice(*s)).collect(),
         }
     }
@@ -254,7 +253,6 @@ impl From<Vec<SliceOrIndex>> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
     fn from(indices: Vec<SliceOrIndex>) -> Self {
         SliceInfo {
             out_dim: PhantomData,
-            out_ndim: indices.iter().filter(|s| s.is_slice()).count(),
             indices: indices,
         }
     }
@@ -262,36 +260,36 @@ impl From<Vec<SliceOrIndex>> for SliceInfo<Vec<SliceOrIndex>, IxDyn> {
 
 #[doc(hidden)]
 pub trait SliceNextDim<D1, D2> {
-    fn next_dim(&self, (PhantomData<D1>, usize)) -> (PhantomData<D2>, usize);
+    fn next_dim(&self, PhantomData<D1>) -> PhantomData<D2>;
 }
 
 impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for Range<Ixs> {
-    fn next_dim(&self, (_dim, ndim): (PhantomData<D1>, usize)) -> (PhantomData<D1::Larger>, usize) {
-        (PhantomData, ndim + 1)
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
     }
 }
 
 impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFrom<Ixs> {
-    fn next_dim(&self, (_dim, ndim): (PhantomData<D1>, usize)) -> (PhantomData<D1::Larger>, usize) {
-        (PhantomData, ndim + 1)
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
     }
 }
 
 impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeTo<Ixs> {
-    fn next_dim(&self, (_dim, ndim): (PhantomData<D1>, usize)) -> (PhantomData<D1::Larger>, usize) {
-        (PhantomData, ndim + 1)
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
     }
 }
 
 impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
-    fn next_dim(&self, (_dim, ndim): (PhantomData<D1>, usize)) -> (PhantomData<D1::Larger>, usize) {
-        (PhantomData, ndim + 1)
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
     }
 }
 
 impl<D1: Dimension> SliceNextDim<D1, D1> for Ixs {
-    fn next_dim(&self, (_dim, ndim): (PhantomData<D1>, usize)) -> (PhantomData<D1>, usize) {
-        (PhantomData, ndim)
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
+        PhantomData
     }
 }
 
@@ -333,54 +331,42 @@ impl<D1: Dimension> SliceNextDim<D1, D1> for Ixs {
 #[macro_export]
 macro_rules! s(
     // convert a..b;c into @step(a..b, c), final item
-    (@parse $dim_ndim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
-        {
-            let (out_dim, out_ndim) = $crate::SliceNextDim::next_dim(&$r, $dim_ndim);
-            unsafe {
-                $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], out_dim, out_ndim)
-            }
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
+        unsafe {
+            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b into @step(a..b, 1), final item
-    (@parse $dim_ndim:expr, [$($stack:tt)*] $r:expr) => {
-        {
-            let (out_dim, out_ndim) = $crate::SliceNextDim::next_dim(&$r, $dim_ndim);
-            unsafe {
-                $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], out_dim, out_ndim)
-            }
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
+        unsafe {
+            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b;c into @step(a..b, c), final item, trailing comma
-    (@parse $dim_ndim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        {
-            let (out_dim, out_ndim) = $crate::SliceNextDim::next_dim(&$r, $dim_ndim);
-            unsafe {
-                $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], out_dim, out_ndim)
-            }
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
+        unsafe {
+            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b into @step(a..b, 1), final item, trailing comma
-    (@parse $dim_ndim:expr, [$($stack:tt)*] $r:expr ,) => {
-        {
-            let (out_dim, out_ndim) = $crate::SliceNextDim::next_dim(&$r, $dim_ndim);
-            unsafe {
-                $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], out_dim, out_ndim)
-            }
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
+        unsafe {
+            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b;c into @step(a..b, c)
-    (@parse $dim_ndim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
-        s![@parse $crate::SliceNextDim::next_dim(&$r, $dim_ndim), [$($stack)* s!(@step $r, $s),] $($t)*]
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
+        s![@parse $crate::SliceNextDim::next_dim(&$r, $dim), [$($stack)* s!(@step $r, $s),] $($t)*]
     };
     // convert a..b into @step(a..b, 1)
-    (@parse $dim_ndim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
-        s![@parse $crate::SliceNextDim::next_dim(&$r, $dim_ndim), [$($stack)* s!(@step $r, 1),] $($t)*]
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
+        s![@parse $crate::SliceNextDim::next_dim(&$r, $dim), [$($stack)* s!(@step $r, 1),] $($t)*]
     };
     // convert range, step into SliceOrIndex
     (@step $r:expr, $s:expr) => {
         <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step($s)
     };
     ($($t:tt)*) => {
-        s![@parse (::std::marker::PhantomData::<$crate::Ix0>, 0), [] $($t)*]
+        s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );

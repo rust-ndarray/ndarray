@@ -42,6 +42,10 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     MulAssign + for<'x> MulAssign<&'x Self> + MulAssign<usize>
 
 {
+    /// For fixed-size dimension representations (e.g. `Ix2`), this should be
+    /// `Some(ndim)`, and for variable-size dimension representations (e.g.
+    /// `IxDyn`), this should be `None`.
+    const NDIM: Option<usize>;
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///
@@ -428,6 +432,7 @@ macro_rules! impl_insert_axis_array(
 );
 
 impl Dimension for Dim<[Ix; 0]> {
+    const NDIM: Option<usize> = Some(0);
     type SliceArg = [SliceOrIndex; 0];
     type Pattern = ();
     type Smaller = Self;
@@ -464,6 +469,7 @@ impl Dimension for Dim<[Ix; 0]> {
 
 
 impl Dimension for Dim<[Ix; 1]> {
+    const NDIM: Option<usize> = Some(1);
     type SliceArg = [SliceOrIndex; 1];
     type Pattern = Ix;
     type Smaller = Ix0;
@@ -557,6 +563,7 @@ impl Dimension for Dim<[Ix; 1]> {
 }
 
 impl Dimension for Dim<[Ix; 2]> {
+    const NDIM: Option<usize> = Some(2);
     type SliceArg = [SliceOrIndex; 2];
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
@@ -692,6 +699,7 @@ impl Dimension for Dim<[Ix; 2]> {
 }
 
 impl Dimension for Dim<[Ix; 3]> {
+    const NDIM: Option<usize> = Some(3);
     type SliceArg = [SliceOrIndex; 3];
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
@@ -809,6 +817,7 @@ impl Dimension for Dim<[Ix; 3]> {
 macro_rules! large_dim {
     ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
+            const NDIM: Option<usize> = Some($n);
             type SliceArg = [SliceOrIndex; $n];
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
@@ -860,6 +869,7 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 impl Dimension for IxDyn
 {
+    const NDIM: Option<usize> = None;
     type SliceArg = [SliceOrIndex];
     type Pattern = Self;
     type Smaller = Self;
