@@ -250,7 +250,8 @@ where
             // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
             // should have the same bitwise representation as
             // `&[SliceOrIndex]`.
-            ::std::mem::transmute(self.indices.borrow())
+            &*(self.indices.borrow() as *const [SliceOrIndex]
+                as *const SliceInfo<[SliceOrIndex], D>)
         }
     }
 }
