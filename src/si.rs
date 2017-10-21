@@ -230,12 +230,64 @@ where
     }
 }
 
-impl<T: ?Sized, D> Borrow<T> for SliceInfo<T, D>
+impl<T: ?Sized, D> SliceInfo<T, D>
 where
     D: Dimension,
 {
-    fn borrow(&self) -> &T {
+    pub fn indices(&self) -> &T {
         &self.indices
+    }
+}
+
+macro_rules! impl_borrow_array_for_sliceinfo {
+    ($ndim:expr) => {
+        impl<T: ?Sized, D> Borrow<[SliceOrIndex; $ndim]> for SliceInfo<T, D>
+        where
+            T: Borrow<[SliceOrIndex; $ndim]>,
+            D: Dimension,
+        {
+            fn borrow(&self) -> &[SliceOrIndex; $ndim] {
+                self.indices.borrow()
+            }
+        }
+
+        impl<'a, T: ?Sized, D> Borrow<[SliceOrIndex; $ndim]> for &'a SliceInfo<T, D>
+        where
+            T: Borrow<[SliceOrIndex; $ndim]>,
+            D: Dimension,
+        {
+            fn borrow(&self) -> &[SliceOrIndex; $ndim] {
+                (*self).borrow()
+            }
+        }
+    }
+}
+
+impl_borrow_array_for_sliceinfo!(0);
+impl_borrow_array_for_sliceinfo!(1);
+impl_borrow_array_for_sliceinfo!(2);
+impl_borrow_array_for_sliceinfo!(3);
+impl_borrow_array_for_sliceinfo!(4);
+impl_borrow_array_for_sliceinfo!(5);
+impl_borrow_array_for_sliceinfo!(6);
+
+impl<T: ?Sized, D> Borrow<[SliceOrIndex]> for SliceInfo<T, D>
+where
+    T: Borrow<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn borrow(&self) -> &[SliceOrIndex] {
+        self.indices.borrow()
+    }
+}
+
+impl<'a, T: ?Sized, D> Borrow<[SliceOrIndex]> for &'a SliceInfo<T, D>
+where
+    T: Borrow<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn borrow(&self) -> &[SliceOrIndex] {
+        (*self).borrow()
     }
 }
 
@@ -253,6 +305,16 @@ where
             &*(self.indices.borrow() as *const [SliceOrIndex]
                 as *const SliceInfo<[SliceOrIndex], D>)
         }
+    }
+}
+
+impl<'a, T, D> Borrow<SliceInfo<[SliceOrIndex], D>> for &'a SliceInfo<T, D>
+where
+    T: Borrow<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn borrow(&self) -> &SliceInfo<[SliceOrIndex], D> {
+        (*self).borrow()
     }
 }
 
