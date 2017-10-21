@@ -256,6 +256,20 @@ where
     }
 }
 
+impl<T, D> Clone for SliceInfo<T, D>
+where
+    T: Clone,
+    D: Dimension,
+{
+    fn clone(&self) -> Self {
+        SliceInfo {
+            out_dim: PhantomData,
+            indices: self.indices.clone(),
+        }
+    }
+}
+
+
 #[doc(hidden)]
 pub trait SliceNextDim<D1, D2> {
     fn next_dim(&self, PhantomData<D1>) -> PhantomData<D2>;
