@@ -14,6 +14,7 @@ use ndarray::{
 };
 use ndarray::indices;
 use itertools::{enumerate, zip};
+use std::borrow::Borrow;
 
 #[test]
 fn test_matmul_rcarray()
@@ -72,21 +73,10 @@ fn test_slice_array_fixed()
 {
     let mut arr = Array2::<f64>::zeros((5, 5));
     let info = s![1.., ..;2];
-    arr.slice(info.clone());
-    arr.slice_mut(info.clone());
-    arr.view().slice_into(info.clone());
-    arr.view().islice(info.clone());
-}
-
-#[test]
-fn test_slice_array_fixed_ref()
-{
-    let mut arr = Array2::<f64>::zeros((5, 5));
-    let info = s![1.., ..;2];
-    arr.slice(&info);
-    arr.slice_mut(&info);
-    arr.view().slice_into(&info);
-    arr.view().islice(&info);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_into(info);
+    arr.view().islice(info);
 }
 
 #[test]
@@ -94,135 +84,66 @@ fn test_slice_dyninput_array_fixed()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
     let info = s![1.., ..;2];
-    arr.slice(info.clone());
-    arr.slice_mut(info.clone());
-    arr.view().slice_into(info.clone());
-    arr.view().islice(info.clone());
-
-}
-
-#[test]
-fn test_slice_dyninput_array_fixed_ref()
-{
-    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = s![1.., ..;2];
-    arr.slice(&info);
-    arr.slice_mut(&info);
-    arr.view().slice_into(&info);
-    arr.view().islice(&info);
-
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_into(info);
+    arr.view().islice(&**info);
 }
 
 #[test]
 fn test_slice_array_dyn()
 {
     let mut arr = Array2::<f64>::zeros((5, 5));
-    let info = SliceInfo::<_, IxDyn>::new([
+    let info = &SliceInfo::<_, IxDyn>::new([
         SliceOrIndex::Slice(Si::from(1..)),
         SliceOrIndex::Slice(Si::from(..).step(2)),
     ]);
-    arr.slice(info.clone());
-    arr.slice_mut(info.clone());
-    arr.view().slice_into(info.clone());
-    arr.view().islice(info.clone());
-}
-
-#[test]
-fn test_slice_array_dyn_ref()
-{
-    let mut arr = Array2::<f64>::zeros((5, 5));
-    let info = SliceInfo::<_, IxDyn>::new([
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
-    ]);
-    arr.slice(&info);
-    arr.slice_mut(&info);
-    arr.view().slice_into(&info);
-    arr.view().islice(&info);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_into(info);
+    arr.view().islice(info);
 }
 
 #[test]
 fn test_slice_dyninput_array_dyn()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = SliceInfo::<_, IxDyn>::new([
+    let info = &SliceInfo::<_, IxDyn>::new([
         SliceOrIndex::Slice(Si::from(1..)),
         SliceOrIndex::Slice(Si::from(..).step(2)),
     ]);
-    arr.slice(info.clone());
-    arr.slice_mut(info.clone());
-    arr.view().slice_into(info.clone());
-    arr.view().islice(info.clone());
-}
-
-#[test]
-fn test_slice_dyninput_array_dyn_ref()
-{
-    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = SliceInfo::<_, IxDyn>::new([
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
-    ]);
-    arr.slice(&info);
-    arr.slice_mut(&info);
-    arr.view().slice_into(&info);
-    arr.view().islice(&info);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_into(info);
+    arr.view().islice(&**info);
 }
 
 #[test]
 fn test_slice_dyninput_vec_fixed()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = SliceInfo::<_, Ix2>::new(vec![
+    let info = &SliceInfo::<_, Ix2>::new(vec![
         SliceOrIndex::Slice(Si::from(1..)),
         SliceOrIndex::Slice(Si::from(..).step(2)),
     ]);
-    arr.slice(info.clone());
-    arr.slice_mut(info.clone());
-    arr.view().slice_into(info.clone());
-    arr.view().islice(info.clone());
-}
-
-#[test]
-fn test_slice_dyninput_vec_fixed_ref()
-{
-    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = SliceInfo::<_, Ix2>::new(vec![
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
-    ]);
-    arr.slice(&info);
-    arr.slice_mut(&info);
-    arr.view().slice_into(&info);
-    arr.view().islice(&info);
+    arr.slice(info.borrow());
+    arr.slice_mut(info.borrow());
+    arr.view().slice_into(info.borrow());
+    arr.view().islice(&*info);
 }
 
 #[test]
 fn test_slice_dyninput_vec_dyn()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = SliceInfo::<_, IxDyn>::new(vec![
+    let info = &SliceInfo::<_, IxDyn>::new(vec![
         SliceOrIndex::Slice(Si::from(1..)),
         SliceOrIndex::Slice(Si::from(..).step(2)),
     ]);
-    arr.slice(info.clone());
-    arr.slice_mut(info.clone());
-    arr.view().slice_into(info.clone());
-    arr.view().islice(info.clone());
-}
-
-#[test]
-fn test_slice_dyninput_vec_dyn_ref()
-{
-    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
-    let info = SliceInfo::<_, IxDyn>::new(vec![
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
-    ]);
-    arr.slice(&info);
-    arr.slice_mut(&info);
-    arr.view().slice_into(&info);
-    arr.view().islice(&info);
+    arr.slice(info.borrow());
+    arr.slice_mut(info.borrow());
+    arr.view().slice_into(info.borrow());
+    arr.view().islice(&*info);
 }
 
 #[test]

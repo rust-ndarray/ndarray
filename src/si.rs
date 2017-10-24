@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::borrow::Borrow;
-use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
+use std::ops::{Range, RangeFrom, RangeTo, RangeFull, Deref};
 use std::fmt;
 use std::marker::PhantomData;
 use super::{Dimension, Ixs};
@@ -173,7 +173,12 @@ impl From<RangeFull> for SliceOrIndex {
 /// Represents all of the necessary information to perform a slice.
 pub struct SliceInfo<T: ?Sized, D: Dimension> {
     out_dim: PhantomData<D>,
-    indices: T,
+    pub(crate) indices: T,
+}
+
+impl<T: ?Sized, D> Deref for SliceInfo<T, D> where D: Dimension {
+    type Target = T;
+    fn deref(&self) -> &Self::Target { &self.indices }
 }
 
 impl<T, D> SliceInfo<T, D>
@@ -230,67 +235,6 @@ where
     }
 }
 
-impl<T: ?Sized, D> SliceInfo<T, D>
-where
-    D: Dimension,
-{
-    pub fn indices(&self) -> &T {
-        &self.indices
-    }
-}
-
-macro_rules! impl_borrow_array_for_sliceinfo {
-    ($ndim:expr) => {
-        impl<T: ?Sized, D> Borrow<[SliceOrIndex; $ndim]> for SliceInfo<T, D>
-        where
-            T: Borrow<[SliceOrIndex; $ndim]>,
-            D: Dimension,
-        {
-            fn borrow(&self) -> &[SliceOrIndex; $ndim] {
-                self.indices.borrow()
-            }
-        }
-
-        impl<'a, T: ?Sized, D> Borrow<[SliceOrIndex; $ndim]> for &'a SliceInfo<T, D>
-        where
-            T: Borrow<[SliceOrIndex; $ndim]>,
-            D: Dimension,
-        {
-            fn borrow(&self) -> &[SliceOrIndex; $ndim] {
-                (*self).borrow()
-            }
-        }
-    }
-}
-
-impl_borrow_array_for_sliceinfo!(0);
-impl_borrow_array_for_sliceinfo!(1);
-impl_borrow_array_for_sliceinfo!(2);
-impl_borrow_array_for_sliceinfo!(3);
-impl_borrow_array_for_sliceinfo!(4);
-impl_borrow_array_for_sliceinfo!(5);
-impl_borrow_array_for_sliceinfo!(6);
-
-impl<T: ?Sized, D> Borrow<[SliceOrIndex]> for SliceInfo<T, D>
-where
-    T: Borrow<[SliceOrIndex]>,
-    D: Dimension,
-{
-    fn borrow(&self) -> &[SliceOrIndex] {
-        self.indices.borrow()
-    }
-}
-
-impl<'a, T: ?Sized, D> Borrow<[SliceOrIndex]> for &'a SliceInfo<T, D>
-where
-    T: Borrow<[SliceOrIndex]>,
-    D: Dimension,
-{
-    fn borrow(&self) -> &[SliceOrIndex] {
-        (*self).borrow()
-    }
-}
-
 impl<T, D> Borrow<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
 where
     T: Borrow<[SliceOrIndex]>,
@@ -308,15 +252,11 @@ where
     }
 }
 
-impl<'a, T, D> Borrow<SliceInfo<[SliceOrIndex], D>> for &'a SliceInfo<T, D>
+impl<T, D> Copy for SliceInfo<T, D>
 where
-    T: Borrow<[SliceOrIndex]>,
+    T: Copy,
     D: Dimension,
-{
-    fn borrow(&self) -> &SliceInfo<[SliceOrIndex], D> {
-        (*self).borrow()
-    }
-}
+{ }
 
 impl<T, D> Clone for SliceInfo<T, D>
 where
@@ -407,25 +347,25 @@ macro_rules! s(
     // convert a..b;c into @step(a..b, c), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
         unsafe {
-            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b into @step(a..b, 1), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
         unsafe {
-            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b;c into @step(a..b, c), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
         unsafe {
-            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b into @step(a..b, 1), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
         unsafe {
-            $crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
         }
     };
     // convert a..b;c into @step(a..b, c)

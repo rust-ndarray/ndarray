@@ -219,9 +219,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice<I, Do>(&self, info: I) -> ArrayView<A, Do>
+    pub fn slice<Do>(&self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayView<A, Do>
     where
-        I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
     {
         self.view().slice_into(info)
@@ -235,9 +234,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_mut<I, Do>(&mut self, info: I) -> ArrayViewMut<A, Do>
+    pub fn slice_mut<Do>(&mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayViewMut<A, Do>
     where
-        I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
         S: DataMut,
     {
@@ -252,16 +250,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_into<I, Do>(mut self, info: I) -> ArrayBase<S, Do>
+    pub fn slice_into<Do>(mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayBase<S, Do>
     where
-        I: Borrow<SliceInfo<D::SliceArg, Do>>,
         Do: Dimension,
     {
-        let info: &SliceInfo<D::SliceArg, Do> = info.borrow();
-        let indices: &[SliceOrIndex] = info.indices().borrow();
-
         // Slice and subview in-place without changing the number of dimensions.
-        self.islice(info.indices());
+        self.islice(&info.indices);
+
+        let indices: &[SliceOrIndex] = info.indices.borrow();
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
@@ -294,11 +290,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn islice<T>(&mut self, indices: T)
-    where
-        T: Borrow<D::SliceArg>,
-    {
-        let indices: &[SliceOrIndex] = indices.borrow().borrow();
+    pub fn islice(&mut self, indices: &D::SliceArg) {
+        let indices: &[SliceOrIndex] = indices.borrow();
         assert_eq!(indices.len(), self.ndim());
         indices
             .iter()
