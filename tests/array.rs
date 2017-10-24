@@ -14,7 +14,6 @@ use ndarray::{
 };
 use ndarray::indices;
 use itertools::{enumerate, zip};
-use std::borrow::Borrow;
 
 #[test]
 fn test_matmul_rcarray()
@@ -126,9 +125,9 @@ fn test_slice_dyninput_vec_fixed()
         SliceOrIndex::Slice(Si::from(1..)),
         SliceOrIndex::Slice(Si::from(..).step(2)),
     ]);
-    arr.slice(info.borrow());
-    arr.slice_mut(info.borrow());
-    arr.view().slice_into(info.borrow());
+    arr.slice(info.as_ref());
+    arr.slice_mut(info.as_ref());
+    arr.view().slice_into(info.as_ref());
     arr.view().islice(&*info);
 }
 
@@ -140,9 +139,9 @@ fn test_slice_dyninput_vec_dyn()
         SliceOrIndex::Slice(Si::from(1..)),
         SliceOrIndex::Slice(Si::from(..).step(2)),
     ]);
-    arr.slice(info.borrow());
-    arr.slice_mut(info.borrow());
-    arr.view().slice_into(info.borrow());
+    arr.slice(info.as_ref());
+    arr.slice_mut(info.as_ref());
+    arr.view().slice_into(info.as_ref());
     arr.view().islice(&*info);
 }
 

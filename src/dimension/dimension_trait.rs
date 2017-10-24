@@ -7,7 +7,7 @@
 // except according to those terms.
 
 
-use std::borrow::Borrow;
+use std::convert::AsRef;
 use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
@@ -59,7 +59,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     ///
     /// The easiest way to create a `SliceArg` is using the macro
     /// [`s![]`](macro.s!.html).
-    type SliceArg: ?Sized + Borrow<[SliceOrIndex]>;
+    type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
     ///
     /// - For `Ix1`: `usize`,

@@ -11,7 +11,6 @@ use ndarray::{Si, SliceInfo};
 use ndarray::SliceOrIndex::Slice;
 use ndarray::{Ix, Ixs};
 
-use std::borrow::Borrow;
 use std::fmt;
 use num_traits::Float;
 
@@ -572,7 +571,7 @@ fn scaled_add_3() {
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(SliceInfo::<_, IxDyn>::new(cslice).borrow());
+                    let c = c.slice(SliceInfo::<_, IxDyn>::new(cslice).as_ref());
 
                     let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
                     answerv += &(beta * &c);

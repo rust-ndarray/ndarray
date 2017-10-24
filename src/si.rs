@@ -5,7 +5,6 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::borrow::Borrow;
 use std::ops::{Range, RangeFrom, RangeTo, RangeFull, Deref};
 use std::fmt;
 use std::marker::PhantomData;
@@ -200,14 +199,14 @@ where
 
 impl<T, D> SliceInfo<T, D>
 where
-    T: Borrow<[SliceOrIndex]>,
+    T: AsRef<[SliceOrIndex]>,
     D: Dimension,
 {
     /// Returns a new `SliceInfo` instance.
     ///
     /// **Panics** if `D` is not consistent with `indices`.
     pub fn new(indices: T) -> SliceInfo<T, D> {
-        let out_ndim = indices.borrow().iter().filter(|s| s.is_slice()).count();
+        let out_ndim = indices.as_ref().iter().filter(|s| s.is_slice()).count();
         if let Some(ndim) = D::NDIM {
             assert_eq!(out_ndim, ndim);
         }
@@ -220,14 +219,14 @@ where
 
 impl<T: ?Sized, D> SliceInfo<T, D>
 where
-    T: Borrow<[SliceOrIndex]>,
+    T: AsRef<[SliceOrIndex]>,
     D: Dimension,
 {
     /// Returns the number of dimensions after slicing and taking subviews.
     pub fn out_ndim(&self) -> usize {
         D::NDIM.unwrap_or_else(|| {
             self.indices
-                .borrow()
+                .as_ref()
                 .iter()
                 .filter(|s| s.is_slice())
                 .count()
@@ -235,18 +234,18 @@ where
     }
 }
 
-impl<T, D> Borrow<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
+impl<T, D> AsRef<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
 where
-    T: Borrow<[SliceOrIndex]>,
+    T: AsRef<[SliceOrIndex]>,
     D: Dimension,
 {
-    fn borrow(&self) -> &SliceInfo<[SliceOrIndex], D> {
+    fn as_ref(&self) -> &SliceInfo<[SliceOrIndex], D> {
         unsafe {
             // This is okay because the only non-zero-sized member of
             // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
             // should have the same bitwise representation as
             // `&[SliceOrIndex]`.
-            &*(self.indices.borrow() as *const [SliceOrIndex]
+            &*(self.indices.as_ref() as *const [SliceOrIndex]
                 as *const SliceInfo<[SliceOrIndex], D>)
         }
     }

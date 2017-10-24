@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Borrow;
+use std::convert::AsRef;
 use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
@@ -257,7 +257,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // Slice and subview in-place without changing the number of dimensions.
         self.islice(&*info);
 
-        let indices: &[SliceOrIndex] = (**info.borrow()).borrow();
+        let indices: &[SliceOrIndex] = (**info).as_ref();
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
@@ -291,7 +291,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn islice(&mut self, indices: &D::SliceArg) {
-        let indices: &[SliceOrIndex] = indices.borrow();
+        let indices: &[SliceOrIndex] = indices.as_ref();
         assert_eq!(indices.len(), self.ndim());
         indices
             .iter()
