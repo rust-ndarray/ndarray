@@ -173,7 +173,7 @@ impl From<RangeFull> for SliceOrIndex {
 /// Represents all of the necessary information to perform a slice.
 pub struct SliceInfo<T: ?Sized, D: Dimension> {
     out_dim: PhantomData<D>,
-    pub(crate) indices: T,
+    indices: T,
 }
 
 impl<T: ?Sized, D> Deref for SliceInfo<T, D> where D: Dimension {

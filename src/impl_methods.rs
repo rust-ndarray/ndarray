@@ -255,9 +255,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         Do: Dimension,
     {
         // Slice and subview in-place without changing the number of dimensions.
-        self.islice(&info.indices);
+        self.islice(&*info);
 
-        let indices: &[SliceOrIndex] = info.indices.borrow();
+        let indices: &[SliceOrIndex] = (**info.borrow()).borrow();
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
