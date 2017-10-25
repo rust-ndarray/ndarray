@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::ops::{Range, RangeFrom, RangeTo, RangeFull, Deref};
+use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeTo};
 use std::fmt;
 use std::marker::PhantomData;
 use super::{Dimension, Ixs};
@@ -130,9 +130,14 @@ pub struct SliceInfo<T: ?Sized, D: Dimension> {
     indices: T,
 }
 
-impl<T: ?Sized, D> Deref for SliceInfo<T, D> where D: Dimension {
+impl<T: ?Sized, D> Deref for SliceInfo<T, D>
+where
+    D: Dimension,
+{
     type Target = T;
-    fn deref(&self) -> &Self::Target { &self.indices }
+    fn deref(&self) -> &Self::Target {
+        &self.indices
+    }
 }
 
 impl<T, D> SliceInfo<T, D>
@@ -220,7 +225,8 @@ impl<T, D> Copy for SliceInfo<T, D>
 where
     T: Copy,
     D: Dimension,
-{ }
+{
+}
 
 impl<T, D> Clone for SliceInfo<T, D>
 where
@@ -311,25 +317,37 @@ macro_rules! s(
     // convert a..b;c into @step(a..b, c), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
         unsafe {
-            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@step $r, $s)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
         }
     };
     // convert a..b into @step(a..b, 1), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
         unsafe {
-            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@step $r, 1)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
         }
     };
     // convert a..b;c into @step(a..b, c), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
         unsafe {
-            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, $s)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@step $r, $s)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
         }
     };
     // convert a..b into @step(a..b, 1), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
         unsafe {
-            &$crate::SliceInfo::new_unchecked([$($stack)* s!(@step $r, 1)], $crate::SliceNextDim::next_dim(&$r, $dim))
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@step $r, 1)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
         }
     };
     // convert a..b;c into @step(a..b, c)
