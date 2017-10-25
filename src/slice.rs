@@ -125,6 +125,7 @@ impl From<RangeFull> for SliceOrIndex {
 }
 
 /// Represents all of the necessary information to perform a slice.
+#[repr(C)]
 pub struct SliceInfo<T: ?Sized, D: Dimension> {
     out_dim: PhantomData<D>,
     indices: T,
