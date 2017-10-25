@@ -7,9 +7,7 @@ use ndarray::{rcarr1, rcarr2};
 use ndarray::{LinalgScalar, Data};
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
-use ndarray::{Si, SliceInfo};
-use ndarray::SliceOrIndex::Slice;
-use ndarray::{Ix, Ixs};
+use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
 
 use std::fmt;
 use num_traits::Float;
@@ -562,9 +560,12 @@ fn scaled_add_3() {
                     vec![n, q]
                 };
                 let cslice = if n == 1 {
-                    vec![Slice(Si(0, None, s2))]
+                    vec![SliceOrIndex::from(..).step(s2)]
                 } else {
-                    vec![Slice(Si(0, None, s1)), Slice(Si(0, None, s2))]
+                    vec![
+                        SliceOrIndex::from(..).step(s1),
+                        SliceOrIndex::from(..).step(s2),
+                    ]
                 };
 
                 let c = range_mat64(n, q).into_shape(cdim).unwrap();

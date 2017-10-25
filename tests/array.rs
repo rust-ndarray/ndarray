@@ -6,7 +6,7 @@ extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
 
-use ndarray::{Si, SliceInfo, SliceOrIndex};
+use ndarray::{SliceInfo, SliceOrIndex};
 use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
@@ -94,8 +94,8 @@ fn test_slice_array_dyn()
 {
     let mut arr = Array2::<f64>::zeros((5, 5));
     let info = &SliceInfo::<_, IxDyn>::new([
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
     ]);
     arr.slice(info);
     arr.slice_mut(info);
@@ -108,8 +108,8 @@ fn test_slice_dyninput_array_dyn()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
     let info = &SliceInfo::<_, IxDyn>::new([
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
     ]);
     arr.slice(info);
     arr.slice_mut(info);
@@ -122,8 +122,8 @@ fn test_slice_dyninput_vec_fixed()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
     let info = &SliceInfo::<_, Ix2>::new(vec![
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
     ]);
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
@@ -136,8 +136,8 @@ fn test_slice_dyninput_vec_dyn()
 {
     let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
     let info = &SliceInfo::<_, IxDyn>::new(vec![
-        SliceOrIndex::Slice(Si::from(1..)),
-        SliceOrIndex::Slice(Si::from(..).step(2)),
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
     ]);
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
@@ -221,7 +221,7 @@ fn slice_oob()
 #[test]
 fn slice_axis_oob() {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice_axis(Axis(0), Si(0, Some(10), 1));
+    let _vi = a.slice_axis(Axis(0), 0, Some(10), 1);
 }
 
 #[should_panic]

@@ -32,7 +32,6 @@ use zip::Zip;
 
 use {
     NdIndex,
-    Si,
     SliceInfo,
     SliceOrIndex
 };
@@ -265,7 +264,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let mut new_strides = Do::zero_index_with_ndim(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices)
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice(_) => Some((d, s)),
+                &SliceOrIndex::Slice(..) => Some((d, s)),
                 &SliceOrIndex::Index(_) => None,
             })
             .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
@@ -297,7 +296,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             .iter()
             .enumerate()
             .for_each(|(axis, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice(s) => self.islice_axis(Axis(axis), s),
+                &SliceOrIndex::Slice(start, end, step) => {
+                    self.islice_axis(Axis(axis), start, end, step)
+                }
                 &SliceOrIndex::Index(i) => {
                     let i_usize = abs_index(self.shape()[axis] as Ixs, i);
                     self.isubview(Axis(axis), i_usize)
@@ -309,9 +310,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis(&self, axis: Axis, indices: Si) -> ArrayView<A, D> {
+    pub fn slice_axis(
+        &self,
+        axis: Axis,
+        start: isize,
+        end: Option<isize>,
+        step: isize,
+    ) -> ArrayView<A, D> {
         let mut arr = self.view();
-        arr.islice_axis(axis, indices);
+        arr.islice_axis(axis, start, end, step);
         arr
     }
 
@@ -319,11 +326,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis_mut(&mut self, axis: Axis, indices: Si) -> ArrayViewMut<A, D>
-        where S: DataMut,
+    pub fn slice_axis_mut(
+        &mut self,
+        axis: Axis,
+        start: isize,
+        end: Option<isize>,
+        step: isize,
+    ) -> ArrayViewMut<A, D>
+    where
+        S: DataMut,
     {
         let mut arr = self.view_mut();
-        arr.islice_axis(axis, indices);
+        arr.islice_axis(axis, start, end, step);
         arr
     }
 
@@ -331,11 +345,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn islice_axis(&mut self, axis: Axis, indices: Si) {
+    pub fn islice_axis(&mut self, axis: Axis, start: isize, end: Option<isize>, step: isize) {
         let offset = D::do_slice(
             &mut self.dim.slice_mut()[axis.index()],
             &mut self.strides.slice_mut()[axis.index()],
-            indices
+            start,
+            end,
+            step,
         );
         unsafe {
             self.ptr = self.ptr.offset(offset);

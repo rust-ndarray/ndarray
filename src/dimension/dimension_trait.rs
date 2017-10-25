@@ -14,7 +14,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Si, SliceOrIndex, IxDynImpl};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
 use IntoDimension;
 use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
@@ -256,14 +256,14 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// Modify dimension, stride and return data pointer offset
     ///
     /// **Panics** if any stride is 0 or if any index is out of bounds.
-    fn do_slice(dim: &mut Ix, stride: &mut Ix, slice: Si) -> isize {
+    fn do_slice(dim: &mut Ix, stride: &mut Ix, start: isize, end: Option<isize>, step: isize) -> isize {
         let mut offset = 0;
         let dr = dim;
         let sr = stride;
 
         let m = *dr;
         let mi = m as Ixs;
-        let Si(b1, opt_e1, s1) = slice;
+        let (b1, opt_e1, s1) = (start, end, step);
         let e1 = opt_e1.unwrap_or(mi);
 
         let b1 = abs_index(mi, b1);
@@ -271,11 +271,11 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         if e1 < b1 { e1 = b1; }
 
         ndassert!(b1 <= m,
-                  "Slice begin {} is past end of axis of length {} (for Si {:?})",
-                  b1, m, slice);
+                  "Slice begin {} is past end of axis of length {}",
+                  b1, m);
         ndassert!(e1 <= m,
-                  "Slice end {} is past end of axis of length {} (for Si {:?})",
-                  e1, m, slice);
+                  "Slice end {} is past end of axis of length {}",
+                  e1, m);
 
         let m = e1 - b1;
         // stride
@@ -284,9 +284,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         // Data pointer offset
         offset += stride_offset(b1, *sr);
         // Adjust for strides
-        ndassert!(s1 != 0,
-                  "Slice stride must not be none (for Si {:?})",
-                  slice);
+        ndassert!(s1 != 0, "Slice stride must not be none");
         // How to implement negative strides:
         //
         // Increase start pointer by

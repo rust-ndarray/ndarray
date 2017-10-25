@@ -10,101 +10,35 @@ use std::fmt;
 use std::marker::PhantomData;
 use super::{Dimension, Ixs};
 
-// [a:b:s] syntax for example [:3], [::-1]
-// [0,:] -- first row of matrix
-// [:,0] -- first column of matrix
-
-#[derive(PartialEq, Eq, Hash)]
-/// A slice, a description of a range of an array axis.
+/// A slice (range with step) or an index.
 ///
-/// Fields are `begin`, `end` and `stride`, where
-/// negative `begin` or `end` indexes are counted from the back
-/// of the axis.
 ///
-/// If `end` is `None`, the slice extends to the end of the axis.
+/// For the `Slice` variant, the fields are `begin`, `end`, and `step`, where
+/// negative `begin` or `end` indexes are counted from the back of the axis. If
+/// `end` is `None`, the slice extends to the end of the axis.
 ///
-/// See also the [`s![] macro`](macro.s!.html), a convenient way to specify
-/// an array of `Si`.
+/// For the `Index` variant, the field is the index.
+///
+/// See also the [`s![] macro`](macro.s!.html) for a convenient way to create a
+/// `&SliceInfo<[SliceOrIndex; n], D>`.
 ///
 /// ## Examples
 ///
-/// `Si(0, None, 1)` is the full range of an axis.
-/// Python equivalent is `[:]`. Macro equivalent is `s![..]`.
+/// `SliceOrIndex::Slice(0, None, 1)` is the full range of an axis. It can also
+/// be created with `SliceOrIndex::from(..)`. The Python equivalent is `[:]`.
+/// The macro equivalent is `s![..]`.
 ///
-/// `Si(a, Some(b), 2)` is every second element from `a` until `b`.
-/// Python equivalent is `[a:b:2]`. Macro equivalent is `s![a..b;2]`.
+/// `SliceOrIndex::Slice(a, Some(b), 2)` is every second element from `a` until
+/// `b`. It can also be created with `SliceOrIndex::from(a..b).step(2)`. The
+/// Python equivalent is `[a:b:2]`. The macro equivalent is `s![a..b;2]`.
 ///
-/// `Si(a, None, -1)` is every element, from `a`
-/// until the end, in reverse order. Python equivalent is `[a::-1]`.
-/// Macro equivalent is `s![a..;-1]`.
-///
-/// The constant [`S`] is a shorthand for the full range of an axis.
-/// [`S`]: constant.S.html
-pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
-
-impl fmt::Debug for Si {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Si(0, _, _) => { }
-            Si(i, _, _) => { try!(write!(f, "{}", i)); }
-        }
-        try!(write!(f, ".."));
-        match *self {
-            Si(_, None, _) => { }
-            Si(_, Some(i), _) => { try!(write!(f, "{}", i)); }
-        }
-        match *self {
-            Si(_, _, 1) => { }
-            Si(_, _, s) => { try!(write!(f, ";{}", s)); }
-        }
-        Ok(())
-    }
-}
-
-impl From<Range<Ixs>> for Si {
-    #[inline]
-    fn from(r: Range<Ixs>) -> Si {
-        Si(r.start, Some(r.end), 1)
-    }
-}
-
-impl From<RangeFrom<Ixs>> for Si {
-    #[inline]
-    fn from(r: RangeFrom<Ixs>) -> Si {
-        Si(r.start, None, 1)
-    }
-}
-
-impl From<RangeTo<Ixs>> for Si {
-    #[inline]
-    fn from(r: RangeTo<Ixs>) -> Si {
-        Si(0, Some(r.end), 1)
-    }
-}
-
-impl From<RangeFull> for Si {
-    #[inline]
-    fn from(_: RangeFull) -> Si {
-        S
-    }
-}
-
-
-impl Si {
-    #[inline]
-    pub fn step(self, step: Ixs) -> Self {
-        Si(self.0, self.1, self.2 * step)
-    }
-}
-
-copy_and_clone!{Si}
-
-/// Slice value for the full range of an axis.
-pub const S: Si = Si(0, None, 1);
-
-#[derive(Debug, Eq, PartialEq)]
+/// `SliceOrIndex::Slice(a, None, -1)` is every element, from `a` until the
+/// end, in reverse order. It can also be created with
+/// `SliceOrIndex::from(a..).step(-1)`. The Python equivalent is `[a::-1]`. The
+/// macro equivalent is `s![a..;-1]`.
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceOrIndex {
-    Slice(Si),
+    Slice(Ixs, Option<Ixs>, Ixs),
     Index(Ixs),
 }
 
@@ -113,7 +47,7 @@ copy_and_clone!{SliceOrIndex}
 impl SliceOrIndex {
     pub fn is_slice(&self) -> bool {
         match self {
-            &SliceOrIndex::Slice(_) => true,
+            &SliceOrIndex::Slice(..) => true,
             _ => false,
         }
     }
@@ -128,16 +62,37 @@ impl SliceOrIndex {
     #[inline]
     pub fn step(self, step: Ixs) -> Self {
         match self {
-            SliceOrIndex::Slice(s) => SliceOrIndex::Slice(s.step(step)),
+            SliceOrIndex::Slice(start, end, _) => SliceOrIndex::Slice(start, end, step),
             SliceOrIndex::Index(s) => SliceOrIndex::Index(s),
         }
+    }
+}
+
+impl fmt::Display for SliceOrIndex {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            SliceOrIndex::Index(index) => write!(f, "{}", index)?,
+            SliceOrIndex::Slice(start, end, step) => {
+                if start != 0 {
+                    write!(f, "{}", start)?;
+                }
+                write!(f, "..")?;
+                if let Some(i) = end {
+                    write!(f, "{}", i)?;
+                }
+                if step != 1 {
+                    write!(f, ";{}", step)?;
+                }
+            }
+        }
+        Ok(())
     }
 }
 
 impl From<Range<Ixs>> for SliceOrIndex {
     #[inline]
     fn from(r: Range<Ixs>) -> SliceOrIndex {
-        SliceOrIndex::Slice(Si::from(r))
+        SliceOrIndex::Slice(r.start, Some(r.end), 1)
     }
 }
 
@@ -151,21 +106,21 @@ impl From<Ixs> for SliceOrIndex {
 impl From<RangeFrom<Ixs>> for SliceOrIndex {
     #[inline]
     fn from(r: RangeFrom<Ixs>) -> SliceOrIndex {
-        SliceOrIndex::Slice(Si::from(r))
+        SliceOrIndex::Slice(r.start, None, 1)
     }
 }
 
 impl From<RangeTo<Ixs>> for SliceOrIndex {
     #[inline]
     fn from(r: RangeTo<Ixs>) -> SliceOrIndex {
-        SliceOrIndex::Slice(Si::from(r))
+        SliceOrIndex::Slice(0, Some(r.end), 1)
     }
 }
 
 impl From<RangeFull> for SliceOrIndex {
     #[inline]
-    fn from(r: RangeFull) -> SliceOrIndex {
-        SliceOrIndex::Slice(Si::from(r))
+    fn from(_: RangeFull) -> SliceOrIndex {
+        SliceOrIndex::Slice(0, None, 1)
     }
 }
 
