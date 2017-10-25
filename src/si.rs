@@ -234,6 +234,16 @@ where
     }
 }
 
+impl<T, D> AsRef<[SliceOrIndex]> for SliceInfo<T, D>
+where
+    T: AsRef<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn as_ref(&self) -> &[SliceOrIndex] {
+        self.indices.as_ref()
+    }
+}
+
 impl<T, D> AsRef<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
 where
     T: AsRef<[SliceOrIndex]>,

@@ -86,7 +86,7 @@ fn test_slice_dyninput_array_fixed()
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_into(info);
-    arr.view().islice(&**info);
+    arr.view().islice(info.as_ref());
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn test_slice_dyninput_array_dyn()
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_into(info);
-    arr.view().islice(&**info);
+    arr.view().islice(info.as_ref());
 }
 
 #[test]
@@ -128,7 +128,7 @@ fn test_slice_dyninput_vec_fixed()
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
     arr.view().slice_into(info.as_ref());
-    arr.view().islice(&*info);
+    arr.view().islice(info.as_ref());
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn test_slice_dyninput_vec_dyn()
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
     arr.view().slice_into(info.as_ref());
-    arr.view().islice(&*info);
+    arr.view().islice(info.as_ref());
 }
 
 #[test]
