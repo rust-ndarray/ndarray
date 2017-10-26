@@ -421,8 +421,8 @@ pub type Ixs = isize;
 /// ## Slicing
 ///
 /// You can use slicing to create a view of a subset of the data in
-/// the array. Slicing methods include `.slice()`, `.islice()`,
-/// `.slice_mut()`.
+/// the array. Slicing methods include `.slice()`, `.slice_mut()`,
+/// `.slice_inplace()`.
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is an instance of
@@ -478,8 +478,8 @@ pub type Ixs = isize;
 ///
 /// Subview methods allow you to restrict the array view while removing
 /// one axis from the array. Subview methods include `.subview()`,
-/// `.isubview()`, `.subview_mut()`. You can also take a subview by using a
-/// single index instead of a range when slicing.
+/// `.subview_inplace()`, `.subview_mut()`. You can also take a subview by
+/// using a single index instead of a range when slicing.
 ///
 /// Subview takes two arguments: `axis` and `index`.
 ///
@@ -527,7 +527,7 @@ pub type Ixs = isize;
 /// # }
 /// ```
 ///
-/// `.isubview()` modifies the view in the same way as `subview()`, but
+/// `.subview_inplace()` modifies the view in the same way as `subview()`, but
 /// since it is *in place*, it cannot remove the collapsed axis. It becomes
 /// an axis of length 1.
 ///

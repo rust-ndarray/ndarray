@@ -254,7 +254,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         Do: Dimension,
     {
         // Slice and subview in-place without changing the number of dimensions.
-        self.islice(&*info);
+        self.slice_inplace(&*info);
 
         let indices: &[SliceOrIndex] = (**info).as_ref();
 
@@ -289,7 +289,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn islice(&mut self, indices: &D::SliceArg) {
+    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
         let indices: &[SliceOrIndex] = indices.as_ref();
         assert_eq!(indices.len(), self.ndim());
         indices
@@ -297,11 +297,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             .enumerate()
             .for_each(|(axis, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice(start, end, step) => {
-                    self.islice_axis(Axis(axis), start, end, step)
+                    self.slice_axis_inplace(Axis(axis), start, end, step)
                 }
                 &SliceOrIndex::Index(i) => {
                     let i_usize = abs_index(self.shape()[axis] as Ixs, i);
-                    self.isubview(Axis(axis), i_usize)
+                    self.subview_inplace(Axis(axis), i_usize)
                 }
             });
     }
@@ -318,7 +318,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         step: isize,
     ) -> ArrayView<A, D> {
         let mut arr = self.view();
-        arr.islice_axis(axis, start, end, step);
+        arr.slice_axis_inplace(axis, start, end, step);
         arr
     }
 
@@ -337,7 +337,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         S: DataMut,
     {
         let mut arr = self.view_mut();
-        arr.islice_axis(axis, start, end, step);
+        arr.slice_axis_inplace(axis, start, end, step);
         arr
     }
 
@@ -345,7 +345,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn islice_axis(&mut self, axis: Axis, start: isize, end: Option<isize>, step: isize) {
+    pub fn slice_axis_inplace(
+        &mut self,
+        axis: Axis,
+        start: isize,
+        end: Option<isize>,
+        step: isize,
+    ) {
         let offset = D::do_slice(
             &mut self.dim.slice_mut()[axis.index()],
             &mut self.strides.slice_mut()[axis.index()],
@@ -535,7 +541,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: Axis, index: Ix) {
+    pub fn subview_inplace(&mut self, axis: Axis, index: Ix) {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
                           axis.index(), index)
     }
@@ -547,7 +553,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        self.isubview(axis, index);
+        self.subview_inplace(axis, index);
         self.remove_axis(axis)
     }
 
@@ -578,7 +584,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let mut subs = vec![self.view(); indices.len()];
         for (&i, sub) in zip(indices, &mut subs[..]) {
-            sub.isubview(axis, i);
+            sub.subview_inplace(axis, i);
         }
         if subs.is_empty() {
             let mut dim = self.raw_dim();
