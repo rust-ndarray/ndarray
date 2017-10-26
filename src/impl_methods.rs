@@ -324,9 +324,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_axis(
         &self,
         axis: Axis,
-        start: isize,
-        end: Option<isize>,
-        step: isize,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
     ) -> ArrayView<A, D> {
         let mut arr = self.view();
         arr.slice_axis_inplace(axis, start, end, step);
@@ -340,9 +340,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_axis_mut(
         &mut self,
         axis: Axis,
-        start: isize,
-        end: Option<isize>,
-        step: isize,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
     ) -> ArrayViewMut<A, D>
     where
         S: DataMut,
@@ -359,9 +359,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn slice_axis_inplace(
         &mut self,
         axis: Axis,
-        start: isize,
-        end: Option<isize>,
-        step: isize,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
     ) {
         let offset = D::do_slice(
             &mut self.dim.slice_mut()[axis.index()],
