@@ -53,7 +53,7 @@ fn remove_axis()
     a.subview(Axis(1), 0);
 
     let a = RcArray::<f32, _>::zeros(vec![4,5,6]);
-    let _b = a.subview_move(Axis(1), 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
+    let _b = a.into_subview(Axis(1), 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
 }
 
 #[test]
