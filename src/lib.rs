@@ -421,13 +421,24 @@ pub type Ixs = isize;
 /// ## Slicing
 ///
 /// You can use slicing to create a view of a subset of the data in
-/// the array. Slicing methods include `.slice()`, `.slice_mut()`,
-/// `.slice_move()`, and `.slice_inplace()`.
+/// the array. Slicing methods include [`.slice()`], [`.slice_mut()`],
+/// [`.slice_move()`], and [`.slice_inplace()`].
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is an instance of
-/// struct [`SliceInfo`]; see its docs for more information.)
-/// [`SliceInfo`]: struct.SliceInfo.html
+/// [`&SliceInfo`]; see its docs for more information.)
+///
+/// [`&SliceInfo`]: struct.SliceInfo.html
+///
+/// If a range is used, the axis is preserved. If an index is used, a subview
+/// is taken with respect to the axis. See [*Subviews*](#subviews) for more
+/// information about subviews. Note that [`.slice_inplace()`] behaves like
+/// [`.subview_inplace()`] by preserving the number of dimensions.
+///
+/// [`.slice()`]: #method.slice
+/// [`.slice_mut()`]: #method.slice_mut
+/// [`.slice_move()`]: #method.slice_move
+/// [`.slice_inplace()`]: #method.slice_inplace
 ///
 /// ```
 /// // import the s![] macro
@@ -455,8 +466,6 @@ pub type Ixs = isize;
 /// // - Every element in each row: `..`
 ///
 /// let b = a.slice(s![.., 0..1, ..]);
-/// // without the macro, the explicit argument is `&[S, Si(0, Some(1), 1), S]`
-///
 /// let c = arr3(&[[[ 1,  2,  3]],
 ///                [[ 7,  8,  9]]]);
 /// assert_eq!(b, c);
@@ -471,17 +480,35 @@ pub type Ixs = isize;
 /// let e = arr3(&[[[ 6,  5,  4]],
 ///                [[12, 11, 10]]]);
 /// assert_eq!(d, e);
+/// assert_eq!(d.shape(), &[2, 1, 3]);
+///
+/// // Let’s create a slice while taking a subview with
+/// //
+/// // - Both submatrices of the greatest dimension: `..`
+/// // - The last row in each submatrix, removing that axis: `-1`
+/// // - Row elements in reverse order: `..;-1`
+/// let f = a.slice(s![.., -1, ..;-1]);
+/// let g = arr3(&[[ 6,  5,  4],
+///                [12, 11, 10]]);
+/// assert_eq!(f, g);
+/// assert_eq!(f.shape(), &[2, 3]);
 /// }
 /// ```
 ///
 /// ## Subviews
 ///
-/// Subview methods allow you to restrict the array view while removing
-/// one axis from the array. Subview methods include `.subview()`,
-/// `.subview_inplace()`, `.subview_mut()`. You can also take a subview by
-/// using a single index instead of a range when slicing.
+/// Subview methods allow you to restrict the array view while removing one
+/// axis from the array. Subview methods include [`.subview()`],
+/// [`.subview_mut()`], [`.into_subview()`], and [`.subview_inplace()`]. You
+/// can also take a subview by using a single index instead of a range when
+/// slicing.
 ///
 /// Subview takes two arguments: `axis` and `index`.
+///
+/// [`.subview()`]: #method.subview
+/// [`.subview_mut()`]: #method.subview_mut
+/// [`.into_subview()`]: #method.into_subview
+/// [`.subview_inplace()`]: #method.subview_inplace
 ///
 /// ```
 /// #[macro_use(s)] extern crate ndarray;
@@ -520,15 +547,13 @@ pub type Ixs = isize;
 ///                              [ 7, 10]]));
 ///
 /// // You can take multiple subviews at once (and slice at the same time)
-///
 /// let double_sub = a.slice(s![1, .., 0]);
-///
 /// assert_eq!(double_sub, aview1(&[7, 10]));
 /// # }
 /// ```
 ///
-/// `.subview_inplace()` modifies the view in the same way as `subview()`, but
-/// since it is *in place*, it cannot remove the collapsed axis. It becomes
+/// [`.subview_inplace()`] modifies the view in the same way as [`.subview()`],
+/// but since it is *in place*, it cannot remove the collapsed axis. It becomes
 /// an axis of length 1.
 ///
 /// `.outer_iter()` is an iterator of every subview along the zeroth (outer)

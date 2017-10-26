@@ -209,11 +209,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
 
-    /// Return a sliced array.
+    /// Return a sliced view of the array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`D::SliceArg`].
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
     ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
@@ -227,8 +228,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a sliced read-write view of the array.
     ///
-    /// See also [`D::SliceArg`].
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
     ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
@@ -241,10 +244,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view_mut().slice_move(info)
     }
 
-    /// Slice the array’s view, possibly changing the number of dimensions.
+    /// Slice the array, possibly changing the number of dimensions.
     ///
-    /// See also [`D::SliceArg`].
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
     ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
@@ -281,8 +286,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Slice the array’s view in place without changing the number of dimensions.
+    /// Slice the array in place without changing the number of dimensions.
     ///
+    /// Note that [`&SliceInfo`](struct.SliceInfo.html) (produced by the
+    /// [`s![]`](macro.s!.html) macro) will usually coerce into `&D::SliceArg`
+    /// automatically, but in some cases (e.g. if `D` is `IxDyn`), you may need
+    /// to call `.as_ref()`.
+    ///
+    /// See [*Slicing*](#slicing) for full documentation.
     /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
@@ -341,7 +352,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         arr
     }
 
-    /// Slice the array’s view in place along the specified axis.
+    /// Slice the array in place along the specified axis.
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// **Panics** if `axis` is out of bounds.

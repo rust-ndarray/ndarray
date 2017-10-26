@@ -57,8 +57,8 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - and so on..
     /// - For `IxDyn`: `[SliceOrIndex]`
     ///
-    /// The easiest way to create a `SliceArg` is using the macro
-    /// [`s![]`](macro.s!.html).
+    /// The easiest way to create a `&SliceInfo<SliceArg, Do>` is using the
+    /// [`s![]`](macro.s!.html) macro.
     type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
     ///

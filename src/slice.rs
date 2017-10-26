@@ -12,14 +12,7 @@ use super::{Dimension, Ixs};
 
 /// A slice (range with step) or an index.
 ///
-///
-/// For the `Slice` variant, the fields are `begin`, `end`, and `step`, where
-/// negative `begin` or `end` indexes are counted from the back of the axis. If
-/// `end` is `None`, the slice extends to the end of the axis.
-///
-/// For the `Index` variant, the field is the index.
-///
-/// See also the [`s![] macro`](macro.s!.html) for a convenient way to create a
+/// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
 /// `&SliceInfo<[SliceOrIndex; n], D>`.
 ///
 /// ## Examples
@@ -38,13 +31,18 @@ use super::{Dimension, Ixs};
 /// macro equivalent is `s![a..;-1]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceOrIndex {
+    /// A range with step size. The fields are `begin`, `end`, and `step`,
+    /// where negative `begin` or `end` indexes are counted from the back of
+    /// the axis. If `end` is `None`, the slice extends to the end of the axis.
     Slice(Ixs, Option<Ixs>, Ixs),
+    /// A single index.
     Index(Ixs),
 }
 
 copy_and_clone!{SliceOrIndex}
 
 impl SliceOrIndex {
+    /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
         match self {
             &SliceOrIndex::Slice(..) => true,
@@ -52,6 +50,7 @@ impl SliceOrIndex {
         }
     }
 
+    /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
         match self {
             &SliceOrIndex::Index(_) => true,
@@ -59,6 +58,7 @@ impl SliceOrIndex {
         }
     }
 
+    /// Returns a new `SliceOrIndex` with the given step size.
     #[inline]
     pub fn step(self, step: Ixs) -> Self {
         match self {
@@ -125,6 +125,12 @@ impl From<RangeFull> for SliceOrIndex {
 }
 
 /// Represents all of the necessary information to perform a slice.
+///
+/// The type `T` is typically `[SliceOrIndex; n]`, `[SliceOrIndex]`, or
+/// `Vec<SliceOrIndex>`. The type `D` is the output dimension after calling
+/// [`.slice()`].
+///
+/// [`.slice()`]: struct.ArrayBase.html#method.slice
 #[repr(C)]
 pub struct SliceInfo<T: ?Sized, D: Dimension> {
     out_dim: PhantomData<D>,
@@ -183,7 +189,13 @@ where
     T: AsRef<[SliceOrIndex]>,
     D: Dimension,
 {
-    /// Returns the number of dimensions after slicing and taking subviews.
+    /// Returns the number of dimensions after calling
+    /// [`.slice()`](struct.ArrayBase.html#method.slice) (including taking
+    /// subviews).
+    ///
+    /// If `D` is a fixed-size dimension type, then this is equivalent to
+    /// `D::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
+    /// over the ranges/indices.
     pub fn out_ndim(&self) -> usize {
         D::NDIM.unwrap_or_else(|| {
             self.indices
@@ -280,23 +292,45 @@ impl<D1: Dimension> SliceNextDim<D1, D1> for Ixs {
 
 /// Slice argument constructor.
 ///
-/// `s![]` takes a list of ranges, separated by comma, with optional strides
-/// that are separated from the range by a semicolon. It is converted into a
-/// `SliceInfo` instance.
+/// `s![]` takes a list of ranges/indices, separated by comma, with optional
+/// step sizes that are separated from the range by a semicolon. It is
+/// converted into a [`&SliceInfo`] instance.
 ///
-/// Each range uses signed indices, where a negative value is counted from
-/// the end of the axis. Strides are also signed and may be negative, but
-/// must not be zero.
+/// [`&SliceInfo`]: struct.SliceInfo.html
 ///
-/// The syntax is `s![` *[ axis-slice [, axis-slice [ , ... ] ] ]* `]`.
-/// Where *axis-slice* is either *i* `..` *j* or *i* `..` *j* `;` *step*,
-/// and *i* is the start index, *j* end index and *step* the element step
-/// size (which defaults to 1). The number of *axis-slice* must match the
-/// number of axes in the array.
+/// Each range/index uses signed indices, where a negative value is counted
+/// from the end of the axis. Step sizes are also signed and may be negative,
+/// but must not be zero.
 ///
-/// For example `s![0..4;2, 1..5]` is a slice of rows 0..4 with step size 2,
-/// and columns 1..5 with default step size 1. The slice would have
-/// shape `[2, 4]`.
+/// The syntax is `s![` *[ axis-slice-or-index [, axis-slice-or-index [ , ... ]
+/// ] ]* `]`, where *axis-slice-or-index* is any of the following:
+///
+/// * *index*: an index to use for taking a subview with respect to that axis
+/// * *range*: a range with step size 1 to use for slicing that axis
+/// * *range* `;` *step*: a range with step size *step* to use for slicing that axis
+///
+/// The number of *axis-slice-or-index* must match the number of axes in the
+/// array. *index*, *range*, and *step* can be expressions. *index* and *step*
+/// must be of type [`Ixs`]. *range* can be of type `Range<Ixs>`,
+/// `RangeTo<Ixs>`, `RangeFrom<Ixs>`, or `RangeFull`.
+///
+/// [`Ixs`]: type.Ixs.html
+///
+/// For example `s![0..4;2, 6, 1..5]` is a slice of the first axis for 0..4
+/// with step size 2, a subview of the second axis at index 6, and a slice of
+/// the third axis for 1..5 with default step size 1. The input array must have
+/// 3 dimensions. The resulting slice would have shape `[2, 4]` for
+/// [`.slice()`], [`.slice_mut()`], and [`.slice_move()`], and shape
+/// `[2, 1, 4]` for [`.slice_inplace()`].
+///
+/// [`.slice()`]: struct.ArrayBase.html#method.slice
+/// [`.slice_mut()`]: struct.ArrayBase.html#method.slice_mut
+/// [`.slice_move()`]: struct.ArrayBase.html#method.slice_move
+/// [`.slice_inplace()`]: struct.ArrayBase.html#method.slice_inplace
+///
+/// See also [*Slicing*](struct.ArrayBase.html#slicing).
+///
+/// # Example
 ///
 /// ```
 /// #[macro_use]
