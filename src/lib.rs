@@ -445,7 +445,7 @@ pub type Ixs = isize;
 /// #[macro_use(s)]
 /// extern crate ndarray;
 ///
-/// use ndarray::arr3;
+/// use ndarray::{arr2, arr3};
 ///
 /// fn main() {
 ///
@@ -488,7 +488,7 @@ pub type Ixs = isize;
 /// // - The last row in each submatrix, removing that axis: `-1`
 /// // - Row elements in reverse order: `..;-1`
 /// let f = a.slice(s![.., -1, ..;-1]);
-/// let g = arr3(&[[ 6,  5,  4],
+/// let g = arr2(&[[ 6,  5,  4],
 ///                [12, 11, 10]]);
 /// assert_eq!(f, g);
 /// assert_eq!(f.shape(), &[2, 3]);
