@@ -222,7 +222,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     where
         Do: Dimension,
     {
-        self.view().slice_into(info)
+        self.view().slice_move(info)
     }
 
     /// Return a sliced read-write view of the array.
@@ -238,7 +238,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         Do: Dimension,
         S: DataMut,
     {
-        self.view_mut().slice_into(info)
+        self.view_mut().slice_move(info)
     }
 
     /// Slice the array’s view, possibly changing the number of dimensions.
@@ -249,7 +249,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_into<Do>(mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayBase<S, Do>
+    pub fn slice_move<Do>(mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayBase<S, Do>
     where
         Do: Dimension,
     {

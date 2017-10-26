@@ -74,7 +74,7 @@ fn test_slice_array_fixed()
     let info = s![1.., ..;2];
     arr.slice(info);
     arr.slice_mut(info);
-    arr.view().slice_into(info);
+    arr.view().slice_move(info);
     arr.view().slice_inplace(info);
 }
 
@@ -85,7 +85,7 @@ fn test_slice_dyninput_array_fixed()
     let info = s![1.., ..;2];
     arr.slice(info);
     arr.slice_mut(info);
-    arr.view().slice_into(info);
+    arr.view().slice_move(info);
     arr.view().slice_inplace(info.as_ref());
 }
 
@@ -99,7 +99,7 @@ fn test_slice_array_dyn()
     ]);
     arr.slice(info);
     arr.slice_mut(info);
-    arr.view().slice_into(info);
+    arr.view().slice_move(info);
     arr.view().slice_inplace(info);
 }
 
@@ -113,7 +113,7 @@ fn test_slice_dyninput_array_dyn()
     ]);
     arr.slice(info);
     arr.slice_mut(info);
-    arr.view().slice_into(info);
+    arr.view().slice_move(info);
     arr.view().slice_inplace(info.as_ref());
 }
 
@@ -127,7 +127,7 @@ fn test_slice_dyninput_vec_fixed()
     ]);
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
-    arr.view().slice_into(info.as_ref());
+    arr.view().slice_move(info.as_ref());
     arr.view().slice_inplace(info.as_ref());
 }
 
@@ -141,7 +141,7 @@ fn test_slice_dyninput_vec_dyn()
     ]);
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
-    arr.view().slice_into(info.as_ref());
+    arr.view().slice_move(info.as_ref());
     arr.view().slice_inplace(info.as_ref());
 }
 
