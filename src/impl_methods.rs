@@ -217,7 +217,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`SliceInfo`]: struct.SliceInfo.html
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice<Do>(&self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayView<A, Do>
     where
@@ -234,7 +234,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`SliceInfo`]: struct.SliceInfo.html
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_mut<Do>(&mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayViewMut<A, Do>
     where
@@ -252,7 +252,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// [`SliceInfo`]: struct.SliceInfo.html
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_move<Do>(mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayBase<S, Do>
     where
@@ -298,7 +298,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
         let indices: &[SliceOrIndex] = indices.as_ref();
@@ -319,7 +319,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a view of the array, sliced along the specified axis.
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
     pub fn slice_axis(
         &self,
@@ -335,7 +335,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Return a mutable view of the array, sliced along the specified axis.
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
     pub fn slice_axis_mut(
         &mut self,
@@ -354,7 +354,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Slice the array in place along the specified axis.
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
     pub fn slice_axis_inplace(
         &mut self,
