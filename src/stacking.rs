@@ -46,8 +46,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
         return Err(from_kind(ErrorKind::IncompatibleShape));
     }
 
-    let stacked_dim = arrays.iter()
-                            .fold(0, |acc, a| acc + a.shape().axis(axis));
+    let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
     res_dim.set_axis(axis, stacked_dim);
 
     // we can safely use uninitialized values here because they are Copy
@@ -62,7 +61,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     {
         let mut assign_view = res.view_mut();
         for array in arrays {
-            let len = array.shape().axis(axis);
+            let len = array.len_of(axis);
             let (mut front, rest) = assign_view.split_at(axis, len);
             front.assign(array);
             assign_view = rest;

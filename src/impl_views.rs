@@ -94,9 +94,9 @@ impl<'a, A, D> ArrayView<'a, A, D>
         -> (Self, Self)
     {
         // NOTE: Keep this in sync with the ArrayViewMut version
-        assert!(index <= self.shape().axis(axis));
+        assert!(index <= self.len_of(axis));
         let left_ptr = self.ptr;
-        let right_ptr = if index == self.shape().axis(axis) {
+        let right_ptr = if index == self.len_of(axis) {
             self.ptr
         } else {
             let offset = stride_offset(index, self.strides.axis(axis));
@@ -200,9 +200,9 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         -> (Self, Self)
     {
         // NOTE: Keep this in sync with the ArrayView version
-        assert!(index <= self.shape().axis(axis));
+        assert!(index <= self.len_of(axis));
         let left_ptr = self.ptr;
-        let right_ptr = if index == self.shape().axis(axis) {
+        let right_ptr = if index == self.len_of(axis) {
             self.ptr
         } else {
             let offset = stride_offset(index, self.strides.axis(axis));

@@ -70,7 +70,7 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
-        let n = self.shape().axis(axis);
+        let n = self.len_of(axis);
         let mut res = self.subview(axis, 0).to_owned();
         let stride = self.strides()[axis.index()];
         if self.ndim() == 2 && stride == 1 {
@@ -115,7 +115,7 @@ impl<A, S, D> ArrayBase<S, D>
         where A: LinalgScalar,
               D: RemoveAxis,
     {
-        let n = self.shape().axis(axis);
+        let n = self.len_of(axis);
         let sum = self.sum_axis(axis);
         let mut cnt = A::one();
         for _ in 1..n {

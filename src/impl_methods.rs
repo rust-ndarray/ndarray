@@ -1611,7 +1611,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: FnMut(ArrayView1<'a, A>) -> B,
               A: 'a,
     {
-        let view_len = self.shape().axis(axis);
+        let view_len = self.len_of(axis);
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
