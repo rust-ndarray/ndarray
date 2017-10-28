@@ -328,6 +328,18 @@ fn reference_mat_vec_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, 
         .into_shape(m).unwrap()
 }
 
+// simple, slow, correct (hopefully) mat mul
+fn reference_vec_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix1>, rhs: &ArrayBase<S2, Ix2>)
+    -> Array1<A>
+    where A: LinalgScalar,
+          S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+{
+    let (m, (_, n)) = (lhs.dim(), rhs.dim());
+    reference_mat_mul(&lhs.to_owned().into_shape((1, m)).unwrap(), rhs)
+        .into_shape(n).unwrap()
+}
+
 #[test]
 fn mat_mul() {
     let (m, n, k) = (8, 8, 8);
@@ -696,6 +708,48 @@ fn gen_mat_vec_mul() {
                         answer.slice_mut(s![..;s1]).assign(&answer_part);
 
                         general_mat_vec_mul(alpha, &a, &b, beta, &mut cv);
+                    }
+                    assert_close(c.view(), answer.view());
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn vec_mat_mul() {
+    let sizes = vec![(4, 4),
+                     (8, 8),
+                     (17, 15),
+                     (4, 17),
+                     (17, 3),
+                     (19, 18),
+                     (16, 17),
+                     (15, 16),
+                     (67, 63),
+        ];
+    // test different strides
+    for &s1 in &[1, 2, -1, -2] {
+        for &s2 in &[1, 2, -1, -2] {
+            for &(m, n) in &sizes {
+                for &rev in &[false, true] {
+                    let mut b = range_mat64(m, n);
+                    if rev {
+                        b = b.reversed_axes();
+                    }
+                    let (m, n) = b.dim();
+                    let a = range1_mat64(m);
+                    let mut c = range1_mat64(n);
+                    let mut answer = c.clone();
+
+                    {
+                        let b = b.slice(s![..;s1, ..;s2]);
+                        let a = a.slice(s![..;s1]);
+
+                        let answer_part = reference_vec_mat_mul(&a, &b);
+                        answer.slice_mut(s![..;s2]).assign(&answer_part);
+
+                        c.slice_mut(s![..;s2]).assign(&a.dot(&b));
                     }
                     assert_close(c.view(), answer.view());
                 }

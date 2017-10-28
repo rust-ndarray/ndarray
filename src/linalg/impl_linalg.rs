@@ -42,19 +42,27 @@ type blas_index = c_int; // blas index type
 impl<A, S> ArrayBase<S, Ix1>
     where S: Data<Elem=A>,
 {
-    /// Compute the dot product of one-dimensional arrays.
+    /// Perform dot product or matrix multiplication of arrays `self` and `rhs`.
     ///
-    /// The dot product is a sum of the elementwise products (no conjugation
-    /// of complex operands, and thus not their inner product).
+    /// `Rhs` may be either a one-dimensional or a two-dimensional array.
     ///
-    /// **Panics** if the arrays are not of the same length.<br>
+    /// If `Rhs` is one-dimensional, then the operation is a vector dot
+    /// product, which is the sum of the elementwise products (no conjugation
+    /// of complex operands, and thus not their inner product). In this case,
+    /// `self` and `rhs` must be the same length.
+    ///
+    /// If `Rhs` is two-dimensional, then the operation is matrix
+    /// multiplication, where `self` is treated as a row vector. In this case,
+    /// if `self` is shape *M*, then `rhs` is shape *M* × *N* and the result is
+    /// shape *N*.
+    ///
+    /// **Panics** if the array shapes are incompatible.<br>
     /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
     /// layout allows.
-    pub fn dot<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
-        where S2: Data<Elem=A>,
-              A: LinalgScalar,
+    pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
+        where Self: Dot<Rhs>
     {
-        self.dot_impl(rhs)
+        Dot::dot(self, rhs)
     }
 
     fn dot_generic<S2>(&self, rhs: &ArrayBase<S2, Ix1>) -> A
@@ -154,6 +162,49 @@ pub trait Dot<Rhs> {
     /// For two-dimensional arrays: a rectangular array.
     type Output;
     fn dot(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix1>
+    where S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          A: LinalgScalar,
+{
+    type Output = A;
+
+    /// Compute the dot product of one-dimensional arrays.
+    ///
+    /// The dot product is a sum of the elementwise products (no conjugation
+    /// of complex operands, and thus not their inner product).
+    ///
+    /// **Panics** if the arrays are not of the same length.<br>
+    /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
+    /// layout allows.
+    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> A
+    {
+        self.dot_impl(rhs)
+    }
+}
+
+impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix1>
+    where S: Data<Elem=A>,
+          S2: Data<Elem=A>,
+          A: LinalgScalar,
+{
+    type Output = Array<A, Ix1>;
+
+    /// Perform the matrix multiplication of the row vector `self` and
+    /// rectangular matrix `rhs`.
+    ///
+    /// The array shapes must agree in the way that
+    /// if `self` is *M*, then `rhs` is *M* × *N*.
+    ///
+    /// Return a result array with shape *N*.
+    ///
+    /// **Panics** if shapes are incompatible.
+    fn dot(&self, rhs: &ArrayBase<S2, Ix2>) -> Array<A, Ix1>
+    {
+        rhs.t().dot(self)
+    }
 }
 
 impl<A, S> ArrayBase<S, Ix2>
