@@ -19,7 +19,7 @@
 //! - [**`ArrayBase`**](struct.ArrayBase.html):
 //!   The *n*-dimensional array type itself.<br>
 //!   It is used to implement both the owned arrays and the views; see its docs
-//!   for an overview of all array features.  
+//!   for an overview of all array features.
 //! - The main specific array type is [**`Array`**](type.Array.html), which owns
 //! its elements.
 //!
@@ -44,7 +44,7 @@
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
-//!   + The higher order functions like ``.map()``, ``.map_inplace()``, 
+//!   + The higher order functions like ``.map()``, ``.map_inplace()``,
 //!     ``.zip_mut_with()``, ``Zip`` and ``azip!()`` are the most efficient ways
 //!     to perform single traversal and lock step traversal respectively.
 //!   + Performance of an operation depends on the memory layout of the array
@@ -80,25 +80,20 @@ extern crate serde;
 #[cfg(feature = "rustc-serialize")]
 extern crate rustc_serialize as serialize;
 
-#[cfg(feature="blas")]
+#[cfg(feature = "blas")]
 extern crate blas_sys;
 
 extern crate matrixmultiply;
 
-#[macro_use(izip)] extern crate itertools;
+#[macro_use(izip)]
+extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-pub use dimension::{
-    Dimension,
-    IntoDimension,
-    RemoveAxis,
-    Axis,
-    AxisDescription,
-};
+pub use dimension::{Dimension, IntoDimension, RemoveAxis, Axis, AxisDescription};
 pub use dimension::dim::*;
 
 pub use dimension::NdIndex;
@@ -114,10 +109,12 @@ pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
-pub use shape_builder::{ ShapeBuilder};
+pub use shape_builder::ShapeBuilder;
 
-#[macro_use] mod macro_utils;
-#[macro_use] mod private;
+#[macro_use]
+mod macro_utils;
+#[macro_use]
+mod private;
 mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde-1")]
@@ -129,13 +126,7 @@ mod data_traits;
 
 pub use aliases::*;
 
-pub use data_traits::{
-    Data,
-    DataMut,
-    DataOwned,
-    DataShared,
-    DataClone,
-};
+pub use data_traits::{Data, DataMut, DataOwned, DataShared, DataClone};
 
 mod dimension;
 
@@ -155,27 +146,14 @@ mod shape_builder;
 mod stacking;
 mod zip;
 
-pub use zip::{
-    Zip,
-    NdProducer,
-    IntoNdProducer,
-    FoldWhile,
-};
+pub use zip::{Zip, NdProducer, IntoNdProducer, FoldWhile};
 
 pub use layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
     pub use prelude::*;
-    pub use {
-        RemoveAxis,
-        Data,
-        DataMut,
-        DataOwned,
-        DataShared,
-        ViewRepr,
-        Ix, Ixs,
-    };
+    pub use {RemoveAxis, Data, DataMut, DataOwned, DataShared, ViewRepr, Ix, Ixs};
     pub use dimension::DimensionExt;
 }
 
@@ -324,7 +302,7 @@ pub type Ixs = isize;
 /// A *column major* (a.k.a. “f” or fortran) memory order array has
 /// columns (or, in general, the outermost axis) with contiguous elements.
 ///
-/// The logical order of any array’s elements is the row major order 
+/// The logical order of any array’s elements is the row major order
 /// (the rightmost index is varying the fastest).
 /// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
 ///
@@ -351,7 +329,7 @@ pub type Ixs = isize;
 ///
 /// These are the element iterators of arrays and they produce an element
 /// sequence in the logical order of the array, that means that the elements
-/// will be visited in the sequence that corresponds to increasing the 
+/// will be visited in the sequence that corresponds to increasing the
 /// last index first: *0, ..., 0,  0*; *0, ..., 0, 1*; *0, ...0, 2* and so on.
 ///
 /// ### `.outer_iter()` and `.axis_iter()`
@@ -365,7 +343,7 @@ pub type Ixs = isize;
 /// axis to traverse.
 ///
 /// The `outer_iter` and `axis_iter` are one dimensional producers.
-/// 
+///
 /// ## `.genrows()`, `.gencolumns()` and `.lanes()`
 ///
 /// [`.genrows()`][gr] is a producer (and iterable) of all rows in an array.
@@ -581,7 +559,8 @@ pub type Ixs = isize;
 /// ```
 ///
 pub struct ArrayBase<S, D>
-    where S: Data
+where
+    S: Data,
 {
     /// Rc data when used as view, Uniquely held data when being mutated
     data: S,
@@ -602,7 +581,7 @@ pub struct ArrayBase<S, D>
 /// the dimensionality.
 ///
 /// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
-/// arrays and the views; see its docs for an overview of all array features.  
+/// arrays and the views; see its docs for an overview of all array features.
 ///
 /// See also:
 ///
@@ -619,7 +598,7 @@ pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 /// the dimensionality.
 ///
 /// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
-/// arrays and the views; see its docs for an overview of all array features.  
+/// arrays and the views; see its docs for an overview of all array features.
 ///
 /// See also:
 ///
@@ -711,20 +690,27 @@ mod impl_owned_array;
 
 /// Private Methods
 impl<A, S, D> ArrayBase<S, D>
-    where S: Data<Elem=A>, D: Dimension
+where
+    S: Data<Elem = A>,
+    D: Dimension,
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
-        where E: Dimension,
+    where
+        E: Dimension,
     {
         #[cold]
         #[inline(never)]
         fn broadcast_panic<D, E>(from: &D, to: &E) -> !
-            where D: Dimension,
-                  E: Dimension,
+        where
+            D: Dimension,
+            E: Dimension,
         {
-            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}",
-                   from.slice(), to.slice())
+            panic!(
+                "ndarray: could not broadcast array from shape: {:?} to: {:?}",
+                from.slice(),
+                to.slice()
+            )
         }
 
         match self.broadcast(dim.clone()) {
@@ -737,16 +723,15 @@ impl<A, S, D> ArrayBase<S, D>
     // (Checked in debug assertions).
     #[inline]
     fn broadcast_assume<E>(&self, dim: E) -> ArrayView<A, E>
-        where E: Dimension,
+    where
+        E: Dimension,
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
         let ptr = self.ptr;
         let mut strides = dim.clone();
         strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe {
-            ArrayView::new_(ptr, dim, strides)
-        }
+        unsafe { ArrayView::new_(ptr, dim, strides) }
     }
 
     fn raw_strides(&self) -> D {
@@ -756,8 +741,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// Apply closure `f` to each element in the array, in whatever
     /// order is the fastest to visit.
     fn unordered_foreach_mut<F>(&mut self, mut f: F)
-        where S: DataMut,
-              F: FnMut(&mut A)
+    where
+        S: DataMut,
+        F: FnMut(&mut A),
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
             // FIXME: Use for loop when slice iterator is perf is restored
@@ -772,8 +758,7 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
-    {
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
         ArrayBase {
@@ -785,15 +770,15 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller>
-    {
+    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller> {
         let n = self.ndim();
         iterators::new_lanes(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
     fn inner_rows_mut(&mut self) -> iterators::LanesMut<A, D::Smaller>
-        where S: DataMut
+    where
+        S: DataMut,
     {
         let n = self.ndim();
         iterators::new_lanes_mut(self.view_mut(), Axis(n.saturating_sub(1)))
