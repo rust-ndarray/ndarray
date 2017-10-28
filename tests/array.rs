@@ -6,7 +6,7 @@ extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
 
-use ndarray::{S, Si};
+use ndarray::{SliceInfo, SliceOrIndex};
 use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
@@ -62,9 +62,144 @@ fn test_slice()
 
     let vi = A.slice(s![1.., ..;2]);
     assert_eq!(vi.shape(), &[2, 2]);
-    let vi = A.slice(&[S, S]);
+    let vi = A.slice(s![.., ..]);
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
+}
+
+#[test]
+fn test_slice_array_fixed()
+{
+    let mut arr = Array2::<f64>::zeros((5, 5));
+    let info = s![1.., ..;2];
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info);
+}
+
+#[test]
+fn test_slice_dyninput_array_fixed()
+{
+    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
+    let info = s![1.., ..;2];
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_array_dyn()
+{
+    let mut arr = Array2::<f64>::zeros((5, 5));
+    let info = &SliceInfo::<_, IxDyn>::new([
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info);
+}
+
+#[test]
+fn test_slice_dyninput_array_dyn()
+{
+    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
+    let info = &SliceInfo::<_, IxDyn>::new([
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_dyninput_vec_fixed()
+{
+    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
+    let info = &SliceInfo::<_, Ix2>::new(vec![
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info.as_ref());
+    arr.slice_mut(info.as_ref());
+    arr.view().slice_move(info.as_ref());
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_dyninput_vec_dyn()
+{
+    let mut arr = Array2::<f64>::zeros((5, 5)).into_dyn();
+    let info = &SliceInfo::<_, IxDyn>::new(vec![
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info.as_ref());
+    arr.slice_mut(info.as_ref());
+    arr.view().slice_move(info.as_ref());
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_with_subview()
+{
+    let mut A = RcArray::<usize, _>::zeros((3, 5, 4));
+    for (i, elt) in A.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let vi = A.slice(s![1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[2, 2]);
+    assert!(
+        vi.iter()
+            .zip(A.subview(Axis(1), 2).slice(s![1.., ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let vi = A.slice(s![1, 2, ..;2]);
+    assert_eq!(vi.shape(), &[2]);
+    assert!(
+        vi.iter()
+            .zip(
+                A.subview(Axis(0), 1)
+                    .subview(Axis(0), 2)
+                    .slice(s![..;2])
+                    .iter()
+            )
+            .all(|(a, b)| a == b)
+    );
+}
+
+#[test]
+fn test_slice_inplace_with_subview_inplace()
+{
+    let mut A = RcArray::<usize, _>::zeros((3, 5, 4));
+    for (i, elt) in A.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let mut vi = A.view();
+    vi.slice_inplace(s![1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[2, 1, 2]);
+    assert!(
+        vi.iter()
+            .zip(A.slice(s![1.., 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let mut vi = A.view();
+    vi.slice_inplace(s![1, 2, ..;2]);
+    assert_eq!(vi.shape(), &[1, 1, 2]);
+    assert!(
+        vi.iter()
+            .zip(A.slice(s![1..2, 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
 }
 
 #[should_panic]
@@ -79,7 +214,14 @@ fn index_out_of_bounds() {
 fn slice_oob()
 {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice(&[Si(0, Some(10), 1), S]);
+    let _vi = a.slice(s![..10, ..]);
+}
+
+#[should_panic]
+#[test]
+fn slice_axis_oob() {
+    let a = RcArray::<i32, _>::zeros((3, 4));
+    let _vi = a.slice_axis(Axis(0), 0, Some(10), 1);
 }
 
 #[should_panic]
@@ -102,7 +244,7 @@ fn test_index()
         assert_eq!(*a, A[[i, j]]);
     }
 
-    let vi = A.slice(&[Si(1, None, 1), Si(0, None, 2)]);
+    let vi = A.slice(s![1.., ..;2]);
     let mut it = vi.iter();
     for ((i, j), x) in zip(indices((1, 2)), &mut it) {
         assert_eq!(*x, vi[[i, j]]);
@@ -171,7 +313,7 @@ fn test_negative_stride_rcarray()
     }
 
     {
-        let vi = mat.slice(&[S, Si(0, None, -1), Si(0, None, -1)]);
+        let vi = mat.slice(s![.., ..;-1, ..;-1]);
         assert_eq!(vi.shape(), &[2, 4, 2]);
         // Test against sequential iterator
         let seq = [7f32,6., 5.,4.,3.,2.,1.,0.,15.,14.,13., 12.,11.,  10.,   9.,   8.];
@@ -203,7 +345,7 @@ fn test_cow()
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
     let mut rev = mat.reshape(4);
-    rev.islice(&[Si(0, None, -1)]);
+    rev.slice_inplace(s![..;-1]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -228,7 +370,7 @@ fn test_cow_shrink()
     // mutation shrinks the array and gives it different strides
     //
     let mut mat = RcArray::zeros((2, 3));
-    //mat.islice(s![.., ..;2]);
+    //mat.slice_inplace(s![.., ..;2]);
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -243,7 +385,7 @@ fn test_cow_shrink()
     assert_eq!(n.get((0, 1)), Some(&0));
     // small has non-C strides this way
     let mut small = mat.reshape(6);
-    small.islice(s![4..;-1]);
+    small.slice_inplace(s![4..;-1]);
     assert_eq!(small[0], 6);
     assert_eq!(small[1], 5);
     let before = small.clone();
@@ -367,7 +509,7 @@ fn assign()
     let mut a = arr2(&[[1, 2], [3, 4]]);
     {
         let mut v = a.view_mut();
-        v.islice(&[Si(0, Some(1), 1), S]);
+        v.slice_inplace(s![..1, ..]);
         v.fill(0);
     }
     assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
@@ -667,7 +809,7 @@ fn view_mut() {
 #[test]
 fn slice_mut() {
     let mut a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
-    for elt in a.slice_mut(&[S, S]) {
+    for elt in a.slice_mut(s![.., ..]) {
         *elt = 0;
     }
     assert_eq!(a, aview2(&[[0, 0], [0, 0]]));
@@ -675,14 +817,14 @@ fn slice_mut() {
     let mut b = arr2(&[[1, 2, 3],
                        [4, 5, 6]]);
     let c = b.clone(); // make sure we can mutate b even if it has to be unshared first
-    for elt in b.slice_mut(&[S, Si(0, Some(1), 1)]) {
+    for elt in b.slice_mut(s![.., ..1]) {
         *elt = 0;
     }
     assert_eq!(b, aview2(&[[0, 2, 3],
                            [0, 5, 6]]));
     assert!(c != b);
 
-    for elt in b.slice_mut(&[S, Si(0, None, 2)]) {
+    for elt in b.slice_mut(s![.., ..;2]) {
         *elt = 99;
     }
     assert_eq!(b, aview2(&[[99, 2, 99],
@@ -1073,7 +1215,7 @@ fn to_owned_memory_order() {
 fn to_owned_neg_stride() {
     let mut c = arr2(&[[1, 2, 3],
                        [4, 5, 6]]);
-    c.islice(s![.., ..;-1]);
+    c.slice_inplace(s![.., ..;-1]);
     let co = c.to_owned();
     assert_eq!(c, co);
 }
@@ -1238,10 +1380,10 @@ fn test_to_vec() {
                        [7, 8, 9],
                        [10,11,12]]);
 
-    a.islice(s![..;-1, ..]);
+    a.slice_inplace(s![..;-1, ..]);
     assert_eq!(a.row(3).to_vec(), vec![1, 2, 3]);
     assert_eq!(a.column(2).to_vec(), vec![12, 9, 6, 3]);
-    a.islice(s![.., ..;-1]);
+    a.slice_inplace(s![.., ..;-1]);
     assert_eq!(a.row(3).to_vec(), vec![3, 2, 1]);
 }
 
@@ -1257,7 +1399,7 @@ fn test_array_clone_unalias() {
 #[test]
 fn test_array_clone_same_view() {
     let mut a = Array::from_iter(0..9).into_shape((3, 3)).unwrap();
-    a.islice(s![..;-1, ..;-1]);
+    a.slice_inplace(s![..;-1, ..;-1]);
     let b = a.clone();
     assert_eq!(a, b);
 }

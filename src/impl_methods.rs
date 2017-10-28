@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::convert::AsRef;
 use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
@@ -19,7 +20,7 @@ use dimension;
 use iterators;
 use error::{self, ShapeError, ErrorKind};
 use dimension::IntoDimension;
-use dimension::{axes_of, Axes, merge_axes, stride_offset};
+use dimension::{abs_index, axes_of, Axes, merge_axes, stride_offset};
 use iterators::{
     new_lanes,
     new_lanes_mut,
@@ -31,6 +32,8 @@ use zip::Zip;
 
 use {
     NdIndex,
+    SliceInfo,
+    SliceOrIndex
 };
 use iter::{
     AxisChunksIter,
@@ -206,47 +209,167 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
 
-    /// Return a sliced array.
+    /// Return a sliced view of the array.
+    ///
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
+    ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    pub fn slice<Do>(&self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayView<A, Do>
+    where
+        Do: Dimension,
+    {
+        self.view().slice_move(info)
+    }
+
+    /// Return a sliced read-write view of the array.
+    ///
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
+    ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    pub fn slice_mut<Do>(&mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayViewMut<A, Do>
+    where
+        Do: Dimension,
+        S: DataMut,
+    {
+        self.view_mut().slice_move(info)
+    }
+
+    /// Slice the array, possibly changing the number of dimensions.
+    ///
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
+    ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    pub fn slice_move<Do>(mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayBase<S, Do>
+    where
+        Do: Dimension,
+    {
+        // Slice and subview in-place without changing the number of dimensions.
+        self.slice_inplace(&*info);
+
+        let indices: &[SliceOrIndex] = (**info).as_ref();
+
+        // Copy the dim and strides that remain after removing the subview axes.
+        let out_ndim = info.out_ndim();
+        let mut new_dim = Do::zero_index_with_ndim(out_ndim);
+        let mut new_strides = Do::zero_index_with_ndim(out_ndim);
+        izip!(self.dim.slice(), self.strides.slice(), indices)
+            .filter_map(|(d, s, slice_or_index)| match slice_or_index {
+                &SliceOrIndex::Slice(..) => Some((d, s)),
+                &SliceOrIndex::Index(_) => None,
+            })
+            .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
+            .for_each(|((d, s), (new_d, new_s))| {
+                *new_d = *d;
+                *new_s = *s;
+            });
+
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim: new_dim,
+            strides: new_strides,
+        }
+    }
+
+    /// Slice the array in place without changing the number of dimensions.
+    ///
+    /// Note that [`&SliceInfo`](struct.SliceInfo.html) (produced by the
+    /// [`s![]`](macro.s!.html) macro) will usually coerce into `&D::SliceArg`
+    /// automatically, but in some cases (e.g. if `D` is `IxDyn`), you may need
+    /// to call `.as_ref()`.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
     /// See also [`D::SliceArg`].
     ///
     /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
-    pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D> {
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
+        let indices: &[SliceOrIndex] = indices.as_ref();
+        assert_eq!(indices.len(), self.ndim());
+        indices
+            .iter()
+            .enumerate()
+            .for_each(|(axis, slice_or_index)| match slice_or_index {
+                &SliceOrIndex::Slice(start, end, step) => {
+                    self.slice_axis_inplace(Axis(axis), start, end, step)
+                }
+                &SliceOrIndex::Index(i) => {
+                    let i_usize = abs_index(self.shape()[axis] as Ixs, i);
+                    self.subview_inplace(Axis(axis), i_usize)
+                }
+            });
+    }
+
+    /// Return a view of the array, sliced along the specified axis.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    pub fn slice_axis(
+        &self,
+        axis: Axis,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    ) -> ArrayView<A, D> {
         let mut arr = self.view();
-        arr.islice(indexes);
+        arr.slice_axis_inplace(axis, start, end, step);
         arr
     }
 
-    /// Return a sliced read-write view of the array.
+    /// Return a mutable view of the array, sliced along the specified axis.
     ///
-    /// See also [`D::SliceArg`].
-    ///
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
-    ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
-    pub fn slice_mut(&mut self, indexes: &D::SliceArg) -> ArrayViewMut<A, D>
-        where S: DataMut
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    pub fn slice_axis_mut(
+        &mut self,
+        axis: Axis,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    ) -> ArrayViewMut<A, D>
+    where
+        S: DataMut,
     {
         let mut arr = self.view_mut();
-        arr.islice(indexes);
+        arr.slice_axis_inplace(axis, start, end, step);
         arr
     }
 
-    /// Slice the array’s view in place.
+    /// Slice the array in place along the specified axis.
     ///
-    /// See also [`D::SliceArg`].
-    ///
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
-    ///
-    /// **Panics** if an index is out of bounds or stride is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
-    pub fn islice(&mut self, indexes: &D::SliceArg) {
-        let offset = D::do_slices(&mut self.dim, &mut self.strides, indexes);
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    pub fn slice_axis_inplace(
+        &mut self,
+        axis: Axis,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    ) {
+        let offset = D::do_slice(
+            &mut self.dim.slice_mut()[axis.index()],
+            &mut self.strides.slice_mut()[axis.index()],
+            start,
+            end,
+            step,
+        );
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }
@@ -429,7 +552,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
-    pub fn isubview(&mut self, axis: Axis, index: Ix) {
+    pub fn subview_inplace(&mut self, axis: Axis, index: Ix) {
         dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
                           axis.index(), index)
     }
@@ -441,7 +564,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        self.isubview(axis, index);
+        self.subview_inplace(axis, index);
         self.remove_axis(axis)
     }
 
@@ -472,7 +595,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let mut subs = vec![self.view(); indices.len()];
         for (&i, sub) in zip(indices, &mut subs[..]) {
-            sub.isubview(axis, i);
+            sub.subview_inplace(axis, i);
         }
         if subs.is_empty() {
             let mut dim = self.raw_dim();
