@@ -32,7 +32,7 @@ impl<A, S> ArrayBase<S, Ix2>
 
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
     pub fn rows(&self) -> usize {
-        self.shape().axis(Axis(0))
+        self.len_of(Axis(0))
     }
 
     /// Return an array view of column `index`.
@@ -54,7 +54,7 @@ impl<A, S> ArrayBase<S, Ix2>
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
     pub fn cols(&self) -> usize {
-        self.shape().axis(Axis(1))
+        self.len_of(Axis(1))
     }
 
     /// Return true if the array is square, false otherwise.
