@@ -61,6 +61,7 @@ fn test_oper_arr<A: NdFloat + fmt::Debug, D: ndarray::Dimension>
             assert_eq!(aa, cc);
         },
         "neg" => {
+            assert_eq!(-&aa, cc);
             assert_eq!(-aa.clone(), cc);
         },
         _ => panic!()

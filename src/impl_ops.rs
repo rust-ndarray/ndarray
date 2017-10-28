@@ -292,6 +292,19 @@ mod arithmetic_ops {
         }
     }
 
+    impl<'a, A, S, D> Neg for &'a ArrayBase<S, D>
+        where A: Clone + Neg<Output=A>,
+              S: Data<Elem=A>,
+              D: Dimension
+    {
+        type Output = Array<A, D>;
+        /// Perform an elementwise negation of reference `self` and return the
+        /// result as a new `Array`.
+        fn neg(self) -> Array<A, D> {
+            self.to_owned().neg()
+        }
+    }
+
     impl<A, S, D> Not for ArrayBase<S, D>
         where A: Clone + Not<Output=A>,
               S: DataOwned<Elem=A> + DataMut,
@@ -304,6 +317,19 @@ mod arithmetic_ops {
                 *elt = !elt.clone();
             });
             self
+        }
+    }
+
+    impl<'a, A, S, D> Not for &'a ArrayBase<S, D>
+        where A: Clone + Not<Output=A>,
+              S: Data<Elem=A>,
+              D: Dimension
+    {
+        type Output = Array<A, D>;
+        /// Perform an elementwise unary not of reference `self` and return the
+        /// result as a new `Array`.
+        fn not(self) -> Array<A, D> {
+            self.to_owned().not()
         }
     }
 }
