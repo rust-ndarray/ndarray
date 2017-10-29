@@ -13,7 +13,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Si, IxDynImpl};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
 use IntoDimension;
 use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
@@ -52,14 +52,14 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// size, which you pass by reference. For the dynamic dimension it is
     /// a slice.
     ///
-    /// - For `Ix1`: `[Si; 1]`
-    /// - For `Ix2`: `[Si; 2]`
+    /// - For `Ix1`: `[SliceOrIndex; 1]`
+    /// - For `Ix2`: `[SliceOrIndex; 2]`
     /// - and so on..
-    /// - For `IxDyn`: `[Si]`
+    /// - For `IxDyn`: `[SliceOrIndex]`
     ///
-    /// The easiest way to create a `&SliceArg` is using the macro
-    /// [`s![]`](macro.s!.html).
-    type SliceArg: ?Sized + AsRef<[Si]>;
+    /// The easiest way to create a `&SliceInfo<SliceArg, Do>` is using the
+    /// [`s![]`](macro.s!.html) macro.
+    type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
     ///
     /// - For `Ix1`: `usize`,
@@ -364,7 +364,7 @@ macro_rules! impl_insert_axis_array(
 
 impl Dimension for Dim<[Ix; 0]> {
     const NDIM: Option<usize> = Some(0);
-    type SliceArg = [Si; 0];
+    type SliceArg = [SliceOrIndex; 0];
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
@@ -401,7 +401,7 @@ impl Dimension for Dim<[Ix; 0]> {
 
 impl Dimension for Dim<[Ix; 1]> {
     const NDIM: Option<usize> = Some(1);
-    type SliceArg = [Si; 1];
+    type SliceArg = [SliceOrIndex; 1];
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
@@ -495,7 +495,7 @@ impl Dimension for Dim<[Ix; 1]> {
 
 impl Dimension for Dim<[Ix; 2]> {
     const NDIM: Option<usize> = Some(2);
-    type SliceArg = [Si; 2];
+    type SliceArg = [SliceOrIndex; 2];
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
@@ -631,7 +631,7 @@ impl Dimension for Dim<[Ix; 2]> {
 
 impl Dimension for Dim<[Ix; 3]> {
     const NDIM: Option<usize> = Some(3);
-    type SliceArg = [Si; 3];
+    type SliceArg = [SliceOrIndex; 3];
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
@@ -749,7 +749,7 @@ macro_rules! large_dim {
     ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
             const NDIM: Option<usize> = Some($n);
-            type SliceArg = [Si; $n];
+            type SliceArg = [SliceOrIndex; $n];
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
@@ -801,7 +801,7 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
 impl Dimension for IxDyn
 {
     const NDIM: Option<usize> = None;
-    type SliceArg = [Si];
+    type SliceArg = [SliceOrIndex];
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;

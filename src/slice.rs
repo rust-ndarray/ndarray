@@ -5,126 +5,333 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
+use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeTo};
 use std::fmt;
-use super::Ixs;
+use std::marker::PhantomData;
+use super::{Dimension, Ixs};
 
-// [a:b:s] syntax for example [:3], [::-1]
-// [0,:] -- first row of matrix
-// [:,0] -- first column of matrix
-
-#[derive(PartialEq, Eq, Hash)]
-/// A slice, a description of a range of an array axis.
+/// A slice (range with step) or an index.
 ///
-/// Fields are `begin`, `end` and `stride`, where
-/// negative `begin` or `end` indexes are counted from the back
-/// of the axis.
-///
-/// If `end` is `None`, the slice extends to the end of the axis.
-///
-/// See also the [`s![] macro`](macro.s!.html), a convenient way to specify
-/// an array of `Si`.
+/// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
+/// `&SliceInfo<[SliceOrIndex; n], D>`.
 ///
 /// ## Examples
 ///
-/// `Si(0, None, 1)` is the full range of an axis.
-/// Python equivalent is `[:]`. Macro equivalent is `s![..]`.
+/// `SliceOrIndex::Slice(0, None, 1)` is the full range of an axis. It can also
+/// be created with `SliceOrIndex::from(..)`. The Python equivalent is `[:]`.
+/// The macro equivalent is `s![..]`.
 ///
-/// `Si(a, Some(b), 2)` is every second element from `a` until `b`.
-/// Python equivalent is `[a:b:2]`. Macro equivalent is `s![a..b;2]`.
+/// `SliceOrIndex::Slice(a, Some(b), 2)` is every second element from `a` until
+/// `b`. It can also be created with `SliceOrIndex::from(a..b).step(2)`. The
+/// Python equivalent is `[a:b:2]`. The macro equivalent is `s![a..b;2]`.
 ///
-/// `Si(a, None, -1)` is every element, from `a`
-/// until the end, in reverse order. Python equivalent is `[a::-1]`.
-/// Macro equivalent is `s![a..;-1]`.
-///
-/// The constant [`S`] is a shorthand for the full range of an axis.
-///
-/// [`S`]: constant.S.html
-pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
+/// `SliceOrIndex::Slice(a, None, -1)` is every element, from `a` until the
+/// end, in reverse order. It can also be created with
+/// `SliceOrIndex::from(a..).step(-1)`. The Python equivalent is `[a::-1]`. The
+/// macro equivalent is `s![a..;-1]`.
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum SliceOrIndex {
+    /// A range with step size. The fields are `begin`, `end`, and `step`,
+    /// where negative `begin` or `end` indexes are counted from the back of
+    /// the axis. If `end` is `None`, the slice extends to the end of the axis.
+    Slice(Ixs, Option<Ixs>, Ixs),
+    /// A single index.
+    Index(Ixs),
+}
 
-impl fmt::Debug for Si {
+copy_and_clone!{SliceOrIndex}
+
+impl SliceOrIndex {
+    /// Returns `true` if `self` is a `Slice` value.
+    pub fn is_slice(&self) -> bool {
+        match self {
+            &SliceOrIndex::Slice(..) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns `true` if `self` is an `Index` value.
+    pub fn is_index(&self) -> bool {
+        match self {
+            &SliceOrIndex::Index(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns a new `SliceOrIndex` with the given step size.
+    #[inline]
+    pub fn step(self, step: Ixs) -> Self {
+        match self {
+            SliceOrIndex::Slice(start, end, _) => SliceOrIndex::Slice(start, end, step),
+            SliceOrIndex::Index(s) => SliceOrIndex::Index(s),
+        }
+    }
+}
+
+impl fmt::Display for SliceOrIndex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Si(0, _, _) => { }
-            Si(i, _, _) => { try!(write!(f, "{}", i)); }
-        }
-        try!(write!(f, ".."));
-        match *self {
-            Si(_, None, _) => { }
-            Si(_, Some(i), _) => { try!(write!(f, "{}", i)); }
-        }
-        match *self {
-            Si(_, _, 1) => { }
-            Si(_, _, s) => { try!(write!(f, ";{}", s)); }
+            SliceOrIndex::Index(index) => write!(f, "{}", index)?,
+            SliceOrIndex::Slice(start, end, step) => {
+                if start != 0 {
+                    write!(f, "{}", start)?;
+                }
+                write!(f, "..")?;
+                if let Some(i) = end {
+                    write!(f, "{}", i)?;
+                }
+                if step != 1 {
+                    write!(f, ";{}", step)?;
+                }
+            }
         }
         Ok(())
     }
 }
 
-impl From<Range<Ixs>> for Si {
+impl From<Range<Ixs>> for SliceOrIndex {
     #[inline]
-    fn from(r: Range<Ixs>) -> Si {
-        Si(r.start, Some(r.end), 1)
+    fn from(r: Range<Ixs>) -> SliceOrIndex {
+        SliceOrIndex::Slice(r.start, Some(r.end), 1)
     }
 }
 
-impl From<RangeFrom<Ixs>> for Si {
+impl From<Ixs> for SliceOrIndex {
     #[inline]
-    fn from(r: RangeFrom<Ixs>) -> Si {
-        Si(r.start, None, 1)
+    fn from(r: Ixs) -> SliceOrIndex {
+        SliceOrIndex::Index(r)
     }
 }
 
-impl From<RangeTo<Ixs>> for Si {
+impl From<RangeFrom<Ixs>> for SliceOrIndex {
     #[inline]
-    fn from(r: RangeTo<Ixs>) -> Si {
-        Si(0, Some(r.end), 1)
+    fn from(r: RangeFrom<Ixs>) -> SliceOrIndex {
+        SliceOrIndex::Slice(r.start, None, 1)
     }
 }
 
-impl From<RangeFull> for Si {
+impl From<RangeTo<Ixs>> for SliceOrIndex {
     #[inline]
-    fn from(_: RangeFull) -> Si {
-        S
+    fn from(r: RangeTo<Ixs>) -> SliceOrIndex {
+        SliceOrIndex::Slice(0, Some(r.end), 1)
+    }
+}
+
+impl From<RangeFull> for SliceOrIndex {
+    #[inline]
+    fn from(_: RangeFull) -> SliceOrIndex {
+        SliceOrIndex::Slice(0, None, 1)
+    }
+}
+
+/// Represents all of the necessary information to perform a slice.
+///
+/// The type `T` is typically `[SliceOrIndex; n]`, `[SliceOrIndex]`, or
+/// `Vec<SliceOrIndex>`. The type `D` is the output dimension after calling
+/// [`.slice()`].
+///
+/// [`.slice()`]: struct.ArrayBase.html#method.slice
+#[derive(Debug)]
+#[repr(C)]
+pub struct SliceInfo<T: ?Sized, D: Dimension> {
+    out_dim: PhantomData<D>,
+    indices: T,
+}
+
+impl<T: ?Sized, D> Deref for SliceInfo<T, D>
+where
+    D: Dimension,
+{
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.indices
+    }
+}
+
+impl<T, D> SliceInfo<T, D>
+where
+    D: Dimension,
+{
+    /// Returns a new `SliceInfo` instance.
+    ///
+    /// If you call this method, you are guaranteeing that `out_dim` and
+    /// `out_ndim` are consistent with `indices`.
+    #[doc(hidden)]
+    pub unsafe fn new_unchecked(indices: T, out_dim: PhantomData<D>) -> SliceInfo<T, D> {
+        SliceInfo {
+            out_dim: out_dim,
+            indices: indices,
+        }
+    }
+}
+
+impl<T, D> SliceInfo<T, D>
+where
+    T: AsRef<[SliceOrIndex]>,
+    D: Dimension,
+{
+    /// Returns a new `SliceInfo` instance.
+    ///
+    /// **Panics** if `D` is not consistent with `indices`.
+    pub fn new(indices: T) -> SliceInfo<T, D> {
+        let out_ndim = indices.as_ref().iter().filter(|s| s.is_slice()).count();
+        if let Some(ndim) = D::NDIM {
+            assert_eq!(out_ndim, ndim);
+        }
+        SliceInfo {
+            out_dim: PhantomData,
+            indices: indices,
+        }
+    }
+}
+
+impl<T: ?Sized, D> SliceInfo<T, D>
+where
+    T: AsRef<[SliceOrIndex]>,
+    D: Dimension,
+{
+    /// Returns the number of dimensions after calling
+    /// [`.slice()`](struct.ArrayBase.html#method.slice) (including taking
+    /// subviews).
+    ///
+    /// If `D` is a fixed-size dimension type, then this is equivalent to
+    /// `D::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
+    /// over the ranges/indices.
+    pub fn out_ndim(&self) -> usize {
+        D::NDIM.unwrap_or_else(|| {
+            self.indices
+                .as_ref()
+                .iter()
+                .filter(|s| s.is_slice())
+                .count()
+        })
+    }
+}
+
+impl<T, D> AsRef<[SliceOrIndex]> for SliceInfo<T, D>
+where
+    T: AsRef<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn as_ref(&self) -> &[SliceOrIndex] {
+        self.indices.as_ref()
+    }
+}
+
+impl<T, D> AsRef<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
+where
+    T: AsRef<[SliceOrIndex]>,
+    D: Dimension,
+{
+    fn as_ref(&self) -> &SliceInfo<[SliceOrIndex], D> {
+        unsafe {
+            // This is okay because the only non-zero-sized member of
+            // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
+            // should have the same bitwise representation as
+            // `&[SliceOrIndex]`.
+            &*(self.indices.as_ref() as *const [SliceOrIndex]
+                as *const SliceInfo<[SliceOrIndex], D>)
+        }
+    }
+}
+
+impl<T, D> Copy for SliceInfo<T, D>
+where
+    T: Copy,
+    D: Dimension,
+{
+}
+
+impl<T, D> Clone for SliceInfo<T, D>
+where
+    T: Clone,
+    D: Dimension,
+{
+    fn clone(&self) -> Self {
+        SliceInfo {
+            out_dim: PhantomData,
+            indices: self.indices.clone(),
+        }
     }
 }
 
 
-impl Si {
-    #[inline]
-    pub fn step(self, step: Ixs) -> Self {
-        Si(self.0, self.1, self.2 * step)
+#[doc(hidden)]
+pub trait SliceNextDim<D1, D2> {
+    fn next_dim(&self, PhantomData<D1>) -> PhantomData<D2>;
+}
+
+impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for Range<Ixs> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
     }
 }
 
-copy_and_clone!{Si}
+impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFrom<Ixs> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
 
-/// Slice value for the full range of an axis.
-pub const S: Si = Si(0, None, 1);
+impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeTo<Ixs> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
+impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
+impl<D1: Dimension> SliceNextDim<D1, D1> for Ixs {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
+        PhantomData
+    }
+}
 
 /// Slice argument constructor.
 ///
-/// `s![]` takes a list of ranges, separated by comma, with optional strides
-/// that are separated from the range by a semicolon.
-/// It is converted into a slice argument with type `&[Si; N]`.
+/// `s![]` takes a list of ranges/indices, separated by comma, with optional
+/// step sizes that are separated from the range by a semicolon. It is
+/// converted into a [`&SliceInfo`] instance.
 ///
-/// Each range uses signed indices, where a negative value is counted from
-/// the end of the axis. Strides are also signed and may be negative, but
-/// must not be zero.
+/// [`&SliceInfo`]: struct.SliceInfo.html
 ///
-/// The syntax is `s![` *[ axis-slice [, axis-slice [ , ... ] ] ]* `]`.
-/// Where *axis-slice* is either *i* `..` *j* or *i* `..` *j* `;` *step*,
-/// and *i* is the start index, *j* end index and *step* the element step
-/// size (which defaults to 1). The number of *axis-slice* must match the
-/// number of axes in the array.
+/// Each range/index uses signed indices, where a negative value is counted
+/// from the end of the axis. Step sizes are also signed and may be negative,
+/// but must not be zero.
 ///
-/// For example `s![0..4;2, 1..5]` is a slice of rows 0..4 with step size 2,
-/// and columns 1..5 with default step size 1. The slice would have
-/// shape `[2, 4]`.
+/// The syntax is `s![` *[ axis-slice-or-index [, axis-slice-or-index [ , ... ]
+/// ] ]* `]`, where *axis-slice-or-index* is any of the following:
 ///
-/// If an array has two axes, the slice argument is passed as
-/// type `&[Si; 2]`.  The macro expansion of `s![a..b;c, d..e]`
-/// is equivalent to `&[Si(a, Some(b), c), Si(d, Some(e), 1)]`.
+/// * *index*: an index to use for taking a subview with respect to that axis
+/// * *range*: a range with step size 1 to use for slicing that axis
+/// * *range* `;` *step*: a range with step size *step* to use for slicing that axis
+///
+/// The number of *axis-slice-or-index* must match the number of axes in the
+/// array. *index*, *range*, and *step* can be expressions. *index* and *step*
+/// must be of type [`Ixs`]. *range* can be of type `Range<Ixs>`,
+/// `RangeTo<Ixs>`, `RangeFrom<Ixs>`, or `RangeFull`.
+///
+/// [`Ixs`]: type.Ixs.html
+///
+/// For example `s![0..4;2, 6, 1..5]` is a slice of the first axis for 0..4
+/// with step size 2, a subview of the second axis at index 6, and a slice of
+/// the third axis for 1..5 with default step size 1. The input array must have
+/// 3 dimensions. The resulting slice would have shape `[2, 4]` for
+/// [`.slice()`], [`.slice_mut()`], and [`.slice_move()`], and shape
+/// `[2, 1, 4]` for [`.slice_inplace()`].
+///
+/// [`.slice()`]: struct.ArrayBase.html#method.slice
+/// [`.slice_mut()`]: struct.ArrayBase.html#method.slice_mut
+/// [`.slice_move()`]: struct.ArrayBase.html#method.slice_move
+/// [`.slice_inplace()`]: struct.ArrayBase.html#method.slice_inplace
+///
+/// See also [*Slicing*](struct.ArrayBase.html#slicing).
+///
+/// # Example
 ///
 /// ```
 /// #[macro_use]
@@ -143,35 +350,67 @@ pub const S: Si = Si(0, None, 1);
 /// ```
 #[macro_export]
 macro_rules! s(
-    // convert a..b;c into @step(a..b, c), final item
-    (@parse [$($stack:tt)*] $r:expr;$s:expr) => {
-        &[$($stack)* s!(@step $r, $s)]
+    // convert a..b;c into @convert(a..b, c), final item
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
+        unsafe {
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@convert $r, $s)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
+        }
     };
-    // convert a..b into @step(a..b, 1), final item
-    (@parse [$($stack:tt)*] $r:expr) => {
-        &[$($stack)* s!(@step $r, 1)]
+    // convert a..b into @convert(a..b), final item
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
+        unsafe {
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@convert $r)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
+        }
     };
-    // convert a..b;c into @step(a..b, c), final item, trailing comma
-    (@parse [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        &[$($stack)* s!(@step $r, $s)]
+    // convert a..b;c into @convert(a..b, c), final item, trailing comma
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
+        unsafe {
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@convert $r, $s)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
+        }
     };
-    // convert a..b into @step(a..b, 1), final item, trailing comma
-    (@parse [$($stack:tt)*] $r:expr ,) => {
-        &[$($stack)* s!(@step $r, 1)]
+    // convert a..b into @convert(a..b), final item, trailing comma
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
+        unsafe {
+            &$crate::SliceInfo::new_unchecked(
+                [$($stack)* s!(@convert $r)],
+                $crate::SliceNextDim::next_dim(&$r, $dim),
+            )
+        }
     };
-    // convert a..b;c into @step(a..b, c)
-    (@parse [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
-        s![@parse [$($stack)* s!(@step $r, $s),] $($t)*]
+    // convert a..b;c into @convert(a..b, c)
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
+        s![@parse
+            $crate::SliceNextDim::next_dim(&$r, $dim),
+            [$($stack)* s!(@convert $r, $s),]
+            $($t)*
+        ]
     };
-    // convert a..b into @step(a..b, 1)
-    (@parse [$($stack:tt)*] $r:expr, $($t:tt)*) => {
-        s![@parse [$($stack)* s!(@step $r, 1),] $($t)*]
+    // convert a..b into @convert(a..b)
+    (@parse $dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
+        s![@parse
+            $crate::SliceNextDim::next_dim(&$r, $dim),
+            [$($stack)* s!(@convert $r),]
+            $($t)*
+        ]
     };
-    // convert range, step into Si
-    (@step $r:expr, $s:expr) => {
-        <$crate::Si as ::std::convert::From<_>>::from($r).step($s)
+    // convert range/index into SliceOrIndex
+    (@convert $r:expr) => {
+        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r)
+    };
+    // convert range/index and step into SliceOrIndex
+    (@convert $r:expr, $s:expr) => {
+        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step($s)
     };
     ($($t:tt)*) => {
-        s![@parse [] $($t)*]
+        s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );

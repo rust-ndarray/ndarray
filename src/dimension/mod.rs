@@ -214,7 +214,7 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
 
 /// Compute the equivalent unsigned index given the axis length and signed index.
 #[inline]
-fn abs_index(len: Ix, index: Ixs) -> Ix {
+pub fn abs_index(len: Ix, index: Ixs) -> Ix {
     if index < 0 {
         len - (-index as Ix)
     } else {
