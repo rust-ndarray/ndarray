@@ -203,7 +203,7 @@ fn test_cow()
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
     let mut rev = mat.reshape(4);
-    rev.islice(&[Si(0, None, -1)]);
+    rev.slice_inplace(&[Si(0, None, -1)]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -228,7 +228,7 @@ fn test_cow_shrink()
     // mutation shrinks the array and gives it different strides
     //
     let mut mat = RcArray::zeros((2, 3));
-    //mat.islice(s![.., ..;2]);
+    //mat.slice_inplace(s![.., ..;2]);
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -243,7 +243,7 @@ fn test_cow_shrink()
     assert_eq!(n.get((0, 1)), Some(&0));
     // small has non-C strides this way
     let mut small = mat.reshape(6);
-    small.islice(s![4..;-1]);
+    small.slice_inplace(s![4..;-1]);
     assert_eq!(small[0], 6);
     assert_eq!(small[1], 5);
     let before = small.clone();
@@ -367,7 +367,7 @@ fn assign()
     let mut a = arr2(&[[1, 2], [3, 4]]);
     {
         let mut v = a.view_mut();
-        v.islice(&[Si(0, Some(1), 1), S]);
+        v.slice_inplace(&[Si(0, Some(1), 1), S]);
         v.fill(0);
     }
     assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
@@ -1073,7 +1073,7 @@ fn to_owned_memory_order() {
 fn to_owned_neg_stride() {
     let mut c = arr2(&[[1, 2, 3],
                        [4, 5, 6]]);
-    c.islice(s![.., ..;-1]);
+    c.slice_inplace(s![.., ..;-1]);
     let co = c.to_owned();
     assert_eq!(c, co);
 }
@@ -1238,10 +1238,10 @@ fn test_to_vec() {
                        [7, 8, 9],
                        [10,11,12]]);
 
-    a.islice(s![..;-1, ..]);
+    a.slice_inplace(s![..;-1, ..]);
     assert_eq!(a.row(3).to_vec(), vec![1, 2, 3]);
     assert_eq!(a.column(2).to_vec(), vec![12, 9, 6, 3]);
-    a.islice(s![.., ..;-1]);
+    a.slice_inplace(s![.., ..;-1]);
     assert_eq!(a.row(3).to_vec(), vec![3, 2, 1]);
 }
 
@@ -1257,7 +1257,7 @@ fn test_array_clone_unalias() {
 #[test]
 fn test_array_clone_same_view() {
     let mut a = Array::from_iter(0..9).into_shape((3, 3)).unwrap();
-    a.islice(s![..;-1, ..;-1]);
+    a.slice_inplace(s![..;-1, ..;-1]);
     let b = a.clone();
     assert_eq!(a, b);
 }

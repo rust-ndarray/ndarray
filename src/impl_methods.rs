@@ -217,7 +217,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn slice(&self, indexes: &D::SliceArg) -> ArrayView<A, D> {
         let mut arr = self.view();
-        arr.islice(indexes);
+        arr.slice_inplace(indexes);
         arr
     }
 
@@ -233,7 +233,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut
     {
         let mut arr = self.view_mut();
-        arr.islice(indexes);
+        arr.slice_inplace(indexes);
         arr
     }
 
@@ -245,7 +245,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
-    pub fn islice(&mut self, indexes: &D::SliceArg) {
+    pub fn slice_inplace(&mut self, indexes: &D::SliceArg) {
         let offset = D::do_slices(&mut self.dim, &mut self.strides, indexes);
         unsafe {
             self.ptr = self.ptr.offset(offset);

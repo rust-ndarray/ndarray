@@ -421,14 +421,18 @@ pub type Ixs = isize;
 /// ## Slicing
 ///
 /// You can use slicing to create a view of a subset of the data in
-/// the array. Slicing methods include `.slice()`, `.islice()`,
-/// `.slice_mut()`.
+/// the array. Slicing methods include [`.slice()`], [`.slice_mut()`],
+/// and [`.slice_inplace()`].
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is a reference
 /// to a fixed size array of [`Si`]; see its docs for more information.)
 ///
 /// [`Si`]: struct.Si.html
+///
+/// [`.slice()`]: #method.slice
+/// [`.slice_mut()`]: #method.slice_mut
+/// [`.slice_inplace()`]: #method.slice_inplace
 ///
 /// ```
 /// // import the s![] macro

@@ -53,7 +53,7 @@ fn serial_many_dim()
     {
         // Test a sliced array.
         let mut a = RcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
-        a.islice(s![..;-1, .., .., ..2]);
+        a.slice_inplace(s![..;-1, .., .., ..2]);
         let serial = json::encode(&a).unwrap();
         println!("Encode {:?} => {:?}", a, serial);
         let res = json::decode::<RcArray<f32, _>>(&serial);
@@ -114,7 +114,7 @@ fn serial_many_dim_serde()
     {
         // Test a sliced array.
         let mut a = RcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
-        a.islice(s![..;-1, .., .., ..2]);
+        a.slice_inplace(s![..;-1, .., .., ..2]);
         let serial = serde_json::to_string(&a).unwrap();
         println!("Encode {:?} => {:?}", a, serial);
         let res = serde_json::from_str::<RcArray<f32, _>>(&serial);
@@ -221,7 +221,7 @@ fn serial_many_dim_serde_msgpack()
     {
         // Test a sliced array.
         let mut a = RcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
-        a.islice(s![..;-1, .., .., ..2]);
+        a.slice_inplace(s![..;-1, .., .., ..2]);
 
         let mut buf = Vec::new();
         serde::Serialize::serialize(&a, &mut rmp_serde::Serializer::new(&mut buf)).ok().unwrap();
@@ -273,7 +273,7 @@ fn serial_many_dim_ron()
     {
         // Test a sliced array.
         let mut a = RcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
-        a.islice(s![..;-1, .., .., ..2]);
+        a.slice_inplace(s![..;-1, .., .., ..2]);
 
         let a_s = ron_serialize(&a).unwrap();
 
