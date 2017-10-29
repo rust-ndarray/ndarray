@@ -157,6 +157,15 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
+    /// Return an index of same type and with the specified dimensionality.
+    ///
+    /// This method is useful for generalizing over fixed-size and
+    /// variable-size dimension representations.
+    ///
+    /// **Panics** if `Self` has a fixed size that is not `ndim`.
+    fn zero_index_with_ndim(ndim: usize) -> Self;
+
+    #[doc(hidden)]
     #[inline]
     fn first_index(&self) -> Option<Self> {
         for ax in self.slice().iter() {
@@ -371,6 +380,11 @@ impl Dimension for Dim<[Ix; 0]> {
     #[inline]
     fn into_pattern(self) -> Self::Pattern { }
     #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 0);
+        Self::default()
+    }
+    #[inline]
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
     }
@@ -400,6 +414,11 @@ impl Dimension for Dim<[Ix; 1]> {
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         get!(&self, 0)
+    }
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 1);
+        Self::default()
     }
     #[inline]
     fn next_for(&self, mut index: Self) -> Option<Self> {
@@ -490,6 +509,11 @@ impl Dimension for Dim<[Ix; 2]> {
     fn slice(&self) -> &[Ix] { self.ix() }
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 2);
+        Self::default()
+    }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = get!(&index, 0);
@@ -631,6 +655,12 @@ impl Dimension for Dim<[Ix; 3]> {
     }
 
     #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 3);
+        Self::default()
+    }
+
+    #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = get!(&index, 0);
         let mut j = get!(&index, 1);
@@ -734,6 +764,11 @@ macro_rules! large_dim {
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
             #[inline]
+            fn zero_index_with_ndim(ndim: usize) -> Self {
+                assert_eq!(ndim, $n);
+                Self::default()
+            }
+            #[inline]
             $($insert_axis)*
             #[inline]
             fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
@@ -784,6 +819,11 @@ impl Dimension for IxDyn
     #[inline]
     fn zero_index(&self) -> Self {
         IxDyn::zeros(self.ndim())
+    }
+
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        IxDyn::zeros(ndim)
     }
 
     #[inline]
