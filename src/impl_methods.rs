@@ -19,7 +19,7 @@ use dimension;
 use iterators;
 use error::{self, ShapeError, ErrorKind};
 use dimension::IntoDimension;
-use dimension::{axes_of, Axes, merge_axes, stride_offset};
+use dimension::{axes_of, Axes, do_slice, merge_axes, stride_offset};
 use iterators::{
     new_lanes,
     new_lanes_mut,
@@ -31,6 +31,7 @@ use zip::Zip;
 
 use {
     NdIndex,
+    Si,
 };
 use iter::{
     AxisChunksIter,
@@ -246,7 +247,69 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if an index is out of bounds or stride is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `indexes` does not match the number of array axes.)
     pub fn slice_inplace(&mut self, indexes: &D::SliceArg) {
-        let offset = D::do_slices(&mut self.dim, &mut self.strides, indexes);
+        let indexes: &[Si] = indexes.as_ref();
+        assert_eq!(indexes.len(), self.ndim());
+        indexes
+            .iter()
+            .enumerate()
+            .for_each(|(axis, &Si(start, end, step))| {
+                self.slice_axis_inplace(Axis(axis), start, end, step)
+            });
+    }
+
+    /// Return a view of the array, sliced along the specified axis.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    pub fn slice_axis(
+        &self,
+        axis: Axis,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    ) -> ArrayView<A, D> {
+        let mut view = self.view();
+        view.slice_axis_inplace(axis, start, end, step);
+        view
+    }
+
+    /// Return a mutable view of the array, sliced along the specified axis.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    pub fn slice_axis_mut(
+        &mut self,
+        axis: Axis,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    ) -> ArrayViewMut<A, D>
+    where
+        S: DataMut,
+    {
+        let mut view_mut = self.view_mut();
+        view_mut.slice_axis_inplace(axis, start, end, step);
+        view_mut
+    }
+
+    /// Slice the array in place along the specified axis.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    pub fn slice_axis_inplace(
+        &mut self,
+        axis: Axis,
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    ) {
+        let offset = do_slice(
+            &mut self.dim.slice_mut()[axis.index()],
+            &mut self.strides.slice_mut()[axis.index()],
+            start,
+            end,
+            step,
+        );
         unsafe {
             self.ptr = self.ptr.offset(offset);
         }

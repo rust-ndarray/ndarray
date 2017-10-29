@@ -84,6 +84,13 @@ fn slice_oob()
 
 #[should_panic]
 #[test]
+fn slice_axis_oob() {
+    let a = RcArray::<i32, _>::zeros((3, 4));
+    let _vi = a.slice_axis(Axis(0), 0, Some(10), 1);
+}
+
+#[should_panic]
+#[test]
 fn slice_wrong_dim()
 {
     let a = RcArray::<i32, _>::zeros(vec![3, 4, 5]);

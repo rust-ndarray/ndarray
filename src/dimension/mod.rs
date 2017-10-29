@@ -212,6 +212,77 @@ pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
     }
 }
 
+/// Compute the equivalent unsigned index given the axis length and signed index.
+#[inline]
+fn abs_index(len: Ix, index: Ixs) -> Ix {
+    if index < 0 {
+        len - (-index as Ix)
+    } else {
+        index as Ix
+    }
+}
+
+/// Modify dimension, stride and return data pointer offset
+///
+/// **Panics** if stride is 0 or if any index is out of bounds.
+pub fn do_slice(
+    dim: &mut Ix,
+    stride: &mut Ix,
+    start: Ixs,
+    end: Option<Ixs>,
+    step: Ixs,
+) -> isize {
+    let mut offset = 0;
+
+    let axis_len = *dim;
+    let start = abs_index(axis_len, start);
+    let mut end = abs_index(axis_len, end.unwrap_or(axis_len as Ixs));
+    if end < start {
+        end = start;
+    }
+
+    ndassert!(
+        start <= axis_len,
+        "Slice begin {} is past end of axis of length {}",
+        start,
+        axis_len,
+    );
+    ndassert!(
+        end <= axis_len,
+        "Slice end {} is past end of axis of length {}",
+        end,
+        axis_len,
+    );
+
+    let m = end - start;
+    // stride
+    let s = (*stride) as Ixs;
+
+    // Data pointer offset
+    offset += stride_offset(start, *stride);
+    // Adjust for strides
+    ndassert!(step != 0, "Slice stride must not be zero");
+    // How to implement negative strides:
+    //
+    // Increase start pointer by
+    // old stride * (old dim - 1)
+    // to put the pointer completely in the other end
+    if step < 0 {
+        offset += stride_offset(m - 1, *stride);
+    }
+
+    let s_prim = s * step;
+
+    let d = m / step.abs() as Ix;
+    let r = m % step.abs() as Ix;
+    let m_prim = d + if r > 0 { 1 } else { 0 };
+
+    // Update dimension and stride coordinate
+    *dim = m_prim;
+    *stride = s_prim as Ix;
+
+    offset
+}
 
 pub fn merge_axes<D>(dim: &mut D, strides: &mut D, take: Axis, into: Axis) -> bool
     where D: Dimension,

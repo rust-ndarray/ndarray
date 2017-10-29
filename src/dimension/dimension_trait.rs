@@ -240,69 +240,6 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
-    /// Modify dimension, strides and return data pointer offset
-    ///
-    /// **Panics** if `slices` does not correspond to the number of axes,
-    /// if any stride is 0, or if any index is out of bounds.
-    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &Self::SliceArg) -> isize {
-        let slices = slices.as_ref();
-        let mut offset = 0;
-        ndassert!(slices.len() == dim.slice().len(),
-                  "SliceArg {:?}'s length does not match dimension {:?}",
-                  slices, dim);
-        for (dr, sr, &slc) in izip!(dim.slice_mut(), strides.slice_mut(), slices) {
-            let m = *dr;
-            let mi = m as Ixs;
-            let Si(b1, opt_e1, s1) = slc;
-            let e1 = opt_e1.unwrap_or(mi);
-
-            let b1 = abs_index(mi, b1);
-            let mut e1 = abs_index(mi, e1);
-            if e1 < b1 { e1 = b1; }
-
-            ndassert!(b1 <= m,
-                      concat!("Slice begin {} is past end of axis of length {}",
-                              " (for SliceArg {:?})"),
-                      b1, m, slices);
-            ndassert!(e1 <= m,
-                      concat!("Slice end {} is past end of axis of length {}",
-                              " (for SliceArg {:?})"),
-                      e1, m, slices);
-
-            let m = e1 - b1;
-            // stride
-            let s = (*sr) as Ixs;
-
-            // Data pointer offset
-            offset += stride_offset(b1, *sr);
-            // Adjust for strides
-            ndassert!(s1 != 0,
-                      concat!("Slice stride must not be none", 
-                              "(for SliceArg {:?})"),
-                      slices);
-            // How to implement negative strides:
-            //
-            // Increase start pointer by
-            // old stride * (old dim - 1)
-            // to put the pointer completely in the other end
-            if s1 < 0 {
-                offset += stride_offset(m - 1, *sr);
-            }
-
-            let s_prim = s * s1;
-
-            let d = m / s1.abs() as Ix;
-            let r = m % s1.abs() as Ix;
-            let m_prim = d + if r > 0 { 1 } else { 0 };
-
-            // Update dimension and stride coordinate
-            *dr = m_prim;
-            *sr = s_prim as Ix;
-        }
-        offset
-    }
-
-    #[doc(hidden)]
     fn is_contiguous(dim: &Self, strides: &Self) -> bool {
         let defaults = dim.default_strides();
         if strides.equal(&defaults) {
@@ -397,18 +334,6 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
 
     private_decl!{}
 }
-
-// utility functions
-
-#[inline]
-fn abs_index(len: Ixs, index: Ixs) -> Ix {
-    if index < 0 {
-        (len + index) as Ix
-    } else {
-        index as Ix
-    }
-}
-
 
 // Dimension impls
 
