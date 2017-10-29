@@ -477,11 +477,16 @@ pub type Ixs = isize;
 ///
 /// ## Subviews
 ///
-/// Subview methods allow you to restrict the array view while removing
-/// one axis from the array. Subview methods include `.subview()`,
-/// `.isubview()`, `.subview_mut()`.
+/// Subview methods allow you to restrict the array view while removing one
+/// axis from the array. Subview methods include [`.subview()`],
+/// [`.subview_mut()`], [`.into_subview()`], and [`.subview_inplace()`].
 ///
 /// Subview takes two arguments: `axis` and `index`.
+///
+/// [`.subview()`]: #method.subview
+/// [`.subview_mut()`]: #method.subview_mut
+/// [`.into_subview()`]: #method.into_subview
+/// [`.subview_inplace()`]: #method.subview_inplace
 ///
 /// ```
 /// use ndarray::{arr3, aview2, Axis};
@@ -516,8 +521,8 @@ pub type Ixs = isize;
 ///                              [ 7, 10]]));
 /// ```
 ///
-/// `.isubview()` modifies the view in the same way as `subview()`, but
-/// since it is *in place*, it cannot remove the collapsed axis. It becomes
+/// [`.subview_inplace()`] modifies the view in the same way as [`.subview()`],
+/// but since it is *in place*, it cannot remove the collapsed axis. It becomes
 /// an axis of length 1.
 ///
 /// `.outer_iter()` is an iterator of every subview along the zeroth (outer)
