@@ -6,6 +6,7 @@ extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
 
+use ndarray::{SliceInfo, SliceOrIndex};
 use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
@@ -64,6 +65,172 @@ fn test_slice()
     let vi = A.slice(s![.., ..]);
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
+}
+
+#[test]
+fn test_slice_with_many_dim() {
+    let mut A = RcArray::<usize, _>::zeros(&[3, 1, 4, 1, 3, 2, 1][..]);
+    for (i, elt) in A.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let vi = A.slice(s![..2, .., ..;2, ..1, ..1, 1.., ..]);
+    let new_shape = &[2, 1, 2, 1, 1, 1, 1][..];
+    assert_eq!(vi.shape(), new_shape);
+    let correct = array![
+        [A[&[0, 0, 0, 0, 0, 1, 0][..]], A[&[0, 0, 2, 0, 0, 1, 0][..]]],
+        [A[&[1, 0, 0, 0, 0, 1, 0][..]], A[&[1, 0, 2, 0, 0, 1, 0][..]]]
+    ].into_shape(new_shape)
+        .unwrap();
+    assert_eq!(vi, correct);
+
+    let vi = A.slice(s![..2, 0, ..;2, 0, 0, 1, 0]);
+    assert_eq!(vi.shape(), &[2, 2][..]);
+    let correct = array![
+        [A[&[0, 0, 0, 0, 0, 1, 0][..]], A[&[0, 0, 2, 0, 0, 1, 0][..]]],
+        [A[&[1, 0, 0, 0, 0, 1, 0][..]], A[&[1, 0, 2, 0, 0, 1, 0][..]]]
+    ];
+    assert_eq!(vi, correct);
+}
+
+#[test]
+fn test_slice_array_fixed() {
+    let mut arr = Array3::<f64>::zeros((5, 2, 5));
+    let info = s![1.., 1, ..;2];
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info);
+}
+
+#[test]
+fn test_slice_dyninput_array_fixed() {
+    let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
+    let info = s![1.., 1, ..;2];
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_array_dyn() {
+    let mut arr = Array3::<f64>::zeros((5, 2, 5));
+    let info = &SliceInfo::<_, IxDyn>::new([
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(1),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info);
+}
+
+#[test]
+fn test_slice_dyninput_array_dyn() {
+    let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
+    let info = &SliceInfo::<_, IxDyn>::new([
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(1),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_dyninput_vec_fixed() {
+    let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
+    let info = &SliceInfo::<_, Ix2>::new(vec![
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(1),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info.as_ref());
+    arr.slice_mut(info.as_ref());
+    arr.view().slice_move(info.as_ref());
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_dyninput_vec_dyn() {
+    let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
+    let info = &SliceInfo::<_, IxDyn>::new(vec![
+        SliceOrIndex::from(1..),
+        SliceOrIndex::from(1),
+        SliceOrIndex::from(..).step(2),
+    ]);
+    arr.slice(info.as_ref());
+    arr.slice_mut(info.as_ref());
+    arr.view().slice_move(info.as_ref());
+    arr.view().slice_inplace(info.as_ref());
+}
+
+#[test]
+fn test_slice_with_subview() {
+    let mut arr = RcArray::<usize, _>::zeros((3, 5, 4));
+    for (i, elt) in arr.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let vi = arr.slice(s![1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[2, 2]);
+    assert!(
+        vi.iter()
+            .zip(arr.subview(Axis(1), 2).slice(s![1.., ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let vi = arr.slice(s![1, 2, ..;2]);
+    assert_eq!(vi.shape(), &[2]);
+    assert!(
+        vi.iter()
+            .zip(
+                arr.subview(Axis(0), 1)
+                    .subview(Axis(0), 2)
+                    .slice(s![..;2])
+                    .iter()
+            )
+            .all(|(a, b)| a == b)
+    );
+
+    let vi = arr.slice(s![1, 2, 3]);
+    assert_eq!(vi.shape(), &[]);
+    assert_eq!(vi, Array0::from_elem((), arr[(1, 2, 3)]));
+}
+
+#[test]
+fn test_slice_inplace_with_subview_inplace() {
+    let mut arr = RcArray::<usize, _>::zeros((3, 5, 4));
+    for (i, elt) in arr.iter_mut().enumerate() {
+        *elt = i;
+    }
+
+    let mut vi = arr.view();
+    vi.slice_inplace(s![1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[2, 1, 2]);
+    assert!(
+        vi.iter()
+            .zip(arr.slice(s![1.., 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let mut vi = arr.view();
+    vi.slice_inplace(s![1, 2, ..;2]);
+    assert_eq!(vi.shape(), &[1, 1, 2]);
+    assert!(
+        vi.iter()
+            .zip(arr.slice(s![1..2, 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b)
+    );
+
+    let mut vi = arr.view();
+    vi.slice_inplace(s![1, 2, 3]);
+    assert_eq!(vi.shape(), &[1, 1, 1]);
+    assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
 }
 
 #[should_panic]
