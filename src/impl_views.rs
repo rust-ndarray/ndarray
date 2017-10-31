@@ -137,8 +137,15 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// Get a reference of a element through the view.
     ///
     /// This method is like `Index::index` but with a longer lifetime (matching
-    /// the array view); which we can't do for general arrays and not in the
+    /// the array view); which we can only do for the array view and not in the
     /// `Index` trait.
+    ///
+    /// See also [the `get` method][1] which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.get
+    ///
+    /// **Panics** if index is out of bounds.
     pub fn index<I>(&self, index: I) -> &'a A
         where I: NdIndex<D>,
     {
@@ -154,6 +161,13 @@ impl<'a, A, D> ArrayView<'a, A, D>
     ///
     /// This method is like `elem` with a longer lifetime (matching the array
     /// view); which we can't do for general arrays.
+    ///
+    /// See also [the `uget` method][1] which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.uget
+    ///
+    /// **Note:** only unchecked for non-debug builds of ndarray.
     pub unsafe fn uindex<I>(&self, index: I) -> &'a A
         where I: NdIndex<D>,
     {
@@ -263,9 +277,16 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     /// Convert a mutable array view to a mutable reference of a element.
     ///
-    /// This method is like `Index::index` but with a longer lifetime (matching
-    /// the array view); which we can't do for general arrays and not in the
-    /// `Index` trait.
+    /// This method is like `IndexMut::index_mut` but with a longer lifetime
+    /// (matching the array view); which we can only do for the array view and
+    /// not in the `Index` trait.
+    ///
+    /// See also [the `get_mut` method][1] which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.get_mut
+    ///
+    /// **Panics** if index is out of bounds.
     pub fn into_index_mut<I>(mut self, index: I) -> &'a mut A
         where I: NdIndex<D>,
     {
@@ -279,9 +300,15 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         }
     }
 
-    /// Convert a mutable array view to a mutable reference of a element without boundary check
+    /// Convert a mutable array view to a mutable reference of a element without
+    /// boundary check.
     ///
+    /// See also [the `uget_mut` method][1] which works for all arrays and array
+    /// views.
     ///
+    /// [1]: struct.ArrayBase.html#method.uget_mut
+    ///
+    /// **Note:** only unchecked for non-debug builds of ndarray.
     pub unsafe fn into_index_mut_unchecked<I>(mut self, index: I) -> &'a mut A
         where I: NdIndex<D>
     {
