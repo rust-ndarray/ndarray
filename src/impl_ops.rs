@@ -293,7 +293,7 @@ mod arithmetic_ops {
     }
 
     impl<'a, A, S, D> Neg for &'a ArrayBase<S, D>
-        where A: Clone + Neg<Output=A>,
+        where &'a A: 'a + Neg<Output=A>,
               S: Data<Elem=A>,
               D: Dimension
     {
@@ -301,7 +301,7 @@ mod arithmetic_ops {
         /// Perform an elementwise negation of reference `self` and return the
         /// result as a new `Array`.
         fn neg(self) -> Array<A, D> {
-            self.to_owned().neg()
+            self.map(Neg::neg)
         }
     }
 
@@ -321,7 +321,7 @@ mod arithmetic_ops {
     }
 
     impl<'a, A, S, D> Not for &'a ArrayBase<S, D>
-        where A: Clone + Not<Output=A>,
+        where &'a A: 'a + Not<Output=A>,
               S: Data<Elem=A>,
               D: Dimension
     {
@@ -329,7 +329,7 @@ mod arithmetic_ops {
         /// Perform an elementwise unary not of reference `self` and return the
         /// result as a new `Array`.
         fn not(self) -> Array<A, D> {
-            self.to_owned().not()
+            self.map(Not::not)
         }
     }
 }

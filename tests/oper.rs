@@ -31,9 +31,12 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<A: NdFloat + fmt::Debug, D: ndarray::Dimension>
-    (op: &str, mut aa: RcArray<A,D>, bb: RcArray<A, D>, cc: RcArray<A, D>)
-{
+fn test_oper_arr<D: Dimension>(
+    op: &str,
+    mut aa: RcArray<f32, D>,
+    bb: RcArray<f32, D>,
+    cc: RcArray<f32, D>,
+) {
     match op {
         "+" => {
             assert_eq!(&aa + &bb, cc);
