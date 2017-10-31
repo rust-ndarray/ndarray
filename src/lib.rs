@@ -17,7 +17,7 @@
 //! Each dimension is also called an *axis*.
 //!
 //! - [**`ArrayBase`**](struct.ArrayBase.html):
-//!   The *n*-dimensional array type itself.<br>
+//!   The *n*-dimensional array type itself.  
 //!   It is used to implement both the owned arrays and the views; see its docs
 //!   for an overview of all array features.  
 //! - The main specific array type is [**`Array`**](type.Array.html), which owns
@@ -427,6 +427,7 @@ pub type Ixs = isize;
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is a reference
 /// to a fixed size array of [`Si`]; see its docs for more information.)
+///
 /// [`Si`]: struct.Si.html
 ///
 /// ```

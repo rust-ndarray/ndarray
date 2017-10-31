@@ -38,6 +38,7 @@ use super::Ixs;
 /// Macro equivalent is `s![a..;-1]`.
 ///
 /// The constant [`S`] is a shorthand for the full range of an axis.
+///
 /// [`S`]: constant.S.html
 pub struct Si(pub Ixs, pub Option<Ixs>, pub Ixs);
 
