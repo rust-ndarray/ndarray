@@ -28,24 +28,8 @@ use {Zip, FoldWhile};
 
 #[cold]
 #[inline(never)]
-fn array_out_of_bounds() -> ! {
+pub(crate) fn array_out_of_bounds() -> ! {
     panic!("ndarray: index out of bounds");
-}
-
-// Macro to insert more informative out of bounds message in debug builds
-#[cfg(debug_assertions)]
-macro_rules! debug_bounds_check {
-    ($self_:ident, $index:expr) => {
-        if let None = $index.index_checked(&$self_.dim, &$self_.strides) {
-            panic!("ndarray: index {:?} is out of bounds for array of shape {:?}",
-                   $index, $self_.shape());
-        }
-    };
-}
-
-#[cfg(not(debug_assertions))]
-macro_rules! debug_bounds_check {
-    ($self_:ident, $index:expr) => { };
 }
 
 #[inline(always)]
@@ -90,62 +74,6 @@ impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
         unsafe {
             &mut *self.as_mut_ptr().offset(index.index_checked(&self.dim, &self.strides)
                                                 .unwrap_or_else(|| array_out_of_bounds()))
-        }
-    }
-}
-
-impl<'a, A, D> ArrayView<'a, A, D>
-where
-    D: Dimension,
-{
-    /// Get a reference of a element through the view.
-    ///
-    /// This is a replacement of `Index::index` since it forces us a wrong lifetime
-    /// https://github.com/bluss/rust-ndarray/issues/371
-    pub fn elem<I: NdIndex<D>>(&self, index: I) -> &'a A {
-        debug_bounds_check!(self, index);
-        unsafe {
-            &*self.as_ptr().offset(
-                index
-                    .index_checked(&self.dim, &self.strides)
-                    .unwrap_or_else(|| array_out_of_bounds()),
-            )
-        }
-    }
-
-    /// Get a reference of a element through the view without boundary check
-    ///
-    /// This is a replacement of `Index::index` since it forces us a wrong lifetime
-    /// https://github.com/bluss/rust-ndarray/issues/371
-    pub fn uelem<I: NdIndex<D>>(&self, index: I) -> &'a A {
-        debug_bounds_check!(self, index);
-        unsafe { &*self.as_ptr().offset(index.index_unchecked(&self.strides)) }
-    }
-}
-
-impl<'a, A, D> ArrayViewMut<'a, A, D>
-where
-    D: Dimension,
-{
-    /// Convert a mutable array view to a mutable reference of a element.
-    pub fn into_elem<I: NdIndex<D>>(mut self, index: I) -> &'a mut A {
-        debug_bounds_check!(self, index);
-        unsafe {
-            &mut *self.as_mut_ptr().offset(
-                index
-                    .index_checked(&self.dim, &self.strides)
-                    .unwrap_or_else(|| array_out_of_bounds()),
-            )
-        }
-    }
-
-    /// Convert a mutable array view to a mutable reference of a element without boundary check
-    pub fn into_elem_unchecked<I: NdIndex<D>>(mut self, index: I) -> &'a mut A {
-        debug_bounds_check!(self, index);
-        unsafe {
-            &mut *self.as_mut_ptr().offset(
-                index.index_unchecked(&self.strides),
-            )
         }
     }
 }

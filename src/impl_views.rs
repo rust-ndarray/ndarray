@@ -11,7 +11,8 @@ use std::slice;
 use imp_prelude::*;
 use dimension::{self, stride_offset};
 use error::ShapeError;
-
+use NdIndex;
+use arraytraits::array_out_of_bounds;
 use StrideShape;
 
 use {
@@ -133,6 +134,33 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
+    /// Get a reference of a element through the view.
+    ///
+    /// This method is like `Index::index` but with a longer lifetime (matching
+    /// the array view); which we can't do for general arrays and not in the
+    /// `Index` trait.
+    pub fn elem<I>(&self, index: I) -> &'a A
+        where I: NdIndex<D>,
+    {
+        debug_bounds_check!(self, index);
+        unsafe {
+            &*self.as_ptr().offset(index
+                .index_checked(&self.dim, &self.strides)
+                .unwrap_or_else(|| array_out_of_bounds()))
+        }
+    }
+
+    /// Get a reference of a element through the view without boundary check
+    ///
+    /// This method is like `elem` with a longer lifetime (matching the array
+    /// view); which we can't do for general arrays.
+    pub unsafe fn uelem<I>(&self, index: I) -> &'a A
+        where I: NdIndex<D>,
+    {
+        debug_bounds_check!(self, index);
+        &*self.as_ptr().offset(index.index_unchecked(&self.strides))
+    }
+
 }
 
 /// Methods for read-write array views.
@@ -233,6 +261,33 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         self.into_slice_().ok()
     }
 
+    /// Convert a mutable array view to a mutable reference of a element.
+    ///
+    /// This method is like `Index::index` but with a longer lifetime (matching
+    /// the array view); which we can't do for general arrays and not in the
+    /// `Index` trait.
+    pub fn into_elem<I>(mut self, index: I) -> &'a mut A
+        where I: NdIndex<D>,
+    {
+        debug_bounds_check!(self, index);
+        unsafe {
+            &mut *self.as_mut_ptr().offset(
+                index
+                    .index_checked(&self.dim, &self.strides)
+                    .unwrap_or_else(|| array_out_of_bounds()),
+            )
+        }
+    }
+
+    /// Convert a mutable array view to a mutable reference of a element without boundary check
+    ///
+    ///
+    pub unsafe fn into_elem_unchecked<I>(mut self, index: I) -> &'a mut A
+        where I: NdIndex<D>
+    {
+        debug_bounds_check!(self, index);
+        &mut *self.as_mut_ptr().offset(index.index_unchecked(&self.strides))
+    }
 }
 
 /// Private array view methods

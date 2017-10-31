@@ -55,3 +55,20 @@ macro_rules! expand_if {
     };
     (@nonempty [] $($body:tt)*) => { };
 }
+
+// Macro to insert more informative out of bounds message in debug builds
+#[cfg(debug_assertions)]
+macro_rules! debug_bounds_check {
+    ($self_:ident, $index:expr) => {
+        if let None = $index.index_checked(&$self_.dim, &$self_.strides) {
+            panic!("ndarray: index {:?} is out of bounds for array of shape {:?}",
+                   $index, $self_.shape());
+        }
+    };
+}
+
+#[cfg(not(debug_assertions))]
+macro_rules! debug_bounds_check {
+    ($self_:ident, $index:expr) => { };
+}
+
