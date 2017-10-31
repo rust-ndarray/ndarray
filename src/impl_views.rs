@@ -139,7 +139,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// This method is like `Index::index` but with a longer lifetime (matching
     /// the array view); which we can't do for general arrays and not in the
     /// `Index` trait.
-    pub fn elem<I>(&self, index: I) -> &'a A
+    pub fn index<I>(&self, index: I) -> &'a A
         where I: NdIndex<D>,
     {
         debug_bounds_check!(self, index);
@@ -154,7 +154,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     ///
     /// This method is like `elem` with a longer lifetime (matching the array
     /// view); which we can't do for general arrays.
-    pub unsafe fn uelem<I>(&self, index: I) -> &'a A
+    pub unsafe fn uindex<I>(&self, index: I) -> &'a A
         where I: NdIndex<D>,
     {
         debug_bounds_check!(self, index);
@@ -266,7 +266,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// This method is like `Index::index` but with a longer lifetime (matching
     /// the array view); which we can't do for general arrays and not in the
     /// `Index` trait.
-    pub fn into_elem<I>(mut self, index: I) -> &'a mut A
+    pub fn into_index_mut<I>(mut self, index: I) -> &'a mut A
         where I: NdIndex<D>,
     {
         debug_bounds_check!(self, index);
@@ -282,7 +282,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// Convert a mutable array view to a mutable reference of a element without boundary check
     ///
     ///
-    pub unsafe fn into_elem_unchecked<I>(mut self, index: I) -> &'a mut A
+    pub unsafe fn into_index_mut_unchecked<I>(mut self, index: I) -> &'a mut A
         where I: NdIndex<D>
     {
         debug_bounds_check!(self, index);
