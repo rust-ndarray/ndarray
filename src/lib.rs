@@ -529,6 +529,8 @@ pub type Ixs = isize;
 ///
 /// Since the trait implementations are hard to overview, here is a summary.
 ///
+/// ### Binary Operators with Two Arrays
+///
 /// Let `A` be an array or view of any kind. Let `B` be an array
 /// with owned storage (either `Array` or `RcArray`).
 /// Let `C` be an array with mutable data (either `Array`, `RcArray`
@@ -542,6 +544,8 @@ pub type Ixs = isize;
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
 ///
+/// ### Binary Operators with Array and Scalar
+///
 /// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
 /// with arrays directly. For a scalar `K` the following combinations of operands
 /// are supported (scalar can be on either the left or right side, but
@@ -550,6 +554,15 @@ pub type Ixs = isize;
 /// - `&A @ K` or `K @ &A` which produces a new `Array`
 /// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
 /// - `C @= K` which performs an arithmetic operation in place
+///
+/// ### Unary Operators
+///
+/// Let `A` be an array or view of any kind. Let `B` be an array with owned
+/// storage (either `Array` or `RcArray`). The following operands are supported
+/// for an arbitrary unary operator denoted by `@` (it can be `-` or `!`).
+///
+/// - `@&A` which produces a new `Array`
+/// - `@B` which consumes `B`, updates it with the result, and returns it
 ///
 /// ## Broadcasting
 ///
