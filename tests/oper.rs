@@ -11,6 +11,7 @@ use ndarray::Si;
 use ndarray::{Ix, Ixs};
 
 use std::fmt;
+use std::ops::Neg;
 use num_traits::Float;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
@@ -18,25 +19,25 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     let aa = rcarr1(a);
     let bb = rcarr1(b);
     let cc = rcarr1(c);
-    test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (2, 2);
     let aa = aa.reshape(dim);
     let bb = bb.reshape(dim);
     let cc = cc.reshape(dim);
-    test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (1, 2, 1, 2);
     let aa = aa.reshape(dim);
     let bb = bb.reshape(dim);
     let cc = cc.reshape(dim);
-    test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<D: Dimension>(
-    op: &str,
-    mut aa: RcArray<f32, D>,
-    bb: RcArray<f32, D>,
-    cc: RcArray<f32, D>,
-) {
+fn test_oper_arr<A, D>(op: &str, mut aa: RcArray<A, D>, bb: RcArray<A, D>, cc: RcArray<A, D>)
+where
+    A: NdFloat,
+    for<'a> &'a A: Neg<Output=A>,
+    D: Dimension,
+{
     match op {
         "+" => {
             assert_eq!(&aa + &bb, cc);
