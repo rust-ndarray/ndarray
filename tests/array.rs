@@ -6,7 +6,7 @@ extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
 
-use ndarray::{SliceInfo, SliceOrIndex};
+use ndarray::{Slice, SliceInfo, SliceOrIndex};
 use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
@@ -55,14 +55,14 @@ fn test_mat_mul() {
 #[test]
 fn test_slice()
 {
-    let mut A = RcArray::<usize, _>::zeros((3, 4));
+    let mut A = RcArray::<usize, _>::zeros((3, 4, 5));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
 
-    let vi = A.slice(s![1.., ..;2]);
-    assert_eq!(vi.shape(), &[2, 2]);
-    let vi = A.slice(s![.., ..]);
+    let vi = A.slice(s![1.., ..;2, Slice(0, None, 2)]);
+    assert_eq!(vi.shape(), &[2, 2, 3]);
+    let vi = A.slice(s![.., .., ..]);
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
 }
@@ -252,7 +252,7 @@ fn slice_oob()
 #[test]
 fn slice_axis_oob() {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice_axis(Axis(0), 0, Some(10), 1);
+    let _vi = a.slice_axis(Axis(0), Slice(0, Some(10), 1));
 }
 
 #[should_panic]

@@ -10,12 +10,69 @@ use std::fmt;
 use std::marker::PhantomData;
 use super::{Dimension, Ixs};
 
+/// A slice (range with step size).
+///
+/// ## Examples
+///
+/// `Slice(0, None, 1)` is the full range of an axis. It can also be created
+/// with `Slice::from(..)`. The Python equivalent is `[:]`.
+///
+/// `Slice(a, Some(b), 2)` is every second element from `a` until `b`. It can
+/// also be created with `Slice::from(a..b).step(2)`. The Python equivalent is
+/// `[a:b:2]`.
+///
+/// `Slice(a, None, -1)` is every element, from `a` until the end, in reverse
+/// order. It can also be created with `Slice::from(a..).step(-1)`. The Python
+/// equivalent is `[a::-1]`.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Slice(pub Ixs, pub Option<Ixs>, pub Ixs);
+
+impl Slice {
+    /// Returns a new `Slice` with the given step size.
+    #[inline]
+    pub fn step(self, step: Ixs) -> Self {
+        Slice(self.0, self.1, step)
+    }
+}
+
+impl From<Range<Ixs>> for Slice {
+    #[inline]
+    fn from(r: Range<Ixs>) -> Slice {
+        Slice(r.start, Some(r.end), 1)
+    }
+}
+
+impl From<RangeFrom<Ixs>> for Slice {
+    #[inline]
+    fn from(r: RangeFrom<Ixs>) -> Slice {
+        Slice(r.start, None, 1)
+    }
+}
+
+impl From<RangeTo<Ixs>> for Slice {
+    #[inline]
+    fn from(r: RangeTo<Ixs>) -> Slice {
+        Slice(0, Some(r.end), 1)
+    }
+}
+
+impl From<RangeFull> for Slice {
+    #[inline]
+    fn from(_: RangeFull) -> Slice {
+        Slice(0, None, 1)
+    }
+}
+
 /// A slice (range with step) or an index.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
 /// `&SliceInfo<[SliceOrIndex; n], D>`.
 ///
 /// ## Examples
+///
+/// `SliceOrIndex::Index(a)` is the index `a`. It can also be created with
+/// `SliceOrIndex::from(a)`. The Python equivalent is `[a]`. The macro
+/// equivalent is `s![a]`.
 ///
 /// `SliceOrIndex::Slice(0, None, 1)` is the full range of an axis. It can also
 /// be created with `SliceOrIndex::from(..)`. The Python equivalent is `[:]`.
@@ -86,6 +143,13 @@ impl fmt::Display for SliceOrIndex {
             }
         }
         Ok(())
+    }
+}
+
+impl From<Slice> for SliceOrIndex {
+    #[inline]
+    fn from(s: Slice) -> SliceOrIndex {
+        SliceOrIndex::Slice(s.0, s.1, s.2)
     }
 }
 
@@ -261,6 +325,12 @@ pub trait SliceNextDim<D1, D2> {
     fn next_dim(&self, PhantomData<D1>) -> PhantomData<D2>;
 }
 
+impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for Slice {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
 impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for Range<Ixs> {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
         PhantomData
@@ -293,15 +363,15 @@ impl<D1: Dimension> SliceNextDim<D1, D1> for Ixs {
 
 /// Slice argument constructor.
 ///
-/// `s![]` takes a list of ranges/indices, separated by comma, with optional
-/// step sizes that are separated from the range by a semicolon. It is
+/// `s![]` takes a list of ranges/slices/indices, separated by comma, with
+/// optional step sizes that are separated from the range by a semicolon. It is
 /// converted into a [`&SliceInfo`] instance.
 ///
 /// [`&SliceInfo`]: struct.SliceInfo.html
 ///
-/// Each range/index uses signed indices, where a negative value is counted
-/// from the end of the axis. Step sizes are also signed and may be negative,
-/// but must not be zero.
+/// Each range/slice/index uses signed indices, where a negative value is
+/// counted from the end of the axis. Step sizes are also signed and may be
+/// negative, but must not be zero.
 ///
 /// The syntax is `s![` *[ axis-slice-or-index [, axis-slice-or-index [ , ... ]
 /// ] ]* `]`, where *axis-slice-or-index* is any of the following:
@@ -309,10 +379,15 @@ impl<D1: Dimension> SliceNextDim<D1, D1> for Ixs {
 /// * *index*: an index to use for taking a subview with respect to that axis
 /// * *range*: a range with step size 1 to use for slicing that axis
 /// * *range* `;` *step*: a range with step size *step* to use for slicing that axis
+/// * *slice*: a [`Slice`] instance to use for slicing that axis
+/// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
+///   instance, with new step size *step*, to use for slicing that axis
+///
+/// [`Slice`]: struct.Slice.html
 ///
 /// The number of *axis-slice-or-index* must match the number of axes in the
-/// array. *index*, *range*, and *step* can be expressions. *index* and *step*
-/// must be of type [`Ixs`]. *range* can be of type `Range<Ixs>`,
+/// array. *index*, *range*, *slice*, and *step* can be expressions. *index*
+/// and *step* must be of type [`Ixs`]. *range* can be of type `Range<Ixs>`,
 /// `RangeTo<Ixs>`, `RangeFrom<Ixs>`, or `RangeFull`.
 ///
 /// [`Ixs`]: type.Ixs.html

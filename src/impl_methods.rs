@@ -31,6 +31,7 @@ use zip::Zip;
 
 use {
     NdIndex,
+    Slice,
     SliceInfo,
     SliceOrIndex
 };
@@ -307,7 +308,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             .enumerate()
             .for_each(|(axis, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice(start, end, step) => {
-                    self.slice_axis_inplace(Axis(axis), start, end, step)
+                    self.slice_axis_inplace(Axis(axis), Slice(start, end, step))
                 }
                 &SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
@@ -320,15 +321,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis(
-        &self,
-        axis: Axis,
-        start: Ixs,
-        end: Option<Ixs>,
-        step: Ixs,
-    ) -> ArrayView<A, D> {
+    pub fn slice_axis(&self, axis: Axis, indices: Slice) -> ArrayView<A, D> {
         let mut view = self.view();
-        view.slice_axis_inplace(axis, start, end, step);
+        view.slice_axis_inplace(axis, indices);
         view
     }
 
@@ -336,18 +331,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis_mut(
-        &mut self,
-        axis: Axis,
-        start: Ixs,
-        end: Option<Ixs>,
-        step: Ixs,
-    ) -> ArrayViewMut<A, D>
+    pub fn slice_axis_mut(&mut self, axis: Axis, indices: Slice) -> ArrayViewMut<A, D>
     where
         S: DataMut,
     {
         let mut view_mut = self.view_mut();
-        view_mut.slice_axis_inplace(axis, start, end, step);
+        view_mut.slice_axis_inplace(axis, indices);
         view_mut
     }
 
@@ -355,19 +344,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis_inplace(
-        &mut self,
-        axis: Axis,
-        start: Ixs,
-        end: Option<Ixs>,
-        step: Ixs,
-    ) {
+    pub fn slice_axis_inplace(&mut self, axis: Axis, indices: Slice) {
         let offset = do_slice(
             &mut self.dim.slice_mut()[axis.index()],
             &mut self.strides.slice_mut()[axis.index()],
-            start,
-            end,
-            step,
+            indices.0,
+            indices.1,
+            indices.2,
         );
         unsafe {
             self.ptr = self.ptr.offset(offset);

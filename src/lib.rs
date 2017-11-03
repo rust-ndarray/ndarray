@@ -105,7 +105,7 @@ pub use dimension::NdIndex;
 pub use dimension::IxDynImpl;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
-pub use slice::{SliceInfo, SliceNextDim, SliceOrIndex};
+pub use slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
 
 use iterators::Baseiter;
 use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
