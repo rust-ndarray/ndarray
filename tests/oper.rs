@@ -577,11 +577,11 @@ fn scaled_add_3() {
                     vec![n, q]
                 };
                 let cslice = if n == 1 {
-                    vec![SliceOrIndex::from(..).step(s2)]
+                    vec![SliceOrIndex::from(..).step_by(s2)]
                 } else {
                     vec![
-                        SliceOrIndex::from(..).step(s1),
-                        SliceOrIndex::from(..).step(s2),
+                        SliceOrIndex::from(..).step_by(s1),
+                        SliceOrIndex::from(..).step_by(s2),
                     ]
                 };
 

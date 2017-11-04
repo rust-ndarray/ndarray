@@ -12,54 +12,88 @@ use super::{Dimension, Ixs};
 
 /// A slice (range with step size).
 ///
+/// Negative `begin` or `end` indexes are counted from the back of the axis. If
+/// `end` is `None`, the slice extends to the end of the axis.
+///
 /// ## Examples
 ///
-/// `Slice(0, None, 1)` is the full range of an axis. It can also be created
-/// with `Slice::from(..)`. The Python equivalent is `[:]`.
+/// `Slice::new(0, None, 1)` is the full range of an axis. It can also be
+/// created with `Slice::from(..)`. The Python equivalent is `[:]`.
 ///
-/// `Slice(a, Some(b), 2)` is every second element from `a` until `b`. It can
-/// also be created with `Slice::from(a..b).step(2)`. The Python equivalent is
-/// `[a:b:2]`.
+/// `Slice::new(a, b, 2)` is every second element from `a` until `b`. It can
+/// also be created with `Slice::from(a..b).step_by(2)`. The Python equivalent
+/// is `[a:b:2]`.
 ///
-/// `Slice(a, None, -1)` is every element, from `a` until the end, in reverse
-/// order. It can also be created with `Slice::from(a..).step(-1)`. The Python
-/// equivalent is `[a::-1]`.
+/// `Slice::new(a, None, -1)` is every element, from `a` until the end, in
+/// reverse order. It can also be created with `Slice::from(a..).step_by(-1)`.
+/// The Python equivalent is `[a::-1]`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Slice(pub Ixs, pub Option<Ixs>, pub Ixs);
+pub struct Slice {
+    pub start: Ixs,
+    pub end: Option<Ixs>,
+    pub step: Ixs,
+}
 
 impl Slice {
+    pub fn new<I>(start: Ixs, end: I, step: Ixs) -> Slice
+    where
+        I: Into<Option<Ixs>>,
+    {
+        Slice {
+            start,
+            end: end.into(),
+            step,
+        }
+    }
+
     /// Returns a new `Slice` with the given step size.
     #[inline]
-    pub fn step(self, step: Ixs) -> Self {
-        Slice(self.0, self.1, step)
+    pub fn step_by(self, step: Ixs) -> Self {
+        Slice { step, ..self }
     }
 }
 
 impl From<Range<Ixs>> for Slice {
     #[inline]
     fn from(r: Range<Ixs>) -> Slice {
-        Slice(r.start, Some(r.end), 1)
+        Slice {
+            start: r.start,
+            end: Some(r.end),
+            step: 1,
+        }
     }
 }
 
 impl From<RangeFrom<Ixs>> for Slice {
     #[inline]
     fn from(r: RangeFrom<Ixs>) -> Slice {
-        Slice(r.start, None, 1)
+        Slice {
+            start: r.start,
+            end: None,
+            step: 1,
+        }
     }
 }
 
 impl From<RangeTo<Ixs>> for Slice {
     #[inline]
     fn from(r: RangeTo<Ixs>) -> Slice {
-        Slice(0, Some(r.end), 1)
+        Slice {
+            start: 0,
+            end: Some(r.end),
+            step: 1,
+        }
     }
 }
 
 impl From<RangeFull> for Slice {
     #[inline]
     fn from(_: RangeFull) -> Slice {
-        Slice(0, None, 1)
+        Slice {
+            start: 0,
+            end: None,
+            step: 1,
+        }
     }
 }
 
@@ -74,24 +108,29 @@ impl From<RangeFull> for Slice {
 /// `SliceOrIndex::from(a)`. The Python equivalent is `[a]`. The macro
 /// equivalent is `s![a]`.
 ///
-/// `SliceOrIndex::Slice(0, None, 1)` is the full range of an axis. It can also
-/// be created with `SliceOrIndex::from(..)`. The Python equivalent is `[:]`.
-/// The macro equivalent is `s![..]`.
+/// `SliceOrIndex::Slice { start: 0, end: None, step: 1 }` is the full range of
+/// an axis. It can also be created with `SliceOrIndex::from(..)`. The Python
+/// equivalent is `[:]`. The macro equivalent is `s![..]`.
 ///
-/// `SliceOrIndex::Slice(a, Some(b), 2)` is every second element from `a` until
-/// `b`. It can also be created with `SliceOrIndex::from(a..b).step(2)`. The
-/// Python equivalent is `[a:b:2]`. The macro equivalent is `s![a..b;2]`.
+/// `SliceOrIndex::Slice { start: a, end: Some(b), step: 2 }` is every second
+/// element from `a` until `b`. It can also be created with
+/// `SliceOrIndex::from(a..b).step_by(2)`. The Python equivalent is `[a:b:2]`.
+/// The macro equivalent is `s![a..b;2]`.
 ///
-/// `SliceOrIndex::Slice(a, None, -1)` is every element, from `a` until the
-/// end, in reverse order. It can also be created with
-/// `SliceOrIndex::from(a..).step(-1)`. The Python equivalent is `[a::-1]`. The
-/// macro equivalent is `s![a..;-1]`.
+/// `SliceOrIndex::Slice { start: a, end: None, step: -1 }` is every element,
+/// from `a` until the end, in reverse order. It can also be created with
+/// `SliceOrIndex::from(a..).step_by(-1)`. The Python equivalent is `[a::-1]`.
+/// The macro equivalent is `s![a..;-1]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceOrIndex {
-    /// A range with step size. The fields are `begin`, `end`, and `step`,
-    /// where negative `begin` or `end` indexes are counted from the back of
-    /// the axis. If `end` is `None`, the slice extends to the end of the axis.
-    Slice(Ixs, Option<Ixs>, Ixs),
+    /// A range with step size. Negative `begin` or `end` indexes are counted
+    /// from the back of the axis. If `end` is `None`, the slice extends to the
+    /// end of the axis.
+    Slice {
+        start: Ixs,
+        end: Option<Ixs>,
+        step: Ixs,
+    },
     /// A single index.
     Index(Ixs),
 }
@@ -102,7 +141,7 @@ impl SliceOrIndex {
     /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
         match self {
-            &SliceOrIndex::Slice(..) => true,
+            &SliceOrIndex::Slice { .. } => true,
             _ => false,
         }
     }
@@ -117,9 +156,9 @@ impl SliceOrIndex {
 
     /// Returns a new `SliceOrIndex` with the given step size.
     #[inline]
-    pub fn step(self, step: Ixs) -> Self {
+    pub fn step_by(self, step: Ixs) -> Self {
         match self {
-            SliceOrIndex::Slice(start, end, _) => SliceOrIndex::Slice(start, end, step),
+            SliceOrIndex::Slice { start, end, .. } => SliceOrIndex::Slice { start, end, step },
             SliceOrIndex::Index(s) => SliceOrIndex::Index(s),
         }
     }
@@ -129,7 +168,7 @@ impl fmt::Display for SliceOrIndex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SliceOrIndex::Index(index) => write!(f, "{}", index)?,
-            SliceOrIndex::Slice(start, end, step) => {
+            SliceOrIndex::Slice { start, end, step } => {
                 if start != 0 {
                     write!(f, "{}", start)?;
                 }
@@ -149,14 +188,22 @@ impl fmt::Display for SliceOrIndex {
 impl From<Slice> for SliceOrIndex {
     #[inline]
     fn from(s: Slice) -> SliceOrIndex {
-        SliceOrIndex::Slice(s.0, s.1, s.2)
+        SliceOrIndex::Slice {
+            start: s.start,
+            end: s.end,
+            step: s.step,
+        }
     }
 }
 
 impl From<Range<Ixs>> for SliceOrIndex {
     #[inline]
     fn from(r: Range<Ixs>) -> SliceOrIndex {
-        SliceOrIndex::Slice(r.start, Some(r.end), 1)
+        SliceOrIndex::Slice {
+            start: r.start,
+            end: Some(r.end),
+            step: 1,
+        }
     }
 }
 
@@ -170,21 +217,33 @@ impl From<Ixs> for SliceOrIndex {
 impl From<RangeFrom<Ixs>> for SliceOrIndex {
     #[inline]
     fn from(r: RangeFrom<Ixs>) -> SliceOrIndex {
-        SliceOrIndex::Slice(r.start, None, 1)
+        SliceOrIndex::Slice {
+            start: r.start,
+            end: None,
+            step: 1,
+        }
     }
 }
 
 impl From<RangeTo<Ixs>> for SliceOrIndex {
     #[inline]
     fn from(r: RangeTo<Ixs>) -> SliceOrIndex {
-        SliceOrIndex::Slice(0, Some(r.end), 1)
+        SliceOrIndex::Slice {
+            start: 0,
+            end: Some(r.end),
+            step: 1,
+        }
     }
 }
 
 impl From<RangeFull> for SliceOrIndex {
     #[inline]
     fn from(_: RangeFull) -> SliceOrIndex {
-        SliceOrIndex::Slice(0, None, 1)
+        SliceOrIndex::Slice {
+            start: 0,
+            end: None,
+            step: 1,
+        }
     }
 }
 
@@ -483,7 +542,7 @@ macro_rules! s(
     };
     // convert range/index and step into SliceOrIndex
     (@convert $r:expr, $s:expr) => {
-        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step($s)
+        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s)
     };
     ($($t:tt)*) => {
         s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]

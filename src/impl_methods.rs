@@ -269,7 +269,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let mut new_strides = Do::zero_index_with_ndim(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices)
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice(..) => Some((d, s)),
+                &SliceOrIndex::Slice {..} => Some((d, s)),
                 &SliceOrIndex::Index(_) => None,
             })
             .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
@@ -307,8 +307,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             .iter()
             .enumerate()
             .for_each(|(axis, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice(start, end, step) => {
-                    self.slice_axis_inplace(Axis(axis), Slice(start, end, step))
+                &SliceOrIndex::Slice { start, end, step } => {
+                    self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
                 }
                 &SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
@@ -348,9 +348,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let offset = do_slice(
             &mut self.dim.slice_mut()[axis.index()],
             &mut self.strides.slice_mut()[axis.index()],
-            indices.0,
-            indices.1,
-            indices.2,
+            indices.start,
+            indices.end,
+            indices.step,
         );
         unsafe {
             self.ptr = self.ptr.offset(offset);

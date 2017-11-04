@@ -60,7 +60,7 @@ fn test_slice()
         *elt = i;
     }
 
-    let vi = A.slice(s![1.., ..;2, Slice(0, None, 2)]);
+    let vi = A.slice(s![1.., ..;2, Slice::new(0, None, 2)]);
     assert_eq!(vi.shape(), &[2, 2, 3]);
     let vi = A.slice(s![.., .., ..]);
     assert_eq!(vi.shape(), A.shape());
@@ -119,7 +119,7 @@ fn test_slice_array_dyn() {
     let info = &SliceInfo::<_, IxDyn>::new([
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step(2),
+        SliceOrIndex::from(..).step_by(2),
     ]);
     arr.slice(info);
     arr.slice_mut(info);
@@ -133,7 +133,7 @@ fn test_slice_dyninput_array_dyn() {
     let info = &SliceInfo::<_, IxDyn>::new([
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step(2),
+        SliceOrIndex::from(..).step_by(2),
     ]);
     arr.slice(info);
     arr.slice_mut(info);
@@ -147,7 +147,7 @@ fn test_slice_dyninput_vec_fixed() {
     let info = &SliceInfo::<_, Ix2>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step(2),
+        SliceOrIndex::from(..).step_by(2),
     ]);
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
@@ -161,7 +161,7 @@ fn test_slice_dyninput_vec_dyn() {
     let info = &SliceInfo::<_, IxDyn>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step(2),
+        SliceOrIndex::from(..).step_by(2),
     ]);
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
@@ -252,7 +252,7 @@ fn slice_oob()
 #[test]
 fn slice_axis_oob() {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice_axis(Axis(0), Slice(0, Some(10), 1));
+    let _vi = a.slice_axis(Axis(0), Slice::new(0, 10, 1));
 }
 
 #[should_panic]
