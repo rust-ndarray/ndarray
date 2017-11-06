@@ -194,6 +194,11 @@ pub unsafe trait DataOwned : Data {
     fn new(elements: Vec<Self::Elem>) -> Self;
     #[doc(hidden)]
     fn into_shared(self) -> OwnedRcRepr<Self::Elem>;
+    #[doc(hidden)]
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension;
 }
 
 /// Array representation trait.
@@ -213,6 +218,14 @@ unsafe impl<A> DataOwned for OwnedRepr<A> {
     fn into_shared(self) -> OwnedRcRepr<A> {
         OwnedRcRepr(Rc::new(self.0))
     }
+    #[inline]
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        self_
+    }
 }
 
 unsafe impl<A> DataOwned for OwnedRcRepr<A> {
@@ -221,6 +234,20 @@ unsafe impl<A> DataOwned for OwnedRcRepr<A> {
     }
     fn into_shared(self) -> OwnedRcRepr<A> {
         self
+    }
+    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        Self::ensure_unique(&mut self_);
+        let data = OwnedRepr(Rc::try_unwrap(self_.data.0).ok().unwrap());
+        ArrayBase {
+            data: data,
+            ptr: self_.ptr,
+            dim: self_.dim,
+            strides: self_.strides,
+        }
     }
 }
 
