@@ -144,6 +144,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.to_owned().into_shared()
     }
 
+    /// Turn the array into a uniquely owned array, cloning the array elements
+    /// to unshare them if necessary.
+    pub fn into_owned(self) -> Array<A, D>
+        where A: Clone,
+              S: DataOwned,
+    {
+        S::into_owned(self)
+    }
+
     /// Turn the array into a shared ownership (copy on write) array,
     /// without any copying.
     pub fn into_shared(self) -> RcArray<A, D>
