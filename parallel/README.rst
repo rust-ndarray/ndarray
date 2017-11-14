@@ -49,6 +49,11 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- 0.6.0
+
+  - Upgrade for rayon 0.9.0 by @cuviper
+  - Fix unused mut warning when using ``par_azip!()``
+
 - 0.5.0
 
   - Upgrade for ndarray 0.10.0

@@ -1,6 +1,6 @@
 [package]
 name = "ndarray-parallel"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
@@ -19,3 +19,6 @@ ndarray = { version = "0.10.0", path = "../" }
 [dev-dependencies]
 num_cpus = "1.2"
 itertools = { version = "0.7.0", default-features = false }
+
+[package.metadata.release]
+no-dev-version = true
