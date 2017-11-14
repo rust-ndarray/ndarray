@@ -276,9 +276,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn get<I>(&self, index: I) -> Option<&A>
         where I: NdIndex<D>,
     {
+        unsafe {
+            self.get_ptr(index).map(|ptr| &*ptr)
+        }
+    }
+
+    pub(crate) fn get_ptr<I>(&self, index: I) -> Option<*const A>
+        where I: NdIndex<D>,
+    {
         let ptr = self.ptr;
         index.index_checked(&self.dim, &self.strides)
-             .map(move |offset| unsafe { &*ptr.offset(offset) })
+             .map(move |offset| unsafe { ptr.offset(offset) as *const _ })
     }
 
     /// Return a mutable reference to the element at `index`, or return `None`
@@ -287,9 +295,20 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               I: NdIndex<D>,
     {
+        unsafe {
+            self.get_ptr_mut(index).map(|ptr| &mut *ptr)
+        }
+    }
+
+    pub(crate) fn get_ptr_mut<I>(&mut self, index: I) -> Option<*mut A>
+        where S: DataMut,
+              I: NdIndex<D>,
+    {
+        // const and mut are separate to enforce &mutness as well as the
+        // extra code in as_mut_ptr
         let ptr = self.as_mut_ptr();
         index.index_checked(&self.dim, &self.strides)
-             .map(move |offset| unsafe { &mut *ptr.offset(offset) })
+             .map(move |offset| unsafe { ptr.offset(offset) })
     }
 
     /// Perform *unchecked* array indexing.

@@ -134,6 +134,26 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
+}
+
+
+/// Extra indexing methods for array views
+///
+/// These methods are very similar to regular indexing or calling of the
+/// `get`/`get_mut` methods that we can use on any array or array view. The
+/// difference here is in the length of lifetime in the resulting reference.
+///
+/// **Note** that the `ArrayView` (read-only) and `ArrayViewMut` (read-write) differ
+/// in how they are allowed implement this trait -- `ArrayView`'s implementation
+/// is rather usual. If you put in a `ArrayView<'a, T, D>` here, you can
+/// get references `&'a T` out.
+///
+/// For `ArrayViewMut` to obey the borrowing rules we have to consume the
+/// view if we call any of these methods. (The equivalent of reborrow is
+/// `.view_mut()` for read-write array views, but if you can use that,
+/// then the regular indexing / `get_mut` should suffice, too.)
+pub trait IndexLonger<I> {
+    type Output;
     /// Get a reference of a element through the view.
     ///
     /// This method is like `Index::index` but with a longer lifetime (matching
@@ -146,14 +166,67 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// [1]: struct.ArrayBase.html#method.get
     ///
     /// **Panics** if index is out of bounds.
-    pub fn index<I>(&self, index: I) -> &'a A
-        where I: NdIndex<D>,
+    fn index(self, index: I) -> Self::Output;
+
+    /// Get a reference of a element through the view.
+    ///
+    /// This method is like `ArrayBase::get` but with a longer lifetime (matching
+    /// the array view); which we can only do for the array view and not in the
+    /// `Index` trait.
+    ///
+    /// See also [the `get` method][1] (and [`get_mut`][2]) which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.get
+    /// [2]: struct.ArrayBase.html#method.get_mut
+    ///
+    /// **Panics** if index is out of bounds.
+    fn get(self, index: I) -> Option<Self::Output>;
+
+    /// Get a reference of a element through the view without boundary check
+    ///
+    /// This method is like `elem` with a longer lifetime (matching the array
+    /// view); which we can't do for general arrays.
+    ///
+    /// See also [the `uget` method][1] which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.uget
+    ///
+    /// **Note:** only unchecked for non-debug builds of ndarray.
+    unsafe fn uget(self, index: I) -> Self::Output;
+}
+
+impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
+    where I: NdIndex<D>,
+          D: Dimension,
+{
+    type Output = &'a A;
+
+    /// Get a reference of a element through the view.
+    ///
+    /// This method is like `Index::index` but with a longer lifetime (matching
+    /// the array view); which we can only do for the array view and not in the
+    /// `Index` trait.
+    ///
+    /// See also [the `get` method][1] which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.get
+    ///
+    /// **Panics** if index is out of bounds.
+    fn index(self, index: I) -> &'a A
     {
         debug_bounds_check!(self, index);
         unsafe {
-            &*self.as_ptr().offset(index
-                .index_checked(&self.dim, &self.strides)
-                .unwrap_or_else(|| array_out_of_bounds()))
+            &*self.get_ptr(index).unwrap_or_else(|| array_out_of_bounds())
+        }
+    }
+
+    fn get(self, index: I) -> Option<&'a A>
+    {
+        unsafe {
+            self.get_ptr(index).map(|ptr| &*ptr)
         }
     }
 
@@ -168,13 +241,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// [1]: struct.ArrayBase.html#method.uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    pub unsafe fn uindex<I>(&self, index: I) -> &'a A
-        where I: NdIndex<D>,
+    unsafe fn uget(self, index: I) -> &'a A
     {
         debug_bounds_check!(self, index);
         &*self.as_ptr().offset(index.index_unchecked(&self.strides))
     }
-
 }
 
 /// Methods for read-write array views.
@@ -275,6 +346,14 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         self.into_slice_().ok()
     }
 
+}
+
+impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
+    where I: NdIndex<D>,
+          D: Dimension,
+{
+    type Output = &'a mut A;
+
     /// Convert a mutable array view to a mutable reference of a element.
     ///
     /// This method is like `IndexMut::index_mut` but with a longer lifetime
@@ -287,16 +366,31 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// [1]: struct.ArrayBase.html#method.get_mut
     ///
     /// **Panics** if index is out of bounds.
-    pub fn into_index_mut<I>(mut self, index: I) -> &'a mut A
-        where I: NdIndex<D>,
-    {
+    fn index(mut self, index: I) -> &'a mut A {
         debug_bounds_check!(self, index);
         unsafe {
-            &mut *self.as_mut_ptr().offset(
-                index
-                    .index_checked(&self.dim, &self.strides)
-                    .unwrap_or_else(|| array_out_of_bounds()),
-            )
+            match self.get_ptr_mut(index) {
+                Some(ptr) => &mut *ptr,
+                None => array_out_of_bounds(),
+            }
+        }
+    }
+
+    /// Convert a mutable array view to a mutable reference of a element, with
+    /// checked access.
+    ///
+    /// See also [the `get_mut` method][1] which works for all arrays and array
+    /// views.
+    ///
+    /// [1]: struct.ArrayBase.html#method.get_mut
+    ///
+    fn get(mut self, index: I) -> Option<&'a mut A> {
+        debug_bounds_check!(self, index);
+        unsafe {
+            match self.get_ptr_mut(index) {
+                Some(ptr) => Some(&mut *ptr),
+                None => None,
+            }
         }
     }
 
@@ -309,9 +403,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// [1]: struct.ArrayBase.html#method.uget_mut
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    pub unsafe fn into_index_mut_unchecked<I>(mut self, index: I) -> &'a mut A
-        where I: NdIndex<D>
-    {
+    unsafe fn uget(mut self, index: I) -> &'a mut A {
         debug_bounds_check!(self, index);
         &mut *self.as_mut_ptr().offset(index.index_unchecked(&self.strides))
     }
