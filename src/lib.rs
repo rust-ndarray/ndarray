@@ -16,11 +16,11 @@
 //! dimensions, then an element in the array is accessed by using that many indices.
 //! Each dimension is also called an *axis*.
 //!
-//! - [**`ArrayBase`**](struct.ArrayBase.html):
-//!   The *n*-dimensional array type itself.  
+//! - **[`ArrayBase`](struct.ArrayBase.html)**:
+//!   The *n*-dimensional array type itself.<br>
 //!   It is used to implement both the owned arrays and the views; see its docs
-//!   for an overview of all array features.  
-//! - The main specific array type is [**`Array`**](type.Array.html), which owns
+//!   for an overview of all array features.<br>
+//! - The main specific array type is **[`Array`](type.Array.html)**, which owns
 //! its elements.
 //!
 //! ## Highlights
