@@ -115,6 +115,7 @@ pub use linalg_traits::{LinalgScalar, NdFloat};
 pub use stacking::stack;
 
 pub use shape_builder::{ ShapeBuilder};
+pub use impl_views::IndexLonger;
 
 #[macro_use] mod macro_utils;
 #[macro_use] mod private;
