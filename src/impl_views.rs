@@ -145,14 +145,37 @@ impl<'a, A, D> ArrayView<'a, A, D>
 ///
 /// **Note** that the `ArrayView` (read-only) and `ArrayViewMut` (read-write) differ
 /// in how they are allowed implement this trait -- `ArrayView`'s implementation
-/// is rather usual. If you put in a `ArrayView<'a, T, D>` here, you can
-/// get references `&'a T` out.
+/// is usual. If you put in a `ArrayView<'a, T, D>` here, you get references
+/// `&'a T` out.
 ///
 /// For `ArrayViewMut` to obey the borrowing rules we have to consume the
 /// view if we call any of these methods. (The equivalent of reborrow is
 /// `.view_mut()` for read-write array views, but if you can use that,
 /// then the regular indexing / `get_mut` should suffice, too.)
+///
+/// ```
+/// use ndarray::IndexLonger;
+/// use ndarray::ArrayView;
+///
+/// let data = [0.; 256];
+/// let long_life_ref = {
+///     // make a 16 × 16 array view
+///     let view = ArrayView::from(&data[..]).into_shape((16, 16)).unwrap();
+///
+///     // index the view and with `IndexLonger`.
+///     // Note here that we get a reference with a life that is derived from
+///     // `data`, the base data, instead of being derived from the view
+///     IndexLonger::index(&view, [0, 1])
+/// };
+///
+/// // view goes out of scope
+///
+/// assert_eq!(long_life_ref, &0.);
+///
+/// ```
 pub trait IndexLonger<I> {
+    /// The type of the reference to the element that is produced, including
+    /// its lifetime.
     type Output;
     /// Get a reference of a element through the view.
     ///
