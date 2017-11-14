@@ -1,13 +1,13 @@
 
 use rayon::iter::ParallelIterator;
 use rayon::iter::IndexedParallelIterator;
-use rayon::iter::internal::{Consumer, UnindexedConsumer};
-use rayon::iter::internal::bridge;
-use rayon::iter::internal::ProducerCallback;
-use rayon::iter::internal::Producer;
-use rayon::iter::internal::UnindexedProducer;
-use rayon::iter::internal::bridge_unindexed;
-use rayon::iter::internal::Folder;
+use rayon::iter::plumbing::{Consumer, UnindexedConsumer};
+use rayon::iter::plumbing::bridge;
+use rayon::iter::plumbing::ProducerCallback;
+use rayon::iter::plumbing::Producer;
+use rayon::iter::plumbing::UnindexedProducer;
+use rayon::iter::plumbing::bridge_unindexed;
+use rayon::iter::plumbing::Folder;
 
 use ndarray::iter::AxisIter;
 use ndarray::iter::AxisIterMut;
