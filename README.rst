@@ -85,6 +85,14 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.13
+
+  - Add an extension trait for longer-life indexing methods for array views
+    (``IndexLonger``) by @termoshtt and @bluss
+  - The ``a.dot(b)`` method now supports a vector times matrix multiplication
+    by @jturner314
+  - More general ``.into_owned()`` method by @jturner314
+
 - 0.10.12
 
   - Implement serde serialization for ``IxDyn``, so that arrays and array views
