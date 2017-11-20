@@ -29,19 +29,16 @@ use super::{Dimension, Ixs};
 /// The Python equivalent is `[a::-1]`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Slice {
-    pub start: Ixs,
-    pub end: Option<Ixs>,
-    pub step: Ixs,
+    pub start: isize,
+    pub end: Option<isize>,
+    pub step: isize,
 }
 
 impl Slice {
-    pub fn new<I>(start: Ixs, end: I, step: Ixs) -> Slice
-    where
-        I: Into<Option<Ixs>>,
-    {
+    pub fn new(start: isize, end: Option<isize>, step: isize) -> Slice {
         Slice {
             start,
-            end: end.into(),
+            end,
             step,
         }
     }
