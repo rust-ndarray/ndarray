@@ -13,7 +13,7 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Si, IxDynImpl};
+use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
 use IntoDimension;
 use RemoveAxis;
 use {ArrayView1, ArrayViewMut1};
@@ -41,6 +41,10 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     MulAssign + for<'x> MulAssign<&'x Self> + MulAssign<usize>
 
 {
+    /// For fixed-size dimension representations (e.g. `Ix2`), this should be
+    /// `Some(ndim)`, and for variable-size dimension representations (e.g.
+    /// `IxDyn`), this should be `None`.
+    const NDIM: Option<usize>;
     /// `SliceArg` is the type which is used to specify slicing for this
     /// dimension.
     ///
@@ -48,14 +52,14 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// size, which you pass by reference. For the dynamic dimension it is
     /// a slice.
     ///
-    /// - For `Ix1`: `[Si; 1]`
-    /// - For `Ix2`: `[Si; 2]`
+    /// - For `Ix1`: `[SliceOrIndex; 1]`
+    /// - For `Ix2`: `[SliceOrIndex; 2]`
     /// - and so on..
-    /// - For `IxDyn`: `[Si]`
+    /// - For `IxDyn`: `[SliceOrIndex]`
     ///
-    /// The easiest way to create a `&SliceArg` is using the macro
-    /// [`s![]`](macro.s!.html).
-    type SliceArg: ?Sized + AsRef<[Si]>;
+    /// The easiest way to create a `&SliceInfo<SliceArg, Do>` is using the
+    /// [`s![]`](macro.s!.html) macro.
+    type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
     ///
     /// - For `Ix1`: `usize`,
@@ -153,6 +157,15 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
+    /// Return an index of same type and with the specified dimensionality.
+    ///
+    /// This method is useful for generalizing over fixed-size and
+    /// variable-size dimension representations.
+    ///
+    /// **Panics** if `Self` has a fixed size that is not `ndim`.
+    fn zero_index_with_ndim(ndim: usize) -> Self;
+
+    #[doc(hidden)]
     #[inline]
     fn first_index(&self) -> Option<Self> {
         for ax in self.slice().iter() {
@@ -237,69 +250,6 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     fn set_last_elem(&mut self, i: usize) {
         let nd = self.ndim();
         self.slice_mut()[nd - 1] = i;
-    }
-
-    #[doc(hidden)]
-    /// Modify dimension, strides and return data pointer offset
-    ///
-    /// **Panics** if `slices` does not correspond to the number of axes,
-    /// if any stride is 0, or if any index is out of bounds.
-    fn do_slices(dim: &mut Self, strides: &mut Self, slices: &Self::SliceArg) -> isize {
-        let slices = slices.as_ref();
-        let mut offset = 0;
-        ndassert!(slices.len() == dim.slice().len(),
-                  "SliceArg {:?}'s length does not match dimension {:?}",
-                  slices, dim);
-        for (dr, sr, &slc) in izip!(dim.slice_mut(), strides.slice_mut(), slices) {
-            let m = *dr;
-            let mi = m as Ixs;
-            let Si(b1, opt_e1, s1) = slc;
-            let e1 = opt_e1.unwrap_or(mi);
-
-            let b1 = abs_index(mi, b1);
-            let mut e1 = abs_index(mi, e1);
-            if e1 < b1 { e1 = b1; }
-
-            ndassert!(b1 <= m,
-                      concat!("Slice begin {} is past end of axis of length {}",
-                              " (for SliceArg {:?})"),
-                      b1, m, slices);
-            ndassert!(e1 <= m,
-                      concat!("Slice end {} is past end of axis of length {}",
-                              " (for SliceArg {:?})"),
-                      e1, m, slices);
-
-            let m = e1 - b1;
-            // stride
-            let s = (*sr) as Ixs;
-
-            // Data pointer offset
-            offset += stride_offset(b1, *sr);
-            // Adjust for strides
-            ndassert!(s1 != 0,
-                      concat!("Slice stride must not be none", 
-                              "(for SliceArg {:?})"),
-                      slices);
-            // How to implement negative strides:
-            //
-            // Increase start pointer by
-            // old stride * (old dim - 1)
-            // to put the pointer completely in the other end
-            if s1 < 0 {
-                offset += stride_offset(m - 1, *sr);
-            }
-
-            let s_prim = s * s1;
-
-            let d = m / s1.abs() as Ix;
-            let r = m % s1.abs() as Ix;
-            let m_prim = d + if r > 0 { 1 } else { 0 };
-
-            // Update dimension and stride coordinate
-            *dr = m_prim;
-            *sr = s_prim as Ix;
-        }
-        offset
     }
 
     #[doc(hidden)]
@@ -398,18 +348,6 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     private_decl!{}
 }
 
-// utility functions
-
-#[inline]
-fn abs_index(len: Ixs, index: Ixs) -> Ix {
-    if index < 0 {
-        (len + index) as Ix
-    } else {
-        index as Ix
-    }
-}
-
-
 // Dimension impls
 
 macro_rules! impl_insert_axis_array(
@@ -425,7 +363,8 @@ macro_rules! impl_insert_axis_array(
 );
 
 impl Dimension for Dim<[Ix; 0]> {
-    type SliceArg = [Si; 0];
+    const NDIM: Option<usize> = Some(0);
+    type SliceArg = [SliceOrIndex; 0];
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
@@ -440,6 +379,11 @@ impl Dimension for Dim<[Ix; 0]> {
     fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern { }
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 0);
+        Self::default()
+    }
     #[inline]
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
@@ -456,7 +400,8 @@ impl Dimension for Dim<[Ix; 0]> {
 
 
 impl Dimension for Dim<[Ix; 1]> {
-    type SliceArg = [Si; 1];
+    const NDIM: Option<usize> = Some(1);
+    type SliceArg = [SliceOrIndex; 1];
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
@@ -469,6 +414,11 @@ impl Dimension for Dim<[Ix; 1]> {
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         get!(&self, 0)
+    }
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 1);
+        Self::default()
     }
     #[inline]
     fn next_for(&self, mut index: Self) -> Option<Self> {
@@ -544,7 +494,8 @@ impl Dimension for Dim<[Ix; 1]> {
 }
 
 impl Dimension for Dim<[Ix; 2]> {
-    type SliceArg = [Si; 2];
+    const NDIM: Option<usize> = Some(2);
+    type SliceArg = [SliceOrIndex; 2];
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
@@ -558,6 +509,11 @@ impl Dimension for Dim<[Ix; 2]> {
     fn slice(&self) -> &[Ix] { self.ix() }
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 2);
+        Self::default()
+    }
     #[inline]
     fn next_for(&self, index: Self) -> Option<Self> {
         let mut i = get!(&index, 0);
@@ -674,7 +630,8 @@ impl Dimension for Dim<[Ix; 2]> {
 }
 
 impl Dimension for Dim<[Ix; 3]> {
-    type SliceArg = [Si; 3];
+    const NDIM: Option<usize> = Some(3);
+    type SliceArg = [SliceOrIndex; 3];
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
@@ -695,6 +652,12 @@ impl Dimension for Dim<[Ix; 3]> {
         let n = get!(self, 1);
         let o = get!(self, 2);
         m as usize * n as usize * o as usize
+    }
+
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        assert_eq!(ndim, 3);
+        Self::default()
     }
 
     #[inline]
@@ -785,7 +748,8 @@ impl Dimension for Dim<[Ix; 3]> {
 macro_rules! large_dim {
     ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
-            type SliceArg = [Si; $n];
+            const NDIM: Option<usize> = Some($n);
+            type SliceArg = [SliceOrIndex; $n];
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
@@ -799,6 +763,11 @@ macro_rules! large_dim {
             fn slice(&self) -> &[Ix] { self.ix() }
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+            #[inline]
+            fn zero_index_with_ndim(ndim: usize) -> Self {
+                assert_eq!(ndim, $n);
+                Self::default()
+            }
             #[inline]
             $($insert_axis)*
             #[inline]
@@ -831,7 +800,8 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 impl Dimension for IxDyn
 {
-    type SliceArg = [Si];
+    const NDIM: Option<usize> = None;
+    type SliceArg = [SliceOrIndex];
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
@@ -849,6 +819,11 @@ impl Dimension for IxDyn
     #[inline]
     fn zero_index(&self) -> Self {
         IxDyn::zeros(self.ndim())
+    }
+
+    #[inline]
+    fn zero_index_with_ndim(ndim: usize) -> Self {
+        IxDyn::zeros(ndim)
     }
 
     #[inline]
