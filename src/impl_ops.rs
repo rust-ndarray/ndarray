@@ -82,7 +82,7 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
     where A: Clone + $trt<A, Output=A>,
-          S: DataMut<Elem=A>,
+          S: DataOwned<Elem=A> + DataMut,
           S2: Data<Elem=A>,
           D: Dimension,
           E: Dimension,
