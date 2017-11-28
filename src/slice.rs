@@ -35,7 +35,15 @@ pub struct Slice {
 }
 
 impl Slice {
+    /// Create a new `Slice` with the given extents.
+    ///
+    /// See also the `From` impls, converting from ranges; for example
+    /// `Slice::from(i..)` or `Slice::from(j..k)`.
+    ///
+    /// `step` must be nonzero.
+    /// (This method checks with a debug assertion that `step` is not zero.)
     pub fn new(start: isize, end: Option<isize>, step: isize) -> Slice {
+        debug_assert_ne!(step, 0, "Slice::new: step must be nonzero");
         Slice {
             start,
             end,
@@ -44,8 +52,12 @@ impl Slice {
     }
 
     /// Returns a new `Slice` with the given step size.
+    ///
+    /// `step` must be nonzero.
+    /// (This method checks with a debug assertion that `step` is not zero.)
     #[inline]
-    pub fn step_by(self, step: Ixs) -> Self {
+    pub fn step_by(self, step: isize) -> Self {
+        debug_assert_ne!(step, 0, "Slice::step_by: step must be nonzero");
         Slice { step, ..self }
     }
 }
