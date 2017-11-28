@@ -61,6 +61,48 @@ impl Slice {
         debug_assert_ne!(step, 0, "Slice::step_by: step must be nonzero");
         Slice { step: self.step * step, ..self }
     }
+
+    /// Returns the `n`th index in this slice.
+    ///
+    /// The `n` argument starts from zero, so `nth(0)` is the first index. If
+    /// `n` is greater than or equal to the length of the slice, then the
+    /// return value is `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::Slice;
+    ///
+    /// // indices 0, 1, 2, 3, 4
+    /// assert_eq!(Slice::new(0, Some(5), 1).nth(2), Some(2));
+    ///
+    /// // indices 1, 3
+    /// assert_eq!(Slice::new(1, Some(5), 2).nth(1), Some(3));
+    ///
+    /// // indices 1, -1, -3
+    /// assert_eq!(Slice::new(1, Some(-4), -2).nth(2), Some(-3));
+    ///
+    /// // indices 1, 3, 5, ...
+    /// assert_eq!(Slice::new(1, None, 2).nth(2), Some(5));
+    ///
+    /// // indices 3, 3, 3, ...
+    /// assert_eq!(Slice::new(3, Some(5), 0).nth(1000), Some(3));
+    ///
+    /// // indices 1, 3
+    /// assert_eq!(Slice::new(1, Some(5), 2).nth(2), None);
+    /// ```
+    pub fn nth(&self, n: usize) -> Option<isize> {
+        let nth = self.start + self.step * n as isize;
+        if let Some(end) = self.end {
+            if self.step == 0 || (self.step > 0 && nth < end) || (self.step < 0 && nth > end) {
+                Some(nth)
+            } else {
+                None
+            }
+        } else {
+            Some(nth)
+        }
+    }
 }
 
 impl From<Range<Ixs>> for Slice {
