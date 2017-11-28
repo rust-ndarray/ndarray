@@ -51,14 +51,15 @@ impl Slice {
         }
     }
 
-    /// Returns a new `Slice` with the given step size.
+    /// Create a new `Slice` with the given step size (multiplied with the
+    /// previous step size).
     ///
     /// `step` must be nonzero.
     /// (This method checks with a debug assertion that `step` is not zero.)
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
         debug_assert_ne!(step, 0, "Slice::step_by: step must be nonzero");
-        Slice { step, ..self }
+        Slice { step: self.step * step, ..self }
     }
 }
 
