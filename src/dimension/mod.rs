@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {Ix, Ixs};
+use {Ix, Ixs, Slice};
 use error::{from_kind, ErrorKind, ShapeError};
 use itertools::izip;
 
@@ -329,25 +329,18 @@ pub fn abs_index(len: Ix, index: Ixs) -> Ix {
     }
 }
 
-/// Modify dimension, stride and return data pointer offset
+/// Determines nonnegative start and end indices, and performs sanity checks.
+///
+/// The return value is (start, end, step).
 ///
 /// **Panics** if stride is 0 or if any index is out of bounds.
-pub fn do_slice(
-    dim: &mut Ix,
-    stride: &mut Ix,
-    start: Ixs,
-    end: Option<Ixs>,
-    step: Ixs,
-) -> isize {
-    let mut offset = 0;
-
-    let axis_len = *dim;
+fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
+    let Slice { start, end, step } = slice;
     let start = abs_index(axis_len, start);
-    let mut end = abs_index(axis_len, end.unwrap_or(axis_len as Ixs));
+    let mut end = abs_index(axis_len, end.unwrap_or(axis_len as isize));
     if end < start {
         end = start;
     }
-
     ndassert!(
         start <= axis_len,
         "Slice begin {} is past end of axis of length {}",
@@ -360,15 +353,23 @@ pub fn do_slice(
         end,
         axis_len,
     );
+    ndassert!(step != 0, "Slice stride must not be zero");
+    (start, end, step)
+}
+
+/// Modify dimension, stride and return data pointer offset
+///
+/// **Panics** if stride is 0 or if any index is out of bounds.
+pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize {
+    let (start, end, step) = to_abs_slice(*dim, slice);
 
     let m = end - start;
-    // stride
-    let s = (*stride) as Ixs;
+    let s = (*stride) as isize;
 
     // Data pointer offset
-    offset += stride_offset(start, *stride);
+    let mut offset = stride_offset(start, *stride);
     // Adjust for strides
-    ndassert!(step != 0, "Slice stride must not be zero");
+    //
     // How to implement negative strides:
     //
     // Increase start pointer by
@@ -380,13 +381,13 @@ pub fn do_slice(
 
     let s_prim = s * step;
 
-    let d = m / step.abs() as Ix;
-    let r = m % step.abs() as Ix;
+    let d = m / step.abs() as usize;
+    let r = m % step.abs() as usize;
     let m_prim = d + if r > 0 { 1 } else { 0 };
 
     // Update dimension and stride coordinate
     *dim = m_prim;
-    *stride = s_prim as Ix;
+    *stride = s_prim as usize;
 
     offset
 }
