@@ -97,6 +97,7 @@ extern crate matrixmultiply;
 extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+extern crate num_integer;
 
 #[cfg(test)]
 extern crate quickcheck;
@@ -113,6 +114,7 @@ pub use dimension::{
     RemoveAxis,
     Axis,
     AxisDescription,
+    slices_intersect,
 };
 pub use dimension::dim::*;
 
