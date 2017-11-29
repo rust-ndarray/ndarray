@@ -172,11 +172,24 @@ impl SliceOrIndex {
         }
     }
 
-    /// Returns a new `SliceOrIndex` with the given step size.
+    /// Returns a new `SliceOrIndex` with the given step size (multiplied with
+    /// the previous step size).
+    ///
+    /// `step` must be nonzero.
+    /// (This method checks with a debug assertion that `step` is not zero.)
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
+        debug_assert_ne!(step, 0, "SliceOrIndex::step_by: step must be nonzero");
         match self {
-            SliceOrIndex::Slice { start, end, .. } => SliceOrIndex::Slice { start, end, step },
+            SliceOrIndex::Slice {
+                start,
+                end,
+                step: orig_step,
+            } => SliceOrIndex::Slice {
+                start,
+                end,
+                step: orig_step * step,
+            },
             SliceOrIndex::Index(s) => SliceOrIndex::Index(s),
         }
     }
