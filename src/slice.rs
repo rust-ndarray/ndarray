@@ -172,11 +172,20 @@ impl SliceOrIndex {
         }
     }
 
-    /// Returns a new `SliceOrIndex` with the given step size.
+    /// Returns a new `SliceOrIndex` with the given step size (multiplied with
+    /// the previous step size).
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
         match self {
-            SliceOrIndex::Slice { start, end, .. } => SliceOrIndex::Slice { start, end, step },
+            SliceOrIndex::Slice {
+                start,
+                end,
+                step: orig_step,
+            } => SliceOrIndex::Slice {
+                start,
+                end,
+                step: orig_step * step,
+            },
             SliceOrIndex::Index(s) => SliceOrIndex::Index(s),
         }
     }
