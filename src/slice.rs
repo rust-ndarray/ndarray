@@ -623,3 +623,226 @@ macro_rules! s(
         &*&$crate::s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );
+
+/// Take multiple slices simultaneously.
+///
+/// This macro makes it possible to take multiple slices of the same array, as
+/// long as Rust's aliasing rules are followed for *elements* in the slices.
+/// For example, it's possible to take two disjoint, mutable slices of an
+/// array, with one referencing the even-index elements and the other
+/// referencing the odd-index elements. If you tried to achieve this by calling
+/// `.slice_mut()` twice, the borrow checker would complain about mutably
+/// borrowing the array twice (even though it's safe as long as the slices are
+/// disjoint).
+///
+/// The syntax is `multislice!(` *expression, (pattern [, pattern [, …]])* `)`,
+/// where *expression* evaluates to an `ArrayBase<S, D>` where `S: DataMut`,
+/// and `pattern` is one of the following:
+///
+/// * `mut expr`: creates an `ArrayViewMut`, where `expr` evaluates to a
+///   `&SliceInfo` instance used to slice the array.
+/// * `expr`: creates an `ArrayView`, where `expr` evaluates to a `&SliceInfo`
+///   instance used to slice the array.
+///
+/// **Note** that this macro always mutably borrows the array even if there are
+/// no `mut` patterns. If all you want to do is take read-only slices, you
+/// don't need `multislice!()`; just call
+/// [`.slice()`](struct.ArrayBase.html#method.slice) multiple times instead.
+///
+/// `multislice!()` follows Rust's aliasing rules:
+///
+/// * An `ArrayViewMut` and `ArrayView` cannot reference the same element.
+/// * Two `ArrayViewMut` cannot reference the same element.
+/// * Two `ArrayView` can reference the same element.
+///
+/// **Panics** at runtime if any of the aliasing rules is violated.
+///
+/// See also [*Slicing*](struct.ArrayBase.html#slicing).
+///
+/// # Examples
+///
+/// In this example, there are two overlapping read-only slices, and two
+/// disjoint mutable slices. Neither of the mutable slices intersects any of
+/// the other slices.
+///
+/// ```
+/// #[macro_use]
+/// extern crate ndarray;
+///
+/// use ndarray::prelude::*;
+///
+/// # fn main() {
+/// let mut arr = Array1::from_iter(0..12);
+/// let (a, b, c, d) = multislice!(arr, (s![0..5], mut s![6..;2], s![1..6], mut s![7..;2]));
+/// assert_eq!(a, array![0, 1, 2, 3, 4]);
+/// assert_eq!(b, array![6, 8, 10]);
+/// assert_eq!(c, array![1, 2, 3, 4, 5]);
+/// assert_eq!(d, array![7, 9, 11]);
+/// # }
+/// ```
+///
+/// These examples panic because they don't follow the aliasing rules:
+///
+/// * `ArrayViewMut` and `ArrayView` cannot reference the same element.
+///
+///   ```should_panic
+///   # #[macro_use] extern crate ndarray;
+///   # use ndarray::prelude::*;
+///   # fn main() {
+///   let mut arr = Array1::from_iter(0..12);
+///   multislice!(arr, (s![0..5], mut s![1..;2])); // panic!
+///   # }
+///   ```
+///
+/// * Two `ArrayViewMut` cannot reference the same element.
+///
+///   ```should_panic
+///   # #[macro_use] extern crate ndarray;
+///   # use ndarray::prelude::*;
+///   # fn main() {
+///   let mut arr = Array1::from_iter(0..12);
+///   multislice!(arr, (mut s![0..5], mut s![1..;2])); // panic!
+///   # }
+///   ```
+#[macro_export]
+macro_rules! multislice(
+    (
+        @check $view:expr,
+        $info:expr,
+        ()
+    ) => {};
+    // Check that $info doesn't intersect $other.
+    (
+        @check $view:expr,
+        $info:expr,
+        ($other:expr,)
+    ) => {
+        assert!(
+            !$crate::slices_intersect(&$view.raw_dim(), $info, $other),
+            "Slice {:?} must not intersect slice {:?}", $info, $other
+        )
+    };
+    // Check that $info doesn't intersect any of the other info in the tuple.
+    (
+        @check $view:expr,
+        $info:expr,
+        ($other:expr, $($more:tt)*)
+    ) => {
+        {
+            multislice!(@check $view, $info, ($other,));
+            multislice!(@check $view, $info, ($($more)*));
+        }
+    };
+    // Parse last slice (mutable), no trailing comma.
+    (
+        @parse $view:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        (mut $info:expr)
+    ) => {
+        match $info {
+            info => {
+                multislice!(@check $view, info, ($($mut_info)*));
+                multislice!(@check $view, info, ($($immut_info)*));
+                ($($sliced)* unsafe { $view.aliasing_view_mut() }.slice_move(info))
+            }
+        }
+    };
+    // Parse last slice (read-only), no trailing comma.
+    (
+        @parse $view:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        ($info:expr)
+    ) => {
+        match $info {
+            info => {
+                multislice!(@check $view, info, ($($mut_info)*));
+                ($($sliced)* unsafe { $view.aliasing_view() }.slice_move(info))
+            }
+        }
+    };
+    // Parse last slice (mutable), with trailing comma.
+    (
+        @parse $view:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        (mut $info:expr,)
+    ) => {
+        match $info {
+            info => {
+                multislice!(@check $view, info, ($($mut_info)*));
+                multislice!(@check $view, info, ($($immut_info)*));
+                ($($sliced)* unsafe { $view.aliasing_view_mut() }.slice_move(info))
+            }
+        }
+    };
+    // Parse last slice (read-only), with trailing comma.
+    (
+        @parse $view:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        ($info:expr,)
+    ) => {
+        match $info {
+            info => {
+                multislice!(@check $view, info, ($($mut_info)*));
+                ($($sliced)* unsafe { $view.aliasing_view() }.slice_move(info))
+            }
+        }
+    };
+    // Parse a mutable slice.
+    (
+        @parse $view:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        (mut $info:expr, $($t:tt)*)
+    ) => {
+        match $info {
+            info => {
+                multislice!(@check $view, info, ($($mut_info)*));
+                multislice!(@check $view, info, ($($immut_info)*));
+                multislice!(
+                    @parse $view,
+                    ($($sliced)* unsafe { $view.aliasing_view_mut() }.slice_move(info),),
+                    ($($mut_info)* info,),
+                    ($($immut_info)*),
+                    ($($t)*)
+                )
+            }
+        }
+    };
+    // Parse a read-only slice.
+    (
+        @parse $view:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        ($info:expr, $($t:tt)*)
+    ) => {
+        match $info {
+            info => {
+                multislice!(@check $view, info, ($($mut_info)*));
+                multislice!(
+                    @parse $view,
+                    ($($sliced)* unsafe { $view.aliasing_view() }.slice_move(info),),
+                    ($($mut_info)*),
+                    ($($immut_info)* info,),
+                    ($($t)*)
+                )
+            }
+        }
+    };
+    // Entry point.
+    ($arr:expr, ($($t:tt)*)) => {
+        {
+            let view = $crate::ArrayBase::view_mut(&mut $arr);
+            multislice!(@parse view, (), (), (), ($($t)*))
+        }
+    };
+);
