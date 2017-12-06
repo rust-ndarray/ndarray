@@ -101,6 +101,34 @@ fn test_slice_range_variable() {
 }
 
 #[test]
+fn test_slice_args_eval_range_once() {
+    let mut eval_count = 0;
+    {
+        let mut range = || {
+            eval_count += 1;
+            1..4
+        };
+        let arr = array![0, 1, 2, 3, 4];
+        assert_eq!(arr.slice(s![range()]), array![1, 2, 3]);
+    }
+    assert_eq!(eval_count, 1);
+}
+
+#[test]
+fn test_slice_args_eval_step_once() {
+    let mut eval_count = 0;
+    {
+        let mut step = || {
+            eval_count += 1;
+            -1
+        };
+        let arr = array![0, 1, 2, 3, 4];
+        assert_eq!(arr.slice(s![1..4;step()]), array![3, 2, 1]);
+    }
+    assert_eq!(eval_count, 1);
+}
+
+#[test]
 fn test_slice_array_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
     let info = s![1.., 1, ..;2];
