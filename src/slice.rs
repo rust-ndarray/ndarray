@@ -5,6 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+use error::{ShapeError, ErrorKind};
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeTo};
 use std::fmt;
 use std::marker::PhantomData;
@@ -334,16 +335,17 @@ where
 {
     /// Returns a new `SliceInfo` instance.
     ///
-    /// **Panics** if `D` is not consistent with `indices`.
-    pub fn new(indices: T) -> SliceInfo<T, D> {
-        let out_ndim = indices.as_ref().iter().filter(|s| s.is_slice()).count();
+    /// Errors if `D` is not consistent with `indices`.
+    pub fn new(indices: T) -> Result<SliceInfo<T, D>, ShapeError> {
         if let Some(ndim) = D::NDIM {
-            assert_eq!(out_ndim, ndim);
+            if ndim != indices.as_ref().iter().filter(|s| s.is_slice()).count() {
+                return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+            }
         }
-        SliceInfo {
+        Ok(SliceInfo {
             out_dim: PhantomData,
             indices: indices,
-        }
+        })
     }
 }
 
