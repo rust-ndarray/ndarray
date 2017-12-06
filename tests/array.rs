@@ -94,6 +94,13 @@ fn test_slice_with_many_dim() {
 }
 
 #[test]
+fn test_slice_range_variable() {
+    let range = 1..4;
+    let arr = array![0, 1, 2, 3, 4];
+    assert_eq!(arr.slice(s![range]), array![1, 2, 3]);
+}
+
+#[test]
 fn test_slice_array_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
     let info = s![1.., 1, ..;2];

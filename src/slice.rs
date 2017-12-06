@@ -533,38 +533,50 @@ impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
 macro_rules! s(
     // convert a..b;c into @convert(a..b, c), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r, $s)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        {
+            let out_dim = $crate::SliceNextDim::next_dim(&$r, $dim);
+            unsafe {
+                &$crate::SliceInfo::new_unchecked(
+                    [$($stack)* s!(@convert $r, $s)],
+                    out_dim,
+                )
+            }
         }
     };
     // convert a..b into @convert(a..b), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        {
+            let out_dim = $crate::SliceNextDim::next_dim(&$r, $dim);
+            unsafe {
+                &$crate::SliceInfo::new_unchecked(
+                    [$($stack)* s!(@convert $r)],
+                    out_dim,
+                )
+            }
         }
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r, $s)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        {
+            let out_dim = $crate::SliceNextDim::next_dim(&$r, $dim);
+            unsafe {
+                &$crate::SliceInfo::new_unchecked(
+                    [$($stack)* s!(@convert $r, $s)],
+                    out_dim,
+                )
+            }
         }
     };
     // convert a..b into @convert(a..b), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        {
+            let out_dim = $crate::SliceNextDim::next_dim(&$r, $dim);
+            unsafe {
+                &$crate::SliceInfo::new_unchecked(
+                    [$($stack)* s!(@convert $r)],
+                    out_dim,
+                )
+            }
         }
     };
     // convert a..b;c into @convert(a..b, c)
