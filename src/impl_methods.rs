@@ -1450,8 +1450,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             // special case for data-less views
             return true;
         }
-        let ptr = slc.as_ptr() as *mut _;
-        let end =  unsafe {
+        let ptr = slc.as_ptr() as *mut A;
+        let end = unsafe {
             ptr.offset(slc.len() as isize)
         };
         self.ptr >= ptr && self.ptr <= end
