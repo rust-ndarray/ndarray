@@ -533,55 +533,83 @@ impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
 macro_rules! s(
     // convert a..b;c into @convert(a..b, c), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r, $s)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        match $r {
+            r => {
+                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                unsafe {
+                    $crate::SliceInfo::new_unchecked(
+                        [$($stack)* s!(@convert r, $s)],
+                        out_dim,
+                    )
+                }
+            }
         }
     };
     // convert a..b into @convert(a..b), final item
     (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        match $r {
+            r => {
+                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                unsafe {
+                    $crate::SliceInfo::new_unchecked(
+                        [$($stack)* s!(@convert r)],
+                        out_dim,
+                    )
+                }
+            }
         }
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r, $s)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        match $r {
+            r => {
+                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                unsafe {
+                    $crate::SliceInfo::new_unchecked(
+                        [$($stack)* s!(@convert r, $s)],
+                        out_dim,
+                    )
+                }
+            }
         }
     };
     // convert a..b into @convert(a..b), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
-        unsafe {
-            &$crate::SliceInfo::new_unchecked(
-                [$($stack)* s!(@convert $r)],
-                $crate::SliceNextDim::next_dim(&$r, $dim),
-            )
+        match $r {
+            r => {
+                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                unsafe {
+                    $crate::SliceInfo::new_unchecked(
+                        [$($stack)* s!(@convert r)],
+                        out_dim,
+                    )
+                }
+            }
         }
     };
     // convert a..b;c into @convert(a..b, c)
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
-        s![@parse
-            $crate::SliceNextDim::next_dim(&$r, $dim),
-            [$($stack)* s!(@convert $r, $s),]
-            $($t)*
-        ]
+        match $r {
+            r => {
+                s![@parse
+                   $crate::SliceNextDim::next_dim(&r, $dim),
+                   [$($stack)* s!(@convert r, $s),]
+                   $($t)*
+                ]
+            }
+        }
     };
     // convert a..b into @convert(a..b)
     (@parse $dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
-        s![@parse
-            $crate::SliceNextDim::next_dim(&$r, $dim),
-            [$($stack)* s!(@convert $r),]
-            $($t)*
-        ]
+        match $r {
+            r => {
+                s![@parse
+                   $crate::SliceNextDim::next_dim(&r, $dim),
+                   [$($stack)* s!(@convert r),]
+                   $($t)*
+                ]
+            }
+        }
     };
     // convert range/index into SliceOrIndex
     (@convert $r:expr) => {
@@ -592,6 +620,8 @@ macro_rules! s(
         <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };
     ($($t:tt)*) => {
-        s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
+        // The extra `*&` is a workaround for this compiler bug:
+        // https://github.com/rust-lang/rust/issues/23014
+        &*&s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );
