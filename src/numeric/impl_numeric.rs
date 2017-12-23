@@ -88,15 +88,6 @@ impl<A, S, D> ArrayBase<S, D>
         res
     }
 
-    /// Old name for `sum_axis`.
-    #[deprecated(note="Use new name .sum_axis()")]
-    pub fn sum(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: Clone + Zero + Add<Output=A>,
-              D: RemoveAxis,
-    {
-        self.sum_axis(axis)
-    }
-
     /// Return mean along `axis`.
     ///
     /// **Panics** if `axis` is out of bounds.
@@ -122,15 +113,6 @@ impl<A, S, D> ArrayBase<S, D>
             cnt = cnt + A::one();
         }
         sum / &aview0(&cnt)
-    }
-
-    /// Old name for `mean_axis`.
-    #[deprecated(note="Use new name .mean_axis()")]
-    pub fn mean(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: LinalgScalar,
-              D: RemoveAxis,
-    {
-        self.mean_axis(axis)
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
