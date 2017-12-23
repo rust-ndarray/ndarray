@@ -869,14 +869,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         exact_chunks_of(self.view(), chunk_size)
     }
 
-    #[doc(hidden)]
-    #[deprecated(note="Renamed to exact_chunks")]
-    pub fn whole_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
-        where E: IntoDimension<Dim=D>,
-    {
-        self.exact_chunks(chunk_size)
-    }
-
     /// Return an exact chunks producer (and iterable).
     ///
     /// It produces the whole chunks of a given n-dimensional chunk size,
@@ -914,15 +906,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               S: DataMut
     {
         exact_chunks_mut_of(self.view_mut(), chunk_size)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="Renamed to exact_chunks_mut")]
-    pub fn whole_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
-        where E: IntoDimension<Dim=D>,
-              S: DataMut
-    {
-        self.exact_chunks_mut(chunk_size)
     }
 
     /// Return a window producer and iterable.
