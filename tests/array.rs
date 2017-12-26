@@ -542,6 +542,62 @@ fn swapaxes()
 }
 
 #[test]
+fn permuted_axes()
+{
+    let a = array![1].into_subview(Axis(0), 0);
+    let permuted = a.view().permuted_axes([]);
+    assert_eq!(a, permuted);
+
+    let a = array![1];
+    let permuted = a.view().permuted_axes([0]);
+    assert_eq!(a, permuted);
+
+    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
+    let permuted = a.view().permuted_axes([2, 1, 0]);
+    for ((i0, i1, i2), elem) in a.indexed_iter() {
+        assert_eq!(*elem, permuted[(i2, i1, i0)]);
+    }
+    let permuted = a.view().into_dyn().permuted_axes(&[0, 2, 1][..]);
+    for ((i0, i1, i2), elem) in a.indexed_iter() {
+        assert_eq!(*elem, permuted[&[i0, i2, i1][..]]);
+    }
+
+    let a = Array::from_iter(0..120).into_shape((2, 3, 4, 5)).unwrap();
+    let permuted = a.view().permuted_axes([1, 0, 3, 2]);
+    for ((i0, i1, i2, i3), elem) in a.indexed_iter() {
+        assert_eq!(*elem, permuted[(i1, i0, i3, i2)]);
+    }
+    let permuted = a.view().into_dyn().permuted_axes(&[1, 2, 3, 0][..]);
+    for ((i0, i1, i2, i3), elem) in a.indexed_iter() {
+        assert_eq!(*elem, permuted[&[i1, i2, i3, i0][..]]);
+    }
+}
+
+#[should_panic]
+#[test]
+fn permuted_axes_repeated_axis()
+{
+    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
+    a.view().permuted_axes([1, 0, 1]);
+}
+
+#[should_panic]
+#[test]
+fn permuted_axes_missing_axis()
+{
+    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap().into_dyn();
+    a.view().permuted_axes(&[2, 0][..]);
+}
+
+#[should_panic]
+#[test]
+fn permuted_axes_oob()
+{
+    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
+    a.view().permuted_axes([1, 0, 3]);
+}
+
+#[test]
 fn standard_layout()
 {
     let mut a = arr2(&[[1., 2.], [3., 4.0]]);

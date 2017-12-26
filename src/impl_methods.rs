@@ -1329,6 +1329,59 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.strides.slice_mut().swap(ax, bx);
     }
 
+    /// Permute the axes.
+    ///
+    /// This does not move any data, it just adjusts the array’s dimensions
+    /// and strides.
+    ///
+    /// *i* in the *j*-th place in the axes sequence means `self`'s *i*-th axis
+    /// becomes `self.permuted_axes()`'s *j*-th axis
+    ///
+    /// **Panics** if any of the axes are out of bounds, if an axis is missing,
+    /// or if an axis is repeated more than once.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{arr2, Array3};
+    ///
+    /// let a = arr2(&[[0, 1], [2, 3]]);
+    /// assert_eq!(a.view().permuted_axes([1, 0]), a.t());
+    ///
+    /// let b = Array3::<u8>::zeros((1, 2, 3));
+    /// assert_eq!(b.permuted_axes([1, 0, 2]).shape(), &[2, 1, 3]);
+    /// ```
+    pub fn permuted_axes<T>(self, axes: T) -> ArrayBase<S, D>
+    where
+        T: IntoDimension<Dim = D>,
+    {
+        let axes = axes.into_dimension();
+        // Ensure that each axis is used exactly once.
+        let mut usage_counts = D::zero_index_with_ndim(self.ndim());
+        for axis in axes.slice() {
+            usage_counts[*axis] += 1;
+        }
+        for count in usage_counts.slice() {
+            assert_eq!(*count, 1, "each axis must be listed exactly once");
+        }
+        // Determine the new shape and strides.
+        let mut new_dim = usage_counts; // reuse to avoid an allocation
+        let mut new_strides = D::zero_index_with_ndim(self.ndim());
+        {
+            let dim = self.dim.slice();
+            let strides = self.strides.slice();
+            for (new_axis, &axis) in axes.slice().iter().enumerate() {
+                new_dim[new_axis] = dim[axis];
+                new_strides[new_axis] = strides[axis];
+            }
+        }
+        ArrayBase {
+            dim: new_dim,
+            strides: new_strides,
+            ..self
+        }
+    }
+
     /// Transpose the array by reversing axes.
     ///
     /// Transposition reverses the order of the axes (dimensions and strides)
