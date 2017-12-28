@@ -70,7 +70,7 @@ How to use with cargo
 ::
 
     [dependencies]
-    ndarray = "0.10.0"
+    ndarray = "0.11.0"
 
 How to enable blas integration. Depend on ``blas-sys`` directly to pick a blas
 provider. Note that only end-user projects (not libraries) should select
@@ -78,7 +78,7 @@ provider::
 
 
     [dependencies]
-    ndarray = { version = "0.10.0", features = ["blas"] }
+    ndarray = { version = "0.11.0", features = ["blas"] }
     blas-sys = { version = "0.6", default-features = false, features = ["openblas"] }
 
 
@@ -98,15 +98,17 @@ Recent Changes (ndarray)
     * Replace the ``Si`` type with ``SliceOrIndex``.
     * Add a new ``Slice`` type that is similar to the old ``Si`` type.
 
-  - Add support form more index types (e.g. ``usize``) to the ``s![]`` macro by
+  - Add support for more index types (e.g. ``usize``) to the ``s![]`` macro by
     @jturner314
   - Rename ``.islice()`` to ``.slice_inplace()`` by @jturner314
   - Rename ``.isubview()`` to ``.subview_inplace()`` by @jturner314
   - Add ``.slice_move()``, ``.slice_axis()``, ``.slice_axis_mut()``, and
     ``.slice_axis_inplace()`` methods by @jturner314
   - Add ``Dimension::NDIM`` associated constant by @jturner314
-  - Change the trait bound on ``S`` in ``arr1 (op) &arr`` to
-    ``S: DataOwned<Elem=A> + DataMut`` by @jturner314
+  - Change trait bounds for arithmetic ops between an array (by value) and
+    a reference to an array or array view (“array1 (op) &array2”); before,
+    an ``ArrayViewMut`` was supported on the left hand side, now, the left
+    hand side must not be a view. (`#380`_) by @jturner314
   - Remove deprecated methods (``.whole_chunks()``, ``.whole_chunks_mut()``,
     ``.sum()``, and ``.mean()``; replaced by ``.exact_chunks()``,
     ``.exact_chunks_mut()``, ``.sum_axis()``, and ``.mean_axis()``,
@@ -114,6 +116,7 @@ Recent Changes (ndarray)
   - Minimum required Rust version is 1.22.
 
 __ https://jim.turner.link/pages/ndarray-0.11/
+.. _`#380`: https://github.com/bluss/rust-ndarray/pull/380
 
 - 0.10.13
 
