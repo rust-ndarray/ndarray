@@ -81,7 +81,9 @@ extern crate serde;
 extern crate rustc_serialize as serialize;
 
 #[cfg(feature="blas")]
-extern crate blas_sys;
+extern crate cblas_sys;
+#[cfg(feature="blas")]
+extern crate blas_src;
 
 extern crate matrixmultiply;
 

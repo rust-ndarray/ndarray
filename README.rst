@@ -72,14 +72,16 @@ How to use with cargo
     [dependencies]
     ndarray = "0.11.0"
 
-How to enable blas integration. Depend on ``blas-sys`` directly to pick a blas
-provider. Note that only end-user projects (not libraries) should select
-provider::
+How to enable blas integration. Depend on ``blas-src`` directly to pick a blas
+provider. Depend on exactly the same version as ``ndarray``, for the selection
+to work. A proposed configuration using system openblas is shown below.
+Note that only end-user projects (not libraries) should select provider::
 
 
     [dependencies]
     ndarray = { version = "0.11.0", features = ["blas"] }
-    blas-sys = { version = "0.6", default-features = false, features = ["openblas"] }
+    blas-src = { version = "0.1.2", default-features = false, features = ["openblas"] }
+    openblas-src = { version = "0.5.6", default-features = false, features = ["cblas", "system"] }
 
 
 Recent Changes (ndarray)
