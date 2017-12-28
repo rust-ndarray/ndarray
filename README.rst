@@ -85,6 +85,35 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.11.0 `Release Announcement`__
+
+  - Allow combined slicing and subviews in a single operation by @jturner314 and
+    @bluss
+
+    * Add support for individual indices (to indicate subviews) to the ``s![]``
+      macro, and change the return type to
+      ``&SliceInfo<[SliceOrIndex; n], Do>``.
+    * Change the argument type of the slicing methods to correspond to the new
+      ``s![]`` macro.
+    * Replace the ``Si`` type with ``SliceOrIndex``.
+    * Add a new ``Slice`` type that is similar to the old ``Si`` type.
+
+  - Add support form more index types (e.g. ``usize``) to the ``s![]`` macro by
+    @jturner314
+  - Rename ``.islice()`` to ``.slice_inplace()`` by @jturner314
+  - Rename ``.isubview()`` to ``.subview_inplace()`` by @jturner314
+  - Add ``.slice_move()``, ``.slice_axis()``, ``.slice_axis_mut()``, and
+    ``.slice_axis_inplace()`` methods by @jturner314
+  - Add ``Dimension::NDIM`` associated constant by @jturner314
+  - Change the trait bound on ``S`` in ``arr1 (op) &arr`` to
+    ``S: DataOwned<Elem=A> + DataMut`` by @jturner314
+  - Remove deprecated methods (``.whole_chunks()``, ``.whole_chunks_mut()``,
+    ``.sum()``, and ``.mean()``; replaced by ``.exact_chunks()``,
+    ``.exact_chunks_mut()``, ``.sum_axis()``, and ``.mean_axis()``,
+    respectively) by @bluss
+
+__ https://jim.turner.link/pages/ndarray-0.11/
+
 - 0.10.13
 
   - Add an extension trait for longer-life indexing methods for array views
