@@ -25,6 +25,7 @@ addons:
   apt:
     packages:
       - libopenblas-dev
+      - gfortran
 script:
   - |
       cargo build --verbose --no-default-features &&
