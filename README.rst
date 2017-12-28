@@ -85,6 +85,10 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.10.14
+
+  - Fix one future incompatibility warning (about raw pointer cast types).
+
 - 0.10.13
 
   - Add an extension trait for longer-life indexing methods for array views
