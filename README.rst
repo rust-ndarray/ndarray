@@ -111,6 +111,7 @@ Recent Changes (ndarray)
     ``.sum()``, and ``.mean()``; replaced by ``.exact_chunks()``,
     ``.exact_chunks_mut()``, ``.sum_axis()``, and ``.mean_axis()``,
     respectively) by @bluss
+  - Minimum required Rust version is 1.22.
 
 __ https://jim.turner.link/pages/ndarray-0.11/
 
