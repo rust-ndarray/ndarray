@@ -16,7 +16,7 @@ matrix:
     - rust: nightly
       env:
        - FEATURES='test'
-       - BENCH=1
+       - IS_NIGHTLY=1
 branches:
   only:
     - master
@@ -25,18 +25,7 @@ addons:
   apt:
     packages:
       - libopenblas-dev
+      - gfortran
 script:
   - |
-      cargo build --verbose --no-default-features &&
-      cargo test --verbose --no-default-features &&
-      cargo test --release --verbose --no-default-features &&
-      cargo build --verbose --features "$FEATURES" &&
-      cargo test --verbose --features "$FEATURES" &&
-      cargo test --manifest-path=parallel/Cargo.toml --verbose &&
-      if [[ "$TRAVIS_RUST_VERSION" == "1.18.0" ]]; then
-        cargo test --manifest-path=serialization-tests/Cargo.toml --verbose --no-default-features
-      else
-        cargo test --manifest-path=serialization-tests/Cargo.toml --verbose
-      fi &&
-      CARGO_TARGET_DIR=target/ cargo test --manifest-path=numeric-tests/Cargo.toml --verbose &&
-      ([ "$BENCH" != 1 ] || cargo bench --no-run --verbose --features "$FEATURES")
+      ./scripts/all-tests.sh "$FEATURES" "$IS_NIGHTLY"

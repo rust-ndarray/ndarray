@@ -1,0 +1,16 @@
+[package]
+name = "blas-tests"
+version = "0.1.0"
+authors = ["bluss"]
+publish = false
+
+[lib]
+test = false
+
+[dev-dependencies]
+ndarray = { path = "../", features = ["blas"] }
+blas-src = { version = "0.1.2", default-features = false, features = ["openblas"] }
+openblas-src = { version = "0.5.6", default-features = false, features = ["cblas", "system"] }
+defmac = "0.1"
+num-traits = "0.1.40"
+

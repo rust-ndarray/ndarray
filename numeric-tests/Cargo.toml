@@ -13,7 +13,7 @@ rand = "0.3"
 test = false
 
 [features]
-test_blas = ["ndarray/blas", "ndarray/blas-openblas-sys"]
+test_blas = ["ndarray/blas", "ndarray/test-blas-openblas-sys"]
 
 [profile.dev]
 opt-level = 2

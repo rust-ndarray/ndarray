@@ -24,9 +24,9 @@ use std::mem::swap;
 use std::os::raw::c_int;
 
 #[cfg(feature="blas")]
-use blas_sys::c::{CblasNoTrans, CblasTrans, CblasRowMajor};
+use cblas_sys as blas_sys;
 #[cfg(feature="blas")]
-use blas_sys;
+use cblas_sys::{CblasNoTrans, CblasTrans, CblasRowMajor};
 
 /// len of vector before we use blas
 #[cfg(feature="blas")]
@@ -112,7 +112,7 @@ impl<A, S> ArrayBase<S, Ix1>
                     let (rhs_ptr, _, incy) = blas_1d_params(rhs.ptr,
                                                             rhs.len(),
                                                             rhs.strides()[0]);
-                    let ret = blas_sys::c::$func(
+                    let ret = blas_sys::$func(
                         n,
                         lhs_ptr as *const $ty,
                         incx,
@@ -415,7 +415,7 @@ fn mat_mul_impl<A>(alpha: A,
                     // gemm is C ← αA^Op B^Op + βC
                     // Where Op is notrans/trans/conjtrans
                     unsafe {
-                        blas_sys::c::$gemm(
+                        blas_sys::$gemm(
                         CblasRowMajor,
                         lhs_trans,
                         rhs_trans,
@@ -595,7 +595,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
                     let y_stride = y.strides()[0] as blas_index;
 
                     unsafe {
-                        blas_sys::c::$gemv(
+                        blas_sys::$gemv(
                         CblasRowMajor,
                         a_trans,
                         m as blas_index, // m, rows of Op(a)
