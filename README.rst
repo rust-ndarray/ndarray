@@ -73,9 +73,10 @@ How to use with cargo
     ndarray = "0.11.0"
 
 How to enable blas integration. Depend on ``blas-src`` directly to pick a blas
-provider. Depend on exactly the same version as ``ndarray``, for the selection
-to work. A proposed configuration using system openblas is shown below.
-Note that only end-user projects (not libraries) should select provider::
+provider. Depend on the same ``blas-src`` version as ``ndarray`` does, for the
+selection to work.  A proposed configuration using system openblas is shown
+below. Note that only end-user projects (not libraries) should select
+provider::
 
 
     [dependencies]
@@ -115,6 +116,8 @@ Recent Changes (ndarray)
     ``.sum()``, and ``.mean()``; replaced by ``.exact_chunks()``,
     ``.exact_chunks_mut()``, ``.sum_axis()``, and ``.mean_axis()``,
     respectively) by @bluss
+  - Updated to the latest blas (optional) dependencies. See instructions in the
+    README.
   - Minimum required Rust version is 1.22.
 
 __ https://jim.turner.link/pages/ndarray-0.11/
