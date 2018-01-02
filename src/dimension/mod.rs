@@ -881,49 +881,17 @@ mod test {
 
     #[test]
     fn slices_intersect_true() {
-        assert!(slices_intersect(
-            &Dim([4, 5]),
-            &[(..).into(), (..).into()],
-            &[(..).into(), (..).into()],
-        ));
-        assert!(slices_intersect(
-            &Dim([4, 5]),
-            &[0.into(), (..).into()],
-            &[0.into(), (..).into()],
-        ));
-        assert!(slices_intersect(
-            &Dim([4, 5]),
-            &[SliceOrIndex::from(..).step_by(2), (..).into()],
-            &[SliceOrIndex::from(..).step_by(3), (..).into()],
-        ));
-        assert!(slices_intersect(
-            &Dim([4, 5]),
-            &[(..).into(), SliceOrIndex::from(..).step_by(2)],
-            &[(..).into(), SliceOrIndex::from(1..).step_by(3)],
-        ));
-        assert!(slices_intersect(
-            &Dim([4, 10]),
-            &[(..).into(), SliceOrIndex::from(..).step_by(9)],
-            &[(..).into(), SliceOrIndex::from(3..).step_by(6)],
-        ));
+        assert!(slices_intersect(&Dim([4, 5]), s![.., ..], s![.., ..]));
+        assert!(slices_intersect(&Dim([4, 5]), s![0, ..], s![0, ..]));
+        assert!(slices_intersect(&Dim([4, 5]), s![..;2, ..], s![..;3, ..]));
+        assert!(slices_intersect(&Dim([4, 5]), s![.., ..;2], s![.., 1..;3]));
+        assert!(slices_intersect(&Dim([4, 10]), s![.., ..;9], s![.., 3..;6]));
     }
 
     #[test]
     fn slices_intersect_false() {
-        assert!(!slices_intersect(
-            &Dim([4, 5]),
-            &[SliceOrIndex::from(..).step_by(2), (..).into()],
-            &[SliceOrIndex::from(1..).step_by(2), (..).into()],
-        ));
-        assert!(!slices_intersect(
-            &Dim([4, 5]),
-            &[SliceOrIndex::from(..).step_by(2), (..).into()],
-            &[SliceOrIndex::from(1..).step_by(3), (..).into()],
-        ));
-        assert!(!slices_intersect(
-            &Dim([4, 5]),
-            &[(..).into(), SliceOrIndex::from(..).step_by(9)],
-            &[(..).into(), SliceOrIndex::from(3..).step_by(6)],
-        ));
+        assert!(!slices_intersect(&Dim([4, 5]), s![..;2, ..], s![1..;2, ..]));
+        assert!(!slices_intersect(&Dim([4, 5]), s![..;2, ..], s![1..;3, ..]));
+        assert!(!slices_intersect(&Dim([4, 5]), s![.., ..;9], s![.., 3..;6]));
     }
 }
