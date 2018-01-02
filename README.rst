@@ -61,7 +61,7 @@ your `Cargo.toml`.
 
   - Optional and experimental, compatible with Rust stable
   - Enable transparent BLAS support for matrix multiplication.
-    Uses ``blas-sys`` for pluggable backend, which needs to be configured
+    Uses ``blas-src`` for pluggable backend, which needs to be configured
     separately.
 
 How to use with cargo
