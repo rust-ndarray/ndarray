@@ -563,31 +563,11 @@ macro_rules! s(
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        match $r {
-            r => {
-                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
-                unsafe {
-                    $crate::SliceInfo::new_unchecked(
-                        [$($stack)* s!(@convert r, $s)],
-                        out_dim,
-                    )
-                }
-            }
-        }
+        s![@parse $dim, [$($stack)*] $r;$s]
     };
     // convert a..b into @convert(a..b), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
-        match $r {
-            r => {
-                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
-                unsafe {
-                    $crate::SliceInfo::new_unchecked(
-                        [$($stack)* s!(@convert r)],
-                        out_dim,
-                    )
-                }
-            }
-        }
+        s![@parse $dim, [$($stack)*] $r]
     };
     // convert a..b;c into @convert(a..b, c)
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
