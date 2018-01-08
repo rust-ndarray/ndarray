@@ -93,6 +93,7 @@ extern crate num_complex;
 
 use std::marker::PhantomData;
 use std::rc::Rc;
+use std::sync::Arc;
 
 pub use dimension::{
     Dimension,
@@ -663,6 +664,22 @@ pub struct ArrayBase<S, D>
 /// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
+/// An array where the data has shared ownership and is copy on write.
+/// It can act as both an owner as the data as well as a shared reference (view
+/// like).
+///
+/// The `ArcArray<A, D>` is parameterized by `A` for the element type and `D` for
+/// the dimensionality.
+///
+/// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
+/// arrays and the views; see its docs for an overview of all array features.  
+///
+/// See also:
+///
+/// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
+/// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
+pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
+
 /// An array that owns its data uniquely.
 ///
 /// `Array` is the main n-dimensional array type, and it owns all its array
@@ -730,12 +747,25 @@ pub struct OwnedRepr<A>(Vec<A>);
 #[derive(Debug)]
 pub struct OwnedRcRepr<A>(Rc<Vec<A>>);
 
-
 impl<A> Clone for OwnedRcRepr<A> {
     fn clone(&self) -> Self {
         OwnedRcRepr(self.0.clone())
     }
 }
+
+/// ArcArray's representation.
+///
+/// *Don’t use this type directly—use the type alias
+/// [`ArcArray`](type.ArcArray.html) for the array type!*
+#[derive(Debug)]
+pub struct OwnedArcRepr<A>(Arc<Vec<A>>);
+
+impl<A> Clone for OwnedArcRepr<A> {
+    fn clone(&self) -> Self {
+        OwnedArcRepr(self.0.clone())
+    }
+}
+
 
 /// Array view’s representation.
 ///
