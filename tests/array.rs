@@ -52,6 +52,7 @@ fn test_mat_mul() {
 }
 
 
+#[deny(unsafe_code)]
 #[test]
 fn test_slice()
 {

@@ -538,6 +538,7 @@ macro_rules! s(
         match $r {
             r => {
                 let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
                         [$($stack)* s!(@convert r, $s)],
@@ -552,6 +553,7 @@ macro_rules! s(
         match $r {
             r => {
                 let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
                         [$($stack)* s!(@convert r)],
