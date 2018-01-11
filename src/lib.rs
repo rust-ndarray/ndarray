@@ -662,6 +662,7 @@ pub struct ArrayBase<S, D>
 ///
 /// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
+#[deprecated(note="RcArray is replaced by ArcArray")]
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array where the data has shared ownership and is copy on write.
@@ -744,14 +745,8 @@ pub struct OwnedRepr<A>(Vec<A>);
 ///
 /// *Don’t use this type directly—use the type alias
 /// [`RcArray`](type.RcArray.html) for the array type!*
-#[derive(Debug)]
-pub struct OwnedRcRepr<A>(Rc<Vec<A>>);
-
-impl<A> Clone for OwnedRcRepr<A> {
-    fn clone(&self) -> Self {
-        OwnedRcRepr(self.0.clone())
-    }
-}
+#[deprecated(note="RcArray is replaced by ArcArray")]
+use self::OwnedArcRepr as OwnedRcRepr;
 
 /// ArcArray's representation.
 ///
