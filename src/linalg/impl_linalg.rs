@@ -26,7 +26,7 @@ use std::os::raw::c_int;
 #[cfg(feature="blas")]
 use cblas_sys as blas_sys;
 #[cfg(feature="blas")]
-use cblas_sys::{CblasNoTrans, CblasTrans, CblasRowMajor};
+use cblas_sys::{CblasNoTrans, CblasTrans, CblasRowMajor, CBLAS_LAYOUT};
 
 /// len of vector before we use blas
 #[cfg(feature="blas")]
@@ -578,25 +578,22 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
         #[cfg(feature = "blas")]
         macro_rules! gemv {
             ($ty:ty, $gemv:ident) => {
-                if blas_row_major_2d::<$ty, _>(&a)
-                    && blas_compat_1d::<$ty, _>(&x)
+                if let Some(layout) = blas_layout::<$ty, _>(&a) {
+                    if blas_compat_1d::<$ty, _>(&x)
                     && blas_compat_1d::<$ty, _>(&y)
                 {
-                    let mut a_trans = CblasNoTrans;
-                    let mut a = a.view();
-                    let a_s0 = a.strides()[0];
-                    if a_s0 == 1 && m == k {
-                        a = a.reversed_axes();
-                        a_trans = CblasTrans;
-                    }
-                    // adjust strides, these may [1, 1] for column matrices
-                    let a_stride = cmp::max(a.strides()[0] as blas_index, k as blas_index);
+                    let a_trans = CblasNoTrans;
+                    let a_stride = match layout {
+                        CBLAS_LAYOUT::CblasRowMajor => a.strides()[0] as blas_index,
+                        CBLAS_LAYOUT::CblasColMajor => a.strides()[1] as blas_index,
+                    };
+
                     let x_stride = x.strides()[0] as blas_index;
                     let y_stride = y.strides()[0] as blas_index;
 
                     unsafe {
                         blas_sys::$gemv(
-                        CblasRowMajor,
+                        layout,
                         a_trans,
                         m as blas_index, // m, rows of Op(a)
                         k as blas_index, // n, cols of Op(a)
@@ -611,6 +608,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
                     );
                     }
                 return;
+                }
                 }
             }
         }
@@ -685,7 +683,7 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     let (m, n) = a.dim();
     let s0 = a.strides()[0];
     let s1 = a.strides()[1];
-    if !(s1 == 1 || n == 1) {
+    if s1 != 1 {
         return false;
     }
     if s0 < 1 || s1 < 1 {
@@ -716,7 +714,7 @@ fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     let (m, n) = a.dim();
     let s0 = a.strides()[0];
     let s1 = a.strides()[1];
-    if !(s0 == 1 || m == 1) {
+    if s0 != 1 {
         return false;
     }
     if s0 < 1 || s1 < 1 {
@@ -735,6 +733,21 @@ fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     true
 }
 
+#[cfg(feature="blas")]
+fn blas_layout<A, S>(a: &ArrayBase<S, Ix2>) -> Option<CBLAS_LAYOUT>
+    where S: Data,
+          A: 'static,
+          S::Elem: 'static,
+{
+    if blas_row_major_2d::<A, _>(a) {
+        Some(CBLAS_LAYOUT::CblasRowMajor)
+    }  else if blas_column_major_2d::<A, _>(a) {
+        Some(CBLAS_LAYOUT::CblasColMajor)
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 #[cfg(feature="blas")]
 mod blas_tests {
@@ -751,7 +764,7 @@ mod blas_tests {
     fn blas_row_major_2d_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
-        assert!(blas_column_major_2d::<f32, _>(&m));
+        assert!(!blas_column_major_2d::<f32, _>(&m));
     }
     
     #[test]
@@ -765,8 +778,8 @@ mod blas_tests {
     fn blas_row_major_2d_transposed_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         let m_t = m.t();
-        assert!(blas_row_major_2d::<f32, _>(&m_t));
-        assert!(blas_column_major_2d::<f32, _>(&m));
+        assert!(!blas_row_major_2d::<f32, _>(&m_t));
+        assert!(blas_column_major_2d::<f32, _>(&m_t));
     }
     
     #[test]
@@ -774,7 +787,7 @@ mod blas_tests {
         let m: Array2<f32> = Array2::zeros((5, 1));
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
-        assert!(blas_column_major_2d::<f32, _>(&m));
+        assert!(blas_column_major_2d::<f32, _>(&m_t));
     }
 
     #[test]
