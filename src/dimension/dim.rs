@@ -35,8 +35,8 @@ use Ix;
 /// array[[0, 0]] = 1.;
 /// assert_eq!(array.raw_dim(), Dim([3, 2]));
 /// ```
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
-pub struct Dim<I: ?Sized> {
+#[derive(Copy, Clone, PartialEq, Eq, Default, Hash)]
+pub struct Dim<I: ?Sized + Hash> {
     index: I,
 }
 
