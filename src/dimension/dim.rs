@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::fmt;
+use std::hash;
 use itertools::zip;
 
 use super::IntoDimension;
@@ -35,8 +36,8 @@ use Ix;
 /// array[[0, 0]] = 1.;
 /// assert_eq!(array.raw_dim(), Dim([3, 2]));
 /// ```
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
-pub struct Dim<I: ?Sized> {
+#[derive(Copy, Clone, PartialEq, Eq, Default, Hash)]
+pub struct Dim<I: ?Sized + hash::Hash> {
     index: I,
 }
 
