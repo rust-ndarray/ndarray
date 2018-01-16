@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::fmt;
+use std::hash;
 use itertools::zip;
 
 use super::IntoDimension;
@@ -66,6 +67,14 @@ impl<I: ?Sized> PartialEq<I> for Dim<I>
 {
     fn eq(&self, rhs: &I) -> bool {
         self.index == *rhs
+    }
+}
+
+impl<I: ?Sized> hash::Hash for Dim<I>
+    where Dim<I>: Dimension,
+{
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.slice().hash(state);
     }
 }
 
