@@ -10,8 +10,11 @@ use ndarray::{
     Axis,
     Dimension,
     Dim,
+    IxDyn,
     IntoDimension,
 };
+
+use std::hash::{Hash, Hasher};
 
 #[test]
 fn insert_axis()
@@ -211,6 +214,42 @@ fn test_operations() {
 
     y[0] -= 1;
     assert_eq!(y, [0, 1]);
+}
+
+#[test]
+fn test_hash() {
+    fn calc_hash<T: Hash>(value: &T) -> u64 {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        value.hash(&mut hasher);
+        hasher.finish()
+    }
+    macro_rules! test_hash_eq {
+        ($arr:expr) => {
+            assert_eq!(calc_hash(&Dim($arr)), calc_hash(&Dim($arr)));
+            assert_eq!(calc_hash(&Dim($arr)), calc_hash(&IxDyn(&$arr)));
+        }
+    }
+    macro_rules! test_hash_ne {
+        ($arr1:expr, $arr2:expr) => {
+            assert_ne!(calc_hash(&Dim($arr1)), calc_hash(&Dim($arr2)));
+            assert_ne!(calc_hash(&Dim($arr1)), calc_hash(&IxDyn(&$arr2)));
+            assert_ne!(calc_hash(&IxDyn(&$arr1)), calc_hash(&Dim($arr2)));
+        }
+    }
+    test_hash_eq!([]);
+    test_hash_eq!([0]);
+    test_hash_eq!([1]);
+    test_hash_eq!([1, 2]);
+    test_hash_eq!([3, 1, 2]);
+    test_hash_eq!([3, 1, 4, 2]);
+    test_hash_eq!([3, 1, 4, 2, 5]);
+    test_hash_eq!([6, 3, 1, 4, 2, 5]);
+    test_hash_ne!([0], [1]);
+    test_hash_ne!([1, 2], [2, 1]);
+    test_hash_ne!([3, 1, 2], [3, 1, 3]);
+    test_hash_ne!([3, 1, 2, 4], [3, 1, 2, 3]);
+    test_hash_ne!([3, 1, 2, 5, 4], [3, 1, 2, 4, 5]);
+    test_hash_ne!([3, 1, 6, 2, 5, 4], [3, 1, 2, 4, 6, 5]);
 }
 
 #[test]
