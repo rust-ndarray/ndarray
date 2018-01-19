@@ -580,35 +580,35 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
             ($ty:ty, $gemv:ident) => {
                 if let Some(layout) = blas_layout::<$ty, _>(&a) {
                     if blas_compat_1d::<$ty, _>(&x)
-                    && blas_compat_1d::<$ty, _>(&y)
-                {
-                    let a_trans = CblasNoTrans;
-                    let a_stride = match layout {
-                        CBLAS_LAYOUT::CblasRowMajor => a.strides()[0] as blas_index,
-                        CBLAS_LAYOUT::CblasColMajor => a.strides()[1] as blas_index,
-                    };
+                        && blas_compat_1d::<$ty, _>(&y)
+                    {
+                        let a_trans = CblasNoTrans;
+                        let a_stride = match layout {
+                            CBLAS_LAYOUT::CblasRowMajor => a.strides()[0] as blas_index,
+                            CBLAS_LAYOUT::CblasColMajor => a.strides()[1] as blas_index,
+                        };
 
-                    let x_stride = x.strides()[0] as blas_index;
-                    let y_stride = y.strides()[0] as blas_index;
+                        let x_stride = x.strides()[0] as blas_index;
+                        let y_stride = y.strides()[0] as blas_index;
 
-                    unsafe {
-                        blas_sys::$gemv(
-                        layout,
-                        a_trans,
-                        m as blas_index, // m, rows of Op(a)
-                        k as blas_index, // n, cols of Op(a)
-                        cast_as(&alpha),     // alpha
-                        a.ptr as *const _,   // a
-                        a_stride, // lda
-                        x.ptr as *const _,   // x
-                        x_stride,
-                        cast_as(&beta),      // beta
-                        y.ptr as *mut _,     // x
-                        y_stride,
-                    );
+                        unsafe {
+                            blas_sys::$gemv(
+                                layout,
+                                a_trans,
+                                m as blas_index, // m, rows of Op(a)
+                                k as blas_index, // n, cols of Op(a)
+                                cast_as(&alpha),     // alpha
+                                a.ptr as *const _,   // a
+                                a_stride, // lda
+                                x.ptr as *const _,   // x
+                                x_stride,
+                                cast_as(&beta),      // beta
+                                y.ptr as *mut _,     // x
+                                y_stride,
+                            );
+                        }
+                        return;
                     }
-                return;
-                }
                 }
             }
         }
@@ -683,7 +683,7 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     let (m, n) = a.dim();
     let s0 = a.strides()[0];
     let s1 = a.strides()[1];
-    if s1 != 1 {
+    if !(s1 == 1 || n == 1) {
         return false;
     }
     if s0 < 1 || s1 < 1 {
@@ -714,7 +714,7 @@ fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     let (m, n) = a.dim();
     let s0 = a.strides()[0];
     let s1 = a.strides()[1];
-    if s0 != 1 {
+    if !(s0 == 1 || m == 1) {
         return false;
     }
     if s0 < 1 || s1 < 1 {
@@ -764,7 +764,7 @@ mod blas_tests {
     fn blas_row_major_2d_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
-        assert!(!blas_column_major_2d::<f32, _>(&m));
+        assert!(blas_column_major_2d::<f32, _>(&m));
     }
     
     #[test]
@@ -778,7 +778,7 @@ mod blas_tests {
     fn blas_row_major_2d_transposed_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         let m_t = m.t();
-        assert!(!blas_row_major_2d::<f32, _>(&m_t));
+        assert!(blas_row_major_2d::<f32, _>(&m_t));
         assert!(blas_column_major_2d::<f32, _>(&m_t));
     }
     
