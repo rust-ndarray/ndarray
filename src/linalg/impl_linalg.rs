@@ -672,6 +672,12 @@ fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix1>) -> bool
 }
 
 #[cfg(feature="blas")]
+enum MemoryOrder {
+    C,
+    F,
+}
+
+#[cfg(feature="blas")]
 fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     where S: Data,
           A: 'static,
@@ -680,26 +686,7 @@ fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    let (m, n) = a.dim();
-    let s0 = a.strides()[0];
-    let s1 = a.strides()[1];
-    if !(s1 == 1 || n == 1) {
-        return false;
-    }
-    if s0 < 1 || s1 < 1 {
-        return false;
-    }
-    if (s0 > blas_index::max_value() as isize || s0 < blas_index::min_value() as isize) ||
-        (s1 > blas_index::max_value() as isize || s1 < blas_index::min_value() as isize)
-    {
-        return false;
-    }
-    if m > blas_index::max_value() as usize ||
-        n > blas_index::max_value() as usize
-    {
-        return false;
-    }
-    true
+    is_blas_2d(&a.dim, &a.strides, MemoryOrder::C)
 }
 
 #[cfg(feature="blas")]
@@ -711,10 +698,18 @@ fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    let (m, n) = a.dim();
-    let s0 = a.strides()[0];
-    let s1 = a.strides()[1];
-    if !(s0 == 1 || m == 1) {
+    is_blas_2d(&a.dim, &a.strides, MemoryOrder::F)
+}
+
+fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool {
+    let (m, n) = dim.into_pattern();
+    let s0 = stride[0] as isize;
+    let s1 = stride[1] as isize;
+    let (inner_stride, outer_dim) = match order {
+        MemoryOrder::C => (s1, n),
+        MemoryOrder::F => (s0, m),
+    };
+    if !(inner_stride == 1 || outer_dim == 1) {
         return false;
     }
     if s0 < 1 || s1 < 1 {
