@@ -701,6 +701,7 @@ fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
     is_blas_2d(&a.dim, &a.strides, MemoryOrder::F)
 }
 
+#[cfg(feature="blas")]
 fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool {
     let (m, n) = dim.into_pattern();
     let s0 = stride[0] as isize;
