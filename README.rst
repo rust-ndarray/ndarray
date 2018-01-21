@@ -88,6 +88,15 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.11.1
+
+  - Dimension types (``Ix1, Ix2, .., IxDyn``) now implement ``Hash`` by
+    @jturner314
+  - Blas integration can now use *gemv* for matrix-vector multiplication also
+    when the matrix is f-order by @maciejkula
+  - Encapsulated ``unsafe`` code blocks in the ``s![]`` macro are now exempted
+    from the ``unsafe_code`` lint by @jturner314
+
 - 0.11.0 `Release Announcement`__
 
   - Allow combined slicing and subviews in a single operation by @jturner314 and
