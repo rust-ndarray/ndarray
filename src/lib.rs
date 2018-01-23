@@ -92,7 +92,6 @@ extern crate num_traits as libnum;
 extern crate num_complex;
 
 use std::marker::PhantomData;
-use std::rc::Rc;
 use std::sync::Arc;
 
 pub use dimension::{

@@ -9,7 +9,6 @@
 //! The data (inner representation) traits for ndarray
 
 use std::mem::{self, size_of};
-use std::rc::Rc;
 use std::sync::Arc;
 
 use {
