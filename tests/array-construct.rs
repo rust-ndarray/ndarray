@@ -32,6 +32,16 @@ fn test_rc_into_owned() {
 }
 
 #[test]
+fn test_arcarray_thread_safe() {
+    fn is_send<T: Send>(_t: &T) { }
+    fn is_sync<T: Sync>(_t: &T) { }
+    let a = Array2::from_elem((5, 5), 1.).into_shared();
+
+    is_send(&a);
+    is_sync(&a);
+}
+
+#[test]
 fn test_uninit() {
     unsafe {
         let mut a = Array::<f32, _>::uninitialized((3, 4).f());
