@@ -650,20 +650,10 @@ pub struct ArrayBase<S, D>
 
 /// An array where the data has shared ownership and is copy on write.
 ///
-/// It can act as both an owner as the data as well as a shared reference (view
-/// like).
+/// It can act as both an owner as the data as well as a shared reference (view like).
 ///
-/// The `RcArray<A, D>` is parameterized by `A` for the element type and `D` for
-/// the dimensionality.
-///
-/// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
-/// arrays and the views; see its docs for an overview of all array features.  
-///
-/// See also:
-///
-/// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
-/// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
-#[deprecated(note="RcArray is replaced by ArcArray")]
+/// **Note: this type alias is obsolete.** See the equivalent [`ArcArray`] instead.
+// Use soon: #[deprecated(note="RcArray is replaced by ArcArray")]
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array where the data has shared ownership and is copy on write.
