@@ -203,18 +203,18 @@ pub type Ixs = isize;
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.
 ///
-/// Type aliases [`Array`], [`RcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
+/// Type aliases [`Array`], [`ArcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
 /// to `ArrayBase` with different types for the data container.
 ///
 /// [`Array`]: type.Array.html
-/// [`RcArray`]: type.RcArray.html
+/// [`ArcArray`]: type.ArcArray.html
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
 /// ## Contents
 ///
 /// + [Array](#array)
-/// + [RcArray](#rcarray)
+/// + [ArcArray](#arcarray)
 /// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Loops, Producers and Iterators](#loops-producers-and-iterators)
@@ -245,12 +245,12 @@ pub type Ixs = isize;
 /// temperature[[2, 2, 2]] += 0.5;
 /// ```
 ///
-/// ## `RcArray`
+/// ## `ArcArray`
 ///
-/// [`RcArray`](type.RcArray.html) is an owned array with reference counted
+/// [`ArcArray`](type.ArcArray.html) is an owned array with reference counted
 /// data (shared ownership).
 /// Sharing requires that it uses copy-on-write for mutable operations.
-/// Calling a method for mutating elements on `RcArray`, for example
+/// Calling a method for mutating elements on `ArcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
 ///
@@ -573,8 +573,8 @@ pub type Ixs = isize;
 /// ### Binary Operators with Two Arrays
 ///
 /// Let `A` be an array or view of any kind. Let `B` be an array
-/// with owned storage (either `Array` or `RcArray`).
-/// Let `C` be an array with mutable data (either `Array`, `RcArray`
+/// with owned storage (either `Array` or `ArcArray`).
+/// Let `C` be an array with mutable data (either `Array`, `ArcArray`
 /// or `ArrayViewMut`).
 /// The following combinations of operands
 /// are supported for an arbitrary binary operator denoted by `@` (it can be
@@ -599,7 +599,7 @@ pub type Ixs = isize;
 /// ### Unary Operators
 ///
 /// Let `A` be an array or view of any kind. Let `B` be an array with owned
-/// storage (either `Array` or `RcArray`). The following operands are supported
+/// storage (either `Array` or `ArcArray`). The following operands are supported
 /// for an arbitrary unary operator denoted by `@` (it can be `-` or `!`).
 ///
 /// - `@&A` which produces a new `Array`
@@ -649,6 +649,7 @@ pub struct ArrayBase<S, D>
 }
 
 /// An array where the data has shared ownership and is copy on write.
+///
 /// It can act as both an owner as the data as well as a shared reference (view
 /// like).
 ///
@@ -666,11 +667,19 @@ pub struct ArrayBase<S, D>
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array where the data has shared ownership and is copy on write.
-/// It can act as both an owner as the data as well as a shared reference (view
-/// like).
 ///
 /// The `ArcArray<A, D>` is parameterized by `A` for the element type and `D` for
 /// the dimensionality.
+///
+/// It can act as both an owner as the data as well as a shared reference (view
+/// like).
+/// Calling a method for mutating elements on `ArcArray`, for example
+/// [`view_mut()`](struct.ArrayBase.html#method.view_mut) or
+/// [`get_mut()`](struct.ArrayBase.html#method.get_mut), will break sharing and
+/// require a clone of the data (if it is not uniquely held).
+///
+/// `ArcArray` uses atomic reference counting like `Arc`, so it is `Send` and
+/// `Sync` (when allowed by the element type of the array too).
 ///
 /// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
 /// arrays and the views; see its docs for an overview of all array features.  
