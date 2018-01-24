@@ -10,13 +10,16 @@ matrix:
     - rust: stable
       env:
        - FEATURES='test'
+       - CARGO_INCREMENTAL=0
     - rust: beta
       env:
        - FEATURES='test'
+       - CARGO_INCREMENTAL=0
     - rust: nightly
       env:
        - FEATURES='test'
        - IS_NIGHTLY=1
+       - CARGO_INCREMENTAL=0
 branches:
   only:
     - master
