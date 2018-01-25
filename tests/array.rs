@@ -40,6 +40,20 @@ fn test_matmul_rcarray()
     }
 }
 
+#[allow(unused)]
+fn arrayview_shrink_lifetime<'a, 'b: 'a>(view: ArrayView1<'b, f64>)
+    -> ArrayView1<'a, f64>
+{
+    view.reborrow()
+}
+
+#[allow(unused)]
+fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(view: ArrayViewMut1<'b, f64>)
+    -> ArrayViewMut1<'a, f64>
+{
+    view.reborrow()
+}
+
 #[test]
 fn test_mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
