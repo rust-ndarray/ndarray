@@ -82,6 +82,16 @@ impl<'a, A, D> ArrayView<'a, A, D>
         ArrayView::new_(ptr, dim, strides)
     }
 
+    /// Convert the view into an `ArrayView<'b, A, D>` where `'b` is a lifetime
+    /// outlived by `'a'`.
+    pub fn reborrow<'b>(self) -> ArrayView<'b, A, D>
+        where 'a: 'b
+    {
+        unsafe {
+            ArrayView::new_(self.as_ptr(), self.dim, self.strides)
+        }
+    }
+
     /// Split the array view along `axis` and return one view strictly before the
     /// split and one view after the split.
     ///
@@ -133,7 +143,6 @@ impl<'a, A, D> ArrayView<'a, A, D>
             None
         }
     }
-
 }
 
 
@@ -326,6 +335,16 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         let dim = shape.dim;
         let strides = shape.strides;
         ArrayViewMut::new_(ptr, dim, strides)
+    }
+
+    /// Convert the view into an `ArrayViewMut<'b, A, D>` where `'b` is a lifetime
+    /// outlived by `'a'`.
+    pub fn reborrow<'b>(mut self) -> ArrayViewMut<'b, A, D>
+        where 'a: 'b
+    {
+        unsafe {
+            ArrayViewMut::new_(self.as_mut_ptr(), self.dim, self.strides)
+        }
     }
 
     /// Split the array view along `axis` and return one mutable view strictly
