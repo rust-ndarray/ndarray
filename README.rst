@@ -88,6 +88,17 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.11.2
+
+  - Add ``ArcArray``. ``RcArray`` has become ``ArcArray``; it is now using thread
+    safe reference counting just like ``Arc``; this means that shared ownership
+    arrays are now ``Send/Sync`` if the corresponding element type is ``Send
+    + Sync``.
+  - Add the method ``.reborrow()`` to ``ArrayView/Mut``, which can be used
+    to shorten the lifetime of an array view; in a reference-like type this
+    normally happens implicitly but for technical reasons the views have
+    an invariant lifetime parameter.
+
 - 0.11.1
 
   - Dimension types (``Ix1, Ix2, .., IxDyn``) now implement ``Hash`` by
