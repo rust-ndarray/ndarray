@@ -53,7 +53,7 @@ macro_rules! par_iter_wrapper {
             bridge(self, consumer)
         }
 
-        fn opt_len(&mut self) -> Option<usize> {
+        fn opt_len(&self) -> Option<usize> {
             Some(self.iter.len())
         }
     }
@@ -68,7 +68,7 @@ macro_rules! par_iter_wrapper {
             callback.callback(ParallelProducer(self.iter))
         }
 
-        fn len(&mut self) -> usize {
+        fn len(&self) -> usize {
             ExactSizeIterator::len(&self.iter)
         }
 
@@ -145,7 +145,7 @@ macro_rules! par_iter_view_wrapper {
             bridge_unindexed(ParallelProducer(self.iter), consumer)
         }
 
-        fn opt_len(&mut self) -> Option<usize> {
+        fn opt_len(&self) -> Option<usize> {
             None
         }
     }
@@ -223,7 +223,7 @@ macro_rules! zip_impl {
                 bridge_unindexed(ParallelProducer(self.iter), consumer)
             }
 
-            fn opt_len(&mut self) -> Option<usize> {
+            fn opt_len(&self) -> Option<usize> {
                 None
             }
         }

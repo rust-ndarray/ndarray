@@ -21,8 +21,7 @@ use std::cmp::max;
 fn set_threads() {
     let n = max(1, num_cpus::get() / 2);
     //println!("Using {} threads", n);
-    let cfg = rayon::Configuration::new().num_threads(n);
-    let _ = rayon::initialize(cfg);
+    let _ = rayon::ThreadPoolBuilder::new().num_threads(n).build_global();
 }
 
 #[bench]
