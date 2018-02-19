@@ -190,6 +190,16 @@ impl<S, A, D> ArrayBase<S, D>
         Self::from_elem(shape, A::zero())
     }
 
+    /// Create an array with ones, shape `shape`.
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow usize.
+    pub fn ones<Sh>(shape: Sh) -> Self
+        where A: Clone + One,
+              Sh: ShapeBuilder<Dim=D>,
+    {
+        Self::from_elem(shape, A::one())
+    }
+
     /// Create an array with default values, shape `shape`
     ///
     /// **Panics** if the number of elements in `shape` would overflow usize.
@@ -228,13 +238,13 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array with the given shape from a vector. (No cloning of
     /// elements needed.)
     ///
-    /// ---- 
+    /// ----
     ///
     /// For a contiguous c- or f-order shape, the following applies:
     ///
     /// **Errors** if `shape` does not correspond to the number of elements in `v`.
     ///
-    /// ---- 
+    /// ----
     ///
     /// For custom strides, the following applies:
     ///

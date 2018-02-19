@@ -142,6 +142,14 @@ fn deny_wraparound_from_vec() {
     assert!(six.is_err());
 }
 
+#[test]
+fn test_ones() {
+    let mut a = Array::<f32, _>::zeros((2, 3, 4));
+    a.fill(1.0);
+    let b = Array::<f32, _>::ones((2, 3, 4));
+    assert_eq!(a, b);
+}
+
 #[should_panic]
 #[test]
 fn deny_wraparound_zeros() {
