@@ -16,6 +16,8 @@ use super::Dimension;
 /// Negative `begin` or `end` indexes are counted from the back of the axis. If
 /// `end` is `None`, the slice extends to the end of the axis.
 ///
+/// See also the [`s![]`](macro.s.html) macro.
+///
 /// ## Examples
 ///
 /// `Slice::new(0, None, 1)` is the full range of an axis. It can also be
@@ -530,6 +532,39 @@ impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
 ///     + v.slice(s![2..  , 1..-1])
 /// }
 /// # fn main() { }
+/// ```
+///
+/// # Negative *step*
+///
+/// The behavior of negative *step* arguments is most easily understood with
+/// slicing as a two-step process:
+///
+/// 1. First, perform a slice with *range*.
+///
+/// 2. If *step* is positive, start with the front of the slice; if *step* is
+///    negative, start with the back of the slice. Then, add *step* until
+///    reaching the other end of the slice (inclusive).
+///
+/// An equivalent way to think about step 2 is, "If *step* is negative, reverse
+/// the slice. Start at the front of the (possibly reversed) slice, and add
+/// *step.abs()* until reaching the back of the slice (inclusive)."
+///
+/// For example,
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate ndarray;
+/// #
+/// # use ndarray::prelude::*;
+/// #
+/// # fn main() {
+/// let arr = array![0, 1, 2, 3];
+/// assert_eq!(arr.slice(s![1..3;-1]), array![2, 1]);
+/// assert_eq!(arr.slice(s![1..;-2]), array![3, 1]);
+/// assert_eq!(arr.slice(s![0..4;-2]), array![3, 1]);
+/// assert_eq!(arr.slice(s![0..;-2]), array![3, 1]);
+/// assert_eq!(arr.slice(s![..;-2]), array![3, 1]);
+/// # }
 /// ```
 #[macro_export]
 macro_rules! s(
