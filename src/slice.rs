@@ -319,8 +319,8 @@ where
 {
     /// Returns a new `SliceInfo` instance.
     ///
-    /// If you call this method, you are guaranteeing that `out_dim` and
-    /// `out_ndim` are consistent with `indices`.
+    /// If you call this method, you are guaranteeing that `out_dim` is
+    /// consistent with `indices`.
     #[doc(hidden)]
     pub unsafe fn new_unchecked(indices: T, out_dim: PhantomData<D>) -> SliceInfo<T, D> {
         SliceInfo {
