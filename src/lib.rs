@@ -744,7 +744,7 @@ pub struct OwnedRepr<A>(Vec<A>);
 /// *Don’t use this type directly—use the type alias
 /// [`RcArray`](type.RcArray.html) for the array type!*
 #[deprecated(note="RcArray is replaced by ArcArray")]
-use self::OwnedArcRepr as OwnedRcRepr;
+pub use self::OwnedArcRepr as OwnedRcRepr;
 
 /// ArcArray's representation.
 ///
