@@ -94,6 +94,8 @@ Recent Changes (ndarray)
     safe reference counting just like ``Arc``; this means that shared ownership
     arrays are now ``Send/Sync`` if the corresponding element type is ``Send
     + Sync``.
+  - Add array method ``.permute_axes()`` by @jturner314
+  - Add array constructor ``Array::ones`` by @ehsanmok
   - Add the method ``.reborrow()`` to ``ArrayView/Mut``, which can be used
     to shorten the lifetime of an array view; in a reference-like type this
     normally happens implicitly but for technical reasons the views have
