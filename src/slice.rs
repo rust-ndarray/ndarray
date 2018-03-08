@@ -440,30 +440,30 @@ macro_rules! impl_slicenextdim_for_index_type {
                 PhantomData
             }
         }
-
-        impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for Range<$index> {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-                PhantomData
-            }
-        }
-
-        impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFrom<$index> {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-                PhantomData
-            }
-        }
-
-        impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeTo<$index> {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-                PhantomData
-            }
-        }
     }
 }
 
 impl_slicenextdim_for_index_type!(isize);
 impl_slicenextdim_for_index_type!(usize);
 impl_slicenextdim_for_index_type!(i32);
+
+impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for Range<T> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
+impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeFrom<T> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
+impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeTo<T> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
 
 impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
