@@ -82,6 +82,21 @@ fn test_slice()
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
 }
 
+/// Test that the compiler can infer a type for a sliced array from the
+/// arguments to `s![]`.
+///
+/// This test relies on the fact that `.dot()` is implemented for both
+/// `ArrayView1` and `ArrayView2`, so the compiler needs to determine which
+/// type is the correct result for the `.slice()` call.
+#[test]
+fn test_slice_infer()
+{
+    let a = array![1., 2.];
+    let b = array![[3., 4.], [5., 6.]];
+    b.slice(s![..-1, ..]).dot(&a);
+    // b.slice(s![0, ..]).dot(&a);
+}
+
 #[test]
 fn test_slice_with_many_dim() {
     let mut A = RcArray::<usize, _>::zeros(&[3, 1, 4, 1, 3, 2, 1][..]);
