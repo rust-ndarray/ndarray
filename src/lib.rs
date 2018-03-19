@@ -74,6 +74,15 @@
 //!     Uses ``blas-src`` for pluggable backend, which needs to be configured
 //!     separately.
 //!
+//! ## Documentation
+//!
+//! * The docs for [`ArrayBase`](struct.ArrayBase.html) provide an overview of
+//!   the *n*-dimensional array type. Other good pages to look at are the
+//!   documentation for the [`s![]`](macro.s.html) and
+//!   [`azip!()`](macro.azip.html) macros.
+//!
+//! * If you have experience with NumPy, you may also be interested in
+//!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
 
 #[cfg(feature = "serde-1")]
 extern crate serde;
@@ -90,6 +99,9 @@ extern crate matrixmultiply;
 #[macro_use(izip)] extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+
+#[cfg(feature = "docs")]
+pub mod doc;
 
 use std::marker::PhantomData;
 use std::sync::Arc;
