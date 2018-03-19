@@ -6,18 +6,18 @@ matrix:
   include:
     - rust: 1.22.1
       env:
-       - FEATURES='test'
+       - FEATURES='test docs'
     - rust: stable
       env:
-       - FEATURES='test'
+       - FEATURES='test docs'
        - CARGO_INCREMENTAL=0
     - rust: beta
       env:
-       - FEATURES='test'
+       - FEATURES='test docs'
        - CARGO_INCREMENTAL=0
     - rust: nightly
       env:
-       - FEATURES='test'
+       - FEATURES='test docs'
        - IS_NIGHTLY=1
        - CARGO_INCREMENTAL=0
 branches:

@@ -91,6 +91,9 @@ extern crate matrixmultiply;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
+#[cfg(feature = "docs")]
+pub mod doc;
+
 use std::marker::PhantomData;
 use std::sync::Arc;
 
