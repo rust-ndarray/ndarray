@@ -98,7 +98,7 @@
 //!             .assign(&(fun(t + c * h, (&y + &dy).view())));
 //!     }
 //!
-//!     let y_new = &y + &(h * k.slice::<Ix2>(s![..-1, ..]).t().dot(&b));
+//!     let y_new = &y + &(h * k.slice(s![..-1, ..]).t().dot(&b));
 //!     let f_new = fun(t + h, y_new.view());
 //!
 //!     k.slice_mut(s![-1, ..]).assign(&f_new);
@@ -162,7 +162,7 @@
 //!     }
 //!     // Similar case here — moving `&y` to the right hand side allows the addition
 //!     // to reuse the allocated array on the left hand side.
-//!     let y_new = h * k.slice::<Ix2>(s![..-1, ..]).t().dot(&b) + &y;
+//!     let y_new = h * k.slice(s![..-1, ..]).t().dot(&b) + &y;
 //!     // Mutate the last row of `k` in-place instead of allocating a new array.
 //!     fun(t + h, y_new.view(), k.slice_mut(s![-1, ..]));
 //!
