@@ -74,6 +74,15 @@
 //!     Uses ``blas-src`` for pluggable backend, which needs to be configured
 //!     separately.
 //!
+//! ## Documentation
+//!
+//! * The docs for [`ArrayBase`](struct.ArrayBase.html) provide an overview of
+//!   the *n*-dimensional array type. Other good pages to look at are the
+//!   documentation for the [`s![]`](macro.s.html) and
+//!   [`azip!()`](macro.azip.html) macros.
+//!
+//! * If you have experience with NumPy, you may also be interested in
+//!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
 
 #[cfg(feature = "serde-1")]
 extern crate serde;
