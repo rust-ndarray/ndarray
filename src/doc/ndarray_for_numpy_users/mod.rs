@@ -610,3 +610,5 @@
 //! [Zip]: ../../struct.Zip.html
 
 pub mod rk_step;
+pub mod coord_transform;
+pub mod simple_math;
