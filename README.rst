@@ -91,7 +91,7 @@ Recent Changes (ndarray)
 - 0.11.2
 
   - New documentation; @jturner314 has written a large “ndarray for NumPy users”
-    document, which we include in rustdoc. `Read it here <nd4npy>`_. It is
+    document, which we include in rustdoc. `Read it here`__. It is
     a useful quick guide for any user, and in particular if you are familiar
     with numpy.
   - Add ``ArcArray``. ``RcArray`` has become ``ArcArray``; it is now using thread
@@ -107,7 +107,7 @@ Recent Changes (ndarray)
   - Fix an issue with type inference, the dimensinality of an array
     should not infer correctly in more cases when using slicing. By @jturner314.
 
-.. nd4npy: https://docs.rs/ndarray/0.11/ndarray/doc/ndarray_for_numpy_users/
+__ https://docs.rs/ndarray/0.11/ndarray/doc/ndarray_for_numpy_users/
 
 - 0.11.1
 
