@@ -90,6 +90,10 @@ Recent Changes (ndarray)
 
 - 0.11.2
 
+  - New documentation; @jturner314 has written a large “ndarray for NumPy users”
+    document, which we include in rustdoc. `Read it here <nd4npy>`_. It is
+    a useful quick guide for any user, and in particular if you are familiar
+    with numpy.
   - Add ``ArcArray``. ``RcArray`` has become ``ArcArray``; it is now using thread
     safe reference counting just like ``Arc``; this means that shared ownership
     arrays are now ``Send/Sync`` if the corresponding element type is ``Send
@@ -100,6 +104,10 @@ Recent Changes (ndarray)
     to shorten the lifetime of an array view; in a reference-like type this
     normally happens implicitly but for technical reasons the views have
     an invariant lifetime parameter.
+  - Fix an issue with type inference, the dimensinality of an array
+    should not infer correctly in more cases when using slicing. By @jturner314.
+
+.. nd4npy: https://docs.rs/ndarray/0.11/ndarray/doc/ndarray_for_numpy_users/
 
 - 0.11.1
 
