@@ -104,7 +104,7 @@ Recent Changes (ndarray)
     to shorten the lifetime of an array view; in a reference-like type this
     normally happens implicitly but for technical reasons the views have
     an invariant lifetime parameter.
-  - Fix an issue with type inference, the dimensinality of an array
+  - Fix an issue with type inference, the dimensionality of an array
     should not infer correctly in more cases when using slicing. By @jturner314.
 
 __ https://docs.rs/ndarray/0.11/ndarray/doc/ndarray_for_numpy_users/
