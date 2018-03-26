@@ -6,7 +6,7 @@ authors = ["bluss"]
 license = "MIT/Apache-2.0"
 readme = "README-crates.io.md"
 
-repository = "https://github.com/bluss/rust-ndarray"
+repository = "https://github.com/bluss/ndarray"
 documentation = "https://docs.rs/ndarray/"
 
 description = "An n-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
