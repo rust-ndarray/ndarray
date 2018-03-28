@@ -194,6 +194,31 @@
 //! `np.array([1, 2, 3, 4]).reshape((2, 2), order='F')` | [`Array::from_shape_vec((2, 2).f(), vec![1, 2, 3, 4])?`][::from_shape_vec()] | create a 2×2 array from the elements in the list/`Vec` using Fortran (column-major) order
 //! `np.random` | See the [`ndarray-rand`](https://crates.io/crates/ndarray-rand) crate. | create arrays of random numbers
 //!
+//! Note that the examples in the table rely on the compiler inferring the
+//! element type and dimensionality from context, which is usually sufficient.
+//! However, if the compiler cannot infer the types, you can specify them
+//! manually. These are examples of creating a 3-D Fortran-layout array of
+//! `f64`s:
+//!
+//! ```
+//! # use ndarray::prelude::*;
+//! #
+//! // This is an example where the compiler can infer the element type
+//! // because `f64::sin` can only be called on `f64` elements:
+//! let arr1 = Array::zeros((3, 2, 4).f());
+//! arr1.mapv(f64::sin);
+//!
+//! // Specify just the element type and infer the dimensionality:
+//! let arr2 = Array::<f64, _>::zeros((3, 2, 4).f());
+//! let arr3: Array<f64, _> = Array::zeros((3, 2, 4).f());
+//!
+//! // Specify both the element type and dimensionality:
+//! let arr4 = Array3::<f64>::zeros((3, 2, 4).f());
+//! let arr5: Array3<f64> = Array::zeros((3, 2, 4).f());
+//! let arr6 = Array::<f64, Ix3>::zeros((3, 2, 4).f());
+//! let arr7: Array<f64, Ix3> = Array::zeros((3, 2, 4).f());
+//! ```
+//!
 //! ## Indexing and slicing
 //!
 //! A few notes:
