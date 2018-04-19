@@ -117,6 +117,8 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return variance along `axis`.
     ///
+    /// The variance is computed using the Welford one-pass algorithm
+    /// https://www.jstor.org/stable/1266577
     pub fn var_axis(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: LinalgScalar,
               D: RemoveAxis,
