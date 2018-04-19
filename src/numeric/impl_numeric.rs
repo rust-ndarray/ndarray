@@ -14,6 +14,7 @@ use imp_prelude::*;
 use numeric_util;
 
 use {
+    ScalarOperand,
     LinalgScalar,
     FoldWhile,
     Zip,
@@ -120,23 +121,24 @@ impl<A, S, D> ArrayBase<S, D>
     /// The variance is computed using the Welford one-pass algorithm
     /// https://www.jstor.org/stable/1266577
     pub fn var_axis(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: LinalgScalar,
+        where A: LinalgScalar + ScalarOperand,
               D: RemoveAxis,
     {
-        let mut count: usize = 1;
+        let n = self.len_of(axis);
+        let mut count = A::one();
         let mut mean = self.subview(axis, 0).to_owned();
-        let mut M2 = Array::from_elem(self.dim.remove_axis(axis), A::zero());
+        let mut m2 = Array::from_elem(self.dim.remove_axis(axis), A::zero());
+        for i in 1..n {
+            let mut new_row = self.subview(axis, i).to_owned();
+            let mut delta = &new_row - &mean;
+            count = count + A::one();
+            mean = mean + &delta / count;
+            let mut delta2 = new_row - &mean;
+            m2 = m2 + delta * delta2;
+        }
+        m2 / count
     }
 
-
-    /// (count, mean, M2) = existingAggregate
-    /// count = count + 1
-    /// delta = newValue - mean
-    /// mean = mean + delta / count
-    /// delta2 = newValue - mean
-    /// M2 = M2 + delta * delta2
-
-    /// return (count, mean, M2)
 
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
