@@ -115,6 +115,15 @@ impl<A, S, D> ArrayBase<S, D>
         sum / &aview0(&cnt)
     }
 
+    /// Return variance along `axis`.
+    ///
+    pub fn var_axis(&self, axis: Axis) -> Array<A, D::Smaller>
+        where A: LinalgScalar,
+              D: RemoveAxis,
+    {
+
+    }
+
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///
