@@ -123,11 +123,20 @@ impl<A, S, D> ArrayBase<S, D>
         where A: LinalgScalar,
               D: RemoveAxis,
     {
-        let mut count: usize = 0;
-        let mut mean = Array::from_elem(self.dim.remove_axis(axis), A::zero());
+        let mut count: usize = 1;
+        let mut mean = self.subview(axis, 0).to_owned();
         let mut M2 = Array::from_elem(self.dim.remove_axis(axis), A::zero());
     }
 
+
+    /// (count, mean, M2) = existingAggregate
+    /// count = count + 1
+    /// delta = newValue - mean
+    /// mean = mean + delta / count
+    /// delta2 = newValue - mean
+    /// M2 = M2 + delta * delta2
+
+    /// return (count, mean, M2)
 
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
