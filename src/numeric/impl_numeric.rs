@@ -120,6 +120,18 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// The variance is computed using the Welford one-pass algorithm
     /// https://www.jstor.org/stable/1266577
+    ///
+    /// ```
+    /// use ndarray::{aview1, arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// let var = a.var_axis(Axis(0));
+    /// println!("{:?}", var);
+    /// assert!(
+    ///     var == aview1(&[1., 1.])
+    /// );
+    /// ```
     pub fn var_axis(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: LinalgScalar + ScalarOperand,
               D: RemoveAxis,
