@@ -1,9 +1,2 @@
 Cargo.lock
 target/
-
-# Vim tags
-tags
-
-# Rust c-tags
-*/rusty-tags.vi
-rusty-tags.vi
