@@ -124,7 +124,36 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Return an uniquely owned copy of the array
+    /// Return an uniquely owned copy of the array.
+    ///
+    /// If the input array is contiguous and its strides are positive, then the
+    /// output array will have the same memory layout. Otherwise, the layout of
+    /// the output array is unspecified. If you need a particular layout, you
+    /// can allocate a new array with the desired memory layout and
+    /// [`.assign()`](#method.assign) the data. Alternatively, you can collect
+    /// an iterator, like this for a result in standard layout:
+    ///
+    /// ```
+    /// # use ndarray::prelude::*;
+    /// # let arr = Array::from_shape_vec((2, 2).f(), vec![1, 2, 3, 4]).unwrap();
+    /// # let owned = {
+    /// Array::from_shape_vec(arr.raw_dim(), arr.iter().cloned().collect()).unwrap()
+    /// # };
+    /// # assert!(owned.is_standard_layout());
+    /// # assert_eq!(arr, owned);
+    /// ```
+    ///
+    /// or this for a result in column-major (Fortran) layout:
+    ///
+    /// ```
+    /// # use ndarray::prelude::*;
+    /// # let arr = Array::from_shape_vec((2, 2), vec![1, 2, 3, 4]).unwrap();
+    /// # let owned = {
+    /// Array::from_shape_vec(arr.raw_dim().f(), arr.t().iter().cloned().collect()).unwrap()
+    /// # };
+    /// # assert!(owned.t().is_standard_layout());
+    /// # assert_eq!(arr, owned);
+    /// ```
     pub fn to_owned(&self) -> Array<A, D>
         where A: Clone
     {
