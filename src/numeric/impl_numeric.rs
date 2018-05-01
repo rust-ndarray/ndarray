@@ -17,6 +17,7 @@ use {
     ScalarOperand,
     LinalgScalar,
     FoldWhile,
+    Slice,
     Zip,
 };
 
@@ -118,39 +119,58 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return variance along `axis`.
     ///
-    /// The variance is computed using the Welford one-pass algorithm
-    /// https://www.jstor.org/stable/1266577
+    /// The variance is computed using the [Welford one-pass
+    /// algorithm](https://www.jstor.org/stable/1266577).
+    ///
+    /// The parameter `ddof` specifies the "delta degrees of freedom". For
+    /// example, to calculate the population variance, use `ddof = 0`, or to
+    /// calculate the sample variance, use `ddof = 1`.
+    ///
+    /// The variance is defined as:
+    ///
+    /// ```text
+    ///               1       n
+    /// variance = ――――――――   ∑ (xᵢ - x̅)²
+    ///            n - ddof  i=1
+    /// ```
+    ///
+    /// where
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// # Example
     ///
     /// ```
     /// use ndarray::{aview1, arr2, Axis};
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
-    /// let var = a.var_axis(Axis(0));
+    /// let var = a.var_axis(Axis(0), 0.);
     /// println!("{:?}", var);
-    /// assert!(
-    ///     var == aview1(&[1., 1.])
-    /// );
+    /// assert_eq!(var, aview1(&[1., 1.]));
     /// ```
-    pub fn var_axis(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: LinalgScalar + ScalarOperand,
-              D: RemoveAxis,
+    pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
+    where
+        A: LinalgScalar + ScalarOperand,
+        D: RemoveAxis,
     {
-        let n = self.len_of(axis);
         let mut count = A::one();
         let mut mean = self.subview(axis, 0).to_owned();
-        let mut m2 = Array::from_elem(self.dim.remove_axis(axis), A::zero());
-        for i in 1..n {
-            let mut new_row = self.subview(axis, i).to_owned();
-            let mut delta = &new_row - &mean;
+        let mut sum_sq = Array::zeros(self.dim.remove_axis(axis));
+        for subview in self.slice_axis(axis, Slice::from(1..)).axis_iter(axis) {
             count = count + A::one();
-            mean = mean + &delta / count;
-            let mut delta2 = new_row - &mean;
-            m2 = m2 + delta * delta2;
+            azip!(mut mean, mut sum_sq, x (subview) in {
+                let delta = x - *mean;
+                *mean = *mean + delta / count;
+                *sum_sq = *sum_sq + delta * (x - *mean);
+            });
         }
-        m2 / count
+        sum_sq / (count - ddof)
     }
-
 
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
@@ -174,4 +194,3 @@ impl<A, S, D> ArrayBase<S, D>
             }).is_done()
     }
 }
-

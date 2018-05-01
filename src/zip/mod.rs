@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[macro_use]
 mod zipmacro;
 
 use imp_prelude::*;
@@ -318,7 +319,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride { 1 }
-    
+
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         self.split_at(axis, index)
