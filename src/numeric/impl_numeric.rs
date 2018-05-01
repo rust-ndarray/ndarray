@@ -142,6 +142,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
+    /// The function panics if `ddof` is equal to the length of `axis`.
+    ///
     /// # Example
     ///
     /// ```
@@ -150,7 +152,6 @@ impl<A, S, D> ArrayBase<S, D>
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
     /// let var = a.var_axis(Axis(0), 0.);
-    /// println!("{:?}", var);
     /// assert_eq!(var, aview1(&[1., 1.]));
     /// ```
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
