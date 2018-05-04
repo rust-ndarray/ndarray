@@ -274,28 +274,37 @@ fn test_slice_inplace_with_subview_inplace() {
         *elt = i;
     }
 
-    let mut vi = arr.view();
-    vi.slice_inplace(s![1.., 2, ..;2]);
-    assert_eq!(vi.shape(), &[2, 1, 2]);
-    assert!(
-        vi.iter()
-            .zip(arr.slice(s![1.., 2..3, ..;2]).iter())
-            .all(|(a, b)| a == b)
-    );
+    {
+        let mut vi = arr.view();
+        vi.slice_inplace(s![1.., 2, ..;2]);
+        assert_eq!(vi.shape(), &[2, 1, 2]);
+        assert!(
+            vi.iter()
+                .zip(arr.slice(s![1.., 2..3, ..;2]).iter())
+                .all(|(a, b)| a == b)
+        );
 
-    let mut vi = arr.view();
-    vi.slice_inplace(s![1, 2, ..;2]);
-    assert_eq!(vi.shape(), &[1, 1, 2]);
-    assert!(
-        vi.iter()
-            .zip(arr.slice(s![1..2, 2..3, ..;2]).iter())
-            .all(|(a, b)| a == b)
-    );
+        let mut vi = arr.view();
+        vi.slice_inplace(s![1, 2, ..;2]);
+        assert_eq!(vi.shape(), &[1, 1, 2]);
+        assert!(
+            vi.iter()
+                .zip(arr.slice(s![1..2, 2..3, ..;2]).iter())
+                .all(|(a, b)| a == b)
+        );
 
-    let mut vi = arr.view();
+        let mut vi = arr.view();
+        vi.slice_inplace(s![1, 2, 3]);
+        assert_eq!(vi.shape(), &[1, 1, 1]);
+        assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
+    }
+
+    // Do it to the RcArray itself
+    let elem = arr[(1, 2, 3)];
+    let mut vi = arr;
     vi.slice_inplace(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
-    assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
+    assert_eq!(vi, Array3::from_elem((1, 1, 1), elem));
 }
 
 #[should_panic]
@@ -805,6 +814,44 @@ fn owned_array_with_stride() {
 
     let a = Array::from_shape_vec(dim.strides(strides), v).unwrap();
     assert_eq!(a.strides(), &[1, 4, 2]);
+}
+
+#[test]
+fn owned_array_discontiguous() {
+    use ::std::iter::repeat;
+    let v: Vec<_> = (0..12).flat_map(|x| repeat(x).take(2)).collect();
+    let dim = (3, 2, 2);
+    let strides = (8, 4, 2);
+
+    let a = Array::from_shape_vec(dim.strides(strides), v).unwrap();
+    assert_eq!(a.strides(), &[8, 4, 2]);
+    println!("{:?}", a.iter().cloned().collect::<Vec<_>>());
+    itertools::assert_equal(a.iter().cloned(), 0..12);
+}
+
+#[test]
+fn owned_array_discontiguous_drop() {
+    use ::std::rc::Rc;
+    use ::std::cell::RefCell;
+    use ::std::collections::BTreeSet;
+
+    struct InsertOnDrop<T: Ord>(Rc<RefCell<BTreeSet<T>>>, Option<T>);
+    impl<T: Ord> Drop for InsertOnDrop<T> {
+        fn drop(&mut self) {
+            let InsertOnDrop(ref set, ref mut value) = *self;
+            set.borrow_mut().insert(value.take().expect("double drop!"));
+        }
+    }
+
+    let set = Rc::new(RefCell::new(BTreeSet::new()));
+    {
+        let v: Vec<_> = (0..12).map(|x| InsertOnDrop(set.clone(), Some(x))).collect();
+        let mut a = Array::from_shape_vec((2, 6), v).unwrap();
+        // discontiguous and non-zero offset
+        a.slice_inplace(s![.., 1..]);
+    }
+    // each item was dropped exactly once
+    itertools::assert_equal(set.borrow().iter().cloned(), 0..12);
 }
 
 macro_rules! assert_matches {
@@ -1369,6 +1416,18 @@ fn to_owned_neg_stride() {
                        [4, 5, 6]]);
     c.slice_inplace(s![.., ..;-1]);
     let co = c.to_owned();
+    assert_eq!(c, co);
+}
+
+#[test]
+fn discontiguous_owned_to_owned() {
+    let mut c = arr2(&[[1, 2, 3],
+                       [4, 5, 6]]);
+    c.slice_inplace(s![.., ..;2]);
+
+    let co = c.to_owned();
+    assert_eq!(c.strides(), &[3, 2]);
+    assert_eq!(co.strides(), &[2, 1]);
     assert_eq!(c, co);
 }
 
