@@ -319,7 +319,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride { 1 }
-
+    
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         self.split_at(axis, index)
@@ -370,7 +370,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 
     #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride { 1 }
-    
+
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         self.split_at(axis, index)
