@@ -17,7 +17,6 @@ use {
     ScalarOperand,
     LinalgScalar,
     FoldWhile,
-    Slice,
     Zip,
 };
 
@@ -142,7 +141,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// The function panics if `ddof` is equal to the length of `axis`.
+    /// **Panics** if `ddof` is greater equal than the length of `axis`.
+    /// **Panics** if `axis` is out of bounds or if lenght of `axis` is zero.
     ///
     /// # Example
     ///
@@ -156,13 +156,13 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
-        A: LinalgScalar + ScalarOperand,
+        A: Float + ScalarOperand,
         D: RemoveAxis,
     {
-        let mut count = A::one();
-        let mut mean = self.subview(axis, 0).to_owned();
+        let mut count = A::zero();
+        let mut mean = Array::zeros(self.dim.remove_axis(axis));
         let mut sum_sq = Array::zeros(self.dim.remove_axis(axis));
-        for subview in self.slice_axis(axis, Slice::from(1..)).axis_iter(axis) {
+        for subview in self.axis_iter(axis) {
             count = count + A::one();
             azip!(mut mean, mut sum_sq, x (subview) in {
                 let delta = x - *mean;
@@ -170,7 +170,12 @@ impl<A, S, D> ArrayBase<S, D>
                 *sum_sq = *sum_sq + delta * (x - *mean);
             });
         }
-        sum_sq / (count - ddof)
+        if ddof >= count {
+            panic!("Ddof needs to be strictly smaller than the length \
+                    of the axis you are computing the variance for!")
+        } else {
+            sum_sq / (count - ddof)
+        }
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
