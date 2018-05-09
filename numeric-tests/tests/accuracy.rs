@@ -5,7 +5,8 @@ extern crate ndarray_rand;
 extern crate rand;
 
 use ndarray_rand::{RandomExt, F32};
-use rand::Rng;
+use rand::{FromEntropy, Rng};
+use rand::rngs::SmallRng;
 
 use ndarray::prelude::*;
 use ndarray::{
@@ -74,7 +75,7 @@ fn accurate_eye_f32() {
         }
     }
     // pick a few random sizes
-    let mut rng = rand::weak_rng();
+    let mut rng = SmallRng::from_entropy();
     for _ in 0..10 {
         let i = rng.gen_range(15, 512);
         let j = rng.gen_range(15, 512);
@@ -110,7 +111,7 @@ fn accurate_eye_f64() {
         }
     }
     // pick a few random sizes
-    let mut rng = rand::weak_rng();
+    let mut rng = SmallRng::from_entropy();
     for _ in 0..10 {
         let i = rng.gen_range(15, 512);
         let j = rng.gen_range(15, 512);
@@ -131,7 +132,7 @@ fn accurate_eye_f64() {
 #[test]
 fn accurate_mul_f32() {
     // pick a few random sizes
-    let mut rng = rand::weak_rng();
+    let mut rng = SmallRng::from_entropy();
     for i in 0..20 {
         let m = rng.gen_range(15, 512);
         let k = rng.gen_range(15, 512);
@@ -165,7 +166,7 @@ fn accurate_mul_f32() {
 #[test]
 fn accurate_mul_f64() {
     // pick a few random sizes
-    let mut rng = rand::weak_rng();
+    let mut rng = SmallRng::from_entropy();
     for i in 0..20 {
         let m = rng.gen_range(15, 512);
         let k = rng.gen_range(15, 512);
@@ -200,7 +201,7 @@ fn accurate_mul_f64() {
 #[test]
 fn accurate_mul_with_column_f64() {
     // pick a few random sizes
-    let mut rng = rand::weak_rng();
+    let mut rng = SmallRng::from_entropy();
     for i in 0..10 {
         let m = rng.gen_range(1, 350);
         let k = rng.gen_range(1, 350);

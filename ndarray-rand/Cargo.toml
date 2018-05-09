@@ -12,7 +12,7 @@ description = "Constructors for randomized arrays. `rand` integration for `ndarr
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
-rand = "0.4.1"
+rand = "0.5.0"
 ndarray = { version = "0.11.0", path = ".." }
 
 [package.metadata.release]
