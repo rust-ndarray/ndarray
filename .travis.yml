@@ -4,7 +4,7 @@ sudo: required
 dist: trusty
 matrix:
   include:
-    - rust: 1.22.1
+    - rust: 1.26.0
       env:
        - FEATURES='test docs'
     - rust: stable

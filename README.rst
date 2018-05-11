@@ -88,6 +88,11 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.12.0 (not yet released)
+
+  - Add support for 128-bit integer scalars (``i128`` and ``u128``).
+  - Minimum required Rust version is 1.26.
+
 - 0.11.2
 
   - New documentation; @jturner314 has written a large “ndarray for NumPy users”
