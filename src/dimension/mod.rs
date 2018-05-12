@@ -72,13 +72,15 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
     // check lengths of axes.
     let len = match dim.size_checked() {
         Some(l) => l,
-        None => return Err(from_kind(ErrorKind::OutOfBounds)),
+        None => return Err(from_kind(ErrorKind::OutOfBounds,
+                                     format!("Can't determine size of dimension {:?}.", dim))),
     };
     // check if strides are strictly positive (zero ok for len 0)
     for &s in strides.slice() {
         let s = s as Ixs;
         if s < 1 && (len != 0 || s < 0) {
-            return Err(from_kind(ErrorKind::Unsupported));
+            return Err(from_kind(ErrorKind::Unsupported,
+                                 format!("Strides must be strictly positive: {}", s)));
         }
     }
     if len == 0 {
@@ -96,13 +98,19 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
         // offset is guaranteed to be positive so no issue converting
         // to usize here
         if (offset as usize) >= data.len() {
-            return Err(from_kind(ErrorKind::OutOfBounds));
+            return Err(from_kind(ErrorKind::OutOfBounds,
+                 format!("Offset {} > data length {}", offset, data.len())));
         }
         if dim_stride_overlap(dim, strides) {
-            return Err(from_kind(ErrorKind::Unsupported));
+            return Err(from_kind(ErrorKind::Unsupported,
+                 format!("Dimension {:?} has overlapping indicies with strides {:?}",
+                         dim, strides)));
         }
     } else {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(from_kind(ErrorKind::OutOfBounds,
+                 format!("index {:?} is out of bounds (or calculation wraps around) \
+                 for dim {:?} with strides {:?}.",
+                         &last_index, dim, strides)));
     }
     Ok(())
 }
@@ -316,7 +324,8 @@ mod test {
 
         let strides = (2, 4, 12).into_dimension();
         assert_eq!(super::can_index_slice(&v, &dim, &strides),
-                   Err(from_kind(ErrorKind::OutOfBounds)));
+                   Err(from_kind(ErrorKind::OutOfBounds,
+                                 "Offset 22 > data length 12".into())));
     }
 
     #[test]

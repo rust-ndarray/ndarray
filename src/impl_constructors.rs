@@ -386,3 +386,24 @@ impl<S, A, D> ArrayBase<S, D>
     }
 
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_incorrect_shape_gives_helpful_error_message() {
+        let too_long_result = Array::from_shape_vec((2, 2),
+                                           vec![1., 2., 3., 4., 5.]); // vec too long.
+        assert!(too_long_result.is_err());
+        assert_eq!("ShapeError/IncompatibleShape: incompatible shapes: [5] != [2, 2]",
+                   format!("{}", too_long_result.err().unwrap()));
+
+        let too_short_result = Array::from_shape_vec((2, 2),
+                                           vec![1., 2., 3.]); // vec too short.
+        assert!(too_short_result.is_err());
+        assert_eq!("ShapeError/IncompatibleShape: incompatible shapes: [3] != [2, 2]",
+                   format!("{}", too_short_result.err().unwrap()));
+    }
+}

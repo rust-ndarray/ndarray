@@ -1155,7 +1155,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 dim: shape,
             })
         } else {
-            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+            Err(error::from_kind(error::ErrorKind::IncompatibleLayout,
+                 format!("Array has a non-standard layout - the first (or last) index needs \
+                 to be the most rapidly varying.")))
         }
     }
 
@@ -1251,7 +1253,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 });
             }
         }
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape,
+                                  format!("Can't convert from dimension {:?}", &self.dim)))
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*

@@ -16,6 +16,7 @@ use super::{
 pub struct ShapeError {
     // we want to be able to change this representation later
     repr: ErrorKind,
+    msg: String
 }
 
 impl ShapeError {
@@ -26,8 +27,8 @@ impl ShapeError {
     }
 
     /// Create a new `ShapeError`
-    pub fn from_kind(error: ErrorKind) -> Self {
-        from_kind(error)
+    pub fn from_kind(error: ErrorKind, msg: String) -> Self {
+        from_kind(error, msg)
     }
 }
 
@@ -52,9 +53,24 @@ pub enum ErrorKind {
 }
 
 #[inline(always)]
-pub fn from_kind(k: ErrorKind) -> ShapeError {
+pub fn from_kind(k: ErrorKind, msg: String) -> ShapeError {
+    let prefix = match k {
+        ErrorKind::IncompatibleShape => { "incompatible shapes" },
+        ErrorKind::IncompatibleLayout => "incompatible memory layout",
+        ErrorKind::RangeLimited => "the shape does not fit in type limits",
+        ErrorKind::OutOfBounds => "out of bounds indexing",
+        ErrorKind::Unsupported => "unsupported operation",
+        ErrorKind::__Incomplete => "this error variant is not in use",
+    };
+
+    let mut prefixed_msg = String::with_capacity(prefix.len() + ": ".len() + msg.len());
+    prefixed_msg.push_str(prefix);
+    prefixed_msg.push_str(": ");
+    prefixed_msg.push_str(&msg);
+
     ShapeError {
-        repr: k
+        repr: k,
+        msg: prefixed_msg
     }
 }
 
@@ -68,20 +84,14 @@ impl PartialEq for ErrorKind {
 impl PartialEq for ShapeError {
     #[inline(always)]
     fn eq(&self, rhs: &Self) -> bool {
-        self.repr == rhs.repr
+        self.repr as u8 == rhs.repr as u8
+            && self.msg == rhs.msg
     }
 }
 
 impl Error for ShapeError {
     fn description(&self) -> &str {
-        match self.kind() {
-            ErrorKind::IncompatibleShape => "incompatible shapes",
-            ErrorKind::IncompatibleLayout => "incompatible memory layout",
-            ErrorKind::RangeLimited => "the shape does not fit in type limits",
-            ErrorKind::OutOfBounds => "out of bounds indexing",
-            ErrorKind::Unsupported => "unsupported operation",
-            ErrorKind::__Incomplete => "this error variant is not in use",
-        }
+        &self.msg
     }
 }
 
@@ -97,9 +107,9 @@ impl fmt::Debug for ShapeError {
     }
 }
 
-pub fn incompatible_shapes<D, E>(_a: &D, _b: &E) -> ShapeError
+pub fn incompatible_shapes<D, E>(a: &D, b: &E) -> ShapeError
     where D: Dimension,
           E: Dimension
 {
-    from_kind(ErrorKind::IncompatibleShape)
+    from_kind(ErrorKind::IncompatibleShape,format!("{:?} != {:?}", a, b))
 }

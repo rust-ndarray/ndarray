@@ -35,15 +35,21 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
           D: RemoveAxis
 {
     if arrays.len() == 0 {
-        return Err(from_kind(ErrorKind::Unsupported));
+        return Err(from_kind(ErrorKind::Unsupported, "`arrays` param is empty.".into()));
     }
     let mut res_dim = arrays[0].raw_dim();
     if axis.index() >= res_dim.ndim() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(from_kind(ErrorKind::OutOfBounds,
+             format!("axis {:?} index {} > {:?} (number of raw dimensions in `arrays[0]`)",
+                     axis, axis.index(), res_dim.ndim())));
     }
     let common_dim = res_dim.remove_axis(axis);
-    if arrays.iter().any(|a| a.raw_dim().remove_axis(axis) != common_dim) {
-        return Err(from_kind(ErrorKind::IncompatibleShape));
+    let uncommon = arrays.iter().filter(|a| a.raw_dim().remove_axis(axis) != common_dim);
+
+    if let Some(first) = uncommon.nth(0) {
+        return Err(from_kind(ErrorKind::IncompatibleShape,
+             format!("the arrays have mismatching shapes, apart from along `axis`. Example: {:?}",
+                     first.raw_dim().remove_axis(axis))));
     }
 
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
