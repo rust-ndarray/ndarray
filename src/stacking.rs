@@ -44,9 +44,10 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
                      axis, axis.index(), res_dim.ndim())));
     }
     let common_dim = res_dim.remove_axis(axis);
-    let uncommon = arrays.iter().filter(|a| a.raw_dim().remove_axis(axis) != common_dim);
+    let uncommon = arrays.iter().filter(
+        |a| a.raw_dim().remove_axis(axis) != common_dim).nth(0);
 
-    if let Some(first) = uncommon.nth(0) {
+    if let Some(first) = uncommon {
         return Err(from_kind(ErrorKind::IncompatibleShape,
              format!("the arrays have mismatching shapes, apart from along `axis`. Example: {:?}",
                      first.raw_dim().remove_axis(axis))));
