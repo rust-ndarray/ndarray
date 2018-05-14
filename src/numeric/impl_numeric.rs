@@ -13,6 +13,9 @@ use itertools::free::enumerate;
 use imp_prelude::*;
 use numeric_util;
 
+use rand::distributions::Uniform;
+use rand::thread_rng;
+
 use {
     LinalgScalar,
     FoldWhile,
@@ -154,7 +157,7 @@ fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
     let n = a.len(); if n == 0 {
         (&a[0]).clone()
     } else {
-        let (q, mut a) = randomized_partition(&a);
+        let (q, mut a) = randomized_partition(&mut a);
         let k = q + 1;
         if i == k {
             (&a[q]).clone()
@@ -166,8 +169,14 @@ fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
     }
 }
 
-fn randomized_partition<A>(mut a: &Array1<A>) -> (usize, Array1<A>)
+fn randomized_partition<A>(a: &mut Array1<A>) -> (usize, Array1<A>)
     where A: Ord + Clone
 {
+    let n = a.len();
+    let mut rng = thread_rng();
+    let i: usize = Uniform::sample_single(0, n, &mut rng);
+    let z = (&a[i]).clone();
+    a[i] = (&a[n-1]).clone();
+    a[n-1] = z;
     unimplemented!()
 }
