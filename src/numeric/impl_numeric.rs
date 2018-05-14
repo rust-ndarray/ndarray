@@ -115,6 +115,15 @@ impl<A, S, D> ArrayBase<S, D>
         sum / &aview0(&cnt)
     }
 
+
+    /// Return the qth percentile of the data along the specified axis.
+    pub fn percentile_axis<E>(&self, axis: Axis, q: E) -> Array<A, D::Smaller>
+        where E: Float,
+              D: RemoveAxis,
+    {
+        unimplemented!()
+    }
+
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///
