@@ -28,6 +28,7 @@ num-traits = { version = "0.1.32", default-features = false }
 num-complex = { version = "0.1.32", default-features = false }
 rustc-serialize = { version = "0.3.20", optional = true }
 itertools = { version = "0.7.0", default-features = false }
+rand = { version = "0.5.0-pre.1" }
 
 # Use via the `blas` crate feature!
 cblas-sys = { version = "0.1.4", optional = true, default-features = false }
