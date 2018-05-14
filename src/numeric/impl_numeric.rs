@@ -117,10 +117,11 @@ impl<A, S, D> ArrayBase<S, D>
 
 
     /// Return the qth percentile of the data along the specified axis.
-    pub fn percentile_axis<E>(&self, axis: Axis, q: E) -> Array<A, D::Smaller>
-        where E: Float,
-              D: RemoveAxis,
+    pub fn percentile_axis(&self, axis: Axis, q: f32) -> Array<A, D::Smaller>
+        where D: RemoveAxis,
     {
+        let n = self.len_of(axis);
+        let i = ((n as f32) * q).floor() as usize;
         unimplemented!()
     }
 
