@@ -100,6 +100,8 @@ extern crate matrixmultiply;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
+extern crate rand;
+
 #[cfg(feature = "docs")]
 pub mod doc;
 
