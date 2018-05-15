@@ -151,26 +151,35 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
-    where A: Ord + Clone
-{
-    let n = a.len();
-    if n == 0 {
-        (&a[0]).clone()
-    } else {
-        let (q, a) = randomized_partition(&mut a);
-        let k = q + 1;
-        if i == k {
-            (&a[q]).clone()
-        } else if i < k {
-            randomized_select(a.slice_mut(s![0..q]).to_owned(), i)
-        } else {
-            randomized_select(a.slice_mut(s![(q+1)..n]).to_owned(), i - k)
-        }
-    }
-}
+// fn randomized_select<A>(mut a: Array1<A>, i: usize) -> (A, Array1<A>)
+//     where A: Ord + Clone + Copy
+// {
+//     let n = a.len();
+//     if n == 0 {
+//        ((&a[0]).clone(), a)
+//     } else {
+//         let (q, a) = randomized_partition(&mut a);
+//         let k = q + 1;
+//         if i == k {
+//             ((&a[q]).clone(), *a)
+//         } else {
+//             let (mut pre, mut after) = a.view_mut().split_at(Axis(0), q).;
+//             let mut x;
+//             if i < k {
+//                 let (z, y) = randomized_select(pre.to_owned(), i);
+//                 x = z;
+//                 pre = y.view_mut().to_owned();
+//             } else {
+//                 let (z, y) = randomized_select(after.to_owned(), i - k);
+//                 x = z;
+//                 after = y.view_mut().to_owned();
+//             }
+//             (x, stack![Axis(0), pre, after])
+//         }
+//     }
+// }
 
-fn randomized_partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
+fn randomized_partition<A>(a: &mut Array1<A>) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
@@ -180,7 +189,7 @@ fn randomized_partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
     partition(a)
 }
 
-fn partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
+fn partition<A>(a: &mut Array1<A>) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
@@ -193,26 +202,33 @@ fn partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
         }
     }
     a.swap(i, n-1);
-    (i, a)
+    i
 }
 
 #[test]
 fn test_partition() {
-    let mut a = arr1(&[1, 3, 2, 10]);
-    let (j, a) = partition(&mut a);
-    assert_eq!(j, 3);
+    let mut a = arr1(&[1, 3, 2, 10, 10]);
+    let j = partition(&mut a);
+    assert_eq!(j, 4);
+    for i in 0..j {
+        assert!(a[i] <= a[j]);
+    }
     let mut a = arr1(&[2, 3, 4, 1]);
-    let (j, a) = partition(&mut a);
+    let j = partition(&mut a);
     assert_eq!(j, 0);
+    let n = a.len();
+    for i in j+1..n {
+        assert!(a[i] > a[j]);
+    }
 }
 
-#[test]
-fn test_randomized_select() {
-    let a = arr1(&[1, 3, 2, 10]);
-    let j = randomized_select(a.clone(), 2);
-    assert_eq!(j, 2);
-    let j = randomized_select(a.clone(), 1);
-    assert_eq!(j, 1);
-    let j = randomized_select(a.clone(), 3);
-    assert_eq!(j, 3);
-}
+// #[test]
+// fn test_randomized_select() {
+//     let a = arr1(&[1, 3, 2, 10]);
+//     let j = randomized_select(a.clone(), 2);
+//     assert_eq!(j, 2);
+//     let j = randomized_select(a.clone(), 1);
+//     assert_eq!(j, 1);
+//     let j = randomized_select(a.clone(), 3);
+//     assert_eq!(j, 3);
+// }
