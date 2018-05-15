@@ -157,7 +157,7 @@ fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
     let n = a.len(); if n == 0 {
         (&a[0]).clone()
     } else {
-        let (q, mut a) = randomized_partition(&mut a);
+        let (q, a) = randomized_partition(&mut a);
         let k = q + 1;
         if i == k {
             (&a[q]).clone()
@@ -184,20 +184,31 @@ fn partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
 {
     let n = a.len();
     let x = (&a[n-1]).clone();
-    let mut i: isize = -1;
+    let mut i = 0;
     for j in 0..n-1 {
         if a[j] <= x {
+            a.swap(i as usize, j);
             i += 1;
-            a.swap(i as usize, j)
         }
     }
-    a.swap((i as usize)+1, n-1);
-    ((i as usize)+1, a)
+    a.swap(i, n-1);
+    (i, a)
 }
 
 #[test]
 fn test_partition() {
     let mut a = arr1(&[1, 3, 2, 10]);
     let (j, a) = partition(&mut a);
+    assert_eq!(j, 3);
+}
+
+#[test]
+fn test_randomized_select() {
+    let a = arr1(&[1, 3, 2, 10]);
+    let j = randomized_select(a.clone(), 2);
+    assert_eq!(j, 2);
+    let j = randomized_select(a.clone(), 1);
+    assert_eq!(j, 1);
+    let j = randomized_select(a.clone(), 3);
     assert_eq!(j, 3);
 }
