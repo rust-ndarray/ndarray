@@ -169,14 +169,45 @@ fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
     }
 }
 
-fn randomized_partition<A>(a: &mut Array1<A>) -> (usize, Array1<A>)
+fn randomized_partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
     where A: Ord + Clone
 {
     let n = a.len();
     let mut rng = thread_rng();
     let i: usize = Uniform::sample_single(0, n, &mut rng);
-    let z = (&a[i]).clone();
-    a[i] = (&a[n-1]).clone();
-    a[n-1] = z;
-    unimplemented!()
+    a.swap(i, n-1);
+    // let z = (&a[i]).clone();
+    // a[i] = (&a[n-1]).clone();
+    // a[n-1] = z;
+    partition(a)
+}
+
+fn partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
+    where A: Ord + Clone
+{
+    let n = a.len();
+    let x = (&a[n-1]).clone();
+    let mut i: usize = 0;
+    for j in 0..n {
+        println!("{:}", j);
+        if a[j] <= x {
+            i += 1;
+            a.swap(i, j)
+            // let z = (&a[i]).clone();
+            // a[i] = (&a[j]).clone();
+            // a[j] = z;
+        }
+    }
+    a.swap(i+1, n-1);
+    // let z = (&a[i+1]).clone();
+    // a[i+1] = (&a[n-1]).clone();
+    // a[n-1] = z;
+    (i+1, a)
+}
+
+#[test]
+fn test_partition() {
+    let mut a = arr1(&[1, 3, 2, 10]);
+    let (j, a) = partition(&mut a);
+    assert_eq!(j, 3);
 }
