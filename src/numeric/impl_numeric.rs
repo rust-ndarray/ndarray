@@ -154,7 +154,8 @@ impl<A, S, D> ArrayBase<S, D>
 fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
     where A: Ord + Clone
 {
-    let n = a.len(); if n == 0 {
+    let n = a.len();
+    if n == 0 {
         (&a[0]).clone()
     } else {
         let (q, a) = randomized_partition(&mut a);
@@ -187,7 +188,7 @@ fn partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
     let mut i = 0;
     for j in 0..n-1 {
         if a[j] <= x {
-            a.swap(i as usize, j);
+            a.swap(i, j);
             i += 1;
         }
     }
@@ -200,6 +201,9 @@ fn test_partition() {
     let mut a = arr1(&[1, 3, 2, 10]);
     let (j, a) = partition(&mut a);
     assert_eq!(j, 3);
+    let mut a = arr1(&[2, 3, 4, 1]);
+    let (j, a) = partition(&mut a);
+    assert_eq!(j, 0);
 }
 
 #[test]
