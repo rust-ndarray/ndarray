@@ -151,33 +151,24 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-// fn randomized_select<A>(mut a: Array1<A>, i: usize) -> (A, Array1<A>)
-//     where A: Ord + Clone + Copy
-// {
-//     let n = a.len();
-//     if n == 0 {
-//        ((&a[0]).clone(), a)
-//     } else {
-//         let (q, a) = randomized_partition(&mut a);
-//         let k = q + 1;
-//         if i == k {
-//             ((&a[q]).clone(), *a)
-//         } else {
-//             let (mut pre, mut after) = a.view_mut().split_at(Axis(0), q).;
-//             let mut x;
-//             if i < k {
-//                 let (z, y) = randomized_select(pre.to_owned(), i);
-//                 x = z;
-//                 pre = y.view_mut().to_owned();
-//             } else {
-//                 let (z, y) = randomized_select(after.to_owned(), i - k);
-//                 x = z;
-//                 after = y.view_mut().to_owned();
-//             }
-//             (x, stack![Axis(0), pre, after])
-//         }
-//     }
-// }
+fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
+    where A: Ord + Clone
+{
+    let n = a.len();
+    if n == 0 {
+        (&a[0]).clone()
+    } else {
+        let q = randomized_partition(&mut a);
+        let k = q + 1;
+        if i == k {
+            (&a[q]).clone()
+        } else if i < k {
+            randomized_select(a.slice_mut(s![0..q]).to_owned(), i)
+        } else {
+            randomized_select(a.slice_mut(s![(q+1)..n]).to_owned(), i - k)
+        }
+    }
+}
 
 fn randomized_partition<A>(a: &mut Array1<A>) -> usize
     where A: Ord + Clone
