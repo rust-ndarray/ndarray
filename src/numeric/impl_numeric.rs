@@ -184,16 +184,15 @@ fn partition<A>(a: &mut Array1<A>) -> (usize, &mut Array1<A>)
 {
     let n = a.len();
     let x = (&a[n-1]).clone();
-    let mut i: usize = 0;
-    for j in 0..n {
-        println!("{:}", j);
+    let mut i: isize = -1;
+    for j in 0..n-1 {
         if a[j] <= x {
             i += 1;
-            a.swap(i, j)
+            a.swap(i as usize, j)
         }
     }
-    a.swap(i+1, n-1);
-    (i+1, a)
+    a.swap((i as usize)+1, n-1);
+    ((i as usize)+1, a)
 }
 
 #[test]
