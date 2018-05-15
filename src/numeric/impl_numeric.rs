@@ -151,26 +151,26 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-fn randomized_select<A>(mut a: Array1<A>, i: usize) -> A
+fn randomized_select<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
     where A: Ord + Clone
 {
     let n = a.len();
     if n == 0 {
         (&a[0]).clone()
     } else {
-        let q = randomized_partition(&mut a);
+        let q = randomized_partition(&mut a.view_mut());
         let k = q + 1;
         if i == k {
             (&a[q]).clone()
         } else if i < k {
-            randomized_select(a.slice_mut(s![0..q]).to_owned(), i)
+            randomized_select(a.slice_mut(s![0..q]), i)
         } else {
-            randomized_select(a.slice_mut(s![(q+1)..n]).to_owned(), i - k)
+            randomized_select(a.slice_mut(s![(q+1)..n]), i - k)
         }
     }
 }
 
-fn randomized_partition<A>(a: &mut Array1<A>) -> usize
+fn randomized_partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
@@ -180,7 +180,7 @@ fn randomized_partition<A>(a: &mut Array1<A>) -> usize
     partition(a)
 }
 
-fn partition<A>(a: &mut Array1<A>) -> usize
+fn partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
@@ -199,13 +199,13 @@ fn partition<A>(a: &mut Array1<A>) -> usize
 #[test]
 fn test_partition() {
     let mut a = arr1(&[1, 3, 2, 10, 10]);
-    let j = partition(&mut a);
+    let j = partition(&mut a.view_mut());
     assert_eq!(j, 4);
     for i in 0..j {
         assert!(a[i] <= a[j]);
     }
     let mut a = arr1(&[2, 3, 4, 1]);
-    let j = partition(&mut a);
+    let j = partition(&mut a.view_mut());
     assert_eq!(j, 0);
     let n = a.len();
     for i in j+1..n {
@@ -213,13 +213,13 @@ fn test_partition() {
     }
 }
 
-// #[test]
-// fn test_randomized_select() {
-//     let a = arr1(&[1, 3, 2, 10]);
-//     let j = randomized_select(a.clone(), 2);
-//     assert_eq!(j, 2);
-//     let j = randomized_select(a.clone(), 1);
-//     assert_eq!(j, 1);
-//     let j = randomized_select(a.clone(), 3);
-//     assert_eq!(j, 3);
-// }
+#[test]
+fn test_randomized_select() {
+    let a = arr1(&[1, 3, 2, 10]);
+    let j = randomized_select(a.clone().view_mut(), 2);
+    assert_eq!(j, 2);
+    let j = randomized_select(a.clone().view_mut(), 1);
+    assert_eq!(j, 1);
+    let j = randomized_select(a.clone().view_mut(), 3);
+    assert_eq!(j, 3);
+}
