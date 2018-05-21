@@ -166,7 +166,7 @@ fn randomized_select<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
     where A: Ord + Clone
 {
     let n = a.len();
-    if n == 0 {
+    if n == 1 {
         (&a[0]).clone()
     } else {
         let q = randomized_partition(&mut a.view_mut());
@@ -256,4 +256,12 @@ fn test_percentile_axis_mut() {
     );
     let q = b.percentile_axis_mut(Axis(0), 0.5);
     assert!(q == b.subview(Axis(0), 1));
+}
+
+#[test]
+fn test_percentile_axis_mut_to_get_minimum() {
+    let mut b = arr2(&[[1, 3, 22, 10]]);
+    let q = b.percentile_axis_mut(Axis(1), 0.);
+    println!("{:?}", q);
+    assert!(q == arr1(&[1]));
 }
