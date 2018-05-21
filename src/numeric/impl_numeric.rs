@@ -127,7 +127,7 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let n = self.len_of(axis);
         let i = ((n as f32) * q).floor() as usize;
-        let mapping = |x| randomized_select(x, i);
+        let mapping = |x| randomized_select(x, i+1);
         let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
         azip!(mut lane (self.lanes_mut(axis)), mut out in {
             *out = mapping(lane);
