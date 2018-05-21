@@ -262,6 +262,12 @@ fn test_percentile_axis_mut() {
 fn test_percentile_axis_mut_to_get_minimum() {
     let mut b = arr2(&[[1, 3, 22, 10]]);
     let q = b.percentile_axis_mut(Axis(1), 0.);
-    println!("{:?}", q);
     assert!(q == arr1(&[1]));
+}
+
+#[test]
+fn test_percentile_axis_mut_to_get_maximum() {
+    let mut b = arr1(&[1, 3, 22, 10]);
+    let q = b.percentile_axis_mut(Axis(0), 1.);
+    assert!(q == arr0(22));
 }
