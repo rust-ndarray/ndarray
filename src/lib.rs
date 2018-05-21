@@ -171,6 +171,7 @@ mod numeric_util;
 mod error;
 mod shape_builder;
 mod stacking;
+#[macro_use]
 mod zip;
 
 pub use zip::{
