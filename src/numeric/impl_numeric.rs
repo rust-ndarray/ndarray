@@ -120,12 +120,19 @@ impl<A, S, D> ArrayBase<S, D>
 
 
     /// Return the qth percentile of the data along the specified axis.
-    pub fn percentile_axis(&self, axis: Axis, q: f32) -> Array<A, D::Smaller>
+    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f32) -> Array<A, D::Smaller>
         where D: RemoveAxis,
+              A: Ord + Clone + Zero,
+              S: DataMut,
     {
         let n = self.len_of(axis);
         let i = ((n as f32) * q).floor() as usize;
-        unimplemented!()
+        let mapping = |x| randomized_select(x, i);
+        let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
+        azip!(mut lane (self.lanes_mut(axis)), mut out in {
+            *out = mapping(lane);
+        });
+        out
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
