@@ -126,8 +126,8 @@ impl<A, S, D> ArrayBase<S, D>
               S: DataMut,
     {
         let n = self.len_of(axis);
-        let i = ((n as f32) * q).floor() as usize;
-        let mapping = |x| randomized_select(x, i+1);
+        let i = ((n as f32) * q).ceil() as usize;
+        let mapping = |x| randomized_select(x, i);
         let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
         azip!(mut lane (self.lanes_mut(axis)), mut out in {
             *out = mapping(lane);
@@ -229,4 +229,27 @@ fn test_randomized_select() {
     assert_eq!(j, 1);
     let j = randomized_select(a.clone().view_mut(), 3);
     assert_eq!(j, 3);
+}
+
+#[test]
+fn test_percentile_axis_mut() {
+    let mut a = arr2(
+        &[
+        [1, 3, 2, 10],
+        [2, 4, 3, 11],
+        [3, 5, 6, 12]
+        ]
+    );
+    let p = a.percentile_axis_mut(Axis(0), 0.5);
+    assert!(p == a.subview(Axis(0), 1));
+    let mut b = arr2(
+        &[
+        [1, 3, 2, 10],
+        [2, 4, 3, 11],
+        [3, 5, 6, 12],
+        [4, 6, 7, 13]
+        ]
+    );
+    let q = b.percentile_axis_mut(Axis(0), 0.5);
+    assert!(q == b.subview(Axis(0), 1));
 }
