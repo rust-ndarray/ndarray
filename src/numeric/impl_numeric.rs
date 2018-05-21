@@ -128,6 +128,7 @@ impl<A, S, D> ArrayBase<S, D>
               A: Ord + Clone + Zero,
               S: DataMut,
     {
+        assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
         let i = ((n as f32) * q).ceil() as usize;
         let mapping = |x| randomized_select(x, i);
