@@ -118,8 +118,11 @@ impl<A, S, D> ArrayBase<S, D>
         sum / &aview0(&cnt)
     }
 
-
-    /// Return the qth percentile of the data along the specified axis.
+    /// Return the qth percentile of the data along the specified axis
+    /// `q` needs to be a float between 0 and 1, included.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `q` is strictly smaller than 0 or strictly bigger than 1.
     pub fn percentile_axis_mut(&mut self, axis: Axis, q: f32) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
