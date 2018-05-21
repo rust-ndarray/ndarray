@@ -236,7 +236,7 @@ fn test_randomized_select() {
 }
 
 #[test]
-fn test_percentile_axis_mut() {
+fn test_percentile_axis_mut_with_odd_axis_length() {
     let mut a = arr2(
         &[
         [1, 3, 2, 10],
@@ -246,6 +246,10 @@ fn test_percentile_axis_mut() {
     );
     let p = a.percentile_axis_mut(Axis(0), 0.5);
     assert!(p == a.subview(Axis(0), 1));
+}
+
+#[test]
+fn test_percentile_axis_mut_with_even_axis_length() {
     let mut b = arr2(
         &[
         [1, 3, 2, 10],
