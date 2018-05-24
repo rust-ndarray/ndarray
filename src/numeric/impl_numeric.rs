@@ -118,8 +118,23 @@ impl<A, S, D> ArrayBase<S, D>
         sum / &aview0(&cnt)
     }
 
-    /// Return the qth percentile of the data along the specified axis
-    /// `q` needs to be a float between 0 and 1, included.
+    /// Return the qth percentile of the data along the specified axis.
+    /// `q` needs to be a float between 0 and 1, bounds included.
+    /// For instance:
+    /// - `q=0.` returns the minimum along each 1-dimensional lane;
+    /// - `q=0.5` returns the median along each 1-dimensional lane;
+    /// - `q=1.` returns the maximum along each 1-dimensional lane.
+    ///
+    /// If the desired percentile lies between two data points we always
+    /// return the smaller data point.
+    ///
+    /// The array is shuffled **in place** along each 1-dimensional lane in
+    /// order to produce the required percentile without allocating a copy
+    /// of the original array. Each 1-dimensional lane is shuffled indipendently
+    /// from the others.
+    ///
+    /// The algorithm asymptotic complexity in the worst case is O(m) where
+    /// m is the number of elements in the array.
     ///
     /// **Panics** if `axis` is out of bounds.
     /// **Panics** if `q` is strictly smaller than 0 or strictly bigger than 1.
