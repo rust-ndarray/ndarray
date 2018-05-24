@@ -115,6 +115,69 @@ impl<A, S, D> ArrayBase<S, D>
         sum / &aview0(&cnt)
     }
 
+    /// Return variance along `axis`.
+    ///
+    /// The variance is computed using the [Welford one-pass
+    /// algorithm](https://www.jstor.org/stable/1266577).
+    ///
+    /// The parameter `ddof` specifies the "delta degrees of freedom". For
+    /// example, to calculate the population variance, use `ddof = 0`, or to
+    /// calculate the sample variance, use `ddof = 1`.
+    ///
+    /// The variance is defined as:
+    ///
+    /// ```text
+    ///               1       n
+    /// variance = ――――――――   ∑ (xᵢ - x̅)²
+    ///            n - ddof  i=1
+    /// ```
+    ///
+    /// where
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// **Panics** if `ddof` is greater equal than the length of `axis`.
+    /// **Panics** if `axis` is out of bounds or if length of `axis` is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{aview1, arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// let var = a.var_axis(Axis(0), 0.);
+    /// assert_eq!(var, aview1(&[1., 1.]));
+    /// ```
+    pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
+    where
+        A: Float,
+        D: RemoveAxis,
+    {
+        let mut count = A::zero();
+        let mut mean = Array::<A, _>::zeros(self.dim.remove_axis(axis));
+        let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
+        for subview in self.axis_iter(axis) {
+            count = count + A::one();
+            azip!(mut mean, mut sum_sq, x (subview) in {
+                let delta = x - *mean;
+                *mean = *mean + delta / count;
+                *sum_sq = *sum_sq + delta * (x - *mean);
+            });
+        }
+        if ddof >= count {
+            panic!("Ddof needs to be strictly smaller than the length \
+                    of the axis you are computing the variance for!")
+        } else {
+            let dof = count - ddof;
+            sum_sq.mapv(|s| s / dof)
+        }
+    }
+
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///
