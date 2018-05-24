@@ -14,7 +14,6 @@ use imp_prelude::*;
 use numeric_util;
 
 use {
-    ScalarOperand,
     LinalgScalar,
     FoldWhile,
     Zip,
@@ -142,7 +141,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `ddof` is greater equal than the length of `axis`.
-    /// **Panics** if `axis` is out of bounds or if lenght of `axis` is zero.
+    /// **Panics** if `axis` is out of bounds or if length of `axis` is zero.
     ///
     /// # Example
     ///
@@ -156,12 +155,12 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
-        A: Float + ScalarOperand,
+        A: Float,
         D: RemoveAxis,
     {
         let mut count = A::zero();
-        let mut mean = Array::zeros(self.dim.remove_axis(axis));
-        let mut sum_sq = Array::zeros(self.dim.remove_axis(axis));
+        let mut mean = Array::<A, _>::zeros(self.dim.remove_axis(axis));
+        let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
         for subview in self.axis_iter(axis) {
             count = count + A::one();
             azip!(mut mean, mut sum_sq, x (subview) in {
@@ -174,7 +173,8 @@ impl<A, S, D> ArrayBase<S, D>
             panic!("Ddof needs to be strictly smaller than the length \
                     of the axis you are computing the variance for!")
         } else {
-            sum_sq / (count - ddof)
+            let dof = count - ddof;
+            sum_sq.mapv(|s| s / dof)
         }
     }
 
