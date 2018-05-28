@@ -167,7 +167,7 @@ impl<A, S, D> ArrayBase<S, D>
             azip!(mut mean, mut sum_sq, x (subview) in {
                 let delta = x - *mean;
                 *mean = *mean + delta / count;
-                *sum_sq = *sum_sq + delta * (x - *mean);
+                *sum_sq = (x - *mean).mul_add(delta, *sum_sq);
             });
         }
         if ddof >= count {
