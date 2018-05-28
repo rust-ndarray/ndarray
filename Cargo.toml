@@ -24,8 +24,8 @@ bench = false
 test = true
 
 [dependencies]
-num-traits = { version = "0.1.32", default-features = false }
-num-complex = { version = "0.1.32", default-features = false }
+num-traits = "0.2"
+num-complex = "0.2"
 rustc-serialize = { version = "0.3.20", optional = true }
 itertools = { version = "0.7.0", default-features = false }
 
