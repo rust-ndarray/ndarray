@@ -200,4 +200,3 @@ impl<A, S, D> ArrayBase<S, D>
             }).is_done()
     }
 }
-
