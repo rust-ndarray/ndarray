@@ -140,8 +140,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater equal than the length of `axis`.
-    /// **Panics** if `axis` is out of bounds or if length of `axis` is zero.
+    /// **Panics** if `ddof` is greater than or equal to the length of the
+    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
     ///
     /// # Example
     ///
@@ -149,9 +149,10 @@ impl<A, S, D> ArrayBase<S, D>
     /// use ndarray::{aview1, arr2, Axis};
     ///
     /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
-    /// let var = a.var_axis(Axis(0), 0.);
-    /// assert_eq!(var, aview1(&[1., 1.]));
+    ///                [3., 4.],
+    ///                [5., 6.]]);
+    /// let var = a.var_axis(Axis(0), 1.);
+    /// assert_eq!(var, aview1(&[4., 4.]));
     /// ```
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
@@ -170,7 +171,7 @@ impl<A, S, D> ArrayBase<S, D>
             });
         }
         if ddof >= count {
-            panic!("Ddof needs to be strictly smaller than the length \
+            panic!("`ddof` needs to be strictly smaller than the length \
                     of the axis you are computing the variance for!")
         } else {
             let dof = count - ddof;
