@@ -1180,9 +1180,11 @@ use indexes::IndicesIterF;
 
 unsafe impl<F> TrustedIterator for Linspace<F> { }
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }
+unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> { }
 unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F>
     where I: TrustedIterator { }
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
+unsafe impl<'a, A> TrustedIterator for slice::IterMut<'a, A> { }
 unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
 // FIXME: These indices iter are dubious -- size needs to be checked up front.
 unsafe impl<D> TrustedIterator for IndicesIter<D> where D: Dimension { }
@@ -1211,30 +1213,6 @@ pub fn to_vec_mapped<I, F, B>(iter: I, mut f: F) -> Vec<B>
     iter.fold((), |(), elt| {
         unsafe {
             ptr::write(out_ptr, f(elt));
-            len += 1;
-            result.set_len(len);
-            out_ptr = out_ptr.offset(1);
-        }
-    });
-    debug_assert_eq!(size, result.len());
-    result
-}
-
-/// Like Iterator::collect, but only for trusted length iterators
-pub fn to_vec_mapped_mut<I, F, B>(iter: I, mut f: F) -> Vec<B>
-    where I: TrustedIterator + ExactSizeIterator,
-          F: FnMut(&mut I::Item) -> B,
-{
-    // Use an `unsafe` block to do this efficiently.
-    // We know that iter will produce exactly .size() elements,
-    // and the loop can vectorize if it's clean (without branch to grow the vector).
-    let (size, _) = iter.size_hint();
-    let mut result = Vec::with_capacity(size);
-    let mut out_ptr = result.as_mut_ptr();
-    let mut len = 0;
-    iter.fold((), |(), elt| {
-        unsafe {
-            ptr::write(out_ptr, f(&mut elt));
             len += 1;
             result.set_len(len);
             out_ptr = out_ptr.offset(1);
