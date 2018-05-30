@@ -135,6 +135,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// order to produce the required percentile without allocating a copy
     /// of the original array. Each 1-dimensional lane is shuffled indipendently
     /// from the others.
+    /// No assumptions should be made on the ordering of the array elements
+    /// after this computation.
     ///
     /// The algorithm asymptotic complexity in the worst case is O(m) where
     /// m is the number of elements in the array.
