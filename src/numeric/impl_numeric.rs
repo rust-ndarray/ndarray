@@ -120,13 +120,16 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return the qth percentile of the data along the specified axis.
     /// `q` needs to be a float between 0 and 1, bounds included.
-    /// For instance:
+    /// The qth percentile for a 1-dimensional lane of length N is defined
+    /// as the element that would be indexed as `Nq` if the lane were to be sorted
+    /// in increasing order. If `Nq` is not an integer the desired percentile
+    /// lies between two data points: we always return the smaller data point.
+    ///
+    /// Some examples:
     /// - `q=0.` returns the minimum along each 1-dimensional lane;
     /// - `q=0.5` returns the median along each 1-dimensional lane;
     /// - `q=1.` returns the maximum along each 1-dimensional lane.
-    ///
-    /// If the desired percentile lies between two data points we always
-    /// return the smaller data point.
+    /// (`q=0` and `q=1` are considered improper percentiles)
     ///
     /// The array is shuffled **in place** along each 1-dimensional lane in
     /// order to produce the required percentile without allocating a copy
@@ -136,8 +139,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// The algorithm asymptotic complexity in the worst case is O(m) where
     /// m is the number of elements in the array.
     ///
-    /// **Panics** if `axis` is out of bounds.
-    /// **Panics** if `q` is strictly smaller than 0 or strictly bigger than 1.
+    /// **Panics** if `axis` is out of bounds, if `q` is strictly smaller
+    /// than 0 or strictly bigger than 1.
     pub fn percentile_axis_mut(&mut self, axis: Axis, q: f32) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
