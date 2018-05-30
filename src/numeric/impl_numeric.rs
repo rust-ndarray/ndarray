@@ -13,7 +13,7 @@ use itertools::free::enumerate;
 use imp_prelude::*;
 use numeric_util;
 
-use rand::distributions::Uniform;
+use rand::prelude::*;
 use rand::thread_rng;
 
 use {
@@ -201,7 +201,7 @@ fn randomized_partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>) -> usize
 {
     let n = a.len();
     let mut rng = thread_rng();
-    let i: usize = Uniform::sample_single(0, n, &mut rng);
+    let i: usize = rng.gen_range(0, n);
     a.swap(i, n-1);
     partition(a)
 }
