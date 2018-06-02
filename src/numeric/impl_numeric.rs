@@ -254,15 +254,17 @@ fn partition_mut<A>(a: &mut ArrayViewMut1<A>, partition_index: usize) -> usize
 }
 
 #[test]
-fn test_partition() {
+fn test_partition_mut() {
     let mut a = arr1(&[1, 3, 2, 10, 10]);
-    let j = partition(&mut a.view_mut());
-    assert_eq!(j, 4);
+    let n = a.len();
+    let j = partition(&mut a.view_mut(), n-1);
+    assert_eq!(j, 3);
     for i in 0..j {
         assert!(a[i] <= a[j]);
     }
     let mut a = arr1(&[2, 3, 4, 1]);
-    let j = partition(&mut a.view_mut());
+    let n = a.len();
+    let j = partition(&mut a.view_mut(), n-1);
     assert_eq!(j, 0);
     let n = a.len();
     for i in j+1..n {
