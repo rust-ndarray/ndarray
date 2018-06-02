@@ -222,11 +222,26 @@ fn random_pivot(n: usize) -> usize
     rng.gen_range(0, n)
 }
 
-fn partition_mut<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>, pivot_index: usize) -> usize
+/// Return the index of `a[partition_index`]` if `a` were to be sorted
+/// in increasing order.
+/// `a` elements are rearranged in such a way that `a[partition_index]`
+/// is in the position it would be in an array sorted in increasing order.
+/// All elements smaller than `a[partition_index]` are moved to its
+/// left and all elements equal or greater than `a[partition_index]`
+/// are moved to its right.
+/// The ordering of the elements in the two partitions is undefined.
+///
+/// `a` is shuffled **in place** to operate the desired partition:
+/// no copy of the array is allocated.
+///
+/// Complexity: O(n), where n is the number of elements in `a`.
+///
+/// **Panics** if `partition_index` is greater than or equal to n.
+fn partition_mut<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>, partition_index: usize) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
-    a.swap(pivot_index, n-1);
+    a.swap(partition_index, n-1);
     let x = (&a[n-1]).clone();
     let mut i = 0;
     for j in 0..n-1 {
