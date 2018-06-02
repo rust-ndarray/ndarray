@@ -204,7 +204,7 @@ fn ith_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
         (&a[0]).clone()
     } else {
         let pivot_index = random_pivot(n);
-        let partition_index = partition(&mut a.view_mut(), pivot_index);
+        let partition_index = partition_mut(&mut a.view_mut(), pivot_index);
         let k = partition_index + 1;
         if i == k {
             (&a[partition_index]).clone()
@@ -222,7 +222,7 @@ fn random_pivot(n: usize) -> usize
     rng.gen_range(0, n)
 }
 
-fn partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>, pivot_index: usize) -> usize
+fn partition_mut<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>, pivot_index: usize) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
