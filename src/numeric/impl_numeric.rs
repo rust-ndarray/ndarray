@@ -159,6 +159,7 @@ impl<A, S, D> ArrayBase<S, D>
             *out = mapping(lane);
         });
         out
+    }
 
     /// Return variance along `axis`.
     ///
