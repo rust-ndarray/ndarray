@@ -138,8 +138,10 @@ impl<A, S, D> ArrayBase<S, D>
     /// No assumptions should be made on the ordering of the array elements
     /// after this computation.
     ///
-    /// The algorithm asymptotic complexity in the worst case is O(m) where
-    /// m is the number of elements in the array.
+    /// Complexity ([quickselect](https://en.wikipedia.org/wiki/Quickselect)):
+    /// - average case: O(m);
+    /// - worst case: O(m^2);
+    /// where m is the number of elements in the array.
     ///
     /// **Panics** if `axis` is out of bounds, if `q` is strictly smaller
     /// than 0 or strictly bigger than 1.
