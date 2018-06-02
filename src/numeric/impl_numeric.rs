@@ -241,17 +241,17 @@ fn partition_mut<A>(a: &mut ArrayViewMut1<A>, partition_index: usize) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
+    let partition_value = (&a[partition_index]).clone();
     a.swap(partition_index, n-1);
-    let x = (&a[n-1]).clone();
-    let mut i = 0;
+    let mut partition_boundary_index = 0;
     for j in 0..n-1 {
-        if a[j] <= x {
-            a.swap(i, j);
-            i += 1;
+        if a[j] <= partition_value {
+            a.swap(partition_boundary_index, j);
+            partition_boundary_index += 1;
         }
     }
-    a.swap(i, n-1);
-    i
+    a.swap(partition_boundary_index, n-1);
+    partition_boundary_index
 }
 
 #[test]
