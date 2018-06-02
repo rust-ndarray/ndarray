@@ -151,7 +151,7 @@ impl<A, S, D> ArrayBase<S, D>
         assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
         let i = ((n as f32) * q).ceil() as usize;
-        let mapping = |x| ith_mut(x, i);
+        let mapping = |x| ith_mut(x, if i == 0 {0} else {i-1});
         let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
         azip!(mut lane (self.lanes_mut(axis)), mut out in {
             *out = mapping(lane);
