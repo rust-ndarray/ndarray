@@ -1645,14 +1645,14 @@ fn array_macros() {
 fn test_partition_mut() {
     let mut a = arr1(&[1, 3, 2, 10, 10]);
     let n = a.len();
-    let j = partition_mut(&mut a.view_mut(), n-1);
+    let j = a.view_mut().partition_mut(n-1);
     assert_eq!(j, 3);
     for i in 0..j {
         assert!(a[i] <= a[j]);
     }
     let mut a = arr1(&[2, 3, 4, 1]);
     let n = a.len();
-    let j = partition_mut(&mut a.view_mut(), n-1);
+    let j = a.view_mut().partition_mut(n-1);
     assert_eq!(j, 0);
     let n = a.len();
     for i in j+1..n {
@@ -1663,11 +1663,11 @@ fn test_partition_mut() {
 #[test]
 fn test_ith_mut() {
     let a = arr1(&[1, 3, 2, 10]);
-    let j = ith_mut(a.clone().view_mut(), 2);
+    let j = a.clone().view_mut().ith_mut(2);
     assert_eq!(j, 3);
-    let j = ith_mut(a.clone().view_mut(), 1);
+    let j = a.clone().view_mut().ith_mut(1);
     assert_eq!(j, 2);
-    let j = ith_mut(a.clone().view_mut(), 3);
+    let j = a.clone().view_mut().ith_mut(3);
     assert_eq!(j, 10);
 }
 
