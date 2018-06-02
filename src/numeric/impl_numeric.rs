@@ -192,7 +192,7 @@ impl<A, S, D> ArrayBase<S, D>
 /// No assumptions should be made on the ordering of `a` elements
 /// after this computation.
 ///
-/// Complexity:
+/// Complexity ([quickselect](https://en.wikipedia.org/wiki/Quickselect)):
 /// - average case: O(n);
 /// - worst case: O(n^2);
 /// where n is the number of elements in `a`.
