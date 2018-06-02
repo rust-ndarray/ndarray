@@ -204,14 +204,14 @@ fn ith_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
         (&a[0]).clone()
     } else {
         let pivot_index = random_pivot(n);
-        let q = partition(&mut a.view_mut(), pivot_index);
-        let k = q + 1;
+        let partition_index = partition(&mut a.view_mut(), pivot_index);
+        let k = partition_index + 1;
         if i == k {
-            (&a[q]).clone()
+            (&a[partition_index]).clone()
         } else if i < k {
-            ith_mut(a.slice_mut(s![0..q]), i)
+            ith_mut(a.slice_mut(s![0..partition_index]), i)
         } else {
-            ith_mut(a.slice_mut(s![(q+1)..n]), i - k)
+            ith_mut(a.slice_mut(s![(partition_index+1)..n]), i - k)
         }
     }
 }
