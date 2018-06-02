@@ -244,7 +244,7 @@ fn partition_mut<A>(a: &mut ArrayViewMut1<A>, partition_index: usize) -> usize
     a.swap(partition_index, n-1);
     let mut partition_boundary_index = 0;
     for j in 0..n-1 {
-        if a[j] <= partition_value {
+        if a[j] < partition_value {
             a.swap(partition_boundary_index, j);
             partition_boundary_index += 1;
         }
