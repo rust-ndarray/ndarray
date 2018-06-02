@@ -13,9 +13,6 @@ use itertools::free::enumerate;
 use imp_prelude::*;
 use numeric_util;
 
-use rand::prelude::*;
-use rand::thread_rng;
-
 use {
     LinalgScalar,
     FoldWhile,
@@ -153,7 +150,7 @@ impl<A, S, D> ArrayBase<S, D>
         assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
         let i = ((n as f32) * q).ceil() as usize;
-        let mapping = |x| ith_mut(x, if i == 0 {0} else {i-1});
+        let mapping = |mut x: ArrayViewMut1<A>| x.ith_mut(if i == 0 {0} else {i-1});
         let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
         azip!(mut lane (self.lanes_mut(axis)), mut out in {
             *out = mapping(lane);
@@ -245,75 +242,4 @@ impl<A, S, D> ArrayBase<S, D>
                 }
             }).is_done()
     }
-}
-
-/// Return the `i`-th element of `a` if `a` were to be a 1-dimensional
-/// array sorted in increasing order.
-///
-/// `a` is shuffled **in place** to retrieve the desired element:
-/// no copy of the array is allocated.
-/// No assumptions should be made on the ordering of `a` elements
-/// after this computation.
-///
-/// Complexity ([quickselect](https://en.wikipedia.org/wiki/Quickselect)):
-/// - average case: O(n);
-/// - worst case: O(n^2);
-/// where n is the number of elements in `a`.
-///
-/// **Panics** if `i` is greater than or equal to n.
-fn ith_mut<A>(mut a: ArrayViewMut1<A>, i: usize) -> A
-    where A: Ord + Clone
-{
-    let n = a.len();
-    if n == 1 {
-        (&a[0]).clone()
-    } else {
-        let pivot_index = random_pivot(n);
-        let partition_index = partition_mut(&mut a.view_mut(), pivot_index);
-        if i == partition_index {
-            (&a[partition_index]).clone()
-        } else if i < partition_index {
-            ith_mut(a.slice_mut(s![0..partition_index]), i)
-        } else {
-            ith_mut(a.slice_mut(s![(partition_index+1)..n]), i - partition_index - 1)
-        }
-    }
-}
-
-fn random_pivot(n: usize) -> usize
-{
-    let mut rng = thread_rng();
-    rng.gen_range(0, n)
-}
-
-/// Return the index of `a[partition_index`]` if `a` were to be sorted
-/// in increasing order.
-/// `a` elements are rearranged in such a way that `a[partition_index]`
-/// is in the position it would be in an array sorted in increasing order.
-/// All elements smaller than `a[partition_index]` are moved to its
-/// left and all elements equal or greater than `a[partition_index]`
-/// are moved to its right.
-/// The ordering of the elements in the two partitions is undefined.
-///
-/// `a` is shuffled **in place** to operate the desired partition:
-/// no copy of the array is allocated.
-///
-/// Complexity: O(n), where n is the number of elements in `a`.
-///
-/// **Panics** if `partition_index` is greater than or equal to n.
-fn partition_mut<A>(a: &mut ArrayViewMut1<A>, partition_index: usize) -> usize
-    where A: Ord + Clone
-{
-    let n = a.len();
-    let partition_value = (&a[partition_index]).clone();
-    a.swap(partition_index, n-1);
-    let mut partition_boundary_index = 0;
-    for j in 0..n-1 {
-        if a[j] < partition_value {
-            a.swap(partition_boundary_index, j);
-            partition_boundary_index += 1;
-        }
-    }
-    a.swap(partition_boundary_index, n-1);
-    partition_boundary_index
 }
