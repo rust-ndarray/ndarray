@@ -196,7 +196,7 @@ impl<A, S, D> ArrayBase<S, D>
 /// where n is the number of elements in `a`.
 ///
 /// **Panics** if `i` is greater than or equal to n.
-fn ith_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
+fn ith_mut<A>(mut a: ArrayViewMut1<A>, i: usize) -> A
     where A: Ord + Clone
 {
     let n = a.len();
@@ -237,7 +237,7 @@ fn random_pivot(n: usize) -> usize
 /// Complexity: O(n), where n is the number of elements in `a`.
 ///
 /// **Panics** if `partition_index` is greater than or equal to n.
-fn partition_mut<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>, partition_index: usize) -> usize
+fn partition_mut<A>(a: &mut ArrayViewMut1<A>, partition_index: usize) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
