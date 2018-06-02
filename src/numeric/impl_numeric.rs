@@ -151,7 +151,7 @@ impl<A, S, D> ArrayBase<S, D>
         assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
         let i = ((n as f32) * q).ceil() as usize;
-        let mapping = |x| randomized_select(x, i);
+        let mapping = |x| nth_mut(x, i);
         let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
         azip!(mut lane (self.lanes_mut(axis)), mut out in {
             *out = mapping(lane);
@@ -182,39 +182,37 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-fn randomized_select<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
+fn nth_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
     where A: Ord + Clone
 {
     let n = a.len();
     if n == 1 {
         (&a[0]).clone()
     } else {
-        let q = randomized_partition(&mut a.view_mut());
+        let pivot_index = random_pivot(n);
+        let q = partition(&mut a.view_mut(), pivot_index);
         let k = q + 1;
         if i == k {
             (&a[q]).clone()
         } else if i < k {
-            randomized_select(a.slice_mut(s![0..q]), i)
+            nth_mut(a.slice_mut(s![0..q]), i)
         } else {
-            randomized_select(a.slice_mut(s![(q+1)..n]), i - k)
+            nth_mut(a.slice_mut(s![(q+1)..n]), i - k)
         }
     }
 }
 
-fn randomized_partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>) -> usize
-    where A: Ord + Clone
+fn random_pivot(n: usize) -> usize
 {
-    let n = a.len();
     let mut rng = thread_rng();
-    let i: usize = rng.gen_range(0, n);
-    a.swap(i, n-1);
-    partition(a)
+    rng.gen_range(0, n)
 }
 
-fn partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>) -> usize
+fn partition<A>(a: &mut ArrayViewMut<A, Dim<[Ix; 1]>>, pivot_index: usize) -> usize
     where A: Ord + Clone
 {
     let n = a.len();
+    a.swap(pivot_index, n-1);
     let x = (&a[n-1]).clone();
     let mut i = 0;
     for j in 0..n-1 {
