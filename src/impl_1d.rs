@@ -27,8 +27,8 @@ impl<A, S> ArrayBase<S, Ix1>
         }
     }
 
-    /// Return the `i`-th element of the array if it were to be a 1-dimensional
-    /// array sorted in increasing order.
+    /// Return the element that would occupy the `i`-th position if the array
+    /// were sorted in increasing order.
     ///
     /// The array is shuffled **in place** to retrieve the desired element:
     /// no copy of the array is allocated.
@@ -36,11 +36,11 @@ impl<A, S> ArrayBase<S, Ix1>
     /// after this computation.
     ///
     /// Complexity ([quickselect](https://en.wikipedia.org/wiki/Quickselect)):
-    /// - average case: O(n);
-    /// - worst case: O(n^2);
+    /// - average case: O(`n`);
+    /// - worst case: O(`n`^2);
     /// where n is the number of elements in the array.
     ///
-    /// **Panics** if `i` is greater than or equal to n.
+    /// **Panics** if `i` is greater than or equal to `n`.
     pub fn ith_mut(&mut self, i: usize) -> A
         where A: Ord + Clone,
               S: DataMut,
@@ -61,7 +61,7 @@ impl<A, S> ArrayBase<S, Ix1>
         }
     }
 
-    /// Return the index of `self[partition_index`]` if `self` were to be sorted
+    /// Return the index of `self[partition_index]` if `self` were to be sorted
     /// in increasing order.
     /// `self` elements are rearranged in such a way that `self[partition_index]`
     /// is in the position it would be in an array sorted in increasing order.
@@ -73,9 +73,9 @@ impl<A, S> ArrayBase<S, Ix1>
     /// `self` is shuffled **in place** to operate the desired partition:
     /// no copy of the array is allocated.
     ///
-    /// Complexity: O(n), where n is the number of elements in the array.
+    /// Complexity: O(`n`), where `n` is the number of elements in the array.
     ///
-    /// **Panics** if `partition_index` is greater than or equal to n.
+    /// **Panics** if `partition_index` is greater than or equal to `n`.
     pub fn partition_mut(&mut self, partition_index: usize) -> usize
         where A: Ord + Clone,
               S: DataMut

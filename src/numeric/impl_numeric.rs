@@ -117,7 +117,7 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return the qth percentile of the data along the specified axis.
     /// `q` needs to be a float between 0 and 1, bounds included.
-    /// The qth percentile for a 1-dimensional lane of length N is defined
+    /// The qth percentile for a 1-dimensional lane of length `N` is defined
     /// as the element that would be indexed as `Nq` if the lane were to be sorted
     /// in increasing order. If `Nq` is not an integer the desired percentile
     /// lies between two data points: we always return the smaller data point.
@@ -136,9 +136,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// after this computation.
     ///
     /// Complexity ([quickselect](https://en.wikipedia.org/wiki/Quickselect)):
-    /// - average case: O(m);
-    /// - worst case: O(m^2);
-    /// where m is the number of elements in the array.
+    /// - average case: O(`m`);
+    /// - worst case: O(`m`^2);
+    /// where `m` is the number of elements in the array.
     ///
     /// **Panics** if `axis` is out of bounds, if `q` is strictly smaller
     /// than 0 or strictly bigger than 1.
