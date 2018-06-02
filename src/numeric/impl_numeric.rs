@@ -248,11 +248,11 @@ fn test_partition() {
 fn test_randomized_select() {
     let a = arr1(&[1, 3, 2, 10]);
     let j = randomized_select(a.clone().view_mut(), 2);
-    assert_eq!(j, 2);
-    let j = randomized_select(a.clone().view_mut(), 1);
-    assert_eq!(j, 1);
-    let j = randomized_select(a.clone().view_mut(), 3);
     assert_eq!(j, 3);
+    let j = randomized_select(a.clone().view_mut(), 1);
+    assert_eq!(j, 2);
+    let j = randomized_select(a.clone().view_mut(), 3);
+    assert_eq!(j, 10);
 }
 
 #[test]
