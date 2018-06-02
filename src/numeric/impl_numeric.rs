@@ -273,13 +273,13 @@ fn test_partition_mut() {
 }
 
 #[test]
-fn test_randomized_select() {
+fn test_ith_mut() {
     let a = arr1(&[1, 3, 2, 10]);
-    let j = randomized_select(a.clone().view_mut(), 2);
+    let j = ith_mut(a.clone().view_mut(), 2);
     assert_eq!(j, 3);
-    let j = randomized_select(a.clone().view_mut(), 1);
+    let j = ith_mut(a.clone().view_mut(), 1);
     assert_eq!(j, 2);
-    let j = randomized_select(a.clone().view_mut(), 3);
+    let j = ith_mut(a.clone().view_mut(), 3);
     assert_eq!(j, 10);
 }
 
