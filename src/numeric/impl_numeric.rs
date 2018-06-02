@@ -151,7 +151,7 @@ impl<A, S, D> ArrayBase<S, D>
         assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
         let i = ((n as f32) * q).ceil() as usize;
-        let mapping = |x| nth_mut(x, i);
+        let mapping = |x| ith_mut(x, i);
         let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
         azip!(mut lane (self.lanes_mut(axis)), mut out in {
             *out = mapping(lane);
@@ -182,7 +182,21 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-fn nth_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
+/// Return the `i`-th element of `a` if `a` were to be a 1-dimensional
+/// array sorted in increasing order.
+///
+/// `a` is shuffled **in place** to retrieve the desired element:
+/// no copy of the array is allocated.
+/// No assumptions should be made on the ordering of `a` elements
+/// after this computation.
+///
+/// Complexity:
+/// - average case: O(n);
+/// - worst case: O(n^2);
+/// where n is the number of elements in `a`.
+///
+/// **Panics** if `i` is greater than or equal to n.
+fn ith_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
     where A: Ord + Clone
 {
     let n = a.len();
@@ -195,9 +209,9 @@ fn nth_mut<A>(mut a: ArrayViewMut<A, Dim<[Ix; 1]>>, i: usize) -> A
         if i == k {
             (&a[q]).clone()
         } else if i < k {
-            nth_mut(a.slice_mut(s![0..q]), i)
+            ith_mut(a.slice_mut(s![0..q]), i)
         } else {
-            nth_mut(a.slice_mut(s![(q+1)..n]), i - k)
+            ith_mut(a.slice_mut(s![(q+1)..n]), i - k)
         }
     }
 }
