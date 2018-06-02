@@ -205,13 +205,12 @@ fn ith_mut<A>(mut a: ArrayViewMut1<A>, i: usize) -> A
     } else {
         let pivot_index = random_pivot(n);
         let partition_index = partition_mut(&mut a.view_mut(), pivot_index);
-        let k = partition_index + 1;
-        if i == k {
+        if i == partition_index {
             (&a[partition_index]).clone()
-        } else if i < k {
+        } else if i < partition_index {
             ith_mut(a.slice_mut(s![0..partition_index]), i)
         } else {
-            ith_mut(a.slice_mut(s![(partition_index+1)..n]), i - k)
+            ith_mut(a.slice_mut(s![(partition_index+1)..n]), i - partition_index - 1)
         }
     }
 }
