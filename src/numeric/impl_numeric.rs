@@ -130,7 +130,7 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// The array is shuffled **in place** along each 1-dimensional lane in
     /// order to produce the required percentile without allocating a copy
-    /// of the original array. Each 1-dimensional lane is shuffled indipendently
+    /// of the original array. Each 1-dimensional lane is shuffled independently
     /// from the others.
     /// No assumptions should be made on the ordering of the array elements
     /// after this computation.
