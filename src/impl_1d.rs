@@ -47,12 +47,12 @@ impl<A, S> ArrayBase<S, Ix1>
     {
         let n = self.len();
         if n == 1 {
-            (&self[0]).clone()
+            self[0].clone()
         } else {
             let pivot_index = random_pivot(n);
             let partition_index = self.view_mut().partition_mut(pivot_index);
             if i == partition_index {
-                (&self[partition_index]).clone()
+                self[partition_index].clone()
             } else if i < partition_index {
                 self.slice_mut(s![0..partition_index]).ith_mut(i)
             } else {
@@ -81,7 +81,7 @@ impl<A, S> ArrayBase<S, Ix1>
               S: DataMut
     {
         let n = self.len();
-        let partition_value = (&self[partition_index]).clone();
+        let partition_value = self[partition_index].clone();
         self.swap(partition_index, n-1);
         let mut partition_boundary_index = 0;
         for j in 0..n-1 {
