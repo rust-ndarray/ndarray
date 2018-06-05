@@ -50,7 +50,7 @@ impl<A, S> ArrayBase<S, Ix1>
             self[0].clone()
         } else {
             let pivot_index = random_pivot(n);
-            let partition_index = self.view_mut().partition_mut(pivot_index);
+            let partition_index = self.partition_mut(pivot_index);
             if i == partition_index {
                 self[partition_index].clone()
             } else if i < partition_index {
