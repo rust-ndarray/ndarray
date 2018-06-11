@@ -50,11 +50,9 @@ impl<A, S> ArrayBase<S, Ix1>
             self[0].clone()
         } else {
             let pivot_index = random_pivot(n);
-            let partition_index = self.partition_mut(pivot_index);
-            if i == partition_index {
-                self[partition_index].clone()
-            } else if i < partition_index {
-                self.slice_mut(s![0..partition_index]).ith_mut(i)
+            let partition_index = self.hoare_partition_mut(pivot_index);
+            if i <= partition_index {
+                self.slice_mut(s![0..partition_index+1]).ith_mut(i)
             } else {
                 self.slice_mut(s![(partition_index+1)..n]).ith_mut(i - partition_index - 1)
             }
@@ -73,7 +71,10 @@ impl<A, S> ArrayBase<S, Ix1>
     /// `self` is shuffled **in place** to operate the desired partition:
     /// no copy of the array is allocated.
     ///
+    /// The method uses Lomuto's partition algorithm.
     /// Complexity: O(`n`), where `n` is the number of elements in the array.
+    /// Average number of element swaps: (n - 1)/2 (see
+    /// (link)[https://cs.stackexchange.com/questions/11458/quicksort-partitioning-hoare-vs-lomuto/11550])
     ///
     /// **Panics** if `partition_index` is greater than or equal to `n`.
     pub fn partition_mut(&mut self, partition_index: usize) -> usize
@@ -92,6 +93,48 @@ impl<A, S> ArrayBase<S, Ix1>
         }
         self.swap(partition_boundary_index, n-1);
         partition_boundary_index
+    }
+
+    /// Return a `partition_index`.
+    /// `self` elements are rearranged in such a way that all elements
+    /// in `self[..partition_index]` are smaller than or equal to all elements
+    /// in `self[(partition_index+1)..]`.
+    /// The ordering of the elements in the two partitions is undefined.
+    ///
+    /// `self` is shuffled **in place** to operate the desired partition:
+    /// no copy of the array is allocated.
+    ///
+    /// The method uses Hoare's partition algorithm.
+    /// Complexity: O(`n`), where `n` is the number of elements in the array.
+    /// Average number of element swaps: n/6 - 1/3 (see
+    /// (link)[https://cs.stackexchange.com/questions/11458/quicksort-partitioning-hoare-vs-lomuto/11550])
+    ///
+    /// **Panics** if `partition_index` is greater than or equal to `n`.
+    fn hoare_partition_mut(&mut self, partition_index: usize) -> usize
+        where A: Ord + Clone,
+              S: DataMut
+    {
+        let partition_value = self[partition_index].clone();
+        self.swap(partition_index, 0);
+
+        let mut i: isize = -1;
+        let mut j: isize = self.len() as isize;
+        loop {
+            loop {
+                i += 1;
+                if self[i as usize] >= partition_value { break }
+            }
+            loop {
+                j -= 1;
+                if self[j as usize] <= partition_value { break }
+            }
+            if i >= j {
+                break
+            } else {
+                self.swap(i as usize, j as usize);
+            }
+        }
+        j as usize
     }
 }
 
