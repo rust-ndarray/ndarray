@@ -143,3 +143,24 @@ fn random_pivot(n: usize) -> usize
     let mut rng = thread_rng();
     rng.gen_range(0, n)
 }
+
+#[test]
+fn test_hoare_partition_mut() {
+    let mut l = vec!(
+        arr1(&[1, 3, 2, 10, 10]),
+        arr1(&[355, 453, 452, 391, 289, 343,  44, 154, 271,  44, 314, 276, 160,
+               469, 191, 138, 163, 308, 395,   3, 416, 391, 210, 354, 200]),
+        arr1(&[ 84, 192, 216, 159,  89, 296,  35, 213, 456, 278,  98,  52, 308,
+               418, 329, 173, 286, 106, 366, 129, 125, 450,  23, 463, 151]),
+    );
+
+    for a in l.iter_mut() {
+        let n = a.len();
+        let partition_index = a.partition_mut(n-1);
+        for i in 0..partition_index+1 {
+            for j in (partition_index+1)..n {
+                assert!(a[i] <= a[j]);
+            }
+        }
+    }
+}
