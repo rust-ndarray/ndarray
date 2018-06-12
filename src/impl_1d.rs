@@ -96,9 +96,11 @@ impl<A, S> ArrayBase<S, Ix1>
     }
 
     /// Return a `partition_index`.
-    /// `self` elements are rearranged in such a way that all elements
-    /// in `self[..partition_index]` are smaller than or equal to all elements
-    /// in `self[(partition_index+1)..]`.
+    /// Let `pivot_value=self[pivot_index]` before the function body is executed.
+    /// Then `self` elements are rearranged in such a way that all elements
+    /// in `self[..partition_index]` are smaller than or equal to `pivot_value`
+    /// while all elements in `self[(partition_index+1)..]` are greater than
+    /// or equal to `pivot_value`.
     /// The ordering of the elements in the two partitions is undefined.
     ///
     /// `self` is shuffled **in place** to operate the desired partition:
@@ -110,23 +112,23 @@ impl<A, S> ArrayBase<S, Ix1>
     /// (link)[https://cs.stackexchange.com/questions/11458/quicksort-partitioning-hoare-vs-lomuto/11550])
     ///
     /// **Panics** if `partition_index` is greater than or equal to `n`.
-    fn hoare_partition_mut(&mut self, partition_index: usize) -> usize
+    fn hoare_partition_mut(&mut self, pivot_index: usize) -> usize
         where A: Ord + Clone,
               S: DataMut
     {
-        let partition_value = self[partition_index].clone();
-        self.swap(partition_index, 0);
+        let pivot_value = self[pivot_index].clone();
+        self.swap(pivot_index, 0);
 
         let mut i: isize = -1;
         let mut j: isize = self.len() as isize;
         loop {
             loop {
                 i += 1;
-                if self[i as usize] >= partition_value { break }
+                if self[i as usize] >= pivot_value { break }
             }
             loop {
                 j -= 1;
-                if self[j as usize] <= partition_value { break }
+                if self[j as usize] <= pivot_value { break }
             }
             if i >= j {
                 break
@@ -156,11 +158,14 @@ fn test_hoare_partition_mut() {
 
     for a in l.iter_mut() {
         let n = a.len();
-        let partition_index = a.partition_mut(n-1);
+        let pivot_index = n-1;
+        let pivot_value = a[pivot_index].clone();
+        let partition_index = a.partition_mut(pivot_index);
         for i in 0..partition_index+1 {
-            for j in (partition_index+1)..n {
-                assert!(a[i] <= a[j]);
-            }
+            assert!(a[i] <= pivot_value);
+        }
+        for j in (partition_index+1)..n {
+            assert!(pivot_value <= a[j]);
         }
     }
 }
