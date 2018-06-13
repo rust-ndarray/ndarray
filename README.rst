@@ -90,8 +90,12 @@ Recent Changes (ndarray)
 
 - 0.12.0 (not yet released)
 
+  - Add ``var_axis`` method for computing variance by @LukeMathWalker.
   - Add support for 128-bit integer scalars (``i128`` and ``u128``).
-  - Minimum required Rust version is 1.26.
+  - Bump ``num-traits`` and ``num-complex`` to version ``0.2``.
+  - Bump ``blas-src`` to version ``0.2``.
+  - Bump minimum required Rust version to 1.26.
+  - Additional contributors to this release: @ExpHP, @jturner314, @alexbool, @messense, @danmack, @nbro
 
 - 0.11.2
 
