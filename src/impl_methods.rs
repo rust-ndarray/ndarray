@@ -1706,8 +1706,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               S: DataMut
     {
         let dim = self.dim.clone();
-        let strides = self.strides.clone();
         if self.is_contiguous() {
+            let strides = self.strides.clone();
             let slc = self.as_slice_memory_order_mut().unwrap();
             let v = ::iterators::to_vec_mapped(slc.iter_mut(), f);
             unsafe {
