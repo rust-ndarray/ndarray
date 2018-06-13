@@ -1701,7 +1701,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// Return an array with the same shape as `self`.
     pub fn map_mut<'a, B, F>(&'a mut self, f: F) -> Array<B, D>
-        where F: FnMut(&mut A) -> B,
+        where F: FnMut(&'a mut A) -> B,
               A: 'a,
               S: DataMut
     {
