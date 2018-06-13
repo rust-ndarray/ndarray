@@ -718,7 +718,7 @@ macro_rules! outer_iter_split_at_impl {
             {
                 assert!(index <= self.iter.len);
                 let right_ptr = if index != self.iter.len {
-                    unsafe { self.iter.offset(index) }
+                    unsafe { self.iter.offset(index) } 
                 }
                 else {
                     self.iter.ptr
