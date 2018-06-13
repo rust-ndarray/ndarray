@@ -14,7 +14,7 @@ const SHARPEN: [[f32; 3]; 3] = [[0., -1., 0.], [ -1., 5., -1.], [0., -1., 0.]];
 type Kernel3x3<A> = [[A; 3]; 3];
 
 #[inline(never)]
-fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3<F>) 
+fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3<F>)
     where F: Float,
 {
     let (n, m) = a.dim();

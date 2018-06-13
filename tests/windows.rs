@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 use ndarray::Zip;
 
 // Edge Cases for Windows iterator:
-// 
+//
 // - window size is 0
 //     - what is the behaviour of the standard for this situation?
 //       "Panics if size is 0."

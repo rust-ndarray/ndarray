@@ -892,7 +892,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
-    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
+    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D>
         where E: IntoDimension<Dim=D>,
     {
         exact_chunks_of(self.view(), chunk_size)
@@ -930,7 +930,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///          [6, 6, 7, 7, 8, 8, 0],
     ///          [6, 6, 7, 7, 8, 8, 0]]));
     /// ```
-    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
+    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D>
         where E: IntoDimension<Dim=D>,
               S: DataMut
     {
@@ -941,13 +941,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
-    /// 
+    ///
     /// Will yield over no elements if window size is larger
     /// than the actual array size of any dimension.
     ///
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.
-    /// 
+    ///
     /// **Panics** if any dimension of `window_size` is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
     /// number of array axes.)
