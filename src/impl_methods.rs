@@ -1862,7 +1862,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         -> Array<B, D::Smaller>
         where D: RemoveAxis,
               F: FnMut(ArrayViewMut1<'a, A>) -> B,
-              A: 'a + Clone,
+              A: 'a,
               S: DataMut,
     {
         let view_len = self.len_of(axis);
