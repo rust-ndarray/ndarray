@@ -39,6 +39,8 @@ impl ScalarOperand for i32 { }
 impl ScalarOperand for u32 { }
 impl ScalarOperand for i64 { }
 impl ScalarOperand for u64 { }
+impl ScalarOperand for i128 { }
+impl ScalarOperand for u128 { }
 impl ScalarOperand for isize { }
 impl ScalarOperand for usize { }
 impl ScalarOperand for f32 { }
@@ -250,6 +252,8 @@ mod arithmetic_ops {
     all_scalar_ops!(u32);
     all_scalar_ops!(i64);
     all_scalar_ops!(u64);
+    all_scalar_ops!(i128);
+    all_scalar_ops!(u128);
 
     impl_scalar_lhs_op!(bool, Commute, &, BitAnd, bitand, "bit and");
     impl_scalar_lhs_op!(bool, Commute, |, BitOr, bitor, "bit or");
