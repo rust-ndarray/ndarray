@@ -260,7 +260,7 @@ fn mat_mul() {
 }
 
 // Check that matrix multiplication of contiguous matrices returns a
-// matrix with the same order 
+// matrix with the same order
 #[test]
 fn mat_mul_order() {
     let (m, n, k) = (8, 8, 8);

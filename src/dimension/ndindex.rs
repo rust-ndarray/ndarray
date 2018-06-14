@@ -57,7 +57,7 @@ unsafe impl NdIndex<Ix2> for (Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix2) -> isize {
-        stride_offset(self.0, get!(strides, 0)) + 
+        stride_offset(self.0, get!(strides, 0)) +
         stride_offset(self.1, get!(strides, 1))
     }
 }
@@ -69,7 +69,7 @@ unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
 
     #[inline]
     fn index_unchecked(&self, strides: &Ix3) -> isize {
-        stride_offset(self.0, get!(strides, 0)) + 
+        stride_offset(self.0, get!(strides, 0)) +
         stride_offset(self.1, get!(strides, 1)) +
         stride_offset(self.2, get!(strides, 2))
     }
@@ -133,7 +133,7 @@ macro_rules! ndindex_with_array {
             #[inline]
             fn index_unchecked(&self, _strides: &$ix_n) -> isize {
                 $(
-                stride_offset(self[$index], get!(_strides, $index)) + 
+                stride_offset(self[$index], get!(_strides, $index)) +
                 )*
                 0
             }
@@ -155,7 +155,7 @@ macro_rules! ndindex_with_array {
                               "Attempted to index with {:?} in array with {} axes",
                               self, strides.ndim());
                 $(
-                stride_offset(get!(self, $index), get!(strides, $index)) + 
+                stride_offset(get!(self, $index), get!(strides, $index)) +
                 )*
                 0
             }
@@ -177,7 +177,7 @@ macro_rules! ndindex_with_array {
                               "Attempted to index with {:?} in array with {} axes",
                               self, strides.ndim());
                 $(
-                stride_offset(self[$index], get!(strides, $index)) + 
+                stride_offset(self[$index], get!(strides, $index)) +
                 )*
                 0
             }

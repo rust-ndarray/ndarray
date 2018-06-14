@@ -755,21 +755,21 @@ mod blas_tests {
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(!blas_column_major_2d::<f32, _>(&m));
     }
-    
+
     #[test]
     fn blas_row_major_2d_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
-    
+
     #[test]
     fn blas_row_major_2d_column_matrix() {
         let m: Array2<f32> = Array2::zeros((5, 1));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
-    
+
     #[test]
     fn blas_row_major_2d_transposed_row_matrix() {
         let m: Array2<f32> = Array2::zeros((1, 5));
@@ -777,7 +777,7 @@ mod blas_tests {
         assert!(blas_row_major_2d::<f32, _>(&m_t));
         assert!(blas_column_major_2d::<f32, _>(&m_t));
     }
-    
+
     #[test]
     fn blas_row_major_2d_transposed_column_matrix() {
         let m: Array2<f32> = Array2::zeros((5, 1));

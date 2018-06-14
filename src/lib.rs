@@ -340,7 +340,7 @@ pub type Ixs = isize;
 /// A *column major* (a.k.a. “f” or fortran) memory order array has
 /// columns (or, in general, the outermost axis) with contiguous elements.
 ///
-/// The logical order of any array’s elements is the row major order 
+/// The logical order of any array’s elements is the row major order
 /// (the rightmost index is varying the fastest).
 /// The iterators `.iter(), .iter_mut()` always adhere to this order, for example.
 ///
@@ -367,7 +367,7 @@ pub type Ixs = isize;
 ///
 /// These are the element iterators of arrays and they produce an element
 /// sequence in the logical order of the array, that means that the elements
-/// will be visited in the sequence that corresponds to increasing the 
+/// will be visited in the sequence that corresponds to increasing the
 /// last index first: *0, ..., 0,  0*; *0, ..., 0, 1*; *0, ...0, 2* and so on.
 ///
 /// ### `.outer_iter()` and `.axis_iter()`
@@ -684,7 +684,7 @@ pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 /// `Sync` (when allowed by the element type of the array too).
 ///
 /// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
-/// arrays and the views; see its docs for an overview of all array features.  
+/// arrays and the views; see its docs for an overview of all array features.
 ///
 /// See also:
 ///
@@ -701,7 +701,7 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// the dimensionality.
 ///
 /// [**`ArrayBase`**](struct.ArrayBase.html) is used to implement both the owned
-/// arrays and the views; see its docs for an overview of all array features.  
+/// arrays and the views; see its docs for an overview of all array features.
 ///
 /// See also:
 ///
