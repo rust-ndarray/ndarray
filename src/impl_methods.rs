@@ -1694,6 +1694,34 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Call `f` on a mutable reference of each element and create a new array
+    /// with the new values.
+    ///
+    /// Elements are visited in arbitrary order.
+    ///
+    /// Return an array with the same shape as `self`.
+    pub fn map_mut<'a, B, F>(&'a mut self, f: F) -> Array<B, D>
+        where F: FnMut(&'a mut A) -> B,
+              A: 'a,
+              S: DataMut
+    {
+        let dim = self.dim.clone();
+        if self.is_contiguous() {
+            let strides = self.strides.clone();
+            let slc = self.as_slice_memory_order_mut().unwrap();
+            let v = ::iterators::to_vec_mapped(slc.iter_mut(), f);
+            unsafe {
+                ArrayBase::from_shape_vec_unchecked(
+                    dim.strides(strides), v)
+            }
+        } else {
+            let v = ::iterators::to_vec_mapped(self.iter_mut(), f);
+            unsafe {
+                ArrayBase::from_shape_vec_unchecked(dim, v)
+            }
+        }
+    }
+
     /// Call `f` by **v**alue on each element and create a new array
     /// with the new values.
     ///
@@ -1816,6 +1844,34 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.subview(axis, 0).map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
+            }
+        })
+    }
+
+    /// Reduce the values along an axis into just one value, producing a new
+    /// array with one less dimension.
+    /// 1-dimensional lanes are passed as mutable references to the reducer,
+    /// allowing for side-effects.
+    ///
+    /// Elements are visited in arbitrary order.
+    ///
+    /// Return the result as an `Array`.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn map_axis_mut<'a, B, F>(&'a mut self, axis: Axis, mut mapping: F)
+        -> Array<B, D::Smaller>
+        where D: RemoveAxis,
+              F: FnMut(ArrayViewMut1<'a, A>) -> B,
+              A: 'a,
+              S: DataMut,
+    {
+        let view_len = self.len_of(axis);
+        let view_stride = self.strides.axis(axis);
+        // use the 0th subview as a map to each 1d array view extended from
+        // the 0th element.
+        self.subview_mut(axis, 0).map_mut(|first_elt: &mut A| {
+            unsafe {
+                mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
     }
