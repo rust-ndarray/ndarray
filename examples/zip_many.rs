@@ -24,7 +24,7 @@ fn main() {
 
     azip!(mut a, b, c in { *a = b + c; });
     assert_eq!(a, &b + &c);
-    
+
     // sum of each row
     let ax = Axis(0);
     let mut sums = Array::zeros(a.len_of(ax));

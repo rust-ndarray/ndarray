@@ -37,7 +37,7 @@ pub unsafe trait Data : Sized {
 /// Array representation trait.
 ///
 /// For an array with writable elements.
-/// 
+///
 /// ***Internal trait, see `Data`.***
 pub unsafe trait DataMut : Data {
     #[doc(hidden)]

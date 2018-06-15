@@ -178,7 +178,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
 
     #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride { 0 }
-    
+
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         let start_a = self.start;

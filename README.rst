@@ -81,12 +81,21 @@ provider::
 
     [dependencies]
     ndarray = { version = "0.11.0", features = ["blas"] }
-    blas-src = { version = "0.1.2", default-features = false, features = ["openblas"] }
-    openblas-src = { version = "0.5.6", default-features = false, features = ["cblas", "system"] }
+    blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
+    openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
 
 
 Recent Changes (ndarray)
 ------------------------
+
+- 0.12.0 (not yet released)
+
+  - Add ``var_axis`` method for computing variance by @LukeMathWalker.
+  - Add support for 128-bit integer scalars (``i128`` and ``u128``).
+  - Bump ``num-traits`` and ``num-complex`` to version ``0.2``.
+  - Bump ``blas-src`` to version ``0.2``.
+  - Bump minimum required Rust version to 1.26.
+  - Additional contributors to this release: @ExpHP, @jturner314, @alexbool, @messense, @danmack, @nbro
 
 - 0.11.2
 

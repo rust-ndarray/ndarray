@@ -110,7 +110,7 @@ macro_rules! tuple_to_array {
                 index!(tuple_expr [self] $n)
             }
         }
-        
+
         impl IntoDimension for [Ix; $n] {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]

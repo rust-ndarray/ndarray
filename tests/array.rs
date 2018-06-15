@@ -690,6 +690,68 @@ fn sum_mean()
 }
 
 #[test]
+fn var_axis() {
+    let a = array![
+        [
+            [-9.76, -0.38, 1.59, 6.23],
+            [-8.57, -9.27, 5.76, 6.01],
+            [-9.54, 5.09, 3.21, 6.56],
+        ],
+        [
+            [ 8.23, -9.63, 3.76, -3.48],
+            [-5.46, 5.86, -2.81, 1.35],
+            [-1.08, 4.66, 8.34, -0.73],
+        ],
+    ];
+    assert!(a.var_axis(Axis(0), 1.5).all_close(
+        &aview2(&[
+            [3.236401e+02, 8.556250e+01, 4.708900e+00, 9.428410e+01],
+            [9.672100e+00, 2.289169e+02, 7.344490e+01, 2.171560e+01],
+            [7.157160e+01, 1.849000e-01, 2.631690e+01, 5.314410e+01]
+        ]),
+        1e-4,
+    ));
+    assert!(a.var_axis(Axis(1), 1.7).all_close(
+        &aview2(&[
+            [0.61676923, 80.81092308, 6.79892308, 0.11789744],
+            [75.19912821, 114.25235897, 48.32405128, 9.03020513],
+        ]),
+        1e-8,
+    ));
+    assert!(a.var_axis(Axis(2), 2.3).all_close(
+        &aview2(&[
+            [ 79.64552941, 129.09663235, 95.98929412],
+            [109.64952941, 43.28758824, 36.27439706],
+        ]),
+        1e-8,
+    ));
+
+    let b = array![[1.1, 2.3, 4.7]];
+    assert!(b.var_axis(Axis(0), 0.).all_close(&aview1(&[0., 0., 0.]), 1e-12));
+    assert!(b.var_axis(Axis(1), 0.).all_close(&aview1(&[2.24]), 1e-12));
+
+    let c = array![[], []];
+    assert_eq!(c.var_axis(Axis(0), 0.), aview1(&[]));
+
+    let d = array![1.1, 2.7, 3.5, 4.9];
+    assert!(d.var_axis(Axis(0), 0.).all_close(&aview0(&1.8875), 1e-12));
+}
+
+#[test]
+#[should_panic]
+fn var_axis_bad_dof() {
+    let a = array![1., 2., 3.];
+    a.var_axis(Axis(0), 4.);
+}
+
+#[test]
+#[should_panic]
+fn var_axis_empty_axis() {
+    let a = array![[], []];
+    a.var_axis(Axis(1), 0.);
+}
+
+#[test]
 fn iter_size_hint()
 {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);

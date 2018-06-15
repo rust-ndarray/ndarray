@@ -582,7 +582,7 @@ impl Dimension for Dim<[Ix; 2]> {
             Axis(1)
         }
     }
-    
+
     #[inline]
     fn first_index(&self) -> Option<Self> {
         let m = get!(self, 0);
