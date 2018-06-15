@@ -151,11 +151,7 @@ impl<A, S, D> ArrayBase<S, D>
         let n = self.len_of(axis);
         let i = ((n as f32) * q).ceil() as usize;
         let mapping = |mut x: ArrayViewMut1<A>| x.ith_mut(if i == 0 {0} else {i-1});
-        let mut out = Array::zeros(self.view().remove_axis(axis).raw_dim());
-        azip!(mut lane (self.lanes_mut(axis)), mut out in {
-            *out = mapping(lane);
-        });
-        out
+        self.map_axis_mut(axis, mapping)
     }
 
     /// Return variance along `axis`.
