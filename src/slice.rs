@@ -6,15 +6,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use error::{ShapeError, ErrorKind};
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeTo};
+use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use std::fmt;
 use std::marker::PhantomData;
 use super::Dimension;
 
 /// A slice (range with step size).
 ///
-/// Negative `begin` or `end` indexes are counted from the back of the axis. If
-/// `end` is `None`, the slice extends to the end of the axis.
+/// `end` is an exclusive index. Negative `begin` or `end` indexes are counted
+/// from the back of the axis. If `end` is `None`, the slice extends to the end
+/// of the axis.
 ///
 /// See also the [`s![]`](macro.s.html) macro.
 ///
@@ -79,6 +80,18 @@ macro_rules! impl_slice_from_index_type {
             }
         }
 
+        impl From<RangeInclusive<$index>> for Slice {
+            #[inline]
+            fn from(r: RangeInclusive<$index>) -> Slice {
+                let end = *r.end() as isize;
+                Slice {
+                    start: *r.start() as isize,
+                    end: if end == -1 { None } else { Some(end + 1) },
+                    step: 1,
+                }
+            }
+        }
+
         impl From<RangeFrom<$index>> for Slice {
             #[inline]
             fn from(r: RangeFrom<$index>) -> Slice {
@@ -100,7 +113,19 @@ macro_rules! impl_slice_from_index_type {
                 }
             }
         }
-    }
+
+        impl From<RangeToInclusive<$index>> for Slice {
+            #[inline]
+            fn from(r: RangeToInclusive<$index>) -> Slice {
+                let end = r.end as isize;
+                Slice {
+                    start: 0,
+                    end: if end == -1 { None } else { Some(end + 1) },
+                    step: 1,
+                }
+            }
+        }
+    };
 }
 
 impl_slice_from_index_type!(isize);
@@ -144,9 +169,9 @@ impl From<RangeFull> for Slice {
 /// The macro equivalent is `s![a..;-1]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceOrIndex {
-    /// A range with step size. Negative `begin` or `end` indexes are counted
-    /// from the back of the axis. If `end` is `None`, the slice extends to the
-    /// end of the axis.
+    /// A range with step size. `end` is an exclusive index. Negative `begin`
+    /// or `end` indexes are counted from the back of the axis. If `end` is
+    /// `None`, the slice extends to the end of the axis.
     Slice {
         start: isize,
         end: Option<isize>,
@@ -250,6 +275,18 @@ macro_rules! impl_sliceorindex_from_index_type {
             }
         }
 
+        impl From<RangeInclusive<$index>> for SliceOrIndex {
+            #[inline]
+            fn from(r: RangeInclusive<$index>) -> SliceOrIndex {
+                let end = *r.end() as isize;
+                SliceOrIndex::Slice {
+                    start: *r.start() as isize,
+                    end: if end == -1 { None } else { Some(end + 1) },
+                    step: 1,
+                }
+            }
+        }
+
         impl From<RangeFrom<$index>> for SliceOrIndex {
             #[inline]
             fn from(r: RangeFrom<$index>) -> SliceOrIndex {
@@ -271,7 +308,19 @@ macro_rules! impl_sliceorindex_from_index_type {
                 }
             }
         }
-    }
+
+        impl From<RangeToInclusive<$index>> for SliceOrIndex {
+            #[inline]
+            fn from(r: RangeToInclusive<$index>) -> SliceOrIndex {
+                let end = r.end as isize;
+                SliceOrIndex::Slice {
+                    start: 0,
+                    end: if end == -1 { None } else { Some(end + 1) },
+                    step: 1,
+                }
+            }
+        }
+    };
 }
 
 impl_sliceorindex_from_index_type!(isize);
@@ -453,6 +502,12 @@ impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for Range<T> {
     }
 }
 
+impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeInclusive<T> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
 impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeFrom<T> {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
         PhantomData
@@ -460,6 +515,12 @@ impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeFrom<T> {
 }
 
 impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeTo<T> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+        PhantomData
+    }
+}
+
+impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeToInclusive<T> {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
         PhantomData
     }
