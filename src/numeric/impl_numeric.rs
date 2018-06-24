@@ -19,6 +19,12 @@ use {
     Zip,
 };
 
+pub enum InterpolationStrategy {
+    Lower,
+    Nearest,
+    Highest,
+}
+
 /// Numerical methods for arrays.
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>,
@@ -142,15 +148,19 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds or if `q` is not between
     /// `0.` and `1.` (inclusive).
-    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f64) -> Array<A, D::Smaller>
+    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f64, interpolation_strategy: InterpolationStrategy) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
               S: DataMut,
     {
         assert!((0. <= q) && (q <= 1.));
-        let n = self.len_of(axis);
-        let i = (((n - 1) as f64) * q).floor() as usize;
-        self.map_axis_mut(axis, |mut x| x.sorted_get_mut(i))
+        let float_percentile_index = ((self.len_of(axis) - 1) as f64) * q;
+        let percentile_index = match interpolation_strategy {
+            InterpolationStrategy::Lower => float_percentile_index.floor() as usize,
+            InterpolationStrategy::Nearest => float_percentile_index.round() as usize,
+            InterpolationStrategy::Highest => float_percentile_index.ceil() as usize,
+        };
+        self.map_axis_mut(axis, |mut x| x.sorted_get_mut(percentile_index))
     }
 
     /// Return variance along `axis`.
