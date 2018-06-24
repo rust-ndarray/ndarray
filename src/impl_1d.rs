@@ -51,7 +51,7 @@ impl<A, S> ArrayBase<S, Ix1>
         } else {
             let mut rng = thread_rng();
             let pivot_index = rng.gen_range(0, n);
-            let partition_index = self.hoare_partition_mut(pivot_index);
+            let partition_index = self.partition_mut(pivot_index);
             if i < partition_index {
                 self.slice_mut(s![..partition_index]).ith_mut(i)
             } else if i == partition_index {
@@ -62,46 +62,11 @@ impl<A, S> ArrayBase<S, Ix1>
         }
     }
 
-    /// Return the index of `self[partition_index]` if `self` were to be sorted
-    /// in increasing order.
-    /// `self` elements are rearranged in such a way that `self[partition_index]`
-    /// is in the position it would be in an array sorted in increasing order.
-    /// All elements smaller than `self[partition_index]` are moved to its
-    /// left and all elements equal or greater than `self[partition_index]`
-    /// are moved to its right.
-    /// The ordering of the elements in the two partitions is undefined.
-    ///
-    /// `self` is shuffled **in place** to operate the desired partition:
-    /// no copy of the array is allocated.
-    ///
-    /// The method uses Lomuto's partition algorithm.
-    /// Complexity: O(`n`), where `n` is the number of elements in the array.
-    /// Average number of element swaps: (n - 1)/2 (see
-    /// (link)[https://cs.stackexchange.com/questions/11458/quicksort-partitioning-hoare-vs-lomuto/11550])
-    ///
-    /// **Panics** if `partition_index` is greater than or equal to `n`.
-    pub fn partition_mut(&mut self, partition_index: usize) -> usize
-        where A: Ord + Clone,
-              S: DataMut
-    {
-        let n = self.len();
-        let partition_value = self[partition_index].clone();
-        self.swap(partition_index, n-1);
-        let mut partition_boundary_index = 0;
-        for j in 0..n-1 {
-            if self[j] < partition_value {
-                self.swap(partition_boundary_index, j);
-                partition_boundary_index += 1;
-            }
-        }
-        self.swap(partition_boundary_index, n-1);
-        partition_boundary_index
-    }
-
     /// Return a `partition_index`.
+    ///
     /// Let `pivot_value=self[pivot_index]` before the function body is executed.
     /// Then `self` elements are rearranged in such a way that all elements
-    /// in `self[..partition_index]` are smaller than or equal to `pivot_value`
+    /// in `self[..partition_index]` are smaller than `pivot_value`
     /// while all elements in `self[(partition_index+1)..]` are greater than
     /// or equal to `pivot_value`.
     /// The ordering of the elements in the two partitions is undefined.
@@ -115,7 +80,7 @@ impl<A, S> ArrayBase<S, Ix1>
     /// (link)[https://cs.stackexchange.com/questions/11458/quicksort-partitioning-hoare-vs-lomuto/11550])
     ///
     /// **Panics** if `partition_index` is greater than or equal to `n`.
-    fn hoare_partition_mut(&mut self, pivot_index: usize) -> usize
+    fn partition_mut(&mut self, pivot_index: usize) -> usize
         where A: Ord + Clone,
               S: DataMut
     {
@@ -148,7 +113,7 @@ impl<A, S> ArrayBase<S, Ix1>
 }
 
 #[test]
-fn test_hoare_partition_mut() {
+fn test_partition_mut() {
     let mut l = vec!(
         arr1(&[1, 3, 2, 10, 10]),
         arr1(&[355, 453, 452, 391, 289, 343,  44, 154, 271,  44, 314, 276, 160,
