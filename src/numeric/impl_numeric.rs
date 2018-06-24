@@ -150,7 +150,7 @@ impl<A, S, D> ArrayBase<S, D>
         assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
         let i = (((n - 1) as f64) * q).floor() as usize;
-        self.map_axis_mut(axis, |mut x| x.ith_mut(i))
+        self.map_axis_mut(axis, |mut x| x.sorted_get_mut(i))
     }
 
     /// Return variance along `axis`.

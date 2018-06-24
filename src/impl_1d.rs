@@ -41,7 +41,7 @@ impl<A, S> ArrayBase<S, Ix1>
     /// where n is the number of elements in the array.
     ///
     /// **Panics** if `i` is greater than or equal to `n`.
-    pub fn ith_mut(&mut self, i: usize) -> A
+    pub fn sorted_get_mut(&mut self, i: usize) -> A
         where A: Ord + Clone,
               S: DataMut,
     {
@@ -53,11 +53,11 @@ impl<A, S> ArrayBase<S, Ix1>
             let pivot_index = rng.gen_range(0, n);
             let partition_index = self.partition_mut(pivot_index);
             if i < partition_index {
-                self.slice_mut(s![..partition_index]).ith_mut(i)
+                self.slice_mut(s![..partition_index]).sorted_get_mut(i)
             } else if i == partition_index {
                 self[i].clone()
             } else {
-                self.slice_mut(s![partition_index+1..]).ith_mut(i - (partition_index+1))
+                self.slice_mut(s![partition_index+1..]).sorted_get_mut(i - (partition_index+1))
             }
         }
     }

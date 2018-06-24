@@ -1731,13 +1731,13 @@ fn test_partition_mut() {
 }
 
 #[test]
-fn test_ith_mut() {
+fn test_sorted_get_mut() {
     let a = arr1(&[1, 3, 2, 10]);
-    let j = a.clone().view_mut().ith_mut(2);
+    let j = a.clone().view_mut().sorted_get_mut(2);
     assert_eq!(j, 3);
-    let j = a.clone().view_mut().ith_mut(1);
+    let j = a.clone().view_mut().sorted_get_mut(1);
     assert_eq!(j, 2);
-    let j = a.clone().view_mut().ith_mut(3);
+    let j = a.clone().view_mut().sorted_get_mut(3);
     assert_eq!(j, 10);
 }
 
