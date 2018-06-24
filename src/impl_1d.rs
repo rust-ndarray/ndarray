@@ -49,12 +49,15 @@ impl<A, S> ArrayBase<S, Ix1>
         if n == 1 {
             self[0].clone()
         } else {
-            let pivot_index = random_pivot(n);
+            let mut rng = thread_rng();
+            let pivot_index = rng.gen_range(0, n);
             let partition_index = self.hoare_partition_mut(pivot_index);
-            if i <= partition_index {
-                self.slice_mut(s![0..partition_index+1]).ith_mut(i)
+            if i < partition_index {
+                self.slice_mut(s![..partition_index]).ith_mut(i)
+            } else if i == partition_index {
+                self[i].clone()
             } else {
-                self.slice_mut(s![(partition_index+1)..n]).ith_mut(i - partition_index - 1)
+                self.slice_mut(s![partition_index+1..]).ith_mut(i - (partition_index+1))
             }
         }
     }
@@ -138,12 +141,6 @@ impl<A, S> ArrayBase<S, Ix1>
         }
         j as usize
     }
-}
-
-fn random_pivot(n: usize) -> usize
-{
-    let mut rng = thread_rng();
-    rng.gen_range(0, n)
 }
 
 #[test]
