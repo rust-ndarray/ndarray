@@ -98,6 +98,7 @@ impl<A, S> ArrayBase<S, Ix1>
                 i += 1;
             }
             while pivot_value <= self[j] {
+                if j == 1 { break }
                 j -= 1;
             }
             if i >= j {
