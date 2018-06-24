@@ -19,10 +19,13 @@ use {
     Zip,
 };
 
+/// Used to choose the interpolation strategy in [`percentile_axis_mut`].
+///
+/// [`percentile_axis_mut`]: struct.ArrayBase.html#method.percentile_axis_mut
 pub enum InterpolationStrategy {
     Lower,
     Nearest,
-    Highest,
+    Higher,
 }
 
 /// Numerical methods for arrays.
@@ -122,11 +125,14 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Return the qth percentile of the data along the specified axis.
+    ///
     /// `q` needs to be a float between 0 and 1, bounds included.
     /// The qth percentile for a 1-dimensional lane of length `N` is defined
-    /// as the element that would be indexed as `Nq` if the lane were to be sorted
-    /// in increasing order. If `Nq` is not an integer the desired percentile
-    /// lies between two data points: we always return the smaller data point.
+    /// as the element that would be indexed as `(N-1)q` if the lane were to be sorted
+    /// in increasing order.
+    /// If `(N-1)q` is not an integer the desired percentile lies between
+    /// two data points: we return the lower, nearest or higher datapoint depending
+    /// on `interpolation_strategy`.
     ///
     /// Some examples:
     /// - `q=0.` returns the minimum along each 1-dimensional lane;
@@ -158,7 +164,7 @@ impl<A, S, D> ArrayBase<S, D>
         let percentile_index = match interpolation_strategy {
             InterpolationStrategy::Lower => float_percentile_index.floor() as usize,
             InterpolationStrategy::Nearest => float_percentile_index.round() as usize,
-            InterpolationStrategy::Highest => float_percentile_index.ceil() as usize,
+            InterpolationStrategy::Higher => float_percentile_index.ceil() as usize,
         };
         self.map_axis_mut(axis, |mut x| x.sorted_get_mut(percentile_index))
     }
