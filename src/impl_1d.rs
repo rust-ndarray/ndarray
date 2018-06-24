@@ -62,13 +62,14 @@ impl<A, S> ArrayBase<S, Ix1>
         }
     }
 
-    /// Return a `partition_index`.
+    /// Return the index of `self[partition_index]` if `self` were to be sorted
+    /// in increasing order.
     ///
-    /// Let `pivot_value=self[pivot_index]` before the function body is executed.
-    /// Then `self` elements are rearranged in such a way that all elements
-    /// in `self[..partition_index]` are smaller than `pivot_value`
-    /// while all elements in `self[(partition_index+1)..]` are greater than
-    /// or equal to `pivot_value`.
+    /// `self` elements are rearranged in such a way that `self[partition_index]`
+    /// is in the position it would be in an array sorted in increasing order.
+    /// All elements smaller than `self[partition_index]` are moved to its
+    /// left and all elements equal or greater than `self[partition_index]`
+    /// are moved to its right.
     /// The ordering of the elements in the two partitions is undefined.
     ///
     /// `self` is shuffled **in place** to operate the desired partition:
