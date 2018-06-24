@@ -81,7 +81,7 @@ impl<A, S> ArrayBase<S, Ix1>
     /// (link)[https://cs.stackexchange.com/questions/11458/quicksort-partitioning-hoare-vs-lomuto/11550])
     ///
     /// **Panics** if `partition_index` is greater than or equal to `n`.
-    fn partition_mut(&mut self, pivot_index: usize) -> usize
+    pub fn partition_mut(&mut self, pivot_index: usize) -> usize
         where A: Ord + Clone,
               S: DataMut
     {
