@@ -142,15 +142,15 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds, if `q` is strictly smaller
     /// than 0 or strictly bigger than 1.
-    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f32) -> Array<A, D::Smaller>
+    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f64) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
               S: DataMut,
     {
         assert!((0. <= q) && (q <= 1.));
         let n = self.len_of(axis);
-        let i = ((n as f32) * q).ceil() as usize;
-        let mapping = |mut x: ArrayViewMut1<A>| x.ith_mut(if i == 0 {0} else {i-1});
+        let i = (((n - 1) as f64) * q).floor() as usize;
+        let mapping = |mut x: ArrayViewMut1<A>| x.ith_mut(i);
         self.map_axis_mut(axis, mapping)
     }
 
