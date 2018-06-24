@@ -140,8 +140,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// - worst case: O(`m`^2);
     /// where `m` is the number of elements in the array.
     ///
-    /// **Panics** if `axis` is out of bounds, if `q` is strictly smaller
-    /// than 0 or strictly bigger than 1.
+    /// **Panics** if `axis` is out of bounds or if `q` is not between
+    /// `0.` and `1.` (inclusive).
     pub fn percentile_axis_mut(&mut self, axis: Axis, q: f64) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
