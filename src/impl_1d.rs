@@ -122,24 +122,28 @@ impl<A, S> ArrayBase<S, Ix1>
         let pivot_value = self[pivot_index].clone();
         self.swap(pivot_index, 0);
 
-        let mut i: isize = -1;
-        let mut j: isize = self.len() as isize;
+        let n = self.len();
+        let mut i = 1;
+        let mut j = n - 1;
         loop {
             loop {
+                if i > j { break }
+                if self[i] >= pivot_value { break }
                 i += 1;
-                if self[i as usize] >= pivot_value { break }
             }
-            loop {
+            while pivot_value <= self[j] {
                 j -= 1;
-                if self[j as usize] <= pivot_value { break }
             }
             if i >= j {
                 break
             } else {
-                self.swap(i as usize, j as usize);
+                self.swap(i, j);
+                i += 1;
+                j -= 1;
             }
         }
-        j as usize
+        self.swap(0, i-1);
+        i-1
     }
 }
 
