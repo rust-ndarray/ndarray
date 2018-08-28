@@ -91,8 +91,11 @@ Recent Changes (ndarray)
 - 0.12.0 (not yet released)
 
   - Add ``var_axis`` method for computing variance by @LukeMathWalker.
+  - Add ``map_mut`` and ``map_axis_mut`` methods (mutable variants of ``map`` and ``map_axis``) by @LukeMathWalker.
   - Add support for 128-bit integer scalars (``i128`` and ``u128``).
   - Add support for slicing with inclusive ranges (``start..=end`` and ``..=end``).
+  - Relax constraint on closure from ``Fn`` to ``FnMut`` for ``mapv``, ``mapv_into``, ``map_inplace`` and ``mapv_inplace``.
+  - Implement ``TrustedIterator`` for ``IterMut``.
   - Bump ``num-traits`` and ``num-complex`` to version ``0.2``.
   - Bump ``blas-src`` to version ``0.2``.
   - Bump minimum required Rust version to 1.27.
