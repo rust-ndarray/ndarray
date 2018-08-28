@@ -6,35 +6,34 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use error::{ShapeError, ErrorKind};
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use std::ops::{Bound, Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use std::fmt;
 use std::marker::PhantomData;
 use super::Dimension;
 
 /// A slice (range with step size).
 ///
-/// `end` is an exclusive index. Negative `begin` or `end` indexes are counted
-/// from the back of the axis. If `end` is `None`, the slice extends to the end
-/// of the axis.
+/// Negative `begin` or `end` indexes are counted from the back of the axis. If
+/// `end` is `Unbounded`, the slice extends to the end of the axis.
 ///
 /// See also the [`s![]`](macro.s.html) macro.
 ///
 /// ## Examples
 ///
-/// `Slice::new(0, None, 1)` is the full range of an axis. It can also be
+/// `Slice::new(0, Unbounded, 1)` is the full range of an axis. It can also be
 /// created with `Slice::from(..)`. The Python equivalent is `[:]`.
 ///
 /// `Slice::new(a, b, 2)` is every second element from `a` until `b`. It can
 /// also be created with `Slice::from(a..b).step_by(2)`. The Python equivalent
 /// is `[a:b:2]`.
 ///
-/// `Slice::new(a, None, -1)` is every element, from `a` until the end, in
+/// `Slice::new(a, Unbounded, -1)` is every element, from `a` until the end, in
 /// reverse order. It can also be created with `Slice::from(a..).step_by(-1)`.
 /// The Python equivalent is `[a::-1]`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Slice {
     pub start: isize,
-    pub end: Option<isize>,
+    pub end: Bound<isize>,
     pub step: isize,
 }
 
@@ -46,7 +45,7 @@ impl Slice {
     ///
     /// `step` must be nonzero.
     /// (This method checks with a debug assertion that `step` is not zero.)
-    pub fn new(start: isize, end: Option<isize>, step: isize) -> Slice {
+    pub fn new(start: isize, end: Bound<isize>, step: isize) -> Slice {
         debug_assert_ne!(step, 0, "Slice::new: step must be nonzero");
         Slice {
             start,
@@ -78,27 +77,27 @@ impl Slice {
 /// `SliceOrIndex::from(a)`. The Python equivalent is `[a]`. The macro
 /// equivalent is `s![a]`.
 ///
-/// `SliceOrIndex::Slice { start: 0, end: None, step: 1 }` is the full range of
-/// an axis. It can also be created with `SliceOrIndex::from(..)`. The Python
-/// equivalent is `[:]`. The macro equivalent is `s![..]`.
+/// `SliceOrIndex::Slice { start: 0, end: Unbounded, step: 1 }` is the full
+/// range of an axis. It can also be created with `SliceOrIndex::from(..)`. The
+/// Python equivalent is `[:]`. The macro equivalent is `s![..]`.
 ///
-/// `SliceOrIndex::Slice { start: a, end: Some(b), step: 2 }` is every second
-/// element from `a` until `b`. It can also be created with
+/// `SliceOrIndex::Slice { start: a, end: Excluded(b), step: 2 }` is every
+/// second element from `a` until `b`. It can also be created with
 /// `SliceOrIndex::from(a..b).step_by(2)`. The Python equivalent is `[a:b:2]`.
 /// The macro equivalent is `s![a..b;2]`.
 ///
-/// `SliceOrIndex::Slice { start: a, end: None, step: -1 }` is every element,
-/// from `a` until the end, in reverse order. It can also be created with
-/// `SliceOrIndex::from(a..).step_by(-1)`. The Python equivalent is `[a::-1]`.
-/// The macro equivalent is `s![a..;-1]`.
+/// `SliceOrIndex::Slice { start: a, end: Unbounded, step: -1 }` is every
+/// element, from `a` until the end, in reverse order. It can also be created
+/// with `SliceOrIndex::from(a..).step_by(-1)`. The Python equivalent is
+/// `[a::-1]`. The macro equivalent is `s![a..;-1]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceOrIndex {
-    /// A range with step size. `end` is an exclusive index. Negative `begin`
-    /// or `end` indexes are counted from the back of the axis. If `end` is
-    /// `None`, the slice extends to the end of the axis.
+    /// A range with step size. Negative `begin` or `end` indexes are counted
+    /// from the back of the axis. If `end` is `Unbounded`, the slice extends
+    /// to the end of the axis.
     Slice {
         start: isize,
-        end: Option<isize>,
+        end: Bound<isize>,
         step: isize,
     },
     /// A single index.
@@ -155,9 +154,10 @@ impl fmt::Display for SliceOrIndex {
                 if start != 0 {
                     write!(f, "{}", start)?;
                 }
-                write!(f, "..")?;
-                if let Some(i) = end {
-                    write!(f, "{}", i)?;
+                match end {
+                    Bound::Included(i) => write!(f, "..={}", i)?,
+                    Bound::Excluded(i) => write!(f, "..{}", i)?,
+                    Bound::Unbounded => write!(f, "..")?,
                 }
                 if step != 1 {
                     write!(f, ";{}", step)?;
@@ -175,7 +175,7 @@ macro_rules! impl_slice_variant_from_range {
             fn from(r: Range<$index>) -> $self {
                 $constructor {
                     start: r.start as isize,
-                    end: Some(r.end as isize),
+                    end: Bound::Excluded(r.end as isize),
                     step: 1,
                 }
             }
@@ -184,10 +184,9 @@ macro_rules! impl_slice_variant_from_range {
         impl From<RangeInclusive<$index>> for $self {
             #[inline]
             fn from(r: RangeInclusive<$index>) -> $self {
-                let end = *r.end() as isize;
                 $constructor {
                     start: *r.start() as isize,
-                    end: if end == -1 { None } else { Some(end + 1) },
+                    end: Bound::Included(*r.end() as isize),
                     step: 1,
                 }
             }
@@ -198,7 +197,7 @@ macro_rules! impl_slice_variant_from_range {
             fn from(r: RangeFrom<$index>) -> $self {
                 $constructor {
                     start: r.start as isize,
-                    end: None,
+                    end: Bound::Unbounded,
                     step: 1,
                 }
             }
@@ -209,7 +208,7 @@ macro_rules! impl_slice_variant_from_range {
             fn from(r: RangeTo<$index>) -> $self {
                 $constructor {
                     start: 0,
-                    end: Some(r.end as isize),
+                    end: Bound::Excluded(r.end as isize),
                     step: 1,
                 }
             }
@@ -218,10 +217,9 @@ macro_rules! impl_slice_variant_from_range {
         impl From<RangeToInclusive<$index>> for $self {
             #[inline]
             fn from(r: RangeToInclusive<$index>) -> $self {
-                let end = r.end as isize;
                 $constructor {
                     start: 0,
-                    end: if end == -1 { None } else { Some(end + 1) },
+                    end: Bound::Included(r.end as isize),
                     step: 1,
                 }
             }
@@ -240,7 +238,7 @@ impl From<RangeFull> for Slice {
     fn from(_: RangeFull) -> Slice {
         Slice {
             start: 0,
-            end: None,
+            end: Bound::Unbounded,
             step: 1,
         }
     }
@@ -251,7 +249,7 @@ impl From<RangeFull> for SliceOrIndex {
     fn from(_: RangeFull) -> SliceOrIndex {
         SliceOrIndex::Slice {
             start: 0,
-            end: None,
+            end: Bound::Unbounded,
             step: 1,
         }
     }

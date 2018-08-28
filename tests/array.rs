@@ -14,6 +14,7 @@ use ndarray::{
 };
 use ndarray::indices;
 use itertools::{enumerate, zip};
+use std::ops::Bound;
 
 #[test]
 fn test_matmul_rcarray()
@@ -75,7 +76,7 @@ fn test_slice()
         *elt = i;
     }
 
-    let vi = A.slice(s![1.., ..;2, Slice::new(0, None, 2)]);
+    let vi = A.slice(s![1.., ..;2, Slice::new(0, Bound::Unbounded, 2)]);
     assert_eq!(vi.shape(), &[2, 2, 3]);
     let vi = A.slice(s![.., .., ..]);
     assert_eq!(vi.shape(), A.shape());
@@ -334,7 +335,7 @@ fn slice_oob()
 #[test]
 fn slice_axis_oob() {
     let a = RcArray::<i32, _>::zeros((3, 4));
-    let _vi = a.slice_axis(Axis(0), Slice::new(0, Some(10), 1));
+    let _vi = a.slice_axis(Axis(0), Slice::new(0, Bound::Excluded(10), 1));
 }
 
 #[should_panic]
