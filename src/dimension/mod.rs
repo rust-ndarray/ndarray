@@ -8,6 +8,7 @@
 
 use {Ix, Ixs};
 use error::{from_kind, ErrorKind, ShapeError};
+use std::ops::Bound;
 
 pub use self::dim::*;
 pub use self::axis::Axis;
@@ -229,14 +230,18 @@ pub fn do_slice(
     dim: &mut Ix,
     stride: &mut Ix,
     start: Ixs,
-    end: Option<Ixs>,
+    end: Bound<Ixs>,
     step: Ixs,
 ) -> isize {
     let mut offset = 0;
 
     let axis_len = *dim;
     let start = abs_index(axis_len, start);
-    let mut end = abs_index(axis_len, end.unwrap_or(axis_len as Ixs));
+    let mut end = abs_index(axis_len, match end {
+        Bound::Included(-1) | Bound::Unbounded => axis_len as Ixs,
+        Bound::Included(i) => i + 1,
+        Bound::Excluded(i) => i,
+    });
     if end < start {
         end = start;
     }

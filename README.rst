@@ -94,6 +94,7 @@ Recent Changes (ndarray)
   - Add ``map_mut`` and ``map_axis_mut`` methods (mutable variants of ``map`` and ``map_axis``) by @LukeMathWalker.
   - Add support for 128-bit integer scalars (``i128`` and ``u128``).
   - Add support for slicing with inclusive ranges (``start..=end`` and ``..=end``).
+  - Change type of ``Slice.end`` and ``SliceOrIndex::Slice.end`` from ``Option<isize>`` to ``Bound<isize>``.
   - Relax constraint on closure from ``Fn`` to ``FnMut`` for ``mapv``, ``mapv_into``, ``map_inplace`` and ``mapv_inplace``.
   - Implement ``TrustedIterator`` for ``IterMut``.
   - Bump ``num-traits`` and ``num-complex`` to version ``0.2``.
