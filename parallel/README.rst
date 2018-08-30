@@ -49,7 +49,7 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
-- 0.9.0 (not yet released)
+- 0.9.0
 
   - Upgrade for ndarray 0.12.0
 
