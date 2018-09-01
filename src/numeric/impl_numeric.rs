@@ -69,7 +69,8 @@ impl<T> Interpolate<T> for Lower {
 
 impl<T> Interpolate<T> for Nearest {
     fn needs_lower(q: f64, len: usize) -> bool {
-        ((Self::lower_index(q, len) as f64) - Self::float_percentile_index(q, len)) <= 0.
+        let lower = Self::lower_index(q, len);
+        ((lower as f64) - Self::float_percentile_index(q, len)) <= 0.
     }
     fn needs_upper(q: f64, len: usize) -> bool {
         !Self::needs_lower(q, len)
@@ -209,19 +210,33 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds or if `q` is not between
     /// `0.` and `1.` (inclusive).
-    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f64, interpolation_strategy: InterpolationStrategy) -> Array<A, D::Smaller>
+    pub fn percentile_axis_mut<I>(&mut self, axis: Axis, q: f64) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
               S: DataMut,
+              I: Interpolate<Array<A, D::Smaller>>,
     {
         assert!((0. <= q) && (q <= 1.));
-        let float_percentile_index = ((self.len_of(axis) - 1) as f64) * q;
-        let percentile_index = match interpolation_strategy {
-            InterpolationStrategy::Lower => float_percentile_index.floor() as usize,
-            InterpolationStrategy::Nearest => float_percentile_index.round() as usize,
-            InterpolationStrategy::Higher => float_percentile_index.ceil() as usize,
+        let mut lower = None;
+        let mut upper = None;
+        let axis_len = self.len_of(axis);
+        if I::needs_lower(q, axis_len) {
+            lower = Some(
+                self.map_axis_mut(
+                    axis,
+                    |mut x| x.sorted_get_mut(I::lower_index(q, axis_len))
+                )
+            );
         };
-        self.map_axis_mut(axis, |mut x| x.sorted_get_mut(percentile_index))
+        if I::needs_upper(q, axis_len) {
+            upper = Some(
+                self.map_axis_mut(
+                    axis,
+                    |mut x| x.sorted_get_mut(I::upper_index(q, axis_len))
+                )
+            );
+        };
+        I::interpolate(lower, upper, q, axis_len)
     }
 
     /// Return variance along `axis`.
