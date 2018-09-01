@@ -1739,8 +1739,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                                [1., 2.]])
     /// );
     /// ```
-    pub fn mapv<B, F>(&self, f: F) -> Array<B, D>
-        where F: Fn(A) -> B,
+    pub fn mapv<B, F>(&self, mut f: F) -> Array<B, D>
+        where F: FnMut(A) -> B,
               A: Clone,
     {
         self.map(move |x| f(x.clone()))
@@ -1752,7 +1752,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Elements are visited in arbitrary order.
     pub fn mapv_into<F>(mut self, f: F) -> Self
         where S: DataMut,
-              F: Fn(A) -> A,
+              F: FnMut(A) -> A,
               A: Clone,
     {
         self.mapv_inplace(f);
@@ -1764,7 +1764,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Elements are visited in arbitrary order.
     pub fn map_inplace<F>(&mut self, f: F)
         where S: DataMut,
-              F: Fn(&mut A),
+              F: FnMut(&mut A),
     {
         self.unordered_foreach_mut(f);
     }
@@ -1785,9 +1785,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                         [0.36788, 7.38906]]), 1e-5)
     /// );
     /// ```
-    pub fn mapv_inplace<F>(&mut self, f: F)
+    pub fn mapv_inplace<F>(&mut self, mut f: F)
         where S: DataMut,
-              F: Fn(A) -> A,
+              F: FnMut(A) -> A,
               A: Clone,
     {
         self.unordered_foreach_mut(move |x| *x = f(x.clone()));

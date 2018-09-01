@@ -83,6 +83,14 @@ fn test_slice()
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
 }
 
+#[test]
+fn test_slice_inclusive_range() {
+    let arr = array![[1, 2, 3], [4, 5, 6]];
+    assert_eq!(arr.slice(s![1..=1, 1..=2]), array![[5, 6]]);
+    assert_eq!(arr.slice(s![1..=-1, -2..=2;-1]), array![[6, 5]]);
+    assert_eq!(arr.slice(s![0..=-1, 0..=2;2]), array![[1, 3], [4, 6]]);
+}
+
 /// Test that the compiler can infer a type for a sliced array from the
 /// arguments to `s![]`.
 ///

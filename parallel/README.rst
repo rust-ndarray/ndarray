@@ -49,6 +49,10 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- 0.9.0
+
+  - Upgrade for ndarray 0.12.0
+
 - 0.8.0
 
   - Upgrade for rayon 1.0!
