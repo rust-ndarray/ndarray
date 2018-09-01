@@ -23,6 +23,17 @@ use {
 ///
 /// [`percentile_axis_mut`]: struct.ArrayBase.html#method.percentile_axis_mut
 pub trait Interpolate<T> {
+    fn float_percentile_index(q: f64, len: usize) -> f64 {
+        ((len - 1) as f64) * q
+    }
+
+    fn lower_index(q: f64, len: usize) -> usize {
+        Self::float_percentile_index(q, len).floor() as usize
+    }
+
+    fn upper_index(q: f64, len: usize) -> usize {
+        Self::float_percentile_index(q, len).ceil() as usize
+    }
     fn needs_lower(q: f64, len: usize) -> bool;
     fn needs_upper(q: f64, len: usize) -> bool;
     fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T;
@@ -58,8 +69,7 @@ impl<T> Interpolate<T> for Lower {
 
 impl<T> Interpolate<T> for Nearest {
     fn needs_lower(q: f64, len: usize) -> bool {
-        let float_percentile_index = ((len - 1) as f64) * q;
-        (float_percentile_index.round() - float_percentile_index) <= 0.
+        ((Self::lower_index(q, len) as f64) - Self::float_percentile_index(q, len)) <= 0.
     }
     fn needs_upper(q: f64, len: usize) -> bool {
         !Self::needs_lower(q, len)
