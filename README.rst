@@ -88,7 +88,7 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
-- 0.12.0 (not yet released)
+- 0.12.0
 
   - Add ``var_axis`` method for computing variance by @LukeMathWalker.
   - Add ``map_mut`` and ``map_axis_mut`` methods (mutable variants of ``map`` and ``map_axis``) by @LukeMathWalker.
