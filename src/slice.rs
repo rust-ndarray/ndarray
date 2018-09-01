@@ -6,15 +6,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use error::{ShapeError, ErrorKind};
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeTo};
+use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use std::fmt;
 use std::marker::PhantomData;
 use super::Dimension;
 
 /// A slice (range with step size).
 ///
-/// Negative `begin` or `end` indexes are counted from the back of the axis. If
-/// `end` is `None`, the slice extends to the end of the axis.
+/// `end` is an exclusive index. Negative `begin` or `end` indexes are counted
+/// from the back of the axis. If `end` is `None`, the slice extends to the end
+/// of the axis.
 ///
 /// See also the [`s![]`](macro.s.html) macro.
 ///
@@ -66,58 +67,6 @@ impl Slice {
     }
 }
 
-macro_rules! impl_slice_from_index_type {
-    ($index:ty) => {
-        impl From<Range<$index>> for Slice {
-            #[inline]
-            fn from(r: Range<$index>) -> Slice {
-                Slice {
-                    start: r.start as isize,
-                    end: Some(r.end as isize),
-                    step: 1,
-                }
-            }
-        }
-
-        impl From<RangeFrom<$index>> for Slice {
-            #[inline]
-            fn from(r: RangeFrom<$index>) -> Slice {
-                Slice {
-                    start: r.start as isize,
-                    end: None,
-                    step: 1,
-                }
-            }
-        }
-
-        impl From<RangeTo<$index>> for Slice {
-            #[inline]
-            fn from(r: RangeTo<$index>) -> Slice {
-                Slice {
-                    start: 0,
-                    end: Some(r.end as isize),
-                    step: 1,
-                }
-            }
-        }
-    }
-}
-
-impl_slice_from_index_type!(isize);
-impl_slice_from_index_type!(usize);
-impl_slice_from_index_type!(i32);
-
-impl From<RangeFull> for Slice {
-    #[inline]
-    fn from(_: RangeFull) -> Slice {
-        Slice {
-            start: 0,
-            end: None,
-            step: 1,
-        }
-    }
-}
-
 /// A slice (range with step) or an index.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
@@ -144,9 +93,9 @@ impl From<RangeFull> for Slice {
 /// The macro equivalent is `s![a..;-1]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceOrIndex {
-    /// A range with step size. Negative `begin` or `end` indexes are counted
-    /// from the back of the axis. If `end` is `None`, the slice extends to the
-    /// end of the axis.
+    /// A range with step size. `end` is an exclusive index. Negative `begin`
+    /// or `end` indexes are counted from the back of the axis. If `end` is
+    /// `None`, the slice extends to the end of the axis.
     Slice {
         start: isize,
         end: Option<isize>,
@@ -219,30 +168,12 @@ impl fmt::Display for SliceOrIndex {
     }
 }
 
-impl From<Slice> for SliceOrIndex {
-    #[inline]
-    fn from(s: Slice) -> SliceOrIndex {
-        SliceOrIndex::Slice {
-            start: s.start,
-            end: s.end,
-            step: s.step,
-        }
-    }
-}
-
-macro_rules! impl_sliceorindex_from_index_type {
-    ($index:ty) => {
-        impl From<$index> for SliceOrIndex {
+macro_rules! impl_slice_variant_from_range {
+    ($self:ty, $constructor:path, $index:ty) => {
+        impl From<Range<$index>> for $self {
             #[inline]
-            fn from(r: $index) -> SliceOrIndex {
-                SliceOrIndex::Index(r as isize)
-            }
-        }
-
-        impl From<Range<$index>> for SliceOrIndex {
-            #[inline]
-            fn from(r: Range<$index>) -> SliceOrIndex {
-                SliceOrIndex::Slice {
+            fn from(r: Range<$index>) -> $self {
+                $constructor {
                     start: r.start as isize,
                     end: Some(r.end as isize),
                     step: 1,
@@ -250,10 +181,22 @@ macro_rules! impl_sliceorindex_from_index_type {
             }
         }
 
-        impl From<RangeFrom<$index>> for SliceOrIndex {
+        impl From<RangeInclusive<$index>> for $self {
             #[inline]
-            fn from(r: RangeFrom<$index>) -> SliceOrIndex {
-                SliceOrIndex::Slice {
+            fn from(r: RangeInclusive<$index>) -> $self {
+                let end = *r.end() as isize;
+                $constructor {
+                    start: *r.start() as isize,
+                    end: if end == -1 { None } else { Some(end + 1) },
+                    step: 1,
+                }
+            }
+        }
+
+        impl From<RangeFrom<$index>> for $self {
+            #[inline]
+            fn from(r: RangeFrom<$index>) -> $self {
+                $constructor {
                     start: r.start as isize,
                     end: None,
                     step: 1,
@@ -261,22 +204,47 @@ macro_rules! impl_sliceorindex_from_index_type {
             }
         }
 
-        impl From<RangeTo<$index>> for SliceOrIndex {
+        impl From<RangeTo<$index>> for $self {
             #[inline]
-            fn from(r: RangeTo<$index>) -> SliceOrIndex {
-                SliceOrIndex::Slice {
+            fn from(r: RangeTo<$index>) -> $self {
+                $constructor {
                     start: 0,
                     end: Some(r.end as isize),
                     step: 1,
                 }
             }
         }
+
+        impl From<RangeToInclusive<$index>> for $self {
+            #[inline]
+            fn from(r: RangeToInclusive<$index>) -> $self {
+                let end = r.end as isize;
+                $constructor {
+                    start: 0,
+                    end: if end == -1 { None } else { Some(end + 1) },
+                    step: 1,
+                }
+            }
+        }
+    };
+}
+impl_slice_variant_from_range!(Slice, Slice, isize);
+impl_slice_variant_from_range!(Slice, Slice, usize);
+impl_slice_variant_from_range!(Slice, Slice, i32);
+impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, isize);
+impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, usize);
+impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, i32);
+
+impl From<RangeFull> for Slice {
+    #[inline]
+    fn from(_: RangeFull) -> Slice {
+        Slice {
+            start: 0,
+            end: None,
+            step: 1,
+        }
     }
 }
-
-impl_sliceorindex_from_index_type!(isize);
-impl_sliceorindex_from_index_type!(usize);
-impl_sliceorindex_from_index_type!(i32);
 
 impl From<RangeFull> for SliceOrIndex {
     #[inline]
@@ -288,6 +256,31 @@ impl From<RangeFull> for SliceOrIndex {
         }
     }
 }
+
+impl From<Slice> for SliceOrIndex {
+    #[inline]
+    fn from(s: Slice) -> SliceOrIndex {
+        SliceOrIndex::Slice {
+            start: s.start,
+            end: s.end,
+            step: s.step,
+        }
+    }
+}
+
+macro_rules! impl_sliceorindex_from_index {
+    ($index:ty) => {
+        impl From<$index> for SliceOrIndex {
+            #[inline]
+            fn from(r: $index) -> SliceOrIndex {
+                SliceOrIndex::Index(r as isize)
+            }
+        }
+    };
+}
+impl_sliceorindex_from_index!(isize);
+impl_sliceorindex_from_index!(usize);
+impl_sliceorindex_from_index!(i32);
 
 /// Represents all of the necessary information to perform a slice.
 ///
@@ -427,49 +420,35 @@ pub trait SliceNextDim<D1, D2> {
     fn next_dim(&self, PhantomData<D1>) -> PhantomData<D2>;
 }
 
-impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for Slice {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-        PhantomData
-    }
-}
-
-macro_rules! impl_slicenextdim_for_index_type {
-    ($index:ty) => {
-        impl<D1: Dimension> SliceNextDim<D1, D1> for $index {
+macro_rules! impl_slicenextdim_equal {
+    ($self:ty) => {
+        impl<D1: Dimension> SliceNextDim<D1, D1> for $self {
             fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
                 PhantomData
             }
         }
     }
 }
+impl_slicenextdim_equal!(isize);
+impl_slicenextdim_equal!(usize);
+impl_slicenextdim_equal!(i32);
 
-impl_slicenextdim_for_index_type!(isize);
-impl_slicenextdim_for_index_type!(usize);
-impl_slicenextdim_for_index_type!(i32);
-
-impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for Range<T> {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-        PhantomData
+macro_rules! impl_slicenextdim_larger {
+    (($($generics:tt)*), $self:ty) => {
+        impl<D1: Dimension, $($generics),*> SliceNextDim<D1, D1::Larger> for $self {
+            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+                PhantomData
+            }
+        }
     }
 }
-
-impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeFrom<T> {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-        PhantomData
-    }
-}
-
-impl<D1: Dimension, T> SliceNextDim<D1, D1::Larger> for RangeTo<T> {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-        PhantomData
-    }
-}
-
-impl<D1: Dimension> SliceNextDim<D1, D1::Larger> for RangeFull {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-        PhantomData
-    }
-}
+impl_slicenextdim_larger!((T), Range<T>);
+impl_slicenextdim_larger!((T), RangeInclusive<T>);
+impl_slicenextdim_larger!((T), RangeFrom<T>);
+impl_slicenextdim_larger!((T), RangeTo<T>);
+impl_slicenextdim_larger!((T), RangeToInclusive<T>);
+impl_slicenextdim_larger!((), RangeFull);
+impl_slicenextdim_larger!((), Slice);
 
 /// Slice argument constructor.
 ///

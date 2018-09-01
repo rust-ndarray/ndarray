@@ -4,6 +4,11 @@ ndarray-rand
 Recent Changes
 --------------
 
+- 0.8.0
+
+  - Require ndarray 0.12
+  - Require rand 0.5
+
 - 0.7.0
 
   - Require ndarray 0.11

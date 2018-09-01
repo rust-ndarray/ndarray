@@ -17,7 +17,7 @@ fn formatting()
                "[[[   1]],\n [[   2]],\n [[   3]],\n [[   4]]]");
 
     let a = a.reshape((2, 2));
-    assert_eq!(format!("{}", a), 
+    assert_eq!(format!("{}", a),
                "[[1, 2],\n [3, 4]]");
     assert_eq!(format!("{}", a),
                "[[1, 2],\n [3, 4]]");

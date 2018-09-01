@@ -892,7 +892,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
-    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D> 
+    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D>
         where E: IntoDimension<Dim=D>,
     {
         exact_chunks_of(self.view(), chunk_size)
@@ -930,7 +930,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///          [6, 6, 7, 7, 8, 8, 0],
     ///          [6, 6, 7, 7, 8, 8, 0]]));
     /// ```
-    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D> 
+    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D>
         where E: IntoDimension<Dim=D>,
               S: DataMut
     {
@@ -941,13 +941,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
-    /// 
+    ///
     /// Will yield over no elements if window size is larger
     /// than the actual array size of any dimension.
     ///
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.
-    /// 
+    ///
     /// **Panics** if any dimension of `window_size` is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
     /// number of array axes.)
@@ -1694,6 +1694,34 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Call `f` on a mutable reference of each element and create a new array
+    /// with the new values.
+    ///
+    /// Elements are visited in arbitrary order.
+    ///
+    /// Return an array with the same shape as `self`.
+    pub fn map_mut<'a, B, F>(&'a mut self, f: F) -> Array<B, D>
+        where F: FnMut(&'a mut A) -> B,
+              A: 'a,
+              S: DataMut
+    {
+        let dim = self.dim.clone();
+        if self.is_contiguous() {
+            let strides = self.strides.clone();
+            let slc = self.as_slice_memory_order_mut().unwrap();
+            let v = ::iterators::to_vec_mapped(slc.iter_mut(), f);
+            unsafe {
+                ArrayBase::from_shape_vec_unchecked(
+                    dim.strides(strides), v)
+            }
+        } else {
+            let v = ::iterators::to_vec_mapped(self.iter_mut(), f);
+            unsafe {
+                ArrayBase::from_shape_vec_unchecked(dim, v)
+            }
+        }
+    }
+
     /// Call `f` by **v**alue on each element and create a new array
     /// with the new values.
     ///
@@ -1711,8 +1739,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                                [1., 2.]])
     /// );
     /// ```
-    pub fn mapv<B, F>(&self, f: F) -> Array<B, D>
-        where F: Fn(A) -> B,
+    pub fn mapv<B, F>(&self, mut f: F) -> Array<B, D>
+        where F: FnMut(A) -> B,
               A: Clone,
     {
         self.map(move |x| f(x.clone()))
@@ -1724,7 +1752,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Elements are visited in arbitrary order.
     pub fn mapv_into<F>(mut self, f: F) -> Self
         where S: DataMut,
-              F: Fn(A) -> A,
+              F: FnMut(A) -> A,
               A: Clone,
     {
         self.mapv_inplace(f);
@@ -1736,7 +1764,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Elements are visited in arbitrary order.
     pub fn map_inplace<F>(&mut self, f: F)
         where S: DataMut,
-              F: Fn(&mut A),
+              F: FnMut(&mut A),
     {
         self.unordered_foreach_mut(f);
     }
@@ -1757,9 +1785,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                         [0.36788, 7.38906]]), 1e-5)
     /// );
     /// ```
-    pub fn mapv_inplace<F>(&mut self, f: F)
+    pub fn mapv_inplace<F>(&mut self, mut f: F)
         where S: DataMut,
-              F: Fn(A) -> A,
+              F: FnMut(A) -> A,
               A: Clone,
     {
         self.unordered_foreach_mut(move |x| *x = f(x.clone()));
@@ -1816,6 +1844,34 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.subview(axis, 0).map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
+            }
+        })
+    }
+
+    /// Reduce the values along an axis into just one value, producing a new
+    /// array with one less dimension.
+    /// 1-dimensional lanes are passed as mutable references to the reducer,
+    /// allowing for side-effects.
+    ///
+    /// Elements are visited in arbitrary order.
+    ///
+    /// Return the result as an `Array`.
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    pub fn map_axis_mut<'a, B, F>(&'a mut self, axis: Axis, mut mapping: F)
+        -> Array<B, D::Smaller>
+        where D: RemoveAxis,
+              F: FnMut(ArrayViewMut1<'a, A>) -> B,
+              A: 'a,
+              S: DataMut,
+    {
+        let view_len = self.len_of(axis);
+        let view_stride = self.strides.axis(axis);
+        // use the 0th subview as a map to each 1d array view extended from
+        // the 0th element.
+        self.subview_mut(axis, 0).map_mut(|first_elt: &mut A| {
+            unsafe {
+                mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
     }

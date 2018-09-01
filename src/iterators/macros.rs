@@ -36,7 +36,7 @@ macro_rules! impl_ndproducer {
         unsafe fn item(&$self_:ident, $ptr:pat) {
             $refexpr:expr
         }
-    }) => { 
+    }) => {
 impl<$($typarm)*> NdProducer for $fulltype {
     $(
         type $atyn = $atyv;
@@ -98,7 +98,7 @@ impl<$($typarm)*> NdProducer for $fulltype {
     private_impl!{}
 }
 
-expand_if!(@nonempty [$($cloneparm)*] 
+expand_if!(@nonempty [$($cloneparm)*]
     impl<$($cloneparm)*> Clone for $fulltype {
         fn clone(&self) -> Self {
             $typename {
@@ -130,8 +130,8 @@ macro_rules! impl_iterator {
         fn item(&mut $self_:ident, $elt:pat) {
             $refexpr:expr
         }
-    }) => { 
-         expand_if!(@nonempty [$($cloneparm)*] 
+    }) => {
+         expand_if!(@nonempty [$($cloneparm)*]
 
             impl<$($cloneparm)*> Clone for $fulltype {
                 fn clone(&self) -> Self {
