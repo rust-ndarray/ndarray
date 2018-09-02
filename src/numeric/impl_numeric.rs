@@ -19,13 +19,69 @@ use {
     Zip,
 };
 
-/// Used to choose the interpolation strategy in [`percentile_axis_mut`].
+/// Used to provide an interpolation strategy to [`percentile_axis_mut`].
 ///
 /// [`percentile_axis_mut`]: struct.ArrayBase.html#method.percentile_axis_mut
-pub enum InterpolationStrategy {
-    Lower,
-    Nearest,
-    Higher,
+pub trait Interpolate<T> {
+    fn float_percentile_index(q: f64, len: usize) -> f64 {
+        ((len - 1) as f64) * q
+    }
+
+    fn lower_index(q: f64, len: usize) -> usize {
+        Self::float_percentile_index(q, len).floor() as usize
+    }
+
+    fn upper_index(q: f64, len: usize) -> usize {
+        Self::float_percentile_index(q, len).ceil() as usize
+    }
+    fn needs_lower(q: f64, len: usize) -> bool;
+    fn needs_upper(q: f64, len: usize) -> bool;
+    fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T;
+}
+
+pub struct Upper;
+pub struct Lower;
+pub struct Nearest;
+
+impl<T> Interpolate<T> for Upper {
+    fn needs_lower(_q: f64, _len: usize) -> bool {
+        false
+    }
+    fn needs_upper(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn interpolate(_lower: Option<T>, upper: Option<T>, _q: f64, _len: usize) -> T {
+       upper.unwrap()
+    }
+}
+
+impl<T> Interpolate<T> for Lower {
+    fn needs_lower(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn needs_upper(_q: f64, _len: usize) -> bool {
+        false
+    }
+    fn interpolate(lower: Option<T>, _upper: Option<T>, _q: f64, _len: usize) -> T {
+        lower.unwrap()
+    }
+}
+
+impl<T> Interpolate<T> for Nearest {
+    fn needs_lower(q: f64, len: usize) -> bool {
+        let lower = <Self as Interpolate<T>>::lower_index(q, len);
+        ((lower as f64) - <Self as Interpolate<T>>::float_percentile_index(q, len)) <= 0.
+    }
+    fn needs_upper(q: f64, len: usize) -> bool {
+        !<Self as Interpolate<T>>::needs_lower(q, len)
+    }
+    fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T {
+        if <Self as Interpolate<T>>::needs_lower(q, len) {
+            lower.unwrap()
+        } else {
+            upper.unwrap()
+        }
+    }
 }
 
 /// Numerical methods for arrays.
@@ -154,19 +210,33 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds or if `q` is not between
     /// `0.` and `1.` (inclusive).
-    pub fn percentile_axis_mut(&mut self, axis: Axis, q: f64, interpolation_strategy: InterpolationStrategy) -> Array<A, D::Smaller>
+    pub fn percentile_axis_mut<I>(&mut self, axis: Axis, q: f64) -> Array<A, D::Smaller>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
               S: DataMut,
+              I: Interpolate<Array<A, D::Smaller>>,
     {
         assert!((0. <= q) && (q <= 1.));
-        let float_percentile_index = ((self.len_of(axis) - 1) as f64) * q;
-        let percentile_index = match interpolation_strategy {
-            InterpolationStrategy::Lower => float_percentile_index.floor() as usize,
-            InterpolationStrategy::Nearest => float_percentile_index.round() as usize,
-            InterpolationStrategy::Higher => float_percentile_index.ceil() as usize,
+        let mut lower = None;
+        let mut upper = None;
+        let axis_len = self.len_of(axis);
+        if I::needs_lower(q, axis_len) {
+            lower = Some(
+                self.map_axis_mut(
+                    axis,
+                    |mut x| x.sorted_get_mut(I::lower_index(q, axis_len))
+                )
+            );
         };
-        self.map_axis_mut(axis, |mut x| x.sorted_get_mut(percentile_index))
+        if I::needs_upper(q, axis_len) {
+            upper = Some(
+                self.map_axis_mut(
+                    axis,
+                    |mut x| x.sorted_get_mut(I::upper_index(q, axis_len))
+                )
+            );
+        };
+        I::interpolate(lower, upper, q, axis_len)
     }
 
     /// Return variance along `axis`.

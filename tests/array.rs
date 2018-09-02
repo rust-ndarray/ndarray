@@ -8,7 +8,7 @@ extern crate itertools;
 
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 use ndarray::prelude::*;
-use ndarray::numeric::InterpolationStrategy;
+use ndarray::numeric::{Lower};
 use ndarray::{
     rcarr2,
     arr3,
@@ -1759,7 +1759,7 @@ fn test_percentile_axis_mut_with_odd_axis_length() {
         [3, 5, 6, 12]
         ]
     );
-    let p = a.percentile_axis_mut(Axis(0), 0.5, InterpolationStrategy::Lower);
+    let p = a.percentile_axis_mut::<Lower>(Axis(0), 0.5);
     assert!(p == a.subview(Axis(0), 1));
 }
 
@@ -1773,20 +1773,20 @@ fn test_percentile_axis_mut_with_even_axis_length() {
         [4, 6, 7, 13]
         ]
     );
-    let q = b.percentile_axis_mut(Axis(0), 0.5, InterpolationStrategy::Lower);
+    let q = b.percentile_axis_mut::<Lower>(Axis(0), 0.5);
     assert!(q == b.subview(Axis(0), 1));
 }
 
 #[test]
 fn test_percentile_axis_mut_to_get_minimum() {
     let mut b = arr2(&[[1, 3, 22, 10]]);
-    let q = b.percentile_axis_mut(Axis(1), 0., InterpolationStrategy::Lower);
+    let q = b.percentile_axis_mut::<Lower>(Axis(1), 0.);
     assert!(q == arr1(&[1]));
 }
 
 #[test]
 fn test_percentile_axis_mut_to_get_maximum() {
     let mut b = arr1(&[1, 3, 22, 10]);
-    let q = b.percentile_axis_mut(Axis(0), 1., InterpolationStrategy::Lower);
+    let q = b.percentile_axis_mut::<Lower>(Axis(0), 1.);
     assert!(q == arr0(22));
 }
