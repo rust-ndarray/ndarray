@@ -249,8 +249,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// as the element that would be indexed as `(N-1)q` if the lane were to be sorted
     /// in increasing order.
     /// If `(N-1)q` is not an integer the desired percentile lies between
-    /// two data points: we return the lower, nearest or higher datapoint depending
-    /// on `interpolation_strategy`.
+    /// two data points: we return the lower, nearest, higher or interpolated
+    /// value depending on the type `Interpolate` bound `I`.
     ///
     /// Some examples:
     /// - `q=0.` returns the minimum along each 1-dimensional lane;
