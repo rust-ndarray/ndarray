@@ -39,9 +39,9 @@ pub trait Interpolate<T> {
     fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T;
 }
 
-struct Upper;
-struct Lower;
-struct Nearest;
+pub struct Upper;
+pub struct Lower;
+pub struct Nearest;
 
 impl<T> Interpolate<T> for Upper {
     fn needs_lower(q: f64, len: usize) -> bool {
