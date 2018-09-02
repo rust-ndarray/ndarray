@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::Add;
-use libnum::{self, Zero, Float};
+use std::ops::{Add, Sub, Div, Mul};
+use libnum::{self, Zero, Float, FromPrimitive};
 use itertools::free::enumerate;
 
 use imp_prelude::*;
@@ -34,14 +34,25 @@ pub trait Interpolate<T> {
     fn upper_index(q: f64, len: usize) -> usize {
         Self::float_percentile_index(q, len).ceil() as usize
     }
+
+    fn float_percentile_index_fraction(q: f64, len: usize) -> f64 {
+        Self::float_percentile_index(q, len) - (Self::lower_index(q, len) as f64)
+    }
+
     fn needs_lower(q: f64, len: usize) -> bool;
     fn needs_upper(q: f64, len: usize) -> bool;
-    fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T;
+    fn interpolate<D>(lower: Option<Array<T, D>>,
+                      upper: Option<Array<T, D>>,
+                      q: f64,
+                      len: usize) -> Array<T, D>
+        where D: Dimension;
 }
 
 pub struct Upper;
 pub struct Lower;
 pub struct Nearest;
+pub struct Midpoint;
+pub struct Linear;
 
 impl<T> Interpolate<T> for Upper {
     fn needs_lower(_q: f64, _len: usize) -> bool {
@@ -50,7 +61,10 @@ impl<T> Interpolate<T> for Upper {
     fn needs_upper(_q: f64, _len: usize) -> bool {
         true
     }
-    fn interpolate(_lower: Option<T>, upper: Option<T>, _q: f64, _len: usize) -> T {
+    fn interpolate<D>(_lower: Option<Array<T, D>>,
+                      upper: Option<Array<T, D>>,
+                      _q: f64,
+                      _len: usize) -> Array<T, D> {
        upper.unwrap()
     }
 }
@@ -62,7 +76,10 @@ impl<T> Interpolate<T> for Lower {
     fn needs_upper(_q: f64, _len: usize) -> bool {
         false
     }
-    fn interpolate(lower: Option<T>, _upper: Option<T>, _q: f64, _len: usize) -> T {
+    fn interpolate<D>(lower: Option<Array<T, D>>,
+                      _upper: Option<Array<T, D>>,
+                      _q: f64,
+                      _len: usize) -> Array<T, D> {
         lower.unwrap()
     }
 }
@@ -75,12 +92,57 @@ impl<T> Interpolate<T> for Nearest {
     fn needs_upper(q: f64, len: usize) -> bool {
         !<Self as Interpolate<T>>::needs_lower(q, len)
     }
-    fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T {
+    fn interpolate<D>(lower: Option<Array<T, D>>,
+                      upper: Option<Array<T, D>>,
+                      q: f64,
+                      len: usize) -> Array<T, D> {
         if <Self as Interpolate<T>>::needs_lower(q, len) {
             lower.unwrap()
         } else {
             upper.unwrap()
         }
+    }
+}
+
+impl<T> Interpolate<T> for Midpoint
+    where T: Add<T, Output = T> + Div<T, Output = T> + Clone + FromPrimitive
+{
+    fn needs_lower(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn needs_upper(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn interpolate<D>(lower: Option<Array<T, D>>,
+                      upper: Option<Array<T, D>>,
+                      _q: f64, _len: usize) -> Array<T, D>
+        where D: Dimension
+    {
+        let denom = T::from_u8(2).unwrap();
+        (lower.unwrap() + upper.unwrap()).mapv_into(|x| x / denom.clone())
+    }
+}
+
+impl<T> Interpolate<T> for Linear
+    where T: Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Clone + FromPrimitive
+{
+    fn needs_lower(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn needs_upper(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn interpolate<D>(lower: Option<Array<T, D>>,
+                      upper: Option<Array<T, D>>,
+                      q: f64, len: usize) -> Array<T, D>
+        where D: Dimension
+    {
+        let fraction = T::from_f64(
+            <Self as Interpolate<T>>::float_percentile_index_fraction(q, len)
+        ).unwrap();
+        let a = lower.unwrap().mapv_into(|x| x * fraction.clone());
+        let b = upper.unwrap().mapv_into(|x| x * (T::from_u8(1).unwrap() - fraction.clone()));
+        a + b
     }
 }
 
@@ -187,8 +249,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// as the element that would be indexed as `(N-1)q` if the lane were to be sorted
     /// in increasing order.
     /// If `(N-1)q` is not an integer the desired percentile lies between
-    /// two data points: we return the lower, nearest or higher datapoint depending
-    /// on `interpolation_strategy`.
+    /// two data points: we return the lower, nearest, higher or interpolated
+    /// value depending on the type `Interpolate` bound `I`.
     ///
     /// Some examples:
     /// - `q=0.` returns the minimum along each 1-dimensional lane;
@@ -214,7 +276,7 @@ impl<A, S, D> ArrayBase<S, D>
         where D: RemoveAxis,
               A: Ord + Clone + Zero,
               S: DataMut,
-              I: Interpolate<Array<A, D::Smaller>>,
+              I: Interpolate<A>,
     {
         assert!((0. <= q) && (q <= 1.));
         let mut lower = None;
