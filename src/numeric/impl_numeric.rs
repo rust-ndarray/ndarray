@@ -19,7 +19,7 @@ use {
     Zip,
 };
 
-/// Used to choose the interpolation strategy in [`percentile_axis_mut`].
+/// Used to provide an interpolation strategy to [`percentile_axis_mut`].
 ///
 /// [`percentile_axis_mut`]: struct.ArrayBase.html#method.percentile_axis_mut
 pub trait Interpolate<T> {
