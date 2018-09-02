@@ -69,14 +69,14 @@ impl<T> Interpolate<T> for Lower {
 
 impl<T> Interpolate<T> for Nearest {
     fn needs_lower(q: f64, len: usize) -> bool {
-        let lower = Self::lower_index(q, len);
-        ((lower as f64) - Self::float_percentile_index(q, len)) <= 0.
+        let lower = <Self as Interpolate<T>>::lower_index(q, len);
+        ((lower as f64) - <Self as Interpolate<T>>::float_percentile_index(q, len)) <= 0.
     }
     fn needs_upper(q: f64, len: usize) -> bool {
-        !Self::needs_lower(q, len)
+        !<Self as Interpolate<T>>::needs_lower(q, len)
     }
     fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T {
-        if Self::needs_lower(q, len) {
+        if <Self as Interpolate<T>>::needs_lower(q, len) {
             lower.unwrap()
         } else {
             upper.unwrap()
