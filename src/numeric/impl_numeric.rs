@@ -44,25 +44,25 @@ pub struct Lower;
 pub struct Nearest;
 
 impl<T> Interpolate<T> for Upper {
-    fn needs_lower(q: f64, len: usize) -> bool {
+    fn needs_lower(_q: f64, _len: usize) -> bool {
         false
     }
-    fn needs_upper(q: f64, len: usize) -> bool {
+    fn needs_upper(_q: f64, _len: usize) -> bool {
         true
     }
-    fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T {
+    fn interpolate(_lower: Option<T>, upper: Option<T>, _q: f64, _len: usize) -> T {
        upper.unwrap()
     }
 }
 
 impl<T> Interpolate<T> for Lower {
-    fn needs_lower(q: f64, len: usize) -> bool {
+    fn needs_lower(_q: f64, _len: usize) -> bool {
         true
     }
-    fn needs_upper(q: f64, len: usize) -> bool {
+    fn needs_upper(_q: f64, _len: usize) -> bool {
         false
     }
-    fn interpolate(lower: Option<T>, upper: Option<T>, q: f64, len: usize) -> T {
+    fn interpolate(lower: Option<T>, _upper: Option<T>, _q: f64, _len: usize) -> T {
         lower.unwrap()
     }
 }
