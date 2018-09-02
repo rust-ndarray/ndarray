@@ -283,14 +283,24 @@ impl<A, S, D> ArrayBase<S, D>
         let mut upper = None;
         let axis_len = self.len_of(axis);
         if I::needs_lower(q, axis_len) {
+            let lower_index = I::lower_index(q, axis_len);
             lower = Some(
                 self.map_axis_mut(
                     axis,
-                    |mut x| x.sorted_get_mut(I::lower_index(q, axis_len))
+                    |mut x| x.sorted_get_mut(lower_index)
                 )
             );
-        };
-        if I::needs_upper(q, axis_len) {
+            if I::needs_upper(q, axis_len) {
+                let upper_index = I::upper_index(q, axis_len);
+                let relative_upper_index = upper_index - lower_index;
+                upper = Some(
+                    self.map_axis_mut(
+                        axis,
+                        |mut x| x.slice_mut(s![lower_index..]).sorted_get_mut(relative_upper_index)
+                    )
+                );
+            };
+        } else {
             upper = Some(
                 self.map_axis_mut(
                     axis,
