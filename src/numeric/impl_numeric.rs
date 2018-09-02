@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::{Add, Div};
+use std::ops::{Add, Sub, Div, Mul};
 use libnum::{self, Zero, Float, FromPrimitive};
 use itertools::free::enumerate;
 
@@ -34,6 +34,11 @@ pub trait Interpolate<T> {
     fn upper_index(q: f64, len: usize) -> usize {
         Self::float_percentile_index(q, len).ceil() as usize
     }
+
+    fn float_percentile_index_fraction(q: f64, len: usize) -> f64 {
+        Self::float_percentile_index(q, len) - (Self::lower_index(q, len) as f64)
+    }
+
     fn needs_lower(q: f64, len: usize) -> bool;
     fn needs_upper(q: f64, len: usize) -> bool;
     fn interpolate<D>(lower: Option<Array<T, D>>,
@@ -47,19 +52,7 @@ pub struct Upper;
 pub struct Lower;
 pub struct Nearest;
 pub struct Midpoint;
-pub struct Linear<T> {
-    coeff: T,
-}
-
-impl<T> Linear<T>
-    where T: FromPrimitive + Ord
-{
-    pub fn new(coeff: T) -> Self {
-        assert!(coeff <= T::from_u8(1).unwrap());
-        assert!(coeff >= T::from_u8(0).unwrap());
-        Linear { coeff }
-    }
-}
+pub struct Linear;
 
 impl<T> Interpolate<T> for Upper {
     fn needs_lower(_q: f64, _len: usize) -> bool {
@@ -127,6 +120,29 @@ impl<T> Interpolate<T> for Midpoint
     {
         let denom = T::from_u8(2).unwrap();
         (lower.unwrap() + upper.unwrap()).mapv_into(|x| x / denom.clone())
+    }
+}
+
+impl<T> Interpolate<T> for Linear
+    where T: Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Clone + FromPrimitive
+{
+    fn needs_lower(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn needs_upper(_q: f64, _len: usize) -> bool {
+        true
+    }
+    fn interpolate<D>(lower: Option<Array<T, D>>,
+                      upper: Option<Array<T, D>>,
+                      q: f64, len: usize) -> Array<T, D>
+        where D: Dimension
+    {
+        let fraction = T::from_f64(
+            <Self as Interpolate<T>>::float_percentile_index_fraction(q, len)
+        ).unwrap();
+        let a = lower.unwrap().mapv_into(|x| x * fraction.clone());
+        let b = upper.unwrap().mapv_into(|x| x * (T::from_u8(1).unwrap() - fraction.clone()));
+        a + b
     }
 }
 
