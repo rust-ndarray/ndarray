@@ -47,6 +47,19 @@ pub struct Upper;
 pub struct Lower;
 pub struct Nearest;
 pub struct Midpoint;
+pub struct Linear<T> {
+    coeff: T,
+}
+
+impl<T> Linear<T>
+    where T: FromPrimitive + Ord
+{
+    pub fn new(coeff: T) -> Self {
+        assert!(coeff <= T::from_u8(1).unwrap());
+        assert!(coeff >= T::from_u8(0).unwrap());
+        Linear { coeff }
+    }
+}
 
 impl<T> Interpolate<T> for Upper {
     fn needs_lower(_q: f64, _len: usize) -> bool {
