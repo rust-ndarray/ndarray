@@ -8,7 +8,7 @@ extern crate itertools;
 
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 use ndarray::prelude::*;
-use ndarray::numeric::InterpolationStrategy;
+use ndarray::numeric::{Lower, Nearest, Upper};
 use ndarray::{
     rcarr2,
     arr3,
