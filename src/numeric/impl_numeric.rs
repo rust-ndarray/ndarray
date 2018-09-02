@@ -274,7 +274,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// `0.` and `1.` (inclusive).
     pub fn percentile_axis_mut<I>(&mut self, axis: Axis, q: f64) -> Array<A, D::Smaller>
         where D: RemoveAxis,
-              A: Ord + Clone + Zero,
+              A: Ord + Clone,
               S: DataMut,
               I: Interpolate<A>,
     {
