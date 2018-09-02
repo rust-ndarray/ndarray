@@ -27,13 +27,18 @@ impl<A, S> ArrayBase<S, Ix1>
         }
     }
 
-    /// Return the element that would occupy the `i`-th position if the array
-    /// were sorted in increasing order.
+    /// Return the element that would occupy the `i`-th position if
+    /// the array were sorted in increasing order.
     ///
     /// The array is shuffled **in place** to retrieve the desired element:
     /// no copy of the array is allocated.
-    /// No assumptions should be made on the ordering of elements
-    /// after this computation.
+    /// After the shuffling, all elements with an index smaller than `i`
+    /// are smaller than the desired element, while all elements with
+    /// an index greater or equal than `i` are greater than or equal
+    /// to the desired element.
+    ///
+    /// No other assumptions should be made on the ordering of the
+    /// elements after this computation.
     ///
     /// Complexity ([quickselect](https://en.wikipedia.org/wiki/Quickselect)):
     /// - average case: O(`n`);
