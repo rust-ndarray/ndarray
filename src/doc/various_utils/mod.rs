@@ -73,9 +73,9 @@
 //!    a.column_mut(0).as_slice_mut().unwrap().sort_unstable();
 //!}
 //!```
-//!This panics with "thread 'main' panicked at 'called `Option::unwrap()` on a `None` value'" since the column is non-contiguous.
+//!This panics with "called `Option::unwrap()` on a `None` value" since the column is non-contiguous.
 //!
-//! There is not yet a good way to sort/shuffle non-contiguous arrays/views. If the array/view is non-contiguous, there are basically three options at the moment:
+//! There is not yet a good way to sort/shuffle non-contiguous arrays/views. If the array/view is non-contiguous,
+//! there are basically three options at the moment:
 //! * Copy the data into a continuous Vec/array/view, and then sort/shuffle the copy. This doesn't modify the order of the original data.
-//! * Sort/shuffle a slice of indices with .sort_by_key()/.shuffle(), and then rearrange the data according to the sorted/shuffled indices. examples/sort-axis.rs provides an example of this.
-//! * Add support for sorting strided data to a sorting crate or contribute the necessary methods to ndarray. :
+//! * Sort/shuffle a slice of indices with `.sort_by_key()`/`.shuffle()`, and then rearrange the data according to the sorted/shuffled indices. [][examples/sort-axis.rs] provides an example of this.
