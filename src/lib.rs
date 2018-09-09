@@ -83,6 +83,9 @@
 //!
 //! * If you have experience with NumPy, you may also be interested in
 //!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
+//!
+//! * For examples of shuffling and sorting ndarrays, see
+//!   [`various_utils`](doc/various_utils/index.html).
 
 #[cfg(feature = "serde-1")]
 extern crate serde;
