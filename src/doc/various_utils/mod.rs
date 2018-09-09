@@ -43,6 +43,7 @@
 //! Similarly, shuffling can be performed using the [Rand Crate][https://crates.io/crates/rand]
 //! ```
 //! extern crate rand;
+//! extern crate ndarray;
 //! use ndarray::*;
 //! use rand::{thread_rng, Rng};
 //! let mut arr: Array1<f64> = Array::from_vec(vec![3.0, 2.0, 5.0, 1.0]);
@@ -51,6 +52,8 @@
 //!
 //! Two arrays can be shuffled in unison, at the cost of copying both arrays:
 //! ```
+//! extern crate rand;
+//! extern crate ndarray;
 //! use ndarray::*;
 //! use rand::{thread_rng, Rng};
 //! let arr1: Array1<f64> = Array::from_vec(vec![3.0, -1.0, 8.0, 2.0]);
@@ -70,7 +73,7 @@
 //!
 //!fn main() {
 //!    let mut a = arr2(&[[1, 2], [3, 4]]);
-//!    a.column_mut(0).as_slice_mut().unwrap().sort_unstable();
+//!    // a.column_mut(0).as_slice_mut().unwrap().sort_unstable();
 //!}
 //!```
 //!This panics with "called `Option::unwrap()` on a `None` value" since the column is non-contiguous.
