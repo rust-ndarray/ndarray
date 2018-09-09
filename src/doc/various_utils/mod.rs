@@ -1,4 +1,4 @@
-//! Various operations on `ndarray`s
+//! Various operations on `ndarray`s.
 //!
 //! # Sorting
 //! Sorting `ndarray`s can be achieved by using the
@@ -7,10 +7,10 @@
 //! from the standard library:
 //! ```
 //! use ndarray::*;
-//!     let mut arr: Array1<i64> = Array::from_vec(vec![3, 2, 5, 1]);
-//!     arr.as_slice_mut().unwrap().sort_unstable();
-//!     println!("1: {:?}", arr);
+//! let mut arr: Array1<i64> = Array::from_vec(vec![3, 2, 5, 1]);
+//! arr.as_slice_mut().unwrap().sort_unstable();
 //! ```
+//!
 //! If we wish to sort floating point numbers, then we must specify how
 //! to handle sorting `NaN`s or `inf`s.
 //! ```
@@ -22,6 +22,7 @@
 //!         None => panic!("Attempting to sort NaN's or Inf's"),
 //!     });
 //! ```
+//!
 //! We can perform an argsort, that is, retrieving the indecies
 //! that would sort the array.
 //! ```
@@ -43,7 +44,7 @@
 //! thread_rng().shuffle(arr.as_slice_mut().unwrap());
 //! ```
 //!
-//! Shuffling two arrays can be done in unison, although at the cost of copying both arrays:
+//! Two arrays can be shuffled in unison, at the cost of copying both arrays:
 //! ```
 //! let arr1: Array1<f64> = Array::from_vec(vec![3.0, -1.0, 8.0, 2.0]);
 //! let arr2: Array1<f64> = Array::from_vec(vec![3.0, 2.0, 5.0, 1.0]);
