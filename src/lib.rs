@@ -44,7 +44,7 @@
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
-//!   + The higher order functions like ``.map()``, ``.map_inplace()``, 
+//!   + The higher order functions like ``.map()``, ``.map_inplace()``,
 //!     ``.zip_mut_with()``, ``Zip`` and ``azip!()`` are the most efficient ways
 //!     to perform single traversal and lock step traversal respectively.
 //!   + Performance of an operation depends on the memory layout of the array
@@ -381,7 +381,7 @@ pub type Ixs = isize;
 /// axis to traverse.
 ///
 /// The `outer_iter` and `axis_iter` are one dimensional producers.
-/// 
+///
 /// ## `.genrows()`, `.gencolumns()` and `.lanes()`
 ///
 /// [`.genrows()`][gr] is a producer (and iterable) of all rows in an array.
