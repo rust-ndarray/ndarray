@@ -220,20 +220,20 @@ impl<A, S, D> ArrayBase<S, D>
     /// let stddev = a.var_axis(Axis(0), 1.);
     /// assert_eq!(stddev, aview1(&[2., 2.]));
     /// ```
+    pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
+    where
+        A: Float,
+        D: RemoveAxis,
+    {
+        self.var_axis(axis, ddof).mapv(|x| x.sqrt())
+    }
+
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting to the same shape isn’t possible.
-    pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
-    where
-        A: Float,
-        D: RemoveAxis,
-    {
-        unimplemented!()
-    }
-
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
         where A: Float,
               S2: Data<Elem=A>,
