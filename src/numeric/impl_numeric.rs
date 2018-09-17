@@ -181,12 +181,59 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    /// Return standard deviation along `axis`.
+    ///
+    /// The standard deviation is computed using the [Welford one-pass
+    /// algorithm](https://www.jstor.org/stable/1266577).
+    ///
+    /// The parameter `ddof` specifies the "delta degrees of freedom". For
+    /// example, to calculate the population standard deviation, use `ddof = 0`, 
+    /// or to calculate the sample standard deviation, use `ddof = 1`.
+    ///
+    /// The standard deviation is defined as:
+    ///
+    /// ```text
+    ///                    1       n
+    /// stddev = sqrt ( ――――――――   ∑ (xᵢ - x̅)² )
+    ///                 n - ddof  i=1
+    /// ```
+    ///
+    /// where
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// **Panics** if `ddof` is greater than or equal to the length of the
+    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{aview1, arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.],
+    ///                [5., 6.]]);
+    /// let stddev = a.var_axis(Axis(0), 1.);
+    /// assert_eq!(stddev, aview1(&[2., 2.]));
+    /// ```
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting to the same shape isn’t possible.
+    pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
+    where
+        A: Float,
+        D: RemoveAxis,
+    {
+        unimplemented!()
+    }
+
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
         where A: Float,
               S2: Data<Elem=A>,
