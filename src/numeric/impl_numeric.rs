@@ -183,8 +183,8 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return standard deviation along `axis`.
     ///
-    /// The standard deviation is computed using the [Welford one-pass
-    /// algorithm](https://www.jstor.org/stable/1266577).
+    /// The standard deviation is computed from the variance using 
+    /// the [Welford one-pass algorithm](https://www.jstor.org/stable/1266577).
     ///
     /// The parameter `ddof` specifies the "delta degrees of freedom". For
     /// example, to calculate the population standard deviation, use `ddof = 0`, 
