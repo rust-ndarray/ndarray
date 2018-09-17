@@ -217,7 +217,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.],
     ///                [5., 6.]]);
-    /// let stddev = a.var_axis(Axis(0), 1.);
+    /// let stddev = a.std_axis(Axis(0), 1.);
     /// assert_eq!(stddev, aview1(&[2., 2.]));
     /// ```
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
