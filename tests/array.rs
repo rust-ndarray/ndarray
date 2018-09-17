@@ -760,6 +760,20 @@ fn var_axis_empty_axis() {
 }
 
 #[test]
+#[should_panic]
+fn std_axis_bad_dof() {
+    let a = array![1., 2., 3.];
+    a.std_axis(Axis(0), 4.);
+}
+
+#[test]
+#[should_panic]
+fn std_axis_empty_axis() {
+    let a = array![[], []];
+    a.std_axis(Axis(1), 0.);
+}
+
+#[test]
 fn iter_size_hint()
 {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
