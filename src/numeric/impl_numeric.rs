@@ -65,7 +65,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// );
     /// ```
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds or if the length of the axis is
+    /// zero.
     pub fn sum_axis(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
@@ -90,7 +91,8 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return mean along `axis`.
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds or if the length of the axis is
+    /// zero.
     ///
     /// ```
     /// use ndarray::{aview1, arr2, Axis};
