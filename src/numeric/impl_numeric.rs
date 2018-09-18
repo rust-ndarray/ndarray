@@ -225,7 +225,7 @@ impl<A, S, D> ArrayBase<S, D>
         A: Float,
         D: RemoveAxis,
     {
-        self.var_axis(axis, ddof).mapv(|x| x.sqrt())
+        self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
     }
 
     /// Return `true` if the arrays' elementwise differences are all within
