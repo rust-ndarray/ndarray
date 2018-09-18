@@ -25,7 +25,7 @@
 //!     });
 //! ```
 //!
-//! We can perform an argsort, that is, retrieving the indecies
+//! We can perform an argsort, that is, retrieving the indices
 //! that would sort the array.
 //! ```
 //! use ndarray::*;
@@ -59,10 +59,10 @@
 //! let arr1: Array1<f64> = Array::from_vec(vec![3.0, -1.0, 8.0, 2.0]);
 //! let arr2: Array1<f64> = Array::from_vec(vec![3.0, 2.0, 5.0, 1.0]);
 //!
-//! let mut indecies: Vec<usize> = (0..arr1.len_of(Axis(0))).collect();
-//! thread_rng().shuffle(&mut indecies);
-//! let arr1 = arr1.select(Axis(0), &indecies);
-//! let arr2 = arr2.select(Axis(0), &indecies);
+//! let mut indices: Vec<usize> = (0..arr1.len_of(Axis(0))).collect();
+//! thread_rng().shuffle(&mut indices);
+//! let arr1 = arr1.select(Axis(0), &indices);
+//! let arr2 = arr2.select(Axis(0), &indices);
 //! ```
 //!
 //! # On mutating non-contiguous vs. contiguous arrays
