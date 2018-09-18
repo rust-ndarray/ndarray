@@ -181,6 +181,53 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }
 
+    /// Return standard deviation along `axis`.
+    ///
+    /// The standard deviation is computed from the variance using 
+    /// the [Welford one-pass algorithm](https://www.jstor.org/stable/1266577).
+    ///
+    /// The parameter `ddof` specifies the "delta degrees of freedom". For
+    /// example, to calculate the population standard deviation, use `ddof = 0`, 
+    /// or to calculate the sample standard deviation, use `ddof = 1`.
+    ///
+    /// The standard deviation is defined as:
+    ///
+    /// ```text
+    ///                    1       n
+    /// stddev = sqrt ( ――――――――   ∑ (xᵢ - x̅)² )
+    ///                 n - ddof  i=1
+    /// ```
+    ///
+    /// where
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// **Panics** if `ddof` is greater than or equal to the length of the
+    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{aview1, arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.],
+    ///                [5., 6.]]);
+    /// let stddev = a.std_axis(Axis(0), 1.);
+    /// assert_eq!(stddev, aview1(&[2., 2.]));
+    /// ```
+    pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
+    where
+        A: Float,
+        D: RemoveAxis,
+    {
+        self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
+    }
+
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///
@@ -203,4 +250,3 @@ impl<A, S, D> ArrayBase<S, D>
             }).is_done()
     }
 }
-
