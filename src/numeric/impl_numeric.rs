@@ -177,7 +177,7 @@ impl<A, S, D> ArrayBase<S, D>
                     of the axis you are computing the variance for!")
         } else {
             let dof = count - ddof;
-            sum_sq.mapv(|s| s / dof)
+            sum_sq.mapv_into(|s| s / dof)
         }
     }
 
