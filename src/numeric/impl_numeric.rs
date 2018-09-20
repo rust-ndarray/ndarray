@@ -6,18 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::Add;
-use libnum::{self, Zero, Float};
+use std::ops::{Add, Div};
+use libnum::{self, One, Zero, Float};
 use itertools::free::enumerate;
 
 use imp_prelude::*;
 use numeric_util;
 
-use {
-    LinalgScalar,
-    FoldWhile,
-    Zip,
-};
+use {FoldWhile, Zip};
 
 /// Numerical methods for arrays.
 impl<A, S, D> ArrayBase<S, D>
@@ -105,7 +101,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// );
     /// ```
     pub fn mean_axis(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: LinalgScalar,
+        where A: Clone + Zero + One + Add<Output=A> + Div<Output=A>,
               D: RemoveAxis,
     {
         let n = self.len_of(axis);
