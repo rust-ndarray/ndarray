@@ -105,9 +105,13 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Add extra information for Debug
-        try!(format_array(self, f, <_>::fmt));
-        try!(write!(f, " shape={:?}, strides={:?}, layout={:?}",
-                    self.shape(), self.strides(), layout=self.view().layout()));
+        format_array(self, f, <_>::fmt)?;
+        write!(f, " shape={:?}, strides={:?}, layout={:?}",
+               self.shape(), self.strides(), layout=self.view().layout())?;
+        match D::NDIM {
+            Some(ndim) => write!(f, ", const ndim={}", ndim)?,
+            None => write!(f, ", dynamic ndim={}", self.ndim())?,
+        }
         Ok(())
     }
 }

@@ -1,7 +1,7 @@
-
 extern crate ndarray;
 
-use ndarray::{arr0, rcarr1, aview1};
+use ndarray::prelude::*;
+use ndarray::rcarr1;
 
 #[test]
 fn formatting()
@@ -34,4 +34,21 @@ fn formatting()
 
     let s = format!("{:02x}", aview1::<u8>(&[1, 0xff, 0xfe]));
     assert_eq!(s, "[01, ff, fe]");
+}
+
+#[test]
+fn debug_format() {
+    let a = Array2::<i32>::zeros((3, 4));
+    assert_eq!(
+        format!("{:?}", a),
+        "[[0, 0, 0, 0],
+ [0, 0, 0, 0],
+ [0, 0, 0, 0]] shape=[3, 4], strides=[4, 1], layout=C (0x1), const ndim=2"
+    );
+    assert_eq!(
+        format!("{:?}", a.into_dyn()),
+        "[[0, 0, 0, 0],
+ [0, 0, 0, 0],
+ [0, 0, 0, 0]] shape=[3, 4], strides=[4, 1], layout=C (0x1), dynamic ndim=2"
+    );
 }
