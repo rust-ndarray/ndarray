@@ -65,14 +65,13 @@ impl<A, S, D> ArrayBase<S, D>
     /// );
     /// ```
     ///
-    /// **Panics** if `axis` is out of bounds or if the length of the axis is
-    /// zero.
+    /// **Panics** if `axis` is out of bounds.
     pub fn sum_axis(&self, axis: Axis) -> Array<A, D::Smaller>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
         let n = self.len_of(axis);
-        let mut res = self.subview(axis, 0).to_owned();
+        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
         let stride = self.strides()[axis.index()];
         if self.ndim() == 2 && stride == 1 {
             // contiguous along the axis we are summing
@@ -81,7 +80,7 @@ impl<A, S, D> ArrayBase<S, D>
                 *elt = self.subview(Axis(1 - ax), i).scalar_sum();
             }
         } else {
-            for i in 1..n {
+            for i in 0..n {
                 let view = self.subview(axis, i);
                 res = res + &view;
             }
@@ -92,7 +91,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// Return mean along `axis`.
     ///
     /// **Panics** if `axis` is out of bounds or if the length of the axis is
-    /// zero.
+    /// zero and division by zero panics for type `A`.
     ///
     /// ```
     /// use ndarray::{aview1, arr2, Axis};
@@ -110,8 +109,8 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let n = self.len_of(axis);
         let sum = self.sum_axis(axis);
-        let mut cnt = A::one();
-        for _ in 1..n {
+        let mut cnt = A::zero();
+        for _ in 0..n {
             cnt = cnt + A::one();
         }
         sum / &aview0(&cnt)
