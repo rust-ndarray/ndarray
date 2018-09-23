@@ -435,7 +435,7 @@ impl_slicenextdim_equal!(i32);
 
 macro_rules! impl_slicenextdim_larger {
     (($($generics:tt)*), $self:ty) => {
-        impl<D1: Dimension, $($generics),*> SliceNextDim<D1, D1::Larger> for $self {
+        impl<D1: Dimension, $($generics)*> SliceNextDim<D1, D1::Larger> for $self {
             fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
                 PhantomData
             }
