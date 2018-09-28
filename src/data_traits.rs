@@ -22,23 +22,20 @@ use {
 
 /// Array representation trait.
 ///
-/// ***Note:*** `Data` is not an extension interface at this point.
+/// For an array that meets the invariants of the `ArrayBase` type. This trait
+/// does not imply any ownership or lifetime; pointers to elements in the array
+/// may not be safe to dereference.
+///
+/// ***Note:*** `DataRaw` is not an extension interface at this point.
 /// Traits in Rust can serve many different roles. This trait is public because
 /// it is used as a bound on public methods.
-pub unsafe trait Data : Sized {
+pub unsafe trait DataRaw : Sized {
     /// The array element type.
     type Elem;
 
     #[doc(hidden)]
     // This method is only used for debugging
-    fn _data_slice(&self) -> &[Self::Elem];
-
-    /// Converts the array to a uniquely owned array, cloning elements if necessary.
-    #[doc(hidden)]
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
-    where
-        Self::Elem: Clone,
-        D: Dimension;
+    fn _data_slice(&self) -> Option<&[Self::Elem]>;
 
     private_decl!{}
 }
@@ -47,19 +44,67 @@ pub unsafe trait Data : Sized {
 ///
 /// For an array with writable elements.
 ///
+/// ***Internal trait, see `DataRaw`.***
+pub unsafe trait DataRawMut : DataRaw {
+    /// If possible, ensures that the array has unique access to its data.
+    ///
+    /// If `Self` provides safe mutable access to array elements, then it
+    /// **must** panic or ensure that the data is unique.
+    #[doc(hidden)]
+    fn try_ensure_unique<D>(&mut ArrayBase<Self, D>)
+    where Self: Sized,
+          D: Dimension;
+
+    /// If possible, returns whether the array has unique access to its data.
+    ///
+    /// If `Self` provides safe mutable access to array elements, then it
+    /// **must** return `Some(_)`.
+    #[doc(hidden)]
+    fn try_is_unique(&mut self) -> Option<bool>;
+}
+
+/// Array representation trait.
+///
+/// For an array with elements that can be accessed with safe code.
+///
+/// ***Internal trait, see `DataRaw`.***
+pub unsafe trait Data : DataRaw {
+    /// Converts the array to a uniquely owned array, cloning elements if necessary.
+    #[doc(hidden)]
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension;
+}
+
+/// Array representation trait.
+///
+/// For an array with writable elements that can be accessed with safe code.
+///
 /// ***Internal trait, see `Data`.***
-pub unsafe trait DataMut : Data {
+//
+// # For implementers
+//
+// If you implement the `DataMut` trait, you are guaranteeing that the
+// `DataRawMut::try_ensure_unique` implementation always panics or ensures that
+// the data is unique. You are also guaranteeing that `try_is_unique` always
+// returns `Some(_)`.
+pub unsafe trait DataMut : Data + DataRawMut {
+    /// Ensures that the array has unique access to its data.
     #[doc(hidden)]
     #[inline]
-    fn ensure_unique<D>(&mut ArrayBase<Self, D>)
-        where Self: Sized,
-              D: Dimension
-    { }
+    fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
+    where Self: Sized,
+          D: Dimension
+    {
+        Self::try_ensure_unique(self_)
+    }
 
+    /// Returns whether the array has unique access to its data.
     #[doc(hidden)]
     #[inline]
     fn is_unique(&mut self) -> bool {
-        true
+        self.try_is_unique().unwrap()
     }
 }
 
@@ -81,33 +126,20 @@ pub unsafe trait DataClone : Data {
     }
 }
 
-unsafe impl<A> Data for OwnedArcRepr<A> {
+unsafe impl<A> DataRaw for OwnedArcRepr<A> {
     type Elem = A;
-    fn _data_slice(&self) -> &[A] {
-        &self.0
-    }
-    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
-    where
-        A: Clone,
-        D: Dimension,
-    {
-        Self::ensure_unique(&mut self_);
-        let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
-        ArrayBase {
-            data: data,
-            ptr: self_.ptr,
-            dim: self_.dim,
-            strides: self_.strides,
-        }
+    fn _data_slice(&self) -> Option<&[A]> {
+        Some(&self.0)
     }
     private_impl!{}
 }
 
 // NOTE: Copy on write
-unsafe impl<A> DataMut for OwnedArcRepr<A>
-    where A: Clone
+unsafe impl<A> DataRawMut for OwnedArcRepr<A>
+where
+    A: Clone,
 {
-    fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
+    fn try_ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
         where Self: Sized,
               D: Dimension
     {
@@ -136,10 +168,29 @@ unsafe impl<A> DataMut for OwnedArcRepr<A>
         }
     }
 
-    fn is_unique(&mut self) -> bool {
-        Arc::get_mut(&mut self.0).is_some()
+    fn try_is_unique(&mut self) -> Option<bool> {
+        Some(Arc::get_mut(&mut self.0).is_some())
     }
 }
+
+unsafe impl<A> Data for OwnedArcRepr<A> {
+    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        Self::ensure_unique(&mut self_);
+        let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
+        ArrayBase {
+            data: data,
+            ptr: self_.ptr,
+            dim: self_.dim,
+            strides: self_.strides,
+        }
+    }
+}
+
+unsafe impl<A> DataMut for OwnedArcRepr<A> where A: Clone {}
 
 unsafe impl<A> DataClone for OwnedArcRepr<A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
@@ -148,11 +199,28 @@ unsafe impl<A> DataClone for OwnedArcRepr<A> {
     }
 }
 
-unsafe impl<A> Data for OwnedRepr<A> {
+unsafe impl<A> DataRaw for OwnedRepr<A> {
     type Elem = A;
-    fn _data_slice(&self) -> &[A] {
-        &self.0
+    fn _data_slice(&self) -> Option<&[A]> {
+        Some(&self.0)
     }
+    private_impl!{}
+}
+
+unsafe impl<A> DataRawMut for OwnedRepr<A> {
+    #[inline]
+    fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
+    where Self: Sized,
+          D: Dimension
+    {}
+
+    #[inline]
+    fn try_is_unique(&mut self) -> Option<bool> {
+        Some(true)
+    }
+}
+
+unsafe impl<A> Data for OwnedRepr<A> {
     #[inline]
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
     where
@@ -161,7 +229,6 @@ unsafe impl<A> Data for OwnedRepr<A> {
     {
         self_
     }
-    private_impl!{}
 }
 
 unsafe impl<A> DataMut for OwnedRepr<A> { }
@@ -192,11 +259,15 @@ unsafe impl<A> DataClone for OwnedRepr<A>
     }
 }
 
-unsafe impl<'a, A> Data for ViewRepr<&'a A> {
+unsafe impl<'a, A> DataRaw for ViewRepr<&'a A> {
     type Elem = A;
-    fn _data_slice(&self) -> &[A] {
-        &[]
+    fn _data_slice(&self) -> Option<&[A]> {
+        None
     }
+    private_impl!{}
+}
+
+unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
     where
         Self::Elem: Clone,
@@ -204,7 +275,6 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     {
         self_.to_owned()
     }
-    private_impl!{}
 }
 
 unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
@@ -213,11 +283,27 @@ unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
     }
 }
 
-unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
+unsafe impl<'a, A> DataRaw for ViewRepr<&'a mut A> {
     type Elem = A;
-    fn _data_slice(&self) -> &[A] {
-        &[]
+    fn _data_slice(&self) -> Option<&[A]> {
+        None
     }
+    private_impl!{}
+}
+
+unsafe impl<'a, A> DataRawMut for ViewRepr<&'a mut A> {
+    #[inline]
+    fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
+    where Self: Sized,
+          D: Dimension {}
+
+    #[inline]
+    fn try_is_unique(&mut self) -> Option<bool> {
+        Some(true)
+    }
+}
+
+unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
     where
         Self::Elem: Clone,
@@ -225,7 +311,6 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     {
         self_.to_owned()
     }
-    private_impl!{}
 }
 
 unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> { }

@@ -1630,16 +1630,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     fn pointer_is_inbounds(&self) -> bool {
-        let slc = self.data._data_slice();
-        if slc.is_empty() {
-            // special case for data-less views
-            return true;
+        match self.data._data_slice() {
+            None => {
+                // special case for non-owned views
+                true
+            }
+            Some(slc) => {
+                let ptr = slc.as_ptr() as *mut A;
+                let end = unsafe {
+                    ptr.offset(slc.len() as isize)
+                };
+                self.ptr >= ptr && self.ptr <= end
+            }
         }
-        let ptr = slc.as_ptr() as *mut A;
-        let end = unsafe {
-            ptr.offset(slc.len() as isize)
-        };
-        self.ptr >= ptr && self.ptr <= end
     }
 
     /// Perform an elementwise assigment to `self` from `rhs`.
