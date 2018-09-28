@@ -154,6 +154,7 @@ pub use aliases::*;
 pub use data_traits::{
     DataRaw,
     DataRawMut,
+    DataRawClone,
     Data,
     DataMut,
     DataOwned,

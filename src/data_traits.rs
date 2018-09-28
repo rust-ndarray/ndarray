@@ -66,6 +66,24 @@ pub unsafe trait DataRawMut : DataRaw {
 
 /// Array representation trait.
 ///
+/// An array representation that can be cloned.
+///
+/// ***Internal trait, see `DataRaw`.***
+pub unsafe trait DataRawClone : DataRaw {
+    #[doc(hidden)]
+    /// Unsafe because, `ptr` must point inside the current storage.
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
+
+    #[doc(hidden)]
+    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: *mut Self::Elem) -> *mut Self::Elem {
+        let (data, ptr) = other.clone_with_ptr(ptr);
+        *self = data;
+        ptr
+    }
+}
+
+/// Array representation trait.
+///
 /// For an array with elements that can be accessed with safe code.
 ///
 /// ***Internal trait, see `DataRaw`.***
@@ -111,21 +129,13 @@ pub unsafe trait DataMut : Data + DataRawMut {
 
 /// Array representation trait.
 ///
-/// An array representation that can be cloned.
+/// An array representation that can be cloned and allows elements to be
+/// accessed with safe code.
 ///
 /// ***Internal trait, see `Data`.***
-pub unsafe trait DataClone : Data {
-    #[doc(hidden)]
-    /// Unsafe because, `ptr` must point inside the current storage.
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
+pub trait DataClone : Data + DataRawClone {}
 
-    #[doc(hidden)]
-    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: *mut Self::Elem) -> *mut Self::Elem {
-        let (data, ptr) = other.clone_with_ptr(ptr);
-        *self = data;
-        ptr
-    }
-}
+impl<T> DataClone for T where T: Data + DataRawClone {}
 
 unsafe impl<A> DataRaw for RawViewRepr<*const A> {
     type Elem = A;
@@ -133,6 +143,12 @@ unsafe impl<A> DataRaw for RawViewRepr<*const A> {
         None
     }
     private_impl!{}
+}
+
+unsafe impl<A> DataRawClone for RawViewRepr<*const A> {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+        (*self, ptr)
+    }
 }
 
 unsafe impl<A> DataRaw for RawViewRepr<*mut A> {
@@ -153,6 +169,12 @@ unsafe impl<A> DataRawMut for RawViewRepr<*mut A> {
     #[inline]
     fn try_is_unique(&mut self) -> Option<bool> {
         None
+    }
+}
+
+unsafe impl<A> DataRawClone for RawViewRepr<*mut A> {
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+        (*self, ptr)
     }
 }
 
@@ -222,7 +244,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
 
 unsafe impl<A> DataMut for OwnedArcRepr<A> where A: Clone {}
 
-unsafe impl<A> DataClone for OwnedArcRepr<A> {
+unsafe impl<A> DataRawClone for OwnedArcRepr<A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         // pointer is preserved
         (self.clone(), ptr)
@@ -263,7 +285,7 @@ unsafe impl<A> Data for OwnedRepr<A> {
 
 unsafe impl<A> DataMut for OwnedRepr<A> { }
 
-unsafe impl<A> DataClone for OwnedRepr<A>
+unsafe impl<A> DataRawClone for OwnedRepr<A>
     where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
@@ -307,7 +329,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     }
 }
 
-unsafe impl<'a, A> DataClone for ViewRepr<&'a A> {
+unsafe impl<'a, A> DataRawClone for ViewRepr<&'a A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         (*self, ptr)
     }
