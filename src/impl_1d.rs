@@ -12,11 +12,13 @@ use imp_prelude::*;
 
 /// # Methods For 1-D Arrays
 impl<A, S> ArrayBase<S, Ix1>
-    where S: Data<Elem=A>,
+    where S: DataRaw<Elem=A>,
 {
     /// Return an vector with the elements of the one-dimensional array.
     pub fn to_vec(&self) -> Vec<A>
-        where A: Clone,
+    where
+        A: Clone,
+        S: Data,
     {
         if let Some(slc) = self.as_slice() {
             slc.to_vec()
