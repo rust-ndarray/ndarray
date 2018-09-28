@@ -11,9 +11,8 @@ use std::slice;
 use imp_prelude::*;
 use dimension::{self, stride_offset};
 use error::ShapeError;
-use NdIndex;
 use arraytraits::array_out_of_bounds;
-use StrideShape;
+use {is_aligned, NdIndex, StrideShape};
 
 use {
     ElementsBase,
@@ -24,11 +23,6 @@ use {
 };
 
 use iter::{self, AxisIter, AxisIterMut};
-
-/// Returns `true` if the pointer is aligned.
-fn is_aligned<T>(ptr: *const T) -> bool {
-    (ptr as usize) % ::std::mem::align_of::<T>() == 0
-}
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>

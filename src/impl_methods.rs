@@ -1079,6 +1079,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Try to make the array unshared.
+    ///
+    /// This is equivalent to `.ensure_unique()` if `S: DataMut`.
+    ///
+    /// This method is mostly only useful with unsafe code.
+    fn try_ensure_unique(&mut self)
+        where S: DataRawMut
+    {
+        debug_assert!(self.pointer_is_inbounds());
+        S::try_ensure_unique(self);
+        debug_assert!(self.pointer_is_inbounds());
+    }
+
     /// Make the array unshared.
     ///
     /// This method is mostly only useful with unsafe code.
@@ -1137,6 +1150,21 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         self.ensure_unique(); // for RcArray
         self.ptr
+    }
+
+    /// Return a raw view of the array.
+    #[inline]
+    pub fn raw_view(&self) -> RawArrayView<A, D> {
+        unsafe { RawArrayView::new_(self.ptr, self.dim.clone(), self.strides.clone()) }
+    }
+
+    /// Return a raw mutable view of the array.
+    #[inline]
+    pub fn raw_view_mut(&mut self) -> RawArrayViewMut<A, D>
+        where S: DataRawMut
+    {
+        self.try_ensure_unique(); // for RcArray
+        unsafe { RawArrayViewMut::new_(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.

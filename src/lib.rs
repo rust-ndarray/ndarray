@@ -1355,6 +1355,9 @@ pub use impl_ops::ScalarOperand;
 // Array view methods
 mod impl_views;
 
+// Array raw view methods
+mod impl_raw_views;
+
 /// A contiguous array shape of n dimensions.
 ///
 /// Either c- or f- memory ordered (*c* a.k.a *row major* is the default).
@@ -1370,4 +1373,9 @@ pub struct StrideShape<D> {
     dim: D,
     strides: D,
     custom: bool,
+}
+
+/// Returns `true` if the pointer is aligned.
+pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
+    (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }
