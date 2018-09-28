@@ -14,6 +14,7 @@ use std::sync::Arc;
 use {
     ArrayBase,
     Dimension,
+    RawViewRepr,
     ViewRepr,
     OwnedRepr,
     OwnedRcRepr,
@@ -123,6 +124,35 @@ pub unsafe trait DataClone : Data {
         let (data, ptr) = other.clone_with_ptr(ptr);
         *self = data;
         ptr
+    }
+}
+
+unsafe impl<A> DataRaw for RawViewRepr<*const A> {
+    type Elem = A;
+    fn _data_slice(&self) -> Option<&[A]> {
+        None
+    }
+    private_impl!{}
+}
+
+unsafe impl<A> DataRaw for RawViewRepr<*mut A> {
+    type Elem = A;
+    fn _data_slice(&self) -> Option<&[A]> {
+        None
+    }
+    private_impl!{}
+}
+
+unsafe impl<A> DataRawMut for RawViewRepr<*mut A> {
+    #[inline]
+    fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
+    where Self: Sized,
+          D: Dimension
+    {}
+
+    #[inline]
+    fn try_is_unique(&mut self) -> Option<bool> {
+        None
     }
 }
 

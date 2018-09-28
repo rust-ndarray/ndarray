@@ -25,6 +25,8 @@ pub use {
     RcArray,
     ArrayView,
     ArrayViewMut,
+    RawArrayView,
+    RawArrayViewMut,
 };
 
 #[doc(no_inline)]

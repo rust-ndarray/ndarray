@@ -201,6 +201,7 @@ mod imp_prelude {
         DataMut,
         DataOwned,
         DataShared,
+        RawViewRepr,
         ViewRepr,
         Ix, Ixs,
     };
@@ -1127,6 +1128,57 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 /// [ab]: struct.ArrayBase.html
 pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 
+/// A read-only array view without a lifetime.
+///
+/// This is similar to [`ArrayView`] but does not carry any lifetime or
+/// ownership information, and its data cannot be read without an unsafe
+/// conversion into an [`ArrayView`]. The relationship between `RawArrayView`
+/// and [`ArrayView`] is somewhat analogous to the relationship between `*const
+/// T` and `&T`, but `RawArrayView` has additional requirements that `*const T`
+/// does not, such as alignment and non-nullness.
+///
+/// [`ArrayView`]: type.ArrayView.html
+///
+/// The `RawArrayView<A, D>` is parameterized by `A` for the element type and
+/// `D` for the dimensionality.
+///
+/// Raw array views have all the methods of an array (see
+/// [`ArrayBase`](struct.ArrayBase.html)).
+///
+/// See also [`RawArrayViewMut`](type.RawArrayViewMut.html).
+///
+/// # Warning
+///
+/// You can't use this type wih an arbitrary raw pointer; see
+/// [`from_shape_ptr`](#method.from_shape_ptr) for details.
+pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
+
+/// A mutable array view without a lifetime.
+///
+/// This is similar to [`ArrayViewMut`] but does not carry any lifetime or
+/// ownership information, and its data cannot be read/written without an
+/// unsafe conversion into an [`ArrayViewMut`]. The relationship between
+/// `RawArrayViewMut` and [`ArrayViewMut`] is somewhat analogous to the
+/// relationship between `*mut T` and `&mut T`, but `RawArrayViewMut` has
+/// additional requirements that `*mut T` does not, such as alignment and
+/// non-nullness.
+///
+/// [`ArrayViewMut`]: type.ArrayViewMut.html
+///
+/// The `RawArrayViewMut<A, D>` is parameterized by `A` for the element type
+/// and `D` for the dimensionality.
+///
+/// Raw array views have all the methods of an array (see
+/// [`ArrayBase`](struct.ArrayBase.html)).
+///
+/// See also [`RawArrayView`](type.RawArrayView.html).
+///
+/// # Warning
+///
+/// You can't use this type wih an arbitrary raw pointer; see
+/// [`from_shape_ptr`](#method.from_shape_ptr) for details.
+pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
+
 /// Array's representation.
 ///
 /// *Don’t use this type directly—use the type alias
@@ -1154,6 +1206,23 @@ impl<A> Clone for OwnedArcRepr<A> {
     }
 }
 
+/// Array pointer’s representation.
+///
+/// *Don’t use this type directly—use the type aliases
+/// [`RawArrayView`](type.RawArrayView.html) /
+/// [`RawArrayViewMut`](type.RawArrayViewMut.html) for the array type!*
+#[derive(Copy, Clone)]
+// This is just a marker type, to carry the mutability and element type.
+pub struct RawViewRepr<A> {
+    ptr: PhantomData<A>,
+}
+
+impl<A> RawViewRepr<A> {
+    #[inline(always)]
+    fn new() -> Self {
+        RawViewRepr { ptr: PhantomData }
+    }
+}
 
 /// Array view’s representation.
 ///
