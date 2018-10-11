@@ -23,7 +23,6 @@ use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, stride_offset};
 use iterators::{
     exact_chunks_of,
     exact_chunks_mut_of,
-    windows
 };
 use zip::Zip;
 
@@ -952,7 +951,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn windows<E>(&self, window_size: E) -> Windows<A, D>
         where E: IntoDimension<Dim=D>
     {
-        windows(self.view(), window_size)
+        Windows::new(self.view(), window_size)
     }
 
     // Return (length, stride) for diagonal

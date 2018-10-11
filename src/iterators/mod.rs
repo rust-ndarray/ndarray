@@ -29,10 +29,7 @@ use super::{
     NdProducer,
 };
 
-pub use self::windows::{
-    Windows,
-    windows
-};
+pub use self::windows::Windows;
 pub use self::chunks::{
     ExactChunks,
     ExactChunksIter,
