@@ -20,10 +20,6 @@ use iterators;
 use error::{self, ShapeError, ErrorKind};
 use dimension::IntoDimension;
 use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, stride_offset};
-use iterators::{
-    exact_chunks_of,
-    exact_chunks_mut_of,
-};
 use zip::Zip;
 
 use {
@@ -892,7 +888,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D>
         where E: IntoDimension<Dim=D>,
     {
-        exact_chunks_of(self.view(), chunk_size)
+        ExactChunks::new(self.view(), chunk_size)
     }
 
     /// Return an exact chunks producer (and iterable).
@@ -931,7 +927,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where E: IntoDimension<Dim=D>,
               S: DataMut
     {
-        exact_chunks_mut_of(self.view_mut(), chunk_size)
+        ExactChunksMut::new(self.view_mut(), chunk_size)
     }
 
     /// Return a window producer and iterable.

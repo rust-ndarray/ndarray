@@ -38,26 +38,30 @@ pub struct ExactChunks<'a, A: 'a, D> {
     inner_strides: D,
 }
 
-/// **Panics** if any chunk dimension is zero<br>
-pub fn exact_chunks_of<A, D, E>(mut a: ArrayView<A, D>, chunk: E) -> ExactChunks<A, D>
-    where D: Dimension,
-          E: IntoDimension<Dim=D>,
-{
-    let chunk = chunk.into_dimension();
-    ndassert!(a.ndim() == chunk.ndim(),
-              concat!("Chunk dimension {} does not match array dimension {} ",
-                      "(with array of shape {:?})"),
-             chunk.ndim(), a.ndim(), a.shape());
-    for i in 0..a.ndim() {
-        a.dim[i] /= chunk[i];
-    }
-    let inner_strides = a.raw_strides();
-    a.strides *= &chunk;
+impl<'a, A, D: Dimension> ExactChunks<'a, A, D> {
+    /// Creates a new exact chunks producer.
+    ///
+    /// **Panics** if any chunk dimension is zero
+    pub(crate) fn new<E>(mut a: ArrayView<'a, A, D>, chunk: E) -> Self
+    where
+        E: IntoDimension<Dim = D>,
+    {
+        let chunk = chunk.into_dimension();
+        ndassert!(a.ndim() == chunk.ndim(),
+                  concat!("Chunk dimension {} does not match array dimension {} ",
+                          "(with array of shape {:?})"),
+                  chunk.ndim(), a.ndim(), a.shape());
+        for i in 0..a.ndim() {
+            a.dim[i] /= chunk[i];
+        }
+        let inner_strides = a.raw_strides();
+        a.strides *= &chunk;
 
-    ExactChunks {
-        base: a,
-        chunk: chunk,
-        inner_strides: inner_strides,
+        ExactChunks {
+            base: a,
+            chunk: chunk,
+            inner_strides: inner_strides,
+        }
     }
 }
 
@@ -117,27 +121,30 @@ pub struct ExactChunksMut<'a, A: 'a, D> {
     inner_strides: D,
 }
 
-/// **Panics** if any chunk dimension is zero<br>
-pub fn exact_chunks_mut_of<A, D, E>(mut a: ArrayViewMut<A, D>, chunk: E)
-    -> ExactChunksMut<A, D>
-    where D: Dimension,
-          E: IntoDimension<Dim=D>,
-{
-    let chunk = chunk.into_dimension();
-    ndassert!(a.ndim() == chunk.ndim(),
-              concat!("Chunk dimension {} does not match array dimension {} ",
-                      "(with array of shape {:?})"),
-             chunk.ndim(), a.ndim(), a.shape());
-    for i in 0..a.ndim() {
-        a.dim[i] /= chunk[i];
-    }
-    let inner_strides = a.raw_strides();
-    a.strides *= &chunk;
+impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D> {
+    /// Creates a new exact chunks producer.
+    ///
+    /// **Panics** if any chunk dimension is zero
+    pub(crate) fn new<E>(mut a: ArrayViewMut<'a, A, D>, chunk: E) -> Self
+    where
+        E: IntoDimension<Dim = D>,
+    {
+        let chunk = chunk.into_dimension();
+        ndassert!(a.ndim() == chunk.ndim(),
+                  concat!("Chunk dimension {} does not match array dimension {} ",
+                          "(with array of shape {:?})"),
+                  chunk.ndim(), a.ndim(), a.shape());
+        for i in 0..a.ndim() {
+            a.dim[i] /= chunk[i];
+        }
+        let inner_strides = a.raw_strides();
+        a.strides *= &chunk;
 
-    ExactChunksMut {
-        base: a,
-        chunk: chunk,
-        inner_strides: inner_strides,
+        ExactChunksMut {
+            base: a,
+            chunk: chunk,
+            inner_strides: inner_strides,
+        }
     }
 }
 

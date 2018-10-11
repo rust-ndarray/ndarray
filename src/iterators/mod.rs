@@ -33,10 +33,8 @@ pub use self::windows::Windows;
 pub use self::chunks::{
     ExactChunks,
     ExactChunksIter,
-    exact_chunks_of,
     ExactChunksMut,
     ExactChunksIterMut,
-    exact_chunks_mut_of,
 };
 pub use self::lanes::{
     Lanes,
