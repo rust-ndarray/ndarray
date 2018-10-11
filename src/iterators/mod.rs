@@ -504,8 +504,8 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
     }
 }
 
-/// An iterator that traverses over all dimensions but the innermost,
-/// and yields each inner row.
+/// An iterator that traverses over all axes but one, and yields a view for
+/// each lane along that axis.
 ///
 /// See [`.lanes()`](../struct.ArrayBase.html#method.lanes) for more information.
 pub struct LanesIter<'a, A: 'a, D> {
