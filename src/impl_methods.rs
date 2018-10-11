@@ -819,7 +819,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
-        iterators::new_axis_iter(self.view(), axis.index())
+        AxisIter::new(self.view(), axis)
     }
 
 
@@ -834,7 +834,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where S: DataMut,
               D: RemoveAxis,
     {
-        iterators::new_axis_iter_mut(self.view_mut(), axis.index())
+        AxisIterMut::new(self.view_mut(), axis)
     }
 
 

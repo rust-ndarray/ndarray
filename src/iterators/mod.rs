@@ -704,6 +704,18 @@ clone_bounds!(
     }
 );
 
+impl<'a, A, D: Dimension> AxisIter<'a, A, D> {
+    /// Creates a new iterator over the specified axis.
+    pub(crate) fn new<Di>(v: ArrayView<'a, A, Di>, axis: Axis) -> Self
+    where
+        Di: RemoveAxis<Smaller = D>,
+    {
+        AxisIter {
+            iter: AxisIterCore::new(v, axis),
+            life: PhantomData,
+        }
+    }
+}
 
 macro_rules! axis_iter_split_at_impl {
     ($iter: ident) => (
@@ -791,26 +803,6 @@ impl<'a, A, D> ExactSizeIterator for AxisIter<'a, A, D>
     }
 }
 
-pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> AxisIter<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIter {
-        iter: AxisIterCore::new(v, Axis(0)),
-        life: PhantomData,
-    }
-}
-
-pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
-    -> AxisIter<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIter {
-        iter: AxisIterCore::new(v, Axis(axis)),
-        life: PhantomData,
-    }
-}
-
-
 /// An iterator that traverses over an axis and
 /// and yields each subview (mutable)
 ///
@@ -828,6 +820,19 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 pub struct AxisIterMut<'a, A: 'a, D> {
     iter: AxisIterCore<A, D>,
     life: PhantomData<&'a mut A>,
+}
+
+impl<'a, A, D: Dimension> AxisIterMut<'a, A, D> {
+    /// Creates a new iterator over the specified axis.
+    pub(crate) fn new<Di>(v: ArrayViewMut<'a, A, Di>, axis: Axis) -> Self
+    where
+        Di: RemoveAxis<Smaller = D>,
+    {
+        AxisIterMut {
+            iter: AxisIterCore::new(v, axis),
+            life: PhantomData,
+        }
+    }
 }
 
 axis_iter_split_at_impl!(AxisIterMut);
@@ -867,25 +872,6 @@ impl<'a, A, D> ExactSizeIterator for AxisIterMut<'a, A, D>
 {
     fn len(&self) -> usize {
         self.size_hint().0
-    }
-}
-
-pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> AxisIterMut<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIterMut {
-        iter: AxisIterCore::new(v, Axis(0)),
-        life: PhantomData,
-    }
-}
-
-pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
-    -> AxisIterMut<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIterMut {
-        iter: AxisIterCore::new(v, Axis(axis)),
-        life: PhantomData,
     }
 }
 
