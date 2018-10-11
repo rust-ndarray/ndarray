@@ -515,6 +515,18 @@ pub struct LanesIter<'a, A: 'a, D> {
     life: PhantomData<&'a A>,
 }
 
+clone_bounds!(
+    ['a, A, D: Clone]
+    LanesIter['a, A, D] {
+        @copy {
+            inner_len,
+            inner_stride,
+            life,
+        }
+        iter,
+    }
+);
+
 impl<'a, A, D> Iterator for LanesIter<'a, A, D>
     where D: Dimension
 {
