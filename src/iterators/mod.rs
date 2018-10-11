@@ -43,41 +43,33 @@ pub use self::lanes::{
 
 use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
-/// Base for array iterators
+/// Base for iterators over all axes.
 ///
-/// Iterator element type is `&'a A`.
-pub struct Baseiter<'a, A: 'a, D> {
-    // Can have pub fields because it is not itself pub.
-    pub ptr: *mut A,
-    pub dim: D,
-    pub strides: D,
-    pub index: Option<D>,
-    pub life: PhantomData<&'a A>,
+/// Iterator element type is `*mut A`.
+pub struct Baseiter<A, D> {
+    ptr: *mut A,
+    dim: D,
+    strides: D,
+    index: Option<D>,
 }
 
 
-impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
-    /// Creating a Baseiter is unsafe, because it can
-    /// have any lifetime, be immut or mut, and the
-    /// boundary and stride parameters need to be correct to
-    /// avoid memory unsafety.
-    ///
-    /// It must be placed in the correct mother iterator to be safe.
-    ///
-    /// NOTE: Mind the lifetime, it's arbitrary
+impl<A, D: Dimension> Baseiter<A, D> {
+    /// Creating a Baseiter is unsafe because shape and stride parameters need
+    /// to be correct to avoid performing an unsafe pointer offset while
+    /// iterating.
     #[inline]
-    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<'a, A, D> {
+    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D> {
         Baseiter {
             ptr: ptr,
             index: len.first_index(),
             dim: len,
             strides: stride,
-            life: PhantomData,
         }
     }
 }
 
-impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
+impl<A, D: Dimension> Baseiter<A, D> {
     #[inline]
     pub fn next(&mut self) -> Option<*mut A> {
         let index = match self.index {
@@ -132,7 +124,7 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
     }
 }
 
-impl<'a, A> Baseiter<'a, A, Ix1> {
+impl<A> Baseiter<A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<*mut A> {
         let index = match self.index {
@@ -150,11 +142,10 @@ impl<'a, A> Baseiter<'a, A, Ix1> {
 }
 
 clone_bounds!(
-    ['a, A, D: Clone]
-    Baseiter['a, A, D] {
+    [A, D: Clone]
+    Baseiter[A, D] {
         @copy {
             ptr,
-            life,
         }
         dim,
         strides,
@@ -166,10 +157,20 @@ clone_bounds!(
     ['a, A, D: Clone]
     ElementsBase['a, A, D] {
         @copy {
+            life,
         }
         inner,
     }
 );
+
+impl<'a, A, D: Dimension> ElementsBase<'a, A, D> {
+    pub fn new(v: ArrayView<'a, A, D>) -> Self {
+        ElementsBase {
+            inner: v.into_base_iter(),
+            life: PhantomData,
+        }
+    }
+}
 
 impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     type Item = &'a A;
@@ -281,7 +282,8 @@ pub struct Iter<'a, A: 'a, D> {
 
 /// Counted read only iterator
 pub struct ElementsBase<'a, A: 'a, D> {
-    pub inner: Baseiter<'a, A, D>,
+    inner: Baseiter<A, D>,
+    life: PhantomData<&'a A>,
 }
 
 /// An iterator over the elements of an array (mutable).
@@ -297,9 +299,18 @@ pub struct IterMut<'a, A: 'a, D> {
 ///
 /// Iterator element type is `&'a mut A`.
 pub struct ElementsBaseMut<'a, A: 'a, D> {
-    pub inner: Baseiter<'a, A, D>,
+    inner: Baseiter<A, D>,
+    life: PhantomData<&'a mut A>,
 }
 
+impl<'a, A, D: Dimension> ElementsBaseMut<'a, A, D> {
+    pub fn new(v: ArrayViewMut<'a, A, D>) -> Self {
+        ElementsBaseMut {
+            inner: v.into_base_iter(),
+            life: PhantomData,
+        }
+    }
+}
 
 /// An iterator over the indexes and elements of an array.
 ///
@@ -495,7 +506,8 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
 pub struct LanesIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
-    iter: Baseiter<'a, A, D>,
+    iter: Baseiter<A, D>,
+    life: PhantomData<&'a A>,
 }
 
 impl<'a, A, D> Iterator for LanesIter<'a, A, D>
@@ -533,7 +545,8 @@ impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
 pub struct LanesIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
-    iter: Baseiter<'a, A, D>,
+    iter: Baseiter<A, D>,
+    life: PhantomData<&'a mut A>,
 }
 
 impl<'a, A, D> Iterator for LanesIterMut<'a, A, D>

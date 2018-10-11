@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 
 use imp_prelude::*;
 use {NdProducer, Layout};
@@ -85,6 +86,7 @@ impl<'a, A, D> IntoIterator for Lanes<'a, A, D>
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
             inner_stride: self.inner_stride,
+            life: PhantomData,
         }
     }
 }
@@ -134,6 +136,7 @@ impl<'a, A, D> IntoIterator for LanesMut<'a, A, D>
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
             inner_stride: self.inner_stride,
+            life: PhantomData,
         }
     }
 }
