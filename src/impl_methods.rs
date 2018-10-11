@@ -21,8 +21,6 @@ use error::{self, ShapeError, ErrorKind};
 use dimension::IntoDimension;
 use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, stride_offset};
 use iterators::{
-    new_lanes,
-    new_lanes_mut,
     exact_chunks_of,
     exact_chunks_mut_of,
     windows
@@ -676,7 +674,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn genrows(&self) -> Lanes<A, D::Smaller> {
         let mut n = self.ndim();
         if n == 0 { n += 1; }
-        new_lanes(self.view(), Axis(n - 1))
+        Lanes::new(self.view(), Axis(n - 1))
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -688,7 +686,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let mut n = self.ndim();
         if n == 0 { n += 1; }
-        new_lanes_mut(self.view_mut(), Axis(n - 1))
+        LanesMut::new(self.view_mut(), Axis(n - 1))
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -718,7 +716,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// }
     /// ```
     pub fn gencolumns(&self) -> Lanes<A, D::Smaller> {
-        new_lanes(self.view(), Axis(0))
+        Lanes::new(self.view(), Axis(0))
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -728,7 +726,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn gencolumns_mut(&mut self) -> LanesMut<A, D::Smaller>
         where S: DataMut
     {
-        new_lanes_mut(self.view_mut(), Axis(0))
+        LanesMut::new(self.view_mut(), Axis(0))
     }
 
     /// Return a producer and iterable that traverses over all 1D lanes
@@ -760,7 +758,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
     /// ```
     pub fn lanes(&self, axis: Axis) -> Lanes<A, D::Smaller> {
-        new_lanes(self.view(), axis)
+        Lanes::new(self.view(), axis)
     }
 
     /// Return a producer and iterable that traverses over all 1D lanes
@@ -770,7 +768,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn lanes_mut(&mut self, axis: Axis) -> LanesMut<A, D::Smaller>
         where S: DataMut
     {
-        new_lanes_mut(self.view_mut(), axis)
+        LanesMut::new(self.view_mut(), axis)
     }
 
 
@@ -1595,8 +1593,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         // break the arrays up into their inner rows
         let n = self.ndim();
         let dim = self.raw_dim();
-        Zip::from(new_lanes_mut(self.view_mut(), Axis(n - 1)))
-            .and(new_lanes(rhs.broadcast_assume(dim), Axis(n - 1)))
+        Zip::from(LanesMut::new(self.view_mut(), Axis(n - 1)))
+            .and(Lanes::new(rhs.broadcast_assume(dim), Axis(n - 1)))
             .apply(move |s_row, r_row| {
                 Zip::from(s_row).and(r_row).apply(|a, b| f(a, b))
             });

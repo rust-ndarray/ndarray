@@ -42,8 +42,6 @@ pub use self::chunks::{
     exact_chunks_mut_of,
 };
 pub use self::lanes::{
-    new_lanes,
-    new_lanes_mut,
     Lanes,
     LanesMut,
 };

@@ -122,7 +122,7 @@ pub use error::{ShapeError, ErrorKind};
 pub use slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
 
 use iterators::Baseiter;
-use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
+use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
 
 pub use arraytraits::AsArray;
 pub use linalg_traits::{LinalgScalar, NdFloat};
@@ -877,7 +877,7 @@ impl<A, S, D> ArrayBase<S, D>
     fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller>
     {
         let n = self.ndim();
-        iterators::new_lanes(self.view(), Axis(n.saturating_sub(1)))
+        Lanes::new(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
@@ -885,7 +885,7 @@ impl<A, S, D> ArrayBase<S, D>
         where S: DataMut
     {
         let n = self.ndim();
-        iterators::new_lanes_mut(self.view_mut(), Axis(n.saturating_sub(1)))
+        LanesMut::new(self.view_mut(), Axis(n.saturating_sub(1)))
     }
 }
 

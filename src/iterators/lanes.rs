@@ -30,29 +30,30 @@ pub struct Lanes<'a, A: 'a, D> {
     inner_stride: Ixs,
 }
 
-
-pub fn new_lanes<A, D>(v: ArrayView<A, D>, axis: Axis)
-    -> Lanes<A, D::Smaller>
-    where D: Dimension
-{
-    let ndim = v.ndim();
-    let len;
-    let stride;
-    let iter_v;
-    if ndim == 0 {
-        len = 1;
-        stride = 1;
-        iter_v = v.try_remove_axis(Axis(0))
-    } else {
-        let i = axis.index();
-        len = v.dim[i];
-        stride = v.strides[i] as isize;
-        iter_v = v.try_remove_axis(axis)
-    }
-    Lanes {
-        inner_len: len,
-        inner_stride: stride,
-        base: iter_v,
+impl<'a, A, D: Dimension> Lanes<'a, A, D> {
+    pub(crate) fn new<Di>(v: ArrayView<'a, A, Di>, axis: Axis) -> Self
+    where
+        Di: Dimension<Smaller = D>,
+    {
+        let ndim = v.ndim();
+        let len;
+        let stride;
+        let iter_v;
+        if ndim == 0 {
+            len = 1;
+            stride = 1;
+            iter_v = v.try_remove_axis(Axis(0))
+        } else {
+            let i = axis.index();
+            len = v.dim[i];
+            stride = v.strides[i] as isize;
+            iter_v = v.try_remove_axis(axis)
+        }
+        Lanes {
+            inner_len: len,
+            inner_stride: stride,
+            base: iter_v,
+        }
     }
 }
 
@@ -96,29 +97,30 @@ pub struct LanesMut<'a, A: 'a, D> {
     inner_stride: Ixs,
 }
 
-
-pub fn new_lanes_mut<A, D>(v: ArrayViewMut<A, D>, axis: Axis)
-    -> LanesMut<A, D::Smaller>
-    where D: Dimension
-{
-    let ndim = v.ndim();
-    let len;
-    let stride;
-    let iter_v;
-    if ndim == 0 {
-        len = 1;
-        stride = 1;
-        iter_v = v.try_remove_axis(Axis(0))
-    } else {
-        let i = axis.index();
-        len = v.dim[i];
-        stride = v.strides[i] as isize;
-        iter_v = v.try_remove_axis(axis)
-    }
-    LanesMut {
-        inner_len: len,
-        inner_stride: stride,
-        base: iter_v,
+impl<'a, A, D: Dimension> LanesMut<'a, A, D> {
+    pub(crate) fn new<Di>(v: ArrayViewMut<'a, A, Di>, axis: Axis) -> Self
+    where
+        Di: Dimension<Smaller = D>,
+    {
+        let ndim = v.ndim();
+        let len;
+        let stride;
+        let iter_v;
+        if ndim == 0 {
+            len = 1;
+            stride = 1;
+            iter_v = v.try_remove_axis(Axis(0))
+        } else {
+            let i = axis.index();
+            len = v.dim[i];
+            stride = v.strides[i] as isize;
+            iter_v = v.try_remove_axis(axis)
+        }
+        LanesMut {
+            inner_len: len,
+            inner_stride: stride,
+            base: iter_v,
+        }
     }
 }
 
