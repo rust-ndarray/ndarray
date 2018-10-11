@@ -590,7 +590,7 @@ impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
 }
 
 #[derive(Debug)]
-pub struct OuterIterCore<A, D> {
+pub struct AxisIterCore<A, D> {
     index: Ix,
     len: Ix,
     stride: Ixs,
@@ -601,7 +601,7 @@ pub struct OuterIterCore<A, D> {
 
 clone_bounds!(
     [A, D: Clone]
-    OuterIterCore[A, D] {
+    AxisIterCore[A, D] {
         @copy {
             index,
             len,
@@ -613,15 +613,15 @@ clone_bounds!(
     }
 );
 
-fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
-    -> OuterIterCore<A, D::Smaller>
+fn new_axis_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
+    -> AxisIterCore<A, D::Smaller>
     where D: RemoveAxis,
           S: Data<Elem = A>
 {
     let shape = v.shape()[axis];
     let stride = v.strides()[axis];
 
-    OuterIterCore {
+    AxisIterCore {
         index: 0,
         len: shape,
         stride: stride,
@@ -631,7 +631,7 @@ fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
     }
 }
 
-impl<A, D> OuterIterCore<A, D> {
+impl<A, D> AxisIterCore<A, D> {
     unsafe fn offset(&self, index: usize) -> *mut A {
         debug_assert!(index <= self.len,
                       "index={}, len={}, stride={}", index, self.len, self.stride);
@@ -639,7 +639,7 @@ impl<A, D> OuterIterCore<A, D> {
     }
 }
 
-impl<A, D> Iterator for OuterIterCore<A, D>
+impl<A, D> Iterator for AxisIterCore<A, D>
     where D: Dimension,
 {
     type Item = *mut A;
@@ -660,7 +660,7 @@ impl<A, D> Iterator for OuterIterCore<A, D>
     }
 }
 
-impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
+impl<A, D> DoubleEndedIterator for AxisIterCore<A, D>
     where D: Dimension,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -690,7 +690,7 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 /// for more information.
 #[derive(Debug)]
 pub struct AxisIter<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     life: PhantomData<&'a A>,
 }
 
@@ -705,7 +705,7 @@ clone_bounds!(
 );
 
 
-macro_rules! outer_iter_split_at_impl {
+macro_rules! axis_iter_split_at_impl {
     ($iter: ident) => (
         impl<'a, A, D> $iter<'a, A, D>
             where D: Dimension
@@ -724,7 +724,7 @@ macro_rules! outer_iter_split_at_impl {
                     self.iter.ptr
                 };
                 let left = $iter {
-                    iter: OuterIterCore {
+                    iter: AxisIterCore {
                         index: 0,
                         len: index,
                         stride: self.iter.stride,
@@ -735,7 +735,7 @@ macro_rules! outer_iter_split_at_impl {
                     life: self.life,
                 };
                 let right = $iter {
-                    iter: OuterIterCore {
+                    iter: AxisIterCore {
                         index: 0,
                         len: self.iter.len - index,
                         stride: self.iter.stride,
@@ -751,7 +751,7 @@ macro_rules! outer_iter_split_at_impl {
     )
 }
 
-outer_iter_split_at_impl!(AxisIter);
+axis_iter_split_at_impl!(AxisIter);
 
 impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     where D: Dimension
@@ -795,7 +795,7 @@ pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> AxisIter<A, D::Smaller>
     where D: RemoveAxis
 {
     AxisIter {
-        iter: new_outer_core(v, 0),
+        iter: new_axis_core(v, 0),
         life: PhantomData,
     }
 }
@@ -805,7 +805,7 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
     where D: RemoveAxis
 {
     AxisIter {
-        iter: new_outer_core(v, axis),
+        iter: new_axis_core(v, axis),
         life: PhantomData,
     }
 }
@@ -826,11 +826,11 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 /// or [`.axis_iter_mut()`](../struct.ArrayBase.html#method.axis_iter_mut)
 /// for more information.
 pub struct AxisIterMut<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     life: PhantomData<&'a mut A>,
 }
 
-outer_iter_split_at_impl!(AxisIterMut);
+axis_iter_split_at_impl!(AxisIterMut);
 
 impl<'a, A, D> Iterator for AxisIterMut<'a, A, D>
     where D: Dimension
@@ -874,7 +874,7 @@ pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> AxisIterMut<A, D::Smal
     where D: RemoveAxis
 {
     AxisIterMut {
-        iter: new_outer_core(v, 0),
+        iter: new_axis_core(v, 0),
         life: PhantomData,
     }
 }
@@ -884,7 +884,7 @@ pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
     where D: RemoveAxis
 {
     AxisIterMut {
-        iter: new_outer_core(v, axis),
+        iter: new_axis_core(v, axis),
         life: PhantomData,
     }
 }
@@ -994,7 +994,7 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
 ///
 /// See [`.axis_chunks_iter()`](../struct.ArrayBase.html#method.axis_chunks_iter) for more information.
 pub struct AxisChunksIter<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     last_ptr: *mut A,
     last_dim: D,
     life: PhantomData<&'a A>,
@@ -1013,7 +1013,7 @@ clone_bounds!(
 );
 
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
-    -> (OuterIterCore<A, D>, *mut A, D)
+    -> (AxisIterCore<A, D>, *mut A, D)
 {
     let axis_len = v.shape()[axis];
     let size = if size > axis_len { axis_len } else { size };
@@ -1036,7 +1036,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     else {
         v.ptr
     };
-    let iter = OuterIterCore {
+    let iter = AxisIterCore {
         index: 0,
         len: shape,
         stride: stride,
@@ -1131,7 +1131,7 @@ macro_rules! chunk_iter_impl {
 /// See [`.axis_chunks_iter_mut()`](../struct.ArrayBase.html#method.axis_chunks_iter_mut)
 /// for more information.
 pub struct AxisChunksIterMut<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     last_ptr: *mut A,
     last_dim: D,
     life: PhantomData<&'a mut A>,
