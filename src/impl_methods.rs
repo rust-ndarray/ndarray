@@ -16,7 +16,6 @@ use imp_prelude::*;
 
 use arraytraits;
 use dimension;
-use iterators;
 use error::{self, ShapeError, ErrorKind};
 use dimension::IntoDimension;
 use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, stride_offset};
@@ -858,7 +857,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                                              [[26, 27]]]));
     /// ```
     pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<A, D> {
-        iterators::new_chunk_iter(self.view(), axis.index(), size)
+        AxisChunksIter::new(self.view(), axis, size)
     }
 
     /// Return an iterator that traverses over `axis` by chunks of `size`,
@@ -871,7 +870,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         -> AxisChunksIterMut<A, D>
         where S: DataMut
     {
-        iterators::new_chunk_iter_mut(self.view_mut(), axis.index(), size)
+        AxisChunksIterMut::new(self.view_mut(), axis, size)
     }
 
     /// Return an exact chunks producer (and iterable).

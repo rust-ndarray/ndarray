@@ -991,9 +991,10 @@ clone_bounds!(
     }
 );
 
-fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
+fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: Axis, size: usize)
     -> (AxisIterCore<A, D>, *mut A, D)
 {
+    let axis = axis.index();
     let axis_len = v.shape()[axis];
     let size = if size > axis_len { axis_len } else { size };
     let last_index = axis_len / size;
@@ -1027,17 +1028,15 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     (iter, last_ptr, last_dim)
 }
 
-pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
-    -> AxisChunksIter<A, D>
-    where D: Dimension
-{
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v, axis, size);
-
-    AxisChunksIter {
-        iter: iter,
-        last_ptr: last_ptr,
-        last_dim: last_dim,
-        life: PhantomData,
+impl<'a, A, D: Dimension> AxisChunksIter<'a, A, D> {
+    pub(crate) fn new(v: ArrayView<'a, A, D>, axis: Axis, size: usize) -> Self {
+        let (iter, last_ptr, last_dim) = chunk_iter_parts(v, axis, size);
+        AxisChunksIter {
+            iter: iter,
+            last_ptr: last_ptr,
+            last_dim: last_dim,
+            life: PhantomData,
+        }
     }
 }
 
@@ -1116,17 +1115,15 @@ pub struct AxisChunksIterMut<'a, A: 'a, D> {
     life: PhantomData<&'a mut A>,
 }
 
-pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
-    -> AxisChunksIterMut<A, D>
-    where D: Dimension
-{
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
-
-    AxisChunksIterMut {
-        iter: iter,
-        last_ptr: last_ptr,
-        last_dim: last_dim,
-        life: PhantomData,
+impl<'a, A, D: Dimension> AxisChunksIterMut<'a, A, D> {
+    pub(crate) fn new(v: ArrayViewMut<'a, A, D>, axis: Axis, size: usize) -> Self {
+        let (iter, last_ptr, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
+        AxisChunksIterMut {
+            iter: iter,
+            last_ptr: last_ptr,
+            last_dim: last_dim,
+            life: PhantomData,
+        }
     }
 }
 
