@@ -737,36 +737,24 @@ impl<'a, A, D: Dimension> AxisIter<'a, A, D> {
             life: PhantomData,
         }
     }
-}
 
-macro_rules! axis_iter_split_at_impl {
-    ($iter: ident) => (
-        impl<'a, A, D> $iter<'a, A, D>
-            where D: Dimension
-        {
-            /// Split the iterator at index, yielding two disjoint iterators.
-            ///
-            /// *panics* if `index` is strictly greater than the iterator's length
-            pub fn split_at(self, index: Ix)
-                -> ($iter<'a, A, D>, $iter<'a, A, D>)
-            {
-                let (left, right) = self.iter.split_at(index);
-                (
-                    $iter {
-                        iter: left,
-                        life: self.life,
-                    },
-                    $iter {
-                        iter: right,
-                        life: self.life,
-                    },
-                )
-            }
-        }
-    )
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            AxisIter {
+                iter: left,
+                life: self.life,
+            },
+            AxisIter {
+                iter: right,
+                life: self.life,
+            },
+        )
+    }
 }
-
-axis_iter_split_at_impl!(AxisIter);
 
 impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     where D: Dimension
@@ -836,9 +824,24 @@ impl<'a, A, D: Dimension> AxisIterMut<'a, A, D> {
             life: PhantomData,
         }
     }
-}
 
-axis_iter_split_at_impl!(AxisIterMut);
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            AxisIterMut {
+                iter: left,
+                life: self.life,
+            },
+            AxisIterMut {
+                iter: right,
+                life: self.life,
+            },
+        )
+    }
+}
 
 impl<'a, A, D> Iterator for AxisIterMut<'a, A, D>
     where D: Dimension
