@@ -69,9 +69,11 @@ impl<A, D: Dimension> Baseiter<A, D> {
     }
 }
 
-impl<A, D: Dimension> Baseiter<A, D> {
+impl<A, D: Dimension> Iterator for Baseiter<A, D> {
+    type Item = *mut A;
+
     #[inline]
-    pub fn next(&mut self) -> Option<*mut A> {
+    fn next(&mut self) -> Option<*mut A> {
         let index = match self.index {
             None => return None,
             Some(ref ix) => ix.clone(),
@@ -81,19 +83,9 @@ impl<A, D: Dimension> Baseiter<A, D> {
         unsafe { Some(self.ptr.offset(offset)) }
     }
 
-    fn len(&self) -> usize {
-        match self.index {
-            None => 0,
-            Some(ref ix) => {
-                let gone = self.dim
-                               .default_strides()
-                               .slice()
-                               .iter()
-                               .zip(ix.slice().iter())
-                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
-                self.dim.size() - gone
-            }
-        }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
     }
 
     fn fold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
@@ -124,7 +116,24 @@ impl<A, D: Dimension> Baseiter<A, D> {
     }
 }
 
-impl<A> Baseiter<A, Ix1> {
+impl<'a, A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
+    fn len(&self) -> usize {
+        match self.index {
+            None => 0,
+            Some(ref ix) => {
+                let gone = self.dim
+                               .default_strides()
+                               .slice()
+                               .iter()
+                               .zip(ix.slice().iter())
+                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                self.dim.size() - gone
+            }
+        }
+    }
+}
+
+impl<A> DoubleEndedIterator for Baseiter<A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<*mut A> {
         let index = match self.index {
@@ -180,8 +189,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.inner.len();
-        (len, Some(len))
+        self.inner.size_hint()
     }
 
     fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
@@ -388,8 +396,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.0.inner.len();
-        (len, Some(len))
+        self.0.size_hint()
     }
 }
 
@@ -442,8 +449,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.inner.len();
-        (len, Some(len))
+        self.inner.size_hint()
     }
 
     fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
@@ -486,8 +492,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.0.inner.len();
-        (len, Some(len))
+        self.0.size_hint()
     }
 }
 
@@ -521,8 +526,7 @@ impl<'a, A, D> Iterator for LanesIter<'a, A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.iter.len();
-        (len, Some(len))
+        self.iter.size_hint()
     }
 }
 
@@ -562,8 +566,7 @@ impl<'a, A, D> Iterator for LanesIterMut<'a, A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.iter.len();
-        (len, Some(len))
+        self.iter.size_hint()
     }
 }
 
