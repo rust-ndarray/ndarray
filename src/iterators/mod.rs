@@ -89,16 +89,6 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
         unsafe { Some(self.ptr.offset(offset)) }
     }
 
-    #[inline]
-    fn next_ref(&mut self) -> Option<&'a A> {
-        unsafe { self.next().map(|p| &*p) }
-    }
-
-    #[inline]
-    fn next_ref_mut(&mut self) -> Option<&'a mut A> {
-        unsafe { self.next().map(|p| &mut *p) }
-    }
-
     fn len(&self) -> usize {
         match self.index {
             None => 0,
@@ -157,16 +147,6 @@ impl<'a, A> Baseiter<'a, A, Ix1> {
 
         unsafe { Some(self.ptr.offset(offset)) }
     }
-
-    #[inline]
-    fn next_back_ref(&mut self) -> Option<&'a A> {
-        unsafe { self.next_back().map(|p| &*p) }
-    }
-
-    #[inline]
-    fn next_back_ref_mut(&mut self) -> Option<&'a mut A> {
-        unsafe { self.next_back().map(|p| &mut *p) }
-    }
 }
 
 clone_bounds!(
@@ -195,7 +175,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     type Item = &'a A;
     #[inline]
     fn next(&mut self) -> Option<&'a A> {
-        self.inner.next_ref()
+        self.inner.next().map(|p| unsafe { &*p })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -215,7 +195,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
 impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A> {
-        self.inner.next_back_ref()
+        self.inner.next_back().map(|p| unsafe { &*p })
     }
 }
 
@@ -390,9 +370,9 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        match self.0.inner.next_ref() {
+        match self.0.next() {
             None => None,
-            Some(p) => Some((index.into_pattern(), p)),
+            Some(elem) => Some((index.into_pattern(), elem)),
         }
     }
 
@@ -447,7 +427,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     type Item = &'a mut A;
     #[inline]
     fn next(&mut self) -> Option<&'a mut A> {
-        self.inner.next_ref_mut()
+        self.inner.next().map(|p| unsafe { &mut *p })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -467,7 +447,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
 impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
-        self.inner.next_back_ref_mut()
+        self.inner.next_back().map(|p| unsafe { &mut *p })
     }
 }
 
@@ -488,9 +468,9 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        match self.0.inner.next_ref_mut() {
+        match self.0.next() {
             None => None,
-            Some(p) => Some((index.into_pattern(), p)),
+            Some(elem) => Some((index.into_pattern(), elem)),
         }
     }
 
