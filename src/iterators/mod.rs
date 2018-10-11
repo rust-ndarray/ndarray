@@ -630,6 +630,35 @@ impl<A, D: Dimension> AxisIterCore<A, D> {
                       "index={}, len={}, stride={}", index, self.len, self.stride);
         self.ptr.offset(index as isize * self.stride)
     }
+
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's length
+    fn split_at(self, index: usize) -> (Self, Self) {
+        assert!(index <= self.len);
+        let right_ptr = if index != self.len {
+            unsafe { self.offset(index) }
+        } else {
+            self.ptr
+        };
+        let left = AxisIterCore {
+            index: 0,
+            len: index,
+            stride: self.stride,
+            inner_dim: self.inner_dim.clone(),
+            inner_strides: self.inner_strides.clone(),
+            ptr: self.ptr,
+        };
+        let right = AxisIterCore {
+            index: 0,
+            len: self.len - index,
+            stride: self.stride,
+            inner_dim: self.inner_dim,
+            inner_strides: self.inner_strides,
+            ptr: right_ptr,
+        };
+        (left, right)
+    }
 }
 
 impl<A, D> Iterator for AxisIterCore<A, D>
@@ -721,36 +750,17 @@ macro_rules! axis_iter_split_at_impl {
             pub fn split_at(self, index: Ix)
                 -> ($iter<'a, A, D>, $iter<'a, A, D>)
             {
-                assert!(index <= self.iter.len);
-                let right_ptr = if index != self.iter.len {
-                    unsafe { self.iter.offset(index) }
-                }
-                else {
-                    self.iter.ptr
-                };
-                let left = $iter {
-                    iter: AxisIterCore {
-                        index: 0,
-                        len: index,
-                        stride: self.iter.stride,
-                        inner_dim: self.iter.inner_dim.clone(),
-                        inner_strides: self.iter.inner_strides.clone(),
-                        ptr: self.iter.ptr,
+                let (left, right) = self.iter.split_at(index);
+                (
+                    $iter {
+                        iter: left,
+                        life: self.life,
                     },
-                    life: self.life,
-                };
-                let right = $iter {
-                    iter: AxisIterCore {
-                        index: 0,
-                        len: self.iter.len - index,
-                        stride: self.iter.stride,
-                        inner_dim: self.iter.inner_dim,
-                        inner_strides: self.iter.inner_strides,
-                        ptr: right_ptr,
+                    $iter {
+                        iter: right,
+                        life: self.life,
                     },
-                    life: self.life,
-                };
-                (left, right)
+                )
             }
         }
     )
