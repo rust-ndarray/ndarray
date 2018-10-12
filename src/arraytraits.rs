@@ -216,11 +216,17 @@ pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 /// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
 ///
 /// Create a one-dimensional read-only array view of the data in `slice`.
+///
+/// **Panics** if the slice length is greater than `isize::MAX`.
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
     where Slice: AsRef<[A]>
 {
     fn from(slice: &'a Slice) -> Self {
         let xs = slice.as_ref();
+        assert!(
+            xs.len() <= ::std::isize::MAX as usize,
+            "Slice length must fit in `isize`.",
+        );
         unsafe {
             Self::from_shape_ptr(xs.len(), xs.as_ptr())
         }
@@ -242,11 +248,17 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
 /// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or slicable.
 ///
 /// Create a one-dimensional read-write array view of the data in `slice`.
+///
+/// **Panics** if the slice length is greater than `isize::MAX`.
 impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
     where Slice: AsMut<[A]>
 {
     fn from(slice: &'a mut Slice) -> Self {
         let xs = slice.as_mut();
+        assert!(
+            xs.len() <= ::std::isize::MAX as usize,
+            "Slice length must fit in `isize`.",
+        );
         unsafe {
             Self::from_shape_ptr(xs.len(), xs.as_mut_ptr())
         }

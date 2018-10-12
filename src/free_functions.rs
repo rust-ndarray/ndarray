@@ -9,6 +9,7 @@
 use std::slice;
 use std::mem::{size_of, forget};
 
+use dimension;
 use imp_prelude::*;
 
 /// Create an [**`Array`**](type.Array.html) with one, two or
@@ -88,16 +89,14 @@ pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
 }
 
 /// Create a two-dimensional array view with elements borrowing `xs`.
+///
+/// **Panics** if the product of non-zero axis lengths or the numer of bytes in
+/// the array overflow `isize`.
 pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
     let cols = V::len();
     let rows = xs.len();
-    let data = unsafe {
-        slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows)
-    };
-    let dim = Ix2(rows, cols);
-    unsafe {
-        ArrayView::from_shape_ptr(dim, data.as_ptr())
-    }
+    let data = unsafe { slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows) };
+    ArrayView::from_shape(Ix2(rows, cols), data).unwrap()
 }
 
 /// Create a one-dimensional read-write array view with elements borrowing `xs`.
@@ -124,6 +123,9 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 
 /// Create a two-dimensional read-write array view with elements borrowing `xs`.
 ///
+/// **Panics** if the product of non-zero axis lengths or the numer of bytes in
+/// the array overflow `isize`.
+///
 /// # Example
 ///
 /// ```
@@ -147,13 +149,8 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 pub fn aview_mut2<A, V: FixedInitializer<Elem=A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
     let cols = V::len();
     let rows = xs.len();
-    let data = unsafe {
-        slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows)
-    };
-    let dim = Ix2(rows, cols);
-    unsafe {
-        ArrayViewMut::from_shape_ptr(dim, data.as_mut_ptr())
-    }
+    let data = unsafe { slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows) };
+    ArrayViewMut::from_shape(Ix2(rows, cols), data).unwrap()
 }
 
 /// Fixed-size array used for array initialization
@@ -207,13 +204,15 @@ impl<A> From<Vec<A>> for Array1<A> {
 impl<A, V> From<Vec<V>> for Array2<A>
     where V: FixedInitializer<Elem = A>
 {
+    /// Converts the `Vec` of arrays to an owned 2-D array.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     fn from(mut xs: Vec<V>) -> Self {
-        let (m, n) = (xs.len(), V::len());
-        let dim = Ix2(m, n);
+        let dim = Ix2(xs.len(), V::len());
         let ptr = xs.as_mut_ptr();
-        let len = xs.len();
         let cap = xs.capacity();
-        let expand_len = len * V::len();
+        let expand_len = dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
@@ -221,6 +220,8 @@ impl<A, V> From<Vec<V>> for Array2<A>
             } else if V::len() == 0 {
                 Vec::new()
             } else {
+                // Guaranteed not to overflow in this case since A is non-ZST
+                // and Vec never allocates more than isize bytes.
                 let expand_cap = cap * V::len();
                 Vec::from_raw_parts(ptr as *mut A, expand_len, expand_cap)
             };
@@ -233,12 +234,15 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
     where V: FixedInitializer<Elem=U>,
           U: FixedInitializer<Elem=A>
 {
+    /// Converts the `Vec` of arrays to an owned 3-D array.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     fn from(mut xs: Vec<V>) -> Self {
         let dim = Ix3(xs.len(), V::len(), U::len());
         let ptr = xs.as_mut_ptr();
-        let len = xs.len();
         let cap = xs.capacity();
-        let expand_len = len * V::len() * U::len();
+        let expand_len = dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
@@ -246,6 +250,8 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
             } else if V::len() == 0 || U::len() == 0 {
                 Vec::new()
             } else {
+                // Guaranteed not to overflow in this case since A is non-ZST
+                // and Vec never allocates more than isize bytes.
                 let expand_cap = cap * V::len() * U::len();
                 Vec::from_raw_parts(ptr as *mut A, expand_len, expand_cap)
             };

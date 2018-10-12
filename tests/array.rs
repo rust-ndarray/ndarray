@@ -1114,11 +1114,11 @@ fn from_vec_dim_stride_2d_7() {
 
 #[test]
 fn from_vec_dim_stride_2d_8() {
-    // strides must be strictly positive (nonzero)
+    // strides of length 1 axes can be zero
     let a = [1.];
     let d = (1, 1);
     let s = (0, 1);
-    assert_matches!(Array::from_shape_vec(d.strides(s), a.to_vec()), Err(_));
+    assert_matches!(Array::from_shape_vec(d.strides(s), a.to_vec()), Ok(_));
 }
 
 #[test]

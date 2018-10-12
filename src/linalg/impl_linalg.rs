@@ -219,7 +219,9 @@ impl<A, S> ArrayBase<S, Ix2>
     ///
     /// Return a result array with shape *M* × *K*.
     ///
-    /// **Panics** if shapes are incompatible.<br>
+    /// **Panics** if shapes are incompatible or the number of elements in the
+    /// result would overflow `isize`.
+    ///
     /// *Note:* If enabled, uses blas `gemv/gemm` for elements of `f32, f64`
     /// when memory layout allows. The default matrixmultiply backend
     /// is otherwise used for `f32, f64` for all memory layouts.
@@ -274,11 +276,13 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
     }
 }
 
+/// Assumes that `m` and `n` are ≤ `isize::MAX`.
 #[cold]
 #[inline(never)]
 fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> ! {
-    if m.checked_mul(n).is_none() {
-        panic!("ndarray: shape {} × {} overflows type range", m, n);
+    match m.checked_mul(n) {
+        Some(len) if len <= ::std::isize::MAX as usize => {},
+        _ => panic!("ndarray: shape {} × {} overflows isize", m, n),
     }
     panic!("ndarray: inputs {} × {} and {} × {} are not compatible for matrix multiplication",
            m, k, k2, n);
