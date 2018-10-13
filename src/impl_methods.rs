@@ -1512,10 +1512,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Remove array axis `axis` and return the result.
+    ///
+    /// **Panics** if the axis is out of bounds or its length is zero.
     pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        assert!(self.ndim() != 0);
+        assert_ne!(self.len_of(axis), 0, "Length of removed axis must be nonzero.");
         let d = self.dim.remove_axis(axis);
         let s = self.strides.remove_axis(axis);
         ArrayBase {
