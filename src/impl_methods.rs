@@ -191,6 +191,29 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Returns a reference to the first element of the array, or `None` if it
+    /// is empty.
+    pub fn first(&self) -> Option<&A> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(unsafe { &*self.as_ptr() })
+        }
+    }
+
+    /// Returns a mutable reference to the first element of the array, or
+    /// `None` if it is empty.
+    pub fn first_mut(&mut self) -> Option<&mut A>
+    where
+        S: DataMut,
+    {
+        if self.is_empty() {
+            None
+        } else {
+            Some(unsafe { &mut *self.as_mut_ptr() })
+        }
+    }
+
     /// Return an iterator of references to the elements of the array.
     ///
     /// Elements are visited in the *logical order* of the array, which
