@@ -71,7 +71,8 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension;
-    #[doc(hidden)]
+
+    /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
 
     /// Convert the dimension into a pattern matching friendly value.
