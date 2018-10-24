@@ -234,6 +234,7 @@ pub type Ixs = isize;
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
 /// + [Broadcasting](#broadcasting)
+/// + [Conversions Between Array Types](#conversions-between-array-types)
 /// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](#methods-for-all-array-types)
 ///
@@ -645,6 +646,218 @@ pub type Ixs = isize;
 ///     c == a + b
 /// );
 /// ```
+///
+/// ## Conversions Between Array Types
+///
+/// This table is a summary of the conversions between arrays of different
+/// ownership, dimensionality, and element type. All of the conversions in this
+/// table preserve the shape of the array.
+///
+/// <table>
+/// <tr>
+/// <th rowspan="2">Output</th>
+/// <th colspan="4">Input</th>
+/// </tr>
+///
+/// <tr>
+/// <td>
+///
+/// `Array<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArrayView<'a, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArrayViewMut<'a, A, D>`
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `Array<A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `Array<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_owned()`][.into_owned()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned()`][.to_owned()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned()`][.to_owned()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `ArcArray<A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `ArrayView<'b, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArrayView<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()] or [`a.reborrow()`][ArrayView::reborrow()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `ArrayViewMut<'b, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArrayViewMut<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
+/// illegal
+///
+/// </td>
+/// <td>
+///
+/// [`a.view_mut()`][.view_mut()] or [`a.reborrow()`][ArrayViewMut::reborrow()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to equivalent with dim `D2`-->
+///
+/// <tr>
+/// <td>
+///
+/// equivalent with dim `D2` (e.g. converting from dynamic dim to const dim)
+///
+/// </td>
+/// <td colspan="4">
+///
+/// [`a.into_dimensionality::<D2>()`][.into_dimensionality()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to equivalent with dim `IxDyn`-->
+///
+/// <tr>
+/// <td>
+///
+/// equivalent with dim `IxDyn`
+///
+/// </td>
+/// <td colspan="4">
+///
+/// [`a.into_dyn()`][.into_dyn()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `Array<B, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `Array<B, D>` (new element type)
+///
+/// </td>
+/// <td colspan="4">
+///
+/// [`a.map(|x| x.do_your_conversion())`][.map()]
+///
+/// </td>
+/// </tr>
+/// </table>
+///
+/// [ArrayView::reborrow()]: type.ArrayView.html#method.reborrow
+/// [ArrayViewMut::reborrow()]: type.ArrayViewMut.html#method.reborrow
+/// [.into_dimensionality()]: #method.into_dimensionality
+/// [.into_dyn()]: #method.into_dyn
+/// [.into_owned()]: #method.into_owned
+/// [.into_shared()]: #method.into_shared
+/// [.to_owned()]: #method.to_owned
+/// [.map()]: #method.map
+/// [.view()]: #method.view
+/// [.view_mut()]: #method.view_mut
 ///
 pub struct ArrayBase<S, D>
     where S: Data
