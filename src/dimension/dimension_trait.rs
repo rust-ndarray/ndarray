@@ -32,6 +32,7 @@ use super::axes_of;
 ///
 /// **Note:** *This trait can not be implemented outside the crate*
 pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
+    AsRef<[usize]> + AsMut<[usize]> +
     IndexMut<usize, Output=usize> +
     Add<Self, Output=Self> +
     AddAssign + for<'x> AddAssign<&'x Self> +

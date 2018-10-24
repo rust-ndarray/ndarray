@@ -62,6 +62,26 @@ pub fn Dim<T>(index: T) -> T::Dim
     index.into_dimension()
 }
 
+impl<I: ?Sized> AsRef<[usize]> for Dim<I>
+where
+    I: AsRef<[usize]>,
+{
+    #[inline]
+    fn as_ref(&self) -> &[usize] {
+        self.index.as_ref()
+    }
+}
+
+impl<I: ?Sized> AsMut<[usize]> for Dim<I>
+where
+    I: AsMut<[usize]>,
+{
+    #[inline]
+    fn as_mut(&mut self) -> &mut [usize] {
+        self.index.as_mut()
+    }
+}
+
 impl<I: ?Sized> PartialEq<I> for Dim<I>
     where I: PartialEq,
 {

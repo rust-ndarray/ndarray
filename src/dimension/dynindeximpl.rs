@@ -198,6 +198,20 @@ impl<J> IndexMut<J> for IxDynImpl
     }
 }
 
+impl AsRef<[usize]> for IxDynImpl {
+    #[inline]
+    fn as_ref(&self) -> &[usize] {
+        self
+    }
+}
+
+impl AsMut<[usize]> for IxDynImpl {
+    #[inline]
+    fn as_mut(&mut self) -> &mut [usize] {
+        self
+    }
+}
+
 impl Deref for IxDynImpl {
     type Target = [Ix];
     #[inline]
