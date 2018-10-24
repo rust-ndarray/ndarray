@@ -166,11 +166,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
                 return None;
             }
         }
-        let mut index = self.clone();
-        for rr in index.slice_mut().iter_mut() {
-            *rr = 0;
-        }
-        Some(index)
+        Some(Self::zeros(self.ndim()))
     }
 
     #[doc(hidden)]
