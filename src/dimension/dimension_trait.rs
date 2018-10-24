@@ -159,12 +159,6 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     fn zeros(ndim: usize) -> Self;
 
     #[doc(hidden)]
-    // Return an index of same dimensionality
-    fn zero_index(&self) -> Self {
-        Self::default()
-    }
-
-    #[doc(hidden)]
     #[inline]
     fn first_index(&self) -> Option<Self> {
         for ax in self.slice().iter() {
@@ -813,11 +807,6 @@ impl Dimension for IxDyn
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self
-    }
-
-    #[inline]
-    fn zero_index(&self) -> Self {
-        IxDyn::zeros(self.ndim())
     }
 
     #[inline]
