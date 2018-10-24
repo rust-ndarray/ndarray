@@ -23,8 +23,7 @@ use {
     Baseiter,
 };
 
-use iter;
-use iterators;
+use iter::{self, AxisIter, AxisIterMut};
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -469,7 +468,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     }
 
     #[inline]
-    pub(crate) fn into_base_iter(self) -> Baseiter<'a, A, D> {
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
         unsafe {
             Baseiter::new(self.ptr, self.dim, self.strides)
         }
@@ -477,7 +476,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
 
     #[inline]
     pub(crate) fn into_elements_base(self) -> ElementsBase<'a, A, D> {
-        ElementsBase { inner: self.into_base_iter() }
+        ElementsBase::new(self)
     }
 
     pub(crate) fn into_iter_(self) -> Iter<'a, A, D> {
@@ -490,7 +489,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
-        iterators::new_outer_iter(self)
+        AxisIter::new(self, Axis(0))
     }
 
 }
@@ -519,7 +518,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     }
 
     #[inline]
-    pub(crate) fn into_base_iter(self) -> Baseiter<'a, A, D> {
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
         unsafe {
             Baseiter::new(self.ptr, self.dim, self.strides)
         }
@@ -527,7 +526,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     #[inline]
     pub(crate) fn into_elements_base(self) -> ElementsBaseMut<'a, A, D> {
-        ElementsBaseMut { inner: self.into_base_iter() }
+        ElementsBaseMut::new(self)
     }
 
     pub(crate) fn into_slice_(self) -> Result<&'a mut [A], Self> {
@@ -550,7 +549,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
         where D: RemoveAxis,
     {
-        iterators::new_outer_iter_mut(self)
+        AxisIterMut::new(self, Axis(0))
     }
 }
 

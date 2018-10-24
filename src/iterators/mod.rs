@@ -29,64 +29,51 @@ use super::{
     NdProducer,
 };
 
-pub use self::windows::{
-    Windows,
-    windows
-};
+pub use self::windows::Windows;
 pub use self::chunks::{
     ExactChunks,
     ExactChunksIter,
-    exact_chunks_of,
     ExactChunksMut,
     ExactChunksIterMut,
-    exact_chunks_mut_of,
 };
 pub use self::lanes::{
-    new_lanes,
-    new_lanes_mut,
     Lanes,
     LanesMut,
 };
 
 use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
-/// Base for array iterators
+/// Base for iterators over all axes.
 ///
-/// Iterator element type is `&'a A`.
-pub struct Baseiter<'a, A: 'a, D> {
-    // Can have pub fields because it is not itself pub.
-    pub ptr: *mut A,
-    pub dim: D,
-    pub strides: D,
-    pub index: Option<D>,
-    pub life: PhantomData<&'a A>,
+/// Iterator element type is `*mut A`.
+pub struct Baseiter<A, D> {
+    ptr: *mut A,
+    dim: D,
+    strides: D,
+    index: Option<D>,
 }
 
 
-impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
-    /// Creating a Baseiter is unsafe, because it can
-    /// have any lifetime, be immut or mut, and the
-    /// boundary and stride parameters need to be correct to
-    /// avoid memory unsafety.
-    ///
-    /// It must be placed in the correct mother iterator to be safe.
-    ///
-    /// NOTE: Mind the lifetime, it's arbitrary
+impl<A, D: Dimension> Baseiter<A, D> {
+    /// Creating a Baseiter is unsafe because shape and stride parameters need
+    /// to be correct to avoid performing an unsafe pointer offset while
+    /// iterating.
     #[inline]
-    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<'a, A, D> {
+    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D> {
         Baseiter {
             ptr: ptr,
             index: len.first_index(),
             dim: len,
             strides: stride,
-            life: PhantomData,
         }
     }
 }
 
-impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
+impl<A, D: Dimension> Iterator for Baseiter<A, D> {
+    type Item = *mut A;
+
     #[inline]
-    pub fn next(&mut self) -> Option<*mut A> {
+    fn next(&mut self) -> Option<*mut A> {
         let index = match self.index {
             None => return None,
             Some(ref ix) => ix.clone(),
@@ -96,29 +83,9 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
         unsafe { Some(self.ptr.offset(offset)) }
     }
 
-    #[inline]
-    fn next_ref(&mut self) -> Option<&'a A> {
-        unsafe { self.next().map(|p| &*p) }
-    }
-
-    #[inline]
-    fn next_ref_mut(&mut self) -> Option<&'a mut A> {
-        unsafe { self.next().map(|p| &mut *p) }
-    }
-
-    fn len(&self) -> usize {
-        match self.index {
-            None => 0,
-            Some(ref ix) => {
-                let gone = self.dim
-                               .default_strides()
-                               .slice()
-                               .iter()
-                               .zip(ix.slice().iter())
-                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
-                self.dim.size() - gone
-            }
-        }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
     }
 
     fn fold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
@@ -149,7 +116,24 @@ impl<'a, A, D: Dimension> Baseiter<'a, A, D> {
     }
 }
 
-impl<'a, A> Baseiter<'a, A, Ix1> {
+impl<'a, A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
+    fn len(&self) -> usize {
+        match self.index {
+            None => 0,
+            Some(ref ix) => {
+                let gone = self.dim
+                               .default_strides()
+                               .slice()
+                               .iter()
+                               .zip(ix.slice().iter())
+                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                self.dim.size() - gone
+            }
+        }
+    }
+}
+
+impl<A> DoubleEndedIterator for Baseiter<A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<*mut A> {
         let index = match self.index {
@@ -164,24 +148,13 @@ impl<'a, A> Baseiter<'a, A, Ix1> {
 
         unsafe { Some(self.ptr.offset(offset)) }
     }
-
-    #[inline]
-    fn next_back_ref(&mut self) -> Option<&'a A> {
-        unsafe { self.next_back().map(|p| &*p) }
-    }
-
-    #[inline]
-    fn next_back_ref_mut(&mut self) -> Option<&'a mut A> {
-        unsafe { self.next_back().map(|p| &mut *p) }
-    }
 }
 
 clone_bounds!(
-    ['a, A, D: Clone]
-    Baseiter['a, A, D] {
+    [A, D: Clone]
+    Baseiter[A, D] {
         @copy {
             ptr,
-            life,
         }
         dim,
         strides,
@@ -193,21 +166,30 @@ clone_bounds!(
     ['a, A, D: Clone]
     ElementsBase['a, A, D] {
         @copy {
+            life,
         }
         inner,
     }
 );
 
+impl<'a, A, D: Dimension> ElementsBase<'a, A, D> {
+    pub fn new(v: ArrayView<'a, A, D>) -> Self {
+        ElementsBase {
+            inner: v.into_base_iter(),
+            life: PhantomData,
+        }
+    }
+}
+
 impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
     type Item = &'a A;
     #[inline]
     fn next(&mut self) -> Option<&'a A> {
-        self.inner.next_ref()
+        self.inner.next().map(|p| unsafe { &*p })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.inner.len();
-        (len, Some(len))
+        self.inner.size_hint()
     }
 
     fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
@@ -222,7 +204,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D> {
 impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A> {
-        self.inner.next_back_ref()
+        self.inner.next_back().map(|p| unsafe { &*p })
     }
 }
 
@@ -308,7 +290,8 @@ pub struct Iter<'a, A: 'a, D> {
 
 /// Counted read only iterator
 pub struct ElementsBase<'a, A: 'a, D> {
-    pub inner: Baseiter<'a, A, D>,
+    inner: Baseiter<A, D>,
+    life: PhantomData<&'a A>,
 }
 
 /// An iterator over the elements of an array (mutable).
@@ -324,9 +307,18 @@ pub struct IterMut<'a, A: 'a, D> {
 ///
 /// Iterator element type is `&'a mut A`.
 pub struct ElementsBaseMut<'a, A: 'a, D> {
-    pub inner: Baseiter<'a, A, D>,
+    inner: Baseiter<A, D>,
+    life: PhantomData<&'a mut A>,
 }
 
+impl<'a, A, D: Dimension> ElementsBaseMut<'a, A, D> {
+    pub fn new(v: ArrayViewMut<'a, A, D>) -> Self {
+        ElementsBaseMut {
+            inner: v.into_base_iter(),
+            life: PhantomData,
+        }
+    }
+}
 
 /// An iterator over the indexes and elements of an array.
 ///
@@ -397,15 +389,14 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        match self.0.inner.next_ref() {
+        match self.0.next() {
             None => None,
-            Some(p) => Some((index.into_pattern(), p)),
+            Some(elem) => Some((index.into_pattern(), elem)),
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.0.inner.len();
-        (len, Some(len))
+        self.0.size_hint()
     }
 }
 
@@ -454,12 +445,11 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
     type Item = &'a mut A;
     #[inline]
     fn next(&mut self) -> Option<&'a mut A> {
-        self.inner.next_ref_mut()
+        self.inner.next().map(|p| unsafe { &mut *p })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.inner.len();
-        (len, Some(len))
+        self.inner.size_hint()
     }
 
     fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
@@ -474,7 +464,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D> {
 impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
-        self.inner.next_back_ref_mut()
+        self.inner.next_back().map(|p| unsafe { &mut *p })
     }
 }
 
@@ -495,15 +485,14 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        match self.0.inner.next_ref_mut() {
+        match self.0.next() {
             None => None,
-            Some(p) => Some((index.into_pattern(), p)),
+            Some(elem) => Some((index.into_pattern(), elem)),
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.0.inner.len();
-        (len, Some(len))
+        self.0.size_hint()
     }
 }
 
@@ -515,15 +504,28 @@ impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
     }
 }
 
-/// An iterator that traverses over all dimensions but the innermost,
-/// and yields each inner row.
+/// An iterator that traverses over all axes but one, and yields a view for
+/// each lane along that axis.
 ///
 /// See [`.lanes()`](../struct.ArrayBase.html#method.lanes) for more information.
 pub struct LanesIter<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
-    iter: Baseiter<'a, A, D>,
+    iter: Baseiter<A, D>,
+    life: PhantomData<&'a A>,
 }
+
+clone_bounds!(
+    ['a, A, D: Clone]
+    LanesIter['a, A, D] {
+        @copy {
+            inner_len,
+            inner_stride,
+            life,
+        }
+        iter,
+    }
+);
 
 impl<'a, A, D> Iterator for LanesIter<'a, A, D>
     where D: Dimension
@@ -536,8 +538,7 @@ impl<'a, A, D> Iterator for LanesIter<'a, A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.iter.len();
-        (len, Some(len))
+        self.iter.size_hint()
     }
 }
 
@@ -560,7 +561,8 @@ impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
 pub struct LanesIterMut<'a, A: 'a, D> {
     inner_len: Ix,
     inner_stride: Ixs,
-    iter: Baseiter<'a, A, D>,
+    iter: Baseiter<A, D>,
+    life: PhantomData<&'a mut A>,
 }
 
 impl<'a, A, D> Iterator for LanesIterMut<'a, A, D>
@@ -576,8 +578,7 @@ impl<'a, A, D> Iterator for LanesIterMut<'a, A, D>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.iter.len();
-        (len, Some(len))
+        self.iter.size_hint()
     }
 }
 
@@ -590,7 +591,7 @@ impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
 }
 
 #[derive(Debug)]
-pub struct OuterIterCore<A, D> {
+pub struct AxisIterCore<A, D> {
     index: Ix,
     len: Ix,
     stride: Ixs,
@@ -601,7 +602,7 @@ pub struct OuterIterCore<A, D> {
 
 clone_bounds!(
     [A, D: Clone]
-    OuterIterCore[A, D] {
+    AxisIterCore[A, D] {
         @copy {
             index,
             len,
@@ -613,33 +614,62 @@ clone_bounds!(
     }
 );
 
-fn new_outer_core<A, S, D>(v: ArrayBase<S, D>, axis: usize)
-    -> OuterIterCore<A, D::Smaller>
-    where D: RemoveAxis,
-          S: Data<Elem = A>
-{
-    let shape = v.shape()[axis];
-    let stride = v.strides()[axis];
-
-    OuterIterCore {
-        index: 0,
-        len: shape,
-        stride: stride,
-        inner_dim: v.dim.remove_axis(Axis(axis)),
-        inner_strides: v.strides.remove_axis(Axis(axis)),
-        ptr: v.ptr,
+impl<A, D: Dimension> AxisIterCore<A, D> {
+    /// Constructs a new iterator over the specified axis.
+    fn new<S, Di>(v: ArrayBase<S, Di>, axis: Axis) -> Self
+    where
+        Di: RemoveAxis<Smaller = D>,
+        S: Data<Elem = A>,
+    {
+        let shape = v.shape()[axis.index()];
+        let stride = v.strides()[axis.index()];
+        AxisIterCore {
+            index: 0,
+            len: shape,
+            stride: stride,
+            inner_dim: v.dim.remove_axis(axis),
+            inner_strides: v.strides.remove_axis(axis),
+            ptr: v.ptr,
+        }
     }
-}
 
-impl<A, D> OuterIterCore<A, D> {
     unsafe fn offset(&self, index: usize) -> *mut A {
         debug_assert!(index <= self.len,
                       "index={}, len={}, stride={}", index, self.len, self.stride);
         self.ptr.offset(index as isize * self.stride)
     }
+
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's length
+    fn split_at(self, index: usize) -> (Self, Self) {
+        assert!(index <= self.len);
+        let right_ptr = if index != self.len {
+            unsafe { self.offset(index) }
+        } else {
+            self.ptr
+        };
+        let left = AxisIterCore {
+            index: 0,
+            len: index,
+            stride: self.stride,
+            inner_dim: self.inner_dim.clone(),
+            inner_strides: self.inner_strides.clone(),
+            ptr: self.ptr,
+        };
+        let right = AxisIterCore {
+            index: 0,
+            len: self.len - index,
+            stride: self.stride,
+            inner_dim: self.inner_dim,
+            inner_strides: self.inner_strides,
+            ptr: right_ptr,
+        };
+        (left, right)
+    }
 }
 
-impl<A, D> Iterator for OuterIterCore<A, D>
+impl<A, D> Iterator for AxisIterCore<A, D>
     where D: Dimension,
 {
     type Item = *mut A;
@@ -660,7 +690,7 @@ impl<A, D> Iterator for OuterIterCore<A, D>
     }
 }
 
-impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
+impl<A, D> DoubleEndedIterator for AxisIterCore<A, D>
     where D: Dimension,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -690,7 +720,7 @@ impl<A, D> DoubleEndedIterator for OuterIterCore<A, D>
 /// for more information.
 #[derive(Debug)]
 pub struct AxisIter<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     life: PhantomData<&'a A>,
 }
 
@@ -704,54 +734,35 @@ clone_bounds!(
     }
 );
 
-
-macro_rules! outer_iter_split_at_impl {
-    ($iter: ident) => (
-        impl<'a, A, D> $iter<'a, A, D>
-            where D: Dimension
-        {
-            /// Split the iterator at index, yielding two disjoint iterators.
-            ///
-            /// *panics* if `index` is strictly greater than the iterator's length
-            pub fn split_at(self, index: Ix)
-                -> ($iter<'a, A, D>, $iter<'a, A, D>)
-            {
-                assert!(index <= self.iter.len);
-                let right_ptr = if index != self.iter.len {
-                    unsafe { self.iter.offset(index) }
-                }
-                else {
-                    self.iter.ptr
-                };
-                let left = $iter {
-                    iter: OuterIterCore {
-                        index: 0,
-                        len: index,
-                        stride: self.iter.stride,
-                        inner_dim: self.iter.inner_dim.clone(),
-                        inner_strides: self.iter.inner_strides.clone(),
-                        ptr: self.iter.ptr,
-                    },
-                    life: self.life,
-                };
-                let right = $iter {
-                    iter: OuterIterCore {
-                        index: 0,
-                        len: self.iter.len - index,
-                        stride: self.iter.stride,
-                        inner_dim: self.iter.inner_dim,
-                        inner_strides: self.iter.inner_strides,
-                        ptr: right_ptr,
-                    },
-                    life: self.life,
-                };
-                (left, right)
-            }
+impl<'a, A, D: Dimension> AxisIter<'a, A, D> {
+    /// Creates a new iterator over the specified axis.
+    pub(crate) fn new<Di>(v: ArrayView<'a, A, Di>, axis: Axis) -> Self
+    where
+        Di: RemoveAxis<Smaller = D>,
+    {
+        AxisIter {
+            iter: AxisIterCore::new(v, axis),
+            life: PhantomData,
         }
-    )
-}
+    }
 
-outer_iter_split_at_impl!(AxisIter);
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            AxisIter {
+                iter: left,
+                life: self.life,
+            },
+            AxisIter {
+                iter: right,
+                life: self.life,
+            },
+        )
+    }
+}
 
 impl<'a, A, D> Iterator for AxisIter<'a, A, D>
     where D: Dimension
@@ -791,26 +802,6 @@ impl<'a, A, D> ExactSizeIterator for AxisIter<'a, A, D>
     }
 }
 
-pub fn new_outer_iter<A, D>(v: ArrayView<A, D>) -> AxisIter<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIter {
-        iter: new_outer_core(v, 0),
-        life: PhantomData,
-    }
-}
-
-pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
-    -> AxisIter<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIter {
-        iter: new_outer_core(v, axis),
-        life: PhantomData,
-    }
-}
-
-
 /// An iterator that traverses over an axis and
 /// and yields each subview (mutable)
 ///
@@ -826,11 +817,39 @@ pub fn new_axis_iter<A, D>(v: ArrayView<A, D>, axis: usize)
 /// or [`.axis_iter_mut()`](../struct.ArrayBase.html#method.axis_iter_mut)
 /// for more information.
 pub struct AxisIterMut<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     life: PhantomData<&'a mut A>,
 }
 
-outer_iter_split_at_impl!(AxisIterMut);
+impl<'a, A, D: Dimension> AxisIterMut<'a, A, D> {
+    /// Creates a new iterator over the specified axis.
+    pub(crate) fn new<Di>(v: ArrayViewMut<'a, A, Di>, axis: Axis) -> Self
+    where
+        Di: RemoveAxis<Smaller = D>,
+    {
+        AxisIterMut {
+            iter: AxisIterCore::new(v, axis),
+            life: PhantomData,
+        }
+    }
+
+    /// Split the iterator at index, yielding two disjoint iterators.
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's length
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            AxisIterMut {
+                iter: left,
+                life: self.life,
+            },
+            AxisIterMut {
+                iter: right,
+                life: self.life,
+            },
+        )
+    }
+}
 
 impl<'a, A, D> Iterator for AxisIterMut<'a, A, D>
     where D: Dimension
@@ -867,25 +886,6 @@ impl<'a, A, D> ExactSizeIterator for AxisIterMut<'a, A, D>
 {
     fn len(&self) -> usize {
         self.size_hint().0
-    }
-}
-
-pub fn new_outer_iter_mut<A, D>(v: ArrayViewMut<A, D>) -> AxisIterMut<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIterMut {
-        iter: new_outer_core(v, 0),
-        life: PhantomData,
-    }
-}
-
-pub fn new_axis_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize)
-    -> AxisIterMut<A, D::Smaller>
-    where D: RemoveAxis
-{
-    AxisIterMut {
-        iter: new_outer_core(v, axis),
-        life: PhantomData,
     }
 }
 
@@ -994,7 +994,7 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
 ///
 /// See [`.axis_chunks_iter()`](../struct.ArrayBase.html#method.axis_chunks_iter) for more information.
 pub struct AxisChunksIter<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     last_ptr: *mut A,
     last_dim: D,
     life: PhantomData<&'a A>,
@@ -1012,9 +1012,10 @@ clone_bounds!(
     }
 );
 
-fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usize)
-    -> (OuterIterCore<A, D>, *mut A, D)
+fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: Axis, size: usize)
+    -> (AxisIterCore<A, D>, *mut A, D)
 {
+    let axis = axis.index();
     let axis_len = v.shape()[axis];
     let size = if size > axis_len { axis_len } else { size };
     let last_index = axis_len / size;
@@ -1036,7 +1037,7 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     else {
         v.ptr
     };
-    let iter = OuterIterCore {
+    let iter = AxisIterCore {
         index: 0,
         len: shape,
         stride: stride,
@@ -1048,17 +1049,15 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: usize, size: usiz
     (iter, last_ptr, last_dim)
 }
 
-pub fn new_chunk_iter<A, D>(v: ArrayView<A, D>, axis: usize, size: usize)
-    -> AxisChunksIter<A, D>
-    where D: Dimension
-{
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v, axis, size);
-
-    AxisChunksIter {
-        iter: iter,
-        last_ptr: last_ptr,
-        last_dim: last_dim,
-        life: PhantomData,
+impl<'a, A, D: Dimension> AxisChunksIter<'a, A, D> {
+    pub(crate) fn new(v: ArrayView<'a, A, D>, axis: Axis, size: usize) -> Self {
+        let (iter, last_ptr, last_dim) = chunk_iter_parts(v, axis, size);
+        AxisChunksIter {
+            iter: iter,
+            last_ptr: last_ptr,
+            last_dim: last_dim,
+            life: PhantomData,
+        }
     }
 }
 
@@ -1131,23 +1130,21 @@ macro_rules! chunk_iter_impl {
 /// See [`.axis_chunks_iter_mut()`](../struct.ArrayBase.html#method.axis_chunks_iter_mut)
 /// for more information.
 pub struct AxisChunksIterMut<'a, A: 'a, D> {
-    iter: OuterIterCore<A, D>,
+    iter: AxisIterCore<A, D>,
     last_ptr: *mut A,
     last_dim: D,
     life: PhantomData<&'a mut A>,
 }
 
-pub fn new_chunk_iter_mut<A, D>(v: ArrayViewMut<A, D>, axis: usize, size: usize)
-    -> AxisChunksIterMut<A, D>
-    where D: Dimension
-{
-    let (iter, last_ptr, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
-
-    AxisChunksIterMut {
-        iter: iter,
-        last_ptr: last_ptr,
-        last_dim: last_dim,
-        life: PhantomData,
+impl<'a, A, D: Dimension> AxisChunksIterMut<'a, A, D> {
+    pub(crate) fn new(v: ArrayViewMut<'a, A, D>, axis: Axis, size: usize) -> Self {
+        let (iter, last_ptr, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
+        AxisChunksIterMut {
+            iter: iter,
+            last_ptr: last_ptr,
+            last_dim: last_dim,
+            life: PhantomData,
+        }
     }
 }
 
