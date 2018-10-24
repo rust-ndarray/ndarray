@@ -150,20 +150,19 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         strides
     }
 
-    #[doc(hidden)]
-    // Return an index of same dimensionality
-    fn zero_index(&self) -> Self {
-        Self::default()
-    }
-
-    #[doc(hidden)]
-    /// Return an index of same type and with the specified dimensionality.
+    /// Creates a dimension of all zeros with the specified ndim.
     ///
     /// This method is useful for generalizing over fixed-size and
     /// variable-size dimension representations.
     ///
     /// **Panics** if `Self` has a fixed size that is not `ndim`.
-    fn zero_index_with_ndim(ndim: usize) -> Self;
+    fn zeros(ndim: usize) -> Self;
+
+    #[doc(hidden)]
+    // Return an index of same dimensionality
+    fn zero_index(&self) -> Self {
+        Self::default()
+    }
 
     #[doc(hidden)]
     #[inline]
@@ -380,7 +379,7 @@ impl Dimension for Dim<[Ix; 0]> {
     #[inline]
     fn into_pattern(self) -> Self::Pattern { }
     #[inline]
-    fn zero_index_with_ndim(ndim: usize) -> Self {
+    fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 0);
         Self::default()
     }
@@ -416,7 +415,7 @@ impl Dimension for Dim<[Ix; 1]> {
         get!(&self, 0)
     }
     #[inline]
-    fn zero_index_with_ndim(ndim: usize) -> Self {
+    fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 1);
         Self::default()
     }
@@ -510,7 +509,7 @@ impl Dimension for Dim<[Ix; 2]> {
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
-    fn zero_index_with_ndim(ndim: usize) -> Self {
+    fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 2);
         Self::default()
     }
@@ -655,7 +654,7 @@ impl Dimension for Dim<[Ix; 3]> {
     }
 
     #[inline]
-    fn zero_index_with_ndim(ndim: usize) -> Self {
+    fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 3);
         Self::default()
     }
@@ -764,7 +763,7 @@ macro_rules! large_dim {
             #[inline]
             fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
             #[inline]
-            fn zero_index_with_ndim(ndim: usize) -> Self {
+            fn zeros(ndim: usize) -> Self {
                 assert_eq!(ndim, $n);
                 Self::default()
             }
@@ -822,7 +821,7 @@ impl Dimension for IxDyn
     }
 
     #[inline]
-    fn zero_index_with_ndim(ndim: usize) -> Self {
+    fn zeros(ndim: usize) -> Self {
         IxDyn::zeros(ndim)
     }
 
