@@ -90,10 +90,16 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     }
 
     #[doc(hidden)]
-    fn slice(&self) -> &[Ix];
+    #[inline]
+    fn slice(&self) -> &[Ix] {
+        self.as_ref()
+    }
 
     #[doc(hidden)]
-    fn slice_mut(&mut self) -> &mut [Ix];
+    #[inline]
+    fn slice_mut(&mut self) -> &mut [Ix] {
+        self.as_mut()
+    }
 
     /// Borrow as a read-only array view.
     fn as_array_view(&self) -> ArrayView1<Ix> {
@@ -363,10 +369,6 @@ impl Dimension for Dim<[Ix; 0]> {
     #[inline]
     fn ndim(&self) -> usize { 0 }
     #[inline]
-    fn slice(&self) -> &[Ix] { &[] }
-    #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
-    #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern { }
@@ -398,10 +400,6 @@ impl Dimension for Dim<[Ix; 1]> {
     type Larger = Ix2;
     #[inline]
     fn ndim(&self) -> usize { 1 }
-    #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
-    #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         get!(&self, 0)
@@ -496,10 +494,6 @@ impl Dimension for Dim<[Ix; 2]> {
     fn into_pattern(self) -> Self::Pattern {
         self.ix().convert()
     }
-    #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
-    #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 2);
@@ -632,10 +626,6 @@ impl Dimension for Dim<[Ix; 3]> {
     fn into_pattern(self) -> Self::Pattern {
         self.ix().convert()
     }
-    #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
-    #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
 
     #[inline]
     fn size(&self) -> usize {
@@ -751,10 +741,6 @@ macro_rules! large_dim {
                 self.ix().convert()
             }
             #[inline]
-            fn slice(&self) -> &[Ix] { self.ix() }
-            #[inline]
-            fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
-            #[inline]
             fn zeros(ndim: usize) -> Self {
                 assert_eq!(ndim, $n);
                 Self::default()
@@ -798,10 +784,6 @@ impl Dimension for IxDyn
     type Larger = Self;
     #[inline]
     fn ndim(&self) -> usize { self.ix().len() }
-    #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
-    #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self
