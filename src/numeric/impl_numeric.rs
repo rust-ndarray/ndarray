@@ -164,7 +164,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    /// axis or if `axis` is out of bounds.
     ///
     /// # Example
     ///
@@ -228,7 +228,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     ///
     /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    /// axis or if `axis` is out of bounds.
     ///
     /// # Example
     ///

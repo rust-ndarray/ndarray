@@ -816,10 +816,9 @@ fn var_axis_bad_dof() {
 }
 
 #[test]
-#[should_panic]
 fn var_axis_empty_axis() {
     let a = array![[], []];
-    a.var_axis(Axis(1), 0.);
+    a.var_axis(Axis(1), -1.);
 }
 
 #[test]
@@ -830,10 +829,9 @@ fn std_axis_bad_dof() {
 }
 
 #[test]
-#[should_panic]
 fn std_axis_empty_axis() {
     let a = array![[], []];
-    a.std_axis(Axis(1), 0.);
+    a.std_axis(Axis(1), -1.);
 }
 
 #[test]
