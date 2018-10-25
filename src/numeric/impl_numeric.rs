@@ -163,8 +163,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis or if `axis` is out of bounds.
+    /// **Panics** if `ddof` is less than zero or greater than the length of
+    /// the axis or if `axis` is out of bounds.
     ///
     /// # Example
     ///
@@ -193,13 +193,13 @@ impl<A, S, D> ArrayBase<S, D>
                 *sum_sq = (x - *mean).mul_add(delta, *sum_sq);
             });
         }
-        if ddof >= count {
-            panic!("`ddof` needs to be strictly smaller than the length \
-                    of the axis you are computing the variance for!")
-        } else {
-            let dof = count - ddof;
-            sum_sq.mapv_into(|s| s / dof)
-        }
+        assert!(
+            !(ddof < A::zero() || ddof > count),
+            "`ddof` must not be less than zero or greater than the length of \
+             the axis",
+        );
+        let dof = count - ddof;
+        sum_sq.mapv_into(|s| s / dof)
     }
 
     /// Return standard deviation along `axis`.
@@ -227,8 +227,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis or if `axis` is out of bounds.
+    /// **Panics** if `ddof` is less than zero or greater than the length of
+    /// the axis or if `axis` is out of bounds.
     ///
     /// # Example
     ///
