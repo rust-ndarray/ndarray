@@ -31,7 +31,7 @@ pub fn indices<E>(shape: E) -> Indices<E::Dim>
 {
     let dim = shape.into_dimension();
     Indices {
-        start: dim.zero_index(),
+        start: E::Dim::zeros(dim.ndim()),
         dim: dim,
     }
 }
@@ -210,7 +210,7 @@ pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
     where E: IntoDimension,
 {
     let dim = shape.into_dimension();
-    let zero = dim.zero_index();
+    let zero = E::Dim::zeros(dim.ndim());
     IndicesIterF {
         has_remaining: dim.size_checked() != Some(0),
         index: zero,
