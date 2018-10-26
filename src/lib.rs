@@ -56,7 +56,7 @@
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
 //!   + See also the [`ndarray-parallel`] crate for integration with rayon.
-//! - **Requires Rust 1.27**
+//! - **Requires Rust 1.30**
 //!
 //! [`ndarray-parallel`]: https://docs.rs/ndarray-parallel
 //!
