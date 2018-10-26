@@ -7,7 +7,7 @@ use test::Bencher;
 
 extern crate rayon;
 extern crate ndarray;
-#[macro_use] extern crate ndarray_parallel;
+extern crate ndarray_parallel;
 use ndarray::prelude::*;
 use ndarray_parallel::prelude::*;
 

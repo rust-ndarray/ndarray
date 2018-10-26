@@ -98,8 +98,10 @@
 pub extern crate ndarray;
 pub extern crate rayon;
 
-/// Into- traits for creating parallelized iterators.
+/// Into- traits for creating parallelized iterators and `par_azip` macro.
 pub mod prelude {
+    pub use par_azip;
+
     // happy and insane; ignorance is bluss
     pub use NdarrayIntoParallelIterator;
     pub use NdarrayIntoParallelRefIterator;

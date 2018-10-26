@@ -1,10 +1,10 @@
 
 extern crate ndarray;
-#[macro_use]
 extern crate ndarray_parallel;
 extern crate itertools;
 
 use ndarray::prelude::*;
+use ndarray_parallel::par_azip;
 use itertools::{enumerate};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
