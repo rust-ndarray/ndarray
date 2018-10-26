@@ -71,7 +71,6 @@
 //! A direct translation to `ndarray` looks like this:
 //!
 //! ```
-//! #[macro_use]
 //! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;
@@ -130,7 +129,6 @@
 //!   some places, but that's not demonstrated in the example below.
 //!
 //! ```
-//! #[macro_use]
 //! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;

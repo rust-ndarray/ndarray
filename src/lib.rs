@@ -470,11 +470,9 @@ pub type Ixs = isize;
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
 /// ```
-/// // import the s![] macro
-/// #[macro_use(s)]
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3};
+/// use ndarray::{arr2, arr3, s};
 ///
 /// fn main() {
 ///
@@ -554,9 +552,9 @@ pub type Ixs = isize;
 /// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
-/// #[macro_use(s)] extern crate ndarray;
+/// extern crate ndarray;
 ///
-/// use ndarray::{arr3, aview1, aview2, Axis};
+/// use ndarray::{arr3, aview1, aview2, s, Axis};
 ///
 /// # fn main() {
 ///

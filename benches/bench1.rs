@@ -2,7 +2,6 @@
 #![allow(unused_imports)]
 
 extern crate test;
-#[macro_use(s, azip)]
 extern crate ndarray;
 
 use ndarray::{
@@ -13,7 +12,7 @@ use ndarray::{
     Array2,
     Zip,
 };
-use ndarray::{arr0, arr1, arr2};
+use ndarray::{arr0, arr1, arr2, azip, s};
 use ndarray::ShapeBuilder;
 
 use test::black_box;

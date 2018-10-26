@@ -6,7 +6,6 @@ use test::Bencher;
 use test::black_box;
 use rawpointer::PointerExt;
 
-#[macro_use(s, azip)]
 extern crate ndarray;
 use ndarray::prelude::*;
 use ndarray::{Zip, FoldWhile};

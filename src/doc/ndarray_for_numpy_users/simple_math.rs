@@ -23,7 +23,6 @@
 //!
 //!
 //!
-//!
 //! a = np.full((5, 4), 3.)
 //!
 //!
@@ -52,7 +51,6 @@
 //! <td>
 //!
 //! ```
-//! #[macro_use]
 //! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;

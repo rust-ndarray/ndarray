@@ -1,5 +1,5 @@
 #[macro_use] extern crate defmac;
-#[macro_use(s)] extern crate ndarray;
+extern crate ndarray;
 extern crate num_traits;
 
 use ndarray::prelude::*;

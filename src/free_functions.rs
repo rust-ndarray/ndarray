@@ -16,8 +16,9 @@ use imp_prelude::*;
 /// three dimensions.
 ///
 /// ```
-/// #[macro_use(array)]
 /// extern crate ndarray;
+///
+/// use ndarray::array;
 ///
 /// fn main() {
 ///     let a1 = array![1, 2, 3, 4];
@@ -115,10 +116,9 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
 /// Create a one-dimensional read-write array view with elements borrowing `xs`.
 ///
 /// ```
-/// #[macro_use(s)]
 /// extern crate ndarray;
 ///
-/// use ndarray::aview_mut1;
+/// use ndarray::{aview_mut1, s};
 ///
 /// // Create an array view over some data, then slice it and modify it.
 /// fn main() {

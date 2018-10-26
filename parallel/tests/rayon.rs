@@ -1,6 +1,6 @@
 
 extern crate rayon;
-#[macro_use(s)] extern crate ndarray;
+extern crate ndarray;
 extern crate ndarray_parallel;
 
 use ndarray::prelude::*;

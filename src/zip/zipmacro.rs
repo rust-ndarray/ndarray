@@ -49,10 +49,9 @@
 /// ## Examples
 ///
 /// ```rust
-/// #[macro_use(azip)]
 /// extern crate ndarray;
 ///
-/// use ndarray::{Array1, Array2, Axis};
+/// use ndarray::{azip, Array1, Array2, Axis};
 ///
 /// type M = Array2<f32>;
 ///

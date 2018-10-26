@@ -1,19 +1,9 @@
-#[macro_use(s)]
 extern crate ndarray;
 extern crate itertools;
 
 use ndarray::prelude::*;
 use ndarray::Ix;
-use ndarray::{
-    Data,
-    Dimension,
-    aview1,
-    arr2,
-    arr3,
-    Axis,
-    indices,
-    Slice,
-};
+use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice};
 
 use itertools::assert_equal;
 use itertools::{rev, enumerate};

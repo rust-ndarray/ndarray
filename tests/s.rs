@@ -1,8 +1,6 @@
-
-#[macro_use(s)]
 extern crate ndarray;
 
-use ndarray::Array;
+use ndarray::{s, Array};
 
 #[test]
 fn test_s()

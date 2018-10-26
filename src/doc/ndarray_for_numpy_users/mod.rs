@@ -163,7 +163,6 @@
 //! and `ndarray` like this:
 //!
 //! ```
-//! #[macro_use]
 //! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;
