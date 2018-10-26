@@ -318,8 +318,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
-        let mut new_dim = Do::zero_index_with_ndim(out_ndim);
-        let mut new_strides = Do::zero_index_with_ndim(out_ndim);
+        let mut new_dim = Do::zeros(out_ndim);
+        let mut new_strides = Do::zeros(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices)
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
                 &SliceOrIndex::Slice {..} => Some((d, s)),
@@ -1401,7 +1401,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let axes = axes.into_dimension();
         // Ensure that each axis is used exactly once.
-        let mut usage_counts = D::zero_index_with_ndim(self.ndim());
+        let mut usage_counts = D::zeros(self.ndim());
         for axis in axes.slice() {
             usage_counts[*axis] += 1;
         }
@@ -1410,7 +1410,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
         // Determine the new shape and strides.
         let mut new_dim = usage_counts; // reuse to avoid an allocation
-        let mut new_strides = D::zero_index_with_ndim(self.ndim());
+        let mut new_strides = D::zeros(self.ndim());
         {
             let dim = self.dim.slice();
             let strides = self.strides.slice();
