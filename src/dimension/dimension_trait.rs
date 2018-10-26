@@ -11,7 +11,7 @@ use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
-use itertools::{enumerate, zip};
+use itertools::{enumerate, izip, zip};
 
 use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
 use IntoDimension;

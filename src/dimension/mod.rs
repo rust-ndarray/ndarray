@@ -8,6 +8,7 @@
 
 use {Ix, Ixs};
 use error::{from_kind, ErrorKind, ShapeError};
+use itertools::izip;
 
 pub use self::dim::*;
 pub use self::axis::Axis;

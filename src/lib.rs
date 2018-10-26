@@ -99,7 +99,7 @@ extern crate blas_src;
 
 extern crate matrixmultiply;
 
-#[macro_use(izip)] extern crate itertools;
+extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
