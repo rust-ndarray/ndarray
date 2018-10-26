@@ -1,6 +1,7 @@
 extern crate ndarray;
-#[macro_use]
 extern crate defmac;
+
+use defmac::defmac;
 
 use ndarray::{
     RcArray,

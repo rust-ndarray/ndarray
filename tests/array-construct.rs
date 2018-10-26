@@ -1,7 +1,7 @@
-#[macro_use]
 extern crate defmac;
 extern crate ndarray;
 
+use defmac::defmac;
 use ndarray::prelude::*;
 
 #[test]
