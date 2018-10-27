@@ -41,6 +41,9 @@
 //!   + The crate is continuously developing, and breaking changes are expected
 //!     during evolution from version to version. We adopt the newest stable
 //!     rust features if we need them.
+//!   + Note that functions/methods/traits/etc. hidden from the docs are not
+//!     considered part of the public API, so changes to them are not
+//!     considered breaking changes.
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
