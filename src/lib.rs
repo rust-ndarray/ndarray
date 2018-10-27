@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name="ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.11/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
