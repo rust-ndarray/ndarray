@@ -169,10 +169,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Turn the array into a uniquely owned array, cloning the array elements
-    /// to unshare them if necessary.
+    /// if necessary.
     pub fn into_owned(self) -> Array<A, D>
         where A: Clone,
-              S: DataOwned,
     {
         S::into_owned(self)
     }
