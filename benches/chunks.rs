@@ -22,14 +22,14 @@ fn chunk2x2_iter_sum(bench: &mut Bencher)
 }
 
 #[bench]
-fn chunk2x2_scalar_sum(bench: &mut Bencher)
+fn chunk2x2_sum(bench: &mut Bencher)
 {
     let a = Array::<f32, _>::zeros((256, 256));
     let chunksz = (2, 2);
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
         azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
-            *sum = a.scalar_sum();
+            *sum = a.sum();
         });
     });
 }

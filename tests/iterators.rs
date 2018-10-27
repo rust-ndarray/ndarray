@@ -492,7 +492,7 @@ fn test_fold() {
     a += 1;
     let mut iter = a.iter();
     iter.next();
-    assert_eq!(iter.fold(0, |acc, &x| acc + x), a.scalar_sum() - 1);
+    assert_eq!(iter.fold(0, |acc, &x| acc + x), a.sum() - 1);
 
     let mut a = Array0::<i32>::default(());
     a += 1;

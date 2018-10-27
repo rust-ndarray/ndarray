@@ -70,8 +70,8 @@
 //! // Change values less than 1.5 to 4.
 //! a.mapv_inplace(|x| if x < 1.5 { 4. } else { x });
 //!
-//! // Compute the scalar sum of the odd-index columns.
-//! let odd_sum = a.slice(s![.., 1..;2]).scalar_sum();
+//! // Compute the sum of the odd-index columns.
+//! let odd_sum = a.slice(s![.., 1..;2]).sum();
 //!
 //! // Create a 1-D array of exp(index).
 //! let b = Array::from_shape_fn(4, |i| (i as f64).exp());

@@ -694,12 +694,12 @@ fn sum_mean()
     assert_eq!(a.mean_axis(Axis(1)), arr1(&[1.5, 3.5]));
     assert_eq!(a.sum_axis(Axis(1)).sum_axis(Axis(0)), arr0(10.));
     assert_eq!(a.view().mean_axis(Axis(1)), aview1(&[1.5, 3.5]));
-    assert_eq!(a.scalar_sum(), 10.);
+    assert_eq!(a.sum(), 10.);
 }
 
 #[test]
 fn sum_mean_empty() {
-    assert_eq!(Array3::<f32>::ones((2, 0, 3)).scalar_sum(), 0.);
+    assert_eq!(Array3::<f32>::ones((2, 0, 3)).sum(), 0.);
     assert_eq!(Array1::<f32>::ones(0).sum_axis(Axis(0)), arr0(0.));
     assert_eq!(
         Array3::<f32>::ones((2, 0, 3)).sum_axis(Axis(1)),
@@ -1432,7 +1432,7 @@ fn scalar_ops() {
     let one = &zero + 1.;
     assert_eq!(0. * &one, zero);
     assert_eq!(&one * 0., zero);
-    assert_eq!((&one + &one).scalar_sum(), 8.);
+    assert_eq!((&one + &one).sum(), 8.);
     assert_eq!(&one / 2., 0.5 * &one);
     assert_eq!(&one % 1., zero);
 
@@ -1723,10 +1723,10 @@ fn test_map_axis() {
                    [7, 8, 9],
                    [10,11,12]]);
 
-    let b = a.map_axis(Axis(0), |view| view.scalar_sum());
+    let b = a.map_axis(Axis(0), |view| view.sum());
     let answer1 = arr1(&[22, 26, 30]);
     assert_eq!(b, answer1);
-    let c = a.map_axis(Axis(1), |view| view.scalar_sum());
+    let c = a.map_axis(Axis(1), |view| view.sum());
     let answer2 = arr1(&[6, 15, 24, 33]);
     assert_eq!(c, answer2);
 }

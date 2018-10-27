@@ -235,7 +235,7 @@ fn dot_product_neg_stride() {
 #[test]
 fn fold_and_sum() {
     let a = Array::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
-    assert_approx_eq(a.fold(0., |acc, &x| acc +x), a.scalar_sum(), 1e-5);
+    assert_approx_eq(a.fold(0., |acc, &x| acc +x), a.sum(), 1e-5);
 
     // test different strides
     let max = 8 as Ixs;
@@ -247,7 +247,7 @@ fn fold_and_sum() {
                 sum += *elt;
             }
             assert_approx_eq(a1.fold(0., |acc, &x| acc +x), sum, 1e-5);
-            assert_approx_eq(sum, a1.scalar_sum(), 1e-5);
+            assert_approx_eq(sum, a1.sum(), 1e-5);
         }
     }
 
