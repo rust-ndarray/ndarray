@@ -53,9 +53,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
-    /// assert_eq!(a.scalar_prod(), 24.);
+    /// assert_eq!(a.product(), 24.);
     /// ```
-    pub fn scalar_prod(&self) -> A
+    pub fn product(&self) -> A
         where A: Clone + Mul<Output=A> + libnum::One,
     {
         if let Some(slc) = self.as_slice_memory_order() {
