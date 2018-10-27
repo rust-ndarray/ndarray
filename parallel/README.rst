@@ -10,8 +10,8 @@ __ http://docs.rs/ndarray-parallel/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://travis-ci.org/bluss/rust-ndarray.svg?branch=master
-.. _build_status: https://travis-ci.org/bluss/rust-ndarray
+.. |build_status| image:: https://travis-ci.org/rust-ndarray/ndarray.svg?branch=master
+.. _build_status: https://travis-ci.org/rust-ndarray/ndarray
 
 .. |crates| image:: http://meritbadge.herokuapp.com/ndarray-parallel
 .. _crates: https://crates.io/crates/ndarray-parallel
