@@ -70,7 +70,7 @@ How to use with cargo
 ::
 
     [dependencies]
-    ndarray = "0.11.0"
+    ndarray = "0.12.0"
 
 How to enable blas integration. Depend on ``blas-src`` directly to pick a blas
 provider. Depend on the same ``blas-src`` version as ``ndarray`` does, for the
@@ -80,7 +80,7 @@ provider::
 
 
     [dependencies]
-    ndarray = { version = "0.11.0", features = ["blas"] }
+    ndarray = { version = "0.12.0", features = ["blas"] }
     blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
     openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
 
