@@ -77,65 +77,70 @@ impl<A, S, D> ArrayBase<S, D>
     /// 
     /// # Example
     /// ```
-    /// use ndarray::arr2;
+    /// use ndarray::{arr2, Array2};
     /// use std::f64;
     /// 
     /// let a = arr2(&[[1., 2.], [3., 4.]]);
-    /// 
-    /// assert_eq!(a.scalar_max(), Some(&4.));
+    /// assert_eq!(a.max(), Some(&4.));
     /// 
     /// let b = arr2(&[[1., f64::NAN], [3., 4.]]);
+    /// assert_eq!(b.max(), None);
     /// 
-    /// assert_eq!(b.scalar_max(), None);
+    /// let c = arr2(&[[f64::NAN]]);
+    /// assert_eq!(c.max(), None);
+    /// 
+    /// let d: Array2<f64> = arr2(&[[]]);
+    /// assert_eq!(d.max(), None);
     /// ```
-    pub fn scalar_max(&self) -> Option<&A>
+    pub fn max(&self) -> Option<&A>
     where A: PartialOrd
     {
-        if let Some(slc) = self.as_slice_memory_order() {
-            let mut max = self.first();
-            for item in slc.iter().skip(1) {
-                match max.partial_cmp(&Some(item)) {
-                    None => return None,
-                    Some(::std::cmp::Ordering::Less) => max = Some(item),
-                    _ => {},
-                }
+        if let Some(first) = self.first() {
+            let max = self.fold(first, |acc, x| if acc == acc && !(x < acc) {x} else {acc});
+            if max == max {
+                Some(max)
+            } else {
+                None
             }
-            max
         } else {
-            Zip::from(self).fold_while(self.first(), |acc, x| 
-            match acc.partial_cmp(&Some(x)) {
-                None => FoldWhile::Done(None),
-                Some(::std::cmp::Ordering::Less) => FoldWhile::Continue(Some(x)),
-                _ => FoldWhile::Continue(acc),
-            }).into_inner()
+            None
         }
+
     }  
 
+    /// Return a reference to a maximum of all values, ignoring
+    /// incomparable elements. Returns None if `self` is empty,
+    /// or contains only incomparable elements.
+    /// 
+    /// # Example
+    /// ```
+    /// use ndarray::{arr2, Array2};
+    /// use std::f64;
+    /// 
+    /// let a = arr2(&[[1., 2.], [3., 4.]]);
+    /// assert_eq!(a.nanmax(), Some(&4.));
+    /// 
+    /// let b = arr2(&[[1., f64::NAN], [3., f64::NAN]]);
+    /// assert_eq!(b.nanmax(), Some(&3.));
+    /// 
+    /// let c: Array2<f64> = arr2(&[[]]);
+    /// assert_eq!(c.nanmax(), None);
+    /// 
+    /// let d = arr2(&[[f64::NAN, f64::NAN],[f64::NAN, f64::NAN]]);
+    /// assert_eq!(d.nanmax(), None);
+    /// ```
     pub fn nanmax(&self) -> Option<&A> 
     where A: PartialOrd,
     {
-        if self.len() == 0 {
-            None
-        }
-        else if let Some(slc) = self.as_slice_memory_order() {
-            let f = |acc, x| if acc == acc && x < acc {acc} else {x};
-            // numeric_util::unrolled_fold(slc, )
-            let mut max = self.first();
-            for item in slc.iter().skip(1) {
-                match max.partial_cmp(&Some(item)) {
-                    None => return None,
-                    Some(::std::cmp::Ordering::Less) => max = Some(item),
-                    _ => {},
-                }
+        if let Some(first) = self.first() {
+            let max = self.fold(first, |acc, x| if acc == acc && !(x > acc) {acc} else {x});
+            if max == max {
+                Some(max)
+            } else {
+                None
             }
-            max
         } else {
-            Zip::from(self).fold_while(self.first(), |acc, x| 
-            match acc.partial_cmp(&Some(x)) {
-                None => FoldWhile::Done(None),
-                Some(::std::cmp::Ordering::Less) => FoldWhile::Continue(Some(x)),
-                _ => FoldWhile::Continue(acc),
-            }).into_inner()
+            None
         }
     }
 
@@ -144,39 +149,71 @@ impl<A, S, D> ArrayBase<S, D>
     /// 
     /// # Example
     /// ```
-    /// use ndarray::arr2;
+    /// use ndarray::{arr2, Array2};
     /// use std::f64;
     /// 
     /// let a = arr2(&[[1., 2.], [3., 4.]]);
-    /// 
-    /// assert_eq!(a.scalar_min(), Some(&1.));
+    /// assert_eq!(a.min(), Some(&1.));
     /// 
     /// let b = arr2(&[[1., f64::NAN], [3., 4.]]);
+    /// assert_eq!(b.min(), None);
     /// 
-    /// assert_eq!(b.scalar_min(), None);
+    /// let c = arr2(&[[f64::NAN]]);
+    /// assert_eq!(c.min(), None);
+    /// 
+    /// let d: Array2<f64> = arr2(&[[]]);
+    /// assert_eq!(d.min(), None);
     /// ```
-    pub fn scalar_min(&self) -> Option<&A>
+    pub fn min(&self) -> Option<&A>
     where A: PartialOrd
     {
-        if let Some(slc) = self.as_slice_memory_order() {
-            let mut min = self.first();
-            for item in slc.iter().skip(1) {
-                match min.partial_cmp(&Some(item)) {
-                    None => return None,
-                    Some(::std::cmp::Ordering::Greater) => min = Some(item),
-                    _ => {},
-                }
+        if let Some(first) = self.first() {
+            let min = self.fold(first, |acc, x| if acc == acc && !(acc < x) {x} else {acc});
+            if min == min {
+                Some(min)
+            } else {
+                None
             }
-            min
         } else {
-            Zip::from(self).fold_while(self.first(), |acc, x| 
-            match acc.partial_cmp(&Some(x)) {
-                None => FoldWhile::Done(None),
-                Some(::std::cmp::Ordering::Greater) => FoldWhile::Continue(Some(x)),
-                _ => FoldWhile::Continue(acc),
-            }).into_inner()
+            None
         }
     }  
+
+    /// Return a reference to a minimum of all values, ignoring
+    /// incomparable elements. Returns None if `self` is empty,
+    /// or contains only incomparable elements.
+    /// 
+    /// # Example
+    /// ```
+    /// use ndarray::{arr2, Array2};
+    /// use std::f64;
+    /// 
+    /// let a = arr2(&[[1., 2.], [3., 4.]]);
+    /// assert_eq!(a.nanmin(), Some(&1.));
+    /// 
+    /// let b = arr2(&[[f64::NAN, 2.], [3., f64::NAN]]);
+    /// assert_eq!(b.nanmin(), Some(&2.));
+    /// 
+    /// let c: Array2<f64> = arr2(&[[]]);
+    /// assert_eq!(c.nanmin(), None);
+    /// 
+    /// let d = arr2(&[[f64::NAN, f64::NAN],[f64::NAN, f64::NAN]]);
+    /// assert_eq!(d.nanmin(), None);
+    /// ```
+    pub fn nanmin(&self) -> Option<&A> 
+    where A: PartialOrd,
+    {
+        if let Some(first) = self.first() {
+            let min = self.fold(first, |acc, x| if acc == acc && !(x < acc) {acc} else {x});
+            if min == min {
+                Some(min)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
 
     /// Return sum along `axis`.
     ///
