@@ -85,6 +85,34 @@ impl<A, S, D> ArrayBase<S, D>
         }
     }  
 
+    pub fn nanmax(&self) -> Option<&A> 
+    where A: PartialOrd,
+    {
+        if self.len() == 0 {
+            None
+        }
+        else if let Some(slc) = self.as_slice_memory_order() {
+            let f = |acc, x| if acc == acc && x < acc {acc} else {x};
+            // numeric_util::unrolled_fold(slc, )
+            let mut max = self.first();
+            for item in slc.iter().skip(1) {
+                match max.partial_cmp(&Some(item)) {
+                    None => return None,
+                    Some(::std::cmp::Ordering::Less) => max = Some(item),
+                    _ => {},
+                }
+            }
+            max
+        } else {
+            Zip::from(self).fold_while(self.first(), |acc, x| 
+            match acc.partial_cmp(&Some(x)) {
+                None => FoldWhile::Done(None),
+                Some(::std::cmp::Ordering::Less) => FoldWhile::Continue(Some(x)),
+                _ => FoldWhile::Continue(acc),
+            }).into_inner()
+        }
+    }
+
     /// Return a reference to a minimum of all values.
     /// Return None if a comparison fails or if self is empty.
     /// 
