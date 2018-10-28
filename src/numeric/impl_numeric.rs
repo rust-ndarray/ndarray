@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::{Add, Div};
+use std::ops::{Add, Div, Mul};
 use libnum::{self, One, Zero, Float};
 use itertools::free::enumerate;
 
@@ -33,14 +33,40 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Add<Output=A> + libnum::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            return numeric_util::unrolled_sum(slc);
+            return numeric_util::unrolled_fold(slc, A::zero, A::add);
         }
         let mut sum = A::zero();
         for row in self.inner_rows() {
             if let Some(slc) = row.as_slice() {
-                sum = sum + numeric_util::unrolled_sum(slc);
+                sum = sum + numeric_util::unrolled_fold(slc, A::zero, A::add);
             } else {
                 sum = sum + row.iter().fold(A::zero(), |acc, elt| acc + elt.clone());
+            }
+        }
+        sum
+    }
+
+    /// Return the product of all elements in the array.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    /// assert_eq!(a.scalar_prod(), 24.);
+    /// ```
+    pub fn scalar_prod(&self) -> A
+        where A: Clone + Mul<Output=A> + libnum::One,
+    {
+        if let Some(slc) = self.as_slice_memory_order() {
+            return numeric_util::unrolled_fold(slc, A::one, A::mul);
+        }
+        let mut sum = A::one();
+        for row in self.inner_rows() {
+            if let Some(slc) = row.as_slice() {
+                sum = sum * numeric_util::unrolled_fold(slc, A::one, A::mul);
+            } else {
+                sum = sum * row.iter().fold(A::one(), |acc, elt| acc * elt.clone());
             }
         }
         sum

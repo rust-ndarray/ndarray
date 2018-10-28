@@ -28,9 +28,18 @@ use {
 pub unsafe trait Data : Sized {
     /// The array element type.
     type Elem;
+
     #[doc(hidden)]
     // This method is only used for debugging
     fn _data_slice(&self) -> &[Self::Elem];
+
+    /// Converts the array to a uniquely owned array, cloning elements if necessary.
+    #[doc(hidden)]
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension;
+
     private_decl!{}
 }
 
@@ -76,6 +85,20 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
     type Elem = A;
     fn _data_slice(&self) -> &[A] {
         &self.0
+    }
+    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        Self::ensure_unique(&mut self_);
+        let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
+        ArrayBase {
+            data: data,
+            ptr: self_.ptr,
+            dim: self_.dim,
+            strides: self_.strides,
+        }
     }
     private_impl!{}
 }
@@ -130,6 +153,14 @@ unsafe impl<A> Data for OwnedRepr<A> {
     fn _data_slice(&self) -> &[A] {
         &self.0
     }
+    #[inline]
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        self_
+    }
     private_impl!{}
 }
 
@@ -166,6 +197,13 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     fn _data_slice(&self) -> &[A] {
         &[]
     }
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension,
+    {
+        self_.to_owned()
+    }
     private_impl!{}
 }
 
@@ -180,6 +218,13 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     fn _data_slice(&self) -> &[A] {
         &[]
     }
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension,
+    {
+        self_.to_owned()
+    }
     private_impl!{}
 }
 
@@ -193,13 +238,11 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> { }
 pub unsafe trait DataOwned : Data {
     #[doc(hidden)]
     fn new(elements: Vec<Self::Elem>) -> Self;
+
+    /// Converts the data representation to a shared (copy on write)
+    /// representation, without any copying.
     #[doc(hidden)]
     fn into_shared(self) -> OwnedRcRepr<Self::Elem>;
-    #[doc(hidden)]
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
-    where
-        Self::Elem: Clone,
-        D: Dimension;
 }
 
 /// Array representation trait.
@@ -219,14 +262,6 @@ unsafe impl<A> DataOwned for OwnedRepr<A> {
     fn into_shared(self) -> OwnedRcRepr<A> {
         OwnedArcRepr(Arc::new(self.0))
     }
-    #[inline]
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
-    where
-        A: Clone,
-        D: Dimension,
-    {
-        self_
-    }
 }
 
 unsafe impl<A> DataOwned for OwnedArcRepr<A> {
@@ -237,20 +272,4 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
     fn into_shared(self) -> OwnedRcRepr<A> {
         self
     }
-
-    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
-    where
-        A: Clone,
-        D: Dimension,
-    {
-        Self::ensure_unique(&mut self_);
-        let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
-        ArrayBase {
-            data: data,
-            ptr: self_.ptr,
-            dim: self_.dim,
-            strides: self_.strides,
-        }
-    }
 }
-

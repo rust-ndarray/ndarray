@@ -10,8 +10,8 @@ __ https://docs.rs/ndarray/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://api.travis-ci.org/bluss/ndarray.svg?branch=master
-.. _build_status: https://travis-ci.org/bluss/ndarray
+.. |build_status| image:: https://api.travis-ci.org/rust-ndarray/ndarray.svg?branch=master
+.. _build_status: https://travis-ci.org/rust-ndarray/ndarray
 
 .. |crates| image:: http://meritbadge.herokuapp.com/ndarray
 .. _crates: https://crates.io/crates/ndarray
@@ -70,7 +70,7 @@ How to use with cargo
 ::
 
     [dependencies]
-    ndarray = "0.11.0"
+    ndarray = "0.12.0"
 
 How to enable blas integration. Depend on ``blas-src`` directly to pick a blas
 provider. Depend on the same ``blas-src`` version as ``ndarray`` does, for the
@@ -80,7 +80,7 @@ provider::
 
 
     [dependencies]
-    ndarray = { version = "0.11.0", features = ["blas"] }
+    ndarray = { version = "0.12.0", features = ["blas"] }
     blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
     openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
 
@@ -164,7 +164,7 @@ __ https://docs.rs/ndarray/0.11/ndarray/doc/ndarray_for_numpy_users/
   - Minimum required Rust version is 1.22.
 
 __ https://jim.turner.link/pages/ndarray-0.11/
-.. _`#380`: https://github.com/bluss/rust-ndarray/pull/380
+.. _`#380`: https://github.com/rust-ndarray/ndarray/pull/380
 
 - 0.10.13
 
@@ -310,7 +310,7 @@ __ https://bluss.github.io//rust/2017/04/09/ndarray-0.9/
   - ``AxisChunksIter`` creation sped up and it implements ``Clone``.
   - Dimension mismatch in ``Zip`` has a better panic message.
 
-  __ https://bluss.github.io/rust-ndarray/master/ndarray/type.IxDyn.html
+  __ https://docs.rs/ndarray/0.8.2/ndarray/type.IxDyn.html
 
 - 0.8.1
 
@@ -634,7 +634,7 @@ __ http://bluss.github.io/rust/2016/03/06/ndarray-0.4/
   - Remove deprecated module ``linalg`` (it was already mostly empty)
   - Deprecate free function ``zeros`` in favour of static method ``zeros``.
 
-__ https://bluss.github.io/rust-ndarray/master/ndarray/struct.ArrayBase.html#arithmetic-operations
+__ https://docs.rs/ndarray/0.4.0-alpha.5/ndarray/struct.ArrayBase.html#arithmetic-operations
 
 - 0.4.0-alpha.4
 

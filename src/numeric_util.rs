@@ -5,50 +5,47 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use libnum;
-
 use std::cmp;
-use std::ops::{
-    Add,
-};
 
 use LinalgScalar;
 
-/// Compute the sum of the values in `xs`
-pub fn unrolled_sum<A>(mut xs: &[A]) -> A
-    where A: Clone + Add<Output=A> + libnum::Zero,
+/// Fold over the manually unrolled `xs` with `f`
+pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
+    where A: Clone,
+    I: Fn() -> A,
+    F: Fn(A, A) -> A,
 {
     // eightfold unrolled so that floating point can be vectorized
     // (even with strict floating point accuracy semantics)
-    let mut sum = A::zero();
+    let mut acc = init();
     let (mut p0, mut p1, mut p2, mut p3,
          mut p4, mut p5, mut p6, mut p7) =
-        (A::zero(), A::zero(), A::zero(), A::zero(),
-         A::zero(), A::zero(), A::zero(), A::zero());
+        (init(), init(), init(), init(),
+         init(), init(), init(), init());
     while xs.len() >= 8 {
-        p0 = p0 + xs[0].clone();
-        p1 = p1 + xs[1].clone();
-        p2 = p2 + xs[2].clone();
-        p3 = p3 + xs[3].clone();
-        p4 = p4 + xs[4].clone();
-        p5 = p5 + xs[5].clone();
-        p6 = p6 + xs[6].clone();
-        p7 = p7 + xs[7].clone();
+        p0 = f(p0, xs[0].clone());
+        p1 = f(p1, xs[1].clone());
+        p2 = f(p2, xs[2].clone());
+        p3 = f(p3, xs[3].clone());
+        p4 = f(p4, xs[4].clone());
+        p5 = f(p5, xs[5].clone());
+        p6 = f(p6, xs[6].clone());
+        p7 = f(p7, xs[7].clone());
 
         xs = &xs[8..];
     }
-    sum = sum.clone() + (p0 + p4);
-    sum = sum.clone() + (p1 + p5);
-    sum = sum.clone() + (p2 + p6);
-    sum = sum.clone() + (p3 + p7);
+    acc = f(acc.clone(), f(p0, p4));
+    acc = f(acc.clone(), f(p1, p5));
+    acc = f(acc.clone(), f(p2, p6));
+    acc = f(acc.clone(), f(p3, p7));
 
     // make it clear to the optimizer that this loop is short
     // and can not be autovectorized.
     for i in 0..xs.len() {
         if i >= 7 { break; }
-        sum = sum.clone() + xs[i].clone()
+        acc = f(acc.clone(), xs[i].clone())
     }
-    sum
+    acc
 }
 
 /// Compute the dot product.

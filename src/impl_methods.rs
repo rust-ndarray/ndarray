@@ -169,10 +169,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Turn the array into a uniquely owned array, cloning the array elements
-    /// to unshare them if necessary.
+    /// if necessary.
     pub fn into_owned(self) -> Array<A, D>
         where A: Clone,
-              S: DataOwned,
     {
         S::into_owned(self)
     }
@@ -830,7 +829,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` is out of bounds.
     ///
-    /// <img src="https://bluss.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
+    /// <img src="https://rust-ndarray.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {

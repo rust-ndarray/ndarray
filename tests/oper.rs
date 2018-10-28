@@ -271,6 +271,26 @@ fn fold_and_sum() {
     }
 }
 
+#[test]
+fn scalar_prod() {
+    let a = Array::linspace(0.5, 2., 128).into_shape((8, 16)).unwrap();
+    assert_approx_eq(a.fold(1., |acc, &x| acc * x), a.scalar_prod(), 1e-5);
+
+    // test different strides
+    let max = 8 as Ixs;
+    for i in 1..max {
+        for j in 1..max {
+            let a1 = a.slice(s![..;i, ..;j]);
+            let mut prod = 1.;
+            for elt in a1.iter() {
+                prod *= *elt;
+            }
+            assert_approx_eq(a1.fold(1., |acc, &x| acc * x), prod, 1e-5);
+            assert_approx_eq(prod, a1.scalar_prod(), 1e-5);
+        }
+    }
+}
+
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n).into_shape((m, n)).unwrap()
 }
