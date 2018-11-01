@@ -237,7 +237,7 @@ pub type Ixs = isize;
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
 /// + [Broadcasting](#broadcasting)
-/// + [Conversions Between Array Types](#conversions-between-array-types)
+/// + [Conversions](#conversions)
 /// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](#methods-for-all-array-types)
 ///
@@ -650,7 +650,9 @@ pub type Ixs = isize;
 /// );
 /// ```
 ///
-/// ## Conversions Between Array Types
+/// ## Conversions
+///
+/// ### Conversions Between Array Types
 ///
 /// This table is a summary of the conversions between arrays of different
 /// ownership, dimensionality, and element type. All of the conversions in this
@@ -850,6 +852,32 @@ pub type Ixs = isize;
 /// </td>
 /// </tr>
 /// </table>
+///
+/// ### Conversions Between Arrays and `Vec`s/Slices
+///
+/// This is a table of the safe conversions between arrays and `Vec`s/slices.
+/// Note that some of the return values are actually `Result`/`Option` wrappers
+/// around the indicated output types.
+///
+/// Input | Output | Methods
+/// ------|--------|--------
+/// `Vec<A>` | `ArrayBase<S: DataOwned, Ix1>` | [`::from_vec()`](#method.from_vec)
+/// `Vec<A>` | `ArrayBase<S: DataOwned, D>` | [`::from_shape_vec()`](#method.from_shape_vec)
+/// `&[A]` | `ArrayView<A, D>` | [`::from_shape()`](type.ArrayView.html#method.from_shape)
+/// `&mut [A]` | `ArrayViewMut<A, D>` | [`::from_shape()`](type.ArrayViewMut.html#method.from_shape)
+/// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](#method.to_vec)
+/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[1](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[2](#req_contig)</sup>
+/// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[1](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[2](#req_contig)</sup>
+/// `ArrayView<A, D>` | `&[A]` | [`.into_slice()`](type.ArrayView.html#method.into_slice)
+/// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)
+///
+/// <sup><a name="req_contig_std">1</a></sup>Works only if the array is
+/// contiguous and in standard order.
+///
+/// <sup><a name="req_contig">2</a></sup>Works only if the array is contiguous.
+///
+/// The table above does not include all the constructors; it only shows
+/// conversions to/from `Vec`s/slices. See below for more constructors.
 ///
 /// [ArrayView::reborrow()]: type.ArrayView.html#method.reborrow
 /// [ArrayViewMut::reborrow()]: type.ArrayViewMut.html#method.reborrow
