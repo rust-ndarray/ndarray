@@ -242,6 +242,7 @@ pub type Ixs = isize;
 /// + [Methods For All Array Types](#methods-for-all-array-types)
 /// + [Methods For 1-D Arrays](#methods-for-1-d-arrays)
 /// + [Methods For 2-D Arrays](#methods-for-2-d-arrays)
+/// + [Methods for Dynamic-Dimensional Arrays](#methods-for-dynamic-dimensional-arrays)
 /// + [Numerical Methods for Arrays](#numerical-methods-for-arrays)
 ///
 /// ## `Array`
@@ -522,11 +523,12 @@ pub type Ixs = isize;
 ///
 /// Subview methods allow you to restrict the array view while removing one
 /// axis from the array. Methods for selecting individual subviews include
-/// [`.index_axis()`], [`.index_axis_mut()`], and [`.index_axis_move()`]. You
-/// can also select a subview by using a single index instead of a range when
-/// slicing. Some other methods, such as [`.fold_axis()`], [`.axis_iter()`],
-/// [`.axis_iter_mut()`], [`.outer_iter()`], and [`.outer_iter_mut()`] operate
-/// on all the subviews along an axis.
+/// [`.index_axis()`], [`.index_axis_mut()`], [`.index_axis_move()`], and
+/// [`.index_axis_inplace()`]. You can also select a subview by using a single
+/// index instead of a range when slicing. Some other methods, such as
+/// [`.fold_axis()`], [`.axis_iter()`], [`.axis_iter_mut()`],
+/// [`.outer_iter()`], and [`.outer_iter_mut()`] operate on all the subviews
+/// along an axis.
 ///
 /// A related method is [`.collapse_axis()`], which modifies the view in the
 /// same way as [`.index_axis()`] except for removing the collapsed axis, since
@@ -539,6 +541,7 @@ pub type Ixs = isize;
 /// [`.axis_iter_mut()`]: #method.axis_iter_mut
 /// [`.fold_axis()`]: #method.fold_axis
 /// [`.index_axis()`]: #method.index_axis
+/// [`.index_axis_inplace()`]: #method.index_axis_inplace
 /// [`.index_axis_mut()`]: #method.index_axis_mut
 /// [`.index_axis_move()`]: #method.index_axis_move
 /// [`.collapse_axis()`]: #method.collapse_axis
@@ -1149,6 +1152,7 @@ impl<A, S, D> ArrayBase<S, D>
 
 mod impl_1d;
 mod impl_2d;
+mod impl_dyn;
 
 mod numeric;
 
