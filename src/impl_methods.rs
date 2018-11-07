@@ -1891,4 +1891,29 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
             }
         })
     }
+
+    /// Convert a dynamic dimensional array or array view to an array or
+    /// array view (respectively). Errors if the dimensions don't agree.
+    pub fn from_dyn(array: ArrayBase<S, IxDyn>) -> Result<Self, ShapeError> {
+        if D::NDIM.is_none() || D::NDIM.unwrap() != array.ndim() {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+        }
+
+        let mut dim = D::default();
+        izip!(dim.as_array_view_mut(), array.shape()).for_each(|(d, s)| {
+            *d = *s;
+        });
+
+        let mut strides = D::default();
+        izip!(strides.as_array_view_mut(), array.strides()).for_each(|(d, s)| {
+            *d = *s as usize;
+        });
+
+        Ok(ArrayBase {
+            ptr: array.ptr,
+            data: array.data,
+            dim,
+            strides,
+        })
+    }
 }
