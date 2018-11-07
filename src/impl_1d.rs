@@ -10,6 +10,7 @@
 //! Methods for one-dimensional arrays.
 use imp_prelude::*;
 
+/// # Methods For 1-D Arrays
 impl<A, S> ArrayBase<S, Ix1>
     where S: Data<Elem=A>,
 {

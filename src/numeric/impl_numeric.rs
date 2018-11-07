@@ -15,7 +15,7 @@ use numeric_util;
 
 use {FoldWhile, Zip};
 
-/// Numerical methods for arrays.
+/// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>,
           D: Dimension,
