@@ -242,6 +242,7 @@ pub type Ixs = isize;
 /// + [Methods For All Array Types](#methods-for-all-array-types)
 /// + [Methods For 1-D Arrays](#methods-for-1-d-arrays)
 /// + [Methods For 2-D Arrays](#methods-for-2-d-arrays)
+/// + [Methods for Dynamic-Dimensional Arrays](#methods-for-dynamic-dimensional-arrays)
 /// + [Numerical Methods for Arrays](#numerical-methods-for-arrays)
 ///
 /// ## `Array`
@@ -1138,6 +1139,7 @@ impl<A, S, D> ArrayBase<S, D>
 
 mod impl_1d;
 mod impl_2d;
+mod impl_dyn;
 
 mod numeric;
 
