@@ -97,7 +97,7 @@ fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
 const ZIPSZ: usize = 10_000;
 
 #[bench]
-fn scalar_sum_3_std_zip1(bench: &mut Bencher)
+fn sum_3_std_zip1(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -110,7 +110,7 @@ fn scalar_sum_3_std_zip1(bench: &mut Bencher)
 }
 
 #[bench]
-fn scalar_sum_3_std_zip2(bench: &mut Bencher)
+fn sum_3_std_zip2(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -123,7 +123,7 @@ fn scalar_sum_3_std_zip2(bench: &mut Bencher)
 }
 
 #[bench]
-fn scalar_sum_3_std_zip3(bench: &mut Bencher)
+fn sum_3_std_zip3(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -151,7 +151,7 @@ fn vector_sum_3_std_zip(bench: &mut Bencher)
 }
 
 #[bench]
-fn scalar_sum_3_azip(bench: &mut Bencher)
+fn sum_3_azip(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];
@@ -166,7 +166,7 @@ fn scalar_sum_3_azip(bench: &mut Bencher)
 }
 
 #[bench]
-fn scalar_sum_3_azip_fold(bench: &mut Bencher)
+fn sum_3_azip_fold(bench: &mut Bencher)
 {
     let a = vec![1; ZIPSZ];
     let b = vec![1; ZIPSZ];

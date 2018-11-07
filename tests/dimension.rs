@@ -270,7 +270,7 @@ fn test_generic_operations() {
 #[test]
 fn test_array_view() {
     fn test_dim<D: Dimension>(d: &D) {
-        assert_eq!(d.as_array_view().scalar_sum(), 7);
+        assert_eq!(d.as_array_view().sum(), 7);
         assert_eq!(d.as_array_view().strides(), &[1]);
     }
 

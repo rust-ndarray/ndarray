@@ -81,9 +81,7 @@ pub fn aview0<A>(x: &A) -> ArrayView0<A> {
 /// // Create a 2D array view from borrowed data
 /// let a2d = aview1(&data).into_shape((32, 32)).unwrap();
 ///
-/// assert!(
-///     a2d.scalar_sum() == 1024.0
-/// );
+/// assert_eq!(a2d.sum(), 1024.0);
 /// ```
 pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
     ArrayView::from(xs)

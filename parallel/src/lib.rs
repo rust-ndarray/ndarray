@@ -57,7 +57,7 @@
 //!     let mut sums = Vec::new();
 //!     a.axis_iter(Axis(0))
 //!      .into_par_iter()
-//!      .map(|row| row.scalar_sum())
+//!      .map(|row| row.sum())
 //!      .collect_into_vec(&mut sums);
 //!
 //!     assert_eq!(sums, [120., 376., 632., 888.]);

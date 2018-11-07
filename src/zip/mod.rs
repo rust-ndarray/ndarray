@@ -441,9 +441,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///
 /// Zip::from(&mut e)
 ///     .and(a.genrows())
-///     .apply(|e, row| {
-///         *e = row.scalar_sum();
-///     });
+///     .apply(|e, row| *e = row.sum());
 ///
 /// // Check the result against the built in `.sum_axis()` along axis 1.
 /// assert_eq!(e, a.sum_axis(Axis(1)));

@@ -418,7 +418,7 @@
 //!
 //! </td><td>
 //!
-//! [`a.scalar_sum()`][.scalar_sum()]
+//! [`a.sum()`][.sum()]
 //!
 //! </td><td>
 //!
@@ -446,7 +446,7 @@
 //!
 //! </td><td>
 //!
-//! `a.scalar_sum() / a.len() as f64`
+//! `a.sum() / a.len() as f64`
 //!
 //! </td><td>
 //!
@@ -615,7 +615,7 @@
 //! [.row_mut()]: ../../struct.ArrayBase.html#method.row_mut
 //! [.rows()]: ../../struct.ArrayBase.html#method.rows
 //! [s!]: ../../macro.s.html
-//! [.scalar_sum()]: ../../struct.ArrayBase.html#method.scalar_sum
+//! [.sum()]: ../../struct.ArrayBase.html#method.sum
 //! [.slice()]: ../../struct.ArrayBase.html#method.slice
 //! [.slice_axis()]: ../../struct.ArrayBase.html#method.slice_axis
 //! [.slice_inplace()]: ../../struct.ArrayBase.html#method.slice_inplace

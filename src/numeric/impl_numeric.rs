@@ -27,9 +27,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
-    /// assert_eq!(a.scalar_sum(), 10.);
+    /// assert_eq!(a.sum(), 10.);
     /// ```
-    pub fn scalar_sum(&self) -> A
+    pub fn sum(&self) -> A
         where A: Clone + Add<Output=A> + libnum::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
@@ -46,6 +46,14 @@ impl<A, S, D> ArrayBase<S, D>
         sum
     }
 
+    /// Return the sum of all elements in the array.
+    #[deprecated(note="renamed to `sum`", since="0.12.1")]
+    pub fn scalar_sum(&self) -> A
+        where A: Clone + Add<Output=A> + libnum::Zero,
+    {
+        self.sum()
+    }
+
     /// Return the product of all elements in the array.
     ///
     /// ```
@@ -53,9 +61,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
-    /// assert_eq!(a.scalar_prod(), 24.);
+    /// assert_eq!(a.product(), 24.);
     /// ```
-    pub fn scalar_prod(&self) -> A
+    pub fn product(&self) -> A
         where A: Clone + Mul<Output=A> + libnum::One,
     {
         if let Some(slc) = self.as_slice_memory_order() {
@@ -99,7 +107,7 @@ impl<A, S, D> ArrayBase<S, D>
             // contiguous along the axis we are summing
             let ax = axis.index();
             for (i, elt) in enumerate(&mut res) {
-                *elt = self.subview(Axis(1 - ax), i).scalar_sum();
+                *elt = self.subview(Axis(1 - ax), i).sum();
             }
         } else {
             for i in 0..n {

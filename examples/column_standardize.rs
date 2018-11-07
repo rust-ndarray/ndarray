@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 fn std1d(a: ArrayView1<f64>) -> f64 {
     let n = a.len() as f64;
     if n == 0. { return 0.; }
-    let mean = a.scalar_sum() / n;
+    let mean = a.sum() / n;
     (a.fold(0., |acc, &x| acc + (x - mean).powi(2)) / n).sqrt()
 }
 

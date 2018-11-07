@@ -277,7 +277,7 @@ impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
 ///
 /// fn sum<'a, V: AsArray<'a, f64>>(data: V) -> f64 {
 ///     let array_view = data.into();
-///     array_view.scalar_sum()
+///     array_view.sum()
 /// }
 ///
 /// assert_eq!(

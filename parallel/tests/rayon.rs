@@ -16,9 +16,9 @@ fn test_axis_iter() {
         v.fill(i as _);
     }
     assert_eq!(a.axis_iter(Axis(0)).len(), M);
-    let s: f64 = a.axis_iter(Axis(0)).into_par_iter().map(|x| x.scalar_sum()).sum();
+    let s: f64 = a.axis_iter(Axis(0)).into_par_iter().map(|x| x.sum()).sum();
     println!("{:?}", a.slice(s![..10, ..5]));
-    assert_eq!(s, a.scalar_sum());
+    assert_eq!(s, a.sum());
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn test_regular_iter() {
     }
     let s: f64 = a.view().into_par_iter().map(|&x| x).sum();
     println!("{:?}", a.slice(s![..10, ..5]));
-    assert_eq!(s, a.scalar_sum());
+    assert_eq!(s, a.sum());
 }
 
 #[test]
