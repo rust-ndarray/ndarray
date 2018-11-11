@@ -865,7 +865,9 @@ pub type Ixs = isize;
 /// ------|--------|--------
 /// `Vec<A>` | `ArrayBase<S: DataOwned, Ix1>` | [`::from_vec()`](#method.from_vec)
 /// `Vec<A>` | `ArrayBase<S: DataOwned, D>` | [`::from_shape_vec()`](#method.from_shape_vec)
+/// `&[A]` | `ArrayView1<A>` | [`::from_slice()`](type.ArrayView.html#method.from_slice)
 /// `&[A]` | `ArrayView<A, D>` | [`::from_shape()`](type.ArrayView.html#method.from_shape)
+/// `&mut [A]` | `ArrayViewMut1<A>` | [`::from_slice()`](type.ArrayViewMut.html#method.from_slice)
 /// `&mut [A]` | `ArrayViewMut<A, D>` | [`::from_shape()`](type.ArrayViewMut.html#method.from_shape)
 /// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](#method.to_vec)
 /// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[1](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[2](#req_contig)</sup>

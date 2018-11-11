@@ -25,6 +25,40 @@ use {
 
 use iter::{self, AxisIter, AxisIterMut};
 
+impl<'a, A> ArrayView<'a, A, Ix1> {
+    /// Creates a 1-D read-only array view borrowing its data from a slice.
+    ///
+    /// ```
+    /// use ndarray::{array, ArrayView1};
+    ///
+    /// let s = &[0, 1, 2, 3];
+    /// let a = ArrayView1::from_slice(s);
+    /// assert_eq!(a, array![0, 1, 2, 3].view());
+    /// ```
+    pub fn from_slice(slice: &'a [A]) -> Self {
+        unsafe { Self::new_(slice.as_ptr(), Ix1(slice.len()), Ix1(1)) }
+    }
+}
+
+impl<'a, A> ArrayViewMut<'a, A, Ix1> {
+    /// Creates a 1-D read-write array view borrowing its data from a slice.
+    ///
+    /// ```
+    /// use ndarray::{array, ArrayViewMut1};
+    ///
+    /// let s = &mut [0, 1, 2, 3];
+    /// {
+    ///     let mut a = ArrayViewMut1::from_slice(s);
+    ///     assert_eq!(a, array![0, 1, 2, 3].view_mut());
+    ///     a[1] = 5;
+    /// }
+    /// assert_eq!(s[1], 5);
+    /// ```
+    pub fn from_slice(slice: &'a mut [A]) -> Self {
+        unsafe { Self::new_(slice.as_mut_ptr(), Ix1(slice.len()), Ix1(1)) }
+    }
+}
+
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
     where D: Dimension,
