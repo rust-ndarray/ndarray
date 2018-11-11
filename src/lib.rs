@@ -865,18 +865,23 @@ pub type Ixs = isize;
 /// ------|--------|--------
 /// `Vec<A>` | `ArrayBase<S: DataOwned, Ix1>` | [`::from_vec()`](#method.from_vec)
 /// `Vec<A>` | `ArrayBase<S: DataOwned, D>` | [`::from_shape_vec()`](#method.from_shape_vec)
+/// `&[A]` | `ArrayView1<A>` | [`::from()`](type.ArrayView.html#method.from)
 /// `&[A]` | `ArrayView<A, D>` | [`::from_shape()`](type.ArrayView.html#method.from_shape)
+/// `&mut [A]` | `ArrayViewMut1<A>` | [`::from()`](type.ArrayViewMut.html#method.from)
 /// `&mut [A]` | `ArrayViewMut<A, D>` | [`::from_shape()`](type.ArrayViewMut.html#method.from_shape)
 /// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](#method.to_vec)
-/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[1](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[2](#req_contig)</sup>
-/// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[1](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[2](#req_contig)</sup>
+/// `Array<A, D>` | `Vec<A>` | [`.into_raw_vec()`](type.Array.html#method.into_raw_vec)<sup>[1](#into_raw_vec)</sup>
+/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[3](#req_contig)</sup>
+/// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
 /// `ArrayView<A, D>` | `&[A]` | [`.into_slice()`](type.ArrayView.html#method.into_slice)
 /// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)
 ///
-/// <sup><a name="req_contig_std">1</a></sup>Works only if the array is
+/// <sup><a name="into_raw_vec">1</a></sup>Returns the data in memory order.
+///
+/// <sup><a name="req_contig_std">2</a></sup>Works only if the array is
 /// contiguous and in standard order.
 ///
-/// <sup><a name="req_contig">2</a></sup>Works only if the array is contiguous.
+/// <sup><a name="req_contig">3</a></sup>Works only if the array is contiguous.
 ///
 /// The table above does not include all the constructors; it only shows
 /// conversions to/from `Vec`s/slices. See below for more constructors.
