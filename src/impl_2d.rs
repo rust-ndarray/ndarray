@@ -10,6 +10,7 @@
 //! Methods for two-dimensional arrays.
 use imp_prelude::*;
 
+/// # Methods For 2-D Arrays
 impl<A, S> ArrayBase<S, Ix2>
     where S: Data<Elem=A>,
 {

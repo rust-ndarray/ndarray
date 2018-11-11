@@ -240,7 +240,9 @@ pub type Ixs = isize;
 /// + [Conversions](#conversions)
 /// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](#methods-for-all-array-types)
-///
+/// + [Methods For 1-D Arrays](#methods-for-1-d-arrays)
+/// + [Methods For 2-D Arrays](#methods-for-2-d-arrays)
+/// + [Numerical Methods for Arrays](#numerical-methods-for-arrays)
 ///
 /// ## `Array`
 ///
