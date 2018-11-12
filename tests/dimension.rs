@@ -53,7 +53,7 @@ fn remove_axis()
     assert_eq!(Dim(vec![4, 5, 6]).remove_axis(Axis(1)), Dim(vec![4, 6]));
 
     let a = RcArray::<f32, _>::zeros((4,5));
-    a.subview(Axis(1), 0);
+    a.index_axis(Axis(1), 0);
 
     let a = RcArray::<f32, _>::zeros(vec![4,5,6]);
     let _b = a.index_axis_move(Axis(1), 0).reshape((4, 6)).reshape(vec![2, 3, 4]);

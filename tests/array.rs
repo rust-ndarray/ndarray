@@ -253,7 +253,7 @@ fn test_slice_with_subview() {
     assert_eq!(vi.shape(), &[2, 2]);
     assert!(
         vi.iter()
-            .zip(arr.subview(Axis(1), 2).slice(s![1.., ..;2]).iter())
+            .zip(arr.index_axis(Axis(1), 2).slice(s![1.., ..;2]).iter())
             .all(|(a, b)| a == b)
     );
 
@@ -262,8 +262,8 @@ fn test_slice_with_subview() {
     assert!(
         vi.iter()
             .zip(
-                arr.subview(Axis(0), 1)
-                    .subview(Axis(0), 2)
+                arr.index_axis(Axis(0), 1)
+                    .index_axis(Axis(0), 2)
                     .slice(s![..;2])
                     .iter()
             )
@@ -515,21 +515,21 @@ fn test_cow_shrink()
 fn test_sub()
 {
     let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
-    let s1 = mat.subview(Axis(0), 0);
-    let s2 = mat.subview(Axis(0), 1);
+    let s1 = mat.index_axis(Axis(0), 0);
+    let s2 = mat.index_axis(Axis(0), 1);
     assert_eq!(s1.shape(), &[4, 2]);
     assert_eq!(s2.shape(), &[4, 2]);
     let n = RcArray::linspace(8., 15., 8).reshape((4,2));
     assert_eq!(n, s2);
     let m = RcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
-    assert_eq!(m, mat.subview(Axis(1), 1));
+    assert_eq!(m, mat.index_axis(Axis(1), 1));
 }
 
 #[should_panic]
 #[test]
 fn test_sub_oob_1() {
     let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
-    mat.subview(Axis(0), 2);
+    mat.index_axis(Axis(0), 2);
 }
 
 
@@ -652,9 +652,9 @@ fn standard_layout()
     assert!(!a.is_standard_layout());
     a.swap_axes(0, 1);
     assert!(a.is_standard_layout());
-    let x1 = a.subview(Axis(0), 0);
+    let x1 = a.index_axis(Axis(0), 0);
     assert!(x1.is_standard_layout());
-    let x2 = a.subview(Axis(1), 0);
+    let x2 = a.index_axis(Axis(1), 0);
     assert!(!x2.is_standard_layout());
 }
 
@@ -887,7 +887,7 @@ fn zero_axes()
     println!("{:?}\n{:?}", b.shape(), b);
 
     // we can even get a subarray of b
-    let bsub = b.subview(Axis(0), 2);
+    let bsub = b.index_axis(Axis(0), 2);
     assert_eq!(bsub.dim(), 0);
 }
 
@@ -1400,9 +1400,9 @@ fn insert_axis_f() {
 fn insert_axis_view() {
     let a = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]];
 
-    assert_eq!(a.subview(Axis(1), 0).insert_axis(Axis(0)), array![[[1, 2], [5, 6], [9, 10]]]);
-    assert_eq!(a.subview(Axis(1), 0).insert_axis(Axis(1)), array![[[1, 2]], [[5, 6]], [[9, 10]]]);
-    assert_eq!(a.subview(Axis(1), 0).insert_axis(Axis(2)), array![[[1], [2]], [[5], [6]], [[9], [10]]]);
+    assert_eq!(a.index_axis(Axis(1), 0).insert_axis(Axis(0)), array![[[1, 2], [5, 6], [9, 10]]]);
+    assert_eq!(a.index_axis(Axis(1), 0).insert_axis(Axis(1)), array![[[1, 2]], [[5, 6]], [[9, 10]]]);
+    assert_eq!(a.index_axis(Axis(1), 0).insert_axis(Axis(2)), array![[[1], [2]], [[5], [6]], [[9], [10]]]);
 }
 
 #[test]
@@ -1420,7 +1420,7 @@ fn char_array()
 {
     // test compilation & basics of non-numerical array
     let cc = RcArray::from_iter("alphabet".chars()).reshape((4, 2));
-    assert!(cc.subview(Axis(1), 0) == RcArray::from_iter("apae".chars()));
+    assert!(cc.index_axis(Axis(1), 0) == RcArray::from_iter("apae".chars()));
 }
 
 #[test]

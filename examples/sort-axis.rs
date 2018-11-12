@@ -110,7 +110,7 @@ impl<A, D> PermuteArray for Array<A, D>
             for i in 0..axis_len {
                 let perm_i = perm.indices[i];
                 Zip::from(result.index_axis_mut(axis, perm_i))
-                    .and(self.subview(axis, i))
+                    .and(self.index_axis(axis, i))
                     .apply(|to, from| {
                         copy_nonoverlapping(from, to, 1)
                     });

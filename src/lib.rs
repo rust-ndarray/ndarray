@@ -520,14 +520,14 @@ pub type Ixs = isize;
 /// ## Subviews
 ///
 /// Subview methods allow you to restrict the array view while removing one
-/// axis from the array. Subview methods include [`.subview()`],
+/// axis from the array. Subview methods include [`.index_axis()`],
 /// [`.index_axis_mut()`], [`.index_axis_move()`], and [`.collapse_axis()`]. You
 /// can also take a subview by using a single index instead of a range when
 /// slicing.
 ///
 /// Subview takes two arguments: `axis` and `index`.
 ///
-/// [`.subview()`]: #method.subview
+/// [`.index_axis()`]: #method.index_axis
 /// [`.index_axis_mut()`]: #method.index_axis_mut
 /// [`.index_axis_move()`]: #method.index_axis_move
 /// [`.collapse_axis()`]: #method.collapse_axis
@@ -553,8 +553,8 @@ pub type Ixs = isize;
 /// // Let’s take a subview along the greatest dimension (axis 0),
 /// // taking submatrix 0, then submatrix 1
 ///
-/// let sub_0 = a.subview(Axis(0), 0);
-/// let sub_1 = a.subview(Axis(0), 1);
+/// let sub_0 = a.index_axis(Axis(0), 0);
+/// let sub_1 = a.index_axis(Axis(0), 1);
 ///
 /// assert_eq!(sub_0, aview2(&[[ 1,  2,  3],
 ///                            [ 4,  5,  6]]));
@@ -563,7 +563,7 @@ pub type Ixs = isize;
 /// assert_eq!(sub_0.shape(), &[2, 3]);
 ///
 /// // This is the subview picking only axis 2, column 0
-/// let sub_col = a.subview(Axis(2), 0);
+/// let sub_col = a.index_axis(Axis(2), 0);
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
 ///                              [ 7, 10]]));
@@ -574,7 +574,7 @@ pub type Ixs = isize;
 /// # }
 /// ```
 ///
-/// [`.collapse_axis()`] modifies the view in the same way as [`.subview()`],
+/// [`.collapse_axis()`] modifies the view in the same way as [`.index_axis()`],
 /// but since it is *in place*, it cannot remove the collapsed axis. It becomes
 /// an axis of length 1.
 ///

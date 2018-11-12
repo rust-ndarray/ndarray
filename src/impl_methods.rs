@@ -542,6 +542,34 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Along `axis`, select the subview `index` and return a
+    /// view with that axis removed.
+    ///
+    /// See [*Subviews*](#subviews) for full documentation.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{arr2, ArrayView, Axis};
+    ///
+    /// let a = arr2(&[[1., 2. ],    // ... axis 0, row 0
+    ///                [3., 4. ],    // --- axis 0, row 1
+    ///                [5., 6. ]]);  // ... axis 0, row 2
+    /// //               .   \
+    /// //                .   axis 1, column 1
+    /// //                 axis 1, column 0
+    /// assert!(
+    ///     a.index_axis(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
+    ///     a.index_axis(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
+    /// );
+    /// ```
+    pub fn index_axis(&self, axis: Axis, index: usize) -> ArrayView<A, D::Smaller>
+    where
+        D: RemoveAxis,
+    {
+        self.view().index_axis_move(axis, index)
+    }
+
     /// Along `axis`, select the subview `index` and return a read-write view
     /// with the axis removed.
     ///
@@ -577,7 +605,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Along `axis`, select the subview `index` and return `self`
     /// with that axis removed.
     ///
-    /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
+    /// See [`.index_axis()`](#method.index_axis) and [*Subviews*](#subviews) for full documentation.
     pub fn index_axis_move(mut self, axis: Axis, index: usize) -> ArrayBase<S, D::Smaller>
     where
         D: RemoveAxis,
@@ -603,28 +631,12 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Along `axis`, select the subview `index` and return a
     /// view with that axis removed.
     ///
-    /// See [*Subviews*](#subviews) for full documentation.
-    ///
     /// **Panics** if `axis` or `index` is out of bounds.
-    ///
-    /// ```
-    /// use ndarray::{arr2, ArrayView, Axis};
-    ///
-    /// let a = arr2(&[[1., 2. ],    // ... axis 0, row 0
-    ///                [3., 4. ],    // --- axis 0, row 1
-    ///                [5., 6. ]]);  // ... axis 0, row 2
-    /// //               .   \
-    /// //                .   axis 1, column 1
-    /// //                 axis 1, column 0
-    /// assert!(
-    ///     a.subview(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
-    ///     a.subview(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
-    /// );
-    /// ```
+    #[deprecated(note="renamed to `index_axis`", since="0.12.1")]
     pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<A, D::Smaller>
         where D: RemoveAxis,
     {
-        self.view().index_axis_move(axis, index)
+        self.index_axis(axis, index)
     }
 
     /// Along `axis`, select the subview `index` and return a read-write view
@@ -1894,7 +1906,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
-        self.subview(axis, 0).map(|first_elt| {
+        self.index_axis(axis, 0).map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
