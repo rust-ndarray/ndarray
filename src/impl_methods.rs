@@ -542,8 +542,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Along `axis`, select the subview `index` and return a
-    /// view with that axis removed.
+    /// Returns a view restricted to `index` along the axis, with the axis
+    /// removed.
     ///
     /// See [*Subviews*](#subviews) for full documentation.
     ///
@@ -570,8 +570,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view().index_axis_move(axis, index)
     }
 
-    /// Along `axis`, select the subview `index` and return a read-write view
-    /// with the axis removed.
+    /// Returns a mutable view restricted to `index` along the axis, with the
+    /// axis removed.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
@@ -602,10 +602,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.view_mut().index_axis_move(axis, index)
     }
 
-    /// Along `axis`, select the subview `index` and return `self`
-    /// with that axis removed.
+    /// Collapses the array to `index` along the axis and removes the axis.
     ///
     /// See [`.index_axis()`](#method.index_axis) and [*Subviews*](#subviews) for full documentation.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
     pub fn index_axis_move(mut self, axis: Axis, index: usize) -> ArrayBase<S, D::Smaller>
     where
         D: RemoveAxis,
@@ -614,10 +615,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         self.remove_axis(axis)
     }
 
-    /// Collapse the axis into length one, selecting the subview at the given
-    /// `index` along the axis.
+    /// Selects `index` along the axis, collapsing the axis into length one.
     ///
-    /// **Panics** if `index` is past the length of the axis.
+    /// **Panics** if `axis` or `index` is out of bounds.
     pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
         dimension::do_collapse_axis(
             &mut self.dim,

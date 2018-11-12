@@ -452,10 +452,11 @@ pub type Ixs = isize;
 ///
 /// [`&SliceInfo`]: struct.SliceInfo.html
 ///
-/// If a range is used, the axis is preserved. If an index is used, a subview
-/// is taken with respect to the axis. See [*Subviews*](#subviews) for more
-/// information about subviews. Note that [`.slice_inplace()`] behaves like
-/// [`.collapse_axis()`] by preserving the number of dimensions.
+/// If a range is used, the axis is preserved. If an index is used, that index
+/// is selected and the axis is removed; this selects a subview. See
+/// [*Subviews*](#subviews) for more information about subviews. Note that
+/// [`.slice_inplace()`] behaves like [`.collapse_axis()`] by preserving the
+/// number of dimensions.
 ///
 /// [`.slice()`]: #method.slice
 /// [`.slice_mut()`]: #method.slice_mut
@@ -504,7 +505,7 @@ pub type Ixs = isize;
 /// assert_eq!(d, e);
 /// assert_eq!(d.shape(), &[2, 1, 3]);
 ///
-/// // Let’s create a slice while taking a subview with
+/// // Let’s create a slice while selecting a subview with
 /// //
 /// // - Both submatrices of the greatest dimension: `..`
 /// // - The last row in each submatrix, removing that axis: `-1`
@@ -520,17 +521,29 @@ pub type Ixs = isize;
 /// ## Subviews
 ///
 /// Subview methods allow you to restrict the array view while removing one
-/// axis from the array. Subview methods include [`.index_axis()`],
-/// [`.index_axis_mut()`], [`.index_axis_move()`], and [`.collapse_axis()`]. You
-/// can also take a subview by using a single index instead of a range when
-/// slicing.
+/// axis from the array. Methods for selecting individual subviews include
+/// [`.index_axis()`], [`.index_axis_mut()`], and [`.index_axis_move()`]. You
+/// can also select a subview by using a single index instead of a range when
+/// slicing. Some other methods, such as [`.fold_axis()`], [`.axis_iter()`],
+/// [`.axis_iter_mut()`], [`.outer_iter()`], and [`.outer_iter_mut()`] operate
+/// on all the subviews along an axis.
 ///
-/// Subview takes two arguments: `axis` and `index`.
+/// A related method is [`.collapse_axis()`], which modifies the view in the
+/// same way as [`.index_axis()`] except for removing the collapsed axis, since
+/// it operates *in place*. The length of the axis becomes 1.
 ///
+/// Methods for selecting an individual subview take two arguments: `axis` and
+/// `index`.
+///
+/// [`.axis_iter()`]: #method.axis_iter
+/// [`.axis_iter_mut()`]: #method.axis_iter_mut
+/// [`.fold_axis()`]: #method.fold_axis
 /// [`.index_axis()`]: #method.index_axis
 /// [`.index_axis_mut()`]: #method.index_axis_mut
 /// [`.index_axis_move()`]: #method.index_axis_move
 /// [`.collapse_axis()`]: #method.collapse_axis
+/// [`.outer_iter()`]: #method.outer_iter
+/// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
 /// #[macro_use(s)] extern crate ndarray;
@@ -573,14 +586,6 @@ pub type Ixs = isize;
 /// assert_eq!(double_sub, aview1(&[7, 10]));
 /// # }
 /// ```
-///
-/// [`.collapse_axis()`] modifies the view in the same way as [`.index_axis()`],
-/// but since it is *in place*, it cannot remove the collapsed axis. It becomes
-/// an axis of length 1.
-///
-/// `.outer_iter()` is an iterator of every subview along the zeroth (outer)
-/// axis, while `.axis_iter()` is an iterator of every subview along a
-/// specific axis.
 ///
 /// ## Arithmetic Operations
 ///

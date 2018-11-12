@@ -465,12 +465,13 @@ impl_slicenextdim_larger!((), Slice);
 /// The syntax is `s![` *[ axis-slice-or-index [, axis-slice-or-index [ , ... ]
 /// ] ]* `]`, where *axis-slice-or-index* is any of the following:
 ///
-/// * *index*: an index to use for taking a subview with respect to that axis
-/// * *range*: a range with step size 1 to use for slicing that axis
-/// * *range* `;` *step*: a range with step size *step* to use for slicing that axis
-/// * *slice*: a [`Slice`] instance to use for slicing that axis
+/// * *index*: an index to use for taking a subview with respect to that axis.
+///   (The index is selected and the axis is removed.)
+/// * *range*: a range with step size 1 to use for slicing that axis.
+/// * *range* `;` *step*: a range with step size *step* to use for slicing that axis.
+/// * *slice*: a [`Slice`] instance to use for slicing that axis.
 /// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
-///   instance, with new step size *step*, to use for slicing that axis
+///   instance, with new step size *step*, to use for slicing that axis.
 ///
 /// [`Slice`]: struct.Slice.html
 ///
