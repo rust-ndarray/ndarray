@@ -542,6 +542,38 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Along `axis`, select the subview `index` and return a read-write view
+    /// with the axis removed.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{arr2, aview2, Axis};
+    ///
+    /// let mut a = arr2(&[[1., 2. ],
+    ///                    [3., 4. ]]);
+    /// //                   .   \
+    /// //                    .   axis 1, column 1
+    /// //                     axis 1, column 0
+    ///
+    /// {
+    ///     let mut column1 = a.index_axis_mut(Axis(1), 1);
+    ///     column1 += 10.;
+    /// }
+    ///
+    /// assert!(
+    ///     a == aview2(&[[1., 12.],
+    ///                   [3., 14.]])
+    /// );
+    /// ```
+    pub fn index_axis_mut(&mut self, axis: Axis, index: usize) -> ArrayViewMut<A, D::Smaller>
+    where
+        S: DataMut,
+        D: RemoveAxis,
+    {
+        self.view_mut().into_subview(axis, index)
+    }
+
     /// Collapse the axis into length one, selecting the subview at the given
     /// `index` along the axis.
     ///
@@ -582,32 +614,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// with the axis removed.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
-    ///
-    /// ```
-    /// use ndarray::{arr2, aview2, Axis};
-    ///
-    /// let mut a = arr2(&[[1., 2. ],
-    ///                    [3., 4. ]]);
-    /// //                   .   \
-    /// //                    .   axis 1, column 1
-    /// //                     axis 1, column 0
-    ///
-    /// {
-    ///     let mut column1 = a.subview_mut(Axis(1), 1);
-    ///     column1 += 10.;
-    /// }
-    ///
-    /// assert!(
-    ///     a == aview2(&[[1., 12.],
-    ///                   [3., 14.]])
-    /// );
-    /// ```
+    #[deprecated(note="renamed to `index_axis_mut`", since="0.12.1")]
     pub fn subview_mut(&mut self, axis: Axis, index: Ix)
         -> ArrayViewMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
     {
-        self.view_mut().into_subview(axis, index)
+        self.index_axis_mut(axis, index)
     }
 
     /// Collapse dimension `axis` into length one,
@@ -1894,7 +1907,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
-        self.subview_mut(axis, 0).map_mut(|first_elt: &mut A| {
+        self.index_axis_mut(axis, 0).map_mut(|first_elt: &mut A| {
             unsafe {
                 mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }

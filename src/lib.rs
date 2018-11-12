@@ -521,14 +521,14 @@ pub type Ixs = isize;
 ///
 /// Subview methods allow you to restrict the array view while removing one
 /// axis from the array. Subview methods include [`.subview()`],
-/// [`.subview_mut()`], [`.into_subview()`], and [`.collapse_axis()`]. You
+/// [`.index_axis_mut()`], [`.into_subview()`], and [`.collapse_axis()`]. You
 /// can also take a subview by using a single index instead of a range when
 /// slicing.
 ///
 /// Subview takes two arguments: `axis` and `index`.
 ///
 /// [`.subview()`]: #method.subview
-/// [`.subview_mut()`]: #method.subview_mut
+/// [`.index_axis_mut()`]: #method.index_axis_mut
 /// [`.into_subview()`]: #method.into_subview
 /// [`.collapse_axis()`]: #method.collapse_axis
 ///

@@ -28,7 +28,7 @@ impl<A, S> ArrayBase<S, Ix2>
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
         where S: DataMut
     {
-        self.subview_mut(Axis(0), index)
+        self.index_axis_mut(Axis(0), index)
     }
 
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
@@ -50,7 +50,7 @@ impl<A, S> ArrayBase<S, Ix2>
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
         where S: DataMut
     {
-        self.subview_mut(Axis(1), index)
+        self.index_axis_mut(Axis(1), index)
     }
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
