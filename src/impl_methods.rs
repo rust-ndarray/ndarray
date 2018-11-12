@@ -571,7 +571,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         S: DataMut,
         D: RemoveAxis,
     {
-        self.view_mut().into_subview(axis, index)
+        self.view_mut().index_axis_move(axis, index)
+    }
+
+    /// Along `axis`, select the subview `index` and return `self`
+    /// with that axis removed.
+    ///
+    /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
+    pub fn index_axis_move(mut self, axis: Axis, index: usize) -> ArrayBase<S, D::Smaller>
+    where
+        D: RemoveAxis,
+    {
+        self.collapse_axis(axis, index);
+        self.remove_axis(axis)
     }
 
     /// Collapse the axis into length one, selecting the subview at the given
@@ -607,7 +619,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<A, D::Smaller>
         where D: RemoveAxis,
     {
-        self.view().into_subview(axis, index)
+        self.view().index_axis_move(axis, index)
     }
 
     /// Along `axis`, select the subview `index` and return a read-write view
@@ -634,13 +646,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Along `axis`, select the subview `index` and return `self`
     /// with that axis removed.
-    ///
-    /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
+    #[deprecated(note="renamed to `index_axis_move`", since="0.12.1")]
+    pub fn into_subview(self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        self.collapse_axis(axis, index);
-        self.remove_axis(axis)
+        self.index_axis_move(axis, index)
     }
 
     /// Along `axis`, select arbitrary subviews corresponding to `indices`

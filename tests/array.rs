@@ -590,7 +590,7 @@ fn swapaxes()
 #[test]
 fn permuted_axes()
 {
-    let a = array![1].into_subview(Axis(0), 0);
+    let a = array![1].index_axis_move(Axis(0), 0);
     let permuted = a.view().permuted_axes([]);
     assert_eq!(a, permuted);
 
@@ -932,14 +932,14 @@ fn as_slice_memory_order()
 fn array0_into_scalar() {
     // With this kind of setup, the `Array`'s pointer is not the same as the
     // underlying `Vec`'s pointer.
-    let a: Array0<i32> = array![4, 5, 6, 7].into_subview(Axis(0), 2);
+    let a: Array0<i32> = array![4, 5, 6, 7].index_axis_move(Axis(0), 2);
     assert_ne!(a.as_ptr(), a.into_raw_vec().as_ptr());
     // `.into_scalar()` should still work correctly.
-    let a: Array0<i32> = array![4, 5, 6, 7].into_subview(Axis(0), 2);
+    let a: Array0<i32> = array![4, 5, 6, 7].index_axis_move(Axis(0), 2);
     assert_eq!(a.into_scalar(), 6);
 
     // It should work for zero-size elements too.
-    let a: Array0<()> = array![(), (), (), ()].into_subview(Axis(0), 2);
+    let a: Array0<()> = array![(), (), (), ()].index_axis_move(Axis(0), 2);
     assert_eq!(a.into_scalar(), ());
 }
 
