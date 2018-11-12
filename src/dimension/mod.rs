@@ -197,13 +197,18 @@ impl<'a> DimensionExt for [Ix]
 ///
 /// **Panics** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
-pub fn do_sub<A, D: Dimension>(dims: &mut D, ptr: &mut *mut A, strides: &D,
-                               axis: usize, index: Ix) {
+pub fn do_collapse_axis<A, D: Dimension>(
+    dims: &mut D,
+    ptr: &mut *mut A,
+    strides: &D,
+    axis: usize,
+    index: usize,
+) {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
     ndassert!(index < dim,
-              concat!("subview: Index {} must be less than axis length {} ",
-                      "for array with shape {:?}"),
+              "collapse_axis: Index {} must be less than axis length {} for \
+               array with shape {:?}",
              index, dim, *dims);
     dims.slice_mut()[axis] = 1;
     let off = stride_offset(index, stride);

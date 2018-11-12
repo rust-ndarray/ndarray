@@ -591,8 +591,13 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `index` is past the length of the axis.
     pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
-        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
-                          axis.index(), index)
+        dimension::do_collapse_axis(
+            &mut self.dim,
+            &mut self.ptr,
+            &self.strides,
+            axis.index(),
+            index,
+        )
     }
 
     /// Along `axis`, select the subview `index` and return a
