@@ -455,7 +455,7 @@ pub type Ixs = isize;
 /// If a range is used, the axis is preserved. If an index is used, a subview
 /// is taken with respect to the axis. See [*Subviews*](#subviews) for more
 /// information about subviews. Note that [`.slice_inplace()`] behaves like
-/// [`.subview_inplace()`] by preserving the number of dimensions.
+/// [`.collapse_axis()`] by preserving the number of dimensions.
 ///
 /// [`.slice()`]: #method.slice
 /// [`.slice_mut()`]: #method.slice_mut
@@ -521,7 +521,7 @@ pub type Ixs = isize;
 ///
 /// Subview methods allow you to restrict the array view while removing one
 /// axis from the array. Subview methods include [`.subview()`],
-/// [`.subview_mut()`], [`.into_subview()`], and [`.subview_inplace()`]. You
+/// [`.subview_mut()`], [`.into_subview()`], and [`.collapse_axis()`]. You
 /// can also take a subview by using a single index instead of a range when
 /// slicing.
 ///
@@ -530,7 +530,7 @@ pub type Ixs = isize;
 /// [`.subview()`]: #method.subview
 /// [`.subview_mut()`]: #method.subview_mut
 /// [`.into_subview()`]: #method.into_subview
-/// [`.subview_inplace()`]: #method.subview_inplace
+/// [`.collapse_axis()`]: #method.collapse_axis
 ///
 /// ```
 /// #[macro_use(s)] extern crate ndarray;
@@ -574,7 +574,7 @@ pub type Ixs = isize;
 /// # }
 /// ```
 ///
-/// [`.subview_inplace()`] modifies the view in the same way as [`.subview()`],
+/// [`.collapse_axis()`] modifies the view in the same way as [`.subview()`],
 /// but since it is *in place*, it cannot remove the collapsed axis. It becomes
 /// an axis of length 1.
 ///

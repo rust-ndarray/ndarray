@@ -310,7 +310,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     where
         Do: Dimension,
     {
-        // Slice and subview in-place without changing the number of dimensions.
+        // Slice and collapse in-place without changing the number of dimensions.
         self.slice_inplace(&*info);
 
         let indices: &[SliceOrIndex] = (**info).as_ref();
@@ -364,7 +364,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
                 &SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
-                    self.subview_inplace(Axis(axis), i_usize)
+                    self.collapse_axis(Axis(axis), i_usize)
                 }
             });
     }
@@ -542,6 +542,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Collapse the axis into length one, selecting the subview at the given
+    /// `index` along the axis.
+    ///
+    /// **Panics** if `index` is past the length of the axis.
+    pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
+        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
+                          axis.index(), index)
+    }
+
     /// Along `axis`, select the subview `index` and return a
     /// view with that axis removed.
     ///
@@ -605,9 +614,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
+    #[deprecated(note="renamed to `collapse_axis`", since="0.12.1")]
     pub fn subview_inplace(&mut self, axis: Axis, index: Ix) {
-        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
-                          axis.index(), index)
+        self.collapse_axis(axis, index)
     }
 
     /// Along `axis`, select the subview `index` and return `self`
@@ -617,7 +626,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        self.subview_inplace(axis, index);
+        self.collapse_axis(axis, index);
         self.remove_axis(axis)
     }
 
@@ -648,7 +657,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let mut subs = vec![self.view(); indices.len()];
         for (&i, sub) in zip(indices, &mut subs[..]) {
-            sub.subview_inplace(axis, i);
+            sub.collapse_axis(axis, i);
         }
         if subs.is_empty() {
             let mut dim = self.raw_dim();

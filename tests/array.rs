@@ -276,7 +276,7 @@ fn test_slice_with_subview() {
 }
 
 #[test]
-fn test_slice_inplace_with_subview_inplace() {
+fn test_slice_inplace_with_indices() {
     let mut arr = RcArray::<usize, _>::zeros((3, 5, 4));
     for (i, elt) in arr.iter_mut().enumerate() {
         *elt = i;
