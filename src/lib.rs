@@ -444,7 +444,7 @@ pub type Ixs = isize;
 ///
 /// You can use slicing to create a view of a subset of the data in
 /// the array. Slicing methods include [`.slice()`], [`.slice_mut()`],
-/// [`.slice_move()`], and [`.slice_inplace()`].
+/// [`.slice_move()`], and [`.slice_collapse()`].
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is an instance of
@@ -455,13 +455,13 @@ pub type Ixs = isize;
 /// If a range is used, the axis is preserved. If an index is used, that index
 /// is selected and the axis is removed; this selects a subview. See
 /// [*Subviews*](#subviews) for more information about subviews. Note that
-/// [`.slice_inplace()`] behaves like [`.collapse_axis()`] by preserving the
-/// number of dimensions.
+/// [`.slice_collapse()`] behaves like [`.collapse_axis()`] by preserving
+/// the number of dimensions.
 ///
 /// [`.slice()`]: #method.slice
 /// [`.slice_mut()`]: #method.slice_mut
 /// [`.slice_move()`]: #method.slice_move
-/// [`.slice_inplace()`]: #method.slice_inplace
+/// [`.slice_collapse()`]: #method.slice_collapse
 ///
 /// ```
 /// // import the s![] macro

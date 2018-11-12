@@ -47,7 +47,7 @@ fn main() {
     }
     a.swap_axes(0, 1);
     a.swap_axes(0, 2);
-    a.slice_inplace(s![.., ..;-1, ..]);
+    a.slice_collapse(s![.., ..;-1, ..]);
     regularize(&mut a).ok();
 
     let mut b = Array::<u8, _>::zeros((2, 3, 4));
@@ -64,6 +64,6 @@ fn main() {
     for (i, elt) in (0..).zip(&mut a) {
         *elt = i;
     }
-    a.slice_inplace(s![..;-1, ..;2, ..]);
+    a.slice_collapse(s![..;-1, ..;2, ..]);
     regularize(&mut a).ok();
 }

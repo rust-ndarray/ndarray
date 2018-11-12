@@ -229,7 +229,7 @@
 //!   Only the non-mutable methods that take the array by reference are listed in
 //!   this table. For example, [`.slice()`][.slice()] also has corresponding
 //!   methods [`.slice_mut()`][.slice_mut()], [`.slice_move()`][.slice_move()], and
-//!   [`.slice_inplace()`][.slice_inplace()].
+//!   [`.slice_collapse()`][.slice_collapse()].
 //!
 //! * The behavior of slicing is slightly different from NumPy for slices with
 //!   `step < -1`. See the docs for the [`s![]` macro][s!] for more details.
@@ -618,7 +618,7 @@
 //! [.sum()]: ../../struct.ArrayBase.html#method.sum
 //! [.slice()]: ../../struct.ArrayBase.html#method.slice
 //! [.slice_axis()]: ../../struct.ArrayBase.html#method.slice_axis
-//! [.slice_inplace()]: ../../struct.ArrayBase.html#method.slice_inplace
+//! [.slice_collapse()]: ../../struct.ArrayBase.html#method.slice_collapse
 //! [.slice_move()]: ../../struct.ArrayBase.html#method.slice_move
 //! [.slice_mut()]: ../../struct.ArrayBase.html#method.slice_mut
 //! [.shape()]: ../../struct.ArrayBase.html#method.shape

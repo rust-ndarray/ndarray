@@ -311,7 +311,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         Do: Dimension,
     {
         // Slice and collapse in-place without changing the number of dimensions.
-        self.slice_inplace(&*info);
+        self.slice_collapse(&*info);
 
         let indices: &[SliceOrIndex] = (**info).as_ref();
 
@@ -352,7 +352,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
-    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
+    pub fn slice_collapse(&mut self, indices: &D::SliceArg) {
         let indices: &[SliceOrIndex] = indices.as_ref();
         assert_eq!(indices.len(), self.ndim());
         indices
@@ -367,6 +367,15 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                     self.collapse_axis(Axis(axis), i_usize)
                 }
             });
+    }
+
+    /// Slice the array in place without changing the number of dimensions.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
+    #[deprecated(note="renamed to `slice_collapse`", since="0.12.1")]
+    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
+        self.slice_collapse(indices)
     }
 
     /// Return a view of the array, sliced along the specified axis.
