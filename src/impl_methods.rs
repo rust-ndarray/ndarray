@@ -621,7 +621,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         D: RemoveAxis,
     {
         self.collapse_axis(axis, index);
-        self.remove_axis(axis)
+        let dim = self.dim.remove_axis(axis);
+        let strides = self.strides.remove_axis(axis);
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim,
+            strides,
+        }
     }
 
     /// Selects `index` along the axis, collapsing the axis into length one.
@@ -1586,18 +1593,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Remove array axis `axis` and return the result.
     ///
     /// **Panics** if the axis is out of bounds or its length is zero.
+    #[deprecated(note="use `.index_axis_move(Axis(_), 0)` instead", since="0.12.1")]
     pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        assert_ne!(self.len_of(axis), 0, "Length of removed axis must be nonzero.");
-        let d = self.dim.remove_axis(axis);
-        let s = self.strides.remove_axis(axis);
-        ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim: d,
-            strides: s,
-        }
+        self.index_axis_move(axis, 0)
     }
 
     fn pointer_is_inbounds(&self) -> bool {
