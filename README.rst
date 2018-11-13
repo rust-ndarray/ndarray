@@ -88,6 +88,20 @@ provider::
 Recent Changes (ndarray)
 ------------------------
 
+- 0.12.1 (not yet released)
+
+  - Add ``std_axis`` method for computing standard deviation by @LukeMathWalker.
+  - Add ``product`` method for computing product of elements in an array by @sebasv.
+  - Add ``sum`` method to replace ``scalar_sum``, and deprecate ``scalar_sum``.
+  - Add ``first`` and ``first_mut`` methods for getting the first element of an array.
+  - Add public ``ndim`` and ``zeros`` methods to ``Dimension`` trait.
+  - Relax constraints on ``sum_axis``, ``mean_axis``, and ``into_owned``.
+  - Add number of dimensions (and whether its const or dynamic) to array ``Debug`` format.
+  - Fix soundness hole in ``remove_axis`` when removing zero-length axis.
+  - Implement ``Clone`` for ``LanesIter``.
+  - Improve documentation.
+  - Miscellaneous internal implementation improvements.
+
 - 0.12.0
 
   - Add ``var_axis`` method for computing variance by @LukeMathWalker.
