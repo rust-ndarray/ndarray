@@ -855,11 +855,11 @@ pub type Ixs = isize;
 /// </tr>
 /// </table>
 ///
-/// ### Conversions Between Arrays and `Vec`s/Slices
+/// ### Conversions Between Arrays and `Vec`s/Slices/Scalars
 ///
-/// This is a table of the safe conversions between arrays and `Vec`s/slices.
-/// Note that some of the return values are actually `Result`/`Option` wrappers
-/// around the indicated output types.
+/// This is a table of the safe conversions between arrays and
+/// `Vec`s/slices/scalars. Note that some of the return values are actually
+/// `Result`/`Option` wrappers around the indicated output types.
 ///
 /// Input | Output | Methods
 /// ------|--------|--------
@@ -875,6 +875,7 @@ pub type Ixs = isize;
 /// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
 /// `ArrayView<A, D>` | `&[A]` | [`.into_slice()`](type.ArrayView.html#method.into_slice)
 /// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)
+/// `Array0<A>` | `A` | [`.into_scalar()`](type.Array.html#method.into_scalar)
 ///
 /// <sup><a name="into_raw_vec">1</a></sup>Returns the data in memory order.
 ///
