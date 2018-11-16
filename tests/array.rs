@@ -656,6 +656,10 @@ fn standard_layout()
     assert!(x1.is_standard_layout());
     let x2 = a.subview(Axis(1), 0);
     assert!(!x2.is_standard_layout());
+    let x3 = ArrayView1::from_shape(1.strides(2), &[1]).unwrap();
+    assert!(x3.is_standard_layout());
+    let x4 = ArrayView2::from_shape((0, 2).strides((0, 1)), &[1, 2]).unwrap();
+    assert!(x4.is_standard_layout());
 }
 
 #[test]

@@ -1025,11 +1025,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
-            let defaults = dim.default_strides();
-            if strides.equal(&defaults) {
+            if dim.slice().iter().any(|&d| d == 0) {
                 return true;
             }
-            if dim.ndim() == 1 { return false; }
+            let defaults = dim.default_strides();
             // check all dimensions -- a dimension of length 1 can have unequal strides
             for (&dim, &s, &ds) in izip!(dim.slice(), strides.slice(), defaults.slice()) {
                 if dim != 1 && s != ds {
