@@ -1478,12 +1478,35 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// If possible, merge in the axis `take` to `into`.
     ///
+    /// Returns `true` iff the axes are now merged.
+    ///
+    /// This method merges the axes if movement along the two original axes
+    /// (moving fastest along the `into` axis) can be equivalently represented
+    /// as movement along one (merged) axis. Merging the axes preserves this
+    /// order in the merged axis. If `take` and `into` are the same axis, then
+    /// the axis is "merged" if its length is ≤ 1.
+    ///
+    /// If the return value is `true`, then the following hold:
+    ///
+    /// * The new length of the `into` axis is the product of the original
+    ///   lengths of the two axes.
+    ///
+    /// * The new length of the `take` axis is 0 if the product of the original
+    ///   lengths of the two axes is 0, and 1 otherwise.
+    ///
+    /// If the return value is `false`, then merging is not possible, and the
+    /// original shape and strides have been preserved.
+    ///
+    /// Note that the ordering constraint means that if it's possible to merge
+    /// `take` into `into`, it's usually not possible to merge `into` into
+    /// `take`, and vice versa.
+    ///
     /// ```
     /// use ndarray::Array3;
     /// use ndarray::Axis;
     ///
     /// let mut a = Array3::<f64>::zeros((2, 3, 4));
-    /// a.merge_axes(Axis(1), Axis(2));
+    /// assert!(a.merge_axes(Axis(1), Axis(2)));
     /// assert_eq!(a.shape(), &[2, 1, 12]);
     /// ```
     ///

@@ -573,6 +573,97 @@ fn diag()
     assert_eq!(d.dim(), 1);
 }
 
+/// Check that the merged shape is correct.
+///
+/// Note that this does not check the strides in the "merged" case!
+#[test]
+fn merge_axes() {
+    macro_rules! assert_merged {
+        ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
+            let mut v = $arr.slice($slice);
+            let merged_len = v.len_of(Axis($take)) * v.len_of(Axis($into));
+            assert!(v.merge_axes(Axis($take), Axis($into)));
+            assert_eq!(v.len_of(Axis($take)), if merged_len == 0 { 0 } else { 1 });
+            assert_eq!(v.len_of(Axis($into)), merged_len);
+        }
+    }
+    macro_rules! assert_not_merged {
+        ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
+            let mut v = $arr.slice($slice);
+            let old_dim = v.raw_dim();
+            let old_strides = v.strides().to_owned();
+            assert!(!v.merge_axes(Axis($take), Axis($into)));
+            assert_eq!(v.raw_dim(), old_dim);
+            assert_eq!(v.strides(), &old_strides[..]);
+        }
+    }
+
+    let a = Array4::<u8>::zeros((3, 4, 5, 4));
+
+    assert_not_merged!(a, s![.., .., .., ..], 0, 0);
+    assert_merged!(a, s![.., .., .., ..], 0, 1);
+    assert_not_merged!(a, s![.., .., .., ..], 0, 2);
+    assert_not_merged!(a, s![.., .., .., ..], 0, 3);
+    assert_not_merged!(a, s![.., .., .., ..], 1, 0);
+    assert_not_merged!(a, s![.., .., .., ..], 1, 1);
+    assert_merged!(a, s![.., .., .., ..], 1, 2);
+    assert_not_merged!(a, s![.., .., .., ..], 1, 3);
+    assert_not_merged!(a, s![.., .., .., ..], 2, 1);
+    assert_not_merged!(a, s![.., .., .., ..], 2, 2);
+    assert_merged!(a, s![.., .., .., ..], 2, 3);
+    assert_not_merged!(a, s![.., .., .., ..], 3, 0);
+    assert_not_merged!(a, s![.., .., .., ..], 3, 1);
+    assert_not_merged!(a, s![.., .., .., ..], 3, 2);
+    assert_not_merged!(a, s![.., .., .., ..], 3, 3);
+
+    assert_merged!(a, s![.., .., .., ..;2], 0, 1);
+    assert_not_merged!(a, s![.., .., .., ..;2], 1, 0);
+    assert_merged!(a, s![.., .., .., ..;2], 1, 2);
+    assert_not_merged!(a, s![.., .., .., ..;2], 2, 1);
+    assert_merged!(a, s![.., .., .., ..;2], 2, 3);
+    assert_not_merged!(a, s![.., .., .., ..;2], 3, 2);
+
+    assert_merged!(a, s![.., .., .., ..3], 0, 1);
+    assert_not_merged!(a, s![.., .., .., ..3], 1, 0);
+    assert_merged!(a, s![.., .., .., ..3], 1, 2);
+    assert_not_merged!(a, s![.., .., .., ..3], 2, 1);
+    assert_not_merged!(a, s![.., .., .., ..3], 2, 3);
+
+    assert_merged!(a, s![.., .., ..;2, ..], 0, 1);
+    assert_not_merged!(a, s![.., .., ..;2, ..], 1, 0);
+    assert_not_merged!(a, s![.., .., ..;2, ..], 1, 2);
+    assert_not_merged!(a, s![.., .., ..;2, ..], 2, 3);
+
+    assert_merged!(a, s![.., ..;2, .., ..], 0, 1);
+    assert_not_merged!(a, s![.., ..;2, .., ..], 1, 0);
+    assert_not_merged!(a, s![.., ..;2, .., ..], 1, 2);
+    assert_merged!(a, s![.., ..;2, .., ..], 2, 3);
+    assert_not_merged!(a, s![.., ..;2, .., ..], 3, 2);
+
+    let a = Array4::<u8>::zeros((3, 1, 5, 1).f());
+    assert_merged!(a, s![.., .., ..;2, ..], 0, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 0, 3);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 0);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 2);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 3);
+    assert_merged!(a, s![.., .., ..;2, ..], 2, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 2, 3);
+    assert_merged!(a, s![.., .., ..;2, ..], 3, 0);
+    assert_merged!(a, s![.., .., ..;2, ..], 3, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 3, 2);
+    assert_merged!(a, s![.., .., ..;2, ..], 3, 3);
+
+    let a = Array4::<u8>::zeros((3, 0, 5, 1));
+    assert_merged!(a, s![.., .., ..;2, ..], 0, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 2, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 3, 1);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 0);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 2);
+    assert_merged!(a, s![.., .., ..;2, ..], 1, 3);
+}
+
 #[test]
 fn swapaxes()
 {

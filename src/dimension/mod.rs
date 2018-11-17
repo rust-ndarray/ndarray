@@ -287,17 +287,27 @@ pub fn do_slice(
 pub fn merge_axes<D>(dim: &mut D, strides: &mut D, take: Axis, into: Axis) -> bool
     where D: Dimension,
 {
-    let il = dim.axis(into);
-    let is = strides.axis(into) as Ixs;
-    let tl = dim.axis(take);
-    let ts = strides.axis(take) as Ixs;
-    if il as Ixs * is != ts {
-        return false;
+    let into_len = dim.axis(into);
+    let into_stride = strides.axis(into) as isize;
+    let take_len = dim.axis(take);
+    let take_stride = strides.axis(take) as isize;
+    let merged_len = into_len * take_len;
+    if take_len <= 1 {
+        dim.set_axis(into, merged_len);
+        dim.set_axis(take, if merged_len == 0 { 0 } else { 1 });
+        true
+    } else if into_len <= 1 {
+        strides.set_axis(into, take_stride as usize);
+        dim.set_axis(into, merged_len);
+        dim.set_axis(take, if merged_len == 0 { 0 } else { 1 });
+        true
+    } else if take_stride == into_len as isize * into_stride {
+        dim.set_axis(into, merged_len);
+        dim.set_axis(take, 1);
+        true
+    } else {
+        false
     }
-    // merge them
-    dim.set_axis(into, il * tl);
-    dim.set_axis(take, 1);
-    true
 }
 
 
