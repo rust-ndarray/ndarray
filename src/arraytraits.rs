@@ -9,6 +9,7 @@
 use std::hash;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
+use std::mem;
 use std::ops::{
     Index,
     IndexMut,
@@ -223,10 +224,12 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
 {
     fn from(slice: &'a Slice) -> Self {
         let xs = slice.as_ref();
-        assert!(
-            xs.len() <= ::std::isize::MAX as usize,
-            "Slice length must fit in `isize`.",
-        );
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                xs.len() <= ::std::isize::MAX as usize,
+                "Slice length must fit in `isize`.",
+            );
+        }
         unsafe {
             Self::from_shape_ptr(xs.len(), xs.as_ptr())
         }
@@ -255,10 +258,12 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
 {
     fn from(slice: &'a mut Slice) -> Self {
         let xs = slice.as_mut();
-        assert!(
-            xs.len() <= ::std::isize::MAX as usize,
-            "Slice length must fit in `isize`.",
-        );
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                xs.len() <= ::std::isize::MAX as usize,
+                "Slice length must fit in `isize`.",
+            );
+        }
         unsafe {
             Self::from_shape_ptr(xs.len(), xs.as_mut_ptr())
         }

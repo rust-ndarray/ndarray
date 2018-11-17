@@ -69,11 +69,11 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
 /// lengths does not exceed `isize::MAX`.
 ///
 /// If `size_of_checked_shape(dim)` returns `Ok(size)`, the data buffer is a
-/// `Vec` of length `size`, and `strides` are created with
+/// slice or `Vec` of length `size`, and `strides` are created with
 /// `self.default_strides()` or `self.fortran_strides()`, then the invariants
 /// are met to construct an array from the data buffer, `dim`, and `strides`.
-/// (The data buffer being a `Vec` guarantees that it contains no more than
-/// `isize::MAX` bytes.)
+/// (The data buffer being a slice or `Vec` guarantees that it contains no more
+/// than `isize::MAX` bytes.)
 pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError> {
     let size_nonzero = dim
         .slice()
@@ -94,13 +94,9 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
 ///
 /// To meet the invariants,
 ///
-/// 1. The offset in units of `A` and in units of bytes between the least
-///    address and greatest address accessible by moving along all axes must
-///    not exceed `isize::MAX`.
+/// 1. The product of non-zero axis lengths must not exceed `isize::MAX`.
 ///
-/// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
-///
-/// 3. The result of `dim.size()` (assuming no overflow) must be less than or
+/// 2. The result of `dim.size()` (assuming no overflow) must be less than or
 ///    equal to the length of the slice.
 ///
 ///    (Since `dim.default_strides()` and `dim.fortran_strides()` always return
@@ -112,31 +108,17 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
 ///    difference between the least address and greatest address accessible by
 ///    moving along all axes is ≤ the length of the slice.)
 ///
-/// Note that if `data` is a slice of a `Vec<A>`, conditions 2 and 3 are
-/// sufficient to guarantee condition 1 because `Vec` never allocates more than
-/// `isize::MAX` bytes.
+/// Note that since slices cannot contain more than `isize::MAX` bytes,
+/// conditions 1 and 2 are sufficient to guarantee that the offset in units of
+/// `A` and in units of bytes between the least address and greatest address
+/// accessible by moving along all axes does not exceed `isize::MAX`.
 pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Result<(), ShapeError> {
-    // Condition 2 and 1a.
+    // Condition 1.
     let len = size_of_shape_checked(dim)?;
-
-    // Calculate offset in units of `A` between the least address and greatest
-    // address accessible by moving along all axes.
-    let max_offset = len.saturating_sub(1);
-    // Calcaulte offset in units of bytes between the least address and
-    // greatest address accessible by moving along all axes.
-    let max_offset_bytes = max_offset
-        .checked_mul(mem::size_of::<A>())
-        .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
-
-    // Condition 1b.
-    if max_offset_bytes > isize::MAX as usize {
-        return Err(from_kind(ErrorKind::Overflow));
-    }
-    // Condition 3.
+    // Condition 2.
     if len > data.len() {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
-
     Ok(())
 }
 
@@ -200,17 +182,13 @@ where
 ///
 /// 1. The ndim of `dim` and `strides` must be the same.
 ///
-/// 2. The absolute difference in units of `A` and in units of bytes between
-///    the least address and greatest address accessible by moving along all axes
-///    must not exceed `isize::MAX`.
+/// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
 ///
-/// 3. The product of non-zero axis lengths must not exceed `isize::MAX`.
-///
-/// 4. For axes with length > 1, the stride must be nonnegative. This is
+/// 3. For axes with length > 1, the stride must be nonnegative. This is
 ///    necessary to make sure the pointer cannot move backwards outside the
 ///    slice. For axes with length ≤ 1, the stride can be anything.
 ///
-/// 5. If the array will be empty (any axes are zero-length), the difference
+/// 4. If the array will be empty (any axes are zero-length), the difference
 ///    between the least address and greatest address accessible by moving
 ///    along all axes must be ≤ `data.len()`. (It's fine in this case to move
 ///    one byte past the end of the slice since the pointers will be offset but
@@ -218,22 +196,23 @@ where
 ///
 ///    If the array will not be empty, the difference between the least address
 ///    and greatest address accessible by moving along all axes must be <
-///    `data.len()`. This and #4 ensure that all dereferenceable pointers point
+///    `data.len()`. This and #3 ensure that all dereferenceable pointers point
 ///    to elements within the slice.
 ///
-/// 6. The strides must not allow any element to be referenced by two different
+/// 5. The strides must not allow any element to be referenced by two different
 ///    indices.
 ///
-/// Note that if `data` is a slice of a `Vec<A>`, conditions 4 and 5 are
-/// sufficient to guarantee condition 2 because `Vec` never allocates more than
-/// `isize::MAX` bytes.
+/// Note that since slices cannot contain more than `isize::MAX` bytes,
+/// condition 4 is sufficient to guarantee that the absolute difference in
+/// units of `A` and in units of bytes between the least address and greatest
+/// address accessible by moving along all axes does not exceed `isize::MAX`.
 pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
     -> Result<(), ShapeError>
 {
-    // Check conditions 1, 2, and 3.
+    // Check conditions 1 and 2 and calculate `max_offset`.
     let max_offset = max_abs_offset_check_overflow::<A, _>(dim, strides)?;
 
-    // Check condition 5.
+    // Check condition 4.
     let is_empty = dim.slice().iter().any(|&d| d == 0);
     if is_empty && max_offset > data.len() {
         return Err(from_kind(ErrorKind::OutOfBounds));
@@ -242,7 +221,7 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
 
-    // Check condition 4.
+    // Check condition 3.
     for (&d, &s) in izip!(dim.slice(), strides.slice()) {
         let s = s as isize;
         if d > 1 && s < 0 {
@@ -250,7 +229,7 @@ pub fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D)
         }
     }
 
-    // Check condition 6.
+    // Check condition 5.
     if !is_empty && dim_stride_overlap(dim, strides) {
         return Err(from_kind(ErrorKind::Unsupported));
     }

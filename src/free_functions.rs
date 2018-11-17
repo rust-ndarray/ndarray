@@ -90,13 +90,26 @@ pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
 
 /// Create a two-dimensional array view with elements borrowing `xs`.
 ///
-/// **Panics** if the product of non-zero axis lengths or the numer of bytes in
-/// the array overflow `isize`.
+/// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
+/// can only occur when `V` is zero-sized.)
 pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
     let cols = V::len();
     let rows = xs.len();
-    let data = unsafe { slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows) };
-    ArrayView::from_shape(Ix2(rows, cols), data).unwrap()
+    let dim = Ix2(rows, cols);
+    if size_of::<V>() == 0 {
+        dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
+    }
+    // `rows` is guaranteed to fit in `isize` because we've checked the ZST
+    // case and slices never contain > `isize::MAX` bytes. `cols` is guaranteed
+    // to fit in `isize` because `FixedInitializer` is not implemented for any
+    // array lengths > `isize::MAX`. `cols * rows` is guaranteed to fit in
+    // `isize` because we've checked the ZST case and slices never contain >
+    // `isize::MAX` bytes.
+    unsafe {
+        let data = slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows);
+        ArrayView::from_shape_ptr(dim, data.as_ptr())
+    }
 }
 
 /// Create a one-dimensional read-write array view with elements borrowing `xs`.
@@ -123,8 +136,8 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 
 /// Create a two-dimensional read-write array view with elements borrowing `xs`.
 ///
-/// **Panics** if the product of non-zero axis lengths or the numer of bytes in
-/// the array overflow `isize`.
+/// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
+/// can only occur when `V` is zero-sized.)
 ///
 /// # Example
 ///
@@ -149,8 +162,21 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 pub fn aview_mut2<A, V: FixedInitializer<Elem=A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
     let cols = V::len();
     let rows = xs.len();
-    let data = unsafe { slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows) };
-    ArrayViewMut::from_shape(Ix2(rows, cols), data).unwrap()
+    let dim = Ix2(rows, cols);
+    if size_of::<V>() == 0 {
+        dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
+    }
+    // `rows` is guaranteed to fit in `isize` because we've checked the ZST
+    // case and slices never contain > `isize::MAX` bytes. `cols` is guaranteed
+    // to fit in `isize` because `FixedInitializer` is not implemented for any
+    // array lengths > `isize::MAX`. `cols * rows` is guaranteed to fit in
+    // `isize` because we've checked the ZST case and slices never contain >
+    // `isize::MAX` bytes.
+    unsafe {
+        let data = slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows);
+        ArrayViewMut::from_shape_ptr(dim, data.as_mut_ptr())
+    }
 }
 
 /// Fixed-size array used for array initialization
@@ -176,6 +202,11 @@ macro_rules! impl_arr_init {
 
 }
 
+// For implementors: If you ever implement `FixedInitializer` for array lengths
+// > `isize::MAX` (e.g. once Rust adds const generics), you must update
+// `aview2` and `aview_mut2` to perform the necessary checks. In particular,
+// the assumption that `cols` can never exceed `isize::MAX` would be incorrect.
+// (Consider e.g. `let xs: &[[i32; ::std::usize::MAX]] = &[]`.)
 impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 
 /// Create a two-dimensional array with elements from `xs`.
