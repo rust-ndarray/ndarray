@@ -117,11 +117,11 @@
 macro_rules! azip {
     // Build Zip Rule (index)
     (@parse [index => $a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
+        $crate::azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
     };
     // Build Zip Rule (no index)
     (@parse [$a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
+        $crate::azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
     };
     // Build Finish Rule (both)
     (@finish ($z:expr) [$($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)*}) => {
@@ -137,32 +137,32 @@ macro_rules! azip {
     // parsing stack: [expressions] [patterns] (one per operand)
     // index uses empty [] -- must be first
     (@parse [] [] index $i:pat, $($t:tt)*) => {
-        azip!(@parse [index =>] [$i,] $($t)*);
+        $crate::azip!(@parse [index =>] [$i,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
-        azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident $($t:tt)*) => {
-        azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] , $($t:tt)*) => {
-        azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
+        $crate::azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident ($e:expr) $($t:tt)*) => {
-        azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident $($t:tt)*) => {
-        azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident ($e:expr) $($t:tt)*) => {
-        azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident $($t:tt)*) => {
-        azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $($t:tt)*) => { };
     ($($t:tt)*) => {
-        azip!(@parse [] [] $($t)*);
+        $crate::azip!(@parse [] [] $($t)*);
     }
 }
 
