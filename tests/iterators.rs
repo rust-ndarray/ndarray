@@ -2,11 +2,9 @@
 extern crate ndarray;
 extern crate itertools;
 
-use ndarray::{Array0, Array2};
-use ndarray::RcArray;
+use ndarray::prelude::*;
 use ndarray::Ix;
 use ndarray::{
-    ArrayBase,
     Data,
     Dimension,
     aview1,
@@ -14,6 +12,7 @@ use ndarray::{
     arr3,
     Axis,
     indices,
+    Slice,
 };
 
 use itertools::assert_equal;
@@ -497,4 +496,45 @@ fn test_fold() {
     let mut a = Array0::<i32>::default(());
     a += 1;
     assert_eq!(a.iter().fold(0, |acc, &x| acc + x), 1);
+}
+
+#[test]
+fn test_rfold() {
+    {
+        let mut a = Array1::<i32>::default(256);
+        a += 1;
+        let mut iter = a.iter();
+        iter.next();
+        assert_eq!(iter.rfold(0, |acc, &x| acc + x), a.sum() - 1);
+    }
+
+    // Test strided arrays
+    {
+        let mut a = Array1::<i32>::default(256);
+        a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+        a += 1;
+        let mut iter = a.iter();
+        iter.next();
+        assert_eq!(iter.rfold(0, |acc, &x| acc + x), a.sum() - 1);
+    }
+
+    {
+        let mut a = Array1::<i32>::default(256);
+        a.slice_axis_inplace(Axis(0), Slice::new(0, None, -2));
+        a += 1;
+        let mut iter = a.iter();
+        iter.next();
+        assert_eq!(iter.rfold(0, |acc, &x| acc + x), a.sum() - 1);
+    }
+
+    // Test order
+    {
+        let mut a = Array1::from_iter(0..20);
+        a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+        let mut iter = a.iter();
+        iter.next();
+        let output = iter.rfold(Vec::new(),
+            |mut acc, elt| { acc.push(*elt); acc });
+        assert_eq!(Array1::from_vec(output), Array::from_iter((1..10).rev().map(|i| i * 2)));
+    }
 }

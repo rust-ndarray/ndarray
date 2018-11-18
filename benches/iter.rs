@@ -10,6 +10,7 @@ use rawpointer::PointerExt;
 extern crate ndarray;
 use ndarray::prelude::*;
 use ndarray::{Zip, FoldWhile};
+use ndarray::Slice;
 
 #[bench]
 fn iter_sum_2d_regular(bench: &mut Bencher)
@@ -342,3 +343,24 @@ fn indexed_iter_3d_dyn(bench: &mut Bencher) {
         }
     })
 }
+
+#[bench]
+fn iter_sum_1d_strided_fold(bench: &mut Bencher)
+{
+    let mut a = Array::<u64, _>::ones(10240);
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    bench.iter(|| {
+        a.iter().fold(0, |acc, &x| acc + x)
+    });
+}
+
+#[bench]
+fn iter_sum_1d_strided_rfold(bench: &mut Bencher)
+{
+    let mut a = Array::<u64, _>::ones(10240);
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    bench.iter(|| {
+        a.iter().rfold(0, |acc, &x| acc + x)
+    });
+}
+
