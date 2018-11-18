@@ -148,6 +148,23 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1> {
 
         unsafe { Some(self.ptr.offset(offset)) }
     }
+
+    fn rfold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
+        where G: FnMut(Acc, *mut A) -> Acc,
+    {
+        let mut accum = init;
+        if let Some(index) = self.index {
+            let elem_index = index[0];
+            unsafe {
+                // self.dim[0] is the current length
+                while self.dim[0] > elem_index {
+                    self.dim[0] -= 1;
+                    accum = g(accum, self.ptr.offset(Ix1::stride_offset(&self.dim, &self.strides)));
+                }
+            }
+        }
+        accum
+    }
 }
 
 clone_bounds!(
@@ -205,6 +222,14 @@ impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a A> {
         self.inner.next_back().map(|p| unsafe { &*p })
+    }
+
+    fn rfold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        unsafe {
+            self.inner.rfold(init, move |acc, ptr| g(acc, &*ptr))
+        }
     }
 }
 
@@ -370,6 +395,12 @@ impl<'a, A> DoubleEndedIterator for Iter<'a, A, Ix1> {
     fn next_back(&mut self) -> Option<&'a A> {
         either_mut!(self.inner, iter => iter.next_back())
     }
+
+    fn rfold<Acc, G>(self, init: Acc, g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc
+    {
+        either!(self.inner, iter => iter.rfold(init, g))
+    }
 }
 
 impl<'a, A, D> ExactSizeIterator for Iter<'a, A, D>
@@ -431,6 +462,12 @@ impl<'a, A> DoubleEndedIterator for IterMut<'a, A, Ix1> {
     fn next_back(&mut self) -> Option<&'a mut A> {
         either_mut!(self.inner, iter => iter.next_back())
     }
+
+    fn rfold<Acc, G>(self, init: Acc, g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc
+    {
+        either!(self.inner, iter => iter.rfold(init, g))
+    }
 }
 
 impl<'a, A, D> ExactSizeIterator for IterMut<'a, A, D>
@@ -465,6 +502,14 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
         self.inner.next_back().map(|p| unsafe { &mut *p })
+    }
+
+    fn rfold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+        where G: FnMut(Acc, Self::Item) -> Acc
+    {
+        unsafe {
+            self.inner.rfold(init, move |acc, ptr| g(acc, &mut *ptr))
+        }
     }
 }
 
