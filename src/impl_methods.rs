@@ -1849,6 +1849,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// function and initial value `init`.
     ///
     /// Return the result as an `Array`.
+    ///
+    /// **Panics** if `axis` is out of bounds.
     pub fn fold_axis<B, F>(&self, axis: Axis, init: B, mut fold: F)
         -> Array<B, D::Smaller>
         where D: RemoveAxis,
