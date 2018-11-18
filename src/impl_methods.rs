@@ -1834,10 +1834,6 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               F: FnMut(&B, &A) -> B,
               B: Clone,
     {
-        if axis.index() >= self.ndim() {
-            panic!("ndarray: axis {} out of bounds in array of dim {} in fold_axis",
-                   axis.index(), self.ndim());
-        }
         let mut res = Array::from_elem(self.raw_dim().remove_axis(axis), init);
         for subview in self.axis_iter(axis) {
             res.zip_mut_with(&subview, |x, y| *x = fold(x, y));
