@@ -161,10 +161,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return a shared ownership (copy on write) array.
-    pub fn to_shared(&self) -> RcArray<A, D>
+    pub fn to_shared(&self) -> ArcArray<A, D>
         where A: Clone
     {
-        // FIXME: Avoid copying if it’s already an RcArray.
+        // FIXME: Avoid copying if it’s already an ArcArray.
         self.to_owned().into_shared()
     }
 
@@ -178,7 +178,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// Turn the array into a shared ownership (copy on write) array,
     /// without any copying.
-    pub fn into_shared(self) -> RcArray<A, D>
+    pub fn into_shared(self) -> ArcArray<A, D>
         where S: DataOwned,
     {
         let data = self.data.into_shared();
@@ -487,7 +487,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a mutable reference to the element at `index`.
     ///
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** (For `RcArray`) The array must be uniquely held when mutating it.
+    /// **Note:** (For `ArcArray`) The array must be uniquely held when mutating it.
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
         where S: DataMut,
@@ -520,7 +520,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Indices may be equal.
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** (For `RcArray`) The array must be uniquely held.
+    /// **Note:** (For `ArcArray`) The array must be uniquely held.
     pub unsafe fn uswap<I>(&mut self, index1: I, index2: I)
         where S: DataMut,
               I: NdIndex<D>,
@@ -1173,7 +1173,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// *Note: Reshape is for `RcArray` only. Use `.into_shape()` for
+    /// *Note: Reshape is for `ArcArray` only. Use `.into_shape()` for
     /// other arrays and array views.*
     ///
     /// Transform the array into `shape`; any shape with the same number of

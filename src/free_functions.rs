@@ -36,7 +36,7 @@ use imp_prelude::*;
 /// This macro uses `vec![]`, and has the same ownership semantics;
 /// elements are moved into the resulting `Array`.
 ///
-/// Use `array![...].into_shared()` to create an `RcArray`.
+/// Use `array![...].into_shared()` to create an `ArcArray`.
 #[macro_export]
 macro_rules! array {
     ($([$([$($x:expr),* $(,)*]),+ $(,)*]),+ $(,)*) => {{
@@ -62,7 +62,7 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix1> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray<A, Ix1> {
     arr1(xs).into_shared()
 }
 
@@ -256,7 +256,7 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, Ix2> {
+pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray<A, Ix2> {
     arr2(xs).into_shared()
 }
 
@@ -287,7 +287,7 @@ pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(
 
 /// Create a three-dimensional array with elements from `xs`.
 pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> RcArray<A, Ix3>
+    -> ArcArray<A, Ix3>
     where V: Clone, U: Clone,
 {
     arr3(xs).into_shared()

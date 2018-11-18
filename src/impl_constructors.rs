@@ -23,7 +23,7 @@ use iterators::{to_vec, to_vec_mapped};
 
 /// # Constructor Methods for Owned Arrays
 ///
-/// Note that the constructor methods apply to `Array` and `RcArray`,
+/// Note that the constructor methods apply to `Array` and `ArcArray`,
 /// the two array types that have owned storage.
 ///
 /// ## Constructor methods for one-dimensional arrays.

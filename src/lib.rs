@@ -186,6 +186,7 @@ pub use layout::Layout;
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
     pub use prelude::*;
+    pub use ArcArray;
     pub use {
         RemoveAxis,
         Data,
