@@ -747,6 +747,10 @@ fn standard_layout()
     assert!(x1.is_standard_layout());
     let x2 = a.subview(Axis(1), 0);
     assert!(!x2.is_standard_layout());
+    let x3 = ArrayView1::from_shape(1.strides(2), &[1]).unwrap();
+    assert!(x3.is_standard_layout());
+    let x4 = ArrayView2::from_shape((0, 2).strides((0, 1)), &[1, 2]).unwrap();
+    assert!(x4.is_standard_layout());
 }
 
 #[test]
@@ -1205,11 +1209,11 @@ fn from_vec_dim_stride_2d_7() {
 
 #[test]
 fn from_vec_dim_stride_2d_8() {
-    // strides must be strictly positive (nonzero)
+    // strides of length 1 axes can be zero
     let a = [1.];
     let d = (1, 1);
     let s = (0, 1);
-    assert_matches!(Array::from_shape_vec(d.strides(s), a.to_vec()), Err(_));
+    assert_matches!(Array::from_shape_vec(d.strides(s), a.to_vec()), Ok(_));
 }
 
 #[test]
