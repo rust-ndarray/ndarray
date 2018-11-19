@@ -2,7 +2,10 @@
 
 name = "ndarray"
 version = "0.12.0"
-authors = ["bluss"]
+authors = [
+  "bluss",
+  "Jim Turner"
+]
 license = "MIT/Apache-2.0"
 readme = "README-crates.io.md"
 
