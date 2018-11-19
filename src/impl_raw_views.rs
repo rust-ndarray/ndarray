@@ -1,4 +1,4 @@
-use dimension;
+use dimension::{self, stride_offset};
 use imp_prelude::*;
 use {is_aligned, StrideShape};
 
@@ -87,6 +87,33 @@ where
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
         ArrayView::new_(self.ptr, self.dim, self.strides)
     }
+
+    /// Split the array view along `axis` and return one array pointer strictly
+    /// before the split and one array pointer after the split.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
+        assert!(index <= self.len_of(axis));
+        let left_ptr = self.ptr;
+        let right_ptr = if index == self.len_of(axis) {
+            self.ptr
+        } else {
+            let offset = stride_offset(index, self.strides.axis(axis));
+            // The `.offset()` is safe due to the guarantees of `DataRaw`.
+            unsafe { self.ptr.offset(offset) }
+        };
+
+        let mut dim_left = self.dim.clone();
+        dim_left.set_axis(axis, index);
+        let left = unsafe { Self::new_(left_ptr, dim_left, self.strides.clone()) };
+
+        let mut dim_right = self.dim;
+        let right_len = dim_right.axis(axis) - index;
+        dim_right.set_axis(axis, right_len);
+        let right = unsafe { Self::new_(right_ptr, dim_right, self.strides) };
+
+        (left, right)
+    }
 }
 
 impl<A, D> RawArrayViewMut<A, D>
@@ -155,6 +182,12 @@ where
         RawArrayViewMut::new_(ptr, dim, strides)
     }
 
+    /// Converts to a non-mutable `RawArrayView`.
+    #[inline]
+    pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
+        unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
+    }
+
     /// Return a read-only view of the array
     ///
     /// **Warning** from a safety standpoint, this is equivalent to
@@ -193,5 +226,19 @@ where
     #[inline]
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D> {
         ArrayViewMut::new_(self.ptr, self.dim, self.strides)
+    }
+
+    /// Split the array view along `axis` and return one array pointer strictly
+    /// before the split and one array pointer after the split.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
+        let (left, right) = self.into_raw_view().split_at(axis, index);
+        unsafe {
+            (
+                Self::new_(left.ptr, left.dim, left.strides),
+                Self::new_(right.ptr, right.dim, right.strides),
+            )
+        }
     }
 }
