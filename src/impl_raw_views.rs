@@ -68,16 +68,6 @@ where
         RawArrayView::new_(ptr, dim, strides)
     }
 
-    /// Return a read-only view of the array.
-    ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid and choose the correct lifetime.
-    #[inline]
-    pub unsafe fn deref_view<'a>(&self) -> ArrayView<'a, A, D> {
-        ArrayView::new_(self.ptr, self.dim.clone(), self.strides.clone())
-    }
-
     /// Converts to a read-only view of the array.
     ///
     /// **Warning** from a safety standpoint, this is equivalent to
@@ -186,26 +176,6 @@ where
     #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
         unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
-    }
-
-    /// Return a read-only view of the array
-    ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid and choose the correct lifetime.
-    #[inline]
-    pub unsafe fn deref_view<'a>(&self) -> ArrayView<'a, A, D> {
-        ArrayView::new_(self.ptr, self.dim.clone(), self.strides.clone())
-    }
-
-    /// Return a read-write view of the array
-    ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid and choose the correct lifetime.
-    #[inline]
-    pub unsafe fn deref_view_mut<'a>(&mut self) -> ArrayViewMut<'a, A, D> {
-        ArrayViewMut::new_(self.ptr, self.dim.clone(), self.strides.clone())
     }
 
     /// Converts to a read-only view of the array.
