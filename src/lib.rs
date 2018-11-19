@@ -90,6 +90,9 @@ extern crate serde;
 #[cfg(feature="rayon")]
 extern crate rayon;
 
+#[cfg(feature = "nalgebra-0_16")]
+extern crate nalgebra;
+
 #[cfg(feature="blas")]
 extern crate cblas_sys;
 #[cfg(feature="blas")]
@@ -146,6 +149,8 @@ mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde-1")]
 mod array_serde;
+#[cfg(feature = "nalgebra-0_16")]
+mod convert_nalgebra;
 mod arrayformat;
 mod data_traits;
 
