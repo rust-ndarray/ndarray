@@ -151,6 +151,7 @@ mod data_traits;
 
 pub use aliases::*;
 
+#[allow(deprecated)]
 pub use data_traits::{
     DataRaw,
     DataRawMut,

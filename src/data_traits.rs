@@ -133,8 +133,10 @@ pub unsafe trait DataMut : Data + DataRawMut {
 /// accessed with safe code.
 ///
 /// ***Internal trait, see `Data`.***
+#[deprecated(note="use `Data + DataRawClone` instead", since="0.13")]
 pub trait DataClone : Data + DataRawClone {}
 
+#[allow(deprecated)]
 impl<T> DataClone for T where T: Data + DataRawClone {}
 
 unsafe impl<A> DataRaw for RawViewRepr<*const A> {
@@ -387,7 +389,7 @@ pub unsafe trait DataOwned : Data {
 /// A representation that is a lightweight view.
 ///
 /// ***Internal trait, see `Data`.***
-pub unsafe trait DataShared : Clone + DataClone { }
+pub unsafe trait DataShared : Clone + Data + DataRawClone { }
 
 unsafe impl<A> DataShared for OwnedRcRepr<A> {}
 unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
