@@ -4,7 +4,7 @@ ndarray-rand
 Recent Changes
 --------------
 
-- 0.9.0 (Not released yet)
+- 0.9.0
 
   - Require rand 0.6
 
