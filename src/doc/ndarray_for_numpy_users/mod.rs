@@ -229,7 +229,7 @@
 //!   Only the non-mutable methods that take the array by reference are listed in
 //!   this table. For example, [`.slice()`][.slice()] also has corresponding
 //!   methods [`.slice_mut()`][.slice_mut()], [`.slice_move()`][.slice_move()], and
-//!   [`.slice_inplace()`][.slice_inplace()].
+//!   [`.slice_collapse()`][.slice_collapse()].
 //!
 //! * The behavior of slicing is slightly different from NumPy for slices with
 //!   `step < -1`. See the docs for the [`s![]` macro][s!] for more details.
@@ -238,7 +238,7 @@
 //! ------|-----------|------
 //! `a[-1]` | [`a[a.len() - 1]`][.index()] | access the last element in 1-D array `a`
 //! `a[1, 4]` | [`a[[1, 4]]`][.index()] | access the element in row 1, column 4
-//! `a[1]` or `a[1, :, :]` | [`a.slice(s![1, .., ..])`][.slice()] or [`a.subview(Axis(0), 1)`][.subview()] | get a 2-D subview of a 3-D array at index 1 of axis 0
+//! `a[1]` or `a[1, :, :]` | [`a.slice(s![1, .., ..])`][.slice()] or [`a.index_axis(Axis(0), 1)`][.index_axis()] | get a 2-D subview of a 3-D array at index 1 of axis 0
 //! `a[0:5]` or `a[:5]` or `a[0:5, :]` | [`a.slice(s![0..5, ..])`][.slice()] or [`a.slice(s![..5, ..])`][.slice()] or [`a.slice_axis(Axis(0), Slice::from(0..5))`][.slice_axis()] | get the first 5 rows of a 2-D array
 //! `a[-5:]` or `a[-5:, :]` | [`a.slice(s![-5.., ..])`][.slice()] or [`a.slice_axis(Axis(0), Slice::from(-5..))`][.slice_axis()] | get the last 5 rows of a 2-D array
 //! `a[:3, 4:9]` | [`a.slice(s![..3, 4..9])`][.slice()] | columns 4, 5, 6, 7, and 8 of the first 3 rows
@@ -618,14 +618,14 @@
 //! [.sum()]: ../../struct.ArrayBase.html#method.sum
 //! [.slice()]: ../../struct.ArrayBase.html#method.slice
 //! [.slice_axis()]: ../../struct.ArrayBase.html#method.slice_axis
-//! [.slice_inplace()]: ../../struct.ArrayBase.html#method.slice_inplace
+//! [.slice_collapse()]: ../../struct.ArrayBase.html#method.slice_collapse
 //! [.slice_move()]: ../../struct.ArrayBase.html#method.slice_move
 //! [.slice_mut()]: ../../struct.ArrayBase.html#method.slice_mut
 //! [.shape()]: ../../struct.ArrayBase.html#method.shape
 //! [stack!]: ../../macro.stack.html
 //! [stack()]: ../../fn.stack.html
 //! [.strides()]: ../../struct.ArrayBase.html#method.strides
-//! [.subview()]: ../../struct.ArrayBase.html#method.subview
+//! [.index_axis()]: ../../struct.ArrayBase.html#method.index_axis
 //! [.sum_axis()]: ../../struct.ArrayBase.html#method.sum_axis
 //! [.t()]: ../../struct.ArrayBase.html#method.t
 //! [::uninitialized()]: ../../struct.ArrayBase.html#method.uninitialized

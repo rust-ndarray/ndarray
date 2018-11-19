@@ -247,6 +247,7 @@ pub type Ixs = isize;
 /// + [Methods For All Array Types](#methods-for-all-array-types)
 /// + [Methods For 1-D Arrays](#methods-for-1-d-arrays)
 /// + [Methods For 2-D Arrays](#methods-for-2-d-arrays)
+/// + [Methods for Dynamic-Dimensional Arrays](#methods-for-dynamic-dimensional-arrays)
 /// + [Numerical Methods for Arrays](#numerical-methods-for-arrays)
 ///
 /// ## `Array`
@@ -449,7 +450,7 @@ pub type Ixs = isize;
 ///
 /// You can use slicing to create a view of a subset of the data in
 /// the array. Slicing methods include [`.slice()`], [`.slice_mut()`],
-/// [`.slice_move()`], and [`.slice_inplace()`].
+/// [`.slice_move()`], and [`.slice_collapse()`].
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is an instance of
@@ -457,15 +458,16 @@ pub type Ixs = isize;
 ///
 /// [`&SliceInfo`]: struct.SliceInfo.html
 ///
-/// If a range is used, the axis is preserved. If an index is used, a subview
-/// is taken with respect to the axis. See [*Subviews*](#subviews) for more
-/// information about subviews. Note that [`.slice_inplace()`] behaves like
-/// [`.subview_inplace()`] by preserving the number of dimensions.
+/// If a range is used, the axis is preserved. If an index is used, that index
+/// is selected and the axis is removed; this selects a subview. See
+/// [*Subviews*](#subviews) for more information about subviews. Note that
+/// [`.slice_collapse()`] behaves like [`.collapse_axis()`] by preserving
+/// the number of dimensions.
 ///
 /// [`.slice()`]: #method.slice
 /// [`.slice_mut()`]: #method.slice_mut
 /// [`.slice_move()`]: #method.slice_move
-/// [`.slice_inplace()`]: #method.slice_inplace
+/// [`.slice_collapse()`]: #method.slice_collapse
 ///
 /// ```
 /// // import the s![] macro
@@ -509,7 +511,7 @@ pub type Ixs = isize;
 /// assert_eq!(d, e);
 /// assert_eq!(d.shape(), &[2, 1, 3]);
 ///
-/// // Let’s create a slice while taking a subview with
+/// // Let’s create a slice while selecting a subview with
 /// //
 /// // - Both submatrices of the greatest dimension: `..`
 /// // - The last row in each submatrix, removing that axis: `-1`
@@ -525,17 +527,31 @@ pub type Ixs = isize;
 /// ## Subviews
 ///
 /// Subview methods allow you to restrict the array view while removing one
-/// axis from the array. Subview methods include [`.subview()`],
-/// [`.subview_mut()`], [`.into_subview()`], and [`.subview_inplace()`]. You
-/// can also take a subview by using a single index instead of a range when
-/// slicing.
+/// axis from the array. Methods for selecting individual subviews include
+/// [`.index_axis()`], [`.index_axis_mut()`], [`.index_axis_move()`], and
+/// [`.index_axis_inplace()`]. You can also select a subview by using a single
+/// index instead of a range when slicing. Some other methods, such as
+/// [`.fold_axis()`], [`.axis_iter()`], [`.axis_iter_mut()`],
+/// [`.outer_iter()`], and [`.outer_iter_mut()`] operate on all the subviews
+/// along an axis.
 ///
-/// Subview takes two arguments: `axis` and `index`.
+/// A related method is [`.collapse_axis()`], which modifies the view in the
+/// same way as [`.index_axis()`] except for removing the collapsed axis, since
+/// it operates *in place*. The length of the axis becomes 1.
 ///
-/// [`.subview()`]: #method.subview
-/// [`.subview_mut()`]: #method.subview_mut
-/// [`.into_subview()`]: #method.into_subview
-/// [`.subview_inplace()`]: #method.subview_inplace
+/// Methods for selecting an individual subview take two arguments: `axis` and
+/// `index`.
+///
+/// [`.axis_iter()`]: #method.axis_iter
+/// [`.axis_iter_mut()`]: #method.axis_iter_mut
+/// [`.fold_axis()`]: #method.fold_axis
+/// [`.index_axis()`]: #method.index_axis
+/// [`.index_axis_inplace()`]: #method.index_axis_inplace
+/// [`.index_axis_mut()`]: #method.index_axis_mut
+/// [`.index_axis_move()`]: #method.index_axis_move
+/// [`.collapse_axis()`]: #method.collapse_axis
+/// [`.outer_iter()`]: #method.outer_iter
+/// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
 /// #[macro_use(s)] extern crate ndarray;
@@ -558,8 +574,8 @@ pub type Ixs = isize;
 /// // Let’s take a subview along the greatest dimension (axis 0),
 /// // taking submatrix 0, then submatrix 1
 ///
-/// let sub_0 = a.subview(Axis(0), 0);
-/// let sub_1 = a.subview(Axis(0), 1);
+/// let sub_0 = a.index_axis(Axis(0), 0);
+/// let sub_1 = a.index_axis(Axis(0), 1);
 ///
 /// assert_eq!(sub_0, aview2(&[[ 1,  2,  3],
 ///                            [ 4,  5,  6]]));
@@ -568,7 +584,7 @@ pub type Ixs = isize;
 /// assert_eq!(sub_0.shape(), &[2, 3]);
 ///
 /// // This is the subview picking only axis 2, column 0
-/// let sub_col = a.subview(Axis(2), 0);
+/// let sub_col = a.index_axis(Axis(2), 0);
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
 ///                              [ 7, 10]]));
@@ -578,14 +594,6 @@ pub type Ixs = isize;
 /// assert_eq!(double_sub, aview1(&[7, 10]));
 /// # }
 /// ```
-///
-/// [`.subview_inplace()`] modifies the view in the same way as [`.subview()`],
-/// but since it is *in place*, it cannot remove the collapsed axis. It becomes
-/// an axis of length 1.
-///
-/// `.outer_iter()` is an iterator of every subview along the zeroth (outer)
-/// axis, while `.axis_iter()` is an iterator of every subview along a
-/// specific axis.
 ///
 /// ## Arithmetic Operations
 ///
@@ -1262,6 +1270,7 @@ impl<A, S, D> ArrayBase<S, D>
 
 mod impl_1d;
 mod impl_2d;
+mod impl_dyn;
 
 mod numeric;
 

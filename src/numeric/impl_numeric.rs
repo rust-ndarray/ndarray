@@ -107,11 +107,11 @@ impl<A, S, D> ArrayBase<S, D>
             // contiguous along the axis we are summing
             let ax = axis.index();
             for (i, elt) in enumerate(&mut res) {
-                *elt = self.subview(Axis(1 - ax), i).sum();
+                *elt = self.index_axis(Axis(1 - ax), i).sum();
             }
         } else {
             for i in 0..n {
-                let view = self.subview(axis, i);
+                let view = self.index_axis(axis, i);
                 res = res + &view;
             }
         }

@@ -465,12 +465,14 @@ impl_slicenextdim_larger!((), Slice);
 /// The syntax is `s![` *[ axis-slice-or-index [, axis-slice-or-index [ , ... ]
 /// ] ]* `]`, where *axis-slice-or-index* is any of the following:
 ///
-/// * *index*: an index to use for taking a subview with respect to that axis
-/// * *range*: a range with step size 1 to use for slicing that axis
-/// * *range* `;` *step*: a range with step size *step* to use for slicing that axis
-/// * *slice*: a [`Slice`] instance to use for slicing that axis
+/// * *index*: an index to use for taking a subview with respect to that axis.
+///   (The index is selected. The axis is removed except with
+///   [`.slice_collapse()`].)
+/// * *range*: a range with step size 1 to use for slicing that axis.
+/// * *range* `;` *step*: a range with step size *step* to use for slicing that axis.
+/// * *slice*: a [`Slice`] instance to use for slicing that axis.
 /// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
-///   instance, with new step size *step*, to use for slicing that axis
+///   instance, with new step size *step*, to use for slicing that axis.
 ///
 /// [`Slice`]: struct.Slice.html
 ///
@@ -486,12 +488,12 @@ impl_slicenextdim_larger!((), Slice);
 /// the third axis for 1..5 with default step size 1. The input array must have
 /// 3 dimensions. The resulting slice would have shape `[2, 4]` for
 /// [`.slice()`], [`.slice_mut()`], and [`.slice_move()`], and shape
-/// `[2, 1, 4]` for [`.slice_inplace()`].
+/// `[2, 1, 4]` for [`.slice_collapse()`].
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 /// [`.slice_mut()`]: struct.ArrayBase.html#method.slice_mut
 /// [`.slice_move()`]: struct.ArrayBase.html#method.slice_move
-/// [`.slice_inplace()`]: struct.ArrayBase.html#method.slice_inplace
+/// [`.slice_collapse()`]: struct.ArrayBase.html#method.slice_collapse
 ///
 /// See also [*Slicing*](struct.ArrayBase.html#slicing).
 ///

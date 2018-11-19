@@ -91,12 +91,12 @@ fn as_slice() {
     let a = a.reshape((2, 4));
     assert_slice_correct(&a);
 
-    assert!(a.view().subview(Axis(1), 0).as_slice().is_none());
+    assert!(a.view().index_axis(Axis(1), 0).as_slice().is_none());
 
     let v = a.view();
     assert_slice_correct(&v);
-    assert_slice_correct(&v.subview(Axis(0), 0));
-    assert_slice_correct(&v.subview(Axis(0), 1));
+    assert_slice_correct(&v.index_axis(Axis(0), 0));
+    assert_slice_correct(&v.index_axis(Axis(0), 1));
 
     assert!(v.slice(s![.., ..1]).as_slice().is_none());
     println!("{:?}", v.slice(s![..1;2, ..]));
@@ -179,12 +179,12 @@ fn outer_iter() {
     //   [8, 9],
     //    ...
     assert_equal(a.outer_iter(),
-                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
+                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
     let mut b = RcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter(),
-                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
+                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
 
     let mut found_rows = Vec::new();
     for sub in b.outer_iter() {
@@ -209,7 +209,7 @@ fn outer_iter() {
     cv.assign(&a);
     assert_eq!(&a, &cv);
     assert_equal(cv.outer_iter(),
-                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
+                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
 
     let mut found_rows = Vec::new();
     for sub in cv.outer_iter() {
@@ -232,9 +232,9 @@ fn axis_iter() {
     //   [8, 9],
     //    ...
     assert_equal(a.axis_iter(Axis(1)),
-                 vec![a.subview(Axis(1), 0),
-                      a.subview(Axis(1), 1),
-                      a.subview(Axis(1), 2)]);
+                 vec![a.index_axis(Axis(1), 0),
+                      a.index_axis(Axis(1), 1),
+                      a.index_axis(Axis(1), 2)]);
 }
 
 #[test]
@@ -263,7 +263,7 @@ fn outer_iter_mut() {
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter_mut(),
-                 vec![a.subview(Axis(0), 0), a.subview(Axis(0), 1)]);
+                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
 
     let mut found_rows = Vec::new();
     for sub in b.outer_iter_mut() {
