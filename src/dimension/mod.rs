@@ -302,13 +302,12 @@ impl<'a> DimensionExt for [Ix]
 ///
 /// **Panics** if `index` is larger than the size of the axis
 // FIXME: Move to Dimension trait
-pub fn do_collapse_axis<A, D: Dimension>(
+pub fn do_collapse_axis<D: Dimension>(
     dims: &mut D,
-    ptr: &mut *mut A,
     strides: &D,
     axis: usize,
     index: usize,
-) {
+) -> isize {
     let dim = dims.slice()[axis];
     let stride = strides.slice()[axis];
     ndassert!(index < dim,
@@ -316,10 +315,7 @@ pub fn do_collapse_axis<A, D: Dimension>(
                array with shape {:?}",
              index, dim, *dims);
     dims.slice_mut()[axis] = 1;
-    let off = stride_offset(index, stride);
-    unsafe {
-        *ptr = ptr.offset(off);
-    }
+    stride_offset(index, stride)
 }
 
 /// Compute the equivalent unsigned index given the axis length and signed index.

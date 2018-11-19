@@ -646,13 +646,9 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
-        dimension::do_collapse_axis(
-            &mut self.dim,
-            &mut self.ptr,
-            &self.strides,
-            axis.index(),
-            index,
-        )
+        let offset = dimension::do_collapse_axis(&mut self.dim, &self.strides, axis.index(), index);
+        self.ptr = unsafe { self.ptr.offset(offset) };
+        debug_assert!(self.pointer_is_inbounds());
     }
 
     /// Along `axis`, select the subview `index` and return a
