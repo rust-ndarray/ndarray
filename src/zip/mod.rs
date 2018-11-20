@@ -812,6 +812,7 @@ map_impl!{
 }
 
 /// Value controlling the execution of `.fold_while` on `Zip`.
+#[derive(Debug, Copy, Clone)]
 pub enum FoldWhile<T> {
     /// Continue folding with this value
     Continue(T),
