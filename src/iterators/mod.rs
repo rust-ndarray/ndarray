@@ -1040,7 +1040,9 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
 /// See [`.axis_chunks_iter()`](../struct.ArrayBase.html#method.axis_chunks_iter) for more information.
 pub struct AxisChunksIter<'a, A: 'a, D> {
     iter: AxisIterCore<A, D>,
+    /// Starting length of the iterator (number of chunks)
     original_len: usize,
+    /// Dimension of the last (and possibly uneven) chunk
     last_dim: D,
     life: PhantomData<&'a A>,
 }
@@ -1057,6 +1059,12 @@ clone_bounds!(
     }
 );
 
+/// Computes the information necessary to construct an iterator over chunks
+/// along an axis, given a `view` of the array, the `axis` to iterate over, and
+/// the chunk `size`.
+///
+/// Returns an axis iterator with the correct stride to move between chunks,
+/// the number of chunks, and the shape of the last chunk.
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: Axis, size: usize)
     -> (AxisIterCore<A, D>, usize, D)
 {
