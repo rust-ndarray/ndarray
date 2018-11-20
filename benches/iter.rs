@@ -364,3 +364,30 @@ fn iter_sum_1d_strided_rfold(bench: &mut Bencher)
     });
 }
 
+
+#[bench]
+fn iter_axis_iter_sum(bench: &mut Bencher)
+{
+    let a = Array::<f32, _>::zeros((64, 64));
+    bench.iter(|| {
+        a.axis_iter(Axis(0)).map(|plane| plane.sum()).sum::<f32>()
+    });
+}
+
+#[bench]
+fn iter_axis_chunks_1_iter_sum(bench: &mut Bencher)
+{
+    let a = Array::<f32, _>::zeros((64, 64));
+    bench.iter(|| {
+        a.axis_chunks_iter(Axis(0), 1).map(|plane| plane.sum()).sum::<f32>()
+    });
+}
+
+#[bench]
+fn iter_axis_chunks_5_iter_sum(bench: &mut Bencher)
+{
+    let a = Array::<f32, _>::zeros((64, 64));
+    bench.iter(|| {
+        a.axis_chunks_iter(Axis(0), 5).map(|plane| plane.sum()).sum::<f32>()
+    });
+}
