@@ -52,47 +52,68 @@
 /// #[macro_use(azip)]
 /// extern crate ndarray;
 ///
-/// use ndarray::Array2;
+/// use ndarray::{Array1, Array2, Axis};
 ///
 /// type M = Array2<f32>;
 ///
-/// // Since this function borrows its inputs, captures must use the x (x) pattern
-/// fn borrow_multiply(a: &mut M, b: &M, c: &M) {
-///     azip!(mut a (a), b (b), c (c) in { *a = b * c });
-/// }
-///
 /// fn main() {
+///     // Setup example arrays
 ///     let mut a = M::zeros((16, 16));
 ///     let mut b = M::zeros(a.dim());
 ///     let mut c = M::zeros(a.dim());
 ///
-///     // set up values in b, c
+///     // assign values
 ///     b.fill(1.);
 ///     for ((i, j), elt) in c.indexed_iter_mut() {
 ///         *elt = (i + 10 * j) as f32;
 ///     }
 ///
-///     // Compute a simple ternary operation:
+///     // Example 1: Compute a simple ternary operation:
 ///     // elementwise addition of b and c, stored in a
-///
 ///     azip!(mut a, b, c in { *a = b + c });
 ///
 ///     assert_eq!(a, &b + &c);
 ///
-///     // Example of azip!() with index
-///
+///     // Example 2: azip!() with index
 ///     azip!(index (i, j), b, c in {
 ///         a[[i, j]] = b - c;
 ///     });
 ///
 ///     assert_eq!(a, &b - &c);
 ///
-///     // Example of azip!() on borrowed values
 ///
+///     // Example 3: azip!() on references
+///     // See the definition of the function below
 ///     borrow_multiply(&mut a, &b, &c);
 ///
 ///     assert_eq!(a, &b * &c);
+///
+///
+///     // Since this function borrows its inputs, captures must use the x (x) pattern
+///     // to avoid the macro's default rule that autorefs the producer.
+///     fn borrow_multiply(a: &mut M, b: &M, c: &M) {
+///         azip!(mut a (a), b (b), c (c) in { *a = b * c });
+///     }
+///
+///
+///     // Example 4: using azip!() with a `ref` rule
+///     //
+///     // Create a new array `totals` with one entry per row of `a`.
+///     // Use azip to traverse the rows of `a` and assign to the corresponding
+///     // entry in `totals` with the sum across each row.
+///     //
+///     // The row is an array view; use the 'ref' rule on the row, to avoid the
+///     // default which is to dereference the produced item.
+///     let mut totals = Array1::zeros(a.rows());
+///
+///     azip!(mut totals, ref row (a.genrows()) in {
+///         *totals = row.sum();
+///     });
+///
+///     // Check the result against the built in `.sum_axis()` along axis 1.
+///     assert_eq!(totals, a.sum_axis(Axis(1)));
 /// }
+///
 /// ```
 macro_rules! azip {
     // Build Zip Rule (index)

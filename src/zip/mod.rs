@@ -428,23 +428,23 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///         *w += x + y * z;
 ///     });
 ///
-/// // Example 2: Create a new array `e` with one entry per row of `a`.
+/// // Example 2: Create a new array `totals` with one entry per row of `a`.
 /// //  Use Zip to traverse the rows of `a` and assign to the corresponding
-/// //  entry in `e` with the sum across each row.
-/// //  This is possible because the producer for `e` and the row producer
+/// //  entry in `totals` with the sum across each row.
+/// //  This is possible because the producer for `totals` and the row producer
 /// //  for `a` have the same shape and dimensionality.
 /// //  The rows producer yields one array view (`row`) per iteration.
 ///
 /// use ndarray::{Array1, Axis};
 ///
-/// let mut e = Array1::zeros(a.rows());
+/// let mut totals = Array1::zeros(a.rows());
 ///
-/// Zip::from(&mut e)
+/// Zip::from(&mut totals)
 ///     .and(a.genrows())
-///     .apply(|e, row| *e = row.sum());
+///     .apply(|totals, row| *totals = row.sum());
 ///
 /// // Check the result against the built in `.sum_axis()` along axis 1.
-/// assert_eq!(e, a.sum_axis(Axis(1)));
+/// assert_eq!(totals, a.sum_axis(Axis(1)));
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {
