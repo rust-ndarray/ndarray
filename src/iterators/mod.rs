@@ -1060,19 +1060,19 @@ clone_bounds!(
 fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<A, D>, axis: Axis, size: usize)
     -> (AxisIterCore<A, D>, usize, D)
 {
-    let axis = axis.index();
-    let axis_len = v.shape()[axis];
+    let axis_len = v.len_of(axis);
     let size = if size > axis_len { axis_len } else { size };
-    let last_index = axis_len / size;
-    let rem = axis_len % size;
-    let iter_len = if rem == 0 { last_index } else { last_index + 1 };
-    let stride = v.strides()[axis] * size as isize;
+    let n_whole_chunks = axis_len / size;
+    let chunk_remainder = axis_len % size;
+    let iter_len = if chunk_remainder == 0 { n_whole_chunks } else { n_whole_chunks + 1 };
+    let stride = v.stride_of(axis) * size as isize;
 
+    let axis = axis.index();
     let mut inner_dim = v.dim.clone();
-    inner_dim.slice_mut()[axis] = size;
+    inner_dim[axis] = size;
 
     let mut last_dim = v.dim;
-    last_dim.slice_mut()[axis] = if rem == 0 { size } else { rem };
+    last_dim[axis] = if chunk_remainder == 0 { size } else { chunk_remainder };
 
     let iter = AxisIterCore {
         index: 0,
