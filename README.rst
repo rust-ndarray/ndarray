@@ -90,17 +90,33 @@ Recent Changes (ndarray)
 
 - 0.12.1 (not yet released)
 
-  - Add ``std_axis`` method for computing standard deviation by @LukeMathWalker.
-  - Add ``product`` method for computing product of elements in an array by @sebasv.
-  - Add ``sum`` method to replace ``scalar_sum``, and deprecate ``scalar_sum``.
+  - Add ``std_axis`` method for computing standard deviation by @LukeMathWalker.
+  - Add ``product`` method for computing product of elements in an array by @sebasv.
   - Add ``first`` and ``first_mut`` methods for getting the first element of an array.
+  - Add ``into_scalar`` method for converting an ``Array0`` into its element.
+  - Add ``insert_axis_inplace`` and ``index_axis_inplace`` methods for inserting and
+    removing axes in dynamic-dimensional (``IxDyn``) arrays without taking ownership.
+  - Add ``stride_of`` method for getting the stride of an axis.
   - Add public ``ndim`` and ``zeros`` methods to ``Dimension`` trait.
-  - Relax constraints on ``sum_axis``, ``mean_axis``, and ``into_owned``.
-  - Add number of dimensions (and whether its const or dynamic) to array ``Debug`` format.
-  - Fix soundness hole in ``remove_axis`` when removing zero-length axis.
+  - Rename ``scalar_sum`` to ``sum``, ``subview`` to ``index_axis``,
+    ``subview_mut`` to ``index_axis_mut``, ``subview_inplace`` to
+    ``collapse_axis``, ``into_subview`` to ``index_axis_move``, and
+    ``slice_inplace`` to ``slice_collapse`` (deprecating the old names).
+  - Deprecate ``remove_axis`` and fix soundness hole when removing a zero-length axis.
   - Implement ``Clone`` for ``LanesIter``.
-  - Improve documentation.
-  - Miscellaneous internal implementation improvements.
+  - Implement ``Debug``, ``Copy``, and ``Clone`` for ``FoldWhile``.
+  - Relax constraints on ``sum_axis``, ``mean_axis``, and ``into_owned``.
+  - Add number of dimensions (and whether it's const or dynamic) to array ``Debug`` format.
+  - Allow merging axes with ``merge_axes`` when either axis length is ≤ 1.
+  - Clarify and check more precise safety requirements for constructing arrays.
+    This fixes undefined behavior in some edge cases. (See `#543`_.)
+  - Fix ``is_standard_layout`` in some edge cases. (See `#543`_.)
+  - Fix chunk sizes in ``axis_chunks_iter`` and ``axis_chunks_iter_mut`` when
+    the stride is zero or the array element type is zero-sized by @bluss.
+  - Improve documentation by @jturner314, @bluss, and @paulkernfeld.
+  - Miscellaneous internal implementation improvements by @jturner314 and @bluss.
+
+.. _`#543`: https://github.com/rust-ndarray/ndarray/pull/543
 
 - 0.12.0
 
