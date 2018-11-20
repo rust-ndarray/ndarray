@@ -56,6 +56,11 @@
 ///
 /// type M = Array2<f32>;
 ///
+/// // Since this function borrows its inputs, captures must use the x (x) pattern
+/// fn borrow_multiply(a: &mut M, b: &M, c: &M) {
+///     azip!(mut a (a), b (b), c (c) in { *a = b * c });
+/// }
+///
 /// fn main() {
 ///     let mut a = M::zeros((16, 16));
 ///     let mut b = M::zeros(a.dim());
@@ -81,6 +86,12 @@
 ///     });
 ///
 ///     assert_eq!(a, &b - &c);
+///
+///     // Example of azip!() on borrowed values
+///
+///     borrow_multiply(&mut a, &b, &c);
+///
+///     assert_eq!(a, &b * &c);
 /// }
 /// ```
 macro_rules! azip {
