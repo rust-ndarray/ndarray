@@ -314,7 +314,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize {
-        self.strides()[axis.index()]
+        self.stride_of(axis)
     }
 
     #[inline(always)]
@@ -365,7 +365,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize {
-        self.strides()[axis.index()]
+        self.stride_of(axis)
     }
 
     #[inline(always)]

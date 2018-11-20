@@ -363,6 +363,31 @@ fn axis_chunks_iter_corner_cases() {
 }
 
 #[test]
+fn axis_chunks_iter_zero_stride() {
+
+    {
+        // stride 0 case
+        let b = Array::from_vec(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
+        let shapes: Vec<_> = b.axis_chunks_iter(Axis(0), 2).map(|v| v.raw_dim()).collect();
+        assert_eq!(shapes, vec![Ix3(2, 0, 3), Ix3(2, 0, 3), Ix3(1, 0, 3)]);
+    }
+
+    {
+        // stride 0 case reverse
+        let b = Array::from_vec(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
+        let shapes: Vec<_> = b.axis_chunks_iter(Axis(0), 2).rev().map(|v| v.raw_dim()).collect();
+        assert_eq!(shapes, vec![Ix3(1, 0, 3), Ix3(2, 0, 3), Ix3(2, 0, 3)]);
+    }
+
+    // From issue #542, ZST element
+    {
+        let a = Array::from_vec(vec![(); 3]);
+        let chunks: Vec<_> = a.axis_chunks_iter(Axis(0), 2).collect();
+        assert_eq!(chunks, vec![a.slice(s![0..2]), a.slice(s![2..])]);
+    }
+}
+
+#[test]
 fn axis_chunks_iter_mut() {
     let a = RcArray::from_iter(0..24);
     let mut a = a.reshape((2, 6, 2));

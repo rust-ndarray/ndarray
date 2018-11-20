@@ -98,6 +98,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Return the stride of `axis`.
+    ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    pub fn stride_of(&self, axis: Axis) -> isize {
+        // strides are reinterpreted as isize
+        self.strides[axis.index()] as isize
+    }
+
     /// Return a read-only view of the array
     pub fn view(&self) -> ArrayView<A, D> {
         debug_assert!(self.pointer_is_inbounds());
