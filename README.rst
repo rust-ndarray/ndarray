@@ -114,6 +114,7 @@ Recent Changes (ndarray)
   - Fix chunk sizes in ``axis_chunks_iter`` and ``axis_chunks_iter_mut`` when
     the stride is zero or the array element type is zero-sized by @bluss.
   - Improve documentation by @jturner314, @bluss, and @paulkernfeld.
+  - Improve element iterators with implementations of ``Iterator::rfold``.
   - Miscellaneous internal implementation improvements by @jturner314 and @bluss.
 
 .. _`#543`: https://github.com/rust-ndarray/ndarray/pull/543
