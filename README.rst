@@ -101,7 +101,8 @@ Recent Changes (ndarray)
   - Rename ``scalar_sum`` to ``sum``, ``subview`` to ``index_axis``,
     ``subview_mut`` to ``index_axis_mut``, ``subview_inplace`` to
     ``collapse_axis``, ``into_subview`` to ``index_axis_move``, and
-    ``slice_inplace`` to ``slice_collapse`` (deprecating the old names).
+    ``slice_inplace`` to ``slice_collapse`` (deprecating the old names,
+    except for ``scalar_sum`` which will be in 0.13).
   - Deprecate ``remove_axis`` and fix soundness hole when removing a zero-length axis.
   - Implement ``Clone`` for ``LanesIter``.
   - Implement ``Debug``, ``Copy``, and ``Clone`` for ``FoldWhile``.

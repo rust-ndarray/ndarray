@@ -47,7 +47,10 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Return the sum of all elements in the array.
-    #[deprecated(note="renamed to `sum`", since="0.12.1")]
+    ///
+    /// *This method has been renamed to `.sum()` and will be deprecated in the
+    /// next version.*
+    // #[deprecated(note="renamed to `sum`", since="0.13")]
     pub fn scalar_sum(&self) -> A
         where A: Clone + Add<Output=A> + libnum::Zero,
     {
