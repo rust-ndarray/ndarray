@@ -104,7 +104,6 @@ extern crate num_traits as libnum;
 extern crate num_complex;
 
 #[cfg(test)]
-#[macro_use(quickcheck)]
 extern crate quickcheck;
 
 #[cfg(feature = "docs")]

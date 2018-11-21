@@ -429,6 +429,7 @@ mod test {
         can_index_slice, can_index_slice_not_custom, max_abs_offset_check_overflow, IntoDimension
     };
     use error::{from_kind, ErrorKind};
+    use quickcheck::quickcheck;
     use {Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn};
 
     #[test]
