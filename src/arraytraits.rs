@@ -208,7 +208,7 @@ unsafe impl<S, D> Send for ArrayBase<S, D>
     where S: Send + Data, D: Send
 { }
 
-#[cfg(any(feature = "rustc-serialize", feature = "serde"))]
+#[cfg(any(feature = "serde"))]
 // Use version number so we can add a packed format later.
 pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 

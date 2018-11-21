@@ -47,11 +47,6 @@ Crate Feature Flags
 The following crate feature flags are available. They are configured in
 your `Cargo.toml`.
 
-- ``rustc-serialize``
-
-  - Optional, compatible with Rust stable
-  - Enables serialization support for rustc-serialize 0.3
-
 - ``serde-1``
 
   - Optional, compatible with Rust stable
