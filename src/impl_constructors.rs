@@ -232,7 +232,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array with values created by the function `f`.
     ///
     /// `f` is called with the index of the element to create; the elements are
-    /// visited in arbitirary order.
+    /// visited in arbitrary order.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
