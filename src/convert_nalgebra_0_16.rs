@@ -1,6 +1,6 @@
 use dimension;
 use imp_prelude::*;
-use nalgebra as na;
+use nalgebra_crate_0_16 as na;
 use std::isize;
 
 /// **Requires crate feature `"nalgebra-0_16"`**
@@ -18,7 +18,7 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate nalgebra;
+    /// # extern crate nalgebra_crate_0_16 as nalgebra;
     /// # extern crate ndarray;
     ///
     /// use nalgebra::Vector3;
@@ -52,7 +52,7 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate nalgebra;
+    /// # extern crate nalgebra_crate_0_16 as nalgebra;
     /// # extern crate ndarray;
     ///
     /// use nalgebra::MatrixSlice3x1;
@@ -101,7 +101,7 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate nalgebra;
+    /// # extern crate nalgebra_crate_0_16 as nalgebra;
     /// # extern crate ndarray;
     ///
     /// use nalgebra::MatrixSliceMut3x1;
@@ -161,7 +161,7 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate nalgebra;
+    /// # extern crate nalgebra_crate_0_16 as nalgebra;
     /// # extern crate ndarray;
     ///
     /// use nalgebra::Matrix2x3;
@@ -199,7 +199,7 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate nalgebra;
+    /// # extern crate nalgebra_crate_0_16 as nalgebra;
     /// # extern crate ndarray;
     ///
     /// use nalgebra::MatrixSlice2x3;
@@ -251,7 +251,7 @@ where
     /// # Example
     ///
     /// ```
-    /// # extern crate nalgebra;
+    /// # extern crate nalgebra_crate_0_16 as nalgebra;
     /// # extern crate ndarray;
     ///
     /// use nalgebra::MatrixSliceMut2x3;

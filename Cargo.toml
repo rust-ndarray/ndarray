@@ -42,8 +42,10 @@ blas-src = { version = "0.2.0", optional = true, default-features = false }
 matrixmultiply = { version = "0.2.0" }
 # Use via the `serde-1` crate feature!
 serde = { version = "1.0", optional = true }
-# Conversions from `nalgebra` types with `nalgebra-0_16` crate feature!
-nalgebra = { version = "0.16", optional = true }
+# Conversions from `nalgebra` 0.15 types with `nalgebra-0_15` crate feature!
+nalgebra-crate-0_15 = { package = "nalgebra", version = "0.15", optional = true }
+# Conversions from `nalgebra` 0.16 types with `nalgebra-0_16` crate feature!
+nalgebra-crate-0_16 = { package = "nalgebra", version = "0.16", optional = true }
 
 [dev-dependencies]
 defmac = "0.2"
@@ -65,10 +67,11 @@ test-blas-openblas-sys = ["blas"]
 test = ["test-blas-openblas-sys"]
 
 # This feature is used for docs
-docs = ["serde-1", "rayon", "nalgebra-0_16"]
+docs = ["serde-1", "rayon", "nalgebra-0_15", "nalgebra-0_16"]
 
 # Conversions from nalgebra types
-nalgebra-0_16 = ["nalgebra"]
+nalgebra-0_15 = ["nalgebra-crate-0_15"]
+nalgebra-0_16 = ["nalgebra-crate-0_16"]
 
 [profile.release]
 [profile.bench]
