@@ -1,6 +1,7 @@
 //! Type aliases for common array sizes
 //!
 
+#[allow(deprecated)]
 use ::{
     Ix,
     Array,
@@ -147,6 +148,8 @@ pub type ArrayViewMut6<'a, A> = ArrayViewMut<'a, A, Ix6>;
 pub type ArrayViewMutD<'a, A> = ArrayViewMut<'a, A, IxDyn>;
 
 /// one-dimensional shared ownership array
+#[allow(deprecated)]
 pub type RcArray1<A> = RcArray<A, Ix1>;
 /// two-dimensional shared ownership array
+#[allow(deprecated)]
 pub type RcArray2<A> = RcArray<A, Ix2>;

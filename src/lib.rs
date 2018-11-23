@@ -1043,7 +1043,7 @@ pub struct ArrayBase<S, D>
 /// It can act as both an owner as the data as well as a shared reference (view like).
 ///
 /// **Note: this type alias is obsolete.** See the equivalent [`ArcArray`] instead.
-// Use soon: #[deprecated(note="RcArray is replaced by ArcArray")]
+#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array where the data has shared ownership and is copy on write.

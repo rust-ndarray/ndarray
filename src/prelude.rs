@@ -19,6 +19,7 @@
 //! ```
 
 #[doc(no_inline)]
+#[allow(deprecated)]
 pub use {
     ArrayBase,
     Array,
