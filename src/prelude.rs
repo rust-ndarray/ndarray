@@ -23,6 +23,7 @@
 pub use {
     ArrayBase,
     Array,
+    ArcArray,
     RcArray,
     ArrayView,
     ArrayViewMut,
