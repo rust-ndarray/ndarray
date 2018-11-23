@@ -2,7 +2,7 @@
 extern crate ndarray;
 
 use ndarray::arr2;
-use ndarray::RcArray;
+use ndarray::ArcArray;
 
 #[test]
 fn test_swap() {
@@ -20,7 +20,7 @@ fn test_swap() {
 
 #[test]
 fn test() {
-    let c = RcArray::<(), _>::default((3, 4));
+    let c = ArcArray::<(), _>::default((3, 4));
     let mut d = c.clone();
     for _ in d.iter_mut() {}
 }
