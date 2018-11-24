@@ -43,9 +43,11 @@ macro_rules! zip_impl {
     ($([$name:ident $($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> Zip<($($p,)*), Dim>
+        impl<D, $($p),*> Zip<($($p,)*), D>
             where $($p::Item : Send , )*
                   $($p : Send , )*
+                  D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
         {
             /// The `par_apply` method for `Zip`.
             ///
