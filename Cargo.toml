@@ -59,7 +59,7 @@ test-blas-openblas-sys = ["blas"]
 test = ["test-blas-openblas-sys"]
 
 # This feature is used for docs
-docs = ["serde-1"]
+docs = ["serde-1", "rayon"]
 
 [profile.release]
 [profile.bench]
