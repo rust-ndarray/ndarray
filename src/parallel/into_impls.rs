@@ -1,8 +1,9 @@
-use {Array, RcArray, Dimension, ArrayView, ArrayViewMut};
+use {Array, ArcArray, Dimension, ArrayView, ArrayViewMut};
 
 use super::prelude::IntoParallelIterator;
 use super::Parallel;
 
+/// Requires crate feature `rayon`.
 impl<'a, A, D> IntoParallelIterator for &'a Array<A, D>
     where D: Dimension,
           A: Sync
@@ -15,7 +16,8 @@ impl<'a, A, D> IntoParallelIterator for &'a Array<A, D>
 }
 
 // This is allowed: goes through `.view()`
-impl<'a, A, D> IntoParallelIterator for &'a RcArray<A, D>
+/// Requires crate feature `rayon`.
+impl<'a, A, D> IntoParallelIterator for &'a ArcArray<A, D>
     where D: Dimension,
           A: Sync
 {
@@ -26,6 +28,7 @@ impl<'a, A, D> IntoParallelIterator for &'a RcArray<A, D>
     }
 }
 
+/// Requires crate feature `rayon`.
 impl<'a, A, D> IntoParallelIterator for &'a mut Array<A, D>
     where D: Dimension,
           A: Sync + Send
@@ -38,7 +41,8 @@ impl<'a, A, D> IntoParallelIterator for &'a mut Array<A, D>
 }
 
 // This is allowed: goes through `.view_mut()`, which is unique access
-impl<'a, A, D> IntoParallelIterator for &'a mut RcArray<A, D>
+/// Requires crate feature `rayon`.
+impl<'a, A, D> IntoParallelIterator for &'a mut ArcArray<A, D>
     where D: Dimension,
           A: Sync + Send + Clone,
 {

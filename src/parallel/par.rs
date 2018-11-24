@@ -28,6 +28,7 @@ struct ParallelProducer<I>(I);
 macro_rules! par_iter_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($iter_name:ident, [$($thread_bounds:tt)*]) => {
+    /// Requires crate feature `rayon`.
     impl<'a, A, D> IntoParallelIterator for $iter_name<'a, A, D>
         where D: Dimension,
               A: $($thread_bounds)*,
@@ -119,6 +120,7 @@ par_iter_wrapper!(AxisIterMut, [Send + Sync]);
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($view_name:ident, [$($thread_bounds:tt)*]) => {
+    /// Requires crate feature `rayon`.
     impl<'a, A, D> IntoParallelIterator for $view_name<'a, A, D>
         where D: Dimension,
               A: $($thread_bounds)*,
@@ -195,6 +197,7 @@ use {Zip, NdProducer, FoldWhile};
 macro_rules! zip_impl {
     ($([$($p:ident)*],)+) => {
         $(
+        /// Requires crate feature `rayon`.
         #[allow(non_snake_case)]
         impl<D, $($p),*> IntoParallelIterator for Zip<($($p,)*), D>
             where $($p::Item : Send , )*
