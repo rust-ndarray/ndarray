@@ -1,5 +1,6 @@
 
 use rayon::iter::ParallelIterator;
+use rayon::prelude::IntoParallelIterator;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::plumbing::{Consumer, UnindexedConsumer};
 use rayon::iter::plumbing::bridge;
@@ -14,8 +15,6 @@ use iter::AxisIterMut;
 use {Dimension};
 use {ArrayView, ArrayViewMut};
 
-use super::NdarrayIntoParallelIterator;
-
 /// Parallel iterator wrapper.
 #[derive(Copy, Clone, Debug)]
 pub struct Parallel<I> {
@@ -29,7 +28,7 @@ struct ParallelProducer<I>(I);
 macro_rules! par_iter_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($iter_name:ident, [$($thread_bounds:tt)*]) => {
-    impl<'a, A, D> NdarrayIntoParallelIterator for $iter_name<'a, A, D>
+    impl<'a, A, D> IntoParallelIterator for $iter_name<'a, A, D>
         where D: Dimension,
               A: $($thread_bounds)*,
     {
@@ -120,7 +119,7 @@ par_iter_wrapper!(AxisIterMut, [Send + Sync]);
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
     ($view_name:ident, [$($thread_bounds:tt)*]) => {
-    impl<'a, A, D> NdarrayIntoParallelIterator for $view_name<'a, A, D>
+    impl<'a, A, D> IntoParallelIterator for $view_name<'a, A, D>
         where D: Dimension,
               A: $($thread_bounds)*,
     {
@@ -197,7 +196,7 @@ macro_rules! zip_impl {
     ($([$($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> NdarrayIntoParallelIterator for Zip<($($p,)*), Dim>
+        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> IntoParallelIterator for Zip<($($p,)*), Dim>
             where $($p::Item : Send , )*
                   $($p : Send , )*
         {

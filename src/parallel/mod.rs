@@ -94,23 +94,14 @@
 /// Into- traits for creating parallelized iterators.
 pub mod prelude {
     // happy and insane; ignorance is bluss
-    pub use super::NdarrayIntoParallelIterator;
-    pub use super::NdarrayIntoParallelRefIterator;
-    pub use super::NdarrayIntoParallelRefMutIterator;
-
     #[doc(no_inline)]
-    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator};
+    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator,
+    IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
 }
 
 pub use self::par::Parallel;
-pub use self::into_traits::{
-    NdarrayIntoParallelIterator,
-    NdarrayIntoParallelRefIterator,
-    NdarrayIntoParallelRefMutIterator,
-};
 
 mod par;
 mod ext_traits;
-mod into_traits;
 mod into_impls;
 mod zipmacro;

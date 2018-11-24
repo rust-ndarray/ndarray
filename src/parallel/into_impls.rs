@@ -1,9 +1,9 @@
 use {Array, RcArray, Dimension, ArrayView, ArrayViewMut};
 
-use super::NdarrayIntoParallelIterator;
+use super::prelude::IntoParallelIterator;
 use super::Parallel;
 
-impl<'a, A, D> NdarrayIntoParallelIterator for &'a Array<A, D>
+impl<'a, A, D> IntoParallelIterator for &'a Array<A, D>
     where D: Dimension,
           A: Sync
 {
@@ -15,7 +15,7 @@ impl<'a, A, D> NdarrayIntoParallelIterator for &'a Array<A, D>
 }
 
 // This is allowed: goes through `.view()`
-impl<'a, A, D> NdarrayIntoParallelIterator for &'a RcArray<A, D>
+impl<'a, A, D> IntoParallelIterator for &'a RcArray<A, D>
     where D: Dimension,
           A: Sync
 {
@@ -26,7 +26,7 @@ impl<'a, A, D> NdarrayIntoParallelIterator for &'a RcArray<A, D>
     }
 }
 
-impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut Array<A, D>
+impl<'a, A, D> IntoParallelIterator for &'a mut Array<A, D>
     where D: Dimension,
           A: Sync + Send
 {
@@ -38,7 +38,7 @@ impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut Array<A, D>
 }
 
 // This is allowed: goes through `.view_mut()`, which is unique access
-impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut RcArray<A, D>
+impl<'a, A, D> IntoParallelIterator for &'a mut RcArray<A, D>
     where D: Dimension,
           A: Sync + Send + Clone,
 {
