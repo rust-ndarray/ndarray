@@ -100,16 +100,6 @@ pub mod prelude {
 
     #[doc(no_inline)]
     pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator};
-
-    pub use super::ext_traits::{
-        ParApply1,
-        ParApply2,
-        ParApply3,
-        ParApply4,
-        ParApply5,
-        ParApply6,
-    };
-    pub use super::ext_traits::ParMap;
 }
 
 pub use self::par::Parallel;

@@ -11,30 +11,23 @@ use parallel::prelude::*;
 
 // Arrays
 
-/// Parallel versions of `map_inplace` and `mapv_inplace`.
-pub trait ParMap {
-    type Item;
-    fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut Self::Item) + Sync + Send;
-    fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(Self::Item) -> Self::Item + Sync + Send,
-              Self::Item: Clone;
-}
 
-impl<A, S, D> ParMap for ArrayBase<S, D>
+impl<A, S, D> ArrayBase<S, D>
     where S: DataMut<Elem=A>,
           D: Dimension,
           A: Send + Sync,
 {
-    type Item = A;
-    fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut Self::Item) + Sync + Send
+    /// Parallel version of `map_inplace`
+    pub fn par_map_inplace<F>(&mut self, f: F)
+        where F: Fn(&mut A) + Sync + Send
     {
         self.view_mut().into_par_iter().for_each(f)
     }
-    fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(Self::Item) -> Self::Item + Sync + Send,
-              Self::Item: Clone
+
+    /// Parallel version of `mapv_inplace`.
+    pub fn par_mapv_inplace<F>(&mut self, f: F)
+        where F: Fn(A) -> A + Sync + Send,
+              A: Clone,
     {
         self.view_mut().into_par_iter()
             .for_each(move |x| *x = f(x.clone()))
@@ -49,21 +42,18 @@ impl<A, S, D> ParMap for ArrayBase<S, D>
 macro_rules! zip_impl {
     ($([$name:ident $($p:ident)*],)+) => {
         $(
-        /// The `par_apply` method for `Zip`.
-        ///
-        /// This is a shorthand for using `.into_par_iter().for_each()` on
-        /// `Zip`.
-        pub trait $name<$($p),*> {
-            fn par_apply<F>(self, function: F)
-                where F: Fn($($p),*) + Sync + Send;
-        }
-
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> $name<$($p::Item),*> for Zip<($($p,)*), Dim>
+        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> Zip<($($p,)*), Dim>
             where $($p::Item : Send , )*
                   $($p : Send , )*
         {
-            fn par_apply<F>(self, function: F)
+            /// The `par_apply` method for `Zip`.
+            ///
+            /// This is a shorthand for using `.into_par_iter().for_each()` on
+            /// `Zip`.
+            ///
+            /// Requires crate feature `rayon`.
+            pub fn par_apply<F>(self, function: F)
                 where F: Fn($($p::Item),*) + Sync + Send
             {
                 self.into_par_iter().for_each(move |($($p,)*)| function($($p),*))
