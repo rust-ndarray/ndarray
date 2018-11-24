@@ -1,8 +1,9 @@
 //! Parallelization features for ndarray.
 //!
 //! Parallelization features are based on the crate [rayon] and its parallel
-//! iterators. Ndarray implements conversions from its iterators to parallel
-//! iterators, and there are parallelized methods on arrays and on [Zip].
+//! iterators. Ndarray implements the parallel iterable traits for arrays
+//! and array views, for some of its iterators and for [Zip].
+//! There are also directly parallelized methods on arrays and on [Zip].
 //!
 //! This requires the crate feature `rayon` to be enabled.
 //!
