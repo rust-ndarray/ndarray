@@ -1101,6 +1101,10 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
+            match D::NDIM {
+                Some(1) => return strides[0] == 1 || dim[0] <= 1,
+                _ =>  { }
+            }
             if dim.slice().iter().any(|&d| d == 0) {
                 return true;
             }
