@@ -196,9 +196,11 @@ macro_rules! zip_impl {
     ($([$($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> IntoParallelIterator for Zip<($($p,)*), Dim>
+        impl<D, $($p),*> IntoParallelIterator for Zip<($($p,)*), D>
             where $($p::Item : Send , )*
                   $($p : Send , )*
+                  D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
         {
             type Item = ($($p::Item ,)*);
             type Iter = Parallel<Self>;
@@ -210,9 +212,11 @@ macro_rules! zip_impl {
         }
 
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> ParallelIterator for Parallel<Zip<($($p,)*), Dim>>
+        impl<D, $($p),*> ParallelIterator for Parallel<Zip<($($p,)*), D>>
             where $($p::Item : Send , )*
                   $($p : Send , )*
+                  D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
         {
             type Item = ($($p::Item ,)*);
 
@@ -228,9 +232,11 @@ macro_rules! zip_impl {
         }
 
         #[allow(non_snake_case)]
-        impl<Dim: Dimension, $($p: NdProducer<Dim=Dim>),*> UnindexedProducer for ParallelProducer<Zip<($($p,)*), Dim>>
+        impl<D, $($p),*> UnindexedProducer for ParallelProducer<Zip<($($p,)*), D>>
             where $($p : Send , )*
                   $($p::Item : Send , )*
+                  D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
         {
             type Item = ($($p::Item ,)*);
 
