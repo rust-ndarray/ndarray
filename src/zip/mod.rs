@@ -708,7 +708,10 @@ macro_rules! map_impl {
     ($([$notlast:ident $($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
-        impl<D: Dimension, $($p: NdProducer<Dim=D>),*> Zip<($($p,)*), D> {
+        impl<D, $($p),*> Zip<($($p,)*), D>
+            where D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
+        {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
             pub fn apply<F>(mut self, mut function: F)
