@@ -1,19 +1,33 @@
 //! Parallelization features for ndarray.
 //!
-//! The array views and references to owned arrays all implement
-//! `IntoParallelIterator`; the default parallel iterators (each element
-//! by reference or mutable reference) have no ordering guarantee in their
-//! parallel implementations.
+//! Parallelization features are based on the crate [rayon] and its parallel
+//! iterators. Ndarray implements conversions from its iterators to parallel
+//! iterators, and there are parallelized methods on arrays and on [Zip].
 //!
-//! `.axis_iter()` and `.axis_iter_mut()` also have parallel counterparts,
-//! and their parallel iterators are indexed (and thus ordered) and exact length.
+//! This requires the crate feature `rayon` to be enabled.
 //!
-//! `Zip` also implements `IntoParallelIterator`, and it has direct methods
-//! called `.par_apply()` that one can use as direct parallelized replacements
-//! for `.apply()`.
+//! The following implement [rayon::iter::IntoParallelIterator]:
+//!
+//! - [Array], [ArcArray]: `.par_iter()` and `.par_iter_mut()`
+//! - [ArrayView](ArrayView): `.into_par_iter()`
+//! - [ArrayViewMut](ArrayViewMut): `.into_par_iter()`
+//! - [AxisIter](iter::AxisIter), [AxisIterMut](iter::AxisIterMut): `.into_par_iter()`
+//! - [Zip] `.into_par_iter()`
+//!
+//! The following parallelized methods exist:
+//!
+//! - [ArrayBase::par_map_inplace()]
+//! - [ArrayBase::par_mapv_inplace()]
+//! - [Zip::par_apply()] (all arities)
+//!
+//! Note that you can use the parallel iterator for [Zip] to access all other
+//! rayon parallel iterator methods.
+//!
+//! Only the axis iterators are indexed parallel iterators, the rest are all
+//! “unindexed”. Use ndarray’s [Zip] for lock step parallel iteration of
+//! multiple arrays or producers at a time.
 //!
 //! # Examples
-//!
 //!
 //! ## Arrays and array views
 //!
