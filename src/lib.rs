@@ -87,6 +87,9 @@
 #[cfg(feature = "serde-1")]
 extern crate serde;
 
+#[cfg(feature="rayon")]
+extern crate rayon;
+
 #[cfg(feature="blas")]
 extern crate cblas_sys;
 #[cfg(feature="blas")]
@@ -1349,6 +1352,10 @@ mod impl_views;
 
 // Array raw view methods
 mod impl_raw_views;
+
+// parallel methods
+#[cfg(feature="rayon")]
+pub mod parallel;
 
 /// A contiguous array shape of n dimensions.
 ///
