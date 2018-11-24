@@ -1,18 +1,16 @@
 //! Parallelization features for ndarray.
 //!
 //! The array views and references to owned arrays all implement
-//! `NdarrayIntoParallelIterator` (*); the default parallel iterators (each element
+//! `IntoParallelIterator`; the default parallel iterators (each element
 //! by reference or mutable reference) have no ordering guarantee in their
 //! parallel implementations.
 //!
 //! `.axis_iter()` and `.axis_iter_mut()` also have parallel counterparts,
 //! and their parallel iterators are indexed (and thus ordered) and exact length.
 //!
-//! `Zip` also implements `NdarrayIntoParallelIterator`, and there is an
-//! extension trait so that it can use a method `.par_apply` directly.
-//!
-//! (*) This regime of a custom trait instead of rayon’s own is since we
-//! use this intermediate ndarray-parallel crate.
+//! `Zip` also implements `IntoParallelIterator`, and it has direct methods
+//! called `.par_apply()` that one can use as direct parallelized replacements
+//! for `.apply()`.
 //!
 //! # Examples
 //!
@@ -30,7 +28,7 @@
 //! fn main() {
 //!     let mut a = Array2::<f64>::zeros((128, 128));
 //!
-//!     // Parallel versions of regular array methods (ParMap trait)
+//!     // Parallel versions of regular array methods
 //!     a.par_map_inplace(|x| *x = x.exp());
 //!     a.par_mapv_inplace(f64::exp);
 //!
@@ -71,7 +69,6 @@
 //!
 //! use ndarray::Array3;
 //! use ndarray::Zip;
-//! use ndarray::parallel::prelude::*;
 //!
 //! type Array3f64 = Array3<f64>;
 //!
@@ -93,7 +90,6 @@
 
 /// Into- traits for creating parallelized iterators.
 pub mod prelude {
-    // happy and insane; ignorance is bluss
     #[doc(no_inline)]
     pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator,
     IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
