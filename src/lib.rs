@@ -65,9 +65,6 @@
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
-//! - `rustc-serialize`
-//!   - Optional, compatible with Rust stable
-//!   - Enables serialization support for rustc-serialize 0.3
 //! - `serde-1`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support for serde 1.0
@@ -89,8 +86,6 @@
 
 #[cfg(feature = "serde-1")]
 extern crate serde;
-#[cfg(feature = "rustc-serialize")]
-extern crate rustc_serialize as serialize;
 
 #[cfg(feature="blas")]
 extern crate cblas_sys;
@@ -143,8 +138,6 @@ mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde-1")]
 mod array_serde;
-#[cfg(feature = "rustc-serialize")]
-mod array_serialize;
 mod arrayformat;
 mod data_traits;
 

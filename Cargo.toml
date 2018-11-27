@@ -29,7 +29,6 @@ test = true
 [dependencies]
 num-traits = "0.2"
 num-complex = "0.2"
-rustc-serialize = { version = "0.3.20", optional = true }
 itertools = { version = "0.7.0", default-features = false }
 
 # Use via the `blas` crate feature!
@@ -58,7 +57,7 @@ test-blas-openblas-sys = ["blas"]
 test = ["test-blas-openblas-sys"]
 
 # This feature is used for docs
-docs = ["rustc-serialize", "serde-1"]
+docs = ["serde-1"]
 
 [profile.release]
 [profile.bench]

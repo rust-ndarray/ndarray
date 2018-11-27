@@ -8,13 +8,10 @@ publish = false
 test = false
 
 [dependencies]
-ndarray = { path = "../", features = ["serde-1", "rustc-serialize"] }
+ndarray = { path = "../", features = ["serde-1"] }
 
 [features]
 default = ["ron"]
-
-[dev-dependencies.rustc-serialize]
-version = "0.3.21"
 
 [dev-dependencies.serde]
 version = "1.0"
