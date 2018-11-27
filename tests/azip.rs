@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate ndarray;
 extern crate itertools;
 
@@ -51,7 +50,7 @@ fn test_azip2_sum() {
     for i in 0..2 {
         let ax = Axis(i);
         let mut b = Array::zeros(c.len_of(ax));
-        azip!(mut b, ref c (c.axis_iter(ax)) in { *b = c.scalar_sum() });
+        azip!(mut b, ref c (c.axis_iter(ax)) in { *b = c.sum() });
         assert!(b.all_close(&c.sum_axis(Axis(1 - i)), 1e-6));
     }
 }

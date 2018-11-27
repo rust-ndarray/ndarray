@@ -1,10 +1,10 @@
 [package]
 name = "ndarray-rand"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
-repository = "https://github.com/bluss/rust-ndarray"
+repository = "https://github.com/rust-ndarray/ndarray"
 documentation = "https://docs.rs/ndarray-rand/"
 
 description = "Constructors for randomized arrays. `rand` integration for `ndarray`."
@@ -12,7 +12,7 @@ description = "Constructors for randomized arrays. `rand` integration for `ndarr
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
-rand = "0.5.0"
+rand = "0.6.0"
 ndarray = { version = "0.12.0", path = ".." }
 
 [package.metadata.release]

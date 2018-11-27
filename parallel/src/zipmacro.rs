@@ -31,10 +31,10 @@
 ///
 /// ```rust
 /// extern crate ndarray;
-/// #[macro_use(par_azip)]
 /// extern crate ndarray_parallel;
 ///
 /// use ndarray::Array2;
+/// use ndarray_parallel::par_azip;
 ///
 /// type M = Array2<f32>;
 ///

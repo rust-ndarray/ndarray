@@ -8,6 +8,7 @@
 
 use serialize::{Encodable, Encoder, Decodable, Decoder};
 use super::arraytraits::ARRAY_FORMAT_VERSION;
+use super::dimension;
 
 use imp_prelude::*;
 
@@ -74,7 +75,9 @@ impl<A, S, D> Decodable for ArrayBase<S, D>
             let elements = try!(
                 d.read_struct_field("data", 2, |d| {
                     d.read_seq(|d, len| {
-                        if len != dim.size() {
+                        let dim_size = dimension::size_of_shape_checked(&dim)
+                            .map_err(|_| d.error("overflow calculating array size"))?;
+                        if len != dim_size {
                             Err(d.error("data and dimension must match in size"))
                         } else {
                             let mut elements = Vec::with_capacity(len);

@@ -8,8 +8,8 @@
 
 //! ndarray prelude.
 //!
-//! This module contains the most used types, type aliases, traits and
-//! functions that you can import easily as a group.
+//! This module contains the most used types, type aliases, traits, functions,
+//! and macros that you can import easily as a group.
 //!
 //! ```
 //! extern crate ndarray;
@@ -19,9 +19,11 @@
 //! ```
 
 #[doc(no_inline)]
+#[allow(deprecated)]
 pub use {
     ArrayBase,
     Array,
+    ArcArray,
     RcArray,
     ArrayView,
     ArrayViewMut,
@@ -54,6 +56,8 @@ pub use {
     aview0, aview1, aview2,
     aview_mut1,
 };
+
+pub use {array, azip, s};
 
 #[doc(no_inline)]
 pub use {

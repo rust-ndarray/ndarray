@@ -11,19 +11,21 @@
 //!
 
 use libnum::{Zero, One, Float};
+use std::isize;
+use std::mem;
 
 use imp_prelude::*;
 use StrideShape;
 use dimension;
 use linspace;
-use error::{self, ShapeError, ErrorKind};
+use error::{self, ShapeError};
 use indices;
 use indexes;
 use iterators::{to_vec, to_vec_mapped};
 
 /// # Constructor Methods for Owned Arrays
 ///
-/// Note that the constructor methods apply to `Array` and `RcArray`,
+/// Note that the constructor methods apply to `Array` and `ArcArray`,
 /// the two array types that have owned storage.
 ///
 /// ## Constructor methods for one-dimensional arrays.
@@ -32,16 +34,26 @@ impl<S, A> ArrayBase<S, Ix1>
 {
     /// Create a one-dimensional array from a vector (no copying needed).
     ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
     /// ```rust
     /// use ndarray::Array;
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
     pub fn from_vec(v: Vec<A>) -> Self {
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                v.len() <= isize::MAX as usize,
+                "Length must fit in `isize`.",
+            );
+        }
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
 
     /// Create a one-dimensional array from an iterable.
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -58,6 +70,8 @@ impl<S, A> ArrayBase<S, Ix1>
     /// Create a one-dimensional array from the inclusive interval
     /// `[start, end]` with `n` elements. `A` must be a floating point type.
     ///
+    /// **Panics** if `n` is greater than `isize::MAX`.
+    ///
     /// ```rust
     /// use ndarray::{Array, arr1};
     ///
@@ -73,6 +87,8 @@ impl<S, A> ArrayBase<S, Ix1>
     /// Create a one-dimensional array from the half-open interval
     /// `[start, end)` with elements spaced by `step`. `A` must be a floating
     /// point type.
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -93,7 +109,7 @@ impl<S, A> ArrayBase<S, Ix2>
 {
     /// Create an identity matrix of size `n` (square 2D array).
     ///
-    /// **Panics** if `n * n` would overflow usize.
+    /// **Panics** if `n * n` would overflow `isize`.
     pub fn eye(n: Ix) -> Self
         where S: DataMut,
               A: Clone + Zero + One,
@@ -107,22 +123,25 @@ impl<S, A> ArrayBase<S, Ix2>
 }
 
 #[cfg(not(debug_assertions))]
-macro_rules! size_checked_unwrap {
+macro_rules! size_of_shape_checked_unwrap {
     ($dim:expr) => {
-        match $dim.size_checked() {
-            Some(sz) => sz,
-            None => panic!("ndarray: Shape too large, number of elements overflows usize"),
+        match dimension::size_of_shape_checked($dim) {
+            Ok(sz) => sz,
+            Err(_) => panic!("ndarray: Shape too large, product of non-zero axis lengths overflows isize"),
         }
     }
 }
 
 #[cfg(debug_assertions)]
-macro_rules! size_checked_unwrap {
+macro_rules! size_of_shape_checked_unwrap {
     ($dim:expr) => {
-        match $dim.size_checked() {
-            Some(sz) => sz,
-            None => panic!("ndarray: Shape too large, number of elements overflows usize in shape {:?}",
-                           $dim),
+        match dimension::size_of_shape_checked($dim) {
+            Ok(sz) => sz,
+            Err(_) => panic!(
+                "ndarray: Shape too large, product of non-zero axis lengths \
+                 overflows isize in shape {:?}",
+                $dim
+            ),
         }
     }
 }
@@ -149,7 +168,7 @@ impl<S, A, D> ArrayBase<S, D>
 {
     /// Create an array with copies of `elem`, shape `shape`.
     ///
-    /// **Panics** if the number of elements in `shape` would overflow usize.
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     ///
     /// ```
     /// use ndarray::{Array, arr3, ShapeBuilder};
@@ -171,18 +190,15 @@ impl<S, A, D> ArrayBase<S, D>
         where A: Clone,
               Sh: ShapeBuilder<Dim=D>,
     {
-        // Note: We don't need to check the case of a size between
-        // isize::MAX -> usize::MAX; in this case, the vec constructor itself
-        // panics.
         let shape = shape.into_shape();
-        let size = size_checked_unwrap!(shape.dim);
+        let size = size_of_shape_checked_unwrap!(&shape.dim);
         let v = vec![elem; size];
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
     /// Create an array with zeros, shape `shape`.
     ///
-    /// **Panics** if the number of elements in `shape` would overflow usize.
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn zeros<Sh>(shape: Sh) -> Self
         where A: Clone + Zero,
               Sh: ShapeBuilder<Dim=D>,
@@ -192,7 +208,7 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array with ones, shape `shape`.
     ///
-    /// **Panics** if the number of elements in `shape` would overflow usize.
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn ones<Sh>(shape: Sh) -> Self
         where A: Clone + One,
               Sh: ShapeBuilder<Dim=D>,
@@ -202,13 +218,13 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array with default values, shape `shape`
     ///
-    /// **Panics** if the number of elements in `shape` would overflow usize.
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn default<Sh>(shape: Sh) -> Self
         where A: Default,
               Sh: ShapeBuilder<Dim=D>,
     {
         let shape = shape.into_shape();
-        let size = size_checked_unwrap!(shape.dim);
+        let size = size_of_shape_checked_unwrap!(&shape.dim);
         let v = to_vec((0..size).map(|_| A::default()));
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
@@ -216,15 +232,15 @@ impl<S, A, D> ArrayBase<S, D>
     /// Create an array with values created by the function `f`.
     ///
     /// `f` is called with the index of the element to create; the elements are
-    /// visited in arbitirary order.
+    /// visited in arbitrary order.
     ///
-    /// **Panics** if the number of elements in `shape` would overflow usize.
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
         where Sh: ShapeBuilder<Dim=D>,
               F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
-        let _ = size_checked_unwrap!(shape.dim);
+        let _ = size_of_shape_checked_unwrap!(&shape.dim);
         if shape.is_c {
             let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
@@ -242,14 +258,16 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// For a contiguous c- or f-order shape, the following applies:
     ///
-    /// **Errors** if `shape` does not correspond to the number of elements in `v`.
+    /// **Errors** if `shape` does not correspond to the number of elements in
+    /// `v` or if the shape/strides would result in overflowing `isize`.
     ///
     /// ----
     ///
     /// For custom strides, the following applies:
     ///
-    /// **Errors** if strides and dimensions can point out of bounds of `v`.<br>
-    /// **Errors** if strides allow multiple indices to point to the same element.
+    /// **Errors** if strides and dimensions can point out of bounds of `v`, if
+    /// strides allow multiple indices to point to the same element, or if the
+    /// shape/strides would result in overflowing `isize`.
     ///
     /// ```
     /// use ndarray::Array;
@@ -275,22 +293,40 @@ impl<S, A, D> ArrayBase<S, D>
 
     fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError>
     {
+        let dim = shape.dim;
+        let strides = shape.strides;
         if shape.custom {
-            Self::from_vec_dim_stride(shape.dim, shape.strides, v)
+            dimension::can_index_slice(&v, &dim, &strides)?;
         } else {
-            let dim = shape.dim;
-            let strides = shape.strides;
-            if dim.size_checked() != Some(v.len()) {
+            dimension::can_index_slice_not_custom::<A, _>(&v, &dim)?;
+            if dim.size() != v.len() {
                 return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
             }
-            unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
         }
+        unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
     }
 
-    /// Create an array from a vector and interpret it according to the
-    /// provided dimensions and strides. (No cloning of elements needed.)
+    /// Creates an array from a vector and interpret it according to the
+    /// provided shape and strides. (No cloning of elements needed.)
     ///
-    /// Unsafe because dimension and strides are unchecked.
+    /// The caller must ensure that the following conditions are met:
+    ///
+    /// 1. The ndim of `dim` and `strides` must be the same.
+    ///
+    /// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
+    ///
+    /// 3. For axes with length > 1, the stride must be nonnegative.
+    ///
+    /// 4. If the array will be empty (any axes are zero-length), the
+    ///    difference between the least address and greatest address accessible
+    ///    by moving along all axes must be ≤ `v.len()`.
+    ///
+    ///    If the array will not be empty, the difference between the least
+    ///    address and greatest address accessible by moving along all axes
+    ///    must be < `v.len()`.
+    ///
+    /// 5. The strides must not allow any element to be referenced by two different
+    ///    indices.
     pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
         where Sh: Into<StrideShape<D>>,
     {
@@ -298,28 +334,11 @@ impl<S, A, D> ArrayBase<S, D>
         Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
     }
 
-    fn from_vec_dim_stride(dim: D, strides: D, v: Vec<A>)
-        -> Result<Self, ShapeError>
-    {
-        dimension::can_index_slice(&v, &dim, &strides).map(|_| {
-            unsafe {
-                Self::from_vec_dim_stride_unchecked(dim, strides, v)
-            }
-        })
-    }
-
     unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
         -> Self
     {
         // debug check for issues that indicates wrong use of this constructor
-        debug_assert!(match dimension::can_index_slice(&v, &dim, &strides) {
-            Ok(_) => true,
-            Err(ref e) => match e.kind() {
-                ErrorKind::OutOfBounds => false,
-                ErrorKind::RangeLimited => false,
-                _ => true,
-            }
-        });
+        debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
@@ -330,7 +349,7 @@ impl<S, A, D> ArrayBase<S, D>
 
     /// Create an array with uninitalized elements, shape `shape`.
     ///
-    /// **Panics** if the number of elements in `shape` would overflow usize.
+    /// **Panics** if the number of elements in `shape` would overflow isize.
     ///
     /// ### Safety
     ///
@@ -351,10 +370,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// ### Examples
     ///
     /// ```
-    /// #[macro_use(s)]
     /// extern crate ndarray;
     ///
-    /// use ndarray::Array2;
+    /// use ndarray::{s, Array2};
     ///
     /// // Example Task: Let's create a column shifted copy of a in b
     ///
@@ -379,7 +397,7 @@ impl<S, A, D> ArrayBase<S, D>
               Sh: ShapeBuilder<Dim=D>,
     {
         let shape = shape.into_shape();
-        let size = size_checked_unwrap!(shape.dim);
+        let size = size_of_shape_checked_unwrap!(&shape.dim);
         let mut v = Vec::with_capacity(size);
         v.set_len(size);
         Self::from_shape_vec_unchecked(shape, v)

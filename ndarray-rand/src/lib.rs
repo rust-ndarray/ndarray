@@ -51,12 +51,12 @@ pub trait RandomExt<S, D>
     /// extern crate ndarray;
     /// extern crate ndarray_rand;
     ///
-    /// use rand::distributions::Range;
+    /// use rand::distributions::Uniform;
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
     ///
     /// # fn main() {
-    /// let a = Array::random((2, 5), Range::new(0., 10.));
+    /// let a = Array::random((2, 5), Uniform::new(0., 10.));
     /// println!("{:8.4}", a);
     /// // Example Output:
     /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],

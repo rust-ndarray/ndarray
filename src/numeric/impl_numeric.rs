@@ -15,7 +15,7 @@ use numeric_util;
 
 use {FoldWhile, Zip};
 
-/// Numerical methods for arrays.
+/// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
     where S: Data<Elem=A>,
           D: Dimension,
@@ -27,9 +27,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
-    /// assert_eq!(a.scalar_sum(), 10.);
+    /// assert_eq!(a.sum(), 10.);
     /// ```
-    pub fn scalar_sum(&self) -> A
+    pub fn sum(&self) -> A
         where A: Clone + Add<Output=A> + libnum::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
@@ -46,6 +46,17 @@ impl<A, S, D> ArrayBase<S, D>
         sum
     }
 
+    /// Return the sum of all elements in the array.
+    ///
+    /// *This method has been renamed to `.sum()` and will be deprecated in the
+    /// next version.*
+    // #[deprecated(note="renamed to `sum`", since="0.13")]
+    pub fn scalar_sum(&self) -> A
+        where A: Clone + Add<Output=A> + libnum::Zero,
+    {
+        self.sum()
+    }
+
     /// Return the product of all elements in the array.
     ///
     /// ```
@@ -53,9 +64,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// let a = arr2(&[[1., 2.],
     ///                [3., 4.]]);
-    /// assert_eq!(a.scalar_prod(), 24.);
+    /// assert_eq!(a.product(), 24.);
     /// ```
-    pub fn scalar_prod(&self) -> A
+    pub fn product(&self) -> A
         where A: Clone + Mul<Output=A> + libnum::One,
     {
         if let Some(slc) = self.as_slice_memory_order() {
@@ -99,11 +110,11 @@ impl<A, S, D> ArrayBase<S, D>
             // contiguous along the axis we are summing
             let ax = axis.index();
             for (i, elt) in enumerate(&mut res) {
-                *elt = self.subview(Axis(1 - ax), i).scalar_sum();
+                *elt = self.index_axis(Axis(1 - ax), i).sum();
             }
         } else {
             for i in 0..n {
-                let view = self.subview(axis, i);
+                let view = self.index_axis(axis, i);
                 res = res + &view;
             }
         }
@@ -160,8 +171,11 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    /// and `n` is the length of the axis.
+    ///
+    /// **Panics** if `ddof` is less than zero or greater than `n`, if `axis`
+    /// is out of bounds, or if `A::from_usize()` fails for any any of the
+    /// numbers in the range `0..=n`.
     ///
     /// # Example
     ///
@@ -176,27 +190,28 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
-        A: Float,
+        A: Float + FromPrimitive,
         D: RemoveAxis,
     {
-        let mut count = A::zero();
+        let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
+        let n = A::from_usize(self.len_of(axis)).expect("Converting length to `A` must not fail.");
+        assert!(
+            !(ddof < zero || ddof > n),
+            "`ddof` must not be less than zero or greater than the length of \
+             the axis",
+        );
+        let dof = n - ddof;
         let mut mean = Array::<A, _>::zeros(self.dim.remove_axis(axis));
         let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
-        for subview in self.axis_iter(axis) {
-            count = count + A::one();
+        for (i, subview) in self.axis_iter(axis).enumerate() {
+            let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
             azip!(mut mean, mut sum_sq, x (subview) in {
                 let delta = x - *mean;
                 *mean = *mean + delta / count;
                 *sum_sq = (x - *mean).mul_add(delta, *sum_sq);
             });
         }
-        if ddof >= count {
-            panic!("`ddof` needs to be strictly smaller than the length \
-                    of the axis you are computing the variance for!")
-        } else {
-            let dof = count - ddof;
-            sum_sq.mapv_into(|s| s / dof)
-        }
+        sum_sq.mapv_into(|s| s / dof)
     }
 
     /// Return standard deviation along `axis`.
@@ -224,8 +239,11 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    /// and `n` is the length of the axis.
+    ///
+    /// **Panics** if `ddof` is less than zero or greater than `n`, if `axis`
+    /// is out of bounds, or if `A::from_usize()` fails for any any of the
+    /// numbers in the range `0..=n`.
     ///
     /// # Example
     ///
@@ -240,7 +258,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
-        A: Float,
+        A: Float + FromPrimitive,
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())

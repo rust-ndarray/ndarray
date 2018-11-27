@@ -1,5 +1,3 @@
-
-#[macro_use(s)]
 extern crate ndarray;
 extern crate itertools;
 

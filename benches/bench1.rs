@@ -2,7 +2,6 @@
 #![allow(unused_imports)]
 
 extern crate test;
-#[macro_use(s, azip)]
 extern crate ndarray;
 
 use ndarray::{
@@ -13,7 +12,7 @@ use ndarray::{
     Array2,
     Zip,
 };
-use ndarray::{arr0, arr1, arr2};
+use ndarray::{arr0, arr1, arr2, azip, s};
 use ndarray::ShapeBuilder;
 
 use test::black_box;
@@ -174,55 +173,55 @@ fn iter_sum_2d_transpose_by_row(bench: &mut test::Bencher)
 }
 
 #[bench]
-fn scalar_sum_2d_regular(bench: &mut test::Bencher)
+fn sum_2d_regular(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros((64, 64));
     let a = black_box(a);
     bench.iter(|| {
-        a.scalar_sum()
+        a.sum()
     });
 }
 
 #[bench]
-fn scalar_sum_2d_cutout(bench: &mut test::Bencher)
+fn sum_2d_cutout(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
-        a.scalar_sum()
+        a.sum()
     });
 }
 
 #[bench]
-fn scalar_sum_2d_float(bench: &mut test::Bencher)
+fn sum_2d_float(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((64, 64));
     let a = black_box(a.view());
     bench.iter(|| {
-        a.scalar_sum()
+        a.sum()
     });
 }
 
 #[bench]
-fn scalar_sum_2d_float_cutout(bench: &mut test::Bencher)
+fn sum_2d_float_cutout(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]);
     let a = black_box(av);
     bench.iter(|| {
-        a.scalar_sum()
+        a.sum()
     });
 }
 
 #[bench]
-fn scalar_sum_2d_float_t_cutout(bench: &mut test::Bencher)
+fn sum_2d_float_t_cutout(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]).reversed_axes();
     let a = black_box(av);
     bench.iter(|| {
-        a.scalar_sum()
+        a.sum()
     });
 }
 

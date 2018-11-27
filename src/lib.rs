@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name="ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.11/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -41,6 +41,9 @@
 //!   + The crate is continuously developing, and breaking changes are expected
 //!     during evolution from version to version. We adopt the newest stable
 //!     rust features if we need them.
+//!   + Note that functions/methods/traits/etc. hidden from the docs are not
+//!     considered part of the public API, so changes to them are not
+//!     considered breaking changes.
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
@@ -53,7 +56,7 @@
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
 //!   + See also the [`ndarray-parallel`] crate for integration with rayon.
-//! - **Requires Rust 1.27**
+//! - **Requires Rust 1.30**
 //!
 //! [`ndarray-parallel`]: https://docs.rs/ndarray-parallel
 //!
@@ -96,9 +99,12 @@ extern crate blas_src;
 
 extern crate matrixmultiply;
 
-#[macro_use(izip)] extern crate itertools;
+extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+
+#[cfg(test)]
+extern crate quickcheck;
 
 #[cfg(feature = "docs")]
 pub mod doc;
@@ -183,6 +189,7 @@ pub use layout::Layout;
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
     pub use prelude::*;
+    pub use ArcArray;
     pub use {
         RemoveAxis,
         Data,
@@ -234,9 +241,13 @@ pub type Ixs = isize;
 /// + [Subviews](#subviews)
 /// + [Arithmetic Operations](#arithmetic-operations)
 /// + [Broadcasting](#broadcasting)
+/// + [Conversions](#conversions)
 /// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](#methods-for-all-array-types)
-///
+/// + [Methods For 1-D Arrays](#methods-for-1-d-arrays)
+/// + [Methods For 2-D Arrays](#methods-for-2-d-arrays)
+/// + [Methods for Dynamic-Dimensional Arrays](#methods-for-dynamic-dimensional-arrays)
+/// + [Numerical Methods for Arrays](#numerical-methods-for-arrays)
 ///
 /// ## `Array`
 ///
@@ -438,7 +449,7 @@ pub type Ixs = isize;
 ///
 /// You can use slicing to create a view of a subset of the data in
 /// the array. Slicing methods include [`.slice()`], [`.slice_mut()`],
-/// [`.slice_move()`], and [`.slice_inplace()`].
+/// [`.slice_move()`], and [`.slice_collapse()`].
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is an instance of
@@ -446,22 +457,21 @@ pub type Ixs = isize;
 ///
 /// [`&SliceInfo`]: struct.SliceInfo.html
 ///
-/// If a range is used, the axis is preserved. If an index is used, a subview
-/// is taken with respect to the axis. See [*Subviews*](#subviews) for more
-/// information about subviews. Note that [`.slice_inplace()`] behaves like
-/// [`.subview_inplace()`] by preserving the number of dimensions.
+/// If a range is used, the axis is preserved. If an index is used, that index
+/// is selected and the axis is removed; this selects a subview. See
+/// [*Subviews*](#subviews) for more information about subviews. Note that
+/// [`.slice_collapse()`] behaves like [`.collapse_axis()`] by preserving
+/// the number of dimensions.
 ///
 /// [`.slice()`]: #method.slice
 /// [`.slice_mut()`]: #method.slice_mut
 /// [`.slice_move()`]: #method.slice_move
-/// [`.slice_inplace()`]: #method.slice_inplace
+/// [`.slice_collapse()`]: #method.slice_collapse
 ///
 /// ```
-/// // import the s![] macro
-/// #[macro_use(s)]
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3};
+/// use ndarray::{arr2, arr3, s};
 ///
 /// fn main() {
 ///
@@ -498,7 +508,7 @@ pub type Ixs = isize;
 /// assert_eq!(d, e);
 /// assert_eq!(d.shape(), &[2, 1, 3]);
 ///
-/// // Let’s create a slice while taking a subview with
+/// // Let’s create a slice while selecting a subview with
 /// //
 /// // - Both submatrices of the greatest dimension: `..`
 /// // - The last row in each submatrix, removing that axis: `-1`
@@ -514,22 +524,36 @@ pub type Ixs = isize;
 /// ## Subviews
 ///
 /// Subview methods allow you to restrict the array view while removing one
-/// axis from the array. Subview methods include [`.subview()`],
-/// [`.subview_mut()`], [`.into_subview()`], and [`.subview_inplace()`]. You
-/// can also take a subview by using a single index instead of a range when
-/// slicing.
+/// axis from the array. Methods for selecting individual subviews include
+/// [`.index_axis()`], [`.index_axis_mut()`], [`.index_axis_move()`], and
+/// [`.index_axis_inplace()`]. You can also select a subview by using a single
+/// index instead of a range when slicing. Some other methods, such as
+/// [`.fold_axis()`], [`.axis_iter()`], [`.axis_iter_mut()`],
+/// [`.outer_iter()`], and [`.outer_iter_mut()`] operate on all the subviews
+/// along an axis.
 ///
-/// Subview takes two arguments: `axis` and `index`.
+/// A related method is [`.collapse_axis()`], which modifies the view in the
+/// same way as [`.index_axis()`] except for removing the collapsed axis, since
+/// it operates *in place*. The length of the axis becomes 1.
 ///
-/// [`.subview()`]: #method.subview
-/// [`.subview_mut()`]: #method.subview_mut
-/// [`.into_subview()`]: #method.into_subview
-/// [`.subview_inplace()`]: #method.subview_inplace
+/// Methods for selecting an individual subview take two arguments: `axis` and
+/// `index`.
+///
+/// [`.axis_iter()`]: #method.axis_iter
+/// [`.axis_iter_mut()`]: #method.axis_iter_mut
+/// [`.fold_axis()`]: #method.fold_axis
+/// [`.index_axis()`]: #method.index_axis
+/// [`.index_axis_inplace()`]: #method.index_axis_inplace
+/// [`.index_axis_mut()`]: #method.index_axis_mut
+/// [`.index_axis_move()`]: #method.index_axis_move
+/// [`.collapse_axis()`]: #method.collapse_axis
+/// [`.outer_iter()`]: #method.outer_iter
+/// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
-/// #[macro_use(s)] extern crate ndarray;
+/// extern crate ndarray;
 ///
-/// use ndarray::{arr3, aview1, aview2, Axis};
+/// use ndarray::{arr3, aview1, aview2, s, Axis};
 ///
 /// # fn main() {
 ///
@@ -547,8 +571,8 @@ pub type Ixs = isize;
 /// // Let’s take a subview along the greatest dimension (axis 0),
 /// // taking submatrix 0, then submatrix 1
 ///
-/// let sub_0 = a.subview(Axis(0), 0);
-/// let sub_1 = a.subview(Axis(0), 1);
+/// let sub_0 = a.index_axis(Axis(0), 0);
+/// let sub_1 = a.index_axis(Axis(0), 1);
 ///
 /// assert_eq!(sub_0, aview2(&[[ 1,  2,  3],
 ///                            [ 4,  5,  6]]));
@@ -557,7 +581,7 @@ pub type Ixs = isize;
 /// assert_eq!(sub_0.shape(), &[2, 3]);
 ///
 /// // This is the subview picking only axis 2, column 0
-/// let sub_col = a.subview(Axis(2), 0);
+/// let sub_col = a.index_axis(Axis(2), 0);
 ///
 /// assert_eq!(sub_col, aview2(&[[ 1,  4],
 ///                              [ 7, 10]]));
@@ -567,14 +591,6 @@ pub type Ixs = isize;
 /// assert_eq!(double_sub, aview1(&[7, 10]));
 /// # }
 /// ```
-///
-/// [`.subview_inplace()`] modifies the view in the same way as [`.subview()`],
-/// but since it is *in place*, it cannot remove the collapsed axis. It becomes
-/// an axis of length 1.
-///
-/// `.outer_iter()` is an iterator of every subview along the zeroth (outer)
-/// axis, while `.axis_iter()` is an iterator of every subview along a
-/// specific axis.
 ///
 /// ## Arithmetic Operations
 ///
@@ -646,15 +662,374 @@ pub type Ixs = isize;
 /// );
 /// ```
 ///
+/// ## Conversions
+///
+/// ### Conversions Between Array Types
+///
+/// This table is a summary of the conversions between arrays of different
+/// ownership, dimensionality, and element type. All of the conversions in this
+/// table preserve the shape of the array.
+///
+/// <table>
+/// <tr>
+/// <th rowspan="2">Output</th>
+/// <th colspan="4">Input</th>
+/// </tr>
+///
+/// <tr>
+/// <td>
+///
+/// `Array<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArrayView<'a, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArrayViewMut<'a, A, D>`
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `Array<A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `Array<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_owned()`][.into_owned()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned()`][.to_owned()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned()`][.to_owned()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `ArcArray<A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.to_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `ArrayView<'b, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArrayView<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()] or [`a.reborrow()`][ArrayView::reborrow()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `ArrayViewMut<'b, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArrayViewMut<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
+/// illegal
+///
+/// </td>
+/// <td>
+///
+/// [`a.view_mut()`][.view_mut()] or [`a.reborrow()`][ArrayViewMut::reborrow()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to equivalent with dim `D2`-->
+///
+/// <tr>
+/// <td>
+///
+/// equivalent with dim `D2` (e.g. converting from dynamic dim to const dim)
+///
+/// </td>
+/// <td colspan="4">
+///
+/// [`a.into_dimensionality::<D2>()`][.into_dimensionality()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to equivalent with dim `IxDyn`-->
+///
+/// <tr>
+/// <td>
+///
+/// equivalent with dim `IxDyn`
+///
+/// </td>
+/// <td colspan="4">
+///
+/// [`a.into_dyn()`][.into_dyn()]
+///
+/// </td>
+/// </tr>
+///
+/// <!--Conversions to `Array<B, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `Array<B, D>` (new element type)
+///
+/// </td>
+/// <td colspan="4">
+///
+/// [`a.map(|x| x.do_your_conversion())`][.map()]
+///
+/// </td>
+/// </tr>
+/// </table>
+///
+/// ### Conversions Between Arrays and `Vec`s/Slices/Scalars
+///
+/// This is a table of the safe conversions between arrays and
+/// `Vec`s/slices/scalars. Note that some of the return values are actually
+/// `Result`/`Option` wrappers around the indicated output types.
+///
+/// Input | Output | Methods
+/// ------|--------|--------
+/// `Vec<A>` | `ArrayBase<S: DataOwned, Ix1>` | [`::from_vec()`](#method.from_vec)
+/// `Vec<A>` | `ArrayBase<S: DataOwned, D>` | [`::from_shape_vec()`](#method.from_shape_vec)
+/// `&[A]` | `ArrayView1<A>` | [`::from()`](type.ArrayView.html#method.from)
+/// `&[A]` | `ArrayView<A, D>` | [`::from_shape()`](type.ArrayView.html#method.from_shape)
+/// `&mut [A]` | `ArrayViewMut1<A>` | [`::from()`](type.ArrayViewMut.html#method.from)
+/// `&mut [A]` | `ArrayViewMut<A, D>` | [`::from_shape()`](type.ArrayViewMut.html#method.from_shape)
+/// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](#method.to_vec)
+/// `Array<A, D>` | `Vec<A>` | [`.into_raw_vec()`](type.Array.html#method.into_raw_vec)<sup>[1](#into_raw_vec)</sup>
+/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[3](#req_contig)</sup>
+/// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
+/// `ArrayView<A, D>` | `&[A]` | [`.into_slice()`](type.ArrayView.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
+/// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
+/// `Array0<A>` | `A` | [`.into_scalar()`](type.Array.html#method.into_scalar)
+///
+/// <sup><a name="into_raw_vec">1</a></sup>Returns the data in memory order.
+///
+/// <sup><a name="req_contig_std">2</a></sup>Works only if the array is
+/// contiguous and in standard order.
+///
+/// <sup><a name="req_contig">3</a></sup>Works only if the array is contiguous.
+///
+/// The table above does not include all the constructors; it only shows
+/// conversions to/from `Vec`s/slices. See below for more constructors.
+///
+/// [ArrayView::reborrow()]: type.ArrayView.html#method.reborrow
+/// [ArrayViewMut::reborrow()]: type.ArrayViewMut.html#method.reborrow
+/// [.into_dimensionality()]: #method.into_dimensionality
+/// [.into_dyn()]: #method.into_dyn
+/// [.into_owned()]: #method.into_owned
+/// [.into_shared()]: #method.into_shared
+/// [.to_owned()]: #method.to_owned
+/// [.map()]: #method.map
+/// [.view()]: #method.view
+/// [.view_mut()]: #method.view_mut
+///
+// # For implementors
+//
+// All methods must uphold the following constraints:
+//
+// 1. `data` must correctly represent the data buffer / ownership information,
+//    `ptr` must point into the data represented by `data`, and the `dim` and
+//    `strides` must be consistent with `data`. For example,
+//
+//    * If `data` is `OwnedRepr<A>`, all elements represented by `ptr`, `dim`,
+//      and `strides` must be owned by the `Vec` and not aliased by multiple
+//      indices.
+//
+//    * If `data` is `ViewRepr<&'a mut A>`, all elements represented by `ptr`,
+//      `dim`, and `strides` must be exclusively borrowed and not aliased by
+//      multiple indices.
+//
+// 2. `ptr` must be non-null and aligned, and it must be safe to [`.offset()`]
+//    `ptr` by zero.
+//
+// 3. It must be safe to [`.offset()`] the pointer repeatedly along all axes
+//    and calculate the `count`s for the `.offset()` calls without overflow,
+//    even if the array is empty or the elements are zero-sized.
+//
+//    More specifically, the set of all possible (signed) offset counts
+//    relative to `ptr` can be determined by the following (the casts and
+//    arithmetic must not overflow):
+//
+//    ```rust
+//    /// Returns all the possible offset `count`s relative to `ptr`.
+//    fn all_offset_counts(shape: &[usize], strides: &[isize]) -> BTreeSet<isize> {
+//        assert_eq!(shape.len(), strides.len());
+//        let mut all_offsets = BTreeSet::<isize>::new();
+//        all_offsets.insert(0);
+//        for axis in 0..shape.len() {
+//            let old_offsets = all_offsets.clone();
+//            for index in 0..shape[axis] {
+//                assert!(index <= isize::MAX as usize);
+//                let off = (index as isize).checked_mul(strides[axis]).unwrap();
+//                for &old_offset in &old_offsets {
+//                    all_offsets.insert(old_offset.checked_add(off).unwrap());
+//                }
+//            }
+//        }
+//        all_offsets
+//    }
+//    ```
+//
+//    Note that it must be safe to offset the pointer *repeatedly* along all
+//    axes, so in addition for it being safe to offset `ptr` by each of these
+//    counts, the difference between the least and greatest address reachable
+//    by these offsets in units of `A` and in units of bytes must not be
+//    greater than `isize::MAX`.
+//
+//    In other words,
+//
+//    * All possible pointers generated by moving along all axes must be in
+//      bounds or one byte past the end of a single allocation with element
+//      type `A`. The only exceptions are if the array is empty or the element
+//      type is zero-sized. In these cases, `ptr` may be dangling, but it must
+//      still be safe to [`.offset()`] the pointer along the axes.
+//
+//    * The offset in units of bytes between the least address and greatest
+//      address by moving along all axes must not exceed `isize::MAX`. This
+//      constraint prevents the computed offset, in bytes, from overflowing
+//      `isize` regardless of the starting point due to past offsets.
+//
+//    * The offset in units of `A` between the least address and greatest
+//      address by moving along all axes must not exceed `isize::MAX`. This
+//      constraint prevents overflow when calculating the `count` parameter to
+//      [`.offset()`] regardless of the starting point due to past offsets.
+//
+//    For example, if the shape is [2, 0, 3] and the strides are [3, 6, -1],
+//    the offsets of interest relative to `ptr` are -2, -1, 0, 1, 2, 3. So,
+//    `ptr.offset(-2)`, `ptr.offset(-1)`, …, `ptr.offset(3)` must be pointers
+//    within a single allocation with element type `A`; `(3 - (-2)) *
+//    size_of::<A>()` must not exceed `isize::MAX`, and `3 - (-2)` must not
+//    exceed `isize::MAX`. Note that this is a requirement even though the
+//    array is empty (axis 1 has length 0).
+//
+//    A dangling pointer can be used when creating an empty array, but this
+//    usually means all the strides have to be zero. A dangling pointer that
+//    can safely be offset by zero bytes can be constructed with
+//    `::std::ptr::NonNull::<A>::dangling().as_ptr()`. (It isn't entirely clear
+//    from the documentation that a pointer created this way is safe to
+//    `.offset()` at all, even by zero bytes, but the implementation of
+//    `Vec<A>` does this, so we can too. See rust-lang/rust#54857 for details.)
+//
+// 4. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
+//    also implies that the length of any individual axis must not exceed
+//    `isize::MAX`, and an array can contain at most `isize::MAX` elements.)
+//    This constraint makes various calculations easier because they don't have
+//    to worry about overflow and axis lengths can be freely cast to `isize`.
+//
+// Constraints 2–4 are carefully designed such that if they're upheld for the
+// array, they're also upheld for any subset of axes of the array as well as
+// slices/subviews/reshapes of the array. This is important for iterators that
+// produce subviews (and other similar cases) to be safe without extra (easy to
+// forget) checks for zero-length axes. Constraint 1 is similarly upheld for
+// any subset of axes and slices/subviews/reshapes, except when removing a
+// zero-length axis (since if the other axes are non-zero-length, that would
+// allow accessing elements that should not be possible to access).
+//
+// Method/function implementations can rely on these constraints being upheld.
+// The constraints can be temporarily violated within a method/function
+// implementation since `ArrayBase` doesn't implement `Drop` and `&mut
+// ArrayBase` is `!UnwindSafe`, but the implementation must not call
+// methods/functions on the array while it violates the constraints.
+//
+// Users of the `ndarray` crate cannot rely on these constraints because they
+// may change in the future.
+//
+// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
 pub struct ArrayBase<S, D>
     where S: Data
 {
-    /// Rc data when used as view, Uniquely held data when being mutated
+    /// Data buffer / ownership information. (If owned, contains the data
+    /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
-    /// A pointer into the buffer held by data, may point anywhere
-    /// in its range.
+    /// A non-null and aligned pointer into the buffer held by `data`; may
+    /// point anywhere in its range.
     ptr: *mut S::Elem,
-    /// The size of each axis
+    /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
     strides: D,
@@ -665,7 +1040,7 @@ pub struct ArrayBase<S, D>
 /// It can act as both an owner as the data as well as a shared reference (view like).
 ///
 /// **Note: this type alias is obsolete.** See the equivalent [`ArcArray`] instead.
-// Use soon: #[deprecated(note="RcArray is replaced by ArcArray")]
+#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array where the data has shared ownership and is copy on write.
@@ -892,6 +1267,7 @@ impl<A, S, D> ArrayBase<S, D>
 
 mod impl_1d;
 mod impl_2d;
+mod impl_dyn;
 
 mod numeric;
 

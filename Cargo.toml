@@ -1,12 +1,15 @@
 [package]
 
 name = "ndarray"
-version = "0.12.0"
-authors = ["bluss"]
+version = "0.12.1"
+authors = [
+  "bluss",
+  "Jim Turner"
+]
 license = "MIT/Apache-2.0"
 readme = "README-crates.io.md"
 
-repository = "https://github.com/bluss/ndarray"
+repository = "https://github.com/rust-ndarray/ndarray"
 documentation = "https://docs.rs/ndarray/"
 
 description = "An n-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
@@ -33,12 +36,13 @@ itertools = { version = "0.7.0", default-features = false }
 cblas-sys = { version = "0.1.4", optional = true, default-features = false }
 blas-src = { version = "0.2.0", optional = true, default-features = false }
 
-matrixmultiply = { version = "0.1.13" }
+matrixmultiply = { version = "0.2.0" }
 # Use via the `serde-1` crate feature!
 serde = { version = "1.0", optional = true }
 
 [dev-dependencies]
-defmac = "0.1"
+defmac = "0.2"
+quickcheck = { version = "0.7.2", default-features = false }
 rawpointer = "0.1"
 
 [features]

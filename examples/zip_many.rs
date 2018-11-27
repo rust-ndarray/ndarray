@@ -1,5 +1,3 @@
-
-#[macro_use]
 extern crate ndarray;
 
 use ndarray::prelude::*;
@@ -28,13 +26,13 @@ fn main() {
     // sum of each row
     let ax = Axis(0);
     let mut sums = Array::zeros(a.len_of(ax));
-    azip!(mut sums, ref a (a.axis_iter(ax)) in { *sums = a.scalar_sum() });
+    azip!(mut sums, ref a (a.axis_iter(ax)) in { *sums = a.sum() });
 
     // sum of each chunk
     let chunk_sz = (2, 2);
     let nchunks = (n / chunk_sz.0, n / chunk_sz.1);
     let mut sums = Array::zeros(nchunks);
-    azip!(mut sums, ref a (a.exact_chunks(chunk_sz)) in { *sums = a.scalar_sum() });
+    azip!(mut sums, ref a (a.exact_chunks(chunk_sz)) in { *sums = a.sum() });
 
 
     // Let's imagine we split to parallelize

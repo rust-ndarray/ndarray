@@ -19,7 +19,10 @@ pub trait RemoveAxis : Dimension {
 
 impl RemoveAxis for Dim<[Ix; 1]> {
     #[inline]
-    fn remove_axis(&self, _: Axis) -> Ix0 { Ix0() }
+    fn remove_axis(&self, axis: Axis) -> Ix0 {
+        debug_assert!(axis.index() < self.ndim());
+        Ix0()
+    }
 }
 
 impl RemoveAxis for Dim<[Ix; 2]> {
@@ -38,6 +41,7 @@ macro_rules! impl_remove_axis_array(
         {
             #[inline]
             fn remove_axis(&self, axis: Axis) -> Self::Smaller {
+                debug_assert!(axis.index() < self.ndim());
                 let mut tup = Dim([0; $n - 1]);
                 {
                     let mut it = tup.slice_mut().iter_mut();

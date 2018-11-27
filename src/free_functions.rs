@@ -9,14 +9,16 @@
 use std::slice;
 use std::mem::{size_of, forget};
 
+use dimension;
 use imp_prelude::*;
 
 /// Create an [**`Array`**](type.Array.html) with one, two or
 /// three dimensions.
 ///
 /// ```
-/// #[macro_use(array)]
 /// extern crate ndarray;
+///
+/// use ndarray::array;
 ///
 /// fn main() {
 ///     let a1 = array![1, 2, 3, 4];
@@ -36,7 +38,7 @@ use imp_prelude::*;
 /// This macro uses `vec![]`, and has the same ownership semantics;
 /// elements are moved into the resulting `Array`.
 ///
-/// Use `array![...].into_shared()` to create an `RcArray`.
+/// Use `array![...].into_shared()` to create an `ArcArray`.
 #[macro_export]
 macro_rules! array {
     ($([$([$($x:expr),* $(,)*]),+ $(,)*]),+ $(,)*) => {{
@@ -62,7 +64,7 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> RcArray<A, Ix1> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray<A, Ix1> {
     arr1(xs).into_shared()
 }
 
@@ -81,23 +83,32 @@ pub fn aview0<A>(x: &A) -> ArrayView0<A> {
 /// // Create a 2D array view from borrowed data
 /// let a2d = aview1(&data).into_shape((32, 32)).unwrap();
 ///
-/// assert!(
-///     a2d.scalar_sum() == 1024.0
-/// );
+/// assert_eq!(a2d.sum(), 1024.0);
 /// ```
 pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
     ArrayView::from(xs)
 }
 
 /// Create a two-dimensional array view with elements borrowing `xs`.
+///
+/// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
+/// can only occur when `V` is zero-sized.)
 pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
     let cols = V::len();
     let rows = xs.len();
-    let data = unsafe {
-        slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows)
-    };
     let dim = Ix2(rows, cols);
+    if size_of::<V>() == 0 {
+        dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
+    }
+    // `rows` is guaranteed to fit in `isize` because we've checked the ZST
+    // case and slices never contain > `isize::MAX` bytes. `cols` is guaranteed
+    // to fit in `isize` because `FixedInitializer` is not implemented for any
+    // array lengths > `isize::MAX`. `cols * rows` is guaranteed to fit in
+    // `isize` because we've checked the ZST case and slices never contain >
+    // `isize::MAX` bytes.
     unsafe {
+        let data = slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows);
         ArrayView::from_shape_ptr(dim, data.as_ptr())
     }
 }
@@ -105,10 +116,9 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
 /// Create a one-dimensional read-write array view with elements borrowing `xs`.
 ///
 /// ```
-/// #[macro_use(s)]
 /// extern crate ndarray;
 ///
-/// use ndarray::aview_mut1;
+/// use ndarray::{aview_mut1, s};
 ///
 /// // Create an array view over some data, then slice it and modify it.
 /// fn main() {
@@ -125,6 +135,9 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 }
 
 /// Create a two-dimensional read-write array view with elements borrowing `xs`.
+///
+/// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
+/// can only occur when `V` is zero-sized.)
 ///
 /// # Example
 ///
@@ -149,11 +162,19 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 pub fn aview_mut2<A, V: FixedInitializer<Elem=A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
     let cols = V::len();
     let rows = xs.len();
-    let data = unsafe {
-        slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows)
-    };
     let dim = Ix2(rows, cols);
+    if size_of::<V>() == 0 {
+        dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
+    }
+    // `rows` is guaranteed to fit in `isize` because we've checked the ZST
+    // case and slices never contain > `isize::MAX` bytes. `cols` is guaranteed
+    // to fit in `isize` because `FixedInitializer` is not implemented for any
+    // array lengths > `isize::MAX`. `cols * rows` is guaranteed to fit in
+    // `isize` because we've checked the ZST case and slices never contain >
+    // `isize::MAX` bytes.
     unsafe {
+        let data = slice::from_raw_parts_mut(xs.as_mut_ptr() as *mut A, cols * rows);
         ArrayViewMut::from_shape_ptr(dim, data.as_mut_ptr())
     }
 }
@@ -181,6 +202,11 @@ macro_rules! impl_arr_init {
 
 }
 
+// For implementors: If you ever implement `FixedInitializer` for array lengths
+// > `isize::MAX` (e.g. once Rust adds const generics), you must update
+// `aview2` and `aview_mut2` to perform the necessary checks. In particular,
+// the assumption that `cols` can never exceed `isize::MAX` would be incorrect.
+// (Consider e.g. `let xs: &[[i32; ::std::usize::MAX]] = &[]`.)
 impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 
 /// Create a two-dimensional array with elements from `xs`.
@@ -209,13 +235,15 @@ impl<A> From<Vec<A>> for Array1<A> {
 impl<A, V> From<Vec<V>> for Array2<A>
     where V: FixedInitializer<Elem = A>
 {
+    /// Converts the `Vec` of arrays to an owned 2-D array.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     fn from(mut xs: Vec<V>) -> Self {
-        let (m, n) = (xs.len(), V::len());
-        let dim = Ix2(m, n);
+        let dim = Ix2(xs.len(), V::len());
         let ptr = xs.as_mut_ptr();
-        let len = xs.len();
         let cap = xs.capacity();
-        let expand_len = len * V::len();
+        let expand_len = dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
@@ -223,6 +251,8 @@ impl<A, V> From<Vec<V>> for Array2<A>
             } else if V::len() == 0 {
                 Vec::new()
             } else {
+                // Guaranteed not to overflow in this case since A is non-ZST
+                // and Vec never allocates more than isize bytes.
                 let expand_cap = cap * V::len();
                 Vec::from_raw_parts(ptr as *mut A, expand_len, expand_cap)
             };
@@ -235,12 +265,15 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
     where V: FixedInitializer<Elem=U>,
           U: FixedInitializer<Elem=A>
 {
+    /// Converts the `Vec` of arrays to an owned 3-D array.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     fn from(mut xs: Vec<V>) -> Self {
         let dim = Ix3(xs.len(), V::len(), U::len());
         let ptr = xs.as_mut_ptr();
-        let len = xs.len();
         let cap = xs.capacity();
-        let expand_len = len * V::len() * U::len();
+        let expand_len = dimension::size_of_shape_checked(&dim)
+            .expect("Product of non-zero axis lengths must not overflow isize.");
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
@@ -248,6 +281,8 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
             } else if V::len() == 0 || U::len() == 0 {
                 Vec::new()
             } else {
+                // Guaranteed not to overflow in this case since A is non-ZST
+                // and Vec never allocates more than isize bytes.
                 let expand_cap = cap * V::len() * U::len();
                 Vec::from_raw_parts(ptr as *mut A, expand_len, expand_cap)
             };
@@ -258,7 +293,7 @@ impl<A, V, U> From<Vec<V>> for Array3<A>
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> RcArray<A, Ix2> {
+pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray<A, Ix2> {
     arr2(xs).into_shared()
 }
 
@@ -289,7 +324,7 @@ pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(
 
 /// Create a three-dimensional array with elements from `xs`.
 pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> RcArray<A, Ix3>
+    -> ArcArray<A, Ix3>
     where V: Clone, U: Clone,
 {
     arr3(xs).into_shared()

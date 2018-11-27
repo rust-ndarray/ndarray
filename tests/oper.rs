@@ -1,5 +1,5 @@
-#[macro_use] extern crate defmac;
-#[macro_use(s)] extern crate ndarray;
+extern crate defmac;
+extern crate ndarray;
 extern crate num_traits;
 
 use ndarray::prelude::*;
@@ -11,6 +11,7 @@ use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
 
 use std::fmt;
 use std::ops::Neg;
+use defmac::defmac;
 use num_traits::Float;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
@@ -31,7 +32,7 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<A, D>(op: &str, mut aa: RcArray<A, D>, bb: RcArray<A, D>, cc: RcArray<A, D>)
+fn test_oper_arr<A, D>(op: &str, mut aa: ArcArray<A, D>, bb: ArcArray<A, D>, cc: ArcArray<A, D>)
 where
     A: NdFloat,
     for<'a> &'a A: Neg<Output=A>,
@@ -109,7 +110,7 @@ fn scalar_operations()
 
     {
         let mut x = c.clone();
-        let mut y = RcArray::zeros((2, 2));
+        let mut y = ArcArray::zeros((2, 2));
         x += 1.;
         y.fill(2.);
         assert_eq!(x, c + arr0(1.));
@@ -235,7 +236,7 @@ fn dot_product_neg_stride() {
 #[test]
 fn fold_and_sum() {
     let a = Array::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
-    assert_approx_eq(a.fold(0., |acc, &x| acc +x), a.scalar_sum(), 1e-5);
+    assert_approx_eq(a.fold(0., |acc, &x| acc +x), a.sum(), 1e-5);
 
     // test different strides
     let max = 8 as Ixs;
@@ -247,7 +248,7 @@ fn fold_and_sum() {
                 sum += *elt;
             }
             assert_approx_eq(a1.fold(0., |acc, &x| acc +x), sum, 1e-5);
-            assert_approx_eq(sum, a1.scalar_sum(), 1e-5);
+            assert_approx_eq(sum, a1.sum(), 1e-5);
         }
     }
 
@@ -272,9 +273,9 @@ fn fold_and_sum() {
 }
 
 #[test]
-fn scalar_prod() {
+fn product() {
     let a = Array::linspace(0.5, 2., 128).into_shape((8, 16)).unwrap();
-    assert_approx_eq(a.fold(1., |acc, &x| acc * x), a.scalar_prod(), 1e-5);
+    assert_approx_eq(a.fold(1., |acc, &x| acc * x), a.product(), 1e-5);
 
     // test different strides
     let max = 8 as Ixs;
@@ -286,7 +287,7 @@ fn scalar_prod() {
                 prod *= *elt;
             }
             assert_approx_eq(a1.fold(1., |acc, &x| acc * x), prod, 1e-5);
-            assert_approx_eq(prod, a1.scalar_prod(), 1e-5);
+            assert_approx_eq(prod, a1.product(), 1e-5);
         }
     }
 }

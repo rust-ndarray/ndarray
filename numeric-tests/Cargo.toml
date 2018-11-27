@@ -7,7 +7,7 @@ publish = false
 [dependencies]
 ndarray = { path = ".." }
 ndarray-rand = { path = "../ndarray-rand/" }
-rand = "0.5.0"
+rand = "0.6.0"
 
 [lib]
 test = false

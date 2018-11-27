@@ -47,6 +47,8 @@ pub enum ErrorKind {
     OutOfBounds,
     /// aliasing array elements
     Unsupported,
+    /// overflow when computing offset, length, etc.
+    Overflow,
     #[doc(hidden)]
     __Incomplete,
 }
@@ -80,6 +82,7 @@ impl Error for ShapeError {
             ErrorKind::RangeLimited => "the shape does not fit in type limits",
             ErrorKind::OutOfBounds => "out of bounds indexing",
             ErrorKind::Unsupported => "unsupported operation",
+            ErrorKind::Overflow => "arithmetic overflow",
             ErrorKind::__Incomplete => "this error variant is not in use",
         }
     }

@@ -4,22 +4,23 @@ sudo: required
 dist: trusty
 matrix:
   include:
-    - rust: 1.27.0
+    - rust: 1.30.0
       env:
        - FEATURES='test docs'
     - rust: stable
       env:
        - FEATURES='test docs'
-       - CARGO_INCREMENTAL=0
     - rust: beta
       env:
        - FEATURES='test docs'
-       - CARGO_INCREMENTAL=0
     - rust: nightly
       env:
        - FEATURES='test docs'
        - IS_NIGHTLY=1
-       - CARGO_INCREMENTAL=0
+env:
+  global:
+    - HOST=x86_64-unknown-linux-gnu
+    - CARGO_INCREMENTAL=0
 branches:
   only:
     - master

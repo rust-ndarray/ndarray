@@ -80,10 +80,9 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
 /// ***Panics*** if the `stack` function would return an error.
 ///
 /// ```
-/// #[macro_use(stack)]
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, Axis};
+/// use ndarray::{arr2, stack, Axis};
 ///
 /// # fn main() {
 ///

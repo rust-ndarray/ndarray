@@ -55,7 +55,7 @@ macro_rules! impl_binary_op(
 /// between `self` and `rhs`,
 /// and return the result (based on `self`).
 ///
-/// `self` must be an `Array` or `RcArray`.
+/// `self` must be an `Array` or `ArcArray`.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -126,7 +126,7 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 /// between `self` and the scalar `x`,
 /// and return the result (based on `self`).
 ///
-/// `self` must be an `Array` or `RcArray`.
+/// `self` must be an `Array` or `ArcArray`.
 impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
           S: DataOwned<Elem=A> + DataMut,

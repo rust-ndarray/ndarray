@@ -49,48 +49,79 @@
 /// ## Examples
 ///
 /// ```rust
-/// #[macro_use(azip)]
 /// extern crate ndarray;
 ///
-/// use ndarray::Array2;
+/// use ndarray::{azip, Array1, Array2, Axis};
 ///
 /// type M = Array2<f32>;
 ///
 /// fn main() {
+///     // Setup example arrays
 ///     let mut a = M::zeros((16, 16));
 ///     let mut b = M::zeros(a.dim());
 ///     let mut c = M::zeros(a.dim());
 ///
-///     // set up values in b, c
+///     // assign values
 ///     b.fill(1.);
 ///     for ((i, j), elt) in c.indexed_iter_mut() {
 ///         *elt = (i + 10 * j) as f32;
 ///     }
 ///
-///     // Compute a simple ternary operation:
+///     // Example 1: Compute a simple ternary operation:
 ///     // elementwise addition of b and c, stored in a
-///
 ///     azip!(mut a, b, c in { *a = b + c });
 ///
 ///     assert_eq!(a, &b + &c);
 ///
-///     // Example of azip!() with index
-///
+///     // Example 2: azip!() with index
 ///     azip!(index (i, j), b, c in {
 ///         a[[i, j]] = b - c;
 ///     });
 ///
 ///     assert_eq!(a, &b - &c);
+///
+///
+///     // Example 3: azip!() on references
+///     // See the definition of the function below
+///     borrow_multiply(&mut a, &b, &c);
+///
+///     assert_eq!(a, &b * &c);
+///
+///
+///     // Since this function borrows its inputs, captures must use the x (x) pattern
+///     // to avoid the macro's default rule that autorefs the producer.
+///     fn borrow_multiply(a: &mut M, b: &M, c: &M) {
+///         azip!(mut a (a), b (b), c (c) in { *a = b * c });
+///     }
+///
+///
+///     // Example 4: using azip!() with a `ref` rule
+///     //
+///     // Create a new array `totals` with one entry per row of `a`.
+///     // Use azip to traverse the rows of `a` and assign to the corresponding
+///     // entry in `totals` with the sum across each row.
+///     //
+///     // The row is an array view; use the 'ref' rule on the row, to avoid the
+///     // default which is to dereference the produced item.
+///     let mut totals = Array1::zeros(a.rows());
+///
+///     azip!(mut totals, ref row (a.genrows()) in {
+///         *totals = row.sum();
+///     });
+///
+///     // Check the result against the built in `.sum_axis()` along axis 1.
+///     assert_eq!(totals, a.sum_axis(Axis(1)));
 /// }
+///
 /// ```
 macro_rules! azip {
     // Build Zip Rule (index)
     (@parse [index => $a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
+        $crate::azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
     };
     // Build Zip Rule (no index)
     (@parse [$a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
+        $crate::azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
     };
     // Build Finish Rule (both)
     (@finish ($z:expr) [$($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)*}) => {
@@ -106,32 +137,32 @@ macro_rules! azip {
     // parsing stack: [expressions] [patterns] (one per operand)
     // index uses empty [] -- must be first
     (@parse [] [] index $i:pat, $($t:tt)*) => {
-        azip!(@parse [index =>] [$i,] $($t)*);
+        $crate::azip!(@parse [index =>] [$i,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
-        azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident $($t:tt)*) => {
-        azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] , $($t:tt)*) => {
-        azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
+        $crate::azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident ($e:expr) $($t:tt)*) => {
-        azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident $($t:tt)*) => {
-        azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident ($e:expr) $($t:tt)*) => {
-        azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident $($t:tt)*) => {
-        azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
+        $crate::azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
     };
     (@parse [$($exprs:tt)*] [$($pats:tt)*] $($t:tt)*) => { };
     ($($t:tt)*) => {
-        azip!(@parse [] [] $($t)*);
+        $crate::azip!(@parse [] [] $($t)*);
     }
 }
 

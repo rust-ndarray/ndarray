@@ -1,11 +1,10 @@
-
-#[macro_use(stack)]
 extern crate ndarray;
 
 
 use ndarray::{
     aview1,
     arr2,
+    stack,
     Axis,
     Array2,
     ErrorKind,

@@ -10,7 +10,7 @@ use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
 
-use itertools::zip;
+use itertools::{izip, zip};
 
 use imp_prelude::*;
 
@@ -18,7 +18,7 @@ use arraytraits;
 use dimension;
 use error::{self, ShapeError, ErrorKind};
 use dimension::IntoDimension;
-use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, stride_offset};
+use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, size_of_shape_checked, stride_offset};
 use zip::Zip;
 
 use {
@@ -98,6 +98,17 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
+    /// Return the stride of `axis`.
+    ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    pub fn stride_of(&self, axis: Axis) -> isize {
+        // strides are reinterpreted as isize
+        self.strides[axis.index()] as isize
+    }
+
     /// Return a read-only view of the array
     pub fn view(&self) -> ArrayView<A, D> {
         debug_assert!(self.pointer_is_inbounds());
@@ -161,25 +172,24 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     }
 
     /// Return a shared ownership (copy on write) array.
-    pub fn to_shared(&self) -> RcArray<A, D>
+    pub fn to_shared(&self) -> ArcArray<A, D>
         where A: Clone
     {
-        // FIXME: Avoid copying if it’s already an RcArray.
+        // FIXME: Avoid copying if it’s already an ArcArray.
         self.to_owned().into_shared()
     }
 
     /// Turn the array into a uniquely owned array, cloning the array elements
-    /// to unshare them if necessary.
+    /// if necessary.
     pub fn into_owned(self) -> Array<A, D>
         where A: Clone,
-              S: DataOwned,
     {
         S::into_owned(self)
     }
 
     /// Turn the array into a shared ownership (copy on write) array,
     /// without any copying.
-    pub fn into_shared(self) -> RcArray<A, D>
+    pub fn into_shared(self) -> ArcArray<A, D>
         where S: DataOwned,
     {
         let data = self.data.into_shared();
@@ -311,8 +321,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     where
         Do: Dimension,
     {
-        // Slice and subview in-place without changing the number of dimensions.
-        self.slice_inplace(&*info);
+        // Slice and collapse in-place without changing the number of dimensions.
+        self.slice_collapse(&*info);
 
         let indices: &[SliceOrIndex] = (**info).as_ref();
 
@@ -353,7 +363,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
-    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
+    pub fn slice_collapse(&mut self, indices: &D::SliceArg) {
         let indices: &[SliceOrIndex] = indices.as_ref();
         assert_eq!(indices.len(), self.ndim());
         indices
@@ -365,9 +375,18 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
                 }
                 &SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
-                    self.subview_inplace(Axis(axis), i_usize)
+                    self.collapse_axis(Axis(axis), i_usize)
                 }
             });
+    }
+
+    /// Slice the array in place without changing the number of dimensions.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
+    #[deprecated(note="renamed to `slice_collapse`", since="0.12.1")]
+    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
+        self.slice_collapse(indices)
     }
 
     /// Return a view of the array, sliced along the specified axis.
@@ -488,7 +507,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Return a mutable reference to the element at `index`.
     ///
     /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** (For `RcArray`) The array must be uniquely held when mutating it.
+    /// **Note:** (For `ArcArray`) The array must be uniquely held when mutating it.
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
         where S: DataMut,
@@ -521,7 +540,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Indices may be equal.
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** (For `RcArray`) The array must be uniquely held.
+    /// **Note:** (For `ArcArray`) The array must be uniquely held.
     pub unsafe fn uswap<I>(&mut self, index1: I, index2: I)
         where S: DataMut,
               I: NdIndex<D>,
@@ -543,8 +562,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// Along `axis`, select the subview `index` and return a
-    /// view with that axis removed.
+    /// Returns a view restricted to `index` along the axis, with the axis
+    /// removed.
     ///
     /// See [*Subviews*](#subviews) for full documentation.
     ///
@@ -560,18 +579,19 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// //                .   axis 1, column 1
     /// //                 axis 1, column 0
     /// assert!(
-    ///     a.subview(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
-    ///     a.subview(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
+    ///     a.index_axis(Axis(0), 1) == ArrayView::from(&[3., 4.]) &&
+    ///     a.index_axis(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<A, D::Smaller>
-        where D: RemoveAxis,
+    pub fn index_axis(&self, axis: Axis, index: usize) -> ArrayView<A, D::Smaller>
+    where
+        D: RemoveAxis,
     {
-        self.view().into_subview(axis, index)
+        self.view().index_axis_move(axis, index)
     }
 
-    /// Along `axis`, select the subview `index` and return a read-write view
-    /// with the axis removed.
+    /// Returns a mutable view restricted to `index` along the axis, with the
+    /// axis removed.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
@@ -585,7 +605,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// //                     axis 1, column 0
     ///
     /// {
-    ///     let mut column1 = a.subview_mut(Axis(1), 1);
+    ///     let mut column1 = a.index_axis_mut(Axis(1), 1);
     ///     column1 += 10.;
     /// }
     ///
@@ -594,32 +614,87 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///                   [3., 14.]])
     /// );
     /// ```
+    pub fn index_axis_mut(&mut self, axis: Axis, index: usize) -> ArrayViewMut<A, D::Smaller>
+    where
+        S: DataMut,
+        D: RemoveAxis,
+    {
+        self.view_mut().index_axis_move(axis, index)
+    }
+
+    /// Collapses the array to `index` along the axis and removes the axis.
+    ///
+    /// See [`.index_axis()`](#method.index_axis) and [*Subviews*](#subviews) for full documentation.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    pub fn index_axis_move(mut self, axis: Axis, index: usize) -> ArrayBase<S, D::Smaller>
+    where
+        D: RemoveAxis,
+    {
+        self.collapse_axis(axis, index);
+        let dim = self.dim.remove_axis(axis);
+        let strides = self.strides.remove_axis(axis);
+        ArrayBase {
+            ptr: self.ptr,
+            data: self.data,
+            dim,
+            strides,
+        }
+    }
+
+    /// Selects `index` along the axis, collapsing the axis into length one.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
+        dimension::do_collapse_axis(
+            &mut self.dim,
+            &mut self.ptr,
+            &self.strides,
+            axis.index(),
+            index,
+        )
+    }
+
+    /// Along `axis`, select the subview `index` and return a
+    /// view with that axis removed.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    #[deprecated(note="renamed to `index_axis`", since="0.12.1")]
+    pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<A, D::Smaller>
+        where D: RemoveAxis,
+    {
+        self.index_axis(axis, index)
+    }
+
+    /// Along `axis`, select the subview `index` and return a read-write view
+    /// with the axis removed.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    #[deprecated(note="renamed to `index_axis_mut`", since="0.12.1")]
     pub fn subview_mut(&mut self, axis: Axis, index: Ix)
         -> ArrayViewMut<A, D::Smaller>
         where S: DataMut,
               D: RemoveAxis,
     {
-        self.view_mut().into_subview(axis, index)
+        self.index_axis_mut(axis, index)
     }
 
     /// Collapse dimension `axis` into length one,
     /// and select the subview of `index` along that axis.
     ///
     /// **Panics** if `index` is past the length of the axis.
+    #[deprecated(note="renamed to `collapse_axis`", since="0.12.1")]
     pub fn subview_inplace(&mut self, axis: Axis, index: Ix) {
-        dimension::do_sub(&mut self.dim, &mut self.ptr, &self.strides,
-                          axis.index(), index)
+        self.collapse_axis(axis, index)
     }
 
     /// Along `axis`, select the subview `index` and return `self`
     /// with that axis removed.
-    ///
-    /// See [`.subview()`](#method.subview) and [*Subviews*](#subviews) for full documentation.
-    pub fn into_subview(mut self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
+    #[deprecated(note="renamed to `index_axis_move`", since="0.12.1")]
+    pub fn into_subview(self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        self.subview_inplace(axis, index);
-        self.remove_axis(axis)
+        self.index_axis_move(axis, index)
     }
 
     /// Along `axis`, select arbitrary subviews corresponding to `indices`
@@ -649,7 +724,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     {
         let mut subs = vec![self.view(); indices.len()];
         for (&i, sub) in zip(indices, &mut subs[..]) {
-            sub.subview_inplace(axis, i);
+            sub.collapse_axis(axis, i);
         }
         if subs.is_empty() {
             let mut dim = self.raw_dim();
@@ -830,7 +905,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     ///
     /// **Panics** if `axis` is out of bounds.
     ///
-    /// <img src="https://bluss.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
+    /// <img src="https://rust-ndarray.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
         where D: RemoveAxis,
     {
@@ -1026,11 +1101,14 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
-            let defaults = dim.default_strides();
-            if strides.equal(&defaults) {
+            match D::NDIM {
+                Some(1) => return strides[0] == 1 || dim[0] <= 1,
+                _ =>  { }
+            }
+            if dim.slice().iter().any(|&d| d == 0) {
                 return true;
             }
-            if dim.ndim() == 1 { return false; }
+            let defaults = dim.default_strides();
             // check all dimensions -- a dimension of length 1 can have unequal strides
             for (&dim, &s, &ds) in izip!(dim.slice(), strides.slice(), defaults.slice()) {
                 if dim != 1 && s != ds {
@@ -1151,7 +1229,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         where E: IntoDimension,
     {
         let shape = shape.into_dimension();
-        if shape.size_checked() != Some(self.dim.size()) {
+        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
             return Err(error::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
@@ -1174,7 +1252,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         }
     }
 
-    /// *Note: Reshape is for `RcArray` only. Use `.into_shape()` for
+    /// *Note: Reshape is for `ArcArray` only. Use `.into_shape()` for
     /// other arrays and array views.*
     ///
     /// Transform the array into `shape`; any shape with the same number of
@@ -1200,7 +1278,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
               E: IntoDimension,
     {
         let shape = shape.into_dimension();
-        if shape.size_checked() != Some(self.dim.size()) {
+        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
             panic!("ndarray: incompatible shapes in reshape, attempted from: {:?}, to: {:?}",
                    self.dim.slice(),
                    shape.slice())
@@ -1479,12 +1557,35 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
 
     /// If possible, merge in the axis `take` to `into`.
     ///
+    /// Returns `true` iff the axes are now merged.
+    ///
+    /// This method merges the axes if movement along the two original axes
+    /// (moving fastest along the `into` axis) can be equivalently represented
+    /// as movement along one (merged) axis. Merging the axes preserves this
+    /// order in the merged axis. If `take` and `into` are the same axis, then
+    /// the axis is "merged" if its length is ≤ 1.
+    ///
+    /// If the return value is `true`, then the following hold:
+    ///
+    /// * The new length of the `into` axis is the product of the original
+    ///   lengths of the two axes.
+    ///
+    /// * The new length of the `take` axis is 0 if the product of the original
+    ///   lengths of the two axes is 0, and 1 otherwise.
+    ///
+    /// If the return value is `false`, then merging is not possible, and the
+    /// original shape and strides have been preserved.
+    ///
+    /// Note that the ordering constraint means that if it's possible to merge
+    /// `take` into `into`, it's usually not possible to merge `into` into
+    /// `take`, and vice versa.
+    ///
     /// ```
     /// use ndarray::Array3;
     /// use ndarray::Axis;
     ///
     /// let mut a = Array3::<f64>::zeros((2, 3, 4));
-    /// a.merge_axes(Axis(1), Axis(2));
+    /// assert!(a.merge_axes(Axis(1), Axis(2)));
     /// assert_eq!(a.shape(), &[2, 1, 12]);
     /// ```
     ///
@@ -1529,18 +1630,11 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// Remove array axis `axis` and return the result.
     ///
     /// **Panics** if the axis is out of bounds or its length is zero.
+    #[deprecated(note="use `.index_axis_move(Axis(_), 0)` instead", since="0.12.1")]
     pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
         where D: RemoveAxis,
     {
-        assert_ne!(self.len_of(axis), 0, "Length of removed axis must be nonzero.");
-        let d = self.dim.remove_axis(axis);
-        let s = self.strides.remove_axis(axis);
-        ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim: d,
-            strides: s,
-        }
+        self.index_axis_move(axis, 0)
     }
 
     fn pointer_is_inbounds(&self) -> bool {
@@ -1827,6 +1921,8 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
     /// function and initial value `init`.
     ///
     /// Return the result as an `Array`.
+    ///
+    /// **Panics** if `axis` is out of bounds.
     pub fn fold_axis<B, F>(&self, axis: Axis, init: B, mut fold: F)
         -> Array<B, D::Smaller>
         where D: RemoveAxis,
@@ -1858,7 +1954,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
-        self.subview(axis, 0).map(|first_elt| {
+        self.index_axis(axis, 0).map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
@@ -1886,7 +1982,7 @@ impl<A, S, D> ArrayBase<S, D> where S: Data<Elem=A>, D: Dimension
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
-        self.subview_mut(axis, 0).map_mut(|first_elt: &mut A| {
+        self.index_axis_mut(axis, 0).map_mut(|first_elt: &mut A| {
             unsafe {
                 mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }

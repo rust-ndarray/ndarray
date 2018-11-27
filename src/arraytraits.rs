@@ -9,6 +9,7 @@
 use std::hash;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
+use std::mem;
 use std::ops::{
     Index,
     IndexMut,
@@ -214,13 +215,20 @@ pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
 // use "raw" form instead of type aliases here so that they show up in docs
 /// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
-///
-/// Create a one-dimensional read-only array view of the data in `slice`.
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
     where Slice: AsRef<[A]>
 {
+    /// Create a one-dimensional read-only array view of the data in `slice`.
+    ///
+    /// **Panics** if the slice length is greater than `isize::MAX`.
     fn from(slice: &'a Slice) -> Self {
         let xs = slice.as_ref();
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                xs.len() <= ::std::isize::MAX as usize,
+                "Slice length must fit in `isize`.",
+            );
+        }
         unsafe {
             Self::from_shape_ptr(xs.len(), xs.as_ptr())
         }
@@ -228,25 +236,31 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
 }
 
 /// Implementation of `ArrayView::from(&A)` where `A` is an array.
-///
-/// Create a read-only array view of the array.
 impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
     where S: Data<Elem=A>,
           D: Dimension,
 {
+    /// Create a read-only array view of the array.
     fn from(array: &'a ArrayBase<S, D>) -> Self {
         array.view()
     }
 }
 
 /// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or slicable.
-///
-/// Create a one-dimensional read-write array view of the data in `slice`.
 impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
     where Slice: AsMut<[A]>
 {
+    /// Create a one-dimensional read-write array view of the data in `slice`.
+    ///
+    /// **Panics** if the slice length is greater than `isize::MAX`.
     fn from(slice: &'a mut Slice) -> Self {
         let xs = slice.as_mut();
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                xs.len() <= ::std::isize::MAX as usize,
+                "Slice length must fit in `isize`.",
+            );
+        }
         unsafe {
             Self::from_shape_ptr(xs.len(), xs.as_mut_ptr())
         }
@@ -254,12 +268,11 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
 }
 
 /// Implementation of `ArrayViewMut::from(&mut A)` where `A` is an array.
-///
-/// Create a read-write array view of the array.
 impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
     where S: DataMut<Elem=A>,
           D: Dimension,
 {
+    /// Create a read-write array view of the array.
     fn from(array: &'a mut ArrayBase<S, D>) -> Self {
         array.view_mut()
     }
@@ -277,7 +290,7 @@ impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
 ///
 /// fn sum<'a, V: AsArray<'a, f64>>(data: V) -> f64 {
 ///     let array_view = data.into();
-///     array_view.scalar_sum()
+///     array_view.sum()
 /// }
 ///
 /// assert_eq!(

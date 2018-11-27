@@ -11,7 +11,7 @@ use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
-use itertools::{enumerate, zip};
+use itertools::{enumerate, izip, zip};
 
 use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
 use IntoDimension;
@@ -109,12 +109,17 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         self.slice() == rhs.slice()
     }
 
+    /// Returns the strides for a standard layout array with the given shape.
+    ///
+    /// If the array is non-empty, the strides result in contiguous layout; if
+    /// the array is empty, the strides are all zeros.
     #[doc(hidden)]
     fn default_strides(&self) -> Self {
         // Compute default array strides
         // Shape (a, b, c) => Give strides (b * c, c, 1)
-        let mut strides = self.clone();
-        {
+        let mut strides = Self::zeros(self.ndim());
+        // For empty arrays, use all zero strides.
+        if self.slice().iter().all(|&d| d != 0) {
             let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
             while let Some(rs) = it.next() {
@@ -130,12 +135,17 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         strides
     }
 
+    /// Returns the strides for a Fortran layout array with the given shape.
+    ///
+    /// If the array is non-empty, the strides result in contiguous layout; if
+    /// the array is empty, the strides are all zeros.
     #[doc(hidden)]
     fn fortran_strides(&self) -> Self {
         // Compute fortran array strides
         // Shape (a, b, c) => Give strides (1, a, a * b)
-        let mut strides = self.clone();
-        {
+        let mut strides = Self::zeros(self.ndim());
+        // For empty arrays, use all zero strides.
+        if self.slice().iter().all(|&d| d != 0) {
             let mut it = strides.slice_mut().iter_mut();
             // Set first element to 1
             while let Some(rs) = it.next() {
@@ -432,7 +442,11 @@ impl Dimension for Dim<[Ix; 1]> {
 
     #[inline]
     fn default_strides(&self) -> Self {
-        Ix1(1)
+        if get!(self, 0) == 0 {
+            Ix1(0)
+        } else {
+            Ix1(1)
+        }
     }
 
     #[inline]
@@ -548,13 +562,23 @@ impl Dimension for Dim<[Ix; 2]> {
 
     #[inline]
     fn default_strides(&self) -> Self {
-        // Compute default array strides
-        // Shape (a, b, c) => Give strides (b * c, c, 1)
-        Ix2(get!(self, 1), 1)
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        if m == 0 || n == 0 {
+            Ix2(0, 0)
+        } else {
+            Ix2(n, 1)
+        }
     }
     #[inline]
     fn fortran_strides(&self) -> Self {
-        Ix2(1, get!(self, 0))
+        let m = get!(self, 0);
+        let n = get!(self, 1);
+        if m == 0 || n == 0 {
+            Ix2(0, 0)
+        } else {
+            Ix2(1, m)
+        }
     }
 
     #[inline]
