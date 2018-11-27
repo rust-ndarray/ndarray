@@ -32,7 +32,7 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<A, D>(op: &str, mut aa: RcArray<A, D>, bb: RcArray<A, D>, cc: RcArray<A, D>)
+fn test_oper_arr<A, D>(op: &str, mut aa: ArcArray<A, D>, bb: ArcArray<A, D>, cc: ArcArray<A, D>)
 where
     A: NdFloat,
     for<'a> &'a A: Neg<Output=A>,
@@ -110,7 +110,7 @@ fn scalar_operations()
 
     {
         let mut x = c.clone();
-        let mut y = RcArray::zeros((2, 2));
+        let mut y = ArcArray::zeros((2, 2));
         x += 1.;
         y.fill(2.);
         assert_eq!(x, c + arr0(1.));

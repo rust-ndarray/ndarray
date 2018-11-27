@@ -19,9 +19,11 @@
 //! ```
 
 #[doc(no_inline)]
+#[allow(deprecated)]
 pub use {
     ArrayBase,
     Array,
+    ArcArray,
     RcArray,
     ArrayView,
     ArrayViewMut,

@@ -21,7 +21,7 @@ fn test_dimension_zero() {
 }
 
 #[test]
-fn test_rc_into_owned() {
+fn test_arc_into_owned() {
     let a = Array2::from_elem((5, 5), 1.).into_shared();
     let mut b = a.clone();
     b.fill(0.);

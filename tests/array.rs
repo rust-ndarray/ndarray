@@ -15,14 +15,14 @@ use defmac::defmac;
 use itertools::{enumerate, zip};
 
 #[test]
-fn test_matmul_rcarray()
+fn test_matmul_arcarray()
 {
-    let mut A = RcArray::<usize, _>::zeros((2, 3));
+    let mut A = ArcArray::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
 
-    let mut B = RcArray::<usize, _>::zeros((3, 4));
+    let mut B = ArcArray::<usize, _>::zeros((3, 4));
     for (i, elt) in B.iter_mut().enumerate() {
         *elt = i;
     }
@@ -32,7 +32,7 @@ fn test_matmul_rcarray()
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
     unsafe {
-        let result = RcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
+        let result = ArcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
         assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
         assert!(c == result);
@@ -57,10 +57,10 @@ fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(view: ArrayViewMut1<'b, f64>)
 fn test_mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let a = RcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
-    let b = RcArray::eye(m);
+    let a = ArcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
+    let b = ArcArray::eye(m);
     assert_eq!(a.dot(&b), a);
-    let c = RcArray::eye(n);
+    let c = ArcArray::eye(n);
     assert_eq!(c.dot(&a), a);
 }
 
@@ -69,7 +69,7 @@ fn test_mat_mul() {
 #[test]
 fn test_slice()
 {
-    let mut A = RcArray::<usize, _>::zeros((3, 4, 5));
+    let mut A = ArcArray::<usize, _>::zeros((3, 4, 5));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -106,7 +106,7 @@ fn test_slice_infer()
 
 #[test]
 fn test_slice_with_many_dim() {
-    let mut A = RcArray::<usize, _>::zeros(&[3, 1, 4, 1, 3, 2, 1][..]);
+    let mut A = ArcArray::<usize, _>::zeros(&[3, 1, 4, 1, 3, 2, 1][..]);
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -243,7 +243,7 @@ fn test_slice_dyninput_vec_dyn() {
 
 #[test]
 fn test_slice_with_subview() {
-    let mut arr = RcArray::<usize, _>::zeros((3, 5, 4));
+    let mut arr = ArcArray::<usize, _>::zeros((3, 5, 4));
     for (i, elt) in arr.iter_mut().enumerate() {
         *elt = i;
     }
@@ -276,7 +276,7 @@ fn test_slice_with_subview() {
 
 #[test]
 fn test_slice_collapse_with_indices() {
-    let mut arr = RcArray::<usize, _>::zeros((3, 5, 4));
+    let mut arr = ArcArray::<usize, _>::zeros((3, 5, 4));
     for (i, elt) in arr.iter_mut().enumerate() {
         *elt = i;
     }
@@ -306,7 +306,7 @@ fn test_slice_collapse_with_indices() {
         assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
     }
 
-    // Do it to the RcArray itself
+    // Do it to the ArcArray itself
     let elem = arr[(1, 2, 3)];
     let mut vi = arr;
     vi.slice_collapse(s![1, 2, 3]);
@@ -325,14 +325,14 @@ fn index_out_of_bounds() {
 #[test]
 fn slice_oob()
 {
-    let a = RcArray::<i32, _>::zeros((3, 4));
+    let a = ArcArray::<i32, _>::zeros((3, 4));
     let _vi = a.slice(s![..10, ..]);
 }
 
 #[should_panic]
 #[test]
 fn slice_axis_oob() {
-    let a = RcArray::<i32, _>::zeros((3, 4));
+    let a = ArcArray::<i32, _>::zeros((3, 4));
     let _vi = a.slice_axis(Axis(0), Slice::new(0, Some(10), 1));
 }
 
@@ -340,14 +340,14 @@ fn slice_axis_oob() {
 #[test]
 fn slice_wrong_dim()
 {
-    let a = RcArray::<i32, _>::zeros(vec![3, 4, 5]);
+    let a = ArcArray::<i32, _>::zeros(vec![3, 4, 5]);
     let _vi = a.slice(s![.., ..]);
 }
 
 #[test]
 fn test_index()
 {
-    let mut A = RcArray::<usize, _>::zeros((2, 3));
+    let mut A = ArcArray::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -377,7 +377,7 @@ fn test_index_arrays() {
 #[test]
 fn test_add()
 {
-    let mut A = RcArray::<usize, _>::zeros((2, 2));
+    let mut A = ArcArray::<usize, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
     }
@@ -393,7 +393,7 @@ fn test_add()
 #[test]
 fn test_multidim()
 {
-    let mut mat = RcArray::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
+    let mut mat = ArcArray::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
     mat[(0,0,0,0,0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -416,9 +416,9 @@ array([[[ 7,  6],
         [ 9,  8]]])
 */
 #[test]
-fn test_negative_stride_rcarray()
+fn test_negative_stride_arcarray()
 {
-    let mut mat = RcArray::zeros((2, 4, 2));
+    let mut mat = ArcArray::zeros((2, 4, 2));
     mat[[0, 0, 0]] = 1.0f32;
     for (i, elt) in mat.iter_mut().enumerate() {
         *elt = i as f32;
@@ -445,7 +445,7 @@ fn test_negative_stride_rcarray()
 #[test]
 fn test_cow()
 {
-    let mut mat = RcArray::zeros((2,2));
+    let mut mat = ArcArray::zeros((2,2));
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -481,7 +481,7 @@ fn test_cow_shrink()
     // A test for clone-on-write in the case that
     // mutation shrinks the array and gives it different strides
     //
-    let mut mat = RcArray::zeros((2, 3));
+    let mut mat = ArcArray::zeros((2, 3));
     //mat.slice_collapse(s![.., ..;2]);
     mat[[0, 0]] = 1;
     let n = mat.clone();
@@ -513,21 +513,21 @@ fn test_cow_shrink()
 #[test]
 fn test_sub()
 {
-    let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
+    let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
     let s1 = mat.index_axis(Axis(0), 0);
     let s2 = mat.index_axis(Axis(0), 1);
     assert_eq!(s1.shape(), &[4, 2]);
     assert_eq!(s2.shape(), &[4, 2]);
-    let n = RcArray::linspace(8., 15., 8).reshape((4,2));
+    let n = ArcArray::linspace(8., 15., 8).reshape((4,2));
     assert_eq!(n, s2);
-    let m = RcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
+    let m = ArcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.index_axis(Axis(1), 1));
 }
 
 #[should_panic]
 #[test]
 fn test_sub_oob_1() {
-    let mat = RcArray::linspace(0., 15., 16).reshape((2, 4, 2));
+    let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
     mat.index_axis(Axis(0), 2);
 }
 
@@ -568,7 +568,7 @@ fn diag()
     assert_eq!(d.dim(), 2);
     let d = arr2::<f32, _>(&[[]]).into_diag();
     assert_eq!(d.dim(), 0);
-    let d = RcArray::<f32, _>::zeros(()).into_diag();
+    let d = ArcArray::<f32, _>::zeros(()).into_diag();
     assert_eq!(d.dim(), 1);
 }
 
@@ -761,12 +761,12 @@ fn assign()
     assert_eq!(a, b);
 
     /* Test broadcasting */
-    a.assign(&RcArray::zeros(1));
-    assert_eq!(a, RcArray::zeros((2, 2)));
+    a.assign(&ArcArray::zeros(1));
+    assert_eq!(a, ArcArray::zeros((2, 2)));
 
     /* Test other type */
     a.assign(&Array::from_elem((2, 2), 3.));
-    assert_eq!(a, RcArray::from_elem((2, 2), 3.));
+    assert_eq!(a, ArcArray::from_elem((2, 2), 3.));
 
     /* Test mut view */
     let mut a = arr2(&[[1, 2], [3, 4]]);
@@ -1049,7 +1049,7 @@ fn owned_array1() {
     assert_eq!(a.shape(), &[4]);
 
     let mut a = Array::zeros((2, 2));
-    let mut b = RcArray::zeros((2, 2));
+    let mut b = ArcArray::zeros((2, 2));
     a[(1, 1)] = 3;
     b[(1, 1)] = 3;
     assert_eq!(a, b);
@@ -1229,7 +1229,7 @@ fn from_vec_dim_stride_2d_rejects() {
 
 #[test]
 fn views() {
-    let a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     let b = a.view();
     assert_eq!(a, b);
     assert_eq!(a.shape(), b.shape());
@@ -1244,7 +1244,7 @@ fn views() {
 
 #[test]
 fn view_mut() {
-    let mut a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in &mut a.view_mut() {
         *elt = 0;
     }
@@ -1258,12 +1258,12 @@ fn view_mut() {
     for elt in a.view_mut() {
         *elt = 2;
     }
-    assert_eq!(a, RcArray::from_elem((2, 2), 2));
+    assert_eq!(a, ArcArray::from_elem((2, 2), 2));
 }
 
 #[test]
 fn slice_mut() {
-    let mut a = RcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in a.slice_mut(s![.., ..]) {
         *elt = 0;
     }
@@ -1513,8 +1513,8 @@ fn arithmetic_broadcast() {
 fn char_array()
 {
     // test compilation & basics of non-numerical array
-    let cc = RcArray::from_iter("alphabet".chars()).reshape((4, 2));
-    assert!(cc.index_axis(Axis(1), 0) == RcArray::from_iter("apae".chars()));
+    let cc = ArcArray::from_iter("alphabet".chars()).reshape((4, 2));
+    assert!(cc.index_axis(Axis(1), 0) == ArcArray::from_iter("apae".chars()));
 }
 
 #[test]
@@ -1573,7 +1573,7 @@ fn split_at() {
     assert_eq!(a, arr2(&[[1., 5.], [8., 4.]]));
 
 
-    let b = RcArray::linspace(0., 59., 60).reshape((3, 4, 5));
+    let b = ArcArray::linspace(0., 59., 60).reshape((3, 4, 5));
 
     let (left, right) = b.view().split_at(Axis(2), 2);
     assert_eq!(left.shape(), [3, 4, 2]);
