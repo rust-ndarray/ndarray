@@ -904,16 +904,32 @@ fn std_axis() {
 
 #[test]
 #[should_panic]
-fn var_axis_bad_dof() {
+fn var_axis_negative_ddof() {
+    let a = array![1., 2., 3.];
+    a.var_axis(Axis(0), -1.);
+}
+
+#[test]
+#[should_panic]
+fn var_axis_too_large_ddof() {
     let a = array![1., 2., 3.];
     a.var_axis(Axis(0), 4.);
 }
 
 #[test]
-#[should_panic]
+fn var_axis_nan_ddof() {
+    let a = Array2::<f64>::zeros((2, 3));
+    let v = a.var_axis(Axis(1), ::std::f64::NAN);
+    assert_eq!(v.shape(), &[2]);
+    v.mapv(|x| assert!(x.is_nan()));
+}
+
+#[test]
 fn var_axis_empty_axis() {
-    let a = array![[], []];
-    a.var_axis(Axis(1), 0.);
+    let a = Array2::<f64>::zeros((2, 0));
+    let v = a.var_axis(Axis(1), 0.);
+    assert_eq!(v.shape(), &[2]);
+    v.mapv(|x| assert!(x.is_nan()));
 }
 
 #[test]
@@ -924,10 +940,11 @@ fn std_axis_bad_dof() {
 }
 
 #[test]
-#[should_panic]
 fn std_axis_empty_axis() {
-    let a = array![[], []];
-    a.std_axis(Axis(1), 0.);
+    let a = Array2::<f64>::zeros((2, 0));
+    let v = a.std_axis(Axis(1), 0.);
+    assert_eq!(v.shape(), &[2]);
+    v.mapv(|x| assert!(x.is_nan()));
 }
 
 #[test]

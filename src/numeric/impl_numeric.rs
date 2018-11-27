@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use std::ops::{Add, Div, Mul};
-use libnum::{self, One, Zero, Float};
+use libnum::{self, One, Zero, Float, FromPrimitive};
 use itertools::free::enumerate;
 
 use imp_prelude::*;
@@ -174,8 +174,11 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    /// and `n` is the length of the axis.
+    ///
+    /// **Panics** if `ddof` is less than zero or greater than `n`, if `axis`
+    /// is out of bounds, or if `A::from_usize()` fails for any any of the
+    /// numbers in the range `0..=n`.
     ///
     /// # Example
     ///
@@ -190,27 +193,28 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
-        A: Float,
+        A: Float + FromPrimitive,
         D: RemoveAxis,
     {
-        let mut count = A::zero();
+        let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
+        let n = A::from_usize(self.len_of(axis)).expect("Converting length to `A` must not fail.");
+        assert!(
+            !(ddof < zero || ddof > n),
+            "`ddof` must not be less than zero or greater than the length of \
+             the axis",
+        );
+        let dof = n - ddof;
         let mut mean = Array::<A, _>::zeros(self.dim.remove_axis(axis));
         let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
-        for subview in self.axis_iter(axis) {
-            count = count + A::one();
+        for (i, subview) in self.axis_iter(axis).enumerate() {
+            let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
             azip!(mut mean, mut sum_sq, x (subview) in {
                 let delta = x - *mean;
                 *mean = *mean + delta / count;
                 *sum_sq = (x - *mean).mul_add(delta, *sum_sq);
             });
         }
-        if ddof >= count {
-            panic!("`ddof` needs to be strictly smaller than the length \
-                    of the axis you are computing the variance for!")
-        } else {
-            let dof = count - ddof;
-            sum_sq.mapv_into(|s| s / dof)
-        }
+        sum_sq.mapv_into(|s| s / dof)
     }
 
     /// Return standard deviation along `axis`.
@@ -238,8 +242,11 @@ impl<A, S, D> ArrayBase<S, D>
     ///     n  i=1
     /// ```
     ///
-    /// **Panics** if `ddof` is greater than or equal to the length of the
-    /// axis, if `axis` is out of bounds, or if the length of the axis is zero.
+    /// and `n` is the length of the axis.
+    ///
+    /// **Panics** if `ddof` is less than zero or greater than `n`, if `axis`
+    /// is out of bounds, or if `A::from_usize()` fails for any any of the
+    /// numbers in the range `0..=n`.
     ///
     /// # Example
     ///
@@ -254,7 +261,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
-        A: Float,
+        A: Float + FromPrimitive,
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
