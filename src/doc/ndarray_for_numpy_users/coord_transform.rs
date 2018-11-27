@@ -49,7 +49,6 @@
 //! This is a direct translation to `ndarray`:
 //!
 //! ```
-//! #[macro_use]
 //! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;
@@ -97,7 +96,6 @@
 //! this:
 //!
 //! ```
-//! #[macro_use]
 //! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;

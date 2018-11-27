@@ -1,5 +1,5 @@
-#[macro_use] extern crate defmac;
-#[macro_use(s)] extern crate ndarray;
+extern crate defmac;
+extern crate ndarray;
 extern crate num_traits;
 
 use ndarray::prelude::*;
@@ -11,6 +11,7 @@ use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
 
 use std::fmt;
 use std::ops::Neg;
+use defmac::defmac;
 use num_traits::Float;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])

@@ -5,7 +5,6 @@ extern crate test;
 use test::Bencher;
 use test::black_box;
 
-#[macro_use(s)]
 extern crate ndarray;
 use ndarray::prelude::*;
 

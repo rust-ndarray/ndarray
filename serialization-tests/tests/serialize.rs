@@ -1,6 +1,6 @@
 extern crate rustc_serialize as serialize;
 
-#[macro_use] extern crate ndarray;
+extern crate ndarray;
 
 extern crate serde;
 
@@ -14,7 +14,7 @@ extern crate ron;
 use serialize::json;
 
 
-use ndarray::{arr0, arr1, arr2, RcArray, RcArray1, RcArray2, ArrayD, IxDyn};
+use ndarray::{arr0, arr1, arr2, s, RcArray, RcArray1, RcArray2, ArrayD, IxDyn};
 
 #[test]
 fn serial_many_dim()

@@ -1,8 +1,6 @@
 #![allow(non_snake_case)]
 
-#[macro_use]
 extern crate ndarray;
-#[macro_use]
 extern crate defmac;
 extern crate itertools;
 
@@ -13,6 +11,7 @@ use ndarray::{
     arr3,
 };
 use ndarray::indices;
+use defmac::defmac;
 use itertools::{enumerate, zip};
 
 #[test]

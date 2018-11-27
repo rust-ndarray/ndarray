@@ -10,7 +10,7 @@ use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
 
-use itertools::zip;
+use itertools::{izip, zip};
 
 use imp_prelude::*;
 

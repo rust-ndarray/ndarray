@@ -56,7 +56,7 @@
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
 //!   + See also the [`ndarray-parallel`] crate for integration with rayon.
-//! - **Requires Rust 1.27**
+//! - **Requires Rust 1.30**
 //!
 //! [`ndarray-parallel`]: https://docs.rs/ndarray-parallel
 //!
@@ -99,12 +99,11 @@ extern crate blas_src;
 
 extern crate matrixmultiply;
 
-#[macro_use(izip)] extern crate itertools;
+extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
 
 #[cfg(test)]
-#[macro_use(quickcheck)]
 extern crate quickcheck;
 
 #[cfg(feature = "docs")]
@@ -470,11 +469,9 @@ pub type Ixs = isize;
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
 /// ```
-/// // import the s![] macro
-/// #[macro_use(s)]
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3};
+/// use ndarray::{arr2, arr3, s};
 ///
 /// fn main() {
 ///
@@ -554,9 +551,9 @@ pub type Ixs = isize;
 /// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
-/// #[macro_use(s)] extern crate ndarray;
+/// extern crate ndarray;
 ///
-/// use ndarray::{arr3, aview1, aview2, Axis};
+/// use ndarray::{arr3, aview1, aview2, s, Axis};
 ///
 /// # fn main() {
 ///

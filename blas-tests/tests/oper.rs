@@ -1,5 +1,5 @@
-#[macro_use] extern crate defmac;
-#[macro_use(s)] extern crate ndarray;
+extern crate defmac;
+extern crate ndarray;
 extern crate num_traits;
 
 use ndarray::prelude::*;
@@ -9,6 +9,7 @@ use ndarray::linalg::general_mat_vec_mul;
 use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
 
 use std::fmt;
+use defmac::defmac;
 use num_traits::Float;
 
 fn assert_approx_eq<F: fmt::Debug + Float>(f: F, g: F, tol: F) -> bool {

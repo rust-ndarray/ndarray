@@ -1,5 +1,3 @@
-
-#[macro_use(array, s)]
 extern crate ndarray;
 
 use ndarray::prelude::*;

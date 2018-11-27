@@ -3,7 +3,6 @@
 extern crate test;
 use test::Bencher;
 
-#[macro_use(s)]
 extern crate ndarray;
 use ndarray::prelude::*;
 

@@ -3,7 +3,6 @@
 extern crate test;
 use test::Bencher;
 
-#[macro_use(azip)]
 extern crate ndarray;
 use ndarray::prelude::*;
 use ndarray::NdProducer;

@@ -370,10 +370,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// ### Examples
     ///
     /// ```
-    /// #[macro_use(s)]
     /// extern crate ndarray;
     ///
-    /// use ndarray::Array2;
+    /// use ndarray::{s, Array2};
     ///
     /// // Example Task: Let's create a column shifted copy of a in b
     ///

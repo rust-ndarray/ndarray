@@ -500,10 +500,9 @@ impl_slicenextdim_larger!((), Slice);
 /// # Example
 ///
 /// ```
-/// #[macro_use]
 /// extern crate ndarray;
 ///
-/// use ndarray::{Array2, ArrayView2};
+/// use ndarray::{s, Array2, ArrayView2};
 ///
 /// fn laplacian(v: &ArrayView2<f32>) -> Array2<f32> {
 ///     -4. * &v.slice(s![1..-1, 1..-1])
@@ -533,7 +532,6 @@ impl_slicenextdim_larger!((), Slice);
 /// For example,
 ///
 /// ```
-/// # #[macro_use]
 /// # extern crate ndarray;
 /// #
 /// # use ndarray::prelude::*;
@@ -557,7 +555,7 @@ macro_rules! s(
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
-                        [$($stack)* s!(@convert r, $s)],
+                        [$($stack)* $crate::s!(@convert r, $s)],
                         out_dim,
                     )
                 }
@@ -572,7 +570,7 @@ macro_rules! s(
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
-                        [$($stack)* s!(@convert r)],
+                        [$($stack)* $crate::s!(@convert r)],
                         out_dim,
                     )
                 }
@@ -581,19 +579,19 @@ macro_rules! s(
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        s![@parse $dim, [$($stack)*] $r;$s]
+        $crate::s![@parse $dim, [$($stack)*] $r;$s]
     };
     // convert a..b into @convert(a..b), final item, trailing comma
     (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
-        s![@parse $dim, [$($stack)*] $r]
+        $crate::s![@parse $dim, [$($stack)*] $r]
     };
     // convert a..b;c into @convert(a..b, c)
     (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         match $r {
             r => {
-                s![@parse
+                $crate::s![@parse
                    $crate::SliceNextDim::next_dim(&r, $dim),
-                   [$($stack)* s!(@convert r, $s),]
+                   [$($stack)* $crate::s!(@convert r, $s),]
                    $($t)*
                 ]
             }
@@ -603,9 +601,9 @@ macro_rules! s(
     (@parse $dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
         match $r {
             r => {
-                s![@parse
+                $crate::s![@parse
                    $crate::SliceNextDim::next_dim(&r, $dim),
-                   [$($stack)* s!(@convert r),]
+                   [$($stack)* $crate::s!(@convert r),]
                    $($t)*
                 ]
             }
@@ -622,6 +620,6 @@ macro_rules! s(
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:
         // https://github.com/rust-lang/rust/issues/23014
-        &*&s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
+        &*&$crate::s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );
