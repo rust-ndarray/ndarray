@@ -12,7 +12,7 @@ use imp_prelude::*;
 
 /// # Methods For 2-D Arrays
 impl<A, S> ArrayBase<S, Ix2>
-    where S: DataRaw<Elem=A>,
+    where S: RawData<Elem=A>,
 {
     /// Return an array view of row `index`.
     ///

@@ -153,9 +153,9 @@ pub use aliases::*;
 
 #[allow(deprecated)]
 pub use data_traits::{
-    DataRaw,
-    DataRawMut,
-    DataRawClone,
+    RawData,
+    RawDataMut,
+    RawDataClone,
     Data,
     DataMut,
     DataOwned,
@@ -197,8 +197,8 @@ mod imp_prelude {
     pub use ArcArray;
     pub use {
         RemoveAxis,
-        DataRaw,
-        DataRawMut,
+        RawData,
+        RawDataMut,
         Data,
         DataMut,
         DataOwned,
@@ -1031,7 +1031,7 @@ pub type Ixs = isize;
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
 pub struct ArrayBase<S, D>
-    where S: DataRaw
+    where S: RawData
 {
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)

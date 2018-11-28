@@ -27,10 +27,10 @@ use {
 /// does not imply any ownership or lifetime; pointers to elements in the array
 /// may not be safe to dereference.
 ///
-/// ***Note:*** `DataRaw` is not an extension interface at this point.
+/// ***Note:*** `RawData` is not an extension interface at this point.
 /// Traits in Rust can serve many different roles. This trait is public because
 /// it is used as a bound on public methods.
-pub unsafe trait DataRaw : Sized {
+pub unsafe trait RawData : Sized {
     /// The array element type.
     type Elem;
 
@@ -45,8 +45,8 @@ pub unsafe trait DataRaw : Sized {
 ///
 /// For an array with writable elements.
 ///
-/// ***Internal trait, see `DataRaw`.***
-pub unsafe trait DataRawMut : DataRaw {
+/// ***Internal trait, see `RawData`.***
+pub unsafe trait RawDataMut : RawData {
     /// If possible, ensures that the array has unique access to its data.
     ///
     /// If `Self` provides safe mutable access to array elements, then it
@@ -68,8 +68,8 @@ pub unsafe trait DataRawMut : DataRaw {
 ///
 /// An array representation that can be cloned.
 ///
-/// ***Internal trait, see `DataRaw`.***
-pub unsafe trait DataRawClone : DataRaw {
+/// ***Internal trait, see `RawData`.***
+pub unsafe trait RawDataClone : RawData {
     #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
@@ -86,8 +86,8 @@ pub unsafe trait DataRawClone : DataRaw {
 ///
 /// For an array with elements that can be accessed with safe code.
 ///
-/// ***Internal trait, see `DataRaw`.***
-pub unsafe trait Data : DataRaw {
+/// ***Internal trait, see `RawData`.***
+pub unsafe trait Data : RawData {
     /// Converts the array to a uniquely owned array, cloning elements if necessary.
     #[doc(hidden)]
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
@@ -105,10 +105,10 @@ pub unsafe trait Data : DataRaw {
 // # For implementers
 //
 // If you implement the `DataMut` trait, you are guaranteeing that the
-// `DataRawMut::try_ensure_unique` implementation always panics or ensures that
+// `RawDataMut::try_ensure_unique` implementation always panics or ensures that
 // the data is unique. You are also guaranteeing that `try_is_unique` always
 // returns `Some(_)`.
-pub unsafe trait DataMut : Data + DataRawMut {
+pub unsafe trait DataMut : Data + RawDataMut {
     /// Ensures that the array has unique access to its data.
     #[doc(hidden)]
     #[inline]
@@ -133,13 +133,13 @@ pub unsafe trait DataMut : Data + DataRawMut {
 /// accessed with safe code.
 ///
 /// ***Internal trait, see `Data`.***
-#[deprecated(note="use `Data + DataRawClone` instead", since="0.13")]
-pub trait DataClone : Data + DataRawClone {}
+#[deprecated(note="use `Data + RawDataClone` instead", since="0.13")]
+pub trait DataClone : Data + RawDataClone {}
 
 #[allow(deprecated)]
-impl<T> DataClone for T where T: Data + DataRawClone {}
+impl<T> DataClone for T where T: Data + RawDataClone {}
 
-unsafe impl<A> DataRaw for RawViewRepr<*const A> {
+unsafe impl<A> RawData for RawViewRepr<*const A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         None
@@ -147,13 +147,13 @@ unsafe impl<A> DataRaw for RawViewRepr<*const A> {
     private_impl!{}
 }
 
-unsafe impl<A> DataRawClone for RawViewRepr<*const A> {
+unsafe impl<A> RawDataClone for RawViewRepr<*const A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         (*self, ptr)
     }
 }
 
-unsafe impl<A> DataRaw for RawViewRepr<*mut A> {
+unsafe impl<A> RawData for RawViewRepr<*mut A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         None
@@ -161,7 +161,7 @@ unsafe impl<A> DataRaw for RawViewRepr<*mut A> {
     private_impl!{}
 }
 
-unsafe impl<A> DataRawMut for RawViewRepr<*mut A> {
+unsafe impl<A> RawDataMut for RawViewRepr<*mut A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where Self: Sized,
@@ -174,13 +174,13 @@ unsafe impl<A> DataRawMut for RawViewRepr<*mut A> {
     }
 }
 
-unsafe impl<A> DataRawClone for RawViewRepr<*mut A> {
+unsafe impl<A> RawDataClone for RawViewRepr<*mut A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         (*self, ptr)
     }
 }
 
-unsafe impl<A> DataRaw for OwnedArcRepr<A> {
+unsafe impl<A> RawData for OwnedArcRepr<A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         Some(&self.0)
@@ -189,7 +189,7 @@ unsafe impl<A> DataRaw for OwnedArcRepr<A> {
 }
 
 // NOTE: Copy on write
-unsafe impl<A> DataRawMut for OwnedArcRepr<A>
+unsafe impl<A> RawDataMut for OwnedArcRepr<A>
 where
     A: Clone,
 {
@@ -246,14 +246,14 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
 
 unsafe impl<A> DataMut for OwnedArcRepr<A> where A: Clone {}
 
-unsafe impl<A> DataRawClone for OwnedArcRepr<A> {
+unsafe impl<A> RawDataClone for OwnedArcRepr<A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         // pointer is preserved
         (self.clone(), ptr)
     }
 }
 
-unsafe impl<A> DataRaw for OwnedRepr<A> {
+unsafe impl<A> RawData for OwnedRepr<A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         Some(&self.0)
@@ -261,7 +261,7 @@ unsafe impl<A> DataRaw for OwnedRepr<A> {
     private_impl!{}
 }
 
-unsafe impl<A> DataRawMut for OwnedRepr<A> {
+unsafe impl<A> RawDataMut for OwnedRepr<A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where Self: Sized,
@@ -287,7 +287,7 @@ unsafe impl<A> Data for OwnedRepr<A> {
 
 unsafe impl<A> DataMut for OwnedRepr<A> { }
 
-unsafe impl<A> DataRawClone for OwnedRepr<A>
+unsafe impl<A> RawDataClone for OwnedRepr<A>
     where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
@@ -313,7 +313,7 @@ unsafe impl<A> DataRawClone for OwnedRepr<A>
     }
 }
 
-unsafe impl<'a, A> DataRaw for ViewRepr<&'a A> {
+unsafe impl<'a, A> RawData for ViewRepr<&'a A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         None
@@ -331,13 +331,13 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     }
 }
 
-unsafe impl<'a, A> DataRawClone for ViewRepr<&'a A> {
+unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A> {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         (*self, ptr)
     }
 }
 
-unsafe impl<'a, A> DataRaw for ViewRepr<&'a mut A> {
+unsafe impl<'a, A> RawData for ViewRepr<&'a mut A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         None
@@ -345,7 +345,7 @@ unsafe impl<'a, A> DataRaw for ViewRepr<&'a mut A> {
     private_impl!{}
 }
 
-unsafe impl<'a, A> DataRawMut for ViewRepr<&'a mut A> {
+unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where Self: Sized,
@@ -389,7 +389,7 @@ pub unsafe trait DataOwned : Data {
 /// A representation that is a lightweight view.
 ///
 /// ***Internal trait, see `Data`.***
-pub unsafe trait DataShared : Clone + Data + DataRawClone { }
+pub unsafe trait DataShared : Clone + Data + RawDataClone { }
 
 unsafe impl<A> DataShared for OwnedRcRepr<A> {}
 unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}

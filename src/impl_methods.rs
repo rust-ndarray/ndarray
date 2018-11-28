@@ -47,7 +47,7 @@ use stacking::stack;
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D>
 where
-    S: DataRaw<Elem = A>,
+    S: RawData<Elem = A>,
     D: Dimension,
 {
     /// Return the total number of elements in the array.
@@ -503,7 +503,7 @@ where
     }
 
     pub(crate) fn get_ptr_mut<I>(&mut self, index: I) -> Option<*mut A>
-        where S: DataRawMut,
+        where S: RawDataMut,
               I: NdIndex<D>,
     {
         // const and mut are separate to enforce &mutness as well as the
@@ -1143,7 +1143,7 @@ where
     ///
     /// This method is mostly only useful with unsafe code.
     fn try_ensure_unique(&mut self)
-        where S: DataRawMut
+        where S: RawDataMut
     {
         debug_assert!(self.pointer_is_inbounds());
         S::try_ensure_unique(self);
@@ -1204,7 +1204,7 @@ where
     /// Return a mutable pointer to the first element in the array.
     #[inline(always)]
     pub fn as_mut_ptr(&mut self) -> *mut A
-        where S: DataRawMut
+        where S: RawDataMut
     {
         self.try_ensure_unique(); // for RcArray
         self.ptr
@@ -1219,7 +1219,7 @@ where
     /// Return a raw mutable view of the array.
     #[inline]
     pub fn raw_view_mut(&mut self) -> RawArrayViewMut<A, D>
-        where S: DataRawMut
+        where S: RawDataMut
     {
         self.try_ensure_unique(); // for RcArray
         unsafe { RawArrayViewMut::new_(self.ptr, self.dim.clone(), self.strides.clone()) }

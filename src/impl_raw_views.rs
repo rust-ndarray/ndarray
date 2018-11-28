@@ -89,7 +89,7 @@ where
             self.ptr
         } else {
             let offset = stride_offset(index, self.strides.axis(axis));
-            // The `.offset()` is safe due to the guarantees of `DataRaw`.
+            // The `.offset()` is safe due to the guarantees of `RawData`.
             unsafe { self.ptr.offset(offset) }
         };
 
