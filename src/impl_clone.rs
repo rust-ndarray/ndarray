@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use imp_prelude::*;
-use DataClone;
+use RawDataClone;
 
-impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D> {
+impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {
         unsafe {
             let (data, ptr) = self.data.clone_with_ptr(self.ptr);
@@ -33,5 +33,4 @@ impl<S: DataClone, D: Clone> Clone for ArrayBase<S, D> {
     }
 }
 
-impl<S: DataClone + Copy, D: Copy> Copy for ArrayBase<S, D> {}
-
+impl<S: RawDataClone + Copy, D: Copy> Copy for ArrayBase<S, D> {}

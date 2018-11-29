@@ -9,11 +9,10 @@
 use std::slice;
 
 use imp_prelude::*;
-use dimension::{self, stride_offset};
+use dimension;
 use error::ShapeError;
-use NdIndex;
 use arraytraits::array_out_of_bounds;
-use StrideShape;
+use {is_aligned, NdIndex, StrideShape};
 
 use {
     ElementsBase,
@@ -24,11 +23,6 @@ use {
 };
 
 use iter::{self, AxisIter, AxisIterMut};
-
-/// Returns `true` if the pointer is aligned.
-fn is_aligned<T>(ptr: *const T) -> bool {
-    (ptr as usize) % ::std::mem::align_of::<T>() == 0
-}
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -117,15 +111,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
         where Sh: Into<StrideShape<D>>
     {
-        let shape = shape.into();
-        let dim = shape.dim;
-        let strides = shape.strides;
-        if cfg!(debug_assertions) {
-            assert!(!ptr.is_null(), "The pointer must be non-null.");
-            assert!(is_aligned(ptr), "The pointer must be aligned.");
-            dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
-        }
-        ArrayView::new_(ptr, dim, strides)
+        RawArrayView::from_shape_ptr(shape, ptr).deref_into_view()
     }
 
     /// Convert the view into an `ArrayView<'b, A, D>` where `'b` is a lifetime
@@ -147,35 +133,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// an array with shape 3 × 5 × 5.
     ///
     /// <img src="https://rust-ndarray.github.io/ndarray/images/split_at.svg" width="300px" height="271px">
-    pub fn split_at(self, axis: Axis, index: Ix)
-        -> (Self, Self)
-    {
-        // NOTE: Keep this in sync with the ArrayViewMut version
-        assert!(index <= self.len_of(axis));
-        let left_ptr = self.ptr;
-        let right_ptr = if index == self.len_of(axis) {
-            self.ptr
-        } else {
-            let offset = stride_offset(index, self.strides.axis(axis));
-            unsafe {
-                self.ptr.offset(offset)
-            }
-        };
-
-        let mut dim_left = self.dim.clone();
-        dim_left.set_axis(axis, index);
-        let left = unsafe {
-            Self::new_(left_ptr, dim_left, self.strides.clone())
-        };
-
-        let mut dim_right = self.dim;
-        let right_len  = dim_right.axis(axis) - index;
-        dim_right.set_axis(axis, right_len);
-        let right = unsafe {
-            Self::new_(right_ptr, dim_right, self.strides)
-        };
-
-        (left, right)
+    pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
+        unsafe {
+            let (left, right) = self.into_raw_view().split_at(axis, index);
+            (left.deref_into_view(), right.deref_into_view())
+        }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
@@ -188,6 +150,11 @@ impl<'a, A, D> ArrayView<'a, A, D>
         } else {
             None
         }
+    }
+
+    /// Converts to a raw array view.
+    pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
+        unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
     }
 }
 
@@ -414,15 +381,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
         where Sh: Into<StrideShape<D>>
     {
-        let shape = shape.into();
-        let dim = shape.dim;
-        let strides = shape.strides;
-        if cfg!(debug_assertions) {
-            assert!(!ptr.is_null(), "The pointer must be non-null.");
-            assert!(is_aligned(ptr), "The pointer must be aligned.");
-            dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
-        }
-        ArrayViewMut::new_(ptr, dim, strides)
+        RawArrayViewMut::from_shape_ptr(shape, ptr).deref_into_view_mut()
     }
 
     /// Convert the view into an `ArrayViewMut<'b, A, D>` where `'b` is a lifetime
@@ -439,35 +398,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// before the split and one mutable view after the split.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
-    pub fn split_at(self, axis: Axis, index: Ix)
-        -> (Self, Self)
-    {
-        // NOTE: Keep this in sync with the ArrayView version
-        assert!(index <= self.len_of(axis));
-        let left_ptr = self.ptr;
-        let right_ptr = if index == self.len_of(axis) {
-            self.ptr
-        } else {
-            let offset = stride_offset(index, self.strides.axis(axis));
-            unsafe {
-                self.ptr.offset(offset)
-            }
-        };
-
-        let mut dim_left = self.dim.clone();
-        dim_left.set_axis(axis, index);
-        let left = unsafe {
-            Self::new_(left_ptr, dim_left, self.strides.clone())
-        };
-
-        let mut dim_right = self.dim;
-        let right_len  = dim_right.axis(axis) - index;
-        dim_right.set_axis(axis, right_len);
-        let right = unsafe {
-            Self::new_(right_ptr, dim_right, self.strides)
-        };
-
-        (left, right)
+    pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
+        unsafe {
+            let (left, right) = self.into_raw_view_mut().split_at(axis, index);
+            (left.deref_into_view_mut(), right.deref_into_view_mut())
+        }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
@@ -609,6 +544,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         unsafe {
             ArrayView::new_(self.ptr, self.dim, self.strides)
         }
+    }
+
+    /// Converts to a mutable raw array view.
+    pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D> {
+        unsafe { RawArrayViewMut::new_(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]
