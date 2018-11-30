@@ -675,7 +675,8 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// don't need `multislice!()`; just call
 /// [`.slice()`](struct.ArrayBase.html#method.slice) multiple times instead.
 ///
-/// `multislice!()` follows Rust's aliasing rules:
+/// `multislice!()` evaluates to a tuple of `ArrayView` and/or `ArrayViewMut`
+/// instances. It checks Rust's aliasing rules:
 ///
 /// * An `ArrayViewMut` and `ArrayView` cannot reference the same element.
 /// * Two `ArrayViewMut` cannot reference the same element.
@@ -692,9 +693,9 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// the other slices.
 ///
 /// ```
-/// #[macro_use]
 /// extern crate ndarray;
 ///
+/// use ndarray::multislice;
 /// use ndarray::prelude::*;
 ///
 /// # fn main() {
@@ -712,7 +713,8 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// * `ArrayViewMut` and `ArrayView` cannot reference the same element.
 ///
 ///   ```should_panic
-///   # #[macro_use] extern crate ndarray;
+///   # extern crate ndarray;
+///   # use ndarray::multislice;
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr = Array1::from_iter(0..12);
@@ -723,7 +725,8 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// * Two `ArrayViewMut` cannot reference the same element.
 ///
 ///   ```should_panic
-///   # #[macro_use] extern crate ndarray;
+///   # extern crate ndarray;
+///   # use ndarray::multislice;
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr = Array1::from_iter(0..12);
