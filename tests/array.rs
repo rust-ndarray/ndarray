@@ -9,6 +9,7 @@ use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
     arr3,
+    multislice,
 };
 use ndarray::indices;
 use defmac::defmac;
@@ -334,14 +335,14 @@ fn test_multislice() {
         {
             let copy = arr.clone();
             assert_eq!(
-                multislice!(arr, (mut s1, mut s2)),
+                multislice!(arr, (mut s1, mut s2,)),
                 (copy.clone().slice_mut(s1), copy.clone().slice_mut(s2))
             );
         }
         {
             let copy = arr.clone();
             assert_eq!(
-                multislice!(arr, (mut s1, s2)),
+                multislice!(arr, (mut s1, s2,)),
                 (copy.clone().slice_mut(s1), copy.clone().slice(s2))
             );
         }
@@ -362,6 +363,7 @@ fn test_multislice() {
     });
     let mut arr = Array1::from_iter(0..48).into_shape((8, 6)).unwrap();
 
+    assert_eq!((arr.clone().view(),), multislice!(arr, (s![.., ..],)));
     test_multislice!(&mut arr, s![0, ..], s![1, ..]);
     test_multislice!(&mut arr, s![0, ..], s![-1, ..]);
     test_multislice!(&mut arr, s![0, ..], s![1.., ..]);
