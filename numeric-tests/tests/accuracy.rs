@@ -11,6 +11,7 @@ use ndarray::{
     Data,
     LinalgScalar,
 };
+use ndarray::linalg::general_mat_mul;
 
 use rand::distributions::Normal;
 
@@ -162,6 +163,42 @@ fn accurate_mul_f32() {
 }
 
 #[test]
+fn accurate_mul_f32_general() {
+    // pick a few random sizes
+    let mut rng = SmallRng::from_entropy();
+    for i in 0..20 {
+        let m = rng.gen_range(15, 512);
+        let k = rng.gen_range(15, 512);
+        let n = rng.gen_range(15, 1560);
+        let a = gen(Ix2(m, k));
+        let b = gen(Ix2(n, k));
+        let mut c = gen(Ix2(m, n));
+        let b = b.t();
+        let (a, b, mut c) = if i > 10 {
+            (a.slice(s![..;2, ..;2]),
+             b.slice(s![..;2, ..;2]),
+             c.slice_mut(s![..;2, ..;2]))
+        } else { (a.view(), b, c.view_mut()) };
+
+        println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
+        general_mat_mul(1., &a, &b, 0., &mut c);
+        let reference = reference_mat_mul(&a, &b);
+        let diff = (&c - &reference).mapv_into(f32::abs);
+
+        let rtol = 1e-3;
+        let atol = 1e-4;
+        let crtol = c.mapv(|x| x.abs() * rtol);
+        let tol = crtol + atol;
+        let tol_m_diff = &diff - &tol;
+        let maxdiff = *tol_m_diff.max();
+        println!("diff offset from tolerance level= {:.2e}", maxdiff);
+        if maxdiff > 0. {
+            panic!("results differ");
+        }
+    }
+}
+
+#[test]
 fn accurate_mul_f64() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
@@ -195,6 +232,41 @@ fn accurate_mul_f64() {
     }
 }
 
+#[test]
+fn accurate_mul_f64_general() {
+    // pick a few random sizes
+    let mut rng = SmallRng::from_entropy();
+    for i in 0..20 {
+        let m = rng.gen_range(15, 512);
+        let k = rng.gen_range(15, 512);
+        let n = rng.gen_range(15, 1560);
+        let a = gen_f64(Ix2(m, k));
+        let b = gen_f64(Ix2(n, k));
+        let mut c = gen_f64(Ix2(m, n));
+        let b = b.t();
+        let (a, b, mut c) = if i > 10 {
+            (a.slice(s![..;2, ..;2]),
+             b.slice(s![..;2, ..;2]),
+             c.slice_mut(s![..;2, ..;2]))
+        } else { (a.view(), b, c.view_mut()) };
+
+        println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
+        general_mat_mul(1., &a, &b, 0., &mut c);
+        let reference = reference_mat_mul(&a, &b);
+        let diff = (&c - &reference).mapv_into(f64::abs);
+
+        let rtol = 1e-7;
+        let atol = 1e-12;
+        let crtol = c.mapv(|x| x.abs() * rtol);
+        let tol = crtol + atol;
+        let tol_m_diff = &diff - &tol;
+        let maxdiff = *tol_m_diff.max();
+        println!("diff offset from tolerance level= {:.2e}", maxdiff);
+        if maxdiff > 0. {
+            panic!("results differ");
+        }
+    }
+}
 
 #[test]
 fn accurate_mul_with_column_f64() {
