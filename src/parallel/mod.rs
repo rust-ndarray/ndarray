@@ -108,9 +108,12 @@ pub mod prelude {
     #[doc(no_inline)]
     pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator,
     IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
+
+    pub use super::par_azip;
 }
 
 pub use self::par::Parallel;
+pub use par_azip;
 
 mod par;
 mod ext_traits;

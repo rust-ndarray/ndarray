@@ -3,7 +3,6 @@
 
 extern crate rayon;
 
-#[macro_use]
 extern crate ndarray;
 extern crate itertools;
 
