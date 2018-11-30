@@ -9,7 +9,7 @@ use error::{ShapeError, ErrorKind};
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use std::fmt;
 use std::marker::PhantomData;
-use super::Dimension;
+use crate::{ArrayView, ArrayViewMut, Dimension, RawArrayViewMut};
 
 /// A slice (range with step size).
 ///
@@ -624,6 +624,32 @@ macro_rules! s(
     };
 );
 
+/// Returns a ZST representing the lifetime of the mutable view.
+#[doc(hidden)]
+pub fn life_of_view_mut<'a, A, D: Dimension>(
+    _view: &ArrayViewMut<'a, A, D>
+) -> PhantomData<&'a mut A> {
+    PhantomData
+}
+
+/// Derefs the raw mutable view into a view, using the given lifetime.
+#[doc(hidden)]
+pub unsafe fn deref_raw_view_mut_into_view_with_life<'a, A, D: Dimension>(
+    raw: RawArrayViewMut<A, D>,
+    _life: PhantomData<&'a mut A>,
+) -> ArrayView<'a, A, D> {
+    raw.deref_into_view()
+}
+
+/// Derefs the raw mutable view into a mutable view, using the given lifetime.
+#[doc(hidden)]
+pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
+    raw: RawArrayViewMut<A, D>,
+    _life: PhantomData<&'a mut A>,
+) -> ArrayViewMut<'a, A, D> {
+    raw.deref_into_view_mut()
+}
+
 /// Take multiple slices simultaneously.
 ///
 /// This macro makes it possible to take multiple slices of the same array, as
@@ -706,67 +732,78 @@ macro_rules! s(
 ///   ```
 #[macro_export]
 macro_rules! multislice(
-    (
-        @check $view:expr,
-        $info:expr,
-        ()
-    ) => {};
+    (@check $view:expr, $info:expr, ()) => {};
     // Check that $info doesn't intersect $other.
-    (
-        @check $view:expr,
-        $info:expr,
-        ($other:expr,)
-    ) => {
+    (@check $view:expr, $info:expr, ($other:expr,)) => {
         assert!(
             !$crate::slices_intersect(&$view.raw_dim(), $info, $other),
             "Slice {:?} must not intersect slice {:?}", $info, $other
         )
     };
     // Check that $info doesn't intersect any of the other info in the tuple.
-    (
-        @check $view:expr,
-        $info:expr,
-        ($other:expr, $($more:tt)*)
-    ) => {
+    (@check $view:expr, $info:expr, ($other:expr, $($more:tt)*)) => {
         {
             multislice!(@check $view, $info, ($other,));
             multislice!(@check $view, $info, ($($more)*));
         }
     };
+    // Create the (mutable) slice.
+    (@slice $view:expr, $life:expr, mut $info:expr) => {
+        #[allow(unsafe_code)]
+        unsafe {
+            $crate::deref_raw_view_mut_into_view_mut_with_life(
+                $view.clone().slice_move($info),
+                $life,
+            )
+        }
+    };
+    // Create the (read-only) slice.
+    (@slice $view:expr, $life:expr, $info:expr) => {
+        #[allow(unsafe_code)]
+        unsafe {
+            $crate::deref_raw_view_mut_into_view_with_life(
+                $view.clone().slice_move($info),
+                $life,
+            )
+        }
+    };
     // Parse last slice (mutable), no trailing comma.
     (
-        @parse $view:expr,
+        @parse $view:expr, $life:expr,
         ($($sliced:tt)*),
         ($($mut_info:tt)*),
         ($($immut_info:tt)*),
         (mut $info:expr)
     ) => {
-        match $info {
-            info => {
-                multislice!(@check $view, info, ($($mut_info)*));
-                multislice!(@check $view, info, ($($immut_info)*));
-                ($($sliced)* unsafe { $view.aliasing_view_mut() }.slice_move(info))
-            }
-        }
+        // Add trailing comma.
+        multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            (mut $info,)
+        )
     };
     // Parse last slice (read-only), no trailing comma.
     (
-        @parse $view:expr,
+        @parse $view:expr, $life:expr,
         ($($sliced:tt)*),
         ($($mut_info:tt)*),
         ($($immut_info:tt)*),
         ($info:expr)
     ) => {
-        match $info {
-            info => {
-                multislice!(@check $view, info, ($($mut_info)*));
-                ($($sliced)* unsafe { $view.aliasing_view() }.slice_move(info))
-            }
-        }
+        // Add trailing comma.
+        multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            ($info,)
+        )
     };
     // Parse last slice (mutable), with trailing comma.
     (
-        @parse $view:expr,
+        @parse $view:expr, $life:expr,
         ($($sliced:tt)*),
         ($($mut_info:tt)*),
         ($($immut_info:tt)*),
@@ -774,15 +811,16 @@ macro_rules! multislice(
     ) => {
         match $info {
             info => {
+                // Check for overlap with all previous mutable and immutable slices.
                 multislice!(@check $view, info, ($($mut_info)*));
                 multislice!(@check $view, info, ($($immut_info)*));
-                ($($sliced)* unsafe { $view.aliasing_view_mut() }.slice_move(info))
+                ($($sliced)* multislice!(@slice $view, $life, mut info),)
             }
         }
     };
     // Parse last slice (read-only), with trailing comma.
     (
-        @parse $view:expr,
+        @parse $view:expr, $life:expr,
         ($($sliced:tt)*),
         ($($mut_info:tt)*),
         ($($immut_info:tt)*),
@@ -790,14 +828,15 @@ macro_rules! multislice(
     ) => {
         match $info {
             info => {
+                // Check for overlap with all previous mutable slices.
                 multislice!(@check $view, info, ($($mut_info)*));
-                ($($sliced)* unsafe { $view.aliasing_view() }.slice_move(info))
+                ($($sliced)* multislice!(@slice $view, $life, info),)
             }
         }
     };
     // Parse a mutable slice.
     (
-        @parse $view:expr,
+        @parse $view:expr, $life:expr,
         ($($sliced:tt)*),
         ($($mut_info:tt)*),
         ($($immut_info:tt)*),
@@ -805,11 +844,12 @@ macro_rules! multislice(
     ) => {
         match $info {
             info => {
+                // Check for overlap with all previous mutable and immutable slices.
                 multislice!(@check $view, info, ($($mut_info)*));
                 multislice!(@check $view, info, ($($immut_info)*));
                 multislice!(
-                    @parse $view,
-                    ($($sliced)* unsafe { $view.aliasing_view_mut() }.slice_move(info),),
+                    @parse $view, $life,
+                    ($($sliced)* multislice!(@slice $view, $life, mut info),),
                     ($($mut_info)* info,),
                     ($($immut_info)*),
                     ($($t)*)
@@ -819,7 +859,7 @@ macro_rules! multislice(
     };
     // Parse a read-only slice.
     (
-        @parse $view:expr,
+        @parse $view:expr, $life:expr,
         ($($sliced:tt)*),
         ($($mut_info:tt)*),
         ($($immut_info:tt)*),
@@ -827,10 +867,11 @@ macro_rules! multislice(
     ) => {
         match $info {
             info => {
+                // Check for overlap with all previous mutable slices.
                 multislice!(@check $view, info, ($($mut_info)*));
                 multislice!(
-                    @parse $view,
-                    ($($sliced)* unsafe { $view.aliasing_view() }.slice_move(info),),
+                    @parse $view, $life,
+                    ($($sliced)* multislice!(@slice $view, $life, info),),
                     ($($mut_info)*),
                     ($($immut_info)* info,),
                     ($($t)*)
@@ -841,8 +882,11 @@ macro_rules! multislice(
     // Entry point.
     ($arr:expr, ($($t:tt)*)) => {
         {
-            let view = $crate::ArrayBase::view_mut(&mut $arr);
-            multislice!(@parse view, (), (), (), ($($t)*))
+            let (life, raw_view) = {
+                let mut view = $crate::ArrayBase::view_mut(&mut $arr);
+                ($crate::life_of_view_mut(&view), view.raw_view_mut())
+            };
+            multislice!(@parse raw_view, life, (), (), (), ($($t)*))
         }
     };
 );

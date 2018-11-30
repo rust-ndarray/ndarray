@@ -122,7 +122,10 @@ pub use dimension::NdIndex;
 pub use dimension::IxDynImpl;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
-pub use slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
+pub use slice::{
+    deref_raw_view_mut_into_view_with_life, deref_raw_view_mut_into_view_mut_with_life,
+    life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex
+};
 
 use iterators::Baseiter;
 use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
