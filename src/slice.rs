@@ -746,8 +746,8 @@ macro_rules! multislice(
     // Check that $info doesn't intersect any of the other info in the tuple.
     (@check $view:expr, $info:expr, ($other:expr, $($more:tt)*)) => {
         {
-            multislice!(@check $view, $info, ($other,));
-            multislice!(@check $view, $info, ($($more)*));
+            $crate::multislice!(@check $view, $info, ($other,));
+            $crate::multislice!(@check $view, $info, ($($more)*));
         }
     };
     // Create the (mutable) slice.
@@ -779,7 +779,7 @@ macro_rules! multislice(
         (mut $info:expr)
     ) => {
         // Add trailing comma.
-        multislice!(
+        $crate::multislice!(
             @parse $view, $life,
             ($($sliced)*),
             ($($mut_info)*),
@@ -796,7 +796,7 @@ macro_rules! multislice(
         ($info:expr)
     ) => {
         // Add trailing comma.
-        multislice!(
+        $crate::multislice!(
             @parse $view, $life,
             ($($sliced)*),
             ($($mut_info)*),
@@ -815,9 +815,9 @@ macro_rules! multislice(
         match $info {
             info => {
                 // Check for overlap with all previous mutable and immutable slices.
-                multislice!(@check $view, info, ($($mut_info)*));
-                multislice!(@check $view, info, ($($immut_info)*));
-                ($($sliced)* multislice!(@slice $view, $life, mut info),)
+                $crate::multislice!(@check $view, info, ($($mut_info)*));
+                $crate::multislice!(@check $view, info, ($($immut_info)*));
+                ($($sliced)* $crate::multislice!(@slice $view, $life, mut info),)
             }
         }
     };
@@ -832,8 +832,8 @@ macro_rules! multislice(
         match $info {
             info => {
                 // Check for overlap with all previous mutable slices.
-                multislice!(@check $view, info, ($($mut_info)*));
-                ($($sliced)* multislice!(@slice $view, $life, info),)
+                $crate::multislice!(@check $view, info, ($($mut_info)*));
+                ($($sliced)* $crate::multislice!(@slice $view, $life, info),)
             }
         }
     };
@@ -848,11 +848,11 @@ macro_rules! multislice(
         match $info {
             info => {
                 // Check for overlap with all previous mutable and immutable slices.
-                multislice!(@check $view, info, ($($mut_info)*));
-                multislice!(@check $view, info, ($($immut_info)*));
-                multislice!(
+                $crate::multislice!(@check $view, info, ($($mut_info)*));
+                $crate::multislice!(@check $view, info, ($($immut_info)*));
+                $crate::multislice!(
                     @parse $view, $life,
-                    ($($sliced)* multislice!(@slice $view, $life, mut info),),
+                    ($($sliced)* $crate::multislice!(@slice $view, $life, mut info),),
                     ($($mut_info)* info,),
                     ($($immut_info)*),
                     ($($t)*)
@@ -871,10 +871,10 @@ macro_rules! multislice(
         match $info {
             info => {
                 // Check for overlap with all previous mutable slices.
-                multislice!(@check $view, info, ($($mut_info)*));
-                multislice!(
+                $crate::multislice!(@check $view, info, ($($mut_info)*));
+                $crate::multislice!(
                     @parse $view, $life,
-                    ($($sliced)* multislice!(@slice $view, $life, info),),
+                    ($($sliced)* $crate::multislice!(@slice $view, $life, info),),
                     ($($mut_info)*),
                     ($($immut_info)* info,),
                     ($($t)*)
@@ -889,7 +889,7 @@ macro_rules! multislice(
                 let mut view = $crate::ArrayBase::view_mut(&mut $arr);
                 ($crate::life_of_view_mut(&view), view.raw_view_mut())
             };
-            multislice!(@parse raw_view, life, (), (), (), ($($t)*))
+            $crate::multislice!(@parse raw_view, life, (), (), (), ($($t)*))
         }
     };
 );
