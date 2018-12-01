@@ -161,7 +161,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// ```rust
     /// # use ndarray::prelude::*;
     /// # let a = Array::from_elem((3, 3), 0);
-    /// let (v1, v2) = a.split_at(Axis(0), 1);
+    /// let (v1, v2) = a.view().split_at(Axis(0), 1);
     /// ```
     /// ```text
     ///         ┌───┬───┬───┬───┐       0  ↓ indices
@@ -181,7 +181,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// ```rust
     /// # use ndarray::prelude::*;
     /// # let a = Array::from_elem((3, 3), 0);
-    /// let (u1, u2) = a.split_at(Axis(1), 2);
+    /// let (u1, u2) = a.view().split_at(Axis(1), 2);
     ///
     /// ```
     /// ```text
