@@ -7,9 +7,11 @@
 // except according to those terms.
 
 #[macro_export]
-/// Parallel version of the `azip!` macro.
+/// Parallelized array zip macro: lock step function application across several
+/// arrays and producers.
 ///
-/// See the `azip!` documentation for more details.
+/// This is a version of the [`azip`] macro that requires the crate feature
+/// `rayon` to be enabled.
 ///
 /// This example:
 ///

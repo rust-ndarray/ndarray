@@ -7,7 +7,8 @@
 //!
 //! This requires the crate feature `rayon` to be enabled.
 //!
-//! The following implement [rayon::iter::IntoParallelIterator]:
+//! The following types implement parallel iterators, accessed using these
+//! methods:
 //!
 //! - [Array], [ArcArray]: `.par_iter()` and `.par_iter_mut()`
 //! - [ArrayView](ArrayView): `.into_par_iter()`
@@ -15,7 +16,7 @@
 //! - [AxisIter](iter::AxisIter), [AxisIterMut](iter::AxisIterMut): `.into_par_iter()`
 //! - [Zip] `.into_par_iter()`
 //!
-//! The following parallelized methods exist:
+//! The following other parallelized methods exist:
 //!
 //! - [ArrayBase::par_map_inplace()]
 //! - [ArrayBase::par_mapv_inplace()]
