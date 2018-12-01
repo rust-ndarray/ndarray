@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `azip` macro in crate `ndarray`."><meta name="keywords" content="rust, rustlang, rust-lang, azip"><title>ndarray::azip - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script></head><body class="rustdoc macro"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><div class="sidebar-elems"><p class='location'><a href='index.html'>ndarray</a></p><script>window.sidebarCurrent = {name: 'azip', ty: 'macro', relpath: ''};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/ndarray/zip/zipmacro.rs.html#117-167' title='goto source code'>[src]</a></span><span class='in-band'>Macro <a href='index.html'>ndarray</a>::<wbr><a class="macro" href=''>azip</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><div class="example-wrap"><pre class="rust macro">
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">azip</span> {
+    (@<span class="ident">parse</span> [<span class="ident">index</span> <span class="op">=&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">aa</span>:<span class="ident">expr</span>,)<span class="kw-2">*</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">tt</span> <span class="kw">in</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">tt</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">aa</span>:<span class="ident">expr</span>,)<span class="kw-2">*</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">tt</span> <span class="kw">in</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">tt</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">finish</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">z</span>:<span class="ident">expr</span>) [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">aa</span>:<span class="ident">expr</span>,)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">p</span>:<span class="ident">pat</span>,)<span class="op">+</span>] <span class="kw">in</span> { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>}) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [] [] <span class="ident">index</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>:<span class="ident">pat</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] <span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>) $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] <span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] , $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] <span class="kw-2">ref</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>) $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] <span class="kw-2">ref</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>) $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    (@<span class="ident">parse</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exprs</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pats</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>] $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=&gt;</span> { ... };
+}</pre></div>
+</div><div class='docblock'><p>Array zip macro: lock step function application across several arrays and
+producers.</p>
+<p>This is a shorthand for <a href="struct.Zip.html"><code>Zip</code></a>.</p>
+<p>This example:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="macro">azip</span><span class="macro">!</span>(<span class="kw-2">mut</span> <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span> <span class="kw">in</span> { <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">+</span> <span class="ident">c</span> })</pre></div>
+<p>Is equivalent to:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="ident">Zip</span>::<span class="ident">from</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a</span>).<span class="ident">and</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>).<span class="ident">and</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">apply</span>(<span class="op">|</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> {
+    <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">+</span> <span class="ident">c</span>;
+});
+</pre></div>
+<p>Explanation of the shorthand for captures:</p>
+<ul>
+<li><code>mut a</code>: the producer is <code>&amp;mut a</code> and the variable pattern is <code>mut a</code>.</li>
+<li><code>b</code>: the producer is <code>&amp;b</code> and the variable pattern is <code>&amp;b</code> (same for <code>c</code>).</li>
+</ul>
+<p>The syntax is <code>azip!(</code> <em>[</em> <code>index</code> <em>pattern</em> <code>,</code><em>] capture [</em><code>,</code> <em>capture [</em><code>,</code> <em>...] ]</em> <code>in {</code> <em>expression</em> <code>})</code>
+where the captures are a sequence of pattern-like items that indicate which
+arrays are used for the zip. The <em>expression</em> is evaluated elementwise,
+with the value of an element from each producer in their respective variable.</p>
+<p>More capture rules:</p>
+<ul>
+<li><code>ref c</code>: the producer is <code>&amp;c</code> and the variable pattern is <code>c</code>.</li>
+<li><code>mut a (expr)</code>: the producer is <code>expr</code> and the variable pattern is <code>mut a</code>.</li>
+<li><code>b (expr)</code>: the producer is <code>expr</code> and the variable pattern is <code>&amp;b</code>.</li>
+<li><code>ref c (expr)</code>: the producer is <code>expr</code> and the variable pattern is <code>c</code>.</li>
+</ul>
+<p>Special rule:</p>
+<ul>
+<li><code>index i</code>: Use <code>Zip::indexed</code> instead. <code>i</code> is a pattern -- it can be
+a single variable name or something else that pattern matches the index.
+This rule must be the first if it is used, and it must be followed by
+at least one other rule.</li>
+</ul>
+<p><strong>Panics</strong> if any of the arrays are not of the same shape.</p>
+<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">ndarray</span>;
+
+<span class="kw">use</span> <span class="ident">ndarray</span>::{<span class="ident">azip</span>, <span class="ident">Array1</span>, <span class="ident">Array2</span>, <span class="ident">Axis</span>};
+
+<span class="kw">type</span> <span class="ident">M</span> <span class="op">=</span> <span class="ident">Array2</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="comment">// Setup example arrays</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">M</span>::<span class="ident">zeros</span>((<span class="number">16</span>, <span class="number">16</span>));
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">M</span>::<span class="ident">zeros</span>(<span class="ident">a</span>.<span class="ident">dim</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">M</span>::<span class="ident">zeros</span>(<span class="ident">a</span>.<span class="ident">dim</span>());
+
+    <span class="comment">// assign values</span>
+    <span class="ident">b</span>.<span class="ident">fill</span>(<span class="number">1.</span>);
+    <span class="kw">for</span> ((<span class="ident">i</span>, <span class="ident">j</span>), <span class="ident">elt</span>) <span class="kw">in</span> <span class="ident">c</span>.<span class="ident">indexed_iter_mut</span>() {
+        <span class="kw-2">*</span><span class="ident">elt</span> <span class="op">=</span> (<span class="ident">i</span> <span class="op">+</span> <span class="number">10</span> <span class="op">*</span> <span class="ident">j</span>) <span class="kw">as</span> <span class="ident">f32</span>;
+    }
+
+    <span class="comment">// Example 1: Compute a simple ternary operation:</span>
+    <span class="comment">// elementwise addition of b and c, stored in a</span>
+    <span class="macro">azip</span><span class="macro">!</span>(<span class="kw-2">mut</span> <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span> <span class="kw">in</span> { <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">+</span> <span class="ident">c</span> });
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">c</span>);
+
+    <span class="comment">// Example 2: azip!() with index</span>
+    <span class="macro">azip</span><span class="macro">!</span>(<span class="ident">index</span> (<span class="ident">i</span>, <span class="ident">j</span>), <span class="ident">b</span>, <span class="ident">c</span> <span class="kw">in</span> {
+        <span class="ident">a</span>[[<span class="ident">i</span>, <span class="ident">j</span>]] <span class="op">=</span> <span class="ident">b</span> <span class="op">-</span> <span class="ident">c</span>;
+    });
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">c</span>);
+
+
+    <span class="comment">// Example 3: azip!() on references</span>
+    <span class="comment">// See the definition of the function below</span>
+    <span class="ident">borrow_multiply</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">c</span>);
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">c</span>);
+
+
+    <span class="comment">// Since this function borrows its inputs, captures must use the x (x) pattern</span>
+    <span class="comment">// to avoid the macro&#39;s default rule that autorefs the producer.</span>
+    <span class="kw">fn</span> <span class="ident">borrow_multiply</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">M</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">M</span>, <span class="ident">c</span>: <span class="kw-2">&amp;</span><span class="ident">M</span>) {
+        <span class="macro">azip</span><span class="macro">!</span>(<span class="kw-2">mut</span> <span class="ident">a</span> (<span class="ident">a</span>), <span class="ident">b</span> (<span class="ident">b</span>), <span class="ident">c</span> (<span class="ident">c</span>) <span class="kw">in</span> { <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">*</span> <span class="ident">c</span> });
+    }
+
+
+    <span class="comment">// Example 4: using azip!() with a `ref` rule</span>
+    <span class="comment">//</span>
+    <span class="comment">// Create a new array `totals` with one entry per row of `a`.</span>
+    <span class="comment">// Use azip to traverse the rows of `a` and assign to the corresponding</span>
+    <span class="comment">// entry in `totals` with the sum across each row.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The row is an array view; use the &#39;ref&#39; rule on the row, to avoid the</span>
+    <span class="comment">// default which is to dereference the produced item.</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">totals</span> <span class="op">=</span> <span class="ident">Array1</span>::<span class="ident">zeros</span>(<span class="ident">a</span>.<span class="ident">rows</span>());
+
+    <span class="macro">azip</span><span class="macro">!</span>(<span class="kw-2">mut</span> <span class="ident">totals</span>, <span class="kw-2">ref</span> <span class="ident">row</span> (<span class="ident">a</span>.<span class="ident">genrows</span>()) <span class="kw">in</span> {
+        <span class="kw-2">*</span><span class="ident">totals</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">sum</span>();
+    });
+
+    <span class="comment">// Check the result against the built in `.sum_axis()` along axis 1.</span>
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">totals</span>, <span class="ident">a</span>.<span class="ident">sum_axis</span>(<span class="ident">Axis</span>(<span class="number">1</span>)));
+}
+</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g. <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g. <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g. <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "ndarray";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
