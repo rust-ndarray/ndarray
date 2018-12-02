@@ -149,7 +149,9 @@ pub type ArrayViewMutD<'a, A> = ArrayViewMut<'a, A, IxDyn>;
 
 /// one-dimensional shared ownership array
 #[allow(deprecated)]
+#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray1<A> = RcArray<A, Ix1>;
 /// two-dimensional shared ownership array
 #[allow(deprecated)]
+#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray2<A> = RcArray<A, Ix2>;
