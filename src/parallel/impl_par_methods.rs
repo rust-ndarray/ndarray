@@ -9,15 +9,20 @@ use {
 
 use parallel::prelude::*;
 
-// Arrays
 
-
+/// # Parallel methods
+///
+/// These methods require crate feature `rayon`.
 impl<A, S, D> ArrayBase<S, D>
     where S: DataMut<Elem=A>,
           D: Dimension,
           A: Send + Sync,
 {
-    /// Parallel version of `map_inplace`
+    /// Parallel version of `map_inplace`.
+    ///
+    /// Modify the array in place by calling `f` by mutable reference on each element.
+    ///
+    /// Elements are visited in arbitrary order.
     pub fn par_map_inplace<F>(&mut self, f: F)
         where F: Fn(&mut A) + Sync + Send
     {
@@ -25,6 +30,11 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Parallel version of `mapv_inplace`.
+    ///
+    /// Modify the array in place by calling `f` by **v**alue on each element.
+    /// The array is updated with the new values.
+    ///
+    /// Elements are visited in arbitrary order.
     pub fn par_mapv_inplace<F>(&mut self, f: F)
         where F: Fn(A) -> A + Sync + Send,
               A: Clone,
