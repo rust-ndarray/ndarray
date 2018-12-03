@@ -662,8 +662,8 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// disjoint).
 ///
 /// The syntax is `multislice!(` *expression, (pattern [, pattern [, …]])* `)`,
-/// where *expression* evaluates to an `ArrayBase<S, D>` where `S: DataMut`,
-/// and `pattern` is one of the following:
+/// where *expression* evaluates to a mutable array, and `pattern` is one of
+/// the following:
 ///
 /// * `mut expr`: creates an `ArrayViewMut`, where `expr` evaluates to a
 ///   `&SliceInfo` instance used to slice the array.
