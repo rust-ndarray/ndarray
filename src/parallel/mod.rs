@@ -104,7 +104,7 @@
 //! ```
 
 
-/// Into- traits for creating parallelized iterators.
+/// Into- traits for creating parallelized iterators and/or using [`par_azip!`]
 pub mod prelude {
     #[doc(no_inline)]
     pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator,
