@@ -55,10 +55,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//!   + See also the [`ndarray-parallel`] crate for integration with rayon.
 //! - **Requires Rust 1.30**
-//!
-//! [`ndarray-parallel`]: https://docs.rs/ndarray-parallel
 //!
 //! ## Crate Feature Flags
 //!
@@ -68,6 +65,9 @@
 //! - `serde-1`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support for serde 1.0
+//! - `rayon`
+//!   - Optional, compatible with Rust stable
+//!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
 //! - `blas`
 //!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication.
@@ -86,6 +86,9 @@
 
 #[cfg(feature = "serde-1")]
 extern crate serde;
+
+#[cfg(feature="rayon")]
+extern crate rayon;
 
 #[cfg(feature="blas")]
 extern crate cblas_sys;
@@ -1332,6 +1335,10 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
+
+// parallel methods
+#[cfg(feature="rayon")]
+pub mod parallel;
 
 mod impl_1d;
 mod impl_2d;
