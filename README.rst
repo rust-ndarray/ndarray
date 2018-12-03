@@ -52,6 +52,11 @@ your `Cargo.toml`.
   - Optional, compatible with Rust stable
   - Enables serialization support for serde 1.0
 
+- ``rayon``
+
+  - Optional, compatible with Rust stable
+  - Enables parallel iterators, parallelized methods and ``par_azip!``.
+
 - ``blas``
 
   - Optional and experimental, compatible with Rust stable
