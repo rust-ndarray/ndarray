@@ -123,26 +123,26 @@ where
     /// split and one view after the split.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
-    /// 
+    ///
     /// **Examples:**
     /// ```rust
     /// # use ndarray::prelude::*;
-    /// let a = array![[0, 1, 2, 3],
-    ///                [4, 5, 6, 7],
-    ///                [8, 9, 0, 1]];
+    /// let a = aview2(&[[0, 1, 2, 3],
+    ///                  [4, 5, 6, 7],
+    ///                  [8, 9, 0, 1]]);
     ///
     /// ```
-    /// The array `a` has two axes and shape 3 × 4:
+    /// The array view `a` has two axes and shape 3 × 4:
     /// ```text
-    ///          ─> Axis(1)
-    ///         ┌───┬───┬───┬───┐  0
-    ///       │ │ 0 │ 1 │ 2 │ 3 │
-    ///       v ├───┼───┼───┼───┤  1
-    ///  Axis(0)│ 4 │ 5 │ 6 │ 7 │
-    ///         ├───┼───┼───┼───┤  2
-    ///         │ 8 │ 9 │ 0 │ 1 │
-    ///         └───┴───┴───┴───┘  3 ↑
-    ///         0   1   2   3   4  ← possible split_at indices.
+    ///          ──▶ Axis(1)
+    ///         ┌─────┬─────┬─────┬─────┐ 0
+    ///       │ │ a₀₀ │ a₀₁ │ a₀₂ │ a₀₃ │
+    ///       ▼ ├─────┼─────┼─────┼─────┤ 1
+    ///  Axis(0)│ a₁₀ │ a₁₁ │ a₁₂ │ a₁₃ │
+    ///         ├─────┼─────┼─────┼─────┤ 2
+    ///         │ a₂₀ │ a₂₁ │ a₂₂ │ a₂₃ │
+    ///         └─────┴─────┴─────┴─────┘ 3 ↑
+    ///         0     1     2     3     4 ← possible split_at indices.
     /// ```
     ///
     /// Row indices increase along `Axis(0)`, and column indices increase along
@@ -152,45 +152,45 @@ where
     /// **Example 1**: Split `a` along the first axis, in this case the rows, at
     /// index 1.<br>
     /// This produces views v1 and v2 of shapes 1 × 4 and 2 × 4:
-    /// 
+    ///
     /// ```rust
     /// # use ndarray::prelude::*;
-    /// # let a = Array::from_elem((3, 3), 0);
-    /// let (v1, v2) = a.view().split_at(Axis(0), 1);
+    /// # let a = aview2(&[[0; 4]; 3]);
+    /// let (v1, v2) = a.split_at(Axis(0), 1);
     /// ```
     /// ```text
-    ///         ┌───┬───┬───┬───┐       0  ↓ indices
-    ///         │ 0 │ 1 │ 2 │ 3 │ v1
-    ///       │ └───┴───┴───┴───┘        
-    ///       v ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄       1
-    ///  Axis(0)┌───┬───┬───┬───┐        
-    ///         │ 4 │ 5 │ 6 │ 7 │
-    ///         ├───┼───┼───┼───┤ v2    2
-    ///         │ 8 │ 9 │ 0 │ 1 │
-    ///         └───┴───┴───┴───┘       3
+    ///         ┌─────┬─────┬─────┬─────┐       0  ↓ indices
+    ///         │ a₀₀ │ a₀₁ │ a₀₂ │ a₀₃ │            along Axis(0)
+    ///         ├─────┼─────┼─────┼─────┤ v1    1
+    ///         │ a₁₀ │ a₁₁ │ a₁₂ │ a₁₃ │
+    ///         └─────┴─────┴─────┴─────┘
+    ///         ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄       2
+    ///         ┌─────┬─────┬─────┬─────┐
+    ///         │ a₂₀ │ a₂₁ │ a₂₂ │ a₂₃ │ v2
+    ///         └─────┴─────┴─────┴─────┘       3
     /// ```
-    /// 
+    ///
     /// **Example 2**: Split `a` along the second axis, in this case the
     /// columns, at index 2.<br>
     /// This produces views u1 and u2 of shapes 3 × 2 and 3 × 2:
     ///
     /// ```rust
     /// # use ndarray::prelude::*;
-    /// # let a = Array::from_elem((3, 3), 0);
-    /// let (u1, u2) = a.view().split_at(Axis(1), 2);
+    /// # let a = aview2(&[[0; 4]; 3]);
+    /// let (u1, u2) = a.split_at(Axis(1), 2);
     ///
     /// ```
     /// ```text
-    ///             u1        u2
-    ///         0   1    2    3   4  indices →
-    ///         ┌───┬───┐┊┌───┬───┐
-    ///         │ 0 │ 1 │┊│ 2 │ 3 │
-    ///         ├───┼───┤┊├───┼───┤
-    ///         │ 4 │ 5 │┊│ 6 │ 7 │
-    ///         ├───┼───┤┊├───┼───┤
-    ///         │ 8 │ 9 │┊│ 0 │ 1 │
-    ///         └───┴───┘┊└───┴───┘
-    ///          ─> Axis(1)
+    ///              u1             u2
+    ///         ┌─────┬─────┐┊┌─────┬─────┐
+    ///         │ a₀₀ │ a₀₁ │┊│ a₀₂ │ a₀₃ │
+    ///         ├─────┼─────┤┊├─────┼─────┤
+    ///         │ a₁₀ │ a₁₁ │┊│ a₁₂ │ a₁₃ │
+    ///         ├─────┼─────┤┊├─────┼─────┤
+    ///         │ a₂₀ │ a₂₁ │┊│ a₂₂ │ a₂₃ │
+    ///         └─────┴─────┘┊└─────┴─────┘
+    ///         0     1      2      3     4  indices →
+    ///                                      along Axis(1)
     /// ```
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
         unsafe {
