@@ -1336,6 +1336,10 @@ impl<A, S, D> ArrayBase<S, D>
 }
 
 
+// parallel methods
+#[cfg(feature="rayon")]
+pub mod parallel;
+
 mod impl_1d;
 mod impl_2d;
 mod impl_dyn;
@@ -1352,10 +1356,6 @@ mod impl_views;
 
 // Array raw view methods
 mod impl_raw_views;
-
-// parallel methods
-#[cfg(feature="rayon")]
-pub mod parallel;
 
 /// A contiguous array shape of n dimensions.
 ///
