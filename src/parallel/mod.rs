@@ -10,17 +10,17 @@
 //! The following types implement parallel iterators, accessed using these
 //! methods:
 //!
-//! - [Array], [ArcArray]: `.par_iter()` and `.par_iter_mut()`
-//! - [ArrayView](ArrayView): `.into_par_iter()`
-//! - [ArrayViewMut](ArrayViewMut): `.into_par_iter()`
-//! - [AxisIter](iter::AxisIter), [AxisIterMut](iter::AxisIterMut): `.into_par_iter()`
-//! - [Zip] `.into_par_iter()`
+//! - [`Array`], [`ArcArray`]: `.par_iter()` and `.par_iter_mut()`
+//! - [`ArrayView`](ArrayView): `.into_par_iter()`
+//! - [`ArrayViewMut`](ArrayViewMut): `.into_par_iter()`
+//! - [`AxisIter`](iter::AxisIter), [`AxisIterMut`](iter::AxisIterMut): `.into_par_iter()`
+//! - [`Zip`] `.into_par_iter()`
 //!
 //! The following other parallelized methods exist:
 //!
-//! - [ArrayBase::par_map_inplace()]
-//! - [ArrayBase::par_mapv_inplace()]
-//! - [Zip::par_apply()] (all arities)
+//! - [`ArrayBase::par_map_inplace()`]
+//! - [`ArrayBase::par_mapv_inplace()`]
+//! - [`Zip::par_apply()`] (all arities)
 //!
 //! Note that you can use the parallel iterator for [Zip] to access all other
 //! rayon parallel iterator methods.
