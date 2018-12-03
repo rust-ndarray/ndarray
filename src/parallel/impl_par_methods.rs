@@ -50,7 +50,7 @@ impl<A, S, D> ArrayBase<S, D>
 // Zip
 
 macro_rules! zip_impl {
-    ($([$name:ident $($p:ident)*],)+) => {
+    ($([$($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
         impl<D, $($p),*> Zip<($($p,)*), D>
@@ -76,10 +76,10 @@ macro_rules! zip_impl {
 }
 
 zip_impl!{
-    [ParApply1 P1],
-    [ParApply2 P1 P2],
-    [ParApply3 P1 P2 P3],
-    [ParApply4 P1 P2 P3 P4],
-    [ParApply5 P1 P2 P3 P4 P5],
-    [ParApply6 P1 P2 P3 P4 P5 P6],
+    [P1],
+    [P1 P2],
+    [P1 P2 P3],
+    [P1 P2 P3 P4],
+    [P1 P2 P3 P4 P5],
+    [P1 P2 P3 P4 P5 P6],
 }
