@@ -117,6 +117,6 @@ pub use self::par::Parallel;
 pub use par_azip;
 
 mod par;
-mod ext_traits;
+mod impl_par_methods;
 mod into_impls;
 mod zipmacro;
