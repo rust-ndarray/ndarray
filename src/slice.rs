@@ -662,13 +662,15 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// disjoint).
 ///
 /// The syntax is `multislice!(` *expression, (pattern [, pattern [, …]])* `)`,
-/// where *expression* evaluates to a mutable array, and `pattern` is one of
-/// the following:
+/// where *expression* evaluates to a mutable array, and each *pattern* is
+/// either
 ///
-/// * `mut expr`: creates an `ArrayViewMut`, where `expr` evaluates to a
-///   `&SliceInfo` instance used to slice the array.
-/// * `expr`: creates an `ArrayView`, where `expr` evaluates to a `&SliceInfo`
-///   instance used to slice the array.
+/// * `mut` *s-args-or-expr*: creates an `ArrayViewMut` or
+/// * *s-args-or-expr*: creates an `ArrayView`
+///
+/// where *s-args-or-expr* is either (1) arguments enclosed in `[]` to pass to
+/// the [`s!`] macro to create a `&SliceInfo` instance or (2) an expression
+/// that evaluates to a `&SliceInfo` instance.
 ///
 /// **Note** that this macro always mutably borrows the array even if there are
 /// no `mut` patterns. If all you want to do is take read-only slices, you
@@ -700,7 +702,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///
 /// # fn main() {
 /// let mut arr = Array1::from_iter(0..12);
-/// let (a, b, c, d) = multislice!(arr, (s![0..5], mut s![6..;2], s![1..6], mut s![7..;2]));
+/// let (a, b, c, d) = multislice!(arr, ([0..5], mut [6..;2], [1..6], mut [7..;2]));
 /// assert_eq!(a, array![0, 1, 2, 3, 4]);
 /// assert_eq!(b, array![6, 8, 10]);
 /// assert_eq!(c, array![1, 2, 3, 4, 5]);
@@ -718,7 +720,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr = Array1::from_iter(0..12);
-///   multislice!(arr, (s![0..5], mut s![1..;2])); // panic!
+///   multislice!(arr, ([0..5], mut [1..;2])); // panic!
 ///   # }
 ///   ```
 ///
@@ -730,7 +732,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr = Array1::from_iter(0..12);
-///   multislice!(arr, (mut s![0..5], mut s![1..;2])); // panic!
+///   multislice!(arr, (mut [0..5], mut [1..;2])); // panic!
 ///   # }
 ///   ```
 #[macro_export]
@@ -769,6 +771,108 @@ macro_rules! multislice(
                 $life,
             )
         }
+    };
+    // Parse last slice (mutable), no trailing comma, applying `s![]` macro.
+    (
+        @parse $view:expr, $life:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        (mut [$($info:tt)*])
+    ) => {
+        // Apply `s![]` macro to info.
+        $crate::multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            (mut $crate::s![$($info)*],)
+        )
+    };
+    // Parse last slice (read-only), no trailing comma, applying `s![]` macro.
+    (
+        @parse $view:expr, $life:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        ([$($info:tt)*])
+    ) => {
+        // Apply `s![]` macro to info.
+        $crate::multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            ($crate::s![$($info)*],)
+        )
+    };
+    // Parse last slice (mutable), with trailing comma, applying `s![]` macro.
+    (
+        @parse $view:expr, $life:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        (mut [$($info:tt)*],)
+    ) => {
+        // Apply `s![]` macro to info.
+        $crate::multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            (mut $crate::s![$($info)*],)
+        )
+    };
+    // Parse last slice (read-only), with trailing comma, applying `s![]` macro.
+    (
+        @parse $view:expr, $life:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        ([$($info:tt)*],)
+    ) => {
+        // Apply `s![]` macro to info.
+        $crate::multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            ($crate::s![$($info)*],)
+        )
+    };
+    // Parse a mutable slice, applying `s![]` macro.
+    (
+        @parse $view:expr, $life:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        (mut [$($info:tt)*], $($t:tt)*)
+    ) => {
+        // Apply `s![]` macro to info.
+        $crate::multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            (mut $crate::s![$($info)*], $($t)*)
+        )
+    };
+    // Parse a read-only slice, applying `s![]` macro.
+    (
+        @parse $view:expr, $life:expr,
+        ($($sliced:tt)*),
+        ($($mut_info:tt)*),
+        ($($immut_info:tt)*),
+        ([$($info:tt)*], $($t:tt)*)
+    ) => {
+        // Apply `s![]` macro to info.
+        $crate::multislice!(
+            @parse $view, $life,
+            ($($sliced)*),
+            ($($mut_info)*),
+            ($($immut_info)*),
+            ($crate::s![$($info)*], $($t)*)
+        )
     };
     // Parse last slice (mutable), no trailing comma.
     (
