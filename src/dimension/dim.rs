@@ -12,7 +12,7 @@ use itertools::zip;
 
 use super::IntoDimension;
 use super::Dimension;
-use Ix;
+use crate::Ix;
 
 /// Dimension description.
 ///

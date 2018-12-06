@@ -11,7 +11,7 @@
 use std::mem::{self, size_of};
 use std::sync::Arc;
 
-use {
+use crate::{
     ArrayBase,
     Dimension,
     RawViewRepr,
@@ -52,7 +52,7 @@ pub unsafe trait RawDataMut : RawData {
     /// If `Self` provides safe mutable access to array elements, then it
     /// **must** panic or ensure that the data is unique.
     #[doc(hidden)]
-    fn try_ensure_unique<D>(&mut ArrayBase<Self, D>)
+    fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where Self: Sized,
           D: Dimension;
 

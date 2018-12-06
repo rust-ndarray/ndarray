@@ -8,7 +8,7 @@
 
 
 //! Methods for one-dimensional arrays.
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
 /// # Methods For 1-D Arrays
 impl<A, S> ArrayBase<S, Ix1>
@@ -23,7 +23,7 @@ impl<A, S> ArrayBase<S, Ix1>
         if let Some(slc) = self.as_slice() {
             slc.to_vec()
         } else {
-            ::iterators::to_vec(self.iter().map(|x| x.clone()))
+            crate::iterators::to_vec(self.iter().map(|x| x.clone()))
         }
     }
 }

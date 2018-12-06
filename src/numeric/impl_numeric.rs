@@ -7,13 +7,13 @@
 // except according to those terms.
 
 use std::ops::{Add, Div, Mul};
-use libnum::{self, Zero, Float, FromPrimitive};
+use num_traits::{self, Zero, Float, FromPrimitive};
 use itertools::free::enumerate;
 
-use imp_prelude::*;
-use numeric_util;
+use crate::imp_prelude::*;
+use crate::numeric_util;
 
-use {FoldWhile, Zip};
+use crate::{FoldWhile, Zip};
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
@@ -30,7 +30,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// assert_eq!(a.sum(), 10.);
     /// ```
     pub fn sum(&self) -> A
-        where A: Clone + Add<Output=A> + libnum::Zero,
+        where A: Clone + Add<Output=A> + num_traits::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_fold(slc, A::zero, A::add);
@@ -52,7 +52,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// next version.*
     // #[deprecated(note="renamed to `sum`", since="0.13")]
     pub fn scalar_sum(&self) -> A
-        where A: Clone + Add<Output=A> + libnum::Zero,
+        where A: Clone + Add<Output=A> + num_traits::Zero,
     {
         self.sum()
     }
@@ -67,7 +67,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// assert_eq!(a.product(), 24.);
     /// ```
     pub fn product(&self) -> A
-        where A: Clone + Mul<Output=A> + libnum::One,
+        where A: Clone + Mul<Output=A> + num_traits::One,
     {
         if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_fold(slc, A::one, A::mul);

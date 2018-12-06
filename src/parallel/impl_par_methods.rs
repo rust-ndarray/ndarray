@@ -1,5 +1,5 @@
 
-use {
+use crate::{
     Dimension,
     NdProducer,
     Zip,
@@ -7,7 +7,7 @@ use {
     DataMut,
 };
 
-use parallel::prelude::*;
+use crate::parallel::prelude::*;
 
 
 /// # Parallel methods

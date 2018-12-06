@@ -16,7 +16,7 @@ pub mod iter;
 use std::marker::PhantomData;
 use std::ptr;
 
-use Ix1;
+use crate::Ix1;
 
 use super::{Dimension, Ix, Ixs};
 use super::{
@@ -942,8 +942,8 @@ impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D>
     type Stride = isize;
 
     #[doc(hidden)]
-    fn layout(&self) -> ::Layout {
-        ::Layout::one_dimensional()
+    fn layout(&self) -> crate::Layout {
+        crate::Layout::one_dimensional()
     }
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
@@ -989,8 +989,8 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
     type Stride = isize;
 
     #[doc(hidden)]
-    fn layout(&self) -> ::Layout {
-        ::Layout::one_dimensional()
+    fn layout(&self) -> crate::Layout {
+        crate::Layout::one_dimensional()
     }
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
@@ -1217,9 +1217,9 @@ send_sync_read_write!(ElementsBaseMut);
 pub unsafe trait TrustedIterator { }
 
 use std;
-use linspace::Linspace;
-use iter::IndicesIter;
-use indexes::IndicesIterF;
+use crate::linspace::Linspace;
+use crate::iter::IndicesIter;
+use crate::indexes::IndicesIterF;
 
 unsafe impl<F> TrustedIterator for Linspace<F> { }
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }

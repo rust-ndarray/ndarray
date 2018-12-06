@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use libnum::{Zero, One, Float};
+use num_traits::{Zero, One, Float};
 use std::fmt;
 use std::ops::{Add, Sub, Mul, Div};
 use std::ops::{
@@ -15,7 +15,7 @@ use std::ops::{
     DivAssign,
     RemAssign,
 };
-use ScalarOperand;
+use crate::ScalarOperand;
 
 /// Elements that support linear algebra operations.
 ///

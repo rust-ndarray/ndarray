@@ -1,7 +1,7 @@
 
-use Dimension;
-use {Shape, StrideShape};
-use dimension::IntoDimension;
+use crate::Dimension;
+use crate::{Shape, StrideShape};
+use crate::dimension::IntoDimension;
 
 /// A trait for `Shape` and `D where D: Dimension` that allows
 /// customizing the memory layout (strides) of an array shape.

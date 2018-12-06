@@ -214,7 +214,7 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
 
 mod arithmetic_ops {
     use super::*;
-    use imp_prelude::*;
+    use crate::imp_prelude::*;
 
     use std::ops::*;
     use num_complex::Complex;
@@ -340,7 +340,7 @@ mod arithmetic_ops {
 
 mod assign_ops {
     use super::*;
-    use imp_prelude::*;
+    use crate::imp_prelude::*;
 
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {

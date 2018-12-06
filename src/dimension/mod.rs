@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {Ix, Ixs, Slice, SliceOrIndex};
-use error::{from_kind, ErrorKind, ShapeError};
+use crate::{Ix, Ixs, Slice, SliceOrIndex};
+use crate::error::{from_kind, ErrorKind, ShapeError};
 use itertools::izip;
 use num_integer::div_floor;
 
@@ -621,11 +621,11 @@ mod test {
         max_abs_offset_check_overflow, slice_min_max, slices_intersect,
         solve_linear_diophantine_eq, IntoDimension
     };
-    use error::{from_kind, ErrorKind};
+    use crate::{Dim, Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn};
+    use crate::error::{from_kind, ErrorKind};
+    use crate::slice::Slice;
     use num_integer::gcd;
     use quickcheck::{quickcheck, TestResult};
-    use slice::{Slice, SliceOrIndex};
-    use {Dim, Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn};
 
     #[test]
     fn slice_indexing_uncommon_strides() {

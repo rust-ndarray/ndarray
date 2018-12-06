@@ -12,7 +12,7 @@ use super::{
     Dimension,
     NdProducer,
 };
-use dimension::IntoDimension;
+use crate::dimension::IntoDimension;
 
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
                             mut format: F)
@@ -33,7 +33,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
         Some(ix) => ix,
     };
     for _ in 0..ndim {
-        try!(write!(f, "["));
+        write!(f, "[")?;
     }
     let mut first = true;
     // Simply use the indexed iterator, and take the index wraparounds
@@ -52,15 +52,15 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
                 // # of ['s needed
                 let n = ndim - i - 1;
                 for _ in 0..n {
-                    try!(write!(f, "]"));
+                    write!(f, "]")?;
                 }
-                try!(write!(f, ","));
-                try!(write!(f, "\n"));
+                write!(f, ",")?;
+                write!(f, "\n")?;
                 for _ in 0..ndim - n {
-                    try!(write!(f, " "));
+                    write!(f, " ")?;
                 }
                 for _ in 0..n {
-                    try!(write!(f, "["));
+                    write!(f, "[")?;
                 }
                 first = true;
                 update_index = true;
@@ -68,17 +68,17 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
             }
         }
         if !first {
-            try!(write!(f, ", "));
+            write!(f, ", ")?;
         }
         first = false;
-        try!(format(elt, f));
+        format(elt, f)?;
 
         if update_index {
             last_index = index;
         }
     }
     for _ in 0..ndim {
-        try!(write!(f, "]"));
+        write!(f, "]")?;
     }
     Ok(())
 }

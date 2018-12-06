@@ -10,10 +10,10 @@ use rayon::iter::plumbing::UnindexedProducer;
 use rayon::iter::plumbing::bridge_unindexed;
 use rayon::iter::plumbing::Folder;
 
-use iter::AxisIter;
-use iter::AxisIterMut;
-use {Dimension};
-use {ArrayView, ArrayViewMut};
+use crate::iter::AxisIter;
+use crate::iter::AxisIterMut;
+use crate::{Dimension};
+use crate::{ArrayView, ArrayViewMut};
 
 /// Parallel iterator wrapper.
 #[derive(Copy, Clone, Debug)]
@@ -192,7 +192,7 @@ par_iter_view_wrapper!(ArrayView, [Sync]);
 par_iter_view_wrapper!(ArrayViewMut, [Sync + Send]);
 
 
-use {Zip, NdProducer, FoldWhile};
+use crate::{Zip, NdProducer, FoldWhile};
 
 macro_rules! zip_impl {
     ($([$($p:ident)*],)+) => {

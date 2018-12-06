@@ -2,7 +2,7 @@
 //!
 
 #[allow(deprecated)]
-use ::{
+use crate::{
     Ix,
     Array,
     ArrayView,
@@ -10,7 +10,7 @@ use ::{
     RcArray,
     IxDynImpl,
 };
-use ::dimension::Dim;
+use crate::dimension::Dim;
 
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]

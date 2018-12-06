@@ -15,17 +15,17 @@ use std::ops::{
     IndexMut,
 };
 
-use imp_prelude::*;
-use iter::{
+use crate::imp_prelude::*;
+use crate::iter::{
     Iter,
     IterMut,
 };
-use {
+use crate::{
     NdIndex,
 };
 
-use numeric_util;
-use {Zip, FoldWhile};
+use crate::numeric_util;
+use crate::{Zip, FoldWhile};
 
 #[cold]
 #[inline(never)]

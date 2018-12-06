@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use imp_prelude::*;
-use error::{ShapeError, ErrorKind, from_kind};
+use crate::imp_prelude::*;
+use crate::error::{ShapeError, ErrorKind, from_kind};
 
 /// Stack arrays along the given axis.
 ///
@@ -56,7 +56,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     unsafe {
         v.set_len(size);
     }
-    let mut res = try!(Array::from_shape_vec(res_dim, v));
+    let mut res = Array::from_shape_vec(res_dim, v)?;
 
     {
         let mut assign_view = res.view_mut();

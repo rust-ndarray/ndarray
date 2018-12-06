@@ -7,7 +7,7 @@
 // except according to those terms.
 use std::cmp;
 
-use LinalgScalar;
+use crate::LinalgScalar;
 
 /// Fold over the manually unrolled `xs` with `f`
 pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A

@@ -6,10 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use imp_prelude::*;
-use numeric_util;
+use crate::imp_prelude::*;
+use crate::numeric_util;
 
-use {
+use crate::{
     LinalgScalar,
     Zip,
 };

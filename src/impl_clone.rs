@@ -5,8 +5,8 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use imp_prelude::*;
-use RawDataClone;
+use crate::imp_prelude::*;
+use crate::RawDataClone;
 
 impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {

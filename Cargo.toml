@@ -2,6 +2,7 @@
 
 name = "ndarray"
 version = "0.12.1"
+edition = "2018"
 authors = [
   "bluss",
   "Jim Turner"

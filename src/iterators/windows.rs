@@ -1,9 +1,9 @@
 
-use imp_prelude::*;
+use crate::imp_prelude::*;
 use super::ElementsBase;
-use IntoDimension;
-use Layout;
-use NdProducer;
+use crate::IntoDimension;
+use crate::Layout;
+use crate::NdProducer;
 
 /// Window producer and iterable
 ///

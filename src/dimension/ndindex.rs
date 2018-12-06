@@ -3,10 +3,7 @@ use std::fmt::Debug;
 
 use itertools::zip;
 
-use {Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, Dimension, IntoDimension};
-use {
-    IxDynImpl,
-};
+use crate::{Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl, Dim, Dimension, IntoDimension};
 use super::{stride_offset, stride_offset_checked};
 
 /// Tuple or fixed size arrays that can be used to index an array.

@@ -5,13 +5,13 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use {ArrayBase, Data};
+use crate::{ArrayBase, Data};
 use super::Dimension;
-use dimension::IntoDimension;
-use Axis;
-use Layout;
-use NdProducer;
-use zip::{Offset, Splittable};
+use crate::dimension::IntoDimension;
+use crate::Axis;
+use crate::Layout;
+use crate::NdProducer;
+use crate::zip::{Offset, Splittable};
 
 /// An iterator over the indexes of an array shape.
 ///

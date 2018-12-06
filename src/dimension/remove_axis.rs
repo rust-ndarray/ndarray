@@ -7,7 +7,7 @@
 // except according to those terms.
 
 
-use {Ix, Ix0, Ix1, Dimension, Dim, Axis};
+use crate::{Ix, Ix0, Ix1, Dimension, Dim, Axis};
 
 /// Array shape with a next smaller dimension.
 ///

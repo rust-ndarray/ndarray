@@ -1,9 +1,9 @@
 
-use imp_prelude::*;
-use IntoDimension;
-use {NdProducer, Layout};
-use ::ElementsBase;
-use ::ElementsBaseMut;
+use crate::imp_prelude::*;
+use crate::IntoDimension;
+use crate::{NdProducer, Layout};
+use crate::ElementsBase;
+use crate::ElementsBaseMut;
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
