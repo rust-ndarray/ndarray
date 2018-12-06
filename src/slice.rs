@@ -661,7 +661,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// borrowing the array twice (even though it's safe as long as the slices are
 /// disjoint).
 ///
-/// The syntax is `multislice!(` *expression, (pattern [, pattern [, …]])* `)`,
+/// The syntax is `multislice!(` *expression, pattern [, pattern [, …]]* `)`,
 /// where *expression* evaluates to a mutable array, and each *pattern* is
 /// either
 ///
@@ -702,7 +702,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///
 /// # fn main() {
 /// let mut arr = Array1::from_iter(0..12);
-/// let (a, b, c, d) = multislice!(arr, ([0..5], mut [6..;2], [1..6], mut [7..;2]));
+/// let (a, b, c, d) = multislice!(arr, [0..5], mut [6..;2], [1..6], mut [7..;2]);
 /// assert_eq!(a, array![0, 1, 2, 3, 4]);
 /// assert_eq!(b, array![6, 8, 10]);
 /// assert_eq!(c, array![1, 2, 3, 4, 5]);
@@ -720,7 +720,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr = Array1::from_iter(0..12);
-///   multislice!(arr, ([0..5], mut [1..;2])); // panic!
+///   multislice!(arr, [0..5], mut [1..;2]); // panic!
 ///   # }
 ///   ```
 ///
@@ -732,7 +732,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr = Array1::from_iter(0..12);
-///   multislice!(arr, (mut [0..5], mut [1..;2])); // panic!
+///   multislice!(arr, mut [0..5], mut [1..;2]); // panic!
 ///   # }
 ///   ```
 #[macro_export]
@@ -987,7 +987,7 @@ macro_rules! multislice(
         }
     };
     // Entry point.
-    ($arr:expr, ($($t:tt)*)) => {
+    ($arr:expr, $($t:tt)*) => {
         {
             let (life, raw_view) = {
                 let mut view = $crate::ArrayBase::view_mut(&mut $arr);
