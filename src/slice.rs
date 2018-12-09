@@ -7,10 +7,10 @@
 // except according to those terms.
 use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
-use crate::{ArrayViewMut, Dimension};
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use crate::{ArrayViewMut, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 
 /// A slice (range with step size).
 ///
@@ -70,7 +70,7 @@ impl Slice {
 /// A slice (range with step) or an index.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
-/// `&SliceInfo<[AxisSliceInfo; n], D>`.
+/// `&SliceInfo<[AxisSliceInfo; n], Di, Do>`.
 ///
 /// ## Examples
 ///
@@ -276,23 +276,85 @@ impl_axissliceinfo_from_index!(isize);
 impl_axissliceinfo_from_index!(usize);
 impl_axissliceinfo_from_index!(i32);
 
+/// A type that can slice an array of dimension `D`.
+///
+/// This trait is unsafe to implement because the implementation must ensure
+/// that `D`, `Self::OutDim`, `self.in_dim()`, and `self.out_ndim()` are
+/// consistent with the `&[AxisSliceInfo]` returned by `self.as_ref()`.
+pub unsafe trait CanSlice<D: Dimension>: AsRef<[AxisSliceInfo]> {
+    type OutDim: Dimension;
+
+    fn in_ndim(&self) -> usize;
+
+    fn out_ndim(&self) -> usize;
+}
+
+macro_rules! impl_canslice_samedim {
+    ($in_dim:ty) => {
+        unsafe impl<T, Do> CanSlice<$in_dim> for SliceInfo<T, $in_dim, Do>
+        where
+            T: AsRef<[AxisSliceInfo]>,
+            Do: Dimension,
+        {
+            type OutDim = Do;
+
+            fn in_ndim(&self) -> usize {
+                self.in_ndim()
+            }
+
+            fn out_ndim(&self) -> usize {
+                self.out_ndim()
+            }
+        }
+    };
+}
+impl_canslice_samedim!(Ix0);
+impl_canslice_samedim!(Ix1);
+impl_canslice_samedim!(Ix2);
+impl_canslice_samedim!(Ix3);
+impl_canslice_samedim!(Ix4);
+impl_canslice_samedim!(Ix5);
+impl_canslice_samedim!(Ix6);
+
+unsafe impl<T, Di, Do> CanSlice<IxDyn> for SliceInfo<T, Di, Do>
+where
+    T: AsRef<[AxisSliceInfo]>,
+    Di: Dimension,
+    Do: Dimension,
+{
+    type OutDim = Do;
+
+    fn in_ndim(&self) -> usize {
+        self.in_ndim()
+    }
+
+    fn out_ndim(&self) -> usize {
+        self.out_ndim()
+    }
+}
+
 /// Represents all of the necessary information to perform a slice.
 ///
 /// The type `T` is typically `[AxisSliceInfo; n]`, `[AxisSliceInfo]`, or
-/// `Vec<AxisSliceInfo>`. The type `D` is the output dimension after calling
-/// [`.slice()`].
+/// `Vec<AxisSliceInfo>`. The type `Di` is the dimension of the array to be
+/// sliced, and `Do` is the output dimension after calling [`.slice()`]. Note
+/// that if `Di` is a fixed dimension type (`Ix0`, `Ix1`, `Ix2`, etc.), the
+/// `SliceInfo` instance can still be used to slice an array with dimension
+/// `IxDyn` as long as the number of axes matches.
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 #[derive(Debug)]
 #[repr(C)]
-pub struct SliceInfo<T: ?Sized, D: Dimension> {
-    out_dim: PhantomData<D>,
+pub struct SliceInfo<T: ?Sized, Di: Dimension, Do: Dimension> {
+    in_dim: PhantomData<Di>,
+    out_dim: PhantomData<Do>,
     indices: T,
 }
 
-impl<T: ?Sized, D> Deref for SliceInfo<T, D>
+impl<T: ?Sized, Di, Do> Deref for SliceInfo<T, Di, Do>
 where
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
     type Target = T;
     fn deref(&self) -> &Self::Target {
@@ -300,55 +362,78 @@ where
     }
 }
 
-impl<T, D> SliceInfo<T, D>
+impl<T, Di, Do> SliceInfo<T, Di, Do>
 where
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
     /// Returns a new `SliceInfo` instance.
     ///
-    /// If you call this method, you are guaranteeing that `out_dim` is
-    /// consistent with `indices`.
+    /// If you call this method, you are guaranteeing that `in_dim` and
+    /// `out_dim` are consistent with `indices`.
     #[doc(hidden)]
-    pub unsafe fn new_unchecked(indices: T, out_dim: PhantomData<D>) -> SliceInfo<T, D> {
-        SliceInfo { out_dim, indices }
+    pub unsafe fn new_unchecked(
+        indices: T,
+        in_dim: PhantomData<Di>,
+        out_dim: PhantomData<Do>,
+    ) -> SliceInfo<T, Di, Do> {
+        SliceInfo {
+            in_dim: in_dim,
+            out_dim: out_dim,
+            indices: indices,
+        }
     }
 }
 
-impl<T, D> SliceInfo<T, D>
+impl<T, Di, Do> SliceInfo<T, Di, Do>
 where
     T: AsRef<[AxisSliceInfo]>,
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
     /// Returns a new `SliceInfo` instance.
     ///
-    /// Errors if `D` is not consistent with `indices`.
-    pub fn new(indices: T) -> Result<SliceInfo<T, D>, ShapeError> {
-        if let Some(ndim) = D::NDIM {
+    /// Errors if `Di` or `Do` is not consistent with `indices`.
+    pub fn new(indices: T) -> Result<SliceInfo<T, Di, Do>, ShapeError> {
+        if let Some(ndim) = Di::NDIM {
+            if ndim != indices.as_ref().len() {
+                return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+            }
+        }
+        if let Some(ndim) = Do::NDIM {
             if ndim != indices.as_ref().iter().filter(|s| s.is_slice()).count() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
         }
         Ok(SliceInfo {
+            in_dim: PhantomData,
             out_dim: PhantomData,
             indices,
         })
     }
 }
 
-impl<T: ?Sized, D> SliceInfo<T, D>
+impl<T: ?Sized, Di, Do> SliceInfo<T, Di, Do>
 where
     T: AsRef<[AxisSliceInfo]>,
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
+    /// Returns the number of dimensions of the input array for
+    /// [`.slice()`](struct.ArrayBase.html#method.slice).
+    pub fn in_ndim(&self) -> usize {
+        Di::NDIM.unwrap_or_else(|| self.indices.as_ref().len())
+    }
+
     /// Returns the number of dimensions after calling
     /// [`.slice()`](struct.ArrayBase.html#method.slice) (including taking
     /// subviews).
     ///
-    /// If `D` is a fixed-size dimension type, then this is equivalent to
-    /// `D::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
-    /// over the ranges/indices.
+    /// If `Do` is a fixed-size dimension type, then this is equivalent to
+    /// `Do::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
+    /// over the `AxisSliceInfo` elements.
     pub fn out_ndim(&self) -> usize {
-        D::NDIM.unwrap_or_else(|| {
+        Do::NDIM.unwrap_or_else(|| {
             self.indices
                 .as_ref()
                 .iter()
@@ -358,47 +443,52 @@ where
     }
 }
 
-impl<T, D> AsRef<[AxisSliceInfo]> for SliceInfo<T, D>
+impl<T, Di, Do> AsRef<[AxisSliceInfo]> for SliceInfo<T, Di, Do>
 where
     T: AsRef<[AxisSliceInfo]>,
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
     fn as_ref(&self) -> &[AxisSliceInfo] {
         self.indices.as_ref()
     }
 }
 
-impl<T, D> AsRef<SliceInfo<[AxisSliceInfo], D>> for SliceInfo<T, D>
+impl<T, Di, Do> AsRef<SliceInfo<[AxisSliceInfo], Di, Do>> for SliceInfo<T, Di, Do>
 where
     T: AsRef<[AxisSliceInfo]>,
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
-    fn as_ref(&self) -> &SliceInfo<[AxisSliceInfo], D> {
+    fn as_ref(&self) -> &SliceInfo<[AxisSliceInfo], Di, Do> {
         unsafe {
             // This is okay because the only non-zero-sized member of
-            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], D>`
+            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], Di, Do>`
             // should have the same bitwise representation as
             // `&[AxisSliceInfo]`.
             &*(self.indices.as_ref() as *const [AxisSliceInfo]
-                as *const SliceInfo<[AxisSliceInfo], D>)
+                as *const SliceInfo<[AxisSliceInfo], Di, Do>)
         }
     }
 }
 
-impl<T, D> Copy for SliceInfo<T, D>
+impl<T, Di, Do> Copy for SliceInfo<T, Di, Do>
 where
     T: Copy,
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
 }
 
-impl<T, D> Clone for SliceInfo<T, D>
+impl<T, Di, Do> Clone for SliceInfo<T, Di, Do>
 where
     T: Clone,
-    D: Dimension,
+    Di: Dimension,
+    Do: Dimension,
 {
     fn clone(&self) -> Self {
         SliceInfo {
+            in_dim: PhantomData,
             out_dim: PhantomData,
             indices: self.indices.clone(),
         }
@@ -406,39 +496,64 @@ where
 }
 
 #[doc(hidden)]
-pub trait SliceNextDim<D1, D2> {
+pub trait SliceNextInDim<D1, D2> {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
 }
 
-macro_rules! impl_slicenextdim_equal {
-    ($self:ty) => {
-        impl<D1: Dimension> SliceNextDim<D1, D1> for $self {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
-                PhantomData
-            }
-        }
-    };
-}
-impl_slicenextdim_equal!(isize);
-impl_slicenextdim_equal!(usize);
-impl_slicenextdim_equal!(i32);
-
-macro_rules! impl_slicenextdim_larger {
+macro_rules! impl_slicenextindim_larger {
     (($($generics:tt)*), $self:ty) => {
-        impl<D1: Dimension, $($generics)*> SliceNextDim<D1, D1::Larger> for $self {
+        impl<D1: Dimension, $($generics),*> SliceNextInDim<D1, D1::Larger> for $self {
             fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
                 PhantomData
             }
         }
     }
 }
-impl_slicenextdim_larger!((T), Range<T>);
-impl_slicenextdim_larger!((T), RangeInclusive<T>);
-impl_slicenextdim_larger!((T), RangeFrom<T>);
-impl_slicenextdim_larger!((T), RangeTo<T>);
-impl_slicenextdim_larger!((T), RangeToInclusive<T>);
-impl_slicenextdim_larger!((), RangeFull);
-impl_slicenextdim_larger!((), Slice);
+impl_slicenextindim_larger!((), isize);
+impl_slicenextindim_larger!((), usize);
+impl_slicenextindim_larger!((), i32);
+impl_slicenextindim_larger!((T), Range<T>);
+impl_slicenextindim_larger!((T), RangeInclusive<T>);
+impl_slicenextindim_larger!((T), RangeFrom<T>);
+impl_slicenextindim_larger!((T), RangeTo<T>);
+impl_slicenextindim_larger!((T), RangeToInclusive<T>);
+impl_slicenextindim_larger!((), RangeFull);
+impl_slicenextindim_larger!((), Slice);
+
+#[doc(hidden)]
+pub trait SliceNextOutDim<D1, D2> {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
+}
+
+macro_rules! impl_slicenextoutdim_equal {
+    ($self:ty) => {
+        impl<D1: Dimension> SliceNextOutDim<D1, D1> for $self {
+            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
+                PhantomData
+            }
+        }
+    };
+}
+impl_slicenextoutdim_equal!(isize);
+impl_slicenextoutdim_equal!(usize);
+impl_slicenextoutdim_equal!(i32);
+
+macro_rules! impl_slicenextoutdim_larger {
+    (($($generics:tt)*), $self:ty) => {
+        impl<D1: Dimension, $($generics)*> SliceNextOutDim<D1, D1::Larger> for $self {
+            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
+                PhantomData
+            }
+        }
+    }
+}
+impl_slicenextoutdim_larger!((T), Range<T>);
+impl_slicenextoutdim_larger!((T), RangeInclusive<T>);
+impl_slicenextoutdim_larger!((T), RangeFrom<T>);
+impl_slicenextoutdim_larger!((T), RangeTo<T>);
+impl_slicenextoutdim_larger!((T), RangeToInclusive<T>);
+impl_slicenextoutdim_larger!((), RangeFull);
+impl_slicenextoutdim_larger!((), Slice);
 
 /// Slice argument constructor.
 ///
@@ -534,14 +649,16 @@ impl_slicenextdim_larger!((), Slice);
 #[macro_export]
 macro_rules! s(
     // convert a..b;c into @convert(a..b, c), final item
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
         match $r {
             r => {
-                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                let in_dim = $crate::SliceNextInDim::next_dim(&r, $in_dim);
+                let out_dim = $crate::SliceNextOutDim::next_dim(&r, $out_dim);
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
                         [$($stack)* $crate::s!(@convert r, $s)],
+                        in_dim,
                         out_dim,
                     )
                 }
@@ -549,14 +666,16 @@ macro_rules! s(
         }
     };
     // convert a..b into @convert(a..b), final item
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr) => {
         match $r {
             r => {
-                let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
+                let in_dim = $crate::SliceNextInDim::next_dim(&r, $in_dim);
+                let out_dim = $crate::SliceNextOutDim::next_dim(&r, $out_dim);
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
                         [$($stack)* $crate::s!(@convert r)],
+                        in_dim,
                         out_dim,
                     )
                 }
@@ -564,19 +683,20 @@ macro_rules! s(
         }
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        $crate::s![@parse $dim, [$($stack)*] $r;$s]
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
+        $crate::s![@parse $in_dim, $out_dim, [$($stack)*] $r;$s]
     };
     // convert a..b into @convert(a..b), final item, trailing comma
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
-        $crate::s![@parse $dim, [$($stack)*] $r]
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr ,) => {
+        $crate::s![@parse $in_dim, $out_dim, [$($stack)*] $r]
     };
     // convert a..b;c into @convert(a..b, c)
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         match $r {
             r => {
                 $crate::s![@parse
-                   $crate::SliceNextDim::next_dim(&r, $dim),
+                   $crate::SliceNextInDim::next_dim(&r, $in_dim),
+                   $crate::SliceNextOutDim::next_dim(&r, $out_dim),
                    [$($stack)* $crate::s!(@convert r, $s),]
                    $($t)*
                 ]
@@ -584,11 +704,12 @@ macro_rules! s(
         }
     };
     // convert a..b into @convert(a..b)
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
         match $r {
             r => {
                 $crate::s![@parse
-                   $crate::SliceNextDim::next_dim(&r, $dim),
+                   $crate::SliceNextInDim::next_dim(&r, $in_dim),
+                   $crate::SliceNextOutDim::next_dim(&r, $out_dim),
                    [$($stack)* $crate::s!(@convert r),]
                    $($t)*
                 ]
@@ -596,11 +717,15 @@ macro_rules! s(
         }
     };
     // empty call, i.e. `s![]`
-    (@parse ::std::marker::PhantomData::<$crate::Ix0>, []) => {
+    (@parse ::std::marker::PhantomData::<$crate::Ix0>, ::std::marker::PhantomData::<$crate::Ix0>, []) => {
         {
             #[allow(unsafe_code)]
             unsafe {
-                $crate::SliceInfo::new_unchecked([], ::std::marker::PhantomData::<$crate::Ix0>)
+                $crate::SliceInfo::new_unchecked(
+                    [],
+                    ::std::marker::PhantomData::<$crate::Ix0>,
+                    ::std::marker::PhantomData::<$crate::Ix0>,
+                )
             }
         }
     };
@@ -617,7 +742,12 @@ macro_rules! s(
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:
         // https://github.com/rust-lang/rust/issues/23014
-        &*&$crate::s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
+        &*&$crate::s![@parse
+              ::std::marker::PhantomData::<$crate::Ix0>,
+              ::std::marker::PhantomData::<$crate::Ix0>,
+              []
+              $($t)*
+        ]
     };
 );
 
@@ -650,13 +780,13 @@ where
     fn multi_slice_move(&self, _view: ArrayViewMut<'a, A, D>) -> Self::Output {}
 }
 
-impl<'a, A, D, Do0> MultiSlice<'a, A, D> for (&SliceInfo<D::SliceArg, Do0>,)
+impl<'a, A, D, I0> MultiSlice<'a, A, D> for (&I0,)
 where
     A: 'a,
     D: Dimension,
-    Do0: Dimension,
+    I0: CanSlice<D>,
 {
-    type Output = (ArrayViewMut<'a, A, Do0>,);
+    type Output = (ArrayViewMut<'a, A, I0::OutDim>,);
 
     fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
         (view.slice_move(self.0),)
@@ -668,17 +798,17 @@ macro_rules! impl_multislice_tuple {
         impl_multislice_tuple!(@def_impl ($($but_last,)* $last,), [$($but_last)*] $last);
     };
     (@def_impl ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
-        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(&SliceInfo<D::SliceArg, $all>,)*)
+        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(&$all,)*)
         where
             A: 'a,
             D: Dimension,
-            $($all: Dimension,)*
+            $($all: CanSlice<D>,)*
         {
-            type Output = ($(ArrayViewMut<'a, A, $all>,)*);
+            type Output = ($(ArrayViewMut<'a, A, $all::OutDim>,)*);
 
             fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
                 #[allow(non_snake_case)]
-                let ($($all,)*) = self;
+                let &($($all,)*) = self;
 
                 let shape = view.raw_dim();
                 assert!(!impl_multislice_tuple!(@intersects_self &shape, ($($all,)*)));
@@ -702,11 +832,11 @@ macro_rules! impl_multislice_tuple {
     };
 }
 
-impl_multislice_tuple!([Do0] Do1);
-impl_multislice_tuple!([Do0 Do1] Do2);
-impl_multislice_tuple!([Do0 Do1 Do2] Do3);
-impl_multislice_tuple!([Do0 Do1 Do2 Do3] Do4);
-impl_multislice_tuple!([Do0 Do1 Do2 Do3 Do4] Do5);
+impl_multislice_tuple!([I0] I1);
+impl_multislice_tuple!([I0 I1] I2);
+impl_multislice_tuple!([I0 I1 I2] I3);
+impl_multislice_tuple!([I0 I1 I2 I3] I4);
+impl_multislice_tuple!([I0 I1 I2 I3 I4] I5);
 
 impl<'a, A, D, T> MultiSlice<'a, A, D> for &T
 where

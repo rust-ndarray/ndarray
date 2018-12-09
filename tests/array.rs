@@ -210,13 +210,13 @@ fn test_slice_dyninput_array_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info.as_ref());
+    arr.view().slice_collapse(info);
 }
 
 #[test]
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
-    let info = &SliceInfo::<_, IxDyn>::new([
+    let info = &SliceInfo::<_, Ix3, IxDyn>::new([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
@@ -231,7 +231,7 @@ fn test_slice_array_dyn() {
 #[test]
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, IxDyn>::new([
+    let info = &SliceInfo::<_, Ix3, IxDyn>::new([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
@@ -240,37 +240,37 @@ fn test_slice_dyninput_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info.as_ref());
+    arr.view().slice_collapse(info);
 }
 
 #[test]
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, Ix2>::new(vec![
+    let info = &SliceInfo::<_, Ix3, Ix2>::new(vec![
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
-    arr.slice(info.as_ref());
-    arr.slice_mut(info.as_ref());
-    arr.view().slice_move(info.as_ref());
-    arr.view().slice_collapse(info.as_ref());
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_collapse(info);
 }
 
 #[test]
 fn test_slice_dyninput_vec_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, IxDyn>::new(vec![
+    let info = &SliceInfo::<_, Ix3, IxDyn>::new(vec![
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
-    arr.slice(info.as_ref());
-    arr.slice_mut(info.as_ref());
-    arr.view().slice_move(info.as_ref());
-    arr.view().slice_collapse(info.as_ref());
+    arr.slice(info);
+    arr.slice_mut(info);
+    arr.view().slice_move(info);
+    arr.view().slice_collapse(info);
 }
 
 #[test]
