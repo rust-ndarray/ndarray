@@ -100,6 +100,7 @@ extern crate matrixmultiply;
 extern crate itertools;
 extern crate num_traits as libnum;
 extern crate num_complex;
+extern crate num_integer;
 
 #[cfg(test)]
 extern crate quickcheck;
@@ -116,6 +117,7 @@ pub use dimension::{
     RemoveAxis,
     Axis,
     AxisDescription,
+    slices_intersect,
 };
 pub use dimension::dim::*;
 
@@ -123,7 +125,10 @@ pub use dimension::NdIndex;
 pub use dimension::IxDynImpl;
 pub use indexes::{indices, indices_of};
 pub use error::{ShapeError, ErrorKind};
-pub use slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
+pub use slice::{
+    deref_raw_view_mut_into_view_with_life, deref_raw_view_mut_into_view_mut_with_life,
+    life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex
+};
 
 use iterators::Baseiter;
 use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
@@ -158,13 +163,11 @@ pub use data_traits::{
     DataClone,
 };
 
-mod dimension;
-
 mod free_functions;
 pub use free_functions::*;
 pub use iterators::iter;
 
-mod slice;
+#[macro_use] mod slice;
 mod layout;
 mod indexes;
 mod iterators;
@@ -176,6 +179,8 @@ mod shape_builder;
 mod stacking;
 #[macro_use]
 mod zip;
+
+mod dimension;
 
 pub use zip::{
     Zip,
@@ -471,10 +476,13 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
+/// It's possible to take multiple simultaneous *mutable* slices with the
+/// [`multislice!()`](macro.multislice!.html) macro.
+///
 /// ```
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3, s};
+/// use ndarray::{arr2, arr3, multislice, s};
 ///
 /// fn main() {
 ///
@@ -521,6 +529,20 @@ pub type Ixs = isize;
 ///                [12, 11, 10]]);
 /// assert_eq!(f, g);
 /// assert_eq!(f.shape(), &[2, 3]);
+///
+/// // Let's take two disjoint, mutable slices of a matrix with
+/// //
+/// // - One containing all the even-index columns in the matrix
+/// // - One containing all the odd-index columns in the matrix
+/// let mut h = arr2(&[[0, 1, 2, 3],
+///                    [4, 5, 6, 7]]);
+/// let (s0, s1) = multislice!(h, mut [.., ..;2], mut [.., 1..;2]);
+/// let i = arr2(&[[0, 2],
+///                [4, 6]]);
+/// let j = arr2(&[[1, 3],
+///                [5, 7]]);
+/// assert_eq!(s0, i);
+/// assert_eq!(s1, j);
 /// }
 /// ```
 ///

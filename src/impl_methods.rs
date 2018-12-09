@@ -445,9 +445,7 @@ where
         let offset = do_slice(
             &mut self.dim.slice_mut()[axis.index()],
             &mut self.strides.slice_mut()[axis.index()],
-            indices.start,
-            indices.end,
-            indices.step,
+            indices,
         );
         unsafe {
             self.ptr = self.ptr.offset(offset);
