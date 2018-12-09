@@ -561,7 +561,7 @@ fn scaled_add_2() {
 #[test]
 fn scaled_add_3() {
     use approx::assert_relative_eq;
-    use ndarray::{SliceInfo, SliceOrIndex};
+    use ndarray::{SliceInfo, AxisSliceInfo};
 
     let beta = -2.3;
     let sizes = vec![
@@ -583,11 +583,11 @@ fn scaled_add_3() {
                 let mut answer = a.clone();
                 let cdim = if n == 1 { vec![q] } else { vec![n, q] };
                 let cslice = if n == 1 {
-                    vec![SliceOrIndex::from(..).step_by(s2)]
+                    vec![AxisSliceInfo::from(..).step_by(s2)]
                 } else {
                     vec![
-                        SliceOrIndex::from(..).step_by(s1),
-                        SliceOrIndex::from(..).step_by(s2),
+                        AxisSliceInfo::from(..).step_by(s1),
+                        AxisSliceInfo::from(..).step_by(s2),
                     ]
                 };
 

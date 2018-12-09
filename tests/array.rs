@@ -12,7 +12,7 @@ use itertools::{enumerate, zip, Itertools};
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::indices;
-use ndarray::{Slice, SliceInfo, SliceOrIndex};
+use ndarray::{AxisSliceInfo, Slice, SliceInfo};
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -217,9 +217,9 @@ fn test_slice_dyninput_array_fixed() {
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
     let info = &SliceInfo::<_, IxDyn>::new([
-        SliceOrIndex::from(1..),
-        SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step_by(2),
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
     arr.slice(info);
@@ -232,9 +232,9 @@ fn test_slice_array_dyn() {
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
     let info = &SliceInfo::<_, IxDyn>::new([
-        SliceOrIndex::from(1..),
-        SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step_by(2),
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
     arr.slice(info);
@@ -247,9 +247,9 @@ fn test_slice_dyninput_array_dyn() {
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
     let info = &SliceInfo::<_, Ix2>::new(vec![
-        SliceOrIndex::from(1..),
-        SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step_by(2),
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
     arr.slice(info.as_ref());
@@ -262,9 +262,9 @@ fn test_slice_dyninput_vec_fixed() {
 fn test_slice_dyninput_vec_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
     let info = &SliceInfo::<_, IxDyn>::new(vec![
-        SliceOrIndex::from(1..),
-        SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step_by(2),
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
     arr.slice(info.as_ref());

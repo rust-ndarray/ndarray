@@ -19,7 +19,7 @@ use crate::{Axis, DimMax};
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
-use crate::{Dim, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl, Ixs, SliceOrIndex};
+use crate::{AxisSliceInfo, Dim, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl, Ixs};
 
 /// Array shape and index trait.
 ///
@@ -63,14 +63,14 @@ pub trait Dimension:
     /// size, which you pass by reference. For the dynamic dimension it is
     /// a slice.
     ///
-    /// - For `Ix1`: `[SliceOrIndex; 1]`
-    /// - For `Ix2`: `[SliceOrIndex; 2]`
+    /// - For `Ix1`: `[AxisSliceInfo; 1]`
+    /// - For `Ix2`: `[AxisSliceInfo; 2]`
     /// - and so on..
-    /// - For `IxDyn`: `[SliceOrIndex]`
+    /// - For `IxDyn`: `[AxisSliceInfo]`
     ///
     /// The easiest way to create a `&SliceInfo<SliceArg, Do>` is using the
     /// [`s![]`](macro.s!.html) macro.
-    type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
+    type SliceArg: ?Sized + AsRef<[AxisSliceInfo]>;
     /// Pattern matching friendly form of the dimension value.
     ///
     /// - For `Ix1`: `usize`,
@@ -399,7 +399,7 @@ macro_rules! impl_insert_axis_array(
 
 impl Dimension for Dim<[Ix; 0]> {
     const NDIM: Option<usize> = Some(0);
-    type SliceArg = [SliceOrIndex; 0];
+    type SliceArg = [AxisSliceInfo; 0];
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
@@ -443,7 +443,7 @@ impl Dimension for Dim<[Ix; 0]> {
 
 impl Dimension for Dim<[Ix; 1]> {
     const NDIM: Option<usize> = Some(1);
-    type SliceArg = [SliceOrIndex; 1];
+    type SliceArg = [AxisSliceInfo; 1];
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
@@ -559,7 +559,7 @@ impl Dimension for Dim<[Ix; 1]> {
 
 impl Dimension for Dim<[Ix; 2]> {
     const NDIM: Option<usize> = Some(2);
-    type SliceArg = [SliceOrIndex; 2];
+    type SliceArg = [AxisSliceInfo; 2];
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
@@ -716,7 +716,7 @@ impl Dimension for Dim<[Ix; 2]> {
 
 impl Dimension for Dim<[Ix; 3]> {
     const NDIM: Option<usize> = Some(3);
-    type SliceArg = [SliceOrIndex; 3];
+    type SliceArg = [AxisSliceInfo; 3];
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
@@ -839,7 +839,7 @@ macro_rules! large_dim {
     ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
             const NDIM: Option<usize> = Some($n);
-            type SliceArg = [SliceOrIndex; $n];
+            type SliceArg = [AxisSliceInfo; $n];
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
@@ -890,7 +890,7 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 impl Dimension for IxDyn {
     const NDIM: Option<usize> = None;
-    type SliceArg = [SliceOrIndex];
+    type SliceArg = [AxisSliceInfo];
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;

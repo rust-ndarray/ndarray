@@ -70,29 +70,29 @@ impl Slice {
 /// A slice (range with step) or an index.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
-/// `&SliceInfo<[SliceOrIndex; n], D>`.
+/// `&SliceInfo<[AxisSliceInfo; n], D>`.
 ///
 /// ## Examples
 ///
-/// `SliceOrIndex::Index(a)` is the index `a`. It can also be created with
-/// `SliceOrIndex::from(a)`. The Python equivalent is `[a]`. The macro
+/// `AxisSliceInfo::Index(a)` is the index `a`. It can also be created with
+/// `AxisSliceInfo::from(a)`. The Python equivalent is `[a]`. The macro
 /// equivalent is `s![a]`.
 ///
-/// `SliceOrIndex::Slice { start: 0, end: None, step: 1 }` is the full range of
-/// an axis. It can also be created with `SliceOrIndex::from(..)`. The Python
-/// equivalent is `[:]`. The macro equivalent is `s![..]`.
+/// `AxisSliceInfo::Slice { start: 0, end: None, step: 1 }` is the full range
+/// of an axis. It can also be created with `AxisSliceInfo::from(..)`. The
+/// Python equivalent is `[:]`. The macro equivalent is `s![..]`.
 ///
-/// `SliceOrIndex::Slice { start: a, end: Some(b), step: 2 }` is every second
+/// `AxisSliceInfo::Slice { start: a, end: Some(b), step: 2 }` is every second
 /// element from `a` until `b`. It can also be created with
-/// `SliceOrIndex::from(a..b).step_by(2)`. The Python equivalent is `[a:b:2]`.
+/// `AxisSliceInfo::from(a..b).step_by(2)`. The Python equivalent is `[a:b:2]`.
 /// The macro equivalent is `s![a..b;2]`.
 ///
-/// `SliceOrIndex::Slice { start: a, end: None, step: -1 }` is every element,
+/// `AxisSliceInfo::Slice { start: a, end: None, step: -1 }` is every element,
 /// from `a` until the end, in reverse order. It can also be created with
-/// `SliceOrIndex::from(a..).step_by(-1)`. The Python equivalent is `[a::-1]`.
+/// `AxisSliceInfo::from(a..).step_by(-1)`. The Python equivalent is `[a::-1]`.
 /// The macro equivalent is `s![a..;-1]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
-pub enum SliceOrIndex {
+pub enum AxisSliceInfo {
     /// A range with step size. `end` is an exclusive index. Negative `begin`
     /// or `end` indexes are counted from the back of the axis. If `end` is
     /// `None`, the slice extends to the end of the axis.
@@ -105,47 +105,47 @@ pub enum SliceOrIndex {
     Index(isize),
 }
 
-copy_and_clone! {SliceOrIndex}
+copy_and_clone! {AxisSliceInfo}
 
-impl SliceOrIndex {
+impl AxisSliceInfo {
     /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
-        matches!(self, SliceOrIndex::Slice { .. })
+        matches!(self, AxisSliceInfo::Slice { .. })
     }
 
     /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
-        matches!(self, SliceOrIndex::Index(_))
+        matches!(self, AxisSliceInfo::Index(_))
     }
 
-    /// Returns a new `SliceOrIndex` with the given step size (multiplied with
+    /// Returns a new `AxisSliceInfo` with the given step size (multiplied with
     /// the previous step size).
     ///
     /// `step` must be nonzero.
     /// (This method checks with a debug assertion that `step` is not zero.)
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
-        debug_assert_ne!(step, 0, "SliceOrIndex::step_by: step must be nonzero");
+        debug_assert_ne!(step, 0, "AxisSliceInfo::step_by: step must be nonzero");
         match self {
-            SliceOrIndex::Slice {
+            AxisSliceInfo::Slice {
                 start,
                 end,
                 step: orig_step,
-            } => SliceOrIndex::Slice {
+            } => AxisSliceInfo::Slice {
                 start,
                 end,
                 step: orig_step * step,
             },
-            SliceOrIndex::Index(s) => SliceOrIndex::Index(s),
+            AxisSliceInfo::Index(s) => AxisSliceInfo::Index(s),
         }
     }
 }
 
-impl fmt::Display for SliceOrIndex {
+impl fmt::Display for AxisSliceInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            SliceOrIndex::Index(index) => write!(f, "{}", index)?,
-            SliceOrIndex::Slice { start, end, step } => {
+            AxisSliceInfo::Index(index) => write!(f, "{}", index)?,
+            AxisSliceInfo::Slice { start, end, step } => {
                 if start != 0 {
                     write!(f, "{}", start)?;
                 }
@@ -225,9 +225,9 @@ macro_rules! impl_slice_variant_from_range {
 impl_slice_variant_from_range!(Slice, Slice, isize);
 impl_slice_variant_from_range!(Slice, Slice, usize);
 impl_slice_variant_from_range!(Slice, Slice, i32);
-impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, isize);
-impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, usize);
-impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, i32);
+impl_slice_variant_from_range!(AxisSliceInfo, AxisSliceInfo::Slice, isize);
+impl_slice_variant_from_range!(AxisSliceInfo, AxisSliceInfo::Slice, usize);
+impl_slice_variant_from_range!(AxisSliceInfo, AxisSliceInfo::Slice, i32);
 
 impl From<RangeFull> for Slice {
     #[inline]
@@ -240,10 +240,10 @@ impl From<RangeFull> for Slice {
     }
 }
 
-impl From<RangeFull> for SliceOrIndex {
+impl From<RangeFull> for AxisSliceInfo {
     #[inline]
-    fn from(_: RangeFull) -> SliceOrIndex {
-        SliceOrIndex::Slice {
+    fn from(_: RangeFull) -> AxisSliceInfo {
+        AxisSliceInfo::Slice {
             start: 0,
             end: None,
             step: 1,
@@ -251,10 +251,10 @@ impl From<RangeFull> for SliceOrIndex {
     }
 }
 
-impl From<Slice> for SliceOrIndex {
+impl From<Slice> for AxisSliceInfo {
     #[inline]
-    fn from(s: Slice) -> SliceOrIndex {
-        SliceOrIndex::Slice {
+    fn from(s: Slice) -> AxisSliceInfo {
+        AxisSliceInfo::Slice {
             start: s.start,
             end: s.end,
             step: s.step,
@@ -262,24 +262,24 @@ impl From<Slice> for SliceOrIndex {
     }
 }
 
-macro_rules! impl_sliceorindex_from_index {
+macro_rules! impl_axissliceinfo_from_index {
     ($index:ty) => {
-        impl From<$index> for SliceOrIndex {
+        impl From<$index> for AxisSliceInfo {
             #[inline]
-            fn from(r: $index) -> SliceOrIndex {
-                SliceOrIndex::Index(r as isize)
+            fn from(r: $index) -> AxisSliceInfo {
+                AxisSliceInfo::Index(r as isize)
             }
         }
     };
 }
-impl_sliceorindex_from_index!(isize);
-impl_sliceorindex_from_index!(usize);
-impl_sliceorindex_from_index!(i32);
+impl_axissliceinfo_from_index!(isize);
+impl_axissliceinfo_from_index!(usize);
+impl_axissliceinfo_from_index!(i32);
 
 /// Represents all of the necessary information to perform a slice.
 ///
-/// The type `T` is typically `[SliceOrIndex; n]`, `[SliceOrIndex]`, or
-/// `Vec<SliceOrIndex>`. The type `D` is the output dimension after calling
+/// The type `T` is typically `[AxisSliceInfo; n]`, `[AxisSliceInfo]`, or
+/// `Vec<AxisSliceInfo>`. The type `D` is the output dimension after calling
 /// [`.slice()`].
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
@@ -316,7 +316,7 @@ where
 
 impl<T, D> SliceInfo<T, D>
 where
-    T: AsRef<[SliceOrIndex]>,
+    T: AsRef<[AxisSliceInfo]>,
     D: Dimension,
 {
     /// Returns a new `SliceInfo` instance.
@@ -337,7 +337,7 @@ where
 
 impl<T: ?Sized, D> SliceInfo<T, D>
 where
-    T: AsRef<[SliceOrIndex]>,
+    T: AsRef<[AxisSliceInfo]>,
     D: Dimension,
 {
     /// Returns the number of dimensions after calling
@@ -358,29 +358,29 @@ where
     }
 }
 
-impl<T, D> AsRef<[SliceOrIndex]> for SliceInfo<T, D>
+impl<T, D> AsRef<[AxisSliceInfo]> for SliceInfo<T, D>
 where
-    T: AsRef<[SliceOrIndex]>,
+    T: AsRef<[AxisSliceInfo]>,
     D: Dimension,
 {
-    fn as_ref(&self) -> &[SliceOrIndex] {
+    fn as_ref(&self) -> &[AxisSliceInfo] {
         self.indices.as_ref()
     }
 }
 
-impl<T, D> AsRef<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>
+impl<T, D> AsRef<SliceInfo<[AxisSliceInfo], D>> for SliceInfo<T, D>
 where
-    T: AsRef<[SliceOrIndex]>,
+    T: AsRef<[AxisSliceInfo]>,
     D: Dimension,
 {
-    fn as_ref(&self) -> &SliceInfo<[SliceOrIndex], D> {
+    fn as_ref(&self) -> &SliceInfo<[AxisSliceInfo], D> {
         unsafe {
             // This is okay because the only non-zero-sized member of
-            // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
+            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], D>`
             // should have the same bitwise representation as
-            // `&[SliceOrIndex]`.
-            &*(self.indices.as_ref() as *const [SliceOrIndex]
-                as *const SliceInfo<[SliceOrIndex], D>)
+            // `&[AxisSliceInfo]`.
+            &*(self.indices.as_ref() as *const [AxisSliceInfo]
+                as *const SliceInfo<[AxisSliceInfo], D>)
         }
     }
 }
@@ -452,8 +452,8 @@ impl_slicenextdim_larger!((), Slice);
 /// counted from the end of the axis. Step sizes are also signed and may be
 /// negative, but must not be zero.
 ///
-/// The syntax is `s![` *[ axis-slice-or-index [, axis-slice-or-index [ , ... ]
-/// ] ]* `]`, where *axis-slice-or-index* is any of the following:
+/// The syntax is `s![` *[ axis-slice-info [, axis-slice-info [ , ... ] ] ]*
+/// `]`, where *axis-slice-info* is any of the following:
 ///
 /// * *index*: an index to use for taking a subview with respect to that axis.
 ///   (The index is selected. The axis is removed except with
@@ -466,12 +466,12 @@ impl_slicenextdim_larger!((), Slice);
 ///
 /// [`Slice`]: struct.Slice.html
 ///
-/// The number of *axis-slice-or-index* must match the number of axes in the
-/// array. *index*, *range*, *slice*, and *step* can be expressions. *index*
-/// must be of type `isize`, `usize`, or `i32`. *range* must be of type
-/// `Range<I>`, `RangeTo<I>`, `RangeFrom<I>`, or `RangeFull` where `I` is
-/// `isize`, `usize`, or `i32`. *step* must be a type that can be converted to
-/// `isize` with the `as` keyword.
+/// The number of *axis-slice-info* must match the number of axes in the array.
+/// *index*, *range*, *slice*, and *step* can be expressions. *index* must be
+/// of type `isize`, `usize`, or `i32`. *range* must be of type `Range<I>`,
+/// `RangeTo<I>`, `RangeFrom<I>`, or `RangeFull` where `I` is `isize`, `usize`,
+/// or `i32`. *step* must be a type that can be converted to `isize` with the
+/// `as` keyword.
 ///
 /// For example `s![0..4;2, 6, 1..5]` is a slice of the first axis for 0..4
 /// with step size 2, a subview of the second axis at index 6, and a slice of
@@ -606,13 +606,13 @@ macro_rules! s(
     };
     // Catch-all clause for syntax errors
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
-    // convert range/index into SliceOrIndex
+    // convert range/index into AxisSliceInfo
     (@convert $r:expr) => {
-        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r)
+        <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r)
     };
-    // convert range/index and step into SliceOrIndex
+    // convert range/index and step into AxisSliceInfo
     (@convert $r:expr, $s:expr) => {
-        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:

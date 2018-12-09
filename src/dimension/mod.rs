@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use crate::error::{from_kind, ErrorKind, ShapeError};
-use crate::{Ix, Ixs, Slice, SliceOrIndex};
+use crate::{AxisSliceInfo, Ix, Ixs, Slice};
 use num_integer::div_floor;
 
 pub use self::axes::{axes_of, Axes, AxisDescription};
@@ -601,15 +601,15 @@ pub fn slices_intersect<D: Dimension>(
 ) -> bool {
     debug_assert_eq!(indices1.as_ref().len(), indices2.as_ref().len());
     for (&axis_len, &si1, &si2) in izip!(dim.slice(), indices1.as_ref(), indices2.as_ref()) {
-        // The slices do not intersect iff any pair of `SliceOrIndex` does not intersect.
+        // The slices do not intersect iff any pair of `AxisSliceInfo` does not intersect.
         match (si1, si2) {
             (
-                SliceOrIndex::Slice {
+                AxisSliceInfo::Slice {
                     start: start1,
                     end: end1,
                     step: step1,
                 },
-                SliceOrIndex::Slice {
+                AxisSliceInfo::Slice {
                     start: start2,
                     end: end2,
                     step: step2,
@@ -630,8 +630,8 @@ pub fn slices_intersect<D: Dimension>(
                     return false;
                 }
             }
-            (SliceOrIndex::Slice { start, end, step }, SliceOrIndex::Index(ind))
-            | (SliceOrIndex::Index(ind), SliceOrIndex::Slice { start, end, step }) => {
+            (AxisSliceInfo::Slice { start, end, step }, AxisSliceInfo::Index(ind))
+            | (AxisSliceInfo::Index(ind), AxisSliceInfo::Slice { start, end, step }) => {
                 let ind = abs_index(axis_len, ind);
                 let (min, max) = match slice_min_max(axis_len, Slice::new(start, end, step)) {
                     Some(m) => m,
@@ -641,7 +641,7 @@ pub fn slices_intersect<D: Dimension>(
                     return false;
                 }
             }
-            (SliceOrIndex::Index(ind1), SliceOrIndex::Index(ind2)) => {
+            (AxisSliceInfo::Index(ind1), AxisSliceInfo::Index(ind2)) => {
                 let ind1 = abs_index(axis_len, ind1);
                 let ind2 = abs_index(axis_len, ind2);
                 if ind1 != ind2 {

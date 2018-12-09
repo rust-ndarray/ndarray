@@ -34,7 +34,7 @@ use crate::iter::{
 };
 use crate::slice::MultiSlice;
 use crate::stacking::concatenate;
-use crate::{NdIndex, Slice, SliceInfo, SliceOrIndex};
+use crate::{AxisSliceInfo, NdIndex, Slice, SliceInfo};
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D>
@@ -417,7 +417,7 @@ where
         // Slice and collapse in-place without changing the number of dimensions.
         self.slice_collapse(&*info);
 
-        let indices: &[SliceOrIndex] = (**info).as_ref();
+        let indices: &[AxisSliceInfo] = (**info).as_ref();
 
         // Copy the dim and strides that remain after removing the subview axes.
         let out_ndim = info.out_ndim();
@@ -425,8 +425,8 @@ where
         let mut new_strides = Do::zeros(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices)
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
-                SliceOrIndex::Slice { .. } => Some((d, s)),
-                SliceOrIndex::Index(_) => None,
+                AxisSliceInfo::Slice { .. } => Some((d, s)),
+                AxisSliceInfo::Index(_) => None,
             })
             .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
             .for_each(|((d, s), (new_d, new_s))| {
@@ -455,16 +455,16 @@ where
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
     pub fn slice_collapse(&mut self, indices: &D::SliceArg) {
-        let indices: &[SliceOrIndex] = indices.as_ref();
+        let indices: &[AxisSliceInfo] = indices.as_ref();
         assert_eq!(indices.len(), self.ndim());
         indices
             .iter()
             .enumerate()
             .for_each(|(axis, &slice_or_index)| match slice_or_index {
-                SliceOrIndex::Slice { start, end, step } => {
+                AxisSliceInfo::Slice { start, end, step } => {
                     self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
                 }
-                SliceOrIndex::Index(index) => {
+                AxisSliceInfo::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
                     self.collapse_axis(Axis(axis), i_usize)
                 }
