@@ -437,6 +437,12 @@ where
                     // Skip the old axis since it should be removed.
                     old_axis += 1;
                 }
+                AxisSliceInfo::NewAxis => {
+                    // Set the dim and stride of the new axis.
+                    new_dim[new_axis] = 1;
+                    new_strides[new_axis] = 0;
+                    new_axis += 1;
+                }
             });
             debug_assert_eq!(old_axis, self.ndim());
             debug_assert_eq!(new_axis, out_ndim);
@@ -449,6 +455,8 @@ where
     }
 
     /// Slice the array in place without changing the number of dimensions.
+    ///
+    /// Note that `NewAxis` elements in `info` are ignored.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
     ///
@@ -463,18 +471,20 @@ where
             self.ndim(),
             "The input dimension of `info` must match the array to be sliced.",
         );
-        info.as_ref()
-            .iter()
-            .enumerate()
-            .for_each(|(axis, &ax_info)| match ax_info {
+        let mut axis = 0;
+        info.as_ref().iter().for_each(|&ax_info| match ax_info {
                 AxisSliceInfo::Slice { start, end, step } => {
-                    self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
+                    self.slice_axis_inplace(Axis(axis), Slice { start, end, step });
+                    axis += 1;
                 }
                 AxisSliceInfo::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
-                    self.collapse_axis(Axis(axis), i_usize)
+                    self.collapse_axis(Axis(axis), i_usize);
+                    axis += 1;
                 }
+                AxisSliceInfo::NewAxis => {}
             });
+        debug_assert_eq!(axis, self.ndim());
     }
 
     /// Return a view of the array, sliced along the specified axis.

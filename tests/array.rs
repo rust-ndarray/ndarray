@@ -85,8 +85,8 @@ fn test_slice() {
         *elt = i;
     }
 
-    let vi = A.slice(s![1.., ..;2, Slice::new(0, None, 2)]);
-    assert_eq!(vi.shape(), &[2, 2, 3]);
+    let vi = A.slice(s![1.., ..;2, NewAxis, Slice::new(0, None, 2)]);
+    assert_eq!(vi.shape(), &[2, 2, 1, 3]);
     let vi = A.slice(s![.., .., ..]);
     assert_eq!(vi.shape(), A.shape());
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
@@ -138,8 +138,8 @@ fn test_slice_with_many_dim() {
         *elt = i;
     }
 
-    let vi = A.slice(s![..2, .., ..;2, ..1, ..1, 1.., ..]);
-    let new_shape = &[2, 1, 2, 1, 1, 1, 1][..];
+    let vi = A.slice(s![..2, NewAxis, .., ..;2, NewAxis, ..1, ..1, 1.., ..]);
+    let new_shape = &[2, 1, 1, 2, 1, 1, 1, 1, 1][..];
     assert_eq!(vi.shape(), new_shape);
     let correct = array![
         [A[&[0, 0, 0, 0, 0, 1, 0][..]], A[&[0, 0, 2, 0, 0, 1, 0][..]]],
@@ -196,7 +196,7 @@ fn test_slice_args_eval_step_once() {
 #[test]
 fn test_slice_array_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
-    let info = s![1.., 1, ..;2];
+    let info = s![1.., 1, NewAxis, ..;2];
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -206,7 +206,7 @@ fn test_slice_array_fixed() {
 #[test]
 fn test_slice_dyninput_array_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = s![1.., 1, ..;2];
+    let info = s![1.., 1, NewAxis, ..;2];
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -219,6 +219,7 @@ fn test_slice_array_dyn() {
     let info = &SliceInfo::<_, Ix3, IxDyn>::new([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
         AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
@@ -234,6 +235,7 @@ fn test_slice_dyninput_array_dyn() {
     let info = &SliceInfo::<_, Ix3, IxDyn>::new([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
         AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
@@ -246,9 +248,10 @@ fn test_slice_dyninput_array_dyn() {
 #[test]
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, Ix3, Ix2>::new(vec![
+    let info = &SliceInfo::<_, Ix3, Ix3>::new(vec![
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
         AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
@@ -264,6 +267,7 @@ fn test_slice_dyninput_vec_dyn() {
     let info = &SliceInfo::<_, Ix3, IxDyn>::new(vec![
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
         AxisSliceInfo::from(..).step_by(2),
     ])
     .unwrap();
@@ -274,27 +278,33 @@ fn test_slice_dyninput_vec_dyn() {
 }
 
 #[test]
-fn test_slice_with_subview() {
+fn test_slice_with_subview_and_new_axis() {
     let mut arr = ArcArray::<usize, _>::zeros((3, 5, 4));
     for (i, elt) in arr.iter_mut().enumerate() {
         *elt = i;
     }
 
-    let vi = arr.slice(s![1.., 2, ..;2]);
-    assert_eq!(vi.shape(), &[2, 2]);
+    let vi = arr.slice(s![NewAxis, 1.., 2, ..;2]);
+    assert_eq!(vi.shape(), &[1, 2, 2]);
     assert!(vi
         .iter()
-        .zip(arr.index_axis(Axis(1), 2).slice(s![1.., ..;2]).iter())
+        .zip(
+            arr.index_axis(Axis(1), 2)
+                .slice(s![1.., ..;2])
+                .insert_axis(Axis(0))
+                .iter()
+        )
         .all(|(a, b)| a == b));
 
-    let vi = arr.slice(s![1, 2, ..;2]);
-    assert_eq!(vi.shape(), &[2]);
+    let vi = arr.slice(s![1, NewAxis, 2, ..;2]);
+    assert_eq!(vi.shape(), &[1, 2]);
     assert!(vi
         .iter()
         .zip(
             arr.index_axis(Axis(0), 1)
                 .index_axis(Axis(0), 2)
                 .slice(s![..;2])
+                .insert_axis(Axis(0))
                 .iter()
         )
         .all(|(a, b)| a == b));
@@ -313,7 +323,7 @@ fn test_slice_collapse_with_indices() {
 
     {
         let mut vi = arr.view();
-        vi.slice_collapse(s![1.., 2, ..;2]);
+        vi.slice_collapse(s![NewAxis, 1.., 2, ..;2]);
         assert_eq!(vi.shape(), &[2, 1, 2]);
         assert!(vi
             .iter()
@@ -321,7 +331,7 @@ fn test_slice_collapse_with_indices() {
             .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
-        vi.slice_collapse(s![1, 2, ..;2]);
+        vi.slice_collapse(s![1, NewAxis, 2, ..;2]);
         assert_eq!(vi.shape(), &[1, 1, 2]);
         assert!(vi
             .iter()
@@ -329,7 +339,7 @@ fn test_slice_collapse_with_indices() {
             .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
-        vi.slice_collapse(s![1, 2, 3]);
+        vi.slice_collapse(s![1, 2, NewAxis, 3]);
         assert_eq!(vi.shape(), &[1, 1, 1]);
         assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
     }
@@ -337,7 +347,7 @@ fn test_slice_collapse_with_indices() {
     // Do it to the ArcArray itself
     let elem = arr[(1, 2, 3)];
     let mut vi = arr;
-    vi.slice_collapse(s![1, 2, 3]);
+    vi.slice_collapse(s![1, 2, 3, NewAxis]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
     assert_eq!(vi, Array3::from_elem((1, 1, 1), elem));
 }
@@ -382,7 +392,7 @@ fn test_multislice() {
 fn test_multislice_intersecting() {
     assert_panics!({
         let mut arr = Array2::<u8>::zeros((8, 6));
-        arr.multi_slice_mut((s![3, ..], s![3, ..]));
+        arr.multi_slice_mut((s![3, .., NewAxis], s![3, ..]));
     });
     assert_panics!({
         let mut arr = Array2::<u8>::zeros((8, 6));
@@ -390,7 +400,7 @@ fn test_multislice_intersecting() {
     });
     assert_panics!({
         let mut arr = Array2::<u8>::zeros((8, 6));
-        arr.multi_slice_mut((s![3, ..], s![..;3, ..]));
+        arr.multi_slice_mut((s![3, ..], s![..;3, NewAxis, ..]));
     });
     assert_panics!({
         let mut arr = Array2::<u8>::zeros((8, 6));

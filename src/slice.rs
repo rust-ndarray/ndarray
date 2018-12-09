@@ -67,7 +67,12 @@ impl Slice {
     }
 }
 
-/// A slice (range with step) or an index.
+/// Token to represent a new axis in a slice description.
+///
+/// See also the [`s![]`](macro.s!.html) macro.
+pub struct NewAxis;
+
+/// A slice (range with step), an index, or a new axis token.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
 /// `&SliceInfo<[AxisSliceInfo; n], Di, Do>`.
@@ -91,6 +96,10 @@ impl Slice {
 /// from `a` until the end, in reverse order. It can also be created with
 /// `AxisSliceInfo::from(a..).step_by(-1)`. The Python equivalent is `[a::-1]`.
 /// The macro equivalent is `s![a..;-1]`.
+///
+/// `AxisSliceInfo::NewAxis` is a new axis of length 1. It can also be created
+/// with `AxisSliceInfo::from(NewAxis)`. The Python equivalent is
+/// `[np.newaxis]`. The macro equivalent is `s![NewAxis]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum AxisSliceInfo {
     /// A range with step size. `end` is an exclusive index. Negative `begin`
@@ -103,6 +112,8 @@ pub enum AxisSliceInfo {
     },
     /// A single index.
     Index(isize),
+    /// A new axis of length 1.
+    NewAxis,
 }
 
 copy_and_clone! {AxisSliceInfo}
@@ -116,6 +127,11 @@ impl AxisSliceInfo {
     /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
         matches!(self, AxisSliceInfo::Index(_))
+    }
+
+    /// Returns `true` if `self` is a `NewAxis` value.
+    pub fn is_new_axis(&self) -> bool {
+        matches!(self, AxisSliceInfo::NewAxis)
     }
 
     /// Returns a new `AxisSliceInfo` with the given step size (multiplied with
@@ -137,6 +153,7 @@ impl AxisSliceInfo {
                 step: orig_step * step,
             },
             AxisSliceInfo::Index(s) => AxisSliceInfo::Index(s),
+            AxisSliceInfo::NewAxis => AxisSliceInfo::NewAxis,
         }
     }
 }
@@ -157,6 +174,7 @@ impl fmt::Display for AxisSliceInfo {
                     write!(f, ";{}", step)?;
                 }
             }
+            AxisSliceInfo::NewAxis => write!(f, "NewAxis")?,
         }
         Ok(())
     }
@@ -275,6 +293,13 @@ macro_rules! impl_axissliceinfo_from_index {
 impl_axissliceinfo_from_index!(isize);
 impl_axissliceinfo_from_index!(usize);
 impl_axissliceinfo_from_index!(i32);
+
+impl From<NewAxis> for AxisSliceInfo {
+    #[inline]
+    fn from(_: NewAxis) -> AxisSliceInfo {
+        AxisSliceInfo::NewAxis
+    }
+}
 
 /// A type that can slice an array of dimension `D`.
 ///
@@ -396,12 +421,12 @@ where
     /// Errors if `Di` or `Do` is not consistent with `indices`.
     pub fn new(indices: T) -> Result<SliceInfo<T, Di, Do>, ShapeError> {
         if let Some(ndim) = Di::NDIM {
-            if ndim != indices.as_ref().len() {
+            if ndim != indices.as_ref().iter().filter(|s| !s.is_new_axis()).count() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
         }
         if let Some(ndim) = Do::NDIM {
-            if ndim != indices.as_ref().iter().filter(|s| s.is_slice()).count() {
+            if ndim != indices.as_ref().iter().filter(|s| !s.is_index()).count() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
         }
@@ -421,8 +446,18 @@ where
 {
     /// Returns the number of dimensions of the input array for
     /// [`.slice()`](struct.ArrayBase.html#method.slice).
+    ///
+    /// If `Di` is a fixed-size dimension type, then this is equivalent to
+    /// `Di::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
+    /// over the `AxisSliceInfo` elements.
     pub fn in_ndim(&self) -> usize {
-        Di::NDIM.unwrap_or_else(|| self.indices.as_ref().len())
+        Di::NDIM.unwrap_or_else(|| {
+            self.indices
+                .as_ref()
+                .iter()
+                .filter(|s| !s.is_new_axis())
+                .count()
+        })
     }
 
     /// Returns the number of dimensions after calling
@@ -437,7 +472,7 @@ where
             self.indices
                 .as_ref()
                 .iter()
-                .filter(|s| s.is_slice())
+                .filter(|s| !s.is_index())
                 .count()
         })
     }
@@ -500,6 +535,12 @@ pub trait SliceNextInDim<D1, D2> {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
 }
 
+impl<D1: Dimension> SliceNextInDim<D1, D1> for NewAxis {
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
+        PhantomData
+    }
+}
+
 macro_rules! impl_slicenextindim_larger {
     (($($generics:tt)*), $self:ty) => {
         impl<D1: Dimension, $($generics),*> SliceNextInDim<D1, D1::Larger> for $self {
@@ -554,12 +595,13 @@ impl_slicenextoutdim_larger!((T), RangeTo<T>);
 impl_slicenextoutdim_larger!((T), RangeToInclusive<T>);
 impl_slicenextoutdim_larger!((), RangeFull);
 impl_slicenextoutdim_larger!((), Slice);
+impl_slicenextoutdim_larger!((), NewAxis);
 
 /// Slice argument constructor.
 ///
-/// `s![]` takes a list of ranges/slices/indices, separated by comma, with
-/// optional step sizes that are separated from the range by a semicolon. It is
-/// converted into a [`&SliceInfo`] instance.
+/// `s![]` takes a list of ranges/slices/indices/new-axes, separated by comma,
+/// with optional step sizes that are separated from the range by a semicolon.
+/// It is converted into a [`&SliceInfo`] instance.
 ///
 /// [`&SliceInfo`]: struct.SliceInfo.html
 ///
@@ -578,22 +620,25 @@ impl_slicenextoutdim_larger!((), Slice);
 /// * *slice*: a [`Slice`] instance to use for slicing that axis.
 /// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
 ///   instance, with new step size *step*, to use for slicing that axis.
+/// * *new-axis*: a [`NewAxis`] instance that represents the creation of a new axis.
 ///
 /// [`Slice`]: struct.Slice.html
+/// [`NewAxis`]: struct.NewAxis.html
 ///
-/// The number of *axis-slice-info* must match the number of axes in the array.
-/// *index*, *range*, *slice*, and *step* can be expressions. *index* must be
-/// of type `isize`, `usize`, or `i32`. *range* must be of type `Range<I>`,
-/// `RangeTo<I>`, `RangeFrom<I>`, or `RangeFull` where `I` is `isize`, `usize`,
-/// or `i32`. *step* must be a type that can be converted to `isize` with the
-/// `as` keyword.
+/// The number of *axis-slice-info*, not including *new-axis*, must match the
+/// number of axes in the array. *index*, *range*, *slice*, *step*, and
+/// *new-axis* can be expressions. *index* must be of type `isize`, `usize`, or
+/// `i32`. *range* must be of type `Range<I>`, `RangeTo<I>`, `RangeFrom<I>`, or
+/// `RangeFull` where `I` is `isize`, `usize`, or `i32`. *step* must be a type
+/// that can be converted to `isize` with the `as` keyword.
 ///
-/// For example `s![0..4;2, 6, 1..5]` is a slice of the first axis for 0..4
-/// with step size 2, a subview of the second axis at index 6, and a slice of
-/// the third axis for 1..5 with default step size 1. The input array must have
-/// 3 dimensions. The resulting slice would have shape `[2, 4]` for
-/// [`.slice()`], [`.slice_mut()`], and [`.slice_move()`], and shape
-/// `[2, 1, 4]` for [`.slice_collapse()`].
+/// For example `s![0..4;2, 6, 1..5, NewAxis]` is a slice of the first axis for
+/// 0..4 with step size 2, a subview of the second axis at index 6, a slice of
+/// the third axis for 1..5 with default step size 1, and a new axis of length
+/// 1 at the end of the shape. The input array must have 3 dimensions. The
+/// resulting slice would have shape `[2, 4, 1]` for [`.slice()`],
+/// [`.slice_mut()`], and [`.slice_move()`], and shape `[2, 1, 4]` for
+/// [`.slice_collapse()`].
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 /// [`.slice_mut()`]: struct.ArrayBase.html#method.slice_mut
@@ -731,11 +776,11 @@ macro_rules! s(
     };
     // Catch-all clause for syntax errors
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
-    // convert range/index into AxisSliceInfo
+    // convert range/index/new-axis into AxisSliceInfo
     (@convert $r:expr) => {
         <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r)
     };
-    // convert range/index and step into AxisSliceInfo
+    // convert range/index/new-axis and step into AxisSliceInfo
     (@convert $r:expr, $s:expr) => {
         <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };

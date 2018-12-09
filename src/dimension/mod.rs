@@ -601,7 +601,11 @@ pub fn slices_intersect<D: Dimension>(
     indices2: &impl CanSlice<D>,
 ) -> bool {
     debug_assert_eq!(indices1.in_ndim(), indices2.in_ndim());
-    for (&axis_len, &si1, &si2) in izip!(dim.slice(), indices1.as_ref(), indices2.as_ref()) {
+    for (&axis_len, &si1, &si2) in izip!(
+        dim.slice(),
+        indices1.as_ref().iter().filter(|si| !si.is_new_axis()),
+        indices2.as_ref().iter().filter(|si| !si.is_new_axis()),
+    ) {
         // The slices do not intersect iff any pair of `AxisSliceInfo` does not intersect.
         match (si1, si2) {
             (
@@ -649,6 +653,7 @@ pub fn slices_intersect<D: Dimension>(
                     return false;
                 }
             }
+            (AxisSliceInfo::NewAxis, _) | (_, AxisSliceInfo::NewAxis) => unreachable!(),
         }
     }
     true
@@ -720,7 +725,7 @@ mod test {
     };
     use crate::error::{from_kind, ErrorKind};
     use crate::slice::Slice;
-    use crate::{Dim, Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn};
+    use crate::{Dim, Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn, NewAxis};
     use num_integer::gcd;
     use quickcheck::{quickcheck, TestResult};
 
@@ -994,17 +999,45 @@ mod test {
 
     #[test]
     fn slices_intersect_true() {
-        assert!(slices_intersect(&Dim([4, 5]), s![.., ..], s![.., ..]));
-        assert!(slices_intersect(&Dim([4, 5]), s![0, ..], s![0, ..]));
-        assert!(slices_intersect(&Dim([4, 5]), s![..;2, ..], s![..;3, ..]));
-        assert!(slices_intersect(&Dim([4, 5]), s![.., ..;2], s![.., 1..;3]));
+        assert!(slices_intersect(
+            &Dim([4, 5]),
+            s![NewAxis, .., NewAxis, ..],
+            s![.., NewAxis, .., NewAxis]
+        ));
+        assert!(slices_intersect(
+            &Dim([4, 5]),
+            s![NewAxis, 0, ..],
+            s![0, ..]
+        ));
+        assert!(slices_intersect(
+            &Dim([4, 5]),
+            s![..;2, ..],
+            s![..;3, NewAxis, ..]
+        ));
+        assert!(slices_intersect(
+            &Dim([4, 5]),
+            s![.., ..;2],
+            s![.., 1..;3, NewAxis]
+        ));
         assert!(slices_intersect(&Dim([4, 10]), s![.., ..;9], s![.., 3..;6]));
     }
 
     #[test]
     fn slices_intersect_false() {
-        assert!(!slices_intersect(&Dim([4, 5]), s![..;2, ..], s![1..;2, ..]));
-        assert!(!slices_intersect(&Dim([4, 5]), s![..;2, ..], s![1..;3, ..]));
-        assert!(!slices_intersect(&Dim([4, 5]), s![.., ..;9], s![.., 3..;6]));
+        assert!(!slices_intersect(
+            &Dim([4, 5]),
+            s![..;2, ..],
+            s![NewAxis, 1..;2, ..]
+        ));
+        assert!(!slices_intersect(
+            &Dim([4, 5]),
+            s![..;2, NewAxis, ..],
+            s![1..;3, ..]
+        ));
+        assert!(!slices_intersect(
+            &Dim([4, 5]),
+            s![.., ..;9],
+            s![.., 3..;6, NewAxis]
+        ));
     }
 }

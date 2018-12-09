@@ -50,6 +50,9 @@ pub use crate::{array, azip, s};
 pub use crate::ShapeBuilder;
 
 #[doc(no_inline)]
+pub use crate::NewAxis;
+
+#[doc(no_inline)]
 pub use crate::AsArray;
 
 #[doc(no_inline)]
