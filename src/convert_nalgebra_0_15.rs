@@ -66,7 +66,7 @@ where
     /// ```
     fn from(slice: na::MatrixSlice<'a, A, R, na::U1, RStride, CStride>) -> ArrayView<'a, A, Ix1> {
         if slice.is_empty() {
-            ArrayView::from_shape(slice.shape().0, &[]).unwrap()
+            ArrayView::from(&[])
         } else {
             let dim = Dim(slice.shape().0);
             let strides = Dim(slice.strides().0);
@@ -77,8 +77,7 @@ where
             );
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides)
                 .expect("overflow converting `nalgebra::MatrixSlice` to `nalgebra::ArrayView`");
-            let ptr: *const A = slice.iter().next().unwrap();
-            unsafe { ArrayView::from_shape_ptr(dim.strides(strides), ptr) }
+            unsafe { ArrayView::from_shape_ptr(dim.strides(strides), slice.get_unchecked(0, 0)) }
         }
     }
 }
@@ -119,7 +118,7 @@ where
         mut slice: na::MatrixSliceMut<'a, A, R, na::U1, RStride, CStride>,
     ) -> ArrayViewMut<'a, A, Ix1> {
         if slice.is_empty() {
-            ArrayViewMut::from_shape(slice.shape().0, &mut []).unwrap()
+            ArrayViewMut::from(&mut [])
         } else {
             let dim = Dim(slice.shape().0);
             let strides = Dim(slice.strides().0);
@@ -139,8 +138,9 @@ where
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).expect(
                 "overflow converting `nalgebra::MatrixSliceMut` to `nalgebra::ArrayViewMut`",
             );
-            let ptr: *mut A = slice.iter_mut().next().unwrap();
-            unsafe { ArrayViewMut::from_shape_ptr(dim.strides(strides), ptr) }
+            unsafe {
+                ArrayViewMut::from_shape_ptr(dim.strides(strides), slice.get_unchecked_mut(0, 0))
+            }
         }
     }
 }
@@ -225,8 +225,7 @@ where
             );
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides)
                 .expect("overflow converting `nalgebra::MatrixSlice` to `nalgebra::ArrayView`");
-            let ptr: *const A = slice.iter().next().unwrap();
-            unsafe { ArrayView::from_shape_ptr(dim.strides(strides), ptr) }
+            unsafe { ArrayView::from_shape_ptr(dim.strides(strides), slice.get_unchecked(0, 0)) }
         }
     }
 }
@@ -289,8 +288,9 @@ where
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).expect(
                 "overflow converting `nalgebra::MatrixSliceMut` to `nalgebra::ArrayViewMut`",
             );
-            let ptr: *mut A = slice.iter_mut().next().unwrap();
-            unsafe { ArrayViewMut::from_shape_ptr(dim.strides(strides), ptr) }
+            unsafe {
+                ArrayViewMut::from_shape_ptr(dim.strides(strides), slice.get_unchecked_mut(0, 0))
+            }
         }
     }
 }
