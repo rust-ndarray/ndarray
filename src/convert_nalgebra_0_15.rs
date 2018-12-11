@@ -1,5 +1,5 @@
-use dimension;
-use imp_prelude::*;
+use crate::dimension;
+use crate::imp_prelude::*;
 use nalgebra_crate_0_15 as na;
 use std::isize;
 
