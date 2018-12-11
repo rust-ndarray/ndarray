@@ -9,9 +9,9 @@
 //! Tuple to array conversion, IntoDimension, and related things
 
 use std::ops::{Index, IndexMut};
-use libnum::Zero;
+use num_traits::Zero;
 
-use {Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
+use crate::{Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
 
 /// $m: macro callback
 /// $m is called with $arg and then the indices corresponding to the size argument

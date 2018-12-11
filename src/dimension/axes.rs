@@ -1,5 +1,5 @@
 
-use {Dimension, Axis, Ix, Ixs};
+use crate::{Dimension, Axis, Ix, Ixs};
 
 /// Create a new Axes iterator
 pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>

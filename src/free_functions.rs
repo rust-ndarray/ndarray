@@ -9,8 +9,8 @@
 use std::slice;
 use std::mem::{size_of, forget};
 
-use dimension;
-use imp_prelude::*;
+use crate::dimension;
+use crate::imp_prelude::*;
 
 /// Create an [**`Array`**](type.Array.html) with one, two or
 /// three dimensions.

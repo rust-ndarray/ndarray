@@ -12,11 +12,11 @@ use serde::ser::{SerializeSeq, SerializeStruct};
 use std::fmt;
 use std::marker::PhantomData;
 
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
 use super::Iter;
-use IntoDimension;
+use crate::IntoDimension;
 
 /// Verifies that the version of the deserialized array matches the current
 /// `ARRAY_FORMAT_VERSION`.
@@ -25,10 +25,10 @@ pub fn verify_version<E>(v: u8) -> Result<(), E>
 {
     if v != ARRAY_FORMAT_VERSION {
         let err_msg = format!("unknown array version: {}", v);
-        try!(Err(de::Error::custom(err_msg)));
+        Err(de::Error::custom(err_msg))
+    } else {
+        Ok(())
     }
-
-    Ok(())
 }
 
 /// **Requires crate feature `"serde-1"`**
@@ -84,10 +84,10 @@ impl<A, D, S> Serialize for ArrayBase<S, D>
     fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
         where Se: Serializer
     {
-        let mut state = try!(serializer.serialize_struct("Array", 3));
-        try!(state.serialize_field("v", &ARRAY_FORMAT_VERSION));
-        try!(state.serialize_field("dim", &self.raw_dim()));
-        try!(state.serialize_field("data", &Sequence(self.iter())));
+        let mut state = serializer.serialize_struct("Array", 3)?;
+        state.serialize_field("v", &ARRAY_FORMAT_VERSION)?;
+        state.serialize_field("dim", &self.raw_dim())?;
+        state.serialize_field("data", &Sequence(self.iter()))?;
         state.end()
     }
 }
@@ -103,9 +103,9 @@ impl<'a, A, D> Serialize for Sequence<'a, A, D>
         where S: Serializer
     {
         let iter = &self.0;
-        let mut seq = try!(serializer.serialize_seq(Some(iter.len())));
+        let mut seq = serializer.serialize_seq(Some(iter.len()))?;
         for elt in iter.clone() {
-            try!(seq.serialize_element(elt));
+            seq.serialize_element(elt)?;
         }
         seq.end()
     }
@@ -197,23 +197,23 @@ impl<'de, A, Di, S> Visitor<'de> for ArrayVisitor<S,Di>
     fn visit_seq<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
         where V: SeqAccess<'de>,
     {
-        let v: u8 = match try!(visitor.next_element()) {
+        let v: u8 = match visitor.next_element()? {
             Some(value) => value,
             None => {
                 return Err(de::Error::invalid_length(0, &self));
             }
         };
 
-        try!(verify_version(v));
+        verify_version(v)?;
 
-        let dim: Di = match try!(visitor.next_element()) {
+        let dim: Di = match visitor.next_element()? {
             Some(value) => value,
             None => {
                 return Err(de::Error::invalid_length(1, &self));
             }
         };
 
-        let data: Vec<A> = match try!(visitor.next_element()) {
+        let data: Vec<A> = match visitor.next_element()? {
             Some(value) => value,
             None => {
                 return Err(de::Error::invalid_length(2, &self));
@@ -234,35 +234,35 @@ impl<'de, A, Di, S> Visitor<'de> for ArrayVisitor<S,Di>
         let mut data: Option<Vec<A>> = None;
         let mut dim: Option<Di> = None;
 
-        while let Some(key) = try!(visitor.next_key()) {
+        while let Some(key) = visitor.next_key()? {
             match key {
                 ArrayField::Version => {
-                    let val = try!(visitor.next_value());
-                    try!(verify_version(val));
+                    let val = visitor.next_value()?;
+                    verify_version(val)?;
                     v = Some(val);
                 },
                 ArrayField::Data => {
-                    data = Some(try!(visitor.next_value()));
+                    data = Some(visitor.next_value()?);
                 },
                 ArrayField::Dim => {
-                    dim = Some(try!(visitor.next_value()));
+                    dim = Some(visitor.next_value()?);
                 },
             }
         }
 
         let _v = match v {
             Some(v) => v,
-            None => try!(Err(de::Error::missing_field("v"))),
+            None => Err(de::Error::missing_field("v"))?,
         };
 
         let data = match data {
             Some(data) => data,
-            None => try!(Err(de::Error::missing_field("data"))),
+            None => Err(de::Error::missing_field("data"))?,
         };
 
         let dim = match dim {
             Some(dim) => dim,
-            None => try!(Err(de::Error::missing_field("dim"))),
+            None => Err(de::Error::missing_field("dim"))?,
         };
 
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {

@@ -9,14 +9,14 @@
 #[macro_use]
 mod zipmacro;
 
-use imp_prelude::*;
-use IntoDimension;
-use NdIndex;
-use Layout;
+use crate::imp_prelude::*;
+use crate::IntoDimension;
+use crate::NdIndex;
+use crate::Layout;
 
-use layout::{CORDER, FORDER};
-use layout::LayoutPriv;
-use indexes::{Indices, indices};
+use crate::layout::{CORDER, FORDER};
+use crate::layout::LayoutPriv;
+use crate::indexes::{Indices, indices};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -79,7 +79,7 @@ impl<'a, A, D, E> Broadcast<E> for ArrayView<'a, A, D>
 }
 
 pub trait Splittable : Sized {
-    fn split_at(self, Axis, Ix) -> (Self, Self);
+    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self);
 }
 
 impl<D> Splittable for D
@@ -166,7 +166,7 @@ pub trait NdProducer {
     #[doc(hidden)]
     fn as_ptr(&self) -> Self::Ptr;
     #[doc(hidden)]
-    unsafe fn as_ref(&self, Self::Ptr) -> Self::Item;
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item;
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     #[doc(hidden)]
@@ -199,7 +199,7 @@ trait ZippableTuple : Sized {
     type Dim: Dimension;
     type Stride: Copy;
     fn as_ptr(&self) -> Self::Ptr;
-    unsafe fn as_ref(&self, Self::Ptr) -> Self::Item;
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item;
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     fn stride_of(&self, index: usize) -> Self::Stride;
     fn contiguous_stride(&self) -> Self::Stride;

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use imp_prelude::*;
-use {NdProducer, Layout};
+use crate::imp_prelude::*;
+use crate::{NdProducer, Layout};
 use super::LanesIter;
 use super::LanesIterMut;
 

@@ -17,7 +17,7 @@ use std::fmt;
 
 impl fmt::Debug for Layout {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(if self.0 == 0 {
+        if self.0 == 0 {
             write!(f, "Custom")
         } else {
             write!(f, "{}",
@@ -29,7 +29,7 @@ impl fmt::Debug for Layout {
                     f(&format_args!("0x{:x}", i))
                 }
             }))
-        });
+        }?;
         write!(f, " ({:#x})", self.0)
     }
 }

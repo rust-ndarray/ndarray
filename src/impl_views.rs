@@ -8,13 +8,13 @@
 
 use std::slice;
 
-use imp_prelude::*;
-use dimension;
-use error::ShapeError;
-use arraytraits::array_out_of_bounds;
-use {is_aligned, NdIndex, StrideShape};
+use crate::imp_prelude::*;
+use crate::dimension;
+use crate::error::ShapeError;
+use crate::arraytraits::array_out_of_bounds;
+use crate::{is_aligned, NdIndex, StrideShape};
 
-use {
+use crate::{
     ElementsBase,
     ElementsBaseMut,
     Iter,
@@ -22,7 +22,7 @@ use {
     Baseiter,
 };
 
-use iter::{self, AxisIter, AxisIterMut};
+use crate::iter::{self, AxisIter, AxisIterMut};
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>

@@ -5,7 +5,7 @@ use std::ops::{
     Deref,
     DerefMut,
 };
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
 const CAP: usize = 4;
 
@@ -53,7 +53,7 @@ impl Default for IxDynRepr<Ix> {
 }
 
 
-use ::libnum::Zero;
+use num_traits::Zero;
 
 impl<T: Copy + Zero> IxDynRepr<T> {
     pub fn copy_from(x: &[T]) -> Self {

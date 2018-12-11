@@ -8,14 +8,14 @@
 //! See also [`NdProducer`](../trait.NdProducer.html).
 
 
-pub use dimension::{
+pub use crate::dimension::{
     Axes,
 };
-pub use indexes::{
+pub use crate::indexes::{
     Indices,
     IndicesIter,
 };
-pub use iterators::{
+pub use crate::iterators::{
     Iter,
     IterMut,
     IndexedIter,

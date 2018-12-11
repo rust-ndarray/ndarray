@@ -55,7 +55,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.30**
+//! - **Requires Rust 1.31**
 //!
 //! ## Crate Feature Flags
 //!
@@ -98,7 +98,7 @@ extern crate blas_src;
 extern crate matrixmultiply;
 
 extern crate itertools;
-extern crate num_traits as libnum;
+extern crate num_traits;
 extern crate num_complex;
 extern crate num_integer;
 
@@ -111,7 +111,7 @@ pub mod doc;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-pub use dimension::{
+pub use crate::dimension::{
     Dimension,
     IntoDimension,
     RemoveAxis,
@@ -119,26 +119,26 @@ pub use dimension::{
     AxisDescription,
     slices_intersect,
 };
-pub use dimension::dim::*;
+pub use crate::dimension::dim::*;
 
-pub use dimension::NdIndex;
-pub use dimension::IxDynImpl;
-pub use indexes::{indices, indices_of};
-pub use error::{ShapeError, ErrorKind};
-pub use slice::{
+pub use crate::dimension::NdIndex;
+pub use crate::dimension::IxDynImpl;
+pub use crate::indexes::{indices, indices_of};
+pub use crate::error::{ShapeError, ErrorKind};
+pub use crate::slice::{
     deref_raw_view_mut_into_view_with_life, deref_raw_view_mut_into_view_mut_with_life,
     life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex
 };
 
-use iterators::Baseiter;
-use iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
+use crate::iterators::Baseiter;
+use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
 
-pub use arraytraits::AsArray;
-pub use linalg_traits::{LinalgScalar, NdFloat};
-pub use stacking::stack;
+pub use crate::arraytraits::AsArray;
+pub use crate::linalg_traits::{LinalgScalar, NdFloat};
+pub use crate::stacking::stack;
 
-pub use shape_builder::{ ShapeBuilder};
-pub use impl_views::IndexLonger;
+pub use crate::shape_builder::{ ShapeBuilder};
+pub use crate::impl_views::IndexLonger;
 
 #[macro_use] mod macro_utils;
 #[macro_use] mod private;
@@ -149,10 +149,10 @@ mod array_serde;
 mod arrayformat;
 mod data_traits;
 
-pub use aliases::*;
+pub use crate::aliases::*;
 
 #[allow(deprecated)]
-pub use data_traits::{
+pub use crate::data_traits::{
     RawData,
     RawDataMut,
     RawDataClone,
@@ -164,8 +164,8 @@ pub use data_traits::{
 };
 
 mod free_functions;
-pub use free_functions::*;
-pub use iterators::iter;
+pub use crate::free_functions::*;
+pub use crate::iterators::iter;
 
 #[macro_use] mod slice;
 mod layout;
@@ -182,20 +182,20 @@ mod zip;
 
 mod dimension;
 
-pub use zip::{
+pub use crate::zip::{
     Zip,
     NdProducer,
     IntoNdProducer,
     FoldWhile,
 };
 
-pub use layout::Layout;
+pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
-    pub use prelude::*;
-    pub use ArcArray;
-    pub use {
+    pub use crate::prelude::*;
+    pub use crate::ArcArray;
+    pub use crate::{
         RemoveAxis,
         RawData,
         RawDataMut,
@@ -207,7 +207,7 @@ mod imp_prelude {
         ViewRepr,
         Ix, Ixs,
     };
-    pub use dimension::DimensionExt;
+    pub use crate::dimension::DimensionExt;
 }
 
 pub mod prelude;
@@ -1371,7 +1371,7 @@ mod numeric;
 pub mod linalg;
 
 mod impl_ops;
-pub use impl_ops::ScalarOperand;
+pub use crate::impl_ops::ScalarOperand;
 
 // Array view methods
 mod impl_views;

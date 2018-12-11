@@ -12,22 +12,22 @@ use std::slice;
 
 use itertools::{izip, zip};
 
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
-use arraytraits;
-use dimension;
-use error::{self, ShapeError, ErrorKind};
-use dimension::IntoDimension;
-use dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, size_of_shape_checked, stride_offset};
-use zip::Zip;
+use crate::arraytraits;
+use crate::dimension;
+use crate::error::{self, ShapeError, ErrorKind};
+use crate::dimension::IntoDimension;
+use crate::dimension::{abs_index, axes_of, Axes, do_slice, merge_axes, size_of_shape_checked, stride_offset};
+use crate::zip::Zip;
 
-use {
+use crate::{
     NdIndex,
     Slice,
     SliceInfo,
     SliceOrIndex
 };
-use iter::{
+use crate::iter::{
     AxisChunksIter,
     AxisChunksIterMut,
     Iter,
@@ -42,7 +42,7 @@ use iter::{
     ExactChunksMut,
     Windows
 };
-use stacking::stack;
+use crate::stacking::stack;
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D>
@@ -1890,13 +1890,13 @@ where
               S: Data,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            let v = ::iterators::to_vec_mapped(slc.iter(), f);
+            let v = crate::iterators::to_vec_mapped(slc.iter(), f);
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(
                     self.dim.clone().strides(self.strides.clone()), v)
             }
         } else {
-            let v = ::iterators::to_vec_mapped(self.iter(), f);
+            let v = crate::iterators::to_vec_mapped(self.iter(), f);
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(self.dim.clone(), v)
             }
@@ -1918,13 +1918,13 @@ where
         if self.is_contiguous() {
             let strides = self.strides.clone();
             let slc = self.as_slice_memory_order_mut().unwrap();
-            let v = ::iterators::to_vec_mapped(slc.iter_mut(), f);
+            let v = crate::iterators::to_vec_mapped(slc.iter_mut(), f);
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(
                     dim.strides(strides), v)
             }
         } else {
-            let v = ::iterators::to_vec_mapped(self.iter_mut(), f);
+            let v = crate::iterators::to_vec_mapped(self.iter_mut(), f);
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(dim, v)
             }

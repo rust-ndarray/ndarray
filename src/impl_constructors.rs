@@ -10,18 +10,18 @@
 //!
 //!
 
-use libnum::{Zero, One, Float};
+use num_traits::{Zero, One, Float};
 use std::isize;
 use std::mem;
 
-use imp_prelude::*;
-use StrideShape;
-use dimension;
-use linspace;
-use error::{self, ShapeError};
-use indices;
-use indexes;
-use iterators::{to_vec, to_vec_mapped};
+use crate::imp_prelude::*;
+use crate::StrideShape;
+use crate::dimension;
+use crate::linspace;
+use crate::error::{self, ShapeError};
+use crate::indices;
+use crate::indexes;
+use crate::iterators::{to_vec, to_vec_mapped};
 
 /// # Constructor Methods for Owned Arrays
 ///

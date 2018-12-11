@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use error::{ShapeError, ErrorKind};
+use crate::error::{ShapeError, ErrorKind};
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use std::fmt;
 use std::marker::PhantomData;
@@ -417,7 +417,7 @@ where
 
 #[doc(hidden)]
 pub trait SliceNextDim<D1, D2> {
-    fn next_dim(&self, PhantomData<D1>) -> PhantomData<D2>;
+    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
 }
 
 macro_rules! impl_slicenextdim_equal {

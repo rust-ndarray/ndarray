@@ -1,4 +1,4 @@
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
 /// Methods specific to `Array0`.
 ///

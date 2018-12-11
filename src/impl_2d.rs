@@ -8,7 +8,7 @@
 
 
 //! Methods for two-dimensional arrays.
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
 /// # Methods For 2-D Arrays
 impl<A, S> ArrayBase<S, Ix2>

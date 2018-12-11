@@ -1,4 +1,4 @@
-use {Array, ArcArray, Dimension, ArrayView, ArrayViewMut};
+use crate::{Array, ArcArray, Dimension, ArrayView, ArrayViewMut};
 
 use super::prelude::IntoParallelIterator;
 use super::Parallel;

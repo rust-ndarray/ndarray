@@ -1,6 +1,5 @@
 #![cfg(feature="rayon")]
 
-#[macro_use]
 extern crate ndarray;
 extern crate itertools;
 

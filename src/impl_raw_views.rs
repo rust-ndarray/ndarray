@@ -1,6 +1,6 @@
-use dimension::{self, stride_offset};
-use imp_prelude::*;
-use {is_aligned, StrideShape};
+use crate::dimension::{self, stride_offset};
+use crate::imp_prelude::*;
+use crate::{is_aligned, StrideShape};
 
 impl<A, D> RawArrayView<A, D>
 where

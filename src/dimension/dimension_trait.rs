@@ -13,11 +13,11 @@ use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, izip, zip};
 
-use {Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
-use IntoDimension;
-use RemoveAxis;
-use {ArrayView1, ArrayViewMut1};
-use Axis;
+use crate::{Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
+use crate::IntoDimension;
+use crate::RemoveAxis;
+use crate::{ArrayView1, ArrayViewMut1};
+use crate::Axis;
 use super::{
     stride_offset,
     stride_offset_checked,

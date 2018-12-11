@@ -114,7 +114,7 @@ pub mod prelude {
 }
 
 pub use self::par::Parallel;
-pub use par_azip;
+pub use crate::par_azip;
 
 mod par;
 mod impl_par_methods;

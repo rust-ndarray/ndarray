@@ -7,7 +7,7 @@
 // except according to those terms.
 
 //! Methods for dynamic-dimensional arrays.
-use imp_prelude::*;
+use crate::imp_prelude::*;
 
 /// # Methods for Dynamic-Dimensional Arrays
 impl<A, S> ArrayBase<S, IxDyn>
