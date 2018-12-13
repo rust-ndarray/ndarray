@@ -390,8 +390,9 @@ pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize {
         d + if r > 0 { 1 } else { 0 }
     };
 
-    // Update stride.
-    *stride = (s * step) as usize;
+    // Update stride. The additional check is necessary to avoid possible
+    // overflow in the multiplication.
+    *stride = if *dim <= 1 { 0 } else { (s * step) as usize };
 
     offset
 }
