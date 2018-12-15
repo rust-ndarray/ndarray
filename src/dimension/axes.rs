@@ -75,6 +75,15 @@ impl<'a, D> Iterator for Axes<'a, D>
         }
     }
 
+    fn fold<B, F>(self, init: B, f: F) -> B
+    where
+        F: FnMut(B, AxisDescription) -> B,
+    {
+        (self.start..self.end)
+            .map(move |i| AxisDescription(Axis(i), self.dim[i], self.strides[i] as isize))
+            .fold(init, f)
+    }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         let len = self.end - self.start;
         (len, Some(len))
