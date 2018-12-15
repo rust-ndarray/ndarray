@@ -380,15 +380,19 @@ pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize {
         offset += stride_offset(m - 1, *stride);
     }
 
-    let s_prim = s * step;
+    // Update dimension.
+    let abs_step = step.abs() as usize;
+    *dim = if abs_step == 1 {
+        m
+    } else {
+        let d = m / abs_step;
+        let r = m % abs_step;
+        d + if r > 0 { 1 } else { 0 }
+    };
 
-    let d = m / step.abs() as usize;
-    let r = m % step.abs() as usize;
-    let m_prim = d + if r > 0 { 1 } else { 0 };
-
-    // Update dimension and stride coordinate
-    *dim = m_prim;
-    *stride = s_prim as usize;
+    // Update stride. The additional check is necessary to avoid possible
+    // overflow in the multiplication.
+    *stride = if *dim <= 1 { 0 } else { (s * step) as usize };
 
     offset
 }
