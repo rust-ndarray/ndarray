@@ -451,13 +451,15 @@ where
     /// `Din::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
     /// over the `AxisSliceInfo` elements.
     pub fn in_ndim(&self) -> usize {
-        Din::NDIM.unwrap_or_else(|| {
+        if let Some(ndim) = Din::NDIM {
+            ndim
+        } else {
             self.indices
                 .as_ref()
                 .iter()
                 .filter(|s| !s.is_new_axis())
                 .count()
-        })
+        }
     }
 
     /// Returns the number of dimensions after calling
@@ -468,13 +470,15 @@ where
     /// `Dout::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
     /// over the `AxisSliceInfo` elements.
     pub fn out_ndim(&self) -> usize {
-        Dout::NDIM.unwrap_or_else(|| {
+        if let Some(ndim) = Dout::NDIM {
+            ndim
+        } else {
             self.indices
                 .as_ref()
                 .iter()
                 .filter(|s| !s.is_index())
                 .count()
-        })
+        }
     }
 }
 
