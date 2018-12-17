@@ -70,6 +70,7 @@ impl Slice {
 /// Token to represent a new axis in a slice description.
 ///
 /// See also the [`s![]`](macro.s!.html) macro.
+#[derive(Clone, Copy, Debug)]
 pub struct NewAxis;
 
 /// A slice (range with step), an index, or a new axis token.
