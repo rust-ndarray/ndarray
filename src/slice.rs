@@ -75,7 +75,7 @@ pub struct NewAxis;
 /// A slice (range with step), an index, or a new axis token.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
-/// `&SliceInfo<[AxisSliceInfo; n], Di, Do>`.
+/// `&SliceInfo<[AxisSliceInfo; n], Din, Dout>`.
 ///
 /// ## Examples
 ///
@@ -316,12 +316,12 @@ pub unsafe trait CanSlice<D: Dimension>: AsRef<[AxisSliceInfo]> {
 
 macro_rules! impl_canslice_samedim {
     ($in_dim:ty) => {
-        unsafe impl<T, Do> CanSlice<$in_dim> for SliceInfo<T, $in_dim, Do>
+        unsafe impl<T, Dout> CanSlice<$in_dim> for SliceInfo<T, $in_dim, Dout>
         where
             T: AsRef<[AxisSliceInfo]>,
-            Do: Dimension,
+            Dout: Dimension,
         {
-            type OutDim = Do;
+            type OutDim = Dout;
 
             fn in_ndim(&self) -> usize {
                 self.in_ndim()
@@ -341,13 +341,13 @@ impl_canslice_samedim!(Ix4);
 impl_canslice_samedim!(Ix5);
 impl_canslice_samedim!(Ix6);
 
-unsafe impl<T, Di, Do> CanSlice<IxDyn> for SliceInfo<T, Di, Do>
+unsafe impl<T, Din, Dout> CanSlice<IxDyn> for SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
-    type OutDim = Do;
+    type OutDim = Dout;
 
     fn in_ndim(&self) -> usize {
         self.in_ndim()
@@ -361,25 +361,25 @@ where
 /// Represents all of the necessary information to perform a slice.
 ///
 /// The type `T` is typically `[AxisSliceInfo; n]`, `[AxisSliceInfo]`, or
-/// `Vec<AxisSliceInfo>`. The type `Di` is the dimension of the array to be
-/// sliced, and `Do` is the output dimension after calling [`.slice()`]. Note
-/// that if `Di` is a fixed dimension type (`Ix0`, `Ix1`, `Ix2`, etc.), the
+/// `Vec<AxisSliceInfo>`. The type `Din` is the dimension of the array to be
+/// sliced, and `Dout` is the output dimension after calling [`.slice()`]. Note
+/// that if `Din` is a fixed dimension type (`Ix0`, `Ix1`, `Ix2`, etc.), the
 /// `SliceInfo` instance can still be used to slice an array with dimension
 /// `IxDyn` as long as the number of axes matches.
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 #[derive(Debug)]
 #[repr(C)]
-pub struct SliceInfo<T: ?Sized, Di: Dimension, Do: Dimension> {
-    in_dim: PhantomData<Di>,
-    out_dim: PhantomData<Do>,
+pub struct SliceInfo<T: ?Sized, Din: Dimension, Dout: Dimension> {
+    in_dim: PhantomData<Din>,
+    out_dim: PhantomData<Dout>,
     indices: T,
 }
 
-impl<T: ?Sized, Di, Do> Deref for SliceInfo<T, Di, Do>
+impl<T: ?Sized, Din, Dout> Deref for SliceInfo<T, Din, Dout>
 where
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
     type Target = T;
     fn deref(&self) -> &Self::Target {
@@ -387,10 +387,10 @@ where
     }
 }
 
-impl<T, Di, Do> SliceInfo<T, Di, Do>
+impl<T, Din, Dout> SliceInfo<T, Din, Dout>
 where
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
     /// Returns a new `SliceInfo` instance.
     ///
@@ -399,9 +399,9 @@ where
     #[doc(hidden)]
     pub unsafe fn new_unchecked(
         indices: T,
-        in_dim: PhantomData<Di>,
-        out_dim: PhantomData<Do>,
-    ) -> SliceInfo<T, Di, Do> {
+        in_dim: PhantomData<Din>,
+        out_dim: PhantomData<Dout>,
+    ) -> SliceInfo<T, Din, Dout> {
         SliceInfo {
             in_dim: in_dim,
             out_dim: out_dim,
@@ -410,22 +410,22 @@ where
     }
 }
 
-impl<T, Di, Do> SliceInfo<T, Di, Do>
+impl<T, Din, Dout> SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
     /// Returns a new `SliceInfo` instance.
     ///
-    /// Errors if `Di` or `Do` is not consistent with `indices`.
-    pub fn new(indices: T) -> Result<SliceInfo<T, Di, Do>, ShapeError> {
-        if let Some(ndim) = Di::NDIM {
+    /// Errors if `Din` or `Dout` is not consistent with `indices`.
+    pub fn new(indices: T) -> Result<SliceInfo<T, Din, Dout>, ShapeError> {
+        if let Some(ndim) = Din::NDIM {
             if ndim != indices.as_ref().iter().filter(|s| !s.is_new_axis()).count() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
         }
-        if let Some(ndim) = Do::NDIM {
+        if let Some(ndim) = Dout::NDIM {
             if ndim != indices.as_ref().iter().filter(|s| !s.is_index()).count() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
@@ -438,20 +438,20 @@ where
     }
 }
 
-impl<T: ?Sized, Di, Do> SliceInfo<T, Di, Do>
+impl<T: ?Sized, Din, Dout> SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
     /// Returns the number of dimensions of the input array for
     /// [`.slice()`](struct.ArrayBase.html#method.slice).
     ///
-    /// If `Di` is a fixed-size dimension type, then this is equivalent to
-    /// `Di::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
+    /// If `Din` is a fixed-size dimension type, then this is equivalent to
+    /// `Din::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
     /// over the `AxisSliceInfo` elements.
     pub fn in_ndim(&self) -> usize {
-        Di::NDIM.unwrap_or_else(|| {
+        Din::NDIM.unwrap_or_else(|| {
             self.indices
                 .as_ref()
                 .iter()
@@ -464,11 +464,11 @@ where
     /// [`.slice()`](struct.ArrayBase.html#method.slice) (including taking
     /// subviews).
     ///
-    /// If `Do` is a fixed-size dimension type, then this is equivalent to
-    /// `Do::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
+    /// If `Dout` is a fixed-size dimension type, then this is equivalent to
+    /// `Dout::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
     /// over the `AxisSliceInfo` elements.
     pub fn out_ndim(&self) -> usize {
-        Do::NDIM.unwrap_or_else(|| {
+        Dout::NDIM.unwrap_or_else(|| {
             self.indices
                 .as_ref()
                 .iter()
@@ -478,48 +478,48 @@ where
     }
 }
 
-impl<T, Di, Do> AsRef<[AxisSliceInfo]> for SliceInfo<T, Di, Do>
+impl<T, Din, Dout> AsRef<[AxisSliceInfo]> for SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
     fn as_ref(&self) -> &[AxisSliceInfo] {
         self.indices.as_ref()
     }
 }
 
-impl<T, Di, Do> AsRef<SliceInfo<[AxisSliceInfo], Di, Do>> for SliceInfo<T, Di, Do>
+impl<T, Din, Dout> AsRef<SliceInfo<[AxisSliceInfo], Din, Dout>> for SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
-    fn as_ref(&self) -> &SliceInfo<[AxisSliceInfo], Di, Do> {
+    fn as_ref(&self) -> &SliceInfo<[AxisSliceInfo], Din, Dout> {
         unsafe {
             // This is okay because the only non-zero-sized member of
-            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], Di, Do>`
+            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], Din, Dout>`
             // should have the same bitwise representation as
             // `&[AxisSliceInfo]`.
             &*(self.indices.as_ref() as *const [AxisSliceInfo]
-                as *const SliceInfo<[AxisSliceInfo], Di, Do>)
+                as *const SliceInfo<[AxisSliceInfo], Din, Dout>)
         }
     }
 }
 
-impl<T, Di, Do> Copy for SliceInfo<T, Di, Do>
+impl<T, Din, Dout> Copy for SliceInfo<T, Din, Dout>
 where
     T: Copy,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
 }
 
-impl<T, Di, Do> Clone for SliceInfo<T, Di, Do>
+impl<T, Din, Dout> Clone for SliceInfo<T, Din, Dout>
 where
     T: Clone,
-    Di: Dimension,
-    Do: Dimension,
+    Din: Dimension,
+    Dout: Dimension,
 {
     fn clone(&self) -> Self {
         SliceInfo {
