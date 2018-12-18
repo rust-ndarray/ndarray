@@ -140,6 +140,8 @@ impl AxisSliceInfo {
     ///
     /// `step` must be nonzero.
     /// (This method checks with a debug assertion that `step` is not zero.)
+    ///
+    /// **Panics** if `self` is not the `AxisSliceInfo::Slice` variant.
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
         debug_assert_ne!(step, 0, "AxisSliceInfo::step_by: step must be nonzero");
@@ -153,8 +155,7 @@ impl AxisSliceInfo {
                 end,
                 step: orig_step * step,
             },
-            AxisSliceInfo::Index(s) => AxisSliceInfo::Index(s),
-            AxisSliceInfo::NewAxis => AxisSliceInfo::NewAxis,
+            _ => panic!("AxisSliceInfo::step_by: `self` must be the `Slice` variant"),
         }
     }
 }
