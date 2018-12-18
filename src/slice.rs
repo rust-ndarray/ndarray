@@ -7,10 +7,10 @@
 // except according to those terms.
 use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
+use crate::{ArrayViewMut, DimAdd, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
-use crate::{ArrayViewMut, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 
 /// A slice (range with step size).
 ///
@@ -536,72 +536,51 @@ where
     }
 }
 
+/// Trait for determining dimensionality of input and output for [`s!`] macro.
 #[doc(hidden)]
-pub trait SliceNextInDim<D1, D2> {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
-}
+pub trait SliceArg {
+    /// Number of dimensions that this slicing argument consumes in the input array.
+    type InDim: Dimension;
+    /// Number of dimensions that this slicing argument produces in the output array.
+    type OutDim: Dimension;
 
-impl<D1: Dimension> SliceNextInDim<D1, D1> for NewAxis {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
+    fn next_in_dim<D>(&self, _: PhantomData<D>) -> PhantomData<D::Out>
+    where
+        D: Dimension + DimAdd<Self::InDim>,
+    {
+        PhantomData
+    }
+
+    fn next_out_dim<D>(&self, _: PhantomData<D>) -> PhantomData<D::Out>
+    where
+        D: Dimension + DimAdd<Self::OutDim>,
+    {
         PhantomData
     }
 }
 
-macro_rules! impl_slicenextindim_larger {
-    (($($generics:tt)*), $self:ty) => {
-        impl<D1: Dimension, $($generics),*> SliceNextInDim<D1, D1::Larger> for $self {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-                PhantomData
-            }
-        }
-    }
-}
-impl_slicenextindim_larger!((), isize);
-impl_slicenextindim_larger!((), usize);
-impl_slicenextindim_larger!((), i32);
-impl_slicenextindim_larger!((T), Range<T>);
-impl_slicenextindim_larger!((T), RangeInclusive<T>);
-impl_slicenextindim_larger!((T), RangeFrom<T>);
-impl_slicenextindim_larger!((T), RangeTo<T>);
-impl_slicenextindim_larger!((T), RangeToInclusive<T>);
-impl_slicenextindim_larger!((), RangeFull);
-impl_slicenextindim_larger!((), Slice);
-
-#[doc(hidden)]
-pub trait SliceNextOutDim<D1, D2> {
-    fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
-}
-
-macro_rules! impl_slicenextoutdim_equal {
-    ($self:ty) => {
-        impl<D1: Dimension> SliceNextOutDim<D1, D1> for $self {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1> {
-                PhantomData
-            }
+macro_rules! impl_slicearg {
+    (($($generics:tt)*), $self:ty, $in:ty, $out:ty) => {
+        impl<$($generics)*> SliceArg for $self {
+            type InDim = $in;
+            type OutDim = $out;
         }
     };
 }
-impl_slicenextoutdim_equal!(isize);
-impl_slicenextoutdim_equal!(usize);
-impl_slicenextoutdim_equal!(i32);
 
-macro_rules! impl_slicenextoutdim_larger {
-    (($($generics:tt)*), $self:ty) => {
-        impl<D1: Dimension, $($generics)*> SliceNextOutDim<D1, D1::Larger> for $self {
-            fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D1::Larger> {
-                PhantomData
-            }
-        }
-    }
-}
-impl_slicenextoutdim_larger!((T), Range<T>);
-impl_slicenextoutdim_larger!((T), RangeInclusive<T>);
-impl_slicenextoutdim_larger!((T), RangeFrom<T>);
-impl_slicenextoutdim_larger!((T), RangeTo<T>);
-impl_slicenextoutdim_larger!((T), RangeToInclusive<T>);
-impl_slicenextoutdim_larger!((), RangeFull);
-impl_slicenextoutdim_larger!((), Slice);
-impl_slicenextoutdim_larger!((), NewAxis);
+impl_slicearg!((), isize, Ix1, Ix0);
+impl_slicearg!((), usize, Ix1, Ix0);
+impl_slicearg!((), i32, Ix1, Ix0);
+
+impl_slicearg!((T), Range<T>, Ix1, Ix1);
+impl_slicearg!((T), RangeInclusive<T>, Ix1, Ix1);
+impl_slicearg!((T), RangeFrom<T>, Ix1, Ix1);
+impl_slicearg!((T), RangeTo<T>, Ix1, Ix1);
+impl_slicearg!((T), RangeToInclusive<T>, Ix1, Ix1);
+impl_slicearg!((), RangeFull, Ix1, Ix1);
+impl_slicearg!((), Slice, Ix1, Ix1);
+
+impl_slicearg!((), NewAxis, Ix0, Ix1);
 
 /// Slice argument constructor.
 ///
@@ -703,8 +682,8 @@ macro_rules! s(
     (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
         match $r {
             r => {
-                let in_dim = $crate::SliceNextInDim::next_dim(&r, $in_dim);
-                let out_dim = $crate::SliceNextOutDim::next_dim(&r, $out_dim);
+                let in_dim = $crate::SliceArg::next_in_dim(&r, $in_dim);
+                let out_dim = $crate::SliceArg::next_out_dim(&r, $out_dim);
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
@@ -720,8 +699,8 @@ macro_rules! s(
     (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr) => {
         match $r {
             r => {
-                let in_dim = $crate::SliceNextInDim::next_dim(&r, $in_dim);
-                let out_dim = $crate::SliceNextOutDim::next_dim(&r, $out_dim);
+                let in_dim = $crate::SliceArg::next_in_dim(&r, $in_dim);
+                let out_dim = $crate::SliceArg::next_out_dim(&r, $out_dim);
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
@@ -746,8 +725,8 @@ macro_rules! s(
         match $r {
             r => {
                 $crate::s![@parse
-                   $crate::SliceNextInDim::next_dim(&r, $in_dim),
-                   $crate::SliceNextOutDim::next_dim(&r, $out_dim),
+                   $crate::SliceArg::next_in_dim(&r, $in_dim),
+                   $crate::SliceArg::next_out_dim(&r, $out_dim),
                    [$($stack)* $crate::s!(@convert r, $s),]
                    $($t)*
                 ]
@@ -759,8 +738,8 @@ macro_rules! s(
         match $r {
             r => {
                 $crate::s![@parse
-                   $crate::SliceNextInDim::next_dim(&r, $in_dim),
-                   $crate::SliceNextOutDim::next_dim(&r, $out_dim),
+                   $crate::SliceArg::next_in_dim(&r, $in_dim),
+                   $crate::SliceArg::next_out_dim(&r, $out_dim),
                    [$($stack)* $crate::s!(@convert r),]
                    $($t)*
                 ]
