@@ -175,7 +175,7 @@ impl fmt::Display for AxisSliceInfo {
                     write!(f, ";{}", step)?;
                 }
             }
-            AxisSliceInfo::NewAxis => write!(f, "NewAxis")?,
+            AxisSliceInfo::NewAxis => write!(f, stringify!(NewAxis))?,
         }
         Ok(())
     }
