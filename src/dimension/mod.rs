@@ -19,6 +19,7 @@ pub use self::dim::*;
 pub use self::dimension_trait::Dimension;
 pub use self::dynindeximpl::IxDynImpl;
 pub use self::ndindex::NdIndex;
+pub use self::ops::DimAdd;
 pub use self::remove_axis::RemoveAxis;
 
 use crate::shape_builder::Strides;
@@ -36,6 +37,7 @@ pub mod dim;
 mod dimension_trait;
 mod dynindeximpl;
 mod ndindex;
+mod ops;
 mod remove_axis;
 
 /// Calculate offset from `Ix` stride converting sign properly

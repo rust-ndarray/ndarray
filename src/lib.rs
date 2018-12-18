@@ -134,8 +134,8 @@ use std::marker::PhantomData;
 use alloc::sync::Arc;
 
 pub use crate::dimension::dim::*;
-pub use crate::dimension::DimMax;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
+pub use crate::dimension::{DimAdd, DimMax};
 
 pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
