@@ -6,8 +6,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::cmp;
-
+use std::ops::Add;
+use num_traits::{self, Zero};
 use crate::LinalgScalar;
+
+pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
+where
+    A: Clone + Add<Output=A> + Zero,
+{
+    unimplemented!()
+}
 
 /// Fold over the manually unrolled `xs` with `f`
 pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
