@@ -14,7 +14,11 @@ pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
 where
     A: Clone + Add<Output=A> + Zero,
 {
-    unimplemented!()
+    if v.len() <= 512 {
+        unimplemented!()
+    } else {
+        unimplemented!()
+    }
 }
 
 /// Fold over the manually unrolled `xs` with `f`
