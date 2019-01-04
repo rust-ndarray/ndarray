@@ -64,6 +64,8 @@ where
             partial_sum = A::zero();
         }
     }
+    partial_sums.push(partial_sum);
+
     pairwise_sum(&partial_sums)
 }
 
@@ -89,6 +91,7 @@ where
             partial_sum = zero();
         }
     }
+    partial_sums.push(partial_sum);
 
     if partial_sums.len() <= NAIVE_SUM_THRESHOLD {
         partial_sums.iter().fold(zero(), |acc, elem| acc + elem)
