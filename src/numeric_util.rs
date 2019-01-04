@@ -8,6 +8,7 @@
 use std::cmp;
 use std::ops::Add;
 use num_traits::{self, Zero};
+use super::{ArrayBase, Array, Data, Dimension};
 use crate::LinalgScalar;
 
 pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
@@ -39,6 +40,34 @@ pub(crate) fn iterator_pairwise_sum<'a, I, A: 'a>(iter: I) -> A
         }
     }
     pairwise_sum(&partial_sums)
+}
+
+pub(crate) fn array_pairwise_sum<I, A, S, D, F>(iter: I, zero: F) -> Array<A, D>
+    where
+        I: Iterator<Item=ArrayBase<S, D>>,
+        S: Data<Elem=A>,
+        D: Dimension,
+        A: Clone + Add<Output=A>,
+        F: Fn() -> Array<A, D>,
+{
+    let mut partial_sums = vec![];
+    let mut partial_sum = zero();
+    for (i, x) in iter.enumerate() {
+        partial_sum = partial_sum + x;
+        if i % 512 == 511 {
+            partial_sums.push(partial_sum);
+            partial_sum = zero();
+        }
+    }
+    if partial_sums.len() > 512 {
+        array_pairwise_sum(partial_sums.into_iter(), zero)
+    } else {
+        let mut res = zero();
+        for x in partial_sums.iter() {
+            res = res + x;
+        }
+        res
+    }
 }
 
 /// Fold over the manually unrolled `xs` with `f`

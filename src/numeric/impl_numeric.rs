@@ -104,21 +104,21 @@ impl<A, S, D> ArrayBase<S, D>
               D: RemoveAxis,
     {
         let n = self.len_of(axis);
-        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
         let stride = self.strides()[axis.index()];
+        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
         if self.ndim() == 2 && stride == 1 {
             // contiguous along the axis we are summing
             let ax = axis.index();
             for (i, elt) in enumerate(&mut res) {
                 *elt = self.index_axis(Axis(1 - ax), i).sum();
             }
+            res
         } else {
-            for i in 0..n {
-                let view = self.index_axis(axis, i);
-                res = res + &view;
-            }
+            numeric_util::array_pairwise_sum(
+                (0..n).map(|i| self.index_axis(axis, i)),
+                || res.clone()
+            )
         }
-        res
     }
 
     /// Return mean along `axis`.
