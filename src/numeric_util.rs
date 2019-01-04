@@ -59,14 +59,16 @@ pub(crate) fn array_pairwise_sum<I, A, S, D, F>(iter: I, zero: F) -> Array<A, D>
             partial_sum = zero();
         }
     }
-    if partial_sums.len() > 512 {
-        array_pairwise_sum(partial_sums.into_iter(), zero)
+
+    if partial_sums.len() <= 512 {
+        partial_sums
+            .iter()
+            .fold(
+                zero(),
+                |acc, elem| acc + elem
+            )
     } else {
-        let mut res = zero();
-        for x in partial_sums.iter() {
-            res = res + x;
-        }
-        res
+        array_pairwise_sum(partial_sums.into_iter(), zero)
     }
 }
 
