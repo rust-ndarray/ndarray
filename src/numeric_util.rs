@@ -24,11 +24,12 @@ const NAIVE_SUM_THRESHOLD: usize = 512;
 ///
 /// Pairwise summation is useful to reduce the accumulated round-off error
 /// when summing floating point numbers.
-/// Pairwise summation provides an asymptotic error bound of *O(eps log n)*, where
-/// *eps* is machine precision, compared to *O(eps n)* of the naive summation algorithm.
-/// For more details, see [`paper`].
+/// Pairwise summation provides an asymptotic error bound of *O(ε* log *n)*, where
+/// *ε* is machine precision, compared to *O(εn)* of the naive summation algorithm.
+/// For more details, see [`paper`] or [`Wikipedia`].
 ///
 /// [`paper`]: https://epubs.siam.org/doi/10.1137/0914050
+/// [`Wikipedia`]: https://en.wikipedia.org/wiki/Pairwise_summation
 /// [`threshold`]: constant.NAIVE_SUM_THRESHOLD.html
 pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
 where
