@@ -14,10 +14,13 @@ pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
 where
     A: Clone + Add<Output=A> + Zero,
 {
-    if v.len() <= 512 {
+    let n = v.len();
+    if n <= 512 {
         return unrolled_fold(v, A::zero, A::add);
     } else {
-        unimplemented!()
+        let mid_index = n / 2;
+        let (v1, v2) = v.split_at(mid_index);
+        pairwise_sum(v1) + pairwise_sum(v2)
     }
 }
 
