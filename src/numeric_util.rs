@@ -11,12 +11,14 @@ use num_traits::{self, Zero};
 use super::{ArrayBase, Array, Data, Dimension};
 use crate::LinalgScalar;
 
+const NAIVE_SUM_THRESHOLD: usize = 512;
+
 pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
 where
     A: Clone + Add<Output=A> + Zero,
 {
     let n = v.len();
-    if n <= 512 {
+    if n <= NAIVE_SUM_THRESHOLD {
         return unrolled_fold(v, A::zero, A::add);
     } else {
         let mid_index = n / 2;
@@ -26,15 +28,15 @@ where
 }
 
 pub(crate) fn iterator_pairwise_sum<'a, I, A: 'a>(iter: I) -> A
-    where
-        I: Iterator<Item=&'a A>,
-        A: Clone + Add<Output=A> + Zero,
+where
+    I: Iterator<Item=&'a A>,
+    A: Clone + Add<Output=A> + Zero,
 {
     let mut partial_sums = vec![];
     let mut partial_sum = A::zero();
     for (i, x) in iter.enumerate() {
         partial_sum = partial_sum + x.clone();
-        if i % 512 == 511 {
+        if i % NAIVE_SUM_THRESHOLD == NAIVE_SUM_THRESHOLD - 1 {
             partial_sums.push(partial_sum);
             partial_sum = A::zero();
         }
@@ -43,30 +45,25 @@ pub(crate) fn iterator_pairwise_sum<'a, I, A: 'a>(iter: I) -> A
 }
 
 pub(crate) fn array_pairwise_sum<I, A, S, D, F>(iter: I, zero: F) -> Array<A, D>
-    where
-        I: Iterator<Item=ArrayBase<S, D>>,
-        S: Data<Elem=A>,
-        D: Dimension,
-        A: Clone + Add<Output=A>,
-        F: Fn() -> Array<A, D>,
+where
+    I: Iterator<Item=ArrayBase<S, D>>,
+    S: Data<Elem=A>,
+    D: Dimension,
+    A: Clone + Add<Output=A>,
+    F: Fn() -> Array<A, D>,
 {
     let mut partial_sums = vec![];
     let mut partial_sum = zero();
     for (i, x) in iter.enumerate() {
         partial_sum = partial_sum + x;
-        if i % 512 == 511 {
+        if i % NAIVE_SUM_THRESHOLD == NAIVE_SUM_THRESHOLD - 1 {
             partial_sums.push(partial_sum);
             partial_sum = zero();
         }
     }
 
-    if partial_sums.len() <= 512 {
-        partial_sums
-            .iter()
-            .fold(
-                zero(),
-                |acc, elem| acc + elem
-            )
+    if partial_sums.len() <= NAIVE_SUM_THRESHOLD {
+        partial_sums.iter().fold(zero(), |acc, elem| acc + elem)
     } else {
         array_pairwise_sum(partial_sums.into_iter(), zero)
     }
