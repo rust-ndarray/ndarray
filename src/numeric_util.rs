@@ -15,7 +15,7 @@ where
     A: Clone + Add<Output=A> + Zero,
 {
     if v.len() <= 512 {
-        unimplemented!()
+        return unrolled_fold(v, A::zero, A::add);
     } else {
         unimplemented!()
     }
