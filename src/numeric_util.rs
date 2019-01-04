@@ -11,8 +11,25 @@ use num_traits::{self, Zero};
 use super::{ArrayBase, Array, Data, Dimension};
 use crate::LinalgScalar;
 
+/// Size threshold to switch to naive summation in all implementations of pairwise summation.
 const NAIVE_SUM_THRESHOLD: usize = 512;
 
+/// An implementation of pairwise summation for a vector slice.
+///
+/// Pairwise summation compute the sum of a set of *n* numbers by splitting
+/// it recursively in two halves, summing their elements and then adding the respective
+/// sums.
+/// It switches to the naive sum algorithm once the size of the set to be summed
+/// is below a certain pre-defined threshold ([`threshold`]).
+///
+/// Pairwise summation is useful to reduce the accumulated round-off error
+/// when summing floating point numbers.
+/// Pairwise summation provides an asymptotic error bound of *O(eps log n)*, where
+/// *eps* is machine precision, compared to *O(eps n)* of the naive summation algorithm.
+/// For more details, see [`paper`].
+///
+/// [`paper`]: https://epubs.siam.org/doi/10.1137/0914050
+/// [`threshold`]: constant.NAIVE_SUM_THRESHOLD.html
 pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
 where
     A: Clone + Add<Output=A> + Zero,
@@ -27,6 +44,11 @@ where
     }
 }
 
+/// An implementation of pairwise summation for an iterator.
+///
+/// See [`pairwise_sum`] for details on the algorithm.
+///
+/// [`pairwise_sum`]: fn.pairwise_sum.html
 pub(crate) fn iterator_pairwise_sum<'a, I, A: 'a>(iter: I) -> A
 where
     I: Iterator<Item=&'a A>,
@@ -44,6 +66,11 @@ where
     pairwise_sum(&partial_sums)
 }
 
+/// An implementation of pairwise summation for an iterator over *n*-dimensional arrays.
+///
+/// See [`pairwise_sum`] for details on the algorithm.
+///
+/// [`pairwise_sum`]: fn.pairwise_sum.html
 pub(crate) fn array_pairwise_sum<I, A, S, D, F>(iter: I, zero: F) -> Array<A, D>
 where
     I: Iterator<Item=ArrayBase<S, D>>,
