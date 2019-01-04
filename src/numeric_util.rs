@@ -24,6 +24,23 @@ where
     }
 }
 
+pub(crate) fn iterator_pairwise_sum<'a, I, A: 'a>(iter: I) -> A
+    where
+        I: Iterator<Item=&'a A>,
+        A: Clone + Add<Output=A> + Zero,
+{
+    let mut partial_sums = vec![];
+    let mut partial_sum = A::zero();
+    for (i, x) in iter.enumerate() {
+        partial_sum = partial_sum + x.clone();
+        if i % 512 == 511 {
+            partial_sums.push(partial_sum);
+            partial_sum = A::zero();
+        }
+    }
+    pairwise_sum(&partial_sums)
+}
+
 /// Fold over the manually unrolled `xs` with `f`
 pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
     where A: Clone,
