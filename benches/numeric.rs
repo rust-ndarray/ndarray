@@ -26,6 +26,16 @@ fn clip(bench: &mut Bencher)
 }
 
 #[bench]
+fn contiguous_sum_int_1e4(bench: &mut Bencher)
+{
+    let n = 1e4 as usize;
+    let a = Array::from_vec((0..n).collect());
+    bench.iter(|| {
+        a.sum()
+    });
+}
+
+#[bench]
 fn contiguous_sum_1e7(bench: &mut Bencher)
 {
     let n = 1e7 as usize;
