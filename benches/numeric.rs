@@ -55,3 +55,26 @@ fn contiguous_sum_1e2(bench: &mut Bencher)
     });
 }
 
+#[bench]
+fn sum_by_row_1e4(bench: &mut Bencher)
+{
+    let n = 1e3 as usize;
+    let a = Array::linspace(-1e6, 1e6, n * n)
+        .into_shape([n, n])
+        .unwrap();
+    bench.iter(|| {
+        a.sum_axis(Axis(0))
+    });
+}
+
+#[bench]
+fn sum_by_col_1e4(bench: &mut Bencher)
+{
+    let n = 1e3 as usize;
+    let a = Array::linspace(-1e6, 1e6, n * n)
+        .into_shape([n, n])
+        .unwrap();
+    bench.iter(|| {
+        a.sum_axis(Axis(1))
+    });
+}
