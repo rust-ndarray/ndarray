@@ -26,11 +26,32 @@ fn clip(bench: &mut Bencher)
 }
 
 #[bench]
-fn contiguous_sum(bench: &mut Bencher)
+fn contiguous_sum_1e7(bench: &mut Bencher)
 {
-    let n = 100000;
+    let n = 1e7 as usize;
     let a = Array::linspace(-1e6, 1e6, n);
     bench.iter(|| {
         a.sum()
     });
 }
+
+#[bench]
+fn contiguous_sum_1e4(bench: &mut Bencher)
+{
+    let n = 1e4 as usize;
+    let a = Array::linspace(-1e6, 1e6, n);
+    bench.iter(|| {
+        a.sum()
+    });
+}
+
+#[bench]
+fn contiguous_sum_1e2(bench: &mut Bencher)
+{
+    let n = 1e2 as usize;
+    let a = Array::linspace(-1e6, 1e6, n);
+    bench.iter(|| {
+        a.sum()
+    });
+}
+
