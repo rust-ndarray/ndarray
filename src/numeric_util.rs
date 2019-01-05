@@ -37,9 +37,10 @@ where
 {
     let n = v.len();
     if n <= NAIVE_SUM_THRESHOLD {
-        unrolled_fold(v, A::zero, A::add)
+        return unrolled_fold(v, A::zero, A::add);
     } else {
-        let (v1, v2) = v.split_at(NAIVE_SUM_THRESHOLD);
+        let mid_index = n / 2;
+        let (v1, v2) = v.split_at(mid_index);
         pairwise_sum(v1) + pairwise_sum(v2)
     }
 }
