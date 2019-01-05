@@ -1,6 +1,5 @@
 
 #![feature(test)]
-
 extern crate test;
 use test::Bencher;
 
@@ -23,5 +22,15 @@ fn clip(bench: &mut Bencher)
             if x > max { x = max }
             x
         })
+    });
+}
+
+#[bench]
+fn contiguous_sum(bench: &mut Bencher)
+{
+    let n = 100000;
+    let a = Array::linspace(-1e6, 1e6, n);
+    bench.iter(|| {
+        a.sum()
     });
 }
