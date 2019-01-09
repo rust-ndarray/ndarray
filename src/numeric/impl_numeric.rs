@@ -103,11 +103,22 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Zero + Add<Output=A>,
               D: RemoveAxis,
     {
-        let mut out = Array::zeros(self.dim.remove_axis(axis));
-        Zip::from(&mut out)
-            .and(self.lanes(axis))
-            .apply(|out, lane| *out = lane.sum());
-        out
+        let n = self.len_of(axis);
+        let stride = self.strides()[axis.index()];
+        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
+        if self.ndim() == 2 && stride == 1 {
+            // contiguous along the axis we are summing
+            let ax = axis.index();
+            for (i, elt) in enumerate(&mut res) {
+                *elt = self.index_axis(Axis(1 - ax), i).sum();
+            }
+            res
+        } else {
+            numeric_util::array_pairwise_sum(
+                (0..n).map(|i| self.index_axis(axis, i)),
+                || res.clone()
+            )
+        }
     }
 
     /// Return mean along `axis`.
