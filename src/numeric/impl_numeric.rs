@@ -46,6 +46,33 @@ impl<A, S, D> ArrayBase<S, D>
         sum
     }
 
+    /// Returns the [arithmetic mean] x̅ of all elements in the array:
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// If the array is empty, `None` is returned.
+    ///
+    /// **Panics** if `A::from_usize()` fails to convert the number of elements in the array.
+    ///
+    /// [arithmetic mean]: https://en.wikipedia.org/wiki/Arithmetic_mean
+    pub fn mean(&self) -> Option<A>
+        where
+            A: Clone + FromPrimitive + Add<Output=A> + Div<Output=A> + Zero
+    {
+        let n_elements = self.len();
+        if n_elements == 0 {
+            None
+        } else {
+            let n_elements = A::from_usize(n_elements)
+                .expect("Converting number of elements to `A` must not fail.");
+            Some(self.sum() / n_elements)
+        }
+    }
+
     /// Return the sum of all elements in the array.
     ///
     /// *This method has been renamed to `.sum()` and will be deprecated in the
