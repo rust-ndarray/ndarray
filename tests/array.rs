@@ -931,10 +931,10 @@ fn sum_mean()
     let a = arr2(&[[1., 2.], [3., 4.]]);
     assert_eq!(a.sum_axis(Axis(0)), arr1(&[4., 6.]));
     assert_eq!(a.sum_axis(Axis(1)), arr1(&[3., 7.]));
-    assert_eq!(a.mean_axis(Axis(0)), arr1(&[2., 3.]));
-    assert_eq!(a.mean_axis(Axis(1)), arr1(&[1.5, 3.5]));
+    assert_eq!(a.mean_axis(Axis(0)), Some(arr1(&[2., 3.])));
+    assert_eq!(a.mean_axis(Axis(1)), Some(arr1(&[1.5, 3.5])));
     assert_eq!(a.sum_axis(Axis(1)).sum_axis(Axis(0)), arr0(10.));
-    assert_eq!(a.view().mean_axis(Axis(1)), aview1(&[1.5, 3.5]));
+    assert_eq!(a.view().mean_axis(Axis(1)).unwrap(), aview1(&[1.5, 3.5]));
     assert_eq!(a.sum(), 10.);
 }
 
@@ -947,11 +947,9 @@ fn sum_mean_empty() {
         Array::zeros((2, 3)),
     );
     let a = Array1::<f32>::ones(0).mean_axis(Axis(0));
-    assert_eq!(a.shape(), &[]);
-    assert!(a[()].is_nan());
+    assert_eq!(a, None);
     let a = Array3::<f32>::ones((2, 0, 3)).mean_axis(Axis(1));
-    assert_eq!(a.shape(), &[2, 3]);
-    a.mapv(|x| assert!(x.is_nan()));
+    assert_eq!(a, None);
 }
 
 #[test]

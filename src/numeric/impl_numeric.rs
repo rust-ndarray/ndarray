@@ -150,8 +150,9 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return mean along `axis`.
     ///
-    /// **Panics** if `axis` is out of bounds, if the length of the axis is
-    /// zero and division by zero panics for type `A`, or if `A::from_usize()`
+    /// Return `None` if the length of the axis is zero.
+    ///
+    /// **Panics** if `axis` is out of bounds or if `A::from_usize()`
     /// fails for the axis length.
     ///
     /// ```
@@ -160,19 +161,25 @@ impl<A, S, D> ArrayBase<S, D>
     /// let a = arr2(&[[1., 2., 3.],
     ///                [4., 5., 6.]]);
     /// assert!(
-    ///     a.mean_axis(Axis(0)) == aview1(&[2.5, 3.5, 4.5]) &&
-    ///     a.mean_axis(Axis(1)) == aview1(&[2., 5.]) &&
+    ///     a.mean_axis(Axis(0)).unwrap() == aview1(&[2.5, 3.5, 4.5]) &&
+    ///     a.mean_axis(Axis(1)).unwrap() == aview1(&[2., 5.]) &&
     ///
-    ///     a.mean_axis(Axis(0)).mean_axis(Axis(0)) == aview0(&3.5)
+    ///     a.mean_axis(Axis(0)).unwrap().mean_axis(Axis(0)).unwrap() == aview0(&3.5)
     /// );
     /// ```
-    pub fn mean_axis(&self, axis: Axis) -> Array<A, D::Smaller>
+    pub fn mean_axis(&self, axis: Axis) -> Option<Array<A, D::Smaller>>
         where A: Clone + Zero + FromPrimitive + Add<Output=A> + Div<Output=A>,
               D: RemoveAxis,
     {
-        let n = A::from_usize(self.len_of(axis)).expect("Converting axis length to `A` must not fail.");
-        let sum = self.sum_axis(axis);
-        sum / &aview0(&n)
+        let axis_length = self.len_of(axis);
+        if axis_length == 0 {
+            None
+        } else {
+            let axis_length = A::from_usize(axis_length)
+                .expect("Converting axis length to `A` must not fail.");
+            let sum = self.sum_axis(axis);
+            Some(sum / &aview0(&axis_length))
+        }
     }
 
     /// Return variance along `axis`.

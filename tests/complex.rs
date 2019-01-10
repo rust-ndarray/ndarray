@@ -22,5 +22,5 @@ fn complex_mat_mul()
     let r = a.dot(&e);
     println!("{}", a);
     assert_eq!(r, a);
-    assert_eq!(a.mean_axis(Axis(0)), arr1(&[c(1.5, 1.), c(2.5, 0.)]));
+    assert_eq!(a.mean_axis(Axis(0)).unwrap(), arr1(&[c(1.5, 1.), c(2.5, 0.)]));
 }
