@@ -28,6 +28,7 @@ bench = false
 test = true
 
 [dependencies]
+approx = "0.3"
 num-integer = "0.1.39"
 num-traits = "0.2"
 num-complex = "0.2"

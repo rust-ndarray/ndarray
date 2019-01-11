@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+extern crate approx;
 extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
@@ -12,6 +13,10 @@ use ndarray::{
     multislice,
 };
 use ndarray::indices;
+use approx::{
+    assert_abs_diff_eq, assert_abs_diff_ne, assert_relative_eq, assert_relative_ne, assert_ulps_eq,
+    assert_ulps_ne,
+};
 use defmac::defmac;
 use itertools::{enumerate, zip};
 
@@ -1161,6 +1166,60 @@ fn equality()
     // make sure we can compare different shapes without failure.
     let c = arr2(&[[1., 2.]]);
     assert!(a != c);
+}
+
+#[test]
+fn abs_diff_eq()
+{
+    let a: Array2<f32> = array![[0., 2.], [-0.000010001, 100000000.]];
+    let mut b: Array2<f32> = array![[0., 1.], [-0.000010002, 100000001.]];
+    assert_abs_diff_ne!(a, b);
+    b[(0, 1)] = 2.;
+    assert_abs_diff_eq!(a, b);
+
+    // Check epsilon.
+    assert_abs_diff_eq!(array![0.0f32], array![1e-40f32], epsilon = 1e-40f32);
+    assert_abs_diff_ne!(array![0.0f32], array![1e-40f32], epsilon = 1e-41f32);
+
+    // Make sure we can compare different shapes without failure.
+    let c = array![[1., 2.]];
+    assert_abs_diff_ne!(a, c);
+}
+
+#[test]
+fn relative_eq()
+{
+    let a: Array2<f32> = array![[1., 2.], [-0.000010001, 100000000.]];
+    let mut b: Array2<f32> = array![[1., 1.], [-0.000010002, 100000001.]];
+    assert_relative_ne!(a, b);
+    b[(0, 1)] = 2.;
+    assert_relative_eq!(a, b);
+
+    // Check epsilon.
+    assert_relative_eq!(array![0.0f32], array![1e-40f32], epsilon = 1e-40f32);
+    assert_relative_ne!(array![0.0f32], array![1e-40f32], epsilon = 1e-41f32);
+
+    // Make sure we can compare different shapes without failure.
+    let c = array![[1., 2.]];
+    assert_relative_ne!(a, c);
+}
+
+#[test]
+fn ulps_eq()
+{
+    let a: Array2<f32> = array![[1., 2.], [-0.000010001, 100000000.]];
+    let mut b: Array2<f32> = array![[1., 1.], [-0.000010002, 100000001.]];
+    assert_ulps_ne!(a, b);
+    b[(0, 1)] = 2.;
+    assert_ulps_eq!(a, b);
+
+    // Check epsilon.
+    assert_ulps_eq!(array![0.0f32], array![1e-40f32], epsilon = 1e-40f32);
+    assert_ulps_ne!(array![0.0f32], array![1e-40f32], epsilon = 1e-41f32);
+
+    // Make sure we can compare different shapes without failure.
+    let c = array![[1., 2.]];
+    assert_ulps_ne!(a, c);
 }
 
 #[test]

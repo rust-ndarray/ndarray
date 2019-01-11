@@ -97,6 +97,7 @@ extern crate blas_src;
 
 extern crate matrixmultiply;
 
+extern crate approx;
 extern crate itertools;
 extern crate num_traits;
 extern crate num_complex;
