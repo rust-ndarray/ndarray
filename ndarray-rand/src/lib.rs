@@ -11,6 +11,8 @@
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
 extern crate rand;
 extern crate ndarray;
+#[cfg(feature = "normal-dist")]
+extern crate ndarray_linalg;
 
 use rand::{thread_rng, Rng, SeedableRng};
 use rand::distributions::Distribution;
