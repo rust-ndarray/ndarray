@@ -23,6 +23,8 @@ use ndarray::{
 };
 use ndarray::ShapeBuilder;
 
+pub mod multivariatenormal;
+
 /// Constructors for n-dimensional arrays with random elements.
 ///
 /// This trait extends ndarray’s `ArrayBase` and can not be implemented
