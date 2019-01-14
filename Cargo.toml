@@ -28,13 +28,14 @@ bench = false
 test = true
 
 [dependencies]
-approx = "0.3"
 num-integer = "0.1.39"
 num-traits = "0.2"
 num-complex = "0.2"
 itertools = { version = "0.7.0", default-features = false }
 
 rayon = { version = "1.0.3", optional = true }
+
+approx = { version = "0.3", optional = true }
 
 # Use via the `blas` crate feature!
 cblas-sys = { version = "0.1.4", optional = true, default-features = false }
@@ -62,7 +63,7 @@ test-blas-openblas-sys = ["blas"]
 test = ["test-blas-openblas-sys"]
 
 # This feature is used for docs
-docs = ["serde-1", "rayon"]
+docs = ["approx", "serde-1", "rayon"]
 
 [profile.release]
 [profile.bench]

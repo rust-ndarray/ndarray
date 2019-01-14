@@ -68,6 +68,9 @@
 //! - `rayon`
 //!   - Optional, compatible with Rust stable
 //!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
+//! - `approx`
+//!   - Optional, compatible with Rust stable
+//!   - Enables implementations of traits from the [`approx`] crate.
 //! - `blas`
 //!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication.
@@ -90,6 +93,9 @@ extern crate serde;
 #[cfg(feature="rayon")]
 extern crate rayon;
 
+#[cfg(feature="approx")]
+extern crate approx;
+
 #[cfg(feature="blas")]
 extern crate cblas_sys;
 #[cfg(feature="blas")]
@@ -97,7 +103,6 @@ extern crate blas_src;
 
 extern crate matrixmultiply;
 
-extern crate approx;
 extern crate itertools;
 extern crate num_traits;
 extern crate num_complex;
@@ -147,6 +152,8 @@ mod aliases;
 mod arraytraits;
 #[cfg(feature = "serde-1")]
 mod array_serde;
+#[cfg(feature = "approx")]
+mod array_approx;
 mod arrayformat;
 mod data_traits;
 
