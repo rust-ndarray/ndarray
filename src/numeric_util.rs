@@ -12,8 +12,9 @@ use super::{ArrayBase, Array, Data, Dimension};
 use crate::LinalgScalar;
 
 /// Size threshold to switch to naive summation in all implementations of pairwise summation.
-const SIMD_NAIVE_SUM_THRESHOLD: usize = 512;
-const NO_SIMD_NAIVE_SUM_THRESHOLD: usize = SIMD_NAIVE_SUM_THRESHOLD / 8;
+const NAIVE_SUM_THRESHOLD: usize = 64;
+/// Number of elements processed by unrolled operators (to leverage SIMD instructions).
+const UNROLL_SIZE: usize = 8;
 
 /// An implementation of pairwise summation for a vector slice.
 ///
@@ -37,7 +38,7 @@ where
     A: Clone + Add<Output=A> + Zero,
 {
     let n = v.len();
-    if n <= SIMD_NAIVE_SUM_THRESHOLD {
+    if n <= NAIVE_SUM_THRESHOLD * UNROLL_SIZE {
         return unrolled_fold(v, A::zero, A::add);
     } else {
         let mid_index = n / 2;
@@ -60,7 +61,7 @@ where
     let mut partial_sum = A::zero();
     for (i, x) in iter.enumerate() {
         partial_sum = partial_sum + x.clone();
-        if i % NO_SIMD_NAIVE_SUM_THRESHOLD == NO_SIMD_NAIVE_SUM_THRESHOLD - 1 {
+        if i % NAIVE_SUM_THRESHOLD == NAIVE_SUM_THRESHOLD - 1 {
             partial_sums.push(partial_sum);
             partial_sum = A::zero();
         }
@@ -87,14 +88,14 @@ where
     let mut partial_sum = zero();
     for (i, x) in iter.enumerate() {
         partial_sum = partial_sum + x;
-        if i % NO_SIMD_NAIVE_SUM_THRESHOLD == NO_SIMD_NAIVE_SUM_THRESHOLD - 1 {
+        if i % NAIVE_SUM_THRESHOLD == NAIVE_SUM_THRESHOLD - 1 {
             partial_sums.push(partial_sum);
             partial_sum = zero();
         }
     }
     partial_sums.push(partial_sum);
 
-    if partial_sums.len() <= NO_SIMD_NAIVE_SUM_THRESHOLD {
+    if partial_sums.len() <= NAIVE_SUM_THRESHOLD {
         partial_sums.iter().fold(zero(), |acc, elem| acc + elem)
     } else {
         array_pairwise_sum(partial_sums.into_iter(), zero)
