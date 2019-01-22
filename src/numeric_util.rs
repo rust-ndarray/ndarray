@@ -79,7 +79,6 @@ pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
 {
     // eightfold unrolled so that floating point can be vectorized
     // (even with strict floating point accuracy semantics)
-    let mut acc = init();
     let (mut p0, mut p1, mut p2, mut p3,
          mut p4, mut p5, mut p6, mut p7) =
         (init(), init(), init(), init(),
@@ -96,18 +95,19 @@ pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
 
         xs = &xs[8..];
     }
-    acc = f(acc.clone(), f(p0, p4));
-    acc = f(acc.clone(), f(p1, p5));
-    acc = f(acc.clone(), f(p2, p6));
-    acc = f(acc.clone(), f(p3, p7));
+    let (q0, q1, q2, q3) = (f(p0, p4), f(p1, p5), f(p2, p6), f(p3, p7));
+    let (r0, r1) = (f(q0, q2), f(q1, q3));
+    let unrolled = f(r0, r1);
 
     // make it clear to the optimizer that this loop is short
     // and can not be autovectorized.
+    let mut partial = init();
     for i in 0..xs.len() {
         if i >= 7 { break; }
-        acc = f(acc.clone(), xs[i].clone())
+        partial = f(partial.clone(), xs[i].clone())
     }
-    acc
+
+    f(unrolled, partial)
 }
 
 /// Compute the dot product.
