@@ -105,19 +105,19 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let n = self.len_of(axis);
         let stride = self.strides()[axis.index()];
-        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
         if self.ndim() == 2 && stride == 1 {
             // contiguous along the axis we are summing
+            let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
             let ax = axis.index();
             for (i, elt) in enumerate(&mut res) {
                 *elt = self.index_axis(Axis(1 - ax), i).sum();
             }
             res
+        } else if self.len_of(axis) <= numeric_util::NAIVE_SUM_THRESHOLD {
+            self.fold_axis(axis, A::zero(), |acc, x| acc.clone() + x.clone())
         } else {
-            numeric_util::array_pairwise_sum(
-                (0..n).map(|i| self.index_axis(axis, i)),
-                || res.clone()
-            )
+            let (v1, v2) = self.view().split_at(axis, n / 2);
+            v1.sum_axis(axis) + v2.sum_axis(axis)
         }
     }
 

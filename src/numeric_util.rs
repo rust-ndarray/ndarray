@@ -12,7 +12,7 @@ use super::{ArrayBase, Array, Data, Dimension};
 use crate::LinalgScalar;
 
 /// Size threshold to switch to naive summation in all implementations of pairwise summation.
-const NAIVE_SUM_THRESHOLD: usize = 64;
+pub(crate) const NAIVE_SUM_THRESHOLD: usize = 64;
 /// Number of elements processed by unrolled operators (to leverage SIMD instructions).
 const UNROLL_SIZE: usize = 8;
 
@@ -69,37 +69,6 @@ where
     partial_sums.push(partial_sum);
 
     pairwise_sum(&partial_sums)
-}
-
-/// An implementation of pairwise summation for an iterator over *n*-dimensional arrays.
-///
-/// See [`pairwise_sum`] for details on the algorithm.
-///
-/// [`pairwise_sum`]: fn.pairwise_sum.html
-pub(crate) fn array_pairwise_sum<I, A, S, D, F>(iter: I, zero: F) -> Array<A, D>
-where
-    I: Iterator<Item=ArrayBase<S, D>>,
-    S: Data<Elem=A>,
-    D: Dimension,
-    A: Clone + Add<Output=A>,
-    F: Fn() -> Array<A, D>,
-{
-    let mut partial_sums = vec![];
-    let mut partial_sum = zero();
-    for (i, x) in iter.enumerate() {
-        partial_sum = partial_sum + x;
-        if i % NAIVE_SUM_THRESHOLD == NAIVE_SUM_THRESHOLD - 1 {
-            partial_sums.push(partial_sum);
-            partial_sum = zero();
-        }
-    }
-    partial_sums.push(partial_sum);
-
-    if partial_sums.len() <= NAIVE_SUM_THRESHOLD {
-        partial_sums.iter().fold(zero(), |acc, elem| acc + elem)
-    } else {
-        array_pairwise_sum(partial_sums.into_iter(), zero)
-    }
 }
 
 /// Fold over the manually unrolled `xs` with `f`
