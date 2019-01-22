@@ -67,7 +67,25 @@ where
     }
     partial_sums.push(partial_sum);
 
-    pairwise_sum(&partial_sums)
+    pure_pairwise_sum(&partial_sums)
+}
+
+/// An implementation of pairwise summation for a vector slice that never
+/// switches to the naive sum algorithm.
+fn pure_pairwise_sum<A>(v: &[A]) -> A
+    where
+        A: Clone + Add<Output=A> + Zero,
+{
+    let n = v.len();
+    match n {
+        0 => A::zero(),
+        1 => v[0].clone(),
+        n => {
+            let mid_index = n / 2;
+            let (v1, v2) = v.split_at(mid_index);
+            pure_pairwise_sum(v1) + pure_pairwise_sum(v2)
+        }
+    }
 }
 
 /// Fold over the manually unrolled `xs` with `f`
