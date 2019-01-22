@@ -8,7 +8,6 @@
 use std::cmp;
 use std::ops::Add;
 use num_traits::{self, Zero};
-use super::{ArrayBase, Array, Data, Dimension};
 use crate::LinalgScalar;
 
 /// Size threshold to switch to naive summation in all implementations of pairwise summation.
