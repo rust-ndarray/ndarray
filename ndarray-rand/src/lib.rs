@@ -11,7 +11,7 @@
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
 extern crate rand;
 extern crate ndarray;
-#[cfg(feature = "normal-dist")]
+#[cfg(feature = "normaldist")]
 extern crate ndarray_linalg;
 
 use rand::{thread_rng, Rng, SeedableRng};
@@ -25,7 +25,7 @@ use ndarray::{
 };
 use ndarray::ShapeBuilder;
 
-pub mod multivariatenormal;
+pub mod normal;
 
 /// Constructors for n-dimensional arrays with random elements.
 ///
@@ -70,7 +70,7 @@ pub trait RandomExt<S, D>
         where IdS: Distribution<S::Elem>,
               Sh: ShapeBuilder<Dim=D>;
 
-    /// Create an array with shape `dim` with elements drawn from
+    /// Create an array with shape `shape` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
     ///
     /// ***Panics*** if the number of elements overflows usize.
