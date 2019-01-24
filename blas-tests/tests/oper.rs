@@ -87,6 +87,14 @@ fn dot_product() {
     assert_eq!(a.dot(&b), dot as i32);
 }
 
+#[test]
+fn mat_vec_product_1d() {
+    let a = arr2(&[[1.], [2.]]);
+    let b = arr1(&[1., 2.]);
+    let ans = arr1(&[5.]);
+    assert_eq!(a.t().dot(&b), ans);
+}
+
 // test that we can dot product with a broadcast array
 #[test]
 fn dot_product_0() {
