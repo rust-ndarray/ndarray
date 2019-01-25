@@ -40,6 +40,10 @@ where D: Dimension
             shape: shape.into_dimension()
         }
     }
+
+    pub fn shape(&self) -> D {
+        self.shape.clone()
+    }
 }
 
 impl<D> Distribution<Array<f64, D>> for MultivariateStandardNormal<D>
