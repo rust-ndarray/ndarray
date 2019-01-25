@@ -24,20 +24,19 @@ fn test_dim() {
 
 #[test]
 fn test_standard_normal() {
-    use ndarray::IntoDimension;
-    let shape = (2usize,);
-    let n = MultivariateStandardNormal::new(shape.into());
+    let shape = 2usize;
+    let n = MultivariateStandardNormal::new(shape);
     let ref mut rng = rand::thread_rng();
     let s: ndarray::Array1<f64> = n.sample(rng);
     assert_eq!(s.shape(), &[2]);
 }
 
+#[cfg(features = "normaldist")]
 #[test]
 fn test_normal() {
     use ndarray::IntoDimension;
     use ndarray::{Array1, arr2};
     use ndarray_rand::normal::advanced::MultivariateNormal;
-    let shape = (2usize,);
     let mean = Array1::from_vec([1., 0.]);
     let covar = arr2([
         [1., 0.8], [0.8, 1.]]);

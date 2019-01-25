@@ -14,8 +14,14 @@ keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 [package.metadata.release]
 no-dev-version = true
 
+[features]
+normaldist = ["ndarray-linalg"]
 
 [dependencies]
 rand = "0.6.4"
-ndarray = { version = "0.12.1", path = ".." }
-ndarray-linalg = { version = "0.10", features = ["openblas"] }
+ndarray = { version = "0.12.1" }
+
+[dependencies.ndarray-linalg]
+version = "0.10"
+optional = true
+features = ["openblas"]

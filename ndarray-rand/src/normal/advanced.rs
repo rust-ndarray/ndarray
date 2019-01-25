@@ -7,11 +7,13 @@ use rand::distributions::{
 use ndarray::prelude::*;
 use ndarray_linalg::error::Result as LAResult;
 
-/// Multivariate normal distribution, with mean vector and covariance matrix.
+/// Multivariate normal distribution for 1D arrays,
+/// with mean vector and covariance matrix.
 pub struct MultivariateNormal {
     shape: Ix1,
     mean: Array1<f64>,
     covariance: Array2<f64>,
+    /// Lower triangular matrix (Cholesky decomposition of the coviariance matrix)
     lower: Array2<f64>
 }
 
@@ -19,7 +21,7 @@ impl MultivariateNormal {
     pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> LAResult<Self> {
         let shape: Ix1 = Ix1(mean.shape()[0]);
         use ndarray_linalg::cholesky::*;
-        let lower = covariance.cholesky(UPLO::Lower);
+        let lower = covariance.cholesky(UPLO::Lower)?;
         Ok(MultivariateNormal {
             shape, mean, covariance, lower
         })
@@ -46,6 +48,6 @@ impl Distribution<Array1<f64>> for MultivariateNormal {
         let res = Array1::random_using(
             shape, StandardNormal, rng);
         // use Cholesky decomposition to obtain a sample of our general multivariate normal
-        self.mean.view() + self.lower.view().dot(&res)
+        self.mean.clone() + self.lower.view().dot(&res)
     }
 }
