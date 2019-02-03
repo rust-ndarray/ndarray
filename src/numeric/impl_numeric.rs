@@ -277,3 +277,63 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use self::Array;
+    use quickcheck::quickcheck;
+
+    quickcheck! {
+        fn sum_value_does_not_depend_on_axis(xs: Vec<f64>) -> bool {
+            // We want three axis of equal length - we drop some elements
+            // to get the right number
+            let axis_length = (xs.len() as f64).cbrt().floor() as usize;
+            let xs = &xs[..axis_length.pow(3)];
+
+            // We want to check that summing with respect to an axis
+            // is independent from the specific underlying implementation of
+            // pairwise sum, which is itself conditional on the arrangement
+            // in memory of the array elements.
+            // We will thus swap axes and compute the sum, in turn, with respect to
+            // axes 0, 1 and 2, while making sure that mathematically the same
+            // number should be spit out (because we are properly transposing before summing).
+            if axis_length > 0 {
+                let a = Array::from_vec(xs.to_vec())
+                    .into_shape((axis_length, axis_length, axis_length))
+                    .unwrap();
+                assert!(a.is_standard_layout());
+                let sum1 = a.sum_axis(Axis(0));
+
+                let mut b = Array::zeros(a.raw_dim());
+                assert!(b.is_standard_layout());
+                for i in 0..axis_length {
+                    for j in 0..axis_length {
+                        for k in 0..axis_length {
+                            b[(i, j, k)] = a[(j, i, k)].clone();
+                        }
+                    }
+                }
+                let sum2 = b.sum_axis(Axis(1));
+
+                let mut c = Array::zeros(a.raw_dim());
+                assert!(c.is_standard_layout());
+                for i in 0..axis_length {
+                    for j in 0..axis_length {
+                        for k in 0..axis_length {
+                            c[(i, j, k)] = a[(k, i, j)].clone();
+                        }
+                    }
+                }
+                let sum3 = c.sum_axis(Axis(2));
+
+                let tol = 1e-10;
+                let first = (sum2.clone() - sum1.clone()).iter().all(|x| x.abs() < tol);
+                let second = (sum3.clone() - sum1.clone()).iter().all(|x| x.abs() < tol);
+                let third = (sum3.clone() - sum2.clone()).iter().all(|x| x.abs() < tol);
+                first && second && third
+            } else {
+                true
+            }
+        }
+    }
+}
