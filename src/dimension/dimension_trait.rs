@@ -291,8 +291,8 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         indices
     }
 
-    /// Compute the minimum stride axis (absolute value), under the constraint
-    /// that the length of the axis is > 1;
+    /// Compute the minimum stride axis (absolute value), preferring axes with
+    /// length > 1.
     #[doc(hidden)]
     fn min_stride_axis(&self, strides: &Self) -> Axis {
         let n = match self.ndim() {
@@ -301,7 +301,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
             n => n,
         };
         axes_of(self, strides)
-            .rev()
+            .filter(|ax| ax.len() > 1)
             .min_by_key(|ax| ax.stride().abs())
             .map_or(Axis(n - 1), |ax| ax.axis())
     }
@@ -588,9 +588,9 @@ impl Dimension for Dim<[Ix; 2]> {
 
     #[inline]
     fn min_stride_axis(&self, strides: &Self) -> Axis {
-        let s = get!(strides, 0) as Ixs;
-        let t = get!(strides, 1) as Ixs;
-        if s.abs() < t.abs() {
+        let s = (get!(strides, 0) as isize).abs();
+        let t = (get!(strides, 1) as isize).abs();
+        if s < t && get!(self, 0) > 1 {
             Axis(0)
         } else {
             Axis(1)
