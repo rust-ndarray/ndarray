@@ -1853,25 +1853,11 @@ where
         } else {
             let mut v = self.view();
             // put the narrowest axis at the last position
-            match v.ndim() {
-                0 | 1 => {}
-                2 => {
-                    if self.len_of(Axis(1)) <= 1
-                        || self.len_of(Axis(0)) > 1
-                            && self.stride_of(Axis(0)).abs() < self.stride_of(Axis(1)).abs()
-                    {
-                        v.swap_axes(0, 1);
-                    }
-                }
-                n => {
-                    let last = n - 1;
-                    let narrow_axis = v
-                        .axes()
-                        .filter(|ax| ax.len() > 1)
-                        .min_by_key(|ax| ax.stride().abs())
-                        .map_or(last, |ax| ax.axis().index());
-                    v.swap_axes(last, narrow_axis);
-                }
+            let n = v.ndim();
+            if n > 1 {
+                let last = n - 1;
+                let narrow_axis = self.min_stride_axis();
+                v.swap_axes(last, narrow_axis.index());
             }
             v.into_elements_base().fold(init, f)
         }
