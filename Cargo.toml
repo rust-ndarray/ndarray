@@ -47,6 +47,7 @@ serde = { version = "1.0", optional = true }
 defmac = "0.2"
 quickcheck = { version = "0.7.2", default-features = false }
 rawpointer = "0.1"
+rand = "0.5.5"
 
 [features]
 # Enable blas usage

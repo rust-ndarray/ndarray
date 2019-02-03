@@ -11,9 +11,14 @@ use num_traits::{self, Zero};
 use crate::LinalgScalar;
 
 /// Size threshold to switch to naive summation in all implementations of pairwise summation.
+#[cfg(not(test))]
 pub(crate) const NAIVE_SUM_THRESHOLD: usize = 64;
+// Set it to a smaller number for testing purposes
+#[cfg(test)]
+pub(crate) const NAIVE_SUM_THRESHOLD: usize = 2;
+
 /// Number of elements processed by unrolled operators (to leverage SIMD instructions).
-const UNROLL_SIZE: usize = 8;
+pub(crate) const UNROLL_SIZE: usize = 8;
 
 /// An implementation of pairwise summation for a vector slice.
 ///
