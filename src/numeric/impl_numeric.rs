@@ -8,7 +8,6 @@
 
 use std::ops::{Add, Div, Mul};
 use num_traits::{self, Zero, Float, FromPrimitive};
-use itertools::free::enumerate;
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
@@ -33,17 +32,10 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Add<Output=A> + num_traits::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            return numeric_util::pairwise_sum(&slc)
+            numeric_util::pairwise_sum(&slc)
+        } else {
+            numeric_util::iterator_pairwise_sum(self.iter())
         }
-        let mut sum = A::zero();
-        for row in self.inner_rows() {
-            if let Some(slc) = row.as_slice() {
-                sum = sum + numeric_util::pairwise_sum(&slc);
-            } else {
-                sum = sum + numeric_util::iterator_pairwise_sum(row.iter());
-            }
-        }
-        sum
     }
 
     /// Return the sum of all elements in the array.
@@ -104,16 +96,14 @@ impl<A, S, D> ArrayBase<S, D>
               D: RemoveAxis,
     {
         let n = self.len_of(axis);
-        let stride = self.strides()[axis.index()];
-        if self.ndim() == 2 && stride == 1 {
+        if self.stride_of(axis) == 1 {
             // contiguous along the axis we are summing
             let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
-            let ax = axis.index();
-            for (i, elt) in enumerate(&mut res) {
-                *elt = self.index_axis(Axis(1 - ax), i).sum();
-            }
+            Zip::from(&mut res)
+                .and(self.lanes(axis))
+                .apply(|sum, lane| *sum = lane.sum());
             res
-        } else if self.len_of(axis) <= numeric_util::NAIVE_SUM_THRESHOLD {
+        } else if n <= numeric_util::NAIVE_SUM_THRESHOLD {
             self.fold_axis(axis, A::zero(), |acc, x| acc.clone() + x.clone())
         } else {
             let (v1, v2) = self.view().split_at(axis, n / 2);
