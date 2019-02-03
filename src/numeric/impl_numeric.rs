@@ -103,7 +103,7 @@ impl<A, S, D> ArrayBase<S, D>
                 .and(self.lanes(axis))
                 .apply(|sum, lane| *sum = lane.sum());
             res
-        } else if self.len_of(axis) <= numeric_util::NAIVE_SUM_THRESHOLD {
+        } else if n <= numeric_util::NAIVE_SUM_THRESHOLD {
             self.fold_axis(axis, A::zero(), |acc, x| acc.clone() + x.clone())
         } else {
             let (v1, v2) = self.view().split_at(axis, n / 2);
