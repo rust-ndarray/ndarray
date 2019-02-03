@@ -215,14 +215,12 @@ pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
 
 #[cfg(test)]
 mod tests {
-    use quickcheck::quickcheck;
+    use quickcheck_macros::quickcheck;
     use std::num::Wrapping;
     use super::iterator_pairwise_sum;
 
-    quickcheck! {
-        fn iterator_pairwise_sum_is_correct(xs: Vec<i32>) -> bool {
-            let xs: Vec<_> = xs.into_iter().map(|x| Wrapping(x)).collect();
-            iterator_pairwise_sum(xs.iter()) == xs.iter().sum()
-        }
+    #[quickcheck]
+    fn iterator_pairwise_sum_is_correct(xs: Vec<Wrapping<i32>>) -> bool {
+        iterator_pairwise_sum(xs.iter()) == xs.iter().sum()
     }
 }
