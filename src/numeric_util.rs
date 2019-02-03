@@ -56,16 +56,18 @@ where
     I: Iterator<Item=&'a A>,
     A: Clone + Add<Output=A> + Zero,
 {
-    let mut partial_sums = vec![];
-    let mut partial_sum = A::zero();
-    for (i, x) in iter.enumerate() {
-        partial_sum = partial_sum + x.clone();
-        if i % NAIVE_SUM_THRESHOLD == NAIVE_SUM_THRESHOLD - 1 {
+    let (len, _) = iter.size_hint();
+    let cap = len.saturating_sub(1) / NAIVE_SUM_THRESHOLD + 1; // ceiling of division
+    let mut partial_sums = Vec::with_capacity(cap);
+    let (_, last_sum) = iter.fold((0, A::zero()), |(count, partial_sum), x| {
+        if count < NAIVE_SUM_THRESHOLD {
+            (count + 1, partial_sum + x.clone())
+        } else {
             partial_sums.push(partial_sum);
-            partial_sum = A::zero();
+            (1, x.clone())
         }
-    }
-    partial_sums.push(partial_sum);
+    });
+    partial_sums.push(last_sum);
 
     pure_pairwise_sum(&partial_sums)
 }
@@ -204,4 +206,18 @@ pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
     }
 
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use quickcheck::quickcheck;
+    use std::num::Wrapping;
+    use super::iterator_pairwise_sum;
+
+    quickcheck! {
+        fn iterator_pairwise_sum_is_correct(xs: Vec<i32>) -> bool {
+            let xs: Vec<_> = xs.into_iter().map(|x| Wrapping(x)).collect();
+            iterator_pairwise_sum(xs.iter()) == xs.iter().sum()
+        }
+    }
 }
