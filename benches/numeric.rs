@@ -25,21 +25,22 @@ fn clip(bench: &mut Bencher)
     });
 }
 
-#[bench]
-fn contiguous_sum_int_1e4(bench: &mut Bencher)
-{
-    let n = 1e4 as usize;
-    let a = Array::from_vec((0..n).collect());
-    bench.iter(|| {
-        a.sum()
-    });
-}
 
 #[bench]
 fn contiguous_sum_1e7(bench: &mut Bencher)
 {
     let n = 1e7 as usize;
     let a = Array::linspace(-1e6, 1e6, n);
+    bench.iter(|| {
+        a.sum()
+    });
+}
+
+#[bench]
+fn contiguous_sum_int_1e7(bench: &mut Bencher)
+{
+    let n = 1e7 as usize;
+    let a = Array::from_vec((0..n).collect());
     bench.iter(|| {
         a.sum()
     });
@@ -56,10 +57,30 @@ fn contiguous_sum_1e4(bench: &mut Bencher)
 }
 
 #[bench]
+fn contiguous_sum_int_1e4(bench: &mut Bencher)
+{
+    let n = 1e4 as usize;
+    let a = Array::from_vec((0..n).collect());
+    bench.iter(|| {
+        a.sum()
+    });
+}
+
+#[bench]
 fn contiguous_sum_1e2(bench: &mut Bencher)
 {
     let n = 1e2 as usize;
     let a = Array::linspace(-1e6, 1e6, n);
+    bench.iter(|| {
+        a.sum()
+    });
+}
+
+#[bench]
+fn contiguous_sum_int_1e2(bench: &mut Bencher)
+{
+    let n = 1e2 as usize;
+    let a = Array::from_vec((0..n).collect());
     bench.iter(|| {
         a.sum()
     });
@@ -76,10 +97,31 @@ fn contiguous_sum_ix3_1e2(bench: &mut Bencher)
 }
 
 #[bench]
+fn contiguous_sum_int_ix3_1e2(bench: &mut Bencher)
+{
+    let n = 1e2 as usize;
+    let a = Array::from_vec((0..n.pow(3)).collect())
+        .into_shape([n, n, n])
+        .unwrap();
+    bench.iter(|| black_box(&a).sum());
+}
+
+#[bench]
 fn inner_discontiguous_sum_ix3_1e2(bench: &mut Bencher)
 {
     let n = 1e2 as usize;
     let a = Array::linspace(-1e6, 1e6, n * n * 2*n)
+        .into_shape([n, n, 2*n])
+        .unwrap();
+    let v = a.slice(s![.., .., ..;2]);
+    bench.iter(|| black_box(&v).sum());
+}
+
+#[bench]
+fn inner_discontiguous_sum_int_ix3_1e2(bench: &mut Bencher)
+{
+    let n = 1e2 as usize;
+    let a = Array::from_vec((0..(n.pow(3) * 2)).collect())
         .into_shape([n, n, 2*n])
         .unwrap();
     let v = a.slice(s![.., .., ..;2]);
@@ -98,10 +140,33 @@ fn middle_discontiguous_sum_ix3_1e2(bench: &mut Bencher)
 }
 
 #[bench]
+fn middle_discontiguous_sum_int_ix3_1e2(bench: &mut Bencher)
+{
+    let n = 1e2 as usize;
+    let a = Array::from_vec((0..(n.pow(3) * 2)).collect())
+        .into_shape([n, 2*n, n])
+        .unwrap();
+    let v = a.slice(s![.., ..;2, ..]);
+    bench.iter(|| black_box(&v).sum());
+}
+
+#[bench]
 fn sum_by_row_1e4(bench: &mut Bencher)
 {
-    let n = 1e3 as usize;
+    let n = 1e4 as usize;
     let a = Array::linspace(-1e6, 1e6, n * n)
+        .into_shape([n, n])
+        .unwrap();
+    bench.iter(|| {
+        a.sum_axis(Axis(0))
+    });
+}
+
+#[bench]
+fn sum_by_row_int_1e4(bench: &mut Bencher)
+{
+    let n = 1e4 as usize;
+    let a = Array::from_vec((0..n.pow(2)).collect())
         .into_shape([n, n])
         .unwrap();
     bench.iter(|| {
@@ -112,8 +177,20 @@ fn sum_by_row_1e4(bench: &mut Bencher)
 #[bench]
 fn sum_by_col_1e4(bench: &mut Bencher)
 {
-    let n = 1e3 as usize;
+    let n = 1e4 as usize;
     let a = Array::linspace(-1e6, 1e6, n * n)
+        .into_shape([n, n])
+        .unwrap();
+    bench.iter(|| {
+        a.sum_axis(Axis(1))
+    });
+}
+
+#[bench]
+fn sum_by_col_int_1e4(bench: &mut Bencher)
+{
+    let n = 1e4 as usize;
+    let a = Array::from_vec((0..n.pow(2)).collect())
         .into_shape([n, n])
         .unwrap();
     bench.iter(|| {
@@ -126,6 +203,18 @@ fn sum_by_middle_1e2(bench: &mut Bencher)
 {
     let n = 1e2 as usize;
     let a = Array::linspace(-1e6, 1e6, n * n * n)
+        .into_shape([n, n, n])
+        .unwrap();
+    bench.iter(|| {
+        a.sum_axis(Axis(1))
+    });
+}
+
+#[bench]
+fn sum_by_middle_int_1e2(bench: &mut Bencher)
+{
+    let n = 1e2 as usize;
+    let a = Array::from_vec((0..n.pow(3)).collect())
         .into_shape([n, n, n])
         .unwrap();
     bench.iter(|| {
