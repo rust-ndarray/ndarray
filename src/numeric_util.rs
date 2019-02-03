@@ -79,7 +79,7 @@ where
 
 /// An implementation of pairwise summation for a vector slice that never
 /// switches to the naive sum algorithm.
-fn pure_pairwise_sum<A>(v: &[A]) -> A
+pub(crate) fn pure_pairwise_sum<A>(v: &[A]) -> A
     where
         A: Clone + Add<Output=A> + Zero,
 {

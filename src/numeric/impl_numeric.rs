@@ -32,10 +32,17 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Add<Output=A> + num_traits::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            numeric_util::pairwise_sum(&slc)
-        } else {
-            numeric_util::iterator_pairwise_sum(self.iter())
+            return numeric_util::pairwise_sum(&slc);
         }
+        if self.ndim() > 1 {
+            let ax = self.dim.min_stride_axis(&self.strides);
+            if self.len_of(ax) >= numeric_util::UNROLL_SIZE && self.stride_of(ax) == 1 {
+                let partial_sums: Vec<_> =
+                    self.lanes(ax).into_iter().map(|lane| lane.sum()).collect();
+                return numeric_util::pure_pairwise_sum(&partial_sums);
+            }
+        }
+        numeric_util::iterator_pairwise_sum(self.iter())
     }
 
     /// Return the sum of all elements in the array.
