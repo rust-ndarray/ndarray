@@ -33,17 +33,10 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Add<Output=A> + num_traits::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            return numeric_util::pairwise_sum(&slc)
+            numeric_util::pairwise_sum(&slc)
+        } else {
+            numeric_util::iterator_pairwise_sum(self.iter())
         }
-        let mut sum = A::zero();
-        for row in self.inner_rows() {
-            if let Some(slc) = row.as_slice() {
-                sum = sum + numeric_util::pairwise_sum(&slc);
-            } else {
-                sum = sum + numeric_util::iterator_pairwise_sum(row.iter());
-            }
-        }
-        sum
     }
 
     /// Return the sum of all elements in the array.
