@@ -697,6 +697,23 @@ impl Dimension for Dim<[Ix; 3]> {
         Some(Ix3(i, j, k))
     }
 
+    #[inline]
+    fn min_stride_axis(&self, strides: &Self) -> Axis {
+        let s = (get!(strides, 0) as isize).abs();
+        let t = (get!(strides, 1) as isize).abs();
+        let u = (get!(strides, 2) as isize).abs();
+        let (argmin, min) = if t < u && get!(self, 1) > 1 {
+            (Axis(1), t)
+        } else {
+            (Axis(2), u)
+        };
+        if s < min && get!(self, 0) > 1 {
+            Axis(0)
+        } else {
+            argmin
+        }
+    }
+
     /// Self is an index, return the stride offset
     #[inline]
     fn stride_offset(index: &Self, strides: &Self) -> isize {
