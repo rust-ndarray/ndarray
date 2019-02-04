@@ -105,6 +105,8 @@ extern crate num_integer;
 #[cfg(test)]
 extern crate quickcheck;
 #[cfg(test)]
+extern crate quickcheck_macros;
+#[cfg(test)]
 extern crate rand;
 
 #[cfg(feature = "docs")]

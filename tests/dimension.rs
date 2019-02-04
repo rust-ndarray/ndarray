@@ -132,37 +132,6 @@ fn fastest_varying_order() {
 
 type ArrayF32<D> = Array<f32, D>;
 
-/*
-#[test]
-fn min_stride_axis() {
-    let a = ArrayF32::zeros(10);
-    assert_eq!(a.min_stride_axis(), Axis(0));
-
-    let a = ArrayF32::zeros((3, 3));
-    assert_eq!(a.min_stride_axis(), Axis(1));
-    assert_eq!(a.t().min_stride_axis(), Axis(0));
-
-    let a = ArrayF32::zeros(vec![3, 3]);
-    assert_eq!(a.min_stride_axis(), Axis(1));
-    assert_eq!(a.t().min_stride_axis(), Axis(0));
-
-    let min_axis = a.axes().min_by_key(|t| t.2.abs()).unwrap().axis();
-    assert_eq!(min_axis, Axis(1));
-
-    let mut b = ArrayF32::zeros(vec![2, 3, 4, 5]);
-    assert_eq!(b.min_stride_axis(), Axis(3));
-    for ax in 0..3 {
-        b.swap_axes(3, ax);
-        assert_eq!(b.min_stride_axis(), Axis(ax));
-        b.swap_axes(3, ax);
-    }
-
-    let a = ArrayF32::zeros((3, 3));
-    let v = a.broadcast((8, 3, 3)).unwrap();
-    assert_eq!(v.min_stride_axis(), Axis(0));
-}
-*/
-
 #[test]
 fn max_stride_axis() {
     let a = ArrayF32::zeros(10);

@@ -62,7 +62,7 @@ where
     A: Clone + Add<Output=A> + Zero,
 {
     let (len, _) = iter.size_hint();
-    let cap = len.saturating_sub(1) / NAIVE_SUM_THRESHOLD + 1; // ceiling of division
+    let cap = len / NAIVE_SUM_THRESHOLD + if len % NAIVE_SUM_THRESHOLD != 0 { 1 } else { 0 };
     let mut partial_sums = Vec::with_capacity(cap);
     let (_, last_sum) = iter.fold((0, A::zero()), |(count, partial_sum), x| {
         if count < NAIVE_SUM_THRESHOLD {
@@ -79,7 +79,7 @@ where
 
 /// An implementation of pairwise summation for a vector slice that never
 /// switches to the naive sum algorithm.
-fn pure_pairwise_sum<A>(v: &[A]) -> A
+pub(crate) fn pure_pairwise_sum<A>(v: &[A]) -> A
     where
         A: Clone + Add<Output=A> + Zero,
 {
@@ -215,14 +215,12 @@ pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
 
 #[cfg(test)]
 mod tests {
-    use quickcheck::quickcheck;
+    use quickcheck_macros::quickcheck;
     use std::num::Wrapping;
     use super::iterator_pairwise_sum;
 
-    quickcheck! {
-        fn iterator_pairwise_sum_is_correct(xs: Vec<i32>) -> bool {
-            let xs: Vec<_> = xs.into_iter().map(|x| Wrapping(x)).collect();
-            iterator_pairwise_sum(xs.iter()) == xs.iter().sum()
-        }
+    #[quickcheck]
+    fn iterator_pairwise_sum_is_correct(xs: Vec<Wrapping<i32>>) -> bool {
+        iterator_pairwise_sum(xs.iter()) == xs.iter().sum()
     }
 }
