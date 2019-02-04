@@ -62,7 +62,7 @@ where
     A: Clone + Add<Output=A> + Zero,
 {
     let (len, _) = iter.size_hint();
-    let cap = len.saturating_sub(1) / NAIVE_SUM_THRESHOLD + 1; // ceiling of division
+    let cap = len / NAIVE_SUM_THRESHOLD + if len % NAIVE_SUM_THRESHOLD != 0 { 1 } else { 0 };
     let mut partial_sums = Vec::with_capacity(cap);
     let (_, last_sum) = iter.fold((0, A::zero()), |(count, partial_sum), x| {
         if count < NAIVE_SUM_THRESHOLD {
