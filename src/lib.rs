@@ -638,6 +638,22 @@ pub type Ixs = isize;
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
 ///
+/// ```
+/// use ndarray::{array, ArrayView1};
+///
+/// let owned1 = array![1, 2];
+/// let owned2 = array![3, 4];
+/// let view1 = ArrayView1::from(&[5, 6]);
+/// let view2 = ArrayView1::from(&[7, 8]);
+/// let mut mutable = array![9, 10];
+///
+/// let sum1 = &view1 + &view2;   // Allocates a new array. Note the explicit `&`.
+/// // let sum2 = view1 + &view2; // This doesn't work because `view1` is not an owned array.
+/// let sum3 = owned1 + view1;    // Consumes `owned1`, updates it, and returns it.
+/// let sum4 = owned2 + &view2;   // Consumes `owned2`, updates it, and returns it.
+/// mutable += &view2;            // Updates `mutable` in-place.
+/// ```
+///
 /// ### Binary Operators with Array and Scalar
 ///
 /// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
