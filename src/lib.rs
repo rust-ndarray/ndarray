@@ -638,6 +638,9 @@ pub type Ixs = isize;
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
 ///
+/// Note that the element type needs to implement the operator trait and the
+/// `Clone` trait.
+///
 /// ```
 /// use ndarray::{array, ArrayView1};
 ///
