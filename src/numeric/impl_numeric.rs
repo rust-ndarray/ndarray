@@ -88,13 +88,13 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     /// use ndarray::{aview0, aview1, arr2, Axis};
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
     /// assert!(
-    ///     a.sum_axis(Axis(0)) == aview1(&[4., 6.]) &&
-    ///     a.sum_axis(Axis(1)) == aview1(&[3., 7.]) &&
+    ///     a.sum_axis(Axis(0)) == aview1(&[5., 7., 9.]) &&
+    ///     a.sum_axis(Axis(1)) == aview1(&[6., 15.]) &&
     ///
-    ///     a.sum_axis(Axis(0)).sum_axis(Axis(0)) == aview0(&10.)
+    ///     a.sum_axis(Axis(0)).sum_axis(Axis(0)) == aview0(&21.)
     /// );
     /// ```
     ///
@@ -128,13 +128,15 @@ impl<A, S, D> ArrayBase<S, D>
     /// fails for the axis length.
     ///
     /// ```
-    /// use ndarray::{aview1, arr2, Axis};
+    /// use ndarray::{aview0, aview1, arr2, Axis};
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
     /// assert!(
-    ///     a.mean_axis(Axis(0)) == aview1(&[2.0, 3.0]) &&
-    ///     a.mean_axis(Axis(1)) == aview1(&[1.5, 3.5])
+    ///     a.mean_axis(Axis(0)) == aview1(&[2.5, 3.5, 4.5]) &&
+    ///     a.mean_axis(Axis(1)) == aview1(&[2., 5.]) &&
+    ///
+    ///     a.mean_axis(Axis(0)).mean_axis(Axis(0)) == aview0(&3.5)
     /// );
     /// ```
     pub fn mean_axis(&self, axis: Axis) -> Array<A, D::Smaller>
