@@ -1619,12 +1619,11 @@ where
         axes_of(&self.dim, &self.strides)
     }
 
-    /*
-    /// Return the axis with the least stride (by absolute value)
-    pub fn min_stride_axis(&self) -> Axis {
+    /// Return the axis with the least stride (by absolute value),
+    /// preferring axes with len > 1.
+    pub(crate) fn min_stride_axis(&self) -> Axis {
         self.dim.min_stride_axis(&self.strides)
     }
-    */
 
     /// Return the axis with the greatest stride (by absolute value),
     /// preferring axes with len > 1.
@@ -1854,25 +1853,11 @@ where
         } else {
             let mut v = self.view();
             // put the narrowest axis at the last position
-            match v.ndim() {
-                0 | 1 => {}
-                2 => {
-                    if self.len_of(Axis(1)) <= 1
-                        || self.len_of(Axis(0)) > 1
-                            && self.stride_of(Axis(0)).abs() < self.stride_of(Axis(1)).abs()
-                    {
-                        v.swap_axes(0, 1);
-                    }
-                }
-                n => {
-                    let last = n - 1;
-                    let narrow_axis = v
-                        .axes()
-                        .filter(|ax| ax.len() > 1)
-                        .min_by_key(|ax| ax.stride().abs())
-                        .map_or(last, |ax| ax.axis().index());
-                    v.swap_axes(last, narrow_axis);
-                }
+            let n = v.ndim();
+            if n > 1 {
+                let last = n - 1;
+                let narrow_axis = self.min_stride_axis();
+                v.swap_axes(last, narrow_axis.index());
             }
             v.into_elements_base().fold(init, f)
         }
@@ -2101,5 +2086,44 @@ where
                 mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn min_stride_axis() {
+        let a = Array1::<u8>::zeros(10);
+        assert_eq!(a.min_stride_axis(), Axis(0));
+
+        let a = Array2::<u8>::zeros((3, 3));
+        assert_eq!(a.min_stride_axis(), Axis(1));
+        assert_eq!(a.t().min_stride_axis(), Axis(0));
+
+        let a = ArrayD::<u8>::zeros(vec![3, 3]);
+        assert_eq!(a.min_stride_axis(), Axis(1));
+        assert_eq!(a.t().min_stride_axis(), Axis(0));
+
+        let min_axis = a.axes().min_by_key(|t| t.2.abs()).unwrap().axis();
+        assert_eq!(min_axis, Axis(1));
+
+        let mut b = ArrayD::<u8>::zeros(vec![2, 3, 4, 5]);
+        assert_eq!(b.min_stride_axis(), Axis(3));
+        for ax in 0..3 {
+            b.swap_axes(3, ax);
+            assert_eq!(b.min_stride_axis(), Axis(ax));
+            b.swap_axes(3, ax);
+        }
+        let mut v = b.view();
+        v.collapse_axis(Axis(3), 0);
+        assert_eq!(v.min_stride_axis(), Axis(2));
+
+        let a = Array2::<u8>::zeros((3, 3));
+        let v = a.broadcast((8, 3, 3)).unwrap();
+        assert_eq!(v.min_stride_axis(), Axis(0));
+        let v2 = a.broadcast((1, 3, 3)).unwrap();
+        assert_eq!(v2.min_stride_axis(), Axis(2));
     }
 }

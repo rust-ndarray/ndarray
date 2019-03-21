@@ -6,8 +6,94 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::cmp;
-
+use std::ops::Add;
+use num_traits::{self, Zero};
 use crate::LinalgScalar;
+
+/// Size threshold to switch to naive summation in all implementations of pairwise summation.
+#[cfg(not(test))]
+pub(crate) const NAIVE_SUM_THRESHOLD: usize = 64;
+// Set it to a smaller number for testing purposes
+#[cfg(test)]
+pub(crate) const NAIVE_SUM_THRESHOLD: usize = 2;
+
+/// Number of elements processed by unrolled operators (to leverage SIMD instructions).
+pub(crate) const UNROLL_SIZE: usize = 8;
+
+/// An implementation of pairwise summation for a vector slice.
+///
+/// Pairwise summation compute the sum of a set of *n* numbers by splitting
+/// it recursively in two halves, summing their elements and then adding the respective
+/// sums.
+/// It switches to the naive sum algorithm once the size of the set to be summed
+/// is below a certain pre-defined threshold ([`threshold`]).
+///
+/// Pairwise summation is useful to reduce the accumulated round-off error
+/// when summing floating point numbers.
+/// Pairwise summation provides an asymptotic error bound of *O(ε* log *n)*, where
+/// *ε* is machine precision, compared to *O(εn)* of the naive summation algorithm.
+/// For more details, see [`paper`] or [`Wikipedia`].
+///
+/// [`paper`]: https://epubs.siam.org/doi/10.1137/0914050
+/// [`Wikipedia`]: https://en.wikipedia.org/wiki/Pairwise_summation
+/// [`threshold`]: constant.NAIVE_SUM_THRESHOLD.html
+pub(crate) fn pairwise_sum<A>(v: &[A]) -> A
+where
+    A: Clone + Add<Output=A> + Zero,
+{
+    let n = v.len();
+    if n <= NAIVE_SUM_THRESHOLD * UNROLL_SIZE {
+        return unrolled_fold(v, A::zero, A::add);
+    } else {
+        let mid_index = n / 2;
+        let (v1, v2) = v.split_at(mid_index);
+        pairwise_sum(v1) + pairwise_sum(v2)
+    }
+}
+
+/// An implementation of pairwise summation for an iterator.
+///
+/// See [`pairwise_sum`] for details on the algorithm.
+///
+/// [`pairwise_sum`]: fn.pairwise_sum.html
+pub(crate) fn iterator_pairwise_sum<'a, I, A: 'a>(iter: I) -> A
+where
+    I: Iterator<Item=&'a A>,
+    A: Clone + Add<Output=A> + Zero,
+{
+    let (len, _) = iter.size_hint();
+    let cap = len / NAIVE_SUM_THRESHOLD + if len % NAIVE_SUM_THRESHOLD != 0 { 1 } else { 0 };
+    let mut partial_sums = Vec::with_capacity(cap);
+    let (_, last_sum) = iter.fold((0, A::zero()), |(count, partial_sum), x| {
+        if count < NAIVE_SUM_THRESHOLD {
+            (count + 1, partial_sum + x.clone())
+        } else {
+            partial_sums.push(partial_sum);
+            (1, x.clone())
+        }
+    });
+    partial_sums.push(last_sum);
+
+    pure_pairwise_sum(&partial_sums)
+}
+
+/// An implementation of pairwise summation for a vector slice that never
+/// switches to the naive sum algorithm.
+pub(crate) fn pure_pairwise_sum<A>(v: &[A]) -> A
+    where
+        A: Clone + Add<Output=A> + Zero,
+{
+    let n = v.len();
+    match n {
+        0 => A::zero(),
+        1 => v[0].clone(),
+        n => {
+            let mid_index = n / 2;
+            let (v1, v2) = v.split_at(mid_index);
+            pure_pairwise_sum(v1) + pure_pairwise_sum(v2)
+        }
+    }
+}
 
 /// Fold over the manually unrolled `xs` with `f`
 pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
@@ -17,7 +103,6 @@ pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
 {
     // eightfold unrolled so that floating point can be vectorized
     // (even with strict floating point accuracy semantics)
-    let mut acc = init();
     let (mut p0, mut p1, mut p2, mut p3,
          mut p4, mut p5, mut p6, mut p7) =
         (init(), init(), init(), init(),
@@ -34,18 +119,19 @@ pub fn unrolled_fold<A, I, F>(mut xs: &[A], init: I, f: F) -> A
 
         xs = &xs[8..];
     }
-    acc = f(acc.clone(), f(p0, p4));
-    acc = f(acc.clone(), f(p1, p5));
-    acc = f(acc.clone(), f(p2, p6));
-    acc = f(acc.clone(), f(p3, p7));
+    let (q0, q1, q2, q3) = (f(p0, p4), f(p1, p5), f(p2, p6), f(p3, p7));
+    let (r0, r1) = (f(q0, q2), f(q1, q3));
+    let unrolled = f(r0, r1);
 
     // make it clear to the optimizer that this loop is short
     // and can not be autovectorized.
+    let mut partial = init();
     for i in 0..xs.len() {
         if i >= 7 { break; }
-        acc = f(acc.clone(), xs[i].clone())
+        partial = f(partial.clone(), xs[i].clone())
     }
-    acc
+
+    f(unrolled, partial)
 }
 
 /// Compute the dot product.
@@ -125,4 +211,16 @@ pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
     }
 
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use quickcheck_macros::quickcheck;
+    use std::num::Wrapping;
+    use super::iterator_pairwise_sum;
+
+    #[quickcheck]
+    fn iterator_pairwise_sum_is_correct(xs: Vec<Wrapping<i32>>) -> bool {
+        iterator_pairwise_sum(xs.iter()) == xs.iter().sum()
+    }
 }

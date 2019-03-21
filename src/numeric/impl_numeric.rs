@@ -8,7 +8,6 @@
 
 use std::ops::{Add, Div, Mul};
 use num_traits::{self, Zero, Float, FromPrimitive};
-use itertools::free::enumerate;
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
@@ -33,17 +32,17 @@ impl<A, S, D> ArrayBase<S, D>
         where A: Clone + Add<Output=A> + num_traits::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
-            return numeric_util::unrolled_fold(slc, A::zero, A::add);
+            return numeric_util::pairwise_sum(&slc);
         }
-        let mut sum = A::zero();
-        for row in self.inner_rows() {
-            if let Some(slc) = row.as_slice() {
-                sum = sum + numeric_util::unrolled_fold(slc, A::zero, A::add);
-            } else {
-                sum = sum + row.iter().fold(A::zero(), |acc, elt| acc + elt.clone());
+        if self.ndim() > 1 {
+            let ax = self.dim.min_stride_axis(&self.strides);
+            if self.len_of(ax) >= numeric_util::UNROLL_SIZE && self.stride_of(ax) == 1 {
+                let partial_sums: Vec<_> =
+                    self.lanes(ax).into_iter().map(|lane| lane.sum()).collect();
+                return numeric_util::pure_pairwise_sum(&partial_sums);
             }
         }
-        sum
+        numeric_util::iterator_pairwise_sum(self.iter())
     }
 
     /// Return the sum of all elements in the array.
@@ -104,21 +103,19 @@ impl<A, S, D> ArrayBase<S, D>
               D: RemoveAxis,
     {
         let n = self.len_of(axis);
-        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
-        let stride = self.strides()[axis.index()];
-        if self.ndim() == 2 && stride == 1 {
+        if self.stride_of(axis) == 1 {
             // contiguous along the axis we are summing
-            let ax = axis.index();
-            for (i, elt) in enumerate(&mut res) {
-                *elt = self.index_axis(Axis(1 - ax), i).sum();
-            }
+            let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
+            Zip::from(&mut res)
+                .and(self.lanes(axis))
+                .apply(|sum, lane| *sum = lane.sum());
+            res
+        } else if n <= numeric_util::NAIVE_SUM_THRESHOLD {
+            self.fold_axis(axis, A::zero(), |acc, x| acc.clone() + x.clone())
         } else {
-            for i in 0..n {
-                let view = self.index_axis(axis, i);
-                res = res + &view;
-            }
+            let (v1, v2) = self.view().split_at(axis, n / 2);
+            v1.sum_axis(axis) + v2.sum_axis(axis)
         }
-        res
     }
 
     /// Return mean along `axis`.
@@ -289,3 +286,150 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::numeric_util::{NAIVE_SUM_THRESHOLD, UNROLL_SIZE};
+    use self::{Array, s};
+    use quickcheck::{QuickCheck, StdGen, TestResult};
+
+    #[test]
+    fn test_sum_value_does_not_depend_on_axis() {
+        // `size` controls the length of the array of data
+        // We set it to be randomly drawn between 0 and
+        // a number larger than NAIVE_SUM_THRESHOLD * UNROLL_SIZE
+        let rng = StdGen::new(
+            rand::thread_rng(),
+            5* (NAIVE_SUM_THRESHOLD * UNROLL_SIZE).pow(3)
+        );
+        let mut quickcheck = QuickCheck::new().gen(rng).tests(100);
+        quickcheck.quickcheck(
+           _sum_value_does_not_depend_on_axis
+            as fn(
+               Vec<f64>
+            ) -> TestResult,
+        );
+    }
+
+    fn _sum_value_does_not_depend_on_axis(xs: Vec<f64>) -> TestResult {
+        // We want three axis of equal length - we drop some elements
+        // to get the right number
+        let axis_length = (xs.len() as f64).cbrt().floor() as usize;
+        let xs = &xs[..axis_length.pow(3)];
+
+        // We want to check that summing with respect to an axis
+        // is independent from the specific underlying implementation of
+        // pairwise sum, which is itself conditional on the arrangement
+        // in memory of the array elements.
+        // We will thus swap axes and compute the sum, in turn, with respect to
+        // axes 0, 1 and 2, while making sure that mathematically the same
+        // number should be spit out (because we are properly transposing before summing).
+        if axis_length > 0 {
+            let (a, b, c) = equivalent_arrays(xs.to_vec(), axis_length);
+
+            let sum1 = a.sum_axis(Axis(0));
+            let sum2 = b.sum_axis(Axis(1));
+            let sum3 = c.sum_axis(Axis(2));
+
+            let tol = 1e-10;
+            let first = (sum2.clone() - sum1.clone()).iter().all(|x| x.abs() < tol);
+            let second = (sum3.clone() - sum1.clone()).iter().all(|x| x.abs() < tol);
+            let third = (sum3.clone() - sum2.clone()).iter().all(|x| x.abs() < tol);
+
+            if first && second && third {
+                TestResult::passed()
+            } else {
+                TestResult::failed()
+            }
+        } else {
+            TestResult::passed()
+        }
+    }
+
+    #[test]
+    fn test_sum_value_does_not_depend_on_axis_with_discontinuous_array() {
+        // `size` controls the length of the array of data
+        // We set it to be randomly drawn between 0 and
+        // a number larger than NAIVE_SUM_THRESHOLD * UNROLL_SIZE
+        let rng = StdGen::new(
+            rand::thread_rng(),
+            5* (NAIVE_SUM_THRESHOLD * UNROLL_SIZE).pow(3)
+        );
+        let mut quickcheck = QuickCheck::new().gen(rng).tests(100);
+        quickcheck.quickcheck(
+            _sum_value_does_not_depend_on_axis_w_discontinuous_array
+                as fn(
+                Vec<f64>
+            ) -> TestResult,
+        );
+    }
+
+    fn _sum_value_does_not_depend_on_axis_w_discontinuous_array(xs: Vec<f64>) -> TestResult {
+        // We want three axis of equal length - we drop some elements
+        // to get the right number
+        let axis_length = (xs.len() as f64).cbrt().floor() as usize;
+        let xs = &xs[..axis_length.pow(3)];
+
+        // We want to check that summing with respect to an axis
+        // is independent from the specific underlying implementation of
+        // pairwise sum, which is itself conditional on the arrangement
+        // in memory of the array elements.
+        // We will thus swap axes and compute the sum, in turn, with respect to
+        // axes 0, 1 and 2, while making sure that mathematically the same
+        // number should be spit out (because we are properly transposing before summing).
+        if axis_length > 0 {
+            let (a, b, c) = equivalent_arrays(xs.to_vec(), axis_length);
+
+            let sum1 = a.slice(s![..;2, .., ..]).sum_axis(Axis(0));
+            let sum2 = b.slice(s![.., ..;2, ..]).sum_axis(Axis(1));
+            let sum3 = c.slice(s![.., .., ..;2]).sum_axis(Axis(2));
+
+            let tol = 1e-10;
+            let first = (sum2.clone() - sum1.clone()).iter().all(|x| x.abs() < tol);
+            let second = (sum3.clone() - sum1.clone()).iter().all(|x| x.abs() < tol);
+            let third = (sum3.clone() - sum2.clone()).iter().all(|x| x.abs() < tol);
+
+            if first && second && third {
+                TestResult::passed()
+            } else {
+                TestResult::failed()
+            }
+        } else {
+            TestResult::passed()
+        }
+    }
+
+    // Given a vector with axis_length^3 elements, it returns three arrays,
+    // built using the vector elements, such that (mathematically):
+    // a.sum_axis(Axis(0) == b.sum_axis(Axis(1)) == c.sum_axis(Axis(2))
+    fn equivalent_arrays(xs: Vec<f64>, axis_length: usize) -> (Array3<f64>, Array3<f64>, Array3<f64>) {
+        assert!(xs.len() == axis_length.pow(3));
+
+        let a = Array::from_vec(xs)
+            .into_shape((axis_length, axis_length, axis_length))
+            .unwrap();
+        assert!(a.is_standard_layout());
+
+        let mut b = Array::zeros(a.raw_dim());
+        assert!(b.is_standard_layout());
+        for i in 0..axis_length {
+            for j in 0..axis_length {
+                for k in 0..axis_length {
+                    b[(i, j, k)] = a[(j, i, k)].clone();
+                }
+            }
+        }
+
+        let mut c = Array::zeros(a.raw_dim());
+        assert!(c.is_standard_layout());
+        for i in 0..axis_length {
+            for j in 0..axis_length {
+                for k in 0..axis_length {
+                    c[(i, j, k)] = a[(k, i, j)].clone();
+                }
+            }
+        }
+        return (a, b, c)
+    }
+
+}
