@@ -228,9 +228,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// The standard deviation is defined as:
     ///
     /// ```text
-    ///                    1       n
-    /// stddev = sqrt ( ――――――――   ∑ (xᵢ - x̅)² )
-    ///                 n - ddof  i=1
+    ///               ⎛    1       n          ⎞
+    /// stddev = sqrt ⎜ ――――――――   ∑ (xᵢ - x̅)²⎟
+    ///               ⎝ n - ddof  i=1         ⎠
     /// ```
     ///
     /// where
