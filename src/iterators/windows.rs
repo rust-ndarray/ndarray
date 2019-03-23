@@ -1,4 +1,3 @@
-
 use crate::imp_prelude::*;
 use super::ElementsBase;
 use crate::IntoDimension;
@@ -37,7 +36,7 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         unsafe {
             Windows {
                 base: ArrayView::from_shape_ptr(size.clone().strides(a.strides), a.ptr),
-                window: window,
+                window,
                 strides: window_strides,
             }
         }

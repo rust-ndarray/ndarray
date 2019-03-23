@@ -145,7 +145,7 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let n = A::from_usize(self.len_of(axis)).expect("Converting axis length to `A` must not fail.");
         let sum = self.sum_axis(axis);
-        sum / &aview0(&n)
+        sum / aview0(&n)
     }
 
     /// Return variance along `axis`.
@@ -288,4 +288,3 @@ impl<A, S, D> ArrayBase<S, D>
             }).is_done()
     }
 }
-

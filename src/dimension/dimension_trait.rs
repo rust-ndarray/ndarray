@@ -356,7 +356,7 @@ macro_rules! impl_insert_axis_array(
             debug_assert!(axis.index() <= $n);
             let mut out = [1; $n + 1];
             out[0..axis.index()].copy_from_slice(&self.slice()[0..axis.index()]);
-            out[axis.index()+1..$n+1].copy_from_slice(&self.slice()[axis.index()..$n]);
+            out[axis.index()+1..=$n].copy_from_slice(&self.slice()[axis.index()..$n]);
             Dim(out)
         }
     );

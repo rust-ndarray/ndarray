@@ -110,16 +110,16 @@ copy_and_clone!{SliceOrIndex}
 impl SliceOrIndex {
     /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
-        match self {
-            &SliceOrIndex::Slice { .. } => true,
+        match *self {
+            SliceOrIndex::Slice { .. } => true,
             _ => false,
         }
     }
 
     /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
-        match self {
-            &SliceOrIndex::Index(_) => true,
+        match *self {
+            SliceOrIndex::Index(_) => true,
             _ => false,
         }
     }
@@ -317,8 +317,8 @@ where
     #[doc(hidden)]
     pub unsafe fn new_unchecked(indices: T, out_dim: PhantomData<D>) -> SliceInfo<T, D> {
         SliceInfo {
-            out_dim: out_dim,
-            indices: indices,
+            out_dim,
+            indices,
         }
     }
 }
@@ -339,7 +339,7 @@ where
         }
         Ok(SliceInfo {
             out_dim: PhantomData,
-            indices: indices,
+            indices,
         })
     }
 }

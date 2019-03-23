@@ -32,7 +32,7 @@ pub fn indices<E>(shape: E) -> Indices<E::Dim>
     let dim = shape.into_dimension();
     Indices {
         start: E::Dim::zeros(dim.ndim()),
-        dim: dim,
+        dim,
     }
 }
 
@@ -90,7 +90,7 @@ impl<D> IntoIterator for Indices<D>
         let sz = self.dim.size();
         let index = if sz != 0 { Some(self.start) } else { None };
         IndicesIter {
-            index: index,
+            index,
             dim: self.dim,
         }
     }
@@ -135,7 +135,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
 
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
-        self.dim.clone()
+        self.dim
     }
 
     #[doc(hidden)]
@@ -168,7 +168,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         let mut index = *i;
         index += &self.start;
-        IndexPtr { index: index }
+        IndexPtr { index }
     }
 
     #[doc(hidden)]
@@ -214,7 +214,7 @@ pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
     IndicesIterF {
         has_remaining: dim.size_checked() != Some(0),
         index: zero,
-        dim: dim,
+        dim,
     }
 }
 

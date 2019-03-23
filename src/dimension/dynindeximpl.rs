@@ -1,4 +1,3 @@
-
 use std::ops::{
     Index,
     IndexMut,
@@ -59,9 +58,8 @@ impl<T: Copy + Zero> IxDynRepr<T> {
     pub fn copy_from(x: &[T]) -> Self {
         if x.len() <= CAP {
             let mut arr = [T::zero(); CAP];
-            for i in 0..x.len() {
-                arr[i] = x[i];
-            }
+            // copy x elements to arr
+            arr[..x.len()].clone_from_slice(&x[..]);
             IxDynRepr::Inline(x.len() as _, arr)
         } else {
             Self::from(x)
@@ -134,7 +132,7 @@ impl IxDynImpl {
             if len < CAP {
                 let mut out = [1; CAP];
                 out[0..i].copy_from_slice(&self[0..i]);
-                out[i+1..len+1].copy_from_slice(&self[i..len]);
+                out[i+1..=len].copy_from_slice(&self[i..len]);
                 IxDynRepr::Inline((len + 1) as u32, out)
             } else {
                 let mut out = Vec::with_capacity(len + 1);
@@ -218,7 +216,7 @@ impl<'a> IntoIterator for &'a IxDynImpl {
     type IntoIter = <&'a [Ix] as IntoIterator>::IntoIter;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self[..].into_iter()
+        self[..].iter()
     }
 }
 
@@ -233,7 +231,7 @@ impl IxDyn {
     /// Create a new dimension value with `n` axes, all zeros
     #[inline]
     pub fn zeros(n: usize) -> IxDyn {
-        const ZEROS: &'static [usize] = &[0; 4];
+        const ZEROS: &[usize] = &[0; 4];
         if n <= ZEROS.len() {
             Dim(&ZEROS[..n])
         } else {

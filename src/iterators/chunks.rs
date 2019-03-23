@@ -1,4 +1,3 @@
-
 use crate::imp_prelude::*;
 use crate::IntoDimension;
 use crate::{NdProducer, Layout};
@@ -59,8 +58,8 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D> {
 
         ExactChunks {
             base: a,
-            chunk: chunk,
-            inner_strides: inner_strides,
+            chunk,
+            inner_strides,
         }
     }
 }
@@ -142,8 +141,8 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D> {
 
         ExactChunksMut {
             base: a,
-            chunk: chunk,
-            inner_strides: inner_strides,
+            chunk,
+            inner_strides,
         }
     }
 }

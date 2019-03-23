@@ -1,4 +1,3 @@
-
 use crate::{Dimension, Axis, Ix, Ixs};
 
 /// Create a new Axes iterator
@@ -7,7 +6,7 @@ pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
 {
     Axes {
         dim: d,
-        strides: strides,
+        strides,
         start: 0,
         end: d.ndim(),
     }
@@ -56,6 +55,9 @@ impl AxisDescription {
     /// Return stride
     #[inline(always)]
     pub fn stride(self) -> Ixs { self.2 }
+    /// Returns True if axis is of length 0
+    #[inline(always)]
+    pub fn is_empty(self) -> bool { self.len() == 0 }
 }
 
 copy_and_clone!(['a, D] Axes<'a, D>);
@@ -128,4 +130,3 @@ impl IncOps for usize {
         *self
     }
 }
-

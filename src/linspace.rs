@@ -80,7 +80,7 @@ pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
     };
     Linspace {
         start: a,
-        step: step,
+        step,
         index: 0,
         len: n,
     }
@@ -101,7 +101,7 @@ pub fn range<F>(a: F, b: F, step: F) -> Linspace<F>
     let steps = F::ceil(len / step);
     Linspace {
         start: a,
-        step: step,
+        step,
         len: steps.to_usize().unwrap(),
         index: 0,
     }

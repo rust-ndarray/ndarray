@@ -486,8 +486,8 @@ impl<'a, A, D> ArrayView<'a, A, D>
         ArrayView {
             data: ViewRepr::new(),
             ptr: ptr as *mut A,
-            dim: dim,
-            strides: strides,
+            dim,
+            strides,
         }
     }
 
@@ -533,9 +533,9 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         }
         ArrayViewMut {
             data: ViewRepr::new(),
-            ptr: ptr,
-            dim: dim,
-            strides: strides,
+            ptr,
+            dim,
+            strides,
         }
     }
 
@@ -586,4 +586,3 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
         AxisIterMut::new(self, Axis(0))
     }
 }
-

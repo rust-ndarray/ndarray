@@ -27,4 +27,3 @@ impl<A, S> ArrayBase<S, Ix1>
         }
     }
 }
-

@@ -34,7 +34,7 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
     where A: Copy,
           D: RemoveAxis
 {
-    if arrays.len() == 0 {
+    if arrays.is_empty() {
         return Err(from_kind(ErrorKind::Unsupported));
     }
     let mut res_dim = arrays[0].raw_dim();

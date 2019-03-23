@@ -55,7 +55,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
                     write!(f, "]")?;
                 }
                 write!(f, ",")?;
-                write!(f, "\n")?;
+                writeln!(f)?;
                 for _ in 0..ndim - n {
                     write!(f, " ")?;
                 }

@@ -206,7 +206,7 @@ where
     {
         let data = self.data.into_shared();
         ArrayBase {
-            data: data,
+            data,
             ptr: self.ptr,
             dim: self.dim,
             strides: self.strides,
@@ -353,9 +353,9 @@ where
         let mut new_dim = Do::zeros(out_ndim);
         let mut new_strides = Do::zeros(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices)
-            .filter_map(|(d, s, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice {..} => Some((d, s)),
-                &SliceOrIndex::Index(_) => None,
+            .filter_map(|(d, s, slice_or_index)| match *slice_or_index {
+                SliceOrIndex::Slice {..} => Some((d, s)),
+                SliceOrIndex::Index(_) => None,
             })
             .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
             .for_each(|((d, s), (new_d, new_s))| {
@@ -391,11 +391,11 @@ where
         indices
             .iter()
             .enumerate()
-            .for_each(|(axis, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice { start, end, step } => {
+            .for_each(|(axis, slice_or_index)| match *slice_or_index {
+                SliceOrIndex::Slice { start, end, step } => {
                     self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
                 }
-                &SliceOrIndex::Index(index) => {
+                SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
                     self.collapse_axis(Axis(axis), i_usize)
                 }
@@ -1101,8 +1101,7 @@ where
         /* empty shape has len 1 */
         let len = self.dim.slice().iter().cloned().min().unwrap_or(1);
         let stride = self.strides()
-                         .iter()
-                         .fold(0, |sum, s| sum + s);
+            .iter().sum();
         (len, stride)
     }
 
@@ -1166,9 +1165,8 @@ where
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
-            match D::NDIM {
-                Some(1) => return strides[0] == 1 || dim[0] <= 1,
-                _ =>  { }
+            if let Some(1) = D::NDIM  {
+                return strides[0] == 1 || dim[0] <= 1;
             }
             if dim.slice().iter().any(|&d| d == 0) {
                 return true;
@@ -1379,7 +1377,7 @@ where
                 dim: shape,
             }
         } else {
-            let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
+            let v = self.iter().cloned().collect::<Vec<A>>();
             unsafe {
                 ArrayBase::from_shape_vec_unchecked(shape, v)
             }
@@ -1425,8 +1423,8 @@ where
                 return Ok(ArrayBase {
                     data: self.data,
                     ptr: self.ptr,
-                    dim: dim,
-                    strides: strides,
+                    dim,
+                    strides,
                 });
             }
         }
@@ -1737,7 +1735,7 @@ where
             Some(slc) => {
                 let ptr = slc.as_ptr() as *mut A;
                 let end = unsafe {
-                    ptr.offset(slc.len() as isize)
+                    ptr.add(slc.len())
                 };
                 self.ptr >= ptr && self.ptr <= end
             }

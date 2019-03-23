@@ -1,4 +1,3 @@
-
 // Copyright 2017 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -11,7 +10,7 @@ use itertools::Itertools;
 use super::Layout;
 use super::LayoutPriv;
 
-const LAYOUT_NAMES: &'static [&'static str] = &["C", "F"];
+const LAYOUT_NAMES: &[&str] = &["C", "F"];
 
 use std::fmt;
 
@@ -33,4 +32,3 @@ impl fmt::Debug for Layout {
         write!(f, " ({:#x})", self.0)
     }
 }
-

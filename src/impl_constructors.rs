@@ -246,7 +246,7 @@ impl<S, A, D> ArrayBase<S, D>
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         } else {
             let dim = shape.dim.clone();
-            let v = to_vec_mapped(indexes::indices_iter_f(dim).into_iter(), f);
+            let v = to_vec_mapped(indexes::indices_iter_f(dim), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         }
     }
@@ -342,8 +342,8 @@ impl<S, A, D> ArrayBase<S, D>
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
-            strides: strides,
-            dim: dim
+            strides,
+            dim
         }
     }
 

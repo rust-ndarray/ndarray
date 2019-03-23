@@ -45,7 +45,7 @@ impl<I> Dim<I> {
     /// Private constructor and accessors for Dim
     pub(crate) fn new(index: I) -> Dim<I> {
         Dim {
-            index: index,
+            index,
         }
     }
     #[inline(always)]
@@ -181,4 +181,3 @@ impl_op!(Sub, sub, SubAssign, sub_assign, sub);
 impl_single_op!(Sub, sub, SubAssign, sub_assign, sub);
 impl_op!(Mul, mul, MulAssign, mul_assign, mul);
 impl_scalar_op!(Mul, mul, MulAssign, mul_assign, mul);
-
