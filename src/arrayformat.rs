@@ -36,7 +36,12 @@ impl ArrayDisplayMode {
         where S: Data<Elem=A>,
               D: Dimension
     {
-        let last_dim = arr.shape().len() - 1;
+        let last_dim = match arr.shape().len().checked_sub(1) {
+            Some(v) => v,
+            None => {
+                return ArrayDisplayMode::Full;
+            }
+        };
 
         let mut overflow_axis_pair: (Option<usize>, Option<usize>) = (None, None);
         for (axis, axis_size) in arr.shape().iter().enumerate().rev() {
@@ -85,7 +90,7 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
     let display_mode = ArrayDisplayMode::from_array(view, limit);
 
     let ndim = view.dim().into_dimension().slice().len();
-    let nth_idx_max = view.shape().iter().last().unwrap();
+    let nth_idx_max = if ndim > 0 { Some(view.shape().iter().last().unwrap()) } else { None };
 
     // None will be an empty iter.
     let mut last_index = match view.dim().into_dimension().first_index() {
@@ -169,10 +174,11 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
 
         if print_row {
             let mut print_elt = true;
-            let nth_idx_val = index.slice().iter().last().unwrap();
+            let nth_idx_op = index.slice().iter().last();
             match display_mode {
                 ArrayDisplayMode::VSplit | ArrayDisplayMode::DoubleSplit(_) => {
-                    if nth_idx_val >= &limit && nth_idx_val < &(nth_idx_max - &limit) {
+                    let nth_idx_val = nth_idx_op.unwrap();
+                    if nth_idx_val >= &limit && nth_idx_val < &(nth_idx_max.unwrap() - &limit) {
                         print_elt = false;
                         if !printed_ellipses_v {
                             write!(f, ", ...")?;
