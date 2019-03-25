@@ -1,9 +1,8 @@
-
 use crate::imp_prelude::*;
-use crate::IntoDimension;
-use crate::{NdProducer, Layout};
 use crate::ElementsBase;
 use crate::ElementsBaseMut;
+use crate::IntoDimension;
+use crate::{Layout, NdProducer};
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
@@ -47,10 +46,16 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D> {
         E: IntoDimension<Dim = D>,
     {
         let chunk = chunk.into_dimension();
-        ndassert!(a.ndim() == chunk.ndim(),
-                  concat!("Chunk dimension {} does not match array dimension {} ",
-                          "(with array of shape {:?})"),
-                  chunk.ndim(), a.ndim(), a.shape());
+        ndassert!(
+            a.ndim() == chunk.ndim(),
+            concat!(
+                "Chunk dimension {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            chunk.ndim(),
+            a.ndim(),
+            a.shape()
+        );
         for i in 0..a.ndim() {
             a.dim[i] /= chunk[i];
         }
@@ -66,8 +71,9 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D> {
 }
 
 impl<'a, A, D> IntoIterator for ExactChunks<'a, A, D>
-    where D: Dimension,
-          A: 'a,
+where
+    D: Dimension,
+    A: 'a,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = ExactChunksIter<'a, A, D>;
@@ -130,10 +136,16 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D> {
         E: IntoDimension<Dim = D>,
     {
         let chunk = chunk.into_dimension();
-        ndassert!(a.ndim() == chunk.ndim(),
-                  concat!("Chunk dimension {} does not match array dimension {} ",
-                          "(with array of shape {:?})"),
-                  chunk.ndim(), a.ndim(), a.shape());
+        ndassert!(
+            a.ndim() == chunk.ndim(),
+            concat!(
+                "Chunk dimension {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            chunk.ndim(),
+            a.ndim(),
+            a.shape()
+        );
         for i in 0..a.ndim() {
             a.dim[i] /= chunk[i];
         }
@@ -149,8 +161,9 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D> {
 }
 
 impl<'a, A, D> IntoIterator for ExactChunksMut<'a, A, D>
-    where D: Dimension,
-          A: 'a,
+where
+    D: Dimension,
+    A: 'a,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = ExactChunksIterMut<'a, A, D>;
@@ -163,8 +176,7 @@ impl<'a, A, D> IntoIterator for ExactChunksMut<'a, A, D>
     }
 }
 
-
-impl_iterator!{
+impl_iterator! {
     ['a, A, D: Dimension]
     [Clone => 'a, A, D: Clone]
     ExactChunksIter {
@@ -186,7 +198,7 @@ impl_iterator!{
     }
 }
 
-impl_iterator!{
+impl_iterator! {
     ['a, A, D: Dimension]
     [Clone => ]
     ExactChunksIterMut {

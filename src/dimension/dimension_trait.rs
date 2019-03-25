@@ -6,24 +6,20 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 use std::fmt::Debug;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 use std::ops::{Index, IndexMut};
-use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 
 use itertools::{enumerate, izip, zip};
 
-use crate::{Ix, Ixs, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, Dim, SliceOrIndex, IxDynImpl};
+use super::axes_of;
+use super::conversion::Convert;
+use super::{stride_offset, stride_offset_checked};
+use crate::Axis;
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
-use crate::Axis;
-use super::{
-    stride_offset,
-    stride_offset_checked,
-};
-use super::conversion::Convert;
-use super::axes_of;
+use crate::{Dim, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl, Ixs, SliceOrIndex};
 
 /// Array shape and index trait.
 ///
@@ -31,15 +27,25 @@ use super::axes_of;
 /// dimensions and indices.
 ///
 /// **Note:** *This trait can not be implemented outside the crate*
-pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
-    IndexMut<usize, Output=usize> +
-    Add<Self, Output=Self> +
-    AddAssign + for<'x> AddAssign<&'x Self> +
-    Sub<Self, Output=Self> +
-    SubAssign + for<'x> SubAssign<&'x Self> +
-    Mul<usize, Output=Self> + Mul<Self, Output=Self> +
-    MulAssign + for<'x> MulAssign<&'x Self> + MulAssign<usize>
-
+pub trait Dimension:
+    Clone
+    + Eq
+    + Debug
+    + Send
+    + Sync
+    + Default
+    + IndexMut<usize, Output = usize>
+    + Add<Self, Output = Self>
+    + AddAssign
+    + for<'x> AddAssign<&'x Self>
+    + Sub<Self, Output = Self>
+    + SubAssign
+    + for<'x> SubAssign<&'x Self>
+    + Mul<usize, Output = Self>
+    + Mul<Self, Output = Self>
+    + MulAssign
+    + for<'x> MulAssign<&'x Self>
+    + MulAssign<usize>
 {
     /// For fixed-size dimension representations (e.g. `Ix2`), this should be
     /// `Some(ndim)`, and for variable-size dimension representations (e.g.
@@ -66,7 +72,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
     /// - For `IxDyn`: `IxDyn`
-    type Pattern: IntoDimension<Dim=Self>;
+    type Pattern: IntoDimension<Dim = Self>;
     /// Next smaller dimension (if applicable)
     type Smaller: Dimension;
     /// Next larger dimension
@@ -85,7 +91,9 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
 
     /// Compute the size while checking for overflow.
     fn size_checked(&self) -> Option<usize> {
-        self.slice().iter().fold(Some(1), |s, &a| s.and_then(|s_| s_.checked_mul(a)))
+        self.slice()
+            .iter()
+            .fold(Some(1), |s, &a| s.and_then(|s_| s_.checked_mul(a)))
     }
 
     #[doc(hidden)]
@@ -224,7 +232,6 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         !end_iteration
     }
 
-
     #[doc(hidden)]
     /// Return stride offset for index.
     fn stride_offset(index: &Self, strides: &Self) -> isize {
@@ -243,7 +250,11 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
 
     #[doc(hidden)]
     fn last_elem(&self) -> usize {
-        if self.ndim() == 0 { 0 } else { self.slice()[self.ndim() - 1] }
+        if self.ndim() == 0 {
+            0
+        } else {
+            self.slice()[self.ndim() - 1]
+        }
     }
 
     #[doc(hidden)]
@@ -258,7 +269,9 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         if strides.equal(&defaults) {
             return true;
         }
-        if dim.ndim() == 1 { return false; }
+        if dim.ndim() == 1 {
+            return false;
+        }
         let order = strides._fastest_varying_stride_order();
         let strides = strides.slice();
 
@@ -313,7 +326,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
         match self.ndim() {
             0 => panic!("max_stride_axis: Array must have ndim > 0"),
             1 => return Axis(0),
-            _ => { }
+            _ => {}
         }
         axes_of(self, strides)
             .filter(|ax| ax.len() > 1)
@@ -345,7 +358,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 
-    private_decl!{}
+    private_decl! {}
 }
 
 // Dimension impls
@@ -370,15 +383,23 @@ impl Dimension for Dim<[Ix; 0]> {
     type Larger = Ix1;
     // empty product is 1 -> size is 1
     #[inline]
-    fn ndim(&self) -> usize { 0 }
+    fn ndim(&self) -> usize {
+        0
+    }
     #[inline]
-    fn slice(&self) -> &[Ix] { &[] }
+    fn slice(&self) -> &[Ix] {
+        &[]
+    }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { &mut [] }
+    fn slice_mut(&mut self) -> &mut [Ix] {
+        &mut []
+    }
     #[inline]
-    fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
+    fn _fastest_varying_stride_order(&self) -> Self {
+        Ix0()
+    }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern { }
+    fn into_pattern(self) -> Self::Pattern {}
     #[inline]
     fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 0);
@@ -395,9 +416,8 @@ impl Dimension for Dim<[Ix; 0]> {
         *self
     }
 
-    private_impl!{}
+    private_impl! {}
 }
-
 
 impl Dimension for Dim<[Ix; 1]> {
     const NDIM: Option<usize> = Some(1);
@@ -406,11 +426,17 @@ impl Dimension for Dim<[Ix; 1]> {
     type Smaller = Ix0;
     type Larger = Ix2;
     #[inline]
-    fn ndim(&self) -> usize { 1 }
+    fn ndim(&self) -> usize {
+        1
+    }
     #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
+    fn slice(&self) -> &[Ix] {
+        self.ix()
+    }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+    fn slice_mut(&mut self) -> &mut [Ix] {
+        self.ixm()
+    }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         get!(&self, 0)
@@ -436,9 +462,13 @@ impl Dimension for Dim<[Ix; 1]> {
     }
 
     #[inline]
-    fn size(&self) -> usize { get!(self, 0) }
+    fn size(&self) -> usize {
+        get!(self, 0)
+    }
     #[inline]
-    fn size_checked(&self) -> Option<usize> { Some(get!(self, 0)) }
+    fn size_checked(&self) -> Option<usize> {
+        Some(get!(self, 0))
+    }
 
     #[inline]
     fn default_strides(&self) -> Self {
@@ -494,7 +524,7 @@ impl Dimension for Dim<[Ix; 1]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
-    private_impl!{}
+    private_impl! {}
 }
 
 impl Dimension for Dim<[Ix; 2]> {
@@ -504,15 +534,21 @@ impl Dimension for Dim<[Ix; 2]> {
     type Smaller = Ix1;
     type Larger = Ix3;
     #[inline]
-    fn ndim(&self) -> usize { 2 }
+    fn ndim(&self) -> usize {
+        2
+    }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self.ix().convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
+    fn slice(&self) -> &[Ix] {
+        self.ix()
+    }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+    fn slice_mut(&mut self) -> &mut [Ix] {
+        self.ixm()
+    }
     #[inline]
     fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 2);
@@ -541,7 +577,9 @@ impl Dimension for Dim<[Ix; 2]> {
     }
 
     #[inline]
-    fn size(&self) -> usize { get!(self, 0) * get!(self, 1) }
+    fn size(&self) -> usize {
+        get!(self, 0) * get!(self, 1)
+    }
 
     #[inline]
     fn size_checked(&self) -> Option<usize> {
@@ -583,7 +621,11 @@ impl Dimension for Dim<[Ix; 2]> {
 
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
-        if get!(self, 0) as Ixs <= get!(self, 1) as Ixs { Ix2(0, 1) } else { Ix2(1, 0) }
+        if get!(self, 0) as Ixs <= get!(self, 1) as Ixs {
+            Ix2(0, 1)
+        } else {
+            Ix2(1, 0)
+        }
     }
 
     #[inline]
@@ -620,8 +662,7 @@ impl Dimension for Dim<[Ix; 2]> {
 
     /// Return stride offset for this dimension and index.
     #[inline]
-    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
-    {
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
         let m = get!(self, 0);
         let n = get!(self, 1);
         let i = get!(index, 0);
@@ -640,7 +681,7 @@ impl Dimension for Dim<[Ix; 2]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
-    private_impl!{}
+    private_impl! {}
 }
 
 impl Dimension for Dim<[Ix; 3]> {
@@ -650,15 +691,21 @@ impl Dimension for Dim<[Ix; 3]> {
     type Smaller = Ix2;
     type Larger = Ix4;
     #[inline]
-    fn ndim(&self) -> usize { 3 }
+    fn ndim(&self) -> usize {
+        3
+    }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self.ix().convert()
     }
     #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
+    fn slice(&self) -> &[Ix] {
+        self.ix()
+    }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+    fn slice_mut(&mut self) -> &mut [Ix] {
+        self.ixm()
+    }
 
     #[inline]
     fn size(&self) -> usize {
@@ -711,8 +758,7 @@ impl Dimension for Dim<[Ix; 3]> {
 
     /// Return stride offset for this dimension and index.
     #[inline]
-    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
-    {
+    fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
         let m = get!(self, 0);
         let n = get!(self, 1);
         let l = get!(self, 2);
@@ -739,7 +785,7 @@ impl Dimension for Dim<[Ix; 3]> {
                     $stride.swap($x, $y);
                     $order.ixm().swap($x, $y);
                 }
-            }
+            };
         }
         {
             // stable sorting network for 3 elements
@@ -756,7 +802,7 @@ impl Dimension for Dim<[Ix; 3]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
-    private_impl!{}
+    private_impl! {}
 }
 
 macro_rules! large_dim {
@@ -812,19 +858,24 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
 
 /// IxDyn is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
-impl Dimension for IxDyn
-{
+impl Dimension for IxDyn {
     const NDIM: Option<usize> = None;
     type SliceArg = [SliceOrIndex];
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
     #[inline]
-    fn ndim(&self) -> usize { self.ix().len() }
+    fn ndim(&self) -> usize {
+        self.ix().len()
+    }
     #[inline]
-    fn slice(&self) -> &[Ix] { self.ix() }
+    fn slice(&self) -> &[Ix] {
+        self.ix()
+    }
     #[inline]
-    fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
+    fn slice_mut(&mut self) -> &mut [Ix] {
+        self.ixm()
+    }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
         self
@@ -853,19 +904,17 @@ impl Dimension for IxDyn
     fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self> {
         Some(IxDyn(d.slice()))
     }
-    private_impl!{}
+    private_impl! {}
 }
 
-impl Index<usize> for Dim<IxDynImpl>
-{
+impl Index<usize> for Dim<IxDynImpl> {
     type Output = <IxDynImpl as Index<usize>>::Output;
     fn index(&self, index: usize) -> &Self::Output {
         &self.ix()[index]
     }
 }
 
-impl IndexMut<usize> for Dim<IxDynImpl>
-{
+impl IndexMut<usize> for Dim<IxDynImpl> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.ixm()[index]
     }

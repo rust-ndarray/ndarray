@@ -1,20 +1,18 @@
-
-extern crate num_traits;
-extern crate num_complex;
 extern crate ndarray;
+extern crate num_complex;
+extern crate num_traits;
 
-use ndarray::{arr1, arr2, Axis};
 use ndarray::Array;
-use num_traits::Num;
+use ndarray::{arr1, arr2, Axis};
 use num_complex::Complex;
+use num_traits::Num;
 
 fn c<T: Clone + Num>(re: T, im: T) -> Complex<T> {
     Complex::new(re, im)
 }
 
 #[test]
-fn complex_mat_mul()
-{
+fn complex_mat_mul() {
     let a = arr2(&[[c(3., 4.), c(2., 0.)], [c(0., -2.), c(3., 0.)]]);
     let b = (&a * c(3., 0.)).map(|c| 5. * c / c.norm());
     println!("{:>8.2}", b);

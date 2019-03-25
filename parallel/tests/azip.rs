@@ -1,11 +1,10 @@
-
+extern crate itertools;
 extern crate ndarray;
 extern crate ndarray_parallel;
-extern crate itertools;
 
+use itertools::enumerate;
 use ndarray::prelude::*;
 use ndarray_parallel::par_azip;
-use itertools::{enumerate};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
@@ -19,7 +18,7 @@ fn test_par_azip1() {
 #[test]
 fn test_par_azip2() {
     let mut a = Array::zeros((5, 7));
-    let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2 * j) as f32);
     par_azip!(mut a, b in { *a = b; });
     assert_eq!(a, b);
 }
@@ -47,7 +46,7 @@ fn test_zip_dim_mismatch_1() {
     let mut a = Array::zeros((5, 7));
     let mut d = a.raw_dim();
     d[0] += 1;
-    let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2 * j) as f32);
     par_azip!(mut a, b in { *a = b; });
 }
 

@@ -4,7 +4,9 @@ use ndarray::prelude::*;
 
 fn std1d(a: ArrayView1<f64>) -> f64 {
     let n = a.len() as f64;
-    if n == 0. { return 0.; }
+    if n == 0. {
+        return 0.;
+    }
     let mean = a.sum() / n;
     (a.fold(0., |acc, &x| acc + (x - mean).powi(2)) / n).sqrt()
 }
@@ -18,9 +20,7 @@ fn main() {
     // counts -= np.mean(counts, axis=0)
     // counts /= np.std(counts, axis=0)
 
-    let mut data = array![[-1., -2., -3.],
-                          [ 1., -3.,  5.],
-                          [ 2.,  2.,  2.]];
+    let mut data = array![[-1., -2., -3.], [1., -3., 5.], [2., 2., 2.]];
 
     println!("{:8.4}", data);
     println!("{:8.4} (Mean axis=0)", data.mean_axis(Axis(0)));

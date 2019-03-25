@@ -1,13 +1,13 @@
-#![cfg(feature="rayon")]
+#![cfg(feature = "rayon")]
 #![feature(test)]
 
 extern crate rayon;
 
-extern crate ndarray;
 extern crate itertools;
+extern crate ndarray;
 
-use ndarray::prelude::*;
 use ndarray::parallel::prelude::*;
+use ndarray::prelude::*;
 
 extern crate test;
 use test::Bencher;
@@ -27,8 +27,7 @@ fn set_threads() {
 }
 
 #[bench]
-fn map_exp_regular(bench: &mut Bencher)
-{
+fn map_exp_regular(bench: &mut Bencher) {
     let mut a = Array2::<f64>::zeros((EXP_N, EXP_N));
     a.swap_axes(0, 1);
     bench.iter(|| {
@@ -37,8 +36,7 @@ fn map_exp_regular(bench: &mut Bencher)
 }
 
 #[bench]
-fn rayon_exp_regular(bench: &mut Bencher)
-{
+fn rayon_exp_regular(bench: &mut Bencher) {
     set_threads();
     let mut a = Array2::<f64>::zeros((EXP_N, EXP_N));
     a.swap_axes(0, 1);
@@ -51,22 +49,18 @@ const FASTEXP: usize = EXP_N;
 
 #[inline]
 fn fastexp(x: f64) -> f64 {
-    let x = 1. + x/1024.;
+    let x = 1. + x / 1024.;
     x.powi(1024)
 }
 
 #[bench]
-fn map_fastexp_regular(bench: &mut Bencher)
-{
+fn map_fastexp_regular(bench: &mut Bencher) {
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
-    bench.iter(|| {
-        a.mapv_inplace(|x| fastexp(x))
-    });
+    bench.iter(|| a.mapv_inplace(|x| fastexp(x)));
 }
 
 #[bench]
-fn rayon_fastexp_regular(bench: &mut Bencher)
-{
+fn rayon_fastexp_regular(bench: &mut Bencher) {
     set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     bench.iter(|| {
@@ -75,18 +69,14 @@ fn rayon_fastexp_regular(bench: &mut Bencher)
 }
 
 #[bench]
-fn map_fastexp_cut(bench: &mut Bencher)
-{
+fn map_fastexp_cut(bench: &mut Bencher) {
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     let mut a = a.slice_mut(s![.., ..-1]);
-    bench.iter(|| {
-        a.mapv_inplace(|x| fastexp(x))
-    });
+    bench.iter(|| a.mapv_inplace(|x| fastexp(x)));
 }
 
 #[bench]
-fn rayon_fastexp_cut(bench: &mut Bencher)
-{
+fn rayon_fastexp_cut(bench: &mut Bencher) {
     set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     let mut a = a.slice_mut(s![.., ..-1]);
@@ -96,8 +86,7 @@ fn rayon_fastexp_cut(bench: &mut Bencher)
 }
 
 #[bench]
-fn map_fastexp_by_axis(bench: &mut Bencher)
-{
+fn map_fastexp_by_axis(bench: &mut Bencher) {
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     bench.iter(|| {
         for mut sheet in a.axis_iter_mut(Axis(0)) {
@@ -107,29 +96,29 @@ fn map_fastexp_by_axis(bench: &mut Bencher)
 }
 
 #[bench]
-fn rayon_fastexp_by_axis(bench: &mut Bencher)
-{
+fn rayon_fastexp_by_axis(bench: &mut Bencher) {
     set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     bench.iter(|| {
-        a.axis_iter_mut(Axis(0)).into_par_iter()
+        a.axis_iter_mut(Axis(0))
+            .into_par_iter()
             .for_each(|mut sheet| sheet.mapv_inplace(fastexp));
     });
 }
 
 #[bench]
-fn rayon_fastexp_zip(bench: &mut Bencher)
-{
+fn rayon_fastexp_zip(bench: &mut Bencher) {
     set_threads();
     let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
     bench.iter(|| {
-        Zip::from(&mut a).into_par_iter().for_each(|(elt, )| *elt = fastexp(*elt));
+        Zip::from(&mut a)
+            .into_par_iter()
+            .for_each(|(elt,)| *elt = fastexp(*elt));
     });
 }
 
 #[bench]
-fn add(bench: &mut Bencher)
-{
+fn add(bench: &mut Bencher) {
     let mut a = Array2::<f64>::zeros((ADDN, ADDN));
     let b = Array2::<f64>::zeros((ADDN, ADDN));
     let c = Array2::<f64>::zeros((ADDN, ADDN));
@@ -142,8 +131,7 @@ fn add(bench: &mut Bencher)
 }
 
 #[bench]
-fn rayon_add(bench: &mut Bencher)
-{
+fn rayon_add(bench: &mut Bencher) {
     set_threads();
     let mut a = Array2::<f64>::zeros((ADDN, ADDN));
     let b = Array2::<f64>::zeros((ADDN, ADDN));

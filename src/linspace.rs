@@ -18,7 +18,8 @@ pub struct Linspace<F> {
 }
 
 impl<F> Iterator for Linspace<F>
-    where F: Float,
+where
+    F: Float,
 {
     type Item = F;
 
@@ -42,7 +43,8 @@ impl<F> Iterator for Linspace<F>
 }
 
 impl<F> DoubleEndedIterator for Linspace<F>
-    where F: Float,
+where
+    F: Float,
 {
     #[inline]
     fn next_back(&mut self) -> Option<F> {
@@ -57,9 +59,7 @@ impl<F> DoubleEndedIterator for Linspace<F>
     }
 }
 
-impl<F> ExactSizeIterator for Linspace<F>
-    where Linspace<F>: Iterator
-{}
+impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 
 /// Return an iterator of evenly spaced floats.
 ///
@@ -70,7 +70,8 @@ impl<F> ExactSizeIterator for Linspace<F>
 /// either `f32` or `f64`.
 #[inline]
 pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
-    where F: Float
+where
+    F: Float,
 {
     let step = if n > 1 {
         let nf: F = F::from(n).unwrap();
@@ -95,7 +96,8 @@ pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
 /// either `f32` or `f64`.
 #[inline]
 pub fn range<F>(a: F, b: F, step: F) -> Linspace<F>
-    where F: Float
+where
+    F: Float,
 {
     let len = b - a;
     let steps = F::ceil(len / step);

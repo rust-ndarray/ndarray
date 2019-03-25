@@ -5,21 +5,19 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::fmt;
-use super::{
-    ArrayBase,
-    Data,
-    Dimension,
-    NdProducer,
-};
+use super::{ArrayBase, Data, Dimension, NdProducer};
 use crate::dimension::IntoDimension;
+use std::fmt;
 
-fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
-                            mut format: F)
-    -> fmt::Result
-    where F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
-          D: Dimension,
-          S: Data<Elem=A>,
+fn format_array<A, S, D, F>(
+    view: &ArrayBase<S, D>,
+    f: &mut fmt::Formatter,
+    mut format: F,
+) -> fmt::Result
+where
+    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+    D: Dimension,
+    S: Data<Elem = A>,
 {
     let ndim = view.dim.slice().len();
     /* private nowadays
@@ -42,11 +40,13 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
         let index = index.into_dimension();
         let take_n = if ndim == 0 { 1 } else { ndim - 1 };
         let mut update_index = false;
-        for (i, (a, b)) in index.slice()
-                                .iter()
-                                .take(take_n)
-                                .zip(last_index.slice().iter())
-                                .enumerate() {
+        for (i, (a, b)) in index
+            .slice()
+            .iter()
+            .take(take_n)
+            .zip(last_index.slice().iter())
+            .enumerate()
+        {
             if a != b {
                 // New row.
                 // # of ['s needed
@@ -89,7 +89,8 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>, f: &mut fmt::Formatter,
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt)
@@ -101,13 +102,19 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Add extra information for Debug
         format_array(self, f, <_>::fmt)?;
-        write!(f, " shape={:?}, strides={:?}, layout={:?}",
-               self.shape(), self.strides(), layout=self.view().layout())?;
+        write!(
+            f,
+            " shape={:?}, strides={:?}, layout={:?}",
+            self.shape(),
+            self.strides(),
+            layout = self.view().layout()
+        )?;
         match D::NDIM {
             Some(ndim) => write!(f, ", const ndim={}", ndim)?,
             None => write!(f, ", dynamic ndim={}", self.ndim())?,
@@ -121,7 +128,8 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt)
@@ -133,7 +141,8 @@ impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt)
@@ -144,7 +153,8 @@ impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt)
@@ -156,7 +166,8 @@ impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt)

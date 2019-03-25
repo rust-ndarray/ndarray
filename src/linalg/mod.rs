@@ -6,11 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 //! Linear algebra.
 
-pub use self::impl_linalg::Dot;
 pub use self::impl_linalg::general_mat_mul;
 pub use self::impl_linalg::general_mat_vec_mul;
+pub use self::impl_linalg::Dot;
 
 mod impl_linalg;

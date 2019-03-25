@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
-use crate::error::{ShapeError, ErrorKind, from_kind};
 
 /// Stack arrays along the given axis.
 ///
@@ -29,10 +29,13 @@ use crate::error::{ShapeError, ErrorKind, from_kind};
 ///                  [3., 3.]]))
 /// );
 /// ```
-pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
-    -> Result<Array<A, D>, ShapeError>
-    where A: Copy,
-          D: RemoveAxis
+pub fn stack<'a, A, D>(
+    axis: Axis,
+    arrays: &[ArrayView<'a, A, D>],
+) -> Result<Array<A, D>, ShapeError>
+where
+    A: Copy,
+    D: RemoveAxis,
 {
     if arrays.len() == 0 {
         return Err(from_kind(ErrorKind::Unsupported));
@@ -42,7 +45,10 @@ pub fn stack<'a, A, D>(axis: Axis, arrays: &[ArrayView<'a, A, D>])
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
     let common_dim = res_dim.remove_axis(axis);
-    if arrays.iter().any(|a| a.raw_dim().remove_axis(axis) != common_dim) {
+    if arrays
+        .iter()
+        .any(|a| a.raw_dim().remove_axis(axis) != common_dim)
+    {
         return Err(from_kind(ErrorKind::IncompatibleShape));
     }
 

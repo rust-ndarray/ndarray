@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::{Add, Div, Mul};
-use num_traits::{self, Zero, Float, FromPrimitive};
 use itertools::free::enumerate;
+use num_traits::{self, Float, FromPrimitive, Zero};
+use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
@@ -17,8 +17,9 @@ use crate::{FoldWhile, Zip};
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
-    where S: Data<Elem=A>,
-          D: Dimension,
+where
+    S: Data<Elem = A>,
+    D: Dimension,
 {
     /// Return the sum of all elements in the array.
     ///
@@ -30,7 +31,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// assert_eq!(a.sum(), 10.);
     /// ```
     pub fn sum(&self) -> A
-        where A: Clone + Add<Output=A> + num_traits::Zero,
+    where
+        A: Clone + Add<Output = A> + num_traits::Zero,
     {
         if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_fold(slc, A::zero, A::add);
@@ -52,7 +54,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// next version.*
     // #[deprecated(note="renamed to `sum`", since="0.13")]
     pub fn scalar_sum(&self) -> A
-        where A: Clone + Add<Output=A> + num_traits::Zero,
+    where
+        A: Clone + Add<Output = A> + num_traits::Zero,
     {
         self.sum()
     }
@@ -67,7 +70,8 @@ impl<A, S, D> ArrayBase<S, D>
     /// assert_eq!(a.product(), 24.);
     /// ```
     pub fn product(&self) -> A
-        where A: Clone + Mul<Output=A> + num_traits::One,
+    where
+        A: Clone + Mul<Output = A> + num_traits::One,
     {
         if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_fold(slc, A::one, A::mul);
@@ -100,8 +104,9 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if `axis` is out of bounds.
     pub fn sum_axis(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: Clone + Zero + Add<Output=A>,
-              D: RemoveAxis,
+    where
+        A: Clone + Zero + Add<Output = A>,
+        D: RemoveAxis,
     {
         let n = self.len_of(axis);
         let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
@@ -140,10 +145,12 @@ impl<A, S, D> ArrayBase<S, D>
     /// );
     /// ```
     pub fn mean_axis(&self, axis: Axis) -> Array<A, D::Smaller>
-        where A: Clone + Zero + FromPrimitive + Add<Output=A> + Div<Output=A>,
-              D: RemoveAxis,
+    where
+        A: Clone + Zero + FromPrimitive + Add<Output = A> + Div<Output = A>,
+        D: RemoveAxis,
     {
-        let n = A::from_usize(self.len_of(axis)).expect("Converting axis length to `A` must not fail.");
+        let n =
+            A::from_usize(self.len_of(axis)).expect("Converting axis length to `A` must not fail.");
         let sum = self.sum_axis(axis);
         sum / &aview0(&n)
     }
@@ -273,9 +280,10 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// **Panics** if broadcasting to the same shape isn’t possible.
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
-        where A: Float,
-              S2: Data<Elem=A>,
-              E: Dimension,
+    where
+        A: Float,
+        S2: Data<Elem = A>,
+        E: Dimension,
     {
         !Zip::from(self)
             .and(rhs.broadcast_unwrap(self.raw_dim()))
@@ -285,7 +293,7 @@ impl<A, S, D> ArrayBase<S, D>
                 } else {
                     FoldWhile::Done(())
                 }
-            }).is_done()
+            })
+            .is_done()
     }
 }
-

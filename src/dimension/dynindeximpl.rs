@@ -1,11 +1,5 @@
-
-use std::ops::{
-    Index,
-    IndexMut,
-    Deref,
-    DerefMut,
-};
 use crate::imp_prelude::*;
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 const CAP: usize = 4;
 
@@ -22,9 +16,7 @@ impl<T> Deref for IxDynRepr<T> {
         match *self {
             IxDynRepr::Inline(len, ref ar) => {
                 debug_assert!(len as (usize) <= ar.len());
-                unsafe {
-                    ar.get_unchecked(..len as usize)
-                }
+                unsafe { ar.get_unchecked(..len as usize) }
             }
             IxDynRepr::Alloc(ref ar) => &*ar,
         }
@@ -36,9 +28,7 @@ impl<T> DerefMut for IxDynRepr<T> {
         match *self {
             IxDynRepr::Inline(len, ref mut ar) => {
                 debug_assert!(len as (usize) <= ar.len());
-                unsafe {
-                    ar.get_unchecked_mut(..len as usize)
-                }
+                unsafe { ar.get_unchecked_mut(..len as usize) }
             }
             IxDynRepr::Alloc(ref mut ar) => &mut *ar,
         }
@@ -51,7 +41,6 @@ impl Default for IxDynRepr<Ix> {
         Self::copy_from(&[0])
     }
 }
-
 
 use num_traits::Zero;
 
@@ -93,25 +82,24 @@ impl<T: Copy> IxDynRepr<T> {
 impl<T: Copy> Clone for IxDynRepr<T> {
     fn clone(&self) -> Self {
         match *self {
-            IxDynRepr::Inline(len, arr) => {
-                IxDynRepr::Inline(len, arr)
-            }
-            _ => Self::from(&self[..])
+            IxDynRepr::Inline(len, arr) => IxDynRepr::Inline(len, arr),
+            _ => Self::from(&self[..]),
         }
     }
 }
 
-impl<T: Eq> Eq for IxDynRepr<T> { }
+impl<T: Eq> Eq for IxDynRepr<T> {}
 
 impl<T: PartialEq> PartialEq for IxDynRepr<T> {
     fn eq(&self, rhs: &Self) -> bool {
         match (self, rhs) {
             (&IxDynRepr::Inline(slen, ref sarr), &IxDynRepr::Inline(rlen, ref rarr)) => {
-                slen == rlen &&
-                    (0..CAP as usize).filter(|&i| i < slen as usize)
+                slen == rlen
+                    && (0..CAP as usize)
+                        .filter(|&i| i < slen as usize)
                         .all(|i| sarr[i] == rarr[i])
             }
-            _ => self[..] == rhs[..]
+            _ => self[..] == rhs[..],
         }
     }
 }
@@ -130,20 +118,18 @@ impl IxDynImpl {
     pub(crate) fn insert(&self, i: usize) -> Self {
         let len = self.len();
         debug_assert!(i <= len);
-        IxDynImpl(
-            if len < CAP {
-                let mut out = [1; CAP];
-                out[0..i].copy_from_slice(&self[0..i]);
-                out[i+1..len+1].copy_from_slice(&self[i..len]);
-                IxDynRepr::Inline((len + 1) as u32, out)
-            } else {
-                let mut out = Vec::with_capacity(len + 1);
-                out.extend_from_slice(&self[0..i]);
-                out.push(1);
-                out.extend_from_slice(&self[i..len]);
-                IxDynRepr::from_vec(out)
-            }
-        )
+        IxDynImpl(if len < CAP {
+            let mut out = [1; CAP];
+            out[0..i].copy_from_slice(&self[0..i]);
+            out[i + 1..len + 1].copy_from_slice(&self[i..len]);
+            IxDynRepr::Inline((len + 1) as u32, out)
+        } else {
+            let mut out = Vec::with_capacity(len + 1);
+            out.extend_from_slice(&self[0..i]);
+            out.push(1);
+            out.extend_from_slice(&self[i..len]);
+            IxDynRepr::from_vec(out)
+        })
     }
 
     fn remove(&self, i: usize) -> Self {
@@ -182,7 +168,8 @@ impl From<Vec<Ix>> for IxDynImpl {
 }
 
 impl<J> Index<J> for IxDynImpl
-    where [Ix]: Index<J>,
+where
+    [Ix]: Index<J>,
 {
     type Output = <[Ix] as Index<J>>::Output;
     fn index(&self, index: J) -> &Self::Output {
@@ -191,7 +178,8 @@ impl<J> Index<J> for IxDynImpl
 }
 
 impl<J> IndexMut<J> for IxDynImpl
-    where [Ix]: IndexMut<J>,
+where
+    [Ix]: IndexMut<J>,
 {
     fn index_mut(&mut self, index: J) -> &mut Self::Output {
         &mut self.0[index]
