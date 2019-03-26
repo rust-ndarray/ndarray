@@ -17,7 +17,7 @@ use crate::dimension::IntoDimension;
 
 #[derive(Debug)]
 enum ArrayDisplayMode {
-    // Array is small enough to me printed without omitting any values.
+    // Array is small enough to be printed without omitting any values.
     Full,
     // Omit central values of the nth axis. Since we print that axis horizontally, ellipses
     // on each row do something like a split of the array into 2 parts vertically.
@@ -32,62 +32,66 @@ enum ArrayDisplayMode {
 const PRINT_ELEMENTS_LIMIT: Ix = 5;
 
 impl ArrayDisplayMode {
-    fn from_array<A, S, D>(arr: &ArrayBase<S, D>, limit: usize) -> ArrayDisplayMode
-        where S: Data<Elem=A>,
-              D: Dimension
+    fn from_shape(shape: &[Ix], limit: Ix) -> ArrayDisplayMode
     {
-        let last_dim = match arr.shape().len().checked_sub(1) {
+        let last_dim = match shape.len().checked_sub(1) {
             Some(v) => v,
             None => {
                 return ArrayDisplayMode::Full;
             }
         };
 
-        let mut overflow_axis_pair: (Option<usize>, Option<usize>) = (None, None);
-        for (axis, axis_size) in arr.shape().iter().enumerate().rev() {
+        let mut overflow_axes: Vec<Ix> = Vec::with_capacity(shape.len());
+        for (axis, axis_size) in shape.iter().enumerate().rev() {
             if *axis_size >= 2 * limit + 1 {
-                match overflow_axis_pair.0 {
-                    Some(_) => {
-                        if let None = overflow_axis_pair.1 {
-                            overflow_axis_pair.1 = Some(axis);
-                        }
-                    },
-                    None => {
-                        if axis != last_dim {
-                            return ArrayDisplayMode::HSplit(axis);
-                        }
-                        overflow_axis_pair.0 = Some(axis);
-                    }
-                }
+                overflow_axes.push(axis);
             }
         }
 
-        match overflow_axis_pair {
-            (Some(_), Some(h_axis)) => ArrayDisplayMode::DoubleSplit(h_axis),
-            (Some(_), None) => ArrayDisplayMode::VSplit,
-            (None, _) => ArrayDisplayMode::Full,
+        if overflow_axes.is_empty() {
+            return ArrayDisplayMode::Full;
+        }
+
+        let min_ovf_axis = *overflow_axes.iter().min().unwrap();
+        let max_ovf_axis = *overflow_axes.iter().max().unwrap();
+
+        if max_ovf_axis == last_dim {
+            if min_ovf_axis != max_ovf_axis {
+                ArrayDisplayMode::DoubleSplit(min_ovf_axis)
+            } else {
+                ArrayDisplayMode::VSplit
+            }
+        } else {
+            ArrayDisplayMode::HSplit(min_ovf_axis)
+        }
+    }
+
+    fn h_split_axis(&self) -> Option<Ix> {
+        match self {
+            ArrayDisplayMode::DoubleSplit(axis) | ArrayDisplayMode::HSplit(axis) => {
+                Some(*axis)
+            },
+            _ => None
         }
     }
 
     fn h_split_offset(&self) -> Option<Ix> {
-        match self {
-            ArrayDisplayMode::DoubleSplit(axis) | ArrayDisplayMode::HSplit(axis) => {
-                Some(axis + 1usize)
-            },
-            _ => None
+        match self.h_split_axis() {
+            Some(axis) => Some(axis + 1usize),
+            None => None
         }
     }
 }
 
 fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
-                                  f: &mut fmt::Formatter,
-                                  mut format: F,
-                                  limit: usize) -> fmt::Result
+                               f: &mut fmt::Formatter,
+                               mut format: F,
+                               limit: Ix) -> fmt::Result
     where F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
           D: Dimension,
           S: Data<Elem=A>,
 {
-    let display_mode = ArrayDisplayMode::from_array(view, limit);
+    let display_mode = ArrayDisplayMode::from_shape(view.shape(), limit);
 
     let ndim = view.dim().into_dimension().slice().len();
     let nth_idx_max = if ndim > 0 { Some(view.shape().iter().last().unwrap()) } else { None };
@@ -134,6 +138,12 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
             .zip(last_index.slice().iter())
             .enumerate() {
             if a != b {
+                if let Some(axis) = display_mode.h_split_axis() {
+                    if i < axis {
+                        printed_ellipses_h = false;
+                    }
+                }
+
                 if print_row {
                     printed_ellipses_v = false;
                     // New row.
@@ -354,5 +364,21 @@ impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt)
+    }
+}
+
+#[cfg(test)]
+mod format_tests {
+    use super::*;
+
+    fn test_array_display_mode_from_shape() {
+        let mode = ArrayDisplayMode::from_shape(&[4, 4], 2);
+        assert_eq!(mode, ArrayDisplayMode::Full);
+
+        let mode = ArrayDisplayMode::from_shape(&[3, 6], 2);
+        assert_eq!(mode, ArrayDisplayMode::VSplit);
+
+        let mode = ArrayDisplayMode::from_shape(&[5, 6, 3], 2);
+        assert_eq!(mode, ArrayDisplayMode::HSplit(1));
     }
 }
