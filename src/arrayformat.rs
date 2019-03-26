@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::fmt;
+use std::slice::Iter;
 use super::{
     ArrayBase,
     Data,
@@ -15,25 +16,24 @@ use super::{
 };
 use crate::dimension::IntoDimension;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum ArrayDisplayMode {
     // Array is small enough to be printed without omitting any values.
     Full,
-    // Omit central values of the nth axis. Since we print that axis horizontally, ellipses
-    // on each row do something like a split of the array into 2 parts vertically.
-    VSplit,
-    // Omit central values of the certain axis. Since we do it only once, ellipses on each row
-    // do something like a split of the array into 2 parts horizontally.
-    HSplit(Ix),
-    // Both `VSplit` and `HSplit` hold.
-    DoubleSplit(Ix),
+    // Omit central values of the nth axis.
+    OmitV,
+    // Omit central values of certain axes (but not the last one).
+    // Vector is guaranteed to be non-empty.
+    OmitH(Vec<Ix>),
+    // Both `OmitV` and `OmitH` hold.
+    OmitBoth(Vec<Ix>),
 }
 
-const PRINT_ELEMENTS_LIMIT: Ix = 5;
+const PRINT_ELEMENTS_LIMIT: Ix = 2;
 
 impl ArrayDisplayMode {
-    fn from_shape(shape: &[Ix], limit: Ix) -> ArrayDisplayMode
-    {
+
+    fn from_shape(shape: &[Ix], limit: Ix) -> ArrayDisplayMode {
         let last_dim = match shape.len().checked_sub(1) {
             Some(v) => v,
             None => {
@@ -41,44 +41,34 @@ impl ArrayDisplayMode {
             }
         };
 
+        let last_axis_ovf = shape[last_dim] >= 2 * limit + 1;
         let mut overflow_axes: Vec<Ix> = Vec::with_capacity(shape.len());
         for (axis, axis_size) in shape.iter().enumerate().rev() {
+            if axis == last_dim {
+                continue;
+            }
             if *axis_size >= 2 * limit + 1 {
                 overflow_axes.push(axis);
             }
         }
 
-        if overflow_axes.is_empty() {
-            return ArrayDisplayMode::Full;
-        }
-
-        let min_ovf_axis = *overflow_axes.iter().min().unwrap();
-        let max_ovf_axis = *overflow_axes.iter().max().unwrap();
-
-        if max_ovf_axis == last_dim {
-            if min_ovf_axis != max_ovf_axis {
-                ArrayDisplayMode::DoubleSplit(min_ovf_axis)
-            } else {
-                ArrayDisplayMode::VSplit
-            }
+        if !overflow_axes.is_empty() && last_axis_ovf {
+            ArrayDisplayMode::OmitBoth(overflow_axes)
+        } else if !overflow_axes.is_empty() {
+            ArrayDisplayMode::OmitH(overflow_axes)
+        } else if last_axis_ovf {
+            ArrayDisplayMode::OmitV
         } else {
-            ArrayDisplayMode::HSplit(min_ovf_axis)
+            ArrayDisplayMode::Full
         }
     }
 
-    fn h_split_axis(&self) -> Option<Ix> {
+    fn h_axes_iter(&self) -> Option<Iter<Ix>> {
         match self {
-            ArrayDisplayMode::DoubleSplit(axis) | ArrayDisplayMode::HSplit(axis) => {
-                Some(*axis)
+            ArrayDisplayMode::OmitH(v) | ArrayDisplayMode::OmitBoth(v) => {
+                Some(v.iter())
             },
             _ => None
-        }
-    }
-
-    fn h_split_offset(&self) -> Option<Ix> {
-        match self.h_split_axis() {
-            Some(axis) => Some(axis + 1usize),
-            None => None
         }
     }
 }
@@ -108,7 +98,7 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
     // Shows if ellipses for vertical split were printed.
     let mut printed_ellipses_v = false;
     // Shows if ellipses for horizontal split were printed.
-    let mut printed_ellipses_h = false;
+    let mut printed_ellipses_h = vec![false; ndim];
     // Shows if the row was printed for the first time after horizontal split.
     let mut no_rows_after_skip_yet = false;
 
@@ -119,17 +109,20 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
         let take_n = if ndim == 0 { 1 } else { ndim - 1 };
         let mut update_index = false;
 
-        let mut print_row = true;
-        match display_mode {
-            ArrayDisplayMode::HSplit(axis) | ArrayDisplayMode::DoubleSplit(axis) => {
-                let sa_idx_max = view.shape().iter().skip(axis).next().unwrap();
-                let sa_idx_val = index.slice().iter().skip(axis).next().unwrap();
-                if sa_idx_val >= &limit && sa_idx_val < &(sa_idx_max - &limit) {
-                    print_row = false;
-                    no_rows_after_skip_yet = true;
-                }
+        let skip_row_for_axis = match display_mode.h_axes_iter() {
+            Some(iter) => {
+                iter.filter(|axis| {
+                    let sa_idx_max = view.shape().iter().skip(**axis).next().unwrap();
+                    let sa_idx_val = index.slice().iter().skip(**axis).next().unwrap();
+                    sa_idx_val >= &limit && sa_idx_val < &(sa_idx_max - &limit)
+                })
+                    .min()
+                    .map(|v| *v)
             },
-            _ => {}
+            None => None
+        };
+        if let Some(_) = skip_row_for_axis {
+            no_rows_after_skip_yet = true;
         }
 
         for (i, (a, b)) in index.slice()
@@ -138,13 +131,9 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
             .zip(last_index.slice().iter())
             .enumerate() {
             if a != b {
-                if let Some(axis) = display_mode.h_split_axis() {
-                    if i < axis {
-                        printed_ellipses_h = false;
-                    }
-                }
+                printed_ellipses_h.iter_mut().skip(i + 1).for_each(|e| { *e = false; });
 
-                if print_row {
+                if skip_row_for_axis.is_none() {
                     printed_ellipses_v = false;
                     // New row.
                     // # of ['s needed
@@ -163,18 +152,19 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
                     for _ in 0..n {
                         write!(f, "[")?;
                     }
-                } else if !printed_ellipses_h {
+                } else if !printed_ellipses_h[skip_row_for_axis.unwrap()] {
+                    let ax = skip_row_for_axis.unwrap();
                     let n = ndim - i - 1;
                     for _ in 0..n {
                         write!(f, "]")?;
                     }
                     write!(f, ",")?;
                     write!(f, "\n")?;
-                    for _ in 0..display_mode.h_split_offset().unwrap() {
+                    for _ in 0..(ax + 1) {
                         write!(f, " ")?;
                     }
                     write!(f, "...,\n")?;
-                    printed_ellipses_h = true;
+                    printed_ellipses_h[ax] = true;
                 }
                 first = true;
                 update_index = true;
@@ -182,11 +172,11 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
             }
         }
 
-        if print_row {
+        if skip_row_for_axis.is_none() {
             let mut print_elt = true;
             let nth_idx_op = index.slice().iter().last();
             match display_mode {
-                ArrayDisplayMode::VSplit | ArrayDisplayMode::DoubleSplit(_) => {
+                ArrayDisplayMode::OmitV | ArrayDisplayMode::OmitBoth(_) => {
                     let nth_idx_val = nth_idx_op.unwrap();
                     if nth_idx_val >= &limit && nth_idx_val < &(nth_idx_max.unwrap() - &limit) {
                         print_elt = false;
@@ -371,14 +361,15 @@ impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
 mod format_tests {
     use super::*;
 
+    #[test]
     fn test_array_display_mode_from_shape() {
         let mode = ArrayDisplayMode::from_shape(&[4, 4], 2);
         assert_eq!(mode, ArrayDisplayMode::Full);
 
         let mode = ArrayDisplayMode::from_shape(&[3, 6], 2);
-        assert_eq!(mode, ArrayDisplayMode::VSplit);
+        assert_eq!(mode, ArrayDisplayMode::OmitV);
 
         let mode = ArrayDisplayMode::from_shape(&[5, 6, 3], 2);
-        assert_eq!(mode, ArrayDisplayMode::HSplit(1));
+        assert_eq!(mode, ArrayDisplayMode::OmitH(vec![1, 0]));
     }
 }
