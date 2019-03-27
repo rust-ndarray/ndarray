@@ -2231,4 +2231,60 @@ where
             })
         }
     }
+
+    /// Iterates over pairs of consecutive elements along the axis.
+    ///
+    /// The first argument to the closure is an element, and the second
+    /// argument is the next element along the axis. Iteration is guaranteed to
+    /// proceed in order along the specified axis, but in all other respects
+    /// the iteration order is unspecified.
+    ///
+    /// # Example
+    ///
+    /// For example, this can be used to compute the cumulative sum along an
+    /// axis:
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    ///
+    /// let mut arr = array![
+    ///     [[1, 2], [3, 4], [5, 6]],
+    ///     [[7, 8], [9, 10], [11, 12]],
+    /// ];
+    /// arr.accumulate_axis_inplace(Axis(1), |&prev, curr| *curr += prev);
+    /// assert_eq!(
+    ///     arr,
+    ///     array![
+    ///         [[1, 2], [4, 6], [9, 12]],
+    ///         [[7, 8], [16, 18], [27, 30]],
+    ///     ],
+    /// );
+    /// ```
+    pub fn accumulate_axis_inplace<F>(&mut self, axis: Axis, mut f: F)
+    where
+        F: FnMut(&A, &mut A),
+        S: DataMut,
+    {
+        if self.len_of(axis) <= 1 {
+            return;
+        }
+        let mut prev = self.raw_view();
+        prev.slice_axis_inplace(axis, Slice::from(..-1));
+        let mut curr = self.raw_view_mut();
+        curr.slice_axis_inplace(axis, Slice::from(1..));
+        // This implementation relies on `Zip` iterating along `axis` in order.
+        Zip::from(prev).and(curr).apply(|prev, curr| unsafe {
+            // These pointer dereferences and borrows are safe because:
+            //
+            // 1. They're pointers to elements in the array.
+            //
+            // 2. `S: DataMut` guarantees that elements are safe to borrow
+            //    mutably and that they don't alias.
+            //
+            // 3. The lifetimes of the borrows last only for the duration
+            //    of the call to `f`, so aliasing across calls to `f`
+            //    cannot occur.
+            f(&*prev, &mut *curr)
+        });
+    }
 }
