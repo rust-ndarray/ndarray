@@ -26,8 +26,8 @@ fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
           S: Data<Elem=A>,
 {
     if view.shape().is_empty() {
-        // Handle weird 0-dimensional array case first
-        return writeln!(f, "[]")
+        // Handle 0-dimensional array case first
+        return format(view.iter().next().unwrap(), f)
     }
 
     let overflow_axes: Vec<Ix> = view.shape().iter()
