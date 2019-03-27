@@ -1,7 +1,7 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-use ndarray::rcarr1;
+use ndarray::{rcarr1, PRINT_ELEMENTS_LIMIT};
 
 #[test]
 fn formatting()
@@ -34,6 +34,132 @@ fn formatting()
 
     let s = format!("{:02x}", aview1::<u8>(&[1, 0xff, 0xfe]));
     assert_eq!(s, "[01, ff, fe]");
+}
+
+#[cfg(test)]
+mod formatting_with_omit {
+    use super::*;
+
+    fn print_output_diff(expected: &str, actual: &str) {
+        println!("Expected output:\n{}\nActual output:\n{}", expected, actual);
+    }
+
+    #[test]
+    fn dim_1() {
+        let overflow: usize = 5;
+        let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, ), 1);
+        let mut expected_output = String::from("[");
+        a.iter()
+            .take(PRINT_ELEMENTS_LIMIT)
+            .for_each(|elem| { expected_output.push_str(format!("{}, ", elem).as_str()) });
+        expected_output.push_str("...");
+        a.iter()
+            .skip(PRINT_ELEMENTS_LIMIT + overflow)
+            .for_each(|elem| { expected_output.push_str(format!(", {}", elem).as_str()) });
+        expected_output.push(']');
+        let actual_output = format!("{}", a);
+
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(actual_output, expected_output);
+    }
+
+    #[test]
+    fn dim_2_last_axis_overflow() {
+        let overflow: usize = 3;
+        let a = Array2::from_elem((PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow), 1);
+        let mut expected_output = String::from("[");
+
+        for i in 0..PRINT_ELEMENTS_LIMIT {
+            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            for j in 1..PRINT_ELEMENTS_LIMIT {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str(", ...");
+            for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str(if i < PRINT_ELEMENTS_LIMIT - 1 { "],\n " } else { "]" });
+        }
+        expected_output.push(']');
+        let actual_output = format!("{}", a);
+
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(actual_output, expected_output);
+    }
+
+    #[test]
+    fn dim_2_non_last_axis_overflow() {
+        let overflow: usize = 5;
+        let a = Array2::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT), 1);
+        let mut expected_output = String::from("[");
+
+        for i in 0..PRINT_ELEMENTS_LIMIT {
+            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            for j in 1..PRINT_ELEMENTS_LIMIT {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str("],\n ");
+        }
+        expected_output.push_str("...,\n ");
+        for i in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
+            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            for j in 1..PRINT_ELEMENTS_LIMIT {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str(if i == PRINT_ELEMENTS_LIMIT * 2 + overflow - 1 {
+                "]"
+            } else {
+                "],\n "
+            });
+        }
+        expected_output.push(']');
+        let actual_output = format!("{}", a);
+
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(actual_output, expected_output);
+    }
+
+    #[test]
+    fn dim_2_multi_directional_overflow() {
+        let overflow: usize = 5;
+        let a = Array2::from_elem(
+            (PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT * 2 + overflow), 1
+        );
+        let mut expected_output = String::from("[");
+
+        for i in 0..PRINT_ELEMENTS_LIMIT {
+            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            for j in 1..PRINT_ELEMENTS_LIMIT {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str(", ...");
+            for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str("],\n ");
+        }
+        expected_output.push_str("...,\n ");
+        for i in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
+            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            for j in 1..PRINT_ELEMENTS_LIMIT {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str(", ...");
+            for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
+                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+            }
+            expected_output.push_str(if i == PRINT_ELEMENTS_LIMIT * 2 + overflow - 1 {
+                "]"
+            } else {
+                "],\n "
+            });
+        }
+        expected_output.push(']');
+        let actual_output = format!("{}", a);
+
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(actual_output, expected_output);
+    }
 }
 
 #[test]

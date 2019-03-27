@@ -149,6 +149,8 @@ mod array_serde;
 mod arrayformat;
 mod data_traits;
 
+pub use arrayformat::PRINT_ELEMENTS_LIMIT;
+
 pub use crate::aliases::*;
 
 #[allow(deprecated)]
