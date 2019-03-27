@@ -149,8 +149,6 @@ mod array_serde;
 mod arrayformat;
 mod data_traits;
 
-pub use arrayformat::PRINT_ELEMENTS_LIMIT;
-
 pub use crate::aliases::*;
 
 #[allow(deprecated)]
@@ -192,6 +190,7 @@ pub use crate::zip::{
 };
 
 pub use crate::layout::Layout;
+pub use crate::arrayformat::PRINT_ELEMENTS_LIMIT;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
