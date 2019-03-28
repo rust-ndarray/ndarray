@@ -190,7 +190,6 @@ pub use crate::zip::{
 };
 
 pub use crate::layout::Layout;
-pub use crate::arrayformat::PRINT_ELEMENTS_LIMIT;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
