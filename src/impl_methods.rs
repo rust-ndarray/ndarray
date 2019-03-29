@@ -2068,7 +2068,16 @@ where
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
-        self.index_axis(axis, 0).map(|first_elt| {
+        let first_subview = if view_len != 0 {
+            self.index_axis(axis, 0)
+        } else {
+            let smaller_zero_dim = <D::Smaller as Dimension>::zeros(self.dim.ndim() - 1);
+            let ptr = std_ptr::NonNull::<A>::dangling().as_ptr() as *const A;
+            unsafe {
+                ArrayView::new_(ptr, smaller_zero_dim.clone(), smaller_zero_dim)
+            }
+        };
+        first_subview.map(|first_elt| {
             unsafe {
                 mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }
@@ -2096,7 +2105,16 @@ where
         let view_stride = self.strides.axis(axis);
         // use the 0th subview as a map to each 1d array view extended from
         // the 0th element.
-        self.index_axis_mut(axis, 0).map_mut(|first_elt: &mut A| {
+        let mut first_subview = if view_len != 0 {
+            self.index_axis_mut(axis, 0)
+        } else {
+            let smaller_zero_dim = <D::Smaller as Dimension>::zeros(self.dim.ndim() - 1);
+            let ptr = std_ptr::NonNull::<A>::dangling().as_ptr();
+            unsafe {
+                ArrayViewMut::new_(ptr, smaller_zero_dim.clone(), smaller_zero_dim)
+            }
+        };
+        first_subview.map_mut(|first_elt: &mut A| {
             unsafe {
                 mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
             }

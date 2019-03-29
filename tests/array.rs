@@ -2002,6 +2002,14 @@ fn test_map_axis() {
     let c = a.map_axis(Axis(1), |view| view.sum());
     let answer2 = arr1(&[6, 15, 24, 33]);
     assert_eq!(c, answer2);
+
+    // Test zero-length axis case
+    let arr = Array2::<f32>::zeros((0, 2));
+    let result = arr.map_axis(Axis(0), |x| x);
+    assert!(result.is_empty());
+    let mut arr = Array2::<f32>::zeros((0, 2));
+    let result = arr.map_axis_mut(Axis(0), |x| x);
+    assert!(result.is_empty());
 }
 
 #[test]
