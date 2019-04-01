@@ -1512,6 +1512,12 @@ where
         /// **Note:** Cannot be used for mutable iterators, since repeating
         /// elements would create aliasing pointers.
         fn upcast<D: Dimension, E: Dimension>(to: &D, from: &E, stride: &E) -> Option<D> {
+            // Make sure the product of non-zero axis lengths does not exceed
+            // `isize::MAX`. This is the only safety check we need to perform
+            // because all the other constraints of `ArrayBase` are guaranteed
+            // to be met since we're starting from a valid `ArrayBase`.
+            let _ = size_of_shape_checked(to).ok()?;
+
             let mut new_stride = to.clone();
             // begin at the back (the least significant dimension)
             // size of the axis has to either agree or `from` has to be 1
