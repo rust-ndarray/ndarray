@@ -2004,12 +2004,33 @@ fn test_map_axis() {
     assert_eq!(c, answer2);
 
     // Test zero-length axis case
-    let arr = Array2::<f32>::zeros((0, 2));
-    let result = arr.map_axis(Axis(0), |x| x);
-    assert!(result.is_empty());
-    let mut arr = Array2::<f32>::zeros((0, 2));
-    let result = arr.map_axis_mut(Axis(0), |x| x);
-    assert!(result.is_empty());
+    let arr = Array3::<f32>::zeros((3, 0, 4));
+    let mut counter = 0;
+    let result = arr.map_axis(Axis(1), |x| {
+        assert_eq!(x.shape(), &[0]);
+        counter += 1;
+        counter
+    });
+    assert_eq!(result.shape(), &[3, 4]);
+    assert_eq!(result, arr2(&[
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12]
+    ]));
+
+    let mut arr = Array3::<f32>::zeros((3, 0, 4));
+    let mut counter = 0;
+    let result = arr.map_axis_mut(Axis(1), |x| {
+        assert_eq!(x.shape(), &[0]);
+        counter += 1;
+        counter
+    });
+    assert_eq!(result.shape(), &[3, 4]);
+    assert_eq!(result, arr2(&[
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12]
+    ]));
 }
 
 #[test]

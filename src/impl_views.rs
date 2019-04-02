@@ -491,18 +491,6 @@ impl<'a, A, D> ArrayView<'a, A, D>
         }
     }
 
-    /// Create a new empty `ArrayView`.
-    pub(crate) fn new_empty() -> Self {
-        let dim = D::NDIM.unwrap_or(0);  // Use 0 in `IxDyn` case.
-        let zero_dim = <D as Dimension>::zeros(dim);
-        let ptr = std::ptr::NonNull::<A>::dangling().as_ptr() as *const A;
-        unsafe {
-            // This is a safe thing to do because `ptr` field of the `ArrayBase` struct may
-            // be dangling when the array has 0 dim and strides (it is empty in other words).
-            ArrayView::new_(ptr, zero_dim.clone(), zero_dim)
-        }
-    }
-
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
         unsafe {
@@ -548,18 +536,6 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
             ptr: ptr,
             dim: dim,
             strides: strides,
-        }
-    }
-
-    /// Create a new empty `ArrayViewMut`.
-    pub(crate) fn new_empty() -> Self {
-        let dim = D::NDIM.unwrap_or(0);  // Use 0 in `IxDyn` case.
-        let zero_dim = <D as Dimension>::zeros(dim);
-        let ptr = std::ptr::NonNull::<A>::dangling().as_ptr() as *mut A;
-        unsafe {
-            // This is a safe thing to do because `ptr` field of the `ArrayBase` struct may
-            // be dangling when the array has 0 dim and strides (it is empty in other words).
-            ArrayViewMut::new_(ptr, zero_dim.clone(), zero_dim)
         }
     }
 
