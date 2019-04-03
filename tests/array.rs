@@ -13,7 +13,7 @@ use ndarray::{
 };
 use ndarray::indices;
 use defmac::defmac;
-use itertools::{enumerate, zip};
+use itertools::{enumerate, zip, Itertools};
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -2012,11 +2012,7 @@ fn test_map_axis() {
         counter
     });
     assert_eq!(result.shape(), &[3, 4]);
-    assert_eq!(result, arr2(&[
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12]
-    ]));
+    itertools::assert_equal(result.iter().cloned().sorted(), 1..=3 * 4);
 
     let mut arr = Array3::<f32>::zeros((3, 0, 4));
     let mut counter = 0;
@@ -2026,11 +2022,7 @@ fn test_map_axis() {
         counter
     });
     assert_eq!(result.shape(), &[3, 4]);
-    assert_eq!(result, arr2(&[
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12]
-    ]));
+    itertools::assert_equal(result.iter().cloned().sorted(), 1..=3 * 4);
 }
 
 #[test]
