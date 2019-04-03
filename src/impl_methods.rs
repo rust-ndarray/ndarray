@@ -83,17 +83,53 @@ where
     }
 
     /// Return the shape of the array as it stored in the array.
+    ///
+    /// This is primarily useful for passing to other `ArrayBase`
+    /// functions, such as when creating another array of the same
+    /// shape and dimensionality.
+    ///
+    /// ```
+    /// use ndarray::Array;
+    ///
+    /// let a = Array::from_elem((2, 3), 5.);
+    ///
+    /// // Create an array of zeros that's the same shape and dimensionality as `a`.
+    /// let b = Array::<f64, _>::zeros(a.raw_dim());
+    /// ```
     pub fn raw_dim(&self) -> D {
         self.dim.clone()
     }
 
     /// Return the shape of the array as a slice.
-    pub fn shape(&self) -> &[Ix] {
+    ///
+    /// Note that you probably don't want to use this to create an array of the
+    /// same shape as another array because creating an array with e.g.
+    /// [`Array::zeros()`](ArrayBase::zeros) using a shape of type `&[usize]`
+    /// results in a dynamic-dimensional array. If you want to create an array
+    /// that has the same shape and dimensionality as another array, use
+    /// [`.raw_dim()`](ArrayBase::raw_dim) instead:
+    ///
+    /// ```rust
+    /// use ndarray::{Array, Array2};
+    ///
+    /// let a = Array2::<i32>::zeros((3, 4));
+    /// let shape = a.shape();
+    /// assert_eq!(shape, &[3, 4]);
+    ///
+    /// // Since `a.shape()` returned `&[usize]`, we get an `ArrayD` instance:
+    /// let b = Array::zeros(shape);
+    /// assert_eq!(a.clone().into_dyn(), b);
+    ///
+    /// // To get the same dimension type, use `.raw_dim()` instead:
+    /// let c = Array::zeros(a.raw_dim());
+    /// assert_eq!(a, c);
+    /// ```
+    pub fn shape(&self) -> &[usize] {
         self.dim.slice()
     }
 
-    /// Return the strides of the array as a slice
-    pub fn strides(&self) -> &[Ixs] {
+    /// Return the strides of the array as a slice.
+    pub fn strides(&self) -> &[isize] {
         let s = self.strides.slice();
         // reinterpret unsigned integer as signed
         unsafe {
