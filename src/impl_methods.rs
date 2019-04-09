@@ -2102,13 +2102,18 @@ where
     {
         let view_len = self.len_of(axis);
         let view_stride = self.strides.axis(axis);
-        // use the 0th subview as a map to each 1d array view extended from
-        // the 0th element.
-        self.index_axis(axis, 0).map(|first_elt| {
-            unsafe {
-                mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            }
-        })
+        if view_len == 0 {
+            let new_dim = self.dim.remove_axis(axis);
+            Array::from_shape_fn(new_dim, move |_| mapping(ArrayView::from(&[])))
+        } else {
+            // use the 0th subview as a map to each 1d array view extended from
+            // the 0th element.
+            self.index_axis(axis, 0).map(|first_elt| {
+                unsafe {
+                    mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
+                }
+            })
+        }
     }
 
     /// Reduce the values along an axis into just one value, producing a new
@@ -2130,12 +2135,17 @@ where
     {
         let view_len = self.len_of(axis);
         let view_stride = self.strides.axis(axis);
-        // use the 0th subview as a map to each 1d array view extended from
-        // the 0th element.
-        self.index_axis_mut(axis, 0).map_mut(|first_elt: &mut A| {
-            unsafe {
-                mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            }
-        })
+        if view_len == 0 {
+            let new_dim = self.dim.remove_axis(axis);
+            Array::from_shape_fn(new_dim, move |_| mapping(ArrayViewMut::from(&mut [])))
+        } else {
+            // use the 0th subview as a map to each 1d array view extended from
+            // the 0th element.
+            self.index_axis_mut(axis, 0).map_mut(|first_elt| {
+                unsafe {
+                    mapping(ArrayViewMut::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
+                }
+            })
+        }
     }
 }

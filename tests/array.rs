@@ -13,7 +13,7 @@ use ndarray::{
 };
 use ndarray::indices;
 use defmac::defmac;
-use itertools::{enumerate, zip};
+use itertools::{enumerate, zip, Itertools};
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -1833,6 +1833,27 @@ fn test_map_axis() {
     let c = a.map_axis(Axis(1), |view| view.sum());
     let answer2 = arr1(&[6, 15, 24, 33]);
     assert_eq!(c, answer2);
+
+    // Test zero-length axis case
+    let arr = Array3::<f32>::zeros((3, 0, 4));
+    let mut counter = 0;
+    let result = arr.map_axis(Axis(1), |x| {
+        assert_eq!(x.shape(), &[0]);
+        counter += 1;
+        counter
+    });
+    assert_eq!(result.shape(), &[3, 4]);
+    itertools::assert_equal(result.iter().cloned().sorted(), 1..=3 * 4);
+
+    let mut arr = Array3::<f32>::zeros((3, 0, 4));
+    let mut counter = 0;
+    let result = arr.map_axis_mut(Axis(1), |x| {
+        assert_eq!(x.shape(), &[0]);
+        counter += 1;
+        counter
+    });
+    assert_eq!(result.shape(), &[3, 4]);
+    itertools::assert_equal(result.iter().cloned().sorted(), 1..=3 * 4);
 }
 
 #[test]
