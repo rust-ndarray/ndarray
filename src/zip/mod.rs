@@ -738,6 +738,22 @@ macro_rules! map_impl {
                 })
             }
 
+            /// Tests if every element of the iterator matches a predicate.
+            ///
+            /// Returns `true` if `predicate` evaluates to `true` for all elements.
+            pub fn all<F>(mut self, mut predicate: F) -> bool
+                where F: FnMut($($p::Item),*) -> bool
+            {
+                self.apply_core(true, move |_, args| {
+                    let ($($p,)*) = args;
+                    if predicate($($p),*) {
+                        FoldWhile::Continue(true)
+                    } else {
+                        FoldWhile::Done(false)
+                    }
+                }).into_inner()
+            }
+
             expand_if!(@bool [$notlast]
 
             /// Include the producer `p` in the Zip.
