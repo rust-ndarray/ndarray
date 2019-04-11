@@ -394,32 +394,48 @@ impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
         either_mut!(self.inner, iter => iter.nth(n))
     }
 
-    fn collect<B: FromIterator<Self::Item>>(self) -> B where Self: Sized {
+    fn collect<B>(self) -> B
+        where B: FromIterator<Self::Item>
+    {
         either!(self.inner, iter => iter.collect())
     }
 
     fn all<F>(&mut self, f: F) -> bool
-        where Self: Sized, F: FnMut(Self::Item) -> bool
+        where F: FnMut(Self::Item) -> bool
     {
         either_mut!(self.inner, iter => iter.all(f))
     }
 
     fn any<F>(&mut self, f: F) -> bool
-        where Self: Sized, F: FnMut(Self::Item) -> bool
+        where F: FnMut(Self::Item) -> bool
     {
         either_mut!(self.inner, iter => iter.any(f))
     }
 
     fn find<P>(&mut self, predicate: P) -> Option<Self::Item>
-        where Self: Sized, P: FnMut(&Self::Item) -> bool
+        where P: FnMut(&Self::Item) -> bool
     {
         either_mut!(self.inner, iter => iter.find(predicate))
     }
 
     fn find_map<B, F>(&mut self, f: F) -> Option<B>
-        where Self: Sized, F: FnMut(Self::Item) -> Option<B>
+        where F: FnMut(Self::Item) -> Option<B>
     {
         either_mut!(self.inner, iter => iter.find_map(f))
+    }
+
+    fn count(self) -> usize {
+        either!(self.inner, iter => iter.count())
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        either!(self.inner, iter => iter.last())
+    }
+
+    fn position<P>(&mut self, predicate: P) -> Option<usize>
+        where P: FnMut(Self::Item) -> bool,
+    {
+        either_mut!(self.inner, iter => iter.position(predicate))
     }
 }
 
@@ -493,32 +509,48 @@ impl<'a, A, D: Dimension> Iterator for IterMut<'a, A, D> {
         either_mut!(self.inner, iter => iter.nth(n))
     }
 
-    fn collect<B: FromIterator<Self::Item>>(self) -> B where Self: Sized {
+    fn collect<B>(self) -> B
+        where B: FromIterator<Self::Item>
+    {
         either!(self.inner, iter => iter.collect())
     }
 
     fn all<F>(&mut self, f: F) -> bool
-        where Self: Sized, F: FnMut(Self::Item) -> bool
+        where F: FnMut(Self::Item) -> bool
     {
         either_mut!(self.inner, iter => iter.all(f))
     }
 
     fn any<F>(&mut self, f: F) -> bool
-        where Self: Sized, F: FnMut(Self::Item) -> bool
+        where F: FnMut(Self::Item) -> bool
     {
         either_mut!(self.inner, iter => iter.any(f))
     }
 
     fn find<P>(&mut self, predicate: P) -> Option<Self::Item>
-        where Self: Sized, P: FnMut(&Self::Item) -> bool
+        where P: FnMut(&Self::Item) -> bool
     {
         either_mut!(self.inner, iter => iter.find(predicate))
     }
 
     fn find_map<B, F>(&mut self, f: F) -> Option<B>
-        where Self: Sized, F: FnMut(Self::Item) -> Option<B>
+        where F: FnMut(Self::Item) -> Option<B>
     {
         either_mut!(self.inner, iter => iter.find_map(f))
+    }
+
+    fn count(self) -> usize {
+        either!(self.inner, iter => iter.count())
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        either!(self.inner, iter => iter.last())
+    }
+
+    fn position<P>(&mut self, predicate: P) -> Option<usize>
+        where P: FnMut(Self::Item) -> bool,
+    {
+        either_mut!(self.inner, iter => iter.position(predicate))
     }
 }
 
