@@ -1894,11 +1894,11 @@ fn array_macros() {
 
 #[test]
 fn test_as_contiguous() {
-    let d = Ix2(2, 2);
-    let shape = d.strides(Ix2(1, 2));
+    let shape = Ix2(2, 2).strides(Ix2(1, 2));
     let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
     assert!(!arr.is_standard_layout());
 
     let cont_arr = arr.as_contiguous();
     assert!(cont_arr.is_standard_layout());
+    assert!(arr.iter().zip(cont_arr.iter()).all(|(x1, x2)| x1 == x2));
 }
