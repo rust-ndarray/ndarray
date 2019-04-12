@@ -167,14 +167,16 @@ mod free_functions;
 pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
-#[macro_use] mod slice;
-mod layout;
+#[macro_use]
+mod slice;
+mod error;
 mod indexes;
 mod iterators;
+mod layout;
 mod linalg_traits;
 mod linspace;
+mod logspace;
 mod numeric_util;
-mod error;
 mod shape_builder;
 mod stacking;
 #[macro_use]

@@ -10,18 +10,18 @@
 //!
 //!
 
-use num_traits::{Zero, One, Float};
+use num_traits::{Float, One, Zero};
 use std::isize;
 use std::mem;
 
-use crate::imp_prelude::*;
-use crate::StrideShape;
 use crate::dimension;
-use crate::linspace;
 use crate::error::{self, ShapeError};
-use crate::indices;
+use crate::imp_prelude::*;
 use crate::indexes;
+use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
+use crate::StrideShape;
+use crate::{linspace, logspace};
 
 /// # Constructor Methods for Owned Arrays
 ///
@@ -100,6 +100,30 @@ impl<S, A> ArrayBase<S, Ix1>
         where A: Float,
     {
         Self::from_vec(to_vec(linspace::range(start, end, step)))
+    }
+
+    /// Create a one-dimensional array from the inclusive interval `[start,
+    /// end]` with `n` elements logarithmically spaced. `A` must be a floating
+    /// point type.
+    ///
+    /// **Panics** if `n` is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::{Array, arr1};
+    ///
+    /// let array = Array::logspace(1e0, 1e3, 4);
+    /// println!("{}", array);
+    /// assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+    ///
+    /// let array = Array::logspace(-1e3, -1e0, 4);
+    /// println!("{}", array);
+    /// assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+    /// ```
+    pub fn logspace(start: A, end: A, n: usize) -> Self
+    where
+        A: Float,
+    {
+        Self::from_vec(to_vec(logspace::logspace(start, end, n)))
     }
 }
 
