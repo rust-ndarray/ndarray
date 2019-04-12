@@ -43,6 +43,7 @@ use crate::iter::{
     Windows
 };
 use crate::stacking::stack;
+use crate::OwnedRepr;
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D>
@@ -1223,6 +1224,21 @@ where
 
     fn is_contiguous(&self) -> bool {
         D::is_contiguous(&self.dim, &self.strides)
+    }
+
+    pub fn as_contiguous(&self) -> ArrayBase<OwnedRepr<A>, D>
+        where S: Data,
+              A: Clone
+    {
+        if self.is_standard_layout() {
+            self.to_owned()
+        } else {
+            let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
+            unsafe {
+                // Safe because we use shape and content of existing array here.
+                ArrayBase::from_shape_vec_unchecked(self.dim(), v)
+            }
+        }
     }
 
     /// Return a pointer to the first element in the array.

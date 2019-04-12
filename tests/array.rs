@@ -1891,3 +1891,14 @@ fn array_macros() {
     let empty2: Array<f32, Ix2> = array![[]];
     assert_eq!(empty2, array![[]]);
 }
+
+#[test]
+fn test_as_contiguous() {
+    let d = Ix2(2, 2);
+    let shape = d.strides(Ix2(1, 2));
+    let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
+    assert!(!arr.is_standard_layout());
+
+    let cont_arr = arr.as_contiguous();
+    assert!(cont_arr.is_standard_layout());
+}
