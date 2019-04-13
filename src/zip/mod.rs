@@ -741,6 +741,16 @@ macro_rules! map_impl {
             /// Tests if every element of the iterator matches a predicate.
             ///
             /// Returns `true` if `predicate` evaluates to `true` for all elements.
+            /// Returns `true` if the input arrays are empty.
+            ///
+            /// Example:
+            ///
+            /// ```
+            /// use ndarray::{array, Zip};
+            /// let a = array![1, 2, 3];
+            /// let b = array![1, 4, 9];
+            /// assert!(Zip::from(&a).and(&b).all(|&a, &b| a * a == b));
+            /// ```
             pub fn all<F>(mut self, mut predicate: F) -> bool
                 where F: FnMut($($p::Item),*) -> bool
             {
