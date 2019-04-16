@@ -17,10 +17,10 @@ use crate::dimension::IntoDimension;
 
 const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
-fn format_array_v2<A, S, D, F>(view: &ArrayBase<S, D>,
-                               f: &mut fmt::Formatter,
-                               mut format: F,
-                               limit: Ix) -> fmt::Result
+fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
+                            f: &mut fmt::Formatter,
+                            mut format: F,
+                            limit: Ix) -> fmt::Result
     where F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
           D: Dimension,
           S: Data<Elem=A>,
@@ -151,7 +151,7 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array_v2(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
+        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
 
@@ -164,7 +164,7 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Add extra information for Debug
-        format_array_v2(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)?;
+        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)?;
         write!(f, " shape={:?}, strides={:?}, layout={:?}",
                self.shape(), self.strides(), layout=self.view().layout())?;
         match D::NDIM {
@@ -183,7 +183,7 @@ impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array_v2(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
+        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
 
@@ -195,7 +195,7 @@ impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array_v2(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
+        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
 /// Format the array using `LowerHex` and apply the formatting parameters used
@@ -206,7 +206,7 @@ impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array_v2(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
+        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
 
@@ -218,7 +218,7 @@ impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
     where S: Data<Elem=A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        format_array_v2(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
+        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
 
