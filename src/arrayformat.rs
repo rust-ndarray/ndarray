@@ -240,6 +240,14 @@ mod formatting_with_omit {
     }
 
     #[test]
+    fn zero_length_axes() {
+        let a = Array3::<f32>::zeros((3, 0, 4));
+        let actual_output = format!("{}", a);
+        let expected_output = String::from("[[[]]]");
+        assert_eq!(actual_output, expected_output);
+    }
+
+    #[test]
     fn dim_0() {
         let element = 12;
         let a = arr0(element);
