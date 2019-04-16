@@ -58,7 +58,6 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
     // as cues for when to add []'s and how many to add.
     for (index, elt) in view.indexed_iter() {
         let index = index.into_dimension();
-        let take_n = if ndim == 0 { 1 } else { ndim - 1 };
         let mut update_index = false;
 
         let skip_row_for_axis = overflow_axes.iter()
@@ -78,7 +77,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
 
         for (i, (a, b)) in index.slice()
             .iter()
-            .take(take_n)
+            .take(ndim-1)
             .zip(last_index.slice().iter())
             .enumerate() {
             if a != b {
