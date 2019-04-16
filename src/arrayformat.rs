@@ -232,6 +232,14 @@ mod formatting_with_omit {
     }
 
     #[test]
+    fn empty_arrays() {
+        let a: Array2<u32> = arr2(&[[], []]);
+        let actual_output = format!("{}", a);
+        let expected_output = String::from("[[]]");
+        assert_eq!(actual_output, expected_output);
+    }
+
+    #[test]
     fn dim_0() {
         let element = 12;
         let a = arr0(element);
