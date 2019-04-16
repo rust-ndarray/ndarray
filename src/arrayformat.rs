@@ -37,7 +37,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
         .map(|(axis, _)| axis)
         .collect();
 
-    let ndim = view.dim().into_dimension().slice().len();
+    let ndim = view.ndim();
     let nth_idx_max = view.shape().iter().last().unwrap();
 
     // None will be an empty iter.
