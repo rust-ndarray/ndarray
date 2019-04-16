@@ -232,6 +232,15 @@ mod formatting_with_omit {
     }
 
     #[test]
+    fn dim_0() {
+        let element = 12;
+        let a = arr0(element);
+        let actual_output = format!("{}", a);
+        let expected_output = format!("{}", element);
+        assert_eq!(actual_output, expected_output);
+    }
+
+    #[test]
     fn dim_1() {
         let overflow: usize = 5;
         let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, ), 1);
