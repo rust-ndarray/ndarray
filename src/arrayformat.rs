@@ -17,6 +17,42 @@ use crate::dimension::IntoDimension;
 
 const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
+fn get_overflow_axes(shape: &[Ix], limit: usize) -> Vec<usize> {
+    shape.iter()
+        .enumerate()
+        .rev()
+        .filter(|(_, axis_size)| **axis_size > 2 * limit)
+        .map(|(axis, _)| axis)
+        .collect()
+}
+
+fn get_highest_axis_to_skip(overflow_axes: &Vec<usize>,
+                            shape: &[Ix],
+                            index: &[Ix],
+                            limit: &usize) -> Option<usize> {
+    overflow_axes.iter()
+        .filter(|axis| {
+            if **axis == shape.len() - 1 {
+                return false
+            };
+            let sa_idx_max = shape.iter().skip(**axis).next().unwrap();
+            let sa_idx_val = index.iter().skip(**axis).next().unwrap();
+            sa_idx_val >= limit && sa_idx_val < &(sa_idx_max - limit)
+        })
+        .min()
+        .map(|v| *v)
+}
+
+fn get_highest_changed_axis(index: &[Ix], prev_index: &[Ix]) -> Option<usize> {
+    index.iter()
+        .take(index.len() - 1)
+        .zip(prev_index.iter())
+        .enumerate()
+        .filter(|(_, (a, b))| a != b)
+        .map(|(i, _)| i)
+        .next()
+}
+
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
                             f: &mut fmt::Formatter,
                             mut format: F,
@@ -30,12 +66,7 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
         return format(view.iter().next().unwrap(), f)
     }
 
-    let overflow_axes: Vec<Ix> = view.shape().iter()
-        .enumerate()
-        .rev()
-        .filter(|(_, axis_size)| **axis_size > 2 * limit)
-        .map(|(axis, _)| axis)
-        .collect();
+    let overflow_axes: Vec<Ix> = get_overflow_axes(view.shape(), limit);
 
     let ndim = view.ndim();
     let nth_idx_max = view.shape()[ndim-1];
@@ -46,9 +77,6 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
         Some(ix) => ix,
     };
     write!(f, "{}", "[".repeat(ndim))?;
-    let mut first = true;
-    // Shows if ellipses for vertical split were printed.
-    let mut printed_ellipses_v = false;
     // Shows if ellipses for horizontal split were printed.
     let mut printed_ellipses_h = vec![false; ndim];
     // Shows if the row was printed for the first time after horizontal split.
@@ -58,83 +86,60 @@ fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
     // as cues for when to add []'s and how many to add.
     for (index, elt) in view.indexed_iter() {
         let index = index.into_dimension();
-        let mut update_index = false;
 
-        let skip_row_for_axis = overflow_axes.iter()
-            .filter(|axis| {
-                if **axis == ndim - 1 {
-                    return false
-                };
-                let sa_idx_max = view.shape().iter().skip(**axis).next().unwrap();
-                let sa_idx_val = index.slice().iter().skip(**axis).next().unwrap();
-                sa_idx_val >= &limit && sa_idx_val < &(sa_idx_max - &limit)
-            })
-            .min()
-            .map(|v| *v);
-        if let Some(_) = skip_row_for_axis {
+        let skip_row_for_axis = get_highest_axis_to_skip(
+            &overflow_axes,
+            view.shape(),
+            index.slice(),
+            &limit
+        );
+        if skip_row_for_axis.is_some() {
             no_rows_after_skip_yet = true;
         }
 
-        for (i, (a, b)) in index.slice()
-            .iter()
-            .take(ndim-1)
-            .zip(last_index.slice().iter())
-            .enumerate() {
-            if a != b {
-                printed_ellipses_h.iter_mut().skip(i + 1).for_each(|e| { *e = false; });
+        let max_changed_idx = get_highest_changed_axis(index.slice(), last_index.slice());
+        if let Some(i) = max_changed_idx {
+            printed_ellipses_h.iter_mut().skip(i + 1).for_each(|e| { *e = false; });
 
-                if skip_row_for_axis.is_none() {
-                    printed_ellipses_v = false;
-                    // New row.
-                    // # of ['s needed
-                    let n = ndim - i - 1;
-                    if !no_rows_after_skip_yet {
-                        write!(f, "{}", "]".repeat(n))?;
-                        writeln!(f, ",")?;
-                    }
-                    no_rows_after_skip_yet = false;
-                    write!(f, "{}", " ".repeat(ndim - n))?;
-                    write!(f, "{}", "[".repeat(n))?;
-                } else if !printed_ellipses_h[skip_row_for_axis.unwrap()] {
-                    let ax = skip_row_for_axis.unwrap();
-                    let n = ndim - i - 1;
+            if skip_row_for_axis.is_none() {
+                // New row.
+                // # of ['s needed
+                let n = ndim - i - 1;
+                if !no_rows_after_skip_yet {
                     write!(f, "{}", "]".repeat(n))?;
                     writeln!(f, ",")?;
-                    write!(f, "{}", " ".repeat(ax + 1))?;
-                    writeln!(f, "...,")?;
-                    printed_ellipses_h[ax] = true;
                 }
-                first = true;
-                update_index = true;
-                break;
+                no_rows_after_skip_yet = false;
+                write!(f, "{}", " ".repeat(ndim - n))?;
+                write!(f, "{}", "[".repeat(n))?;
+            } else if !printed_ellipses_h[skip_row_for_axis.unwrap()] {
+                let ax = skip_row_for_axis.unwrap();
+                let n = ndim - i - 1;
+                write!(f, "{}", "]".repeat(n))?;
+                writeln!(f, ",")?;
+                write!(f, "{}", " ".repeat(ax + 1))?;
+                writeln!(f, "...,")?;
+                printed_ellipses_h[ax] = true;
             }
+            last_index = index.clone();
         }
 
         if skip_row_for_axis.is_none() {
-            let mut print_elt = true;
             let nth_idx_op = index.slice().iter().last();
             if overflow_axes.contains(&(ndim - 1)) {
                 let nth_idx_val = nth_idx_op.unwrap();
                 if nth_idx_val >= &limit && nth_idx_val < &(nth_idx_max - &limit) {
-                    print_elt = false;
-                    if !printed_ellipses_v {
+                    if nth_idx_val == &limit {
                         write!(f, ", ...")?;
-                        printed_ellipses_v = true;
                     }
+                    continue;
                 }
             }
 
-            if print_elt {
-                if !first {
-                    write!(f, ", ")?;
-                }
-                first = false;
-                format(elt, f)?;
+            if max_changed_idx.is_none() && !index.slice().iter().all(|x| *x == 0) {
+                write!(f, ", ")?;
             }
-        }
-
-        if update_index {
-            last_index = index;
+            format(elt, f)?;
         }
     }
     write!(f, "{}", "]".repeat(ndim))?;
