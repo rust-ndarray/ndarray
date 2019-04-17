@@ -103,3 +103,66 @@ where
         len: n,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::logspace;
+    use crate::{arr1, Array1};
+
+    #[test]
+    fn valid() {
+        let array: Array1<_> = logspace(1e0, 1e3, 4).collect();
+        assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+
+        let array: Array1<_> = logspace(-1e3, -1e0, 4).collect();
+        assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+    }
+
+    #[test]
+    fn iter_forward() {
+        let mut iter = logspace(1.0f64, 1e3, 4);
+
+        assert!(iter.size_hint() == (4, Some(4)));
+
+        assert!((iter.next().unwrap() - 1e0).abs() < 1e-5);
+        assert!((iter.next().unwrap() - 1e1).abs() < 1e-5);
+        assert!((iter.next().unwrap() - 1e2).abs() < 1e-5);
+        assert!((iter.next().unwrap() - 1e3).abs() < 1e-5);
+        assert!(iter.next().is_none());
+
+        assert!(iter.size_hint() == (0, Some(0)));
+    }
+
+    #[test]
+    fn iter_backward() {
+        let mut iter = logspace(1.0f64, 1e3, 4);
+
+        assert!(iter.size_hint() == (4, Some(4)));
+
+        assert!((iter.next_back().unwrap() - 1e3).abs() < 1e-5);
+        assert!((iter.next_back().unwrap() - 1e2).abs() < 1e-5);
+        assert!((iter.next_back().unwrap() - 1e1).abs() < 1e-5);
+        assert!((iter.next_back().unwrap() - 1e0).abs() < 1e-5);
+        assert!(iter.next_back().is_none());
+
+        assert!(iter.size_hint() == (0, Some(0)));
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_lower() {
+        logspace(0.0, 1.0, 4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_upper() {
+        logspace(1.0, 0.0, 4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_included() {
+        logspace(-1.0, 1.0, 4);
+    }
+}
