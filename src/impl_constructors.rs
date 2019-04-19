@@ -112,11 +112,9 @@ impl<S, A> ArrayBase<S, Ix1>
     /// use ndarray::{Array, arr1};
     ///
     /// let array = Array::logspace(1e0, 1e3, 4);
-    /// println!("{}", array);
     /// assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
     ///
     /// let array = Array::logspace(-1e3, -1e0, 4);
-    /// println!("{}", array);
     /// assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
     /// ```
     pub fn logspace(start: A, end: A, n: usize) -> Self
