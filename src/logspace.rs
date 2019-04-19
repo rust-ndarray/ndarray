@@ -114,8 +114,14 @@ mod tests {
         let array: Array1<_> = logspace(1e0, 1e3, 4).collect();
         assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
 
+        let array: Array1<_> = logspace(1e3, 1e0, 4).collect();
+        assert!(array.all_close(&arr1(&[1e3, 1e2, 1e1, 1e0]), 1e-5));
+
         let array: Array1<_> = logspace(-1e3, -1e0, 4).collect();
         assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+
+        let array: Array1<_> = logspace(-1e0, -1e3, 4).collect();
+        assert!(array.all_close(&arr1(&[-1e0, -1e1, -1e2, -1e3]), 1e-5));
     }
 
     #[test]
