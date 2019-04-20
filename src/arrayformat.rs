@@ -15,7 +15,7 @@ use super::{
     Ix
 };
 use crate::dimension::IntoDimension;
-use crate::aliases::ArrayViewD;
+use crate::aliases::Ix1;
 
 const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
@@ -55,27 +55,13 @@ fn get_highest_changed_axis(index: &[Ix], prev_index: &[Ix]) -> Option<usize> {
         .next()
 }
 
-fn format_1d_array<A, S, D, F>(
-    view: &ArrayBase<S, D>,
+fn format_1d_array<A, S, F>(
+    view: &ArrayBase<S, Ix1>,
     f: &mut fmt::Formatter,
     mut format: F,
     limit: Ix) -> fmt::Result
     where
         F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
-        D: Dimension,
-        S: Data<Elem=A>,
-{
-    unimplemented!()
-}
-
-fn format_multidimensional_array<A, S, D, F>(
-    view: &ArrayBase<S, D>,
-    f: &mut fmt::Formatter,
-    mut format: F,
-    limit: Ix) -> fmt::Result
-    where
-        F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
-        D: Dimension,
         S: Data<Elem=A>,
 {
     unimplemented!()
@@ -94,7 +80,7 @@ where
     let view = view.view().into_dyn();
     match view.shape() {
         [] => format(view.iter().next().unwrap(), f)?,
-        [_] => format_1d_array(&view, f, format, limit)?,
+        [_] => format_1d_array(&view.into_dimensionality::<Ix1>().unwrap(), f, format, limit)?,
         shape => {
             let first_axis_length = shape[0];
             let indexes_to_be_printed: Vec<Option<usize>> = if first_axis_length <= 2 * limit {
