@@ -31,13 +31,13 @@ fn get_highest_axis_to_skip(overflow_axes: &Vec<usize>,
                             index: &[Ix],
                             limit: &usize) -> Option<usize> {
     overflow_axes.iter()
-        .filter(|axis| {
-            if **axis == shape.len() - 1 {
+        .filter(|&axis| {
+            if *axis == shape.len() - 1 {
                 return false
             };
-            let sa_idx_max = shape.iter().skip(**axis).next().unwrap();
-            let sa_idx_val = index.iter().skip(**axis).next().unwrap();
-            sa_idx_val >= limit && sa_idx_val < &(sa_idx_max - limit)
+            let sa_idx_max = shape[*axis];
+            let sa_idx_val = index[*axis];
+            sa_idx_val >= *limit && sa_idx_val < sa_idx_max - *limit
         })
         .min()
         .map(|v| *v)
