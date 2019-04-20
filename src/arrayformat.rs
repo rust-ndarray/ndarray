@@ -87,7 +87,7 @@ fn format_array_v2<A, S, D, F>(
     mut format: F,
     limit: Ix) -> fmt::Result
 where
-    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result + Clone,
     D: Dimension,
     S: Data<Elem=A>,
 {
@@ -109,7 +109,7 @@ where
             for index in indexes_to_be_printed {
                 match index {
                     Some(i) => format_array_v2(
-                        &view.index_axis(Axis(0), i), f, format, limit
+                        &view.index_axis(Axis(0), i), f, format.clone(), limit
                     )?,
                     None => {
                         writeln!(f, "...,")?
