@@ -8,12 +8,14 @@
 use std::fmt;
 use super::{
     ArrayBase,
+    Axis,
     Data,
     Dimension,
     NdProducer,
     Ix
 };
 use crate::dimension::IntoDimension;
+use crate::aliases::ArrayViewD;
 
 const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
@@ -51,6 +53,73 @@ fn get_highest_changed_axis(index: &[Ix], prev_index: &[Ix]) -> Option<usize> {
         .filter(|(_, (a, b))| a != b)
         .map(|(i, _)| i)
         .next()
+}
+
+fn format_1d_array<A, S, D, F>(
+    view: &ArrayBase<S, D>,
+    f: &mut fmt::Formatter,
+    mut format: F,
+    limit: Ix) -> fmt::Result
+    where
+        F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+        D: Dimension,
+        S: Data<Elem=A>,
+{
+    unimplemented!()
+}
+
+fn format_multidimensional_array<A, S, D, F>(
+    view: &ArrayBase<S, D>,
+    f: &mut fmt::Formatter,
+    mut format: F,
+    limit: Ix) -> fmt::Result
+    where
+        F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+        D: Dimension,
+        S: Data<Elem=A>,
+{
+    unimplemented!()
+}
+
+fn format_array_v2<A, S, D, F>(
+    view: &ArrayBase<S, D>,
+    f: &mut fmt::Formatter,
+    mut format: F,
+    limit: Ix) -> fmt::Result
+where
+    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+    D: Dimension,
+    S: Data<Elem=A>,
+{
+    let view = view.view().into_dyn();
+    match view.shape() {
+        [] => format(view.iter().next().unwrap(), f)?,
+        [_] => format_1d_array(&view, f, format, limit)?,
+        shape => {
+            let first_axis_length = shape[0];
+            let indexes_to_be_printed: Vec<Option<usize>> = if first_axis_length <= 2 * limit {
+                (0..first_axis_length).map(|x| Some(x)).collect()
+            } else {
+                let mut v: Vec<Option<usize>> = (0..limit).map(|x| Some(x)).collect();
+                v.push(None);
+                v.extend((first_axis_length-limit..first_axis_length).map(|x| Some(x)));
+                v
+            };
+            write!(f, "[")?;
+            for index in indexes_to_be_printed {
+                match index {
+                    Some(i) => format_array_v2(
+                        &view.index_axis(Axis(0), i), f, format, limit
+                    )?,
+                    None => {
+                        writeln!(f, "...,")?
+                    }
+                }
+            }
+            write!(f, "]")?;
+        }
+    }
+    Ok(())
 }
 
 fn format_array<A, S, D, F>(view: &ArrayBase<S, D>,
