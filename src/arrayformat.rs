@@ -28,14 +28,15 @@ fn format_1d_array<A, S, F>(
         S: Data<Elem=A>,
 {
     let n = view.len();
-    let indexes_to_be_printed = indexes_to_be_printed(n, limit);
-    let last_index = indexes_to_be_printed.len();
+    let to_be_printed = to_be_printed(n, limit);
+    let n_to_be_printed = to_be_printed.len();
+    let is_last = |j| j == n_to_be_printed - 1;
     write!(f, "[")?;
-    for (j, index) in indexes_to_be_printed.into_iter().enumerate() {
+    for (j, index) in to_be_printed.into_iter().enumerate() {
         match index {
             Some(i) => {
                 format(&view[i], f)?;
-                if j != (last_index-1) {
+                if !is_last(j) {
                     write!(f, ", ")?;
                 }
             },
@@ -46,7 +47,10 @@ fn format_1d_array<A, S, F>(
     Ok(())
 }
 
-fn indexes_to_be_printed(length: usize, limit: usize) -> Vec<Option<usize>> {
+// Returns what indexes should be printed for a certain axis.
+// If the axis is longer than 2 * limit, a `None` is inserted
+// where indexes are being omitted.
+fn to_be_printed(length: usize, limit: usize) -> Vec<Option<usize>> {
     if length <= 2 * limit {
         (0..length).map(|x| Some(x)).collect()
     } else {
@@ -67,32 +71,44 @@ where
     D: Dimension,
     S: Data<Elem=A>,
 {
+    // If any of the axes has 0 length, we return the same empty array representation
+    // e.g. [[]] for 2-d arrays
     if view.shape().iter().any(|&x| x == 0) {
         write!(f, "{}{}", "[".repeat(view.ndim()), "]".repeat(view.ndim()))?;
         return Ok(())
     }
     match view.shape() {
+        // If it's 0 dimensional, we just print out the scalar
         [] => format(view.iter().next().unwrap(), f)?,
+        // We delegate 1-dimensional arrays to a specialized function
         [_] => format_1d_array(&view.view().into_dimensionality::<Ix1>().unwrap(), f, format, limit)?,
+        // For n-dimensional arrays, we proceed recursively
         shape => {
+            // Cast into a dynamically dimensioned view
+            // This is required to be able to use `index_axis`
             let view = view.view().into_dyn();
-            let first_axis_length = shape[0];
-            let indexes_to_be_printed = indexes_to_be_printed(first_axis_length, limit);
-            let n_to_be_printed = indexes_to_be_printed.len();
+            // We start by checking what indexes from the first axis should be printed
+            // We put a `None` in the middle if we are omitting elements
+            let to_be_printed = to_be_printed(shape[0], limit);
+
+            let n_to_be_printed = to_be_printed.len();
+            let is_last = |j| j == n_to_be_printed - 1;
+
             write!(f, "[")?;
-            for (j, index) in indexes_to_be_printed.into_iter().enumerate() {
+            for (j, index) in to_be_printed.into_iter().enumerate() {
                 match index {
                     Some(i) => {
+                        // Proceed recursively with the (n-1)-dimensional slice
                         format_array(
                             &view.index_axis(Axis(0), i), f, format.clone(), limit
                         )?;
-                        if j != (n_to_be_printed -1) {
+                        // We need to add a separator after each slice,
+                        // apart from the last one
+                        if !is_last(j) {
                             write!(f, ",\n ")?
                         }
                     },
-                    None => {
-                        write!(f, "...,\n ")?
-                    }
+                    None => write!(f, "...,\n ")?
                 }
             }
             write!(f, "]")?;
