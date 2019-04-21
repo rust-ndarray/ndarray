@@ -27,10 +27,11 @@ fn format_1d_array<A, S, F>(
         F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
         S: Data<Elem=A>,
 {
-    let n = view.len();
-    let to_be_printed = to_be_printed(n, limit);
+    let to_be_printed = to_be_printed(view.len(), limit);
+
     let n_to_be_printed = to_be_printed.len();
     let is_last = |j| j == n_to_be_printed - 1;
+
     write!(f, "[")?;
     for (j, index) in to_be_printed.into_iter().enumerate() {
         match index {
