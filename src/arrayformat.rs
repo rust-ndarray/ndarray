@@ -28,14 +28,7 @@ fn format_1d_array<A, S, F>(
         S: Data<Elem=A>,
 {
     let n = view.len();
-    let indexes_to_be_printed: Vec<Option<usize>> = if n <= 2 * limit {
-        (0..n).map(|x| Some(x)).collect()
-    } else {
-        let mut v: Vec<Option<usize>> = (0..limit).map(|x| Some(x)).collect();
-        v.push(None);
-        v.extend((n-limit..n).map(|x| Some(x)));
-        v
-    };
+    let indexes_to_be_printed = indexes_to_be_printed(n, limit);
     write!(f, "[")?;
     for index in indexes_to_be_printed {
         match index {
@@ -45,6 +38,17 @@ fn format_1d_array<A, S, F>(
     }
     write!(f, "]")?;
     Ok(())
+}
+
+fn indexes_to_be_printed(length: usize, limit: usize) -> Vec<Option<usize>> {
+    if length <= 2 * limit {
+        (0..length).map(|x| Some(x)).collect()
+    } else {
+        let mut v: Vec<Option<usize>> = (0..limit).map(|x| Some(x)).collect();
+        v.push(None);
+        v.extend((length-limit..length).map(|x| Some(x)));
+        v
+    }
 }
 
 fn format_array<A, S, D, F>(
@@ -63,14 +67,7 @@ where
         [_] => format_1d_array(&view.into_dimensionality::<Ix1>().unwrap(), f, format, limit)?,
         shape => {
             let first_axis_length = shape[0];
-            let indexes_to_be_printed: Vec<Option<usize>> = if first_axis_length <= 2 * limit {
-                (0..first_axis_length).map(|x| Some(x)).collect()
-            } else {
-                let mut v: Vec<Option<usize>> = (0..limit).map(|x| Some(x)).collect();
-                v.push(None);
-                v.extend((first_axis_length-limit..first_axis_length).map(|x| Some(x)));
-                v
-            };
+            let indexes_to_be_printed = indexes_to_be_printed(first_axis_length, limit);
             writeln!(f, "[")?;
             for index in indexes_to_be_printed {
                 match index {
