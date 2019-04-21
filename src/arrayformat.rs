@@ -29,11 +29,17 @@ fn format_1d_array<A, S, F>(
 {
     let n = view.len();
     let indexes_to_be_printed = indexes_to_be_printed(n, limit);
+    let last_index = indexes_to_be_printed.len();
     write!(f, "[")?;
-    for index in indexes_to_be_printed {
+    for (j, index) in indexes_to_be_printed.into_iter().enumerate() {
         match index {
-            Some(i) => format(&view[i], f)?,
-            None => write!(f, ", ..., ")?,
+            Some(i) => {
+                format(&view[i], f)?;
+                if j != (last_index-1) {
+                    write!(f, ", ")?;
+                }
+            },
+            None => write!(f, "..., ")?,
         }
     }
     write!(f, "]")?;
@@ -61,29 +67,35 @@ where
     D: Dimension,
     S: Data<Elem=A>,
 {
-    let view = view.view().into_dyn();
+    if view.shape().iter().any(|&x| x == 0) {
+        write!(f, "{}{}", "[".repeat(view.ndim()), "]".repeat(view.ndim()))?;
+        return Ok(())
+    }
     match view.shape() {
         [] => format(view.iter().next().unwrap(), f)?,
-        [_] => format_1d_array(&view.into_dimensionality::<Ix1>().unwrap(), f, format, limit)?,
+        [_] => format_1d_array(&view.view().into_dimensionality::<Ix1>().unwrap(), f, format, limit)?,
         shape => {
+            let view = view.view().into_dyn();
             let first_axis_length = shape[0];
             let indexes_to_be_printed = indexes_to_be_printed(first_axis_length, limit);
-            writeln!(f, "[")?;
-            for index in indexes_to_be_printed {
+            let n_to_be_printed = indexes_to_be_printed.len();
+            write!(f, "[")?;
+            for (j, index) in indexes_to_be_printed.into_iter().enumerate() {
                 match index {
                     Some(i) => {
-                        write!(f, " ")?;
                         format_array(
                             &view.index_axis(Axis(0), i), f, format.clone(), limit
                         )?;
-                        writeln!(f, ",")?
+                        if j != (n_to_be_printed -1) {
+                            write!(f, ",\n ")?
+                        }
                     },
                     None => {
-                        writeln!(f, " ...,")?
+                        write!(f, "...,\n ")?
                     }
                 }
             }
-            writeln!(f, "]")?;
+            write!(f, "]")?;
         }
     }
     Ok(())
@@ -183,7 +195,8 @@ mod formatting_with_omit {
         let a: Array2<u32> = arr2(&[[], []]);
         let actual_output = format!("{}", a);
         let expected_output = String::from("[[]]");
-        assert_eq!(actual_output, expected_output);
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(expected_output, actual_output);
     }
 
     #[test]
@@ -191,7 +204,8 @@ mod formatting_with_omit {
         let a = Array3::<f32>::zeros((3, 0, 4));
         let actual_output = format!("{}", a);
         let expected_output = String::from("[[[]]]");
-        assert_eq!(actual_output, expected_output);
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(expected_output, actual_output);
     }
 
     #[test]
@@ -200,7 +214,8 @@ mod formatting_with_omit {
         let a = arr0(element);
         let actual_output = format!("{}", a);
         let expected_output = format!("{}", element);
-        assert_eq!(actual_output, expected_output);
+        print_output_diff(&expected_output, &actual_output);
+        assert_eq!(expected_output, actual_output);
     }
 
     #[test]
