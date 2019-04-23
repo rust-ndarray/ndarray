@@ -34,29 +34,34 @@ fn format_1d_array<A, S, F>(
     write!(f, "[")?;
     for (j, index) in to_be_printed.into_iter().enumerate() {
         match index {
-            Some(i) => {
+            PrintableCell::ElementIndex(i) => {
                 format(&view[i], f)?;
                 if j != n_to_be_printed - 1 {
                     write!(f, ", ")?;
                 }
             },
-            None => write!(f, "..., ")?,
+            PrintableCell::Ellipses => write!(f, "..., ")?,
         }
     }
     write!(f, "]")?;
     Ok(())
 }
 
+enum PrintableCell {
+  ElementIndex(usize),
+  Ellipses,
+}
+
 // Returns what indexes should be printed for a certain axis.
-// If the axis is longer than 2 * limit, a `None` is inserted
+// If the axis is longer than 2 * limit, a `Ellipses` is inserted
 // where indexes are being omitted.
-fn to_be_printed(length: usize, limit: usize) -> Vec<Option<usize>> {
+fn to_be_printed(length: usize, limit: usize) -> Vec<PrintableCell> {
     if length <= 2 * limit {
-        (0..length).map(|x| Some(x)).collect()
+        (0..length).map(|x| PrintableCell::ElementIndex(x)).collect()
     } else {
-        let mut v: Vec<Option<usize>> = (0..limit).map(|x| Some(x)).collect();
-        v.push(None);
-        v.extend((length-limit..length).map(|x| Some(x)));
+        let mut v: Vec<PrintableCell> = (0..limit).map(|x| PrintableCell::ElementIndex(x)).collect();
+        v.push(PrintableCell::Ellipses);
+        v.extend((length-limit..length).map(|x| PrintableCell::ElementIndex(x)));
         v
     }
 }
@@ -96,7 +101,7 @@ where
             write!(f, "[")?;
             for (j, index) in to_be_printed.into_iter().enumerate() {
                 match index {
-                    Some(i) => {
+                    PrintableCell::ElementIndex(i) => {
                         // Proceed recursively with the (n-1)-dimensional slice
                         format_array(
                             &view.index_axis(Axis(0), i), f, format.clone(), limit
@@ -107,7 +112,7 @@ where
                             write!(f, ",\n ")?
                         }
                     },
-                    None => write!(f, "...,\n ")?
+                    PrintableCell::Ellipses => write!(f, "...,\n ")?
                 }
             }
             write!(f, "]")?;
