@@ -30,14 +30,13 @@ fn format_1d_array<A, S, F>(
     let to_be_printed = to_be_printed(view.len(), limit);
 
     let n_to_be_printed = to_be_printed.len();
-    let is_last = |j| j == n_to_be_printed - 1;
 
     write!(f, "[")?;
     for (j, index) in to_be_printed.into_iter().enumerate() {
         match index {
             Some(i) => {
                 format(&view[i], f)?;
-                if !is_last(j) {
+                if j != n_to_be_printed - 1 {
                     write!(f, ", ")?;
                 }
             },
@@ -93,7 +92,6 @@ where
             let to_be_printed = to_be_printed(shape[0], limit);
 
             let n_to_be_printed = to_be_printed.len();
-            let is_last = |j| j == n_to_be_printed - 1;
 
             write!(f, "[")?;
             for (j, index) in to_be_printed.into_iter().enumerate() {
@@ -105,7 +103,7 @@ where
                         )?;
                         // We need to add a separator after each slice,
                         // apart from the last one
-                        if !is_last(j) {
+                        if j != n_to_be_printed - 1 {
                             write!(f, ",\n ")?
                         }
                     },
