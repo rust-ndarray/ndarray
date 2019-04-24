@@ -11,7 +11,7 @@ use std::mem::swap;
 
 #[test]
 fn test_azip1() {
-    let mut a = Array::zeros(62);
+    let mut a = Array::zeros((62,));
     let mut x = 0;
     azip!(mut a in { *a = x; x += 1; });
     assert_equal(cloned(&a), 0..a.len());
@@ -49,7 +49,7 @@ fn test_azip2_sum() {
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
     for i in 0..2 {
         let ax = Axis(i);
-        let mut b = Array::zeros(c.len_of(ax));
+        let mut b = Array::zeros((c.len_of(ax),));
         azip!(mut b, ref c (c.axis_iter(ax)) in { *b = c.sum() });
         assert!(b.all_close(&c.sum_axis(Axis(1 - i)), 1e-6));
     }
@@ -150,7 +150,7 @@ fn test_clone() {
 
 #[test]
 fn test_indices_1() {
-    let mut a1 = Array::default(12);
+    let mut a1 = Array::default((12,));
     for (i, elt) in a1.indexed_iter_mut() {
         *elt = i;
     }

@@ -437,7 +437,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///
 /// use ndarray::{Array1, Axis};
 ///
-/// let mut totals = Array1::zeros(a.rows());
+/// let mut totals = Array1::zeros((a.rows(),));
 ///
 /// Zip::from(&mut totals)
 ///     .and(a.genrows())

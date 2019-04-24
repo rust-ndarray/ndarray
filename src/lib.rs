@@ -416,7 +416,7 @@ pub type Ixs = isize;
 ///
 /// // 2. Use Zip to pair each row in 2D `a` with elements in 1D `b`
 /// use ndarray::Zip;
-/// let mut b = Array::zeros(a.rows());
+/// let mut b = Array::zeros((a.rows(),));
 ///
 /// Zip::from(a.genrows())
 ///     .and(&mut b)

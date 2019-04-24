@@ -25,7 +25,7 @@ fn main() {
 
     // sum of each row
     let ax = Axis(0);
-    let mut sums = Array::zeros(a.len_of(ax));
+    let mut sums = Array::zeros((a.len_of(ax),));
     azip!(mut sums, ref a (a.axis_iter(ax)) in { *sums = a.sum() });
 
     // sum of each chunk

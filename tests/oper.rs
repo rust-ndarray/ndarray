@@ -348,9 +348,9 @@ fn reference_mat_vec_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, 
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, _), k) = (lhs.dim(), rhs.dim());
+    let ((m, _), (k,)) = (lhs.dim(), rhs.dim());
     reference_mat_mul(lhs, &rhs.to_owned().into_shape((k, 1)).unwrap())
-        .into_shape(m).unwrap()
+        .into_shape((m,)).unwrap()
 }
 
 // simple, slow, correct (hopefully) mat mul
@@ -360,9 +360,9 @@ fn reference_vec_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix1>, rhs: &ArrayBase<S2, 
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let (m, (_, n)) = (lhs.dim(), rhs.dim());
+    let ((m,), (_, n)) = (lhs.dim(), rhs.dim());
     reference_mat_mul(&lhs.to_owned().into_shape((1, m)).unwrap(), rhs)
-        .into_shape(n).unwrap()
+        .into_shape((n,)).unwrap()
 }
 
 #[test]
@@ -474,7 +474,7 @@ fn mat_mul_broadcast() {
     let x1 = 1.;
     let x = Array::from_vec(vec![x1]);
     let b0 = x.broadcast((n, k)).unwrap();
-    let b1 = Array::from_elem(n, x1);
+    let b1 = Array::from_elem((n,), x1);
     let b1 = b1.broadcast((n, k)).unwrap();
     let b2 = Array::from_elem((n, k), x1);
 

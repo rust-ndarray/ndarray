@@ -47,6 +47,16 @@ unsafe impl NdIndex<Ix0> for () {
     }
 }
 
+unsafe impl NdIndex<Ix1> for (Ix,) {
+    #[inline]
+    fn index_checked(&self, dim: &Ix1, strides: &Ix1) -> Option<isize> {
+        dim.stride_offset_checked(strides, &Ix1(self.0))
+    }
+    #[inline(always)]
+    fn index_unchecked(&self, strides: &Ix1) -> isize {
+        stride_offset(self.0, get!(strides, 0))
+    }
+}
 unsafe impl NdIndex<Ix2> for (Ix, Ix) {
     #[inline]
     fn index_checked(&self, dim: &Ix2, strides: &Ix2) -> Option<isize> {

@@ -50,12 +50,12 @@ fn sum_mean()
 #[test]
 fn sum_mean_empty() {
     assert_eq!(Array3::<f32>::ones((2, 0, 3)).sum(), 0.);
-    assert_eq!(Array1::<f32>::ones(0).sum_axis(Axis(0)), arr0(0.));
+    assert_eq!(Array1::<f32>::ones((0,)).sum_axis(Axis(0)), arr0(0.));
     assert_eq!(
         Array3::<f32>::ones((2, 0, 3)).sum_axis(Axis(1)),
         Array::zeros((2, 3)),
     );
-    let a = Array1::<f32>::ones(0).mean_axis(Axis(0));
+    let a = Array1::<f32>::ones((0,)).mean_axis(Axis(0));
     assert_eq!(a, None);
     let a = Array3::<f32>::ones((2, 0, 3)).mean_axis(Axis(1));
     assert_eq!(a, None);

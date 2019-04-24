@@ -404,7 +404,7 @@ fn test_multislice_intersecting() {
 
 #[test]
 fn test_multislice_eval_args_only_once() {
-    let mut arr = Array1::<u8>::zeros(10);
+    let mut arr = Array1::<u8>::zeros((10,));
     let mut eval_count = 0;
     {
         let mut slice = || {
@@ -540,7 +540,7 @@ fn test_add()
 #[test]
 fn test_multidim()
 {
-    let mut mat = ArcArray::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
+    let mut mat = ArcArray::zeros((2*3*4*5*6,)).reshape((2,3,4,5,6));
     mat[(0,0,0,0,0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -603,7 +603,7 @@ fn test_cow()
     assert_eq!(n[[0, 0]], 1);
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
-    let mut rev = mat.reshape(4);
+    let mut rev = mat.reshape((4,));
     rev.slice_collapse(s![..;-1]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
@@ -643,7 +643,7 @@ fn test_cow_shrink()
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
     // small has non-C strides this way
-    let mut small = mat.reshape(6);
+    let mut small = mat.reshape((6,));
     small.slice_collapse(s![4..;-1]);
     assert_eq!(small[0], 6);
     assert_eq!(small[1], 5);
@@ -709,14 +709,14 @@ fn test_select(){
 fn diag()
 {
     let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
-    assert_eq!(d.dim(), 1);
+    assert_eq!(d.dim(), (1,));
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
     let d = a.view().into_diag();
-    assert_eq!(d.dim(), 2);
+    assert_eq!(d.dim(), (2,));
     let d = arr2::<f32, _>(&[[]]).into_diag();
-    assert_eq!(d.dim(), 0);
+    assert_eq!(d.dim(), (0,));
     let d = ArcArray::<f32, _>::zeros(()).into_diag();
-    assert_eq!(d.dim(), 1);
+    assert_eq!(d.dim(), (1,));
 }
 
 /// Check that the merged shape is correct.
@@ -893,7 +893,7 @@ fn standard_layout()
     assert!(x1.is_standard_layout());
     let x2 = a.index_axis(Axis(1), 0);
     assert!(!x2.is_standard_layout());
-    let x3 = ArrayView1::from_shape(1.strides(2), &[1]).unwrap();
+    let x3 = ArrayView1::from_shape((1,).strides((2,)), &[1]).unwrap();
     assert!(x3.is_standard_layout());
     let x4 = ArrayView2::from_shape((0, 2).strides((0, 1)), &[1, 2]).unwrap();
     assert!(x4.is_standard_layout());
@@ -908,7 +908,7 @@ fn assign()
     assert_eq!(a, b);
 
     /* Test broadcasting */
-    a.assign(&ArcArray::zeros(1));
+    a.assign(&ArcArray::zeros((1,)));
     assert_eq!(a, ArcArray::zeros((2, 2)));
 
     /* Test other type */
@@ -977,7 +977,7 @@ fn zero_axes()
 
     // we can even get a subarray of b
     let bsub = b.index_axis(Axis(0), 2);
-    assert_eq!(bsub.dim(), 0);
+    assert_eq!(bsub.dim(), (0,));
 }
 
 #[test]
@@ -1118,7 +1118,7 @@ macro_rules! assert_matches {
 #[test]
 fn from_vec_dim_stride_empty_1d() {
     let empty: [f32; 0] = [];
-    assert_matches!(Array::from_shape_vec(0.strides(1), empty.to_vec()),
+    assert_matches!(Array::from_shape_vec((0,).strides((1,)), empty.to_vec()),
                     Ok(_));
 }
 
@@ -1470,10 +1470,10 @@ fn insert_axis_f() {
     assert!(::std::panic::catch_unwind(
         || Array0::from_shape_vec(().f(), vec![1]).unwrap().insert_axis(Axis(1))).is_err());
 
-    test_insert_f!(Array1::<u8>::zeros((3).f()), 0, Array2::<u8>::zeros((1, 3)));
-    test_insert_f!(Array1::<u8>::zeros((3).f()), 1, Array2::<u8>::zeros((3, 1)));
+    test_insert_f!(Array1::<u8>::zeros((3,).f()), 0, Array2::<u8>::zeros((1, 3)));
+    test_insert_f!(Array1::<u8>::zeros((3,).f()), 1, Array2::<u8>::zeros((3, 1)));
     assert!(::std::panic::catch_unwind(
-        || Array1::<u8>::zeros((3).f()).insert_axis(Axis(2))).is_err());
+        || Array1::<u8>::zeros((3,).f()).insert_axis(Axis(2))).is_err());
 
     test_insert_f!(Array3::<u8>::zeros((3, 4, 5).f()), 1, Array4::<u8>::zeros((3, 1, 4, 5)));
     assert!(::std::panic::catch_unwind(

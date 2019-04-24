@@ -79,7 +79,7 @@ impl<A, S> ArrayBase<S, Ix1>
         let mut sum = A::zero();
         for i in 0..self.len() {
             unsafe {
-                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+                sum = sum.clone() + self.uget((i,)).clone() * rhs.uget((i,)).clone();
             }
         }
         sum
@@ -312,14 +312,14 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
     type Output = Array<A, Ix1>;
     fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
     {
-        let ((m, a), n) = (self.dim(), rhs.dim());
+        let ((m, a), (n,)) = (self.dim(), rhs.dim());
         if a != n {
             dot_shape_error(m, a, n, 1);
         }
 
         // Avoid initializing the memory in vec -- set it during iteration
         unsafe {
-            let mut c = Array::uninitialized(m);
+            let mut c = Array::uninitialized((m,));
             general_mat_vec_mul(A::one(), self, rhs, A::zero(), &mut c);
             c
         }
@@ -574,8 +574,8 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
           S3: DataMut<Elem=A>,
           A: LinalgScalar,
 {
-    let ((m, k), k2) = (a.dim(), x.dim());
-    let m2 = y.dim();
+    let ((m, k), (k2,)) = (a.dim(), x.dim());
+    let (m2,) = y.dim();
     if k != k2 || m != m2 {
         general_dot_shape_error(m, k, k2, 1, m2, 1);
     } else {

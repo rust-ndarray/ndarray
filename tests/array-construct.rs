@@ -64,7 +64,7 @@ fn test_from_fn_c0() {
 
 #[test]
 fn test_from_fn_c1() {
-    let a = Array::from_shape_fn(28, |i| i);
+    let a = Array::from_shape_fn((28,), |i| i);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt);
     }
@@ -96,7 +96,7 @@ fn test_from_fn_f0() {
 
 #[test]
 fn test_from_fn_f1() {
-    let a = Array::from_shape_fn(28.f(), |i| i);
+    let a = Array::from_shape_fn((28,).f(), |i| i);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt);
     }
@@ -138,7 +138,7 @@ fn deny_wraparound_from_vec() {
     let five = vec![0; 5];
     let five_large = Array::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
     assert!(five_large.is_err());
-    let six = Array::from_shape_vec(6, five.clone());
+    let six = Array::from_shape_vec((6,), five.clone());
     assert!(six.is_err());
 }
 
@@ -161,7 +161,7 @@ fn deny_wraparound_zeros() {
 #[test]
 fn deny_wraparound_reshape() {
     //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
-    let five = Array::<f32, _>::zeros(5);
+    let five = Array::<f32, _>::zeros((5,));
     let _five_large = five.into_shape((3, 7, 29, 36760123, 823996703)).unwrap();
 }
 

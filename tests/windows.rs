@@ -41,9 +41,9 @@ fn windows_iterator_oversized() {
 /// Simple test for iterating 1d-arrays via `Windows`.
 #[test]
 fn windows_iterator_1d() {
-    let a = Array::from_iter(10..20).into_shape(10).unwrap();
+    let a = Array::from_iter(10..20).into_shape((10,)).unwrap();
     itertools::assert_equal(
-        a.windows(Dim(4)),
+        a.windows(Dim((4,))),
         vec![
             arr1(&[10, 11, 12, 13]),
             arr1(&[11, 12, 13, 14]),

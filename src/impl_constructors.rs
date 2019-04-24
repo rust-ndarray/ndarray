@@ -48,7 +48,7 @@ impl<S, A> ArrayBase<S, Ix1>
                 "Length must fit in `isize`.",
             );
         }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+        unsafe { Self::from_shape_vec_unchecked((v.len() as Ix,), v) }
     }
 
     /// Create a one-dimensional array from an iterable.

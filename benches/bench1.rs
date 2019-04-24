@@ -20,7 +20,7 @@ use test::black_box;
 #[bench]
 fn iter_sum_1d_regular(bench: &mut test::Bencher)
 {
-    let a = Array::<i32, _>::zeros(64 * 64);
+    let a = Array::<i32, _>::zeros((64 * 64,));
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
@@ -35,7 +35,7 @@ fn iter_sum_1d_regular(bench: &mut test::Bencher)
 fn iter_sum_1d_raw(bench: &mut test::Bencher)
 {
     // this is autovectorized to death (= great performance)
-    let a = Array::<i32, _>::zeros(64 * 64);
+    let a = Array::<i32, _>::zeros((64 * 64,));
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
@@ -404,7 +404,7 @@ fn add_2d_cutouts_by_32(bench: &mut test::Bencher)
 fn add_2d_broadcast_1_to_2(bench: &mut test::Bencher)
 {
     let mut a = Array2::<i32>::zeros((ADD2DSZ, ADD2DSZ));
-    let b = Array1::<i32>::zeros(ADD2DSZ);
+    let b = Array1::<i32>::zeros((ADD2DSZ,));
     let bv = b.view();
     bench.iter(|| {
         a += &bv;
@@ -614,7 +614,7 @@ const ADD1D_SIZE: usize = 64 * 64;
 #[bench]
 fn add_1d_regular(bench: &mut test::Bencher)
 {
-    let mut a = Array::<f32, _>::zeros(ADD1D_SIZE);
+    let mut a = Array::<f32, _>::zeros((ADD1D_SIZE,));
     let b = Array::<f32, _>::zeros(a.dim());
     bench.iter(|| {
         a += &b;
@@ -624,7 +624,7 @@ fn add_1d_regular(bench: &mut test::Bencher)
 #[bench]
 fn add_1d_strided(bench: &mut test::Bencher)
 {
-    let mut a = Array::<f32, _>::zeros(ADD1D_SIZE * 2);
+    let mut a = Array::<f32, _>::zeros((ADD1D_SIZE * 2,));
     let mut av = a.slice_mut(s![..;2]);
     let b = Array::<f32, _>::zeros(av.dim());
     bench.iter(|| {
@@ -880,40 +880,40 @@ fn equality_f32_mixorder(bench: &mut test::Bencher)
 #[bench]
 fn dot_f32_16(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros(16);
-    let b = Array::<f32, _>::zeros(16);
+    let a = Array::<f32, _>::zeros((16,));
+    let b = Array::<f32, _>::zeros((16,));
     bench.iter(|| a.dot(&b));
 }
 
 #[bench]
 fn dot_f32_20(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros(20);
-    let b = Array::<f32, _>::zeros(20);
+    let a = Array::<f32, _>::zeros((20,));
+    let b = Array::<f32, _>::zeros((20,));
     bench.iter(|| a.dot(&b));
 }
 
 #[bench]
 fn dot_f32_32(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros(32);
-    let b = Array::<f32, _>::zeros(32);
+    let a = Array::<f32, _>::zeros((32,));
+    let b = Array::<f32, _>::zeros((32,));
     bench.iter(|| a.dot(&b));
 }
 
 #[bench]
 fn dot_f32_256(bench: &mut test::Bencher)
 {
-    let a = Array::<f32, _>::zeros(256);
-    let b = Array::<f32, _>::zeros(256);
+    let a = Array::<f32, _>::zeros((256,));
+    let b = Array::<f32, _>::zeros((256,));
     bench.iter(|| a.dot(&b));
 }
 
 #[bench]
 fn dot_f32_1024(bench: &mut test::Bencher)
 {
-    let av = Array::<f32, _>::zeros(1024);
-    let bv = Array::<f32, _>::zeros(1024);
+    let av = Array::<f32, _>::zeros((1024,));
+    let bv = Array::<f32, _>::zeros((1024,));
     bench.iter(|| {
         av.dot(&bv)
     });
@@ -923,8 +923,8 @@ fn dot_f32_1024(bench: &mut test::Bencher)
 fn dot_f32_10e6(bench: &mut test::Bencher)
 {
     let n = 1_000_000;
-    let av = Array::<f32, _>::zeros(n);
-    let bv = Array::<f32, _>::zeros(n);
+    let av = Array::<f32, _>::zeros((n,));
+    let bv = Array::<f32, _>::zeros((n,));
     bench.iter(|| {
         av.dot(&bv)
     });

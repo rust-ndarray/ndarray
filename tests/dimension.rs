@@ -165,7 +165,7 @@ fn min_stride_axis() {
 
 #[test]
 fn max_stride_axis() {
-    let a = ArrayF32::zeros(10);
+    let a = ArrayF32::zeros((10,));
     assert_eq!(a.max_stride_axis(), Axis(0));
 
     let a = ArrayF32::zeros((3, 3));
@@ -265,7 +265,7 @@ fn test_generic_operations() {
 
     test_dim(&Dim([2, 3, 4]));
     test_dim(&Dim(vec![2, 3, 4, 1]));
-    test_dim(&Dim(2));
+    test_dim(&Dim((2,)));
 }
 
 #[test]
@@ -277,7 +277,7 @@ fn test_array_view() {
 
     test_dim(&Dim([1, 2, 4]));
     test_dim(&Dim(vec![1, 1, 2, 3]));
-    test_dim(&Dim(7));
+    test_dim(&Dim((7,)));
 }
 
 #[test]

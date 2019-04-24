@@ -62,7 +62,7 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
     ///
-    /// - For `Ix1`: `usize`,
+    /// - For `Ix1`: `(usize)`,
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
     /// - For `IxDyn`: `IxDyn`
@@ -402,7 +402,7 @@ impl Dimension for Dim<[Ix; 0]> {
 impl Dimension for Dim<[Ix; 1]> {
     const NDIM: Option<usize> = Some(1);
     type SliceArg = [SliceOrIndex; 1];
-    type Pattern = Ix;
+    type Pattern = (Ix,);
     type Smaller = Ix0;
     type Larger = Ix2;
     #[inline]
@@ -413,7 +413,7 @@ impl Dimension for Dim<[Ix; 1]> {
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
     fn into_pattern(self) -> Self::Pattern {
-        get!(&self, 0)
+        self.ix().convert()
     }
     #[inline]
     fn zeros(ndim: usize) -> Self {

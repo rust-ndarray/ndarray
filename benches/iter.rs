@@ -235,8 +235,8 @@ const I2DSZ: usize = 64;
 
 #[bench]
 fn indexed_iter_1d_ix1(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros(I2DSZ * I2DSZ);
-    for (i, elt) in a.indexed_iter_mut() {
+    let mut a = Array::<f64, _>::zeros((I2DSZ * I2DSZ,));
+    for ((i,), elt) in a.indexed_iter_mut() {
         *elt = i as _;
     }
 
@@ -250,8 +250,8 @@ fn indexed_iter_1d_ix1(bench: &mut Bencher) {
 
 #[bench]
 fn indexed_zip_1d_ix1(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros(I2DSZ * I2DSZ);
-    for (i, elt) in a.indexed_iter_mut() {
+    let mut a = Array::<f64, _>::zeros((I2DSZ * I2DSZ,));
+    for ((i,), elt) in a.indexed_iter_mut() {
         *elt = i as _;
     }
 
@@ -346,7 +346,7 @@ fn indexed_iter_3d_dyn(bench: &mut Bencher) {
 #[bench]
 fn iter_sum_1d_strided_fold(bench: &mut Bencher)
 {
-    let mut a = Array::<u64, _>::ones(10240);
+    let mut a = Array::<u64, _>::ones((10240,));
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     bench.iter(|| {
         a.iter().fold(0, |acc, &x| acc + x)
@@ -356,7 +356,7 @@ fn iter_sum_1d_strided_fold(bench: &mut Bencher)
 #[bench]
 fn iter_sum_1d_strided_rfold(bench: &mut Bencher)
 {
-    let mut a = Array::<u64, _>::ones(10240);
+    let mut a = Array::<u64, _>::ones((10240,));
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     bench.iter(|| {
         a.iter().rfold(0, |acc, &x| acc + x)

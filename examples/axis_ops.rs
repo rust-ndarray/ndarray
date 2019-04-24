@@ -51,7 +51,7 @@ fn main() {
         *elt = i;
     }
     regularize(&mut b).ok();
-    let mut b = b.into_shape(a.len()).unwrap();
+    let mut b = b.into_shape((a.len(),)).unwrap();
     regularize(&mut b).ok();
     b.invert_axis(Axis(0));
     regularize(&mut b).ok();

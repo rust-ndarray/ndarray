@@ -11,7 +11,7 @@
 use std::ops::{Index, IndexMut};
 use num_traits::Zero;
 
-use crate::{Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
+use crate::{Ix, IxDyn, Dimension, Dim, IxDynImpl};
 
 /// $m: macro callback
 /// $m is called with $arg and then the indices corresponding to the size argument
@@ -41,12 +41,6 @@ macro_rules! index_item {
 pub trait IntoDimension {
     type Dim: Dimension;
     fn into_dimension(self) -> Self::Dim;
-}
-
-impl IntoDimension for Ix {
-    type Dim = Ix1;
-    #[inline(always)]
-    fn into_dimension(self) -> Ix1 { Ix1(self) }
 }
 
 impl<D> IntoDimension for D where D: Dimension {

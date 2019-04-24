@@ -42,7 +42,7 @@ fn iter_size_hint() {
 fn indexed()
 {
     let a = ArcArray::linspace(0., 7., 8);
-    for (i, elt) in a.indexed_iter() {
+    for ((i,), elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }
     let a = a.reshape((2, 4, 1));
@@ -516,7 +516,7 @@ fn test_fold() {
 #[test]
 fn test_rfold() {
     {
-        let mut a = Array1::<i32>::default(256);
+        let mut a = Array1::<i32>::default((256,));
         a += 1;
         let mut iter = a.iter();
         iter.next();
@@ -525,7 +525,7 @@ fn test_rfold() {
 
     // Test strided arrays
     {
-        let mut a = Array1::<i32>::default(256);
+        let mut a = Array1::<i32>::default((256,));
         a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
         a += 1;
         let mut iter = a.iter();
@@ -534,7 +534,7 @@ fn test_rfold() {
     }
 
     {
-        let mut a = Array1::<i32>::default(256);
+        let mut a = Array1::<i32>::default((256,));
         a.slice_axis_inplace(Axis(0), Slice::new(0, None, -2));
         a += 1;
         let mut iter = a.iter();
