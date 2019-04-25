@@ -72,7 +72,7 @@
 //! let odd_sum = a.slice(s![.., 1..;2]).sum();
 //!
 //! // Create a 1-D array of exp(index).
-//! let b = Array::from_shape_fn(4, |i| (i as f64).exp());
+//! let b = Array::from_shape_fn((4,), |(i,)| (i as f64).exp());
 //!
 //! // Add b to a (broadcasting to rows).
 //! let c = a + &b;
