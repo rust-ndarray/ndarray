@@ -14,7 +14,7 @@ use itertools::{izip, zip};
 
 use crate::imp_prelude::*;
 
-use crate::arraytraits;
+use crate::{arraytraits, CowArray};
 use crate::dimension;
 use crate::error::{self, ShapeError, ErrorKind};
 use crate::dimension::IntoDimension;
@@ -1226,18 +1226,19 @@ where
         D::is_contiguous(&self.dim, &self.strides)
     }
 
-    pub fn as_contiguous(&self) -> ArrayBase<OwnedRepr<A>, D>
+    pub fn as_contiguous(&self) -> CowArray<'_, A, D>
         where S: Data,
               A: Clone
     {
         if self.is_standard_layout() {
-            self.to_owned()
+            CowArray::from_view_array(self.view())
         } else {
             let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
-            unsafe {
+            let owned_array: Array<A, D> = unsafe {
                 // Safe because we use shape and content of existing array here.
                 ArrayBase::from_shape_vec_unchecked(self.dim(), v)
-            }
+            };
+            CowArray::from_owned_array(owned_array)
         }
     }
 

@@ -1374,6 +1374,30 @@ impl<A> ViewRepr<A> {
     }
 }
 
+pub enum CowRepr<'a, A>
+    where A: Clone
+{
+    View(ViewRepr<&'a A>),
+    Temp(OwnedRepr<A>),
+}
+
+impl<'a, A> CowRepr<'a, A>
+    where A: Clone
+{
+    pub fn is_view(&self) -> bool {
+        match self {
+            CowRepr::View(_) => true,
+            CowRepr::Temp(_) => false,
+        }
+    }
+
+    pub fn is_temp(&self) -> bool {
+        !self.is_view()
+    }
+}
+
+pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+
 mod impl_clone;
 
 mod impl_constructors;
@@ -1469,6 +1493,60 @@ impl<A, S, D> ArrayBase<S, D>
     {
         let n = self.ndim();
         LanesMut::new(self.view_mut(), Axis(n.saturating_sub(1)))
+    }
+}
+
+impl<'a, A, D> CowArray<'a, A, D>
+    where A: Clone,
+          D: Dimension
+{
+    fn from_view_array(array: ArrayView<'a, A, D>) -> CowArray<'a, A, D> {
+        ArrayBase {
+            data: CowRepr::View(array.data),
+            ptr: array.ptr,
+            dim: array.dim,
+            strides: array.strides,
+        }
+    }
+
+    fn from_owned_array(array: Array<A, D>) -> CowArray<'a, A, D> {
+        ArrayBase {
+            data: CowRepr::Temp(array.data),
+            ptr: array.ptr,
+            dim: array.dim,
+            strides: array.strides,
+        }
+    }
+
+    fn into_view_array(self) -> Option<ArrayView<'a, A, D>> {
+        match self.data {
+            CowRepr::View(view) => Some(ArrayBase {
+                data: view,
+                ptr: self.ptr,
+                dim: self.dim,
+                strides: self.strides,
+            }),
+            CowRepr::Temp(_) => None,
+        }
+    }
+
+    fn into_owned_array(self) -> Option<Array<A, D>> {
+        match self.data {
+            CowRepr::View(_) => None,
+            CowRepr::Temp(data) => Some(ArrayBase {
+                data,
+                ptr: self.ptr,
+                dim: self.dim,
+                strides: self.strides,
+            })
+        }
+    }
+
+    fn ensure_temp(&mut self) {
+        if self.data.is_view() {
+            let copied_data: Vec<A> = self.iter().map(|x| x.clone()).collect();
+            self.data = CowRepr::Temp(OwnedRepr(copied_data));
+        }
     }
 }
 
