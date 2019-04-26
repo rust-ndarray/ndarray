@@ -43,7 +43,6 @@ use crate::iter::{
     Windows
 };
 use crate::stacking::stack;
-use crate::OwnedRepr;
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D>
