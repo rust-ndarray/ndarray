@@ -1898,7 +1898,7 @@ fn test_as_contiguous() {
     let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
     assert!(!arr.is_standard_layout());
 
-    let cont_arr = arr.as_contiguous();
+    let cont_arr = arr.as_standard_layout();
     assert!(cont_arr.is_standard_layout());
     assert!(arr.iter().zip(cont_arr.iter()).all(|(x1, x2)| x1 == x2));
 }

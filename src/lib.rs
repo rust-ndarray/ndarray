@@ -1378,7 +1378,7 @@ pub enum CowRepr<'a, A>
     where A: Clone
 {
     View(ViewRepr<&'a A>),
-    Temp(OwnedRepr<A>),
+    Owned(OwnedRepr<A>),
 }
 
 impl<'a, A> CowRepr<'a, A>
@@ -1387,16 +1387,16 @@ impl<'a, A> CowRepr<'a, A>
     pub fn is_view(&self) -> bool {
         match self {
             CowRepr::View(_) => true,
-            CowRepr::Temp(_) => false,
+            CowRepr::Owned(_) => false,
         }
     }
 
-    pub fn is_temp(&self) -> bool {
+    pub fn is_owned(&self) -> bool {
         !self.is_view()
     }
 }
 
-pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+pub type ArrayCow<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
 
 mod impl_clone;
 
@@ -1496,11 +1496,11 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-impl<'a, A, D> CowArray<'a, A, D>
+impl<'a, A, D> ArrayCow<'a, A, D>
     where A: Clone,
           D: Dimension
 {
-    fn from_view_array(array: ArrayView<'a, A, D>) -> CowArray<'a, A, D> {
+    fn from_view_array(array: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
         ArrayBase {
             data: CowRepr::View(array.data),
             ptr: array.ptr,
@@ -1509,9 +1509,9 @@ impl<'a, A, D> CowArray<'a, A, D>
         }
     }
 
-    fn from_owned_array(array: Array<A, D>) -> CowArray<'a, A, D> {
+    fn from_owned_array(array: Array<A, D>) -> ArrayCow<'a, A, D> {
         ArrayBase {
-            data: CowRepr::Temp(array.data),
+            data: CowRepr::Owned(array.data),
             ptr: array.ptr,
             dim: array.dim,
             strides: array.strides,
@@ -1526,14 +1526,14 @@ impl<'a, A, D> CowArray<'a, A, D>
                 dim: self.dim,
                 strides: self.strides,
             }),
-            CowRepr::Temp(_) => None,
+            CowRepr::Owned(_) => None,
         }
     }
 
     fn into_owned_array(self) -> Option<Array<A, D>> {
         match self.data {
             CowRepr::View(_) => None,
-            CowRepr::Temp(data) => Some(ArrayBase {
+            CowRepr::Owned(data) => Some(ArrayBase {
                 data,
                 ptr: self.ptr,
                 dim: self.dim,
@@ -1542,10 +1542,11 @@ impl<'a, A, D> CowArray<'a, A, D>
         }
     }
 
-    fn ensure_temp(&mut self) {
+    fn ensure_is_owned(&mut self) {
         if self.data.is_view() {
-            let copied_data: Vec<A> = self.iter().map(|x| x.clone()).collect();
-            self.data = CowRepr::Temp(OwnedRepr(copied_data));
+            let mut copied_data: Vec<A> = self.iter().map(|x| x.clone()).collect();
+            self.ptr = copied_data.as_mut_ptr();
+            self.data = CowRepr::Owned(OwnedRepr(copied_data));
         }
     }
 }

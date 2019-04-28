@@ -421,7 +421,7 @@ unsafe impl<'a, A> RawData for CowRepr<'a, A>
     fn _data_slice(&self) -> Option<&[A]> {
         match self {
             CowRepr::View(view) => view._data_slice(),
-            CowRepr::Temp(data) => data._data_slice(),
+            CowRepr::Owned(data) => data._data_slice(),
         }
     }
     private_impl!{}
@@ -435,12 +435,12 @@ unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
         where Self: Sized,
               D: Dimension
     {
-        array.ensure_temp();
+        array.ensure_is_owned();
     }
 
     #[inline]
     fn try_is_unique(&mut self) -> Option<bool> {
-        Some(self.is_temp())
+        Some(self.is_owned())
     }
 }
 
@@ -453,9 +453,9 @@ unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
                 let (new_view, ptr) = view.clone_with_ptr(ptr);
                 (CowRepr::View(new_view), ptr)
             },
-            CowRepr::Temp(data) => {
+            CowRepr::Owned(data) => {
                 let (new_data, ptr) = data.clone_with_ptr(ptr);
-                (CowRepr::Temp(new_data), ptr)
+                (CowRepr::Owned(new_data), ptr)
             },
         }
     }
@@ -466,13 +466,13 @@ unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
             CowRepr::View(view) => {
                 match other {
                     CowRepr::View(other_view) => view.clone_from_with_ptr(other_view, ptr),
-                    CowRepr::Temp(_) => panic!("Cannot copy `CowRepr::View` from `CowRepr::Temp`"),
+                    CowRepr::Owned(_) => panic!("Cannot copy `CowRepr::View` from `CowRepr::Temp`"),
                 }
             },
-            CowRepr::Temp(data) => {
+            CowRepr::Owned(data) => {
                 match other {
                     CowRepr::View(_) => panic!("Cannot copy `CowRepr::Temp` from `CowRepr::View`"),
-                    CowRepr::Temp(other_data) => data.clone_from_with_ptr(other_data, ptr),
+                    CowRepr::Owned(other_data) => data.clone_from_with_ptr(other_data, ptr),
                 }
             },
         }
