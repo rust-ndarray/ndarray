@@ -220,11 +220,40 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
     }
 }
 
+/// An array reference is an n-dimensional producer of element references
+/// (like ArrayView).
+impl<'a, 'b, A: 'a + 'b, S, D> IntoNdProducer for &'b &'a ArrayBase<S, D>
+    where D: Dimension,
+          S: Data<Elem=A>,
+{
+    type Item = &'a A;
+    type Dim = D;
+    type Output = ArrayView<'a, A, D>;
+    fn into_producer(self) -> Self::Output {
+        self.view()
+    }
+}
+
 /// A mutable array reference is an n-dimensional producer of mutable element
 /// references (like ArrayViewMut).
 impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
     where D: Dimension,
           S: DataMut<Elem=A>,
+{
+    type Item = &'a mut A;
+    type Dim = D;
+    type Output = ArrayViewMut<'a, A, D>;
+    fn into_producer(self) -> Self::Output {
+        self.view_mut()
+    }
+}
+
+/// A mutable array reference is an n-dimensional producer of mutable element
+/// references (like ArrayViewMut).
+impl<'a, 'b, A: 'a + 'b, S, D> IntoNdProducer for &'a mut &'b mut ArrayBase<S, D>
+    where D: Dimension,
+          S: DataMut<Elem=A>,
+          'b: 'a
 {
     type Item = &'a mut A;
     type Dim = D;
