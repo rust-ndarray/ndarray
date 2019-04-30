@@ -1549,6 +1549,14 @@ impl<'a, A, D> ArrayCow<'a, A, D>
             self.data = CowRepr::Owned(OwnedRepr(copied_data));
         }
     }
+
+    pub fn is_view(&self) -> bool {
+        self.data.is_view()
+    }
+
+    pub fn is_owned(&self) -> bool {
+        self.data.is_owned()
+    }
 }
 
 

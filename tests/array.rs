@@ -4,7 +4,7 @@ extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
 
-use ndarray::{Slice, SliceInfo, SliceOrIndex};
+use ndarray::{Slice, SliceInfo, SliceOrIndex, Data};
 use ndarray::prelude::*;
 use ndarray::{
     rcarr2,
@@ -1894,11 +1894,63 @@ fn array_macros() {
 
 #[test]
 fn test_as_contiguous() {
+    fn is_content_identical<A, S1, S2, D>(arr1: &ArrayBase<S1, D>, arr2: &ArrayBase<S2, D>) -> bool
+        where A: Clone + PartialEq,
+              S1: Data<Elem=A>,
+              S2: Data<Elem=A>,
+              D: Dimension
+    {
+        arr1.iter().zip(arr2.iter()).all(|(x1, x2)| x1 == x2)
+    }
+
+    // F layout
     let shape = Ix2(2, 2).strides(Ix2(1, 2));
     let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
     assert!(!arr.is_standard_layout());
-
     let cont_arr = arr.as_standard_layout();
     assert!(cont_arr.is_standard_layout());
-    assert!(arr.iter().zip(cont_arr.iter()).all(|(x1, x2)| x1 == x2));
+    assert!(is_content_identical(&arr, &cont_arr));
+    assert!(cont_arr.is_owned());
+
+    // C layout
+    let arr = Array::<i32, Ix2>::from_shape_vec((2, 2), vec![1, 2, 3, 4]).unwrap();
+    assert!(arr.is_standard_layout());
+    let cont_arr = arr.as_standard_layout();
+    assert!(cont_arr.is_standard_layout());
+    assert!(is_content_identical(&arr, &cont_arr));
+    assert!(cont_arr.is_view());
+
+    // F layout view
+    let shape = Ix2(2, 2).strides(Ix2(1, 2));
+    let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
+    let arr_view = arr.view();
+    assert!(!arr_view.is_standard_layout());
+    let cont_arr = arr.as_standard_layout();
+    assert!(cont_arr.is_standard_layout());
+    assert!(is_content_identical(&arr, &cont_arr));
+    assert!(cont_arr.is_owned());
+
+    // C layout view
+    let arr = Array::<i32, Ix2>::from_shape_vec((2, 2), vec![1, 2, 3, 4]).unwrap();
+    let arr_view = arr.view();
+    assert!(arr_view.is_standard_layout());
+    let cont_arr = arr_view.as_standard_layout();
+    assert!(is_content_identical(&arr, &cont_arr));
+    assert!(cont_arr.is_view());
+
+    // 0 dimensional array
+    let arr_view = ArrayView1::<i32>::from(&[]);
+    assert!(arr_view.is_standard_layout());
+    let cont_arr = arr_view.as_standard_layout();
+    assert!(is_content_identical(&arr_view, &cont_arr));
+    assert!(cont_arr.is_view());
+
+    // Custom layout
+    let shape = Ix4(1, 2, 3, 2).strides(Ix4(12, 1, 2, 6));
+    let arr_data: Vec<i32> = (0..12).collect();
+    let arr = Array::<i32, Ix4>::from_shape_vec(shape, arr_data).unwrap();
+    assert!(!arr.is_standard_layout());
+    let cont_arr = arr.as_standard_layout();
+    assert!(is_content_identical(&arr, &cont_arr));
+    assert!(cont_arr.is_owned());
 }
