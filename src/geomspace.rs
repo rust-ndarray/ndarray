@@ -7,19 +7,18 @@
 // except according to those terms.
 use num_traits::Float;
 
-/// An iterator of a sequence of logarithmically spaced number.
+/// An iterator of a sequence of geometrically spaced floats.
 ///
 /// Iterator element type is `F`.
-pub struct Logspace<F> {
+pub struct Geomspace<F> {
     sign: F,
-    base: F,
     start: F,
     step: F,
     index: usize,
     len: usize,
 }
 
-impl<F> Iterator for Logspace<F>
+impl<F> Iterator for Geomspace<F>
 where
     F: Float,
 {
@@ -34,7 +33,7 @@ where
             let i = self.index;
             self.index += 1;
             let exponent = self.start + self.step * F::from(i).unwrap();
-            Some(self.sign * self.base.powf(exponent))
+            Some(self.sign * exponent.exp())
         }
     }
 
@@ -45,7 +44,7 @@ where
     }
 }
 
-impl<F> DoubleEndedIterator for Logspace<F>
+impl<F> DoubleEndedIterator for Geomspace<F>
 where
     F: Float,
 {
@@ -58,35 +57,46 @@ where
             self.len -= 1;
             let i = self.len;
             let exponent = self.start + self.step * F::from(i).unwrap();
-            Some(self.sign * self.base.powf(exponent))
+            Some(self.sign * exponent.exp())
         }
     }
 }
 
-impl<F> ExactSizeIterator for Logspace<F> where Logspace<F>: Iterator {}
+impl<F> ExactSizeIterator for Geomspace<F> where Geomspace<F>: Iterator {}
 
-/// An iterator of a sequence of logarithmically spaced number.
+/// An iterator of a sequence of geometrically spaced values.
 ///
-/// The `Logspace` has `n` elements, where the first element is `base.powf(a)`
-/// and the last element is `base.powf(b)`.  If `base` is negative, this
-/// iterator will return all negative values.
+/// The `Geomspace` has `n` elements, where the first element is `a` and the
+/// last element is `b`.
 ///
 /// Iterator element type is `F`, where `F` must be either `f32` or `f64`.
+///
+/// **Panics** if the interval `[a, b]` contains zero (including the end points).
 #[inline]
-pub fn logspace<F>(base: F, a: F, b: F, n: usize) -> Logspace<F>
+pub fn geomspace<F>(a: F, b: F, n: usize) -> Geomspace<F>
 where
     F: Float,
 {
+    assert!(
+        a != F::zero() && b != F::zero(),
+        "Start and/or end of geomspace cannot be zero.",
+    );
+    assert!(
+        a.is_sign_negative() == b.is_sign_negative(),
+        "Logarithmic interval cannot cross 0."
+    );
+
+    let log_a = a.abs().ln();
+    let log_b = b.abs().ln();
     let step = if n > 1 {
         let nf: F = F::from(n).unwrap();
-        (b - a) / (nf - F::one())
+        (log_b - log_a) / (nf - F::one())
     } else {
         F::zero()
     };
-    Logspace {
-        sign: base.signum(),
-        base: base.abs(),
-        start: a,
+    Geomspace {
+        sign: a.signum(),
+        start: log_a,
         step: step,
         index: 0,
         len: n,
@@ -95,27 +105,27 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::logspace;
+    use super::geomspace;
     use crate::{arr1, Array1};
 
     #[test]
     fn valid() {
-        let array: Array1<_> = logspace(10.0, 0.0, 3.0, 4).collect();
+        let array: Array1<_> = geomspace(1e0, 1e3, 4).collect();
         assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
 
-        let array: Array1<_> = logspace(10.0, 3.0, 0.0, 4).collect();
+        let array: Array1<_> = geomspace(1e3, 1e0, 4).collect();
         assert!(array.all_close(&arr1(&[1e3, 1e2, 1e1, 1e0]), 1e-5));
 
-        let array: Array1<_> = logspace(-10.0, 3.0, 0.0, 4).collect();
+        let array: Array1<_> = geomspace(-1e3, -1e0, 4).collect();
         assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
 
-        let array: Array1<_> = logspace(-10.0, 0.0, 3.0, 4).collect();
+        let array: Array1<_> = geomspace(-1e0, -1e3, 4).collect();
         assert!(array.all_close(&arr1(&[-1e0, -1e1, -1e2, -1e3]), 1e-5));
     }
 
     #[test]
     fn iter_forward() {
-        let mut iter = logspace(10.0f64, 0.0, 3.0, 4);
+        let mut iter = geomspace(1.0f64, 1e3, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
 
@@ -130,7 +140,7 @@ mod tests {
 
     #[test]
     fn iter_backward() {
-        let mut iter = logspace(10.0f64, 0.0, 3.0, 4);
+        let mut iter = geomspace(1.0f64, 1e3, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
 
@@ -141,5 +151,23 @@ mod tests {
         assert!(iter.next_back().is_none());
 
         assert!(iter.size_hint() == (0, Some(0)));
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_lower() {
+        geomspace(0.0, 1.0, 4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_upper() {
+        geomspace(1.0, 0.0, 4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_included() {
+        geomspace(-1.0, 1.0, 4);
     }
 }

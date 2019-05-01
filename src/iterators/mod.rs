@@ -1218,9 +1218,10 @@ pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
-use crate::{linspace::Linspace, logspace::Logspace};
+use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
 use std;
 
+unsafe impl<F> TrustedIterator for Geomspace<F> {}
 unsafe impl<F> TrustedIterator for Linspace<F> {}
 unsafe impl<F> TrustedIterator for Logspace<F> {}
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
