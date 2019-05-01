@@ -274,9 +274,9 @@ fn test_indices_split_1() {
 
 #[test]
 fn test_zip_all() {
-    let a = Array::<f32, _>::zeros(62);
-    let b = Array::<f32, _>::ones(62);
-    let mut c = Array::<f32, _>::ones(62);
+    let a = Array::<f32, _>::zeros([62]);
+    let b = Array::<f32, _>::ones([62]);
+    let mut c = Array::<f32, _>::ones([62]);
     c[5] = 0.0;
     assert_eq!(true, Zip::from(&a).and(&b).all(|&x, &y| x + y == 1.0));
     assert_eq!(false, Zip::from(&a).and(&b).all(|&x, &y| x == y));
@@ -285,8 +285,8 @@ fn test_zip_all() {
 
 #[test]
 fn test_zip_all_empty_array() {
-    let a = Array::<f32, _>::zeros(0);
-    let b = Array::<f32, _>::ones(0);
+    let a = Array::<f32, _>::zeros([0]);
+    let b = Array::<f32, _>::ones([0]);
     assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| true));
     assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| false));
 }

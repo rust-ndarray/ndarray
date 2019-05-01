@@ -221,7 +221,7 @@ mod formatting_with_omit {
 
     #[test]
     fn zero_length_axes() {
-        let a = Array3::<f32>::zeros((3, 0, 4));
+        let a = Array3::<f32>::zeros([3, 0, 4]);
         let actual_output = format!("{}", a);
         let expected_output = String::from("[[[]]]");
         print_output_diff(&expected_output, &actual_output);
@@ -241,7 +241,7 @@ mod formatting_with_omit {
     #[test]
     fn dim_1() {
         let overflow: usize = 5;
-        let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, ), 1);
+        let a = Array1::from_elem([PRINT_ELEMENTS_LIMIT * 2 + overflow, ], 1);
         let mut expected_output = String::from("[");
         a.iter()
             .take(PRINT_ELEMENTS_LIMIT)
@@ -260,17 +260,17 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_last_axis_overflow() {
         let overflow: usize = 3;
-        let a = Array2::from_elem((PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow), 1);
+        let a = Array2::from_elem([PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow], 1);
         let mut expected_output = String::from("[");
 
         for i in 0..PRINT_ELEMENTS_LIMIT {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            expected_output.push_str(format!("[{}", a[[i, 0]]).as_str());
             for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str(", ...");
             for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str(if i < PRINT_ELEMENTS_LIMIT - 1 { "],\n " } else { "]" });
         }
@@ -284,21 +284,21 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_non_last_axis_overflow() {
         let overflow: usize = 5;
-        let a = Array2::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT), 1);
+        let a = Array2::from_elem([PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT], 1);
         let mut expected_output = String::from("[");
 
         for i in 0..PRINT_ELEMENTS_LIMIT {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            expected_output.push_str(format!("[{}", a[[i, 0]]).as_str());
             for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str("],\n ");
         }
         expected_output.push_str("...,\n ");
         for i in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            expected_output.push_str(format!("[{}", a[[i, 0]]).as_str());
             for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str(if i == PRINT_ELEMENTS_LIMIT * 2 + overflow - 1 {
                 "]"
@@ -317,30 +317,30 @@ mod formatting_with_omit {
     fn dim_2_multi_directional_overflow() {
         let overflow: usize = 5;
         let a = Array2::from_elem(
-            (PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT * 2 + overflow), 1
+            [PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT * 2 + overflow], 1
         );
         let mut expected_output = String::from("[");
 
         for i in 0..PRINT_ELEMENTS_LIMIT {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            expected_output.push_str(format!("[{}", a[[i, 0]]).as_str());
             for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str(", ...");
             for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str("],\n ");
         }
         expected_output.push_str("...,\n ");
         for i in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
+            expected_output.push_str(format!("[{}", a[[i, 0]]).as_str());
             for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str(", ...");
             for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
+                expected_output.push_str(format!(", {}", a[[i, j]]).as_str());
             }
             expected_output.push_str(if i == PRINT_ELEMENTS_LIMIT * 2 + overflow - 1 {
                 "]"
