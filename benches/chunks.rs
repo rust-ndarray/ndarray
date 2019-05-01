@@ -10,8 +10,8 @@ use ndarray::NdProducer;
 #[bench]
 fn chunk2x2_iter_sum(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((256, 256));
-    let chunksz = (2, 2);
+    let a = Array::<f32, _>::zeros([256, 256]);
+    let chunksz = [2, 2];
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
         azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
@@ -23,8 +23,8 @@ fn chunk2x2_iter_sum(bench: &mut Bencher)
 #[bench]
 fn chunk2x2_sum(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((256, 256));
-    let chunksz = (2, 2);
+    let a = Array::<f32, _>::zeros([256, 256]);
+    let chunksz = [2, 2];
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
         azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
@@ -36,8 +36,8 @@ fn chunk2x2_sum(bench: &mut Bencher)
 #[bench]
 fn chunk2x2_sum_get1(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((256, 256));
-    let chunksz = (2, 2);
+    let a = Array::<f32, _>::zeros([256, 256]);
+    let chunksz = [2, 2];
     let mut sum = Array::<f32, _>::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
         let [m, n] = a.dim();
@@ -52,8 +52,8 @@ fn chunk2x2_sum_get1(bench: &mut Bencher)
 #[bench]
 fn chunk2x2_sum_uget1(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((256, 256));
-    let chunksz = (2, 2);
+    let a = Array::<f32, _>::zeros([256, 256]);
+    let chunksz = [2, 2];
     let mut sum = Array::<f32, _>::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
         let [m, n] = a.dim();
@@ -70,8 +70,8 @@ fn chunk2x2_sum_uget1(bench: &mut Bencher)
 #[bench]
 fn chunk2x2_sum_get2(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((256, 256));
-    let chunksz = (2, 2);
+    let a = Array::<f32, _>::zeros([256, 256]);
+    let chunksz = [2, 2];
     let mut sum = Array::<f32, _>::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
         let [m, n] = sum.dim();

@@ -23,27 +23,27 @@ use ndarray::Zip;
 #[should_panic]
 fn windows_iterator_zero_size() {
     let a = Array::from_iter(10..37)
-        .into_shape((3, 3, 3))
+        .into_shape([3, 3, 3])
         .unwrap();
-    a.windows(Dim((0, 0, 0)));
+    a.windows(Dim([0, 0, 0]));
 }
 
 /// Test that verifites that no windows are yielded on oversized window sizes.
 #[test]
 fn windows_iterator_oversized() {
     let a = Array::from_iter(10..37)
-        .into_shape((3, 3, 3))
+        .into_shape([3, 3, 3])
         .unwrap();
-    let mut iter = a.windows((4, 3, 2)).into_iter(); // (4,3,2) doesn't fit into (3,3,3) => oversized!
+    let mut iter = a.windows([4, 3, 2]).into_iter(); // (4,3,2) doesn't fit into (3,3,3) => oversized!
     assert_eq!(iter.next(), None);
 }
 
 /// Simple test for iterating 1d-arrays via `Windows`.
 #[test]
 fn windows_iterator_1d() {
-    let a = Array::from_iter(10..20).into_shape((10,)).unwrap();
+    let a = Array::from_iter(10..20).into_shape([10]).unwrap();
     itertools::assert_equal(
-        a.windows(Dim((4,))),
+        a.windows(Dim([4])),
         vec![
             arr1(&[10, 11, 12, 13]),
             arr1(&[11, 12, 13, 14]),
@@ -58,9 +58,9 @@ fn windows_iterator_1d() {
 /// Simple test for iterating 2d-arrays via `Windows`.
 #[test]
 fn windows_iterator_2d() {
-    let a = Array::from_iter(10..30).into_shape((5, 4)).unwrap();
+    let a = Array::from_iter(10..30).into_shape([5, 4]).unwrap();
     itertools::assert_equal(
-        a.windows(Dim((3, 2))),
+        a.windows(Dim([3, 2])),
         vec![
             arr2(&[ [10, 11], [14, 15], [18, 19] ]),
             arr2(&[ [11, 12], [15, 16], [19, 20] ]),
@@ -80,9 +80,9 @@ fn windows_iterator_2d() {
 #[test]
 fn windows_iterator_3d() {
     use ndarray::arr3;
-    let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
+    let a = Array::from_iter(10..37).into_shape([3, 3, 3]).unwrap();
     itertools::assert_equal(
-        a.windows(Dim((2, 2, 2))),
+        a.windows(Dim([2, 2, 2])),
         vec![
             arr3(&[ [[10, 11], [13, 14]], [[19, 20], [22, 23]] ]),
             arr3(&[ [[11, 12], [14, 15]], [[20, 21], [23, 24]] ]),
@@ -100,12 +100,12 @@ fn windows_iterator_3d() {
 
 #[test]
 fn test_window_zip() {
-    let a = Array::from_iter(0..64).into_shape((4, 4, 4)).unwrap();
+    let a = Array::from_iter(0..64).into_shape([4, 4, 4]).unwrap();
 
     for x in 1..4 {
         for y in 1..4 {
             for z in 1..4 {
-                Zip::indexed(a.windows((x, y, z)))
+                Zip::indexed(a.windows([x, y, z]))
                     .apply(|[i, j, k], window| {
                         let x = x as isize;
                         let y = y as isize;

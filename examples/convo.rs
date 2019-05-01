@@ -41,7 +41,7 @@ fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3
 
 fn main() {
     let n = 16;
-    let mut a = Array::zeros((n, n));
+    let mut a = Array::zeros([n, n]);
     // make a circle
     let c = (8., 8.);
     for ([i, j], elt) in a.indexed_iter_mut() {

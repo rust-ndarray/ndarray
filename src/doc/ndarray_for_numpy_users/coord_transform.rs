@@ -55,7 +55,7 @@
 //!
 //! fn main() {
 //!     let nelems = 4;
-//!     let bunge = Array::ones((3, nelems));
+//!     let bunge = Array::ones([3, nelems]);
 //!
 //!     let s1 = bunge.slice(s![0, ..]).mapv(f64::sin);
 //!     let c1 = bunge.slice(s![0, ..]).mapv(f64::cos);
@@ -64,7 +64,7 @@
 //!     let s3 = bunge.slice(s![2, ..]).mapv(f64::sin);
 //!     let c3 = bunge.slice(s![2, ..]).mapv(f64::cos);
 //!
-//!     let mut rmat = Array::zeros((3, 3, nelems).f());
+//!     let mut rmat = Array::zeros([3, 3, nelems].f());
 //!     for i in 0..nelems {
 //!         rmat[[0, 0, i]] = c1[i] * c3[i] - s1[i] * s3[i] * c2[i];
 //!         rmat[[0, 1, i]] = -c1[i] * s3[i] - s1[i] * c2[i] * c3[i];
@@ -81,7 +81,7 @@
 //!
 //!     let eye2d = Array::eye(3);
 //!
-//!     let mut rotated = Array::zeros((3, 3, nelems).f());
+//!     let mut rotated = Array::zeros([3, 3, nelems].f());
 //!     for i in 0..nelems {
 //!         rotated
 //!             .slice_mut(s![.., .., i])
@@ -102,9 +102,9 @@
 //!
 //! fn main() {
 //!     let nelems = 4;
-//!     let bunge = Array2::<f64>::ones((3, nelems));
+//!     let bunge = Array2::<f64>::ones([3, nelems]);
 //!
-//!     let mut rmat = Array::zeros((3, 3, nelems).f());
+//!     let mut rmat = Array::zeros([3, 3, nelems].f());
 //!     azip!(mut rmat (rmat.axis_iter_mut(Axis(2))), ref bunge (bunge.axis_iter(Axis(1))) in {
 //!         let s1 = bunge[0].sin();
 //!         let c1 = bunge[0].cos();
@@ -128,7 +128,7 @@
 //!
 //!     let eye2d = Array2::<f64>::eye(3);
 //!
-//!     let mut rotated = Array3::<f64>::zeros((3, 3, nelems).f());
+//!     let mut rotated = Array3::<f64>::zeros([3, 3, nelems].f());
 //!     azip!(mut rotated (rotated.axis_iter_mut(Axis(2)), rmat (rmat.axis_iter(Axis(2)))) in {
 //!         rotated.assign({ &rmat.dot(&eye2d) });
 //!     });

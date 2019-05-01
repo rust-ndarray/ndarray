@@ -20,7 +20,7 @@ fn test_swap() {
 
 #[test]
 fn test() {
-    let c = ArcArray::<(), _>::default((3, 4));
+    let c = ArcArray::<(), _>::default([3, 4]);
     let mut d = c.clone();
     for _ in d.iter_mut() {}
 }

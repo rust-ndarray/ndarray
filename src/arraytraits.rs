@@ -230,7 +230,7 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
             );
         }
         unsafe {
-            Self::from_shape_ptr((xs.len(),), xs.as_ptr())
+            Self::from_shape_ptr([xs.len()], xs.as_ptr())
         }
     }
 }
@@ -262,7 +262,7 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
             );
         }
         unsafe {
-            Self::from_shape_ptr((xs.len(),), xs.as_mut_ptr())
+            Self::from_shape_ptr([xs.len()], xs.as_mut_ptr())
         }
     }
 }

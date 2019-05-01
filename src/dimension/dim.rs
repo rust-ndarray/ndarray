@@ -32,7 +32,7 @@ use crate::Ix;
 /// use ndarray::Array2;
 /// use ndarray::Dim;
 ///
-/// let mut array = Array2::zeros((3, 2));
+/// let mut array = Array2::zeros([3, 2]);
 /// array[[0, 0]] = 1.;
 /// assert_eq!(array.raw_dim(), Dim([3, 2]));
 /// ```

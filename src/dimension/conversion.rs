@@ -82,12 +82,6 @@ macro_rules! tuple_expr {
     )
 }
 
-macro_rules! array_expr {
-    ([$self_:expr] $($index:tt)*) => (
-        [$($self_ . $index, )*]
-    )
-}
-
 macro_rules! array_zero {
     ([] $($index:tt)*) => (
         [$(sub!($index 0), )*]
@@ -110,14 +104,6 @@ macro_rules! tuple_to_array {
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
                 Dim::new(self)
-            }
-        }
-
-        impl IntoDimension for index!(tuple_type [Ix] $n) {
-            type Dim = Dim<[Ix; $n]>;
-            #[inline(always)]
-            fn into_dimension(self) -> Self::Dim {
-                Dim::new(index!(array_expr [self] $n))
             }
         }
 

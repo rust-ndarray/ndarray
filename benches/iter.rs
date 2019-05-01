@@ -14,7 +14,7 @@ use ndarray::Slice;
 #[bench]
 fn iter_sum_2d_regular(bench: &mut Bencher)
 {
-    let a = Array::<i32, _>::zeros((64, 64));
+    let a = Array::<i32, _>::zeros([64, 64]);
     bench.iter(|| {
         a.iter().fold(0, |acc, &x| acc + x)
     });
@@ -23,7 +23,7 @@ fn iter_sum_2d_regular(bench: &mut Bencher)
 #[bench]
 fn iter_sum_2d_cutout(bench: &mut Bencher)
 {
-    let a = Array::<i32, _>::zeros((66, 66));
+    let a = Array::<i32, _>::zeros([66, 66]);
     let av = a.slice(s![1..-1, 1..-1]);
     let a = av;
     bench.iter(|| {
@@ -34,7 +34,7 @@ fn iter_sum_2d_cutout(bench: &mut Bencher)
 #[bench]
 fn iter_all_2d_cutout(bench: &mut Bencher)
 {
-    let a = Array::<i32, _>::zeros((66, 66));
+    let a = Array::<i32, _>::zeros([66, 66]);
     let av = a.slice(s![1..-1, 1..-1]);
     let a = av;
     bench.iter(|| {
@@ -45,7 +45,7 @@ fn iter_all_2d_cutout(bench: &mut Bencher)
 #[bench]
 fn iter_sum_2d_transpose(bench: &mut Bencher)
 {
-    let a = Array::<i32, _>::zeros((66, 66));
+    let a = Array::<i32, _>::zeros([66, 66]);
     let a = a.t();
     bench.iter(|| {
         a.iter().fold(0, |acc, &x| acc + x)
@@ -55,7 +55,7 @@ fn iter_sum_2d_transpose(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_u32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape([16, 16]).unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
     bench.iter(|| {
         b.iter().filter(|&&x| x < 75).fold(0, |acc, &x| acc + x)
@@ -65,7 +65,7 @@ fn iter_filter_sum_2d_u32(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_f32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape([16, 16]).unwrap();
     let b = a * 100.;
     bench.iter(|| {
         b.iter().filter(|&&x| x < 75.).fold(0., |acc, &x| acc + x)
@@ -75,7 +75,7 @@ fn iter_filter_sum_2d_f32(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape([16, 16]).unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
     let b = b.slice(s![.., ..;2]);
     bench.iter(|| {
@@ -86,7 +86,7 @@ fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape([16, 16]).unwrap();
     let b = a * 100.;
     let b = b.slice(s![.., ..;2]);
     bench.iter(|| {
@@ -235,7 +235,7 @@ const I2DSZ: usize = 64;
 
 #[bench]
 fn indexed_iter_1d_ix1(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((I2DSZ * I2DSZ,));
+    let mut a = Array::<f64, _>::zeros([I2DSZ * I2DSZ]);
     for ([i], elt) in a.indexed_iter_mut() {
         *elt = i as _;
     }
@@ -250,7 +250,7 @@ fn indexed_iter_1d_ix1(bench: &mut Bencher) {
 
 #[bench]
 fn indexed_zip_1d_ix1(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((I2DSZ * I2DSZ,));
+    let mut a = Array::<f64, _>::zeros([I2DSZ * I2DSZ]);
     for ([i], elt) in a.indexed_iter_mut() {
         *elt = i as _;
     }
@@ -266,7 +266,7 @@ fn indexed_zip_1d_ix1(bench: &mut Bencher) {
 
 #[bench]
 fn indexed_iter_2d_ix2(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((I2DSZ, I2DSZ));
+    let mut a = Array::<f64, _>::zeros([I2DSZ, I2DSZ]);
     for ([i, j], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j) as _;
     }
@@ -280,7 +280,7 @@ fn indexed_iter_2d_ix2(bench: &mut Bencher) {
 }
 #[bench]
 fn indexed_zip_2d_ix2(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((I2DSZ, I2DSZ));
+    let mut a = Array::<f64, _>::zeros([I2DSZ, I2DSZ]);
     for ([i, j], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j) as _;
     }
@@ -298,7 +298,7 @@ fn indexed_zip_2d_ix2(bench: &mut Bencher) {
 
 #[bench]
 fn indexed_iter_3d_ix3(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
+    let mut a = Array::<f64, _>::zeros([ISZ, ISZ, ISZ]);
     for ([i, j, k], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
@@ -313,7 +313,7 @@ fn indexed_iter_3d_ix3(bench: &mut Bencher) {
 
 #[bench]
 fn indexed_zip_3d_ix3(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
+    let mut a = Array::<f64, _>::zeros([ISZ, ISZ, ISZ]);
     for ([i, j, k], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
@@ -329,7 +329,7 @@ fn indexed_zip_3d_ix3(bench: &mut Bencher) {
 
 #[bench]
 fn indexed_iter_3d_dyn(bench: &mut Bencher) {
-    let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
+    let mut a = Array::<f64, _>::zeros([ISZ, ISZ, ISZ]);
     for ([i, j, k], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
@@ -346,7 +346,7 @@ fn indexed_iter_3d_dyn(bench: &mut Bencher) {
 #[bench]
 fn iter_sum_1d_strided_fold(bench: &mut Bencher)
 {
-    let mut a = Array::<u64, _>::ones((10240,));
+    let mut a = Array::<u64, _>::ones([10240]);
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     bench.iter(|| {
         a.iter().fold(0, |acc, &x| acc + x)
@@ -356,7 +356,7 @@ fn iter_sum_1d_strided_fold(bench: &mut Bencher)
 #[bench]
 fn iter_sum_1d_strided_rfold(bench: &mut Bencher)
 {
-    let mut a = Array::<u64, _>::ones((10240,));
+    let mut a = Array::<u64, _>::ones([10240]);
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     bench.iter(|| {
         a.iter().rfold(0, |acc, &x| acc + x)
@@ -367,7 +367,7 @@ fn iter_sum_1d_strided_rfold(bench: &mut Bencher)
 #[bench]
 fn iter_axis_iter_sum(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((64, 64));
+    let a = Array::<f32, _>::zeros([64, 64]);
     bench.iter(|| {
         a.axis_iter(Axis(0)).map(|plane| plane.sum()).sum::<f32>()
     });
@@ -376,7 +376,7 @@ fn iter_axis_iter_sum(bench: &mut Bencher)
 #[bench]
 fn iter_axis_chunks_1_iter_sum(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((64, 64));
+    let a = Array::<f32, _>::zeros([64, 64]);
     bench.iter(|| {
         a.axis_chunks_iter(Axis(0), 1).map(|plane| plane.sum()).sum::<f32>()
     });
@@ -385,7 +385,7 @@ fn iter_axis_chunks_1_iter_sum(bench: &mut Bencher)
 #[bench]
 fn iter_axis_chunks_5_iter_sum(bench: &mut Bencher)
 {
-    let a = Array::<f32, _>::zeros((64, 64));
+    let a = Array::<f32, _>::zeros([64, 64]);
     bench.iter(|| {
         a.axis_chunks_iter(Axis(0), 5).map(|plane| plane.sum()).sum::<f32>()
     });

@@ -49,15 +49,15 @@ fn sum_mean()
 
 #[test]
 fn sum_mean_empty() {
-    assert_eq!(Array3::<f32>::ones((2, 0, 3)).sum(), 0.);
-    assert_eq!(Array1::<f32>::ones((0,)).sum_axis(Axis(0)), arr0(0.));
+    assert_eq!(Array3::<f32>::ones([2, 0, 3]).sum(), 0.);
+    assert_eq!(Array1::<f32>::ones([0]).sum_axis(Axis(0)), arr0(0.));
     assert_eq!(
-        Array3::<f32>::ones((2, 0, 3)).sum_axis(Axis(1)),
-        Array::zeros((2, 3)),
+        Array3::<f32>::ones([2, 0, 3]).sum_axis(Axis(1)),
+        Array::zeros([2, 3]),
     );
-    let a = Array1::<f32>::ones((0,)).mean_axis(Axis(0));
+    let a = Array1::<f32>::ones([0]).mean_axis(Axis(0));
     assert_eq!(a, None);
-    let a = Array3::<f32>::ones((2, 0, 3)).mean_axis(Axis(1));
+    let a = Array3::<f32>::ones([2, 0, 3]).mean_axis(Axis(1));
     assert_eq!(a, None);
 }
 
@@ -172,7 +172,7 @@ fn var_axis_too_large_ddof() {
 
 #[test]
 fn var_axis_nan_ddof() {
-    let a = Array2::<f64>::zeros((2, 3));
+    let a = Array2::<f64>::zeros([2, 3]);
     let v = a.var_axis(Axis(1), ::std::f64::NAN);
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
@@ -180,7 +180,7 @@ fn var_axis_nan_ddof() {
 
 #[test]
 fn var_axis_empty_axis() {
-    let a = Array2::<f64>::zeros((2, 0));
+    let a = Array2::<f64>::zeros([2, 0]);
     let v = a.var_axis(Axis(1), 0.);
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
@@ -195,7 +195,7 @@ fn std_axis_bad_dof() {
 
 #[test]
 fn std_axis_empty_axis() {
-    let a = Array2::<f64>::zeros((2, 0));
+    let a = Array2::<f64>::zeros([2, 0]);
     let v = a.std_axis(Axis(1), 0.);
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));

@@ -269,7 +269,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
+            c = Array::from_shape_vec_unchecked([m, n].set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -319,7 +319,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
 
         // Avoid initializing the memory in vec -- set it during iteration
         unsafe {
-            let mut c = Array::uninitialized((m,));
+            let mut c = Array::uninitialized([m]);
             general_mat_vec_mul(A::one(), self, rhs, A::zero(), &mut c);
             c
         }
@@ -755,28 +755,28 @@ mod blas_tests {
 
     #[test]
     fn blas_row_major_2d_normal_matrix() {
-        let m: Array2<f32> = Array2::zeros((3, 5));
+        let m: Array2<f32> = Array2::zeros([3, 5]);
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(!blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
     fn blas_row_major_2d_row_matrix() {
-        let m: Array2<f32> = Array2::zeros((1, 5));
+        let m: Array2<f32> = Array2::zeros([1, 5]);
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
     fn blas_row_major_2d_column_matrix() {
-        let m: Array2<f32> = Array2::zeros((5, 1));
+        let m: Array2<f32> = Array2::zeros([5, 1]);
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
     fn blas_row_major_2d_transposed_row_matrix() {
-        let m: Array2<f32> = Array2::zeros((1, 5));
+        let m: Array2<f32> = Array2::zeros([1, 5]);
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
         assert!(blas_column_major_2d::<f32, _>(&m_t));
@@ -784,7 +784,7 @@ mod blas_tests {
 
     #[test]
     fn blas_row_major_2d_transposed_column_matrix() {
-        let m: Array2<f32> = Array2::zeros((5, 1));
+        let m: Array2<f32> = Array2::zeros([5, 1]);
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
         assert!(blas_column_major_2d::<f32, _>(&m_t));
@@ -792,7 +792,7 @@ mod blas_tests {
 
     #[test]
     fn blas_column_major_2d_normal_matrix() {
-        let m: Array2<f32> = Array2::zeros((3, 5).f());
+        let m: Array2<f32> = Array2::zeros([3, 5].f());
         assert!(!blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }

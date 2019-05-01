@@ -23,7 +23,7 @@ fn double_ended() {
 #[test]
 fn iter_size_hint() {
     // Check that the size hint is correctly computed
-    let a = ArcArray::from_iter(0..24).reshape((2, 3, 4));
+    let a = ArcArray::from_iter(0..24).reshape([2, 3, 4]);
     let mut data = [0; 24];
     for (i, elt) in enumerate(&mut data) {
         *elt = i as i32;
@@ -45,8 +45,8 @@ fn indexed()
     for ([i], elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }
-    let a = a.reshape((2, 4, 1));
-    let (mut i, mut j, k) = (0, 0, 0);
+    let a = a.reshape([2, 4, 1]);
+    let [mut i, mut j, k] = [0, 0, 0];
     for (idx, elt) in a.indexed_iter() {
         assert_eq!(idx, [i, j, k]);
         j += 1;
@@ -74,11 +74,11 @@ fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
 #[test]
 fn as_slice() {
     let a = ArcArray::linspace(0., 7., 8);
-    let a = a.reshape((2, 4, 1));
+    let a = a.reshape([2, 4, 1]);
 
     assert_slice_correct(&a);
 
-    let a = a.reshape((2, 4));
+    let a = a.reshape([2, 4]);
     assert_slice_correct(&a);
 
     assert!(a.view().index_axis(Axis(1), 0).as_slice().is_none());
@@ -101,7 +101,7 @@ fn as_slice() {
     assert!(u.as_slice().is_some());
     assert_slice_correct(&u);
 
-    let a = a.reshape((8, 1));
+    let a = a.reshape([8, 1]);
     assert_slice_correct(&a);
     let u = a.slice(s![..;2, ..]);
     println!("u={:?}, shape={:?}, strides={:?}", u, u.shape(), u.strides());
@@ -111,7 +111,7 @@ fn as_slice() {
 #[test]
 fn inner_iter() {
     let a = ArcArray::from_iter(0..12);
-    let a = a.reshape((2, 3, 2));
+    let a = a.reshape([2, 3, 2]);
     // [[[0, 1],
     //   [2, 3],
     //   [4, 5]],
@@ -121,7 +121,7 @@ fn inner_iter() {
     assert_equal(a.genrows(),
                  vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
                       aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
-    let mut b = ArcArray::zeros((2, 3, 2));
+    let mut b = ArcArray::zeros([2, 3, 2]);
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.genrows(),
@@ -131,14 +131,14 @@ fn inner_iter() {
 
 #[test]
 fn inner_iter_corner_cases() {
-    let a0 = ArcArray::zeros(());
+    let a0 = ArcArray::zeros([]);
     assert_equal(a0.genrows(), vec![aview1(&[0])]);
 
-    let a2 = ArcArray::<i32, _>::zeros((0, 3));
+    let a2 = ArcArray::<i32, _>::zeros([0, 3]);
     assert_equal(a2.genrows(),
                  vec![aview1(&[]); 0]);
 
-    let a2 = ArcArray::<i32, _>::zeros((3, 0));
+    let a2 = ArcArray::<i32, _>::zeros([3, 0]);
     assert_equal(a2.genrows(),
                  vec![aview1(&[]); 3]);
 }
@@ -146,7 +146,7 @@ fn inner_iter_corner_cases() {
 #[test]
 fn inner_iter_size_hint() {
     // Check that the size hint is correctly computed
-    let a = ArcArray::from_iter(0..24).reshape((2, 3, 4));
+    let a = ArcArray::from_iter(0..24).reshape([2, 3, 4]);
     let mut len = 6;
     let mut it = a.genrows().into_iter();
     assert_eq!(it.len(), len);
@@ -161,7 +161,7 @@ fn inner_iter_size_hint() {
 #[test]
 fn outer_iter() {
     let a = ArcArray::from_iter(0..12);
-    let a = a.reshape((2, 3, 2));
+    let a = a.reshape([2, 3, 2]);
     // [[[0, 1],
     //   [2, 3],
     //   [4, 5]],
@@ -170,7 +170,7 @@ fn outer_iter() {
     //    ...
     assert_equal(a.outer_iter(),
                  vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
-    let mut b = ArcArray::zeros((2, 3, 2));
+    let mut b = ArcArray::zeros([2, 3, 2]);
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter(),
@@ -194,7 +194,7 @@ fn outer_iter() {
     assert_eq!(&found_rows, &found_rows_rev);
 
     // Test a case where strides are negative instead
-    let mut c = ArcArray::zeros((2, 3, 2));
+    let mut c = ArcArray::zeros([2, 3, 2]);
     let mut cv = c.slice_mut(s![..;-1, ..;-1, ..;-1]);
     cv.assign(&a);
     assert_eq!(&a, &cv);
@@ -214,7 +214,7 @@ fn outer_iter() {
 #[test]
 fn axis_iter() {
     let a = ArcArray::from_iter(0..12);
-    let a = a.reshape((2, 3, 2));
+    let a = a.reshape([2, 3, 2]);
     // [[[0, 1],
     //   [2, 3],
     //   [4, 5]],
@@ -229,11 +229,11 @@ fn axis_iter() {
 
 #[test]
 fn outer_iter_corner_cases() {
-    let a2 = ArcArray::<i32, _>::zeros((0, 3));
+    let a2 = ArcArray::<i32, _>::zeros([0, 3]);
     assert_equal(a2.outer_iter(),
                  vec![aview1(&[]); 0]);
 
-    let a2 = ArcArray::<i32, _>::zeros((3, 0));
+    let a2 = ArcArray::<i32, _>::zeros([3, 0]);
     assert_equal(a2.outer_iter(),
                  vec![aview1(&[]); 3]);
 }
@@ -242,14 +242,14 @@ fn outer_iter_corner_cases() {
 #[test]
 fn outer_iter_mut() {
     let a = ArcArray::from_iter(0..12);
-    let a = a.reshape((2, 3, 2));
+    let a = a.reshape([2, 3, 2]);
     // [[[0, 1],
     //   [2, 3],
     //   [4, 5]],
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    let mut b = ArcArray::zeros((2, 3, 2));
+    let mut b = ArcArray::zeros([2, 3, 2]);
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(b.outer_iter_mut(),
@@ -267,7 +267,7 @@ fn outer_iter_mut() {
 #[test]
 fn axis_iter_mut() {
     let a = ArcArray::from_iter(0..12);
-    let a = a.reshape((2, 3, 2));
+    let a = a.reshape([2, 3, 2]);
     // [[[0, 1],
     //   [2, 3],
     //   [4, 5]],
@@ -292,7 +292,7 @@ fn axis_iter_mut() {
 #[test]
 fn axis_chunks_iter() {
     let a = ArcArray::from_iter(0..24);
-    let a = a.reshape((2, 6, 2));
+    let a = a.reshape([2, 6, 2]);
 
     let it = a.axis_chunks_iter(Axis(1), 2);
     assert_equal(it,
@@ -301,7 +301,7 @@ fn axis_chunks_iter() {
                       arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]])]);
 
     let a = ArcArray::from_iter(0..28);
-    let a = a.reshape((2, 7, 2));
+    let a = a.reshape([2, 7, 2]);
 
     let it = a.axis_chunks_iter(Axis(1), 2);
     assert_equal(it,
@@ -331,7 +331,7 @@ fn axis_chunks_iter_corner_cases() {
     // and enable checking if no pointer offseting is out of bounds. However
     // checking the absence of of out of bounds offseting cannot (?) be
     // done automatically, so one has to launch this test in a debugger.
-    let a = ArcArray::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
+    let a = ArcArray::<f32, _>::linspace(0., 7., 8).reshape([8, 1]);
     let it = a.axis_chunks_iter(Axis(0), 4);
     assert_equal(it, vec![a.slice(s![..4, ..]), a.slice(s![4.., ..])]);
     let a = a.slice(s![..;-1,..]);
@@ -343,13 +343,13 @@ fn axis_chunks_iter_corner_cases() {
                       arr2(&[[4.], [3.], [2.]]),
                       arr2(&[[1.], [0.]])]);
 
-    let b = ArcArray::<f32, _>::zeros((8, 2));
+    let b = ArcArray::<f32, _>::zeros([8, 2]);
     let a = b.slice(s![1..;2,..]);
     let it = a.axis_chunks_iter(Axis(0), 8);
     assert_equal(it, vec![a.view()]);
 
     let it = a.axis_chunks_iter(Axis(0), 1);
-    assert_equal(it, vec![ArcArray::zeros((1, 2)); 4]);
+    assert_equal(it, vec![ArcArray::zeros([1, 2]); 4]);
 }
 
 #[test]
@@ -357,14 +357,14 @@ fn axis_chunks_iter_zero_stride() {
 
     {
         // stride 0 case
-        let b = Array::from_vec(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
+        let b = Array::from_vec(vec![0f32; 0]).into_shape([5, 0, 3]).unwrap();
         let shapes: Vec<_> = b.axis_chunks_iter(Axis(0), 2).map(|v| v.raw_dim()).collect();
         assert_eq!(shapes, vec![Ix3(2, 0, 3), Ix3(2, 0, 3), Ix3(1, 0, 3)]);
     }
 
     {
         // stride 0 case reverse
-        let b = Array::from_vec(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
+        let b = Array::from_vec(vec![0f32; 0]).into_shape([5, 0, 3]).unwrap();
         let shapes: Vec<_> = b.axis_chunks_iter(Axis(0), 2).rev().map(|v| v.raw_dim()).collect();
         assert_eq!(shapes, vec![Ix3(1, 0, 3), Ix3(2, 0, 3), Ix3(2, 0, 3)]);
     }
@@ -380,7 +380,7 @@ fn axis_chunks_iter_zero_stride() {
 #[test]
 fn axis_chunks_iter_mut() {
     let a = ArcArray::from_iter(0..24);
-    let mut a = a.reshape((2, 6, 2));
+    let mut a = a.reshape([2, 6, 2]);
 
     let mut it = a.axis_chunks_iter_mut(Axis(1), 2);
     let mut col0 = it.next().unwrap();
@@ -391,7 +391,7 @@ fn axis_chunks_iter_mut() {
 #[test]
 fn outer_iter_size_hint() {
     // Check that the size hint is correctly computed
-    let a = ArcArray::from_iter(0..24).reshape((4, 3, 2));
+    let a = ArcArray::from_iter(0..24).reshape([4, 3, 2]);
     let mut len = 4;
     let mut it = a.outer_iter();
     assert_eq!(it.len(), len);
@@ -423,7 +423,7 @@ fn outer_iter_size_hint() {
 
 #[test]
 fn outer_iter_split_at() {
-    let a = ArcArray::from_iter(0..30).reshape((5, 3, 2));
+    let a = ArcArray::from_iter(0..30).reshape([5, 3, 2]);
 
     let it = a.outer_iter();
     let (mut itl, mut itr) = it.clone().split_at(2);
@@ -445,7 +445,7 @@ fn outer_iter_split_at() {
 #[test]
 #[should_panic]
 fn outer_iter_split_at_panics() {
-    let a = ArcArray::from_iter(0..30).reshape((5, 3, 2));
+    let a = ArcArray::from_iter(0..30).reshape([5, 3, 2]);
 
     let it = a.outer_iter();
     it.split_at(6);
@@ -453,7 +453,7 @@ fn outer_iter_split_at_panics() {
 
 #[test]
 fn outer_iter_mut_split_at() {
-    let mut a = ArcArray::from_iter(0..30).reshape((5, 3, 2));
+    let mut a = ArcArray::from_iter(0..30).reshape([5, 3, 2]);
 
     {
         let it = a.outer_iter_mut();
@@ -477,7 +477,7 @@ fn iterators_are_send_sync() {
     // are too.
     fn _send_sync<T: Send + Sync>(_: &T) { }
 
-    let mut a = ArcArray::from_iter(0..30).into_shape((5, 3, 2)).unwrap();
+    let mut a = ArcArray::from_iter(0..30).into_shape([5, 3, 2]).unwrap();
 
     _send_sync(&a.view());
     _send_sync(&a.view_mut());
@@ -494,21 +494,21 @@ fn iterators_are_send_sync() {
     _send_sync(&a.axis_chunks_iter(Axis(1), 1));
     _send_sync(&a.axis_chunks_iter_mut(Axis(1), 1));
     _send_sync(&indices(a.dim()));
-    _send_sync(&a.exact_chunks((1, 1, 1)));
-    _send_sync(&a.exact_chunks_mut((1, 1, 1)));
-    _send_sync(&a.exact_chunks((1, 1, 1)).into_iter());
-    _send_sync(&a.exact_chunks_mut((1, 1, 1)).into_iter());
+    _send_sync(&a.exact_chunks([1, 1, 1]));
+    _send_sync(&a.exact_chunks_mut([1, 1, 1]));
+    _send_sync(&a.exact_chunks([1, 1, 1]).into_iter());
+    _send_sync(&a.exact_chunks_mut([1, 1, 1]).into_iter());
 }
 
 #[test]
 fn test_fold() {
-    let mut a = Array2::<i32>::default((20, 20));
+    let mut a = Array2::<i32>::default([20, 20]);
     a += 1;
     let mut iter = a.iter();
     iter.next();
     assert_eq!(iter.fold(0, |acc, &x| acc + x), a.sum() - 1);
 
-    let mut a = Array0::<i32>::default(());
+    let mut a = Array0::<i32>::default([]);
     a += 1;
     assert_eq!(a.iter().fold(0, |acc, &x| acc + x), 1);
 }
@@ -516,7 +516,7 @@ fn test_fold() {
 #[test]
 fn test_rfold() {
     {
-        let mut a = Array1::<i32>::default((256,));
+        let mut a = Array1::<i32>::default([256]);
         a += 1;
         let mut iter = a.iter();
         iter.next();
@@ -525,7 +525,7 @@ fn test_rfold() {
 
     // Test strided arrays
     {
-        let mut a = Array1::<i32>::default((256,));
+        let mut a = Array1::<i32>::default([256]);
         a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
         a += 1;
         let mut iter = a.iter();
@@ -534,7 +534,7 @@ fn test_rfold() {
     }
 
     {
-        let mut a = Array1::<i32>::default((256,));
+        let mut a = Array1::<i32>::default([256]);
         a.slice_axis_inplace(Axis(0), Slice::new(0, None, -2));
         a += 1;
         let mut iter = a.iter();

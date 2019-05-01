@@ -5,12 +5,12 @@ use ndarray::Zip;
 
 fn main() {
     let n = 16;
-    let mut a = Array::<f32, _>::zeros((n, n));
-    let mut b = Array::<f32, _>::from_elem((n, n), 1.);
+    let mut a = Array::<f32, _>::zeros([n, n]);
+    let mut b = Array::<f32, _>::from_elem([n, n], 1.);
     for ([i, j], elt) in b.indexed_iter_mut() {
         *elt /= 1. + (i + 2 * j) as f32;
     }
-    let c = Array::<f32, _>::from_elem((n, n + 1), 1.7);
+    let c = Array::<f32, _>::from_elem([n, n + 1], 1.7);
     let c = c.slice(s![.., ..-1]);
 
     {
@@ -25,12 +25,12 @@ fn main() {
 
     // sum of each row
     let ax = Axis(0);
-    let mut sums = Array::zeros((a.len_of(ax),));
+    let mut sums = Array::zeros([a.len_of(ax)]);
     azip!(mut sums, ref a (a.axis_iter(ax)) in { *sums = a.sum() });
 
     // sum of each chunk
-    let chunk_sz = (2, 2);
-    let nchunks = (n / chunk_sz.0, n / chunk_sz.1);
+    let chunk_sz = [2, 2];
+    let nchunks = [n / chunk_sz[0], n / chunk_sz[1]];
     let mut sums = Array::zeros(nchunks);
     azip!(mut sums, ref a (a.exact_chunks(chunk_sz)) in { *sums = a.sum() });
 

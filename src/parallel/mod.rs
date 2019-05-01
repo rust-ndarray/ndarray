@@ -42,7 +42,7 @@
 //! use ndarray::parallel::prelude::*;
 //!
 //! fn main() {
-//!     let mut a = Array2::<f64>::zeros((128, 128));
+//!     let mut a = Array2::<f64>::zeros([128, 128]);
 //!
 //!     // Parallel versions of regular array methods
 //!     a.par_map_inplace(|x| *x = x.exp());
@@ -65,7 +65,7 @@
 //! use ndarray::parallel::prelude::*;
 //!
 //! fn main() {
-//!     let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
+//!     let a = Array::linspace(0., 63., 64).into_shape([4, 16]).unwrap();
 //!     let mut sums = Vec::new();
 //!     a.axis_iter(Axis(0))
 //!      .into_par_iter()
@@ -90,7 +90,7 @@
 //!
 //! fn main() {
 //!     const N: usize = 128;
-//!     let a = Array3f64::from_elem((N, N, N), 1.);
+//!     let a = Array3f64::from_elem([N, N, N], 1.);
 //!     let b = Array3f64::from_elem(a.dim(), 2.);
 //!     let mut c = Array3f64::zeros(a.dim());
 //!

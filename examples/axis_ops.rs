@@ -37,7 +37,7 @@ fn regularize<A, D>(a: &mut Array<A, D>) -> Result<(), ()>
 }
 
 fn main() {
-    let mut a = Array::<u8, _>::zeros((2, 3, 4));
+    let mut a = Array::<u8, _>::zeros([2, 3, 4]);
     for (i, elt) in (0..).zip(&mut a) {
         *elt = i;
     }
@@ -46,17 +46,17 @@ fn main() {
     a.slice_collapse(s![.., ..;-1, ..]);
     regularize(&mut a).ok();
 
-    let mut b = Array::<u8, _>::zeros((2, 3, 4));
+    let mut b = Array::<u8, _>::zeros([2, 3, 4]);
     for (i, elt) in (0..).zip(&mut b) {
         *elt = i;
     }
     regularize(&mut b).ok();
-    let mut b = b.into_shape((a.len(),)).unwrap();
+    let mut b = b.into_shape([a.len()]).unwrap();
     regularize(&mut b).ok();
     b.invert_axis(Axis(0));
     regularize(&mut b).ok();
 
-    let mut a = Array::<u8, _>::zeros((2, 3, 4));
+    let mut a = Array::<u8, _>::zeros([2, 3, 4]);
     for (i, elt) in (0..).zip(&mut a) {
         *elt = i;
     }

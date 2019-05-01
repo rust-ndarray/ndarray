@@ -40,7 +40,7 @@
 /// type M = Array2<f32>;
 ///
 /// fn main() {
-///     let mut a = M::zeros((16, 16));
+///     let mut a = M::zeros([16, 16]);
 ///     let b = M::from_elem(a.dim(), 1.);
 ///     let c = M::from_elem(a.dim(), 2.);
 ///

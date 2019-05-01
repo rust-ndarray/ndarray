@@ -264,9 +264,9 @@ mod tests {
 
     #[test]
     fn test_indices_iter_c_size_hint() {
-        let dim = (3, 4);
+        let dim = [3, 4];
         let mut it = indices(dim).into_iter();
-        let mut len = dim.0 * dim.1;
+        let mut len = dim.iter().product();
         assert_eq!(it.len(), len);
         while let Some(_) = it.next() {
             len -= 1;
@@ -277,9 +277,9 @@ mod tests {
 
     #[test]
     fn test_indices_iter_f_size_hint() {
-        let dim = (3, 4);
+        let dim = [3, 4];
         let mut it = indices_iter_f(dim);
-        let mut len = dim.0 * dim.1;
+        let mut len = dim.iter().product();
         assert_eq!(it.len(), len);
         while let Some(_) = it.next() {
             len -= 1;

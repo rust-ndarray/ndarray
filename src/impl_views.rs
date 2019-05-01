@@ -39,7 +39,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// use ndarray::ShapeBuilder;
     ///
     /// let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    /// let a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)),
+    /// let a = ArrayView::from_shape([2, 3, 2].strides([1, 4, 2]),
     ///                               &s).unwrap();
     ///
     /// assert!(
@@ -182,7 +182,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
 /// let data = [0.; 256];
 /// let long_life_ref = {
 ///     // make a 16 × 16 array view
-///     let view = ArrayView::from(&data[..]).into_shape((16, 16)).unwrap();
+///     let view = ArrayView::from(&data[..]).into_shape([16, 16]).unwrap();
 ///
 ///     // index the view and with `IndexLonger`.
 ///     // Note here that we get a reference with a life that is derived from
@@ -308,7 +308,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// use ndarray::ShapeBuilder;
     ///
     /// let mut s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    /// let mut a = ArrayViewMut::from_shape((2, 3, 2).strides((1, 4, 2)),
+    /// let mut a = ArrayViewMut::from_shape([2, 3, 2].strides([1, 4, 2]),
     ///                                      &mut s).unwrap();
     ///
     /// a[[0, 0, 0]] = 1;

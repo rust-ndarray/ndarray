@@ -57,7 +57,7 @@
 ///
 /// fn main() {
 ///     // Setup example arrays
-///     let mut a = M::zeros((16, 16));
+///     let mut a = M::zeros([16, 16]);
 ///     let mut b = M::zeros(a.dim());
 ///     let mut c = M::zeros(a.dim());
 ///
@@ -103,7 +103,7 @@
 ///     //
 ///     // The row is an array view; use the 'ref' rule on the row, to avoid the
 ///     // default which is to dereference the produced item.
-///     let mut totals = Array1::zeros((a.rows(),));
+///     let mut totals = Array1::zeros([a.rows()]);
 ///
 ///     azip!(mut totals, ref row (a.genrows()) in {
 ///         *totals = row.sum();

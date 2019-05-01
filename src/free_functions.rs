@@ -55,7 +55,7 @@ macro_rules! array {
 /// Create a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array0<A>
 {
-    unsafe { ArrayBase::from_shape_vec_unchecked((), vec![x]) }
+    unsafe { ArrayBase::from_shape_vec_unchecked([], vec![x]) }
 }
 
 /// Create a one-dimensional array with elements from `xs`.
@@ -81,7 +81,7 @@ pub fn aview0<A>(x: &A) -> ArrayView0<A> {
 /// let data = [1.0; 1024];
 ///
 /// // Create a 2D array view from borrowed data
-/// let a2d = aview1(&data).into_shape((32, 32)).unwrap();
+/// let a2d = aview1(&data).into_shape([32, 32]).unwrap();
 ///
 /// assert_eq!(a2d.sum(), 1024.0);
 /// ```
@@ -124,7 +124,7 @@ pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
 /// fn main() {
 ///     let mut data = [0; 1024];
 ///     {
-///         let mut a = aview_mut1(&mut data).into_shape((32, 32)).unwrap();
+///         let mut a = aview_mut1(&mut data).into_shape([32, 32]).unwrap();
 ///         a.slice_mut(s![.., ..;3]).fill(5);
 ///     }
 ///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
