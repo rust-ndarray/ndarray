@@ -29,11 +29,11 @@ fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3
                 let mut conv = F::zero();
                 for k in 0..3 {
                     for l in 0..3 {
-                        conv = conv + *a.uget((i + k, j + l)) * kernel[k][l];
+                        conv = conv + *a.uget([i + k, j + l]) * kernel[k][l];
                         //conv += a[[i + k, j + l]] * x_kernel[k][l];
                     }
                 }
-                *out.uget_mut((i + 1, j + 1)) = conv;
+                *out.uget_mut([i + 1, j + 1]) = conv;
             }
         }
     }

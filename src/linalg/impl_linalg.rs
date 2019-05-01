@@ -79,7 +79,7 @@ impl<A, S> ArrayBase<S, Ix1>
         let mut sum = A::zero();
         for i in 0..self.len() {
             unsafe {
-                sum = sum.clone() + self.uget((i,)).clone() * rhs.uget((i,)).clone();
+                sum = sum.clone() + self.uget([i]).clone() * rhs.uget([i]).clone();
             }
         }
         sum
@@ -508,9 +508,9 @@ fn mat_mul_general<A>(alpha: A,
         let mut j = 0;
         loop {
             unsafe {
-                let elt = c.uget_mut((i, j));
+                let elt = c.uget_mut([i, j]);
                 *elt = *elt * beta + alpha * (0..k).fold(A::zero(),
-                    move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
+                    move |s, x| s + *lhs.uget([i, x]) * *rhs.uget([x, j]));
             }
             j += 1;
             if j == n {

@@ -316,13 +316,12 @@ fn add_2d_zip_alloc(bench: &mut test::Bencher)
 {
     let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
-    bench.iter(|| {
-        unsafe {
+    bench.iter(|| unsafe {
             let mut c = Array::uninitialized(a.dim());
             azip!(a, b, mut c in { *c = a + b });
             c
         }
-    });
+    );
 }
 
 #[bench]
@@ -466,7 +465,6 @@ fn scalar_sub_2(bench: &mut test::Bencher) {
     });
 }
 
-
 // This is for comparison with add_2d_broadcast_0_to_2
 #[bench]
 fn add_2d_0_to_2_iadd_scalar(bench: &mut test::Bencher)
@@ -512,7 +510,6 @@ fn add_2d_strided_dyn(bench: &mut test::Bencher)
         a += &bv;
     });
 }
-
 
 #[bench]
 fn add_2d_zip_strided(bench: &mut test::Bencher)
@@ -607,7 +604,6 @@ fn add_3d_strided_dyn(bench: &mut test::Bencher)
         a += &bv;
     });
 }
-
 
 const ADD1D_SIZE: usize = 64 * 64;
 
@@ -740,7 +736,11 @@ fn assign_zero_2d_forder(bench: &mut test::Bencher)
 fn bench_iter_diag(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((1024, 1024));
-    bench.iter(|| for elt in a.diag() { black_box(elt); })
+    bench.iter(|| {
+        for elt in a.diag() {
+            black_box(elt);
+        }
+    })
 }
 
 #[bench]
@@ -748,7 +748,11 @@ fn bench_row_iter(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((1024, 1024));
     let it = a.row(17);
-    bench.iter(|| for elt in it.clone() { black_box(elt); })
+    bench.iter(|| {
+        for elt in it.clone() {
+            black_box(elt);
+        }
+    })
 }
 
 #[bench]
@@ -756,7 +760,11 @@ fn bench_col_iter(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros((1024, 1024));
     let it = a.column(17);
-    bench.iter(|| for elt in it.clone() { black_box(elt); })
+    bench.iter(|| {
+        for elt in it.clone() {
+            black_box(elt);
+        }
+    })
 }
 
 macro_rules! mat_mul {
@@ -779,7 +787,7 @@ macro_rules! mat_mul {
     }
 }
 
-mat_mul!{mat_mul_f32, f32,
+mat_mul! {mat_mul_f32, f32,
     (m004, 4, 4, 4)
     (m007, 7, 7, 7)
     (m008, 8, 8, 8)
@@ -793,7 +801,7 @@ mat_mul!{mat_mul_f32, f32,
     (mix10000, 128, 10000, 128)
 }
 
-mat_mul!{mat_mul_f64, f64,
+mat_mul! {mat_mul_f64, f64,
     (m004, 4, 4, 4)
     (m007, 7, 7, 7)
     (m008, 8, 8, 8)
@@ -807,7 +815,7 @@ mat_mul!{mat_mul_f64, f64,
     (mix10000, 128, 10000, 128)
 }
 
-mat_mul!{mat_mul_i32, i32,
+mat_mul! {mat_mul_i32, i32,
     (m004, 4, 4, 4)
     (m007, 7, 7, 7)
     (m008, 8, 8, 8)
@@ -826,9 +834,7 @@ fn create_iter_4d(bench: &mut test::Bencher)
     a.swap_axes(2, 1);
     let v = black_box(a.view());
 
-    bench.iter(|| {
-        v.into_iter()
-    });
+    bench.iter(|| v.into_iter());
 }
 
 #[bench]
@@ -914,9 +920,7 @@ fn dot_f32_1024(bench: &mut test::Bencher)
 {
     let av = Array::<f32, _>::zeros((1024,));
     let bv = Array::<f32, _>::zeros((1024,));
-    bench.iter(|| {
-        av.dot(&bv)
-    });
+    bench.iter(|| av.dot(&bv));
 }
 
 #[bench]
@@ -925,13 +929,12 @@ fn dot_f32_10e6(bench: &mut test::Bencher)
     let n = 1_000_000;
     let av = Array::<f32, _>::zeros((n,));
     let bv = Array::<f32, _>::zeros((n,));
-    bench.iter(|| {
-        av.dot(&bv)
-    });
+    bench.iter(|| av.dot(&bv));
 }
 
 #[bench]
-fn dot_extended(bench: &mut test::Bencher) {
+fn dot_extended(bench: &mut test::Bencher)
+{
     let m = 10;
     let n = 33;
     let k = 10;
@@ -943,7 +946,7 @@ fn dot_extended(bench: &mut test::Bencher) {
         for i in 0..m {
             for j in 0..k {
                 unsafe {
-                    *res.uget_mut((i, j)) = av.row(i).dot(&bv.column(j));
+                    *res.uget_mut([i, j]) = av.row(i).dot(&bv.column(j));
                 }
             }
         }
@@ -952,31 +955,38 @@ fn dot_extended(bench: &mut test::Bencher) {
 
 const MEAN_SUM_N: usize = 127;
 
-fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
+fn range_mat(m: Ix, n: Ix) -> Array2<f32>
+{
     assert!(m * n != 0);
-    Array::linspace(0., (m * n - 1) as f32, m * n).into_shape((m, n)).unwrap()
+    Array::linspace(0., (m * n - 1) as f32, m * n)
+        .into_shape((m, n))
+        .unwrap()
 }
 
 #[bench]
-fn mean_axis0(bench: &mut test::Bencher) {
+fn mean_axis0(bench: &mut test::Bencher)
+{
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.mean_axis(Axis(0)));
 }
 
 #[bench]
-fn mean_axis1(bench: &mut test::Bencher) {
+fn mean_axis1(bench: &mut test::Bencher)
+{
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.mean_axis(Axis(1)));
 }
 
 #[bench]
-fn sum_axis0(bench: &mut test::Bencher) {
+fn sum_axis0(bench: &mut test::Bencher)
+{
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.sum_axis(Axis(0)));
 }
 
 #[bench]
-fn sum_axis1(bench: &mut test::Bencher) {
+fn sum_axis1(bench: &mut test::Bencher)
+{
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.sum_axis(Axis(1)));
 }

@@ -12,7 +12,7 @@ fn test_swap() {
 
     for i in 0..a.rows() {
         for j in i + 1..a.cols() {
-            a.swap((i, j), (j, i));
+            a.swap([i, j], [j, i]);
         }
     }
     assert_eq!(a, b.t());

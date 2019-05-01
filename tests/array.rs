@@ -286,7 +286,7 @@ fn test_slice_with_subview() {
 
     let vi = arr.slice(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[]);
-    assert_eq!(vi, Array0::from_elem((), arr[(1, 2, 3)]));
+    assert_eq!(vi, Array0::from_elem((), arr[[1, 2, 3]]));
 }
 
 #[test]
@@ -318,11 +318,11 @@ fn test_slice_collapse_with_indices() {
         let mut vi = arr.view();
         vi.slice_collapse(s![1, 2, 3]);
         assert_eq!(vi.shape(), &[1, 1, 1]);
-        assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
+        assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[[1, 2, 3]]));
     }
 
     // Do it to the ArcArray itself
-    let elem = arr[(1, 2, 3)];
+    let elem = arr[[1, 2, 3]];
     let mut vi = arr;
     vi.slice_collapse(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
@@ -541,7 +541,7 @@ fn test_add()
 fn test_multidim()
 {
     let mut mat = ArcArray::zeros((2*3*4*5*6,)).reshape((2,3,4,5,6));
-    mat[(0,0,0,0,0)] = 22u8;
+    mat[[0,0,0,0,0]] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
             *elt = i as u8;
@@ -602,7 +602,7 @@ fn test_cow()
     assert_eq!(mat[[0, 1]], 2);
     assert_eq!(n[[0, 0]], 1);
     assert_eq!(n[[0, 1]], 0);
-    assert_eq!(n.get((0, 1)), Some(&0));
+    assert_eq!(n.get([0, 1]), Some(&0));
     let mut rev = mat.reshape((4,));
     rev.slice_collapse(s![..;-1]);
     assert_eq!(rev[0], 4);
@@ -641,7 +641,7 @@ fn test_cow_shrink()
     assert_eq!(mat[[0, 1]], 2);
     assert_eq!(n[[0, 0]], 1);
     assert_eq!(n[[0, 1]], 0);
-    assert_eq!(n.get((0, 1)), Some(&0));
+    assert_eq!(n.get([0, 1]), Some(&0));
     // small has non-C strides this way
     let mut small = mat.reshape((6,));
     small.slice_collapse(s![4..;-1]);
@@ -838,7 +838,7 @@ fn permuted_axes()
     let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
     let permuted = a.view().permuted_axes([2, 1, 0]);
     for ([i0, i1, i2], elem) in a.indexed_iter() {
-        assert_eq!(*elem, permuted[(i2, i1, i0)]);
+        assert_eq!(*elem, permuted[[i2, i1, i0]]);
     }
     let permuted = a.view().into_dyn().permuted_axes(&[0, 2, 1][..]);
     for ([i0, i1, i2], elem) in a.indexed_iter() {
@@ -848,7 +848,7 @@ fn permuted_axes()
     let a = Array::from_iter(0..120).into_shape((2, 3, 4, 5)).unwrap();
     let permuted = a.view().permuted_axes([1, 0, 3, 2]);
     for ([i0, i1, i2, i3], elem) in a.indexed_iter() {
-        assert_eq!(*elem, permuted[(i1, i0, i3, i2)]);
+        assert_eq!(*elem, permuted[[i1, i0, i3, i2]]);
     }
     let permuted = a.view().into_dyn().permuted_axes(&[1, 2, 3, 0][..]);
     for ([i0, i1, i2, i3], elem) in a.indexed_iter() {
@@ -986,7 +986,7 @@ fn equality()
     let a = arr2(&[[1., 2.], [3., 4.]]);
     let mut b = arr2(&[[1., 2.], [2., 4.]]);
     assert!(a != b);
-    b[(1, 0)] = 3.;
+    b[[1, 0]] = 3.;
     assert!(a == b);
 
     // make sure we can compare different shapes without failure.
@@ -1002,7 +1002,7 @@ fn map1()
     assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
     // test map to reference with array's lifetime.
     let c = a.map(|x| x);
-    assert_eq!(a[(0, 0)], *c[(0, 0)]);
+    assert_eq!(a[[0, 0]], *c[[0, 0]]);
 }
 
 #[test]
@@ -1045,8 +1045,8 @@ fn owned_array1() {
 
     let mut a = Array::zeros((2, 2));
     let mut b = ArcArray::zeros((2, 2));
-    a[(1, 1)] = 3;
-    b[(1, 1)] = 3;
+    a[[1, 1]] = 3;
+    b[[1, 1]] = 3;
     assert_eq!(a, b);
 
     let c = a.clone();
@@ -1230,8 +1230,8 @@ fn views() {
     assert_eq!(a.shape(), b.shape());
     assert_eq!(a.clone() + a.clone(), &b + &b);
     assert_eq!(a.clone() + b, &b + &b);
-    a.clone()[(0, 0)] = 99;
-    assert_eq!(b[(0, 0)], 1);
+    a.clone()[[0, 0]] = 99;
+    assert_eq!(b[[0, 0]], 1);
 
     assert_eq!(a.view().into_iter().cloned().collect::<Vec<_>>(),
                vec![1, 2, 3, 4]);
@@ -1246,9 +1246,9 @@ fn view_mut() {
     assert_eq!(a, Array::zeros((2, 2)));
     {
         let mut b = a.view_mut();
-        b[(0, 0)] = 7;
+        b[[0, 0]] = 7;
     }
-    assert_eq!(a[(0, 0)], 7);
+    assert_eq!(a[[0, 0]], 7);
 
     for elt in a.view_mut() {
         *elt = 2;
@@ -1751,7 +1751,7 @@ fn test_swap() {
 
     for i in 0..a.rows() {
         for j in i + 1..a.cols() {
-            a.swap((i, j), (j, i));
+            a.swap([i, j], [j, i]);
         }
     }
     assert_eq!(a, b.t());
@@ -1766,7 +1766,7 @@ fn test_uswap() {
 
     for i in 0..a.rows() {
         for j in i + 1..a.cols() {
-            unsafe { a.uswap((i, j), (j, i)) };
+            unsafe { a.uswap([i, j], [j, i]) };
         }
     }
     assert_eq!(a, b.t());

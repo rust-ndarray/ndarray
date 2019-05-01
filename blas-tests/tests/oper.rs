@@ -163,7 +163,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
     for rr in &mut res_elems {
         unsafe {
             *rr = (0..k).fold(A::zero(),
-                move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
+                move |s, x| s + *lhs.uget([i, x]) * *rhs.uget([x, j]));
         }
         j += 1;
         if j == n {
