@@ -12,7 +12,7 @@ fn chunk2x2_iter_sum(bench: &mut Bencher) {
     let chunksz = (2, 2);
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
+        azip!((a in a.exact_chunks(chunksz), sum in &mut sum) {
             *sum = a.iter().sum::<f32>();
         });
     });
@@ -24,7 +24,7 @@ fn chunk2x2_sum(bench: &mut Bencher) {
     let chunksz = (2, 2);
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
+        azip!((a in a.exact_chunks(chunksz), sum in &mut sum) {
             *sum = a.sum();
         });
     });

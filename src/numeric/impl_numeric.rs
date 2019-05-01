@@ -247,7 +247,7 @@ where
         let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
         for (i, subview) in self.axis_iter(axis).enumerate() {
             let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
-            azip!(mut mean, mut sum_sq, x (subview) in {
+            azip!((mean in &mut mean, sum_sq in &mut sum_sq, &x in &subview) {
                 let delta = x - *mean;
                 *mean = *mean + delta / count;
                 *sum_sq = (x - *mean).mul_add(delta, *sum_sq);

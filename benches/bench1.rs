@@ -270,7 +270,7 @@ fn add_2d_zip_alloc(bench: &mut test::Bencher) {
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| unsafe {
         let mut c = Array::uninitialized(a.dim());
-        azip!(a, b, mut c in { *c = a + b });
+        azip!((&a in &a, &b in &b, c in &mut c) *c = a + b);
         c
     });
 }

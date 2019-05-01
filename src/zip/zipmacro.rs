@@ -1,4 +1,3 @@
-#[macro_export]
 /// Array zip macro: lock step function application across several arrays and
 /// producers.
 ///
@@ -7,41 +6,32 @@
 /// This example:
 ///
 /// ```rust,ignore
-/// azip!(mut a, b, c in { *a = b + c })
+/// azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
 /// ```
 ///
 /// Is equivalent to:
 ///
 /// ```rust,ignore
 /// Zip::from(&mut a).and(&b).and(&c).apply(|a, &b, &c| {
-///     *a = b + c;
+///     *a = b + c
 /// });
-///
 /// ```
 ///
-/// Explanation of the shorthand for captures:
+/// The syntax is either
 ///
-/// + `mut a`: the producer is `&mut a` and the variable pattern is `mut a`.
-/// + `b`: the producer is `&b` and the variable pattern is `&b` (same for `c`).
+/// `azip!((` *pat* `in` *expr* `,` *[* *pat* `in` *expr* `,` ... *]* `)` *body_expr* `)`
 ///
-/// The syntax is `azip!(` *[* `index` *pattern* `,`*] capture [*`,` *capture [*`,` *...] ]* `in {` *expression* `})`
-/// where the captures are a sequence of pattern-like items that indicate which
-/// arrays are used for the zip. The *expression* is evaluated elementwise,
-/// with the value of an element from each producer in their respective variable.
+/// or, to use `Zip::indexed` instead of `Zip::from`,
 ///
-/// More capture rules:
+/// `azip!((index` *pat* `,` *pat* `in` *expr* `,` *[* *pat* `in` *expr* `,` ... *]* `)` *body_expr* `)`
 ///
-/// + `ref c`: the producer is `&c` and the variable pattern is `c`.
-/// + `mut a (expr)`: the producer is `expr` and the variable pattern is `mut a`.
-/// + `b (expr)`: the producer is `expr` and the variable pattern is `&b`.
-/// + `ref c (expr)`: the producer is `expr` and the variable pattern is `c`.
-///
-/// Special rule:
-///
-/// + `index i`: Use `Zip::indexed` instead. `i` is a pattern -- it can be
-///    a single variable name or something else that pattern matches the index.
-///    This rule must be the first if it is used, and it must be followed by
-///    at least one other rule.
+/// The *expr* are expressions whose types must implement `IntoNdProducer`, the
+/// *pat* are the patterns of the parameters to the closure called by
+/// `Zip::apply`, and *body_expr* is the body of the closure called by
+/// `Zip::apply`. You can think of each *pat* `in` *expr* as being analogous to
+/// the `pat in expr` of a normal loop `for pat in expr { statements }`: a
+/// pattern, followed by `in`, followed by an expression that implements
+/// `IntoNdProducer` (analogous to `IntoIterator` for a `for` loop).
 ///
 /// **Panics** if any of the arrays are not of the same shape.
 ///
@@ -68,12 +58,12 @@
 ///
 ///     // Example 1: Compute a simple ternary operation:
 ///     // elementwise addition of b and c, stored in a
-///     azip!(mut a, b, c in { *a = b + c });
+///     azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
 ///
 ///     assert_eq!(a, &b + &c);
 ///
 ///     // Example 2: azip!() with index
-///     azip!(index (i, j), b, c in {
+///     azip!((index (i, j), &b in &b, &c in &c) {
 ///         a[[i, j]] = b - c;
 ///     });
 ///
@@ -87,80 +77,56 @@
 ///     assert_eq!(a, &b * &c);
 ///
 ///
-///     // Since this function borrows its inputs, captures must use the x (x) pattern
-///     // to avoid the macro's default rule that autorefs the producer.
+///     // Since this function borrows its inputs, the `IntoNdProducer`
+///     // expressions don't need to explicitly include `&mut` or `&`.
 ///     fn borrow_multiply(a: &mut M, b: &M, c: &M) {
-///         azip!(mut a (a), b (b), c (c) in { *a = b * c });
+///         azip!((a in a, &b in b, &c in c) *a = b * c);
 ///     }
 ///
 ///
-///     // Example 4: using azip!() with a `ref` rule
+///     // Example 4: using azip!() without dereference in pattern.
 ///     //
 ///     // Create a new array `totals` with one entry per row of `a`.
 ///     // Use azip to traverse the rows of `a` and assign to the corresponding
 ///     // entry in `totals` with the sum across each row.
 ///     //
-///     // The row is an array view; use the 'ref' rule on the row, to avoid the
-///     // default which is to dereference the produced item.
-///     let mut totals = Array1::zeros(a.nrows());
-///
-///     azip!(mut totals, ref row (a.genrows()) in {
-///         *totals = row.sum();
-///     });
+///     // The row is an array view; it doesn't need to be dereferenced.
+///     let mut totals = Array1::zeros(a.rows());
+///     azip!((totals in &mut totals, row in a.genrows()) *totals = row.sum());
 ///
 ///     // Check the result against the built in `.sum_axis()` along axis 1.
 ///     assert_eq!(totals, a.sum_axis(Axis(1)));
 /// }
 ///
 /// ```
+#[macro_export]
 macro_rules! azip {
-    // Build Zip Rule (index)
-    (@parse [index => $a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        $crate::azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
+    // Indexed with a single producer and no trailing comma.
+    ((index $index:pat, $first_pat:pat in $first_prod:expr) $body:expr) => {
+        $crate::Zip::indexed($first_prod).apply(|$index, $first_pat| $body)
     };
-    // Build Zip Rule (no index)
-    (@parse [$a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        $crate::azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
+    // Indexed with more than one producer and no trailing comma.
+    ((index $index:pat, $first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),*) $body:expr) => {
+        $crate::Zip::indexed($first_prod)
+            $(.and($prod))*
+            .apply(|$index, $first_pat, $($pat),*| $body)
     };
-    // Build Finish Rule (both)
-    (@finish ($z:expr) [$($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)*}) => {
-        #[allow(unused_mut)]
-        ($z)
-            $(
-                .and($aa)
-            )*
-            .apply(|$($p),+| {
-                $($t)*
-            })
+    // Indexed with trailing comma.
+    ((index $index:pat, $($pat:pat in $prod:expr),+,) $body:expr) => {
+        azip!((index $index, $($pat in $prod),+) $body)
     };
-    // parsing stack: [expressions] [patterns] (one per operand)
-    // index uses empty [] -- must be first
-    (@parse [] [] index $i:pat, $($t:tt)*) => {
-        $crate::azip!(@parse [index =>] [$i,] $($t)*);
+    // Unindexed with a single producer and no trailing comma.
+    (($first_pat:pat in $first_prod:expr) $body:expr) => {
+        $crate::Zip::from($first_prod).apply(|$first_pat| $body)
     };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
+    // Unindexed with more than one producer and no trailing comma.
+    (($first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),*) $body:expr) => {
+        $crate::Zip::from($first_prod)
+            $(.and($prod))*
+            .apply(|$first_pat, $($pat),*| $body)
     };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
+    // Unindexed with trailing comma.
+    (($($pat:pat in $prod:expr),+,) $body:expr) => {
+        azip!(($($pat in $prod),+) $body)
     };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] , $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident ($e:expr) $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident ($e:expr) $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident $($t:tt)*) => {
-        $crate::azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] $($t:tt)*) => { };
-    ($($t:tt)*) => {
-        $crate::azip!(@parse [] [] $($t)*);
-    }
 }
