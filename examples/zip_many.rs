@@ -7,7 +7,7 @@ fn main() {
     let n = 16;
     let mut a = Array::<f32, _>::zeros((n, n));
     let mut b = Array::<f32, _>::from_elem((n, n), 1.);
-    for ((i, j), elt) in b.indexed_iter_mut() {
+    for ([i, j], elt) in b.indexed_iter_mut() {
         *elt /= 1. + (i + 2 * j) as f32;
     }
     let c = Array::<f32, _>::from_elem((n, n + 1), 1.7);
@@ -38,11 +38,11 @@ fn main() {
     // Let's imagine we split to parallelize
     {
         let (x, y) = Zip::indexed(&mut a).split();
-        x.apply(|(_, j), elt| {
+        x.apply(|[_, j], elt| {
             *elt = elt.powi(j as i32);
         });
 
-        y.apply(|(_, j), elt| {
+        y.apply(|[_, j], elt| {
             *elt = elt.powi(j as i32);
         });
     }

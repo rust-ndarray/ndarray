@@ -40,7 +40,7 @@ fn chunk2x2_sum_get1(bench: &mut Bencher)
     let chunksz = (2, 2);
     let mut sum = Array::<f32, _>::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        let (m, n) = a.dim();
+        let [m, n] = a.dim();
         for i in 0..m {
             for j in 0..n {
                 sum[[i/2, j/2]] += a[[i, j]];
@@ -56,7 +56,7 @@ fn chunk2x2_sum_uget1(bench: &mut Bencher)
     let chunksz = (2, 2);
     let mut sum = Array::<f32, _>::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        let (m, n) = a.dim();
+        let [m, n] = a.dim();
         for i in 0..m {
             for j in 0..n {
                 unsafe {
@@ -74,7 +74,7 @@ fn chunk2x2_sum_get2(bench: &mut Bencher)
     let chunksz = (2, 2);
     let mut sum = Array::<f32, _>::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        let (m, n) = sum.dim();
+        let [m, n] = sum.dim();
         for i in 0..m {
             for j in 0..n {
                 sum[[i, j]] += a[[i*2 + 0, j*2 + 0]];

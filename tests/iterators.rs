@@ -42,13 +42,13 @@ fn iter_size_hint() {
 fn indexed()
 {
     let a = ArcArray::linspace(0., 7., 8);
-    for ((i,), elt) in a.indexed_iter() {
+    for ([i], elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
     }
     let a = a.reshape((2, 4, 1));
     let (mut i, mut j, k) = (0, 0, 0);
     for (idx, elt) in a.indexed_iter() {
-        assert_eq!(idx, (i, j, k));
+        assert_eq!(idx, [i, j, k]);
         j += 1;
         if j == 4 {
             j = 0;

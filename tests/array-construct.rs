@@ -8,7 +8,7 @@ use ndarray::prelude::*;
 fn test_from_shape_fn() {
     let step = 3.1;
     let h = Array::from_shape_fn((5, 5),
-        |(i, j)| f64::sin(i as f64 / step) * f64::cos(j as f64  / step));
+        |[i, j]| f64::sin(i as f64 / step) * f64::cos(j as f64  / step));
     assert_eq!(h.shape(), &[5, 5]);
 }
 
@@ -45,7 +45,7 @@ fn test_arcarray_thread_safe() {
 fn test_uninit() {
     unsafe {
         let mut a = Array::<f32, _>::uninitialized((3, 4).f());
-        assert_eq!(a.dim(), (3, 4));
+        assert_eq!(a.dim(), [3, 4]);
         assert_eq!(a.strides(), &[1, 3]);
         let b = Array::<f32, _>::linspace(0., 25., a.len()).into_shape(a.dim()).unwrap();
         a.assign(&b);
@@ -57,7 +57,7 @@ fn test_uninit() {
 #[test]
 fn test_from_fn_c0() {
     let a = Array::from_shape_fn((), |i| i);
-    assert_eq!(a[()], ());
+    assert_eq!(a[()], []);
     assert_eq!(a.len(), 1);
     assert_eq!(a.shape(), &[]);
 }
@@ -89,7 +89,7 @@ fn test_from_fn_c3() {
 #[test]
 fn test_from_fn_f0() {
     let a = Array::from_shape_fn(().f(), |i| i);
-    assert_eq!(a[()], ());
+    assert_eq!(a[()], []);
     assert_eq!(a.len(), 1);
     assert_eq!(a.shape(), &[]);
 }

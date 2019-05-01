@@ -236,7 +236,7 @@ const I2DSZ: usize = 64;
 #[bench]
 fn indexed_iter_1d_ix1(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((I2DSZ * I2DSZ,));
-    for ((i,), elt) in a.indexed_iter_mut() {
+    for ([i], elt) in a.indexed_iter_mut() {
         *elt = i as _;
     }
 
@@ -251,7 +251,7 @@ fn indexed_iter_1d_ix1(bench: &mut Bencher) {
 #[bench]
 fn indexed_zip_1d_ix1(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((I2DSZ * I2DSZ,));
-    for ((i,), elt) in a.indexed_iter_mut() {
+    for ([i], elt) in a.indexed_iter_mut() {
         *elt = i as _;
     }
 
@@ -267,7 +267,7 @@ fn indexed_zip_1d_ix1(bench: &mut Bencher) {
 #[bench]
 fn indexed_iter_2d_ix2(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((I2DSZ, I2DSZ));
-    for ((i, j), elt) in a.indexed_iter_mut() {
+    for ([i, j], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j) as _;
     }
 
@@ -281,7 +281,7 @@ fn indexed_iter_2d_ix2(bench: &mut Bencher) {
 #[bench]
 fn indexed_zip_2d_ix2(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((I2DSZ, I2DSZ));
-    for ((i, j), elt) in a.indexed_iter_mut() {
+    for ([i, j], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j) as _;
     }
 
@@ -299,7 +299,7 @@ fn indexed_zip_2d_ix2(bench: &mut Bencher) {
 #[bench]
 fn indexed_iter_3d_ix3(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
-    for ((i, j, k), elt) in a.indexed_iter_mut() {
+    for ([i, j, k], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
 
@@ -314,7 +314,7 @@ fn indexed_iter_3d_ix3(bench: &mut Bencher) {
 #[bench]
 fn indexed_zip_3d_ix3(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
-    for ((i, j, k), elt) in a.indexed_iter_mut() {
+    for ([i, j, k], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
 
@@ -330,7 +330,7 @@ fn indexed_zip_3d_ix3(bench: &mut Bencher) {
 #[bench]
 fn indexed_iter_3d_dyn(bench: &mut Bencher) {
     let mut a = Array::<f64, _>::zeros((ISZ, ISZ, ISZ));
-    for ((i, j, k), elt) in a.indexed_iter_mut() {
+    for ([i, j, k], elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
     let a = a.into_shape(&[ISZ; 3][..]).unwrap();

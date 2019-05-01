@@ -63,7 +63,7 @@
 ///
 ///     // assign values
 ///     b.fill(1.);
-///     for ((i, j), elt) in c.indexed_iter_mut() {
+///     for ([i, j], elt) in c.indexed_iter_mut() {
 ///         *elt = (i + 10 * j) as f32;
 ///     }
 ///
@@ -74,7 +74,7 @@
 ///     assert_eq!(a, &b + &c);
 ///
 ///     // Example 2: azip!() with index
-///     azip!(index (i, j), b, c in {
+///     azip!(index [i, j], b, c in {
 ///         a[[i, j]] = b - c;
 ///     });
 ///

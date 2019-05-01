@@ -16,8 +16,8 @@ type Kernel3x3<A> = [[A; 3]; 3];
 fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3<F>)
     where F: Float,
 {
-    let (n, m) = a.dim();
-    let (np, mp) = out.dim();
+    let [n, m] = a.dim();
+    let [np, mp] = out.dim();
     if n < 3 || m < 3 {
         return;
     }
@@ -44,7 +44,7 @@ fn main() {
     let mut a = Array::zeros((n, n));
     // make a circle
     let c = (8., 8.);
-    for ((i, j), elt) in a.indexed_iter_mut() {
+    for ([i, j], elt) in a.indexed_iter_mut() {
         {
             let s = ((i as f32) - c.0).powi(2) + (j as f32 - c.1).powi(2);
             if s.sqrt() > 3. && s.sqrt() < 6. {

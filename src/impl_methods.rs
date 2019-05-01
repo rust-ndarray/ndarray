@@ -79,7 +79,7 @@ where
     /// an integer in the one-dimensional case, tuple in the n-dimensional cases
     /// and so on.
     pub fn dim(&self) -> D::Pattern {
-        self.dim.clone().into_pattern()
+        self.dim.to_pattern()
     }
 
     /// Return the shape of the array as it stored in the array.

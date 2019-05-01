@@ -20,7 +20,7 @@ fn test_azip1() {
 #[test]
 fn test_azip2() {
     let mut a = Array::zeros((5, 7));
-    let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn(a.dim(), |[i, j]| 1. / (i + 2*j) as f32);
     azip!(mut a, b in { *a = b; });
     assert_eq!(a, b);
 }
@@ -28,7 +28,7 @@ fn test_azip2() {
 #[test]
 fn test_azip2_1() {
     let mut a = Array::zeros((5, 7));
-    let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn((5, 10), |[i, j]| 1. / (i + 2*j) as f32);
     let b = b.slice(s![..;-1, 3..]);
     azip!(mut a, b in { *a = b; });
     assert_eq!(a, b);
@@ -36,8 +36,8 @@ fn test_azip2_1() {
 
 #[test]
 fn test_azip2_3() {
-    let mut b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2*j) as f32);
-    let mut c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
+    let mut b = Array::from_shape_fn((5, 10), |[i, j]| 1. / (i + 2*j) as f32);
+    let mut c = Array::from_shape_fn((5, 10), |[i, j]| f32::exp((i + j) as f32));
     let a = b.clone();
     azip!(mut b, mut c in { swap(b, c) });
     assert_eq!(a, c);
@@ -46,7 +46,7 @@ fn test_azip2_3() {
 
 #[test]
 fn test_azip2_sum() {
-    let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
+    let c = Array::from_shape_fn((5, 10), |[i, j]| f32::exp((i + j) as f32));
     for i in 0..2 {
         let ax = Axis(i);
         let mut b = Array::zeros((c.len_of(ax),));
@@ -77,7 +77,7 @@ fn test_broadcast() {
     let n = 16;
     let mut a = Array::<f32, _>::zeros((n, n));
     let mut b = Array::<f32, _>::from_elem((1, n), 1.);
-    for ((i, j), elt) in b.indexed_iter_mut() {
+    for ([i, j], elt) in b.indexed_iter_mut() {
         *elt /= 1. + (i + 2 * j) as f32;
     }
     let d = Array::from_elem((1, n), 1.);
@@ -99,7 +99,7 @@ fn test_zip_dim_mismatch_1() {
     let mut a = Array::zeros((5, 7));
     let mut d = a.raw_dim();
     d[0] += 1;
-    let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn(d, |[i, j]| 1. / (i + 2*j) as f32);
     azip!(mut a, b in { *a = b; });
 }
 

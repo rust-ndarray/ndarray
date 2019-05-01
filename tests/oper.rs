@@ -315,7 +315,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
+    let ([m, k], [k2, n]) = (lhs.dim(), rhs.dim());
     assert!(m.checked_mul(n).is_some());
     assert_eq!(k, k2);
     let mut res_elems = Vec::<A>::with_capacity(m * n);
@@ -348,7 +348,7 @@ fn reference_mat_vec_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, 
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, _), (k,)) = (lhs.dim(), rhs.dim());
+    let ([m, _], [k]) = (lhs.dim(), rhs.dim());
     reference_mat_mul(lhs, &rhs.to_owned().into_shape((k, 1)).unwrap())
         .into_shape((m,)).unwrap()
 }
@@ -360,7 +360,7 @@ fn reference_vec_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix1>, rhs: &ArrayBase<S2, 
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m,), (_, n)) = (lhs.dim(), rhs.dim());
+    let ([m], [_, n]) = (lhs.dim(), rhs.dim());
     reference_mat_mul(&lhs.to_owned().into_shape((1, m)).unwrap(), rhs)
         .into_shape((n,)).unwrap()
 }
@@ -666,7 +666,7 @@ fn gen_mat_mul() {
 #[test]
 fn gemm_64_1_f() {
     let a = range_mat64(64, 64).reversed_axes();
-    let (m, n) = a.dim();
+    let [m, n] = a.dim();
     // m x n  times n x 1  == m x 1
     let x = range_mat64(n, 1);
     let mut y = range_mat64(m, 1);
@@ -722,7 +722,7 @@ fn gen_mat_vec_mul() {
                     if rev {
                         a = a.reversed_axes();
                     }
-                    let (m, k) = a.dim();
+                    let [m, k] = a.dim();
                     let b = range1_mat64(k);
                     let mut c = range1_mat64(m);
                     let mut answer = c.clone();
@@ -765,7 +765,7 @@ fn vec_mat_mul() {
                     if rev {
                         b = b.reversed_axes();
                     }
-                    let (m, n) = b.dim();
+                    let [m, n] = b.dim();
                     let a = range1_mat64(m);
                     let mut c = range1_mat64(n);
                     let mut answer = c.clone();

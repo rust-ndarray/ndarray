@@ -1031,8 +1031,8 @@ pub type Ixs = isize;
 ///     array![[1, 2, 3], [4, 5, 6]],
 ///     array![[7, 8, 9], [10, 11, 12]],
 /// ];
-/// let inner_shape = nested[0].dim();
-/// let shape = (nested.len(), inner_shape.0, inner_shape.1);
+/// let [rows, cols] = nested[0].dim();
+/// let shape = (nested.len(), rows, cols);
 /// let flat: Vec<i32> = nested.iter().flatten().cloned().collect();
 /// let arr = Array3::from_shape_vec(shape, flat)?;
 /// assert_eq!(arr, array![

@@ -57,7 +57,7 @@ impl<D> Iterator for IndicesIter<D>
             Some(ref ix) => ix.clone(),
         };
         self.index = self.dim.next_for(index.clone());
-        Some(index.into_pattern())
+        Some(index.to_pattern())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -161,7 +161,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
 
     #[doc(hidden)]
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
-        ptr.index.into_pattern()
+        ptr.index.to_pattern()
     }
 
     #[doc(hidden)]
@@ -227,7 +227,7 @@ impl<D> Iterator for IndicesIterF<D>
         if !self.has_remaining {
             None
         } else {
-            let elt = self.index.clone().into_pattern();
+            let elt = self.index.to_pattern();
             self.has_remaining = self.dim.next_for_f(&mut self.index);
             Some(elt)
         }

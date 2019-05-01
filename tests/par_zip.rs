@@ -69,15 +69,15 @@ fn test_zip_index_4() {
 
     Zip::indexed(&mut a)
         .and(&mut b)
-        .par_apply(|(i, j), x, y| {
+        .par_apply(|[i, j], x, y| {
             *x = i;
             *y = j;
         });
 
-    for ((i, _), elt) in a.indexed_iter() {
+    for ([i, _], elt) in a.indexed_iter() {
         assert_eq!(*elt, i);
     }
-    for ((_, j), elt) in b.indexed_iter() {
+    for ([_, j], elt) in b.indexed_iter() {
         assert_eq!(*elt, j);
     }
 }

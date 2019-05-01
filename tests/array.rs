@@ -499,13 +499,13 @@ fn test_index()
         *elt = i;
     }
 
-    for ((i, j), a) in zip(indices((2, 3)), &A) {
+    for ([i, j], a) in zip(indices((2, 3)), &A) {
         assert_eq!(*a, A[[i, j]]);
     }
 
     let vi = A.slice(s![1.., ..;2]);
     let mut it = vi.iter();
-    for ((i, j), x) in zip(indices((1, 2)), &mut it) {
+    for ([i, j], x) in zip(indices((1, 2)), &mut it) {
         assert_eq!(*x, vi[[i, j]]);
     }
     assert!(it.next().is_none());
@@ -709,14 +709,14 @@ fn test_select(){
 fn diag()
 {
     let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
-    assert_eq!(d.dim(), (1,));
+    assert_eq!(d.dim(), [1]);
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
     let d = a.view().into_diag();
-    assert_eq!(d.dim(), (2,));
+    assert_eq!(d.dim(), [2]);
     let d = arr2::<f32, _>(&[[]]).into_diag();
-    assert_eq!(d.dim(), (0,));
+    assert_eq!(d.dim(), [0]);
     let d = ArcArray::<f32, _>::zeros(()).into_diag();
-    assert_eq!(d.dim(), (1,));
+    assert_eq!(d.dim(), [1]);
 }
 
 /// Check that the merged shape is correct.
@@ -837,21 +837,21 @@ fn permuted_axes()
 
     let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
     let permuted = a.view().permuted_axes([2, 1, 0]);
-    for ((i0, i1, i2), elem) in a.indexed_iter() {
+    for ([i0, i1, i2], elem) in a.indexed_iter() {
         assert_eq!(*elem, permuted[(i2, i1, i0)]);
     }
     let permuted = a.view().into_dyn().permuted_axes(&[0, 2, 1][..]);
-    for ((i0, i1, i2), elem) in a.indexed_iter() {
+    for ([i0, i1, i2], elem) in a.indexed_iter() {
         assert_eq!(*elem, permuted[&[i0, i2, i1][..]]);
     }
 
     let a = Array::from_iter(0..120).into_shape((2, 3, 4, 5)).unwrap();
     let permuted = a.view().permuted_axes([1, 0, 3, 2]);
-    for ((i0, i1, i2, i3), elem) in a.indexed_iter() {
+    for ([i0, i1, i2, i3], elem) in a.indexed_iter() {
         assert_eq!(*elem, permuted[(i1, i0, i3, i2)]);
     }
     let permuted = a.view().into_dyn().permuted_axes(&[1, 2, 3, 0][..]);
-    for ((i0, i1, i2, i3), elem) in a.indexed_iter() {
+    for ([i0, i1, i2, i3], elem) in a.indexed_iter() {
         assert_eq!(*elem, permuted[&[i1, i2, i3, i0][..]]);
     }
 }
@@ -977,7 +977,7 @@ fn zero_axes()
 
     // we can even get a subarray of b
     let bsub = b.index_axis(Axis(0), 2);
-    assert_eq!(bsub.dim(), (0,));
+    assert_eq!(bsub.dim(), [0]);
 }
 
 #[test]

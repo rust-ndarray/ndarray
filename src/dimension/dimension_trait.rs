@@ -22,7 +22,6 @@ use super::{
     stride_offset,
     stride_offset_checked,
 };
-use super::conversion::Convert;
 use super::axes_of;
 
 /// Array shape and index trait.
@@ -62,11 +61,12 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
     ///
-    /// - For `Ix1`: `(usize)`,
-    /// - For `Ix2`: `(usize, usize)`
+    /// - For `Ix0`: `[]`,
+    /// - For `Ix1`: `[usize]`,
+    /// - For `Ix2`: `[usize, usize]`
     /// - and so on..
     /// - For `IxDyn`: `IxDyn`
-    type Pattern: IntoDimension<Dim=Self>;
+    type Pattern: IntoDimension<Dim=Self> + Clone;
     /// Next smaller dimension (if applicable)
     type Smaller: Dimension;
     /// Next larger dimension
@@ -75,8 +75,14 @@ pub trait Dimension : Clone + Eq + Debug + Send + Sync + Default +
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
 
-    /// Convert the dimension into a pattern matching friendly value.
-    fn into_pattern(self) -> Self::Pattern;
+    /// Returns the dimension as a pattern matching friendly value.
+    fn as_pattern(&self) -> &Self::Pattern;
+
+    /// Convert the dimension to a pattern matching friendly value.
+    fn to_pattern(&self) -> Self::Pattern
+    {
+        self.as_pattern().clone()
+    }
 
     /// Compute the size of the dimension (number of elements)
     fn size(&self) -> usize {
@@ -365,7 +371,7 @@ macro_rules! impl_insert_axis_array(
 impl Dimension for Dim<[Ix; 0]> {
     const NDIM: Option<usize> = Some(0);
     type SliceArg = [SliceOrIndex; 0];
-    type Pattern = ();
+    type Pattern = [Ix; 0];
     type Smaller = Self;
     type Larger = Ix1;
     // empty product is 1 -> size is 1
@@ -378,7 +384,7 @@ impl Dimension for Dim<[Ix; 0]> {
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self { Ix0() }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern { }
+    fn as_pattern(&self) -> &Self::Pattern { &[] }
     #[inline]
     fn zeros(ndim: usize) -> Self {
         assert_eq!(ndim, 0);
@@ -402,7 +408,7 @@ impl Dimension for Dim<[Ix; 0]> {
 impl Dimension for Dim<[Ix; 1]> {
     const NDIM: Option<usize> = Some(1);
     type SliceArg = [SliceOrIndex; 1];
-    type Pattern = (Ix,);
+    type Pattern = [Ix; 1];
     type Smaller = Ix0;
     type Larger = Ix2;
     #[inline]
@@ -412,8 +418,8 @@ impl Dimension for Dim<[Ix; 1]> {
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern {
-        self.ix().convert()
+    fn as_pattern(&self) -> &Self::Pattern {
+        self.ix()
     }
     #[inline]
     fn zeros(ndim: usize) -> Self {
@@ -500,14 +506,14 @@ impl Dimension for Dim<[Ix; 1]> {
 impl Dimension for Dim<[Ix; 2]> {
     const NDIM: Option<usize> = Some(2);
     type SliceArg = [SliceOrIndex; 2];
-    type Pattern = (Ix, Ix);
+    type Pattern = [Ix; 2];
     type Smaller = Ix1;
     type Larger = Ix3;
     #[inline]
     fn ndim(&self) -> usize { 2 }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern {
-        self.ix().convert()
+    fn as_pattern(&self) -> &Self::Pattern {
+        self.ix()
     }
     #[inline]
     fn slice(&self) -> &[Ix] { self.ix() }
@@ -646,14 +652,14 @@ impl Dimension for Dim<[Ix; 2]> {
 impl Dimension for Dim<[Ix; 3]> {
     const NDIM: Option<usize> = Some(3);
     type SliceArg = [SliceOrIndex; 3];
-    type Pattern = (Ix, Ix, Ix);
+    type Pattern = [Ix; 3];
     type Smaller = Ix2;
     type Larger = Ix4;
     #[inline]
     fn ndim(&self) -> usize { 3 }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern {
-        self.ix().convert()
+    fn as_pattern(&self) -> &Self::Pattern {
+        self.ix()
     }
     #[inline]
     fn slice(&self) -> &[Ix] { self.ix() }
@@ -764,14 +770,14 @@ macro_rules! large_dim {
         impl Dimension for Dim<[Ix; $n]> {
             const NDIM: Option<usize> = Some($n);
             type SliceArg = [SliceOrIndex; $n];
-            type Pattern = $pattern;
+            type Pattern = [Ix; $n];
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
-            fn into_pattern(self) -> Self::Pattern {
-                self.ix().convert()
+            fn as_pattern(&self) -> &Self::Pattern {
+                self.ix()
             }
             #[inline]
             fn slice(&self) -> &[Ix] { self.ix() }
@@ -826,7 +832,7 @@ impl Dimension for IxDyn
     #[inline]
     fn slice_mut(&mut self) -> &mut [Ix] { self.ixm() }
     #[inline]
-    fn into_pattern(self) -> Self::Pattern {
+    fn as_pattern(&self) -> &Self::Pattern {
         self
     }
 

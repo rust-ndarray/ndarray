@@ -106,7 +106,7 @@ fn test_window_zip() {
         for y in 1..4 {
             for z in 1..4 {
                 Zip::indexed(a.windows((x, y, z)))
-                    .apply(|(i, j, k), window| {
+                    .apply(|[i, j, k], window| {
                         let x = x as isize;
                         let y = y as isize;
                         let z = z as isize;
