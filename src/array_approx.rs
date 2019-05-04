@@ -1,5 +1,5 @@
 use crate::imp_prelude::*;
-use crate::{FoldWhile, Zip};
+use crate::Zip;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 /// **Requires crate feature `"approx"`**
@@ -22,7 +22,7 @@ where
         }
         Zip::from(self)
             .and(other)
-            .all(A::abs_diff_ne(a, b, epsilon.clone()))
+            .all(|a, b| A::abs_diff_eq(a, b, epsilon.clone()))
     }
 }
 
@@ -49,7 +49,7 @@ where
         }
         Zip::from(self)
             .and(other)
-            .all(A::relative_ne(a, b, epsilon.clone(), max_relative.clone()))
+            .all(|a, b| A::relative_eq(a, b, epsilon.clone(), max_relative.clone()))
     }
 }
 
@@ -71,7 +71,7 @@ where
         }
         Zip::from(self)
             .and(other)
-            .all(A::ulps_ne(a, b, epsilon.clone(), max_ulps))
+            .all(|a, b| A::ulps_eq(a, b, epsilon.clone(), max_ulps))
     }
 }
 
