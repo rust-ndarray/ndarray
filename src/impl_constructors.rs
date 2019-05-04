@@ -112,12 +112,15 @@ impl<S, A> ArrayBase<S, Ix1>
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
+    /// use approx::AbsDiffEq;
     ///
+    /// # #[cfg(feature = "approx")] {
     /// let array = Array::logspace(10.0, 0.0, 3.0, 4);
-    /// assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+    /// assert!(array.abs_diff_eq(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
     ///
     /// let array = Array::logspace(-10.0, 3.0, 0.0, 4);
-    /// assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+    /// assert!(array.abs_diff_eq(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+    /// # }
     /// ```
     pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
     where

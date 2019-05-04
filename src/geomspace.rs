@@ -109,18 +109,19 @@ mod tests {
     use crate::{arr1, Array1};
 
     #[test]
+    #[cfg(approx)]
     fn valid() {
         let array: Array1<_> = geomspace(1e0, 1e3, 4).collect();
-        assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+        assert!(array.abs_diff_eq(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
 
         let array: Array1<_> = geomspace(1e3, 1e0, 4).collect();
-        assert!(array.all_close(&arr1(&[1e3, 1e2, 1e1, 1e0]), 1e-5));
+        assert!(array.abs_diff_eq(&arr1(&[1e3, 1e2, 1e1, 1e0]), 1e-5));
 
         let array: Array1<_> = geomspace(-1e3, -1e0, 4).collect();
-        assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+        assert!(array.abs_diff_eq(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
 
         let array: Array1<_> = geomspace(-1e0, -1e3, 4).collect();
-        assert!(array.all_close(&arr1(&[-1e0, -1e1, -1e2, -1e3]), 1e-5));
+        assert!(array.abs_diff_eq(&arr1(&[-1e0, -1e1, -1e2, -1e3]), 1e-5));
     }
 
     #[test]
