@@ -1742,7 +1742,7 @@ fn test_all_close() {
                    [[1., 2., 3.],
                     [1., 2.5, 3.]]]);
     assert!(c.abs_diff_eq(&aview1(&[1., 2., 3.]), 1.));
-    assert!(c.abs_diff_neq(&aview1(&[1., 2., 3.]), 0.1));
+    assert!(c.abs_diff_ne(&aview1(&[1., 2., 3.]), 0.1));
 }
 
 #[test]
