@@ -2040,14 +2040,17 @@ where
     ///
     /// ```
     /// use ndarray::arr2;
+    /// use approx::AbsDiffEq;
     ///
+    /// # #[cfg(feature = "approx")] {
     /// let mut a = arr2(&[[ 0., 1.],
     ///                    [-1., 2.]]);
     /// a.mapv_inplace(f32::exp);
     /// assert!(
-    ///     a.all_close(&arr2(&[[1.00000, 2.71828],
-    ///                         [0.36788, 7.38906]]), 1e-5)
+    ///     a.abs_diff_eq(&arr2(&[[1.00000, 2.71828],
+    ///                           [0.36788, 7.38906]]), 1e-5)
     /// );
+    /// # }
     /// ```
     pub fn mapv_inplace<F>(&mut self, mut f: F)
         where S: DataMut,
