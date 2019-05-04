@@ -306,6 +306,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting to the same shape isn’t possible.
+    #[deprecated(note="Use `abs_diff_eq` - it requires the `approx` crate feature", since="0.13")]
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
         where A: Float,
               S2: Data<Elem=A>,
