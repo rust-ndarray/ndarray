@@ -15,7 +15,7 @@ const Y: usize = 16;
 #[bench]
 fn map_regular(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 127., N).into_shape((X, Y)).unwrap();
+    let a = Array::linspace(0., 127., N).into_shape([X, Y]).unwrap();
     bench.iter(|| {
         a.map(|&x| 2. * x)
     });

@@ -274,7 +274,7 @@ pub type Ixs = isize;
 /// ```
 /// // Create a three-dimensional f64 array, initialized with zeros
 /// use ndarray::Array3;
-/// let mut temperature = Array3::<f64>::zeros((3, 4, 5));
+/// let mut temperature = Array3::<f64>::zeros([3, 4, 5]);
 /// // Increase the temperature in this location
 /// temperature[[2, 2, 2]] += 0.5;
 /// ```
@@ -339,7 +339,7 @@ pub type Ixs = isize;
 ///
 /// ```
 /// use ndarray::Array2;
-/// let mut array = Array2::zeros((4, 3));
+/// let mut array = Array2::zeros([4, 3]);
 /// array[[1, 1]] = 7;
 /// ```
 ///
@@ -412,14 +412,14 @@ pub type Ixs = isize;
 /// use ndarray::Array;
 ///
 /// // 1. Loop over the rows of a 2D array
-/// let mut a = Array::zeros((10, 10));
+/// let mut a = Array::zeros([10, 10]);
 /// for mut row in a.genrows_mut() {
 ///     row.fill(1.);
 /// }
 ///
 /// // 2. Use Zip to pair each row in 2D `a` with elements in 1D `b`
 /// use ndarray::Zip;
-/// let mut b = Array::zeros(a.rows());
+/// let mut b = Array::zeros([a.rows()]);
 ///
 /// Zip::from(a.genrows())
 ///     .and(&mut b)
@@ -985,7 +985,7 @@ pub type Ixs = isize;
 /// ```rust
 /// use ndarray::{array, Array2, Axis};
 ///
-/// let mut arr = Array2::zeros((2, 3));
+/// let mut arr = Array2::zeros([2, 3]);
 /// for (i, mut row) in arr.axis_iter_mut(Axis(0)).enumerate() {
 ///     // Perform calculations and assign to `row`; this is a trivial example:
 ///     row.fill(i);
@@ -1013,7 +1013,7 @@ pub type Ixs = isize;
 ///     data.extend_from_slice(&row);
 ///     nrows += 1;
 /// }
-/// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
+/// let arr = Array2::from_shape_vec([nrows, ncols], data)?;
 /// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
 /// # Ok(())
 /// # }
@@ -1034,8 +1034,8 @@ pub type Ixs = isize;
 ///     array![[1, 2, 3], [4, 5, 6]],
 ///     array![[7, 8, 9], [10, 11, 12]],
 /// ];
-/// let inner_shape = nested[0].dim();
-/// let shape = (nested.len(), inner_shape.0, inner_shape.1);
+/// let [rows, cols] = nested[0].dim();
+/// let shape = [nested.len(), rows, cols];
 /// let flat: Vec<i32> = nested.iter().flatten().cloned().collect();
 /// let arr = Array3::from_shape_vec(shape, flat)?;
 /// assert_eq!(arr, array![

@@ -35,7 +35,7 @@ fn test_ixdyn_out_of_bounds() {
 #[test]
 fn test_ixdyn_iterate() {
     for &rev in &[false, true] {
-        let mut a = Array::zeros((2, 3, 4).set_f(rev));
+        let mut a = Array::zeros([2, 3, 4].set_f(rev));
         let dim = a.shape().to_vec();
         for (i, elt) in a.iter_mut().enumerate() {
             *elt = i;
@@ -55,9 +55,9 @@ fn test_ixdyn_iterate() {
 #[test]
 fn test_ixdyn_index_iterate() {
     for &rev in &[false, true] {
-        let mut a = Array::zeros((2, 3, 4).set_f(rev));
+        let mut a = Array::zeros([2, 3, 4].set_f(rev));
         let dim = a.shape().to_vec();
-        for ((i, j, k), elt) in a.indexed_iter_mut() {
+        for ([i, j, k], elt) in a.indexed_iter_mut() {
             *elt = i + 10 * j + 100 * k;
         }
         let a = a.into_shape(dim).unwrap();
@@ -151,7 +151,7 @@ fn test_0_add_broad() {
 
 #[test]
 fn test_into_dimension() {
-    let a = Array::linspace(0., 41., 6 * 7).into_shape((6, 7)).unwrap();
+    let a = Array::linspace(0., 41., 6 * 7).into_shape([6, 7]).unwrap();
     let a2 = a.clone().into_shape(IxDyn(&[6, 7])).unwrap();
     let b = a2.clone().into_dimensionality::<Ix2>().unwrap();
     assert_eq!(a, b);

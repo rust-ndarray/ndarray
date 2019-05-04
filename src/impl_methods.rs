@@ -79,7 +79,7 @@ where
     /// an integer in the one-dimensional case, tuple in the n-dimensional cases
     /// and so on.
     pub fn dim(&self) -> D::Pattern {
-        self.dim.clone().into_pattern()
+        self.dim.to_pattern()
     }
 
     /// Return the shape of the array as it stored in the array.
@@ -91,7 +91,7 @@ where
     /// ```
     /// use ndarray::Array;
     ///
-    /// let a = Array::from_elem((2, 3), 5.);
+    /// let a = Array::from_elem([2, 3], 5.);
     ///
     /// // Create an array of zeros that's the same shape and dimensionality as `a`.
     /// let b = Array::<f64, _>::zeros(a.raw_dim());
@@ -112,7 +112,7 @@ where
     /// ```rust
     /// use ndarray::{Array, Array2};
     ///
-    /// let a = Array2::<i32>::zeros((3, 4));
+    /// let a = Array2::<i32>::zeros([3, 4]);
     /// let shape = a.shape();
     /// assert_eq!(shape, &[3, 4]);
     ///
@@ -180,7 +180,7 @@ where
     ///
     /// ```
     /// # use ndarray::prelude::*;
-    /// # let arr = Array::from_shape_vec((2, 2).f(), vec![1, 2, 3, 4]).unwrap();
+    /// # let arr = Array::from_shape_vec([2, 2].f(), vec![1, 2, 3, 4]).unwrap();
     /// # let owned = {
     /// Array::from_shape_vec(arr.raw_dim(), arr.iter().cloned().collect()).unwrap()
     /// # };
@@ -192,7 +192,7 @@ where
     ///
     /// ```
     /// # use ndarray::prelude::*;
-    /// # let arr = Array::from_shape_vec((2, 2), vec![1, 2, 3, 4]).unwrap();
+    /// # let arr = Array::from_shape_vec([2, 2], vec![1, 2, 3, 4]).unwrap();
     /// # let owned = {
     /// Array::from_shape_vec(arr.raw_dim().f(), arr.t().iter().cloned().collect()).unwrap()
     /// # };
@@ -501,9 +501,8 @@ where
     ///                [3., 4.]]);
     ///
     /// assert!(
-    ///     a.get((0, 1)) == Some(&2.) &&
-    ///     a.get((0, 2)) == None &&
-    ///     a[(0, 1)] == 2. &&
+    ///     a.get([0, 1]) == Some(&2.) &&
+    ///     a.get([0, 2]) == None &&
     ///     a[[0, 1]] == 2.
     /// );
     /// ```
@@ -1020,7 +1019,7 @@ where
     /// use ndarray::Array;
     /// use ndarray::{arr3, Axis};
     ///
-    /// let a = Array::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
+    /// let a = Array::from_iter(0..28).into_shape([2, 7, 2]).unwrap();
     /// let mut iter = a.axis_chunks_iter(Axis(1), 2);
     ///
     /// // first iteration yields a 2 × 2 × 2 view
@@ -1086,10 +1085,10 @@ where
     /// ```rust
     /// use ndarray::Array;
     /// use ndarray::arr2;
-    /// let mut a = Array::zeros((6, 7));
+    /// let mut a = Array::zeros([6, 7]);
     ///
     /// // Fill each 2 × 2 chunk with the index of where it appeared in iteration
-    /// for (i, mut chunk) in a.exact_chunks_mut((2, 2)).into_iter().enumerate() {
+    /// for (i, mut chunk) in a.exact_chunks_mut([2, 2]).into_iter().enumerate() {
     ///     chunk.fill(i);
     /// }
     ///
@@ -1342,7 +1341,7 @@ where
     /// use ndarray::{aview1, aview2};
     ///
     /// assert!(
-    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
+    ///     aview1(&[1., 2., 3., 4.]).into_shape([2, 2]).unwrap()
     ///     == aview2(&[[1., 2.],
     ///                 [3., 4.]])
     /// );
@@ -1389,7 +1388,7 @@ where
     /// use ndarray::{rcarr1, rcarr2};
     ///
     /// assert!(
-    ///     rcarr1(&[1., 2., 3., 4.]).reshape((2, 2))
+    ///     rcarr1(&[1., 2., 3., 4.]).reshape([2, 2])
     ///     == rcarr2(&[[1., 2.],
     ///                 [3., 4.]])
     /// );
@@ -1494,7 +1493,7 @@ where
     /// use ndarray::{aview1, aview2};
     ///
     /// assert!(
-    ///     aview1(&[1., 0.]).broadcast((10, 2)).unwrap()
+    ///     aview1(&[1., 0.]).broadcast([10, 2]).unwrap()
     ///     == aview2(&[[1., 0.]; 10])
     /// );
     /// ```
@@ -1600,7 +1599,7 @@ where
     /// let a = arr2(&[[0, 1], [2, 3]]);
     /// assert_eq!(a.view().permuted_axes([1, 0]), a.t());
     ///
-    /// let b = Array3::<u8>::zeros((1, 2, 3));
+    /// let b = Array3::<u8>::zeros([1, 2, 3]);
     /// assert_eq!(b.permuted_axes([1, 0, 2]).shape(), &[2, 1, 3]);
     /// ```
     pub fn permuted_axes<T>(self, axes: T) -> ArrayBase<S, D>
@@ -1717,7 +1716,7 @@ where
     /// use ndarray::Array3;
     /// use ndarray::Axis;
     ///
-    /// let mut a = Array3::<f64>::zeros((2, 3, 4));
+    /// let mut a = Array3::<f64>::zeros([2, 3, 4]);
     /// assert!(a.merge_axes(Axis(1), Axis(2)));
     /// assert_eq!(a.shape(), &[2, 1, 12]);
     /// ```
@@ -1743,7 +1742,7 @@ where
     /// assert_eq!(col, arr2(&[[1], [2], [3]]));
     ///
     /// // The new axis always has length 1.
-    /// let b = Array3::<f64>::zeros((3, 4, 5));
+    /// let b = Array3::<f64>::zeros([3, 4, 5]);
     /// assert_eq!(b.insert_axis(Axis(2)).shape(), &[3, 4, 1, 5]);
     /// ```
     ///

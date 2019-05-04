@@ -48,7 +48,7 @@ impl<S, A> ArrayBase<S, Ix1>
                 "Length must fit in `isize`.",
             );
         }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+        unsafe { Self::from_shape_vec_unchecked([v.len() as Ix], v) }
     }
 
     /// Create a one-dimensional array from an iterable.
@@ -163,7 +163,7 @@ impl<S, A> ArrayBase<S, Ix2>
         where S: DataMut,
               A: Clone + Zero + One,
     {
-        let mut eye = Self::zeros((n, n));
+        let mut eye = Self::zeros([n, n]);
         for a_ii in eye.diag_mut() {
             *a_ii = A::one();
         }
@@ -222,7 +222,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// ```
     /// use ndarray::{Array, arr3, ShapeBuilder};
     ///
-    /// let a = Array::from_elem((2, 2, 2), 1.);
+    /// let a = Array::from_elem([2, 2, 2], 1.);
     ///
     /// assert!(
     ///     a == arr3(&[[[1., 1.],
@@ -232,7 +232,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// );
     /// assert!(a.strides() == &[4, 2, 1]);
     ///
-    /// let b = Array::from_elem((2, 2, 2).f(), 1.);
+    /// let b = Array::from_elem([2, 2, 2].f(), 1.);
     /// assert!(b.strides() == &[1, 2, 4]);
     /// ```
     pub fn from_elem<Sh>(shape: Sh, elem: A) -> Self
@@ -323,10 +323,10 @@ impl<S, A, D> ArrayBase<S, D>
     /// use ndarray::ShapeBuilder; // Needed for .strides() method
     /// use ndarray::arr2;
     ///
-    /// let a = Array::from_shape_vec((2, 2), vec![1., 2., 3., 4.]);
+    /// let a = Array::from_shape_vec([2, 2], vec![1., 2., 3., 4.]);
     /// assert!(a.is_ok());
     ///
-    /// let b = Array::from_shape_vec((2, 2).strides((1, 2)),
+    /// let b = Array::from_shape_vec([2, 2].strides([1, 2]),
     ///                               vec![1., 2., 3., 4.]).unwrap();
     /// assert!(
     ///     b == arr2(&[[1., 3.],
@@ -438,7 +438,7 @@ impl<S, A, D> ArrayBase<S, D>
     /// }
     ///
     /// # fn main() {
-    /// #   shift_by_two(&Array2::zeros((8, 8)));
+    /// #   shift_by_two(&Array2::zeros([8, 8]));
     /// # }
     /// ```
     pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self

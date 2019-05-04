@@ -12,14 +12,14 @@ type Board = Array2<u8>;
 
 fn parse(x: &[u8]) -> Board {
     // make a border of 0 cells
-    let mut map = Board::from_elem(((N + 2), (N + 2)), 0);
+    let mut map = Board::from_elem([N + 2, N + 2], 0);
     let a = Array::from_iter(x.iter().filter_map(|&b| match b {
         b'#' => Some(1),
         b'.' => Some(0),
         _ => None,
     }));
 
-    let a = a.into_shape((N, N)).unwrap();
+    let a = a.into_shape([N, N]).unwrap();
     map.slice_mut(s![1..-1, 1..-1]).assign(&a);
     map
 }
@@ -79,7 +79,7 @@ fn render(a: &Board) {
 
 fn main() {
     let mut a = parse(INPUT);
-    let mut scratch = Board::zeros((N, N));
+    let mut scratch = Board::zeros([N, N]);
     let steps = 100;
     turn_on_corners(&mut a);
     for _ in 0..steps {

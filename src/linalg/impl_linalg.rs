@@ -79,7 +79,7 @@ impl<A, S> ArrayBase<S, Ix1>
         let mut sum = A::zero();
         for i in 0..self.len() {
             unsafe {
-                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+                sum = sum.clone() + self.uget([i]).clone() * rhs.uget([i]).clone();
             }
         }
         sum
@@ -256,7 +256,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
     {
         let a = self.view();
         let b = b.view();
-        let ((m, k), (k2, n)) = (a.dim(), b.dim());
+        let ([m, k], [k2, n]) = (a.dim(), b.dim());
         if k != k2 || m.checked_mul(n).is_none() {
             dot_shape_error(m, k, k2, n);
         }
@@ -269,7 +269,7 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix2>> for ArrayBase<S, Ix2>
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
+            c = Array::from_shape_vec_unchecked([m, n].set_f(column_major), v);
         }
         mat_mul_impl(A::one(), &a, &b, A::zero(), &mut c.view_mut());
         c
@@ -312,14 +312,14 @@ impl<A, S, S2> Dot<ArrayBase<S2, Ix1>> for ArrayBase<S, Ix2>
     type Output = Array<A, Ix1>;
     fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
     {
-        let ((m, a), n) = (self.dim(), rhs.dim());
+        let ([m, a], [n]) = (self.dim(), rhs.dim());
         if a != n {
             dot_shape_error(m, a, n, 1);
         }
 
         // Avoid initializing the memory in vec -- set it during iteration
         unsafe {
-            let mut c = Array::uninitialized(m);
+            let mut c = Array::uninitialized([m]);
             general_mat_vec_mul(A::one(), self, rhs, A::zero(), &mut c);
             c
         }
@@ -362,7 +362,7 @@ fn mat_mul_impl<A>(alpha: A,
 {
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
-    let ((mut m, a), (_, mut n)) = (lhs.dim(), rhs.dim());
+    let ([mut m, a], [_, mut n]) = (lhs.dim(), rhs.dim());
     if !(m > cut || n > cut || a > cut) ||
         !(same_type::<A, f32>() || same_type::<A, f64>()) {
         return mat_mul_general(alpha, lhs, rhs, beta, c);
@@ -400,11 +400,11 @@ fn mat_mul_impl<A>(alpha: A,
                     && blas_row_major_2d::<$ty, _>(&rhs_)
                     && blas_row_major_2d::<$ty, _>(&c_)
                 {
-                    let (m, k) = match lhs_trans {
+                    let [m, k] = match lhs_trans {
                         CblasNoTrans => lhs_.dim(),
                         _ => {
-                            let (rows, cols) = lhs_.dim();
-                            (cols, rows)
+                            let [rows, cols] = lhs_.dim();
+                            [cols, rows]
                         }
                     };
                     let n = match rhs_trans {
@@ -454,7 +454,7 @@ fn mat_mul_general<A>(alpha: A,
                       c: &mut ArrayViewMut2<A>)
     where A: LinalgScalar,
 {
-    let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
+    let ([m, k], [_, n]) = (lhs.dim(), rhs.dim());
 
     // common parameters for gemm
     let ap = lhs.as_ptr();
@@ -508,9 +508,9 @@ fn mat_mul_general<A>(alpha: A,
         let mut j = 0;
         loop {
             unsafe {
-                let elt = c.uget_mut((i, j));
+                let elt = c.uget_mut([i, j]);
                 *elt = *elt * beta + alpha * (0..k).fold(A::zero(),
-                    move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
+                    move |s, x| s + *lhs.uget([i, x]) * *rhs.uget([x, j]));
             }
             j += 1;
             if j == n {
@@ -545,8 +545,8 @@ pub fn general_mat_mul<A, S1, S2, S3>(alpha: A,
           S3: DataMut<Elem=A>,
           A: LinalgScalar,
 {
-    let ((m, k), (k2, n)) = (a.dim(), b.dim());
-    let (m2, n2) = c.dim();
+    let ([m, k], [k2, n]) = (a.dim(), b.dim());
+    let [m2, n2] = c.dim();
     if k != k2 || m != m2 || n != n2 {
         general_dot_shape_error(m, k, k2, n, m2, n2);
     } else {
@@ -574,8 +574,8 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
           S3: DataMut<Elem=A>,
           A: LinalgScalar,
 {
-    let ((m, k), k2) = (a.dim(), x.dim());
-    let m2 = y.dim();
+    let ([m, k], [k2]) = (a.dim(), x.dim());
+    let [m2] = y.dim();
     if k != k2 || m != m2 {
         general_dot_shape_error(m, k, k2, 1, m2, 1);
     } else {
@@ -707,7 +707,7 @@ fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
 
 #[cfg(feature="blas")]
 fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool {
-    let (m, n) = dim.into_pattern();
+    let [m, n] = dim.to_pattern();
     let s0 = stride[0] as isize;
     let s1 = stride[1] as isize;
     let (inner_stride, outer_dim) = match order {
@@ -755,28 +755,28 @@ mod blas_tests {
 
     #[test]
     fn blas_row_major_2d_normal_matrix() {
-        let m: Array2<f32> = Array2::zeros((3, 5));
+        let m: Array2<f32> = Array2::zeros([3, 5]);
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(!blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
     fn blas_row_major_2d_row_matrix() {
-        let m: Array2<f32> = Array2::zeros((1, 5));
+        let m: Array2<f32> = Array2::zeros([1, 5]);
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
     fn blas_row_major_2d_column_matrix() {
-        let m: Array2<f32> = Array2::zeros((5, 1));
+        let m: Array2<f32> = Array2::zeros([5, 1]);
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
     fn blas_row_major_2d_transposed_row_matrix() {
-        let m: Array2<f32> = Array2::zeros((1, 5));
+        let m: Array2<f32> = Array2::zeros([1, 5]);
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
         assert!(blas_column_major_2d::<f32, _>(&m_t));
@@ -784,7 +784,7 @@ mod blas_tests {
 
     #[test]
     fn blas_row_major_2d_transposed_column_matrix() {
-        let m: Array2<f32> = Array2::zeros((5, 1));
+        let m: Array2<f32> = Array2::zeros([5, 1]);
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
         assert!(blas_column_major_2d::<f32, _>(&m_t));
@@ -792,7 +792,7 @@ mod blas_tests {
 
     #[test]
     fn blas_column_major_2d_normal_matrix() {
-        let m: Array2<f32> = Array2::zeros((3, 5).f());
+        let m: Array2<f32> = Array2::zeros([3, 5].f());
         assert!(!blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }

@@ -128,11 +128,11 @@ fn dot_product_neg_stride() {
 }
 
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
-    Array::linspace(0., (m * n) as f32 - 1., m * n).into_shape((m, n)).unwrap()
+    Array::linspace(0., (m * n) as f32 - 1., m * n).into_shape([m, n]).unwrap()
 }
 
 fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
-    Array::linspace(0., (m * n) as f64 - 1., m * n).into_shape((m, n)).unwrap()
+    Array::linspace(0., (m * n) as f64 - 1., m * n).into_shape([m, n]).unwrap()
 }
 
 fn range1_mat64(m: Ix) -> Array1<f64> {
@@ -140,7 +140,7 @@ fn range1_mat64(m: Ix) -> Array1<f64> {
 }
 
 fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
-    Array::from_iter(0..(m * n) as i32).into_shape((m, n)).unwrap()
+    Array::from_iter(0..(m * n) as i32).into_shape([m, n]).unwrap()
 }
 
 // simple, slow, correct (hopefully) mat mul
@@ -150,7 +150,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
+    let ([m, k], [k2, n]) = (lhs.dim(), rhs.dim());
     assert!(m.checked_mul(n).is_some());
     assert_eq!(k, k2);
     let mut res_elems = Vec::<A>::with_capacity(m * n);
@@ -163,7 +163,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
     for rr in &mut res_elems {
         unsafe {
             *rr = (0..k).fold(A::zero(),
-                move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
+                move |s, x| s + *lhs.uget([i, x]) * *rhs.uget([x, j]));
         }
         j += 1;
         if j == n {
@@ -172,7 +172,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
         }
     }
     unsafe {
-        ArrayBase::from_shape_vec_unchecked((m, n), res_elems)
+        ArrayBase::from_shape_vec_unchecked([m, n], res_elems)
     }
 }
 
@@ -183,9 +183,9 @@ fn reference_mat_vec_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, 
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, _), k) = (lhs.dim(), rhs.dim());
-    reference_mat_mul(lhs, &rhs.to_owned().into_shape((k, 1)).unwrap())
-        .into_shape(m).unwrap()
+    let ([m, _], [k]) = (lhs.dim(), rhs.dim());
+    reference_mat_mul(lhs, &rhs.to_owned().into_shape([k, 1]).unwrap())
+        .into_shape([m]).unwrap()
 }
 
 // simple, slow, correct (hopefully) mat mul
@@ -195,14 +195,14 @@ fn reference_vec_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix1>, rhs: &ArrayBase<S2, 
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let (m, (_, n)) = (lhs.dim(), rhs.dim());
-    reference_mat_mul(&lhs.to_owned().into_shape((1, m)).unwrap(), rhs)
-        .into_shape(n).unwrap()
+    let ([m], [_, n]) = (lhs.dim(), rhs.dim());
+    reference_mat_mul(&lhs.to_owned().into_shape([1, m]).unwrap(), rhs)
+        .into_shape([n]).unwrap()
 }
 
 #[test]
 fn mat_mul() {
-    let (m, n, k) = (8, 8, 8);
+    let [m, n, k] = [8, 8, 8];
     let a = range_mat(m, n);
     let b = range_mat(n, k);
     let mut b = b / 4.;
@@ -221,7 +221,7 @@ fn mat_mul() {
     assert_eq!(ab, af.dot(&b));
     assert_eq!(ab, af.dot(&bf));
 
-    let (m, n, k) = (10, 5, 11);
+    let [m, n, k] = [10, 5, 11];
     let a = range_mat(m, n);
     let b = range_mat(n, k);
     let mut b = b / 4.;
@@ -240,7 +240,7 @@ fn mat_mul() {
     assert_eq!(ab, af.dot(&b));
     assert_eq!(ab, af.dot(&bf));
 
-    let (m, n, k) = (10, 8, 1);
+    let [m, n, k] = [10, 8, 1];
     let a = range_mat(m, n);
     let b = range_mat(n, k);
     let mut b = b / 4.;
@@ -264,7 +264,7 @@ fn mat_mul() {
 // matrix with the same order
 #[test]
 fn mat_mul_order() {
-    let (m, n, k) = (8, 8, 8);
+    let [m, n, k] = [8, 8, 8];
     let a = range_mat(m, n);
     let b = range_mat(n, k);
     let mut af = Array::zeros(a.dim().f());
@@ -304,14 +304,14 @@ fn mat_mul_shape_mismatch_2() {
 // supports broadcast arrays.
 #[test]
 fn mat_mul_broadcast() {
-    let (m, n, k) = (16, 16, 16);
+    let [m, n, k] = [16, 16, 16];
     let a = range_mat(m, n);
     let x1 = 1.;
     let x = Array::from_vec(vec![x1]);
-    let b0 = x.broadcast((n, k)).unwrap();
-    let b1 = Array::from_elem(n, x1);
-    let b1 = b1.broadcast((n, k)).unwrap();
-    let b2 = Array::from_elem((n, k), x1);
+    let b0 = x.broadcast([n, k]).unwrap();
+    let b1 = Array::from_elem([n], x1);
+    let b1 = b1.broadcast([n, k]).unwrap();
+    let b2 = Array::from_elem([n, k], x1);
 
     let c2 = a.dot(&b2);
     let c1 = a.dot(&b1);
@@ -323,7 +323,7 @@ fn mat_mul_broadcast() {
 // Check that matrix multiplication supports reversed axes
 #[test]
 fn mat_mul_rev() {
-    let (m, n, k) = (16, 16, 16);
+    let [m, n, k] = [16, 16, 16];
     let a = range_mat(m, n);
     let b = range_mat(n, k);
     let mut rev = Array::zeros(b.dim());
@@ -344,12 +344,12 @@ fn mat_mut_zero_len() {
             for m in 0..4 {
                 let a = range_mat_fn(m, n);
                 let b = range_mat_fn(n, 0);
-                assert_eq!(a.dot(&b), Array2::zeros((m, 0)));
+                assert_eq!(a.dot(&b), Array2::zeros([m, 0]));
             }
             for k in 0..4 {
                 let a = range_mat_fn(0, n);
                 let b = range_mat_fn(n, k);
-                assert_eq!(a.dot(&b), Array2::zeros((0, k)));
+                assert_eq!(a.dot(&b), Array2::zeros([0, k]));
             }
         }
     });
@@ -462,19 +462,19 @@ fn scaled_add_3() {
 fn gen_mat_mul() {
     let alpha = -2.3;
     let beta = 3.14;
-    let sizes = vec![(4, 4, 4), (8, 8, 8),
-                     (17, 15, 16),
-                     (4, 17, 3),
-                     (17, 3, 22),
-                     (19, 18, 2),
-                     (16, 17, 15),
-                     (15, 16, 17),
-                     (67, 63, 62),
+    let sizes = vec![[4, 4, 4], [8, 8, 8],
+                     [17, 15, 16],
+                     [4, 17, 3],
+                     [17, 3, 22],
+                     [19, 18, 2],
+                     [16, 17, 15],
+                     [15, 16, 17],
+                     [67, 63, 62],
         ];
     // test different strides
     for &s1 in &[1, 2, -1, -2] {
         for &s2 in &[1, 2, -1, -2] {
-            for &(m, k, n) in &sizes {
+            for &[m, k, n] in &sizes {
                 let a = range_mat64(m, k);
                 let b = range_mat64(k, n);
                 let mut c = range_mat64(m, n);
@@ -501,7 +501,7 @@ fn gen_mat_mul() {
 #[test]
 fn gemm_64_1_f() {
     let a = range_mat64(64, 64).reversed_axes();
-    let (m, n) = a.dim();
+    let [m, n] = a.dim();
     // m x n  times n x 1  == m x 1
     let x = range_mat64(n, 1);
     let mut y = range_mat64(m, 1);
@@ -514,16 +514,16 @@ fn gemm_64_1_f() {
 fn gen_mat_mul_i32() {
     let alpha = -1;
     let beta = 2;
-    let sizes = vec![(4, 4, 4), (8, 8, 8),
-                     (17, 15, 16),
-                     (4, 17, 3),
-                     (17, 3, 22),
-                     (19, 18, 2),
-                     (16, 17, 15),
-                     (15, 16, 17),
-                     (67, 63, 62),
+    let sizes = vec![[4, 4, 4], [8, 8, 8],
+                     [17, 15, 16],
+                     [4, 17, 3],
+                     [17, 3, 22],
+                     [19, 18, 2],
+                     [16, 17, 15],
+                     [15, 16, 17],
+                     [67, 63, 62],
         ];
-    for &(m, k, n) in &sizes {
+    for &[m, k, n] in &sizes {
         let a = range_i32(m, k);
         let b = range_i32(k, n);
         let mut c = range_i32(m, n);
@@ -557,7 +557,7 @@ fn gen_mat_vec_mul() {
                     if rev {
                         a = a.reversed_axes();
                     }
-                    let (m, k) = a.dim();
+                    let [m, k] = a.dim();
                     let b = range1_mat64(k);
                     let mut c = range1_mat64(m);
                     let mut answer = c.clone();
@@ -600,7 +600,7 @@ fn vec_mat_mul() {
                     if rev {
                         b = b.reversed_axes();
                     }
-                    let (m, n) = b.dim();
+                    let [m, n] = b.dim();
                     let a = range1_mat64(m);
                     let mut c = range1_mat64(n);
                     let mut answer = c.clone();

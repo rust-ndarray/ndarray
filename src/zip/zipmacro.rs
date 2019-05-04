@@ -57,13 +57,13 @@
 ///
 /// fn main() {
 ///     // Setup example arrays
-///     let mut a = M::zeros((16, 16));
+///     let mut a = M::zeros([16, 16]);
 ///     let mut b = M::zeros(a.dim());
 ///     let mut c = M::zeros(a.dim());
 ///
 ///     // assign values
 ///     b.fill(1.);
-///     for ((i, j), elt) in c.indexed_iter_mut() {
+///     for ([i, j], elt) in c.indexed_iter_mut() {
 ///         *elt = (i + 10 * j) as f32;
 ///     }
 ///
@@ -74,7 +74,7 @@
 ///     assert_eq!(a, &b + &c);
 ///
 ///     // Example 2: azip!() with index
-///     azip!(index (i, j), b, c in {
+///     azip!(index [i, j], b, c in {
 ///         a[[i, j]] = b - c;
 ///     });
 ///
@@ -103,7 +103,7 @@
 ///     //
 ///     // The row is an array view; use the 'ref' rule on the row, to avoid the
 ///     // default which is to dereference the produced item.
-///     let mut totals = Array1::zeros(a.rows());
+///     let mut totals = Array1::zeros([a.rows()]);
 ///
 ///     azip!(mut totals, ref row (a.genrows()) in {
 ///         *totals = row.sum();

@@ -471,7 +471,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
         };
         match self.0.next() {
             None => None,
-            Some(elem) => Some((index.into_pattern(), elem)),
+            Some(elem) => Some((index.to_pattern(), elem)),
         }
     }
 
@@ -629,7 +629,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
         };
         match self.0.next() {
             None => None,
-            Some(elem) => Some((index.into_pattern(), elem)),
+            Some(elem) => Some((index.to_pattern(), elem)),
         }
     }
 

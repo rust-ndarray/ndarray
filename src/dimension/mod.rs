@@ -634,42 +634,42 @@ mod test {
     #[test]
     fn slice_indexing_uncommon_strides() {
         let v: Vec<_> = (0..12).collect();
-        let dim = (2, 3, 2).into_dimension();
-        let strides = (1, 2, 6).into_dimension();
+        let dim = [2, 3, 2].into_dimension();
+        let strides = [1, 2, 6].into_dimension();
         assert!(super::can_index_slice(&v, &dim, &strides).is_ok());
 
-        let strides = (2, 4, 12).into_dimension();
+        let strides = [2, 4, 12].into_dimension();
         assert_eq!(super::can_index_slice(&v, &dim, &strides),
                    Err(from_kind(ErrorKind::OutOfBounds)));
     }
 
     #[test]
     fn overlapping_strides_dim() {
-        let dim = (2, 3, 2).into_dimension();
-        let strides = (5, 2, 1).into_dimension();
+        let dim = [2, 3, 2].into_dimension();
+        let strides = [5, 2, 1].into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
-        let strides = (6, 2, 1).into_dimension();
+        let strides = [6, 2, 1].into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
-        let strides = (6, 0, 1).into_dimension();
+        let strides = [6, 0, 1].into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
-        let dim = (2, 2).into_dimension();
-        let strides = (3, 2).into_dimension();
+        let dim = [2, 2].into_dimension();
+        let strides = [3, 2].into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
     }
 
     #[test]
     fn max_abs_offset_check_overflow_examples() {
-        let dim = (1, ::std::isize::MAX as usize, 1).into_dimension();
-        let strides = (1, 1, 1).into_dimension();
+        let dim = [1, ::std::isize::MAX as usize, 1].into_dimension();
+        let strides = [1, 1, 1].into_dimension();
         max_abs_offset_check_overflow::<u8, _>(&dim, &strides).unwrap();
-        let dim = (1, ::std::isize::MAX as usize, 2).into_dimension();
-        let strides = (1, 1, 1).into_dimension();
+        let dim = [1, ::std::isize::MAX as usize, 2].into_dimension();
+        let strides = [1, 1, 1].into_dimension();
         max_abs_offset_check_overflow::<u8, _>(&dim, &strides).unwrap_err();
-        let dim = (0, 2, 2).into_dimension();
-        let strides = (1, ::std::isize::MAX as usize, 1).into_dimension();
+        let dim = [0, 2, 2].into_dimension();
+        let strides = [1, ::std::isize::MAX as usize, 1].into_dimension();
         max_abs_offset_check_overflow::<u8, _>(&dim, &strides).unwrap_err();
-        let dim = (0, 2, 2).into_dimension();
-        let strides = (1, ::std::isize::MAX as usize / 4, 1).into_dimension();
+        let dim = [0, 2, 2].into_dimension();
+        let strides = [1, ::std::isize::MAX as usize / 4, 1].into_dimension();
         max_abs_offset_check_overflow::<i32, _>(&dim, &strides).unwrap_err();
     }
 

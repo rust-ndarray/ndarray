@@ -412,7 +412,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 /// type M = Array2<f64>;
 ///
 /// // Create four 2d arrays of the same size
-/// let mut a = M::zeros((64, 32));
+/// let mut a = M::zeros([64, 32]);
 /// let b = M::from_elem(a.dim(), 1.);
 /// let c = M::from_elem(a.dim(), 2.);
 /// let d = M::from_elem(a.dim(), 3.);
@@ -437,7 +437,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///
 /// use ndarray::{Array1, Axis};
 ///
-/// let mut totals = Array1::zeros(a.rows());
+/// let mut totals = Array1::zeros([a.rows()]);
 ///
 /// Zip::from(&mut totals)
 ///     .and(a.genrows())

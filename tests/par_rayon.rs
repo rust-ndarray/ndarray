@@ -13,7 +13,7 @@ const N: usize = 100;
 
 #[test]
 fn test_axis_iter() {
-    let mut a = Array2::<f64>::zeros((M, N));
+    let mut a = Array2::<f64>::zeros([M, N]);
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
     }
@@ -25,7 +25,7 @@ fn test_axis_iter() {
 
 #[test]
 fn test_axis_iter_mut() {
-    let mut a = Array::linspace(0., 1.0f64, M * N).into_shape((M, N)).unwrap();
+    let mut a = Array::linspace(0., 1.0f64, M * N).into_shape([M, N]).unwrap();
     let b = a.mapv(|x| x.exp());
     a.axis_iter_mut(Axis(0)).into_par_iter().for_each(|mut v| v.mapv_inplace(|x| x.exp()));
     println!("{:?}", a.slice(s![..10, ..5]));
@@ -34,7 +34,7 @@ fn test_axis_iter_mut() {
 
 #[test]
 fn test_regular_iter() {
-    let mut a = Array2::<f64>::zeros((M, N));
+    let mut a = Array2::<f64>::zeros([M, N]);
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
     }
@@ -45,7 +45,7 @@ fn test_regular_iter() {
 
 #[test]
 fn test_regular_iter_collect() {
-    let mut a = Array2::<f64>::zeros((M, N));
+    let mut a = Array2::<f64>::zeros([M, N]);
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
     }

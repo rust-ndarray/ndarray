@@ -53,11 +53,11 @@ fn remove_axis()
     assert_eq!(Dim(vec![1, 2]).remove_axis(Axis(0)), Dim(vec![2]));
     assert_eq!(Dim(vec![4, 5, 6]).remove_axis(Axis(1)), Dim(vec![4, 6]));
 
-    let a = ArcArray::<f32, _>::zeros((4,5));
+    let a = ArcArray::<f32, _>::zeros([4, 5]);
     a.index_axis(Axis(1), 0);
 
     let a = ArcArray::<f32, _>::zeros(vec![4,5,6]);
-    let _b = a.index_axis_move(Axis(1), 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
+    let _b = a.index_axis_move(Axis(1), 0).reshape([4, 6]).reshape(vec![2, 3, 4]);
 }
 
 #[test]
@@ -138,7 +138,7 @@ fn min_stride_axis() {
     let a = ArrayF32::zeros(10);
     assert_eq!(a.min_stride_axis(), Axis(0));
 
-    let a = ArrayF32::zeros((3, 3));
+    let a = ArrayF32::zeros([3, 3]);
     assert_eq!(a.min_stride_axis(), Axis(1));
     assert_eq!(a.t().min_stride_axis(), Axis(0));
 
@@ -157,24 +157,24 @@ fn min_stride_axis() {
         b.swap_axes(3, ax);
     }
 
-    let a = ArrayF32::zeros((3, 3));
-    let v = a.broadcast((8, 3, 3)).unwrap();
+    let a = ArrayF32::zeros([3, 3]);
+    let v = a.broadcast([8, 3, 3]).unwrap();
     assert_eq!(v.min_stride_axis(), Axis(0));
 }
 */
 
 #[test]
 fn max_stride_axis() {
-    let a = ArrayF32::zeros(10);
+    let a = ArrayF32::zeros([10]);
     assert_eq!(a.max_stride_axis(), Axis(0));
 
-    let a = ArrayF32::zeros((3, 3));
+    let a = ArrayF32::zeros([3, 3]);
     assert_eq!(a.max_stride_axis(), Axis(0));
     assert_eq!(a.t().max_stride_axis(), Axis(1));
 
     let a = ArrayF32::zeros(vec![1, 3]);
     assert_eq!(a.max_stride_axis(), Axis(1));
-    let a = ArrayF32::zeros((1, 3));
+    let a = ArrayF32::zeros([1, 3]);
     assert_eq!(a.max_stride_axis(), Axis(1));
 
     let a = ArrayF32::zeros(vec![3, 3]);
@@ -265,7 +265,7 @@ fn test_generic_operations() {
 
     test_dim(&Dim([2, 3, 4]));
     test_dim(&Dim(vec![2, 3, 4, 1]));
-    test_dim(&Dim(2));
+    test_dim(&Dim([2]));
 }
 
 #[test]
@@ -277,7 +277,7 @@ fn test_array_view() {
 
     test_dim(&Dim([1, 2, 4]));
     test_dim(&Dim(vec![1, 1, 2, 3]));
-    test_dim(&Dim(7));
+    test_dim(&Dim([7]));
 }
 
 #[test]
@@ -308,8 +308,8 @@ macro_rules! ndindex {
     }
 }
     ndindex!(10);
-    ndindex!(10, 4);
-    ndindex!(10, 4, 3);
+    ndindex![10, 4];
+    ndindex![10, 4, 3];
     ndindex!(10, 4, 3, 2);
     ndindex!(10, 4, 3, 2, 2);
     ndindex!(10, 4, 3, 2, 2, 2);

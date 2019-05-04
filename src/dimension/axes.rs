@@ -25,7 +25,7 @@ pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
 /// use ndarray::Array3;
 /// use ndarray::Axis;
 ///
-/// let a = Array3::<f32>::zeros((3, 5, 4));
+/// let a = Array3::<f32>::zeros([3, 5, 4]);
 ///
 /// let largest_axis = a.axes()
 ///                     .max_by_key(|ax| ax.len())

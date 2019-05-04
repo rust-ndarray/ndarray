@@ -29,7 +29,7 @@ fn set_threads() {
 #[bench]
 fn map_exp_regular(bench: &mut Bencher)
 {
-    let mut a = Array2::<f64>::zeros((EXP_N, EXP_N));
+    let mut a = Array2::<f64>::zeros([EXP_N, EXP_N]);
     a.swap_axes(0, 1);
     bench.iter(|| {
         a.mapv_inplace(|x| x.exp());
@@ -40,7 +40,7 @@ fn map_exp_regular(bench: &mut Bencher)
 fn rayon_exp_regular(bench: &mut Bencher)
 {
     set_threads();
-    let mut a = Array2::<f64>::zeros((EXP_N, EXP_N));
+    let mut a = Array2::<f64>::zeros([EXP_N, EXP_N]);
     a.swap_axes(0, 1);
     bench.iter(|| {
         a.view_mut().into_par_iter().for_each(|x| *x = x.exp());
@@ -58,7 +58,7 @@ fn fastexp(x: f64) -> f64 {
 #[bench]
 fn map_fastexp_regular(bench: &mut Bencher)
 {
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     bench.iter(|| {
         a.mapv_inplace(|x| fastexp(x))
     });
@@ -68,7 +68,7 @@ fn map_fastexp_regular(bench: &mut Bencher)
 fn rayon_fastexp_regular(bench: &mut Bencher)
 {
     set_threads();
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     bench.iter(|| {
         a.view_mut().into_par_iter().for_each(|x| *x = fastexp(*x));
     });
@@ -77,7 +77,7 @@ fn rayon_fastexp_regular(bench: &mut Bencher)
 #[bench]
 fn map_fastexp_cut(bench: &mut Bencher)
 {
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     let mut a = a.slice_mut(s![.., ..-1]);
     bench.iter(|| {
         a.mapv_inplace(|x| fastexp(x))
@@ -88,7 +88,7 @@ fn map_fastexp_cut(bench: &mut Bencher)
 fn rayon_fastexp_cut(bench: &mut Bencher)
 {
     set_threads();
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     let mut a = a.slice_mut(s![.., ..-1]);
     bench.iter(|| {
         a.view_mut().into_par_iter().for_each(|x| *x = fastexp(*x));
@@ -98,7 +98,7 @@ fn rayon_fastexp_cut(bench: &mut Bencher)
 #[bench]
 fn map_fastexp_by_axis(bench: &mut Bencher)
 {
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     bench.iter(|| {
         for mut sheet in a.axis_iter_mut(Axis(0)) {
             sheet.mapv_inplace(fastexp)
@@ -110,7 +110,7 @@ fn map_fastexp_by_axis(bench: &mut Bencher)
 fn rayon_fastexp_by_axis(bench: &mut Bencher)
 {
     set_threads();
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     bench.iter(|| {
         a.axis_iter_mut(Axis(0)).into_par_iter()
             .for_each(|mut sheet| sheet.mapv_inplace(fastexp));
@@ -121,7 +121,7 @@ fn rayon_fastexp_by_axis(bench: &mut Bencher)
 fn rayon_fastexp_zip(bench: &mut Bencher)
 {
     set_threads();
-    let mut a = Array2::<f64>::zeros((FASTEXP, FASTEXP));
+    let mut a = Array2::<f64>::zeros([FASTEXP, FASTEXP]);
     bench.iter(|| {
         Zip::from(&mut a).into_par_iter().for_each(|(elt, )| *elt = fastexp(*elt));
     });
@@ -130,10 +130,10 @@ fn rayon_fastexp_zip(bench: &mut Bencher)
 #[bench]
 fn add(bench: &mut Bencher)
 {
-    let mut a = Array2::<f64>::zeros((ADDN, ADDN));
-    let b = Array2::<f64>::zeros((ADDN, ADDN));
-    let c = Array2::<f64>::zeros((ADDN, ADDN));
-    let d = Array2::<f64>::zeros((ADDN, ADDN));
+    let mut a = Array2::<f64>::zeros([ADDN, ADDN]);
+    let b = Array2::<f64>::zeros([ADDN, ADDN]);
+    let c = Array2::<f64>::zeros([ADDN, ADDN]);
+    let d = Array2::<f64>::zeros([ADDN, ADDN]);
     bench.iter(|| {
         azip!(mut a, b, c, d in {
             *a += b.exp() + c.exp() + d.exp();
@@ -145,10 +145,10 @@ fn add(bench: &mut Bencher)
 fn rayon_add(bench: &mut Bencher)
 {
     set_threads();
-    let mut a = Array2::<f64>::zeros((ADDN, ADDN));
-    let b = Array2::<f64>::zeros((ADDN, ADDN));
-    let c = Array2::<f64>::zeros((ADDN, ADDN));
-    let d = Array2::<f64>::zeros((ADDN, ADDN));
+    let mut a = Array2::<f64>::zeros([ADDN, ADDN]);
+    let b = Array2::<f64>::zeros([ADDN, ADDN]);
+    let c = Array2::<f64>::zeros([ADDN, ADDN]);
+    let d = Array2::<f64>::zeros([ADDN, ADDN]);
     bench.iter(|| {
         par_azip!(mut a, b, c, d in {
             *a += b.exp() + c.exp() + d.exp();

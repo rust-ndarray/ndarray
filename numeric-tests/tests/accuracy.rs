@@ -22,7 +22,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
           S: Data<Elem=A>,
           S2: Data<Elem=A>,
 {
-    let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
+    let ([m, k], [_, n]) = (lhs.dim(), rhs.dim());
     let mut res_elems = Vec::<A>::with_capacity(m * n);
     unsafe {
         res_elems.set_len(m * n);
@@ -33,7 +33,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
     for rr in &mut res_elems {
         unsafe {
             *rr = (0..k).fold(A::zero(),
-                move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
+                move |s, x| s + *lhs.uget([i, x]) * *rhs.uget([x, j]));
         }
         j += 1;
         if j == n {
@@ -42,7 +42,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
         }
     }
     unsafe {
-        ArrayBase::from_shape_vec_unchecked((m, n), res_elems)
+        ArrayBase::from_shape_vec_unchecked([m, n], res_elems)
     }
 }
 
@@ -285,11 +285,11 @@ fn accurate_mul_with_column_f64() {
             0 ... 3 => b_sq = b_owner.view(),
             4 ... 7 => {
                 b_row_col = b_owner.column(0);
-                b_sq = b_row_col.broadcast((k, k)).unwrap();
+                b_sq = b_row_col.broadcast([k, k]).unwrap();
             }
             _otherwise => {
                 b_row_col = b_owner.row(0);
-                b_sq = b_row_col.broadcast((k, k)).unwrap();
+                b_sq = b_row_col.broadcast([k, k]).unwrap();
             }
         };
 
