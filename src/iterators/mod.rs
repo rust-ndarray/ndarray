@@ -13,6 +13,7 @@ mod windows;
 mod lanes;
 pub mod iter;
 
+use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -388,6 +389,54 @@ impl<'a, A, D: Dimension> Iterator for Iter<'a, A, D> {
     {
         either!(self.inner, iter => iter.fold(init, g))
     }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        either_mut!(self.inner, iter => iter.nth(n))
+    }
+
+    fn collect<B>(self) -> B
+        where B: FromIterator<Self::Item>
+    {
+        either!(self.inner, iter => iter.collect())
+    }
+
+    fn all<F>(&mut self, f: F) -> bool
+        where F: FnMut(Self::Item) -> bool
+    {
+        either_mut!(self.inner, iter => iter.all(f))
+    }
+
+    fn any<F>(&mut self, f: F) -> bool
+        where F: FnMut(Self::Item) -> bool
+    {
+        either_mut!(self.inner, iter => iter.any(f))
+    }
+
+    fn find<P>(&mut self, predicate: P) -> Option<Self::Item>
+        where P: FnMut(&Self::Item) -> bool
+    {
+        either_mut!(self.inner, iter => iter.find(predicate))
+    }
+
+    fn find_map<B, F>(&mut self, f: F) -> Option<B>
+        where F: FnMut(Self::Item) -> Option<B>
+    {
+        either_mut!(self.inner, iter => iter.find_map(f))
+    }
+
+    fn count(self) -> usize {
+        either!(self.inner, iter => iter.count())
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        either!(self.inner, iter => iter.last())
+    }
+
+    fn position<P>(&mut self, predicate: P) -> Option<usize>
+        where P: FnMut(Self::Item) -> bool,
+    {
+        either_mut!(self.inner, iter => iter.position(predicate))
+    }
 }
 
 impl<'a, A> DoubleEndedIterator for Iter<'a, A, Ix1> {
@@ -454,6 +503,54 @@ impl<'a, A, D: Dimension> Iterator for IterMut<'a, A, D> {
         where G: FnMut(Acc, Self::Item) -> Acc
     {
         either!(self.inner, iter => iter.fold(init, g))
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        either_mut!(self.inner, iter => iter.nth(n))
+    }
+
+    fn collect<B>(self) -> B
+        where B: FromIterator<Self::Item>
+    {
+        either!(self.inner, iter => iter.collect())
+    }
+
+    fn all<F>(&mut self, f: F) -> bool
+        where F: FnMut(Self::Item) -> bool
+    {
+        either_mut!(self.inner, iter => iter.all(f))
+    }
+
+    fn any<F>(&mut self, f: F) -> bool
+        where F: FnMut(Self::Item) -> bool
+    {
+        either_mut!(self.inner, iter => iter.any(f))
+    }
+
+    fn find<P>(&mut self, predicate: P) -> Option<Self::Item>
+        where P: FnMut(&Self::Item) -> bool
+    {
+        either_mut!(self.inner, iter => iter.find(predicate))
+    }
+
+    fn find_map<B, F>(&mut self, f: F) -> Option<B>
+        where F: FnMut(Self::Item) -> Option<B>
+    {
+        either_mut!(self.inner, iter => iter.find_map(f))
+    }
+
+    fn count(self) -> usize {
+        either!(self.inner, iter => iter.count())
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        either!(self.inner, iter => iter.last())
+    }
+
+    fn position<P>(&mut self, predicate: P) -> Option<usize>
+        where P: FnMut(Self::Item) -> bool,
+    {
+        either_mut!(self.inner, iter => iter.position(predicate))
     }
 }
 
@@ -1214,25 +1311,25 @@ send_sync_read_write!(ElementsBaseMut);
 
 /// (Trait used internally) An iterator that we trust
 /// to deliver exactly as many items as it said it would.
-pub unsafe trait TrustedIterator { }
+pub unsafe trait TrustedIterator {}
 
-use std;
-use crate::linspace::Linspace;
-use crate::iter::IndicesIter;
 use crate::indexes::IndicesIterF;
+use crate::iter::IndicesIter;
+use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
+use std;
 
-unsafe impl<F> TrustedIterator for Linspace<F> { }
-unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> { }
-unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> { }
-unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F>
-    where I: TrustedIterator { }
-unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> { }
-unsafe impl<'a, A> TrustedIterator for slice::IterMut<'a, A> { }
-unsafe impl TrustedIterator for ::std::ops::Range<usize> { }
+unsafe impl<F> TrustedIterator for Geomspace<F> {}
+unsafe impl<F> TrustedIterator for Linspace<F> {}
+unsafe impl<F> TrustedIterator for Logspace<F> {}
+unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
+unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}
+unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F> where I: TrustedIterator {}
+unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> {}
+unsafe impl<'a, A> TrustedIterator for slice::IterMut<'a, A> {}
+unsafe impl TrustedIterator for ::std::ops::Range<usize> {}
 // FIXME: These indices iter are dubious -- size needs to be checked up front.
-unsafe impl<D> TrustedIterator for IndicesIter<D> where D: Dimension { }
-unsafe impl<D> TrustedIterator for IndicesIterF<D> where D: Dimension { }
-
+unsafe impl<D> TrustedIterator for IndicesIter<D> where D: Dimension {}
+unsafe impl<D> TrustedIterator for IndicesIterF<D> where D: Dimension {}
 
 /// Like Iterator::collect, but only for trusted length iterators
 pub fn to_vec<I>(iter: I) -> Vec<I::Item>

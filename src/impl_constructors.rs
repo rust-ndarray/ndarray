@@ -10,18 +10,18 @@
 //!
 //!
 
-use num_traits::{Zero, One, Float};
+use num_traits::{Float, One, Zero};
 use std::isize;
 use std::mem;
 
-use crate::imp_prelude::*;
-use crate::StrideShape;
 use crate::dimension;
-use crate::linspace;
 use crate::error::{self, ShapeError};
-use crate::indices;
+use crate::imp_prelude::*;
 use crate::indexes;
+use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
+use crate::StrideShape;
+use crate::{linspace, geomspace, logspace};
 
 /// # Constructor Methods for Owned Arrays
 ///
@@ -100,6 +100,55 @@ impl<S, A> ArrayBase<S, Ix1>
         where A: Float,
     {
         Self::from_vec(to_vec(linspace::range(start, end, step)))
+    }
+
+    /// Create a one-dimensional array with `n` elements logarithmically spaced,
+    /// with the starting value being `base.powf(start)` and the final one being
+    /// `base.powf(end)`. `A` must be a floating point type.
+    ///
+    /// If `base` is negative, all values will be negative.
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::{Array, arr1};
+    ///
+    /// let array = Array::logspace(10.0, 0.0, 3.0, 4);
+    /// assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+    ///
+    /// let array = Array::logspace(-10.0, 3.0, 0.0, 4);
+    /// assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+    /// ```
+    pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
+    where
+        A: Float,
+    {
+        Self::from_vec(to_vec(logspace::logspace(base, start, end, n)))
+    }
+
+    /// Create a one-dimensional array from the inclusive interval `[start,
+    /// end]` with `n` elements geometrically spaced. `A` must be a floating
+    /// point type.
+    ///
+    /// The interval can be either all positive or all negative; however, it
+    /// cannot contain 0 (including the end points).
+    ///
+    /// **Panics** if `n` is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::{Array, arr1};
+    ///
+    /// let array = Array::geomspace(1e0, 1e3, 4);
+    /// assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+    ///
+    /// let array = Array::geomspace(-1e3, -1e0, 4);
+    /// assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+    /// ```
+    pub fn geomspace(start: A, end: A, n: usize) -> Self
+    where
+        A: Float,
+    {
+        Self::from_vec(to_vec(geomspace::geomspace(start, end, n)))
     }
 }
 
