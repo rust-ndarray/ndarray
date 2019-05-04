@@ -22,14 +22,7 @@ where
         }
         Zip::from(self)
             .and(other)
-            .fold_while(true, |_, a, b| {
-                if A::abs_diff_ne(a, b, epsilon.clone()) {
-                    FoldWhile::Done(false)
-                } else {
-                    FoldWhile::Continue(true)
-                }
-            })
-            .into_inner()
+            .all(A::abs_diff_ne(a, b, epsilon.clone()))
     }
 }
 
@@ -56,14 +49,7 @@ where
         }
         Zip::from(self)
             .and(other)
-            .fold_while(true, |_, a, b| {
-                if A::relative_ne(a, b, epsilon.clone(), max_relative.clone()) {
-                    FoldWhile::Done(false)
-                } else {
-                    FoldWhile::Continue(true)
-                }
-            })
-            .into_inner()
+            .all(A::relative_ne(a, b, epsilon.clone(), max_relative.clone()))
     }
 }
 
@@ -85,14 +71,7 @@ where
         }
         Zip::from(self)
             .and(other)
-            .fold_while(true, |_, a, b| {
-                if A::ulps_ne(a, b, epsilon.clone(), max_ulps) {
-                    FoldWhile::Done(false)
-                } else {
-                    FoldWhile::Continue(true)
-                }
-            })
-            .into_inner()
+            .all(A::ulps_ne(a, b, epsilon.clone(), max_ulps))
     }
 }
 
