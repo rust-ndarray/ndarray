@@ -3,11 +3,12 @@ use crate::Zip;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D> AbsDiffEq for ArrayBase<S, D>
+impl<A, S, T, D> AbsDiffEq<ArrayBase<T, D>> for ArrayBase<S, D>
 where
     A: AbsDiffEq,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
+    T: Data<Elem = A>,
     D: Dimension,
 {
     type Epsilon = A::Epsilon;
@@ -16,7 +17,7 @@ where
         A::default_epsilon()
     }
 
-    fn abs_diff_eq(&self, other: &ArrayBase<S, D>, epsilon: A::Epsilon) -> bool {
+    fn abs_diff_eq(&self, other: &ArrayBase<T, D>, epsilon: A::Epsilon) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
@@ -27,11 +28,12 @@ where
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D> RelativeEq for ArrayBase<S, D>
+impl<A, S, T, D> RelativeEq<ArrayBase<T, D>> for ArrayBase<S, D>
 where
     A: RelativeEq,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
+    T: Data<Elem = A>,
     D: Dimension,
 {
     fn default_max_relative() -> A::Epsilon {
@@ -40,7 +42,7 @@ where
 
     fn relative_eq(
         &self,
-        other: &ArrayBase<S, D>,
+        other: &ArrayBase<T, D>,
         epsilon: A::Epsilon,
         max_relative: A::Epsilon,
     ) -> bool {
@@ -54,18 +56,19 @@ where
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D> UlpsEq for ArrayBase<S, D>
+impl<A, S, D, T> UlpsEq<ArrayBase<T, D>> for ArrayBase<S, D>
 where
     A: UlpsEq,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
+    T: Data<Elem = A>,
     D: Dimension,
 {
     fn default_max_ulps() -> u32 {
         A::default_max_ulps()
     }
 
-    fn ulps_eq(&self, other: &ArrayBase<S, D>, epsilon: A::Epsilon, max_ulps: u32) -> bool {
+    fn ulps_eq(&self, other: &ArrayBase<T, D>, epsilon: A::Epsilon, max_ulps: u32) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
