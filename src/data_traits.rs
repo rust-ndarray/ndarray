@@ -471,19 +471,23 @@ unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
 
     #[doc(hidden)]
     unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: *mut Self::Elem) -> *mut Self::Elem {
-        match self {
-            CowRepr::View(view) => {
-                match other {
-                    CowRepr::View(other_view) => view.clone_from_with_ptr(other_view, ptr),
-                    CowRepr::Owned(_) => panic!("Cannot copy `CowRepr::View` from `CowRepr::Temp`"),
-                }
+        match (&mut *self, other) {
+            (CowRepr::View(self_), CowRepr::View(other)) => {
+                self_.clone_from_with_ptr(other, ptr)
             },
-            CowRepr::Owned(data) => {
-                match other {
-                    CowRepr::View(_) => panic!("Cannot copy `CowRepr::Temp` from `CowRepr::View`"),
-                    CowRepr::Owned(other_data) => data.clone_from_with_ptr(other_data, ptr),
-                }
+            (CowRepr::Owned(self_), CowRepr::Owned(other)) => {
+                self_.clone_from_with_ptr(other, ptr)
             },
+            (_, CowRepr::Owned(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::Owned(cloned);
+                ptr
+            },
+            (_, CowRepr::View(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::View(cloned);
+                ptr
+            }
         }
     }
 }
