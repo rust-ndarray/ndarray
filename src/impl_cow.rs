@@ -15,7 +15,6 @@ use crate::imp_prelude::*;
 /// [`ArrayBase`]: struct.ArrayBase.html
 impl<'a, A, D> ArrayCow<'a, A, D>
 where
-    A: Clone,
     D: Dimension,
 {
     pub fn is_view(&self) -> bool {
@@ -29,7 +28,6 @@ where
 
 impl<'a, A, D> From<ArrayView<'a, A, D>> for ArrayCow<'a, A, D>
 where
-    A: Clone,
     D: Dimension,
 {
     fn from(view: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
@@ -44,7 +42,6 @@ where
 
 impl<'a, A, D> From<Array<A, D>> for ArrayCow<'a, A, D>
 where
-    A: Clone,
     D: Dimension,
 {
     fn from(array: Array<A, D>) -> ArrayCow<'a, A, D> {

@@ -414,9 +414,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
     }
 }
 
-unsafe impl<'a, A> RawData for CowRepr<'a, A>
-    where A: Clone
-{
+unsafe impl<'a, A> RawData for CowRepr<'a, A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         match self {
@@ -492,9 +490,7 @@ unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
     }
 }
 
-unsafe impl<'a, A> Data for CowRepr<'a, A>
-    where A: Clone
-{
+unsafe impl<'a, A> Data for CowRepr<'a, A> {
     #[inline]
     fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
         where

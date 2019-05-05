@@ -1389,16 +1389,12 @@ impl<A> ViewRepr<A> {
     }
 }
 
-pub enum CowRepr<'a, A>
-    where A: Clone
-{
+pub enum CowRepr<'a, A> {
     View(ViewRepr<&'a A>),
     Owned(OwnedRepr<A>),
 }
 
-impl<'a, A> CowRepr<'a, A>
-    where A: Clone
-{
+impl<'a, A> CowRepr<'a, A> {
     pub fn is_view(&self) -> bool {
         match self {
             CowRepr::View(_) => true,
