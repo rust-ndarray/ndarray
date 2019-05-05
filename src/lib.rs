@@ -1497,37 +1497,6 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-impl<'a, A, D> ArrayCow<'a, A, D>
-    where A: Clone,
-          D: Dimension
-{
-    fn from_view_array(array: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::View(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
-        }
-    }
-
-    fn from_owned_array(array: Array<A, D>) -> ArrayCow<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::Owned(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
-        }
-    }
-
-    pub fn is_view(&self) -> bool {
-        self.data.is_view()
-    }
-
-    pub fn is_owned(&self) -> bool {
-        self.data.is_owned()
-    }
-}
-
 
 // parallel methods
 #[cfg(feature="rayon")]
@@ -1549,6 +1518,9 @@ mod impl_views;
 
 // Array raw view methods
 mod impl_raw_views;
+
+// Copy-on-write array methods
+mod impl_cow;
 
 /// A contiguous array shape of n dimensions.
 ///
