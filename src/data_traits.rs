@@ -508,3 +508,5 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
         }
     }
 }
+
+unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
