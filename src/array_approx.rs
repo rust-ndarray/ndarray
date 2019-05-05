@@ -3,12 +3,12 @@ use crate::Zip;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, T, D> AbsDiffEq<ArrayBase<T, D>> for ArrayBase<S, D>
+impl<A, B, S, S2, D> AbsDiffEq<ArrayBase<S2, D>> for ArrayBase<S, D>
 where
-    A: AbsDiffEq,
+    A: AbsDiffEq<B>,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
-    T: Data<Elem = A>,
+    S2: Data<Elem = B>,
     D: Dimension,
 {
     type Epsilon = A::Epsilon;
@@ -17,7 +17,7 @@ where
         A::default_epsilon()
     }
 
-    fn abs_diff_eq(&self, other: &ArrayBase<T, D>, epsilon: A::Epsilon) -> bool {
+    fn abs_diff_eq(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
@@ -28,12 +28,12 @@ where
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, T, D> RelativeEq<ArrayBase<T, D>> for ArrayBase<S, D>
+impl<A, B, S, S2, D> RelativeEq<ArrayBase<S2, D>> for ArrayBase<S, D>
 where
-    A: RelativeEq,
+    A: RelativeEq<B>,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
-    T: Data<Elem = A>,
+    S2: Data<Elem = B>,
     D: Dimension,
 {
     fn default_max_relative() -> A::Epsilon {
@@ -42,7 +42,7 @@ where
 
     fn relative_eq(
         &self,
-        other: &ArrayBase<T, D>,
+        other: &ArrayBase<S2, D>,
         epsilon: A::Epsilon,
         max_relative: A::Epsilon,
     ) -> bool {
@@ -56,19 +56,19 @@ where
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D, T> UlpsEq<ArrayBase<T, D>> for ArrayBase<S, D>
+impl<A, B, S, S2, D, S2> UlpsEq<ArrayBase<S2, D>> for ArrayBase<S, D>
 where
-    A: UlpsEq,
+    A: UlpsEq<B>,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
-    T: Data<Elem = A>,
+    S2: Data<Elem = B>,
     D: Dimension,
 {
     fn default_max_ulps() -> u32 {
         A::default_max_ulps()
     }
 
-    fn ulps_eq(&self, other: &ArrayBase<T, D>, epsilon: A::Epsilon, max_ulps: u32) -> bool {
+    fn ulps_eq(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon, max_ulps: u32) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
