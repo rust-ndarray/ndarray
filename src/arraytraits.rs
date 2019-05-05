@@ -81,11 +81,12 @@ impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
-impl<S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
-    where D: Dimension,
-          S: Data,
-          S2: Data<Elem = S::Elem>,
-          S::Elem: PartialEq
+impl<A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
+where
+    A: PartialEq<B>,
+    S: Data<Elem = A>,
+    S2: Data<Elem = B>,
+    D: Dimension,
 {
     fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool {
         if self.shape() != rhs.shape() {
