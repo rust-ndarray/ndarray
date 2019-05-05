@@ -66,14 +66,17 @@ impl<F> ExactSizeIterator for Geomspace<F> where Geomspace<F>: Iterator {}
 
 /// An iterator of a sequence of geometrically spaced values.
 ///
-/// The `Geomspace` has `n` elements, where the first element is `a` and the
-/// last element is `b`.
+/// The `Geomspace` has `n` geometrically spaced elements from `start` to `end`
+/// (inclusive).
 ///
-/// Iterator element type is `F`, where `F` must be either `f32` or `f64`.
+/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
+/// `f32` or `f64`.
 ///
 /// Returns `None` if `start` and `end` have different signs or if either one
 /// is zero. Conceptually, this means that in order to obtain a `Some` result,
 /// `end / start` must be positive.
+///
+/// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
 pub fn geomspace<F>(a: F, b: F, n: usize) -> Option<Geomspace<F>>
 where

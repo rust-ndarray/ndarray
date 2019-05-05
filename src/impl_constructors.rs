@@ -67,10 +67,16 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(iterable.into_iter().collect())
     }
 
-    /// Create a one-dimensional array from the inclusive interval
-    /// `[start, end]` with `n` elements. `A` must be a floating point type.
+    /// Create a one-dimensional array with `n` evenly spaced elements from
+    /// `start` to `end` (inclusive). `A` must be a floating point type.
     ///
-    /// **Panics** if `n` is greater than `isize::MAX`.
+    /// Note that if `start > end`, the first element will still be `start`,
+    /// and the following elements will be decreasing. This is different from
+    /// the behavior of `std::ops::RangeInclusive`, which interprets `start >
+    /// end` to mean that the range is empty.
+    ///
+    /// **Panics** if `n` is greater than `isize::MAX` or if converting `n - 1`
+    /// to type `A` fails.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -84,9 +90,8 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(to_vec(linspace::linspace(start, end, n)))
     }
 
-    /// Create a one-dimensional array from the half-open interval
-    /// `[start, end)` with elements spaced by `step`. `A` must be a floating
-    /// point type.
+    /// Create a one-dimensional array with elements from `start` to `end`
+    /// (exclusive), incrementing by `step`. `A` must be a floating point type.
     ///
     /// **Panics** if the length is greater than `isize::MAX`.
     ///
@@ -102,13 +107,14 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(to_vec(linspace::range(start, end, step)))
     }
 
-    /// Create a one-dimensional array with `n` elements logarithmically spaced,
-    /// with the starting value being `base.powf(start)` and the final one being
-    /// `base.powf(end)`. `A` must be a floating point type.
+    /// Create a one-dimensional array with `n` logarithmically spaced
+    /// elements, with the starting value being `base.powf(start)` and the
+    /// final one being `base.powf(end)`. `A` must be a floating point type.
     ///
     /// If `base` is negative, all values will be negative.
     ///
-    /// **Panics** if the length is greater than `isize::MAX`.
+    /// **Panics** if `n` is greater than `isize::MAX` or if converting `n - 1`
+    /// to type `A` fails.
     ///
     /// ```rust
     /// use approx::assert_abs_diff_eq;
@@ -129,15 +135,15 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(to_vec(logspace::logspace(base, start, end, n)))
     }
 
-    /// Create a one-dimensional array from the inclusive interval `[start,
-    /// end]` with `n` elements geometrically spaced. `A` must be a floating
-    /// point type.
+    /// Create a one-dimensional array with `n` geometrically spaced elements
+    /// from `start` to `end` (inclusive). `A` must be a floating point type.
     ///
     /// Returns `None` if `start` and `end` have different signs or if either
     /// one is zero. Conceptually, this means that in order to obtain a `Some`
     /// result, `end / start` must be positive.
     ///
-    /// **Panics** if `n` is greater than `isize::MAX`.
+    /// **Panics** if `n` is greater than `isize::MAX` or if converting `n - 1`
+    /// to type `A` fails.
     ///
     /// ```rust
     /// use approx::assert_abs_diff_eq;
