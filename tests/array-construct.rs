@@ -21,6 +21,7 @@ fn test_dimension_zero() {
 }
 
 #[test]
+#[cfg(features = "approx")]
 fn test_arc_into_owned() {
     let a = Array2::from_elem((5, 5), 1.).into_shared();
     let mut b = a.clone();
@@ -28,7 +29,7 @@ fn test_arc_into_owned() {
     let mut c = b.into_owned();
     c.fill(2.);
     // test that they are unshared
-    assert!(!a.all_close(&c, 0.01));
+    assert_abs_diff_ne!(a, &c, 0.01);
 }
 
 #[test]

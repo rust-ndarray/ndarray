@@ -25,6 +25,7 @@ fn test_par_azip2() {
 }
 
 #[test]
+#[cfg(features = "approx")]
 fn test_par_azip3() {
     let mut a = [0.; 32];
     let mut b = [0.; 32];
@@ -38,7 +39,7 @@ fn test_par_azip3() {
         *c = a.sin();
     });
     let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
-    assert!(res.all_close(&ArrayView::from(&c), 1e-4));
+    assert_abs_diff_eq!(res, &ArrayView::from(&c), 1e-4);
 }
 
 #[should_panic]
