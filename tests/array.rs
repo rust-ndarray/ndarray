@@ -12,7 +12,6 @@ use ndarray::{
     multislice,
 };
 use ndarray::indices;
-use approx::AbsDiffEq;
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
 
@@ -683,6 +682,8 @@ fn test_sub_oob_1() {
 #[test]
 #[cfg(feature = "approx")]
 fn test_select(){
+    use approx::AbsDiffEq;
+
     // test for 2-d array
     let x = arr2(&[[0., 1.], [1.,0.],[1.,0.],[1.,0.],[1.,0.],[0., 1.],[0., 1.]]);
     let r = x.select(Axis(0),&[1,3,5]);
@@ -1737,6 +1738,7 @@ fn test_contiguous() {
 #[test]
 #[cfg(feature = "approx")]
 fn test_all_close() {
+    use approx::AbsDiffEq;
     let c = arr3(&[[[1., 2., 3.],
                     [1.5, 1.5, 3.]],
                    [[1., 2., 3.],
