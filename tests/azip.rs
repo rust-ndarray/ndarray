@@ -4,7 +4,7 @@ extern crate itertools;
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-use itertools::{assert_equal, cloned, enumerate};
+use itertools::{assert_equal, cloned};
 
 use std::mem::swap;
 

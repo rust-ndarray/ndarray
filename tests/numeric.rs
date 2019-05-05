@@ -1,6 +1,6 @@
 extern crate approx;
 use std::f64;
-use ndarray::{array, Axis, aview1, aview2, aview0, arr0, arr1, arr2, Array, Array1, Array2, Array3};
+use ndarray::{array, Axis, aview1, arr0, arr1, arr2, Array, Array1, Array2, Array3};
 use approx::abs_diff_eq;
 
 #[test]
@@ -102,7 +102,7 @@ fn var_axis() {
 
     let b = array![[1.1, 2.3, 4.7]];
     assert_abs_diff_eq!(b.var_axis(Axis(0), 0.), &aview1(&[0., 0., 0.]), 1e-12);
-    assert_abs_diff_eq!(b.var_axis(Axis(1), 0.).all_close(&aview1(&[2.24]), 1e-12));
+    assert_abs_diff_eq!(b.var_axis(Axis(1), 0.), &aview1(&[2.24]), 1e-12);
 
     let c = array![[], []];
     assert_eq!(c.var_axis(Axis(0), 0.), aview1(&[]));
@@ -112,6 +112,7 @@ fn var_axis() {
 }
 
 #[test]
+#[cfg(features = "approx")]
 fn std_axis() {
     let a = array![
        [
@@ -125,33 +126,33 @@ fn std_axis() {
             [ 0.51529756,  0.70111616,  0.20799415,  0.91851457]
        ],
     ];
-    assert!(a.std_axis(Axis(0), 1.5).all_close(
+    assert_abs_diff_eq!(a.std_axis(Axis(0), 1.5),
         &aview2(&[
             [ 0.05989184,  0.36051836,  0.00989781,  0.32669847],
             [ 0.81957535,  0.39599997,  0.49731472,  0.17084346],
             [ 0.07044443,  0.06795249,  0.09794304,  0.83195211],
         ]),
         1e-4,
-    ));
-    assert!(a.std_axis(Axis(1), 1.7).all_close(
+    );
+    assert_abs_diff_eq!(a.std_axis(Axis(1), 1.7),
         &aview2(&[
             [ 0.42698655,  0.48139215,  0.36874991,  0.41458724],
             [ 0.26769097,  0.18941435,  0.30555015,  0.35118674],
         ]),
         1e-8,
-    ));
-    assert!(a.std_axis(Axis(2), 2.3).all_close(
+    );
+    assert_abs_diff_eq!(a.std_axis(Axis(2), 2.3),
         &aview2(&[
             [ 0.41117907,  0.37130425,  0.35332388],
             [ 0.16905862,  0.25304841,  0.39978276],
         ]),
         1e-8,
-    ));
+    );
 
     let b = array![[100000., 1., 0.01]];
-    assert!(b.std_axis(Axis(0), 0.).all_close(&aview1(&[0., 0., 0.]), 1e-12));
-    assert!(
-        b.std_axis(Axis(1), 0.).all_close(&aview1(&[47140.214021552769]), 1e-6),
+    assert_abs_diff_eq!(b.std_axis(Axis(0), 0.), &aview1(&[0., 0., 0.]), 1e-12);
+    assert_abs_diff_eq!(
+        b.std_axis(Axis(1), 0.), &aview1(&[47140.214021552769]), 1e-6,
     );
 
     let c = array![[], []];
