@@ -11,6 +11,6 @@ test = false
 ndarray = { path = "../", features = ["blas"] }
 blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
 openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
-defmac = "0.1"
+defmac = "0.2"
 num-traits = "0.2"
 
