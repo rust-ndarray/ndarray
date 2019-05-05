@@ -86,14 +86,16 @@ fn var_axis() {
         ]),
         epsilon = 1e-4,
     );
-    assert_abs_diff_eq!(a.var_axis(Axis(1), 1.7),
+    assert_abs_diff_eq!(
+        a.var_axis(Axis(1), 1.7),
         &aview2(&[
             [0.61676923, 80.81092308, 6.79892308, 0.11789744],
             [75.19912821, 114.25235897, 48.32405128, 9.03020513],
         ]),
         epsilon = 1e-8,
     );
-    assert_abs_diff_eq!(a.var_axis(Axis(2), 2.3),
+    assert_abs_diff_eq!(
+        a.var_axis(Axis(2), 2.3),
         &aview2(&[
             [ 79.64552941, 129.09663235, 95.98929412],
             [109.64952941, 43.28758824, 36.27439706],
