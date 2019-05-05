@@ -96,21 +96,24 @@ where
 #[cfg(test)]
 mod tests {
     use super::logspace;
-    use crate::{arr1, Array1};
 
     #[test]
+    #[cfg(feature = "approx")]
     fn valid() {
+        use approx::assert_abs_diff_eq;
+        use crate::{arr1, Array1};
+
         let array: Array1<_> = logspace(10.0, 0.0, 3.0, 4).collect();
-        assert!(array.all_close(&arr1(&[1e0, 1e1, 1e2, 1e3]), 1e-5));
+        assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]));
 
         let array: Array1<_> = logspace(10.0, 3.0, 0.0, 4).collect();
-        assert!(array.all_close(&arr1(&[1e3, 1e2, 1e1, 1e0]), 1e-5));
+        assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]));
 
         let array: Array1<_> = logspace(-10.0, 3.0, 0.0, 4).collect();
-        assert!(array.all_close(&arr1(&[-1e3, -1e2, -1e1, -1e0]), 1e-5));
+        assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]));
 
         let array: Array1<_> = logspace(-10.0, 0.0, 3.0, 4).collect();
-        assert!(array.all_close(&arr1(&[-1e0, -1e1, -1e2, -1e3]), 1e-5));
+        assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]));
     }
 
     #[test]

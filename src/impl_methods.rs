@@ -2039,15 +2039,20 @@ where
     /// Elements are visited in arbitrary order.
     ///
     /// ```
+    /// use approx::assert_abs_diff_eq;
     /// use ndarray::arr2;
     ///
+    /// # #[cfg(feature = "approx")] {
     /// let mut a = arr2(&[[ 0., 1.],
     ///                    [-1., 2.]]);
     /// a.mapv_inplace(f32::exp);
-    /// assert!(
-    ///     a.all_close(&arr2(&[[1.00000, 2.71828],
-    ///                         [0.36788, 7.38906]]), 1e-5)
+    /// assert_abs_diff_eq!(
+    ///     a,
+    ///     arr2(&[[1.00000, 2.71828],
+    ///            [0.36788, 7.38906]]),
+    ///     epsilon = 1e-5,
     /// );
+    /// # }
     /// ```
     pub fn mapv_inplace<F>(&mut self, mut f: F)
         where S: DataMut,

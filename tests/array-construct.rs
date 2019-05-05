@@ -21,14 +21,17 @@ fn test_dimension_zero() {
 }
 
 #[test]
+#[cfg(feature = "approx")]
 fn test_arc_into_owned() {
+    use approx::assert_abs_diff_ne;
+
     let a = Array2::from_elem((5, 5), 1.).into_shared();
     let mut b = a.clone();
     b.fill(0.);
     let mut c = b.into_owned();
     c.fill(2.);
     // test that they are unshared
-    assert!(!a.all_close(&c, 0.01));
+    assert_abs_diff_ne!(a, c, epsilon = 0.01);
 }
 
 #[test]

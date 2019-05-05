@@ -1,7 +1,7 @@
 extern crate approx;
 use std::f64;
-use ndarray::{array, Axis, aview1, aview2, aview0, arr0, arr1, arr2, Array, Array1, Array2, Array3};
-use approx::abs_diff_eq;
+use ndarray::{array, Axis, aview1, arr0, arr1, arr2, Array, Array1, Array2, Array3};
+use approx::assert_abs_diff_eq;
 
 #[test]
 fn test_mean_with_nan_values() {
@@ -29,9 +29,8 @@ fn test_mean_with_array_of_floats() {
             0.63608897, 0.84959691, 0.43599069, 0.77867775, 0.88267754,
             0.83003623, 0.67016118, 0.67547638, 0.65220036, 0.68043427
         ];
-    // Computed using NumPy
-    let expected_mean = 0.5475494059146699;
-    abs_diff_eq!(a.mean().unwrap(), expected_mean, epsilon = f64::EPSILON);
+    let exact_mean = 0.5475494054;
+    assert_abs_diff_eq!(a.mean().unwrap(), exact_mean);
 }
 
 #[test]
@@ -62,7 +61,10 @@ fn sum_mean_empty() {
 }
 
 #[test]
+#[cfg(feature = "approx")]
 fn var_axis() {
+    use ndarray::{aview0, aview2};
+
     let a = array![
         [
             [-9.76, -0.38, 1.59, 6.23],
@@ -75,42 +77,48 @@ fn var_axis() {
             [-1.08, 4.66, 8.34, -0.73],
         ],
     ];
-    assert!(a.var_axis(Axis(0), 1.5).all_close(
-        &aview2(&[
+    assert_abs_diff_eq!(
+        a.var_axis(Axis(0), 1.5),
+        aview2(&[
             [3.236401e+02, 8.556250e+01, 4.708900e+00, 9.428410e+01],
             [9.672100e+00, 2.289169e+02, 7.344490e+01, 2.171560e+01],
             [7.157160e+01, 1.849000e-01, 2.631690e+01, 5.314410e+01]
         ]),
-        1e-4,
-    ));
-    assert!(a.var_axis(Axis(1), 1.7).all_close(
-        &aview2(&[
+        epsilon = 1e-4,
+    );
+    assert_abs_diff_eq!(
+        a.var_axis(Axis(1), 1.7),
+        aview2(&[
             [0.61676923, 80.81092308, 6.79892308, 0.11789744],
             [75.19912821, 114.25235897, 48.32405128, 9.03020513],
         ]),
-        1e-8,
-    ));
-    assert!(a.var_axis(Axis(2), 2.3).all_close(
-        &aview2(&[
+        epsilon = 1e-8,
+    );
+    assert_abs_diff_eq!(
+        a.var_axis(Axis(2), 2.3),
+        aview2(&[
             [ 79.64552941, 129.09663235, 95.98929412],
             [109.64952941, 43.28758824, 36.27439706],
         ]),
-        1e-8,
-    ));
+        epsilon = 1e-8,
+    );
 
     let b = array![[1.1, 2.3, 4.7]];
-    assert!(b.var_axis(Axis(0), 0.).all_close(&aview1(&[0., 0., 0.]), 1e-12));
-    assert!(b.var_axis(Axis(1), 0.).all_close(&aview1(&[2.24]), 1e-12));
+    assert_abs_diff_eq!(b.var_axis(Axis(0), 0.), aview1(&[0., 0., 0.]), epsilon = 1e-12);
+    assert_abs_diff_eq!(b.var_axis(Axis(1), 0.), aview1(&[2.24]), epsilon = 1e-12);
 
     let c = array![[], []];
     assert_eq!(c.var_axis(Axis(0), 0.), aview1(&[]));
 
     let d = array![1.1, 2.7, 3.5, 4.9];
-    assert!(d.var_axis(Axis(0), 0.).all_close(&aview0(&1.8875), 1e-12));
+    assert_abs_diff_eq!(d.var_axis(Axis(0), 0.), aview0(&1.8875), epsilon = 1e-12);
 }
 
 #[test]
+#[cfg(feature = "approx")]
 fn std_axis() {
+    use ndarray::aview2;
+
     let a = array![
        [
             [ 0.22935481,  0.08030619,  0.60827517,  0.73684379],
@@ -123,33 +131,42 @@ fn std_axis() {
             [ 0.51529756,  0.70111616,  0.20799415,  0.91851457]
        ],
     ];
-    assert!(a.std_axis(Axis(0), 1.5).all_close(
-        &aview2(&[
+    assert_abs_diff_eq!(
+        a.std_axis(Axis(0), 1.5),
+        aview2(&[
             [ 0.05989184,  0.36051836,  0.00989781,  0.32669847],
             [ 0.81957535,  0.39599997,  0.49731472,  0.17084346],
             [ 0.07044443,  0.06795249,  0.09794304,  0.83195211],
         ]),
-        1e-4,
-    ));
-    assert!(a.std_axis(Axis(1), 1.7).all_close(
-        &aview2(&[
+        epsilon = 1e-4,
+    );
+    assert_abs_diff_eq!(
+        a.std_axis(Axis(1), 1.7),
+        aview2(&[
             [ 0.42698655,  0.48139215,  0.36874991,  0.41458724],
             [ 0.26769097,  0.18941435,  0.30555015,  0.35118674],
         ]),
-        1e-8,
-    ));
-    assert!(a.std_axis(Axis(2), 2.3).all_close(
-        &aview2(&[
+        epsilon = 1e-8,
+    );
+    assert_abs_diff_eq!(
+        a.std_axis(Axis(2), 2.3),
+        aview2(&[
             [ 0.41117907,  0.37130425,  0.35332388],
             [ 0.16905862,  0.25304841,  0.39978276],
         ]),
-        1e-8,
-    ));
+        epsilon = 1e-8,
+    );
 
     let b = array![[100000., 1., 0.01]];
-    assert!(b.std_axis(Axis(0), 0.).all_close(&aview1(&[0., 0., 0.]), 1e-12));
-    assert!(
-        b.std_axis(Axis(1), 0.).all_close(&aview1(&[47140.214021552769]), 1e-6),
+    assert_abs_diff_eq!(
+        b.std_axis(Axis(0), 0.),
+        aview1(&[0., 0., 0.]),
+        epsilon = 1e-12,
+    );
+    assert_abs_diff_eq!(
+        b.std_axis(Axis(1), 0.),
+        aview1(&[47140.214021552769]),
+        epsilon = 1e-6,
     );
 
     let c = array![[], []];
