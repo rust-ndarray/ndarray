@@ -18,29 +18,41 @@ where
     A: Clone,
     D: Dimension,
 {
-    fn from_view_array(array: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::View(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
-        }
-    }
-
-    fn from_owned_array(array: Array<A, D>) -> ArrayCow<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::Owned(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
-        }
-    }
-
     pub fn is_view(&self) -> bool {
         self.data.is_view()
     }
 
     pub fn is_owned(&self) -> bool {
         self.data.is_owned()
+    }
+}
+
+impl<'a, A, D> From<ArrayView<'a, A, D>> for ArrayCow<'a, A, D>
+where
+    A: Clone,
+    D: Dimension,
+{
+    fn from(view: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
+        ArrayBase {
+            data: CowRepr::View(view.data),
+            ptr: view.ptr,
+            dim: view.dim,
+            strides: view.strides,
+        }
+    }
+}
+
+impl<'a, A, D> From<Array<A, D>> for ArrayCow<'a, A, D>
+where
+    A: Clone,
+    D: Dimension,
+{
+    fn from(array: Array<A, D>) -> ArrayCow<'a, A, D> {
+        ArrayBase {
+            data: CowRepr::Owned(array.data),
+            ptr: array.ptr,
+            dim: array.dim,
+            strides: array.strides,
+        }
     }
 }

@@ -1230,14 +1230,14 @@ where
               A: Clone
     {
         if self.is_standard_layout() {
-            ArrayCow::from_view_array(self.view())
+            ArrayCow::from(self.view())
         } else {
             let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
             let owned_array: Array<A, D> = unsafe {
                 // Safe because we use shape and content of existing array here.
                 ArrayBase::from_shape_vec_unchecked(self.dim(), v)
             };
-            ArrayCow::from_owned_array(owned_array)
+            ArrayCow::from(owned_array)
         }
     }
 
