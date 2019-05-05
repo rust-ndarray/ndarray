@@ -23,9 +23,9 @@ fn main() {
                           [ 2.,  2.,  2.]];
 
     println!("{:8.4}", data);
-    println!("{:8.4} (Mean axis=0)", data.mean_axis(Axis(0)));
+    println!("{:8.4} (Mean axis=0)", data.mean_axis(Axis(0)).unwrap());
 
-    data -= &data.mean_axis(Axis(0));
+    data -= &data.mean_axis(Axis(0)).unwrap();
     println!("{:8.4}", data);
 
     data /= &std(&data, Axis(0));

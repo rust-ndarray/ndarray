@@ -4,7 +4,7 @@ extern crate itertools;
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-use itertools::{assert_equal, cloned, enumerate};
+use itertools::{assert_equal, cloned};
 
 use std::mem::swap;
 
@@ -45,17 +45,19 @@ fn test_azip2_3() {
 }
 
 #[test]
+#[cfg(features = "approx")]
 fn test_azip2_sum() {
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
     for i in 0..2 {
         let ax = Axis(i);
         let mut b = Array::zeros(c.len_of(ax));
         azip!(mut b, ref c (c.axis_iter(ax)) in { *b = c.sum() });
-        assert!(b.all_close(&c.sum_axis(Axis(1 - i)), 1e-6));
+        assert_abs_diff_eq!(b, c.sum_axis(Axis(1 - i)), 1e-6);
     }
 }
 
 #[test]
+#[cfg(features = "approx")]
 fn test_azip3_slices() {
     let mut a = [0.; 32];
     let mut b = [0.; 32];
@@ -69,10 +71,11 @@ fn test_azip3_slices() {
         *c = a.sin();
     });
     let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
-    assert!(res.all_close(&ArrayView::from(&c), 1e-4));
+    assert_abs_diff_eq!(res, &ArrayView::from(&c), 1e-4);
 }
 
 #[test]
+#[cfg(features = "approx")]
 fn test_broadcast() {
     let n = 16;
     let mut a = Array::<f32, _>::zeros((n, n));
@@ -90,7 +93,7 @@ fn test_broadcast() {
             .and_broadcast(&e);
         z.apply(|x, &y, &z, &w| *x = y + z + w);
     }
-    assert!(a.all_close(&(&b + &d + &e), 1e-4));
+    assert_abs_diff_eq!(a, &(&b + &d + &e), 1e-4);
 }
 
 #[should_panic]
@@ -270,4 +273,23 @@ fn test_indices_split_1() {
             assert_eq!(seen.len(), a1.len());
         }
     }
+}
+
+#[test]
+fn test_zip_all() {
+    let a = Array::<f32, _>::zeros(62);
+    let b = Array::<f32, _>::ones(62);
+    let mut c = Array::<f32, _>::ones(62);
+    c[5] = 0.0;
+    assert_eq!(true, Zip::from(&a).and(&b).all(|&x, &y| x + y == 1.0));
+    assert_eq!(false, Zip::from(&a).and(&b).all(|&x, &y| x == y));
+    assert_eq!(false, Zip::from(&a).and(&c).all(|&x, &y| x + y == 1.0));
+}
+
+#[test]
+fn test_zip_all_empty_array() {
+    let a = Array::<f32, _>::zeros(0);
+    let b = Array::<f32, _>::ones(0);
+    assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| true));
+    assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| false));
 }

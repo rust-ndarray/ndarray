@@ -46,6 +46,33 @@ impl<A, S, D> ArrayBase<S, D>
         sum
     }
 
+    /// Returns the [arithmetic mean] x̅ of all elements in the array:
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// If the array is empty, `None` is returned.
+    ///
+    /// **Panics** if `A::from_usize()` fails to convert the number of elements in the array.
+    ///
+    /// [arithmetic mean]: https://en.wikipedia.org/wiki/Arithmetic_mean
+    pub fn mean(&self) -> Option<A>
+        where
+            A: Clone + FromPrimitive + Add<Output=A> + Div<Output=A> + Zero
+    {
+        let n_elements = self.len();
+        if n_elements == 0 {
+            None
+        } else {
+            let n_elements = A::from_usize(n_elements)
+                .expect("Converting number of elements to `A` must not fail.");
+            Some(self.sum() / n_elements)
+        }
+    }
+
     /// Return the sum of all elements in the array.
     ///
     /// *This method has been renamed to `.sum()` and will be deprecated in the
@@ -88,13 +115,13 @@ impl<A, S, D> ArrayBase<S, D>
     /// ```
     /// use ndarray::{aview0, aview1, arr2, Axis};
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
     /// assert!(
-    ///     a.sum_axis(Axis(0)) == aview1(&[4., 6.]) &&
-    ///     a.sum_axis(Axis(1)) == aview1(&[3., 7.]) &&
+    ///     a.sum_axis(Axis(0)) == aview1(&[5., 7., 9.]) &&
+    ///     a.sum_axis(Axis(1)) == aview1(&[6., 15.]) &&
     ///
-    ///     a.sum_axis(Axis(0)).sum_axis(Axis(0)) == aview0(&10.)
+    ///     a.sum_axis(Axis(0)).sum_axis(Axis(0)) == aview0(&21.)
     /// );
     /// ```
     ///
@@ -123,27 +150,36 @@ impl<A, S, D> ArrayBase<S, D>
 
     /// Return mean along `axis`.
     ///
-    /// **Panics** if `axis` is out of bounds, if the length of the axis is
-    /// zero and division by zero panics for type `A`, or if `A::from_usize()`
+    /// Return `None` if the length of the axis is zero.
+    ///
+    /// **Panics** if `axis` is out of bounds or if `A::from_usize()`
     /// fails for the axis length.
     ///
     /// ```
-    /// use ndarray::{aview1, arr2, Axis};
+    /// use ndarray::{aview0, aview1, arr2, Axis};
     ///
-    /// let a = arr2(&[[1., 2.],
-    ///                [3., 4.]]);
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
     /// assert!(
-    ///     a.mean_axis(Axis(0)) == aview1(&[2.0, 3.0]) &&
-    ///     a.mean_axis(Axis(1)) == aview1(&[1.5, 3.5])
+    ///     a.mean_axis(Axis(0)).unwrap() == aview1(&[2.5, 3.5, 4.5]) &&
+    ///     a.mean_axis(Axis(1)).unwrap() == aview1(&[2., 5.]) &&
+    ///
+    ///     a.mean_axis(Axis(0)).unwrap().mean_axis(Axis(0)).unwrap() == aview0(&3.5)
     /// );
     /// ```
-    pub fn mean_axis(&self, axis: Axis) -> Array<A, D::Smaller>
+    pub fn mean_axis(&self, axis: Axis) -> Option<Array<A, D::Smaller>>
         where A: Clone + Zero + FromPrimitive + Add<Output=A> + Div<Output=A>,
               D: RemoveAxis,
     {
-        let n = A::from_usize(self.len_of(axis)).expect("Converting axis length to `A` must not fail.");
-        let sum = self.sum_axis(axis);
-        sum / &aview0(&n)
+        let axis_length = self.len_of(axis);
+        if axis_length == 0 {
+            None
+        } else {
+            let axis_length = A::from_usize(axis_length)
+                .expect("Converting axis length to `A` must not fail.");
+            let sum = self.sum_axis(axis);
+            Some(sum / &aview0(&axis_length))
+        }
     }
 
     /// Return variance along `axis`.
@@ -226,9 +262,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// The standard deviation is defined as:
     ///
     /// ```text
-    ///                    1       n
-    /// stddev = sqrt ( ――――――――   ∑ (xᵢ - x̅)² )
-    ///                 n - ddof  i=1
+    ///               ⎛    1       n          ⎞
+    /// stddev = sqrt ⎜ ――――――――   ∑ (xᵢ - x̅)²⎟
+    ///               ⎝ n - ddof  i=1         ⎠
     /// ```
     ///
     /// where
@@ -270,6 +306,7 @@ impl<A, S, D> ArrayBase<S, D>
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting to the same shape isn’t possible.
+    #[deprecated(note="Use `abs_diff_eq` - it requires the `approx` crate feature", since="0.13")]
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
         where A: Float,
               S2: Data<Elem=A>,

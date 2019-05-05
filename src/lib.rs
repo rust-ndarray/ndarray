@@ -175,15 +175,18 @@ mod free_functions;
 pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
-#[macro_use] mod slice;
-mod layout;
+mod error;
+mod geomspace;
 mod indexes;
 mod iterators;
+mod layout;
 mod linalg_traits;
 mod linspace;
+mod logspace;
 mod numeric_util;
-mod error;
 mod shape_builder;
+#[macro_use]
+mod slice;
 mod stacking;
 #[macro_use]
 mod zip;
@@ -646,6 +649,25 @@ pub type Ixs = isize;
 /// - `B @ &A` which consumes `B`, updates it with the result, and returns it
 /// - `C @= &A` which performs an arithmetic operation in place
 ///
+/// Note that the element type needs to implement the operator trait and the
+/// `Clone` trait.
+///
+/// ```
+/// use ndarray::{array, ArrayView1};
+///
+/// let owned1 = array![1, 2];
+/// let owned2 = array![3, 4];
+/// let view1 = ArrayView1::from(&[5, 6]);
+/// let view2 = ArrayView1::from(&[7, 8]);
+/// let mut mutable = array![9, 10];
+///
+/// let sum1 = &view1 + &view2;   // Allocates a new array. Note the explicit `&`.
+/// // let sum2 = view1 + &view2; // This doesn't work because `view1` is not an owned array.
+/// let sum3 = owned1 + view1;    // Consumes `owned1`, updates it, and returns it.
+/// let sum4 = owned2 + &view2;   // Consumes `owned2`, updates it, and returns it.
+/// mutable += &view2;            // Updates `mutable` in-place.
+/// ```
+///
 /// ### Binary Operators with Array and Scalar
 ///
 /// The trait [`ScalarOperand`](trait.ScalarOperand.html) marks types that can be used in arithmetic
@@ -928,7 +950,8 @@ pub type Ixs = isize;
 /// <sup><a name="req_contig">3</a></sup>Works only if the array is contiguous.
 ///
 /// The table above does not include all the constructors; it only shows
-/// conversions to/from `Vec`s/slices. See below for more constructors.
+/// conversions to/from `Vec`s/slices. See
+/// [below](#constructor-methods-for-owned-arrays) for more constructors.
 ///
 /// [ArrayView::reborrow()]: type.ArrayView.html#method.reborrow
 /// [ArrayViewMut::reborrow()]: type.ArrayViewMut.html#method.reborrow
@@ -940,6 +963,101 @@ pub type Ixs = isize;
 /// [.map()]: #method.map
 /// [.view()]: #method.view
 /// [.view_mut()]: #method.view_mut
+///
+/// ### Conversions from Nested `Vec`s/`Array`s
+///
+/// It's generally a good idea to avoid nested `Vec`/`Array` types, such as
+/// `Vec<Vec<A>>` or `Vec<Array2<A>>` because:
+///
+/// * they require extra heap allocations compared to a single `Array`,
+///
+/// * they can scatter data all over memory (because of multiple allocations),
+///
+/// * they cause unnecessary indirection (traversing multiple pointers to reach
+///   the data),
+///
+/// * they don't enforce consistent shape within the nested
+///   `Vec`s/`ArrayBase`s, and
+///
+/// * they are generally more difficult to work with.
+///
+/// The most common case where users might consider using nested
+/// `Vec`s/`Array`s is when creating an array by appending rows/subviews in a
+/// loop, where the rows/subviews are computed within the loop. However, there
+/// are better ways than using nested `Vec`s/`Array`s.
+///
+/// If you know ahead-of-time the shape of the final array, the cleanest
+/// solution is to allocate the final array before the loop, and then assign
+/// the data to it within the loop, like this:
+///
+/// ```rust
+/// use ndarray::{array, Array2, Axis};
+///
+/// let mut arr = Array2::zeros((2, 3));
+/// for (i, mut row) in arr.axis_iter_mut(Axis(0)).enumerate() {
+///     // Perform calculations and assign to `row`; this is a trivial example:
+///     row.fill(i);
+/// }
+/// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
+/// ```
+///
+/// If you don't know ahead-of-time the shape of the final array, then the
+/// cleanest solution is generally to append the data to a flat `Vec`, and then
+/// convert it to an `Array` at the end with
+/// [`::from_shape_vec()`](#method.from_shape_vec). You just have to be careful
+/// that the layout of the data (the order of the elements in the flat `Vec`)
+/// is correct.
+///
+/// ```rust
+/// use ndarray::{array, Array2};
+///
+/// # fn main() -> Result<(), Box<std::error::Error>> {
+/// let ncols = 3;
+/// let mut data = Vec::new();
+/// let mut nrows = 0;
+/// for i in 0..2 {
+///     // Compute `row` and append it to `data`; this is a trivial example:
+///     let row = vec![i; ncols];
+///     data.extend_from_slice(&row);
+///     nrows += 1;
+/// }
+/// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
+/// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
+/// # Ok(())
+/// # }
+/// ```
+///
+/// If neither of these options works for you, and you really need to convert
+/// nested `Vec`/`Array` instances to an `Array`, the cleanest solution is
+/// generally to use
+/// [`Iterator::flatten()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.flatten)
+/// to get a flat `Vec`, and then convert the `Vec` to an `Array` with
+/// [`::from_shape_vec()`](#method.from_shape_vec), like this:
+///
+/// ```rust
+/// use ndarray::{array, Array2, Array3};
+///
+/// # fn main() -> Result<(), Box<std::error::Error>> {
+/// let nested: Vec<Array2<i32>> = vec![
+///     array![[1, 2, 3], [4, 5, 6]],
+///     array![[7, 8, 9], [10, 11, 12]],
+/// ];
+/// let inner_shape = nested[0].dim();
+/// let shape = (nested.len(), inner_shape.0, inner_shape.1);
+/// let flat: Vec<i32> = nested.iter().flatten().cloned().collect();
+/// let arr = Array3::from_shape_vec(shape, flat)?;
+/// assert_eq!(arr, array![
+///     [[1, 2, 3], [4, 5, 6]],
+///     [[7, 8, 9], [10, 11, 12]],
+/// ]);
+/// # Ok(())
+/// # }
+/// ```
+///
+/// Note that this implementation assumes that the nested `Vec`s are all the
+/// same shape and that the `Vec` is non-empty. Depending on your application,
+/// it may be a good idea to add checks for these assumptions and possibly
+/// choose a different way to handle the empty case.
 ///
 // # For implementors
 //

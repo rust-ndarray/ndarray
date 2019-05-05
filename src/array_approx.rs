@@ -1,13 +1,14 @@
 use crate::imp_prelude::*;
-use crate::{FoldWhile, Zip};
+use crate::Zip;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D> AbsDiffEq for ArrayBase<S, D>
+impl<A, S, T, D> AbsDiffEq<ArrayBase<T, D>> for ArrayBase<S, D>
 where
     A: AbsDiffEq,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
+    T: Data<Elem = A>,
     D: Dimension,
 {
     type Epsilon = A::Epsilon;
@@ -16,29 +17,23 @@ where
         A::default_epsilon()
     }
 
-    fn abs_diff_eq(&self, other: &ArrayBase<S, D>, epsilon: A::Epsilon) -> bool {
+    fn abs_diff_eq(&self, other: &ArrayBase<T, D>, epsilon: A::Epsilon) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
         Zip::from(self)
             .and(other)
-            .fold_while(true, |_, a, b| {
-                if A::abs_diff_ne(a, b, epsilon.clone()) {
-                    FoldWhile::Done(false)
-                } else {
-                    FoldWhile::Continue(true)
-                }
-            })
-            .into_inner()
+            .all(|a, b| A::abs_diff_eq(a, b, epsilon.clone()))
     }
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D> RelativeEq for ArrayBase<S, D>
+impl<A, S, T, D> RelativeEq<ArrayBase<T, D>> for ArrayBase<S, D>
 where
     A: RelativeEq,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
+    T: Data<Elem = A>,
     D: Dimension,
 {
     fn default_max_relative() -> A::Epsilon {
@@ -47,7 +42,7 @@ where
 
     fn relative_eq(
         &self,
-        other: &ArrayBase<S, D>,
+        other: &ArrayBase<T, D>,
         epsilon: A::Epsilon,
         max_relative: A::Epsilon,
     ) -> bool {
@@ -56,43 +51,30 @@ where
         }
         Zip::from(self)
             .and(other)
-            .fold_while(true, |_, a, b| {
-                if A::relative_ne(a, b, epsilon.clone(), max_relative.clone()) {
-                    FoldWhile::Done(false)
-                } else {
-                    FoldWhile::Continue(true)
-                }
-            })
-            .into_inner()
+            .all(|a, b| A::relative_eq(a, b, epsilon.clone(), max_relative.clone()))
     }
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, S, D> UlpsEq for ArrayBase<S, D>
+impl<A, S, D, T> UlpsEq<ArrayBase<T, D>> for ArrayBase<S, D>
 where
     A: UlpsEq,
     A::Epsilon: Clone,
     S: Data<Elem = A>,
+    T: Data<Elem = A>,
     D: Dimension,
 {
     fn default_max_ulps() -> u32 {
         A::default_max_ulps()
     }
 
-    fn ulps_eq(&self, other: &ArrayBase<S, D>, epsilon: A::Epsilon, max_ulps: u32) -> bool {
+    fn ulps_eq(&self, other: &ArrayBase<T, D>, epsilon: A::Epsilon, max_ulps: u32) -> bool {
         if self.shape() != other.shape() {
             return false;
         }
         Zip::from(self)
             .and(other)
-            .fold_while(true, |_, a, b| {
-                if A::ulps_ne(a, b, epsilon.clone(), max_ulps) {
-                    FoldWhile::Done(false)
-                } else {
-                    FoldWhile::Continue(true)
-                }
-            })
-            .into_inner()
+            .all(|a, b| A::ulps_eq(a, b, epsilon.clone(), max_ulps))
     }
 }
 
