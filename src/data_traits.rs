@@ -454,7 +454,7 @@ unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
 }
 
 unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
-    where A: Copy
+    where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         match self {
