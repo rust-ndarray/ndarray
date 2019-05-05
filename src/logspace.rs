@@ -78,8 +78,8 @@ where
     F: Float,
 {
     let step = if n > 1 {
-        let nf: F = F::from(n).unwrap();
-        (b - a) / (nf - F::one())
+        let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
+        (b - a) / num_steps
     } else {
         F::zero()
     };

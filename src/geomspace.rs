@@ -85,8 +85,8 @@ where
     let log_a = a.abs().ln();
     let log_b = b.abs().ln();
     let step = if n > 1 {
-        let nf: F = F::from(n).unwrap();
-        (log_b - log_a) / (nf - F::one())
+        let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
+        (log_b - log_a) / num_steps
     } else {
         F::zero()
     };
