@@ -1518,30 +1518,6 @@ impl<'a, A, D> ArrayCow<'a, A, D>
         }
     }
 
-    fn into_view_array(self) -> Option<ArrayView<'a, A, D>> {
-        match self.data {
-            CowRepr::View(view) => Some(ArrayBase {
-                data: view,
-                ptr: self.ptr,
-                dim: self.dim,
-                strides: self.strides,
-            }),
-            CowRepr::Owned(_) => None,
-        }
-    }
-
-    fn into_owned_array(self) -> Option<Array<A, D>> {
-        match self.data {
-            CowRepr::View(_) => None,
-            CowRepr::Owned(data) => Some(ArrayBase {
-                data,
-                ptr: self.ptr,
-                dim: self.dim,
-                strides: self.strides,
-            })
-        }
-    }
-
     pub fn is_view(&self) -> bool {
         self.data.is_view()
     }

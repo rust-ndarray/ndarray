@@ -497,10 +497,14 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             A: Clone,
             D: Dimension,
     {
-        if self_.data.is_view() {
-            ViewRepr::into_owned(self_.into_view_array().unwrap())
-        } else {
-            OwnedRepr::into_owned(self_.into_owned_array().unwrap())
+        match self_.data {
+            CowRepr::View(_) => self_.to_owned(),
+            CowRepr::Owned(data) => ArrayBase {
+                data,
+                ptr: self_.ptr,
+                dim: self_.dim,
+                strides: self_.strides,
+            },
         }
     }
 }
