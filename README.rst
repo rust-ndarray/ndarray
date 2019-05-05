@@ -57,6 +57,16 @@ your `Cargo.toml`.
   - Optional, compatible with Rust stable
   - Enables parallel iterators, parallelized methods and ``par_azip!``.
 
+- ``nalgebra-0_15``
+
+  - Optional, compatible with Rust stable
+  - Enables conversions from nalgebra 0.15 vectors/matrices
+
+- ``nalgebra-0_16``
+
+  - Optional, compatible with Rust stable
+  - Enables conversions from nalgebra 0.16 vectors/matrices
+
 - ``blas``
 
   - Optional and experimental, compatible with Rust stable
