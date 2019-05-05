@@ -435,7 +435,16 @@ unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
         where Self: Sized,
               D: Dimension
     {
-        array.ensure_is_owned();
+        match array.data {
+            CowRepr::View(_) => {
+                let owned = array.to_owned();
+                array.data = CowRepr::Owned(owned.data);
+                array.ptr = owned.ptr;
+                array.dim = owned.dim;
+                array.strides = owned.strides;
+            }
+            CowRepr::Owned(_) => {}
+        }
     }
 
     #[inline]

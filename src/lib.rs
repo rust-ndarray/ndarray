@@ -1542,14 +1542,6 @@ impl<'a, A, D> ArrayCow<'a, A, D>
         }
     }
 
-    fn ensure_is_owned(&mut self) {
-        if self.data.is_view() {
-            let mut copied_data: Vec<A> = self.iter().map(|x| x.clone()).collect();
-            self.ptr = copied_data.as_mut_ptr();
-            self.data = CowRepr::Owned(OwnedRepr(copied_data));
-        }
-    }
-
     pub fn is_view(&self) -> bool {
         self.data.is_view()
     }
