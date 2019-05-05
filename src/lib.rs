@@ -205,6 +205,7 @@ mod imp_prelude {
         DataShared,
         RawViewRepr,
         ViewRepr,
+        CowRepr,
         Ix, Ixs,
     };
     pub use crate::dimension::DimensionExt;
