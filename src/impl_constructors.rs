@@ -133,8 +133,9 @@ impl<S, A> ArrayBase<S, Ix1>
     /// end]` with `n` elements geometrically spaced. `A` must be a floating
     /// point type.
     ///
-    /// The interval can be either all positive or all negative; however, it
-    /// cannot contain 0 (including the end points).
+    /// Returns `None` if `start` and `end` have different signs or if either
+    /// one is zero. Conceptually, this means that in order to obtain a `Some`
+    /// result, `end / start` must be positive.
     ///
     /// **Panics** if `n` is greater than `isize::MAX`.
     ///
@@ -142,19 +143,24 @@ impl<S, A> ArrayBase<S, Ix1>
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::{Array, arr1};
     ///
+    /// # fn example() -> Option<()> {
     /// # #[cfg(feature = "approx")] {
-    /// let array = Array::geomspace(1e0, 1e3, 4);
+    /// let array = Array::geomspace(1e0, 1e3, 4)?;
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
-    /// let array = Array::geomspace(-1e3, -1e0, 4);
+    /// let array = Array::geomspace(-1e3, -1e0, 4)?;
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
     /// # }
+    /// # Some(())
+    /// # }
+    /// #
+    /// # fn main() { example().unwrap() }
     /// ```
-    pub fn geomspace(start: A, end: A, n: usize) -> Self
+    pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
         A: Float,
     {
-        Self::from_vec(to_vec(geomspace::geomspace(start, end, n)))
+        Some(Self::from_vec(to_vec(geomspace::geomspace(start, end, n)?)))
     }
 }
 
