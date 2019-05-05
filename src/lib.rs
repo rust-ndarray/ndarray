@@ -1231,6 +1231,20 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
+/// An array with copy-on-write behavior.
+///
+/// An `ArrayCow` represents either a uniquely owned array or a view of an
+/// array. The `'a` corresponds to the lifetime of the view variant.
+///
+/// Array views have all the methods of an array (see [`ArrayBase`][ab]).
+///
+/// See also [`ArcArray`](type.ArcArray.html), which also provides
+/// copy-on-write behavior but has a reference-counted pointer to the data
+/// instead of either a view or a uniquely owned copy.
+///
+/// [ab]: struct.ArrayBase.html
+pub type ArrayCow<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+
 /// A read-only array view.
 ///
 /// An array view represents an array or a part of it, created from
@@ -1396,8 +1410,6 @@ impl<'a, A> CowRepr<'a, A>
         !self.is_view()
     }
 }
-
-pub type ArrayCow<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
 
 mod impl_clone;
 
