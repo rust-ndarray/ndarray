@@ -557,7 +557,7 @@
 //! `a[:,4]` | [`a.column(4)`][.column()] or [`a.column_mut(4)`][.column_mut()] | view (or mutable view) of column 4 in a 2-D array
 //! `a.shape[0] == a.shape[1]` | [`a.is_square()`][.is_square()] | check if the array is square
 //!
-//! [.abs_diff_eq()]: ../../struct.ArrayBase.html#impl-AbsDiffEq<ArrayBase<S%2C%20D>>
+//! [.abs_diff_eq()]: ../../struct.ArrayBase.html#impl-AbsDiffEq<ArrayBase<S2%2C%20D>>
 //! [ArcArray]: ../../type.ArcArray.html
 //! [arr2()]: ../../fn.arr2.html
 //! [array!]: ../../macro.array.html
