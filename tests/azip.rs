@@ -45,24 +45,28 @@ fn test_azip2_3() {
 }
 
 #[test]
-#[cfg(features = "approx")]
+#[cfg(feature = "approx")]
 fn test_azip2_sum() {
+    use approx::assert_abs_diff_eq;
+
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
     for i in 0..2 {
         let ax = Axis(i);
         let mut b = Array::zeros(c.len_of(ax));
         azip!(mut b, ref c (c.axis_iter(ax)) in { *b = c.sum() });
-        assert_abs_diff_eq!(b, c.sum_axis(Axis(1 - i)), 1e-6);
+        assert_abs_diff_eq!(b, c.sum_axis(Axis(1 - i)), epsilon = 1e-6);
     }
 }
 
 #[test]
-#[cfg(features = "approx")]
+#[cfg(feature = "approx")]
 fn test_azip3_slices() {
+    use approx::assert_abs_diff_eq;
+
     let mut a = [0.; 32];
     let mut b = [0.; 32];
     let mut c = [0.; 32];
-    for (i, elt) in enumerate(&mut b) {
+    for (i, elt) in b.iter_mut().enumerate() {
         *elt = i as f32;
     }
 
@@ -71,12 +75,14 @@ fn test_azip3_slices() {
         *c = a.sin();
     });
     let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
-    assert_abs_diff_eq!(res, &ArrayView::from(&c), 1e-4);
+    assert_abs_diff_eq!(res, ArrayView::from(&c), epsilon = 1e-4);
 }
 
 #[test]
-#[cfg(features = "approx")]
+#[cfg(feature = "approx")]
 fn test_broadcast() {
+    use approx::assert_abs_diff_eq;
+
     let n = 16;
     let mut a = Array::<f32, _>::zeros((n, n));
     let mut b = Array::<f32, _>::from_elem((1, n), 1.);
@@ -93,7 +99,8 @@ fn test_broadcast() {
             .and_broadcast(&e);
         z.apply(|x, &y, &z, &w| *x = y + z + w);
     }
-    assert_abs_diff_eq!(a, &(&b + &d + &e), 1e-4);
+    let sum = &b + &d + &e;
+    assert_abs_diff_eq!(a, sum.broadcast((n, n)).unwrap(), epsilon = 1e-4);
 }
 
 #[should_panic]

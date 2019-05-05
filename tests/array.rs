@@ -682,7 +682,7 @@ fn test_sub_oob_1() {
 #[test]
 #[cfg(feature = "approx")]
 fn test_select(){
-    use approx::AbsDiffEq;
+    use approx::assert_abs_diff_eq;
 
     // test for 2-d array
     let x = arr2(&[[0., 1.], [1.,0.],[1.,0.],[1.,0.],[1.,0.],[0., 1.],[0., 1.]]);
@@ -690,8 +690,8 @@ fn test_select(){
     let c = x.select(Axis(1),&[1]);
     let r_target = arr2(&[[1.,0.],[1.,0.],[0., 1.]]);
     let c_target = arr2(&[[1.,0.,0.,0.,0., 1., 1.]]);
-    assert!(r.abs_diff_eq(&r_target,1e-8));
-    assert!(c.abs_diff_eq(&c_target.t(),1e-8));
+    assert_abs_diff_eq!(r, r_target);
+    assert_abs_diff_eq!(c, c_target.t());
 
     // test for 3-d array
     let y = arr3(&[[[1., 2., 3.],
@@ -702,8 +702,8 @@ fn test_select(){
     let c = y.select(Axis(2),&[1]);
     let r_target = arr3(&[[[1.5, 1.5, 3.]], [[1., 2.5, 3.]]]);
     let c_target = arr3(&[[[2.],[1.5]],[[2.],[2.5]]]);
-    assert!(r.abs_diff_eq(&r_target,1e-8));
-    assert!(c.abs_diff_eq(&c_target,1e-8));
+    assert_abs_diff_eq!(r, r_target);
+    assert_abs_diff_eq!(c, c_target);
 
 }
 
@@ -1736,19 +1736,14 @@ fn test_contiguous() {
 }
 
 #[test]
-#[cfg(feature = "approx")]
+#[allow(deprecated)]
 fn test_all_close() {
-    use approx::AbsDiffEq;
     let c = arr3(&[[[1., 2., 3.],
                     [1.5, 1.5, 3.]],
                    [[1., 2., 3.],
                     [1., 2.5, 3.]]]);
-    assert!(
-       c.abs_diff_eq(&aview1(&[1., 2., 3.]).broadcast(c.raw_dim()).unwrap(), 1.)
-    );
-    assert!(
-       c.abs_diff_ne(&aview1(&[1., 2., 3.]).broadcast(c.raw_dim()).unwrap(), 0.1)
-    );
+    assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
+    assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
 }
 
 #[test]
