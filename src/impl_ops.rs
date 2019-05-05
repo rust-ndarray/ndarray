@@ -60,12 +60,14 @@ macro_rules! impl_binary_op(
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
-    where A: Clone + $trt<A, Output=A>,
-          S: DataOwned<Elem=A> + DataMut,
-          S2: Data<Elem=A>,
-          D: Dimension,
-          E: Dimension,
+impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = ArrayBase<S, D>;
     fn $mth(self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
@@ -82,12 +84,14 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
-    where A: Clone + $trt<A, Output=A>,
-          S: DataOwned<Elem=A> + DataMut,
-          S2: Data<Elem=A>,
-          D: Dimension,
-          E: Dimension,
+impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = ArrayBase<S, D>;
     fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
@@ -107,12 +111,14 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
-    where A: Clone + $trt<A, Output=A>,
-          S: Data<Elem=A>,
-          S2: Data<Elem=A>,
-          D: Dimension,
-          E: Dimension,
+impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = Array<A, D>;
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Array<A, D> {

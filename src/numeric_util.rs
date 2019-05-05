@@ -96,8 +96,9 @@ pub fn unrolled_dot<A>(xs: &[A], ys: &[A]) -> A
 /// Compute pairwise equality
 ///
 /// `xs` and `ys` must be the same length
-pub fn unrolled_eq<A>(xs: &[A], ys: &[A]) -> bool
-    where A: PartialEq
+pub fn unrolled_eq<A, B>(xs: &[A], ys: &[B]) -> bool
+where
+    A: PartialEq<B>,
 {
     debug_assert_eq!(xs.len(), ys.len());
     // eightfold unrolled for performance (this is not done by llvm automatically)
