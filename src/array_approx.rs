@@ -56,7 +56,7 @@ where
 }
 
 /// **Requires crate feature `"approx"`**
-impl<A, B, S, S2, D, S2> UlpsEq<ArrayBase<S2, D>> for ArrayBase<S, D>
+impl<A, B, S, S2, D> UlpsEq<ArrayBase<S2, D>> for ArrayBase<S, D>
 where
     A: UlpsEq<B>,
     A::Epsilon: Clone,
