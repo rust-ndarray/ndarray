@@ -131,7 +131,7 @@ fn inner_iter() {
 
 #[test]
 fn inner_iter_corner_cases() {
-    let a0 = ArcArray::zeros(());
+    let a0 = ArcArray::<i32, _>::zeros(());
     assert_equal(a0.genrows(), vec![aview1(&[0])]);
 
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
