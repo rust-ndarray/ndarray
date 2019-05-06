@@ -1,3 +1,4 @@
+extern crate approx;
 extern crate ndarray;
 extern crate ndarray_rand;
 extern crate rand;
@@ -14,6 +15,8 @@ use ndarray::{
 use ndarray::linalg::general_mat_mul;
 
 use rand::distributions::Normal;
+
+use approx::{assert_abs_diff_eq, assert_relative_eq};
 
 // simple, slow, correct (hopefully) mat mul
 fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>)
@@ -64,13 +67,9 @@ fn accurate_eye_f32() {
         for j in 0..20 {
             let a = gen(Ix2(i, j));
             let a2 = eye.dot(&a);
-            if !a.all_close(&a2, 1e-6) {
-                panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
-            }
+            assert_abs_diff_eq!(a, a2, epsilon = 1e-6);
             let a3 = a.t().dot(&eye);
-            if !a.t().all_close(&a3, 1e-6) {
-                panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
-            }
+            assert_abs_diff_eq!(a.t(), a3, epsilon = 1e-6);
         }
     }
     // pick a few random sizes
@@ -82,13 +81,9 @@ fn accurate_eye_f32() {
         let a = gen(Ix2(i, j));
         let eye = Array::eye(i);
         let a2 = eye.dot(&a);
-        if !a.all_close(&a2, 1e-6) {
-            panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
-        }
+        assert_abs_diff_eq!(a, a2, epsilon = 1e-6);
         let a3 = a.t().dot(&eye);
-        if !a.t().all_close(&a3, 1e-6) {
-            panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
-        }
+        assert_abs_diff_eq!(a.t(), a3, epsilon = 1e-6);
     }
 }
 
@@ -100,13 +95,9 @@ fn accurate_eye_f64() {
         for j in 0..20 {
             let a = gen_f64(Ix2(i, j));
             let a2 = eye.dot(&a);
-            if !a.all_close(&a2, abs_tol) {
-                panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
-            }
+            assert_abs_diff_eq!(a, a2, epsilon = abs_tol);
             let a3 = a.t().dot(&eye);
-            if !a.t().all_close(&a3, abs_tol) {
-                panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
-            }
+            assert_abs_diff_eq!(a.t(), a3, epsilon = abs_tol);
         }
     }
     // pick a few random sizes
@@ -118,13 +109,9 @@ fn accurate_eye_f64() {
         let a = gen_f64(Ix2(i, j));
         let eye = Array::eye(i);
         let a2 = eye.dot(&a);
-        if !a.all_close(&a2, 1e-6) {
-            panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a, a2, &a2 - &a);
-        }
+        assert_abs_diff_eq!(a, a2, epsilon = 1e-6);
         let a3 = a.t().dot(&eye);
-        if !a.t().all_close(&a3, 1e-6) {
-            panic!("Arrays are not equal:\n{:?}\n{:?}\n{:?}", a.t(), a3, &a3 - &a.t());
-        }
+        assert_abs_diff_eq!(a.t(), a3, epsilon = 1e-6);
     }
 }
 
@@ -147,18 +134,8 @@ fn accurate_mul_f32() {
         println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
         let c = a.dot(&b);
         let reference = reference_mat_mul(&a, &b);
-        let diff = (&c - &reference).mapv_into(f32::abs);
 
-        let rtol = 1e-3;
-        let atol = 1e-4;
-        let crtol = c.mapv(|x| x.abs() * rtol);
-        let tol = crtol + atol;
-        let tol_m_diff = &diff - &tol;
-        let maxdiff = *tol_m_diff.max();
-        println!("diff offset from tolerance level= {:.2e}", maxdiff);
-        if maxdiff > 0. {
-            panic!("results differ");
-        }
+        assert_relative_eq!(c, reference, epsilon = 1e-4, max_relative = 1e-3);
     }
 }
 
@@ -183,18 +160,8 @@ fn accurate_mul_f32_general() {
         println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
         general_mat_mul(1., &a, &b, 0., &mut c);
         let reference = reference_mat_mul(&a, &b);
-        let diff = (&c - &reference).mapv_into(f32::abs);
 
-        let rtol = 1e-3;
-        let atol = 1e-4;
-        let crtol = c.mapv(|x| x.abs() * rtol);
-        let tol = crtol + atol;
-        let tol_m_diff = &diff - &tol;
-        let maxdiff = *tol_m_diff.max();
-        println!("diff offset from tolerance level= {:.2e}", maxdiff);
-        if maxdiff > 0. {
-            panic!("results differ");
-        }
+        assert_relative_eq!(c, reference, epsilon = 1e-4, max_relative = 1e-3);
     }
 }
 
@@ -217,18 +184,8 @@ fn accurate_mul_f64() {
         println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
         let c = a.dot(&b);
         let reference = reference_mat_mul(&a, &b);
-        let diff = (&c - &reference).mapv_into(f64::abs);
 
-        let rtol = 1e-7;
-        let atol = 1e-12;
-        let crtol = c.mapv(|x| x.abs() * rtol);
-        let tol = crtol + atol;
-        let tol_m_diff = &diff - &tol;
-        let maxdiff = *tol_m_diff.max();
-        println!("diff offset from tolerance level= {:.2e}", maxdiff);
-        if maxdiff > 0. {
-            panic!("results differ");
-        }
+        assert_relative_eq!(c, reference, epsilon = 1e-12, max_relative = 1e-7);
     }
 }
 
@@ -253,18 +210,8 @@ fn accurate_mul_f64_general() {
         println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
         general_mat_mul(1., &a, &b, 0., &mut c);
         let reference = reference_mat_mul(&a, &b);
-        let diff = (&c - &reference).mapv_into(f64::abs);
 
-        let rtol = 1e-7;
-        let atol = 1e-12;
-        let crtol = c.mapv(|x| x.abs() * rtol);
-        let tol = crtol + atol;
-        let tol_m_diff = &diff - &tol;
-        let maxdiff = *tol_m_diff.max();
-        println!("diff offset from tolerance level= {:.2e}", maxdiff);
-        if maxdiff > 0. {
-            panic!("results differ");
-        }
+        assert_relative_eq!(c, reference, epsilon = 1e-12, max_relative = 1e-7);
     }
 }
 
@@ -307,53 +254,9 @@ fn accurate_mul_with_column_f64() {
                 println!("Strides ({:?}) by ({:?})", a.strides(), b.strides());
                 let c = a.dot(&b);
                 let reference = reference_mat_mul(&a, &b);
-                let diff = (&c - &reference).mapv_into(f64::abs);
 
-                let rtol = 1e-7;
-                let atol = 1e-12;
-                let crtol = c.mapv(|x| x.abs() * rtol);
-                let tol = crtol + atol;
-                let tol_m_diff = &diff - &tol;
-                let maxdiff = *tol_m_diff.max();
-                println!("diff offset from tolerance level= {:.2e}", maxdiff);
-                if maxdiff > 0. {
-                    panic!("results differ");
-                }
+                assert_relative_eq!(c, reference, epsilon = 1e-12, max_relative = 1e-7);
             }
-        }
-    }
-}
-
-
-trait Utils {
-    type Elem;
-    type Dim;
-    type Data;
-    fn max(&self) -> &Self::Elem
-        where Self::Elem: PartialOrd;
-}
-
-impl<A, S, D> Utils for ArrayBase<S, D>
-    where S: Data<Elem=A>,
-          D: Dimension,
-{
-    type Elem = A;
-    type Dim = D;
-    type Data = S;
-
-    fn max(&self) -> &A
-        where A: PartialOrd
-    {
-        let mut iter = self.iter();
-        if let Some(mut max) = iter.next() {
-            for elt in iter {
-                if elt > max {
-                    max = elt;
-                }
-            }
-            max
-        } else {
-            panic!("empty");
         }
     }
 }
