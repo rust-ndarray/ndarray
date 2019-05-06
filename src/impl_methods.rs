@@ -1232,7 +1232,7 @@ where
         if self.is_standard_layout() {
             ArrayCow::from(self.view())
         } else {
-            let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
+            let v = self.iter().cloned().collect::<Vec<A>>();
             let owned_array: Array<A, D> = unsafe {
                 // Safe because we use shape and content of existing array here.
                 ArrayBase::from_shape_vec_unchecked(self.raw_dim(), v)
