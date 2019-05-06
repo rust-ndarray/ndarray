@@ -1891,3 +1891,106 @@ fn array_macros() {
     let empty2: Array<f32, Ix2> = array![[]];
     assert_eq!(empty2, array![[]]);
 }
+
+#[cfg(test)]
+mod array_cow_tests {
+    use super::*;
+    use ndarray::Data;
+
+    fn is_content_identical<A, S1, S2, D>(arr1: &ArrayBase<S1, D>, arr2: &ArrayBase<S2, D>) -> bool
+        where A: Clone + PartialEq,
+              S1: Data<Elem=A>,
+              S2: Data<Elem=A>,
+              D: Dimension
+    {
+        arr1.iter().zip(arr2.iter()).all(|(x1, x2)| x1 == x2)
+    }
+
+    #[test]
+    fn test_is_view() {
+        let arr: Array<i32, Ix2> = array![[1, 2], [3, 4]];
+        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+        assert!(arr_cow.is_view());
+        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
+        assert!(!arr_cow.is_view());
+    }
+
+    #[test]
+    fn test_is_owned() {
+        let arr: Array<i32, Ix2> = array![[1, 2], [3, 4]];
+        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
+        assert!(arr_cow.is_owned());
+        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+        assert!(!arr_cow.is_owned());
+    }
+
+    #[test]
+    fn test_element_mutation() {
+        let arr: Array2<i32> = array![[1, 2], [3, 4]];
+        let mut arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+        arr_cow[(1, 1)] = 2;
+        let expected_arr: Array2<i32> = array![[1, 2], [3, 2]];
+        assert!(arr_cow.is_owned());
+        assert!(is_content_identical(&arr_cow, &expected_arr));
+
+        let mut arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
+        let prev_ptr = arr_cow.as_ptr();
+        arr_cow[(1, 1)] = 2;
+        assert_eq!(arr_cow.as_ptr(), prev_ptr);
+        assert!(is_content_identical(&arr_cow, &expected_arr));
+    }
+
+    #[test]
+    fn test_clone() {
+        let arr: Array2<i32> = array![[1, 2], [3, 4]];
+        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+        let arr_cow_clone = arr_cow.clone();
+        assert!(arr_cow_clone.is_view());
+        assert!(is_content_identical(&arr_cow, &arr_cow_clone));
+        assert_eq!(arr_cow.dim(), arr_cow_clone.dim());
+        assert_eq!(arr_cow.strides(), arr_cow_clone.strides());
+
+        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
+        let arr_cow_clone = arr_cow.clone();
+        assert!(arr_cow_clone.is_owned());
+        assert!(is_content_identical(&arr_cow, &arr_cow_clone));
+        assert_eq!(arr_cow.dim(), arr_cow_clone.dim());
+        assert_eq!(arr_cow.strides(), arr_cow_clone.strides());
+    }
+
+    #[test]
+    fn test_clone_from() {
+        let arr: Array2<i32> = array![[1, 2], [3, 4]];
+        let other_arr: Array2<i32> = array![[11, 12], [13, 14]];
+
+        fn perform_checks(arr1: &ArrayCow<i32, Ix2>, arr2: &ArrayCow<i32, Ix2>) {
+            assert!(is_content_identical(arr1, arr2));
+            assert_eq!(arr1.dim(), arr2.dim());
+            assert_eq!(arr1.strides(), arr2.strides());
+        }
+
+        let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.view());
+        let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.clone());
+        arr_cow_dst.clone_from(&arr_cow_src);
+        assert!(arr_cow_dst.is_view());
+        perform_checks(&arr_cow_src, &arr_cow_dst);
+
+        let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.view());
+        let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.view());
+        arr_cow_dst.clone_from(&arr_cow_src);
+        assert!(arr_cow_dst.is_view());
+        perform_checks(&arr_cow_src, &arr_cow_dst);
+
+        let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.clone());
+        let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.view());
+        arr_cow_dst.clone_from(&arr_cow_src);
+        assert!(arr_cow_dst.is_owned());
+        perform_checks(&arr_cow_src, &arr_cow_dst);
+
+        let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.clone());
+        let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.clone());
+        arr_cow_dst.clone_from(&arr_cow_src);
+        assert!(arr_cow_dst.is_owned());
+        perform_checks(&arr_cow_src, &arr_cow_dst);
+    }
+}
