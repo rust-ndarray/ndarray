@@ -13,7 +13,7 @@ fn formatting() {
     let a = a.reshape((4, 1, 1));
     assert_eq!(
         format!("{:4}", a),
-        "[[[   1]],\n [[   2]],\n [[   3]],\n [[   4]]]"
+        "[[[   1]],\n\n [[   2]],\n\n [[   3]],\n\n [[   4]]]",
     );
 
     let a = a.reshape((2, 2));

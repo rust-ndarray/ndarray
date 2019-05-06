@@ -99,6 +99,7 @@ where
 
             let n_to_be_printed = to_be_printed.len();
 
+            let blank_lines = "\n".repeat(shape.len() - 2);
             let indent = " ".repeat(depth + 1);
 
             write!(f, "[")?;
@@ -120,10 +121,10 @@ where
                         // We need to add a separator after each slice,
                         // apart from the last one
                         if j != n_to_be_printed - 1 {
-                            write!(f, ",\n")?
+                            write!(f, ",\n{}", blank_lines)?
                         }
                     }
-                    PrintableCell::Ellipses => write!(f, "{}...,\n", indent)?,
+                    PrintableCell::Ellipses => write!(f, "{}...,\n{}", indent, blank_lines)?,
                 }
             }
             write!(f, "]")?;
