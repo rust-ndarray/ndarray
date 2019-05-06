@@ -66,41 +66,40 @@ impl<F> ExactSizeIterator for Geomspace<F> where Geomspace<F>: Iterator {}
 
 /// An iterator of a sequence of geometrically spaced values.
 ///
-/// The `Geomspace` has `n` elements, where the first element is `a` and the
-/// last element is `b`.
+/// The `Geomspace` has `n` geometrically spaced elements from `start` to `end`
+/// (inclusive).
 ///
-/// Iterator element type is `F`, where `F` must be either `f32` or `f64`.
+/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
+/// `f32` or `f64`.
 ///
-/// **Panics** if the interval `[a, b]` contains zero (including the end points).
+/// Returns `None` if `start` and `end` have different signs or if either one
+/// is zero. Conceptually, this means that in order to obtain a `Some` result,
+/// `end / start` must be positive.
+///
+/// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
-pub fn geomspace<F>(a: F, b: F, n: usize) -> Geomspace<F>
+pub fn geomspace<F>(a: F, b: F, n: usize) -> Option<Geomspace<F>>
 where
     F: Float,
 {
-    assert!(
-        a != F::zero() && b != F::zero(),
-        "Start and/or end of geomspace cannot be zero.",
-    );
-    assert!(
-        a.is_sign_negative() == b.is_sign_negative(),
-        "Logarithmic interval cannot cross 0."
-    );
-
+    if a == F::zero() || b == F::zero() || a.is_sign_negative() != b.is_sign_negative() {
+        return None;
+    }
     let log_a = a.abs().ln();
     let log_b = b.abs().ln();
     let step = if n > 1 {
-        let nf: F = F::from(n).unwrap();
-        (log_b - log_a) / (nf - F::one())
+        let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
+        (log_b - log_a) / num_steps
     } else {
         F::zero()
     };
-    Geomspace {
+    Some(Geomspace {
         sign: a.signum(),
         start: log_a,
         step: step,
         index: 0,
         len: n,
-    }
+    })
 }
 
 #[cfg(test)]
@@ -113,22 +112,22 @@ mod tests {
         use approx::assert_abs_diff_eq;
         use crate::{arr1, Array1};
 
-        let array: Array1<_> = geomspace(1e0, 1e3, 4).collect();
+        let array: Array1<_> = geomspace(1e0, 1e3, 4).unwrap().collect();
         assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
 
-        let array: Array1<_> = geomspace(1e3, 1e0, 4).collect();
+        let array: Array1<_> = geomspace(1e3, 1e0, 4).unwrap().collect();
         assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]), epsilon = 1e-12);
 
-        let array: Array1<_> = geomspace(-1e3, -1e0, 4).collect();
+        let array: Array1<_> = geomspace(-1e3, -1e0, 4).unwrap().collect();
         assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
 
-        let array: Array1<_> = geomspace(-1e0, -1e3, 4).collect();
+        let array: Array1<_> = geomspace(-1e0, -1e3, 4).unwrap().collect();
         assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]), epsilon = 1e-12);
     }
 
     #[test]
     fn iter_forward() {
-        let mut iter = geomspace(1.0f64, 1e3, 4);
+        let mut iter = geomspace(1.0f64, 1e3, 4).unwrap();
 
         assert!(iter.size_hint() == (4, Some(4)));
 
@@ -143,7 +142,7 @@ mod tests {
 
     #[test]
     fn iter_backward() {
-        let mut iter = geomspace(1.0f64, 1e3, 4);
+        let mut iter = geomspace(1.0f64, 1e3, 4).unwrap();
 
         assert!(iter.size_hint() == (4, Some(4)));
 
@@ -157,20 +156,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn zero_lower() {
-        geomspace(0.0, 1.0, 4);
+        assert!(geomspace(0.0, 1.0, 4).is_none());
     }
 
     #[test]
-    #[should_panic]
     fn zero_upper() {
-        geomspace(1.0, 0.0, 4);
+        assert!(geomspace(1.0, 0.0, 4).is_none());
     }
 
     #[test]
-    #[should_panic]
     fn zero_included() {
-        geomspace(-1.0, 1.0, 4);
+        assert!(geomspace(-1.0, 1.0, 4).is_none());
     }
 }

@@ -67,10 +67,16 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(iterable.into_iter().collect())
     }
 
-    /// Create a one-dimensional array from the inclusive interval
-    /// `[start, end]` with `n` elements. `A` must be a floating point type.
+    /// Create a one-dimensional array with `n` evenly spaced elements from
+    /// `start` to `end` (inclusive). `A` must be a floating point type.
     ///
-    /// **Panics** if `n` is greater than `isize::MAX`.
+    /// Note that if `start > end`, the first element will still be `start`,
+    /// and the following elements will be decreasing. This is different from
+    /// the behavior of `std::ops::RangeInclusive`, which interprets `start >
+    /// end` to mean that the range is empty.
+    ///
+    /// **Panics** if `n` is greater than `isize::MAX` or if converting `n - 1`
+    /// to type `A` fails.
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
@@ -84,9 +90,8 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(to_vec(linspace::linspace(start, end, n)))
     }
 
-    /// Create a one-dimensional array from the half-open interval
-    /// `[start, end)` with elements spaced by `step`. `A` must be a floating
-    /// point type.
+    /// Create a one-dimensional array with elements from `start` to `end`
+    /// (exclusive), incrementing by `step`. `A` must be a floating point type.
     ///
     /// **Panics** if the length is greater than `isize::MAX`.
     ///
@@ -102,13 +107,14 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(to_vec(linspace::range(start, end, step)))
     }
 
-    /// Create a one-dimensional array with `n` elements logarithmically spaced,
-    /// with the starting value being `base.powf(start)` and the final one being
-    /// `base.powf(end)`. `A` must be a floating point type.
+    /// Create a one-dimensional array with `n` logarithmically spaced
+    /// elements, with the starting value being `base.powf(start)` and the
+    /// final one being `base.powf(end)`. `A` must be a floating point type.
     ///
     /// If `base` is negative, all values will be negative.
     ///
-    /// **Panics** if the length is greater than `isize::MAX`.
+    /// **Panics** if `n` is greater than `isize::MAX` or if converting `n - 1`
+    /// to type `A` fails.
     ///
     /// ```rust
     /// use approx::assert_abs_diff_eq;
@@ -129,32 +135,38 @@ impl<S, A> ArrayBase<S, Ix1>
         Self::from_vec(to_vec(logspace::logspace(base, start, end, n)))
     }
 
-    /// Create a one-dimensional array from the inclusive interval `[start,
-    /// end]` with `n` elements geometrically spaced. `A` must be a floating
-    /// point type.
+    /// Create a one-dimensional array with `n` geometrically spaced elements
+    /// from `start` to `end` (inclusive). `A` must be a floating point type.
     ///
-    /// The interval can be either all positive or all negative; however, it
-    /// cannot contain 0 (including the end points).
+    /// Returns `None` if `start` and `end` have different signs or if either
+    /// one is zero. Conceptually, this means that in order to obtain a `Some`
+    /// result, `end / start` must be positive.
     ///
-    /// **Panics** if `n` is greater than `isize::MAX`.
+    /// **Panics** if `n` is greater than `isize::MAX` or if converting `n - 1`
+    /// to type `A` fails.
     ///
     /// ```rust
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::{Array, arr1};
     ///
+    /// # fn example() -> Option<()> {
     /// # #[cfg(feature = "approx")] {
-    /// let array = Array::geomspace(1e0, 1e3, 4);
+    /// let array = Array::geomspace(1e0, 1e3, 4)?;
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
-    /// let array = Array::geomspace(-1e3, -1e0, 4);
+    /// let array = Array::geomspace(-1e3, -1e0, 4)?;
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
     /// # }
+    /// # Some(())
+    /// # }
+    /// #
+    /// # fn main() { example().unwrap() }
     /// ```
-    pub fn geomspace(start: A, end: A, n: usize) -> Self
+    pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
         A: Float,
     {
-        Self::from_vec(to_vec(geomspace::geomspace(start, end, n)))
+        Some(Self::from_vec(to_vec(geomspace::geomspace(start, end, n)?)))
     }
 }
 
