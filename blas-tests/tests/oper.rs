@@ -1,3 +1,4 @@
+extern crate approx;
 extern crate defmac;
 extern crate ndarray;
 extern crate num_traits;
@@ -8,34 +9,8 @@ use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
 
-use std::fmt;
+use approx::{assert_abs_diff_eq, assert_relative_eq};
 use defmac::defmac;
-use num_traits::Float;
-
-fn assert_approx_eq<F: fmt::Debug + Float>(f: F, g: F, tol: F) -> bool {
-    assert!((f - g).abs() <= tol, "{:?} approx== {:?} (tol={:?})",
-            f, g, tol);
-    true
-}
-
-fn assert_close<D>(a: ArrayView<f64, D>, b: ArrayView<f64, D>)
-    where D: Dimension,
-{
-    let diff = (&a - &b).mapv_into(f64::abs);
-
-    let rtol = 1e-7;
-    let atol = 1e-12;
-    let crtol = b.mapv(|x| x.abs() * rtol);
-    let tol = crtol + atol;
-    let tol_m_diff = &diff - &tol;
-    let maxdiff = tol_m_diff.fold(0./0., |x, y| f64::max(x, *y));
-    println!("diff offset from tolerance level= {:.2e}", maxdiff);
-    if maxdiff > 0. {
-        println!("{:.4?}", a);
-        println!("{:.4?}", b);
-        panic!("results differ");
-    }
-}
 
 fn reference_dot<'a,A, V1, V2>(a: V1, b: V2) -> A
     where A: NdFloat,
@@ -54,32 +29,32 @@ fn dot_product() {
     let a = Array::range(0., 69., 1.);
     let b = &a * 2. - 7.;
     let dot = 197846.;
-    assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
 
     // test different alignments
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_approx_eq(a1.dot(&b1), reference_dot(&a1, &b1), 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_approx_eq(a2.dot(&b2), reference_dot(&a2, &b2), 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
     }
 
 
     let a = a.map(|f| *f as f32);
     let b = b.map(|f| *f as f32);
-    assert_approx_eq(a.dot(&b), dot as f32, 1e-5);
+    assert_abs_diff_eq!(a.dot(&b), dot as f32, epsilon = 1e-5);
 
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_approx_eq(a1.dot(&b1), reference_dot(&a1, &b1), 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_approx_eq(a2.dot(&b2), reference_dot(&a2, &b2), 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
     }
 
     let a = a.map(|f| *f as i32);
@@ -94,17 +69,17 @@ fn dot_product_0() {
     let x = 1.5;
     let b = aview0(&x);
     let b = b.broadcast(a.dim()).unwrap();
-    assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
 
     // test different alignments
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_approx_eq(a1.dot(&b1), reference_dot(&a1, &b1), 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_approx_eq(a2.dot(&b2), reference_dot(&a2, &b2), 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
     }
 }
 
@@ -117,13 +92,13 @@ fn dot_product_neg_stride() {
         // both negative
         let a = a.slice(s![..;stride]);
         let b = b.slice(s![..;stride]);
-        assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
     }
     for stride in -10..0 {
         // mixed
         let a = a.slice(s![..;-stride]);
         let b = b.slice(s![..;stride]);
-        assert_approx_eq(a.dot(&b), reference_dot(&a, &b), 1e-5);
+        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
     }
 }
 
@@ -402,7 +377,7 @@ fn scaled_add_2() {
                     answerv += &(beta * &c);
                     av.scaled_add(beta, &c);
                 }
-                assert_close(a.view(), answer.view());
+                assert_relative_eq!(a, answer, epsilon = 1e-12, max_relative = 1e-7);
             }
         }
     }
@@ -451,7 +426,7 @@ fn scaled_add_3() {
                     answerv += &(beta * &c);
                     av.scaled_add(beta, &c);
                 }
-                assert_close(a.view(), answer.view());
+                assert_relative_eq!(a, answer, epsilon = 1e-12, max_relative = 1e-7);
             }
         }
     }
@@ -490,7 +465,7 @@ fn gen_mat_mul() {
 
                     general_mat_mul(alpha, &a, &b, beta, &mut cv);
                 }
-                assert_close(c.view(), answer.view());
+                assert_relative_eq!(c, answer, epsilon = 1e-12, max_relative = 1e-7);
             }
         }
     }
@@ -507,7 +482,7 @@ fn gemm_64_1_f() {
     let mut y = range_mat64(m, 1);
     let answer = reference_mat_mul(&a, &x) + &y;
     general_mat_mul(1.0, &a, &x, 1.0, &mut y);
-    assert_close(y.view(), answer.view());
+    assert_relative_eq!(y, answer, epsilon = 1e-12, max_relative = 1e-7);
 }
 
 #[test]
@@ -572,7 +547,7 @@ fn gen_mat_vec_mul() {
 
                         general_mat_vec_mul(alpha, &a, &b, beta, &mut cv);
                     }
-                    assert_close(c.view(), answer.view());
+                    assert_relative_eq!(c, answer, epsilon = 1e-12, max_relative = 1e-7);
                 }
             }
         }
@@ -614,7 +589,7 @@ fn vec_mat_mul() {
 
                         c.slice_mut(s![..;s2]).assign(&a.dot(&b));
                     }
-                    assert_close(c.view(), answer.view());
+                    assert_relative_eq!(c, answer, epsilon = 1e-12, max_relative = 1e-7);
                 }
             }
         }
