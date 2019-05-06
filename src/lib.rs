@@ -205,6 +205,7 @@ mod imp_prelude {
         DataShared,
         RawViewRepr,
         ViewRepr,
+        CowRepr,
         Ix, Ixs,
     };
     pub use crate::dimension::DimensionExt;
@@ -1230,6 +1231,20 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
+/// An array with copy-on-write behavior.
+///
+/// An `ArrayCow` represents either a uniquely owned array or a view of an
+/// array. The `'a` corresponds to the lifetime of the view variant.
+///
+/// Array views have all the methods of an array (see [`ArrayBase`][ab]).
+///
+/// See also [`ArcArray`](type.ArcArray.html), which also provides
+/// copy-on-write behavior but has a reference-counted pointer to the data
+/// instead of either a view or a uniquely owned copy.
+///
+/// [ab]: struct.ArrayBase.html
+pub type ArrayCow<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+
 /// A read-only array view.
 ///
 /// An array view represents an array or a part of it, created from
@@ -1374,16 +1389,12 @@ impl<A> ViewRepr<A> {
     }
 }
 
-pub enum CowRepr<'a, A>
-    where A: Clone
-{
+pub enum CowRepr<'a, A> {
     View(ViewRepr<&'a A>),
     Owned(OwnedRepr<A>),
 }
 
-impl<'a, A> CowRepr<'a, A>
-    where A: Clone
-{
+impl<'a, A> CowRepr<'a, A> {
     pub fn is_view(&self) -> bool {
         match self {
             CowRepr::View(_) => true,
@@ -1395,8 +1406,6 @@ impl<'a, A> CowRepr<'a, A>
         !self.is_view()
     }
 }
-
-pub type ArrayCow<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
 
 mod impl_clone;
 
@@ -1496,69 +1505,6 @@ impl<A, S, D> ArrayBase<S, D>
     }
 }
 
-impl<'a, A, D> ArrayCow<'a, A, D>
-    where A: Clone,
-          D: Dimension
-{
-    fn from_view_array(array: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::View(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
-        }
-    }
-
-    fn from_owned_array(array: Array<A, D>) -> ArrayCow<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::Owned(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
-        }
-    }
-
-    fn into_view_array(self) -> Option<ArrayView<'a, A, D>> {
-        match self.data {
-            CowRepr::View(view) => Some(ArrayBase {
-                data: view,
-                ptr: self.ptr,
-                dim: self.dim,
-                strides: self.strides,
-            }),
-            CowRepr::Owned(_) => None,
-        }
-    }
-
-    fn into_owned_array(self) -> Option<Array<A, D>> {
-        match self.data {
-            CowRepr::View(_) => None,
-            CowRepr::Owned(data) => Some(ArrayBase {
-                data,
-                ptr: self.ptr,
-                dim: self.dim,
-                strides: self.strides,
-            })
-        }
-    }
-
-    fn ensure_is_owned(&mut self) {
-        if self.data.is_view() {
-            let mut copied_data: Vec<A> = self.iter().map(|x| x.clone()).collect();
-            self.ptr = copied_data.as_mut_ptr();
-            self.data = CowRepr::Owned(OwnedRepr(copied_data));
-        }
-    }
-
-    pub fn is_view(&self) -> bool {
-        self.data.is_view()
-    }
-
-    pub fn is_owned(&self) -> bool {
-        self.data.is_owned()
-    }
-}
-
 
 // parallel methods
 #[cfg(feature="rayon")]
@@ -1580,6 +1526,9 @@ mod impl_views;
 
 // Array raw view methods
 mod impl_raw_views;
+
+// Copy-on-write array methods
+mod impl_cow;
 
 /// A contiguous array shape of n dimensions.
 ///

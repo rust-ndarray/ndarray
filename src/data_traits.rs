@@ -414,9 +414,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
     }
 }
 
-unsafe impl<'a, A> RawData for CowRepr<'a, A>
-    where A: Clone
-{
+unsafe impl<'a, A> RawData for CowRepr<'a, A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
         match self {
@@ -435,7 +433,16 @@ unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
         where Self: Sized,
               D: Dimension
     {
-        array.ensure_is_owned();
+        match array.data {
+            CowRepr::View(_) => {
+                let owned = array.to_owned();
+                array.data = CowRepr::Owned(owned.data);
+                array.ptr = owned.ptr;
+                array.dim = owned.dim;
+                array.strides = owned.strides;
+            }
+            CowRepr::Owned(_) => {}
+        }
     }
 
     #[inline]
@@ -445,7 +452,7 @@ unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
 }
 
 unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
-    where A: Copy
+    where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
         match self {
@@ -462,36 +469,44 @@ unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
 
     #[doc(hidden)]
     unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: *mut Self::Elem) -> *mut Self::Elem {
-        match self {
-            CowRepr::View(view) => {
-                match other {
-                    CowRepr::View(other_view) => view.clone_from_with_ptr(other_view, ptr),
-                    CowRepr::Owned(_) => panic!("Cannot copy `CowRepr::View` from `CowRepr::Temp`"),
-                }
+        match (&mut *self, other) {
+            (CowRepr::View(self_), CowRepr::View(other)) => {
+                self_.clone_from_with_ptr(other, ptr)
             },
-            CowRepr::Owned(data) => {
-                match other {
-                    CowRepr::View(_) => panic!("Cannot copy `CowRepr::Temp` from `CowRepr::View`"),
-                    CowRepr::Owned(other_data) => data.clone_from_with_ptr(other_data, ptr),
-                }
+            (CowRepr::Owned(self_), CowRepr::Owned(other)) => {
+                self_.clone_from_with_ptr(other, ptr)
             },
+            (_, CowRepr::Owned(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::Owned(cloned);
+                ptr
+            },
+            (_, CowRepr::View(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::View(cloned);
+                ptr
+            }
         }
     }
 }
 
-unsafe impl<'a, A> Data for CowRepr<'a, A>
-    where A: Clone
-{
+unsafe impl<'a, A> Data for CowRepr<'a, A> {
     #[inline]
     fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
         where
             A: Clone,
             D: Dimension,
     {
-        if self_.data.is_view() {
-            ViewRepr::into_owned(self_.into_view_array().unwrap())
-        } else {
-            OwnedRepr::into_owned(self_.into_owned_array().unwrap())
+        match self_.data {
+            CowRepr::View(_) => self_.to_owned(),
+            CowRepr::Owned(data) => ArrayBase {
+                data,
+                ptr: self_.ptr,
+                dim: self_.dim,
+                strides: self_.strides,
+            },
         }
     }
 }
+
+unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
