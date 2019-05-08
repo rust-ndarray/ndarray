@@ -72,7 +72,7 @@ pub trait Dimension:
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
     /// - For `IxDyn`: `IxDyn`
-    type Pattern: IntoDimension<Dim = Self>;
+    type Pattern: IntoDimension<Dim = Self> + Clone + Debug + PartialEq + Eq + Default;
     /// Next smaller dimension (if applicable)
     type Smaller: Dimension;
     /// Next larger dimension
