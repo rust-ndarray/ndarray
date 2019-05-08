@@ -1993,4 +1993,17 @@ mod array_cow_tests {
         assert!(arr_cow_dst.is_owned());
         perform_checks(&arr_cow_src, &arr_cow_dst);
     }
+
+    #[test]
+    fn test_into_owned() {
+        let arr: Array2<i32> = array![[1, 2], [3, 4]];
+        let cont_arr = ArrayCow::<i32, Ix2>::from(arr.view()).into_owned();
+        assert!(is_content_identical(&arr, &cont_arr));
+
+        let cont_arr = ArrayCow::<i32, Ix2>::from(arr.clone());
+        let prev_ptr = cont_arr.as_ptr();
+        let cont_arr = cont_arr.into_owned();
+        assert_eq!(cont_arr.as_ptr(), prev_ptr);
+        assert!(is_content_identical(&arr, &cont_arr));
+    }
 }
