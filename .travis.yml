@@ -32,4 +32,5 @@ addons:
       - gfortran
 script:
   - |
+      cargo fmt --all -- --check &&
       ./scripts/all-tests.sh "$FEATURES" "$IS_NIGHTLY"
