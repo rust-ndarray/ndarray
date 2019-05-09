@@ -1,4 +1,3 @@
-
 #[macro_export]
 /// Array zip macro: lock step function application across several arrays and
 /// producers.
@@ -165,4 +164,3 @@ macro_rules! azip {
         $crate::azip!(@parse [] [] $($t)*);
     }
 }
-

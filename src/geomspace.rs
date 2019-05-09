@@ -109,8 +109,8 @@ mod tests {
     #[test]
     #[cfg(feature = "approx")]
     fn valid() {
-        use approx::assert_abs_diff_eq;
         use crate::{arr1, Array1};
+        use approx::assert_abs_diff_eq;
 
         let array: Array1<_> = geomspace(1e0, 1e3, 4).unwrap().collect();
         assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);

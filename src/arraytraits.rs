@@ -10,22 +10,14 @@ use std::hash;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
 use std::mem;
-use std::ops::{
-    Index,
-    IndexMut,
-};
+use std::ops::{Index, IndexMut};
 
 use crate::imp_prelude::*;
-use crate::iter::{
-    Iter,
-    IterMut,
-};
-use crate::{
-    NdIndex,
-};
+use crate::iter::{Iter, IterMut};
+use crate::NdIndex;
 
 use crate::numeric_util;
-use crate::{Zip, FoldWhile};
+use crate::{FoldWhile, Zip};
 
 #[cold]
 #[inline(never)]
@@ -35,9 +27,10 @@ pub(crate) fn array_out_of_bounds() -> ! {
 
 #[inline(always)]
 pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
-    where D: Dimension,
-          I: NdIndex<D>,
-          S: Data,
+where
+    D: Dimension,
+    I: NdIndex<D>,
+    S: Data,
 {
     debug_bounds_check!(_a, *_index);
 }
@@ -46,17 +39,21 @@ pub fn debug_bounds_check<S, D, I>(_a: &ArrayBase<S, D>, _index: &I)
 ///
 /// **Panics** if index is out of bounds.
 impl<S, D, I> Index<I> for ArrayBase<S, D>
-    where D: Dimension,
-          I: NdIndex<D>,
-          S: Data,
+where
+    D: Dimension,
+    I: NdIndex<D>,
+    S: Data,
 {
     type Output = S::Elem;
     #[inline]
     fn index(&self, index: I) -> &S::Elem {
         debug_bounds_check!(self, index);
         unsafe {
-            &*self.ptr.offset(index.index_checked(&self.dim, &self.strides)
-                                   .unwrap_or_else(|| array_out_of_bounds()))
+            &*self.ptr.offset(
+                index
+                    .index_checked(&self.dim, &self.strides)
+                    .unwrap_or_else(|| array_out_of_bounds()),
+            )
         }
     }
 }
@@ -65,16 +62,20 @@ impl<S, D, I> Index<I> for ArrayBase<S, D>
 ///
 /// **Panics** if index is out of bounds.
 impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
-    where D: Dimension,
-          I: NdIndex<D>,
-          S: DataMut,
+where
+    D: Dimension,
+    I: NdIndex<D>,
+    S: DataMut,
 {
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut S::Elem {
         debug_bounds_check!(self, index);
         unsafe {
-            &mut *self.as_mut_ptr().offset(index.index_checked(&self.dim, &self.strides)
-                                                .unwrap_or_else(|| array_out_of_bounds()))
+            &mut *self.as_mut_ptr().offset(
+                index
+                    .index_checked(&self.dim, &self.strides)
+                    .unwrap_or_else(|| array_out_of_bounds()),
+            )
         }
     }
 }
@@ -99,34 +100,41 @@ where
         }
         Zip::from(self)
             .and(rhs)
-            .fold_while(true, |_, a, b|
-            if a != b {
-                FoldWhile::Done(false)
-            } else {
-                FoldWhile::Continue(true)
-            }).into_inner()
+            .fold_while(true, |_, a, b| {
+                if a != b {
+                    FoldWhile::Done(false)
+                } else {
+                    FoldWhile::Continue(true)
+                }
+            })
+            .into_inner()
     }
 }
 
 impl<S, D> Eq for ArrayBase<S, D>
-    where D: Dimension,
-          S: Data,
-          S::Elem: Eq,
-{ }
+where
+    D: Dimension,
+    S: Data,
+    S::Elem: Eq,
+{
+}
 
 impl<A, S> FromIterator<A> for ArrayBase<S, Ix1>
-    where S: DataOwned<Elem=A>
+where
+    S: DataOwned<Elem = A>,
 {
     fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
-        where I: IntoIterator<Item=A>,
+    where
+        I: IntoIterator<Item = A>,
     {
         ArrayBase::from_iter(iterable)
     }
 }
 
 impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
-    where D: Dimension,
-          S: Data,
+where
+    D: Dimension,
+    S: Data,
 {
     type Item = &'a S::Elem;
     type IntoIter = Iter<'a, S::Elem, D>;
@@ -137,8 +145,9 @@ impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
 }
 
 impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
-    where D: Dimension,
-          S: DataMut
+where
+    D: Dimension,
+    S: DataMut,
 {
     type Item = &'a mut S::Elem;
     type IntoIter = IterMut<'a, S::Elem, D>;
@@ -149,7 +158,8 @@ impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
 }
 
 impl<'a, A, D> IntoIterator for ArrayView<'a, A, D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     type Item = &'a A;
     type IntoIter = Iter<'a, A, D>;
@@ -160,7 +170,8 @@ impl<'a, A, D> IntoIterator for ArrayView<'a, A, D>
 }
 
 impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A, D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     type Item = &'a mut A;
     type IntoIter = IterMut<'a, A, D>;
@@ -171,9 +182,10 @@ impl<'a, A, D> IntoIterator for ArrayViewMut<'a, A, D>
 }
 
 impl<'a, S, D> hash::Hash for ArrayBase<S, D>
-    where D: Dimension,
-          S: Data,
-          S::Elem: hash::Hash
+where
+    D: Dimension,
+    S: Data,
+    S::Elem: hash::Hash,
 {
     // Note: elements are hashed in the logical order
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
@@ -201,23 +213,29 @@ impl<'a, S, D> hash::Hash for ArrayBase<S, D>
 
 /// `ArrayBase` is `Sync` when the storage type is.
 unsafe impl<S, D> Sync for ArrayBase<S, D>
-    where S: Sync + Data, D: Sync
-{ }
+where
+    S: Sync + Data,
+    D: Sync,
+{
+}
 
 /// `ArrayBase` is `Send` when the storage type is.
 unsafe impl<S, D> Send for ArrayBase<S, D>
-    where S: Send + Data, D: Send
-{ }
+where
+    S: Send + Data,
+    D: Send,
+{
+}
 
 #[cfg(any(feature = "serde"))]
 // Use version number so we can add a packed format later.
 pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
-
 // use "raw" form instead of type aliases here so that they show up in docs
 /// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
-    where Slice: AsRef<[A]>
+where
+    Slice: AsRef<[A]>,
 {
     /// Create a one-dimensional read-only array view of the data in `slice`.
     ///
@@ -230,16 +248,15 @@ impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
                 "Slice length must fit in `isize`.",
             );
         }
-        unsafe {
-            Self::from_shape_ptr(xs.len(), xs.as_ptr())
-        }
+        unsafe { Self::from_shape_ptr(xs.len(), xs.as_ptr()) }
     }
 }
 
 /// Implementation of `ArrayView::from(&A)` where `A` is an array.
 impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
-    where S: Data<Elem=A>,
-          D: Dimension,
+where
+    S: Data<Elem = A>,
+    D: Dimension,
 {
     /// Create a read-only array view of the array.
     fn from(array: &'a ArrayBase<S, D>) -> Self {
@@ -249,7 +266,8 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
 
 /// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or slicable.
 impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
-    where Slice: AsMut<[A]>
+where
+    Slice: AsMut<[A]>,
 {
     /// Create a one-dimensional read-write array view of the data in `slice`.
     ///
@@ -262,16 +280,15 @@ impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
                 "Slice length must fit in `isize`.",
             );
         }
-        unsafe {
-            Self::from_shape_ptr(xs.len(), xs.as_mut_ptr())
-        }
+        unsafe { Self::from_shape_ptr(xs.len(), xs.as_mut_ptr()) }
     }
 }
 
 /// Implementation of `ArrayViewMut::from(&mut A)` where `A` is an array.
 impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
-    where S: DataMut<Elem=A>,
-          D: Dimension,
+where
+    S: DataMut<Elem = A>,
+    D: Dimension,
 {
     /// Create a read-write array view of the array.
     fn from(array: &'a mut ArrayBase<S, D>) -> Self {
@@ -300,11 +317,17 @@ impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
 /// );
 ///
 /// ```
-pub trait AsArray<'a, A: 'a, D = Ix1> : Into<ArrayView<'a, A, D>> where D: Dimension { }
+pub trait AsArray<'a, A: 'a, D = Ix1>: Into<ArrayView<'a, A, D>>
+where
+    D: Dimension,
+{
+}
 impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
-    where T: Into<ArrayView<'a, A, D>>,
-          D: Dimension,
-{ }
+where
+    T: Into<ArrayView<'a, A, D>>,
+    D: Dimension,
+{
+}
 
 /// Create an owned array with a default state.
 ///
@@ -319,9 +342,10 @@ impl<'a, A: 'a, D, T> AsArray<'a, A, D> for T
 /// Since arrays cannot grow, the intention is to use the default value as
 /// placeholder.
 impl<A, S, D> Default for ArrayBase<S, D>
-    where S: DataOwned<Elem=A>,
-          D: Dimension,
-          A: Default,
+where
+    S: DataOwned<Elem = A>,
+    D: Dimension,
+    A: Default,
 {
     // NOTE: We can implement Default for non-zero dimensional array views by
     // using an empty slice, however we need a trait for nonzero Dimension.

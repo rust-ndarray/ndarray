@@ -1,5 +1,5 @@
-extern crate ndarray;
 extern crate itertools;
+extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Zip;
@@ -7,7 +7,6 @@ use ndarray::Zip;
 use itertools::{assert_equal, cloned};
 
 use std::mem::swap;
-
 
 #[test]
 fn test_azip1() {
@@ -20,7 +19,7 @@ fn test_azip1() {
 #[test]
 fn test_azip2() {
     let mut a = Array::zeros((5, 7));
-    let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2 * j) as f32);
     azip!(mut a, b in { *a = b; });
     assert_eq!(a, b);
 }
@@ -28,7 +27,7 @@ fn test_azip2() {
 #[test]
 fn test_azip2_1() {
     let mut a = Array::zeros((5, 7));
-    let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j) as f32);
     let b = b.slice(s![..;-1, 3..]);
     azip!(mut a, b in { *a = b; });
     assert_eq!(a, b);
@@ -36,7 +35,7 @@ fn test_azip2_1() {
 
 #[test]
 fn test_azip2_3() {
-    let mut b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2*j) as f32);
+    let mut b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j) as f32);
     let mut c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
     let a = b.clone();
     azip!(mut b, mut c in { swap(b, c) });
@@ -109,7 +108,7 @@ fn test_zip_dim_mismatch_1() {
     let mut a = Array::zeros((5, 7));
     let mut d = a.raw_dim();
     d[0] += 1;
-    let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2*j) as f32);
+    let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2 * j) as f32);
     azip!(mut a, b in { *a = b; });
 }
 
@@ -140,7 +139,6 @@ fn test_contiguous_but_not_c_or_f() {
     assert_eq!(ans, correct);
 }
 
-
 #[test]
 fn test_clone() {
     let a = Array::from_iter(0..27).into_shape((3, 3, 3)).unwrap();
@@ -166,11 +164,10 @@ fn test_indices_1() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1)
-        .apply(|i, elt| {
-            count += 1;
-            assert_eq!(*elt, i);
-        });
+    Zip::indexed(&a1).apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
     assert_eq!(count, a1.len());
 
     let mut count = 0;
@@ -227,11 +224,10 @@ fn test_indices_3() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1)
-        .apply(|i, elt| {
-            count += 1;
-            assert_eq!(*elt, i);
-        });
+    Zip::indexed(&a1).apply(|i, elt| {
+        count += 1;
+        assert_eq!(*elt, i);
+    });
     assert_eq!(count, a1.len());
 
     let mut count = 0;

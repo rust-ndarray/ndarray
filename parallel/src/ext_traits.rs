@@ -1,11 +1,4 @@
-
-use ndarray::{
-    Dimension,
-    NdProducer,
-    Zip,
-    ArrayBase,
-    DataMut,
-};
+use ndarray::{ArrayBase, DataMut, Dimension, NdProducer, Zip};
 
 use prelude::*;
 
@@ -15,34 +8,37 @@ use prelude::*;
 pub trait ParMap {
     type Item;
     fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut Self::Item) + Sync + Send;
+    where
+        F: Fn(&mut Self::Item) + Sync + Send;
     fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(Self::Item) -> Self::Item + Sync + Send,
-              Self::Item: Clone;
+    where
+        F: Fn(Self::Item) -> Self::Item + Sync + Send,
+        Self::Item: Clone;
 }
 
 impl<A, S, D> ParMap for ArrayBase<S, D>
-    where S: DataMut<Elem=A>,
-          D: Dimension,
-          A: Send + Sync,
+where
+    S: DataMut<Elem = A>,
+    D: Dimension,
+    A: Send + Sync,
 {
     type Item = A;
     fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut Self::Item) + Sync + Send
+    where
+        F: Fn(&mut Self::Item) + Sync + Send,
     {
         self.view_mut().into_par_iter().for_each(f)
     }
     fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(Self::Item) -> Self::Item + Sync + Send,
-              Self::Item: Clone
+    where
+        F: Fn(Self::Item) -> Self::Item + Sync + Send,
+        Self::Item: Clone,
     {
-        self.view_mut().into_par_iter()
+        self.view_mut()
+            .into_par_iter()
             .for_each(move |x| *x = f(x.clone()))
     }
 }
-
-
-
 
 // Zip
 
@@ -73,7 +69,7 @@ macro_rules! zip_impl {
     }
 }
 
-zip_impl!{
+zip_impl! {
     [ParApply1 P1],
     [ParApply2 P1 P2],
     [ParApply3 P1 P2 P3],

@@ -5,11 +5,11 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::error::{ShapeError, ErrorKind};
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use crate::error::{ErrorKind, ShapeError};
+use crate::{ArrayView, ArrayViewMut, Dimension, RawArrayViewMut};
 use std::fmt;
 use std::marker::PhantomData;
-use crate::{ArrayView, ArrayViewMut, Dimension, RawArrayViewMut};
+use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 /// A slice (range with step size).
 ///
@@ -48,11 +48,7 @@ impl Slice {
     /// (This method checks with a debug assertion that `step` is not zero.)
     pub fn new(start: isize, end: Option<isize>, step: isize) -> Slice {
         debug_assert_ne!(step, 0, "Slice::new: step must be nonzero");
-        Slice {
-            start,
-            end,
-            step,
-        }
+        Slice { start, end, step }
     }
 
     /// Create a new `Slice` with the given step size (multiplied with the
@@ -63,7 +59,10 @@ impl Slice {
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
         debug_assert_ne!(step, 0, "Slice::step_by: step must be nonzero");
-        Slice { step: self.step * step, ..self }
+        Slice {
+            step: self.step * step,
+            ..self
+        }
     }
 }
 
@@ -105,7 +104,7 @@ pub enum SliceOrIndex {
     Index(isize),
 }
 
-copy_and_clone!{SliceOrIndex}
+copy_and_clone! {SliceOrIndex}
 
 impl SliceOrIndex {
     /// Returns `true` if `self` is a `Slice` value.
@@ -414,7 +413,6 @@ where
     }
 }
 
-
 #[doc(hidden)]
 pub trait SliceNextDim<D1, D2> {
     fn next_dim(&self, _: PhantomData<D1>) -> PhantomData<D2>;
@@ -427,7 +425,7 @@ macro_rules! impl_slicenextdim_equal {
                 PhantomData
             }
         }
-    }
+    };
 }
 impl_slicenextdim_equal!(isize);
 impl_slicenextdim_equal!(usize);
@@ -627,7 +625,7 @@ macro_rules! s(
 /// Returns a ZST representing the lifetime of the mutable view.
 #[doc(hidden)]
 pub fn life_of_view_mut<'a, A, D: Dimension>(
-    _view: &ArrayViewMut<'a, A, D>
+    _view: &ArrayViewMut<'a, A, D>,
 ) -> PhantomData<&'a mut A> {
     PhantomData
 }

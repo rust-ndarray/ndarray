@@ -1,9 +1,9 @@
-
-use crate::{Dimension, Axis, Ix, Ixs};
+use crate::{Axis, Dimension, Ix, Ixs};
 
 /// Create a new Axes iterator
 pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     Axes {
         dim: d,
@@ -49,19 +49,26 @@ copy_and_clone!(AxisDescription);
 impl AxisDescription {
     /// Return axis
     #[inline(always)]
-    pub fn axis(self) -> Axis { self.0 }
+    pub fn axis(self) -> Axis {
+        self.0
+    }
     /// Return length
     #[inline(always)]
-    pub fn len(self) -> Ix { self.1 }
+    pub fn len(self) -> Ix {
+        self.1
+    }
     /// Return stride
     #[inline(always)]
-    pub fn stride(self) -> Ixs { self.2 }
+    pub fn stride(self) -> Ixs {
+        self.2
+    }
 }
 
 copy_and_clone!(['a, D] Axes<'a, D>);
 
 impl<'a, D> Iterator for Axes<'a, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     /// Description of the axis, its length and its stride.
     type Item = AxisDescription;
@@ -69,7 +76,11 @@ impl<'a, D> Iterator for Axes<'a, D>
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
             let i = self.start.post_inc();
-            Some(AxisDescription(Axis(i), self.dim[i], self.strides[i] as Ixs))
+            Some(AxisDescription(
+                Axis(i),
+                self.dim[i],
+                self.strides[i] as Ixs,
+            ))
         } else {
             None
         }
@@ -91,19 +102,24 @@ impl<'a, D> Iterator for Axes<'a, D>
 }
 
 impl<'a, D> DoubleEndedIterator for Axes<'a, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
             let i = self.end.pre_dec();
-            Some(AxisDescription(Axis(i), self.dim[i], self.strides[i] as Ixs))
+            Some(AxisDescription(
+                Axis(i),
+                self.dim[i],
+                self.strides[i] as Ixs,
+            ))
         } else {
             None
         }
     }
 }
 
-trait IncOps : Copy {
+trait IncOps: Copy {
     fn post_inc(&mut self) -> Self;
     fn post_dec(&mut self) -> Self;
     fn pre_dec(&mut self) -> Self;
@@ -128,4 +144,3 @@ impl IncOps for usize {
         *self
     }
 }
-

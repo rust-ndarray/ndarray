@@ -21,7 +21,7 @@ use crate::indexes;
 use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
 use crate::StrideShape;
-use crate::{linspace, geomspace, logspace};
+use crate::{geomspace, linspace, logspace};
 
 /// # Constructor Methods for Owned Arrays
 ///
@@ -30,7 +30,8 @@ use crate::{linspace, geomspace, logspace};
 ///
 /// ## Constructor methods for one-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix1>
-    where S: DataOwned<Elem=A>,
+where
+    S: DataOwned<Elem = A>,
 {
     /// Create a one-dimensional array from a vector (no copying needed).
     ///
@@ -62,7 +63,8 @@ impl<S, A> ArrayBase<S, Ix1>
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
     pub fn from_iter<I>(iterable: I) -> Self
-        where I: IntoIterator<Item=A>
+    where
+        I: IntoIterator<Item = A>,
     {
         Self::from_vec(iterable.into_iter().collect())
     }
@@ -85,7 +87,8 @@ impl<S, A> ArrayBase<S, Ix1>
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
     pub fn linspace(start: A, end: A, n: usize) -> Self
-        where A: Float,
+    where
+        A: Float,
     {
         Self::from_vec(to_vec(linspace::linspace(start, end, n)))
     }
@@ -102,7 +105,8 @@ impl<S, A> ArrayBase<S, Ix1>
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
     pub fn range(start: A, end: A, step: A) -> Self
-        where A: Float,
+    where
+        A: Float,
     {
         Self::from_vec(to_vec(linspace::range(start, end, step)))
     }
@@ -172,14 +176,16 @@ impl<S, A> ArrayBase<S, Ix1>
 
 /// ## Constructor methods for two-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix2>
-    where S: DataOwned<Elem=A>,
+where
+    S: DataOwned<Elem = A>,
 {
     /// Create an identity matrix of size `n` (square 2D array).
     ///
     /// **Panics** if `n * n` would overflow `isize`.
     pub fn eye(n: Ix) -> Self
-        where S: DataMut,
-              A: Clone + Zero + One,
+    where
+        S: DataMut,
+        A: Clone + Zero + One,
     {
         let mut eye = Self::zeros((n, n));
         for a_ii in eye.diag_mut() {
@@ -194,9 +200,11 @@ macro_rules! size_of_shape_checked_unwrap {
     ($dim:expr) => {
         match dimension::size_of_shape_checked($dim) {
             Ok(sz) => sz,
-            Err(_) => panic!("ndarray: Shape too large, product of non-zero axis lengths overflows isize"),
+            Err(_) => {
+                panic!("ndarray: Shape too large, product of non-zero axis lengths overflows isize")
+            }
         }
-    }
+    };
 }
 
 #[cfg(debug_assertions)]
@@ -210,7 +218,7 @@ macro_rules! size_of_shape_checked_unwrap {
                 $dim
             ),
         }
-    }
+    };
 }
 
 /// ## Constructor methods for n-dimensional arrays.
@@ -230,8 +238,9 @@ macro_rules! size_of_shape_checked_unwrap {
 /// `Into<StrideShape>` argument *optionally* support custom strides, for
 /// example a shape given like `(10, 2, 2).strides((1, 10, 20))` is valid.
 impl<S, A, D> ArrayBase<S, D>
-    where S: DataOwned<Elem=A>,
-          D: Dimension,
+where
+    S: DataOwned<Elem = A>,
+    D: Dimension,
 {
     /// Create an array with copies of `elem`, shape `shape`.
     ///
@@ -254,8 +263,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// assert!(b.strides() == &[1, 2, 4]);
     /// ```
     pub fn from_elem<Sh>(shape: Sh, elem: A) -> Self
-        where A: Clone,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        A: Clone,
+        Sh: ShapeBuilder<Dim = D>,
     {
         let shape = shape.into_shape();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
@@ -267,8 +277,9 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn zeros<Sh>(shape: Sh) -> Self
-        where A: Clone + Zero,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        A: Clone + Zero,
+        Sh: ShapeBuilder<Dim = D>,
     {
         Self::from_elem(shape, A::zero())
     }
@@ -277,8 +288,9 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn ones<Sh>(shape: Sh) -> Self
-        where A: Clone + One,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        A: Clone + One,
+        Sh: ShapeBuilder<Dim = D>,
     {
         Self::from_elem(shape, A::one())
     }
@@ -287,8 +299,9 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn default<Sh>(shape: Sh) -> Self
-        where A: Default,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        A: Default,
+        Sh: ShapeBuilder<Dim = D>,
     {
         let shape = shape.into_shape();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
@@ -303,8 +316,9 @@ impl<S, A, D> ArrayBase<S, D>
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
-        where Sh: ShapeBuilder<Dim=D>,
-              F: FnMut(D::Pattern) -> A,
+    where
+        Sh: ShapeBuilder<Dim = D>,
+        F: FnMut(D::Pattern) -> A,
     {
         let shape = shape.into_shape();
         let _ = size_of_shape_checked_unwrap!(&shape.dim);
@@ -352,14 +366,14 @@ impl<S, A, D> ArrayBase<S, D>
     /// );
     /// ```
     pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<Self, ShapeError>
-        where Sh: Into<StrideShape<D>>,
+    where
+        Sh: Into<StrideShape<D>>,
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_vec_impl(shape.into(), v)
     }
 
-    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError>
-    {
+    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError> {
         let dim = shape.dim;
         let strides = shape.strides;
         if shape.custom {
@@ -395,22 +409,21 @@ impl<S, A, D> ArrayBase<S, D>
     /// 5. The strides must not allow any element to be referenced by two different
     ///    indices.
     pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
-        where Sh: Into<StrideShape<D>>,
+    where
+        Sh: Into<StrideShape<D>>,
     {
         let shape = shape.into();
         Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
     }
 
-    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>)
-        -> Self
-    {
+    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
             strides: strides,
-            dim: dim
+            dim: dim,
         }
     }
 
@@ -460,8 +473,9 @@ impl<S, A, D> ArrayBase<S, D>
     /// # }
     /// ```
     pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
-        where A: Copy,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        A: Copy,
+        Sh: ShapeBuilder<Dim = D>,
     {
         let shape = shape.into_shape();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
@@ -469,5 +483,4 @@ impl<S, A, D> ArrayBase<S, D>
         v.set_len(size);
         Self::from_shape_vec_unchecked(shape, v)
     }
-
 }
