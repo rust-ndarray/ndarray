@@ -24,12 +24,10 @@ impl fmt::Debug for Layout {
                 "{}",
                 (0..32)
                     .filter(|&i| self.is(1 << i))
-                    .format_with(" | ", |i, f| {
-                        if let Some(name) = LAYOUT_NAMES.get(i) {
-                            f(name)
-                        } else {
-                            f(&format_args!("0x{:x}", i))
-                        }
+                    .format_with(" | ", |i, f| if let Some(name) = LAYOUT_NAMES.get(i) {
+                        f(name)
+                    } else {
+                        f(&format_args!("0x{:x}", i))
                     })
             )
         }?;
