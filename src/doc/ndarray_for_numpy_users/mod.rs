@@ -633,6 +633,6 @@
 //! [::zeros()]: ../../struct.ArrayBase.html#method.zeros
 //! [Zip]: ../../struct.Zip.html
 
-pub mod rk_step;
 pub mod coord_transform;
+pub mod rk_step;
 pub mod simple_math;

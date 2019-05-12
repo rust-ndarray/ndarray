@@ -1,4 +1,3 @@
-
 extern crate ndarray;
 
 use ndarray::prelude::*;

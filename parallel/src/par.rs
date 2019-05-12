@@ -1,17 +1,16 @@
-
-use rayon::iter::ParallelIterator;
-use rayon::iter::IndexedParallelIterator;
-use rayon::iter::plumbing::{Consumer, UnindexedConsumer};
 use rayon::iter::plumbing::bridge;
-use rayon::iter::plumbing::ProducerCallback;
-use rayon::iter::plumbing::Producer;
-use rayon::iter::plumbing::UnindexedProducer;
 use rayon::iter::plumbing::bridge_unindexed;
 use rayon::iter::plumbing::Folder;
+use rayon::iter::plumbing::Producer;
+use rayon::iter::plumbing::ProducerCallback;
+use rayon::iter::plumbing::UnindexedProducer;
+use rayon::iter::plumbing::{Consumer, UnindexedConsumer};
+use rayon::iter::IndexedParallelIterator;
+use rayon::iter::ParallelIterator;
 
 use ndarray::iter::AxisIter;
 use ndarray::iter::AxisIterMut;
-use ndarray::{Dimension};
+use ndarray::Dimension;
 use ndarray::{ArrayView, ArrayViewMut};
 
 use super::NdarrayIntoParallelIterator;
@@ -111,11 +110,8 @@ macro_rules! par_iter_wrapper {
     }
 }
 
-
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
-
-
 
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
@@ -190,8 +186,7 @@ macro_rules! par_iter_view_wrapper {
 par_iter_view_wrapper!(ArrayView, [Sync]);
 par_iter_view_wrapper!(ArrayViewMut, [Sync + Send]);
 
-
-use ndarray::{Zip, NdProducer, FoldWhile};
+use ndarray::{FoldWhile, NdProducer, Zip};
 
 macro_rules! zip_impl {
     ($([$($p:ident)*],)+) => {
@@ -260,7 +255,7 @@ macro_rules! zip_impl {
     }
 }
 
-zip_impl!{
+zip_impl! {
     [P1],
     [P1 P2],
     [P1 P2 P3],

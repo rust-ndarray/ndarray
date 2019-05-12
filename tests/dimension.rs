@@ -1,25 +1,14 @@
-extern crate ndarray;
 extern crate defmac;
+extern crate ndarray;
 
 use defmac::defmac;
 
-use ndarray::{
-    ArcArray,
-    Array,
-    RemoveAxis,
-    arr2,
-    Axis,
-    Dimension,
-    Dim,
-    IxDyn,
-    IntoDimension,
-};
+use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IntoDimension, IxDyn, RemoveAxis};
 
 use std::hash::{Hash, Hasher};
 
 #[test]
-fn insert_axis()
-{
+fn insert_axis() {
     assert_eq!(Dim([]).insert_axis(Axis(0)), Dim([1]));
 
     assert_eq!(Dim([3]).insert_axis(Axis(0)), Dim([1, 3]));
@@ -31,7 +20,10 @@ fn insert_axis()
 
     assert_eq!(Dim([2, 3, 4]).insert_axis(Axis(2)), Dim([2, 3, 1, 4]));
 
-    assert_eq!(Dim([2, 3, 4, 5, 6, 7]).insert_axis(Axis(2)), Dim(vec![2, 3, 1, 4, 5, 6, 7]));
+    assert_eq!(
+        Dim([2, 3, 4, 5, 6, 7]).insert_axis(Axis(2)),
+        Dim(vec![2, 3, 1, 4, 5, 6, 7])
+    );
 
     assert_eq!(Dim(vec![]).insert_axis(Axis(0)), Dim(vec![1]));
 
@@ -39,13 +31,18 @@ fn insert_axis()
     assert_eq!(Dim(vec![2, 3]).insert_axis(Axis(1)), Dim(vec![2, 1, 3]));
     assert_eq!(Dim(vec![2, 3]).insert_axis(Axis(2)), Dim(vec![2, 3, 1]));
 
-    assert_eq!(Dim(vec![2, 3, 4, 5, 6]).insert_axis(Axis(2)), Dim(vec![2, 3, 1, 4, 5, 6]));
-    assert_eq!(Dim(vec![2, 3, 4, 5, 6, 7]).insert_axis(Axis(2)), Dim(vec![2, 3, 1, 4, 5, 6, 7]));
+    assert_eq!(
+        Dim(vec![2, 3, 4, 5, 6]).insert_axis(Axis(2)),
+        Dim(vec![2, 3, 1, 4, 5, 6])
+    );
+    assert_eq!(
+        Dim(vec![2, 3, 4, 5, 6, 7]).insert_axis(Axis(2)),
+        Dim(vec![2, 3, 1, 4, 5, 6, 7])
+    );
 }
 
 #[test]
-fn remove_axis()
-{
+fn remove_axis() {
     assert_eq!(Dim([3]).remove_axis(Axis(0)), Dim([]));
     assert_eq!(Dim([1, 2]).remove_axis(Axis(0)), Dim([2]));
     assert_eq!(Dim([4, 5, 6]).remove_axis(Axis(1)), Dim([4, 6]));
@@ -53,16 +50,18 @@ fn remove_axis()
     assert_eq!(Dim(vec![1, 2]).remove_axis(Axis(0)), Dim(vec![2]));
     assert_eq!(Dim(vec![4, 5, 6]).remove_axis(Axis(1)), Dim(vec![4, 6]));
 
-    let a = ArcArray::<f32, _>::zeros((4,5));
+    let a = ArcArray::<f32, _>::zeros((4, 5));
     a.index_axis(Axis(1), 0);
 
-    let a = ArcArray::<f32, _>::zeros(vec![4,5,6]);
-    let _b = a.index_axis_move(Axis(1), 0).reshape((4, 6)).reshape(vec![2, 3, 4]);
+    let a = ArcArray::<f32, _>::zeros(vec![4, 5, 6]);
+    let _b = a
+        .index_axis_move(Axis(1), 0)
+        .reshape((4, 6))
+        .reshape(vec![2, 3, 4]);
 }
 
 #[test]
-fn dyn_dimension()
-{
+fn dyn_dimension() {
     let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape(vec![2, 2]).unwrap();
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
     assert_eq!(a[&[0, 0][..]], 1.);
@@ -121,13 +120,19 @@ fn fastest_varying_order() {
 
     assert_eq!(Dim([1, 3])._fastest_varying_stride_order(), Dim([0, 1]));
     assert_eq!(Dim([7, 2])._fastest_varying_stride_order(), Dim([1, 0]));
-    assert_eq!(Dim([6, 1, 3])._fastest_varying_stride_order(), Dim([1, 2, 0]));
+    assert_eq!(
+        Dim([6, 1, 3])._fastest_varying_stride_order(),
+        Dim([1, 2, 0])
+    );
 
     // it's important that it produces distinct indices. Prefer the stable order
     // where 0 is before 1 when they are equal.
     assert_eq!(Dim([2, 2])._fastest_varying_stride_order(), [0, 1]);
     assert_eq!(Dim([2, 2, 1])._fastest_varying_stride_order(), [2, 0, 1]);
-    assert_eq!(Dim([2, 2, 3, 1, 2])._fastest_varying_stride_order(), [3, 0, 1, 4, 2]);
+    assert_eq!(
+        Dim([2, 2, 3, 1, 2])._fastest_varying_stride_order(),
+        [3, 0, 1, 4, 2]
+    );
 }
 
 type ArrayF32<D> = Array<f32, D>;
@@ -228,14 +233,14 @@ fn test_hash() {
         ($arr:expr) => {
             assert_eq!(calc_hash(&Dim($arr)), calc_hash(&Dim($arr)));
             assert_eq!(calc_hash(&Dim($arr)), calc_hash(&IxDyn(&$arr)));
-        }
+        };
     }
     macro_rules! test_hash_ne {
         ($arr1:expr, $arr2:expr) => {
             assert_ne!(calc_hash(&Dim($arr1)), calc_hash(&Dim($arr2)));
             assert_ne!(calc_hash(&Dim($arr1)), calc_hash(&IxDyn(&$arr2)));
             assert_ne!(calc_hash(&IxDyn(&$arr1)), calc_hash(&Dim($arr2)));
-        }
+        };
     }
     test_hash_eq!([]);
     test_hash_eq!([0]);
@@ -282,7 +287,7 @@ fn test_array_view() {
 
 #[test]
 fn test_all_ndindex() {
-macro_rules! ndindex {
+    macro_rules! ndindex {
     ($($i:expr),*) => {
         for &rev in &[false, true] {
             // rev is for C / F order

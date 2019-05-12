@@ -11,12 +11,12 @@ mod zipmacro;
 
 use crate::imp_prelude::*;
 use crate::IntoDimension;
-use crate::NdIndex;
 use crate::Layout;
+use crate::NdIndex;
 
-use crate::layout::{CORDER, FORDER};
+use crate::indexes::{indices, Indices};
 use crate::layout::LayoutPriv;
-use crate::indexes::{Indices, indices};
+use crate::layout::{CORDER, FORDER};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -25,9 +25,8 @@ macro_rules! fold_while {
             FoldWhile::Continue(x) => x,
             x => return x,
         }
-    }
+    };
 }
-
 
 /// Broadcast an array so that it acts like a larger size and/or shape array.
 ///
@@ -35,19 +34,21 @@ macro_rules! fold_while {
 ///
 /// [1]: struct.ArrayBase.html#broadcasting
 trait Broadcast<E>
-    where E: IntoDimension,
+where
+    E: IntoDimension,
 {
-    type Output: NdProducer<Dim=E::Dim>;
+    type Output: NdProducer<Dim = E::Dim>;
     /// Broadcast the array to the new dimensions `shape`.
     ///
     /// ***Panics*** if broadcasting isn’t possible.
     fn broadcast_unwrap(self, shape: E) -> Self::Output;
-    private_decl!{}
+    private_decl! {}
 }
 
 impl<S, D> ArrayBase<S, D>
-    where S: Data,
-          D: Dimension,
+where
+    S: Data,
+    D: Dimension,
 {
     pub(crate) fn layout_impl(&self) -> Layout {
         Layout::new(if self.is_standard_layout() {
@@ -65,25 +66,25 @@ impl<S, D> ArrayBase<S, D>
 }
 
 impl<'a, A, D, E> Broadcast<E> for ArrayView<'a, A, D>
-    where E: IntoDimension,
-          D: Dimension,
+where
+    E: IntoDimension,
+    D: Dimension,
 {
     type Output = ArrayView<'a, A, E::Dim>;
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
         let res: ArrayView<A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
-        unsafe {
-            ArrayView::new_(res.ptr, res.dim, res.strides)
-        }
+        unsafe { ArrayView::new_(res.ptr, res.dim, res.strides) }
     }
-    private_impl!{}
+    private_impl! {}
 }
 
-pub trait Splittable : Sized {
+pub trait Splittable: Sized {
     fn split_at(self, axis: Axis, index: Ix) -> (Self, Self);
 }
 
 impl<D> Splittable for D
-    where D: Dimension,
+where
+    D: Dimension,
 {
     fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
         let mut d1 = self;
@@ -106,16 +107,21 @@ pub trait IntoNdProducer {
     type Item;
     /// Dimension type of the producer
     type Dim: Dimension;
-    type Output: NdProducer<Dim=Self::Dim, Item=Self::Item>;
+    type Output: NdProducer<Dim = Self::Dim, Item = Self::Item>;
     /// Convert the value into an `NdProducer`.
     fn into_producer(self) -> Self::Output;
 }
 
-impl<P> IntoNdProducer for P where P: NdProducer {
+impl<P> IntoNdProducer for P
+where
+    P: NdProducer,
+{
     type Item = P::Item;
     type Dim = P::Dim;
     type Output = Self;
-    fn into_producer(self) -> Self::Output { self }
+    fn into_producer(self) -> Self::Output {
+        self
+    }
 }
 
 /// A producer of an n-dimensional set of elements;
@@ -150,7 +156,7 @@ pub trait NdProducer {
     // stride (= along a particular axis)
     #[doc(hidden)]
     /// Pointer or stand-in for pointer
-    type Ptr: Offset<Stride=Self::Stride>;
+    type Ptr: Offset<Stride = Self::Stride>;
     #[doc(hidden)]
     /// Pointer stride
     type Stride: Copy;
@@ -175,14 +181,16 @@ pub trait NdProducer {
     #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride;
     #[doc(hidden)]
-    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) where Self: Sized;
-    private_decl!{}
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self)
+    where
+        Self: Sized;
+    private_decl! {}
 }
 
-pub trait Offset : Copy {
+pub trait Offset: Copy {
     type Stride: Copy;
     unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self;
-    private_decl!{}
+    private_decl! {}
 }
 
 impl<T> Offset for *mut T {
@@ -190,12 +198,12 @@ impl<T> Offset for *mut T {
     unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self {
         self.offset(s * (index as isize))
     }
-    private_impl!{}
+    private_impl! {}
 }
 
-trait ZippableTuple : Sized {
+trait ZippableTuple: Sized {
     type Item;
-    type Ptr: OffsetTuple<Args=Self::Stride> + Copy;
+    type Ptr: OffsetTuple<Args = Self::Stride> + Copy;
     type Dim: Dimension;
     type Stride: Copy;
     fn as_ptr(&self) -> Self::Ptr;
@@ -209,8 +217,9 @@ trait ZippableTuple : Sized {
 /// An array reference is an n-dimensional producer of element references
 /// (like ArrayView).
 impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
-    where D: Dimension,
-          S: Data<Elem=A>,
+where
+    D: Dimension,
+    S: Data<Elem = A>,
 {
     type Item = &'a A;
     type Dim = D;
@@ -223,8 +232,9 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
 /// A mutable array reference is an n-dimensional producer of mutable element
 /// references (like ArrayViewMut).
 impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
-    where D: Dimension,
-          S: DataMut<Elem=A>,
+where
+    D: Dimension,
+    S: DataMut<Elem = A>,
 {
     type Item = &'a mut A;
     type Dim = D;
@@ -274,14 +284,13 @@ impl<'a, A: 'a> IntoNdProducer for &'a mut Vec<A> {
     }
 }
 
-impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
-{
+impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D> {
     type Item = &'a A;
     type Dim = D;
     type Ptr = *mut A;
     type Stride = isize;
 
-    private_impl!{}
+    private_impl! {}
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
         self.raw_dim()
@@ -318,7 +327,9 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
     }
 
     #[inline(always)]
-    fn contiguous_stride(&self) -> Self::Stride { 1 }
+    fn contiguous_stride(&self) -> Self::Stride {
+        1
+    }
 
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
@@ -332,7 +343,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
     type Ptr = *mut A;
     type Stride = isize;
 
-    private_impl!{}
+    private_impl! {}
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
         self.raw_dim()
@@ -369,14 +380,15 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
     }
 
     #[inline(always)]
-    fn contiguous_stride(&self) -> Self::Stride { 1 }
+    fn contiguous_stride(&self) -> Self::Stride {
+        1
+    }
 
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         self.split_at(axis, index)
     }
 }
-
 
 /// Lock step function application across several arrays or other producers.
 ///
@@ -453,29 +465,32 @@ pub struct Zip<Parts, D> {
     layout: Layout,
 }
 
-impl<P, D> Zip<(P, ), D>
-    where D: Dimension,
-          P: NdProducer<Dim=D>
+impl<P, D> Zip<(P,), D>
+where
+    D: Dimension,
+    P: NdProducer<Dim = D>,
 {
     /// Create a new `Zip` from the input array or other producer `p`.
     ///
     /// The Zip will take the exact dimension of `p` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     pub fn from<IP>(p: IP) -> Self
-        where IP: IntoNdProducer<Dim=D, Output=P, Item=P::Item>
+    where
+        IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>,
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
         Zip {
             dimension: dim,
             layout: array.layout(),
-            parts: (array, ),
+            parts: (array,),
         }
     }
 }
 impl<P, D> Zip<(Indices<D>, P), D>
-    where D: Dimension + Copy,
-          P: NdProducer<Dim=D>,
+where
+    D: Dimension + Copy,
+    P: NdProducer<Dim = D>,
 {
     /// Create a new `Zip` with an index producer and the producer `p`.
     ///
@@ -484,7 +499,8 @@ impl<P, D> Zip<(Indices<D>, P), D>
     ///
     /// *Note:* Indexed zip has overhead.
     pub fn indexed<IP>(p: IP) -> Self
-        where IP: IntoNdProducer<Dim=D, Output=P, Item=P::Item>
+    where
+        IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>,
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
@@ -493,15 +509,19 @@ impl<P, D> Zip<(Indices<D>, P), D>
 }
 
 impl<Parts, D> Zip<Parts, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
-
     fn check<P>(&self, part: &P)
-        where P: NdProducer<Dim=D>
+    where
+        P: NdProducer<Dim = D>,
     {
-        ndassert!(part.equal_dim(&self.dimension),
+        ndassert!(
+            part.equal_dim(&self.dimension),
             "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
-            self.dimension, part.raw_dim());
+            self.dimension,
+            part.raw_dim()
+        );
     }
 
     /// Return a the number of element tuples in the Zip
@@ -521,23 +541,32 @@ impl<Parts, D> Zip<Parts, D>
     /// others.
     fn max_stride_axis(&self) -> Axis {
         let i = match self.layout.flag() {
-            FORDER => self.dimension.slice().iter()
-                          .rposition(|&len| len > 1).unwrap_or(self.dimension.ndim() - 1),
+            FORDER => self
+                .dimension
+                .slice()
+                .iter()
+                .rposition(|&len| len > 1)
+                .unwrap_or(self.dimension.ndim() - 1),
             /* corder or default */
-            _ => self.dimension.slice().iter()
-                          .position(|&len| len > 1).unwrap_or(0),
+            _ => self
+                .dimension
+                .slice()
+                .iter()
+                .position(|&len| len > 1)
+                .unwrap_or(0),
         };
         Axis(i)
     }
-
 }
 
 impl<P, D> Zip<P, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     fn apply_core<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
-        where F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
-              P: ZippableTuple<Dim=D>,
+    where
+        F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
+        P: ZippableTuple<Dim = D>,
     {
         if self.layout.is(CORDER | FORDER) {
             self.apply_core_contiguous(acc, function)
@@ -546,8 +575,9 @@ impl<P, D> Zip<P, D>
         }
     }
     fn apply_core_contiguous<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
-        where F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
-              P: ZippableTuple<Dim=D>,
+    where
+        F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
+        P: ZippableTuple<Dim = D>,
     {
         debug_assert!(self.layout.is(CORDER | FORDER));
         let size = self.dimension.size();
@@ -563,8 +593,9 @@ impl<P, D> Zip<P, D>
     }
 
     fn apply_core_strided<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
-        where F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
-              P: ZippableTuple<Dim=D>,
+    where
+        F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
+        P: ZippableTuple<Dim = D>,
     {
         let n = self.dimension.ndim();
         if n == 0 {
@@ -607,7 +638,6 @@ impl<T> Offset for *mut T {
 }
 */
 
-
 trait OffsetTuple {
     type Args;
     unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self;
@@ -636,7 +666,7 @@ macro_rules! offset_impl {
     }
 }
 
-offset_impl!{
+offset_impl! {
     [A ][ a],
     [A B][ a b],
     [A B C][ a b c],
@@ -695,7 +725,7 @@ macro_rules! zipt_impl {
     }
 }
 
-zipt_impl!{
+zipt_impl! {
     [A ][ a],
     [A B][ a b],
     [A B C][ a b c],
@@ -831,7 +861,7 @@ macro_rules! map_impl {
     }
 }
 
-map_impl!{
+map_impl! {
     [true P1],
     [true P1 P2],
     [true P1 P2 P3],
@@ -853,7 +883,7 @@ impl<T> FoldWhile<T> {
     /// Return the inner value
     pub fn into_inner(self) -> T {
         match self {
-            FoldWhile::Continue(x) | FoldWhile::Done(x) => x
+            FoldWhile::Continue(x) | FoldWhile::Done(x) => x,
         }
     }
 

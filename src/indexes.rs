@@ -5,13 +5,13 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::{ArrayBase, Data};
 use super::Dimension;
 use crate::dimension::IntoDimension;
+use crate::zip::{Offset, Splittable};
 use crate::Axis;
 use crate::Layout;
 use crate::NdProducer;
-use crate::zip::{Offset, Splittable};
+use crate::{ArrayBase, Data};
 
 /// An iterator over the indexes of an array shape.
 ///
@@ -27,7 +27,8 @@ pub struct IndicesIter<D> {
 /// *Note:* prefer higher order methods, arithmetic operations and
 /// non-indexed iteration before using indices.
 pub fn indices<E>(shape: E) -> Indices<E::Dim>
-    where E: IntoDimension,
+where
+    E: IntoDimension,
 {
     let dim = shape.into_dimension();
     Indices {
@@ -41,13 +42,16 @@ pub fn indices<E>(shape: E) -> Indices<E::Dim>
 /// *Note:* prefer higher order methods, arithmetic operations and
 /// non-indexed iteration before using indices.
 pub fn indices_of<S, D>(array: &ArrayBase<S, D>) -> Indices<D>
-    where S: Data, D: Dimension,
+where
+    S: Data,
+    D: Dimension,
 {
     indices(array.dim())
 }
 
 impl<D> Iterator for IndicesIter<D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     type Item = D::Pattern;
     #[inline]
@@ -64,12 +68,13 @@ impl<D> Iterator for IndicesIter<D>
         let l = match self.index {
             None => 0,
             Some(ref ix) => {
-                let gone = self.dim
-                               .default_strides()
-                               .slice()
-                               .iter()
-                               .zip(ix.slice().iter())
-                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                let gone = self
+                    .dim
+                    .default_strides()
+                    .slice()
+                    .iter()
+                    .zip(ix.slice().iter())
+                    .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
                 self.dim.size() - gone
             }
         };
@@ -77,12 +82,11 @@ impl<D> Iterator for IndicesIter<D>
     }
 }
 
-impl<D> ExactSizeIterator for IndicesIter<D>
-    where D: Dimension
-{}
+impl<D> ExactSizeIterator for IndicesIter<D> where D: Dimension {}
 
 impl<D> IntoIterator for Indices<D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     type Item = D::Pattern;
     type IntoIter = IndicesIter<D>;
@@ -101,7 +105,8 @@ impl<D> IntoIterator for Indices<D>
 /// `Indices` is an `NdProducer` that produces the indices of an array shape.
 #[derive(Copy, Clone, Debug)]
 pub struct Indices<D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     start: D,
     dim: D,
@@ -113,7 +118,8 @@ pub struct IndexPtr<D> {
 }
 
 impl<D> Offset for IndexPtr<D>
-    where D: Dimension + Copy,
+where
+    D: Dimension + Copy,
 {
     // stride: The axis to increment
     type Stride = usize;
@@ -122,7 +128,7 @@ impl<D> Offset for IndexPtr<D>
         self.index[stride] += index;
         self
     }
-    private_impl!{}
+    private_impl! {}
 }
 
 impl<D: Dimension + Copy> NdProducer for Indices<D> {
@@ -131,7 +137,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
     type Ptr = IndexPtr<D>;
     type Stride = usize;
 
-    private_impl!{}
+    private_impl! {}
 
     #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
@@ -145,9 +151,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
 
     #[doc(hidden)]
     fn as_ptr(&self) -> Self::Ptr {
-        IndexPtr {
-            index: self.start,
-        }
+        IndexPtr { index: self.start }
     }
 
     #[doc(hidden)]
@@ -177,7 +181,9 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
     }
 
     #[inline(always)]
-    fn contiguous_stride(&self) -> Self::Stride { 0 }
+    fn contiguous_stride(&self) -> Self::Stride {
+        0
+    }
 
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
@@ -185,14 +191,16 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
         let mut start_b = start_a;
         let (a, b) = self.dim.split_at(axis, index);
         start_b[axis.index()] += index;
-        (Indices {
-            start: start_a,
-            dim: a,
-        },
-        Indices {
-            start: start_b,
-            dim: b,
-        })
+        (
+            Indices {
+                start: start_a,
+                dim: a,
+            },
+            Indices {
+                start: start_b,
+                dim: b,
+            },
+        )
     }
 }
 
@@ -207,7 +215,8 @@ pub struct IndicesIterF<D> {
 }
 
 pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
-    where E: IntoDimension,
+where
+    E: IntoDimension,
 {
     let dim = shape.into_dimension();
     let zero = E::Dim::zeros(dim.ndim());
@@ -219,7 +228,8 @@ pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
 }
 
 impl<D> Iterator for IndicesIterF<D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     type Item = D::Pattern;
     #[inline]
@@ -239,12 +249,13 @@ impl<D> Iterator for IndicesIterF<D>
         }
         let l = match self.index {
             ref ix => {
-                let gone = self.dim
-                               .fortran_strides()
-                               .slice()
-                               .iter()
-                               .zip(ix.slice().iter())
-                               .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                let gone = self
+                    .dim
+                    .fortran_strides()
+                    .slice()
+                    .iter()
+                    .zip(ix.slice().iter())
+                    .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
                 self.dim.size() - gone
             }
         };
@@ -252,10 +263,7 @@ impl<D> Iterator for IndicesIterF<D>
     }
 }
 
-impl<D> ExactSizeIterator for IndicesIterF<D>
-    where D: Dimension
-{}
-
+impl<D> ExactSizeIterator for IndicesIterF<D> where D: Dimension {}
 
 #[cfg(test)]
 mod tests {

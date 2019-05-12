@@ -5,16 +5,9 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::fmt;
-use super::{
-    ArrayBase,
-    Axis,
-    Data,
-    Dimension,
-    NdProducer,
-    Ix
-};
+use super::{ArrayBase, Axis, Data, Dimension, Ix, NdProducer};
 use crate::aliases::Ix1;
+use std::fmt;
 
 const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
@@ -22,10 +15,11 @@ fn format_1d_array<A, S, F>(
     view: &ArrayBase<S, Ix1>,
     f: &mut fmt::Formatter,
     mut format: F,
-    limit: Ix) -> fmt::Result
-    where
-        F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
-        S: Data<Elem=A>,
+    limit: Ix,
+) -> fmt::Result
+where
+    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+    S: Data<Elem = A>,
 {
     let to_be_printed = to_be_printed(view.len(), limit);
 
@@ -39,7 +33,7 @@ fn format_1d_array<A, S, F>(
                 if j != n_to_be_printed - 1 {
                     write!(f, ", ")?;
                 }
-            },
+            }
             PrintableCell::Ellipses => write!(f, "..., ")?,
         }
     }
@@ -48,8 +42,8 @@ fn format_1d_array<A, S, F>(
 }
 
 enum PrintableCell {
-  ElementIndex(usize),
-  Ellipses,
+    ElementIndex(usize),
+    Ellipses,
 }
 
 // Returns what indexes should be printed for a certain axis.
@@ -57,11 +51,14 @@ enum PrintableCell {
 // where indexes are being omitted.
 fn to_be_printed(length: usize, limit: usize) -> Vec<PrintableCell> {
     if length <= 2 * limit {
-        (0..length).map(|x| PrintableCell::ElementIndex(x)).collect()
+        (0..length)
+            .map(|x| PrintableCell::ElementIndex(x))
+            .collect()
     } else {
-        let mut v: Vec<PrintableCell> = (0..limit).map(|x| PrintableCell::ElementIndex(x)).collect();
+        let mut v: Vec<PrintableCell> =
+            (0..limit).map(|x| PrintableCell::ElementIndex(x)).collect();
         v.push(PrintableCell::Ellipses);
-        v.extend((length-limit..length).map(|x| PrintableCell::ElementIndex(x)));
+        v.extend((length - limit..length).map(|x| PrintableCell::ElementIndex(x)));
         v
     }
 }
@@ -70,23 +67,29 @@ fn format_array<A, S, D, F>(
     view: &ArrayBase<S, D>,
     f: &mut fmt::Formatter,
     mut format: F,
-    limit: Ix) -> fmt::Result
+    limit: Ix,
+) -> fmt::Result
 where
     F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result + Clone,
     D: Dimension,
-    S: Data<Elem=A>,
+    S: Data<Elem = A>,
 {
     // If any of the axes has 0 length, we return the same empty array representation
     // e.g. [[]] for 2-d arrays
     if view.shape().iter().any(|&x| x == 0) {
         write!(f, "{}{}", "[".repeat(view.ndim()), "]".repeat(view.ndim()))?;
-        return Ok(())
+        return Ok(());
     }
     match view.shape() {
         // If it's 0 dimensional, we just print out the scalar
         [] => format(view.iter().next().unwrap(), f)?,
         // We delegate 1-dimensional arrays to a specialized function
-        [_] => format_1d_array(&view.view().into_dimensionality::<Ix1>().unwrap(), f, format, limit)?,
+        [_] => format_1d_array(
+            &view.view().into_dimensionality::<Ix1>().unwrap(),
+            f,
+            format,
+            limit,
+        )?,
         // For n-dimensional arrays, we proceed recursively
         shape => {
             // Cast into a dynamically dimensioned view
@@ -103,16 +106,14 @@ where
                 match index {
                     PrintableCell::ElementIndex(i) => {
                         // Proceed recursively with the (n-1)-dimensional slice
-                        format_array(
-                            &view.index_axis(Axis(0), i), f, format.clone(), limit
-                        )?;
+                        format_array(&view.index_axis(Axis(0), i), f, format.clone(), limit)?;
                         // We need to add a separator after each slice,
                         // apart from the last one
                         if j != n_to_be_printed - 1 {
                             write!(f, ",\n ")?
                         }
-                    },
-                    PrintableCell::Ellipses => write!(f, "...,\n ")?
+                    }
+                    PrintableCell::Ellipses => write!(f, "...,\n ")?,
                 }
             }
             write!(f, "]")?;
@@ -127,7 +128,8 @@ where
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
@@ -139,13 +141,19 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Add extra information for Debug
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)?;
-        write!(f, " shape={:?}, strides={:?}, layout={:?}",
-               self.shape(), self.strides(), layout=self.view().layout())?;
+        write!(
+            f,
+            " shape={:?}, strides={:?}, layout={:?}",
+            self.shape(),
+            self.strides(),
+            layout = self.view().layout()
+        )?;
         match D::NDIM {
             Some(ndim) => write!(f, ", const ndim={}", ndim)?,
             None => write!(f, ", dynamic ndim={}", self.ndim())?,
@@ -159,7 +167,8 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
@@ -171,7 +180,8 @@ impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
@@ -182,7 +192,8 @@ impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
@@ -194,7 +205,8 @@ impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
 ///
 /// The array is shown in multiline style.
 impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
-    where S: Data<Elem=A>,
+where
+    S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
@@ -203,8 +215,8 @@ impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
 
 #[cfg(test)]
 mod formatting_with_omit {
-    use crate::prelude::*;
     use super::*;
+    use crate::prelude::*;
 
     fn print_output_diff(expected: &str, actual: &str) {
         println!("Expected output:\n{}\nActual output:\n{}", expected, actual);
@@ -241,15 +253,15 @@ mod formatting_with_omit {
     #[test]
     fn dim_1() {
         let overflow: usize = 5;
-        let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, ), 1);
+        let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow,), 1);
         let mut expected_output = String::from("[");
         a.iter()
             .take(PRINT_ELEMENTS_LIMIT)
-            .for_each(|elem| { expected_output.push_str(format!("{}, ", elem).as_str()) });
+            .for_each(|elem| expected_output.push_str(format!("{}, ", elem).as_str()));
         expected_output.push_str("...");
         a.iter()
             .skip(PRINT_ELEMENTS_LIMIT + overflow)
-            .for_each(|elem| { expected_output.push_str(format!(", {}", elem).as_str()) });
+            .for_each(|elem| expected_output.push_str(format!(", {}", elem).as_str()));
         expected_output.push(']');
         let actual_output = format!("{}", a);
 
@@ -260,7 +272,10 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_last_axis_overflow() {
         let overflow: usize = 3;
-        let a = Array2::from_elem((PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow), 1);
+        let a = Array2::from_elem(
+            (PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow),
+            1,
+        );
         let mut expected_output = String::from("[");
 
         for i in 0..PRINT_ELEMENTS_LIMIT {
@@ -272,7 +287,11 @@ mod formatting_with_omit {
             for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
                 expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
             }
-            expected_output.push_str(if i < PRINT_ELEMENTS_LIMIT - 1 { "],\n " } else { "]" });
+            expected_output.push_str(if i < PRINT_ELEMENTS_LIMIT - 1 {
+                "],\n "
+            } else {
+                "]"
+            });
         }
         expected_output.push(']');
         let actual_output = format!("{}", a);
@@ -284,7 +303,10 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_non_last_axis_overflow() {
         let overflow: usize = 5;
-        let a = Array2::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT), 1);
+        let a = Array2::from_elem(
+            (PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT),
+            1,
+        );
         let mut expected_output = String::from("[");
 
         for i in 0..PRINT_ELEMENTS_LIMIT {
@@ -317,7 +339,11 @@ mod formatting_with_omit {
     fn dim_2_multi_directional_overflow() {
         let overflow: usize = 5;
         let a = Array2::from_elem(
-            (PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT * 2 + overflow), 1
+            (
+                PRINT_ELEMENTS_LIMIT * 2 + overflow,
+                PRINT_ELEMENTS_LIMIT * 2 + overflow,
+            ),
+            1,
         );
         let mut expected_output = String::from("[");
 

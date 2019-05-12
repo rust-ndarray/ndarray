@@ -1,11 +1,12 @@
-use ndarray::{Array, RcArray, Dimension, ArrayView, ArrayViewMut};
+use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, RcArray};
 
 use NdarrayIntoParallelIterator;
 use Parallel;
 
 impl<'a, A, D> NdarrayIntoParallelIterator for &'a Array<A, D>
-    where D: Dimension,
-          A: Sync
+where
+    D: Dimension,
+    A: Sync,
 {
     type Item = &'a A;
     type Iter = Parallel<ArrayView<'a, A, D>>;
@@ -16,8 +17,9 @@ impl<'a, A, D> NdarrayIntoParallelIterator for &'a Array<A, D>
 
 // This is allowed: goes through `.view()`
 impl<'a, A, D> NdarrayIntoParallelIterator for &'a RcArray<A, D>
-    where D: Dimension,
-          A: Sync
+where
+    D: Dimension,
+    A: Sync,
 {
     type Item = &'a A;
     type Iter = Parallel<ArrayView<'a, A, D>>;
@@ -27,8 +29,9 @@ impl<'a, A, D> NdarrayIntoParallelIterator for &'a RcArray<A, D>
 }
 
 impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut Array<A, D>
-    where D: Dimension,
-          A: Sync + Send
+where
+    D: Dimension,
+    A: Sync + Send,
 {
     type Item = &'a mut A;
     type Iter = Parallel<ArrayViewMut<'a, A, D>>;
@@ -39,8 +42,9 @@ impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut Array<A, D>
 
 // This is allowed: goes through `.view_mut()`, which is unique access
 impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut RcArray<A, D>
-    where D: Dimension,
-          A: Sync + Send + Clone,
+where
+    D: Dimension,
+    A: Sync + Send + Clone,
 {
     type Item = &'a mut A;
     type Iter = Parallel<ArrayViewMut<'a, A, D>>;

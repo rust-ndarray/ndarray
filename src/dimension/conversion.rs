@@ -8,10 +8,10 @@
 
 //! Tuple to array conversion, IntoDimension, and related things
 
-use std::ops::{Index, IndexMut};
 use num_traits::Zero;
+use std::ops::{Index, IndexMut};
 
-use crate::{Ix, Ix1, IxDyn, Dimension, Dim, IxDynImpl};
+use crate::{Dim, Dimension, Ix, Ix1, IxDyn, IxDynImpl};
 
 /// $m: macro callback
 /// $m is called with $arg and then the indices corresponding to the size argument
@@ -46,25 +46,36 @@ pub trait IntoDimension {
 impl IntoDimension for Ix {
     type Dim = Ix1;
     #[inline(always)]
-    fn into_dimension(self) -> Ix1 { Ix1(self) }
+    fn into_dimension(self) -> Ix1 {
+        Ix1(self)
+    }
 }
 
-impl<D> IntoDimension for D where D: Dimension {
+impl<D> IntoDimension for D
+where
+    D: Dimension,
+{
     type Dim = D;
     #[inline(always)]
-    fn into_dimension(self) -> Self { self }
+    fn into_dimension(self) -> Self {
+        self
+    }
 }
 
 impl IntoDimension for IxDynImpl {
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim { Dim::new(self) }
+    fn into_dimension(self) -> Self::Dim {
+        Dim::new(self)
+    }
 }
 
 impl IntoDimension for Vec<Ix> {
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim { Dim::new(IxDynImpl::from(self)) }
+    fn into_dimension(self) -> Self::Dim {
+        Dim::new(IxDynImpl::from(self))
+    }
 }
 
 pub trait Convert {
@@ -73,7 +84,9 @@ pub trait Convert {
 }
 
 macro_rules! sub {
-    ($_x:tt $y:tt) => ($y);
+    ($_x:tt $y:tt) => {
+        $y
+    };
 }
 
 macro_rules! tuple_type {

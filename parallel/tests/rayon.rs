@@ -1,7 +1,6 @@
-
-extern crate rayon;
 extern crate ndarray;
 extern crate ndarray_parallel;
+extern crate rayon;
 
 use ndarray::prelude::*;
 use ndarray_parallel::prelude::*;
@@ -23,9 +22,13 @@ fn test_axis_iter() {
 
 #[test]
 fn test_axis_iter_mut() {
-    let mut a = Array::linspace(0., 1.0f64, M * N).into_shape((M, N)).unwrap();
+    let mut a = Array::linspace(0., 1.0f64, M * N)
+        .into_shape((M, N))
+        .unwrap();
     let b = a.mapv(|x| x.exp());
-    a.axis_iter_mut(Axis(0)).into_par_iter().for_each(|mut v| v.mapv_inplace(|x| x.exp()));
+    a.axis_iter_mut(Axis(0))
+        .into_par_iter()
+        .for_each(|mut v| v.mapv_inplace(|x| x.exp()));
     println!("{:?}", a.slice(s![..10, ..5]));
     assert!(a.all_close(&b, 0.001));
 }
