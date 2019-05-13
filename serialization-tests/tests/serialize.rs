@@ -1,10 +1,7 @@
 extern crate ndarray;
-
-extern crate serde;
-
-extern crate serde_json;
-
 extern crate rmp_serde;
+extern crate serde;
+extern crate serde_json;
 
 #[cfg(feature = "ron")]
 extern crate ron;

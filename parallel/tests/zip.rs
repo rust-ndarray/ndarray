@@ -2,8 +2,6 @@ extern crate ndarray;
 extern crate ndarray_parallel;
 
 use ndarray::prelude::*;
-use ndarray_parallel::prelude::*;
-
 use ndarray::Zip;
 
 const M: usize = 1024 * 10;

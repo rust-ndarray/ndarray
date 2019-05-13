@@ -1,7 +1,9 @@
+extern crate approx;
 extern crate itertools;
 extern crate ndarray;
 extern crate ndarray_parallel;
 
+use approx::assert_abs_diff_eq;
 use itertools::enumerate;
 use ndarray::prelude::*;
 use ndarray_parallel::par_azip;
@@ -37,7 +39,7 @@ fn test_par_azip3() {
         *c = a.sin();
     });
     let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
-    assert!(res.all_close(&ArrayView::from(&c), 1e-4));
+    assert_abs_diff_eq!(res, ArrayView::from(&c), epsilon = 1e-4);
 }
 
 #[should_panic]

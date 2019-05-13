@@ -1,7 +1,9 @@
+extern crate approx;
 extern crate ndarray;
 extern crate ndarray_parallel;
 extern crate rayon;
 
+use approx::assert_abs_diff_eq;
 use ndarray::prelude::*;
 use ndarray_parallel::prelude::*;
 
@@ -30,7 +32,7 @@ fn test_axis_iter_mut() {
         .into_par_iter()
         .for_each(|mut v| v.mapv_inplace(|x| x.exp()));
     println!("{:?}", a.slice(s![..10, ..5]));
-    assert!(a.all_close(&b, 0.001));
+    assert_abs_diff_eq!(a, b, epsilon = 1e-3);
 }
 
 #[test]
