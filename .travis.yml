@@ -1,34 +1,45 @@
 language: rust
-# use trusty for newer openblas
+
 sudo: required
-dist: trusty
+
+rust:
+  - 1.32.0
+  - stable
+  - beta
+  - nightly
+
 matrix:
-  include:
-    - rust: 1.32.0
-      env:
-       - FEATURES='test docs'
-       - RUSTFLAGS='-D warnings'
-    - rust: stable
-      env:
-       - FEATURES='test docs'
-       - RUSTFLAGS='-D warnings'
+  allow_failures:
     - rust: beta
-      env:
-       - FEATURES='test docs'
-       - CHANNEL='beta'
-       - RUSTFLAGS='-D warnings'
     - rust: nightly
-      env:
-       - FEATURES='test docs'
-       - CHANNEL='nightly'
+
 env:
   global:
-    - HOST=x86_64-unknown-linux-gnu
-    - CARGO_INCREMENTAL=0
+    - RUSTFLAGS="-D warnings"
+    - FEATURES="blas serde-1 docs"
+
+cache: cargo
+
 addons:
   apt:
+    update: true
     packages:
       - libopenblas-dev
       - gfortran
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
+      - libgsl0-dev
+
+before_script:
+  - ./ci/before_script.sh
+
 script:
-  - ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
+  - ./ci/script.sh
+
+after_success:
+  - ./ci/after_success.sh

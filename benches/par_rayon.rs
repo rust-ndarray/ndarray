@@ -1,3 +1,4 @@
+#![cfg(feature = "nightly")]
 #![cfg(feature = "rayon")]
 #![feature(test)]
 

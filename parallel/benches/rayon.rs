@@ -1,3 +1,4 @@
+#![cfg(feature = "nightly")]
 #![feature(test)]
 
 extern crate num_cpus;

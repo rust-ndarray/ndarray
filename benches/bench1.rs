@@ -1,3 +1,4 @@
+#![cfg(feature = "nightly")]
 #![feature(test)]
 #![allow(unused_imports)]
 #![allow(
