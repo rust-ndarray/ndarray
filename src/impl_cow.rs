@@ -14,8 +14,8 @@ use crate::imp_prelude::*;
 ///
 /// [`ArrayBase`]: struct.ArrayBase.html
 impl<'a, A, D> ArrayCow<'a, A, D>
-    where
-        D: Dimension,
+where
+    D: Dimension,
 {
     pub fn is_view(&self) -> bool {
         self.data.is_view()
@@ -27,8 +27,8 @@ impl<'a, A, D> ArrayCow<'a, A, D>
 }
 
 impl<'a, A, D> From<ArrayView<'a, A, D>> for ArrayCow<'a, A, D>
-    where
-        D: Dimension,
+where
+    D: Dimension,
 {
     fn from(view: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
         ArrayBase {
@@ -41,8 +41,8 @@ impl<'a, A, D> From<ArrayView<'a, A, D>> for ArrayCow<'a, A, D>
 }
 
 impl<'a, A, D> From<Array<A, D>> for ArrayCow<'a, A, D>
-    where
-        D: Dimension,
+where
+    D: Dimension,
 {
     fn from(array: Array<A, D>) -> ArrayCow<'a, A, D> {
         ArrayBase {
