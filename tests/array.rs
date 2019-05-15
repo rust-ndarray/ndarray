@@ -1963,33 +1963,16 @@ fn array_macros() {
 #[cfg(test)]
 mod array_cow_tests {
     use super::*;
-    use ndarray::Data;
-
-    fn is_content_identical<A, S1, S2, D>(arr1: &ArrayBase<S1, D>, arr2: &ArrayBase<S2, D>) -> bool
-        where A: Clone + PartialEq,
-              S1: Data<Elem=A>,
-              S2: Data<Elem=A>,
-              D: Dimension
-    {
-        arr1.iter().zip(arr2.iter()).all(|(x1, x2)| x1 == x2)
-    }
 
     #[test]
-    fn test_is_view() {
+    fn test_is_variant() {
         let arr: Array<i32, Ix2> = array![[1, 2], [3, 4]];
         let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
         assert!(arr_cow.is_view());
-        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
-        assert!(!arr_cow.is_view());
-    }
-
-    #[test]
-    fn test_is_owned() {
-        let arr: Array<i32, Ix2> = array![[1, 2], [3, 4]];
+        assert!(!arr_cow.is_owned());
         let arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
         assert!(arr_cow.is_owned());
-        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
-        assert!(!arr_cow.is_owned());
+        assert!(!arr_cow.is_view());
     }
 
     #[test]
@@ -1999,13 +1982,13 @@ mod array_cow_tests {
         arr_cow[(1, 1)] = 2;
         let expected_arr: Array2<i32> = array![[1, 2], [3, 2]];
         assert!(arr_cow.is_owned());
-        assert!(is_content_identical(&arr_cow, &expected_arr));
+        assert_eq!(arr_cow, expected_arr);
 
         let mut arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
         let prev_ptr = arr_cow.as_ptr();
         arr_cow[(1, 1)] = 2;
         assert_eq!(arr_cow.as_ptr(), prev_ptr);
-        assert!(is_content_identical(&arr_cow, &expected_arr));
+        assert_eq!(arr_cow, expected_arr);
     }
 
     #[test]
@@ -2014,14 +1997,14 @@ mod array_cow_tests {
         let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
         let arr_cow_clone = arr_cow.clone();
         assert!(arr_cow_clone.is_view());
-        assert!(is_content_identical(&arr_cow, &arr_cow_clone));
+        assert_eq!(arr_cow, arr_cow_clone);
         assert_eq!(arr_cow.dim(), arr_cow_clone.dim());
         assert_eq!(arr_cow.strides(), arr_cow_clone.strides());
 
         let arr_cow = ArrayCow::<i32, Ix2>::from(arr.clone());
         let arr_cow_clone = arr_cow.clone();
         assert!(arr_cow_clone.is_owned());
-        assert!(is_content_identical(&arr_cow, &arr_cow_clone));
+        assert_eq!(arr_cow, arr_cow_clone);
         assert_eq!(arr_cow.dim(), arr_cow_clone.dim());
         assert_eq!(arr_cow.strides(), arr_cow_clone.strides());
     }
@@ -2032,7 +2015,7 @@ mod array_cow_tests {
         let other_arr: Array2<i32> = array![[11, 12], [13, 14]];
 
         fn perform_checks(arr1: &ArrayCow<i32, Ix2>, arr2: &ArrayCow<i32, Ix2>) {
-            assert!(is_content_identical(arr1, arr2));
+            assert_eq!(arr1, arr2);
             assert_eq!(arr1.dim(), arr2.dim());
             assert_eq!(arr1.strides(), arr2.strides());
         }
@@ -2066,12 +2049,12 @@ mod array_cow_tests {
     fn test_into_owned() {
         let arr: Array2<i32> = array![[1, 2], [3, 4]];
         let cont_arr = ArrayCow::<i32, Ix2>::from(arr.view()).into_owned();
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
 
         let cont_arr = ArrayCow::<i32, Ix2>::from(arr.clone());
         let prev_ptr = cont_arr.as_ptr();
         let cont_arr = cont_arr.into_owned();
         assert_eq!(cont_arr.as_ptr(), prev_ptr);
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
     }
 }
