@@ -5,11 +5,9 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::fmt;
+use super::Dimension;
 use std::error::Error;
-use super::{
-    Dimension,
-};
+use std::fmt;
 
 /// An error related to array shape or layout.
 #[derive(Clone)]
@@ -55,9 +53,7 @@ pub enum ErrorKind {
 
 #[inline(always)]
 pub fn from_kind(k: ErrorKind) -> ShapeError {
-    ShapeError {
-        repr: k
-    }
+    ShapeError { repr: k }
 }
 
 impl PartialEq for ErrorKind {
@@ -101,8 +97,9 @@ impl fmt::Debug for ShapeError {
 }
 
 pub fn incompatible_shapes<D, E>(_a: &D, _b: &E) -> ShapeError
-    where D: Dimension,
-          E: Dimension
+where
+    D: Dimension,
+    E: Dimension,
 {
     from_kind(ErrorKind::IncompatibleShape)
 }

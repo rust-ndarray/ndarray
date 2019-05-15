@@ -5,7 +5,8 @@ authors = ["bluss"]
 publish = false
 
 [dependencies]
-ndarray = { path = ".." }
+approx = "0.3.2"
+ndarray = { path = "..", features = ["approx"] }
 ndarray-rand = { path = "../ndarray-rand/" }
 rand = "0.6.0"
 

@@ -1,19 +1,15 @@
 #![allow(non_snake_case)]
 
-extern crate ndarray;
 extern crate defmac;
 extern crate itertools;
+extern crate ndarray;
 
-use ndarray::{Slice, SliceInfo, SliceOrIndex};
-use ndarray::prelude::*;
-use ndarray::{
-    rcarr2,
-    arr3,
-    multislice,
-};
-use ndarray::indices;
 use defmac::defmac;
-use itertools::{enumerate, zip};
+use itertools::{enumerate, zip, Itertools};
+use ndarray::indices;
+use ndarray::prelude::*;
+use ndarray::{arr3, multislice, rcarr2};
+use ndarray::{Slice, SliceInfo, SliceOrIndex};
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -30,8 +26,7 @@ macro_rules! assert_panics {
 }
 
 #[test]
-fn test_matmul_arcarray()
-{
+fn test_matmul_arcarray() {
     let mut A = ArcArray::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
@@ -47,24 +42,23 @@ fn test_matmul_arcarray()
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
     unsafe {
-        let result = ArcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
+        let result =
+            ArcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
         assert_eq!(c.shape(), result.shape());
-        assert!(c.iter().zip(result.iter()).all(|(a,b)| a == b));
+        assert!(c.iter().zip(result.iter()).all(|(a, b)| a == b));
         assert!(c == result);
     }
 }
 
 #[allow(unused)]
-fn arrayview_shrink_lifetime<'a, 'b: 'a>(view: ArrayView1<'b, f64>)
-    -> ArrayView1<'a, f64>
-{
+fn arrayview_shrink_lifetime<'a, 'b: 'a>(view: ArrayView1<'b, f64>) -> ArrayView1<'a, f64> {
     view.reborrow()
 }
 
 #[allow(unused)]
-fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(view: ArrayViewMut1<'b, f64>)
-    -> ArrayViewMut1<'a, f64>
-{
+fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(
+    view: ArrayViewMut1<'b, f64>,
+) -> ArrayViewMut1<'a, f64> {
     view.reborrow()
 }
 
@@ -72,18 +66,16 @@ fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(view: ArrayViewMut1<'b, f64>)
 fn test_mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let a = ArcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize ).reshape((n, m));
+    let a = ArcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize).reshape((n, m));
     let b = ArcArray::eye(m);
     assert_eq!(a.dot(&b), a);
     let c = ArcArray::eye(n);
     assert_eq!(c.dot(&a), a);
 }
 
-
 #[deny(unsafe_code)]
 #[test]
-fn test_slice()
-{
+fn test_slice() {
     let mut A = ArcArray::<usize, _>::zeros((3, 4, 5));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
@@ -111,8 +103,7 @@ fn test_slice_inclusive_range() {
 /// `ArrayView1` and `ArrayView2`, so the compiler needs to determine which
 /// type is the correct result for the `.slice()` call.
 #[test]
-fn test_slice_infer()
-{
+fn test_slice_infer() {
     let a = array![1., 2.];
     let b = array![[3., 4.], [5., 6.]];
     b.slice(s![..-1, ..]).dot(&a);
@@ -132,8 +123,9 @@ fn test_slice_with_many_dim() {
     let correct = array![
         [A[&[0, 0, 0, 0, 0, 1, 0][..]], A[&[0, 0, 2, 0, 0, 1, 0][..]]],
         [A[&[1, 0, 0, 0, 0, 1, 0][..]], A[&[1, 0, 2, 0, 0, 1, 0][..]]]
-    ].into_shape(new_shape)
-        .unwrap();
+    ]
+    .into_shape(new_shape)
+    .unwrap();
     assert_eq!(vi, correct);
 
     let vi = A.slice(s![..2, 0, ..;2, 0, 0, 1, 0]);
@@ -207,7 +199,8 @@ fn test_slice_array_dyn() {
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
-    ]).unwrap();
+    ])
+    .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -221,7 +214,8 @@ fn test_slice_dyninput_array_dyn() {
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
-    ]).unwrap();
+    ])
+    .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -235,7 +229,8 @@ fn test_slice_dyninput_vec_fixed() {
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
-    ]).unwrap();
+    ])
+    .unwrap();
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
     arr.view().slice_move(info.as_ref());
@@ -249,7 +244,8 @@ fn test_slice_dyninput_vec_dyn() {
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
-    ]).unwrap();
+    ])
+    .unwrap();
     arr.slice(info.as_ref());
     arr.slice_mut(info.as_ref());
     arr.view().slice_move(info.as_ref());
@@ -265,24 +261,22 @@ fn test_slice_with_subview() {
 
     let vi = arr.slice(s![1.., 2, ..;2]);
     assert_eq!(vi.shape(), &[2, 2]);
-    assert!(
-        vi.iter()
-            .zip(arr.index_axis(Axis(1), 2).slice(s![1.., ..;2]).iter())
-            .all(|(a, b)| a == b)
-    );
+    assert!(vi
+        .iter()
+        .zip(arr.index_axis(Axis(1), 2).slice(s![1.., ..;2]).iter())
+        .all(|(a, b)| a == b));
 
     let vi = arr.slice(s![1, 2, ..;2]);
     assert_eq!(vi.shape(), &[2]);
-    assert!(
-        vi.iter()
-            .zip(
-                arr.index_axis(Axis(0), 1)
-                    .index_axis(Axis(0), 2)
-                    .slice(s![..;2])
-                    .iter()
-            )
-            .all(|(a, b)| a == b)
-    );
+    assert!(vi
+        .iter()
+        .zip(
+            arr.index_axis(Axis(0), 1)
+                .index_axis(Axis(0), 2)
+                .slice(s![..;2])
+                .iter()
+        )
+        .all(|(a, b)| a == b));
 
     let vi = arr.slice(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[]);
@@ -300,20 +294,18 @@ fn test_slice_collapse_with_indices() {
         let mut vi = arr.view();
         vi.slice_collapse(s![1.., 2, ..;2]);
         assert_eq!(vi.shape(), &[2, 1, 2]);
-        assert!(
-            vi.iter()
-                .zip(arr.slice(s![1.., 2..3, ..;2]).iter())
-                .all(|(a, b)| a == b)
-        );
+        assert!(vi
+            .iter()
+            .zip(arr.slice(s![1.., 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
         vi.slice_collapse(s![1, 2, ..;2]);
         assert_eq!(vi.shape(), &[1, 1, 2]);
-        assert!(
-            vi.iter()
-                .zip(arr.slice(s![1..2, 2..3, ..;2]).iter())
-                .all(|(a, b)| a == b)
-        );
+        assert!(vi
+            .iter()
+            .zip(arr.slice(s![1..2, 2..3, ..;2]).iter())
+            .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
         vi.slice_collapse(s![1, 2, 3]);
@@ -470,8 +462,7 @@ fn index_out_of_bounds() {
 
 #[should_panic]
 #[test]
-fn slice_oob()
-{
+fn slice_oob() {
     let a = ArcArray::<i32, _>::zeros((3, 4));
     let _vi = a.slice(s![..10, ..]);
 }
@@ -485,15 +476,13 @@ fn slice_axis_oob() {
 
 #[should_panic]
 #[test]
-fn slice_wrong_dim()
-{
+fn slice_wrong_dim() {
     let a = ArcArray::<i32, _>::zeros(vec![3, 4, 5]);
     let _vi = a.slice(s![.., ..]);
 }
 
 #[test]
-fn test_index()
-{
+fn test_index() {
     let mut A = ArcArray::<usize, _>::zeros((2, 3));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
@@ -522,8 +511,7 @@ fn test_index_arrays() {
 }
 
 #[test]
-fn test_add()
-{
+fn test_add() {
     let mut A = ArcArray::<usize, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
         *elt = i;
@@ -538,18 +526,16 @@ fn test_add()
 }
 
 #[test]
-fn test_multidim()
-{
-    let mut mat = ArcArray::zeros(2*3*4*5*6).reshape((2,3,4,5,6));
-    mat[(0,0,0,0,0)] = 22u8;
+fn test_multidim() {
+    let mut mat = ArcArray::zeros(2 * 3 * 4 * 5 * 6).reshape((2, 3, 4, 5, 6));
+    mat[(0, 0, 0, 0, 0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
             *elt = i as u8;
         }
     }
-    assert_eq!(mat.shape(), &[2,3,4,5,6]);
+    assert_eq!(mat.shape(), &[2, 3, 4, 5, 6]);
 }
-
 
 /*
 array([[[ 7,  6],
@@ -563,8 +549,7 @@ array([[[ 7,  6],
         [ 9,  8]]])
 */
 #[test]
-fn test_negative_stride_arcarray()
-{
+fn test_negative_stride_arcarray() {
     let mut mat = ArcArray::zeros((2, 4, 2));
     mat[[0, 0, 0]] = 1.0f32;
     for (i, elt) in mat.iter_mut().enumerate() {
@@ -575,7 +560,9 @@ fn test_negative_stride_arcarray()
         let vi = mat.slice(s![.., ..;-1, ..;-1]);
         assert_eq!(vi.shape(), &[2, 4, 2]);
         // Test against sequential iterator
-        let seq = [7f32,6., 5.,4.,3.,2.,1.,0.,15.,14.,13., 12.,11.,  10.,   9.,   8.];
+        let seq = [
+            7f32, 6., 5., 4., 3., 2., 1., 0., 15., 14., 13., 12., 11., 10., 9., 8.,
+        ];
         for (a, b) in vi.clone().iter().zip(seq.iter()) {
             assert_eq!(*a, *b);
         }
@@ -590,9 +577,8 @@ fn test_negative_stride_arcarray()
 }
 
 #[test]
-fn test_cow()
-{
-    let mut mat = ArcArray::zeros((2,2));
+fn test_cow() {
+    let mut mat = ArcArray::zeros((2, 2));
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -623,8 +609,7 @@ fn test_cow()
 }
 
 #[test]
-fn test_cow_shrink()
-{
+fn test_cow_shrink() {
     // A test for clone-on-write in the case that
     // mutation shrinks the array and gives it different strides
     //
@@ -658,14 +643,13 @@ fn test_cow_shrink()
 }
 
 #[test]
-fn test_sub()
-{
+fn test_sub() {
     let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
     let s1 = mat.index_axis(Axis(0), 0);
     let s2 = mat.index_axis(Axis(0), 1);
     assert_eq!(s1.shape(), &[4, 2]);
     assert_eq!(s2.shape(), &[4, 2]);
-    let n = ArcArray::linspace(8., 15., 8).reshape((4,2));
+    let n = ArcArray::linspace(8., 15., 8).reshape((4, 2));
     assert_eq!(n, s2);
     let m = ArcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.index_axis(Axis(1), 1));
@@ -678,36 +662,43 @@ fn test_sub_oob_1() {
     mat.index_axis(Axis(0), 2);
 }
 
-
 #[test]
-fn test_select(){
+#[cfg(feature = "approx")]
+fn test_select() {
+    use approx::assert_abs_diff_eq;
+
     // test for 2-d array
-    let x = arr2(&[[0., 1.], [1.,0.],[1.,0.],[1.,0.],[1.,0.],[0., 1.],[0., 1.]]);
-    let r = x.select(Axis(0),&[1,3,5]);
-    let c = x.select(Axis(1),&[1]);
-    let r_target = arr2(&[[1.,0.],[1.,0.],[0., 1.]]);
-    let c_target = arr2(&[[1.,0.,0.,0.,0., 1., 1.]]);
-    assert!(r.all_close(&r_target,1e-8));
-    assert!(c.all_close(&c_target.t(),1e-8));
+    let x = arr2(&[
+        [0., 1.],
+        [1., 0.],
+        [1., 0.],
+        [1., 0.],
+        [1., 0.],
+        [0., 1.],
+        [0., 1.],
+    ]);
+    let r = x.select(Axis(0), &[1, 3, 5]);
+    let c = x.select(Axis(1), &[1]);
+    let r_target = arr2(&[[1., 0.], [1., 0.], [0., 1.]]);
+    let c_target = arr2(&[[1., 0., 0., 0., 0., 1., 1.]]);
+    assert_abs_diff_eq!(r, r_target);
+    assert_abs_diff_eq!(c, c_target.t());
 
     // test for 3-d array
-    let y = arr3(&[[[1., 2., 3.],
-                    [1.5, 1.5, 3.]],
-                    [[1., 2., 8.],
-                    [1., 2.5, 3.]]]);
-    let r = y.select(Axis(1),&[1]);
-    let c = y.select(Axis(2),&[1]);
+    let y = arr3(&[
+        [[1., 2., 3.], [1.5, 1.5, 3.]],
+        [[1., 2., 8.], [1., 2.5, 3.]],
+    ]);
+    let r = y.select(Axis(1), &[1]);
+    let c = y.select(Axis(2), &[1]);
     let r_target = arr3(&[[[1.5, 1.5, 3.]], [[1., 2.5, 3.]]]);
-    let c_target = arr3(&[[[2.],[1.5]],[[2.],[2.5]]]);
-    assert!(r.all_close(&r_target,1e-8));
-    assert!(c.all_close(&c_target,1e-8));
-
+    let c_target = arr3(&[[[2.], [1.5]], [[2.], [2.5]]]);
+    assert_abs_diff_eq!(r, r_target);
+    assert_abs_diff_eq!(c, c_target);
 }
 
-
 #[test]
-fn diag()
-{
+fn diag() {
     let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
     assert_eq!(d.dim(), 1);
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
@@ -731,7 +722,7 @@ fn merge_axes() {
             assert!(v.merge_axes(Axis($take), Axis($into)));
             assert_eq!(v.len_of(Axis($take)), if merged_len == 0 { 0 } else { 1 });
             assert_eq!(v.len_of(Axis($into)), merged_len);
-        }
+        };
     }
     macro_rules! assert_not_merged {
         ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
@@ -741,7 +732,7 @@ fn merge_axes() {
             assert!(!v.merge_axes(Axis($take), Axis($into)));
             assert_eq!(v.raw_dim(), old_dim);
             assert_eq!(v.strides(), &old_strides[..]);
-        }
+        };
     }
 
     let a = Array4::<u8>::zeros((3, 4, 5, 4));
@@ -811,10 +802,9 @@ fn merge_axes() {
 }
 
 #[test]
-fn swapaxes()
-{
+fn swapaxes() {
     let mut a = arr2(&[[1., 2.], [3., 4.0f32]]);
-    let     b = arr2(&[[1., 3.], [2., 4.0f32]]);
+    let b = arr2(&[[1., 3.], [2., 4.0f32]]);
     assert!(a != b);
     a.swap_axes(0, 1);
     assert_eq!(a, b);
@@ -825,8 +815,7 @@ fn swapaxes()
 }
 
 #[test]
-fn permuted_axes()
-{
+fn permuted_axes() {
     let a = array![1].index_axis_move(Axis(0), 0);
     let permuted = a.view().permuted_axes([]);
     assert_eq!(a, permuted);
@@ -858,31 +847,30 @@ fn permuted_axes()
 
 #[should_panic]
 #[test]
-fn permuted_axes_repeated_axis()
-{
+fn permuted_axes_repeated_axis() {
     let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
     a.view().permuted_axes([1, 0, 1]);
 }
 
 #[should_panic]
 #[test]
-fn permuted_axes_missing_axis()
-{
-    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap().into_dyn();
+fn permuted_axes_missing_axis() {
+    let a = Array::from_iter(0..24)
+        .into_shape((2, 3, 4))
+        .unwrap()
+        .into_dyn();
     a.view().permuted_axes(&[2, 0][..]);
 }
 
 #[should_panic]
 #[test]
-fn permuted_axes_oob()
-{
+fn permuted_axes_oob() {
     let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
     a.view().permuted_axes([1, 0, 3]);
 }
 
 #[test]
-fn standard_layout()
-{
+fn standard_layout() {
     let mut a = arr2(&[[1., 2.], [3., 4.0]]);
     assert!(a.is_standard_layout());
     a.swap_axes(0, 1);
@@ -900,10 +888,9 @@ fn standard_layout()
 }
 
 #[test]
-fn assign()
-{
+fn assign() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
-    let     b = arr2(&[[1., 3.], [2., 4.]]);
+    let b = arr2(&[[1., 3.], [2., 4.]]);
     a.assign(&b);
     assert_eq!(a, b);
 
@@ -926,8 +913,7 @@ fn assign()
 }
 
 #[test]
-fn iter_size_hint()
-{
+fn iter_size_hint() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
     {
         let mut it = a.iter();
@@ -962,8 +948,7 @@ fn iter_size_hint()
 }
 
 #[test]
-fn zero_axes()
-{
+fn zero_axes() {
     let mut a = arr1::<f32>(&[]);
     for _ in a.iter() {
         assert!(false);
@@ -981,8 +966,7 @@ fn zero_axes()
 }
 
 #[test]
-fn equality()
-{
+fn equality() {
     let a = arr2(&[[1., 2.], [3., 4.]]);
     let mut b = arr2(&[[1., 2.], [2., 4.]]);
     assert!(a != b);
@@ -995,8 +979,7 @@ fn equality()
 }
 
 #[test]
-fn map1()
-{
+fn map1() {
     let a = arr2(&[[1., 2.], [3., 4.]]);
     let b = a.map(|&x| (x / 3.) as isize);
     assert_eq!(b, arr2(&[[0, 0], [1, 1]]));
@@ -1006,8 +989,7 @@ fn map1()
 }
 
 #[test]
-fn as_slice_memory_order()
-{
+fn as_slice_memory_order() {
     // test that mutation breaks sharing
     let a = rcarr2(&[[1., 2.], [3., 4.0f32]]);
     let mut b = a.clone();
@@ -1082,9 +1064,9 @@ fn owned_array_discontiguous() {
 
 #[test]
 fn owned_array_discontiguous_drop() {
-    use ::std::rc::Rc;
     use ::std::cell::RefCell;
     use ::std::collections::BTreeSet;
+    use ::std::rc::Rc;
 
     struct InsertOnDrop<T: Ord>(Rc<RefCell<BTreeSet<T>>>, Option<T>);
     impl<T: Ord> Drop for InsertOnDrop<T> {
@@ -1096,7 +1078,9 @@ fn owned_array_discontiguous_drop() {
 
     let set = Rc::new(RefCell::new(BTreeSet::new()));
     {
-        let v: Vec<_> = (0..12).map(|x| InsertOnDrop(set.clone(), Some(x))).collect();
+        let v: Vec<_> = (0..12)
+            .map(|x| InsertOnDrop(set.clone(), Some(x)))
+            .collect();
         let mut a = Array::from_shape_vec((2, 6), v).unwrap();
         // discontiguous and non-zero offset
         a.slice_collapse(s![.., 1..]);
@@ -1109,17 +1093,20 @@ macro_rules! assert_matches {
     ($value:expr, $pat:pat) => {
         match $value {
             $pat => {}
-            ref err => panic!("assertion failed: `{}` matches `{}` found: {:?}",
-                               stringify!($value), stringify!($pat), err),
+            ref err => panic!(
+                "assertion failed: `{}` matches `{}` found: {:?}",
+                stringify!($value),
+                stringify!($pat),
+                err
+            ),
         }
-    }
+    };
 }
 
 #[test]
 fn from_vec_dim_stride_empty_1d() {
     let empty: [f32; 0] = [];
-    assert_matches!(Array::from_shape_vec(0.strides(1), empty.to_vec()),
-                    Ok(_));
+    assert_matches!(Array::from_shape_vec(0.strides(1), empty.to_vec()), Ok(_));
 }
 
 #[test]
@@ -1128,7 +1115,10 @@ fn from_vec_dim_stride_0d() {
     let one = [1.];
     let two = [1., 2.];
     // too few elements
-    assert_matches!(Array::from_shape_vec(().strides(()), empty.to_vec()), Err(_));
+    assert_matches!(
+        Array::from_shape_vec(().strides(()), empty.to_vec()),
+        Err(_)
+    );
     // exact number of elements
     assert_matches!(Array::from_shape_vec(().strides(()), one.to_vec()), Ok(_));
     // too many are ok
@@ -1153,22 +1143,24 @@ fn from_vec_dim_stride_2d_2() {
 
 #[test]
 fn from_vec_dim_stride_2d_3() {
-    let a = arr3(&[[[1]],
-                   [[2]],
-                   [[3]]]);
+    let a = arr3(&[[[1]], [[2]], [[3]]]);
     let d = a.raw_dim();
     let s = d.default_strides();
-    assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
+    assert_matches!(
+        Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()),
+        Ok(_)
+    );
 }
 
 #[test]
 fn from_vec_dim_stride_2d_4() {
-    let a = arr3(&[[[1]],
-                   [[2]],
-                   [[3]]]);
+    let a = arr3(&[[[1]], [[2]], [[3]]]);
     let d = a.raw_dim();
     let s = d.fortran_strides();
-    assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
+    assert_matches!(
+        Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()),
+        Ok(_)
+    );
 }
 
 #[test]
@@ -1176,7 +1168,10 @@ fn from_vec_dim_stride_2d_5() {
     let a = arr3(&[[[1, 2, 3]]]);
     let d = a.raw_dim();
     let s = d.fortran_strides();
-    assert_matches!(Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()), Ok(_));
+    assert_matches!(
+        Array::from_shape_vec(d.strides(s), a.as_slice().unwrap().to_vec()),
+        Ok(_)
+    );
 }
 
 #[test]
@@ -1233,8 +1228,10 @@ fn views() {
     a.clone()[(0, 0)] = 99;
     assert_eq!(b[(0, 0)], 1);
 
-    assert_eq!(a.view().into_iter().cloned().collect::<Vec<_>>(),
-               vec![1, 2, 3, 4]);
+    assert_eq!(
+        a.view().into_iter().cloned().collect::<Vec<_>>(),
+        vec![1, 2, 3, 4]
+    );
 }
 
 #[test]
@@ -1264,28 +1261,24 @@ fn slice_mut() {
     }
     assert_eq!(a, aview2(&[[0, 0], [0, 0]]));
 
-    let mut b = arr2(&[[1, 2, 3],
-                       [4, 5, 6]]);
+    let mut b = arr2(&[[1, 2, 3], [4, 5, 6]]);
     let c = b.clone(); // make sure we can mutate b even if it has to be unshared first
     for elt in b.slice_mut(s![.., ..1]) {
         *elt = 0;
     }
-    assert_eq!(b, aview2(&[[0, 2, 3],
-                           [0, 5, 6]]));
+    assert_eq!(b, aview2(&[[0, 2, 3], [0, 5, 6]]));
     assert!(c != b);
 
     for elt in b.slice_mut(s![.., ..;2]) {
         *elt = 99;
     }
-    assert_eq!(b, aview2(&[[99, 2, 99],
-                           [99, 5, 99]]));
+    assert_eq!(b, aview2(&[[99, 2, 99], [99, 5, 99]]));
 }
 
 #[test]
-fn assign_ops()
-{
+fn assign_ops() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
-    let     b = arr2(&[[1., 3.], [2., 4.]]);
+    let b = arr2(&[[1., 3.], [2., 4.]]);
     (*&mut a.view_mut()) += &b;
     assert_eq!(a, arr2(&[[2., 5.], [5., 8.]]));
 
@@ -1319,32 +1312,28 @@ fn aview_mut() {
             slc += 1;
         }
     }
-    assert_eq!(data, [1, 0, 1, 0,  1, 0, 1, 0,  0, 0, 0, 0,  0, 0, 0, 0]);
+    assert_eq!(data, [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 }
 
 #[test]
 fn transpose_view() {
-    let a = arr2(&[[1, 2],
-                   [3, 4]]);
+    let a = arr2(&[[1, 2], [3, 4]]);
     let at = a.view().reversed_axes();
     assert_eq!(at, arr2(&[[1, 3], [2, 4]]));
 
-    let a = arr2(&[[1, 2, 3],
-                   [4, 5, 6]]);
+    let a = arr2(&[[1, 2, 3], [4, 5, 6]]);
     let at = a.view().reversed_axes();
     assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 6]]));
 }
 
 #[test]
 fn transpose_view_mut() {
-    let mut a = arr2(&[[1, 2],
-                       [3, 4]]);
+    let mut a = arr2(&[[1, 2], [3, 4]]);
     let mut at = a.view_mut().reversed_axes();
     at[[0, 1]] = 5;
     assert_eq!(at, arr2(&[[1, 5], [2, 4]]));
 
-    let mut a = arr2(&[[1, 2, 3],
-                       [4, 5, 6]]);
+    let mut a = arr2(&[[1, 2, 3], [4, 5, 6]]);
     let mut at = a.view_mut().reversed_axes();
     at[[2, 1]] = 7;
     assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 7]]));
@@ -1362,10 +1351,7 @@ fn reshape() {
     assert_eq!(u.shape(), &[2, 2, 2]);
     let s = u.into_shape((4, 2)).unwrap();
     assert_eq!(s.shape(), &[4, 2]);
-    assert_eq!(s, aview2(&[[1, 2],
-                           [3, 4],
-                           [5, 6],
-                           [7, 8]]));
+    assert_eq!(s, aview2(&[[1, 2], [3, 4], [5, 6], [7, 8]]));
 }
 
 #[test]
@@ -1408,10 +1394,7 @@ fn reshape_f() {
     let s = u.into_shape((4, 3)).unwrap();
     println!("{:?}", s);
     assert_eq!(s.shape(), &[4, 3]);
-    assert_eq!(s, aview2(&[[0, 4, 8],
-                           [1, 5, 9],
-                           [2, 6,10],
-                           [3, 7,11]]));
+    assert_eq!(s, aview2(&[[0, 4, 8], [1, 5, 9], [2, 6, 10], [3, 7, 11]]));
 }
 
 #[test]
@@ -1430,32 +1413,83 @@ fn insert_axis() {
     test_insert!(arr1(&[1, 2, 3]), 1, arr2(&[[1], [2], [3]]));
     assert!(::std::panic::catch_unwind(|| arr1(&[1, 2, 3]).insert_axis(Axis(2))).is_err());
 
-    test_insert!(arr2(&[[1, 2, 3], [4, 5, 6]]), 0, arr3(&[[[1, 2, 3], [4, 5, 6]]]));
-    test_insert!(arr2(&[[1, 2, 3], [4, 5, 6]]), 1, arr3(&[[[1, 2, 3]], [[4, 5, 6]]]));
-    test_insert!(arr2(&[[1, 2, 3], [4, 5, 6]]), 2, arr3(&[[[1], [2], [3]], [[4], [5], [6]]]));
-    assert!(::std::panic::catch_unwind(
-        || arr2(&[[1, 2, 3], [4, 5, 6]]).insert_axis(Axis(3))).is_err());
+    test_insert!(
+        arr2(&[[1, 2, 3], [4, 5, 6]]),
+        0,
+        arr3(&[[[1, 2, 3], [4, 5, 6]]])
+    );
+    test_insert!(
+        arr2(&[[1, 2, 3], [4, 5, 6]]),
+        1,
+        arr3(&[[[1, 2, 3]], [[4, 5, 6]]])
+    );
+    test_insert!(
+        arr2(&[[1, 2, 3], [4, 5, 6]]),
+        2,
+        arr3(&[[[1], [2], [3]], [[4], [5], [6]]])
+    );
+    assert!(
+        ::std::panic::catch_unwind(|| arr2(&[[1, 2, 3], [4, 5, 6]]).insert_axis(Axis(3))).is_err()
+    );
 
-    test_insert!(Array3::<u8>::zeros((3, 4, 5)), 0, Array4::<u8>::zeros((1, 3, 4, 5)));
-    test_insert!(Array3::<u8>::zeros((3, 4, 5)), 1, Array4::<u8>::zeros((3, 1, 4, 5)));
-    test_insert!(Array3::<u8>::zeros((3, 4, 5)), 3, Array4::<u8>::zeros((3, 4, 5, 1)));
-    assert!(::std::panic::catch_unwind(
-        || Array3::<u8>::zeros((3, 4, 5)).insert_axis(Axis(4))).is_err());
+    test_insert!(
+        Array3::<u8>::zeros((3, 4, 5)),
+        0,
+        Array4::<u8>::zeros((1, 3, 4, 5))
+    );
+    test_insert!(
+        Array3::<u8>::zeros((3, 4, 5)),
+        1,
+        Array4::<u8>::zeros((3, 1, 4, 5))
+    );
+    test_insert!(
+        Array3::<u8>::zeros((3, 4, 5)),
+        3,
+        Array4::<u8>::zeros((3, 4, 5, 1))
+    );
+    assert!(
+        ::std::panic::catch_unwind(|| Array3::<u8>::zeros((3, 4, 5)).insert_axis(Axis(4))).is_err()
+    );
 
-    test_insert!(Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)), 0,
-                 ArrayD::<u8>::zeros(vec![1, 2, 3, 4, 3, 2, 3]));
-    test_insert!(Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)), 3,
-                 ArrayD::<u8>::zeros(vec![2, 3, 4, 1, 3, 2, 3]));
-    test_insert!(Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)), 6,
-                 ArrayD::<u8>::zeros(vec![2, 3, 4, 3, 2, 3, 1]));
+    test_insert!(
+        Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)),
+        0,
+        ArrayD::<u8>::zeros(vec![1, 2, 3, 4, 3, 2, 3])
+    );
+    test_insert!(
+        Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)),
+        3,
+        ArrayD::<u8>::zeros(vec![2, 3, 4, 1, 3, 2, 3])
+    );
+    test_insert!(
+        Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)),
+        6,
+        ArrayD::<u8>::zeros(vec![2, 3, 4, 3, 2, 3, 1])
+    );
     assert!(::std::panic::catch_unwind(
-        || Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)).insert_axis(Axis(7))).is_err());
+        || Array6::<u8>::zeros((2, 3, 4, 3, 2, 3)).insert_axis(Axis(7))
+    )
+    .is_err());
 
-    test_insert!(ArrayD::<u8>::zeros(vec![3, 4, 5]), 0, ArrayD::<u8>::zeros(vec![1, 3, 4, 5]));
-    test_insert!(ArrayD::<u8>::zeros(vec![3, 4, 5]), 1, ArrayD::<u8>::zeros(vec![3, 1, 4, 5]));
-    test_insert!(ArrayD::<u8>::zeros(vec![3, 4, 5]), 3, ArrayD::<u8>::zeros(vec![3, 4, 5, 1]));
-    assert!(::std::panic::catch_unwind(
-        || ArrayD::<u8>::zeros(vec![3, 4, 5]).insert_axis(Axis(4))).is_err());
+    test_insert!(
+        ArrayD::<u8>::zeros(vec![3, 4, 5]),
+        0,
+        ArrayD::<u8>::zeros(vec![1, 3, 4, 5])
+    );
+    test_insert!(
+        ArrayD::<u8>::zeros(vec![3, 4, 5]),
+        1,
+        ArrayD::<u8>::zeros(vec![3, 1, 4, 5])
+    );
+    test_insert!(
+        ArrayD::<u8>::zeros(vec![3, 4, 5]),
+        3,
+        ArrayD::<u8>::zeros(vec![3, 4, 5, 1])
+    );
+    assert!(
+        ::std::panic::catch_unwind(|| ArrayD::<u8>::zeros(vec![3, 4, 5]).insert_axis(Axis(4)))
+            .is_err()
+    );
 }
 
 #[test]
@@ -1466,32 +1500,61 @@ fn insert_axis_f() {
         assert!(res.t().is_standard_layout());
     });
 
-    test_insert_f!(Array0::from_shape_vec(().f(), vec![1]).unwrap(), 0, arr1(&[1]));
-    assert!(::std::panic::catch_unwind(
-        || Array0::from_shape_vec(().f(), vec![1]).unwrap().insert_axis(Axis(1))).is_err());
+    test_insert_f!(
+        Array0::from_shape_vec(().f(), vec![1]).unwrap(),
+        0,
+        arr1(&[1])
+    );
+    assert!(
+        ::std::panic::catch_unwind(|| Array0::from_shape_vec(().f(), vec![1])
+            .unwrap()
+            .insert_axis(Axis(1)))
+        .is_err()
+    );
 
     test_insert_f!(Array1::<u8>::zeros((3).f()), 0, Array2::<u8>::zeros((1, 3)));
     test_insert_f!(Array1::<u8>::zeros((3).f()), 1, Array2::<u8>::zeros((3, 1)));
-    assert!(::std::panic::catch_unwind(
-        || Array1::<u8>::zeros((3).f()).insert_axis(Axis(2))).is_err());
+    assert!(
+        ::std::panic::catch_unwind(|| Array1::<u8>::zeros((3).f()).insert_axis(Axis(2))).is_err()
+    );
 
-    test_insert_f!(Array3::<u8>::zeros((3, 4, 5).f()), 1, Array4::<u8>::zeros((3, 1, 4, 5)));
-    assert!(::std::panic::catch_unwind(
-        || Array3::<u8>::zeros((3, 4, 5).f()).insert_axis(Axis(4))).is_err());
+    test_insert_f!(
+        Array3::<u8>::zeros((3, 4, 5).f()),
+        1,
+        Array4::<u8>::zeros((3, 1, 4, 5))
+    );
+    assert!(
+        ::std::panic::catch_unwind(|| Array3::<u8>::zeros((3, 4, 5).f()).insert_axis(Axis(4)))
+            .is_err()
+    );
 
-    test_insert_f!(ArrayD::<u8>::zeros(vec![3, 4, 5].f()), 1,
-                   ArrayD::<u8>::zeros(vec![3, 1, 4, 5]));
+    test_insert_f!(
+        ArrayD::<u8>::zeros(vec![3, 4, 5].f()),
+        1,
+        ArrayD::<u8>::zeros(vec![3, 1, 4, 5])
+    );
     assert!(::std::panic::catch_unwind(
-        || ArrayD::<u8>::zeros(vec![3, 4, 5].f()).insert_axis(Axis(4))).is_err());
+        || ArrayD::<u8>::zeros(vec![3, 4, 5].f()).insert_axis(Axis(4))
+    )
+    .is_err());
 }
 
 #[test]
 fn insert_axis_view() {
     let a = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]];
 
-    assert_eq!(a.index_axis(Axis(1), 0).insert_axis(Axis(0)), array![[[1, 2], [5, 6], [9, 10]]]);
-    assert_eq!(a.index_axis(Axis(1), 0).insert_axis(Axis(1)), array![[[1, 2]], [[5, 6]], [[9, 10]]]);
-    assert_eq!(a.index_axis(Axis(1), 0).insert_axis(Axis(2)), array![[[1], [2]], [[5], [6]], [[9], [10]]]);
+    assert_eq!(
+        a.index_axis(Axis(1), 0).insert_axis(Axis(0)),
+        array![[[1, 2], [5, 6], [9, 10]]]
+    );
+    assert_eq!(
+        a.index_axis(Axis(1), 0).insert_axis(Axis(1)),
+        array![[[1, 2]], [[5, 6]], [[9, 10]]]
+    );
+    assert_eq!(
+        a.index_axis(Axis(1), 0).insert_axis(Axis(2)),
+        array![[[1], [2]], [[5], [6]], [[9], [10]]]
+    );
 }
 
 #[test]
@@ -1505,8 +1568,7 @@ fn arithmetic_broadcast() {
 }
 
 #[test]
-fn char_array()
-{
+fn char_array() {
     // test compilation & basics of non-numerical array
     let cc = ArcArray::from_iter("alphabet".chars()).reshape((4, 2));
     assert!(cc.index_axis(Axis(1), 0) == ArcArray::from_iter("apae".chars()));
@@ -1543,10 +1605,10 @@ fn scalar_ops() {
     let zero = Array::<i32, _>::zeros((2, 2));
     let one = &zero + 1;
     assert_eq!(one.clone() << 3, 8 * &one);
-    assert_eq!(3 << one.clone() , 6 * &one);
+    assert_eq!(3 << one.clone(), 6 * &one);
 
     assert_eq!(&one << 3, 8 * &one);
-    assert_eq!(3 << &one , 6 * &one);
+    assert_eq!(3 << &one, 6 * &one);
 }
 
 #[test]
@@ -1567,15 +1629,19 @@ fn split_at() {
     }
     assert_eq!(a, arr2(&[[1., 5.], [8., 4.]]));
 
-
     let b = ArcArray::linspace(0., 59., 60).reshape((3, 4, 5));
 
     let (left, right) = b.view().split_at(Axis(2), 2);
     assert_eq!(left.shape(), [3, 4, 2]);
     assert_eq!(right.shape(), [3, 4, 3]);
-    assert_eq!(left, arr3(&[[[0., 1.], [5., 6.], [10., 11.], [15., 16.]],
-                            [[20., 21.], [25., 26.], [30., 31.], [35., 36.]],
-                            [[40., 41.], [45., 46.], [50., 51.], [55., 56.]]]));
+    assert_eq!(
+        left,
+        arr3(&[
+            [[0., 1.], [5., 6.], [10., 11.], [15., 16.]],
+            [[20., 21.], [25., 26.], [30., 31.], [35., 36.]],
+            [[40., 41.], [45., 46.], [50., 51.], [55., 56.]]
+        ])
+    );
 
     // we allow for an empty right view when index == dim[axis]
     let (_, right) = b.view().split_at(Axis(1), 4);
@@ -1600,13 +1666,13 @@ fn deny_split_at_index_out_of_bounds() {
 fn test_range() {
     let a = Array::range(0., 5., 1.);
     assert_eq!(a.len(), 5);
-    assert_eq!(a[0],  0.);
-    assert_eq!(a[4],  4.);
+    assert_eq!(a[0], 0.);
+    assert_eq!(a[4], 4.);
 
     let b = Array::range(0., 2.2, 1.);
     assert_eq!(b.len(), 3);
-    assert_eq!(b[0],  0.);
-    assert_eq!(b[2],  2.);
+    assert_eq!(b[0], 0.);
+    assert_eq!(b[2], 2.);
 
     let c = Array::range(0., 5., 2.);
     assert_eq!(c.len(), 3);
@@ -1629,8 +1695,7 @@ fn test_range() {
 fn test_f_order() {
     // Test that arrays are logically equal in every way,
     // even if the underlying memory order is different
-    let c = arr2(&[[1, 2, 3],
-                   [4, 5, 6]]);
+    let c = arr2(&[[1, 2, 3], [4, 5, 6]]);
     let mut f = Array::zeros(c.dim().f());
     f.assign(&c);
     assert_eq!(f, c);
@@ -1652,8 +1717,7 @@ fn test_f_order() {
 fn to_owned_memory_order() {
     // check that .to_owned() makes f-contiguous arrays out of f-contiguous
     // input.
-    let c = arr2(&[[1, 2, 3],
-                   [4, 5, 6]]);
+    let c = arr2(&[[1, 2, 3], [4, 5, 6]]);
     let mut f = c.view();
     f.swap_axes(0, 1);
     let fo = f.to_owned();
@@ -1663,8 +1727,7 @@ fn to_owned_memory_order() {
 
 #[test]
 fn to_owned_neg_stride() {
-    let mut c = arr2(&[[1, 2, 3],
-                       [4, 5, 6]]);
+    let mut c = arr2(&[[1, 2, 3], [4, 5, 6]]);
     c.slice_collapse(s![.., ..;-1]);
     let co = c.to_owned();
     assert_eq!(c, co);
@@ -1672,8 +1735,7 @@ fn to_owned_neg_stride() {
 
 #[test]
 fn discontiguous_owned_to_owned() {
-    let mut c = arr2(&[[1, 2, 3],
-                       [4, 5, 6]]);
+    let mut c = arr2(&[[1, 2, 3], [4, 5, 6]]);
     c.slice_collapse(s![.., ..;2]);
 
     let co = c.to_owned();
@@ -1684,10 +1746,7 @@ fn discontiguous_owned_to_owned() {
 
 #[test]
 fn map_memory_order() {
-    let a = arr3(&[[[1, 2, 3],
-                    [4, 5, 6]],
-                   [[7, 8, 9],
-                    [0, -1, -2]]]);
+    let a = arr3(&[[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [0, -1, -2]]]);
     let mut v = a.view();
     v.swap_axes(0, 1);
     let amap = v.map(|x| *x >= 3);
@@ -1697,10 +1756,7 @@ fn map_memory_order() {
 
 #[test]
 fn test_contiguous() {
-    let c = arr3(&[[[1, 2, 3],
-                    [4, 5, 6]],
-                   [[4, 5, 6],
-                    [7, 7, 7]]]);
+    let c = arr3(&[[[1, 2, 3], [4, 5, 6]], [[4, 5, 6], [7, 7, 7]]]);
     assert!(c.is_standard_layout());
     assert!(c.as_slice_memory_order().is_some());
     let v = c.slice(s![.., 0..1, ..]);
@@ -1733,20 +1789,19 @@ fn test_contiguous() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_all_close() {
-    let c = arr3(&[[[1., 2., 3.],
-                    [1.5, 1.5, 3.]],
-                   [[1., 2., 3.],
-                    [1., 2.5, 3.]]]);
+    let c = arr3(&[
+        [[1., 2., 3.], [1.5, 1.5, 3.]],
+        [[1., 2., 3.], [1., 2.5, 3.]],
+    ]);
     assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
     assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
 }
 
 #[test]
 fn test_swap() {
-    let mut a = arr2(&[[1, 2, 3],
-                       [4, 5, 6],
-                       [7, 8, 9]]);
+    let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
     let b = a.clone();
 
     for i in 0..a.rows() {
@@ -1759,9 +1814,7 @@ fn test_swap() {
 
 #[test]
 fn test_uswap() {
-    let mut a = arr2(&[[1, 2, 3],
-                       [4, 5, 6],
-                       [7, 8, 9]]);
+    let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
     let b = a.clone();
 
     for i in 0..a.rows() {
@@ -1805,7 +1858,6 @@ fn test_default() {
     let a = <Array<f32, Ix2> as Default>::default();
     assert_eq!(a, aview2(&[[0.0; 0]; 0]));
 
-
     #[derive(Default, Debug, PartialEq)]
     struct Foo(i32);
     let b = <Array<Foo, Ix0> as Default>::default();
@@ -1819,13 +1871,9 @@ fn test_default_ixdyn() {
     assert_eq!(a, b);
 }
 
-
 #[test]
 fn test_map_axis() {
-    let a = arr2(&[[1, 2, 3],
-                   [4, 5, 6],
-                   [7, 8, 9],
-                   [10,11,12]]);
+    let a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]);
 
     let b = a.map_axis(Axis(0), |view| view.sum());
     let answer1 = arr1(&[22, 26, 30]);
@@ -1833,14 +1881,32 @@ fn test_map_axis() {
     let c = a.map_axis(Axis(1), |view| view.sum());
     let answer2 = arr1(&[6, 15, 24, 33]);
     assert_eq!(c, answer2);
+
+    // Test zero-length axis case
+    let arr = Array3::<f32>::zeros((3, 0, 4));
+    let mut counter = 0;
+    let result = arr.map_axis(Axis(1), |x| {
+        assert_eq!(x.shape(), &[0]);
+        counter += 1;
+        counter
+    });
+    assert_eq!(result.shape(), &[3, 4]);
+    itertools::assert_equal(result.iter().cloned().sorted(), 1..=3 * 4);
+
+    let mut arr = Array3::<f32>::zeros((3, 0, 4));
+    let mut counter = 0;
+    let result = arr.map_axis_mut(Axis(1), |x| {
+        assert_eq!(x.shape(), &[0]);
+        counter += 1;
+        counter
+    });
+    assert_eq!(result.shape(), &[3, 4]);
+    itertools::assert_equal(result.iter().cloned().sorted(), 1..=3 * 4);
 }
 
 #[test]
 fn test_to_vec() {
-    let mut a = arr2(&[[1, 2, 3],
-                       [4, 5, 6],
-                       [7, 8, 9],
-                       [10,11,12]]);
+    let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]);
 
     a.slice_collapse(s![..;-1, ..]);
     assert_eq!(a.row(3).to_vec(), vec![1, 2, 3]);
@@ -1879,8 +1945,10 @@ fn array_macros() {
     assert_eq!(a4, arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]));
 
     let s = String::from("abc");
-    let a2s = array![[String::from("w"), s],
-                     [String::from("x"), String::from("y")]];
+    let a2s = array![
+        [String::from("w"), s],
+        [String::from("x"), String::from("y")]
+    ];
     assert_eq!(a2s[[0, 0]], "w");
     assert_eq!(a2s[[0, 1]], "abc");
     assert_eq!(a2s[[1, 0]], "x");

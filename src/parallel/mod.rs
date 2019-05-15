@@ -103,12 +103,13 @@
 //! }
 //! ```
 
-
 /// Into- traits for creating parallelized iterators and/or using [`par_azip!`]
 pub mod prelude {
     #[doc(no_inline)]
-    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator,
-    IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
+    pub use rayon::prelude::{
+        IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator,
+        IntoParallelRefMutIterator, ParallelIterator,
+    };
 
     pub use super::par_azip;
 }
@@ -116,7 +117,7 @@ pub mod prelude {
 pub use self::par::Parallel;
 pub use crate::par_azip;
 
-mod par;
 mod impl_par_methods;
 mod into_impls;
+mod par;
 mod zipmacro;

@@ -1,7 +1,7 @@
 extern crate ndarray;
 
-use ndarray::prelude::*;
 use ndarray::indices_of;
+use ndarray::prelude::*;
 
 #[test]
 fn test_ixdyn_index_iterate() {

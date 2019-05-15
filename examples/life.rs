@@ -36,31 +36,29 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
     neigh.fill(0);
     neigh += &z.slice(s![0..-2, 0..-2]);
     neigh += &z.slice(s![0..-2, 1..-1]);
-    neigh += &z.slice(s![0..-2, 2..  ]);
+    neigh += &z.slice(s![0..-2, 2..]);
 
     neigh += &z.slice(s![1..-1, 0..-2]);
-    neigh += &z.slice(s![1..-1, 2..  ]);
+    neigh += &z.slice(s![1..-1, 2..]);
 
-    neigh += &z.slice(s![2..  , 0..-2]);
-    neigh += &z.slice(s![2..  , 1..-1]);
-    neigh += &z.slice(s![2..  , 2..  ]);
+    neigh += &z.slice(s![2.., 0..-2]);
+    neigh += &z.slice(s![2.., 1..-1]);
+    neigh += &z.slice(s![2.., 2..]);
 
     // birth where n = 3 and z[i] = 0,
     // survive where n = 2 || n = 3 and z[i] = 1
     let mut zv = z.slice_mut(s![1..-1, 1..-1]);
 
     // this is autovectorized amazingly well!
-    zv.zip_mut_with(&neigh, |y, &n| {
-        *y = ((n == 3) || (n == 2 && *y > 0)) as u8
-    });
+    zv.zip_mut_with(&neigh, |y, &n| *y = ((n == 3) || (n == 2 && *y > 0)) as u8);
 }
 
 fn turn_on_corners(z: &mut Board) {
     let n = z.rows();
     let m = z.cols();
-    z[[1    , 1    ]] = 1;
-    z[[1    , m - 2]] = 1;
-    z[[n - 2, 1    ]] = 1;
+    z[[1, 1]] = 1;
+    z[[1, m - 2]] = 1;
+    z[[n - 2, 1]] = 1;
     z[[n - 2, m - 2]] = 1;
 }
 

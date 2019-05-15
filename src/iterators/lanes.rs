@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::imp_prelude::*;
-use crate::{NdProducer, Layout};
 use super::LanesIter;
 use super::LanesIterMut;
+use crate::imp_prelude::*;
+use crate::{Layout, NdProducer};
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
@@ -77,7 +77,8 @@ impl_ndproducer! {
 }
 
 impl<'a, A, D> IntoIterator for Lanes<'a, A, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = LanesIter<'a, A, D>;
@@ -127,7 +128,8 @@ impl<'a, A, D: Dimension> LanesMut<'a, A, D> {
 }
 
 impl<'a, A, D> IntoIterator for LanesMut<'a, A, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = LanesIterMut<'a, A, D>;

@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-#![crate_name="ndarray"]
+#![crate_name = "ndarray"]
 #![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
@@ -68,6 +68,9 @@
 //! - `rayon`
 //!   - Optional, compatible with Rust stable
 //!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
+//! - `approx`
+//!   - Optional, compatible with Rust stable
+//!   - Enables implementations of traits from the [`approx`] crate.
 //! - `blas`
 //!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication.
@@ -87,20 +90,23 @@
 #[cfg(feature = "serde-1")]
 extern crate serde;
 
-#[cfg(feature="rayon")]
+#[cfg(feature = "rayon")]
 extern crate rayon;
 
-#[cfg(feature="blas")]
-extern crate cblas_sys;
-#[cfg(feature="blas")]
+#[cfg(feature = "approx")]
+extern crate approx;
+
+#[cfg(feature = "blas")]
 extern crate blas_src;
+#[cfg(feature = "blas")]
+extern crate cblas_sys;
 
 extern crate matrixmultiply;
 
 extern crate itertools;
-extern crate num_traits;
 extern crate num_complex;
 extern crate num_integer;
+extern crate num_traits;
 
 #[cfg(test)]
 extern crate quickcheck;
@@ -111,23 +117,18 @@ pub mod doc;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-pub use crate::dimension::{
-    Dimension,
-    IntoDimension,
-    RemoveAxis,
-    Axis,
-    AxisDescription,
-    slices_intersect,
-};
 pub use crate::dimension::dim::*;
+pub use crate::dimension::{
+    slices_intersect, Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis,
+};
 
-pub use crate::dimension::NdIndex;
 pub use crate::dimension::IxDynImpl;
+pub use crate::dimension::NdIndex;
+pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
-pub use crate::error::{ShapeError, ErrorKind};
 pub use crate::slice::{
-    deref_raw_view_mut_into_view_with_life, deref_raw_view_mut_into_view_mut_with_life,
-    life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex
+    deref_raw_view_mut_into_view_mut_with_life, deref_raw_view_mut_into_view_with_life,
+    life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex,
 };
 
 use crate::iterators::Baseiter;
@@ -137,78 +138,64 @@ pub use crate::arraytraits::AsArray;
 pub use crate::linalg_traits::{LinalgScalar, NdFloat};
 pub use crate::stacking::stack;
 
-pub use crate::shape_builder::{ ShapeBuilder};
 pub use crate::impl_views::IndexLonger;
+pub use crate::shape_builder::ShapeBuilder;
 
-#[macro_use] mod macro_utils;
-#[macro_use] mod private;
+#[macro_use]
+mod macro_utils;
+#[macro_use]
+mod private;
 mod aliases;
-mod arraytraits;
+#[cfg(feature = "approx")]
+mod array_approx;
 #[cfg(feature = "serde-1")]
 mod array_serde;
 mod arrayformat;
+mod arraytraits;
 mod data_traits;
 
 pub use crate::aliases::*;
 
 #[allow(deprecated)]
 pub use crate::data_traits::{
-    RawData,
-    RawDataMut,
-    RawDataClone,
-    Data,
-    DataMut,
-    DataOwned,
-    DataShared,
-    DataClone,
+    Data, DataClone, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
 };
 
 mod free_functions;
 pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
-#[macro_use] mod slice;
-mod layout;
+mod error;
+mod geomspace;
 mod indexes;
 mod iterators;
+mod layout;
 mod linalg_traits;
 mod linspace;
+mod logspace;
 mod numeric_util;
-mod error;
 mod shape_builder;
+#[macro_use]
+mod slice;
 mod stacking;
 #[macro_use]
 mod zip;
 
 mod dimension;
 
-pub use crate::zip::{
-    Zip,
-    NdProducer,
-    IntoNdProducer,
-    FoldWhile,
-};
+pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 
 pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude {
+    pub use crate::dimension::DimensionExt;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
     pub use crate::{
-        RemoveAxis,
-        RawData,
-        RawDataMut,
-        Data,
-        DataMut,
-        DataOwned,
-        DataShared,
-        RawViewRepr,
-        ViewRepr,
-        CowRepr,
-        Ix, Ixs,
+        CowRepr, Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
+        RemoveAxis, ViewRepr,
     };
-    pub use crate::dimension::DimensionExt;
 }
 
 pub mod prelude;
@@ -1162,7 +1149,8 @@ pub type Ixs = isize;
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
 pub struct ArrayBase<S, D>
-    where S: RawData
+where
+    S: RawData,
 {
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
@@ -1181,7 +1169,7 @@ pub struct ArrayBase<S, D>
 /// It can act as both an owner as the data as well as a shared reference (view like).
 ///
 /// **Note: this type alias is obsolete.** See the equivalent [`ArcArray`] instead.
-#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
+#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
 
 /// An array where the data has shared ownership and is copy on write.
@@ -1337,7 +1325,7 @@ pub struct OwnedRepr<A>(Vec<A>);
 ///
 /// *Don’t use this type directly—use the type alias
 /// [`RcArray`](type.RcArray.html) for the array type!*
-#[deprecated(note="RcArray is replaced by ArcArray")]
+#[deprecated(note = "RcArray is replaced by ArcArray")]
 pub use self::OwnedArcRepr as OwnedRcRepr;
 
 /// ArcArray's representation.
@@ -1416,20 +1404,27 @@ mod impl_owned_array;
 
 /// Private Methods
 impl<A, S, D> ArrayBase<S, D>
-    where S: Data<Elem=A>, D: Dimension
+where
+    S: Data<Elem = A>,
+    D: Dimension,
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
-        where E: Dimension,
+    where
+        E: Dimension,
     {
         #[cold]
         #[inline(never)]
         fn broadcast_panic<D, E>(from: &D, to: &E) -> !
-            where D: Dimension,
-                  E: Dimension,
+        where
+            D: Dimension,
+            E: Dimension,
         {
-            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}",
-                   from.slice(), to.slice())
+            panic!(
+                "ndarray: could not broadcast array from shape: {:?} to: {:?}",
+                from.slice(),
+                to.slice()
+            )
         }
 
         match self.broadcast(dim.clone()) {
@@ -1442,16 +1437,15 @@ impl<A, S, D> ArrayBase<S, D>
     // (Checked in debug assertions).
     #[inline]
     fn broadcast_assume<E>(&self, dim: E) -> ArrayView<A, E>
-        where E: Dimension,
+    where
+        E: Dimension,
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
         let ptr = self.ptr;
         let mut strides = dim.clone();
         strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe {
-            ArrayView::new_(ptr, dim, strides)
-        }
+        unsafe { ArrayView::new_(ptr, dim, strides) }
     }
 
     fn raw_strides(&self) -> D {
@@ -1461,8 +1455,9 @@ impl<A, S, D> ArrayBase<S, D>
     /// Apply closure `f` to each element in the array, in whatever
     /// order is the fastest to visit.
     fn unordered_foreach_mut<F>(&mut self, mut f: F)
-        where S: DataMut,
-              F: FnMut(&mut A)
+    where
+        S: DataMut,
+        F: FnMut(&mut A),
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
             // FIXME: Use for loop when slice iterator is perf is restored
@@ -1477,8 +1472,7 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
-    {
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
         ArrayBase {
@@ -1490,24 +1484,23 @@ impl<A, S, D> ArrayBase<S, D>
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller>
-    {
+    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller> {
         let n = self.ndim();
         Lanes::new(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
     fn inner_rows_mut(&mut self) -> iterators::LanesMut<A, D::Smaller>
-        where S: DataMut
+    where
+        S: DataMut,
     {
         let n = self.ndim();
         LanesMut::new(self.view_mut(), Axis(n.saturating_sub(1)))
     }
 }
 
-
 // parallel methods
-#[cfg(feature="rayon")]
+#[cfg(feature = "rayon")]
 pub mod parallel;
 
 mod impl_1d;

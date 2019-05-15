@@ -1,12 +1,12 @@
-#![cfg(feature="rayon")]
+#![cfg(feature = "rayon")]
 
 extern crate rayon;
 
-extern crate ndarray;
 extern crate itertools;
+extern crate ndarray;
 
-use ndarray::prelude::*;
 use ndarray::parallel::prelude::*;
+use ndarray::prelude::*;
 
 const M: usize = 1024 * 10;
 const N: usize = 100;
@@ -24,12 +24,18 @@ fn test_axis_iter() {
 }
 
 #[test]
+#[cfg(feature = "approx")]
 fn test_axis_iter_mut() {
-    let mut a = Array::linspace(0., 1.0f64, M * N).into_shape((M, N)).unwrap();
+    use approx::assert_abs_diff_eq;
+    let mut a = Array::linspace(0., 1.0f64, M * N)
+        .into_shape((M, N))
+        .unwrap();
     let b = a.mapv(|x| x.exp());
-    a.axis_iter_mut(Axis(0)).into_par_iter().for_each(|mut v| v.mapv_inplace(|x| x.exp()));
+    a.axis_iter_mut(Axis(0))
+        .into_par_iter()
+        .for_each(|mut v| v.mapv_inplace(|x| x.exp()));
     println!("{:?}", a.slice(s![..10, ..5]));
-    assert!(a.all_close(&b, 0.001));
+    assert_abs_diff_eq!(a, b, epsilon = 0.001);
 }
 
 #[test]

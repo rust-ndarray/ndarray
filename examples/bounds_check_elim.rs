@@ -1,4 +1,4 @@
-#![crate_type="lib"]
+#![crate_type = "lib"]
 
 // Test cases for bounds check elimination
 
@@ -35,12 +35,20 @@ pub fn testvec_as_slice(a: &Vec<f64>) -> f64 {
 
 #[no_mangle]
 pub fn test1d_single(a: &Array1<f64>, i: usize) -> f64 {
-    if i < a.len() { a[i] } else { 0. }
+    if i < a.len() {
+        a[i]
+    } else {
+        0.
+    }
 }
 
 #[no_mangle]
 pub fn test1d_single_mut(a: &mut Array1<f64>, i: usize) -> f64 {
-    if i < a.len() { *&mut a[i] } else { 0. }
+    if i < a.len() {
+        *&mut a[i]
+    } else {
+        0.
+    }
 }
 
 #[no_mangle]
@@ -99,5 +107,4 @@ pub fn test2d_whiles(a: &Array2<f64>) -> f64 {
     sum
 }
 
-fn main() {
-}
+fn main() {}
