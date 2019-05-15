@@ -1,6 +1,5 @@
-
-use crate::imp_prelude::*;
 use super::ElementsBase;
+use crate::imp_prelude::*;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdProducer;
@@ -21,10 +20,16 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         E: IntoDimension<Dim = D>,
     {
         let window = window_size.into_dimension();
-        ndassert!(a.ndim() == window.ndim(),
-            concat!("Window dimension {} does not match array dimension {} ",
-            "(with array of shape {:?})"),
-            window.ndim(), a.ndim(), a.shape());
+        ndassert!(
+            a.ndim() == window.ndim(),
+            concat!(
+                "Window dimension {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            window.ndim(),
+            a.ndim(),
+            a.shape()
+        );
         let mut size = a.dim;
         for (sz, &ws) in size.slice_mut().iter_mut().zip(window.slice()) {
             assert_ne!(ws, 0, "window-size must not be zero!");
@@ -64,8 +69,9 @@ impl_ndproducer! {
 }
 
 impl<'a, A, D> IntoIterator for Windows<'a, A, D>
-    where D: Dimension,
-          A: 'a,
+where
+    D: Dimension,
+    A: 'a,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = WindowsIter<'a, A, D>;
@@ -88,7 +94,7 @@ pub struct WindowsIter<'a, A: 'a, D> {
     strides: D,
 }
 
-impl_iterator!{
+impl_iterator! {
     ['a, A, D: Dimension]
     [Clone => 'a, A, D: Clone]
     WindowsIter {

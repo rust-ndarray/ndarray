@@ -1,32 +1,18 @@
 extern crate ndarray;
 
-
-use ndarray::{
-    aview1,
-    arr2,
-    stack,
-    Axis,
-    Array2,
-    ErrorKind,
-};
+use ndarray::{arr2, aview1, stack, Array2, Axis, ErrorKind};
 
 #[test]
 fn stacking() {
-    let a = arr2(&[[2., 2.],
-                   [3., 3.]]);
+    let a = arr2(&[[2., 2.], [3., 3.]]);
     let b = ndarray::stack(Axis(0), &[a.view(), a.view()]).unwrap();
-    assert_eq!(b, arr2(&[[2., 2.],
-                         [3., 3.],
-                         [2., 2.],
-                         [3., 3.]]));
+    assert_eq!(b, arr2(&[[2., 2.], [3., 3.], [2., 2.], [3., 3.]]));
 
     let c = stack![Axis(0), a, b];
-    assert_eq!(c, arr2(&[[2., 2.],
-                         [3., 3.],
-                         [2., 2.],
-                         [3., 3.],
-                         [2., 2.],
-                         [3., 3.]]));
+    assert_eq!(
+        c,
+        arr2(&[[2., 2.], [3., 3.], [2., 2.], [3., 3.], [2., 2.], [3., 3.]])
+    );
 
     let d = stack![Axis(0), a.row(0), &[9., 9.]];
     assert_eq!(d, aview1(&[2., 2., 9., 9.]));

@@ -45,7 +45,8 @@ impl<A> Array<A, Ix0> {
 ///
 /// [`ArrayBase`]: struct.ArrayBase.html
 impl<A, D> Array<A, D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     /// Return a vector of the elements in the array, in the way they are
     /// stored internally.

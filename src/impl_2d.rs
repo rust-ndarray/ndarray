@@ -6,13 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 //! Methods for two-dimensional arrays.
 use crate::imp_prelude::*;
 
 /// # Methods For 2-D Arrays
 impl<A, S> ArrayBase<S, Ix2>
-    where S: RawData<Elem=A>,
+where
+    S: RawData<Elem = A>,
 {
     /// Return an array view of row `index`.
     ///
@@ -28,7 +28,8 @@ impl<A, S> ArrayBase<S, Ix2>
     ///
     /// **Panics** if `index` is out of bounds.
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
-        where S: DataMut
+    where
+        S: DataMut,
     {
         self.index_axis_mut(Axis(0), index)
     }
@@ -52,7 +53,8 @@ impl<A, S> ArrayBase<S, Ix2>
     ///
     /// **Panics** if `index` is out of bounds.
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
-        where S: DataMut
+    where
+        S: DataMut,
     {
         self.index_axis_mut(Axis(1), index)
     }
@@ -67,4 +69,3 @@ impl<A, S> ArrayBase<S, Ix2>
         self.rows() == self.cols()
     }
 }
-

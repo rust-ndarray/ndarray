@@ -1,37 +1,40 @@
 //! Type aliases for common array sizes
 //!
 
-#[allow(deprecated)]
-use crate::{
-    Ix,
-    Array,
-    ArrayView,
-    ArrayViewMut,
-    RcArray,
-    IxDynImpl,
-};
 use crate::dimension::Dim;
+#[allow(deprecated)]
+use crate::{Array, ArrayView, ArrayViewMut, Ix, IxDynImpl, RcArray};
 
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix0() -> Ix0 { Dim::new([]) }
+pub fn Ix0() -> Ix0 {
+    Dim::new([])
+}
 /// Create a one-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix1(i0: Ix) -> Ix1 { Dim::new([i0]) }
+pub fn Ix1(i0: Ix) -> Ix1 {
+    Dim::new([i0])
+}
 /// Create a two-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 { Dim::new([i0, i1]) }
+pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 {
+    Dim::new([i0, i1])
+}
 /// Create a three-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 { Dim::new([i0, i1, i2]) }
+pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 {
+    Dim::new([i0, i1, i2])
+}
 /// Create a four-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4 { Dim::new([i0, i1, i2, i3]) }
+pub fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4 {
+    Dim::new([i0, i1, i2, i3])
+}
 /// Create a five-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
@@ -149,9 +152,9 @@ pub type ArrayViewMutD<'a, A> = ArrayViewMut<'a, A, IxDyn>;
 
 /// one-dimensional shared ownership array
 #[allow(deprecated)]
-#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
+#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray1<A> = RcArray<A, Ix1>;
 /// two-dimensional shared ownership array
 #[allow(deprecated)]
-#[deprecated(note="`RcArray` has been renamed to `ArcArray`")]
+#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
 pub type RcArray2<A> = RcArray<A, Ix2>;

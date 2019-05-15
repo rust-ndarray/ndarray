@@ -6,12 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use itertools::zip;
 use std::fmt;
 use std::hash;
-use itertools::zip;
 
-use super::IntoDimension;
 use super::Dimension;
+use super::IntoDimension;
 use crate::Ix;
 
 /// Dimension description.
@@ -44,26 +44,30 @@ pub struct Dim<I: ?Sized> {
 impl<I> Dim<I> {
     /// Private constructor and accessors for Dim
     pub(crate) fn new(index: I) -> Dim<I> {
-        Dim {
-            index: index,
-        }
+        Dim { index: index }
     }
     #[inline(always)]
-    pub(crate) fn ix(&self) -> &I { &self.index }
+    pub(crate) fn ix(&self) -> &I {
+        &self.index
+    }
     #[inline(always)]
-    pub(crate) fn ixm(&mut self) -> &mut I { &mut self.index }
+    pub(crate) fn ixm(&mut self) -> &mut I {
+        &mut self.index
+    }
 }
 
 /// Create a new dimension value.
 #[allow(non_snake_case)]
 pub fn Dim<T>(index: T) -> T::Dim
-    where T: IntoDimension
+where
+    T: IntoDimension,
 {
     index.into_dimension()
 }
 
 impl<I: ?Sized> PartialEq<I> for Dim<I>
-    where I: PartialEq,
+where
+    I: PartialEq,
 {
     fn eq(&self, rhs: &I) -> bool {
         self.index == *rhs
@@ -71,7 +75,8 @@ impl<I: ?Sized> PartialEq<I> for Dim<I>
 }
 
 impl<I: ?Sized> hash::Hash for Dim<I>
-    where Dim<I>: Dimension,
+where
+    Dim<I>: Dimension,
 {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.slice().hash(state);
@@ -79,101 +84,111 @@ impl<I: ?Sized> hash::Hash for Dim<I>
 }
 
 impl<I> fmt::Debug for Dim<I>
-    where I: fmt::Debug,
+where
+    I: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.index)
     }
 }
 
-use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 macro_rules! impl_op {
     ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
-    impl<I> $op for Dim<I>
-        where Dim<I>: Dimension,
-    {
-        type Output = Self;
-        fn $op_m(mut self, rhs: Self) -> Self {
-            $expr!(self, &rhs);
-            self
-        }
-    }
-
-    impl<I> $opassign for Dim<I>
-        where Dim<I>: Dimension,
-    {
-        fn $opassign_m(&mut self, rhs: Self) {
-            $expr!(*self, &rhs);
-        }
-    }
-
-    impl<'a, I> $opassign<&'a Dim<I>> for Dim<I>
-        where Dim<I>: Dimension,
-    {
-        fn $opassign_m(&mut self, rhs: &Self) {
-            for (x, &y) in zip(self.slice_mut(), rhs.slice()) {
-                $expr!(*x, y);
+        impl<I> $op for Dim<I>
+        where
+            Dim<I>: Dimension,
+        {
+            type Output = Self;
+            fn $op_m(mut self, rhs: Self) -> Self {
+                $expr!(self, &rhs);
+                self
             }
         }
-    }
 
-    }
+        impl<I> $opassign for Dim<I>
+        where
+            Dim<I>: Dimension,
+        {
+            fn $opassign_m(&mut self, rhs: Self) {
+                $expr!(*self, &rhs);
+            }
+        }
+
+        impl<'a, I> $opassign<&'a Dim<I>> for Dim<I>
+        where
+            Dim<I>: Dimension,
+        {
+            fn $opassign_m(&mut self, rhs: &Self) {
+                for (x, &y) in zip(self.slice_mut(), rhs.slice()) {
+                    $expr!(*x, y);
+                }
+            }
+        }
+    };
 }
 
 macro_rules! impl_single_op {
     ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
-    impl $op<Ix> for Dim<[Ix; 1]>
-    {
-        type Output = Self;
-        #[inline]
-        fn $op_m(mut self, rhs: Ix) -> Self {
-            $expr!(self, rhs);
-            self
+        impl $op<Ix> for Dim<[Ix; 1]> {
+            type Output = Self;
+            #[inline]
+            fn $op_m(mut self, rhs: Ix) -> Self {
+                $expr!(self, rhs);
+                self
+            }
         }
-    }
 
-    impl $opassign<Ix> for Dim<[Ix; 1]> {
-        #[inline]
-        fn $opassign_m(&mut self, rhs: Ix) {
-            $expr!((*self)[0], rhs);
+        impl $opassign<Ix> for Dim<[Ix; 1]> {
+            #[inline]
+            fn $opassign_m(&mut self, rhs: Ix) {
+                $expr!((*self)[0], rhs);
+            }
         }
-    }
     };
 }
 
 macro_rules! impl_scalar_op {
     ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {
-    impl<I> $op<Ix> for Dim<I>
-        where Dim<I>: Dimension,
-    {
-        type Output = Self;
-        fn $op_m(mut self, rhs: Ix) -> Self {
-            $expr!(self, rhs);
-            self
-        }
-    }
-
-    impl<I> $opassign<Ix> for Dim<I>
-        where Dim<I>: Dimension,
-    {
-        fn $opassign_m(&mut self, rhs: Ix) {
-            for x in self.slice_mut() {
-                $expr!(*x, rhs);
+        impl<I> $op<Ix> for Dim<I>
+        where
+            Dim<I>: Dimension,
+        {
+            type Output = Self;
+            fn $op_m(mut self, rhs: Ix) -> Self {
+                $expr!(self, rhs);
+                self
             }
         }
-    }
+
+        impl<I> $opassign<Ix> for Dim<I>
+        where
+            Dim<I>: Dimension,
+        {
+            fn $opassign_m(&mut self, rhs: Ix) {
+                for x in self.slice_mut() {
+                    $expr!(*x, rhs);
+                }
+            }
+        }
     };
 }
 
 macro_rules! add {
-    ($x:expr, $y:expr) => { $x += $y; }
+    ($x:expr, $y:expr) => {
+        $x += $y;
+    };
 }
 macro_rules! sub {
-    ($x:expr, $y:expr) => { $x -= $y; }
+    ($x:expr, $y:expr) => {
+        $x -= $y;
+    };
 }
 macro_rules! mul {
-    ($x:expr, $y:expr) => { $x *= $y; }
+    ($x:expr, $y:expr) => {
+        $x *= $y;
+    };
 }
 impl_op!(Add, add, AddAssign, add_assign, add);
 impl_single_op!(Add, add, AddAssign, add_assign, add);
@@ -181,4 +196,3 @@ impl_op!(Sub, sub, SubAssign, sub_assign, sub);
 impl_single_op!(Sub, sub, SubAssign, sub_assign, sub);
 impl_op!(Mul, mul, MulAssign, mul_assign, mul);
 impl_scalar_op!(Mul, mul, MulAssign, mul_assign, mul);
-

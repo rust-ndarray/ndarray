@@ -1,10 +1,9 @@
-
 extern crate ndarray;
 
 use ndarray::Array;
-use ndarray::{Ix0, Ix1, Ix2, Ix3, IxDyn};
 use ndarray::IntoDimension;
 use ndarray::ShapeBuilder;
+use ndarray::{Ix0, Ix1, Ix2, Ix3, IxDyn};
 
 #[test]
 fn test_ixdyn() {
