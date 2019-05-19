@@ -8,25 +8,20 @@
 
 use std::slice;
 
-use crate::imp_prelude::*;
+use crate::arraytraits::array_out_of_bounds;
 use crate::dimension;
 use crate::error::ShapeError;
-use crate::arraytraits::array_out_of_bounds;
+use crate::imp_prelude::*;
 use crate::{is_aligned, NdIndex, StrideShape};
 
-use crate::{
-    ElementsBase,
-    ElementsBaseMut,
-    Iter,
-    IterMut,
-    Baseiter,
-};
+use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     /// Create a read-only array view borrowing its data from a slice.
     ///
@@ -52,9 +47,9 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_shape<Sh>(shape: Sh, xs: &'a [A])
-        -> Result<Self, ShapeError>
-        where Sh: Into<StrideShape<D>>,
+    pub fn from_shape<Sh>(shape: Sh, xs: &'a [A]) -> Result<Self, ShapeError>
+    where
+        Sh: Into<StrideShape<D>>,
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_impl(shape.into(), xs)
@@ -109,7 +104,8 @@ impl<'a, A, D> ArrayView<'a, A, D>
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
-        where Sh: Into<StrideShape<D>>
+    where
+        Sh: Into<StrideShape<D>>,
     {
         RawArrayView::from_shape_ptr(shape, ptr).deref_into_view()
     }
@@ -117,11 +113,10 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// Convert the view into an `ArrayView<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
     pub fn reborrow<'b>(self) -> ArrayView<'b, A, D>
-        where 'a: 'b
+    where
+        'a: 'b,
     {
-        unsafe {
-            ArrayView::new_(self.as_ptr(), self.dim, self.strides)
-        }
+        unsafe { ArrayView::new_(self.as_ptr(), self.dim, self.strides) }
     }
 
     /// Split the array view along `axis` and return one view strictly before the
@@ -144,9 +139,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     /// Return `None` otherwise.
     pub fn into_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
-            unsafe {
-                Some(slice::from_raw_parts(self.ptr, self.len()))
-            }
+            unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
         } else {
             None
         }
@@ -157,7 +150,6 @@ impl<'a, A, D> ArrayView<'a, A, D>
         unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
     }
 }
-
 
 /// Extra indexing methods for array views
 ///
@@ -243,8 +235,9 @@ pub trait IndexLonger<I> {
 }
 
 impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
-    where I: NdIndex<D>,
-          D: Dimension,
+where
+    I: NdIndex<D>,
+    D: Dimension,
 {
     type Output = &'a A;
 
@@ -260,19 +253,13 @@ impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
     /// [1]: struct.ArrayBase.html#method.get
     ///
     /// **Panics** if index is out of bounds.
-    fn index(self, index: I) -> &'a A
-    {
+    fn index(self, index: I) -> &'a A {
         debug_bounds_check!(self, index);
-        unsafe {
-            &*self.get_ptr(index).unwrap_or_else(|| array_out_of_bounds())
-        }
+        unsafe { &*self.get_ptr(index).unwrap_or_else(|| array_out_of_bounds()) }
     }
 
-    fn get(self, index: I) -> Option<&'a A>
-    {
-        unsafe {
-            self.get_ptr(index).map(|ptr| &*ptr)
-        }
+    fn get(self, index: I) -> Option<&'a A> {
+        unsafe { self.get_ptr(index).map(|ptr| &*ptr) }
     }
 
     /// Get a reference of a element through the view without boundary check
@@ -286,8 +273,7 @@ impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
     /// [1]: struct.ArrayBase.html#method.uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    unsafe fn uget(self, index: I) -> &'a A
-    {
+    unsafe fn uget(self, index: I) -> &'a A {
         debug_bounds_check!(self, index);
         &*self.as_ptr().offset(index.index_unchecked(&self.strides))
     }
@@ -295,7 +281,8 @@ impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
 
 /// Methods for read-write array views.
 impl<'a, A, D> ArrayViewMut<'a, A, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     /// Create a read-write array view borrowing its data from a slice.
     ///
@@ -322,9 +309,9 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A])
-        -> Result<Self, ShapeError>
-        where Sh: Into<StrideShape<D>>,
+    pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A]) -> Result<Self, ShapeError>
+    where
+        Sh: Into<StrideShape<D>>,
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_impl(shape.into(), xs)
@@ -379,7 +366,8 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
-        where Sh: Into<StrideShape<D>>
+    where
+        Sh: Into<StrideShape<D>>,
     {
         RawArrayViewMut::from_shape_ptr(shape, ptr).deref_into_view_mut()
     }
@@ -387,11 +375,10 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     /// Convert the view into an `ArrayViewMut<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
     pub fn reborrow<'b>(mut self) -> ArrayViewMut<'b, A, D>
-        where 'a: 'b
+    where
+        'a: 'b,
     {
-        unsafe {
-            ArrayViewMut::new_(self.as_mut_ptr(), self.dim, self.strides)
-        }
+        unsafe { ArrayViewMut::new_(self.as_mut_ptr(), self.dim, self.strides) }
     }
 
     /// Split the array view along `axis` and return one mutable view strictly
@@ -410,12 +397,12 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
     pub fn into_slice(self) -> Option<&'a mut [A]> {
         self.into_slice_().ok()
     }
-
 }
 
 impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
-    where I: NdIndex<D>,
-          D: Dimension,
+where
+    I: NdIndex<D>,
+    D: Dimension,
 {
     type Output = &'a mut A;
 
@@ -470,13 +457,16 @@ impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
     /// **Note:** only unchecked for non-debug builds of ndarray.
     unsafe fn uget(mut self, index: I) -> &'a mut A {
         debug_bounds_check!(self, index);
-        &mut *self.as_mut_ptr().offset(index.index_unchecked(&self.strides))
+        &mut *self
+            .as_mut_ptr()
+            .offset(index.index_unchecked(&self.strides))
     }
 }
 
 /// Private array view methods
 impl<'a, A, D> ArrayView<'a, A, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     /// Create a new `ArrayView`
     ///
@@ -493,9 +483,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
 
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
-        unsafe {
-            Baseiter::new(self.ptr, self.dim, self.strides)
-        }
+        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]
@@ -509,17 +497,18 @@ impl<'a, A, D> ArrayView<'a, A, D>
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
-    #[deprecated(note="This method will be replaced.")]
+    #[deprecated(note = "This method will be replaced.")]
     pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
-        where D: RemoveAxis,
+    where
+        D: RemoveAxis,
     {
         AxisIter::new(self, Axis(0))
     }
-
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     /// Create a new `ArrayView`
     ///
@@ -541,9 +530,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     // Convert into a read-only view
     pub(crate) fn into_view(self) -> ArrayView<'a, A, D> {
-        unsafe {
-            ArrayView::new_(self.ptr, self.dim, self.strides)
-        }
+        unsafe { ArrayView::new_(self.ptr, self.dim, self.strides) }
     }
 
     /// Converts to a mutable raw array view.
@@ -553,9 +540,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
-        unsafe {
-            Baseiter::new(self.ptr, self.dim, self.strides)
-        }
+        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]
@@ -565,9 +550,7 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     pub(crate) fn into_slice_(self) -> Result<&'a mut [A], Self> {
         if self.is_standard_layout() {
-            unsafe {
-                Ok(slice::from_raw_parts_mut(self.ptr, self.len()))
-            }
+            unsafe { Ok(slice::from_raw_parts_mut(self.ptr, self.len())) }
         } else {
             Err(self)
         }
@@ -579,11 +562,11 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 
     /// Return an outer iterator for this view.
     #[doc(hidden)] // not official
-    #[deprecated(note="This method will be replaced.")]
+    #[deprecated(note = "This method will be replaced.")]
     pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
-        where D: RemoveAxis,
+    where
+        D: RemoveAxis,
     {
         AxisIterMut::new(self, Axis(0))
     }
 }
-

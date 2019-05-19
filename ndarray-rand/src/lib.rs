@@ -9,21 +9,17 @@
 //! Constructors for randomized arrays. `rand` integration for `ndarray`.
 //!
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
-extern crate rand;
 extern crate ndarray;
 #[cfg(feature = "normaldist")]
 extern crate ndarray_linalg;
+extern crate rand;
 
-use rand::{thread_rng, Rng, SeedableRng};
 use rand::distributions::Distribution;
 use rand::rngs::SmallRng;
+use rand::{thread_rng, Rng, SeedableRng};
 
-use ndarray::{
-    ArrayBase,
-    Dimension,
-    DataOwned,
-};
 use ndarray::ShapeBuilder;
+use ndarray::{ArrayBase, DataOwned, Dimension};
 
 pub mod normal;
 
@@ -41,8 +37,9 @@ pub mod normal;
 /// documentation for information. You can select a different RNG with
 /// [`.random_using()`](#tymethod.random_using).
 pub trait RandomExt<S, D>
-    where S: DataOwned,
-          D: Dimension,
+where
+    S: DataOwned,
+    D: Dimension,
 {
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution` using the default RNG.
@@ -67,26 +64,30 @@ pub trait RandomExt<S, D>
     /// //  [  0.0914,   5.5186,   5.8135,   5.2361,   3.1879]]
     /// # }
     fn random<Sh, IdS>(shape: Sh, distribution: IdS) -> ArrayBase<S, D>
-        where IdS: Distribution<S::Elem>,
-              Sh: ShapeBuilder<Dim=D>;
+    where
+        IdS: Distribution<S::Elem>,
+        Sh: ShapeBuilder<Dim = D>;
 
     /// Create an array with shape `shape` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
     ///
     /// ***Panics*** if the number of elements overflows usize.
     fn random_using<Sh, IdS, R>(shape: Sh, distribution: IdS, rng: &mut R) -> ArrayBase<S, D>
-        where IdS: Distribution<S::Elem>,
-              R: Rng + ?Sized,
-              Sh: ShapeBuilder<Dim=D>;
+    where
+        IdS: Distribution<S::Elem>,
+        R: Rng + ?Sized,
+        Sh: ShapeBuilder<Dim = D>;
 }
 
 impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
-    where S: DataOwned,
-          D: Dimension,
+where
+    S: DataOwned,
+    D: Dimension,
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
-        where IdS: Distribution<S::Elem>,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        IdS: Distribution<S::Elem>,
+        Sh: ShapeBuilder<Dim = D>,
     {
         let mut rng =
             SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed");
@@ -94,9 +95,10 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
     }
 
     fn random_using<Sh, IdS, R>(shape: Sh, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
-        where IdS: Distribution<S::Elem>,
-              R: Rng + ?Sized,
-              Sh: ShapeBuilder<Dim=D>,
+    where
+        IdS: Distribution<S::Elem>,
+        R: Rng + ?Sized,
+        Sh: ShapeBuilder<Dim = D>,
     {
         Self::from_shape_fn(shape, |_| dist.sample(rng))
     }
@@ -124,7 +126,8 @@ impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
 pub struct F32<S>(pub S);
 
 impl<S> Distribution<f32> for F32<S>
-    where S: Distribution<f64>
+where
+    S: Distribution<f64>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
         self.0.sample(rng) as f32

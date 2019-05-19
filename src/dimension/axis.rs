@@ -21,10 +21,12 @@ pub struct Axis(pub usize);
 impl Axis {
     /// Return the index of the axis.
     #[inline(always)]
-    pub fn index(&self) -> usize { self.0 }
+    pub fn index(&self) -> usize {
+        self.0
+    }
 }
 
-copy_and_clone!{Axis}
+copy_and_clone! {Axis}
 
 macro_rules! derive_cmp {
     ($traitname:ident for $typename:ident, $method:ident -> $ret:ty) => {
@@ -34,9 +36,8 @@ macro_rules! derive_cmp {
                 (self.0).$method(&rhs.0)
             }
         }
-    }
+    };
 }
 
-derive_cmp!{PartialEq for Axis, eq -> bool}
-derive_cmp!{PartialOrd for Axis, partial_cmp -> Option<Ordering>}
-
+derive_cmp! {PartialEq for Axis, eq -> bool}
+derive_cmp! {PartialOrd for Axis, partial_cmp -> Option<Ordering>}

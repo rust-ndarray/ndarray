@@ -473,7 +473,7 @@
 //!
 //! </td><td>
 //!
-//! [`a.all_close(&b, 1e-8)`][.all_close()]
+//! [`a.abs_diff_eq(&b, 1e-8)`][.abs_diff_eq()]
 //!
 //! </td><td>
 //!
@@ -557,7 +557,7 @@
 //! `a[:,4]` | [`a.column(4)`][.column()] or [`a.column_mut(4)`][.column_mut()] | view (or mutable view) of column 4 in a 2-D array
 //! `a.shape[0] == a.shape[1]` | [`a.is_square()`][.is_square()] | check if the array is square
 //!
-//! [.all_close()]: ../../struct.ArrayBase.html#method.all_close
+//! [.abs_diff_eq()]: ../../struct.ArrayBase.html#impl-AbsDiffEq<ArrayBase<S2%2C%20D>>
 //! [ArcArray]: ../../type.ArcArray.html
 //! [arr2()]: ../../fn.arr2.html
 //! [array!]: ../../macro.array.html
@@ -633,6 +633,6 @@
 //! [::zeros()]: ../../struct.ArrayBase.html#method.zeros
 //! [Zip]: ../../struct.Zip.html
 
-pub mod rk_step;
 pub mod coord_transform;
+pub mod rk_step;
 pub mod simple_math;

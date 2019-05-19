@@ -1,6 +1,6 @@
-extern crate rand;
 extern crate ndarray;
 extern crate ndarray_rand;
+extern crate rand;
 
 use rand::distributions::{
     Uniform, Distribution

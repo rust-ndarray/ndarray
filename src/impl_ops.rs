@@ -29,24 +29,24 @@ use num_complex::Complex;
 /// This trait ***does not*** limit which elements can be stored in an array in general.
 /// Non-`ScalarOperand` types can still participate in arithmetic as array elements in
 /// in array-array operations.
-pub trait ScalarOperand : 'static + Clone { }
-impl ScalarOperand for bool { }
-impl ScalarOperand for i8 { }
-impl ScalarOperand for u8 { }
-impl ScalarOperand for i16 { }
-impl ScalarOperand for u16 { }
-impl ScalarOperand for i32 { }
-impl ScalarOperand for u32 { }
-impl ScalarOperand for i64 { }
-impl ScalarOperand for u64 { }
-impl ScalarOperand for i128 { }
-impl ScalarOperand for u128 { }
-impl ScalarOperand for isize { }
-impl ScalarOperand for usize { }
-impl ScalarOperand for f32 { }
-impl ScalarOperand for f64 { }
-impl ScalarOperand for Complex<f32> { }
-impl ScalarOperand for Complex<f64> { }
+pub trait ScalarOperand: 'static + Clone {}
+impl ScalarOperand for bool {}
+impl ScalarOperand for i8 {}
+impl ScalarOperand for u8 {}
+impl ScalarOperand for i16 {}
+impl ScalarOperand for u16 {}
+impl ScalarOperand for i32 {}
+impl ScalarOperand for u32 {}
+impl ScalarOperand for i64 {}
+impl ScalarOperand for u64 {}
+impl ScalarOperand for i128 {}
+impl ScalarOperand for u128 {}
+impl ScalarOperand for isize {}
+impl ScalarOperand for usize {}
+impl ScalarOperand for f32 {}
+impl ScalarOperand for f64 {}
+impl ScalarOperand for Complex<f32> {}
+impl ScalarOperand for Complex<f64> {}
 
 macro_rules! impl_binary_op(
     ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
@@ -60,12 +60,14 @@ macro_rules! impl_binary_op(
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
-    where A: Clone + $trt<A, Output=A>,
-          S: DataOwned<Elem=A> + DataMut,
-          S2: Data<Elem=A>,
-          D: Dimension,
-          E: Dimension,
+impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = ArrayBase<S, D>;
     fn $mth(self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
@@ -82,12 +84,14 @@ impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
-    where A: Clone + $trt<A, Output=A>,
-          S: DataOwned<Elem=A> + DataMut,
-          S2: Data<Elem=A>,
-          D: Dimension,
-          E: Dimension,
+impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = ArrayBase<S, D>;
     fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
@@ -107,12 +111,14 @@ impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
-    where A: Clone + $trt<A, Output=A>,
-          S: Data<Elem=A>,
-          S2: Data<Elem=A>,
-          D: Dimension,
-          E: Dimension,
+impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
 {
     type Output = Array<A, D>;
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Array<A, D> {
@@ -162,8 +168,12 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
 
 // Pick the expression $a for commutative and $b for ordered binop
 macro_rules! if_commutative {
-    (Commute { $a:expr } or { $b:expr }) => ($a);
-    (Ordered { $a:expr } or { $b:expr }) => ($b);
+    (Commute { $a:expr } or { $b:expr }) => {
+        $a
+    };
+    (Ordered { $a:expr } or { $b:expr }) => {
+        $b
+    };
 }
 
 macro_rules! impl_scalar_lhs_op {
@@ -211,13 +221,12 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
     );
 }
 
-
 mod arithmetic_ops {
     use super::*;
     use crate::imp_prelude::*;
 
-    use std::ops::*;
     use num_complex::Complex;
+    use std::ops::*;
 
     impl_binary_op!(Add, +, add, +=, "addition");
     impl_binary_op!(Sub, -, sub, -=, "subtraction");
@@ -282,9 +291,10 @@ mod arithmetic_ops {
     impl_scalar_lhs_op!(Complex<f64>, Ordered, /, Div, div, "division");
 
     impl<A, S, D> Neg for ArrayBase<S, D>
-        where A: Clone + Neg<Output=A>,
-              S: DataOwned<Elem=A> + DataMut,
-              D: Dimension
+    where
+        A: Clone + Neg<Output = A>,
+        S: DataOwned<Elem = A> + DataMut,
+        D: Dimension,
     {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
@@ -297,9 +307,10 @@ mod arithmetic_ops {
     }
 
     impl<'a, A, S, D> Neg for &'a ArrayBase<S, D>
-        where &'a A: 'a + Neg<Output=A>,
-              S: Data<Elem=A>,
-              D: Dimension
+    where
+        &'a A: 'a + Neg<Output = A>,
+        S: Data<Elem = A>,
+        D: Dimension,
     {
         type Output = Array<A, D>;
         /// Perform an elementwise negation of reference `self` and return the
@@ -310,9 +321,10 @@ mod arithmetic_ops {
     }
 
     impl<A, S, D> Not for ArrayBase<S, D>
-        where A: Clone + Not<Output=A>,
-              S: DataOwned<Elem=A> + DataMut,
-              D: Dimension
+    where
+        A: Clone + Not<Output = A>,
+        S: DataOwned<Elem = A> + DataMut,
+        D: Dimension,
     {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
@@ -325,9 +337,10 @@ mod arithmetic_ops {
     }
 
     impl<'a, A, S, D> Not for &'a ArrayBase<S, D>
-        where &'a A: 'a + Not<Output=A>,
-              S: Data<Elem=A>,
-              D: Dimension
+    where
+        &'a A: 'a + Not<Output = A>,
+        S: Data<Elem = A>,
+        D: Dimension,
     {
         type Output = Array<A, D>;
         /// Perform an elementwise unary not of reference `self` and return the
@@ -344,60 +357,91 @@ mod assign_ops {
 
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {
-    use std::ops::$trt;
+            use std::ops::$trt;
 
-    #[doc=$doc]
-    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
-    ///
-    /// **Panics** if broadcasting isn’t possible.
-    impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
-        where A: Clone + $trt<A>,
-              S: DataMut<Elem=A>,
-              S2: Data<Elem=A>,
-              D: Dimension,
-              E: Dimension,
-    {
-        fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
-            self.zip_mut_with(rhs, |x, y| {
-                x.$method(y.clone());
-            });
-        }
-    }
+            #[doc=$doc]
+            /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+            ///
+            /// **Panics** if broadcasting isn’t possible.
+            impl<'a, A, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
+            where
+                A: Clone + $trt<A>,
+                S: DataMut<Elem = A>,
+                S2: Data<Elem = A>,
+                D: Dimension,
+                E: Dimension,
+            {
+                fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
+                    self.zip_mut_with(rhs, |x, y| {
+                        x.$method(y.clone());
+                    });
+                }
+            }
 
-    #[doc=$doc]
-    impl<A, S, D> $trt<A> for ArrayBase<S, D>
-        where A: ScalarOperand + $trt<A>,
-              S: DataMut<Elem=A>,
-              D: Dimension,
-    {
-        fn $method(&mut self, rhs: A) {
-            self.unordered_foreach_mut(move |elt| {
-                elt.$method(rhs.clone());
-            });
-        }
-    }
-
+            #[doc=$doc]
+            impl<A, S, D> $trt<A> for ArrayBase<S, D>
+            where
+                A: ScalarOperand + $trt<A>,
+                S: DataMut<Elem = A>,
+                D: Dimension,
+            {
+                fn $method(&mut self, rhs: A) {
+                    self.unordered_foreach_mut(move |elt| {
+                        elt.$method(rhs.clone());
+                    });
+                }
+            }
         };
     }
 
-    impl_assign_op!(AddAssign, add_assign,
-                    "Perform `self += rhs` as elementwise addition (in place).\n");
-    impl_assign_op!(SubAssign, sub_assign,
-                    "Perform `self -= rhs` as elementwise subtraction (in place).\n");
-    impl_assign_op!(MulAssign, mul_assign,
-                    "Perform `self *= rhs` as elementwise multiplication (in place).\n");
-    impl_assign_op!(DivAssign, div_assign,
-                    "Perform `self /= rhs` as elementwise division (in place).\n");
-    impl_assign_op!(RemAssign, rem_assign,
-                    "Perform `self %= rhs` as elementwise remainder (in place).\n");
-    impl_assign_op!(BitAndAssign, bitand_assign,
-                    "Perform `self &= rhs` as elementwise bit and (in place).\n");
-    impl_assign_op!(BitOrAssign, bitor_assign,
-                    "Perform `self |= rhs` as elementwise bit or (in place).\n");
-    impl_assign_op!(BitXorAssign, bitxor_assign,
-                    "Perform `self ^= rhs` as elementwise bit xor (in place).\n");
-    impl_assign_op!(ShlAssign, shl_assign,
-                    "Perform `self <<= rhs` as elementwise left shift (in place).\n");
-    impl_assign_op!(ShrAssign, shr_assign,
-                    "Perform `self >>= rhs` as elementwise right shift (in place).\n");
+    impl_assign_op!(
+        AddAssign,
+        add_assign,
+        "Perform `self += rhs` as elementwise addition (in place).\n"
+    );
+    impl_assign_op!(
+        SubAssign,
+        sub_assign,
+        "Perform `self -= rhs` as elementwise subtraction (in place).\n"
+    );
+    impl_assign_op!(
+        MulAssign,
+        mul_assign,
+        "Perform `self *= rhs` as elementwise multiplication (in place).\n"
+    );
+    impl_assign_op!(
+        DivAssign,
+        div_assign,
+        "Perform `self /= rhs` as elementwise division (in place).\n"
+    );
+    impl_assign_op!(
+        RemAssign,
+        rem_assign,
+        "Perform `self %= rhs` as elementwise remainder (in place).\n"
+    );
+    impl_assign_op!(
+        BitAndAssign,
+        bitand_assign,
+        "Perform `self &= rhs` as elementwise bit and (in place).\n"
+    );
+    impl_assign_op!(
+        BitOrAssign,
+        bitor_assign,
+        "Perform `self |= rhs` as elementwise bit or (in place).\n"
+    );
+    impl_assign_op!(
+        BitXorAssign,
+        bitxor_assign,
+        "Perform `self ^= rhs` as elementwise bit xor (in place).\n"
+    );
+    impl_assign_op!(
+        ShlAssign,
+        shl_assign,
+        "Perform `self <<= rhs` as elementwise left shift (in place).\n"
+    );
+    impl_assign_op!(
+        ShrAssign,
+        shr_assign,
+        "Perform `self >>= rhs` as elementwise right shift (in place).\n"
+    );
 }

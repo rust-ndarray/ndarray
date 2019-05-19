@@ -1,4 +1,3 @@
-
 /// Derive Copy and Clone using the parameters (and bounds) as specified in []
 macro_rules! copy_and_clone {
     ([$($parm:tt)*] $type_:ty) => {
@@ -44,7 +43,9 @@ macro_rules! ndassert {
 
 #[cfg(not(debug_assertions))]
 macro_rules! ndassert {
-    ($e:expr, $($_ignore:tt)*) => { assert!($e) }
+    ($e:expr, $($_ignore:tt)*) => {
+        assert!($e)
+    };
 }
 
 macro_rules! expand_if {
@@ -61,14 +62,16 @@ macro_rules! expand_if {
 macro_rules! debug_bounds_check {
     ($self_:ident, $index:expr) => {
         if let None = $index.index_checked(&$self_.dim, &$self_.strides) {
-            panic!("ndarray: index {:?} is out of bounds for array of shape {:?}",
-                   $index, $self_.shape());
+            panic!(
+                "ndarray: index {:?} is out of bounds for array of shape {:?}",
+                $index,
+                $self_.shape()
+            );
         }
     };
 }
 
 #[cfg(not(debug_assertions))]
 macro_rules! debug_bounds_check {
-    ($self_:ident, $index:expr) => { };
+    ($self_:ident, $index:expr) => {};
 }
-

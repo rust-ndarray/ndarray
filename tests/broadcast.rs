@@ -1,11 +1,9 @@
-
 extern crate ndarray;
 
 use ndarray::prelude::*;
 
 #[test]
-fn broadcast_1()
-{
+fn broadcast_1() {
     let a_dim = Dim([2, 4, 2, 2]);
     let b_dim = Dim([2, 1, 2, 1]);
     let a = ArcArray::linspace(0., 1., a_dim.size()).reshape(a_dim);
@@ -22,16 +20,15 @@ fn broadcast_1()
     assert!(c.broadcast((32, 1, 2)).is_none());
 
     /* () can be broadcast to anything */
-    let z = ArcArray::<f32,_>::zeros(());
+    let z = ArcArray::<f32, _>::zeros(());
     assert!(z.broadcast(()).is_some());
     assert!(z.broadcast(1).is_some());
     assert!(z.broadcast(3).is_some());
-    assert!(z.broadcast((7,2,9)).is_some());
+    assert!(z.broadcast((7, 2, 9)).is_some());
 }
 
 #[test]
-fn test_add()
-{
+fn test_add() {
     let a_dim = Dim([2, 4, 2, 2]);
     let b_dim = Dim([2, 1, 2, 1]);
     let mut a = ArcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
@@ -41,9 +38,9 @@ fn test_add()
     a += &t;
 }
 
-#[test] #[should_panic]
-fn test_add_incompat()
-{
+#[test]
+#[should_panic]
+fn test_add_incompat() {
     let a_dim = Dim([2, 4, 2, 2]);
     let mut a = ArcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);
     let incompat = ArcArray::from_elem(3, 1.0f32);

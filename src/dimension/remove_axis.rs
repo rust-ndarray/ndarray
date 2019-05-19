@@ -6,14 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
-use crate::{Ix, Ix0, Ix1, Dimension, Dim, Axis};
+use crate::{Axis, Dim, Dimension, Ix, Ix0, Ix1};
 
 /// Array shape with a next smaller dimension.
 ///
 /// `RemoveAxis` defines a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
-pub trait RemoveAxis : Dimension {
+pub trait RemoveAxis: Dimension {
     fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
@@ -30,7 +29,11 @@ impl RemoveAxis for Dim<[Ix; 2]> {
     fn remove_axis(&self, axis: Axis) -> Ix1 {
         let axis = axis.index();
         debug_assert!(axis < self.ndim());
-        if axis == 0 { Ix1(get!(self, 1)) } else { Ix1(get!(self, 0)) }
+        if axis == 0 {
+            Ix1(get!(self, 1))
+        } else {
+            Ix1(get!(self, 0))
+        }
     }
 }
 
@@ -63,6 +66,3 @@ macro_rules! impl_remove_axis_array(
 );
 
 impl_remove_axis_array!(3, 4, 5, 6);
-
-
-

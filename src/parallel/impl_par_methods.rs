@@ -1,22 +1,15 @@
-
-use crate::{
-    Dimension,
-    NdProducer,
-    Zip,
-    ArrayBase,
-    DataMut,
-};
+use crate::{ArrayBase, DataMut, Dimension, NdProducer, Zip};
 
 use crate::parallel::prelude::*;
-
 
 /// # Parallel methods
 ///
 /// These methods require crate feature `rayon`.
 impl<A, S, D> ArrayBase<S, D>
-    where S: DataMut<Elem=A>,
-          D: Dimension,
-          A: Send + Sync,
+where
+    S: DataMut<Elem = A>,
+    D: Dimension,
+    A: Send + Sync,
 {
     /// Parallel version of `map_inplace`.
     ///
@@ -24,7 +17,8 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// Elements are visited in arbitrary order.
     pub fn par_map_inplace<F>(&mut self, f: F)
-        where F: Fn(&mut A) + Sync + Send
+    where
+        F: Fn(&mut A) + Sync + Send,
     {
         self.view_mut().into_par_iter().for_each(f)
     }
@@ -36,16 +30,15 @@ impl<A, S, D> ArrayBase<S, D>
     ///
     /// Elements are visited in arbitrary order.
     pub fn par_mapv_inplace<F>(&mut self, f: F)
-        where F: Fn(A) -> A + Sync + Send,
-              A: Clone,
+    where
+        F: Fn(A) -> A + Sync + Send,
+        A: Clone,
     {
-        self.view_mut().into_par_iter()
+        self.view_mut()
+            .into_par_iter()
             .for_each(move |x| *x = f(x.clone()))
     }
 }
-
-
-
 
 // Zip
 
@@ -75,7 +68,7 @@ macro_rules! zip_impl {
     }
 }
 
-zip_impl!{
+zip_impl! {
     [P1],
     [P1 P2],
     [P1 P2 P3],

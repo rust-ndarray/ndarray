@@ -1,10 +1,11 @@
-
 use std::fmt::Debug;
 
 use itertools::zip;
 
-use crate::{Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl, Dim, Dimension, IntoDimension};
 use super::{stride_offset, stride_offset_checked};
+use crate::{
+    Dim, Dimension, IntoDimension, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl,
+};
 
 /// Tuple or fixed size arrays that can be used to index an array.
 ///
@@ -18,7 +19,7 @@ use super::{stride_offset, stride_offset_checked};
 /// a[[1, 1]] += 1;
 /// assert_eq!(a[(1, 1)], 4);
 /// ```
-pub unsafe trait NdIndex<E> : Debug {
+pub unsafe trait NdIndex<E>: Debug {
     #[doc(hidden)]
     fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;
     #[doc(hidden)]
@@ -26,7 +27,8 @@ pub unsafe trait NdIndex<E> : Debug {
 }
 
 unsafe impl<D> NdIndex<D> for D
-    where D: Dimension
+where
+    D: Dimension,
 {
     fn index_checked(&self, dim: &D, strides: &D) -> Option<isize> {
         dim.stride_offset_checked(strides, self)
@@ -54,8 +56,7 @@ unsafe impl NdIndex<Ix2> for (Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix2) -> isize {
-        stride_offset(self.0, get!(strides, 0)) +
-        stride_offset(self.1, get!(strides, 1))
+        stride_offset(self.0, get!(strides, 0)) + stride_offset(self.1, get!(strides, 1))
     }
 }
 unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
@@ -66,9 +67,9 @@ unsafe impl NdIndex<Ix3> for (Ix, Ix, Ix) {
 
     #[inline]
     fn index_unchecked(&self, strides: &Ix3) -> isize {
-        stride_offset(self.0, get!(strides, 0)) +
-        stride_offset(self.1, get!(strides, 1)) +
-        stride_offset(self.2, get!(strides, 2))
+        stride_offset(self.0, get!(strides, 0))
+            + stride_offset(self.1, get!(strides, 1))
+            + stride_offset(self.2, get!(strides, 2))
     }
 }
 
@@ -79,7 +80,9 @@ unsafe impl NdIndex<Ix4> for (Ix, Ix, Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix4) -> isize {
-        zip(strides.ix(), self.into_dimension().ix()).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), self.into_dimension().ix())
+            .map(|(&s, &i)| stride_offset(i, s))
+            .sum()
     }
 }
 unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
@@ -89,7 +92,9 @@ unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix) {
     }
     #[inline]
     fn index_unchecked(&self, strides: &Ix5) -> isize {
-        zip(strides.ix(), self.into_dimension().ix()).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), self.into_dimension().ix())
+            .map(|(&s, &i)| stride_offset(i, s))
+            .sum()
     }
 }
 
@@ -183,7 +188,7 @@ macro_rules! ndindex_with_array {
     };
 }
 
-ndindex_with_array!{
+ndindex_with_array! {
     [0, Ix0]
     [1, Ix1 0]
     [2, Ix2 0 1]
@@ -214,6 +219,8 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
         stride_offset_checked(dim.ix(), strides.ix(), *self)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
-        zip(strides.ix(), *self).map(|(&s, &i)| stride_offset(i, s)).sum()
+        zip(strides.ix(), *self)
+            .map(|(&s, &i)| stride_offset(i, s))
+            .sum()
     }
 }

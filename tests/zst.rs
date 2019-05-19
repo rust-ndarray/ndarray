@@ -1,4 +1,3 @@
-
 extern crate ndarray;
 
 use ndarray::arr2;
@@ -6,7 +5,7 @@ use ndarray::ArcArray;
 
 #[test]
 fn test_swap() {
-    let mut a = arr2(&[[();3];3]);
+    let mut a = arr2(&[[(); 3]; 3]);
 
     let b = a.clone();
 

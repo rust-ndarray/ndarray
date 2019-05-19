@@ -1,4 +1,3 @@
-
 ///
 /// This build script emits the openblas linking directive if requested
 ///
