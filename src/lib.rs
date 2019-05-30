@@ -218,8 +218,9 @@ pub type Ixs = isize;
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.
 ///
-/// Type aliases [`Array`], [`ArcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
-/// to `ArrayBase` with different types for the data container.
+/// Type aliases [`Array`], [`ArcArray`], [`ArrayView`], [`ArrayViewMut`], and
+/// [`ArrayCow`] refer to `ArrayBase` with different types for the data
+/// container.
 ///
 /// [`Array`]: type.Array.html
 /// [`ArcArray`]: type.ArcArray.html
@@ -230,6 +231,7 @@ pub type Ixs = isize;
 ///
 /// + [Array](#array)
 /// + [ArcArray](#arcarray)
+/// + [ArrayCow](#arraycow)
 /// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Loops, Producers and Iterators](#loops-producers-and-iterators)
@@ -272,6 +274,16 @@ pub type Ixs = isize;
 /// Calling a method for mutating elements on `ArcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
+///
+/// ## `ArrayCow`
+///
+/// [`ArrayCow`](type.ArrayCow.html) is analogous to
+/// [`std::borrow::Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+/// It can represent either an immutable view or a uniquely owned array. If an
+/// `ArrayCow` instance is the immutable view variant, then calling a method
+/// for mutating elements in the array will cause it to be converted into the
+/// owned variant (by cloning all the elements) before the modification is
+/// performed.
 ///
 /// ## Array Views
 ///
@@ -705,7 +717,7 @@ pub type Ixs = isize;
 /// <table>
 /// <tr>
 /// <th rowspan="2">Output</th>
-/// <th colspan="4">Input</th>
+/// <th colspan="5">Input</th>
 /// </tr>
 ///
 /// <tr>
@@ -717,6 +729,11 @@ pub type Ixs = isize;
 /// <td>
 ///
 /// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `ArrayCow<'a, A, D>`
 ///
 /// </td>
 /// <td>
@@ -742,6 +759,11 @@ pub type Ixs = isize;
 /// <td>
 ///
 /// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_owned()`][.into_owned()]
 ///
 /// </td>
 /// <td>
@@ -781,6 +803,11 @@ pub type Ixs = isize;
 /// </td>
 /// <td>
 ///
+/// [`a.into_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
 /// [`a.to_owned().into_shared()`][.into_shared()]
 ///
 /// </td>
@@ -791,12 +818,52 @@ pub type Ixs = isize;
 /// </td>
 /// </tr>
 ///
+/// <!--Conversions to `ArrayCow<'a, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `ArrayCow<'a, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`ArrayCow::from(a)`](type.ArrayCow.html#impl-From<ArrayBase<OwnedRepr<A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// [`ArrayCow::from(a.into_owned())`](type.ArrayCow.html#impl-From<ArrayBase<OwnedRepr<A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`ArrayCow::from(a)`](type.ArrayCow.html#impl-From<ArrayBase<ViewRepr<%26%27a%20A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// [`ArrayCow::from(a.view())`](type.ArrayCow.html#impl-From<ArrayBase<ViewRepr<%26%27a%20A>%2C%20D>>)
+///
+/// </td>
+/// </tr>
+///
 /// <!--Conversions to `ArrayView<'b, A, D>`-->
 ///
 /// <tr>
 /// <td>
 ///
 /// `ArrayView<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
 ///
 /// </td>
 /// <td>
@@ -841,6 +908,11 @@ pub type Ixs = isize;
 /// </td>
 /// <td>
 ///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
 /// illegal
 ///
 /// </td>
@@ -859,7 +931,7 @@ pub type Ixs = isize;
 /// equivalent with dim `D2` (e.g. converting from dynamic dim to const dim)
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.into_dimensionality::<D2>()`][.into_dimensionality()]
 ///
@@ -874,7 +946,7 @@ pub type Ixs = isize;
 /// equivalent with dim `IxDyn`
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.into_dyn()`][.into_dyn()]
 ///
@@ -889,7 +961,7 @@ pub type Ixs = isize;
 /// `Array<B, D>` (new element type)
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.map(|x| x.do_your_conversion())`][.map()]
 ///
@@ -1224,6 +1296,13 @@ pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 /// An `ArrayCow` represents either a uniquely owned array or a view of an
 /// array. The `'a` corresponds to the lifetime of the view variant.
 ///
+/// This type is analogous to
+/// [`std::borrow::Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+/// If an `ArrayCow` instance is the immutable view variant, then calling a
+/// method for mutating elements in the array will cause it to be converted
+/// into the owned variant (by cloning all the elements) before the
+/// modification is performed.
+///
 /// Array views have all the methods of an array (see [`ArrayBase`][ab]).
 ///
 /// See also [`ArcArray`](type.ArcArray.html), which also provides
@@ -1377,12 +1456,19 @@ impl<A> ViewRepr<A> {
     }
 }
 
+/// ArrayCow's representation.
+///
+/// *Don't use this type directly—use the type alias
+/// [`ArrayCow`](type.ArrayCow.html) for the array type!*
 pub enum CowRepr<'a, A> {
+    /// Borrowed data.
     View(ViewRepr<&'a A>),
+    /// Owned data.
     Owned(OwnedRepr<A>),
 }
 
 impl<'a, A> CowRepr<'a, A> {
+    /// Returns `true` iff the data is the `View` variant.
     pub fn is_view(&self) -> bool {
         match self {
             CowRepr::View(_) => true,
@@ -1390,6 +1476,7 @@ impl<'a, A> CowRepr<'a, A> {
         }
     }
 
+    /// Returns `true` iff the data is the `Owned` variant.
     pub fn is_owned(&self) -> bool {
         !self.is_view()
     }

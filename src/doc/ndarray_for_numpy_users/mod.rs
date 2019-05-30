@@ -72,9 +72,11 @@
 //! In `ndarray`, all arrays are instances of [`ArrayBase`][ArrayBase], but
 //! `ArrayBase` is generic over the ownership of the data. [`Array`][Array]
 //! owns its data; [`ArrayView`][ArrayView] is a view;
-//! [`ArrayViewMut`][ArrayViewMut] is a mutable view; and
-//! [`ArcArray`][ArcArray] has a reference-counted pointer to its data (with
-//! copy-on-write mutation). Arrays and views follow Rust's aliasing rules.
+//! [`ArrayViewMut`][ArrayViewMut] is a mutable view; [`ArrayCow`][ArrayCow]
+//! either owns its data or is a view (with copy-on-write mutation of the view
+//! variant); and [`ArcArray`][ArcArray] has a reference-counted pointer to its
+//! data (with copy-on-write mutation). Arrays and views follow Rust's aliasing
+//! rules.
 //!
 //! </td>
 //! </tr>
@@ -564,6 +566,7 @@
 //! [Array]: ../../type.Array.html
 //! [Array2]: ../../type.Array2.html
 //! [ArrayBase]: ../../struct.ArrayBase.html
+//! [ArrayCow]: ../../type.ArrayCow.html
 //! [ArrayView]: ../../type.ArrayView.html
 //! [ArrayViewMut]: ../../type.ArrayViewMut.html
 //! [.assign()]: ../../struct.ArrayBase.html#method.assign

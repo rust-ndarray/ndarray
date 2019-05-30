@@ -17,10 +17,12 @@ impl<'a, A, D> ArrayCow<'a, A, D>
 where
     D: Dimension,
 {
+    /// Returns `true` iff the array is the view (borrowed) variant.
     pub fn is_view(&self) -> bool {
         self.data.is_view()
     }
 
+    /// Returns `true` iff the array is the owned variant.
     pub fn is_owned(&self) -> bool {
         self.data.is_owned()
     }
