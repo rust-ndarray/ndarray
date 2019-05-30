@@ -193,7 +193,7 @@ mod imp_prelude {
     pub use crate::prelude::*;
     pub use crate::ArcArray;
     pub use crate::{
-        Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
+        CowRepr, Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
         RemoveAxis, ViewRepr,
     };
 }
@@ -218,18 +218,21 @@ pub type Ixs = isize;
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.
 ///
-/// Type aliases [`Array`], [`ArcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
-/// to `ArrayBase` with different types for the data container.
+/// Type aliases [`Array`], [`ArcArray`], [`CowArray`], [`ArrayView`], and
+/// [`ArrayViewMut`] refer to `ArrayBase` with different types for the data
+/// container.
 ///
 /// [`Array`]: type.Array.html
 /// [`ArcArray`]: type.ArcArray.html
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
+/// [`CowArray`]: type.CowArray.html
 ///
 /// ## Contents
 ///
 /// + [Array](#array)
 /// + [ArcArray](#arcarray)
+/// + [CowArray](#cowarray)
 /// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Loops, Producers and Iterators](#loops-producers-and-iterators)
@@ -272,6 +275,16 @@ pub type Ixs = isize;
 /// Calling a method for mutating elements on `ArcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
+///
+/// ## `CowArray`
+///
+/// [`CowArray`](type.CowArray.html) is analogous to
+/// [`std::borrow::Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+/// It can represent either an immutable view or a uniquely owned array. If a
+/// `CowArray` instance is the immutable view variant, then calling a method
+/// for mutating elements in the array will cause it to be converted into the
+/// owned variant (by cloning all the elements) before the modification is
+/// performed.
 ///
 /// ## Array Views
 ///
@@ -705,7 +718,7 @@ pub type Ixs = isize;
 /// <table>
 /// <tr>
 /// <th rowspan="2">Output</th>
-/// <th colspan="4">Input</th>
+/// <th colspan="5">Input</th>
 /// </tr>
 ///
 /// <tr>
@@ -717,6 +730,11 @@ pub type Ixs = isize;
 /// <td>
 ///
 /// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `CowArray<'a, A, D>`
 ///
 /// </td>
 /// <td>
@@ -742,6 +760,11 @@ pub type Ixs = isize;
 /// <td>
 ///
 /// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_owned()`][.into_owned()]
 ///
 /// </td>
 /// <td>
@@ -781,6 +804,11 @@ pub type Ixs = isize;
 /// </td>
 /// <td>
 ///
+/// [`a.into_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
 /// [`a.to_owned().into_shared()`][.into_shared()]
 ///
 /// </td>
@@ -791,12 +819,52 @@ pub type Ixs = isize;
 /// </td>
 /// </tr>
 ///
+/// <!--Conversions to `CowArray<'a, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `CowArray<'a, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a)`](type.CowArray.html#impl-From<ArrayBase<OwnedRepr<A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a.into_owned())`](type.CowArray.html#impl-From<ArrayBase<OwnedRepr<A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a)`](type.CowArray.html#impl-From<ArrayBase<ViewRepr<%26%27a%20A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a.view())`](type.CowArray.html#impl-From<ArrayBase<ViewRepr<%26%27a%20A>%2C%20D>>)
+///
+/// </td>
+/// </tr>
+///
 /// <!--Conversions to `ArrayView<'b, A, D>`-->
 ///
 /// <tr>
 /// <td>
 ///
 /// `ArrayView<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
 ///
 /// </td>
 /// <td>
@@ -841,6 +909,11 @@ pub type Ixs = isize;
 /// </td>
 /// <td>
 ///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
 /// illegal
 ///
 /// </td>
@@ -859,7 +932,7 @@ pub type Ixs = isize;
 /// equivalent with dim `D2` (e.g. converting from dynamic dim to const dim)
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.into_dimensionality::<D2>()`][.into_dimensionality()]
 ///
@@ -874,7 +947,7 @@ pub type Ixs = isize;
 /// equivalent with dim `IxDyn`
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.into_dyn()`][.into_dyn()]
 ///
@@ -889,7 +962,7 @@ pub type Ixs = isize;
 /// `Array<B, D>` (new element type)
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.map(|x| x.do_your_conversion())`][.map()]
 ///
@@ -1219,6 +1292,27 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
+/// An array with copy-on-write behavior.
+///
+/// An `CowArray` represents either a uniquely owned array or a view of an
+/// array. The `'a` corresponds to the lifetime of the view variant.
+///
+/// This type is analogous to
+/// [`std::borrow::Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+/// If a `CowArray` instance is the immutable view variant, then calling a
+/// method for mutating elements in the array will cause it to be converted
+/// into the owned variant (by cloning all the elements) before the
+/// modification is performed.
+///
+/// Array views have all the methods of an array (see [`ArrayBase`][ab]).
+///
+/// See also [`ArcArray`](type.ArcArray.html), which also provides
+/// copy-on-write behavior but has a reference-counted pointer to the data
+/// instead of either a view or a uniquely owned copy.
+///
+/// [ab]: struct.ArrayBase.html
+pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+
 /// A read-only array view.
 ///
 /// An array view represents an array or a part of it, created from
@@ -1363,6 +1457,35 @@ impl<A> ViewRepr<A> {
     }
 }
 
+/// CowArray's representation.
+///
+/// *Don't use this type directly—use the type alias
+/// [`CowArray`](type.CowArray.html) for the array type!*
+pub enum CowRepr<'a, A> {
+    /// Borrowed data.
+    View(ViewRepr<&'a A>),
+    /// Owned data.
+    Owned(OwnedRepr<A>),
+}
+
+impl<'a, A> CowRepr<'a, A> {
+    /// Returns `true` iff the data is the `View` variant.
+    pub fn is_view(&self) -> bool {
+        match self {
+            CowRepr::View(_) => true,
+            CowRepr::Owned(_) => false,
+        }
+    }
+
+    /// Returns `true` iff the data is the `Owned` variant.
+    pub fn is_owned(&self) -> bool {
+        match self {
+            CowRepr::View(_) => false,
+            CowRepr::Owned(_) => true,
+        }
+    }
+}
+
 mod impl_clone;
 
 mod impl_constructors;
@@ -1487,6 +1610,9 @@ mod impl_views;
 
 // Array raw view methods
 mod impl_raw_views;
+
+// Copy-on-write array methods
+mod impl_cow;
 
 /// A contiguous array shape of n dimensions.
 ///
