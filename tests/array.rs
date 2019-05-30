@@ -89,6 +89,16 @@ fn test_slice() {
 }
 
 #[test]
+fn test_slice_edge_cases() {
+    let mut arr = Array3::<u8>::zeros((3, 4, 5));
+    arr.slice_collapse(s![0..0;-1, .., ..]);
+    assert_eq!(arr.shape(), &[0, 4, 5]);
+    let mut arr = Array2::<u8>::from_shape_vec((1, 1).strides((10, 1)), vec![5]).unwrap();
+    arr.slice_collapse(s![1..1, ..]);
+    assert_eq!(arr.shape(), &[0, 1]);
+}
+
+#[test]
 fn test_slice_inclusive_range() {
     let arr = array![[1, 2, 3], [4, 5, 6]];
     assert_eq!(arr.slice(s![1..=1, 1..=2]), array![[5, 6]]);
