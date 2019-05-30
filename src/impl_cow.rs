@@ -8,29 +8,31 @@
 
 use crate::imp_prelude::*;
 
-/// Methods specific to `ArrayCow`.
+/// Methods specific to `CowArray`.
 ///
 /// ***See also all methods for [`ArrayBase`]***
 ///
 /// [`ArrayBase`]: struct.ArrayBase.html
-impl<'a, A, D> ArrayCow<'a, A, D>
+impl<'a, A, D> CowArray<'a, A, D>
 where
     D: Dimension,
 {
+    /// Returns `true` iff the array is the view (borrowed) variant.
     pub fn is_view(&self) -> bool {
         self.data.is_view()
     }
 
+    /// Returns `true` iff the array is the owned variant.
     pub fn is_owned(&self) -> bool {
         self.data.is_owned()
     }
 }
 
-impl<'a, A, D> From<ArrayView<'a, A, D>> for ArrayCow<'a, A, D>
+impl<'a, A, D> From<ArrayView<'a, A, D>> for CowArray<'a, A, D>
 where
     D: Dimension,
 {
-    fn from(view: ArrayView<'a, A, D>) -> ArrayCow<'a, A, D> {
+    fn from(view: ArrayView<'a, A, D>) -> CowArray<'a, A, D> {
         ArrayBase {
             data: CowRepr::View(view.data),
             ptr: view.ptr,
@@ -40,11 +42,11 @@ where
     }
 }
 
-impl<'a, A, D> From<Array<A, D>> for ArrayCow<'a, A, D>
+impl<'a, A, D> From<Array<A, D>> for CowArray<'a, A, D>
 where
     D: Dimension,
 {
-    fn from(array: Array<A, D>) -> ArrayCow<'a, A, D> {
+    fn from(array: Array<A, D>) -> CowArray<'a, A, D> {
         ArrayBase {
             data: CowRepr::Owned(array.data),
             ptr: array.ptr,
