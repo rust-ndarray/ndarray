@@ -1478,7 +1478,10 @@ impl<'a, A> CowRepr<'a, A> {
 
     /// Returns `true` iff the data is the `Owned` variant.
     pub fn is_owned(&self) -> bool {
-        !self.is_view()
+        match self {
+            CowRepr::View(_) => false,
+            CowRepr::Owned(_) => true,
+        }
     }
 }
 
