@@ -1967,10 +1967,10 @@ mod array_cow_tests {
     #[test]
     fn test_is_variant() {
         let arr: Array<i32, Ix2> = array![[1, 2], [3, 4]];
-        let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+        let arr_cow = CowArray::<i32, Ix2>::from(arr.view());
         assert!(arr_cow.is_view());
         assert!(!arr_cow.is_owned());
-        let arr_cow = ArrayCow::<i32, Ix2>::from(arr);
+        let arr_cow = CowArray::<i32, Ix2>::from(arr);
         assert!(arr_cow.is_owned());
         assert!(!arr_cow.is_view());
     }
@@ -1998,13 +1998,13 @@ mod array_cow_tests {
             let mut expected = arr.clone();
             expected[(1, 1)] = 2;
 
-            let mut arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+            let mut arr_cow = CowArray::<i32, Ix2>::from(arr.view());
             arr_cow[(1, 1)] = 2;
             assert!(arr_cow.is_owned());
             assert_eq!(arr_cow, expected);
 
             let ptr = arr.as_ptr();
-            let mut arr_cow = ArrayCow::<i32, Ix2>::from(arr);
+            let mut arr_cow = CowArray::<i32, Ix2>::from(arr);
             assert_eq!(arr_cow.as_ptr(), ptr);
             arr_cow[(1, 1)] = 2;
             assert_eq!(arr_cow.as_ptr(), ptr);
@@ -2015,14 +2015,14 @@ mod array_cow_tests {
     #[test]
     fn test_clone() {
         run_with_various_layouts(|arr: Array2<i32>| {
-            let arr_cow = ArrayCow::<i32, Ix2>::from(arr.view());
+            let arr_cow = CowArray::<i32, Ix2>::from(arr.view());
             let arr_cow_clone = arr_cow.clone();
             assert!(arr_cow_clone.is_view());
             assert_eq!(arr_cow, arr_cow_clone);
             assert_eq!(arr_cow.dim(), arr_cow_clone.dim());
             assert_eq!(arr_cow.strides(), arr_cow_clone.strides());
 
-            let arr_cow = ArrayCow::<i32, Ix2>::from(arr);
+            let arr_cow = CowArray::<i32, Ix2>::from(arr);
             let arr_cow_clone = arr_cow.clone();
             assert!(arr_cow_clone.is_owned());
             assert_eq!(arr_cow, arr_cow_clone);
@@ -2033,7 +2033,7 @@ mod array_cow_tests {
 
     #[test]
     fn test_clone_from() {
-        fn assert_eq_contents_and_layout(arr1: &ArrayCow<i32, Ix2>, arr2: &ArrayCow<i32, Ix2>) {
+        fn assert_eq_contents_and_layout(arr1: &CowArray<i32, Ix2>, arr2: &CowArray<i32, Ix2>) {
             assert_eq!(arr1, arr2);
             assert_eq!(arr1.dim(), arr2.dim());
             assert_eq!(arr1.strides(), arr2.strides());
@@ -2041,26 +2041,26 @@ mod array_cow_tests {
 
         run_with_various_layouts(|arr: Array2<i32>| {
             run_with_various_layouts(|other_arr: Array2<i32>| {
-                let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.view());
-                let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.clone());
+                let arr_cow_src = CowArray::<i32, Ix2>::from(arr.view());
+                let mut arr_cow_dst = CowArray::<i32, Ix2>::from(other_arr.clone());
                 arr_cow_dst.clone_from(&arr_cow_src);
                 assert!(arr_cow_dst.is_view());
                 assert_eq_contents_and_layout(&arr_cow_src, &arr_cow_dst);
 
-                let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.view());
-                let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.view());
+                let arr_cow_src = CowArray::<i32, Ix2>::from(arr.view());
+                let mut arr_cow_dst = CowArray::<i32, Ix2>::from(other_arr.view());
                 arr_cow_dst.clone_from(&arr_cow_src);
                 assert!(arr_cow_dst.is_view());
                 assert_eq_contents_and_layout(&arr_cow_src, &arr_cow_dst);
 
-                let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.clone());
-                let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.view());
+                let arr_cow_src = CowArray::<i32, Ix2>::from(arr.clone());
+                let mut arr_cow_dst = CowArray::<i32, Ix2>::from(other_arr.view());
                 arr_cow_dst.clone_from(&arr_cow_src);
                 assert!(arr_cow_dst.is_owned());
                 assert_eq_contents_and_layout(&arr_cow_src, &arr_cow_dst);
 
-                let arr_cow_src = ArrayCow::<i32, Ix2>::from(arr.clone());
-                let mut arr_cow_dst = ArrayCow::<i32, Ix2>::from(other_arr.clone());
+                let arr_cow_src = CowArray::<i32, Ix2>::from(arr.clone());
+                let mut arr_cow_dst = CowArray::<i32, Ix2>::from(other_arr.clone());
                 arr_cow_dst.clone_from(&arr_cow_src);
                 assert!(arr_cow_dst.is_owned());
                 assert_eq_contents_and_layout(&arr_cow_src, &arr_cow_dst);
@@ -2071,11 +2071,11 @@ mod array_cow_tests {
     #[test]
     fn test_into_owned() {
         run_with_various_layouts(|arr: Array2<i32>| {
-            let before = ArrayCow::<i32, Ix2>::from(arr.view());
+            let before = CowArray::<i32, Ix2>::from(arr.view());
             let after = before.into_owned();
             assert_eq!(arr, after);
 
-            let before = ArrayCow::<i32, Ix2>::from(arr.clone());
+            let before = CowArray::<i32, Ix2>::from(arr.clone());
             let ptr = before.as_ptr();
             let after = before.into_owned();
             assert_eq!(after.as_ptr(), ptr);
