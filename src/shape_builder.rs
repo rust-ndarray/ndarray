@@ -1,7 +1,6 @@
-
+use crate::dimension::IntoDimension;
 use crate::Dimension;
 use crate::{Shape, StrideShape};
-use crate::dimension::IntoDimension;
 
 /// A trait for `Shape` and `D where D: Dimension` that allows
 /// customizing the memory layout (strides) of an array shape.
@@ -19,7 +18,8 @@ pub trait ShapeBuilder {
 }
 
 impl<D> From<D> for Shape<D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     /// Create a `Shape` from `dimension`, using the default memory layout.
     fn from(dimension: D) -> Shape<D> {
@@ -28,13 +28,18 @@ impl<D> From<D> for Shape<D>
 }
 
 impl<T, D> From<T> for StrideShape<D>
-    where D: Dimension,
-          T: ShapeBuilder<Dim=D>,
+where
+    D: Dimension,
+    T: ShapeBuilder<Dim = D>,
 {
     fn from(value: T) -> Self {
         let shape = value.into_shape();
         let d = shape.dim;
-        let st = if shape.is_c { d.default_strides() } else { d.fortran_strides() };
+        let st = if shape.is_c {
+            d.default_strides()
+        } else {
+            d.fortran_strides()
+        };
         StrideShape {
             strides: st,
             dim: d,
@@ -60,7 +65,8 @@ impl<D> From<Shape<D>> for StrideShape<D>
 */
 
 impl<T> ShapeBuilder for T
-    where T: IntoDimension
+where
+    T: IntoDimension,
 {
     type Dim = T::Dim;
     type Strides = T;
@@ -70,7 +76,9 @@ impl<T> ShapeBuilder for T
             is_c: true,
         }
     }
-    fn f(self) -> Shape<Self::Dim> { self.set_f(true) }
+    fn f(self) -> Shape<Self::Dim> {
+        self.set_f(true)
+    }
     fn set_f(self, is_f: bool) -> Shape<Self::Dim> {
         self.into_shape().set_f(is_f)
     }
@@ -80,12 +88,17 @@ impl<T> ShapeBuilder for T
 }
 
 impl<D> ShapeBuilder for Shape<D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     type Dim = D;
     type Strides = D;
-    fn into_shape(self) -> Shape<D> { self }
-    fn f(self) -> Self { self.set_f(true) }
+    fn into_shape(self) -> Shape<D> {
+        self
+    }
+    fn f(self) -> Self {
+        self.set_f(true)
+    }
     fn set_f(mut self, is_f: bool) -> Self {
         self.is_c = !is_f;
         self
@@ -99,12 +112,14 @@ impl<D> ShapeBuilder for Shape<D>
     }
 }
 
-
 impl<D> Shape<D>
-    where D: Dimension,
+where
+    D: Dimension,
 {
     // Return a reference to the dimension
     //pub fn dimension(&self) -> &D { &self.dim }
     /// Return the size of the shape in number of elements
-    pub fn size(&self) -> usize { self.dim.size() }
+    pub fn size(&self) -> usize {
+        self.dim.size()
+    }
 }

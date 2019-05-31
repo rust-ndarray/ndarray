@@ -18,7 +18,8 @@ pub struct Linspace<F> {
 }
 
 impl<F> Iterator for Linspace<F>
-    where F: Float,
+where
+    F: Float,
 {
     type Item = F;
 
@@ -42,7 +43,8 @@ impl<F> Iterator for Linspace<F>
 }
 
 impl<F> DoubleEndedIterator for Linspace<F>
-    where F: Float,
+where
+    F: Float,
 {
     #[inline]
     fn next_back(&mut self) -> Option<F> {
@@ -57,24 +59,24 @@ impl<F> DoubleEndedIterator for Linspace<F>
     }
 }
 
-impl<F> ExactSizeIterator for Linspace<F>
-    where Linspace<F>: Iterator
-{}
+impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 
 /// Return an iterator of evenly spaced floats.
 ///
-/// The `Linspace` has `n` elements, where the first
-/// element is `a` and the last element is `b`.
+/// The `Linspace` has `n` elements from `a` to `b` (inclusive).
 ///
-/// Iterator element type is `F`, where `F` must be
-/// either `f32` or `f64`.
+/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
+/// `f32` or `f64`.
+///
+/// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
 pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
-    where F: Float
+where
+    F: Float,
 {
     let step = if n > 1 {
-        let nf: F = F::from(n).unwrap();
-        (b - a) / (nf - F::one())
+        let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
+        (b - a) / num_steps
     } else {
         F::zero()
     };
@@ -86,23 +88,30 @@ pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
     }
 }
 
-/// Return an iterator of floats spaced by `step`, from
-/// the half-open interval [a, b).
-/// Numerical reasons can result in `b` being included
-/// in the result.
+/// Return an iterator of floats from `start` to `end` (exclusive),
+/// incrementing by `step`.
 ///
-/// Iterator element type is `F`, where `F` must be
-/// either `f32` or `f64`.
+/// Numerical reasons can result in `b` being included in the result.
+///
+/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
+/// `f32` or `f64`.
+///
+/// **Panics** if converting `((b - a) / step).ceil()` to type `F` fails.
 #[inline]
 pub fn range<F>(a: F, b: F, step: F) -> Linspace<F>
-    where F: Float
+where
+    F: Float,
 {
     let len = b - a;
     let steps = F::ceil(len / step);
     Linspace {
         start: a,
         step: step,
-        len: steps.to_usize().unwrap(),
+        len: steps.to_usize().expect(
+            "Converting the length to `usize` must not fail. The most likely \
+             cause of this failure is if the sign of `end - start` is \
+             different from the sign of `step`.",
+        ),
         index: 0,
     }
 }

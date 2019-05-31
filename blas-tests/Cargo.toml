@@ -8,9 +8,9 @@ publish = false
 test = false
 
 [dev-dependencies]
-ndarray = { path = "../", features = ["blas"] }
+approx = "0.3.2"
+ndarray = { path = "../", features = ["approx", "blas"] }
 blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
 openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
-defmac = "0.1"
+defmac = "0.2"
 num-traits = "0.2"
-

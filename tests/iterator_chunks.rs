@@ -5,7 +5,9 @@ use ndarray::NdProducer;
 
 #[test]
 fn chunks() {
-    let a = <Array1<f32>>::linspace(1., 100., 10 * 10).into_shape((10, 10)).unwrap();
+    let a = <Array1<f32>>::linspace(1., 100., 10 * 10)
+        .into_shape((10, 10))
+        .unwrap();
 
     let (m, n) = a.dim();
     for i in 1..m + 1 {
@@ -18,7 +20,11 @@ fn chunks() {
                 let cindex = (index / ly, index % ly);
                 let cx = (cindex.0 * i) as isize;
                 let cy = (cindex.1 * j) as isize;
-                assert_eq!(elt, a.slice(s![cx.., cy..]).slice(s![..i as isize, ..j as isize]));
+                assert_eq!(
+                    elt,
+                    a.slice(s![cx.., cy..])
+                        .slice(s![..i as isize, ..j as isize])
+                );
             }
             let c = a.exact_chunks((i, j));
             assert_eq!(c.into_iter().count(), (m / i) * (n / j));
@@ -69,13 +75,14 @@ fn chunks_mut() {
     }
     println!("{:?}", a);
     let ans = array![
-       [0, 0, 0, 1, 1, 1, 0, 0],
-       [0, 0, 0, 1, 1, 1, 0, 0],
-       [2, 2, 2, 3, 3, 3, 0, 0],
-       [2, 2, 2, 3, 3, 3, 0, 0],
-       [4, 4, 4, 5, 5, 5, 0, 0],
-       [4, 4, 4, 5, 5, 5, 0, 0],
-       [0, 0, 0, 0, 0, 0, 0, 0]];
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [2, 2, 2, 3, 3, 3, 0, 0],
+        [2, 2, 2, 3, 3, 3, 0, 0],
+        [4, 4, 4, 5, 5, 5, 0, 0],
+        [4, 4, 4, 5, 5, 5, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0]
+    ];
     assert_eq!(a, ans);
 }
 

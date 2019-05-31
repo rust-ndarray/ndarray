@@ -94,7 +94,6 @@
 //! ```
 #![doc(html_root_url = "http://docs.rs/ndarray-parallel/0.9/")]
 
-
 pub extern crate ndarray;
 pub extern crate rayon;
 
@@ -108,28 +107,19 @@ pub mod prelude {
     pub use NdarrayIntoParallelRefMutIterator;
 
     #[doc(no_inline)]
-    pub use rayon::prelude::{ParallelIterator, IndexedParallelIterator};
+    pub use rayon::prelude::{IndexedParallelIterator, ParallelIterator};
 
-    pub use ext_traits::{
-        ParApply1,
-        ParApply2,
-        ParApply3,
-        ParApply4,
-        ParApply5,
-        ParApply6,
-    };
     pub use ext_traits::ParMap;
+    pub use ext_traits::{ParApply1, ParApply2, ParApply3, ParApply4, ParApply5, ParApply6};
 }
 
-pub use par::Parallel;
 pub use into_traits::{
-    NdarrayIntoParallelIterator,
-    NdarrayIntoParallelRefIterator,
-    NdarrayIntoParallelRefMutIterator,
+    NdarrayIntoParallelIterator, NdarrayIntoParallelRefIterator, NdarrayIntoParallelRefMutIterator,
 };
+pub use par::Parallel;
 
-mod par;
 mod ext_traits;
-mod into_traits;
 mod into_impls;
+mod into_traits;
+mod par;
 mod zipmacro;

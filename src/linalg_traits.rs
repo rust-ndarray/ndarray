@@ -5,42 +5,39 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use num_traits::{Zero, One, Float};
-use std::fmt;
-use std::ops::{Add, Sub, Mul, Div};
-use std::ops::{
-    AddAssign,
-    SubAssign,
-    MulAssign,
-    DivAssign,
-    RemAssign,
-};
 use crate::ScalarOperand;
+use num_traits::{Float, One, Zero};
+use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 /// Elements that support linear algebra operations.
 ///
 /// `'static` for type-based specialization, `Copy` so that they don't need move
 /// semantics or destructors, and the rest are numerical traits.
-pub trait LinalgScalar :
-    'static +
-    Copy +
-    Zero + One +
-    Add<Output=Self> +
-    Sub<Output=Self> +
-    Mul<Output=Self> +
-    Div<Output=Self>
-{ }
+pub trait LinalgScalar:
+    'static
+    + Copy
+    + Zero
+    + One
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Div<Output = Self>
+{
+}
 
-impl<T> LinalgScalar for T
-    where T:
-    'static +
-    Copy +
-    Zero + One +
-    Add<Output=T> +
-    Sub<Output=T> +
-    Mul<Output=T> +
-    Div<Output=T>
-{ }
+impl<T> LinalgScalar for T where
+    T: 'static
+        + Copy
+        + Zero
+        + One
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+{
+}
 
 /// Floating-point element types `f32` and `f64`.
 ///
@@ -50,12 +47,23 @@ impl<T> LinalgScalar for T
 /// operations (`ScalarOperand`).
 ///
 /// This trait can only be implemented by `f32` and `f64`.
-pub trait NdFloat :
-    Float +
-    AddAssign + SubAssign + MulAssign + DivAssign + RemAssign +
-    fmt::Display + fmt::Debug + fmt::LowerExp + fmt::UpperExp +
-    ScalarOperand + LinalgScalar + Send + Sync
-{ }
+pub trait NdFloat:
+    Float
+    + AddAssign
+    + SubAssign
+    + MulAssign
+    + DivAssign
+    + RemAssign
+    + fmt::Display
+    + fmt::Debug
+    + fmt::LowerExp
+    + fmt::UpperExp
+    + ScalarOperand
+    + LinalgScalar
+    + Send
+    + Sync
+{
+}
 
-impl NdFloat for f32 { }
-impl NdFloat for f64 { }
+impl NdFloat for f32 {}
+impl NdFloat for f64 {}

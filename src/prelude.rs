@@ -21,53 +21,37 @@
 #[doc(no_inline)]
 #[allow(deprecated)]
 pub use crate::{
-    ArrayBase,
-    Array,
-    ArcArray,
+    ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, CowArray, RawArrayView, RawArrayViewMut,
     RcArray,
-    ArrayView,
-    ArrayViewMut,
-    RawArrayView,
-    RawArrayViewMut,
 };
 
 #[doc(no_inline)]
-pub use crate::{
-    Axis,
-    Dim,
-    Dimension,
-};
+pub use crate::{Axis, Dim, Dimension};
 
 #[doc(no_inline)]
 pub use crate::{Array0, Array1, Array2, Array3, Array4, Array5, Array6, ArrayD};
 
 #[doc(no_inline)]
-pub use crate::{ArrayView0, ArrayView1, ArrayView2, ArrayView3, ArrayView4, ArrayView5,
-ArrayView6, ArrayViewD};
+pub use crate::{
+    ArrayView0, ArrayView1, ArrayView2, ArrayView3, ArrayView4, ArrayView5, ArrayView6, ArrayViewD,
+};
 
 #[doc(no_inline)]
-pub use crate::{ArrayViewMut0, ArrayViewMut1, ArrayViewMut2, ArrayViewMut3,
-ArrayViewMut4, ArrayViewMut5, ArrayViewMut6, ArrayViewMutD};
+pub use crate::{
+    ArrayViewMut0, ArrayViewMut1, ArrayViewMut2, ArrayViewMut3, ArrayViewMut4, ArrayViewMut5,
+    ArrayViewMut6, ArrayViewMutD,
+};
 
 #[doc(no_inline)]
 pub use crate::{Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 
 #[doc(no_inline)]
-pub use crate::{
-    arr0, arr1, arr2,
-    aview0, aview1, aview2,
-    aview_mut1,
-};
+pub use crate::{arr0, arr1, arr2, aview0, aview1, aview2, aview_mut1};
 
 pub use crate::{array, azip, s};
 
 #[doc(no_inline)]
-pub use crate::{
-    ShapeBuilder,
-};
+pub use crate::ShapeBuilder;
 
 #[doc(no_inline)]
-pub use crate::{
-    NdFloat,
-    AsArray,
-};
+pub use crate::{AsArray, NdFloat};

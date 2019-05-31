@@ -3,13 +3,16 @@ extern crate ndarray;
 use ndarray::prelude::*;
 
 fn regularize<A, D>(a: &mut Array<A, D>) -> Result<(), ()>
-    where D: Dimension,
-          A: ::std::fmt::Debug,
+where
+    D: Dimension,
+    A: ::std::fmt::Debug,
 {
     println!("Regularize:\n{:?}", a);
     // reverse all neg axes
     while let Some(ax) = a.axes().find(|ax| ax.stride() <= 0) {
-        if ax.stride() == 0 { return Err(()); }
+        if ax.stride() == 0 {
+            return Err(());
+        }
         // reverse ax
         println!("Reverse {:?}", ax.axis());
         a.invert_axis(ax.axis());

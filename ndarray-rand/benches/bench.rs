@@ -1,15 +1,15 @@
 #![feature(test)]
 
-extern crate rand;
 extern crate ndarray;
 extern crate ndarray_rand;
+extern crate rand;
 extern crate test;
 
-use rand::distributions::Uniform;
-use rand::distributions::Normal;
 use ndarray::Array;
 use ndarray_rand::RandomExt;
 use ndarray_rand::F32;
+use rand::distributions::Normal;
+use rand::distributions::Uniform;
 
 use test::Bencher;
 

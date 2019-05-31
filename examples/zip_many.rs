@@ -16,7 +16,6 @@ fn main() {
     {
         let a = a.view_mut().reversed_axes();
         azip!(mut a (a), b (b.t()) in { *a = b });
-
     }
     assert_eq!(a, b);
 
@@ -33,7 +32,6 @@ fn main() {
     let nchunks = (n / chunk_sz.0, n / chunk_sz.1);
     let mut sums = Array::zeros(nchunks);
     azip!(mut sums, ref a (a.exact_chunks(chunk_sz)) in { *sums = a.sum() });
-
 
     // Let's imagine we split to parallelize
     {

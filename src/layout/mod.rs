@@ -1,4 +1,3 @@
-
 mod layoutfmt;
 
 // public but users don't interact with it
@@ -7,7 +6,7 @@ mod layoutfmt;
 #[derive(Copy, Clone)]
 pub struct Layout(u32);
 
-pub trait LayoutPriv : Sized {
+pub trait LayoutPriv: Sized {
     fn new(x: u32) -> Self;
     fn and(self, flag: Self) -> Self;
     fn is(self, flag: u32) -> bool;
@@ -16,7 +15,9 @@ pub trait LayoutPriv : Sized {
 
 impl LayoutPriv for Layout {
     #[inline(always)]
-    fn new(x: u32) -> Self { Layout(x) }
+    fn new(x: u32) -> Self {
+        Layout(x)
+    }
 
     #[inline(always)]
     fn is(self, flag: u32) -> bool {

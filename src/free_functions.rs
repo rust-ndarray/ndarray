@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::mem::{forget, size_of};
 use std::slice;
-use std::mem::{size_of, forget};
 
 use crate::dimension;
 use crate::imp_prelude::*;
@@ -53,8 +53,7 @@ macro_rules! array {
 }
 
 /// Create a zero-dimensional array with the element `x`.
-pub fn arr0<A>(x: A) -> Array0<A>
-{
+pub fn arr0<A>(x: A) -> Array0<A> {
     unsafe { ArrayBase::from_shape_vec_unchecked((), vec![x]) }
 }
 
@@ -93,7 +92,7 @@ pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
 ///
 /// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
 /// can only occur when `V` is zero-sized.)
-pub fn aview2<A, V: FixedInitializer<Elem=A>>(xs: &[V]) -> ArrayView2<A> {
+pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<A> {
     let cols = V::len();
     let rows = xs.len();
     let dim = Ix2(rows, cols);
@@ -159,7 +158,7 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 ///     assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
 /// }
 /// ```
-pub fn aview_mut2<A, V: FixedInitializer<Elem=A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
+pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
     let cols = V::len();
     let rows = xs.len();
     let dim = Ix2(rows, cols);
@@ -221,7 +220,8 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 /// );
 /// ```
 pub fn arr2<A: Clone, V: FixedInitializer<Elem = A>>(xs: &[V]) -> Array2<A>
-    where V: Clone,
+where
+    V: Clone,
 {
     Array2::from(xs.to_vec())
 }
@@ -233,7 +233,8 @@ impl<A> From<Vec<A>> for Array1<A> {
 }
 
 impl<A, V> From<Vec<V>> for Array2<A>
-    where V: FixedInitializer<Elem = A>
+where
+    V: FixedInitializer<Elem = A>,
 {
     /// Converts the `Vec` of arrays to an owned 2-D array.
     ///
@@ -262,8 +263,9 @@ impl<A, V> From<Vec<V>> for Array2<A>
 }
 
 impl<A, V, U> From<Vec<V>> for Array3<A>
-    where V: FixedInitializer<Elem=U>,
-          U: FixedInitializer<Elem=A>
+where
+    V: FixedInitializer<Elem = U>,
+    U: FixedInitializer<Elem = A>,
 {
     /// Converts the `Vec` of arrays to an owned 3-D array.
     ///
@@ -314,18 +316,23 @@ pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcA
 ///     a.shape() == [3, 2, 2]
 /// );
 /// ```
-pub fn arr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> Array3<A>
-    where V: Clone,
-          U: Clone,
+pub fn arr3<A: Clone, V: FixedInitializer<Elem = U>, U: FixedInitializer<Elem = A>>(
+    xs: &[V],
+) -> Array3<A>
+where
+    V: Clone,
+    U: Clone,
 {
     Array3::from(xs.to_vec())
 }
 
 /// Create a three-dimensional array with elements from `xs`.
-pub fn rcarr3<A: Clone, V: FixedInitializer<Elem=U>, U: FixedInitializer<Elem=A>>(xs: &[V])
-    -> ArcArray<A, Ix3>
-    where V: Clone, U: Clone,
+pub fn rcarr3<A: Clone, V: FixedInitializer<Elem = U>, U: FixedInitializer<Elem = A>>(
+    xs: &[V],
+) -> ArcArray<A, Ix3>
+where
+    V: Clone,
+    U: Clone,
 {
     arr3(xs).into_shared()
 }

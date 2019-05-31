@@ -1,12 +1,12 @@
-extern crate ndarray;
 extern crate itertools;
+extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Ix;
 use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice};
 
 use itertools::assert_equal;
-use itertools::{rev, enumerate};
+use itertools::{enumerate, rev};
 
 #[test]
 fn double_ended() {
@@ -39,8 +39,7 @@ fn iter_size_hint() {
 }
 
 #[test]
-fn indexed()
-{
+fn indexed() {
     let a = ArcArray::linspace(0., 7., 8);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as Ix);
@@ -58,11 +57,11 @@ fn indexed()
     }
 }
 
-
 fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
-    where S: Data<Elem=A>,
-          D: Dimension,
-          A: PartialEq + std::fmt::Debug,
+where
+    S: Data<Elem = A>,
+    D: Dimension,
+    A: PartialEq + std::fmt::Debug,
 {
     let slc = v.as_slice();
     assert!(slc.is_some());
@@ -104,7 +103,12 @@ fn as_slice() {
     let a = a.reshape((8, 1));
     assert_slice_correct(&a);
     let u = a.slice(s![..;2, ..]);
-    println!("u={:?}, shape={:?}, strides={:?}", u, u.shape(), u.strides());
+    println!(
+        "u={:?}, shape={:?}, strides={:?}",
+        u,
+        u.shape(),
+        u.strides()
+    );
     assert!(u.as_slice().is_none());
 }
 
@@ -118,29 +122,43 @@ fn inner_iter() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.genrows(),
-                 vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
-                      aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
+    assert_equal(
+        a.genrows(),
+        vec![
+            aview1(&[0, 1]),
+            aview1(&[2, 3]),
+            aview1(&[4, 5]),
+            aview1(&[6, 7]),
+            aview1(&[8, 9]),
+            aview1(&[10, 11]),
+        ],
+    );
     let mut b = ArcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
-    assert_equal(b.genrows(),
-                 vec![aview1(&[0, 1]), aview1(&[2, 3]), aview1(&[4, 5]),
-                      aview1(&[6, 7]), aview1(&[8, 9]), aview1(&[10, 11])]);
+    assert_equal(
+        b.genrows(),
+        vec![
+            aview1(&[0, 1]),
+            aview1(&[2, 3]),
+            aview1(&[4, 5]),
+            aview1(&[6, 7]),
+            aview1(&[8, 9]),
+            aview1(&[10, 11]),
+        ],
+    );
 }
 
 #[test]
 fn inner_iter_corner_cases() {
-    let a0 = ArcArray::zeros(());
+    let a0 = ArcArray::<i32, _>::zeros(());
     assert_equal(a0.genrows(), vec![aview1(&[0])]);
 
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
-    assert_equal(a2.genrows(),
-                 vec![aview1(&[]); 0]);
+    assert_equal(a2.genrows(), vec![aview1(&[]); 0]);
 
     let a2 = ArcArray::<i32, _>::zeros((3, 0));
-    assert_equal(a2.genrows(),
-                 vec![aview1(&[]); 3]);
+    assert_equal(a2.genrows(), vec![aview1(&[]); 3]);
 }
 
 #[test]
@@ -168,13 +186,17 @@ fn outer_iter() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.outer_iter(),
-                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
+    assert_equal(
+        a.outer_iter(),
+        vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)],
+    );
     let mut b = ArcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
-    assert_equal(b.outer_iter(),
-                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
+    assert_equal(
+        b.outer_iter(),
+        vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)],
+    );
 
     let mut found_rows = Vec::new();
     for sub in b.outer_iter() {
@@ -198,8 +220,10 @@ fn outer_iter() {
     let mut cv = c.slice_mut(s![..;-1, ..;-1, ..;-1]);
     cv.assign(&a);
     assert_eq!(&a, &cv);
-    assert_equal(cv.outer_iter(),
-                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
+    assert_equal(
+        cv.outer_iter(),
+        vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)],
+    );
 
     let mut found_rows = Vec::new();
     for sub in cv.outer_iter() {
@@ -221,21 +245,23 @@ fn axis_iter() {
     //  [[6, 7],
     //   [8, 9],
     //    ...
-    assert_equal(a.axis_iter(Axis(1)),
-                 vec![a.index_axis(Axis(1), 0),
-                      a.index_axis(Axis(1), 1),
-                      a.index_axis(Axis(1), 2)]);
+    assert_equal(
+        a.axis_iter(Axis(1)),
+        vec![
+            a.index_axis(Axis(1), 0),
+            a.index_axis(Axis(1), 1),
+            a.index_axis(Axis(1), 2),
+        ],
+    );
 }
 
 #[test]
 fn outer_iter_corner_cases() {
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
-    assert_equal(a2.outer_iter(),
-                 vec![aview1(&[]); 0]);
+    assert_equal(a2.outer_iter(), vec![aview1(&[]); 0]);
 
     let a2 = ArcArray::<i32, _>::zeros((3, 0));
-    assert_equal(a2.outer_iter(),
-                 vec![aview1(&[]); 3]);
+    assert_equal(a2.outer_iter(), vec![aview1(&[]); 3]);
 }
 
 #[allow(deprecated)]
@@ -252,8 +278,10 @@ fn outer_iter_mut() {
     let mut b = ArcArray::zeros((2, 3, 2));
     b.swap_axes(0, 2);
     b.assign(&a);
-    assert_equal(b.outer_iter_mut(),
-                 vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)]);
+    assert_equal(
+        b.outer_iter_mut(),
+        vec![a.index_axis(Axis(0), 0), a.index_axis(Axis(0), 1)],
+    );
 
     let mut found_rows = Vec::new();
     for sub in b.outer_iter_mut() {
@@ -280,12 +308,7 @@ fn axis_iter_mut() {
         subview[[0, 0]] = 42;
     }
 
-    let b = arr3(&[[[42, 1],
-                    [42, 3],
-                    [42, 5]],
-                   [[6, 7],
-                    [8, 9],
-                    [10, 11]]]);
+    let b = arr3(&[[[42, 1], [42, 3], [42, 5]], [[6, 7], [8, 9], [10, 11]]]);
     assert_eq!(a, b);
 }
 
@@ -295,27 +318,39 @@ fn axis_chunks_iter() {
     let a = a.reshape((2, 6, 2));
 
     let it = a.axis_chunks_iter(Axis(1), 2);
-    assert_equal(it,
-                 vec![arr3(&[[[0, 1], [2, 3]], [[12, 13], [14, 15]]]),
-                      arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]),
-                      arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]])]);
+    assert_equal(
+        it,
+        vec![
+            arr3(&[[[0, 1], [2, 3]], [[12, 13], [14, 15]]]),
+            arr3(&[[[4, 5], [6, 7]], [[16, 17], [18, 19]]]),
+            arr3(&[[[8, 9], [10, 11]], [[20, 21], [22, 23]]]),
+        ],
+    );
 
     let a = ArcArray::from_iter(0..28);
     let a = a.reshape((2, 7, 2));
 
     let it = a.axis_chunks_iter(Axis(1), 2);
-    assert_equal(it,
-                 vec![arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]),
-                      arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
-                      arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
-                      arr3(&[[[12, 13]], [[26, 27]]])]);
+    assert_equal(
+        it,
+        vec![
+            arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]),
+            arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
+            arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
+            arr3(&[[[12, 13]], [[26, 27]]]),
+        ],
+    );
 
     let it = a.axis_chunks_iter(Axis(1), 2).rev();
-    assert_equal(it,
-                 vec![arr3(&[[[12, 13]], [[26, 27]]]),
-                      arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
-                      arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
-                      arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]])]);
+    assert_equal(
+        it,
+        vec![
+            arr3(&[[[12, 13]], [[26, 27]]]),
+            arr3(&[[[8, 9], [10, 11]], [[22, 23], [24, 25]]]),
+            arr3(&[[[4, 5], [6, 7]], [[18, 19], [20, 21]]]),
+            arr3(&[[[0, 1], [2, 3]], [[14, 15], [16, 17]]]),
+        ],
+    );
 
     let it = a.axis_chunks_iter(Axis(1), 7);
     assert_equal(it, vec![a.view()]);
@@ -338,10 +373,14 @@ fn axis_chunks_iter_corner_cases() {
     let it = a.axis_chunks_iter(Axis(0), 8);
     assert_equal(it, vec![a.view()]);
     let it = a.axis_chunks_iter(Axis(0), 3);
-    assert_equal(it,
-                 vec![arr2(&[[7.], [6.], [5.]]),
-                      arr2(&[[4.], [3.], [2.]]),
-                      arr2(&[[1.], [0.]])]);
+    assert_equal(
+        it,
+        vec![
+            arr2(&[[7.], [6.], [5.]]),
+            arr2(&[[4.], [3.], [2.]]),
+            arr2(&[[1.], [0.]]),
+        ],
+    );
 
     let b = ArcArray::<f32, _>::zeros((8, 2));
     let a = b.slice(s![1..;2,..]);
@@ -354,18 +393,28 @@ fn axis_chunks_iter_corner_cases() {
 
 #[test]
 fn axis_chunks_iter_zero_stride() {
-
     {
         // stride 0 case
-        let b = Array::from_vec(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
-        let shapes: Vec<_> = b.axis_chunks_iter(Axis(0), 2).map(|v| v.raw_dim()).collect();
+        let b = Array::from_vec(vec![0f32; 0])
+            .into_shape((5, 0, 3))
+            .unwrap();
+        let shapes: Vec<_> = b
+            .axis_chunks_iter(Axis(0), 2)
+            .map(|v| v.raw_dim())
+            .collect();
         assert_eq!(shapes, vec![Ix3(2, 0, 3), Ix3(2, 0, 3), Ix3(1, 0, 3)]);
     }
 
     {
         // stride 0 case reverse
-        let b = Array::from_vec(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
-        let shapes: Vec<_> = b.axis_chunks_iter(Axis(0), 2).rev().map(|v| v.raw_dim()).collect();
+        let b = Array::from_vec(vec![0f32; 0])
+            .into_shape((5, 0, 3))
+            .unwrap();
+        let shapes: Vec<_> = b
+            .axis_chunks_iter(Axis(0), 2)
+            .rev()
+            .map(|v| v.raw_dim())
+            .collect();
         assert_eq!(shapes, vec![Ix3(1, 0, 3), Ix3(2, 0, 3), Ix3(2, 0, 3)]);
     }
 
@@ -475,7 +524,7 @@ fn outer_iter_mut_split_at() {
 fn iterators_are_send_sync() {
     // When the element type is Send + Sync, then the iterators and views
     // are too.
-    fn _send_sync<T: Send + Sync>(_: &T) { }
+    fn _send_sync<T: Send + Sync>(_: &T) {}
 
     let mut a = ArcArray::from_iter(0..30).into_shape((5, 3, 2)).unwrap();
 
@@ -548,8 +597,13 @@ fn test_rfold() {
         a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
         let mut iter = a.iter();
         iter.next();
-        let output = iter.rfold(Vec::new(),
-            |mut acc, elt| { acc.push(*elt); acc });
-        assert_eq!(Array1::from_vec(output), Array::from_iter((1..10).rev().map(|i| i * 2)));
+        let output = iter.rfold(Vec::new(), |mut acc, elt| {
+            acc.push(*elt);
+            acc
+        });
+        assert_eq!(
+            Array1::from_vec(output),
+            Array::from_iter((1..10).rev().map(|i| i * 2))
+        );
     }
 }
