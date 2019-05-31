@@ -9,7 +9,7 @@ use itertools::{enumerate, zip, Itertools};
 use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, multislice, rcarr2};
-use ndarray::{Data, Slice, SliceInfo, SliceOrIndex};
+use ndarray::{Slice, SliceInfo, SliceOrIndex};
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -1974,15 +1974,6 @@ fn array_macros() {
 mod as_standard_layout_tests {
     use super::*;
 
-    fn is_content_identical<A, S1, S2, D>(arr1: &ArrayBase<S1, D>, arr2: &ArrayBase<S2, D>) -> bool
-        where A: Clone + PartialEq,
-              S1: Data<Elem=A>,
-              S2: Data<Elem=A>,
-              D: Dimension
-    {
-        arr1.iter().zip(arr2.iter()).all(|(x1, x2)| x1 == x2)
-    }
-
     #[test]
     fn test_f_layout() {
         let shape = Ix2(2, 2).strides(Ix2(1, 2));
@@ -1990,7 +1981,7 @@ mod as_standard_layout_tests {
         assert!(!arr.is_standard_layout());
         let cont_arr = arr.as_standard_layout();
         assert!(cont_arr.is_standard_layout());
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
         assert!(cont_arr.is_owned());
     }
 
@@ -2000,7 +1991,7 @@ mod as_standard_layout_tests {
         assert!(arr.is_standard_layout());
         let cont_arr = arr.as_standard_layout();
         assert!(cont_arr.is_standard_layout());
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
         assert!(cont_arr.is_view());
     }
 
@@ -2012,7 +2003,7 @@ mod as_standard_layout_tests {
         assert!(!arr_view.is_standard_layout());
         let cont_arr = arr.as_standard_layout();
         assert!(cont_arr.is_standard_layout());
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
         assert!(cont_arr.is_owned());
     }
 
@@ -2023,7 +2014,7 @@ mod as_standard_layout_tests {
         assert!(arr_view.is_standard_layout());
         let cont_arr = arr_view.as_standard_layout();
         assert!(cont_arr.is_standard_layout());
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
         assert!(cont_arr.is_view());
     }
 
@@ -2033,7 +2024,7 @@ mod as_standard_layout_tests {
         assert!(arr_view.is_standard_layout());
         let cont_arr = arr_view.as_standard_layout();
         assert!(cont_arr.is_standard_layout());
-        assert!(is_content_identical(&arr_view, &cont_arr));
+        assert_eq!(arr_view, cont_arr);
         assert!(cont_arr.is_view());
     }
 
@@ -2045,7 +2036,7 @@ mod as_standard_layout_tests {
         assert!(!arr.is_standard_layout());
         let cont_arr = arr.as_standard_layout();
         assert!(cont_arr.is_standard_layout());
-        assert!(is_content_identical(&arr, &cont_arr));
+        assert_eq!(arr, cont_arr);
         assert!(cont_arr.is_owned());
     }
 }
