@@ -25,7 +25,6 @@ pub use crate::{
     Array,
     ArcArray,
     RcArray,
-    ArrayCow,
     ArrayView,
     ArrayViewMut,
     RawArrayView,
