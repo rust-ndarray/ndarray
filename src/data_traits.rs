@@ -11,7 +11,9 @@
 use std::mem::{self, size_of};
 use std::sync::Arc;
 
-use crate::{ArrayBase, Dimension, OwnedArcRepr, OwnedRcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{
+    ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRcRepr, OwnedRepr, RawViewRepr, ViewRepr,
+};
 
 /// Array representation trait.
 ///
@@ -423,3 +425,103 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
         self
     }
 }
+
+unsafe impl<'a, A> RawData for CowRepr<'a, A> {
+    type Elem = A;
+    fn _data_slice(&self) -> Option<&[A]> {
+        match self {
+            CowRepr::View(view) => view._data_slice(),
+            CowRepr::Owned(data) => data._data_slice(),
+        }
+    }
+    private_impl! {}
+}
+
+unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
+where
+    A: Clone,
+{
+    #[inline]
+    fn try_ensure_unique<D>(array: &mut ArrayBase<Self, D>)
+    where
+        Self: Sized,
+        D: Dimension,
+    {
+        match array.data {
+            CowRepr::View(_) => {
+                let owned = array.to_owned();
+                array.data = CowRepr::Owned(owned.data);
+                array.ptr = owned.ptr;
+                array.dim = owned.dim;
+                array.strides = owned.strides;
+            }
+            CowRepr::Owned(_) => {}
+        }
+    }
+
+    #[inline]
+    fn try_is_unique(&mut self) -> Option<bool> {
+        Some(self.is_owned())
+    }
+}
+
+unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
+where
+    A: Clone,
+{
+    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+        match self {
+            CowRepr::View(view) => {
+                let (new_view, ptr) = view.clone_with_ptr(ptr);
+                (CowRepr::View(new_view), ptr)
+            }
+            CowRepr::Owned(data) => {
+                let (new_data, ptr) = data.clone_with_ptr(ptr);
+                (CowRepr::Owned(new_data), ptr)
+            }
+        }
+    }
+
+    #[doc(hidden)]
+    unsafe fn clone_from_with_ptr(
+        &mut self,
+        other: &Self,
+        ptr: *mut Self::Elem,
+    ) -> *mut Self::Elem {
+        match (&mut *self, other) {
+            (CowRepr::View(self_), CowRepr::View(other)) => self_.clone_from_with_ptr(other, ptr),
+            (CowRepr::Owned(self_), CowRepr::Owned(other)) => self_.clone_from_with_ptr(other, ptr),
+            (_, CowRepr::Owned(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::Owned(cloned);
+                ptr
+            }
+            (_, CowRepr::View(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::View(cloned);
+                ptr
+            }
+        }
+    }
+}
+
+unsafe impl<'a, A> Data for CowRepr<'a, A> {
+    #[inline]
+    fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        match self_.data {
+            CowRepr::View(_) => self_.to_owned(),
+            CowRepr::Owned(data) => ArrayBase {
+                data,
+                ptr: self_.ptr,
+                dim: self_.dim,
+                strides: self_.strides,
+            },
+        }
+    }
+}
+
+unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
