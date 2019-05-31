@@ -14,7 +14,6 @@ use itertools::{izip, zip};
 
 use crate::imp_prelude::*;
 
-use crate::{arraytraits, CowArray};
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
@@ -22,6 +21,7 @@ use crate::dimension::{
 };
 use crate::error::{self, ErrorKind, ShapeError};
 use crate::zip::Zip;
+use crate::{arraytraits, CowArray};
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
@@ -1219,8 +1219,9 @@ where
     }
 
     pub fn as_standard_layout(&self) -> CowArray<'_, A, D>
-        where S: Data<Elem=A>,
-              A: Clone
+    where
+        S: Data<Elem = A>,
+        A: Clone,
     {
         if self.is_standard_layout() {
             CowArray::from(self.view())
