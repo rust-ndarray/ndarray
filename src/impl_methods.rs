@@ -14,6 +14,7 @@ use itertools::{izip, zip};
 
 use crate::imp_prelude::*;
 
+use crate::arraytraits;
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
@@ -21,7 +22,6 @@ use crate::dimension::{
 };
 use crate::error::{self, ErrorKind, ShapeError};
 use crate::zip::Zip;
-use crate::{arraytraits, CowArray};
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
@@ -1218,6 +1218,11 @@ where
         D::is_contiguous(&self.dim, &self.strides)
     }
 
+    /// Return a representation of the array in the standard layout.
+    ///
+    /// Return the COW view of the array if it is in the standard layout.
+    /// Otherwise copy the array, transform the copy to the standard layout and return it as
+    /// an owned COW array.
     pub fn as_standard_layout(&self) -> CowArray<'_, A, D>
     where
         S: Data<Elem = A>,
@@ -1226,10 +1231,13 @@ where
         if self.is_standard_layout() {
             CowArray::from(self.view())
         } else {
-            let v = self.iter().cloned().collect::<Vec<A>>();
+            let v: Vec<A> = self.iter().cloned().collect();
+            let dim = self.dim.clone();
+            assert_eq!(v.len(), dim.size());
             let owned_array: Array<A, D> = unsafe {
-                // Safe because we use shape and content of existing array here.
-                ArrayBase::from_shape_vec_unchecked(self.raw_dim(), v)
+                // Safe because the shape and element type are from the existing array
+                // and the strides are the default strides.
+                Array::from_shape_vec_unchecked(dim, v)
             };
             CowArray::from(owned_array)
         }
