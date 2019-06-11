@@ -15,3 +15,4 @@ cargo test --manifest-path=serialization-tests/Cargo.toml --verbose
 cargo test --manifest-path=blas-tests/Cargo.toml --verbose
 CARGO_TARGET_DIR=target/ cargo test --manifest-path=numeric-tests/Cargo.toml --verbose
 ([ "$IS_NIGHTLY" != 1 ] || cargo bench --no-run --verbose --features "$FEATURES")
+([ "$TRAVIS_RUST_VERSION" == stable ] || cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID )

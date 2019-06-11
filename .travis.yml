@@ -28,8 +28,13 @@ branches:
 addons:
   apt:
     packages:
+      - libssl-dev
       - libopenblas-dev
       - gfortran
+before_cache: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    cargo install cargo-tarpaulin -f
+  fi
 before_script:
   - rustup component add rustfmt
 script:
