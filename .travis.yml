@@ -33,7 +33,7 @@ addons:
       - gfortran
 before_script:
   - rustup component add rustfmt
-  - cargo install cargo-tarpaulin
+  - '[ $(rustc --version) -lt "rustc 1.32" ] || cargo install cargo-tarpaulin'
 script:
   - |
       cargo fmt --all -- --check &&
