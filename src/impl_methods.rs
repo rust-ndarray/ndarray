@@ -1128,7 +1128,7 @@ where
     fn diag_params(&self) -> (Ix, Ixs) {
         /* empty shape has len 1 */
         let len = self.dim.slice().iter().cloned().min().unwrap_or(1);
-        let stride = self.strides().iter().fold(0, |sum, s| sum + s);
+        let stride = self.strides().iter().sum();
         (len, stride)
     }
 
@@ -1195,9 +1195,8 @@ where
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
-            match D::NDIM {
-                Some(1) => return strides[0] == 1 || dim[0] <= 1,
-                _ => {}
+            if let Some(1) = D::NDIM {
+                return strides[0] == 1 || dim[0] <= 1
             }
             if dim.slice().iter().any(|&d| d == 0) {
                 return true;
@@ -1408,7 +1407,7 @@ where
                 dim: shape,
             }
         } else {
-            let v = self.iter().map(|x| x.clone()).collect::<Vec<A>>();
+            let v = self.iter().cloned().collect::<Vec<A>>();
             unsafe { ArrayBase::from_shape_vec_unchecked(shape, v) }
         }
     }
@@ -1778,7 +1777,7 @@ where
             }
             Some(slc) => {
                 let ptr = slc.as_ptr() as *mut A;
-                let end = unsafe { ptr.offset(slc.len() as isize) };
+                let end = unsafe { ptr.add(slc.len()) };
                 self.ptr >= ptr && self.ptr <= end
             }
         }
