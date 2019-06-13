@@ -21,7 +21,7 @@ pub struct Axis(pub usize);
 impl Axis {
     /// Return the index of the axis.
     #[inline(always)]
-    pub fn index(&self) -> usize {
+    pub fn index(self) -> usize {
         self.0
     }
 }

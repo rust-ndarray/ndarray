@@ -140,6 +140,7 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
     private_impl! {}
 
     #[doc(hidden)]
+    #[allow(clippy::clone_on_copy)]
     fn raw_dim(&self) -> Self::Dim {
         self.dim.clone()
     }

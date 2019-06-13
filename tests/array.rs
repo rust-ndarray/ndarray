@@ -3,7 +3,8 @@
     clippy::many_single_char_names,
     clippy::deref_addrof,
     clippy::unreadable_literal,
-    clippy::many_single_char_names
+    clippy::many_single_char_names,
+    clippy::float_cmp
 )]
 
 extern crate defmac;
@@ -968,11 +969,11 @@ fn iter_size_hint() {
 fn zero_axes() {
     let mut a = arr1::<f32>(&[]);
     for _ in a.iter() {
-        assert!(false);
+        panic!();
     }
-    a.map(|_| assert!(false));
-    a.map_inplace(|_| assert!(false));
-    a.visit(|_| assert!(false));
+    a.map(|_| panic!());
+    a.map_inplace(|_| panic!());
+    a.visit(|_| panic!());
     println!("{:?}", a);
     let b = arr2::<f32, _>(&[[], [], [], []]);
     println!("{:?}\n{:?}", b.shape(), b);

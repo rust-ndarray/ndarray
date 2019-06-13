@@ -135,6 +135,9 @@ where
         }
     }
 
+    // Should this be `to_slice` if taking a reference?
+    // https://rust-lang.github.io/rust-clippy/master/#wrong_self_convention
+
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     pub fn into_slice(&self) -> Option<&'a [A]> {

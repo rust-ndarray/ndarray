@@ -1,3 +1,10 @@
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names,
+    clippy::float_cmp
+)]
 extern crate ndarray;
 
 use ndarray::prelude::*;

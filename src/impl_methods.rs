@@ -375,8 +375,8 @@ where
         let mut new_strides = Do::zeros(out_ndim);
         izip!(self.dim.slice(), self.strides.slice(), indices)
             .filter_map(|(d, s, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice { .. } => Some((d, s)),
-                &SliceOrIndex::Index(_) => None,
+                SliceOrIndex::Slice { .. } => Some((d, s)),
+                SliceOrIndex::Index(_) => None,
             })
             .zip(izip!(new_dim.slice_mut(), new_strides.slice_mut()))
             .for_each(|((d, s), (new_d, new_s))| {
@@ -413,6 +413,7 @@ where
             .iter()
             .enumerate()
             .for_each(|(axis, slice_or_index)| match slice_or_index {
+                // Clippy insists we can remove the `&`, but this fails if we try
                 &SliceOrIndex::Slice { start, end, step } => {
                     self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
                 }

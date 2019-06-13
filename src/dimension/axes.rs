@@ -62,6 +62,9 @@ impl AxisDescription {
     pub fn stride(self) -> Ixs {
         self.2
     }
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
+    }
 }
 
 copy_and_clone!(['a, D] Axes<'a, D>);

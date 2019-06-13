@@ -48,9 +48,7 @@ impl<T: Copy + Zero> IxDynRepr<T> {
     pub fn copy_from(x: &[T]) -> Self {
         if x.len() <= CAP {
             let mut arr = [T::zero(); CAP];
-            for i in 0..x.len() {
-                arr[i] = x[i];
-            }
+            arr[..x.len()].clone_from_slice(&x[..]);
             IxDynRepr::Inline(x.len() as _, arr)
         } else {
             Self::from(x)
@@ -121,7 +119,7 @@ impl IxDynImpl {
         IxDynImpl(if len < CAP {
             let mut out = [1; CAP];
             out[0..i].copy_from_slice(&self[0..i]);
-            out[i + 1..len + 1].copy_from_slice(&self[i..len]);
+            out[i + 1..=len].copy_from_slice(&self[i..len]);
             IxDynRepr::Inline((len + 1) as u32, out)
         } else {
             let mut out = Vec::with_capacity(len + 1);
@@ -206,7 +204,7 @@ impl<'a> IntoIterator for &'a IxDynImpl {
     type IntoIter = <&'a [Ix] as IntoIterator>::IntoIter;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self[..].into_iter()
+        self[..].iter()
     }
 }
 

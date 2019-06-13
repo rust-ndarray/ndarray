@@ -184,7 +184,7 @@ where
             let axis_length =
                 A::from_usize(axis_length).expect("Converting axis length to `A` must not fail.");
             let sum = self.sum_axis(axis);
-            Some(sum / &aview0(&axis_length))
+            Some(sum / aview0(&axis_length))
         }
     }
 
