@@ -78,7 +78,7 @@ where
         let mut sum = A::zero();
         for i in 0..self.len() {
             unsafe {
-                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+                sum = sum + self.uget(i).clone() * rhs.uget(i).clone();
             }
         }
         sum
@@ -512,7 +512,7 @@ fn mat_mul_general<A>(
         }
     } else {
         // It's a no-op if `c` has zero length.
-        if c.len() == 0 {
+        if c.is_empty() {
             return;
         }
 

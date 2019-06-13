@@ -1,4 +1,10 @@
 #![crate_type = "lib"]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
 // Test cases for bounds check elimination
 

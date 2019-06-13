@@ -8,7 +8,7 @@ extern crate ndarray;
 
 use ndarray::prelude::*;
 
-const INPUT: &'static [u8] = include_bytes!("life.txt");
+const INPUT: &[u8] = include_bytes!("life.txt");
 //const INPUT: &'static [u8] = include_bytes!("lifelite.txt");
 
 const N: usize = 100;
@@ -77,7 +77,7 @@ fn render(a: &Board) {
                 print!(".");
             }
         }
-        println!("");
+        println!();
     }
 }
 

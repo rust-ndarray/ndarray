@@ -315,10 +315,7 @@ where
     /// consistent with `indices`.
     #[doc(hidden)]
     pub unsafe fn new_unchecked(indices: T, out_dim: PhantomData<D>) -> SliceInfo<T, D> {
-        SliceInfo {
-            out_dim: out_dim,
-            indices: indices,
-        }
+        SliceInfo { out_dim, indices }
     }
 }
 
@@ -338,7 +335,7 @@ where
         }
         Ok(SliceInfo {
             out_dim: PhantomData,
-            indices: indices,
+            indices,
         })
     }
 }

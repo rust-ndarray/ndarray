@@ -589,7 +589,7 @@ fn iadd_scalar_2d_strided_dyn(bench: &mut test::Bencher) {
 fn scaled_add_2d_f32_regular(bench: &mut test::Bencher) {
     let mut av = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
-    let scalar = std::f32::consts::Pi;
+    let scalar = std::f32::consts::PI;
     bench.iter(|| {
         av.scaled_add(scalar, &bv);
     });

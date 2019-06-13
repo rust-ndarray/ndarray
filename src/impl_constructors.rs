@@ -422,8 +422,8 @@ where
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
-            strides: strides,
-            dim: dim,
+            strides,
+            dim,
         }
     }
 

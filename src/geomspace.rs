@@ -96,7 +96,7 @@ where
     Some(Geomspace {
         sign: a.signum(),
         start: log_a,
-        step: step,
+        step,
         index: 0,
         len: n,
     })

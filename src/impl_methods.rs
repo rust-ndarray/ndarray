@@ -52,6 +52,7 @@ where
     }
 
     /// Return whether the array has any elements
+    // #[allow(clippy::)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -225,7 +226,7 @@ where
     {
         let data = self.data.into_shared();
         ArrayBase {
-            data: data,
+            data,
             ptr: self.ptr,
             dim: self.dim,
             strides: self.strides,
@@ -1196,7 +1197,7 @@ where
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
             if let Some(1) = D::NDIM {
-                return strides[0] == 1 || dim[0] <= 1
+                return strides[0] == 1 || dim[0] <= 1;
             }
             if dim.slice().iter().any(|&d| d == 0) {
                 return true;
@@ -1452,8 +1453,8 @@ where
                 return Ok(ArrayBase {
                     data: self.data,
                     ptr: self.ptr,
-                    dim: dim,
-                    strides: strides,
+                    dim,
+                    strides,
                 });
             }
         }
