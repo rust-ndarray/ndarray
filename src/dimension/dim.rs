@@ -74,6 +74,8 @@ where
     }
 }
 
+// FIXME: need help understanding why this is complaining
+#[allow(clippy::derive_hash_xor_eq)]
 impl<I: ?Sized> hash::Hash for Dim<I>
 where
     Dim<I>: Dimension,

@@ -15,6 +15,8 @@ where
     S: RawData<Elem = A>,
 {
     /// Return an vector with the elements of the one-dimensional array.
+    // TODO: See below re error
+    #[allow(clippy::map_clone)]
     pub fn to_vec(&self) -> Vec<A>
     where
         A: Clone,
