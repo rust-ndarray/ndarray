@@ -127,7 +127,7 @@ where
     where
         I: IntoIterator<Item = A>,
     {
-        ArrayBase::from_iter_(iterable)
+        ArrayBase::from_iter(iterable)
     }
 }
 

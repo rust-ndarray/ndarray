@@ -64,7 +64,7 @@ where
     /// let array = Array::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
-    pub fn from_iter_<I>(iterable: I) -> Self
+    pub fn from_iter<I>(iterable: I) -> Self
     where
         I: IntoIterator<Item = A>,
     {
