@@ -20,7 +20,7 @@ use ndarray::{FoldWhile, Zip};
 #[bench]
 fn iter_sum_2d_regular(bench: &mut Bencher) {
     let a = Array::<i32, _>::zeros((64, 64));
-    bench.iter(|| a.iter().fold(0, |acc, &x| acc + x));
+    bench.iter(|| a.iter().sum::<i32>());
 }
 
 #[bench]
@@ -28,7 +28,7 @@ fn iter_sum_2d_cutout(bench: &mut Bencher) {
     let a = Array::<i32, _>::zeros((66, 66));
     let av = a.slice(s![1..-1, 1..-1]);
     let a = av;
-    bench.iter(|| a.iter().fold(0, |acc, &x| acc + x));
+    bench.iter(|| a.iter().sum::<i32>());
 }
 
 #[bench]
@@ -43,21 +43,21 @@ fn iter_all_2d_cutout(bench: &mut Bencher) {
 fn iter_sum_2d_transpose(bench: &mut Bencher) {
     let a = Array::<i32, _>::zeros((66, 66));
     let a = a.t();
-    bench.iter(|| a.iter().fold(0, |acc, &x| acc + x));
+    bench.iter(|| a.iter().sum::<i32>());
 }
 
 #[bench]
 fn iter_filter_sum_2d_u32(bench: &mut Bencher) {
     let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
-    bench.iter(|| b.iter().filter(|&&x| x < 75).fold(0, |acc, &x| acc + x));
+    bench.iter(|| b.iter().filter(|&&x| x < 75).sum::<u32>());
 }
 
 #[bench]
 fn iter_filter_sum_2d_f32(bench: &mut Bencher) {
     let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
     let b = a * 100.;
-    bench.iter(|| b.iter().filter(|&&x| x < 75.).fold(0., |acc, &x| acc + x));
+    bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
 }
 
 #[bench]
@@ -65,7 +65,7 @@ fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher) {
     let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
     let b = b.slice(s![.., ..;2]);
-    bench.iter(|| b.iter().filter(|&&x| x < 75).fold(0, |acc, &x| acc + x));
+    bench.iter(|| b.iter().filter(|&&x| x < 75).sum::<u32>());
 }
 
 #[bench]
@@ -73,7 +73,7 @@ fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher) {
     let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
     let b = a * 100.;
     let b = b.slice(s![.., ..;2]);
-    bench.iter(|| b.iter().filter(|&&x| x < 75.).fold(0., |acc, &x| acc + x));
+    bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
 }
 
 const ZIPSZ: usize = 10_000;
@@ -196,7 +196,7 @@ fn vector_sum_3_zip_unchecked_manual(bench: &mut Bencher) {
         let mut ap = a.as_ptr();
         let mut bp = b.as_ptr();
         let mut cp = c.as_mut_ptr();
-        let cend = cp.offset(c.len() as isize);
+        let cend = cp.add(c.len());
         while cp != cend {
             *cp.post_inc() += *ap.post_inc() + *bp.post_inc();
         }
@@ -316,7 +316,7 @@ fn indexed_iter_3d_dyn(bench: &mut Bencher) {
 fn iter_sum_1d_strided_fold(bench: &mut Bencher) {
     let mut a = Array::<u64, _>::ones(10240);
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
-    bench.iter(|| a.iter().fold(0, |acc, &x| acc + x));
+    bench.iter(|| a.iter().sum::<u64>());
 }
 
 #[bench]

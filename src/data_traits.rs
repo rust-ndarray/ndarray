@@ -133,7 +133,7 @@ pub unsafe trait DataMut: Data + RawDataMut {
 /// accessed with safe code.
 ///
 /// ***Internal trait, see `Data`.***
-#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13")]
+#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13.0")]
 pub trait DataClone: Data + RawDataClone {}
 
 #[allow(deprecated)]

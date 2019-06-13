@@ -527,6 +527,7 @@ fn test_index_arrays() {
 }
 
 #[test]
+#[allow(clippy::assign_op_pattern)]
 fn test_add() {
     let mut A = ArcArray::<usize, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
