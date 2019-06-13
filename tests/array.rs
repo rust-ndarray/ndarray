@@ -579,7 +579,7 @@ fn test_negative_stride_arcarray() {
         let seq = [
             7f32, 6., 5., 4., 3., 2., 1., 0., 15., 14., 13., 12., 11., 10., 9., 8.,
         ];
-        for (a, b) in vi.clone().iter().zip(seq.iter()) {
+        for (a, b) in vi.iter().zip(seq.iter()) {
             assert_eq!(*a, *b);
         }
     }
