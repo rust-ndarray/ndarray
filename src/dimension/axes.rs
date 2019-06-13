@@ -7,7 +7,7 @@ where
 {
     Axes {
         dim: d,
-        strides: strides,
+        strides,
         start: 0,
         end: d.ndim(),
     }

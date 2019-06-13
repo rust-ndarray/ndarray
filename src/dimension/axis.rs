@@ -15,7 +15,7 @@ use std::cmp::Ordering;
 ///
 /// All array axis arguments use this type to make the code easier to write
 /// correctly and easier to understand.
-#[derive(Eq, Ord, Hash, Debug)]
+#[derive(Eq, Ord, Debug)]
 pub struct Axis(pub usize);
 
 impl Axis {

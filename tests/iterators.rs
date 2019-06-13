@@ -1,3 +1,9 @@
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 extern crate itertools;
 extern crate ndarray;
 
@@ -11,7 +17,7 @@ use itertools::{enumerate, rev};
 #[test]
 fn double_ended() {
     let a = ArcArray::linspace(0., 7., 8);
-    let mut it = a.iter().map(|x| *x);
+    let mut it = a.iter().copied();
     assert_eq!(it.next(), Some(0.));
     assert_eq!(it.next_back(), Some(7.));
     assert_eq!(it.next(), Some(1.));
@@ -555,11 +561,11 @@ fn test_fold() {
     a += 1;
     let mut iter = a.iter();
     iter.next();
-    assert_eq!(iter.fold(0, |acc, &x| acc + x), a.sum() - 1);
+    assert_eq!(iter.sum::<i32>(), a.sum() - 1);
 
     let mut a = Array0::<i32>::default(());
     a += 1;
-    assert_eq!(a.iter().fold(0, |acc, &x| acc + x), 1);
+    assert_eq!(a.iter().sum::<i32>(), 1);
 }
 
 #[test]

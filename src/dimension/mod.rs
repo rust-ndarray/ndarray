@@ -539,12 +539,10 @@ fn slice_min_max(axis_len: usize, slice: Slice) -> Option<(usize, usize)> {
     let (start, end, step) = to_abs_slice(axis_len, slice);
     if start == end {
         None
+    } else if step > 0 {
+        Some((start, end - 1 - (end - start - 1) % (step as usize)))
     } else {
-        if step > 0 {
-            Some((start, end - 1 - (end - start - 1) % (step as usize)))
-        } else {
-            Some((start + (end - start - 1) % (-step as usize), end - 1))
-        }
+        Some((start + (end - start - 1) % (-step as usize), end - 1))
     }
 }
 

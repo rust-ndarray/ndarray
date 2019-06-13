@@ -1,4 +1,10 @@
 #![allow(non_snake_case)]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
 extern crate defmac;
 extern crate itertools;

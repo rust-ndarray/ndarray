@@ -241,7 +241,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
         Self::ensure_unique(&mut self_);
         let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
         ArrayBase {
-            data: data,
+            data,
             ptr: self_.ptr,
             dim: self_.dim,
             strides: self_.strides,

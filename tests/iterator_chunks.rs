@@ -10,8 +10,8 @@ fn chunks() {
         .unwrap();
 
     let (m, n) = a.dim();
-    for i in 1..m + 1 {
-        for j in 1..n + 1 {
+    for i in 1..=m {
+        for j in 1..=n {
             let c = a.exact_chunks((i, j));
 
             let ly = n / j;

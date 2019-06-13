@@ -314,7 +314,7 @@ where
     /// **Panics** if broadcasting to the same shape isn’t possible.
     #[deprecated(
         note = "Use `abs_diff_eq` - it requires the `approx` crate feature",
-        since = "0.13"
+        since = "0.13.0"
     )]
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
     where

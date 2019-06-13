@@ -476,8 +476,8 @@ where
         ArrayView {
             data: ViewRepr::new(),
             ptr: ptr as *mut A,
-            dim: dim,
-            strides: strides,
+            dim,
+            strides,
         }
     }
 
@@ -522,9 +522,9 @@ where
         }
         ArrayViewMut {
             data: ViewRepr::new(),
-            ptr: ptr,
-            dim: dim,
-            strides: strides,
+            ptr,
+            dim,
+            strides,
         }
     }
 
