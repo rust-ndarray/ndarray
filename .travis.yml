@@ -35,5 +35,4 @@ before_script:
 script:
   - |
       cargo fmt --all -- --check &&
-      cargo clippy &&
       ./scripts/all-tests.sh "$FEATURES" "$IS_NIGHTLY"
