@@ -17,7 +17,7 @@ use itertools::{enumerate, rev};
 #[test]
 fn double_ended() {
     let a = ArcArray::linspace(0., 7., 8);
-    let mut it = a.iter().copied();
+    let mut it = a.iter().cloned();
     assert_eq!(it.next(), Some(0.));
     assert_eq!(it.next_back(), Some(7.));
     assert_eq!(it.next(), Some(1.));
