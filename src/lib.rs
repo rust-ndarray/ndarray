@@ -111,6 +111,11 @@ extern crate num_traits;
 #[cfg(test)]
 extern crate quickcheck;
 
+#[macro_use]
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+
 #[cfg(feature = "docs")]
 pub mod doc;
 
