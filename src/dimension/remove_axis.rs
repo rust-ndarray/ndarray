@@ -49,12 +49,9 @@ macro_rules! impl_remove_axis_array(
                 {
                     let mut it = tup.slice_mut().iter_mut();
                     for (i, &d) in self.slice().iter().enumerate() {
-                        if i == axis.index() {
-                            continue;
-                        }
-                        for rr in it.by_ref() {
-                            *rr = d;
-                            break
+                        if i != axis.index() {
+                            // FIXME: is this a correct translations from the existing version?
+                            *it.next().unwrap() = d;
                         }
                     }
                 }
