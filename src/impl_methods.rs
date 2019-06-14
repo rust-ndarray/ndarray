@@ -52,7 +52,6 @@ where
     }
 
     /// Return whether the array has any elements
-    // #[allow(clippy::)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
