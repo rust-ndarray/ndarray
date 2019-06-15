@@ -38,7 +38,9 @@ where
     D: RemoveAxis,
 {
     if arrays.len() == 0 {
-        return Err(ShapeError::from(ShapeErrorKind::Unsupported));
+        return Err(ShapeError::from(ShapeErrorKind::Unsupported {
+            message: String::from("Stack `arrays` param is empty.")
+        }));
     }
     let mut res_dim = arrays[0].raw_dim();
     if axis.index() >= res_dim.ndim() {

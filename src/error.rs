@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use super::Dimension;
-use std::error::Error;
 use std::fmt;
 
 use failure::{Context, Fail, Backtrace};
@@ -31,8 +30,10 @@ pub enum ShapeErrorKind {
     RangeLimited,
     #[fail(display = "Out of bounds indexing.")]
     OutOfBounds,
-    #[fail(display = "Aliasing array elements.")]
-    Unsupported,
+    #[fail(display = "Aliasing array elements. {}", message)]
+    Unsupported{
+        message: String
+    },
     #[fail(display = "Overflow when computing offset, length, etc.")]
     Overflow,
     #[fail(display = "Incomplete")]

@@ -25,5 +25,7 @@ fn stacking() {
     assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::OutOfBounds));
 
     let res: Result<Array2<f64>, _> = ndarray::stack(Axis(0), &[]);
-    assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::Unsupported));
+    assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::Unsupported {
+        message: String::from("Stack `arrays` param is empty.")
+    }));
 }

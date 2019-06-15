@@ -231,13 +231,17 @@ pub fn can_index_slice<A, D: Dimension>(
     for (&d, &s) in izip!(dim.slice(), strides.slice()) {
         let s = s as isize;
         if d > 1 && s < 0 {
-            return Err(ShapeError::from(ShapeErrorKind::Unsupported));
+            return Err(ShapeError::from(ShapeErrorKind::Unsupported {
+                message: format!("Strides must be strictly positive: {}.", s)
+            }));
         }
     }
 
     // Check condition 5.
     if !is_empty && dim_stride_overlap(dim, strides) {
-        return Err(ShapeError::from(ShapeErrorKind::Unsupported));
+        return Err(ShapeError::from(ShapeErrorKind::Unsupported {
+            message: format!("Dimension {:?} has overlapping indices with strides {:?}.", dim, strides)
+        }));
     }
 
     Ok(())
