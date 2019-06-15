@@ -13,8 +13,8 @@ use failure::{Context, Fail, Backtrace};
 
 /// An error related to array shape or layout.
 #[derive(Debug)]
-pub struct MyError {
-    inner: Context<MyErrorKind>,
+pub struct ShapeError {
+    inner: Context<ShapeErrorKind>,
 }
 
 /// Error code for an error related to array shape or layout.
@@ -22,7 +22,7 @@ pub struct MyError {
 /// This enumeration is not exhaustive. The representation of the enum
 /// is not guaranteed.
 #[derive(Clone, PartialEq, Debug, Fail)]
-pub enum MyErrorKind {
+pub enum ShapeErrorKind {
     #[fail(display = "Incompatible shape.")]
     IncompatibleShape,
     #[fail(display = "Incompatible layout.")]
@@ -40,7 +40,7 @@ pub enum MyErrorKind {
     __Incomplete,
 }
 
-impl Fail for MyError {
+impl Fail for ShapeError {
     fn cause(&self) -> Option<&Fail> {
         self.inner.cause()
     }
@@ -50,41 +50,41 @@ impl Fail for MyError {
     }
 }
 
-impl fmt::Display for MyError {
+impl fmt::Display for ShapeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.inner, f)
     }
 }
 
-impl MyError {
-    pub fn kind(&self) -> &MyErrorKind {
+impl ShapeError {
+    pub fn kind(&self) -> &ShapeErrorKind {
         self.inner.get_context()
     }
 }
 
-impl From<MyErrorKind> for MyError {
-    fn from(kind: MyErrorKind) -> MyError {
-        MyError { inner: Context::new(kind) }
+impl From<ShapeErrorKind> for ShapeError {
+    fn from(kind: ShapeErrorKind) -> ShapeError {
+        ShapeError { inner: Context::new(kind) }
     }
 }
 
-impl From<Context<MyErrorKind>> for MyError {
-    fn from(inner: Context<MyErrorKind>) -> MyError {
-        MyError { inner }
+impl From<Context<ShapeErrorKind>> for ShapeError {
+    fn from(inner: Context<ShapeErrorKind>) -> ShapeError {
+        ShapeError { inner }
     }
 }
 
-impl PartialEq for MyError {
+impl PartialEq for ShapeError {
     #[inline(always)]
     fn eq(&self, rhs: &Self) -> bool {
         self.kind() == rhs.kind()
     }
 }
 
-pub fn incompatible_shapes<D, E>(_a: &D, _b: &E) -> MyError
+pub fn incompatible_shapes<D, E>(_a: &D, _b: &E) -> ShapeError
 where
     D: Dimension,
     E: Dimension,
 {
-    MyError::from(MyErrorKind::IncompatibleShape)
+    ShapeError::from(ShapeErrorKind::IncompatibleShape)
 }

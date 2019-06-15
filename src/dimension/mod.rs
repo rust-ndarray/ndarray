@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::error::{MyError, MyErrorKind};
+use crate::error::{ShapeError, ShapeErrorKind};
 use crate::{Ix, Ixs, Slice, SliceOrIndex};
 use itertools::izip;
 use num_integer::div_floor;
@@ -77,15 +77,15 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
 /// are met to construct an array from the data buffer, `dim`, and `strides`.
 /// (The data buffer being a slice or `Vec` guarantees that it contains no more
 /// than `isize::MAX` bytes.)
-pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, MyError> {
+pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError> {
     let size_nonzero = dim
         .slice()
         .iter()
         .filter(|&&d| d != 0)
         .try_fold(1usize, |acc, &d| acc.checked_mul(d))
-        .ok_or_else(|| MyError::from(MyErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow))?;
     if size_nonzero > ::std::isize::MAX as usize {
-        Err(MyError::from(MyErrorKind::Overflow))
+        Err(ShapeError::from(ShapeErrorKind::Overflow))
     } else {
         Ok(dim.size())
     }
@@ -115,12 +115,12 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, MyError> {
 /// conditions 1 and 2 are sufficient to guarantee that the offset in units of
 /// `A` and in units of bytes between the least address and greatest address
 /// accessible by moving along all axes does not exceed `isize::MAX`.
-pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Result<(), MyError> {
+pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Result<(), ShapeError> {
     // Condition 1.
     let len = size_of_shape_checked(dim)?;
     // Condition 2.
     if len > data.len() {
-        return Err(MyError::from(MyErrorKind::OutOfBounds));
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
     }
     Ok(())
 }
@@ -139,13 +139,13 @@ pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Resul
 /// 3. The product of non-zero axis lengths does not exceed `isize::MAX`. (This
 ///    also implies that the length of any individual axis does not exceed
 ///    `isize::MAX`.)
-pub fn max_abs_offset_check_overflow<A, D>(dim: &D, strides: &D) -> Result<usize, MyError>
+pub fn max_abs_offset_check_overflow<A, D>(dim: &D, strides: &D) -> Result<usize, ShapeError>
 where
     D: Dimension,
 {
     // Condition 1.
     if dim.ndim() != strides.ndim() {
-        return Err(MyError::from(MyErrorKind::IncompatibleLayout));
+        return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout));
     }
 
     // Condition 3.
@@ -160,20 +160,20 @@ where
             let off = d.saturating_sub(1).checked_mul(s.abs() as usize)?;
             acc.checked_add(off)
         })
-        .ok_or_else(|| MyError::from(MyErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow))?;
     // Condition 2a.
     if max_offset > isize::MAX as usize {
-        return Err(MyError::from(MyErrorKind::Overflow));
+        return Err(ShapeError::from(ShapeErrorKind::Overflow));
     }
 
     // Determine absolute difference in units of bytes between least and
     // greatest address accessible by moving along all axes
     let max_offset_bytes = max_offset
         .checked_mul(mem::size_of::<A>())
-        .ok_or_else(|| MyError::from(MyErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow))?;
     // Condition 2b.
     if max_offset_bytes > isize::MAX as usize {
-        return Err(MyError::from(MyErrorKind::Overflow));
+        return Err(ShapeError::from(ShapeErrorKind::Overflow));
     }
 
     Ok(max_offset)
@@ -214,30 +214,30 @@ pub fn can_index_slice<A, D: Dimension>(
     data: &[A],
     dim: &D,
     strides: &D,
-) -> Result<(), MyError> {
+) -> Result<(), ShapeError> {
     // Check conditions 1 and 2 and calculate `max_offset`.
     let max_offset = max_abs_offset_check_overflow::<A, _>(dim, strides)?;
 
     // Check condition 4.
     let is_empty = dim.slice().iter().any(|&d| d == 0);
     if is_empty && max_offset > data.len() {
-        return Err(MyError::from(MyErrorKind::OutOfBounds));
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
     }
     if !is_empty && max_offset >= data.len() {
-        return Err(MyError::from(MyErrorKind::OutOfBounds));
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
     }
 
     // Check condition 3.
     for (&d, &s) in izip!(dim.slice(), strides.slice()) {
         let s = s as isize;
         if d > 1 && s < 0 {
-            return Err(MyError::from(MyErrorKind::Unsupported));
+            return Err(ShapeError::from(ShapeErrorKind::Unsupported));
         }
     }
 
     // Check condition 5.
     if !is_empty && dim_stride_overlap(dim, strides) {
-        return Err(MyError::from(MyErrorKind::Unsupported));
+        return Err(ShapeError::from(ShapeErrorKind::Unsupported));
     }
 
     Ok(())
@@ -644,7 +644,7 @@ mod test {
         max_abs_offset_check_overflow, slice_min_max, slices_intersect,
         solve_linear_diophantine_eq, IntoDimension,
     };
-    use crate::error::{MyError, MyErrorKind};
+    use crate::error::{ShapeError, ShapeErrorKind};
     use crate::slice::Slice;
     use crate::{Dim, Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn};
     use num_integer::gcd;
@@ -660,7 +660,7 @@ mod test {
         let strides = (2, 4, 12).into_dimension();
         assert_eq!(
             super::can_index_slice(&v, &dim, &strides),
-            Err(MyError::from(MyErrorKind::OutOfBounds))
+            Err(ShapeError::from(ShapeErrorKind::OutOfBounds))
         );
     }
 

@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::error::{MyErrorKind, MyError};
+use crate::error::{ShapeErrorKind, ShapeError};
 use crate::{ArrayView, ArrayViewMut, Dimension, RawArrayViewMut};
 use std::fmt;
 use std::marker::PhantomData;
@@ -330,10 +330,10 @@ where
     /// Returns a new `SliceInfo` instance.
     ///
     /// Errors if `D` is not consistent with `indices`.
-    pub fn new(indices: T) -> Result<SliceInfo<T, D>, MyError> {
+    pub fn new(indices: T) -> Result<SliceInfo<T, D>, ShapeError> {
         if let Some(ndim) = D::NDIM {
             if ndim != indices.as_ref().iter().filter(|s| s.is_slice()).count() {
-                return Err(MyError::from(MyErrorKind::IncompatibleShape));
+                return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape));
             }
         }
         Ok(SliceInfo {

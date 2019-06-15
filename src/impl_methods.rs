@@ -20,7 +20,7 @@ use crate::dimension::IntoDimension;
 use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
-use crate::error::{self, MyErrorKind, MyError};
+use crate::error::{self, ShapeErrorKind, ShapeError};
 use crate::zip::Zip;
 
 use crate::iter::{
@@ -1336,7 +1336,7 @@ where
     ///                 [3., 4.]])
     /// );
     /// ```
-    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, MyError>
+    pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
     where
         E: IntoDimension,
     {
@@ -1360,7 +1360,7 @@ where
                 dim: shape,
             })
         } else {
-            Err(MyError::from(MyErrorKind::IncompatibleLayout))
+            Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout))
         }
     }
 
@@ -1444,7 +1444,7 @@ where
     ///
     /// assert!(array.into_dimensionality::<Ix2>().is_ok());
     /// ```
-    pub fn into_dimensionality<D2>(self) -> Result<ArrayBase<S, D2>, MyError>
+    pub fn into_dimensionality<D2>(self) -> Result<ArrayBase<S, D2>, ShapeError>
     where
         D2: Dimension,
     {
@@ -1458,7 +1458,7 @@ where
                 });
             }
         }
-        Err(MyError::from(MyErrorKind::IncompatibleShape))
+        Err(ShapeError::from(ShapeErrorKind::IncompatibleShape))
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*
