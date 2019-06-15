@@ -15,7 +15,7 @@ use std::isize;
 use std::mem;
 
 use crate::dimension;
-use crate::error::{self, ShapeError};
+use crate::error::{self, MyError};
 use crate::imp_prelude::*;
 use crate::indexes;
 use crate::indices;
@@ -365,7 +365,7 @@ where
     ///                 [2., 4.]])
     /// );
     /// ```
-    pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<Self, ShapeError>
+    pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<Self, MyError>
     where
         Sh: Into<StrideShape<D>>,
     {
@@ -373,7 +373,7 @@ where
         Self::from_shape_vec_impl(shape.into(), v)
     }
 
-    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError> {
+    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, MyError> {
         let dim = shape.dim;
         let strides = shape.strides;
         if shape.custom {

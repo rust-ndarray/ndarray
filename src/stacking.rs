@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::error::{from_kind, ErrorKind, ShapeError};
+use crate::error::{MyErrorKind, MyError};
 use crate::imp_prelude::*;
 
 /// Stack arrays along the given axis.
@@ -32,24 +32,24 @@ use crate::imp_prelude::*;
 pub fn stack<'a, A, D>(
     axis: Axis,
     arrays: &[ArrayView<'a, A, D>],
-) -> Result<Array<A, D>, ShapeError>
+) -> Result<Array<A, D>, MyError>
 where
     A: Copy,
     D: RemoveAxis,
 {
     if arrays.len() == 0 {
-        return Err(from_kind(ErrorKind::Unsupported));
+        return Err(MyError::from(MyErrorKind::Unsupported));
     }
     let mut res_dim = arrays[0].raw_dim();
     if axis.index() >= res_dim.ndim() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(MyError::from(MyErrorKind::OutOfBounds));
     }
     let common_dim = res_dim.remove_axis(axis);
     if arrays
         .iter()
         .any(|a| a.raw_dim().remove_axis(axis) != common_dim)
     {
-        return Err(from_kind(ErrorKind::IncompatibleShape));
+        return Err(MyError::from(MyErrorKind::IncompatibleShape));
     }
 
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));

@@ -129,7 +129,7 @@ pub use crate::dimension::{
 
 pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
-pub use crate::error::{ErrorKind, ShapeError};
+pub use crate::error::{MyErrorKind, MyError};
 pub use crate::indexes::{indices, indices_of};
 pub use crate::slice::{
     deref_raw_view_mut_into_view_mut_with_life, deref_raw_view_mut_into_view_with_life,
@@ -1065,8 +1065,9 @@ pub type Ixs = isize;
 ///
 /// ```rust
 /// use ndarray::{array, Array2};
+/// use ndarray::MyError;
 ///
-/// # fn main() -> Result<(), Box<std::error::Error>> {
+/// # fn main() -> Result<(), Box<MyError>> {
 /// let ncols = 3;
 /// let mut data = Vec::new();
 /// let mut nrows = 0;
@@ -1091,8 +1092,9 @@ pub type Ixs = isize;
 ///
 /// ```rust
 /// use ndarray::{array, Array2, Array3};
+/// use ndarray::MyError;
 ///
-/// # fn main() -> Result<(), Box<std::error::Error>> {
+/// # fn main() -> Result<(), Box<MyError>> {
 /// let nested: Vec<Array2<i32>> = vec![
 ///     array![[1, 2, 3], [4, 5, 6]],
 ///     array![[7, 8, 9], [10, 11, 12]],

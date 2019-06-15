@@ -10,7 +10,7 @@ use std::slice;
 
 use crate::arraytraits::array_out_of_bounds;
 use crate::dimension;
-use crate::error::ShapeError;
+use crate::error::MyError;
 use crate::imp_prelude::*;
 use crate::{is_aligned, NdIndex, StrideShape};
 
@@ -47,7 +47,7 @@ where
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_shape<Sh>(shape: Sh, xs: &'a [A]) -> Result<Self, ShapeError>
+    pub fn from_shape<Sh>(shape: Sh, xs: &'a [A]) -> Result<Self, MyError>
     where
         Sh: Into<StrideShape<D>>,
     {
@@ -55,7 +55,7 @@ where
         Self::from_shape_impl(shape.into(), xs)
     }
 
-    fn from_shape_impl(shape: StrideShape<D>, xs: &'a [A]) -> Result<Self, ShapeError> {
+    fn from_shape_impl(shape: StrideShape<D>, xs: &'a [A]) -> Result<Self, MyError> {
         let dim = shape.dim;
         let strides = shape.strides;
         if shape.custom {
@@ -309,7 +309,7 @@ where
     /// );
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
-    pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A]) -> Result<Self, ShapeError>
+    pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A]) -> Result<Self, MyError>
     where
         Sh: Into<StrideShape<D>>,
     {
@@ -317,7 +317,7 @@ where
         Self::from_shape_impl(shape.into(), xs)
     }
 
-    fn from_shape_impl(shape: StrideShape<D>, xs: &'a mut [A]) -> Result<Self, ShapeError> {
+    fn from_shape_impl(shape: StrideShape<D>, xs: &'a mut [A]) -> Result<Self, MyError> {
         let dim = shape.dim;
         let strides = shape.strides;
         if shape.custom {

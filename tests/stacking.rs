@@ -1,6 +1,7 @@
 extern crate ndarray;
 
-use ndarray::{arr2, aview1, stack, Array2, Axis, ErrorKind};
+use ndarray::{arr2, aview1, stack, Array2, Axis};
+use ndarray::{MyError, MyErrorKind};
 
 #[test]
 fn stacking() {
@@ -18,11 +19,11 @@ fn stacking() {
     assert_eq!(d, aview1(&[2., 2., 9., 9.]));
 
     let res = ndarray::stack(Axis(1), &[a.view(), c.view()]);
-    assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);
+    assert_eq!(res.unwrap_err(), MyError::from(MyErrorKind::IncompatibleShape));
 
     let res = ndarray::stack(Axis(2), &[a.view(), c.view()]);
-    assert_eq!(res.unwrap_err().kind(), ErrorKind::OutOfBounds);
+    assert_eq!(res.unwrap_err(), MyError::from(MyErrorKind::OutOfBounds));
 
     let res: Result<Array2<f64>, _> = ndarray::stack(Axis(0), &[]);
-    assert_eq!(res.unwrap_err().kind(), ErrorKind::Unsupported);
+    assert_eq!(res.unwrap_err(), MyError::from(MyErrorKind::Unsupported));
 }
