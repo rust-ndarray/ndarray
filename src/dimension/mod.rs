@@ -69,7 +69,7 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
 }
 
 /// Returns the `size` of the `dim`, checking that the product of non-zero axis
-/// lengths does not exceed `isize::MAX`.
+/// lengths does not exceed `usize::MAX`.
 ///
 /// If `size_of_checked_shape(dim)` returns `Ok(size)`, the data buffer is a
 /// slice or `Vec` of length `size`, and `strides` are created with
@@ -83,9 +83,15 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
         .iter()
         .filter(|&&d| d != 0)
         .try_fold(1usize, |acc, &d| acc.checked_mul(d))
-        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("From dimensions: {:?}, the product of non-zero axis lengths \
+                exceed `usize::MAX`.", dim)
+        }))?;
+
     if size_nonzero > ::std::isize::MAX as usize {
-        Err(ShapeError::from(ShapeErrorKind::Overflow))
+        Err(ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("Size: {:?} exceed `isize::MAX`.", size_nonzero)
+        }))
     } else {
         Ok(dim.size())
     }
@@ -160,20 +166,32 @@ where
             let off = d.saturating_sub(1).checked_mul(s.abs() as usize)?;
             acc.checked_add(off)
         })
-        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("From the dimensions: {:?} and strides: {:?}, \
+                the maximum possible absolute movement in units of `A` exceed `usize::MAX`.", dim, strides)
+        }))?;
     // Condition 2a.
     if max_offset > isize::MAX as usize {
-        return Err(ShapeError::from(ShapeErrorKind::Overflow));
+        return Err(ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("The absolute difference between least and greatest address, \
+                max ofsset: {:?} in units of `A` exceed `isize::MAX`.", max_offset)
+        }));
     }
 
     // Determine absolute difference in units of bytes between least and
     // greatest address accessible by moving along all axes
     let max_offset_bytes = max_offset
         .checked_mul(mem::size_of::<A>())
-        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("From the dimensions: {:?} and strides: {:?}, \
+                the maximum possible absolute movement in bytes exceed `usize::MAX`.", dim, strides)
+        }))?;
     // Condition 2b.
     if max_offset_bytes > isize::MAX as usize {
-        return Err(ShapeError::from(ShapeErrorKind::Overflow));
+        return Err(ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("The absolute difference between least and greatest address, \
+                max ofsset: {:?} in units of bytes, exceed `isize::MAX`.", max_offset_bytes)
+        }));
     }
 
     Ok(max_offset)

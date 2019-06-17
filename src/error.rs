@@ -31,11 +31,13 @@ pub enum ShapeErrorKind {
     #[fail(display = "Out of bounds indexing.")]
     OutOfBounds,
     #[fail(display = "Aliasing array elements. {}", message)]
-    Unsupported{
+    Unsupported {
         message: String
     },
-    #[fail(display = "Overflow when computing offset, length, etc.")]
-    Overflow,
+    #[fail(display = "Overflow dimensions. {}", message)]
+    Overflow {
+        message: String
+    },
     #[fail(display = "Incomplete")]
     #[doc(hidden)]
     __Incomplete,
