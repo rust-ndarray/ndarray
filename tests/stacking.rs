@@ -22,7 +22,9 @@ fn stacking() {
     assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::IncompatibleShape));
 
     let res = ndarray::stack(Axis(2), &[a.view(), c.view()]);
-    assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::OutOfBounds));
+    assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::OutOfBounds {
+        message: format!("The axis index: {:?} greater than the number of raw dimensions: {:?}.", 2, 2)
+    }));
 
     let res: Result<Array2<f64>, _> = ndarray::stack(Axis(0), &[]);
     assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::Unsupported {

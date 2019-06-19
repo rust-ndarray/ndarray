@@ -43,8 +43,12 @@ where
         }));
     }
     let mut res_dim = arrays[0].raw_dim();
-    if axis.index() >= res_dim.ndim() {
-        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
+    let index = axis.index();
+    let dimensions = res_dim.ndim();
+    if index >= dimensions {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("The axis index: {:?} greater than the number of raw dimensions: {:?}.", index, dimensions)
+        }));
     }
     let common_dim = res_dim.remove_axis(axis);
     if arrays

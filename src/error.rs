@@ -28,8 +28,10 @@ pub enum ShapeErrorKind {
     IncompatibleLayout,
     #[fail(display = "The shape does not fit inside type limits.")]
     RangeLimited,
-    #[fail(display = "Out of bounds indexing.")]
-    OutOfBounds,
+    #[fail(display = "Out of bounds indexing. {}", message)]
+    OutOfBounds {
+        message: String
+    },
     #[fail(display = "Aliasing array elements. {}", message)]
     Unsupported {
         message: String

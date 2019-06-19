@@ -123,10 +123,15 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
 /// accessible by moving along all axes does not exceed `isize::MAX`.
 pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Result<(), ShapeError> {
     // Condition 1.
-    let len = size_of_shape_checked(dim)?;
+    let size = size_of_shape_checked(dim)?;
+
     // Condition 2.
-    if len > data.len() {
-        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
+    let length = data.len();
+    if size > length {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("The dimension size: {:?} must be less than or equal to \
+                the length of the slice: {:?}.", size, length)
+        }));
     }
     Ok(())
 }
@@ -237,12 +242,21 @@ pub fn can_index_slice<A, D: Dimension>(
     let max_offset = max_abs_offset_check_overflow::<A, _>(dim, strides)?;
 
     // Check condition 4.
+    let length = data.len();
     let is_empty = dim.slice().iter().any(|&d| d == 0);
-    if is_empty && max_offset > data.len() {
-        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
+    if is_empty && max_offset > length {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("If the array will be empty, the difference between \
+                least and greatest address, max ofsset: {:?}, must be less than or \
+                equal to the length of data{:?}.", max_offset, length)
+        }));
     }
-    if !is_empty && max_offset >= data.len() {
-        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds));
+    if !is_empty && max_offset >= length {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("If the array will not be empty, the difference between \
+                least and greatest address, max ofsset: {:?}, must be less than \
+                the length of data {:?}.", max_offset, length)
+        }));
     }
 
     // Check condition 3.
@@ -682,7 +696,11 @@ mod test {
         let strides = (2, 4, 12).into_dimension();
         assert_eq!(
             super::can_index_slice(&v, &dim, &strides),
-            Err(ShapeError::from(ShapeErrorKind::OutOfBounds))
+            Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+                message: format!("If the array will not be empty, the difference \
+                    between least and greatest address, max ofsset: {:?}, must be \
+                    less than the length of data {:?}.", 22, 12)
+            }))
         );
     }
 
@@ -787,11 +805,16 @@ mod test {
             let result = can_index_slice_not_custom(&data, &dim);
             if dim.size_checked().is_none() {
                 // Avoid overflow `dim.default_strides()` or `dim.fortran_strides()`.
-                result.is_err()
-            } else {
-                result == can_index_slice(&data, &dim, &dim.default_strides()) &&
-                    result == can_index_slice(&data, &dim, &dim.fortran_strides())
+                return result.is_err();
             }
+
+            if dim.size() > data.len() {
+                // Avoid out of bounds, can index slice not custom.
+                return  result.is_err();
+            }
+
+            result == can_index_slice(&data, &dim, &dim.default_strides()) &&
+                result == can_index_slice(&data, &dim, &dim.fortran_strides())
         }
     }
 
