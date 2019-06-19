@@ -1367,8 +1367,8 @@ where
             })
         } else {
             Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
-                message: format!("The input array is not c-contiguous or f-contiguous.\
-                    Shape default strides {:?} and fortran strides {:?}.", shape.default_strides(), shape.fortran_strides())
+                message: format!("The input array is not c-contiguous or f-contiguous. \
+                    Shape {:?} and dimension {:?}.", shape, self.dim)
             }))
         }
     }

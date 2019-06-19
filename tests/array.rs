@@ -1373,7 +1373,7 @@ fn reshape_error1() {
 }
 
 #[test]
-#[should_panic(expected = "Incompatible layout.")]
+#[should_panic(expected = "Incompatible layout. The input array is not c-contiguous or f-contiguous. Shape [2, 4] and dimension [2, 2, 2].")]
 fn reshape_error2() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
