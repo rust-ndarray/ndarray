@@ -156,7 +156,9 @@ where
 {
     // Condition 1.
     if dim.ndim() != strides.ndim() {
-        return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout));
+        return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
+            message: format!("The number of dimension must be the same for dim {:?} and strides {:?}.", dim.ndim(), strides.ndim())
+        }));
     }
 
     // Condition 3.

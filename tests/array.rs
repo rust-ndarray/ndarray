@@ -1365,7 +1365,7 @@ fn reshape() {
 }
 
 #[test]
-#[should_panic(expected = "Incompatible shape.")]
+#[should_panic(expected = "Incompatible layout. The size of shape: 10 and the size of dimension: 8 must be the same.")]
 fn reshape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);

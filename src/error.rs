@@ -24,10 +24,10 @@ pub struct ShapeError {
 pub enum ShapeErrorKind {
     #[fail(display = "Incompatible shape.")]
     IncompatibleShape,
-    #[fail(display = "Incompatible layout.")]
-    IncompatibleLayout,
-    #[fail(display = "The shape does not fit inside type limits.")]
-    RangeLimited,
+    #[fail(display = "Incompatible layout. {}", message)]
+    IncompatibleLayout {
+        message: String
+    },
     #[fail(display = "Out of bounds indexing. {}", message)]
     OutOfBounds {
         message: String
@@ -40,6 +40,8 @@ pub enum ShapeErrorKind {
     Overflow {
         message: String
     },
+    #[fail(display = "The shape does not fit inside type limits.")]
+    RangeLimited,
     #[fail(display = "Incomplete")]
     #[doc(hidden)]
     __Incomplete,
@@ -84,12 +86,4 @@ impl PartialEq for ShapeError {
     fn eq(&self, rhs: &Self) -> bool {
         self.kind() == rhs.kind()
     }
-}
-
-pub fn incompatible_shapes<D, E>(_a: &D, _b: &E) -> ShapeError
-where
-    D: Dimension,
-    E: Dimension,
-{
-    ShapeError::from(ShapeErrorKind::IncompatibleShape)
 }

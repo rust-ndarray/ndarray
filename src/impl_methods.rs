@@ -20,7 +20,7 @@ use crate::dimension::IntoDimension;
 use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
-use crate::error::{self, ShapeErrorKind, ShapeError};
+use crate::error::{ShapeErrorKind, ShapeError};
 use crate::zip::Zip;
 
 use crate::iter::{
@@ -1341,8 +1341,14 @@ where
         E: IntoDimension,
     {
         let shape = shape.into_dimension();
-        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
-            return Err(error::incompatible_shapes(&self.dim, &shape));
+        let shape_size = size_of_shape_checked(&shape)?;
+        let dim_size = self.dim.size();
+
+        if shape_size != dim_size {
+            return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
+                message: format!("The size of shape: {:?} and the size of dimension: {:?} \
+                    must be the same.", shape_size, dim_size)
+            }));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
@@ -1360,7 +1366,10 @@ where
                 dim: shape,
             })
         } else {
-            Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout))
+            Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
+                message: format!("The input array is not c-contiguous or f-contiguous.\
+                    Shape default strides {:?} and fortran strides {:?}.", shape.default_strides(), shape.fortran_strides())
+            }))
         }
     }
 
