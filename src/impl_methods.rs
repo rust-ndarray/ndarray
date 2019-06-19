@@ -1218,11 +1218,12 @@ where
         D::is_contiguous(&self.dim, &self.strides)
     }
 
-    /// Return a representation of the array in the standard layout.
+    /// Return a standard-layout array containing the data, cloning if
+    /// necessary.
     ///
-    /// Return the COW view of the array if it is in the standard layout.
-    /// Otherwise copy the array, transform the copy to the standard layout and return it as
-    /// an owned COW array.
+    /// If `self` is in standard layout, a COW view of the data is returned
+    /// without cloning. Otherwise, the data is cloned, and the returned array
+    /// owns the cloned data.
     pub fn as_standard_layout(&self) -> CowArray<'_, A, D>
     where
         S: Data<Elem = A>,
