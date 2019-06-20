@@ -15,7 +15,7 @@ use std::isize;
 use std::mem;
 
 use crate::dimension;
-use crate::error::{self, ShapeError};
+use crate::error::{ShapeError, ShapeErrorKind};
 use crate::imp_prelude::*;
 use crate::indexes;
 use crate::indices;
@@ -380,8 +380,13 @@ where
             dimension::can_index_slice(&v, &dim, &strides)?;
         } else {
             dimension::can_index_slice_not_custom::<A, _>(&v, &dim)?;
-            if dim.size() != v.len() {
-                return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
+            let size = dim.size();
+            let length = v.len();
+            if size != length {
+                return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
+                    message: format!("The size of shape: {:?} and the length of vector: {:?} \
+                        must be the same.", size, length)
+                }));
             }
         }
         unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }

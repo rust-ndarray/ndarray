@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::error::{from_kind, ErrorKind, ShapeError};
+use crate::error::{ShapeError, ShapeErrorKind};
 use crate::{Ix, Ixs, Slice, SliceOrIndex};
 use itertools::izip;
 use num_integer::div_floor;
@@ -69,7 +69,7 @@ pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
 }
 
 /// Returns the `size` of the `dim`, checking that the product of non-zero axis
-/// lengths does not exceed `isize::MAX`.
+/// lengths does not exceed `usize::MAX`.
 ///
 /// If `size_of_checked_shape(dim)` returns `Ok(size)`, the data buffer is a
 /// slice or `Vec` of length `size`, and `strides` are created with
@@ -83,9 +83,15 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
         .iter()
         .filter(|&&d| d != 0)
         .try_fold(1usize, |acc, &d| acc.checked_mul(d))
-        .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("From dimensions: {:?}, the product of non-zero axis lengths \
+                exceed `usize::MAX`.", dim)
+        }))?;
+
     if size_nonzero > ::std::isize::MAX as usize {
-        Err(from_kind(ErrorKind::Overflow))
+        Err(ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("Size: {:?} exceed `isize::MAX`.", size_nonzero)
+        }))
     } else {
         Ok(dim.size())
     }
@@ -117,10 +123,15 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
 /// accessible by moving along all axes does not exceed `isize::MAX`.
 pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Result<(), ShapeError> {
     // Condition 1.
-    let len = size_of_shape_checked(dim)?;
+    let size = size_of_shape_checked(dim)?;
+
     // Condition 2.
-    if len > data.len() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+    let length = data.len();
+    if size > length {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("The dimension size: {:?} must be less than or equal to \
+                the length of the slice: {:?}.", size, length)
+        }));
     }
     Ok(())
 }
@@ -145,7 +156,9 @@ where
 {
     // Condition 1.
     if dim.ndim() != strides.ndim() {
-        return Err(from_kind(ErrorKind::IncompatibleLayout));
+        return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
+            message: format!("The number of dimension must be the same for dim {:?} and strides {:?}.", dim.ndim(), strides.ndim())
+        }));
     }
 
     // Condition 3.
@@ -160,20 +173,32 @@ where
             let off = d.saturating_sub(1).checked_mul(s.abs() as usize)?;
             acc.checked_add(off)
         })
-        .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("From the dimensions: {:?} and strides: {:?}, \
+                the maximum possible absolute movement in units of `A` exceed `usize::MAX`.", dim, strides)
+        }))?;
     // Condition 2a.
     if max_offset > isize::MAX as usize {
-        return Err(from_kind(ErrorKind::Overflow));
+        return Err(ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("The absolute difference between least and greatest address, \
+                max ofsset: {:?} in units of `A` exceed `isize::MAX`.", max_offset)
+        }));
     }
 
     // Determine absolute difference in units of bytes between least and
     // greatest address accessible by moving along all axes
     let max_offset_bytes = max_offset
         .checked_mul(mem::size_of::<A>())
-        .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
+        .ok_or_else(|| ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("From the dimensions: {:?} and strides: {:?}, \
+                the maximum possible absolute movement in bytes exceed `usize::MAX`.", dim, strides)
+        }))?;
     // Condition 2b.
     if max_offset_bytes > isize::MAX as usize {
-        return Err(from_kind(ErrorKind::Overflow));
+        return Err(ShapeError::from(ShapeErrorKind::Overflow {
+            message: format!("The absolute difference between least and greatest address, \
+                max ofsset: {:?} in units of bytes, exceed `isize::MAX`.", max_offset_bytes)
+        }));
     }
 
     Ok(max_offset)
@@ -219,25 +244,38 @@ pub fn can_index_slice<A, D: Dimension>(
     let max_offset = max_abs_offset_check_overflow::<A, _>(dim, strides)?;
 
     // Check condition 4.
+    let length = data.len();
     let is_empty = dim.slice().iter().any(|&d| d == 0);
-    if is_empty && max_offset > data.len() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+    if is_empty && max_offset > length {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("If the array will be empty, the difference between \
+                least and greatest address, max ofsset: {:?}, must be less than or \
+                equal to the length of data{:?}.", max_offset, length)
+        }));
     }
-    if !is_empty && max_offset >= data.len() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+    if !is_empty && max_offset >= length {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("If the array will not be empty, the difference between \
+                least and greatest address, max ofsset: {:?}, must be less than \
+                the length of data {:?}.", max_offset, length)
+        }));
     }
 
     // Check condition 3.
     for (&d, &s) in izip!(dim.slice(), strides.slice()) {
         let s = s as isize;
         if d > 1 && s < 0 {
-            return Err(from_kind(ErrorKind::Unsupported));
+            return Err(ShapeError::from(ShapeErrorKind::Unsupported {
+                message: format!("Strides must be strictly positive: {}.", s)
+            }));
         }
     }
 
     // Check condition 5.
     if !is_empty && dim_stride_overlap(dim, strides) {
-        return Err(from_kind(ErrorKind::Unsupported));
+        return Err(ShapeError::from(ShapeErrorKind::Unsupported {
+            message: format!("Dimension {:?} has overlapping indices with strides {:?}.", dim, strides)
+        }));
     }
 
     Ok(())
@@ -644,7 +682,7 @@ mod test {
         max_abs_offset_check_overflow, slice_min_max, slices_intersect,
         solve_linear_diophantine_eq, IntoDimension,
     };
-    use crate::error::{from_kind, ErrorKind};
+    use crate::error::{ShapeError, ShapeErrorKind};
     use crate::slice::Slice;
     use crate::{Dim, Dimension, Ix0, Ix1, Ix2, Ix3, IxDyn};
     use num_integer::gcd;
@@ -660,7 +698,11 @@ mod test {
         let strides = (2, 4, 12).into_dimension();
         assert_eq!(
             super::can_index_slice(&v, &dim, &strides),
-            Err(from_kind(ErrorKind::OutOfBounds))
+            Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+                message: format!("If the array will not be empty, the difference \
+                    between least and greatest address, max ofsset: {:?}, must be \
+                    less than the length of data {:?}.", 22, 12)
+            }))
         );
     }
 
@@ -765,11 +807,16 @@ mod test {
             let result = can_index_slice_not_custom(&data, &dim);
             if dim.size_checked().is_none() {
                 // Avoid overflow `dim.default_strides()` or `dim.fortran_strides()`.
-                result.is_err()
-            } else {
-                result == can_index_slice(&data, &dim, &dim.default_strides()) &&
-                    result == can_index_slice(&data, &dim, &dim.fortran_strides())
+                return result.is_err();
             }
+
+            if dim.size() > data.len() {
+                // Avoid out of bounds, can index slice not custom.
+                return  result.is_err();
+            }
+
+            result == can_index_slice(&data, &dim, &dim.default_strides()) &&
+                result == can_index_slice(&data, &dim, &dim.fortran_strides())
         }
     }
 

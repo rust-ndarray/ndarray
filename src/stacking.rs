@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::error::{from_kind, ErrorKind, ShapeError};
+use crate::error::{ShapeErrorKind, ShapeError};
 use crate::imp_prelude::*;
 
 /// Stack arrays along the given axis.
@@ -38,18 +38,28 @@ where
     D: RemoveAxis,
 {
     if arrays.len() == 0 {
-        return Err(from_kind(ErrorKind::Unsupported));
+        return Err(ShapeError::from(ShapeErrorKind::Unsupported {
+            message: String::from("Stack `arrays` param is empty.")
+        }));
     }
     let mut res_dim = arrays[0].raw_dim();
-    if axis.index() >= res_dim.ndim() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+    let index = axis.index();
+    let dimensions = res_dim.ndim();
+    if index >= dimensions {
+        return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
+            message: format!("The axis index: {:?} greater than the number of raw dimensions: {:?}.", index, dimensions)
+        }));
     }
+    // Difference between raw and common dimension, without axis, in arrays
     let common_dim = res_dim.remove_axis(axis);
-    if arrays
-        .iter()
-        .any(|a| a.raw_dim().remove_axis(axis) != common_dim)
-    {
-        return Err(from_kind(ErrorKind::IncompatibleShape));
+    for (index, array) in arrays.iter().enumerate() {
+        let raw_dim = array.raw_dim().remove_axis(axis);
+        if raw_dim != common_dim {
+            return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape {
+                message: format!("Difference between raw dimension: {:?} and common dimension: {:?}, apart from along `axis`, array: {:?}.",
+                    raw_dim, common_dim, index)
+            }));
+        }
     }
 
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
