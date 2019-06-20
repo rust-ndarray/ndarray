@@ -20,8 +20,10 @@ pub struct ShapeError {
 /// is not guaranteed.
 #[derive(Clone, PartialEq, Debug, Fail)]
 pub enum ShapeErrorKind {
-    #[fail(display = "Incompatible shape.")]
-    IncompatibleShape,
+    #[fail(display = "Incompatible shape. {}", message)]
+    IncompatibleShape {
+        message: String
+    },
     #[fail(display = "Incompatible layout. {}", message)]
     IncompatibleLayout {
         message: String

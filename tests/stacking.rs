@@ -19,7 +19,10 @@ fn stacking() {
     assert_eq!(d, aview1(&[2., 2., 9., 9.]));
 
     let res = ndarray::stack(Axis(1), &[a.view(), c.view()]);
-    assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::IncompatibleShape));
+    assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::IncompatibleShape {
+        message: format!("Difference between raw dimension: {:?} and common dimension: {:?}, \
+            apart from along `axis`, array: {:?}.", [6], [2], 1)
+    }));
 
     let res = ndarray::stack(Axis(2), &[a.view(), c.view()]);
     assert_eq!(res.unwrap_err(), ShapeError::from(ShapeErrorKind::OutOfBounds {

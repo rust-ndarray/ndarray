@@ -332,8 +332,11 @@ where
     /// Errors if `D` is not consistent with `indices`.
     pub fn new(indices: T) -> Result<SliceInfo<T, D>, ShapeError> {
         if let Some(ndim) = D::NDIM {
-            if ndim != indices.as_ref().iter().filter(|s| s.is_slice()).count() {
-                return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape));
+            let count = indices.as_ref().iter().filter(|s| s.is_slice()).count();
+            if ndim != count {
+                return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape {
+                    message: format!("Number of dimensions: {:?} must be equal to the quantity of indices: {:?}", ndim, count)
+                }));
             }
         }
         Ok(SliceInfo {

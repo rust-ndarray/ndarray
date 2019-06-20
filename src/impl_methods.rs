@@ -1467,7 +1467,9 @@ where
                 });
             }
         }
-        Err(ShapeError::from(ShapeErrorKind::IncompatibleShape))
+        Err(ShapeError::from(ShapeErrorKind::IncompatibleShape {
+            message: format!("Can't convert from dimension {:?}", self.dim)
+        }))
     }
 
     /// Act like a larger size and/or shape array by *broadcasting*

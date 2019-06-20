@@ -50,12 +50,16 @@ where
             message: format!("The axis index: {:?} greater than the number of raw dimensions: {:?}.", index, dimensions)
         }));
     }
+    // Difference between raw and common dimension, without axis, in arrays
     let common_dim = res_dim.remove_axis(axis);
-    if arrays
-        .iter()
-        .any(|a| a.raw_dim().remove_axis(axis) != common_dim)
-    {
-        return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape));
+    for (index, array) in arrays.iter().enumerate() {
+        let raw_dim = array.raw_dim().remove_axis(axis);
+        if raw_dim != common_dim {
+            return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape {
+                message: format!("Difference between raw dimension: {:?} and common dimension: {:?}, apart from along `axis`, array: {:?}.",
+                    raw_dim, common_dim, index)
+            }));
+        }
     }
 
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
