@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::error::{ShapeErrorKind, ShapeError};
+use crate::error::{ShapeError, ShapeErrorKind};
 use crate::{ArrayView, ArrayViewMut, Dimension, RawArrayViewMut};
 use std::fmt;
 use std::marker::PhantomData;
@@ -335,7 +335,10 @@ where
             let count = indices.as_ref().iter().filter(|s| s.is_slice()).count();
             if ndim != count {
                 return Err(ShapeError::from(ShapeErrorKind::IncompatibleShape {
-                    message: format!("Number of dimensions: {:?} must be equal to the quantity of indices: {:?}", ndim, count)
+                    message: format!(
+                        "Number of dimensions: {:?} must be equal to the quantity of indices: {:?}",
+                        ndim, count
+                    ),
                 }));
             }
         }

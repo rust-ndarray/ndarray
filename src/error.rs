@@ -5,8 +5,8 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+use failure::{Backtrace, Context, Fail};
 use std::fmt;
-use failure::{Context, Fail, Backtrace};
 
 /// An error related to array shape or layout.
 #[derive(Debug)]
@@ -21,25 +21,15 @@ pub struct ShapeError {
 #[derive(Clone, PartialEq, Debug, Fail)]
 pub enum ShapeErrorKind {
     #[fail(display = "Incompatible shape. {}", message)]
-    IncompatibleShape {
-        message: String
-    },
+    IncompatibleShape { message: String },
     #[fail(display = "Incompatible layout. {}", message)]
-    IncompatibleLayout {
-        message: String
-    },
+    IncompatibleLayout { message: String },
     #[fail(display = "Out of bounds indexing. {}", message)]
-    OutOfBounds {
-        message: String
-    },
+    OutOfBounds { message: String },
     #[fail(display = "Aliasing array elements. {}", message)]
-    Unsupported {
-        message: String
-    },
+    Unsupported { message: String },
     #[fail(display = "Overflow dimensions. {}", message)]
-    Overflow {
-        message: String
-    },
+    Overflow { message: String },
     #[fail(display = "The shape does not fit inside type limits.")]
     RangeLimited,
     #[fail(display = "Incomplete")]
@@ -71,7 +61,9 @@ impl ShapeError {
 
 impl From<ShapeErrorKind> for ShapeError {
     fn from(kind: ShapeErrorKind) -> ShapeError {
-        ShapeError { inner: Context::new(kind) }
+        ShapeError {
+            inner: Context::new(kind),
+        }
     }
 }
 

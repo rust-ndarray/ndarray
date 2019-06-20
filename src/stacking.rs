@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::error::{ShapeErrorKind, ShapeError};
+use crate::error::{ShapeError, ShapeErrorKind};
 use crate::imp_prelude::*;
 
 /// Stack arrays along the given axis.
@@ -39,7 +39,7 @@ where
 {
     if arrays.len() == 0 {
         return Err(ShapeError::from(ShapeErrorKind::Unsupported {
-            message: String::from("Stack `arrays` param is empty.")
+            message: String::from("Stack `arrays` param is empty."),
         }));
     }
     let mut res_dim = arrays[0].raw_dim();
@@ -47,7 +47,10 @@ where
     let dimensions = res_dim.ndim();
     if index >= dimensions {
         return Err(ShapeError::from(ShapeErrorKind::OutOfBounds {
-            message: format!("The axis index: {:?} greater than the number of raw dimensions: {:?}.", index, dimensions)
+            message: format!(
+                "The axis index: {:?} greater than the number of raw dimensions: {:?}.",
+                index, dimensions
+            ),
         }));
     }
     // Difference between raw and common dimension, without axis, in arrays

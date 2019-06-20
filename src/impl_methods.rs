@@ -20,7 +20,7 @@ use crate::dimension::IntoDimension;
 use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
-use crate::error::{ShapeErrorKind, ShapeError};
+use crate::error::{ShapeError, ShapeErrorKind};
 use crate::zip::Zip;
 
 use crate::iter::{
@@ -1388,8 +1388,11 @@ where
 
         if shape_size != dim_size {
             return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
-                message: format!("The size of shape: {:?} and the size of dimension: {:?} \
-                    must be the same.", shape_size, dim_size)
+                message: format!(
+                    "The size of shape: {:?} and the size of dimension: {:?} \
+                     must be the same.",
+                    shape_size, dim_size
+                ),
             }));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
@@ -1409,8 +1412,11 @@ where
             })
         } else {
             Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
-                message: format!("The input array is not c-contiguous or f-contiguous. \
-                    Shape {:?} and dimension {:?}.", shape, self.dim)
+                message: format!(
+                    "The input array is not c-contiguous or f-contiguous. \
+                     Shape {:?} and dimension {:?}.",
+                    shape, self.dim
+                ),
             }))
         }
     }
@@ -1510,7 +1516,7 @@ where
             }
         }
         Err(ShapeError::from(ShapeErrorKind::IncompatibleShape {
-            message: format!("Can't convert from dimension {:?}", self.dim)
+            message: format!("Can't convert from dimension {:?}", self.dim),
         }))
     }
 

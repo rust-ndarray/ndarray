@@ -384,8 +384,11 @@ where
             let length = v.len();
             if size != length {
                 return Err(ShapeError::from(ShapeErrorKind::IncompatibleLayout {
-                    message: format!("The size of shape: {:?} and the length of vector: {:?} \
-                        must be the same.", size, length)
+                    message: format!(
+                        "The size of shape: {:?} and the length of vector: {:?} \
+                         must be the same.",
+                        size, length
+                    ),
                 }));
             }
         }
