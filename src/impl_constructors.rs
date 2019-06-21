@@ -64,8 +64,7 @@ where
     /// let array = Array::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
-    // FIXME: I don't yet understand why we can't rely on FromIterator
-    // in `arraytraits.rs`, and have that function call call ArrayBase::from_vec
+    // Potentially remove; see https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296068930
     #[allow(clippy::should_implement_trait)]
     pub fn from_iter<I>(iterable: I) -> Self
     where
