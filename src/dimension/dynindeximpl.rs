@@ -1,4 +1,5 @@
 use crate::imp_prelude::*;
+use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 const CAP: usize = 4;
@@ -102,12 +103,18 @@ impl<T: PartialEq> PartialEq for IxDynRepr<T> {
     }
 }
 
+impl<T: Hash> Hash for IxDynRepr<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        Hash::hash(&self[..], state)
+    }
+}
+
 /// Dynamic dimension or index type.
 ///
 /// Use `IxDyn` directly. This type implements a dynamic number of
 /// dimensions or indices. Short dimensions are stored inline and don't need
 /// any dynamic memory allocation.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct IxDynImpl(IxDynRepr<Ix>);
 
 impl IxDynImpl {
