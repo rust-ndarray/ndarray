@@ -556,16 +556,17 @@ fn iterators_are_send_sync() {
 }
 
 #[test]
+#[allow(clippy::unnecessary_fold)]
 fn test_fold() {
     let mut a = Array2::<i32>::default((20, 20));
     a += 1;
     let mut iter = a.iter();
     iter.next();
-    assert_eq!(iter.sum::<i32>(), a.sum() - 1);
+    assert_eq!(iter.fold(0, |acc, &x| acc + x), a.sum() - 1);
 
     let mut a = Array0::<i32>::default(());
     a += 1;
-    assert_eq!(a.iter().sum::<i32>(), 1);
+    assert_eq!(a.iter().fold(0, |acc, &x| acc + x), 1);
 }
 
 #[test]
