@@ -32,8 +32,8 @@ addons:
       - libopenblas-dev
       - gfortran
 before_script:
-  - rustup component add rustfmt clippy
+  - rustup component add rustfmt
 script:
   - |
-      cargo fmt --all -- --check &&
-      ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
+    cargo fmt --all -- --check &&
+    ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
