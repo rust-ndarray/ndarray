@@ -109,8 +109,6 @@ impl<T: PartialEq> PartialEq for IxDynRepr<T> {
 /// any dynamic memory allocation.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct IxDynImpl(IxDynRepr<Ix>);
-unsafe impl Send for IxDynImpl {}
-unsafe impl Sync for IxDynImpl {}
 
 impl IxDynImpl {
     pub(crate) fn insert(&self, i: usize) -> Self {
