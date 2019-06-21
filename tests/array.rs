@@ -418,7 +418,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, mut &slice(), [3..4], [5..6]);
     }
@@ -427,7 +427,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, [3..4], mut &slice(), [5..6]);
     }
@@ -436,7 +436,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, [3..4], [5..6], mut &slice());
     }
@@ -445,7 +445,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, &slice(), mut [3..4], [5..6]);
     }
@@ -454,7 +454,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, mut [3..4], &slice(), [5..6]);
     }
@@ -463,7 +463,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, mut [3..4], [5..6], &slice());
     }

@@ -1,3 +1,5 @@
+#![allow(clippy::float_cmp)]
+
 extern crate defmac;
 extern crate ndarray;
 
@@ -61,6 +63,7 @@ fn remove_axis() {
 }
 
 #[test]
+#[allow(clippy::eq_op)]
 fn dyn_dimension() {
     let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape(vec![2, 2]).unwrap();
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
