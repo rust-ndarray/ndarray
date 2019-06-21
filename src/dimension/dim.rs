@@ -8,7 +8,6 @@
 
 use itertools::zip;
 use std::fmt;
-use std::hash;
 
 use super::Dimension;
 use super::IntoDimension;
@@ -36,7 +35,7 @@ use crate::Ix;
 /// array[[0, 0]] = 1.;
 /// assert_eq!(array.raw_dim(), Dim([3, 2]));
 /// ```
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Dim<I: ?Sized> {
     index: I,
 }
@@ -71,17 +70,6 @@ where
 {
     fn eq(&self, rhs: &I) -> bool {
         self.index == *rhs
-    }
-}
-
-// FIXME: need help understanding why this is complaining
-#[allow(clippy::derive_hash_xor_eq)]
-impl<I: ?Sized> hash::Hash for Dim<I>
-where
-    Dim<I>: Dimension,
-{
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.slice().hash(state);
     }
 }
 

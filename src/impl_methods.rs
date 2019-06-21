@@ -405,19 +405,17 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
-    // TODO: Clippy insists we can remove the `&` in the below match, but this won't work
-    #[allow(clippy::match_ref_pats)]
     pub fn slice_collapse(&mut self, indices: &D::SliceArg) {
         let indices: &[SliceOrIndex] = indices.as_ref();
         assert_eq!(indices.len(), self.ndim());
         indices
             .iter()
             .enumerate()
-            .for_each(|(axis, slice_or_index)| match slice_or_index {
-                &SliceOrIndex::Slice { start, end, step } => {
+            .for_each(|(axis, &slice_or_index)| match slice_or_index {
+                SliceOrIndex::Slice { start, end, step } => {
                     self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
                 }
-                &SliceOrIndex::Index(index) => {
+                SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
                     self.collapse_axis(Axis(axis), i_usize)
                 }

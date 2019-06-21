@@ -1329,6 +1329,9 @@ send_sync_read_write!(ElementsBaseMut);
 
 /// (Trait used internally) An iterator that we trust
 /// to deliver exactly as many items as it said it would.
+///
+/// The iterator must produce exactly the number of elements it reported or
+/// diverge before reaching the end.
 pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
@@ -1341,6 +1344,7 @@ unsafe impl<F> TrustedIterator for Linspace<F> {}
 unsafe impl<F> TrustedIterator for Logspace<F> {}
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
 unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}
+unsafe impl<I> TrustedIterator for std::iter::Cloned<I> where I: TrustedIterator {}
 unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F> where I: TrustedIterator {}
 unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> {}
 unsafe impl<'a, A> TrustedIterator for slice::IterMut<'a, A> {}
