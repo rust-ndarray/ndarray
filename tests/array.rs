@@ -339,6 +339,7 @@ fn test_slice_collapse_with_indices() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn test_multislice() {
     defmac!(test_multislice mut arr, s1, s2 => {
         {
@@ -732,6 +733,7 @@ fn diag() {
 ///
 /// Note that this does not check the strides in the "merged" case!
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn merge_axes() {
     macro_rules! assert_merged {
         ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
@@ -1416,6 +1418,7 @@ fn reshape_f() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn insert_axis() {
     defmac!(test_insert orig, index, new => {
         let res = orig.insert_axis(Axis(index));

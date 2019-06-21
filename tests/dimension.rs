@@ -226,6 +226,7 @@ fn test_operations() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn test_hash() {
     fn calc_hash<T: Hash>(value: &T) -> u64 {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -289,6 +290,7 @@ fn test_array_view() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn test_all_ndindex() {
     macro_rules! ndindex {
     ($($i:expr),*) => {
