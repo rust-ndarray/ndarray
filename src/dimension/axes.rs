@@ -46,6 +46,9 @@ pub struct AxisDescription(pub Axis, pub Ix, pub Ixs);
 
 copy_and_clone!(AxisDescription);
 
+// AxisDescription can't really be empty
+// https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296051702
+#[allow(clippy::len_without_is_empty)]
 impl AxisDescription {
     /// Return axis
     #[inline(always)]
@@ -61,9 +64,6 @@ impl AxisDescription {
     #[inline(always)]
     pub fn stride(self) -> Ixs {
         self.2
-    }
-    pub fn is_empty(self) -> bool {
-        self.len() == 0
     }
 }
 
