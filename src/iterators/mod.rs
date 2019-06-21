@@ -1329,6 +1329,9 @@ send_sync_read_write!(ElementsBaseMut);
 
 /// (Trait used internally) An iterator that we trust
 /// to deliver exactly as many items as it said it would.
+///
+/// The iterator must produce exactly the number of elements it reported or
+/// diverge before reaching the end.
 pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
