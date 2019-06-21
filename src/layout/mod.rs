@@ -57,5 +57,5 @@ impl Layout {
     }
 }
 
-pub const CORDER: u32 = 1;
-pub const FORDER: u32 = 1 << 1;
+pub const CORDER: u32 = 0b01;
+pub const FORDER: u32 = 0b10;
