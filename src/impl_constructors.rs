@@ -42,6 +42,7 @@ where
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
+    #[deprecated(note = "use standard `from`", since = "0.13.0")]
     pub fn from_vec(v: Vec<A>) -> Self {
         if mem::size_of::<A>() == 0 {
             assert!(
@@ -153,7 +154,7 @@ where
     where
         A: Float,
     {
-        Some(Self::from_vec(to_vec(geomspace::geomspace(start, end, n)?)))
+        Some(Self::from(to_vec(geomspace::geomspace(start, end, n)?)))
     }
 }
 

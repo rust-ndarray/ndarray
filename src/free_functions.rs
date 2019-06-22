@@ -226,12 +226,6 @@ where
     Array2::from(xs.to_vec())
 }
 
-impl<A> From<Vec<A>> for Array1<A> {
-    fn from(xs: Vec<A>) -> Self {
-        Array1::from_vec(xs)
-    }
-}
-
 impl<A, V> From<Vec<V>> for Array2<A>
 where
     V: FixedInitializer<Elem = A>,

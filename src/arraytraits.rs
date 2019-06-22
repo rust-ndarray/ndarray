@@ -10,6 +10,7 @@ use std::hash;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
 use std::mem;
+use std::isize;
 use std::ops::{Index, IndexMut};
 
 use crate::imp_prelude::*;
@@ -181,6 +182,29 @@ where
     }
 }
 
+impl<A,S> From<Vec<A>> for ArrayBase<S, Ix1>
+where
+    S: DataOwned<Elem = A>,
+{
+    /// Create a one-dimensional array from a vector (no copying needed).
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::Array;
+    ///
+    /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
+    /// ```
+    fn from(v: Vec<A>) -> Self {
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                v.len() <= isize::MAX as usize,
+                "Length must fit in `isize`.",
+            );
+        }
+        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+    }
+}
 impl<'a, S, D> hash::Hash for ArrayBase<S, D>
 where
     D: Dimension,
