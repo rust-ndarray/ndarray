@@ -48,7 +48,7 @@ macro_rules! array {
         $crate::Array2::from(vec![$([$($x,)*],)*])
     }};
     ($($x:expr),* $(,)*) => {{
-        $crate::Array::from_vec(vec![$($x,)*])
+        $crate::Array::from(vec![$($x,)*])
     }};
 }
 

@@ -40,7 +40,7 @@ where
     /// ```rust
     /// use ndarray::Array;
     ///
-    /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
+    /// let array = Array::from(vec![1., 2., 3., 4.]);
     /// ```
     #[deprecated(note = "use standard `from`", since = "0.13.0")]
     pub fn from_vec(v: Vec<A>) -> Self {
@@ -95,7 +95,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(linspace::linspace(start, end, n)))
+        Self::from(to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array with elements from `start` to `end`
@@ -113,7 +113,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(linspace::range(start, end, step)))
+        Self::from(to_vec(linspace::range(start, end, step)))
     }
 
     /// Create a one-dimensional array with `n` logarithmically spaced
@@ -141,7 +141,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(logspace::logspace(base, start, end, n)))
+        Self::from(to_vec(logspace::logspace(base, start, end, n)))
     }
 
     /// Create a one-dimensional array with `n` geometrically spaced elements

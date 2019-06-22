@@ -396,9 +396,7 @@ fn axis_chunks_iter_corner_cases() {
 fn axis_chunks_iter_zero_stride() {
     {
         // stride 0 case
-        let b = Array::from_vec(vec![0f32; 0])
-            .into_shape((5, 0, 3))
-            .unwrap();
+        let b = Array::from(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
         let shapes: Vec<_> = b
             .axis_chunks_iter(Axis(0), 2)
             .map(|v| v.raw_dim())
@@ -408,9 +406,7 @@ fn axis_chunks_iter_zero_stride() {
 
     {
         // stride 0 case reverse
-        let b = Array::from_vec(vec![0f32; 0])
-            .into_shape((5, 0, 3))
-            .unwrap();
+        let b = Array::from(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
         let shapes: Vec<_> = b
             .axis_chunks_iter(Axis(0), 2)
             .rev()
@@ -421,7 +417,7 @@ fn axis_chunks_iter_zero_stride() {
 
     // From issue #542, ZST element
     {
-        let a = Array::from_vec(vec![(); 3]);
+        let a = Array::from(vec![(); 3]);
         let chunks: Vec<_> = a.axis_chunks_iter(Axis(0), 2).collect();
         assert_eq!(chunks, vec![a.slice(s![0..2]), a.slice(s![2..])]);
     }
@@ -603,7 +599,7 @@ fn test_rfold() {
             acc
         });
         assert_eq!(
-            Array1::from_vec(output),
+            Array1::from(output),
             Array::from_iter((1..10).rev().map(|i| i * 2))
         );
     }
