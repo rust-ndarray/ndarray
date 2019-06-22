@@ -52,23 +52,6 @@ where
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
 
-    /// Create a one-dimensional array from an iterable.
-    ///
-    /// **Panics** if the length is greater than `isize::MAX`.
-    ///
-    /// ```rust
-    /// use ndarray::{Array, arr1};
-    ///
-    /// let array = Array::from_iter((0..5).map(|x| x * x));
-    /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
-    /// ```
-    pub fn from_iter<I>(iterable: I) -> Self
-    where
-        I: IntoIterator<Item = A>,
-    {
-        Self::from_vec(iterable.into_iter().collect())
-    }
-
     /// Create a one-dimensional array with `n` evenly spaced elements from
     /// `start` to `end` (inclusive). `A` must be a floating point type.
     ///

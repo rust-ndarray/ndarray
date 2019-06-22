@@ -127,7 +127,7 @@ where
     where
         I: IntoIterator<Item = A>,
     {
-        ArrayBase::from_iter(iterable)
+        Self::from_vec(iterable.into_iter().collect())
     }
 }
 

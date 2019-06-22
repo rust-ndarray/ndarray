@@ -1,6 +1,7 @@
 #![feature(test)]
 
 extern crate test;
+use std::iter::FromIterator;
 use test::black_box;
 use test::Bencher;
 

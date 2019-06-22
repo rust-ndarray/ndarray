@@ -7,6 +7,7 @@ use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice};
 
 use itertools::assert_equal;
 use itertools::{enumerate, rev};
+use std::iter::FromIterator;
 
 #[test]
 fn double_ended() {

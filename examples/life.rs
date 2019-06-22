@@ -3,10 +3,9 @@ extern crate ndarray;
 use ndarray::prelude::*;
 
 const INPUT: &'static [u8] = include_bytes!("life.txt");
-//const INPUT: &'static [u8] = include_bytes!("lifelite.txt");
+use std::iter::FromIterator;
 
 const N: usize = 100;
-//const N: usize = 8;
 
 type Board = Array2<u8>;
 

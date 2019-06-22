@@ -10,6 +10,7 @@ use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, multislice, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
+use std::iter::FromIterator;
 
 macro_rules! assert_panics {
     ($body:expr) => {
