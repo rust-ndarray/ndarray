@@ -59,7 +59,7 @@ pub fn arr0<A>(x: A) -> Array0<A> {
 
 /// Create a one-dimensional array with elements from `xs`.
 pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
-    ArrayBase::from_vec(xs.to_vec())
+    ArrayBase::from(xs.to_vec())
 }
 
 /// Create a one-dimensional array with elements from `xs`.
