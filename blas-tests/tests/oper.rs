@@ -3,6 +3,7 @@ extern crate defmac;
 extern crate ndarray;
 extern crate num_traits;
 
+use std::iter::FromIterator;
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::prelude::*;
