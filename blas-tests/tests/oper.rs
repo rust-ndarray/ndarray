@@ -3,12 +3,12 @@ extern crate defmac;
 extern crate ndarray;
 extern crate num_traits;
 
-use std::iter::FromIterator;
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::prelude::*;
 use ndarray::{Data, LinalgScalar};
 use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
+use std::iter::FromIterator;
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use defmac::defmac;
