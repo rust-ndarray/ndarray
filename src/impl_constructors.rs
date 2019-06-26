@@ -44,13 +44,7 @@ where
     /// ```
     #[deprecated(note = "use standard `from`", since = "0.13.0")]
     pub fn from_vec(v: Vec<A>) -> Self {
-        if mem::size_of::<A>() == 0 {
-            assert!(
-                v.len() <= isize::MAX as usize,
-                "Length must fit in `isize`.",
-            );
-        }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+        Self::from(v)
     }
 
     // FIXME: Having this uncommented means that `from_iter` references this

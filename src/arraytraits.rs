@@ -148,13 +148,20 @@ impl<A, S> FromIterator<A> for ArrayBase<S, Ix1>
 where
     S: DataOwned<Elem = A>,
 {
+    /// Create a one-dimensional array from a vector (no copying needed).
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::Array;
+    ///
+    /// let array = Array::from(vec![1., 2., 3., 4.]);
+    /// ```
     fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
     where
         I: IntoIterator<Item = A>,
     {
-        // TODO: can I put this on one line?
-        let v: Vec<A> = iterable.into_iter().collect();
-        Self::from(v)
+        Self::from(iterable.into_iter().collect::<Vec<A>>())
     }
 }
 

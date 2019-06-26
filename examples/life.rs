@@ -1,9 +1,9 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
+use std::iter::FromIterator;
 
 const INPUT: &'static [u8] = include_bytes!("life.txt");
-use std::iter::FromIterator;
 
 const N: usize = 100;
 
