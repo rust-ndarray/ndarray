@@ -137,7 +137,7 @@ where
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
-    #[deprecated(note = "`into_slice` has been renamed to `to_slice`")]
+    #[deprecated(note = "`into_slice` has been renamed to `to_slice`", since="0.13.0")]
     pub fn into_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
             unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
