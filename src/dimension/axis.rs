@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 
 /// An axis index.
 ///
@@ -15,7 +16,7 @@ use std::cmp::Ordering;
 ///
 /// All array axis arguments use this type to make the code easier to write
 /// correctly and easier to understand.
-#[derive(Eq, Ord, Hash, Debug)]
+#[derive(Eq, Ord, Debug)]
 pub struct Axis(pub usize);
 
 impl Axis {
@@ -27,6 +28,12 @@ impl Axis {
 }
 
 copy_and_clone! {Axis}
+
+impl Hash for Axis {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
 
 macro_rules! derive_cmp {
     ($traitname:ident for $typename:ident, $method:ident -> $ret:ty) => {
