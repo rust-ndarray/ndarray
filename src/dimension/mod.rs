@@ -266,13 +266,11 @@ pub trait DimensionExt {
     /// Get the dimension at `axis`.
     ///
     /// *Panics* if `axis` is out of bounds.
-    #[inline]
     fn axis(&self, axis: Axis) -> Ix;
 
     /// Set the dimension at `axis`.
     ///
     /// *Panics* if `axis` is out of bounds.
-    #[inline]
     fn set_axis(&mut self, axis: Axis, value: Ix);
 }
 
