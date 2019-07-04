@@ -36,7 +36,7 @@ use crate::Ix;
 /// array[[0, 0]] = 1.;
 /// assert_eq!(array.raw_dim(), Dim([3, 2]));
 /// ```
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Copy, Clone, Eq, Default)]
 pub struct Dim<I: ?Sized> {
     index: I,
 }
@@ -63,6 +63,13 @@ where
     T: IntoDimension,
 {
     index.into_dimension()
+}
+
+impl<I: ?Sized> PartialEq for Dim<I>
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        self == rhs
+    }
 }
 
 impl<I: ?Sized> PartialEq<I> for Dim<I>
