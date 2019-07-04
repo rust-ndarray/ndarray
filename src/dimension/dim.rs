@@ -65,8 +65,7 @@ where
     index.into_dimension()
 }
 
-impl<I: ?Sized> PartialEq for Dim<I>
-{
+impl<I: ?Sized> PartialEq for Dim<I> {
     fn eq(&self, rhs: &Self) -> bool {
         self == rhs
     }
