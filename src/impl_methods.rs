@@ -1218,6 +1218,48 @@ where
         D::is_contiguous(&self.dim, &self.strides)
     }
 
+    /// Return a standard-layout array containing the data, cloning if
+    /// necessary.
+    ///
+    /// If `self` is in standard layout, a COW view of the data is returned
+    /// without cloning. Otherwise, the data is cloned, and the returned array
+    /// owns the cloned data.
+    ///
+    /// ```
+    /// use ndarray::Array2;
+    ///
+    /// let standard = Array2::<f64>::zeros((3, 4));
+    /// assert!(standard.is_standard_layout());
+    /// let cow_view = standard.as_standard_layout();
+    /// assert!(cow_view.is_view());
+    /// assert!(cow_view.is_standard_layout());
+    ///
+    /// let fortran = standard.reversed_axes();
+    /// assert!(!fortran.is_standard_layout());
+    /// let cow_owned = fortran.as_standard_layout();
+    /// assert!(cow_owned.is_owned());
+    /// assert!(cow_owned.is_standard_layout());
+    /// ```
+    pub fn as_standard_layout(&self) -> CowArray<'_, A, D>
+    where
+        S: Data<Elem = A>,
+        A: Clone,
+    {
+        if self.is_standard_layout() {
+            CowArray::from(self.view())
+        } else {
+            let v: Vec<A> = self.iter().cloned().collect();
+            let dim = self.dim.clone();
+            assert_eq!(v.len(), dim.size());
+            let owned_array: Array<A, D> = unsafe {
+                // Safe because the shape and element type are from the existing array
+                // and the strides are the default strides.
+                Array::from_shape_vec_unchecked(dim, v)
+            };
+            CowArray::from(owned_array)
+        }
+    }
+
     /// Return a pointer to the first element in the array.
     ///
     /// Raw access to array elements needs to follow the strided indexing
