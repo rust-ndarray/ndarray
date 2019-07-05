@@ -29,6 +29,8 @@ impl Axis {
 
 copy_and_clone! {Axis}
 
+// Hash and PartialEq must be explicitly implemented or both default-generated.
+// ref: https://rust-lang.github.io/rust-clippy/master/index.html#derive_hash_xor_eq
 impl Hash for Axis {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.0.hash(state);
