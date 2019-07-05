@@ -52,13 +52,13 @@ enum PrintableCell {
 fn to_be_printed(length: usize, limit: usize) -> Vec<PrintableCell> {
     if length <= 2 * limit {
         (0..length)
-            .map(|x| PrintableCell::ElementIndex(x))
+            .map(PrintableCell::ElementIndex)
             .collect()
     } else {
         let mut v: Vec<PrintableCell> =
-            (0..limit).map(|x| PrintableCell::ElementIndex(x)).collect();
+            (0..limit).map(PrintableCell::ElementIndex).collect();
         v.push(PrintableCell::Ellipses);
-        v.extend((length - limit..length).map(|x| PrintableCell::ElementIndex(x)));
+        v.extend((length - limit..length).map(PrintableCell::ElementIndex));
         v
     }
 }
