@@ -22,10 +22,6 @@ env:
   global:
     - HOST=x86_64-unknown-linux-gnu
     - CARGO_INCREMENTAL=0
-branches:
-  only:
-    - master
-    - 0.10.x
 addons:
   apt:
     packages:

@@ -1982,6 +1982,74 @@ fn array_macros() {
 }
 
 #[cfg(test)]
+mod as_standard_layout_tests {
+    use super::*;
+    use ndarray::Data;
+    use std::fmt::Debug;
+
+    fn test_as_standard_layout_for<S, D>(orig: ArrayBase<S, D>)
+    where
+        S: Data,
+        S::Elem: Clone + Debug + PartialEq,
+        D: Dimension,
+    {
+        let orig_is_standard = orig.is_standard_layout();
+        let out = orig.as_standard_layout();
+        assert!(out.is_standard_layout());
+        assert_eq!(out, orig);
+        assert_eq!(orig_is_standard, out.is_view());
+    }
+
+    #[test]
+    fn test_f_layout() {
+        let shape = (2, 2).f();
+        let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
+        assert!(!arr.is_standard_layout());
+        test_as_standard_layout_for(arr);
+    }
+
+    #[test]
+    fn test_c_layout() {
+        let arr = Array::<i32, Ix2>::from_shape_vec((2, 2), vec![1, 2, 3, 4]).unwrap();
+        assert!(arr.is_standard_layout());
+        test_as_standard_layout_for(arr);
+    }
+
+    #[test]
+    fn test_f_layout_view() {
+        let shape = (2, 2).f();
+        let arr = Array::<i32, Ix2>::from_shape_vec(shape, vec![1, 2, 3, 4]).unwrap();
+        let arr_view = arr.view();
+        assert!(!arr_view.is_standard_layout());
+        test_as_standard_layout_for(arr);
+    }
+
+    #[test]
+    fn test_c_layout_view() {
+        let arr = Array::<i32, Ix2>::from_shape_vec((2, 2), vec![1, 2, 3, 4]).unwrap();
+        let arr_view = arr.view();
+        assert!(arr_view.is_standard_layout());
+        test_as_standard_layout_for(arr_view);
+    }
+
+    #[test]
+    fn test_zero_dimensional_array() {
+        let arr_view = ArrayView1::<i32>::from(&[]);
+        assert!(arr_view.is_standard_layout());
+        test_as_standard_layout_for(arr_view);
+    }
+
+    #[test]
+    fn test_custom_layout() {
+        let shape = (1, 2, 3, 2).strides((12, 1, 2, 6));
+        let arr_data: Vec<i32> = (0..12).collect();
+        let arr = Array::<i32, Ix4>::from_shape_vec(shape, arr_data).unwrap();
+        assert!(!arr.is_standard_layout());
+        test_as_standard_layout_for(arr);
+    }
+}
+
+#[cfg(test)]
 mod array_cow_tests {
     use super::*;
 

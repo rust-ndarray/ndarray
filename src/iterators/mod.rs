@@ -260,7 +260,7 @@ where
 {
     pub(crate) fn new(self_: ArrayView<'a, A, D>) -> Self {
         Iter {
-            inner: if let Some(slc) = self_.into_slice() {
+            inner: if let Some(slc) = self_.to_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
                 ElementsRepr::Counted(self_.into_elements_base())

@@ -137,10 +137,19 @@ where
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
-    // TODO: Should this be `to_slice` if taking a reference?
-    // https://rust-lang.github.io/rust-clippy/master/#wrong_self_convention
+    #[deprecated(note = "`into_slice` has been renamed to `to_slice`", since = "0.13.0")]
     #[allow(clippy::wrong_self_convention)]
     pub fn into_slice(&self) -> Option<&'a [A]> {
+        if self.is_standard_layout() {
+            unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
+        } else {
+            None
+        }
+    }
+
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Return `None` otherwise.
+    pub fn to_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
             unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
         } else {
