@@ -15,8 +15,8 @@ where
         RawArrayView {
             data: RawViewRepr::new(),
             ptr: ptr as *mut A,
-            dim: dim,
-            strides: strides,
+            dim,
+            strides,
         }
     }
 
@@ -118,9 +118,9 @@ where
     pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
         RawArrayViewMut {
             data: RawViewRepr::new(),
-            ptr: ptr,
-            dim: dim,
-            strides: strides,
+            ptr,
+            dim,
+            strides,
         }
     }
 

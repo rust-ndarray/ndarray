@@ -51,12 +51,9 @@ enum PrintableCell {
 // where indexes are being omitted.
 fn to_be_printed(length: usize, limit: usize) -> Vec<PrintableCell> {
     if length <= 2 * limit {
-        (0..length)
-            .map(PrintableCell::ElementIndex)
-            .collect()
+        (0..length).map(PrintableCell::ElementIndex).collect()
     } else {
-        let mut v: Vec<PrintableCell> =
-            (0..limit).map(PrintableCell::ElementIndex).collect();
+        let mut v: Vec<PrintableCell> = (0..limit).map(PrintableCell::ElementIndex).collect();
         v.push(PrintableCell::Ellipses);
         v.extend((length - limit..length).map(PrintableCell::ElementIndex));
         v

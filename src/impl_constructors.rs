@@ -62,6 +62,7 @@ where
     /// let array = Array::from_iter((0..5).map(|x| x * x));
     /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn from_iter<I>(iterable: I) -> Self
     where
         I: IntoIterator<Item = A>,
@@ -212,7 +213,7 @@ macro_rules! size_of_shape_checked_unwrap {
     ($dim:expr) => {
         match dimension::size_of_shape_checked($dim) {
             Ok(sz) => sz,
-            Err(_) => panic!(
+            Err(_e) => panic!(
                 "ndarray: Shape too large, product of non-zero axis lengths \
                  overflows isize in shape {:?}",
                 $dim
@@ -315,6 +316,7 @@ where
     /// visited in arbitrary order.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
+    #[allow(clippy::identity_conversion)]
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
     where
         Sh: ShapeBuilder<Dim = D>,
@@ -422,8 +424,8 @@ where
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
-            strides: strides,
-            dim: dim,
+            strides,
+            dim,
         }
     }
 

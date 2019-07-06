@@ -420,6 +420,7 @@ pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize {
 /// nonnegative.
 ///
 /// See https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+#[allow(clippy::many_single_char_names)]
 fn extended_gcd(a: isize, b: isize) -> (isize, (isize, isize)) {
     if a == 0 {
         (b.abs(), (0, b.signum()))
@@ -456,6 +457,7 @@ fn extended_gcd(a: isize, b: isize) -> (isize, (isize, isize)) {
 ///
 /// See https://en.wikipedia.org/wiki/Diophantine_equation#One_equation
 /// and https://math.stackexchange.com/questions/1656120#1656138
+#[allow(clippy::many_single_char_names)]
 fn solve_linear_diophantine_eq(a: isize, b: isize, c: isize) -> Option<(isize, isize)> {
     debug_assert_ne!(a, 0);
     debug_assert_ne!(b, 0);
@@ -535,14 +537,21 @@ fn arith_seq_intersect(
 /// If the slice is empty, then returns `None`, otherwise returns `Some((min, max))`.
 fn slice_min_max(axis_len: usize, slice: Slice) -> Option<(usize, usize)> {
     let (start, end, step) = to_abs_slice(axis_len, slice);
+    //if start == end {
+    //    None
+    //} else {
+    //    if step > 0 {
+    //        Some((start, end - 1 - (end - start - 1) % (step as usize)))
+    //    } else {
+    //        Some((start + (end - start - 1) % (-step as usize), end - 1))
+    //    }
+    //}
     if start == end {
         None
+    } else if step > 0 {
+        Some((start, end - 1 - (end - start - 1) % (step as usize)))
     } else {
-        if step > 0 {
-            Some((start, end - 1 - (end - start - 1) % (step as usize)))
-        } else {
-            Some((start + (end - start - 1) % (-step as usize), end - 1))
-        }
+        Some((start + (end - start - 1) % (-step as usize), end - 1))
     }
 }
 

@@ -360,14 +360,14 @@ pub trait Dimension:
 }
 
 // Dimension impls
-
+#[allow(clippy::range_plus_one)]
 macro_rules! impl_insert_axis_array(
     ($n:expr) => (
         fn insert_axis(&self, axis: Axis) -> Self::Larger {
             debug_assert!(axis.index() <= $n);
             let mut out = [1; $n + 1];
             out[0..axis.index()].copy_from_slice(&self.slice()[0..axis.index()]);
-            out[axis.index()+1..$n+1].copy_from_slice(&self.slice()[axis.index()..$n]);
+            out[axis.index()+1..=$n].copy_from_slice(&self.slice()[axis.index()..$n]);
             Dim(out)
         }
     );
@@ -659,6 +659,7 @@ impl Dimension for Dim<[Ix; 2]> {
     }
 
     /// Return stride offset for this dimension and index.
+    #[allow(clippy::many_single_char_names)]
     #[inline]
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
         let m = get!(self, 0);
@@ -743,6 +744,7 @@ impl Dimension for Dim<[Ix; 3]> {
     }
 
     /// Self is an index, return the stride offset
+    #[allow(clippy::many_single_char_names)]
     #[inline]
     fn stride_offset(index: &Self, strides: &Self) -> isize {
         let i = get!(index, 0);
@@ -755,6 +757,7 @@ impl Dimension for Dim<[Ix; 3]> {
     }
 
     /// Return stride offset for this dimension and index.
+    #[allow(clippy::many_single_char_names)]
     #[inline]
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize> {
         let m = get!(self, 0);

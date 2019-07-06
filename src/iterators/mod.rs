@@ -45,7 +45,7 @@ impl<A, D: Dimension> Baseiter<A, D> {
     #[inline]
     pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D> {
         Baseiter {
-            ptr: ptr,
+            ptr,
             index: len.first_index(),
             dim: len,
             strides: stride,
@@ -79,23 +79,19 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
         let ndim = self.dim.ndim();
         debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        loop {
-            if let Some(mut index) = self.index.clone() {
-                let stride = self.strides.last_elem() as isize;
-                let elem_index = index.last_elem();
-                let len = self.dim.last_elem();
-                let offset = D::stride_offset(&index, &self.strides);
-                unsafe {
-                    let row_ptr = self.ptr.offset(offset);
-                    for i in 0..(len - elem_index) {
-                        accum = g(accum, row_ptr.offset(i as isize * stride));
-                    }
+        while let Some(mut index) = self.index.clone() {
+            let stride = self.strides.last_elem() as isize;
+            let elem_index = index.last_elem();
+            let len = self.dim.last_elem();
+            let offset = D::stride_offset(&index, &self.strides);
+            unsafe {
+                let row_ptr = self.ptr.offset(offset);
+                for i in 0..(len - elem_index) {
+                    accum = g(accum, row_ptr.offset(i as isize * stride));
                 }
-                index.set_last_elem(len - 1);
-                self.index = self.dim.next_for(index);
-            } else {
-                break;
-            };
+            }
+            index.set_last_elem(len - 1);
+            self.index = self.dim.next_for(index);
         }
         accum
     }
@@ -776,7 +772,7 @@ impl<A, D: Dimension> AxisIterCore<A, D> {
         AxisIterCore {
             index: 0,
             len: shape,
-            stride: stride,
+            stride,
             inner_dim: v.dim.remove_axis(axis),
             inner_strides: v.strides.remove_axis(axis),
             ptr: v.ptr,
@@ -1198,8 +1194,8 @@ fn chunk_iter_parts<A, D: Dimension>(
     let iter = AxisIterCore {
         index: 0,
         len: iter_len,
-        stride: stride,
-        inner_dim: inner_dim,
+        stride,
+        inner_dim,
         inner_strides: v.strides,
         ptr: v.ptr,
     };
@@ -1211,9 +1207,9 @@ impl<'a, A, D: Dimension> AxisChunksIter<'a, A, D> {
     pub(crate) fn new(v: ArrayView<'a, A, D>, axis: Axis, size: usize) -> Self {
         let (iter, n_whole_chunks, last_dim) = chunk_iter_parts(v, axis, size);
         AxisChunksIter {
-            iter: iter,
-            n_whole_chunks: n_whole_chunks,
-            last_dim: last_dim,
+            iter,
+            n_whole_chunks,
+            last_dim,
             life: PhantomData,
         }
     }
@@ -1306,9 +1302,9 @@ impl<'a, A, D: Dimension> AxisChunksIterMut<'a, A, D> {
     pub(crate) fn new(v: ArrayViewMut<'a, A, D>, axis: Axis, size: usize) -> Self {
         let (iter, len, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
         AxisChunksIterMut {
-            iter: iter,
+            iter,
             n_whole_chunks: len,
-            last_dim: last_dim,
+            last_dim,
             life: PhantomData,
         }
     }
