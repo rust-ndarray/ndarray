@@ -148,14 +148,17 @@ impl<A, S> FromIterator<A> for ArrayBase<S, Ix1>
 where
     S: DataOwned<Elem = A>,
 {
-    /// Create a one-dimensional array from a vector (no copying needed).
+    /// Create a one-dimensional array from an iterable.
     ///
     /// **Panics** if the length is greater than `isize::MAX`.
     ///
     /// ```rust
-    /// use ndarray::Array;
+    /// use ndarray::{Array, arr1};
+    /// use std::iter::FromIterator;
     ///
-    /// let array = Array::from(vec![1., 2., 3., 4.]);
+    /// // Either use `from_iter` directly or use `Iterator::collect`.
+    /// let array = Array::from_iter((0..5).map(|x| x * x));
+    /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
     /// ```
     fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
     where
