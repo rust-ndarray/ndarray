@@ -11,8 +11,6 @@
 //!
 
 use num_traits::{Float, One, Zero};
-use std::isize;
-use std::mem;
 
 use crate::dimension;
 use crate::error::{self, ShapeError};
