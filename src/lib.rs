@@ -989,7 +989,7 @@ pub type Ixs = isize;
 /// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[3](#req_contig)</sup>
 /// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
 /// `ArrayView<A, D>` | `&[A]` | [`.to_slice()`](type.ArrayView.html#method.to_slice)<sup>[2](#req_contig_std)</sup>
-/// `ArrayViewMut<A, D>` | `&mut [A]` | [`.to_slice()`](type.ArrayViewMut.html#method.to_slice)<sup>[2](#req_contig_std)</sup>
+/// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
 /// `Array0<A>` | `A` | [`.into_scalar()`](type.Array.html#method.into_scalar)
 ///
 /// <sup><a name="into_raw_vec">1</a></sup>Returns the data in memory order.
