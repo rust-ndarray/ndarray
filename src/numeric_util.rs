@@ -5,6 +5,9 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
+// https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296074711
+#![allow(clippy::needless_range_loop)]
 use std::cmp;
 
 use crate::LinalgScalar;
@@ -48,11 +51,12 @@ where
 
     // make it clear to the optimizer that this loop is short
     // and can not be autovectorized.
-    for (i, x) in xs.iter().enumerate() {
+    // https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296337112
+    for i in 0..xs.len() {
         if i >= 7 {
             break;
         }
-        acc = f(acc.clone(), x.clone())
+        acc = f(acc.clone(), xs[i].clone())
     }
     acc
 }
@@ -99,13 +103,13 @@ where
     sum = sum + (p2 + p6);
     sum = sum + (p3 + p7);
 
-    for (i, x) in xs.iter().enumerate() {
+    for i in 0..xs.len() {
         if i >= 7 {
             break;
         }
         unsafe {
             // get_unchecked is needed to avoid the bounds check
-            sum = sum + *x * *ys.get_unchecked(i);
+            sum = sum + xs[i] * *ys.get_unchecked(i);
         }
     }
     sum
