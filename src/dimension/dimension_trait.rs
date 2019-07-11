@@ -130,9 +130,8 @@ pub trait Dimension:
         if self.slice().iter().all(|&d| d != 0) {
             let mut it = strides.slice_mut().iter_mut().rev();
             // Set first element to 1
-            while let Some(rs) = it.next() {
+            if let Some(rs) = it.next() {
                 *rs = 1;
-                break;
             }
             let mut cum_prod = 1;
             for (rs, dim) in it.zip(self.slice().iter().rev()) {
@@ -156,9 +155,8 @@ pub trait Dimension:
         if self.slice().iter().all(|&d| d != 0) {
             let mut it = strides.slice_mut().iter_mut();
             // Set first element to 1
-            while let Some(rs) = it.next() {
+            if let Some(rs) = it.next() {
                 *rs = 1;
-                break;
             }
             let mut cum_prod = 1;
             for (rs, dim) in it.zip(self.slice()) {
@@ -369,7 +367,7 @@ macro_rules! impl_insert_axis_array(
             debug_assert!(axis.index() <= $n);
             let mut out = [1; $n + 1];
             out[0..axis.index()].copy_from_slice(&self.slice()[0..axis.index()]);
-            out[axis.index()+1..$n+1].copy_from_slice(&self.slice()[axis.index()..$n]);
+            out[axis.index()+1..=$n].copy_from_slice(&self.slice()[axis.index()..$n]);
             Dim(out)
         }
     );

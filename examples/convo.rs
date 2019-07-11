@@ -28,6 +28,7 @@ where
         for i in 0..n - 2 {
             for j in 0..m - 2 {
                 let mut conv = F::zero();
+                #[allow(clippy::needless_range_loop)]
                 for k in 0..3 {
                     for l in 0..3 {
                         conv = conv + *a.uget((i + k, j + l)) * kernel[k][l];

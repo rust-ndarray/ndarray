@@ -138,6 +138,7 @@ where
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     #[deprecated(note = "`into_slice` has been renamed to `to_slice`", since = "0.13.0")]
+    #[allow(clippy::wrong_self_convention)]
     pub fn into_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
             unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
@@ -487,8 +488,8 @@ where
         ArrayView {
             data: ViewRepr::new(),
             ptr: ptr as *mut A,
-            dim: dim,
-            strides: strides,
+            dim,
+            strides,
         }
     }
 
@@ -533,9 +534,9 @@ where
         }
         ArrayViewMut {
             data: ViewRepr::new(),
-            ptr: ptr,
-            dim: dim,
-            strides: strides,
+            ptr,
+            dim,
+            strides,
         }
     }
 

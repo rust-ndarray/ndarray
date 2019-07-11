@@ -13,10 +13,11 @@ matrix:
     - rust: beta
       env:
        - FEATURES='test docs'
+       - CHANNEL='beta'
     - rust: nightly
       env:
        - FEATURES='test docs'
-       - IS_NIGHTLY=1
+       - CHANNEL='nightly'
 env:
   global:
     - HOST=x86_64-unknown-linux-gnu
@@ -30,5 +31,5 @@ before_script:
   - rustup component add rustfmt
 script:
   - |
-      cargo fmt --all -- --check &&
-      ./scripts/all-tests.sh "$FEATURES" "$IS_NIGHTLY"
+    cargo fmt --all -- --check &&
+    ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"

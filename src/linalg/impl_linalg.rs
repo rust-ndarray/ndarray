@@ -78,7 +78,7 @@ where
         let mut sum = A::zero();
         for i in 0..self.len() {
             unsafe {
-                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+                sum = sum + *self.uget(i) * *rhs.uget(i);
             }
         }
         sum
@@ -512,7 +512,7 @@ fn mat_mul_general<A>(
         }
     } else {
         // It's a no-op if `c` has zero length.
-        if c.len() == 0 {
+        if c.is_empty() {
             return;
         }
 
@@ -586,6 +586,7 @@ pub fn general_mat_mul<A, S1, S2, S3>(
 /// ***Panics*** if array shapes are not compatible<br>
 /// *Note:* If enabled, uses blas `gemv` for elements of `f32, f64` when memory
 /// layout allows.
+#[allow(clippy::collapsible_if)]
 pub fn general_mat_vec_mul<A, S1, S2, S3>(
     alpha: A,
     a: &ArrayBase<S1, Ix2>,

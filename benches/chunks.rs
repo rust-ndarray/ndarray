@@ -64,6 +64,7 @@ fn chunk2x2_sum_uget1(bench: &mut Bencher) {
 }
 
 #[bench]
+#[allow(clippy::identity_op)]
 fn chunk2x2_sum_get2(bench: &mut Bencher) {
     let a = Array::<f32, _>::zeros((256, 256));
     let chunksz = (2, 2);
