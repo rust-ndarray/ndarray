@@ -6,17 +6,18 @@ matrix:
   include:
     - rust: 1.31.0
       env:
-       - FEATURES='test docs'
+        - FEATURES='test docs'
     - rust: stable
       env:
-       - FEATURES='test docs'
+        - FEATURES='test docs'
     - rust: beta
       env:
-       - FEATURES='test docs'
+        - FEATURES='test docs'
+        - CHANNEL='beta'
     - rust: nightly
       env:
-       - FEATURES='test docs'
-       - IS_NIGHTLY=1
+        - FEATURES='test docs'
+        - CHANNEL='nightly'
 env:
   global:
     - HOST=x86_64-unknown-linux-gnu
@@ -32,5 +33,5 @@ before_script:
   - '[ "$TRAVIS_RUST_VERSION" != stable ] || cargo install cargo-tarpaulin'
 script:
   - |
-      cargo fmt --all -- --check &&
-      ./scripts/all-tests.sh "$FEATURES" "$IS_NIGHTLY"
+    cargo fmt --all -- --check &&
+    ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"

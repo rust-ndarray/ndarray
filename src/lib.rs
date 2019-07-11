@@ -7,6 +7,12 @@
 // except according to those terms.
 #![crate_name = "ndarray"]
 #![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -1552,8 +1558,8 @@ where
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
             // FIXME: Use for loop when slice iterator is perf is restored
-            for i in 0..slc.len() {
-                f(&mut slc[i]);
+            for x in slc.iter_mut() {
+                f(x);
             }
             return;
         }

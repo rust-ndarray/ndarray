@@ -13,8 +13,8 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
         unsafe {
             let (data, ptr) = self.data.clone_with_ptr(self.ptr);
             ArrayBase {
-                data: data,
-                ptr: ptr,
+                data,
+                ptr,
                 dim: self.dim.clone(),
                 strides: self.strides.clone(),
             }

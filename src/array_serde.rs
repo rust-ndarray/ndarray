@@ -139,7 +139,7 @@ impl<S, Di> ArrayVisitor<S, Di> {
     }
 }
 
-static ARRAY_FIELDS: &'static [&'static str] = &["v", "dim", "data"];
+static ARRAY_FIELDS: &[&str] = &["v", "dim", "data"];
 
 /// **Requires crate feature `"serde-1"`**
 impl<'de, A, Di, S> Deserialize<'de> for ArrayBase<S, Di>

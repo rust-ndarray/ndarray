@@ -133,7 +133,7 @@ pub unsafe trait DataMut: Data + RawDataMut {
 /// accessed with safe code.
 ///
 /// ***Internal trait, see `Data`.***
-#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13")]
+#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13.0")]
 pub trait DataClone: Data + RawDataClone {}
 
 #[allow(deprecated)]
@@ -241,7 +241,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
         Self::ensure_unique(&mut self_);
         let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
         ArrayBase {
-            data: data,
+            data,
             ptr: self_.ptr,
             dim: self_.dim,
             strides: self_.strides,
