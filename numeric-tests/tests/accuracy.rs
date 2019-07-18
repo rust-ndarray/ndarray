@@ -1,10 +1,11 @@
 extern crate approx;
+extern crate rand_distr;
 extern crate ndarray;
 extern crate ndarray_rand;
 extern crate rand;
 
 use ndarray_rand::{RandomExt, F32};
-use rand::{FromEntropy, Rng};
+use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
 
 use ndarray::prelude::*;
@@ -14,7 +15,7 @@ use ndarray::{
 };
 use ndarray::linalg::general_mat_mul;
 
-use rand::distributions::Normal;
+use rand_distr::Normal;
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 

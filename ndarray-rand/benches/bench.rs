@@ -9,8 +9,8 @@ extern crate test;
 use ndarray::Array;
 use ndarray_rand::RandomExt;
 use ndarray_rand::F32;
-use rand::distributions::Uniform;
 use rand_distr::Normal;
+use rand_distr::Uniform;
 
 use test::Bencher;
 

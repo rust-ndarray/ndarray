@@ -11,10 +11,11 @@
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
 extern crate ndarray;
 extern crate rand;
+extern crate rand_distr;
 
-use rand::distributions::Distribution;
 use rand::rngs::SmallRng;
 use rand::{thread_rng, Rng, SeedableRng};
+use rand_distr::Distribution;
 
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};

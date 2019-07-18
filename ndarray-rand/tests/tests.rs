@@ -4,7 +4,7 @@ extern crate rand;
 
 use ndarray::Array;
 use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
+use rand_distr::Uniform;
 
 #[test]
 fn test_dim() {
