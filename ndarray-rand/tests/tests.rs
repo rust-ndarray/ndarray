@@ -1,7 +1,3 @@
-extern crate ndarray;
-extern crate ndarray_rand;
-extern crate rand;
-
 use ndarray::Array;
 use ndarray_rand::RandomExt;
 use rand_distr::Uniform;
