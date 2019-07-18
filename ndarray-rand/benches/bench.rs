@@ -3,6 +3,7 @@
 extern crate ndarray;
 extern crate ndarray_rand;
 extern crate rand;
+extern crate rand_distr;
 extern crate test;
 
 use ndarray::Array;
