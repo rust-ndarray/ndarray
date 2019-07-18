@@ -13,6 +13,7 @@ keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
 ndarray = { version = "0.12.0", path = ".." }
+rand_distr = "0.2.1"
 
 [dependencies.rand]
 version = "0.7.0"
