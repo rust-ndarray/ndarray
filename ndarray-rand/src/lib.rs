@@ -9,8 +9,6 @@
 //! Constructors for randomized arrays. `rand` integration for `ndarray`.
 //!
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
-extern crate ndarray;
-extern crate rand;
 
 use rand::distributions::Distribution;
 use rand::rngs::SmallRng;
