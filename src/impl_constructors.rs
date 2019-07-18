@@ -10,6 +10,8 @@
 //!
 //!
 
+#![allow(clippy::match_wild_err_arm)]
+
 use num_traits::{Float, One, Zero};
 
 use crate::dimension;
@@ -172,6 +174,7 @@ where
 }
 
 #[cfg(not(debug_assertions))]
+#[allow(clippy::match_wild_err_arm)]
 macro_rules! size_of_shape_checked_unwrap {
     ($dim:expr) => {
         match dimension::size_of_shape_checked($dim) {
@@ -303,7 +306,7 @@ where
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         } else {
             let dim = shape.dim.clone();
-            let v = to_vec_mapped(indexes::indices_iter_f(dim).into_iter(), f);
+            let v = to_vec_mapped(indexes::indices_iter_f(dim), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         }
     }
@@ -398,8 +401,8 @@ where
         ArrayBase {
             ptr: v.as_mut_ptr(),
             data: DataOwned::new(v),
-            strides: strides,
-            dim: dim,
+            strides,
+            dim,
         }
     }
 

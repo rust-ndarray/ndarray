@@ -1,5 +1,10 @@
 #![feature(test)]
-
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 extern crate test;
 use std::iter::FromIterator;
 use test::black_box;
@@ -68,7 +73,7 @@ fn map_axis_0(bench: &mut Bencher) {
     let a = Array::from_iter(0..MASZ as i32)
         .into_shape([MA, MA])
         .unwrap();
-    bench.iter(|| a.map_axis(Axis(0), |lane| black_box(lane)));
+    bench.iter(|| a.map_axis(Axis(0), black_box));
 }
 
 #[bench]
@@ -76,5 +81,5 @@ fn map_axis_1(bench: &mut Bencher) {
     let a = Array::from_iter(0..MASZ as i32)
         .into_shape([MA, MA])
         .unwrap();
-    bench.iter(|| a.map_axis(Axis(1), |lane| black_box(lane)));
+    bench.iter(|| a.map_axis(Axis(1), black_box));
 }

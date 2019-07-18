@@ -1,3 +1,9 @@
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 extern crate ndarray;
 
 use ndarray::prelude::*;
@@ -70,7 +76,7 @@ fn render(a: &Board) {
                 print!(".");
             }
         }
-        println!("");
+        println!();
     }
 }
 

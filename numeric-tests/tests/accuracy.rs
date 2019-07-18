@@ -229,8 +229,8 @@ fn accurate_mul_with_column_f64() {
 
         // pick dense square or broadcasted to square matrix
         match i {
-            0 ... 3 => b_sq = b_owner.view(),
-            4 ... 7 => {
+            0 ..= 3 => b_sq = b_owner.view(),
+            4 ..= 7 => {
                 b_row_col = b_owner.column(0);
                 b_sq = b_row_col.broadcast((k, k)).unwrap();
             }

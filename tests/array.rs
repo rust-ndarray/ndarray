@@ -1,4 +1,11 @@
 #![allow(non_snake_case)]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names,
+    clippy::float_cmp
+)]
 
 extern crate defmac;
 extern crate itertools;
@@ -333,6 +340,7 @@ fn test_slice_collapse_with_indices() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn test_multislice() {
     defmac!(test_multislice mut arr, s1, s2 => {
         {
@@ -412,7 +420,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, mut &slice(), [3..4], [5..6]);
     }
@@ -421,7 +429,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, [3..4], mut &slice(), [5..6]);
     }
@@ -430,7 +438,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, [3..4], [5..6], mut &slice());
     }
@@ -439,7 +447,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, &slice(), mut [3..4], [5..6]);
     }
@@ -448,7 +456,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, mut [3..4], &slice(), [5..6]);
     }
@@ -457,7 +465,7 @@ fn test_multislice_eval_args_only_once() {
     {
         let mut slice = || {
             eval_count += 1;
-            s![1..2].clone()
+            *s![1..2]
         };
         multislice!(arr, mut [3..4], [5..6], &slice());
     }
@@ -522,6 +530,7 @@ fn test_index_arrays() {
 }
 
 #[test]
+#[allow(clippy::assign_op_pattern)]
 fn test_add() {
     let mut A = ArcArray::<usize, _>::zeros((2, 2));
     for (i, elt) in A.iter_mut().enumerate() {
@@ -574,7 +583,7 @@ fn test_negative_stride_arcarray() {
         let seq = [
             7f32, 6., 5., 4., 3., 2., 1., 0., 15., 14., 13., 12., 11., 10., 9., 8.,
         ];
-        for (a, b) in vi.clone().iter().zip(seq.iter()) {
+        for (a, b) in vi.iter().zip(seq.iter()) {
             assert_eq!(*a, *b);
         }
     }
@@ -725,6 +734,7 @@ fn diag() {
 ///
 /// Note that this does not check the strides in the "merged" case!
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn merge_axes() {
     macro_rules! assert_merged {
         ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
@@ -962,11 +972,11 @@ fn iter_size_hint() {
 fn zero_axes() {
     let mut a = arr1::<f32>(&[]);
     for _ in a.iter() {
-        assert!(false);
+        panic!();
     }
-    a.map(|_| assert!(false));
-    a.map_inplace(|_| assert!(false));
-    a.visit(|_| assert!(false));
+    a.map(|_| panic!());
+    a.map_inplace(|_| panic!());
+    a.visit(|_| panic!());
     println!("{:?}", a);
     let b = arr2::<f32, _>(&[[], [], [], []]);
     println!("{:?}\n{:?}", b.shape(), b);
@@ -1409,6 +1419,7 @@ fn reshape_f() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn insert_axis() {
     defmac!(test_insert orig, index, new => {
         let res = orig.insert_axis(Axis(index));

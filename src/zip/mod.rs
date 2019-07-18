@@ -178,7 +178,6 @@ pub trait NdProducer {
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> <Self::Ptr as Offset>::Stride;
     #[doc(hidden)]
-    #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride;
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self)

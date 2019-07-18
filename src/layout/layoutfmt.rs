@@ -10,7 +10,7 @@ use super::Layout;
 use super::LayoutPriv;
 use itertools::Itertools;
 
-const LAYOUT_NAMES: &'static [&'static str] = &["C", "F"];
+const LAYOUT_NAMES: &[&str] = &["C", "F"];
 
 use std::fmt;
 
