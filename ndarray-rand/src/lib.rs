@@ -10,12 +10,20 @@
 //!
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
 
-use rand::distributions::Distribution;
 use rand::rngs::SmallRng;
 use rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};
+
+
+/// `rand`'s `Distribution` trait, re-exported for convenience.
+pub use rand::distributions::Distribution;
+
+/// `rand`'s distributions, re-exported for convenience and version-compatibility.
+pub mod distributions {
+    pub use rand::distributions::*;
+}
 
 /// Constructors for n-dimensional arrays with random elements.
 ///
