@@ -1,6 +1,6 @@
 use ndarray::Array;
-use ndarray_rand::RandomExt;
 use ndarray_rand::distributions::Uniform;
+use ndarray_rand::RandomExt;
 
 #[test]
 fn test_dim() {

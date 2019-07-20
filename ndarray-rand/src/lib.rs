@@ -16,7 +16,6 @@ use rand::{thread_rng, Rng, SeedableRng};
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};
 
-
 /// `rand`'s `Distribution` trait, re-exported for convenience.
 pub use crate::distributions::Distribution;
 
