@@ -50,13 +50,12 @@ where
     /// overflows usize.
     ///
     /// ```
-    /// extern crate rand;
     /// extern crate ndarray;
     /// extern crate ndarray_rand;
     ///
-    /// use rand::distributions::Uniform;
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
+    /// use ndarray_rand::distributions::Uniform;
     ///
     /// # fn main() {
     /// let a = Array::random((2, 5), Uniform::new(0., 10.));
@@ -109,13 +108,12 @@ where
 /// A wrapper type that allows casting f64 distributions to f32
 ///
 /// ```
-/// extern crate rand;
 /// extern crate ndarray;
 /// extern crate ndarray_rand;
 ///
-/// use rand::distributions::Normal;
 /// use ndarray::Array;
 /// use ndarray_rand::{RandomExt, F32};
+/// use ndarray_rand::distributions::Normal;
 ///
 /// # fn main() {
 /// let a = Array::random((2, 5), F32(Normal::new(0., 1.)));
