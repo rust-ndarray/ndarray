@@ -17,6 +17,7 @@ use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, multislice, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
+use std::iter::FromIterator;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -670,7 +671,7 @@ fn test_sub() {
     assert_eq!(s2.shape(), &[4, 2]);
     let n = ArcArray::linspace(8., 15., 8).reshape((4, 2));
     assert_eq!(n, s2);
-    let m = ArcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
+    let m = ArcArray::from(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.index_axis(Axis(1), 1));
 }
 
@@ -1036,7 +1037,7 @@ fn array0_into_scalar() {
 
 #[test]
 fn owned_array1() {
-    let mut a = Array::from_vec(vec![1, 2, 3, 4]);
+    let mut a = Array::from(vec![1, 2, 3, 4]);
     for elt in a.iter_mut() {
         *elt = 2;
     }
@@ -1239,7 +1240,7 @@ fn from_vec_dim_stride_2d_rejects() {
 
 #[test]
 fn views() {
-    let a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
     let b = a.view();
     assert_eq!(a, b);
     assert_eq!(a.shape(), b.shape());
@@ -1256,7 +1257,7 @@ fn views() {
 
 #[test]
 fn view_mut() {
-    let mut a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in &mut a.view_mut() {
         *elt = 0;
     }
@@ -1275,7 +1276,7 @@ fn view_mut() {
 
 #[test]
 fn slice_mut() {
-    let mut a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in a.slice_mut(s![.., ..]) {
         *elt = 0;
     }

@@ -8,6 +8,7 @@ use ndarray::linalg::general_mat_vec_mul;
 use ndarray::prelude::*;
 use ndarray::{Data, LinalgScalar};
 use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
+use std::iter::FromIterator;
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use defmac::defmac;
@@ -289,7 +290,7 @@ fn mat_mul_broadcast() {
     let (m, n, k) = (16, 16, 16);
     let a = range_mat(m, n);
     let x1 = 1.;
-    let x = Array::from_vec(vec![x1]);
+    let x = Array::from(vec![x1]);
     let b0 = x.broadcast((n, k)).unwrap();
     let b1 = Array::from_elem(n, x1);
     let b1 = b1.broadcast((n, k)).unwrap();
