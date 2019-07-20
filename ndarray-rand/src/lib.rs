@@ -18,7 +18,7 @@ use ndarray::{ArrayBase, DataOwned, Dimension};
 
 
 /// `rand`'s `Distribution` trait, re-exported for convenience.
-pub use rand::distributions::Distribution;
+pub use crate::distributions::Distribution;
 
 /// `rand`'s distributions, re-exported for convenience and version-compatibility.
 pub mod distributions {
