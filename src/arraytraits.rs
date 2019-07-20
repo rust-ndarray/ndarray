@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::hash;
+use std::isize;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
 use std::mem;
@@ -119,15 +120,51 @@ where
 {
 }
 
+impl<A, S> From<Vec<A>> for ArrayBase<S, Ix1>
+where
+    S: DataOwned<Elem = A>,
+{
+    /// Create a one-dimensional array from a vector (no copying needed).
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::Array;
+    ///
+    /// let array = Array::from(vec![1., 2., 3., 4.]);
+    /// ```
+    fn from(v: Vec<A>) -> Self {
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                v.len() <= isize::MAX as usize,
+                "Length must fit in `isize`.",
+            );
+        }
+        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+    }
+}
+
 impl<A, S> FromIterator<A> for ArrayBase<S, Ix1>
 where
     S: DataOwned<Elem = A>,
 {
+    /// Create a one-dimensional array from an iterable.
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::{Array, arr1};
+    /// use std::iter::FromIterator;
+    ///
+    /// // Either use `from_iter` directly or use `Iterator::collect`.
+    /// let array = Array::from_iter((0..5).map(|x| x * x));
+    /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
+    /// ```
     fn from_iter<I>(iterable: I) -> ArrayBase<S, Ix1>
     where
         I: IntoIterator<Item = A>,
     {
-        ArrayBase::from_iter(iterable)
+        Self::from(iterable.into_iter().collect::<Vec<A>>())
     }
 }
 

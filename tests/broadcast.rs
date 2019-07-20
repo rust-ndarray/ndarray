@@ -52,7 +52,7 @@ fn test_broadcast() {
     let (_, n, k) = (16, 16, 16);
     let x1 = 1.;
     // b0 broadcast 1 -> n, k
-    let x = Array::from_vec(vec![x1]);
+    let x = Array::from(vec![x1]);
     let b0 = x.broadcast((n, k)).unwrap();
     // b1 broadcast n -> n, k
     let b1 = Array::from_elem(n, x1);
@@ -72,7 +72,7 @@ fn test_broadcast_1d() {
     let n = 16;
     let x1 = 1.;
     // b0 broadcast 1 -> n
-    let x = Array::from_vec(vec![x1]);
+    let x = Array::from(vec![x1]);
     let b0 = x.broadcast(n).unwrap();
     let b2 = Array::from_elem(n, x1);
 
