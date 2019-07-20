@@ -9,6 +9,7 @@ extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Zip;
+use std::iter::FromIterator;
 
 // Edge Cases for Windows iterator:
 //
