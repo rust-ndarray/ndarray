@@ -13,8 +13,6 @@
 #![allow(clippy::match_wild_err_arm)]
 
 use num_traits::{Float, One, Zero};
-use std::isize;
-use std::mem;
 
 use crate::dimension;
 use crate::error::{self, ShapeError};
@@ -42,35 +40,11 @@ where
     /// ```rust
     /// use ndarray::Array;
     ///
-    /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
+    /// let array = Array::from(vec![1., 2., 3., 4.]);
     /// ```
+    #[deprecated(note = "use standard `from`", since = "0.13.0")]
     pub fn from_vec(v: Vec<A>) -> Self {
-        if mem::size_of::<A>() == 0 {
-            assert!(
-                v.len() <= isize::MAX as usize,
-                "Length must fit in `isize`.",
-            );
-        }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
-    }
-
-    /// Create a one-dimensional array from an iterable.
-    ///
-    /// **Panics** if the length is greater than `isize::MAX`.
-    ///
-    /// ```rust
-    /// use ndarray::{Array, arr1};
-    ///
-    /// let array = Array::from_iter((0..5).map(|x| x * x));
-    /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
-    /// ```
-    // Potentially remove; see https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296068930
-    #[allow(clippy::should_implement_trait)]
-    pub fn from_iter<I>(iterable: I) -> Self
-    where
-        I: IntoIterator<Item = A>,
-    {
-        Self::from_vec(iterable.into_iter().collect())
+        Self::from(v)
     }
 
     /// Create a one-dimensional array with `n` evenly spaced elements from
@@ -94,7 +68,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(linspace::linspace(start, end, n)))
+        Self::from(to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array with elements from `start` to `end`
@@ -112,7 +86,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(linspace::range(start, end, step)))
+        Self::from(to_vec(linspace::range(start, end, step)))
     }
 
     /// Create a one-dimensional array with `n` logarithmically spaced
@@ -140,7 +114,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(logspace::logspace(base, start, end, n)))
+        Self::from(to_vec(logspace::logspace(base, start, end, n)))
     }
 
     /// Create a one-dimensional array with `n` geometrically spaced elements
@@ -174,7 +148,7 @@ where
     where
         A: Float,
     {
-        Some(Self::from_vec(to_vec(geomspace::geomspace(start, end, n)?)))
+        Some(Self::from(to_vec(geomspace::geomspace(start, end, n)?)))
     }
 }
 

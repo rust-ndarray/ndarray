@@ -10,6 +10,7 @@ extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Zip;
+use std::iter::FromIterator;
 
 use itertools::{assert_equal, cloned};
 

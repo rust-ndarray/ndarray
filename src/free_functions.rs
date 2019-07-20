@@ -48,7 +48,7 @@ macro_rules! array {
         $crate::Array2::from(vec![$([$($x,)*],)*])
     }};
     ($($x:expr),* $(,)*) => {{
-        $crate::Array::from_vec(vec![$($x,)*])
+        $crate::Array::from(vec![$($x,)*])
     }};
 }
 
@@ -59,7 +59,7 @@ pub fn arr0<A>(x: A) -> Array0<A> {
 
 /// Create a one-dimensional array with elements from `xs`.
 pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
-    ArrayBase::from_vec(xs.to_vec())
+    ArrayBase::from(xs.to_vec())
 }
 
 /// Create a one-dimensional array with elements from `xs`.
@@ -224,12 +224,6 @@ where
     V: Clone,
 {
     Array2::from(xs.to_vec())
-}
-
-impl<A> From<Vec<A>> for Array1<A> {
-    fn from(xs: Vec<A>) -> Self {
-        Array1::from_vec(xs)
-    }
 }
 
 impl<A, V> From<Vec<V>> for Array2<A>
