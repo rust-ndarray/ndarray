@@ -1182,9 +1182,13 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D> {
 /// See [`.axis_chunks_iter()`](../struct.ArrayBase.html#method.axis_chunks_iter) for more information.
 pub struct AxisChunksIter<'a, A, D> {
     iter: AxisIterCore<A, D>,
-    n_whole_chunks: usize,
-    /// Dimension of the last (and possibly uneven) chunk
-    last_dim: D,
+    /// Index of the partial chunk (the chunk smaller than the specified chunk
+    /// size due to the axis length not being evenly divisible). If the axis
+    /// length is evenly divisible by the chunk size, this index is larger than
+    /// the maximum valid index.
+    partial_chunk_index: usize,
+    /// Dimension of the partial chunk.
+    partial_chunk_dim: D,
     life: PhantomData<&'a A>,
 }
 
@@ -1193,10 +1197,10 @@ clone_bounds!(
     AxisChunksIter['a, A, D] {
         @copy {
             life,
-            n_whole_chunks,
+            partial_chunk_index,
         }
         iter,
-        last_dim,
+        partial_chunk_dim,
     }
 );
 
@@ -1233,12 +1237,9 @@ fn chunk_iter_parts<A, D: Dimension>(
     let mut inner_dim = v.dim.clone();
     inner_dim[axis] = size;
 
-    let mut last_dim = v.dim;
-    last_dim[axis] = if chunk_remainder == 0 {
-        size
-    } else {
-        chunk_remainder
-    };
+    let mut partial_chunk_dim = v.dim;
+    partial_chunk_dim[axis] = chunk_remainder;
+    let partial_chunk_index = n_whole_chunks;
 
     let iter = AxisIterCore {
         index: 0,
@@ -1249,16 +1250,16 @@ fn chunk_iter_parts<A, D: Dimension>(
         ptr: v.ptr,
     };
 
-    (iter, n_whole_chunks, last_dim)
+    (iter, partial_chunk_index, partial_chunk_dim)
 }
 
 impl<'a, A, D: Dimension> AxisChunksIter<'a, A, D> {
     pub(crate) fn new(v: ArrayView<'a, A, D>, axis: Axis, size: usize) -> Self {
-        let (iter, n_whole_chunks, last_dim) = chunk_iter_parts(v, axis, size);
+        let (iter, partial_chunk_index, partial_chunk_dim) = chunk_iter_parts(v, axis, size);
         AxisChunksIter {
             iter,
-            n_whole_chunks,
-            last_dim,
+            partial_chunk_index,
+            partial_chunk_dim,
             life: PhantomData,
         }
     }
@@ -1270,30 +1271,24 @@ macro_rules! chunk_iter_impl {
         where
             D: Dimension,
         {
-            fn get_subview(
-                &self,
-                iter_item: Option<*mut A>,
-                is_uneven: bool,
-            ) -> Option<$array<'a, A, D>> {
-                iter_item.map(|ptr| {
-                    if !is_uneven {
-                        unsafe {
-                            $array::new_(
-                                ptr,
-                                self.iter.inner_dim.clone(),
-                                self.iter.inner_strides.clone(),
-                            )
-                        }
-                    } else {
-                        unsafe {
-                            $array::new_(
-                                ptr,
-                                self.last_dim.clone(),
-                                self.iter.inner_strides.clone(),
-                            )
-                        }
+            fn get_subview(&self, index: usize, ptr: *mut A) -> $array<'a, A, D> {
+                if index != self.partial_chunk_index {
+                    unsafe {
+                        $array::new_(
+                            ptr,
+                            self.iter.inner_dim.clone(),
+                            self.iter.inner_strides.clone(),
+                        )
                     }
-                })
+                } else {
+                    unsafe {
+                        $array::new_(
+                            ptr,
+                            self.partial_chunk_dim.clone(),
+                            self.iter.inner_strides.clone(),
+                        )
+                    }
+                }
             }
         }
 
@@ -1304,9 +1299,8 @@ macro_rules! chunk_iter_impl {
             type Item = $array<'a, A, D>;
 
             fn next(&mut self) -> Option<Self::Item> {
-                let res = self.iter.next();
-                let is_uneven = self.iter.index > self.n_whole_chunks;
-                self.get_subview(res, is_uneven)
+                let index = self.iter.index;
+                self.iter.next().map(|ptr| self.get_subview(index, ptr))
             }
 
             fn size_hint(&self) -> (usize, Option<usize>) {
@@ -1319,9 +1313,9 @@ macro_rules! chunk_iter_impl {
             D: Dimension,
         {
             fn next_back(&mut self) -> Option<Self::Item> {
-                let is_uneven = self.iter.end > self.n_whole_chunks;
-                let res = self.iter.next_back();
-                self.get_subview(res, is_uneven)
+                self.iter
+                    .next_back()
+                    .map(|ptr| self.get_subview(self.iter.end, ptr))
             }
         }
 
@@ -1342,18 +1336,19 @@ macro_rules! chunk_iter_impl {
 /// for more information.
 pub struct AxisChunksIterMut<'a, A, D> {
     iter: AxisIterCore<A, D>,
-    n_whole_chunks: usize,
-    last_dim: D,
+    partial_chunk_index: usize,
+    partial_chunk_dim: D,
     life: PhantomData<&'a mut A>,
 }
 
 impl<'a, A, D: Dimension> AxisChunksIterMut<'a, A, D> {
     pub(crate) fn new(v: ArrayViewMut<'a, A, D>, axis: Axis, size: usize) -> Self {
-        let (iter, len, last_dim) = chunk_iter_parts(v.into_view(), axis, size);
+        let (iter, partial_chunk_index, partial_chunk_dim) =
+            chunk_iter_parts(v.into_view(), axis, size);
         AxisChunksIterMut {
             iter,
-            n_whole_chunks: len,
-            last_dim,
+            partial_chunk_index,
+            partial_chunk_dim,
             life: PhantomData,
         }
     }
