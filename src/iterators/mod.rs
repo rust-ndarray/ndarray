@@ -788,7 +788,7 @@ impl<A, D: Dimension> AxisIterCore<A, D> {
     #[inline]
     unsafe fn offset(&self, index: usize) -> *mut A {
         debug_assert!(
-            index <= self.end,
+            index < self.end,
             "index={}, end={}, stride={}",
             index,
             self.end,
@@ -857,8 +857,8 @@ where
         if self.index >= self.end {
             None
         } else {
+            let ptr = unsafe { self.offset(self.end - 1) };
             self.end -= 1;
-            let ptr = unsafe { self.offset(self.end) };
             Some(ptr)
         }
     }
