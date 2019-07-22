@@ -5,7 +5,7 @@
     clippy::many_single_char_names,
     clippy::float_cmp
 )]
-extern crate approx;
+
 use approx::assert_abs_diff_eq;
 use ndarray::{arr0, arr1, arr2, array, aview1, Array, Array1, Array2, Array3, Axis};
 use std::f64;

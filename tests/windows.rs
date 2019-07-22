@@ -4,8 +4,7 @@
     clippy::unreadable_literal,
     clippy::many_single_char_names
 )]
-extern crate itertools;
-extern crate ndarray;
+use itertools;
 
 use ndarray::prelude::*;
 use ndarray::Zip;

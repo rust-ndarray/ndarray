@@ -13,12 +13,12 @@ const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
 fn format_1d_array<A, S, F>(
     view: &ArrayBase<S, Ix1>,
-    f: &mut fmt::Formatter,
+    f: &mut fmt::Formatter<'_>,
     mut format: F,
     limit: Ix,
 ) -> fmt::Result
 where
-    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result,
+    F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result,
     S: Data<Elem = A>,
 {
     let to_be_printed = to_be_printed(view.len(), limit);
@@ -62,12 +62,12 @@ fn to_be_printed(length: usize, limit: usize) -> Vec<PrintableCell> {
 
 fn format_array<A, S, D, F>(
     view: &ArrayBase<S, D>,
-    f: &mut fmt::Formatter,
+    f: &mut fmt::Formatter<'_>,
     mut format: F,
     limit: Ix,
 ) -> fmt::Result
 where
-    F: FnMut(&A, &mut fmt::Formatter) -> fmt::Result + Clone,
+    F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result + Clone,
     D: Dimension,
     S: Data<Elem = A>,
 {
@@ -128,7 +128,7 @@ impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
@@ -141,7 +141,7 @@ impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Add extra information for Debug
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)?;
         write!(
@@ -167,7 +167,7 @@ impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
@@ -180,7 +180,7 @@ impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
@@ -192,7 +192,7 @@ impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }
@@ -205,7 +205,7 @@ impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT)
     }
 }

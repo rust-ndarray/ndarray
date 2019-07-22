@@ -1,4 +1,4 @@
-extern crate ndarray;
+use ndarray;
 
 use ndarray::{arr2, aview1, stack, Array2, Axis, ErrorKind};
 

@@ -107,16 +107,6 @@ extern crate blas_src;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
 
-extern crate matrixmultiply;
-
-extern crate itertools;
-extern crate num_complex;
-extern crate num_integer;
-extern crate num_traits;
-
-#[cfg(test)]
-extern crate quickcheck;
-
 #[cfg(feature = "docs")]
 pub mod doc;
 
@@ -1506,7 +1496,7 @@ where
     D: Dimension,
 {
     #[inline]
-    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
+    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
     where
         E: Dimension,
     {
@@ -1533,7 +1523,7 @@ where
     // Broadcast to dimension `E`, without checking that the dimensions match
     // (Checked in debug assertions).
     #[inline]
-    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<A, E>
+    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<'_, A, E>
     where
         E: Dimension,
     {
@@ -1581,13 +1571,13 @@ where
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller> {
+    fn inner_rows(&self) -> iterators::Lanes<'_, A, D::Smaller> {
         let n = self.ndim();
         Lanes::new(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::LanesMut<A, D::Smaller>
+    fn inner_rows_mut(&mut self) -> iterators::LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {

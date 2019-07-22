@@ -1,8 +1,6 @@
-extern crate ndarray;
-
 use ndarray::prelude::*;
 
-fn std1d(a: ArrayView1<f64>) -> f64 {
+fn std1d(a: ArrayView1<'_, f64>) -> f64 {
     let n = a.len() as f64;
     if n == 0. {
         return 0.;

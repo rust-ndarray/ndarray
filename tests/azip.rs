@@ -5,8 +5,6 @@
     clippy::many_single_char_names,
     clippy::float_cmp
 )]
-extern crate itertools;
-extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Zip;

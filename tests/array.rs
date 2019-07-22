@@ -7,9 +7,8 @@
     clippy::float_cmp
 )]
 
-extern crate defmac;
-extern crate itertools;
-extern crate ndarray;
+use itertools;
+use ndarray;
 
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
@@ -2123,7 +2122,10 @@ mod array_cow_tests {
 
     #[test]
     fn test_clone_from() {
-        fn assert_eq_contents_and_layout(arr1: &CowArray<i32, Ix2>, arr2: &CowArray<i32, Ix2>) {
+        fn assert_eq_contents_and_layout(
+            arr1: &CowArray<'_, i32, Ix2>,
+            arr2: &CowArray<'_, i32, Ix2>,
+        ) {
             assert_eq!(arr1, arr2);
             assert_eq!(arr1.dim(), arr2.dim());
             assert_eq!(arr1.strides(), arr2.strides());
