@@ -1303,6 +1303,31 @@ macro_rules! chunk_iter_impl {
                     }
                 }
             }
+
+            /// Splits the iterator at index, yielding two disjoint iterators.
+            ///
+            /// `index` is relative to the current state of the iterator (which is not
+            /// necessarily the start of the axis).
+            ///
+            /// **Panics** if `index` is strictly greater than the iterator's remaining
+            /// length.
+            pub fn split_at(self, index: usize) -> (Self, Self) {
+                let (left, right) = self.iter.split_at(index);
+                (
+                    Self {
+                        iter: left,
+                        partial_chunk_index: self.partial_chunk_index,
+                        partial_chunk_dim: self.partial_chunk_dim.clone(),
+                        life: self.life,
+                    },
+                    Self {
+                        iter: right,
+                        partial_chunk_index: self.partial_chunk_index,
+                        partial_chunk_dim: self.partial_chunk_dim,
+                        life: self.life,
+                    },
+                )
+            }
         }
 
         impl<'a, A, D> Iterator for $iter<'a, A, D>
