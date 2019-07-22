@@ -13,6 +13,20 @@ use itertools::assert_equal;
 use itertools::{enumerate, rev};
 use std::iter::FromIterator;
 
+macro_rules! assert_panics {
+    ($body:expr) => {
+        if let Ok(v) = ::std::panic::catch_unwind(|| $body) {
+            panic!("assertion failed: should_panic; \
+            non-panicking result: {:?}", v);
+        }
+    };
+    ($body:expr, $($arg:tt)*) => {
+        if let Ok(_) = ::std::panic::catch_unwind(|| $body) {
+            panic!($($arg)*);
+        }
+    };
+}
+
 #[test]
 fn double_ended() {
     let a = ArcArray::linspace(0., 7., 8);
@@ -583,6 +597,33 @@ fn axis_chunks_iter_zero_chunk_size() {
 fn axis_chunks_iter_zero_axis_len() {
     let a = Array::from_iter(0..0);
     assert!(a.axis_chunks_iter(Axis(0), 5).next().is_none());
+}
+
+#[test]
+fn axis_chunks_iter_split_at() {
+    let mut a = Array2::<usize>::zeros((11, 3));
+    a.iter_mut().enumerate().for_each(|(i, elt)| *elt = i);
+    for source in &[
+        a.slice(s![..0, ..]),
+        a.slice(s![..1, ..]),
+        a.slice(s![..5, ..]),
+        a.slice(s![..10, ..]),
+        a.slice(s![..11, ..]),
+        a.slice(s![.., ..0]),
+    ] {
+        let chunks_iter = source.axis_chunks_iter(Axis(0), 5);
+        let all_chunks: Vec<_> = chunks_iter.clone().collect();
+        let n_chunks = chunks_iter.len();
+        assert_eq!(n_chunks, all_chunks.len());
+        for index in 0..=n_chunks {
+            let (left, right) = chunks_iter.clone().split_at(index);
+            assert_eq!(&all_chunks[..index], &left.collect::<Vec<_>>()[..]);
+            assert_eq!(&all_chunks[index..], &right.collect::<Vec<_>>()[..]);
+        }
+        assert_panics!({
+            chunks_iter.split_at(n_chunks + 1);
+        });
+    }
 }
 
 #[test]
