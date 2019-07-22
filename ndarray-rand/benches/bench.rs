@@ -1,9 +1,5 @@
 #![feature(test)]
 
-
-
-
-
 extern crate test;
 
 use ndarray::Array;
