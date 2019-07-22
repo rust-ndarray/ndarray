@@ -574,6 +574,19 @@ fn axis_chunks_iter_zero_stride() {
     }
 }
 
+#[should_panic]
+#[test]
+fn axis_chunks_iter_zero_chunk_size() {
+    let a = Array::from_iter(0..5);
+    a.axis_chunks_iter(Axis(0), 0);
+}
+
+#[test]
+fn axis_chunks_iter_zero_axis_len() {
+    let a = Array::from_iter(0..0);
+    assert!(a.axis_chunks_iter(Axis(0), 5).next().is_none());
+}
+
 #[test]
 fn axis_chunks_iter_mut() {
     let a = ArcArray::from_iter(0..24);
@@ -583,6 +596,19 @@ fn axis_chunks_iter_mut() {
     let mut col0 = it.next().unwrap();
     col0[[0, 0, 0]] = 42;
     assert_eq!(col0, arr3(&[[[42, 1], [2, 3]], [[12, 13], [14, 15]]]));
+}
+
+#[should_panic]
+#[test]
+fn axis_chunks_iter_mut_zero_chunk_size() {
+    let mut a = Array::from_iter(0..5);
+    a.axis_chunks_iter_mut(Axis(0), 0);
+}
+
+#[test]
+fn axis_chunks_iter_mut_zero_axis_len() {
+    let mut a = Array::from_iter(0..0);
+    assert!(a.axis_chunks_iter_mut(Axis(0), 5).next().is_none());
 }
 
 #[test]
