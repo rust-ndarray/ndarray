@@ -825,6 +825,19 @@ impl<A, D: Dimension> AxisIterCore<A, D> {
         };
         (left, right)
     }
+
+    /// Does the same thing as `.next()` but also returns the index of the item
+    /// relative to the start of the axis.
+    fn next_with_index(&mut self) -> Option<(usize, *mut A)> {
+        let index = self.index;
+        self.next().map(|ptr| (index, ptr))
+    }
+
+    /// Does the same thing as `.next_back()` but also returns the index of the
+    /// item relative to the start of the axis.
+    fn next_back_with_index(&mut self) -> Option<(usize, *mut A)> {
+        self.next_back().map(|ptr| (self.end, ptr))
+    }
 }
 
 impl<A, D> Iterator for AxisIterCore<A, D>
@@ -1299,8 +1312,9 @@ macro_rules! chunk_iter_impl {
             type Item = $array<'a, A, D>;
 
             fn next(&mut self) -> Option<Self::Item> {
-                let index = self.iter.index;
-                self.iter.next().map(|ptr| self.get_subview(index, ptr))
+                self.iter
+                    .next_with_index()
+                    .map(|(index, ptr)| self.get_subview(index, ptr))
             }
 
             fn size_hint(&self) -> (usize, Option<usize>) {
@@ -1314,8 +1328,8 @@ macro_rules! chunk_iter_impl {
         {
             fn next_back(&mut self) -> Option<Self::Item> {
                 self.iter
-                    .next_back()
-                    .map(|ptr| self.get_subview(self.iter.end, ptr))
+                    .next_back_with_index()
+                    .map(|(index, ptr)| self.get_subview(index, ptr))
             }
         }
 
