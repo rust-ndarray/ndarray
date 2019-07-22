@@ -1206,13 +1206,15 @@ clone_bounds!(
 ///
 /// Returns an axis iterator with the correct stride to move between chunks,
 /// the number of chunks, and the shape of the last chunk.
+///
+/// **Panics** if `size == 0`.
 fn chunk_iter_parts<A, D: Dimension>(
     v: ArrayView<A, D>,
     axis: Axis,
     size: usize,
 ) -> (AxisIterCore<A, D>, usize, D) {
+    assert_ne!(size, 0, "Chunk size must be nonzero.");
     let axis_len = v.len_of(axis);
-    let size = if size > axis_len { axis_len } else { size };
     let n_whole_chunks = axis_len / size;
     let chunk_remainder = axis_len % size;
     let iter_len = if chunk_remainder == 0 {
@@ -1220,7 +1222,12 @@ fn chunk_iter_parts<A, D: Dimension>(
     } else {
         n_whole_chunks + 1
     };
-    let stride = v.stride_of(axis) * size as isize;
+    let stride = if n_whole_chunks == 0 {
+        // This case avoids potential overflow when `size > axis_len`.
+        0
+    } else {
+        v.stride_of(axis) * size as isize
+    };
 
     let axis = axis.index();
     let mut inner_dim = v.dim.clone();
