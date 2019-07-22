@@ -2,6 +2,7 @@ language: rust
 # use trusty for newer openblas
 sudo: required
 dist: trusty
+cache: cargo
 matrix:
   include:
     - rust: 1.31.0
@@ -22,13 +23,25 @@ env:
   global:
     - HOST=x86_64-unknown-linux-gnu
     - CARGO_INCREMENTAL=0
+    - DIST_SCCACHE=1
+    # Maximum space sccache cache will use on disk.
+    # This is the smallest possible value (as of sccache 0.29)
+    - SCCACHE_CACHE_SIZE="1G"
+    - SCCACHE_DIR=$TRAVIS_HOME/.cache/sccache
+    - PATH=$PATH:$TRAVIS_HOME/bin
+    - RUSTC_WRAPPER="sccache"
 addons:
   apt:
     packages:
       - libopenblas-dev
       - gfortran
+before_cache:
+  # this is a noop to avoid cache files deletion
+  # see: https://docs.travis-ci.com/user/languages/rust/#dependency-management
 before_script:
   - rustup component add rustfmt
+  - ./scripts/get-sccache.sh
+  - sccache --version
 script:
   - |
     cargo fmt --all -- --check &&
