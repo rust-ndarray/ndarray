@@ -23,11 +23,11 @@ fn uniform_f32(b: &mut Bencher) {
 #[bench]
 fn norm_f32(b: &mut Bencher) {
     let m = 100;
-    b.iter(|| Array::random((m, m), F32(Normal::new(0., 1.))));
+    b.iter(|| Array::random((m, m), F32(Normal::new(0., 1.).unwrap())));
 }
 
 #[bench]
 fn norm_f64(b: &mut Bencher) {
     let m = 100;
-    b.iter(|| Array::random((m, m), Normal::new(0., 1.)));
+    b.iter(|| Array::random((m, m), Normal::new(0., 1.).unwrap()));
 }
