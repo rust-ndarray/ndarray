@@ -4,11 +4,18 @@ Version 0.13.0 (in development)
 New features
 ------------
 
+ - Add `logspace` and `geomspace` constructors
+   ([#617](https://github.com/rust-ndarray/ndarray/pull/617) by @JP-Ellis)
+ - Implement approx traits for `ArrayBase`
+   ([#581](https://github.com/rust-ndarray/ndarray/pull/581) by @jturner314)
+
 Enhancements
 ------------
 
 API changes
 -----------
+ - The `into_slice` method on ArrayView is deprecated and renamed to `to_slice`
+   ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by @max-sixty)
 
 Bug fixes
 ---------
