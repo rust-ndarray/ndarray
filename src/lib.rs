@@ -93,17 +93,6 @@
 //! * If you have experience with NumPy, you may also be interested in
 //!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
 
-#[cfg(feature = "serde-1")]
-extern crate serde;
-
-#[cfg(feature = "rayon")]
-extern crate rayon;
-
-#[cfg(feature = "approx")]
-extern crate approx;
-
-#[cfg(feature = "blas")]
-extern crate blas_src;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
 
