@@ -1337,7 +1337,6 @@ pub unsafe trait TrustedIterator {}
 use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
 use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
-use std;
 
 unsafe impl<F> TrustedIterator for Geomspace<F> {}
 unsafe impl<F> TrustedIterator for Linspace<F> {}

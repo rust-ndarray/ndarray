@@ -4,7 +4,6 @@
     clippy::unreadable_literal,
     clippy::many_single_char_names
 )]
-use itertools;
 
 use ndarray::prelude::*;
 use ndarray::Zip;

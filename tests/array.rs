@@ -7,9 +7,6 @@
     clippy::float_cmp
 )]
 
-use itertools;
-use ndarray;
-
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
 use ndarray::indices;
