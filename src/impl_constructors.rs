@@ -184,7 +184,6 @@ where
         }
         eye
     }
-
 }
 
 #[cfg(not(debug_assertions))]

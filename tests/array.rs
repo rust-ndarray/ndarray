@@ -1954,7 +1954,6 @@ fn test_array_clone_same_view() {
     assert_eq!(a, b);
 }
 
-
 #[test]
 fn test_array2_from_diag() {
     let diag = arr1(&[0, 1, 2]);
@@ -1962,7 +1961,6 @@ fn test_array2_from_diag() {
     let x_exp = arr2(&[[0, 0, 0], [0, 1, 0], [0, 0, 2]]);
     assert_eq!(x, x_exp);
 }
-
 
 #[test]
 fn array_macros() {
