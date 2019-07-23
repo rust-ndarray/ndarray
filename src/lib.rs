@@ -93,9 +93,6 @@
 //! * If you have experience with NumPy, you may also be interested in
 //!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
 
-#[cfg(feature = "blas")]
-extern crate cblas_sys;
-
 #[cfg(feature = "docs")]
 pub mod doc;
 

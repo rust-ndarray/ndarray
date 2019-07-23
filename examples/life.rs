@@ -8,7 +8,7 @@
 use ndarray::prelude::*;
 use std::iter::FromIterator;
 
-const INPUT: &'static [u8] = include_bytes!("life.txt");
+const INPUT: &[u8] = include_bytes!("life.txt");
 
 const N: usize = 100;
 
