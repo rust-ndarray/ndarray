@@ -1960,6 +1960,12 @@ fn test_array2_from_diag() {
     let x = Array2::from_diag(&diag);
     let x_exp = arr2(&[[0, 0, 0], [0, 1, 0], [0, 0, 2]]);
     assert_eq!(x, x_exp);
+
+    // check 0 length array
+    let diag = Array1::<f64>::zeros(0);
+    let x = Array2::from_diag(&diag);
+    assert_eq!(x.ndim(), 2);
+    assert_eq!(x.shape(), [0, 0]);
 }
 
 #[test]
