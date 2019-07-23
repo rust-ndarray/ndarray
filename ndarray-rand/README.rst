@@ -18,6 +18,7 @@ Recent Changes
 - 0.10.0
 
   - Require rand 0.7
+  - Require Rust 1.32 or later
 
 - 0.9.0
 
