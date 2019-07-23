@@ -171,6 +171,20 @@ where
         }
         eye
     }
+
+    /// Create a 2D matrix from its diagonal
+    pub fn from_diag(diag: &ArrayBase<S, Ix1>) -> Self
+    where
+        S: DataMut,
+        A: Clone + Zero + One,
+    {
+        let mut eye = Self::zeros((diag.len(), diag.len()));
+        for (idx, val) in diag.iter().enumerate() {
+            eye[[idx, idx]] = val.clone();
+        }
+        eye
+    }
+
 }
 
 #[cfg(not(debug_assertions))]
