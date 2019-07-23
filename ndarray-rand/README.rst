@@ -4,14 +4,13 @@ ndarray-rand
 Dependencies
 ------------
 
-ndarray-rand depends on rand 0.7. If you use any other items from rand,
-you need to specify a compatible version of rand in your Cargo.toml. If
-you want to use a RNG or distribution from another crate with
-ndarray-rand, you need to make sure that crate also depends on the
-correct version of rand. Otherwise, the compiler will return errors
-saying that the items are not compatible (e.g. that a type doesn't
-implement a necessary trait).
-
+``ndarray-rand`` depends on ``rand`` 0.7. If you use any other items from
+``rand``, you need to specify a compatible version of ``rand`` in your
+``Cargo.toml``. If you want to use a RNG or distribution from another crate
+with ``ndarray-rand``, you need to make sure that crate also depends on the
+correct version of ``rand``. Otherwise, the compiler will return errors saying
+that the items are not compatible (e.g. that a type doesn't implement a
+necessary trait).
 
 Recent Changes
 --------------
