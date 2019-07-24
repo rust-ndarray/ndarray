@@ -353,7 +353,7 @@ where
             i += 1;
         }
     }
-    unsafe { ArrayBase::from_shape_vec_unchecked((m, n), res_elems) }
+    ArrayBase::from_shape_vec_unchecked((m, n), res_elems)
 }
 
 #[test]
