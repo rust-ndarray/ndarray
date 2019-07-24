@@ -249,7 +249,7 @@ where
         let shape = shape.into_shape();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
         let v = vec![elem; size];
-        unsafe { Self::from_shape_vec_unchecked(shape, v) }
+        Self::from_shape_vec_unchecked(shape, v)
     }
 
     /// Create an array with zeros, shape `shape`.
@@ -285,7 +285,7 @@ where
         let shape = shape.into_shape();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
         let v = to_vec((0..size).map(|_| A::default()));
-        unsafe { Self::from_shape_vec_unchecked(shape, v) }
+        Self::from_shape_vec_unchecked(shape, v)
     }
 
     /// Create an array with values created by the function `f`.
@@ -303,11 +303,11 @@ where
         let _ = size_of_shape_checked_unwrap!(&shape.dim);
         if shape.is_c {
             let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
-            unsafe { Self::from_shape_vec_unchecked(shape, v) }
+            Self::from_shape_vec_unchecked(shape, v)
         } else {
             let dim = shape.dim.clone();
             let v = to_vec_mapped(indexes::indices_iter_f(dim), f);
-            unsafe { Self::from_shape_vec_unchecked(shape, v) }
+            Self::from_shape_vec_unchecked(shape, v)
         }
     }
 
@@ -363,7 +363,7 @@ where
                 return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
             }
         }
-        unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
+        Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v))
     }
 
     /// Creates an array from a vector and interpret it according to the
@@ -387,7 +387,8 @@ where
     ///
     /// 5. The strides must not allow any element to be referenced by two different
     ///    indices.
-    pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
+    //pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
+    pub fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
     where
         Sh: Into<StrideShape<D>>,
     {
@@ -395,7 +396,8 @@ where
         Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
     }
 
-    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
+    //unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
+    fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {

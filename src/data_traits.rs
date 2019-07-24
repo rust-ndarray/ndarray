@@ -206,12 +206,10 @@ where
         if self_.dim.size() <= self_.data.0.len() / 2 {
             // Create a new vec if the current view is less than half of
             // backing data.
-            unsafe {
-                *self_ = ArrayBase::from_shape_vec_unchecked(
-                    self_.dim.clone(),
-                    self_.iter().cloned().collect(),
-                );
-            }
+            *self_ = ArrayBase::from_shape_vec_unchecked(
+                self_.dim.clone(),
+                self_.iter().cloned().collect(),
+            );
             return;
         }
         let rcvec = &mut self_.data.0;

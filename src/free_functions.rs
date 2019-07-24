@@ -54,7 +54,7 @@ macro_rules! array {
 
 /// Create a zero-dimensional array with the element `x`.
 pub fn arr0<A>(x: A) -> Array0<A> {
-    unsafe { ArrayBase::from_shape_vec_unchecked((), vec![x]) }
+    ArrayBase::from_shape_vec_unchecked((), vec![x])
 }
 
 /// Create a one-dimensional array with elements from `xs`.

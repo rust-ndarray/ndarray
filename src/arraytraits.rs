@@ -140,7 +140,7 @@ where
                 "Length must fit in `isize`.",
             );
         }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+        Self::from_shape_vec_unchecked(v.len() as Ix, v)
     }
 }
 
