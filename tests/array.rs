@@ -49,8 +49,7 @@ fn test_matmul_arcarray() {
     println!("A = \n{:?}", A);
     println!("B = \n{:?}", B);
     println!("A x B = \n{:?}", c);
-    let result =
-        ArcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
+    let result = ArcArray::from_shape_vec_unchecked((2, 4), vec![20, 23, 26, 29, 56, 68, 80, 92]);
     assert_eq!(c.shape(), result.shape());
     assert!(c.iter().zip(result.iter()).all(|(a, b)| a == b));
     assert!(c == result);
