@@ -31,7 +31,7 @@ type BaseProducerMut<'a, A, D> = ArrayViewMut<'a, A, D>;
 /// See [`.exact_chunks()`](../struct.ArrayBase.html#method.exact_chunks) for more
 /// information.
 //#[derive(Debug)]
-pub struct ExactChunks<'a, A: 'a, D> {
+pub struct ExactChunks<'a, A, D> {
     base: BaseProducerRef<'a, A, D>,
     chunk: D,
     inner_strides: D,
@@ -90,7 +90,7 @@ where
 ///
 /// See [`.exact_chunks()`](../struct.ArrayBase.html#method.exact_chunks) for more
 /// information.
-pub struct ExactChunksIter<'a, A: 'a, D> {
+pub struct ExactChunksIter<'a, A, D> {
     iter: ElementsBase<'a, A, D>,
     chunk: D,
     inner_strides: D,
@@ -121,7 +121,7 @@ impl_ndproducer! {
 /// See [`.exact_chunks_mut()`](../struct.ArrayBase.html#method.exact_chunks_mut)
 /// for more information.
 //#[derive(Debug)]
-pub struct ExactChunksMut<'a, A: 'a, D> {
+pub struct ExactChunksMut<'a, A, D> {
     base: BaseProducerMut<'a, A, D>,
     chunk: D,
     inner_strides: D,
@@ -224,7 +224,7 @@ impl_iterator! {
 ///
 /// See [`.exact_chunks_mut()`](../struct.ArrayBase.html#method.exact_chunks_mut)
 /// for more information.
-pub struct ExactChunksIterMut<'a, A: 'a, D> {
+pub struct ExactChunksIterMut<'a, A, D> {
     iter: ElementsBaseMut<'a, A, D>,
     chunk: D,
     inner_strides: D,

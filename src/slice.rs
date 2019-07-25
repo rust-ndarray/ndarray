@@ -147,7 +147,7 @@ impl SliceOrIndex {
 }
 
 impl fmt::Display for SliceOrIndex {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             SliceOrIndex::Index(index) => write!(f, "{}", index)?,
             SliceOrIndex::Slice { start, end, step } => {
