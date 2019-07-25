@@ -179,11 +179,9 @@ where
     /// ```rust
     /// use ndarray::{Array2, arr1, arr2};
     ///
-    /// # #[cfg(feature = "approx")] {
     /// let diag = arr1(&[1, 2]);
     /// let array = Array2::from_diag(&diag);
     /// assert_eq!(array, arr2(&[[1, 0], [0, 2]]));
-    /// # }
     pub fn from_diag<S2>(diag: &ArrayBase<S2, Ix1>) -> Self
     where
         A: Clone + Zero,
