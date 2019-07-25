@@ -1,8 +1,5 @@
 #![allow(clippy::float_cmp)]
 
-extern crate defmac;
-extern crate ndarray;
-
 use defmac::defmac;
 
 use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IntoDimension, IxDyn, RemoveAxis};

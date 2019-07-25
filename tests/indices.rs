@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use ndarray::indices_of;
 use ndarray::prelude::*;
 

@@ -3,7 +3,6 @@
 extern crate test;
 use test::Bencher;
 
-extern crate ndarray;
 use ndarray::prelude::*;
 
 const N: usize = 1024;

@@ -1,11 +1,6 @@
 #![cfg(feature = "rayon")]
 #![feature(test)]
 
-extern crate rayon;
-
-extern crate itertools;
-extern crate ndarray;
-
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
 
@@ -16,8 +11,6 @@ use ndarray::Zip;
 
 const EXP_N: usize = 256;
 const ADDN: usize = 512;
-
-use std::cmp::max;
 
 fn set_threads() {
     // Consider setting a fixed number of threads here, for example to avoid

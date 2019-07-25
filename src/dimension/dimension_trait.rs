@@ -103,12 +103,12 @@ pub trait Dimension:
     fn slice_mut(&mut self) -> &mut [Ix];
 
     /// Borrow as a read-only array view.
-    fn as_array_view(&self) -> ArrayView1<Ix> {
+    fn as_array_view(&self) -> ArrayView1<'_, Ix> {
         ArrayView1::from(self.slice())
     }
 
     /// Borrow as a read-write array view.
-    fn as_array_view_mut(&mut self) -> ArrayViewMut1<Ix> {
+    fn as_array_view_mut(&mut self) -> ArrayViewMut1<'_, Ix> {
         ArrayViewMut1::from(self.slice_mut())
     }
 

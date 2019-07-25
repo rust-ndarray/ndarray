@@ -15,7 +15,7 @@ const LAYOUT_NAMES: &[&str] = &["C", "F"];
 use std::fmt;
 
 impl fmt::Debug for Layout {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.0 == 0 {
             write!(f, "Custom")
         } else {
