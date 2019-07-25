@@ -6,8 +6,6 @@
     clippy::float_cmp
 )]
 
-extern crate ndarray;
-
 use ndarray::Array;
 use ndarray::Ix0;
 use ndarray::ShapeBuilder;

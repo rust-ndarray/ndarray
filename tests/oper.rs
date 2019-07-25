@@ -5,11 +5,6 @@
     clippy::many_single_char_names
 )]
 
-extern crate approx;
-extern crate defmac;
-extern crate ndarray;
-extern crate num_traits;
-
 use ndarray::linalg::general_mat_mul;
 use ndarray::prelude::*;
 use ndarray::{rcarr1, rcarr2};

@@ -33,7 +33,7 @@ where
 /// assert_eq!(largest_axis, Axis(1));
 /// ```
 #[derive(Debug)]
-pub struct Axes<'a, D: 'a> {
+pub struct Axes<'a, D> {
     dim: &'a D,
     strides: &'a D,
     start: usize,
