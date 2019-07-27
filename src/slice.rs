@@ -69,9 +69,6 @@ impl Slice {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-struct Index(isize);
-
 /// A slice (range with step) or an index.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
