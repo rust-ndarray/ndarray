@@ -257,7 +257,7 @@ fn test_slice_dyninput_vec_dyn() {
     let info = &SliceInfo::<_, IxDyn>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
-        SliceOrIndex::from(..).step_by(2),
+        SliceOrIndex::from(..).step_by(2isize),
     ])
     .unwrap();
     arr.slice(info.as_ref());

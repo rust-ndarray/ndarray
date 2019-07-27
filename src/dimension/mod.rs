@@ -360,8 +360,7 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
         end,
         axis_len,
     );
-    ndassert!(step != 0, "Slice stride must not be zero");
-    (start, end, step)
+    (start, end, step.get())
 }
 
 /// Modify dimension, stride and return data pointer offset

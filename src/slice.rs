@@ -9,6 +9,7 @@ use crate::error::{ErrorKind, ShapeError};
 use crate::{ArrayView, ArrayViewMut, Dimension, RawArrayViewMut};
 use std::fmt;
 use std::marker::PhantomData;
+use std::num::NonZeroIsize;
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 /// A slice (range with step size).
@@ -35,7 +36,7 @@ use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, Rang
 pub struct Slice {
     pub start: isize,
     pub end: Option<isize>,
-    pub step: isize,
+    pub step: NonZeroIsize,
 }
 
 impl Slice {
@@ -47,24 +48,16 @@ impl Slice {
     /// `step` must be nonzero.
     /// (This method checks with a debug assertion that `step` is not zero.)
     pub fn new(start: isize, end: Option<isize>, step: isize) -> Slice {
-        debug_assert_ne!(step, 0, "Slice::new: step must be nonzero");
-        Slice { start, end, step }
-    }
-
-    /// Create a new `Slice` with the given step size (multiplied with the
-    /// previous step size).
-    ///
-    /// `step` must be nonzero.
-    /// (This method checks with a debug assertion that `step` is not zero.)
-    #[inline]
-    pub fn step_by(self, step: isize) -> Self {
-        debug_assert_ne!(step, 0, "Slice::step_by: step must be nonzero");
         Slice {
-            step: self.step * step,
-            ..self
+            start,
+            end,
+            step: NonZeroIsize::new(step).expect("Slice::new: step must be nonzero"),
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+struct Index(isize);
 
 /// A slice (range with step) or an index.
 ///
@@ -130,7 +123,6 @@ impl SliceOrIndex {
     /// (This method checks with a debug assertion that `step` is not zero.)
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
-        debug_assert_ne!(step, 0, "SliceOrIndex::step_by: step must be nonzero");
         match self {
             SliceOrIndex::Slice {
                 start,
@@ -172,11 +164,7 @@ macro_rules! impl_slice_variant_from_range {
         impl From<Range<$index>> for $self {
             #[inline]
             fn from(r: Range<$index>) -> $self {
-                $constructor {
-                    start: r.start as isize,
-                    end: Some(r.end as isize),
-                    step: 1,
-                }
+                Slice::new(r.start as isize, Some(r.end as isize), 1).into()
             }
         }
 
@@ -184,33 +172,26 @@ macro_rules! impl_slice_variant_from_range {
             #[inline]
             fn from(r: RangeInclusive<$index>) -> $self {
                 let end = *r.end() as isize;
-                $constructor {
-                    start: *r.start() as isize,
-                    end: if end == -1 { None } else { Some(end + 1) },
-                    step: 1,
-                }
+                Slice::new(
+                    *r.start() as isize,
+                    if end == -1 { None } else { Some(end + 1) },
+                    1,
+                )
+                .into()
             }
         }
 
         impl From<RangeFrom<$index>> for $self {
             #[inline]
             fn from(r: RangeFrom<$index>) -> $self {
-                $constructor {
-                    start: r.start as isize,
-                    end: None,
-                    step: 1,
-                }
+                Slice::new(r.start as isize, None, 1).into()
             }
         }
 
         impl From<RangeTo<$index>> for $self {
             #[inline]
             fn from(r: RangeTo<$index>) -> $self {
-                $constructor {
-                    start: 0,
-                    end: Some(r.end as isize),
-                    step: 1,
-                }
+                Slice::new(0, Some(r.end as isize), 1).into()
             }
         }
 
@@ -218,11 +199,7 @@ macro_rules! impl_slice_variant_from_range {
             #[inline]
             fn from(r: RangeToInclusive<$index>) -> $self {
                 let end = r.end as isize;
-                $constructor {
-                    start: 0,
-                    end: if end == -1 { None } else { Some(end + 1) },
-                    step: 1,
-                }
+                Slice::new(0, if end == -1 { None } else { Some(end + 1) }, 1).into()
             }
         }
     };
@@ -237,11 +214,7 @@ impl_slice_variant_from_range!(SliceOrIndex, SliceOrIndex::Slice, i32);
 impl From<RangeFull> for Slice {
     #[inline]
     fn from(_: RangeFull) -> Slice {
-        Slice {
-            start: 0,
-            end: None,
-            step: 1,
-        }
+        Slice::new(0, None, 1)
     }
 }
 
@@ -262,7 +235,7 @@ impl From<Slice> for SliceOrIndex {
         SliceOrIndex::Slice {
             start: s.start,
             end: s.end,
-            step: s.step,
+            step: s.step.get(),
         }
     }
 }
@@ -610,7 +583,7 @@ macro_rules! s(
     };
     // convert range/index and step into SliceOrIndex
     (@convert $r:expr, $s:expr) => {
-        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s)
     };
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:

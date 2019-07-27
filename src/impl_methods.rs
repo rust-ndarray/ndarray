@@ -413,7 +413,7 @@ where
             .enumerate()
             .for_each(|(axis, &slice_or_index)| match slice_or_index {
                 SliceOrIndex::Slice { start, end, step } => {
-                    self.slice_axis_inplace(Axis(axis), Slice { start, end, step })
+                    self.slice_axis_inplace(Axis(axis), Slice::new(start, end, step))
                 }
                 SliceOrIndex::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
