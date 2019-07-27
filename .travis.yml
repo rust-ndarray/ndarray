@@ -27,9 +27,5 @@ addons:
     packages:
       - libopenblas-dev
       - gfortran
-before_script:
-  - rustup component add rustfmt
 script:
-  - |
-    cargo fmt --all -- --check &&
-    ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
+  - ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
