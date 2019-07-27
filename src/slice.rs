@@ -235,7 +235,7 @@ impl From<Slice> for SliceOrIndex {
         SliceOrIndex::Slice {
             start: s.start,
             end: s.end,
-            step: s.step.get(),
+            step: s.step.into(),
         }
     }
 }
