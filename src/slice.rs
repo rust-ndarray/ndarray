@@ -54,6 +54,19 @@ impl Slice {
             step: NonZeroIsize::new(step).expect("Slice::new: step must be nonzero"),
         }
     }
+
+    /// Create a new `Slice` with the given step size (multiplied with the
+    /// previous step size).
+    ///
+    /// `step` must be nonzero.
+    /// (This method checks with a debug assertion that `step` is not zero.)
+    #[inline]
+    pub fn step_by(self, step: isize) -> Self {
+        Slice {
+            step: NonZeroIsize::new(self.step.get() * step).expect("step must be nonzero"),
+            ..self
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
