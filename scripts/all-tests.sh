@@ -6,6 +6,7 @@ set -e
 FEATURES=$1
 CHANNEL=$2
 
+([ "$CHANNEL" != "beta" ] || (rustup component add rustfmt && cargo fmt --all -- --check))
 cargo build --verbose --no-default-features
 cargo test --verbose --no-default-features
 cargo test --release --verbose --no-default-features
