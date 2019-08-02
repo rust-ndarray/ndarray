@@ -7,13 +7,16 @@ matrix:
     - rust: 1.32.0
       env:
        - FEATURES='test docs'
+       - RUSTFLAGS='-D warnings'
     - rust: stable
       env:
        - FEATURES='test docs'
+       - RUSTFLAGS='-D warnings'
     - rust: beta
       env:
        - FEATURES='test docs'
        - CHANNEL='beta'
+       - RUSTFLAGS='-D warnings'
     - rust: nightly
       env:
        - FEATURES='test docs'
