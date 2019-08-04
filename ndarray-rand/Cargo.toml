@@ -21,6 +21,9 @@ rand_distr = "0.2.1"
 version = "0.7.0"
 features = ["small_rng"]
 
+[dev-dependencies]
+rand_isaac = "0.2.0"
+
 [package.metadata.release]
 no-dev-version = true
 

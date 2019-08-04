@@ -91,6 +91,30 @@ where
     /// `distribution`, using a specific Rng `rng`.
     ///
     /// ***Panics*** if the number of elements overflows usize.
+    ///
+    /// ```
+    /// extern crate ndarray;
+    /// extern crate ndarray_rand;
+    /// extern crate rand_isaac;
+    ///
+    /// use ndarray::Array;
+    /// use ndarray_rand::RandomExt;
+    /// use ndarray_rand::rand::SeedableRng;
+    /// use ndarray_rand::rand_distr::Uniform;
+    /// use rand_isaac::isaac64::Isaac64Rng;
+    ///
+    /// # fn main() {
+    /// // Get a seeded random number generator for reproducibility (Isaac64 algorithm)
+    /// let seed = 42;
+    /// let mut rng = Isaac64Rng::seed_from_u64(seed);
+    ///
+    /// // Generate a random array using `rng`
+    /// let a = Array::random_using((2, 5), Uniform::new(0., 10.), &mut rng);
+    /// println!("{:8.4}", a);
+    /// // Example Output:
+    /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],
+    /// //  [  0.0914,   5.5186,   5.8135,   5.2361,   3.1879]]
+    /// # }
     fn random_using<Sh, IdS, R>(shape: Sh, distribution: IdS, rng: &mut R) -> ArrayBase<S, D>
     where
         IdS: Distribution<S::Elem>,
