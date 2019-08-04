@@ -73,7 +73,7 @@ where
     ///
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
-    /// use ndarray_rand::rand::distributions::Uniform;
+    /// use ndarray_rand::rand_distr::Uniform;
     ///
     /// # fn main() {
     /// let a = Array::random((2, 5), Uniform::new(0., 10.));
@@ -131,10 +131,11 @@ where
 ///
 /// use ndarray::Array;
 /// use ndarray_rand::{RandomExt, F32};
-/// use ndarray_rand::rand::distributions::Normal;
+/// use ndarray_rand::rand_distr::Normal;
 ///
 /// # fn main() {
-/// let a = Array::random((2, 5), F32(Normal::new(0., 1.)));
+/// let distribution_f64 = Normal::new(0., 1.).expect("Failed to create normal distribution");
+/// let a = Array::random((2, 5), F32(distribution_f64));
 /// println!("{:8.4}", a);
 /// // Example Output:
 /// // [[ -0.6910,   1.1730,   1.0902,  -0.4092,  -1.7340],
