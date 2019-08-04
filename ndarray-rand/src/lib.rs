@@ -25,10 +25,9 @@
 //! that the items are not compatible (e.g. that a type doesn't implement a
 //! necessary trait).
 
-
+use crate::rand::distributions::Distribution;
 use crate::rand::rngs::SmallRng;
 use crate::rand::{thread_rng, Rng, SeedableRng};
-use crate::rand::distributions::Distribution;
 
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};
