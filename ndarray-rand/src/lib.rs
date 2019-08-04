@@ -6,30 +6,34 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Constructors for randomized arrays. `rand` integration for `ndarray`.
+//! Constructors for randomized arrays: `rand` integration for `ndarray`.
 //!
 //! See [**`RandomExt`**](trait.RandomExt.html) for usage examples.
 //!
-//! **Note:** `ndarray-rand` depends on `rand` 0.7. If you use any other items
-//! from `rand`, you need to specify a compatible version of `rand` in your
-//! `Cargo.toml`. If you want to use a RNG or distribution from another crate
-//! with `ndarray-rand`, you need to make sure that crate also depends on the
-//! correct version of `rand`. Otherwise, the compiler will return errors
-//! saying that the items are not compatible (e.g. that a type doesn't
-//! implement a necessary trait).
+//! ## Note
+//!
+//! `ndarray-rand` depends on `rand` 0.7.
+//!
+//! `rand` is re-exported as a sub-module, `ndarray_rand::rand`. Please rely on this submodule for
+//! guaranteed compatibility.
+//!
+//! If you want to use a random number generator or distribution from another crate
+//! with ``ndarray-rand``, you need to make sure that the other crate also depends on the
+//! same version of ``rand``. Otherwise, the compiler will return errors saying
+//! that the items are not compatible (e.g. that a type doesn't implement a
+//! necessary trait).
 
-use rand::rngs::SmallRng;
-use rand::{thread_rng, Rng, SeedableRng};
+
+use crate::rand::rngs::SmallRng;
+use crate::rand::{thread_rng, Rng, SeedableRng};
+use crate::rand::distributions::Distribution;
 
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};
 
-/// `rand`'s `Distribution` trait, re-exported for convenience.
-pub use crate::distributions::Distribution;
-
-/// `rand`'s distributions, re-exported for convenience and version-compatibility.
-pub mod distributions {
-    pub use rand::distributions::*;
+/// `rand`, re-exported for convenience and version-compatibility.
+pub mod rand {
+    pub use rand::*;
 }
 
 /// Constructors for n-dimensional arrays with random elements.
@@ -62,7 +66,7 @@ where
     ///
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
-    /// use ndarray_rand::distributions::Uniform;
+    /// use ndarray_rand::rand::distributions::Uniform;
     ///
     /// # fn main() {
     /// let a = Array::random((2, 5), Uniform::new(0., 10.));
@@ -120,7 +124,7 @@ where
 ///
 /// use ndarray::Array;
 /// use ndarray_rand::{RandomExt, F32};
-/// use ndarray_rand::distributions::Normal;
+/// use ndarray_rand::rand::distributions::Normal;
 ///
 /// # fn main() {
 /// let a = Array::random((2, 5), F32(Normal::new(0., 1.)));
