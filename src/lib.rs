@@ -1538,14 +1538,11 @@ where
         F: FnMut(&mut A),
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
-            // FIXME: Use for loop when slice iterator is perf is restored
-            for x in slc.iter_mut() {
-                f(x);
+            slc.iter_mut().for_each(f);
+        } else {
+            for row in self.inner_rows_mut() {
+                row.into_iter_().fold((), |(), elt| f(elt));
             }
-            return;
-        }
-        for row in self.inner_rows_mut() {
-            row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
 
