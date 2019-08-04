@@ -12,14 +12,16 @@
 //!
 //! ## Note
 //!
-//! `ndarray-rand` depends on `rand` 0.7.
+//! `ndarray-rand` depends on [`rand` 0.7.0](https://docs.rs/rand/0.7.0/rand/).
 //!
-//! `rand` is re-exported as a sub-module, `ndarray_rand::rand`. Please rely on this submodule for
-//! guaranteed compatibility.
+//! [`rand`](https://docs.rs/rand/0.7.0/rand/) and [`rand-distr`](https://docs.rs/rand_distr/0.2.1/rand_distr/)
+//! are re-exported as sub-modules, [`ndarray_rand::rand`](rand/index.html)
+//! and [`ndarray_rand::rand_distr`](rand_distr/index.html) respectively.
+//! Please rely on these submodules for guaranteed version compatibility.
 //!
 //! If you want to use a random number generator or distribution from another crate
-//! with ``ndarray-rand``, you need to make sure that the other crate also depends on the
-//! same version of ``rand``. Otherwise, the compiler will return errors saying
+//! with `ndarray-rand`, you need to make sure that the other crate also depends on the
+//! same version of `rand`. Otherwise, the compiler will return errors saying
 //! that the items are not compatible (e.g. that a type doesn't implement a
 //! necessary trait).
 
@@ -31,9 +33,14 @@ use crate::rand::distributions::Distribution;
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};
 
-/// `rand`, re-exported for convenience and version-compatibility.
+/// [`rand`](https://docs.rs/rand/0.7.0/rand/), re-exported for convenience and version-compatibility.
 pub mod rand {
     pub use rand::*;
+}
+
+/// [`rand-distr`](https://docs.rs/rand_distr/0.2.1/rand_distr/), re-exported for convenience and version-compatibility.
+pub mod rand_distr {
+    pub use rand_distr::*;
 }
 
 /// Constructors for n-dimensional arrays with random elements.
@@ -42,8 +49,8 @@ pub mod rand {
 /// for other types.
 ///
 /// The default RNG is a fast automatically seeded rng (currently
-/// [`rand::rngs::SmallRng`](https://docs.rs/rand/0.5/rand/rngs/struct.SmallRng.html)
-/// seeded from [`rand::thread_rng`](https://docs.rs/rand/0.5/rand/fn.thread_rng.html)).
+/// [`rand::rngs::SmallRng`](https://docs.rs/rand/0.7/rand/rngs/struct.SmallRng.html)
+/// seeded from [`rand::thread_rng`](https://docs.rs/rand/0.7/rand/fn.thread_rng.html)).
 ///
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its

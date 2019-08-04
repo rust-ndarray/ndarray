@@ -1,5 +1,5 @@
 use ndarray::Array;
-use ndarray_rand::rand::distributions::Uniform;
+use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
 
 #[test]
