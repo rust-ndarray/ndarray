@@ -6,13 +6,11 @@
     clippy::many_single_char_names
 )]
 
-extern crate rawpointer;
 extern crate test;
 use rawpointer::PointerExt;
 use test::black_box;
 use test::Bencher;
 
-extern crate ndarray;
 use ndarray::prelude::*;
 use ndarray::Slice;
 use ndarray::{FoldWhile, Zip};

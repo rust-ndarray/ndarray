@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use ndarray::prelude::*;
 use ndarray::Data;
 

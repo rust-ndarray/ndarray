@@ -68,7 +68,7 @@ pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray<A, Ix1> {
 }
 
 /// Create a zero-dimensional array view borrowing `x`.
-pub fn aview0<A>(x: &A) -> ArrayView0<A> {
+pub fn aview0<A>(x: &A) -> ArrayView0<'_, A> {
     unsafe { ArrayView::from_shape_ptr(Ix0(), x) }
 }
 
@@ -84,7 +84,7 @@ pub fn aview0<A>(x: &A) -> ArrayView0<A> {
 ///
 /// assert_eq!(a2d.sum(), 1024.0);
 /// ```
-pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
+pub fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A> {
     ArrayView::from(xs)
 }
 
@@ -92,7 +92,7 @@ pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
 ///
 /// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
 /// can only occur when `V` is zero-sized.)
-pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<A> {
+pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<'_, A> {
     let cols = V::len();
     let rows = xs.len();
     let dim = Ix2(rows, cols);
@@ -129,7 +129,7 @@ pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<A> {
 ///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
 /// }
 /// ```
-pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
+pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A> {
     ArrayViewMut::from(xs)
 }
 
@@ -158,7 +158,7 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 ///     assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
 /// }
 /// ```
-pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
+pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMut2<'_, A> {
     let cols = V::len();
     let rows = xs.len();
     let dim = Ix2(rows, cols);
