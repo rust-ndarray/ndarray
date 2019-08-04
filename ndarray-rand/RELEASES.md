@@ -6,6 +6,7 @@ Recent Changes
   - Require `rand` 0.7
   - Require Rust 1.32 or later
   - Re-export `rand` as a submodule, `ndarray_rand::rand`
+  - Re-export `rand-distr` as a submodule, `ndarray_rand::rand_distr`
 
 - 0.9.0
 
