@@ -1,10 +1,5 @@
 #![cfg(feature = "rayon")]
 
-extern crate rayon;
-
-extern crate itertools;
-extern crate ndarray;
-
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
 

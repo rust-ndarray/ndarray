@@ -85,13 +85,13 @@ impl Error for ShapeError {
 }
 
 impl fmt::Display for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ShapeError/{:?}: {}", self.kind(), self.description())
     }
 }
 
 impl fmt::Debug for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ShapeError/{:?}: {}", self.kind(), self.description())
     }
 }

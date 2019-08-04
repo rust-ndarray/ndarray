@@ -1,8 +1,5 @@
 #![cfg(feature = "rayon")]
 
-extern crate itertools;
-extern crate ndarray;
-
 use itertools::enumerate;
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;

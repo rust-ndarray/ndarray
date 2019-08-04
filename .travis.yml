@@ -5,16 +5,19 @@ dist: trusty
 cache: cargo
 matrix:
   include:
-    - rust: 1.31.0
+    - rust: 1.32.0
       env:
        - FEATURES='test docs'
+       - RUSTFLAGS='-D warnings'
     - rust: stable
       env:
        - FEATURES='test docs'
+       - RUSTFLAGS='-D warnings'
     - rust: beta
       env:
        - FEATURES='test docs'
        - CHANNEL='beta'
+       - RUSTFLAGS='-D warnings'
     - rust: nightly
       env:
        - FEATURES='test docs'
@@ -43,6 +46,4 @@ before_script:
   - ./scripts/get-sccache.sh
   - sccache --version
 script:
-  - |
-    cargo fmt --all -- --check &&
-    ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
+  - ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"

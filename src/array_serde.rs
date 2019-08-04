@@ -99,7 +99,7 @@ where
 }
 
 // private iterator wrapper
-struct Sequence<'a, A: 'a, D>(Iter<'a, A, D>);
+struct Sequence<'a, A, D>(Iter<'a, A, D>);
 
 impl<'a, A, D> Serialize for Sequence<'a, A, D>
 where
@@ -166,7 +166,7 @@ impl<'de> Deserialize<'de> for ArrayField {
         impl<'de> Visitor<'de> for ArrayFieldVisitor {
             type Value = ArrayField;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str(r#""v", "dim", or "data""#)
             }
 
@@ -210,7 +210,7 @@ where
 {
     type Value = ArrayBase<S, Di>;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("ndarray representation")
     }
 
