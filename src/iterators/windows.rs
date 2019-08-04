@@ -8,7 +8,7 @@ use crate::NdProducer;
 ///
 /// See [`.windows()`](../struct.ArrayBase.html#method.windows) for more
 /// information.
-pub struct Windows<'a, A: 'a, D> {
+pub struct Windows<'a, A, D> {
     base: ArrayView<'a, A, D>,
     window: D,
     strides: D,
@@ -88,7 +88,7 @@ where
 ///
 /// See [`.windows()`](../struct.ArrayBase.html#method.windows) for more
 /// information.
-pub struct WindowsIter<'a, A: 'a, D> {
+pub struct WindowsIter<'a, A, D> {
     iter: ElementsBase<'a, A, D>,
     window: D,
     strides: D,

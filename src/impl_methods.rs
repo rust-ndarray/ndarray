@@ -133,7 +133,7 @@ where
     }
 
     /// Return a read-only view of the array
-    pub fn view(&self) -> ArrayView<A, D>
+    pub fn view(&self) -> ArrayView<'_, A, D>
     where
         S: Data,
     {
@@ -142,7 +142,7 @@ where
     }
 
     /// Return a read-write view of the array
-    pub fn view_mut(&mut self) -> ArrayViewMut<A, D>
+    pub fn view_mut(&mut self) -> ArrayViewMut<'_, A, D>
     where
         S: DataMut,
     {
@@ -264,7 +264,7 @@ where
     /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `&A`.
-    pub fn iter(&self) -> Iter<A, D>
+    pub fn iter(&self) -> Iter<'_, A, D>
     where
         S: Data,
     {
@@ -278,7 +278,7 @@ where
     /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `&mut A`.
-    pub fn iter_mut(&mut self) -> IterMut<A, D>
+    pub fn iter_mut(&mut self) -> IterMut<'_, A, D>
     where
         S: DataMut,
     {
@@ -293,7 +293,7 @@ where
     /// Iterator element type is `(D::Pattern, &A)`.
     ///
     /// See also [`Zip::indexed`](struct.Zip.html)
-    pub fn indexed_iter(&self) -> IndexedIter<A, D>
+    pub fn indexed_iter(&self) -> IndexedIter<'_, A, D>
     where
         S: Data,
     {
@@ -306,7 +306,7 @@ where
     /// is where the rightmost index is varying the fastest.
     ///
     /// Iterator element type is `(D::Pattern, &mut A)`.
-    pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<A, D>
+    pub fn indexed_iter_mut(&mut self) -> IndexedIterMut<'_, A, D>
     where
         S: DataMut,
     {
@@ -323,7 +323,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice<Do>(&self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayView<A, Do>
+    pub fn slice<Do>(&self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayView<'_, A, Do>
     where
         Do: Dimension,
         S: Data,
@@ -341,7 +341,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_mut<Do>(&mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayViewMut<A, Do>
+    pub fn slice_mut<Do>(&mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayViewMut<'_, A, Do>
     where
         Do: Dimension,
         S: DataMut,
@@ -435,7 +435,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis(&self, axis: Axis, indices: Slice) -> ArrayView<A, D>
+    pub fn slice_axis(&self, axis: Axis, indices: Slice) -> ArrayView<'_, A, D>
     where
         S: Data,
     {
@@ -448,7 +448,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
-    pub fn slice_axis_mut(&mut self, axis: Axis, indices: Slice) -> ArrayViewMut<A, D>
+    pub fn slice_axis_mut(&mut self, axis: Axis, indices: Slice) -> ArrayViewMut<'_, A, D>
     where
         S: DataMut,
     {
@@ -633,7 +633,7 @@ where
     ///     a.index_axis(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
     /// );
     /// ```
-    pub fn index_axis(&self, axis: Axis, index: usize) -> ArrayView<A, D::Smaller>
+    pub fn index_axis(&self, axis: Axis, index: usize) -> ArrayView<'_, A, D::Smaller>
     where
         S: Data,
         D: RemoveAxis,
@@ -665,7 +665,7 @@ where
     ///                   [3., 14.]])
     /// );
     /// ```
-    pub fn index_axis_mut(&mut self, axis: Axis, index: usize) -> ArrayViewMut<A, D::Smaller>
+    pub fn index_axis_mut(&mut self, axis: Axis, index: usize) -> ArrayViewMut<'_, A, D::Smaller>
     where
         S: DataMut,
         D: RemoveAxis,
@@ -707,7 +707,7 @@ where
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     #[deprecated(note = "renamed to `index_axis`", since = "0.12.1")]
-    pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<A, D::Smaller>
+    pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<'_, A, D::Smaller>
     where
         S: Data,
         D: RemoveAxis,
@@ -720,7 +720,7 @@ where
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     #[deprecated(note = "renamed to `index_axis_mut`", since = "0.12.1")]
-    pub fn subview_mut(&mut self, axis: Axis, index: Ix) -> ArrayViewMut<A, D::Smaller>
+    pub fn subview_mut(&mut self, axis: Axis, index: Ix) -> ArrayViewMut<'_, A, D::Smaller>
     where
         S: DataMut,
         D: RemoveAxis,
@@ -813,7 +813,7 @@ where
     ///     /* loop body */
     /// }
     /// ```
-    pub fn genrows(&self) -> Lanes<A, D::Smaller>
+    pub fn genrows(&self) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -828,7 +828,7 @@ where
     /// rows of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn genrows_mut(&mut self) -> LanesMut<A, D::Smaller>
+    pub fn genrows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
@@ -865,7 +865,7 @@ where
     ///     /* loop body */
     /// }
     /// ```
-    pub fn gencolumns(&self) -> Lanes<A, D::Smaller>
+    pub fn gencolumns(&self) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -876,7 +876,7 @@ where
     /// columns of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn gencolumns_mut(&mut self) -> LanesMut<A, D::Smaller>
+    pub fn gencolumns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
@@ -911,7 +911,7 @@ where
     /// // The first lane for axis 2 is [0, 1, 2]
     /// assert_eq!(inner2.into_iter().next().unwrap(), aview1(&[0, 1, 2]));
     /// ```
-    pub fn lanes(&self, axis: Axis) -> Lanes<A, D::Smaller>
+    pub fn lanes(&self, axis: Axis) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -922,7 +922,7 @@ where
     /// pointing in the direction of `axis`.
     ///
     /// Iterator element is `ArrayViewMut1<A>` (1D read-write array view).
-    pub fn lanes_mut(&mut self, axis: Axis) -> LanesMut<A, D::Smaller>
+    pub fn lanes_mut(&mut self, axis: Axis) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
@@ -936,7 +936,7 @@ where
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
     #[allow(deprecated)]
-    pub fn outer_iter(&self) -> AxisIter<A, D::Smaller>
+    pub fn outer_iter(&self) -> AxisIter<'_, A, D::Smaller>
     where
         S: Data,
         D: RemoveAxis,
@@ -951,7 +951,7 @@ where
     ///
     /// Iterator element is `ArrayViewMut<A, D::Smaller>` (read-write array view).
     #[allow(deprecated)]
-    pub fn outer_iter_mut(&mut self) -> AxisIterMut<A, D::Smaller>
+    pub fn outer_iter_mut(&mut self) -> AxisIterMut<'_, A, D::Smaller>
     where
         S: DataMut,
         D: RemoveAxis,
@@ -974,7 +974,7 @@ where
     /// **Panics** if `axis` is out of bounds.
     ///
     /// <img src="https://rust-ndarray.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
-    pub fn axis_iter(&self, axis: Axis) -> AxisIter<A, D::Smaller>
+    pub fn axis_iter(&self, axis: Axis) -> AxisIter<'_, A, D::Smaller>
     where
         S: Data,
         D: RemoveAxis,
@@ -989,7 +989,7 @@ where
     /// (read-write array view).
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_iter_mut(&mut self, axis: Axis) -> AxisIterMut<A, D::Smaller>
+    pub fn axis_iter_mut(&mut self, axis: Axis) -> AxisIterMut<'_, A, D::Smaller>
     where
         S: DataMut,
         D: RemoveAxis,
@@ -1010,6 +1010,7 @@ where
     /// ```
     /// use ndarray::Array;
     /// use ndarray::{arr3, Axis};
+    /// use std::iter::FromIterator;
     ///
     /// let a = Array::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
     /// let mut iter = a.axis_chunks_iter(Axis(1), 2);
@@ -1023,7 +1024,7 @@ where
     /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]],
     ///                                              [[26, 27]]]));
     /// ```
-    pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<A, D>
+    pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<'_, A, D>
     where
         S: Data,
     {
@@ -1036,7 +1037,7 @@ where
     /// Iterator element is `ArrayViewMut<A, D>`
     ///
     /// **Panics** if `axis` is out of bounds.
-    pub fn axis_chunks_iter_mut(&mut self, axis: Axis, size: usize) -> AxisChunksIterMut<A, D>
+    pub fn axis_chunks_iter_mut(&mut self, axis: Axis, size: usize) -> AxisChunksIterMut<'_, A, D>
     where
         S: DataMut,
     {
@@ -1054,7 +1055,7 @@ where
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
-    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<A, D>
+    pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
         S: Data,
@@ -1094,7 +1095,7 @@ where
     ///          [6, 6, 7, 7, 8, 8, 0],
     ///          [6, 6, 7, 7, 8, 8, 0]]));
     /// ```
-    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<A, D>
+    pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
         S: DataMut,
@@ -1116,7 +1117,7 @@ where
     /// **Panics** if any dimension of `window_size` is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
     /// number of array axes.)
-    pub fn windows<E>(&self, window_size: E) -> Windows<A, D>
+    pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
         S: Data,
@@ -1136,7 +1137,7 @@ where
     ///
     /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
     /// *(1, 1, ..., 1)* etc as long as all axes have elements.
-    pub fn diag(&self) -> ArrayView1<A>
+    pub fn diag(&self) -> ArrayView1<'_, A>
     where
         S: Data,
     {
@@ -1144,7 +1145,7 @@ where
     }
 
     /// Return a read-write view over the diagonal elements of the array.
-    pub fn diag_mut(&mut self) -> ArrayViewMut1<A>
+    pub fn diag_mut(&mut self) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
     {
@@ -1531,7 +1532,7 @@ where
     ///     == aview2(&[[1., 0.]; 10])
     /// );
     /// ```
-    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<A, E::Dim>>
+    pub fn broadcast<E>(&self, dim: E) -> Option<ArrayView<'_, A, E::Dim>>
     where
         E: IntoDimension,
         S: Data,
@@ -1685,7 +1686,7 @@ where
     /// This is a shorthand for `self.view().reversed_axes()`.
     ///
     /// See also the more general methods `.reversed_axes()` and `.swap_axes()`.
-    pub fn t(&self) -> ArrayView<A, D>
+    pub fn t(&self) -> ArrayView<'_, A, D>
     where
         S: Data,
     {
@@ -1693,7 +1694,7 @@ where
     }
 
     /// Return an iterator over the length and stride of each axis.
-    pub fn axes(&self) -> Axes<D> {
+    pub fn axes(&self) -> Axes<'_, D> {
         axes_of(&self.dim, &self.strides)
     }
 

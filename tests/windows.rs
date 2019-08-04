@@ -4,11 +4,10 @@
     clippy::unreadable_literal,
     clippy::many_single_char_names
 )]
-extern crate itertools;
-extern crate ndarray;
 
 use ndarray::prelude::*;
 use ndarray::Zip;
+use std::iter::FromIterator;
 
 // Edge Cases for Windows iterator:
 //

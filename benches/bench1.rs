@@ -7,7 +7,6 @@
     clippy::many_single_char_names
 )]
 
-extern crate ndarray;
 extern crate test;
 
 use ndarray::ShapeBuilder;

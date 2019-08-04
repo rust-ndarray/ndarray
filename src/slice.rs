@@ -147,7 +147,7 @@ impl SliceOrIndex {
 }
 
 impl fmt::Display for SliceOrIndex {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             SliceOrIndex::Index(index) => write!(f, "{}", index)?,
             SliceOrIndex::Slice { start, end, step } => {
@@ -696,7 +696,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// use ndarray::prelude::*;
 ///
 /// # fn main() {
-/// let mut arr = Array1::from_iter(0..12);
+/// let mut arr: Array1<_> = (0..12).collect();
 /// let (a, b, c, d) = multislice!(arr, [0..5], mut [6..;2], [1..6], mut [7..;2]);
 /// assert_eq!(a, array![0, 1, 2, 3, 4]);
 /// assert_eq!(b, array![6, 8, 10]);
@@ -714,7 +714,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::multislice;
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
-///   let mut arr = Array1::from_iter(0..12);
+///   let mut arr: Array1<_> = (0..12).collect();
 ///   multislice!(arr, [0..5], mut [1..;2]); // panic!
 ///   # }
 ///   ```
@@ -726,7 +726,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::multislice;
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
-///   let mut arr = Array1::from_iter(0..12);
+///   let mut arr: Array1<_> = (0..12).collect();
 ///   multislice!(arr, mut [0..5], mut [1..;2]); // panic!
 ///   # }
 ///   ```

@@ -363,10 +363,10 @@ use self::mat_mul_general as mat_mul_impl;
 #[cfg(feature = "blas")]
 fn mat_mul_impl<A>(
     alpha: A,
-    lhs: &ArrayView2<A>,
-    rhs: &ArrayView2<A>,
+    lhs: &ArrayView2<'_, A>,
+    rhs: &ArrayView2<'_, A>,
     beta: A,
-    c: &mut ArrayViewMut2<A>,
+    c: &mut ArrayViewMut2<'_, A>,
 ) where
     A: LinalgScalar,
 {
@@ -458,10 +458,10 @@ fn mat_mul_impl<A>(
 /// C ← α A B + β C
 fn mat_mul_general<A>(
     alpha: A,
-    lhs: &ArrayView2<A>,
-    rhs: &ArrayView2<A>,
+    lhs: &ArrayView2<'_, A>,
+    rhs: &ArrayView2<'_, A>,
     beta: A,
-    c: &mut ArrayViewMut2<A>,
+    c: &mut ArrayViewMut2<'_, A>,
 ) where
     A: LinalgScalar,
 {

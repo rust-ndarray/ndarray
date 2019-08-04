@@ -7,16 +7,13 @@
     clippy::float_cmp
 )]
 
-extern crate defmac;
-extern crate itertools;
-extern crate ndarray;
-
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
 use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, multislice, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
+use std::iter::FromIterator;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -670,7 +667,7 @@ fn test_sub() {
     assert_eq!(s2.shape(), &[4, 2]);
     let n = ArcArray::linspace(8., 15., 8).reshape((4, 2));
     assert_eq!(n, s2);
-    let m = ArcArray::from_vec(vec![2., 3., 10., 11.]).reshape((2, 2));
+    let m = ArcArray::from(vec![2., 3., 10., 11.]).reshape((2, 2));
     assert_eq!(m, mat.index_axis(Axis(1), 1));
 }
 
@@ -1036,7 +1033,7 @@ fn array0_into_scalar() {
 
 #[test]
 fn owned_array1() {
-    let mut a = Array::from_vec(vec![1, 2, 3, 4]);
+    let mut a = Array::from(vec![1, 2, 3, 4]);
     for elt in a.iter_mut() {
         *elt = 2;
     }
@@ -1239,7 +1236,7 @@ fn from_vec_dim_stride_2d_rejects() {
 
 #[test]
 fn views() {
-    let a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
     let b = a.view();
     assert_eq!(a, b);
     assert_eq!(a.shape(), b.shape());
@@ -1256,7 +1253,7 @@ fn views() {
 
 #[test]
 fn view_mut() {
-    let mut a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in &mut a.view_mut() {
         *elt = 0;
     }
@@ -1275,7 +1272,7 @@ fn view_mut() {
 
 #[test]
 fn slice_mut() {
-    let mut a = ArcArray::from_vec(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
     for elt in a.slice_mut(s![.., ..]) {
         *elt = 0;
     }
@@ -1954,6 +1951,20 @@ fn test_array_clone_same_view() {
 }
 
 #[test]
+fn test_array2_from_diag() {
+    let diag = arr1(&[0, 1, 2]);
+    let x = Array2::from_diag(&diag);
+    let x_exp = arr2(&[[0, 0, 0], [0, 1, 0], [0, 0, 2]]);
+    assert_eq!(x, x_exp);
+
+    // check 0 length array
+    let diag = Array1::<f64>::zeros(0);
+    let x = Array2::from_diag(&diag);
+    assert_eq!(x.ndim(), 2);
+    assert_eq!(x.shape(), [0, 0]);
+}
+
+#[test]
 fn array_macros() {
     // array
     let a1 = array![1, 2, 3];
@@ -2122,7 +2133,10 @@ mod array_cow_tests {
 
     #[test]
     fn test_clone_from() {
-        fn assert_eq_contents_and_layout(arr1: &CowArray<i32, Ix2>, arr2: &CowArray<i32, Ix2>) {
+        fn assert_eq_contents_and_layout(
+            arr1: &CowArray<'_, i32, Ix2>,
+            arr2: &CowArray<'_, i32, Ix2>,
+        ) {
             assert_eq!(arr1, arr2);
             assert_eq!(arr1.dim(), arr2.dim());
             assert_eq!(arr1.strides(), arr2.strides());

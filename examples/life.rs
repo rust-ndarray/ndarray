@@ -4,15 +4,13 @@
     clippy::unreadable_literal,
     clippy::many_single_char_names
 )]
-extern crate ndarray;
 
 use ndarray::prelude::*;
+use std::iter::FromIterator;
 
 const INPUT: &[u8] = include_bytes!("life.txt");
-//const INPUT: &'static [u8] = include_bytes!("lifelite.txt");
 
 const N: usize = 100;
-//const N: usize = 8;
 
 type Board = Array2<u8>;
 

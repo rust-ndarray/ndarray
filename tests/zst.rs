@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use ndarray::arr2;
 use ndarray::ArcArray;
 

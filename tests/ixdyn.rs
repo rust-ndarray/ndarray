@@ -5,7 +5,6 @@
     clippy::many_single_char_names,
     clippy::float_cmp
 )]
-extern crate ndarray;
 
 use ndarray::Array;
 use ndarray::IntoDimension;
@@ -147,7 +146,7 @@ fn test_0_add_add() {
 
 #[test]
 fn test_0_add_broad() {
-    let mut b = Array::from_vec(vec![5., 6.]);
+    let mut b = Array::from(vec![5., 6.]);
     let mut a = Array::zeros(vec![]);
     a += 1.;
     b += &a;

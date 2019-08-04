@@ -6,10 +6,10 @@
     clippy::many_single_char_names
 )]
 extern crate test;
+use std::iter::FromIterator;
 use test::black_box;
 use test::Bencher;
 
-extern crate ndarray;
 use ndarray::prelude::*;
 
 const N: usize = 1024;
@@ -22,7 +22,7 @@ fn map_regular(bench: &mut Bencher) {
     bench.iter(|| a.map(|&x| 2. * x));
 }
 
-pub fn double_array(mut a: ArrayViewMut2<f64>) {
+pub fn double_array(mut a: ArrayViewMut2<'_, f64>) {
     a *= 2.0;
 }
 

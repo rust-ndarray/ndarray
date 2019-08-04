@@ -4,8 +4,6 @@
     clippy::unreadable_literal,
     clippy::many_single_char_names
 )]
-extern crate defmac;
-extern crate ndarray;
 
 use defmac::defmac;
 use ndarray::prelude::*;
