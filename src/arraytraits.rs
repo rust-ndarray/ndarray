@@ -50,7 +50,7 @@ where
     fn index(&self, index: I) -> &S::Elem {
         debug_bounds_check!(self, index);
         unsafe {
-            &*self.ptr.offset(
+            &*self.ptr.as_ptr().offset(
                 index
                     .index_checked(&self.dim, &self.strides)
                     .unwrap_or_else(|| array_out_of_bounds()),

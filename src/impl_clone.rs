@@ -8,13 +8,15 @@
 use crate::imp_prelude::*;
 use crate::RawDataClone;
 
+use std::ptr::NonNull;
+
 impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {
         unsafe {
-            let (data, ptr) = self.data.clone_with_ptr(self.ptr);
+            let (data, ptr) = self.data.clone_with_ptr(self.ptr.as_ptr());
             ArrayBase {
                 data,
-                ptr,
+                ptr: NonNull::new(ptr).unwrap(),
                 dim: self.dim.clone(),
                 strides: self.strides.clone(),
             }
@@ -26,7 +28,11 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     /// potentially more efficient.
     fn clone_from(&mut self, other: &Self) {
         unsafe {
-            self.ptr = self.data.clone_from_with_ptr(&other.data, other.ptr);
+            self.ptr = NonNull::new(
+                self.data
+                    .clone_from_with_ptr(&other.data, other.ptr.as_ptr()),
+            )
+            .unwrap();
             self.dim.clone_from(&other.dim);
             self.strides.clone_from(&other.strides);
         }

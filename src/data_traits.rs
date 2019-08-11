@@ -9,6 +9,7 @@
 //! The data (inner representation) traits for ndarray
 
 use std::mem::{self, size_of};
+use std::ptr::NonNull;
 use std::sync::Arc;
 
 use crate::{
@@ -217,13 +218,13 @@ where
         let rcvec = &mut self_.data.0;
         let a_size = mem::size_of::<A>() as isize;
         let our_off = if a_size != 0 {
-            (self_.ptr as isize - rcvec.as_ptr() as isize) / a_size
+            (self_.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
         } else {
             0
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.ptr = rvec.as_mut_ptr().offset(our_off);
+            self_.ptr = NonNull::new(rvec.as_mut_ptr().offset(our_off)).unwrap();
         }
     }
 

@@ -12,6 +12,8 @@
 
 #![allow(clippy::match_wild_err_arm)]
 
+use std::ptr::NonNull;
+
 use num_traits::{Float, One, Zero};
 
 use crate::dimension;
@@ -422,7 +424,7 @@ where
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
-            ptr: v.as_mut_ptr(),
+            ptr: NonNull::new(v.as_mut_ptr()).unwrap(),
             data: DataOwned::new(v),
             strides,
             dim,
