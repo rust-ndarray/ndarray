@@ -108,9 +108,9 @@ where
                     if blas_compat_1d::<$ty, _>(self) && blas_compat_1d::<$ty, _>(rhs) {
                         unsafe {
                             let (lhs_ptr, n, incx) =
-                                blas_1d_params(self.ptr, self.len(), self.strides()[0]);
+                                blas_1d_params(self.ptr.as_ptr(), self.len(), self.strides()[0]);
                             let (rhs_ptr, _, incy) =
-                                blas_1d_params(rhs.ptr, rhs.len(), rhs.strides()[0]);
+                                blas_1d_params(rhs.ptr.as_ptr(), rhs.len(), rhs.strides()[0]);
                             let ret = blas_sys::$func(
                                 n,
                                 lhs_ptr as *const $ty,
@@ -432,17 +432,17 @@ fn mat_mul_impl<A>(
                             CblasRowMajor,
                             lhs_trans,
                             rhs_trans,
-                            m as blas_index,      // m, rows of Op(a)
-                            n as blas_index,      // n, cols of Op(b)
-                            k as blas_index,      // k, cols of Op(a)
-                            cast_as(&alpha),      // alpha
-                            lhs_.ptr as *const _, // a
-                            lhs_stride,           // lda
-                            rhs_.ptr as *const _, // b
-                            rhs_stride,           // ldb
-                            cast_as(&beta),       // beta
-                            c_.ptr as *mut _,     // c
-                            c_stride,             // ldc
+                            m as blas_index,               // m, rows of Op(a)
+                            n as blas_index,               // n, cols of Op(b)
+                            k as blas_index,               // k, cols of Op(a)
+                            cast_as(&alpha),               // alpha
+                            lhs_.ptr.as_ptr() as *const _, // a
+                            lhs_stride,                    // lda
+                            rhs_.ptr.as_ptr() as *const _, // b
+                            rhs_stride,                    // ldb
+                            cast_as(&beta),                // beta
+                            c_.ptr.as_ptr() as *mut _,     // c
+                            c_stride,                      // ldc
                         );
                     }
                     return;
@@ -622,15 +622,15 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
                             blas_sys::$gemv(
                                 layout,
                                 a_trans,
-                                m as blas_index,   // m, rows of Op(a)
-                                k as blas_index,   // n, cols of Op(a)
-                                cast_as(&alpha),   // alpha
-                                a.ptr as *const _, // a
-                                a_stride,          // lda
-                                x.ptr as *const _, // x
+                                m as blas_index,            // m, rows of Op(a)
+                                k as blas_index,            // n, cols of Op(a)
+                                cast_as(&alpha),            // alpha
+                                a.ptr.as_ptr() as *const _, // a
+                                a_stride,                   // lda
+                                x.ptr.as_ptr() as *const _, // x
                                 x_stride,
-                                cast_as(&beta),  // beta
-                                y.ptr as *mut _, // x
+                                cast_as(&beta),           // beta
+                                y.ptr.as_ptr() as *mut _, // x
                                 y_stride,
                             );
                         }
