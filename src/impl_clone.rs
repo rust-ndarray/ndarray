@@ -5,10 +5,10 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+use std::ptr::NonNull;
+
 use crate::imp_prelude::*;
 use crate::RawDataClone;
-
-use std::ptr::NonNull;
 
 impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {
