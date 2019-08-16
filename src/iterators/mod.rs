@@ -131,6 +131,22 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1> {
         unsafe { Some(self.ptr.offset(offset)) }
     }
 
+    fn nth_back(&mut self, n: usize) -> Option<*mut A> {
+        let index = self.index?;
+        let len = self.dim[0] - index[0];
+        if n < len {
+            self.dim[0] -= n + 1;
+            let offset = <_>::stride_offset(&self.dim, &self.strides);
+            if index == self.dim {
+                self.index = None;
+            }
+            unsafe { Some(self.ptr.offset(offset)) }
+        } else {
+            self.index = None;
+            None
+        }
+    }
+
     fn rfold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
     where
         G: FnMut(Acc, *mut A) -> Acc,
@@ -437,6 +453,10 @@ impl<'a, A> DoubleEndedIterator for Iter<'a, A, Ix1> {
         either_mut!(self.inner, iter => iter.next_back())
     }
 
+    fn nth_back(&mut self, n: usize) -> Option<&'a A> {
+        either_mut!(self.inner, iter => iter.nth_back(n))
+    }
+
     fn rfold<Acc, G>(self, init: Acc, g: G) -> Acc
     where
         G: FnMut(Acc, Self::Item) -> Acc,
@@ -559,6 +579,10 @@ impl<'a, A> DoubleEndedIterator for IterMut<'a, A, Ix1> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A> {
         either_mut!(self.inner, iter => iter.next_back())
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<&'a mut A> {
+        either_mut!(self.inner, iter => iter.nth_back(n))
     }
 
     fn rfold<Acc, G>(self, init: Acc, g: G) -> Acc

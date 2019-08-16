@@ -565,6 +565,65 @@ fn test_fold() {
 }
 
 #[test]
+fn test_nth_back() {
+    let mut a: Array1<i32> = (0..256).collect();
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+
+    {
+        assert_eq!(a.iter().nth_back(0), Some(&a[a.len() - 1]));
+        assert_eq!(a.iter().nth_back(1), Some(&a[a.len() - 2]));
+        assert_eq!(a.iter().nth_back(a.len() - 2), Some(&a[1]));
+        assert_eq!(a.iter().nth_back(a.len() - 1), Some(&a[0]));
+        assert_eq!(a.iter().nth_back(a.len()), None);
+        assert_eq!(a.iter().nth_back(a.len() + 1), None);
+        assert_eq!(a.iter().nth_back(a.len() + 2), None);
+    }
+
+    {
+        let mut iter1 = a.iter();
+        let mut iter2 = a.iter();
+        for _ in 0..(a.len() + 1) {
+            assert_eq!(iter1.nth_back(0), iter2.next_back());
+            assert_eq!(iter1.len(), iter2.len());
+        }
+    }
+
+    {
+        let mut iter1 = a.iter();
+        let mut iter2 = a.iter();
+        for _ in 0..(a.len() / 3 + 1) {
+            assert_eq!(iter1.nth_back(2), {
+                iter2.next_back();
+                iter2.next_back();
+                iter2.next_back()
+            });
+            assert_eq!(iter1.len(), iter2.len());
+        }
+    }
+
+    {
+        let mut iter = a.iter();
+        assert_eq!(iter.nth_back(a.len()), None);
+        assert_eq!(iter.next(), None);
+    }
+
+    {
+        let mut iter = a.iter();
+        iter.next();
+        iter.next_back();
+        assert_eq!(iter.len(), a.len() - 2);
+        assert_eq!(iter.nth_back(1), Some(&a[a.len() - 3]));
+        assert_eq!(iter.len(), a.len() - 4);
+        assert_eq!(iter.nth_back(a.len() - 6), Some(&a[2]));
+        assert_eq!(iter.len(), 1);
+        assert_eq!(iter.next(), Some(&a[1]));
+        assert_eq!(iter.len(), 0);
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
+    }
+}
+
+#[test]
 fn test_rfold() {
     {
         let mut a = Array1::<i32>::default(256);
