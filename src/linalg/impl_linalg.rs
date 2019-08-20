@@ -857,7 +857,7 @@ where
     }
 }
 
-#[allow(dead_code)]
+#[allow(dead_code, clippy::type_repetition_in_bounds)]
 fn kron_to_dyn<Sa, I, Sb, T>(a: &ArrayBase<Sa, IxDyn>, b: &ArrayBase<Sb, I>) -> Array<T, IxDyn>
 where
     T: Copy,
@@ -895,7 +895,7 @@ where
     }
 }
 
-#[allow(dead_code)]
+#[allow(dead_code, clippy::type_repetition_in_bounds)]
 fn kron_same_size<Sa, I, Sb, T>(a: &ArrayBase<Sa, I>, b: &ArrayBase<Sb, I>) -> Array<T, I>
 where
     T: Copy,
