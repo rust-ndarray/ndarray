@@ -9,7 +9,6 @@
 extern crate test;
 use test::Bencher;
 
-extern crate ndarray;
 use ndarray::prelude::*;
 
 use ndarray::linalg::general_mat_vec_mul;

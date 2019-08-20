@@ -72,7 +72,7 @@ where
 {
     type Output = ArrayView<'a, A, E::Dim>;
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
-        let res: ArrayView<A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
+        let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
         unsafe { ArrayView::new_(res.ptr, res.dim, res.strides) }
     }
     private_impl! {}

@@ -1,7 +1,3 @@
-extern crate ndarray;
-extern crate num_complex;
-extern crate num_traits;
-
 use ndarray::Array;
 use ndarray::{arr1, arr2, Axis};
 use num_complex::Complex;

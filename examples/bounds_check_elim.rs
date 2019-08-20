@@ -8,8 +8,6 @@
 
 // Test cases for bounds check elimination
 
-extern crate ndarray;
-
 use ndarray::prelude::*;
 
 /*

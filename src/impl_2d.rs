@@ -17,7 +17,7 @@ where
     /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn row(&self, index: Ix) -> ArrayView1<A>
+    pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
     where
         S: Data,
     {
@@ -27,7 +27,7 @@ where
     /// Return a mutable array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
+    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
     {
@@ -42,7 +42,7 @@ where
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn column(&self, index: Ix) -> ArrayView1<A>
+    pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
     where
         S: Data,
     {
@@ -52,7 +52,7 @@ where
     /// Return a mutable array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
+    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
     {

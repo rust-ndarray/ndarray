@@ -4,16 +4,19 @@ sudo: required
 dist: trusty
 matrix:
   include:
-    - rust: 1.31.0
+    - rust: 1.32.0
       env:
        - FEATURES='test docs'
+       - RUSTFLAGS='-D warnings'
     - rust: stable
       env:
        - FEATURES='test docs'
+       - RUSTFLAGS='-D warnings'
     - rust: beta
       env:
        - FEATURES='test docs'
        - CHANNEL='beta'
+       - RUSTFLAGS='-D warnings'
     - rust: nightly
       env:
        - FEATURES='test docs'
@@ -27,9 +30,5 @@ addons:
     packages:
       - libopenblas-dev
       - gfortran
-before_script:
-  - rustup component add rustfmt
 script:
-  - |
-    cargo fmt --all -- --check &&
-    ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"
+  - ./scripts/all-tests.sh "$FEATURES" "$CHANNEL"

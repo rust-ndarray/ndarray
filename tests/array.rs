@@ -7,10 +7,6 @@
     clippy::float_cmp
 )]
 
-extern crate defmac;
-extern crate itertools;
-extern crate ndarray;
-
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
 use ndarray::indices;
@@ -1955,6 +1951,20 @@ fn test_array_clone_same_view() {
 }
 
 #[test]
+fn test_array2_from_diag() {
+    let diag = arr1(&[0, 1, 2]);
+    let x = Array2::from_diag(&diag);
+    let x_exp = arr2(&[[0, 0, 0], [0, 1, 0], [0, 0, 2]]);
+    assert_eq!(x, x_exp);
+
+    // check 0 length array
+    let diag = Array1::<f64>::zeros(0);
+    let x = Array2::from_diag(&diag);
+    assert_eq!(x.ndim(), 2);
+    assert_eq!(x.shape(), [0, 0]);
+}
+
+#[test]
 fn array_macros() {
     // array
     let a1 = array![1, 2, 3];
@@ -2123,7 +2133,10 @@ mod array_cow_tests {
 
     #[test]
     fn test_clone_from() {
-        fn assert_eq_contents_and_layout(arr1: &CowArray<i32, Ix2>, arr2: &CowArray<i32, Ix2>) {
+        fn assert_eq_contents_and_layout(
+            arr1: &CowArray<'_, i32, Ix2>,
+            arr2: &CowArray<'_, i32, Ix2>,
+        ) {
             assert_eq!(arr1, arr2);
             assert_eq!(arr1.dim(), arr2.dim());
             assert_eq!(arr1.strides(), arr2.strides());
