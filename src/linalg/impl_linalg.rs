@@ -823,3 +823,125 @@ mod blas_tests {
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 }
+
+fn general_outer_to_dyn<Sa, Sb, I, F, T>(
+    a: &ArrayBase<Sa, IxDyn>,
+    b: &ArrayBase<Sb, I>,
+    f: F,
+) -> ArrayD<T>
+where
+    T: Copy,
+    Sa: Data<Elem = T>,
+    Sb: Data<Elem = T>,
+    I: Dimension,
+    F: Fn(ArrayViewMut<T, IxDyn>, T, &ArrayBase<Sb, I>) -> (),
+{
+    //Iterators on the shapes, compelted by 1s
+    let a_shape_iter = a.shape().iter().chain([1].iter().cycle());
+    let b_shape_iter = b.shape().iter().chain([1].iter().cycle());
+
+    let res_ndim = std::cmp::max(a.ndim(), b.ndim());
+    let res_dim: Vec<Ix> = a_shape_iter
+        .zip(b_shape_iter)
+        .take(res_ndim)
+        .map(|(x, y)| x * y)
+        .collect();
+
+    unsafe {
+        let mut res: ArrayD<T> = ArrayBase::uninitialized(res_dim);
+        let res_chunks = res.exact_chunks_mut(b.shape());
+        //azip!(mut r_c (res_chunks), a in {f(r_c, a, b)});
+        Zip::from(res_chunks).and(a).apply(|r_c, &x| f(r_c, x, b));
+        res
+    }
+}
+
+fn kron_to_dyn<Sa, I, Sb, T>(a: &ArrayBase<Sa, IxDyn>, b: &ArrayBase<Sb, I>) -> Array<T, IxDyn>
+where
+    T: Copy,
+    Sa: Data<Elem = T>,
+    Sb: Data<Elem = T>,
+    I: Dimension,
+    T: crate::ScalarOperand,
+    for<'a> &'a ArrayBase<Sb, I>: std::ops::Mul<T, Output = Array<T, I>>,
+{
+    general_outer_to_dyn(a, b, |mut res, x, a| res.assign(&(a * x)))
+}
+
+fn general_outer_same_size<Sa, I, Sb, F, T>(
+    a: &ArrayBase<Sa, I>,
+    b: &ArrayBase<Sb, I>,
+    f: F,
+) -> Array<T, I>
+where
+    T: Copy,
+    Sa: Data<Elem = T>,
+    Sb: Data<Elem = T>,
+    I: Dimension,
+    F: Fn(ArrayViewMut<T, I>, T, &ArrayBase<Sb, I>) -> (),
+{
+    let mut res_dim = a.raw_dim().clone();
+    let mut res_dim_view = res_dim.as_array_view_mut();
+    res_dim_view *= &b.raw_dim().as_array_view();
+
+    unsafe {
+        let mut res: Array<T, I> = ArrayBase::uninitialized(res_dim);
+        let res_chunks = res.exact_chunks_mut(b.raw_dim());
+        Zip::from(res_chunks).and(a).apply(|r_c, &x| f(r_c, x, b));
+        res
+    }
+}
+
+fn kron_same_size<Sa, I, Sb, T>(a: &ArrayBase<Sa, I>, b: &ArrayBase<Sb, I>) -> Array<T, I>
+where
+    T: Copy,
+    Sa: Data<Elem = T>,
+    Sb: Data<Elem = T>,
+    I: Dimension,
+    T: crate::ScalarOperand,
+    for<'a> &'a ArrayBase<Sb, I>: std::ops::Mul<T, Output = Array<T, I>>,
+{
+    general_outer_same_size(a, b, |mut res, x, a| res.assign(&(a * x)))
+}
+
+#[cfg(test)]
+mod kron_test {
+    use super::*;
+
+    #[test]
+    fn test_same_size() {
+        let a = array![
+            [[1, 2, 3], [4, 5, 6]],
+            [[17, 42, 69], [0, -1, 1]],
+            [[1337, 1, 0], [-1337, -1, 0]]
+        ];
+        let b = array![
+            [[55, 66, 77], [88, 99, 1010]],
+            [[42, 42, 0], [1, -3, 10]],
+            [[110, 0, 7], [523, 21, -12]]
+        ];
+        let res1 = kron_same_size(&a, &b);
+        let res2 = kron_to_dyn(&a.clone().into_dyn(), &b);
+        assert_eq!(res1.clone().into_dyn(), res2);
+        for a0 in 0..a.len_of(Axis(0)) {
+            for a1 in 0..a.len_of(Axis(1)) {
+                for a2 in 0..a.len_of(Axis(2)) {
+                    for b0 in 0..b.len_of(Axis(0)) {
+                        for b1 in 0..b.len_of(Axis(1)) {
+                            for b2 in 0..b.len_of(Axis(2)) {
+                                assert_eq!(
+                                    res2[[
+                                        b.shape()[0] * a0 + b0,
+                                        b.shape()[1] * a1 + b1,
+                                        b.shape()[2] * a2 + b2
+                                    ]],
+                                    a[[a0, a1, a2]] * b[[b0, b1, b2]]
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
