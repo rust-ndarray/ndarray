@@ -1005,7 +1005,7 @@ where
     /// The last view may have less elements if `size` does not divide
     /// the axis' dimension.
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds or if `size` is zero.
     ///
     /// ```
     /// use ndarray::Array;
@@ -1036,7 +1036,7 @@ where
     ///
     /// Iterator element is `ArrayViewMut<A, D>`
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds or if `size` is zero.
     pub fn axis_chunks_iter_mut(&mut self, axis: Axis, size: usize) -> AxisChunksIterMut<'_, A, D>
     where
         S: DataMut,
