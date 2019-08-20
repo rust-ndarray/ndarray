@@ -824,6 +824,7 @@ mod blas_tests {
     }
 }
 
+#[allow(dead_code)]
 fn general_outer_to_dyn<Sa, Sb, I, F, T>(
     a: &ArrayBase<Sa, IxDyn>,
     b: &ArrayBase<Sb, I>,
@@ -856,6 +857,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn kron_to_dyn<Sa, I, Sb, T>(a: &ArrayBase<Sa, IxDyn>, b: &ArrayBase<Sb, I>) -> Array<T, IxDyn>
 where
     T: Copy,
@@ -868,6 +870,7 @@ where
     general_outer_to_dyn(a, b, |mut res, x, a| res.assign(&(a * x)))
 }
 
+#[allow(dead_code)]
 fn general_outer_same_size<Sa, I, Sb, F, T>(
     a: &ArrayBase<Sa, I>,
     b: &ArrayBase<Sb, I>,
@@ -892,6 +895,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn kron_same_size<Sa, I, Sb, T>(a: &ArrayBase<Sa, I>, b: &ArrayBase<Sb, I>) -> Array<T, I>
 where
     T: Copy,
