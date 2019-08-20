@@ -657,8 +657,8 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// disjoint).
 ///
 /// The syntax is `multislice!(` *expression, pattern [, pattern [, …]]* `)`,
-/// where *expression* evaluates to a mutable array, and each *pattern* is
-/// either
+/// where *expression* is any valid input to `ArrayViewMut::from()`, and each
+/// *pattern* is either
 ///
 /// * `mut` *s-args-or-expr*: creates an `ArrayViewMut` or
 /// * *s-args-or-expr*: creates an `ArrayView`
@@ -667,9 +667,9 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 /// the [`s!`] macro to create a `&SliceInfo` instance or (2) an expression
 /// that evaluates to a `&SliceInfo` instance.
 ///
-/// **Note** that this macro always mutably borrows the array even if there are
-/// no `mut` patterns. If all you want to do is take read-only slices, you
-/// don't need `multislice!()`; just call
+/// **Note** that *expression* is converted to an `ArrayViewMut` using
+/// `ArrayViewMut::from()` even if there are no `mut` patterns. If all you want
+/// to do is take read-only slices, you don't need `multislice!()`; just call
 /// [`.slice()`](struct.ArrayBase.html#method.slice) multiple times instead.
 ///
 /// `multislice!()` evaluates to a tuple of `ArrayView` and/or `ArrayViewMut`
@@ -697,7 +697,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///
 /// # fn main() {
 /// let mut arr: Array1<_> = (0..12).collect();
-/// let (a, b, c, d) = multislice!(arr, [0..5], mut [6..;2], [1..6], mut [7..;2]);
+/// let (a, b, c, d) = multislice!(&mut arr, [0..5], mut [6..;2], [1..6], mut [7..;2]);
 /// assert_eq!(a, array![0, 1, 2, 3, 4]);
 /// assert_eq!(b, array![6, 8, 10]);
 /// assert_eq!(c, array![1, 2, 3, 4, 5]);
@@ -715,7 +715,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr: Array1<_> = (0..12).collect();
-///   multislice!(arr, [0..5], mut [1..;2]); // panic!
+///   multislice!(&mut arr, [0..5], mut [1..;2]); // panic!
 ///   # }
 ///   ```
 ///
@@ -727,7 +727,7 @@ pub unsafe fn deref_raw_view_mut_into_view_mut_with_life<'a, A, D: Dimension>(
 ///   # use ndarray::prelude::*;
 ///   # fn main() {
 ///   let mut arr: Array1<_> = (0..12).collect();
-///   multislice!(arr, mut [0..5], mut [1..;2]); // panic!
+///   multislice!(&mut arr, mut [0..5], mut [1..;2]); // panic!
 ///   # }
 ///   ```
 #[macro_export]
@@ -985,7 +985,7 @@ macro_rules! multislice(
     ($arr:expr, $($t:tt)*) => {
         {
             let (life, raw_view) = {
-                let mut view = $crate::ArrayBase::view_mut(&mut $arr);
+                let mut view: $crate::ArrayViewMut<_, _> = ::core::convert::From::from($arr);
                 ($crate::life_of_view_mut(&view), view.raw_view_mut())
             };
             $crate::multislice!(@parse raw_view, life, (), (), (), ($($t)*))

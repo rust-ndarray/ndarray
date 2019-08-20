@@ -524,7 +524,7 @@ pub type Ixs = isize;
 /// // - One containing all the odd-index columns in the matrix
 /// let mut h = arr2(&[[0, 1, 2, 3],
 ///                    [4, 5, 6, 7]]);
-/// let (s0, s1) = multislice!(h, mut [.., ..;2], mut [.., 1..;2]);
+/// let (s0, s1) = multislice!(&mut h, mut [.., ..;2], mut [.., 1..;2]);
 /// let i = arr2(&[[0, 2],
 ///                [4, 6]]);
 /// let j = arr2(&[[1, 3],
