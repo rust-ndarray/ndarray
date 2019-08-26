@@ -5,7 +5,6 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use std::ptr::NonNull;
 
 use crate::imp_prelude::*;
 use crate::RawDataClone;
@@ -13,10 +12,10 @@ use crate::RawDataClone;
 impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {
         unsafe {
-            let (data, ptr) = self.data.clone_with_ptr(self.ptr.as_ptr());
+            let (data, ptr) = self.data.clone_with_ptr(self.ptr);
             ArrayBase {
                 data,
-                ptr: NonNull::new(ptr).unwrap(),
+                ptr,
                 dim: self.dim.clone(),
                 strides: self.strides.clone(),
             }
@@ -28,11 +27,7 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     /// potentially more efficient.
     fn clone_from(&mut self, other: &Self) {
         unsafe {
-            self.ptr = NonNull::new(
-                self.data
-                    .clone_from_with_ptr(&other.data, other.ptr.as_ptr()),
-            )
-            .unwrap();
+            self.ptr = self.data.clone_from_with_ptr(&other.data, other.ptr);
             self.dim.clone_from(&other.dim);
             self.strides.clone_from(&other.strides);
         }
