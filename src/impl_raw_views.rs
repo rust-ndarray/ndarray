@@ -16,7 +16,10 @@ where
     pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
         RawArrayView {
             data: RawViewRepr::new(),
-            ptr: NonNull::new(ptr as *mut A).unwrap(),
+            ptr: {
+                debug_assert!(!ptr.is_null());
+                NonNull::new_unchecked(ptr as *mut A)
+            },
             dim,
             strides,
         }
@@ -120,7 +123,10 @@ where
     pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
         RawArrayViewMut {
             data: RawViewRepr::new(),
-            ptr: NonNull::new(ptr).unwrap(),
+            ptr: {
+                debug_assert!(!ptr.is_null());
+                NonNull::new_unchecked(ptr)
+            },
             dim,
             strides,
         }
