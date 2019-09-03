@@ -588,8 +588,12 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(alpha: A,
                     {
                         let a_trans = CblasNoTrans;
                         let a_stride = match layout {
-                            CBLAS_LAYOUT::CblasRowMajor => a.strides()[0].max(k as isize) as blas_index,
-                            CBLAS_LAYOUT::CblasColMajor => a.strides()[1].max(m as isize) as blas_index,
+                            CBLAS_LAYOUT::CblasRowMajor => {
+                                a.strides()[0].max(k as isize) as blas_index
+                            }
+                            CBLAS_LAYOUT::CblasColMajor => {
+                                a.strides()[1].max(m as isize) as blas_index
+                            }
                         };
 
                         let x_stride = x.strides()[0] as blas_index;
