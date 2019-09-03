@@ -28,14 +28,7 @@ addons:
     packages:
       - libopenblas-dev
       - gfortran
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      - libiberty-dev
-      - libgsl0-dev
+      - kcov
 
 before_script:
   - ./ci/before_script.sh

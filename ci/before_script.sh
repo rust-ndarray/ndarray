@@ -18,7 +18,7 @@ cargo_tools() {
         return
     fi
     cargo install cargo-update || echo "cargo-update already installed"
-    cargo install cargo-travis || echo "cargo-travis already installed"
+    cargo install cargo-kcov || echo "cargo-kcov already installed"
     # Update cached binaries
     cargo install-update -a
 }
