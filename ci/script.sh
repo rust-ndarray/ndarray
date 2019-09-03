@@ -21,8 +21,8 @@ check_format() {
 
 # Run the test suite.
 check_tests() {
-    cargo test --all --examples --tests --benches --no-default-features
-    cargo test --all --examples --tests --benches --features "$FEATURES"
+    cargo test --all --no-default-features
+    cargo test --all --features "$FEATURES"
 }
 
 main() {
