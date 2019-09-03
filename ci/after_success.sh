@@ -7,12 +7,16 @@ set -o nounset
 # Exit on any error
 set -o errexit
 
+
 run_kcov() {
+    sh <(cargo kcov --print-install-kcov-sh)
+    KCOV_BIN="./$(ls | grep kcov)/build/src/kcov"
+
     # Run kcov on all the test suites
     cargo kcov --all --no-default-features --output kcov-no-default-features
     cargo kcov --all --features "$FEATURES" --output kcov-features
 
-    kcov --merge kcov \
+    $KCOV_BIN --merge kcov \
          kcov-no-default-features \
          kcov-features
 }
