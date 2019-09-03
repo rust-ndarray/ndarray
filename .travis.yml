@@ -2,13 +2,16 @@ language: rust
 
 sudo: required
 
-rust:
-  - 1.32.0
-  - stable
-  - beta
-  - nightly
-
 matrix:
+  include:
+    - rust: 1.32.0
+      env: FEATURES="blas serde-1 docs"
+    - rust: stable
+      env: FEATURES="blas serde-1 docs"
+    - rust: beta
+      env: FEATURES="blas serde-1 docs"
+    - rust: nightly
+      env: FEATURES="blas serde-1 docs nightly"
   allow_failures:
     - rust: beta
     - rust: nightly
@@ -16,7 +19,6 @@ matrix:
 env:
   global:
     - RUSTFLAGS="-D warnings"
-    - FEATURES="blas serde-1 docs"
 
 cache: cargo
 
