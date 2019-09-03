@@ -14,6 +14,9 @@ rustup_tools() {
 
 # Install cargo tools
 cargo_tools() {
+    if [[ "$TRAVIS_RUST_VERSION" != "stable" ]]; then
+        return
+    fi
     cargo install cargo-update || echo "cargo-update already installed"
     cargo install cargo-travis || echo "cargo-travis already installed"
     # Update cached binaries
