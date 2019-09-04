@@ -64,6 +64,29 @@
 //! }
 //! ```
 //!
+//! ## Axis chunks iterators
+//!
+//! Use the parallel `.axis_chunks_iter()` to process your data in chunks.
+//!
+//! ```
+//! extern crate ndarray;
+//!
+//! use ndarray::Array;
+//! use ndarray::Axis;
+//! use ndarray_parallel::prelude::*;
+//!
+//! fn main() {
+//!     let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
+//!     let mut shapes = Vec::new();
+//!     a.axis_chunks_iter(Axis(0), 3)
+//!      .into_par_iter()
+//!      .map(|chunk| chunk.shape().to_owned())
+//!      .collect_into_vec(&mut shapes);
+//!
+//!     assert_eq!(shapes, [vec![3, 16], vec![1, 16]]);
+//! }
+//! ```
+//!
 //! ## Zip
 //!
 //! Use zip for lock step function application across several arrays

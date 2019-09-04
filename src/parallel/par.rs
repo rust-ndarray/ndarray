@@ -9,6 +9,8 @@ use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
 
+use crate::iter::AxisChunksIter;
+use crate::iter::AxisChunksIterMut;
 use crate::iter::AxisIter;
 use crate::iter::AxisIterMut;
 use crate::Dimension;
@@ -112,6 +114,8 @@ macro_rules! par_iter_wrapper {
 
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
+par_iter_wrapper!(AxisChunksIter, [Sync]);
+par_iter_wrapper!(AxisChunksIterMut, [Send + Sync]);
 
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
