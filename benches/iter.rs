@@ -74,6 +74,27 @@ fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher) {
     bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
 }
 
+#[bench]
+fn iter_rev_step_by_contiguous(bench: &mut Bencher) {
+    let a = Array::linspace(0., 1., 512);
+    bench.iter(|| {
+        a.iter().rev().step_by(2).for_each(|x| {
+            black_box(x);
+        })
+    });
+}
+
+#[bench]
+fn iter_rev_step_by_discontiguous(bench: &mut Bencher) {
+    let mut a = Array::linspace(0., 1., 1024);
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    bench.iter(|| {
+        a.iter().rev().step_by(2).for_each(|x| {
+            black_box(x);
+        })
+    });
+}
+
 const ZIPSZ: usize = 10_000;
 
 #[bench]
