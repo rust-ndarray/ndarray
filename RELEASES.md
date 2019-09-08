@@ -5,9 +5,9 @@ New features
 ------------
 
  - Add `logspace` and `geomspace` constructors
-   ([#617](https://github.com/rust-ndarray/ndarray/pull/617) by @JP-Ellis)
+   ([#617](https://github.com/rust-ndarray/ndarray/pull/617) by [@JP-Ellis])
  - Implement approx traits for `ArrayBase`
-   ([#581](https://github.com/rust-ndarray/ndarray/pull/581) by @jturner314)
+   ([#581](https://github.com/rust-ndarray/ndarray/pull/581) by [@jturner314])
 
 Enhancements
 ------------
@@ -15,9 +15,9 @@ Enhancements
 API changes
 -----------
  - The `into_slice` method on ArrayView is deprecated and renamed to `to_slice`
-   ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by @max-sixty)
+   ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by [@max-sixty])
  - `RcArray` is deprecated in favour of `ArcArray` 
-   ([#560](https://github.com/rust-ndarray/ndarray/pull/560/files) by [@bluss](https://github.com/bluss))
+   ([#560](https://github.com/rust-ndarray/ndarray/pull/560/files) by [@bluss])
 
 Bug fixes
 ---------
@@ -798,3 +798,10 @@ Earlier releases
 
   - First release on crates.io
   - Starting point for evolution to come
+ 
+
+[@bluss]: https://github.com/bluss
+[@jturner314]: https://github.com/jturner314
+[@LukeMathWalker]: https://github.com/LukeMathWalker
+[@max-sixty]: https://github.com/max-sixty
+[@JP-Ellis]: https://github.com/JP-Ellis
