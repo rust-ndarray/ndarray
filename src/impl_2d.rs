@@ -40,7 +40,7 @@ where
     }
 
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
-    #[deprecated(note="Renamed to .nrows(), please use the new name")]
+    #[deprecated(note = "Renamed to .nrows(), please use the new name")]
     pub fn rows(&self) -> usize {
         self.nrows()
     }
@@ -71,7 +71,7 @@ where
     }
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
-    #[deprecated(note="Renamed to .ncols(), please use the new name")]
+    #[deprecated(note = "Renamed to .ncols(), please use the new name")]
     pub fn cols(&self) -> usize {
         self.ncols()
     }
