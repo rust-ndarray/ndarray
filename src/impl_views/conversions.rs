@@ -13,6 +13,7 @@ use crate::imp_prelude::*;
 use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
+use crate::IndexLonger;
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -53,6 +54,36 @@ where
     /// Converts to a raw array view.
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
         unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
+    }
+}
+
+
+/// Methods specific to `ArrayView0`.
+///
+/// ***See also all methods for [`ArrayView`] and [`ArrayBase`]***
+///
+/// [`ArrayBase`]: struct.ArrayBase.html
+/// [`ArrayView`]: struct.ArrayView.html
+impl<'a, A> ArrayView<'a, A, Ix0> {
+    /// Consume the view and returns a reference to the single element in the array.
+    ///
+    /// The lifetime of the returned reference matches the lifetime of the data
+    /// the array view was pointing to.
+    ///
+    /// ```
+    /// use ndarray::{arr0, Array0};
+    ///
+    /// // `Foo` doesn't implement `Clone`.
+    /// #[derive(Debug, Eq, PartialEq)]
+    /// struct Foo;
+    ///
+    /// let array: Array0<Foo> = arr0(Foo);
+    /// let view = array.view();
+    /// let scalar: &Foo = view.into_scalar();
+    /// assert_eq!(scalar, &Foo);
+    /// ```
+    pub fn into_scalar(self) -> &'a A {
+        self.index(Ix0())
     }
 }
 
