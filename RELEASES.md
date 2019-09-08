@@ -16,6 +16,8 @@ API changes
 -----------
  - The `into_slice` method on ArrayView is deprecated and renamed to `to_slice`
    ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by @max-sixty)
+ - `RcArray` is deprecated in favour of `ArcArray` 
+   ([#560](https://github.com/rust-ndarray/ndarray/pull/560/files) by [@bluss](https://github.com/bluss))
 
 Bug fixes
 ---------
