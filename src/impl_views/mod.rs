@@ -18,7 +18,7 @@ use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
 
-/// Methods for read-only array impl_views.
+/// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
     where
         D: Dimension,
@@ -151,7 +151,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     ///
     /// **Example 1**: Split `a` along the first axis, in this case the rows, at
     /// index 1.<br>
-    /// This produces impl_views v1 and v2 of shapes 1 × 4 and 2 × 4:
+    /// This produces views v1 and v2 of shapes 1 × 4 and 2 × 4:
     ///
     /// ```rust
     /// # use ndarray::prelude::*;
@@ -172,7 +172,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     ///
     /// **Example 2**: Split `a` along the second axis, in this case the
     /// columns, at index 2.<br>
-    /// This produces impl_views u1 and u2 of shapes 3 × 2 and 3 × 2:
+    /// This produces views u1 and u2 of shapes 3 × 2 and 3 × 2:
     ///
     /// ```rust
     /// # use ndarray::prelude::*;
@@ -227,7 +227,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
     }
 }
 
-/// Extra indexing methods for array impl_views
+/// Extra indexing methods for array views
 ///
 /// These methods are very similar to regular indexing or calling of the
 /// `get`/`get_mut` methods that we can use on any array or array view. The
@@ -240,7 +240,7 @@ impl<'a, A, D> ArrayView<'a, A, D>
 ///
 /// For `ArrayViewMut` to obey the borrowing rules we have to consume the
 /// view if we call any of these methods. (The equivalent of reborrow is
-/// `.view_mut()` for read-write array impl_views, but if you can use that,
+/// `.view_mut()` for read-write array views, but if you can use that,
 /// then the regular indexing / `get_mut` should suffice, too.)
 ///
 /// ```
@@ -274,7 +274,7 @@ pub trait IndexLonger<I> {
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.get
     ///
@@ -288,7 +288,7 @@ pub trait IndexLonger<I> {
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] (and [`get_mut`][2]) which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.get
     /// [2]: struct.ArrayBase.html#method.get_mut
@@ -302,7 +302,7 @@ pub trait IndexLonger<I> {
     /// view); which we can't do for general arrays.
     ///
     /// See also [the `uget` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.uget
     ///
@@ -324,7 +324,7 @@ impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.get
     ///
@@ -344,7 +344,7 @@ impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
     /// view); which we can't do for general arrays.
     ///
     /// See also [the `uget` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.uget
     ///
@@ -355,7 +355,7 @@ impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
     }
 }
 
-/// Methods for read-write array impl_views.
+/// Methods for read-write array views.
 impl<'a, A, D> ArrayViewMut<'a, A, D>
     where
         D: Dimension,
@@ -489,7 +489,7 @@ impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
     /// not in the `Index` trait.
     ///
     /// See also [the `get_mut` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.get_mut
     ///
@@ -508,7 +508,7 @@ impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
     /// checked access.
     ///
     /// See also [the `get_mut` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.get_mut
     ///
@@ -526,7 +526,7 @@ impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
     /// boundary check.
     ///
     /// See also [the `uget_mut` method][1] which works for all arrays and array
-    /// impl_views.
+    /// views.
     ///
     /// [1]: struct.ArrayBase.html#method.uget_mut
     ///
