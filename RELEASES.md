@@ -6,22 +6,60 @@ New features
 
  - Add `logspace` and `geomspace` constructors
    ([#617](https://github.com/rust-ndarray/ndarray/pull/617) by [@JP-Ellis])
- - Implement approx traits for `ArrayBase`
+ - Implement approx traits for `ArrayBase`. They can be enabled using the `approx` feature-flag.
    ([#581](https://github.com/rust-ndarray/ndarray/pull/581) by [@jturner314])
+ - Add `mean` method
+   ([#580](https://github.com/rust-ndarray/ndarray/pull/580) by [@LukeMathWalker])
+ - Add `Zip::all` to check if all elements of an iterator satisfy a predicate
+   ([#615](https://github.com/rust-ndarray/ndarray/pull/615) by [@mneumann])
+ - Add `CoWArray`, `C`lone `o`n `Write` array
+   ([#632](https://github.com/rust-ndarray/ndarray/pull/632) by [@jturner314] and [@andrei-papou])
+ - Add `as_contiguous` to `ArrayBase`: it takes an array by reference and returns a `CoWArray` in standard layout
+   ([#616](https://github.com/rust-ndarray/ndarray/pull/616) by [@jturner314] and [@andrei-papou])
 
 Enhancements
 ------------
+ - Improved performance for matrix multiplications when using the pure-Rust backend thanks to `matrix-multiply:v0.2`;
+   ([#556](https://github.com/rust-ndarray/ndarray/pull/556) by [@bluss])
+ - Improved performance of `.fold`
+   ([#574](https://github.com/rust-ndarray/ndarray/pull/574) by [@jturner314])
+ - Improved performance of iterators for 1-d arrays
+   ([#614](https://github.com/rust-ndarray/ndarray/pull/614) by [@andrei-papou])
+ - Better formatting for arrays when using the `Debug` formatter
+   ([#606](https://github.com/rust-ndarray/ndarray/pull/606) by [@andrei-papou] and [@LukeMathWalker])
+ - Arithmetic operations between arrays with different element types are now allowed when there is a scalar equivalent 
+   ([#588](https://github.com/rust-ndarray/ndarray/pull/588) by [@jturner314])
+ - `.map_axis/_mut()` won't panic on 0-length `axis`
+   ([#579](https://github.com/rust-ndarray/ndarray/pull/612) by [@andrei-papou]) 
+ - Various documentation improvements (by [@jturner314], [@JP-Ellis])
+ 
 
 API changes
 -----------
  - The `into_slice` method on ArrayView is deprecated and renamed to `to_slice`
    ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by [@max-sixty])
  - `RcArray` is deprecated in favour of `ArcArray` 
-   ([#560](https://github.com/rust-ndarray/ndarray/pull/560/files) by [@bluss])
+   ([#560](https://github.com/rust-ndarray/ndarray/pull/560) by [@bluss])
+ - `mean_axis` returns `Option<A>` instead of `A`, to avoid panicking when invoked on a 0-length axis 
+   ([#580](https://github.com/rust-ndarray/ndarray/pull/580) by [@LukeMathWalker])
 
 Bug fixes
 ---------
+ - Prevent overflow when computing strides in `do_slice`
+   ([#575](https://github.com/rust-ndarray/ndarray/pull/575) by [@jturner314])
+ - Fix issue with BLAS matrix-vector multiplication for array with only 1 non-trivial dimension
+   ([#585](https://github.com/rust-ndarray/ndarray/pull/585) by [@sebasv])
+ - Fix offset computation to avoid UB/panic when slicing in some edge cases
+   ([#636](https://github.com/rust-ndarray/ndarray/pull/636) by [@jturner314])
 
+
+Other changes
+-------------
+ - Removed the `rustc-serialize` feature-flag. `serde` is the recommended feature-flag to enable serialization.
+   ([#557](https://github.com/rust-ndarray/ndarray/pull/557) by [@bluss])
+ - `ndarray-parallel` has been merged into `ndarray`. Use the `rayon` feature-flag to get access to parallel iterators and
+   other parallelized methods.
+   ([#563](https://github.com/rust-ndarray/ndarray/pull/563/files) by [@bluss])
 
 Version 0.12.1 (2018-11-21)
 ===========================
@@ -805,3 +843,6 @@ Earlier releases
 [@LukeMathWalker]: https://github.com/LukeMathWalker
 [@max-sixty]: https://github.com/max-sixty
 [@JP-Ellis]: https://github.com/JP-Ellis
+[@sebasv]: https://github.com/sebasv
+[@andrei-papou]: https://github.com/sebasv
+[@mneumann]: https://github.com/mneumann
