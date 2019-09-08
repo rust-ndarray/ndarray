@@ -1852,8 +1852,8 @@ fn test_swap() {
     let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
     let b = a.clone();
 
-    for i in 0..a.rows() {
-        for j in i + 1..a.cols() {
+    for i in 0..a.nrows() {
+        for j in i + 1..a.ncols() {
             a.swap((i, j), (j, i));
         }
     }
@@ -1865,8 +1865,8 @@ fn test_uswap() {
     let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
     let b = a.clone();
 
-    for i in 0..a.rows() {
-        for j in i + 1..a.cols() {
+    for i in 0..a.nrows() {
+        for j in i + 1..a.ncols() {
             unsafe { a.uswap((i, j), (j, i)) };
         }
     }

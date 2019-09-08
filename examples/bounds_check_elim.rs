@@ -88,8 +88,8 @@ pub fn test1d_while(a: &Array1<f64>) -> f64 {
 #[no_mangle]
 pub fn test2d_ranges(a: &Array2<f64>) -> f64 {
     let mut sum = 0.;
-    for i in 0..a.rows() {
-        for j in 0..a.cols() {
+    for i in 0..a.nrows() {
+        for j in 0..a.ncols() {
             sum += a[[i, j]];
         }
     }
@@ -100,9 +100,9 @@ pub fn test2d_ranges(a: &Array2<f64>) -> f64 {
 pub fn test2d_whiles(a: &Array2<f64>) -> f64 {
     let mut sum = 0.;
     let mut i = 0;
-    while i < a.rows() {
+    while i < a.nrows() {
         let mut j = 0;
-        while j < a.cols() {
+        while j < a.ncols() {
             sum += a[[i, j]];
             j += 1;
         }
