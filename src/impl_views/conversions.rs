@@ -57,7 +57,6 @@ where
     }
 }
 
-
 /// Methods specific to `ArrayView0`.
 ///
 /// ***See also all methods for [`ArrayView`] and [`ArrayBase`]***
