@@ -7,11 +7,25 @@
 
 use ndarray::prelude::*;
 use ndarray::Ix;
-use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice};
+use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice, Zip};
 
 use itertools::assert_equal;
 use itertools::{enumerate, rev};
 use std::iter::FromIterator;
+
+macro_rules! assert_panics {
+    ($body:expr) => {
+        if let Ok(v) = ::std::panic::catch_unwind(|| $body) {
+            panic!("assertion failed: should_panic; \
+            non-panicking result: {:?}", v);
+        }
+    };
+    ($body:expr, $($arg:tt)*) => {
+        if let Ok(_) = ::std::panic::catch_unwind(|| $body) {
+            panic!($($arg)*);
+        }
+    };
+}
 
 #[test]
 fn double_ended() {
@@ -261,6 +275,68 @@ fn axis_iter() {
 }
 
 #[test]
+fn axis_iter_split_at() {
+    let a = Array::from_iter(0..5);
+    let iter = a.axis_iter(Axis(0));
+    let all: Vec<_> = iter.clone().collect();
+    for mid in 0..=all.len() {
+        let (left, right) = iter.clone().split_at(mid);
+        assert_eq!(&all[..mid], &left.collect::<Vec<_>>()[..]);
+        assert_eq!(&all[mid..], &right.collect::<Vec<_>>()[..]);
+    }
+}
+
+#[test]
+fn axis_iter_split_at_partially_consumed() {
+    let a = Array::from_iter(0..5);
+    let mut iter = a.axis_iter(Axis(0));
+    while iter.next().is_some() {
+        let remaining: Vec<_> = iter.clone().collect();
+        for mid in 0..=remaining.len() {
+            let (left, right) = iter.clone().split_at(mid);
+            assert_eq!(&remaining[..mid], &left.collect::<Vec<_>>()[..]);
+            assert_eq!(&remaining[mid..], &right.collect::<Vec<_>>()[..]);
+        }
+    }
+}
+
+#[test]
+fn axis_iter_zip() {
+    let a = Array::from_iter(0..5);
+    let iter = a.axis_iter(Axis(0));
+    let mut b = Array::zeros(5);
+    Zip::from(&mut b).and(iter).apply(|b, a| *b = a[()]);
+    assert_eq!(a, b);
+}
+
+#[test]
+fn axis_iter_zip_partially_consumed() {
+    let a = Array::from_iter(0..5);
+    let mut iter = a.axis_iter(Axis(0));
+    let mut consumed = 0;
+    while iter.next().is_some() {
+        consumed += 1;
+        let mut b = Array::zeros(a.len() - consumed);
+        Zip::from(&mut b).and(iter.clone()).apply(|b, a| *b = a[()]);
+        assert_eq!(a.slice(s![consumed..]), b);
+    }
+}
+
+#[test]
+fn axis_iter_zip_partially_consumed_discontiguous() {
+    let a = Array::from_iter(0..5);
+    let mut iter = a.axis_iter(Axis(0));
+    let mut consumed = 0;
+    while iter.next().is_some() {
+        consumed += 1;
+        let mut b = Array::zeros((a.len() - consumed) * 2);
+        b.slice_collapse(s![..;2]);
+        Zip::from(&mut b).and(iter.clone()).apply(|b, a| *b = a[()]);
+        assert_eq!(a.slice(s![consumed..]), b);
+    }
+}
+
+#[test]
 fn outer_iter_corner_cases() {
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
     assert_equal(a2.outer_iter(), vec![aview1(&[]); 0]);
@@ -365,6 +441,89 @@ fn axis_chunks_iter() {
 }
 
 #[test]
+fn axis_iter_mut_split_at() {
+    let mut a = Array::from_iter(0..5);
+    let mut a_clone = a.clone();
+    let all: Vec<_> = a_clone.axis_iter_mut(Axis(0)).collect();
+    for mid in 0..=all.len() {
+        let (left, right) = a.axis_iter_mut(Axis(0)).split_at(mid);
+        assert_eq!(&all[..mid], &left.collect::<Vec<_>>()[..]);
+        assert_eq!(&all[mid..], &right.collect::<Vec<_>>()[..]);
+    }
+}
+
+#[test]
+fn axis_iter_mut_split_at_partially_consumed() {
+    let mut a = Array::from_iter(0..5);
+    for consumed in 1..=a.len() {
+        for mid in 0..=(a.len() - consumed) {
+            let mut a_clone = a.clone();
+            let remaining: Vec<_> = {
+                let mut iter = a_clone.axis_iter_mut(Axis(0));
+                for _ in 0..consumed {
+                    iter.next();
+                }
+                iter.collect()
+            };
+            let (left, right) = {
+                let mut iter = a.axis_iter_mut(Axis(0));
+                for _ in 0..consumed {
+                    iter.next();
+                }
+                iter.split_at(mid)
+            };
+            assert_eq!(&remaining[..mid], &left.collect::<Vec<_>>()[..]);
+            assert_eq!(&remaining[mid..], &right.collect::<Vec<_>>()[..]);
+        }
+    }
+}
+
+#[test]
+fn axis_iter_mut_zip() {
+    let orig = Array::from_iter(0..5);
+    let mut cloned = orig.clone();
+    let iter = cloned.axis_iter_mut(Axis(0));
+    let mut b = Array::zeros(5);
+    Zip::from(&mut b).and(iter).apply(|b, mut a| {
+        a[()] += 1;
+        *b = a[()];
+    });
+    assert_eq!(cloned, b);
+    assert_eq!(cloned, orig + 1);
+}
+
+#[test]
+fn axis_iter_mut_zip_partially_consumed() {
+    let mut a = Array::from_iter(0..5);
+    for consumed in 1..=a.len() {
+        let remaining = a.len() - consumed;
+        let mut iter = a.axis_iter_mut(Axis(0));
+        for _ in 0..consumed {
+            iter.next();
+        }
+        let mut b = Array::zeros(remaining);
+        Zip::from(&mut b).and(iter).apply(|b, a| *b = a[()]);
+        assert_eq!(a.slice(s![consumed..]), b);
+    }
+}
+
+#[test]
+fn axis_iter_mut_zip_partially_consumed_discontiguous() {
+    let mut a = Array::from_iter(0..5);
+    for consumed in 1..=a.len() {
+        let remaining = a.len() - consumed;
+        let mut iter = a.axis_iter_mut(Axis(0));
+        for _ in 0..consumed {
+            iter.next();
+        }
+        let mut b = Array::zeros(remaining * 2);
+        b.slice_collapse(s![..;2]);
+        Zip::from(&mut b).and(iter).apply(|b, a| *b = a[()]);
+        assert_eq!(a.slice(s![consumed..]), b);
+    }
+}
+
+#[test]
 fn axis_chunks_iter_corner_cases() {
     // examples provided by @bluss in PR #65
     // these tests highlight corner cases of the axis_chunks_iter implementation
@@ -427,6 +586,46 @@ fn axis_chunks_iter_zero_stride() {
     }
 }
 
+#[should_panic]
+#[test]
+fn axis_chunks_iter_zero_chunk_size() {
+    let a = Array::from_iter(0..5);
+    a.axis_chunks_iter(Axis(0), 0);
+}
+
+#[test]
+fn axis_chunks_iter_zero_axis_len() {
+    let a = Array::from_iter(0..0);
+    assert!(a.axis_chunks_iter(Axis(0), 5).next().is_none());
+}
+
+#[test]
+fn axis_chunks_iter_split_at() {
+    let mut a = Array2::<usize>::zeros((11, 3));
+    a.iter_mut().enumerate().for_each(|(i, elt)| *elt = i);
+    for source in &[
+        a.slice(s![..0, ..]),
+        a.slice(s![..1, ..]),
+        a.slice(s![..5, ..]),
+        a.slice(s![..10, ..]),
+        a.slice(s![..11, ..]),
+        a.slice(s![.., ..0]),
+    ] {
+        let chunks_iter = source.axis_chunks_iter(Axis(0), 5);
+        let all_chunks: Vec<_> = chunks_iter.clone().collect();
+        let n_chunks = chunks_iter.len();
+        assert_eq!(n_chunks, all_chunks.len());
+        for index in 0..=n_chunks {
+            let (left, right) = chunks_iter.clone().split_at(index);
+            assert_eq!(&all_chunks[..index], &left.collect::<Vec<_>>()[..]);
+            assert_eq!(&all_chunks[index..], &right.collect::<Vec<_>>()[..]);
+        }
+        assert_panics!({
+            chunks_iter.split_at(n_chunks + 1);
+        });
+    }
+}
+
 #[test]
 fn axis_chunks_iter_mut() {
     let a = ArcArray::from_iter(0..24);
@@ -436,6 +635,19 @@ fn axis_chunks_iter_mut() {
     let mut col0 = it.next().unwrap();
     col0[[0, 0, 0]] = 42;
     assert_eq!(col0, arr3(&[[[42, 1], [2, 3]], [[12, 13], [14, 15]]]));
+}
+
+#[should_panic]
+#[test]
+fn axis_chunks_iter_mut_zero_chunk_size() {
+    let mut a = Array::from_iter(0..5);
+    a.axis_chunks_iter_mut(Axis(0), 0);
+}
+
+#[test]
+fn axis_chunks_iter_mut_zero_axis_len() {
+    let mut a = Array::from_iter(0..0);
+    assert!(a.axis_chunks_iter_mut(Axis(0), 5).next().is_none());
 }
 
 #[test]
@@ -562,6 +774,74 @@ fn test_fold() {
     let mut a = Array0::<i32>::default(());
     a += 1;
     assert_eq!(a.iter().fold(0, |acc, &x| acc + x), 1);
+}
+
+#[test]
+fn nth_back_examples() {
+    let mut a: Array1<i32> = (0..256).collect();
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    assert_eq!(a.iter().nth_back(0), Some(&a[a.len() - 1]));
+    assert_eq!(a.iter().nth_back(1), Some(&a[a.len() - 2]));
+    assert_eq!(a.iter().nth_back(a.len() - 2), Some(&a[1]));
+    assert_eq!(a.iter().nth_back(a.len() - 1), Some(&a[0]));
+    assert_eq!(a.iter().nth_back(a.len()), None);
+    assert_eq!(a.iter().nth_back(a.len() + 1), None);
+    assert_eq!(a.iter().nth_back(a.len() + 2), None);
+}
+
+#[test]
+fn nth_back_zero_n() {
+    let mut a: Array1<i32> = (0..256).collect();
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    let mut iter1 = a.iter();
+    let mut iter2 = a.iter();
+    for _ in 0..(a.len() + 1) {
+        assert_eq!(iter1.nth_back(0), iter2.next_back());
+        assert_eq!(iter1.len(), iter2.len());
+    }
+}
+
+#[test]
+fn nth_back_nonzero_n() {
+    let mut a: Array1<i32> = (0..256).collect();
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    let mut iter1 = a.iter();
+    let mut iter2 = a.iter();
+    for _ in 0..(a.len() / 3 + 1) {
+        assert_eq!(iter1.nth_back(2), {
+            iter2.next_back();
+            iter2.next_back();
+            iter2.next_back()
+        });
+        assert_eq!(iter1.len(), iter2.len());
+    }
+}
+
+#[test]
+fn nth_back_past_end() {
+    let mut a: Array1<i32> = (0..256).collect();
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    let mut iter = a.iter();
+    assert_eq!(iter.nth_back(a.len()), None);
+    assert_eq!(iter.next(), None);
+}
+
+#[test]
+fn nth_back_partially_consumed() {
+    let mut a: Array1<i32> = (0..256).collect();
+    a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
+    let mut iter = a.iter();
+    iter.next();
+    iter.next_back();
+    assert_eq!(iter.len(), a.len() - 2);
+    assert_eq!(iter.nth_back(1), Some(&a[a.len() - 3]));
+    assert_eq!(iter.len(), a.len() - 4);
+    assert_eq!(iter.nth_back(a.len() - 6), Some(&a[2]));
+    assert_eq!(iter.len(), 1);
+    assert_eq!(iter.next(), Some(&a[1]));
+    assert_eq!(iter.len(), 0);
+    assert_eq!(iter.next(), None);
+    assert_eq!(iter.next_back(), None);
 }
 
 #[test]

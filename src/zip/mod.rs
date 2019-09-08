@@ -755,8 +755,44 @@ macro_rules! map_impl {
             /// Apply a fold function to all elements of the input arrays,
             /// visiting elements in lock step.
             ///
-            /// The fold continues while the return value is a
-            /// `FoldWhile::Continue`.
+            /// # Example
+            ///
+            /// The expression `tr(AᵀB)` can be more efficiently computed as
+            /// the equivalent expression `∑ᵢⱼ(A∘B)ᵢⱼ` (i.e. the sum of the
+            /// elements of the entry-wise product). It would be possible to
+            /// evaluate this expression by first computing the entry-wise
+            /// product, `A∘B`, and then computing the elementwise sum of that
+            /// product, but it's possible to do this in a single loop (and
+            /// avoid an extra heap allocation if `A` and `B` can't be
+            /// consumed) by using `Zip`:
+            ///
+            /// ```
+            /// use ndarray::{array, Zip};
+            ///
+            /// let a = array![[1, 5], [3, 7]];
+            /// let b = array![[2, 4], [8, 6]];
+            ///
+            /// // Without using `Zip`. This involves two loops and an extra
+            /// // heap allocation for the result of `&a * &b`.
+            /// let sum_prod_nonzip = (&a * &b).sum();
+            /// // Using `Zip`. This is a single loop without any heap allocations.
+            /// let sum_prod_zip = Zip::from(&a).and(&b).fold(0, |acc, a, b| acc + a * b);
+            ///
+            /// assert_eq!(sum_prod_nonzip, sum_prod_zip);
+            /// ```
+            pub fn fold<F, Acc>(mut self, acc: Acc, mut function: F) -> Acc
+            where
+                F: FnMut(Acc, $($p::Item),*) -> Acc,
+            {
+                self.apply_core(acc, move |acc, args| {
+                    let ($($p,)*) = args;
+                    FoldWhile::Continue(function(acc, $($p),*))
+                }).into_inner()
+            }
+
+            /// Apply a fold function to the input arrays while the return
+            /// value is `FoldWhile::Continue`, visiting elements in lock step.
+            ///
             pub fn fold_while<F, Acc>(mut self, acc: Acc, mut function: F)
                 -> FoldWhile<Acc>
                 where F: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>

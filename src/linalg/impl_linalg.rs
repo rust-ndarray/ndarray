@@ -609,10 +609,18 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
             ($ty:ty, $gemv:ident) => {
                 if let Some(layout) = blas_layout::<$ty, _>(&a) {
                     if blas_compat_1d::<$ty, _>(&x) && blas_compat_1d::<$ty, _>(&y) {
+                        // Determine stride between rows or columns. Note that the stride is
+                        // adjusted to at least `k` or `m` to handle the case of a matrix with a
+                        // trivial (length 1) dimension, since the stride for the trivial dimension
+                        // may be arbitrary.
                         let a_trans = CblasNoTrans;
                         let a_stride = match layout {
-                            CBLAS_LAYOUT::CblasRowMajor => a.strides()[0] as blas_index,
-                            CBLAS_LAYOUT::CblasColMajor => a.strides()[1] as blas_index,
+                            CBLAS_LAYOUT::CblasRowMajor => {
+                                a.strides()[0].max(k as isize) as blas_index
+                            }
+                            CBLAS_LAYOUT::CblasColMajor => {
+                                a.strides()[1].max(m as isize) as blas_index
+                            }
                         };
 
                         let x_stride = x.strides()[0] as blas_index;

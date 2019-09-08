@@ -1009,7 +1009,7 @@ where
     /// The last view may have less elements if `size` does not divide
     /// the axis' dimension.
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds or if `size` is zero.
     ///
     /// ```
     /// use ndarray::Array;
@@ -1040,7 +1040,7 @@ where
     ///
     /// Iterator element is `ArrayViewMut<A, D>`
     ///
-    /// **Panics** if `axis` is out of bounds.
+    /// **Panics** if `axis` is out of bounds or if `size` is zero.
     pub fn axis_chunks_iter_mut(&mut self, axis: Axis, size: usize) -> AxisChunksIterMut<'_, A, D>
     where
         S: DataMut,
@@ -1121,6 +1121,28 @@ where
     /// **Panics** if any dimension of `window_size` is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
     /// number of array axes.)
+    ///
+    /// This is an illustration of the 2×2 windows in a 3×4 array:
+    ///
+    /// ```text
+    ///          ──▶ Axis(1)
+    ///
+    ///      │   ┏━━━━━┳━━━━━┱─────┬─────┐   ┌─────┲━━━━━┳━━━━━┱─────┐   ┌─────┬─────┲━━━━━┳━━━━━┓
+    ///      ▼   ┃ a₀₀ ┃ a₀₁ ┃     │     │   │     ┃ a₀₁ ┃ a₀₂ ┃     │   │     │     ┃ a₀₂ ┃ a₀₃ ┃
+    /// Axis(0)  ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────╊━━━━━╋━━━━━╉─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
+    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     ┃ a₁₁ ┃ a₁₂ ┃     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
+    ///          ┡━━━━━╇━━━━━╃─────┼─────┤   ├─────╄━━━━━╇━━━━━╃─────┤   ├─────┼─────╄━━━━━╇━━━━━┩
+    ///          │     │     │     │     │   │     │     │     │     │   │     │     │     │     │
+    ///          └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘
+    ///
+    ///          ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐
+    ///          │     │     │     │     │   │     │     │     │     │   │     │     │     │     │
+    ///          ┢━━━━━╈━━━━━╅─────┼─────┤   ├─────╆━━━━━╈━━━━━╅─────┤   ├─────┼─────╆━━━━━╈━━━━━┪
+    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     ┃ a₁₁ ┃ a₁₂ ┃     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
+    ///          ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────╊━━━━━╋━━━━━╉─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
+    ///          ┃ a₂₀ ┃ a₂₁ ┃     │     │   │     ┃ a₂₁ ┃ a₂₂ ┃     │   │     │     ┃ a₂₂ ┃ a₂₃ ┃
+    ///          ┗━━━━━┻━━━━━┹─────┴─────┘   └─────┺━━━━━┻━━━━━┹─────┘   └─────┴─────┺━━━━━┻━━━━━┛
+    /// ```
     pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
