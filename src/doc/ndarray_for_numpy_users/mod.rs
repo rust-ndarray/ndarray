@@ -554,7 +554,7 @@
 //! NumPy | `ndarray` | Notes
 //! ------|-----------|------
 //! `len(a)` or `a.shape[0]` | [`a.nrows()`][.nrows()] | get the number of rows in a 2-D array
-//! `a.shape[1]` | [`a.cols()`][.cols()] | get the number of columns in a 2-D array
+//! `a.shape[1]` | [`a.ncols()`][.ncols()] | get the number of columns in a 2-D array
 //! `a[1]` or `a[1,:]` | [`a.row(1)`][.row()] or [`a.row_mut(1)`][.row_mut()] | view (or mutable view) of row 1 in a 2-D array
 //! `a[:,4]` | [`a.column(4)`][.column()] or [`a.column_mut(4)`][.column_mut()] | view (or mutable view) of column 4 in a 2-D array
 //! `a.shape[0] == a.shape[1]` | [`a.is_square()`][.is_square()] | check if the array is square
@@ -571,7 +571,7 @@
 //! [.assign()]: ../../struct.ArrayBase.html#method.assign
 //! [.axis_iter()]: ../../struct.ArrayBase.html#method.axis_iter
 //! [azip!]: ../../macro.azip.html
-//! [.cols()]: ../../struct.ArrayBase.html#method.cols
+//! [.ncols()]: ../../struct.ArrayBase.html#method.ncols
 //! [.column()]: ../../struct.ArrayBase.html#method.column
 //! [.column_mut()]: ../../struct.ArrayBase.html#method.column_mut
 //! [CowArray]: ../../type.CowArray.html

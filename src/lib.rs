@@ -409,7 +409,7 @@ pub type Ixs = isize;
 /// Zip::from(a.genrows())
 ///     .and(&mut b)
 ///     .apply(|a_row, b_elt| {
-///         *b_elt = a_row[a.cols() - 1] - a_row[0];
+///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
 ///     });
 /// ```
 ///
