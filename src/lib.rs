@@ -153,6 +153,7 @@ pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
 mod error;
+mod extension;
 mod geomspace;
 mod indexes;
 mod iterators;

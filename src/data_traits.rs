@@ -8,6 +8,8 @@
 
 //! The data (inner representation) traits for ndarray
 
+use crate::extension::nonnull::nonnull_from_vec_data;
+use rawpointer::PointerExt;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 use std::sync::Arc;
@@ -224,7 +226,7 @@ where
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.ptr = NonNull::new(rvec.as_mut_ptr().offset(our_off)).unwrap();
+            self_.ptr = nonnull_from_vec_data(rvec).offset(our_off);
         }
     }
 
@@ -301,13 +303,13 @@ where
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         let mut u = self.clone();
-        let mut new_ptr = u.0.as_mut_ptr();
+        let mut new_ptr = nonnull_from_vec_data(&mut u.0);
         if size_of::<A>() != 0 {
             let our_off =
                 (ptr.as_ptr() as isize - self.0.as_ptr() as isize) / mem::size_of::<A>() as isize;
             new_ptr = new_ptr.offset(our_off);
         }
-        (u, NonNull::new(new_ptr).unwrap())
+        (u, new_ptr)
     }
 
     unsafe fn clone_from_with_ptr(
@@ -321,7 +323,7 @@ where
             0
         };
         self.0.clone_from(&other.0);
-        NonNull::new(self.0.as_mut_ptr().offset(our_off)).unwrap()
+        nonnull_from_vec_data(&mut self.0).offset(our_off)
     }
 }
 

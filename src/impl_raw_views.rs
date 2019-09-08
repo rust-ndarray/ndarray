@@ -1,6 +1,5 @@
-use std::ptr::NonNull;
-
 use crate::dimension::{self, stride_offset};
+use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
 use crate::{is_aligned, StrideShape};
 
@@ -16,10 +15,7 @@ where
     pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
         RawArrayView {
             data: RawViewRepr::new(),
-            ptr: {
-                debug_assert!(!ptr.is_null());
-                NonNull::new_unchecked(ptr as *mut A)
-            },
+            ptr: nonnull_debug_checked_from_ptr(ptr as *mut _),
             dim,
             strides,
         }
@@ -123,10 +119,7 @@ where
     pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
         RawArrayViewMut {
             data: RawViewRepr::new(),
-            ptr: {
-                debug_assert!(!ptr.is_null());
-                NonNull::new_unchecked(ptr)
-            },
+            ptr: nonnull_debug_checked_from_ptr(ptr),
             dim,
             strides,
         }

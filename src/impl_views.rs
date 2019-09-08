@@ -6,12 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ptr::NonNull;
 use std::slice;
 
 use crate::arraytraits::array_out_of_bounds;
 use crate::dimension;
 use crate::error::ShapeError;
+use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
 use crate::{is_aligned, NdIndex, StrideShape};
 
@@ -488,7 +488,7 @@ where
     pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
         ArrayView {
             data: ViewRepr::new(),
-            ptr: NonNull::new(ptr as *mut A).unwrap(),
+            ptr: nonnull_debug_checked_from_ptr(ptr as *mut _),
             dim,
             strides,
         }
@@ -535,7 +535,7 @@ where
         }
         ArrayViewMut {
             data: ViewRepr::new(),
-            ptr: NonNull::new(ptr).unwrap(),
+            ptr: nonnull_debug_checked_from_ptr(ptr),
             dim,
             strides,
         }

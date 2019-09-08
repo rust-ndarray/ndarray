@@ -9,9 +9,9 @@
 use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
-use std_ptr::NonNull;
 
 use itertools::{izip, zip};
+use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
 
@@ -469,7 +469,7 @@ where
             indices,
         );
         unsafe {
-            self.ptr = NonNull::new(self.ptr.as_ptr().offset(offset)).unwrap();
+            self.ptr = self.ptr.offset(offset);
         }
         debug_assert!(self.pointer_is_inbounds());
     }
@@ -702,7 +702,7 @@ where
     /// **Panics** if `axis` or `index` is out of bounds.
     pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
         let offset = dimension::do_collapse_axis(&mut self.dim, &self.strides, axis.index(), index);
-        self.ptr = unsafe { NonNull::new(self.ptr.as_ptr().offset(offset)).unwrap() };
+        self.ptr = unsafe { self.ptr.offset(offset) };
         debug_assert!(self.pointer_is_inbounds());
     }
 
@@ -1723,8 +1723,7 @@ where
             let s = self.strides.axis(axis) as Ixs;
             let m = self.dim.axis(axis);
             if m != 0 {
-                self.ptr =
-                    NonNull::new(self.ptr.as_ptr().offset(stride_offset(m - 1, s as Ix))).unwrap();
+                self.ptr = self.ptr.offset(stride_offset(m - 1, s as Ix));
             }
             self.strides.set_axis(axis, (-s) as Ix);
         }
