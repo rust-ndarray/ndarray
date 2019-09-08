@@ -31,6 +31,9 @@ Enhancements
    ([#588](https://github.com/rust-ndarray/ndarray/pull/588) by [@jturner314])
  - `.map_axis/_mut()` won't panic on 0-length `axis`
    ([#579](https://github.com/rust-ndarray/ndarray/pull/612) by [@andrei-papou]) 
+ - `ndarray-parallel` has been merged into `ndarray`. Use the `rayon` feature-flag to get access to parallel iterators and
+   other parallelized methods.
+   ([#563](https://github.com/rust-ndarray/ndarray/pull/563/files) by [@bluss])
  - Various documentation improvements (by [@jturner314], [@JP-Ellis])
  
 
@@ -57,9 +60,6 @@ Other changes
 -------------
  - Removed the `rustc-serialize` feature-flag. `serde` is the recommended feature-flag to enable serialization.
    ([#557](https://github.com/rust-ndarray/ndarray/pull/557) by [@bluss])
- - `ndarray-parallel` has been merged into `ndarray`. Use the `rayon` feature-flag to get access to parallel iterators and
-   other parallelized methods.
-   ([#563](https://github.com/rust-ndarray/ndarray/pull/563/files) by [@bluss])
 
 Version 0.12.1 (2018-11-21)
 ===========================
