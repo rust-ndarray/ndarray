@@ -18,10 +18,10 @@ use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
 
-/// Methods for read-only array views.
+/// Methods for read-only array impl_views.
 impl<'a, A, D> ArrayView<'a, A, D>
-where
-    D: Dimension,
+    where
+        D: Dimension,
 {
     /// Create a read-only array view borrowing its data from a slice.
     ///
@@ -48,8 +48,8 @@ where
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
     pub fn from_shape<Sh>(shape: Sh, xs: &'a [A]) -> Result<Self, ShapeError>
-    where
-        Sh: Into<StrideShape<D>>,
+        where
+            Sh: Into<StrideShape<D>>,
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_impl(shape.into(), xs)
@@ -104,8 +104,8 @@ where
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
-    where
-        Sh: Into<StrideShape<D>>,
+        where
+            Sh: Into<StrideShape<D>>,
     {
         RawArrayView::from_shape_ptr(shape, ptr).deref_into_view()
     }
@@ -113,8 +113,8 @@ where
     /// Convert the view into an `ArrayView<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
     pub fn reborrow<'b>(self) -> ArrayView<'b, A, D>
-    where
-        'a: 'b,
+        where
+            'a: 'b,
     {
         unsafe { ArrayView::new_(self.as_ptr(), self.dim, self.strides) }
     }
@@ -151,7 +151,7 @@ where
     ///
     /// **Example 1**: Split `a` along the first axis, in this case the rows, at
     /// index 1.<br>
-    /// This produces views v1 and v2 of shapes 1 × 4 and 2 × 4:
+    /// This produces impl_views v1 and v2 of shapes 1 × 4 and 2 × 4:
     ///
     /// ```rust
     /// # use ndarray::prelude::*;
@@ -172,7 +172,7 @@ where
     ///
     /// **Example 2**: Split `a` along the second axis, in this case the
     /// columns, at index 2.<br>
-    /// This produces views u1 and u2 of shapes 3 × 2 and 3 × 2:
+    /// This produces impl_views u1 and u2 of shapes 3 × 2 and 3 × 2:
     ///
     /// ```rust
     /// # use ndarray::prelude::*;
@@ -227,7 +227,7 @@ where
     }
 }
 
-/// Extra indexing methods for array views
+/// Extra indexing methods for array impl_views
 ///
 /// These methods are very similar to regular indexing or calling of the
 /// `get`/`get_mut` methods that we can use on any array or array view. The
@@ -240,7 +240,7 @@ where
 ///
 /// For `ArrayViewMut` to obey the borrowing rules we have to consume the
 /// view if we call any of these methods. (The equivalent of reborrow is
-/// `.view_mut()` for read-write array views, but if you can use that,
+/// `.view_mut()` for read-write array impl_views, but if you can use that,
 /// then the regular indexing / `get_mut` should suffice, too.)
 ///
 /// ```
@@ -274,7 +274,7 @@ pub trait IndexLonger<I> {
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.get
     ///
@@ -288,7 +288,7 @@ pub trait IndexLonger<I> {
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] (and [`get_mut`][2]) which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.get
     /// [2]: struct.ArrayBase.html#method.get_mut
@@ -302,7 +302,7 @@ pub trait IndexLonger<I> {
     /// view); which we can't do for general arrays.
     ///
     /// See also [the `uget` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.uget
     ///
@@ -311,9 +311,9 @@ pub trait IndexLonger<I> {
 }
 
 impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
-where
-    I: NdIndex<D>,
-    D: Dimension,
+    where
+        I: NdIndex<D>,
+        D: Dimension,
 {
     type Output = &'a A;
 
@@ -324,7 +324,7 @@ where
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.get
     ///
@@ -344,7 +344,7 @@ where
     /// view); which we can't do for general arrays.
     ///
     /// See also [the `uget` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.uget
     ///
@@ -355,10 +355,10 @@ where
     }
 }
 
-/// Methods for read-write array views.
+/// Methods for read-write array impl_views.
 impl<'a, A, D> ArrayViewMut<'a, A, D>
-where
-    D: Dimension,
+    where
+        D: Dimension,
 {
     /// Create a read-write array view borrowing its data from a slice.
     ///
@@ -386,8 +386,8 @@ where
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
     pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A]) -> Result<Self, ShapeError>
-    where
-        Sh: Into<StrideShape<D>>,
+        where
+            Sh: Into<StrideShape<D>>,
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_impl(shape.into(), xs)
@@ -442,8 +442,8 @@ where
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
-    where
-        Sh: Into<StrideShape<D>>,
+        where
+            Sh: Into<StrideShape<D>>,
     {
         RawArrayViewMut::from_shape_ptr(shape, ptr).deref_into_view_mut()
     }
@@ -451,8 +451,8 @@ where
     /// Convert the view into an `ArrayViewMut<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
     pub fn reborrow<'b>(mut self) -> ArrayViewMut<'b, A, D>
-    where
-        'a: 'b,
+        where
+            'a: 'b,
     {
         unsafe { ArrayViewMut::new_(self.as_mut_ptr(), self.dim, self.strides) }
     }
@@ -476,9 +476,9 @@ where
 }
 
 impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
-where
-    I: NdIndex<D>,
-    D: Dimension,
+    where
+        I: NdIndex<D>,
+        D: Dimension,
 {
     type Output = &'a mut A;
 
@@ -489,7 +489,7 @@ where
     /// not in the `Index` trait.
     ///
     /// See also [the `get_mut` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.get_mut
     ///
@@ -508,7 +508,7 @@ where
     /// checked access.
     ///
     /// See also [the `get_mut` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.get_mut
     ///
@@ -526,7 +526,7 @@ where
     /// boundary check.
     ///
     /// See also [the `uget_mut` method][1] which works for all arrays and array
-    /// views.
+    /// impl_views.
     ///
     /// [1]: struct.ArrayBase.html#method.uget_mut
     ///
@@ -541,8 +541,8 @@ where
 
 /// Private array view methods
 impl<'a, A, D> ArrayView<'a, A, D>
-where
-    D: Dimension,
+    where
+        D: Dimension,
 {
     /// Create a new `ArrayView`
     ///
@@ -575,16 +575,16 @@ where
     #[doc(hidden)] // not official
     #[deprecated(note = "This method will be replaced.")]
     pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
-    where
-        D: RemoveAxis,
+        where
+            D: RemoveAxis,
     {
         AxisIter::new(self, Axis(0))
     }
 }
 
 impl<'a, A, D> ArrayViewMut<'a, A, D>
-where
-    D: Dimension,
+    where
+        D: Dimension,
 {
     /// Create a new `ArrayView`
     ///
@@ -640,8 +640,8 @@ where
     #[doc(hidden)] // not official
     #[deprecated(note = "This method will be replaced.")]
     pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
-    where
-        D: RemoveAxis,
+        where
+            D: RemoveAxis,
     {
         AxisIterMut::new(self, Axis(0))
     }
