@@ -65,7 +65,7 @@ where
 /// [`ArrayBase`]: struct.ArrayBase.html
 /// [`ArrayView`]: struct.ArrayView.html
 impl<'a, A> ArrayView<'a, A, Ix0> {
-    /// Consume the view and returns a reference to the single element in the array.
+    /// Consume the view and return a reference to the single element in the array.
     ///
     /// The lifetime of the returned reference matches the lifetime of the data
     /// the array view was pointing to.
@@ -83,6 +83,33 @@ impl<'a, A> ArrayView<'a, A, Ix0> {
     /// assert_eq!(scalar, &Foo);
     /// ```
     pub fn into_scalar(self) -> &'a A {
+        self.index(Ix0())
+    }
+}
+
+/// Methods specific to `ArrayViewMut0`.
+///
+/// ***See also all methods for [`ArrayViewMut`] and [`ArrayBase`]***
+///
+/// [`ArrayBase`]: struct.ArrayBase.html
+/// [`ArrayViewMut`]: struct.ArrayViewMut.html
+impl<'a, A> ArrayViewMut<'a, A, Ix0> {
+    /// Consume the mutable view and return a mutable reference to the single element in the array.
+    ///
+    /// The lifetime of the returned reference matches the lifetime of the data
+    /// the array view was pointing to.
+    ///
+    /// ```
+    /// use ndarray::{arr0, Array0};
+    ///
+    /// let mut array: Array0<f64> = arr0(5.);
+    /// let view = array.view_mut();
+    /// let mut scalar = view.into_scalar();
+    /// *scalar = 7.;
+    /// assert_eq!(scalar, &7.);
+    /// assert_eq!(array[()], 7.);
+    /// ```
+    pub fn into_scalar(self) -> &'a mut A {
         self.index(Ix0())
     }
 }
