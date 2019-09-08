@@ -553,7 +553,7 @@
 //!
 //! NumPy | `ndarray` | Notes
 //! ------|-----------|------
-//! `len(a)` or `a.shape[0]` | [`a.rows()`][.rows()] | get the number of rows in a 2-D array
+//! `len(a)` or `a.shape[0]` | [`a.nrows()`][.nrows()] | get the number of rows in a 2-D array
 //! `a.shape[1]` | [`a.cols()`][.cols()] | get the number of columns in a 2-D array
 //! `a[1]` or `a[1,:]` | [`a.row(1)`][.row()] or [`a.row_mut(1)`][.row_mut()] | view (or mutable view) of row 1 in a 2-D array
 //! `a[:,4]` | [`a.column(4)`][.column()] or [`a.column_mut(4)`][.column_mut()] | view (or mutable view) of column 4 in a 2-D array
@@ -615,7 +615,7 @@
 //! [.reversed_axes()]: ../../struct.ArrayBase.html#method.reversed_axes
 //! [.row()]: ../../struct.ArrayBase.html#method.row
 //! [.row_mut()]: ../../struct.ArrayBase.html#method.row_mut
-//! [.rows()]: ../../struct.ArrayBase.html#method.rows
+//! [.nrows()]: ../../struct.ArrayBase.html#method.nrows
 //! [s!]: ../../macro.s.html
 //! [.sum()]: ../../struct.ArrayBase.html#method.sum
 //! [.slice()]: ../../struct.ArrayBase.html#method.slice

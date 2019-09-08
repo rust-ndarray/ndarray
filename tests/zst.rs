@@ -7,8 +7,8 @@ fn test_swap() {
 
     let b = a.clone();
 
-    for i in 0..a.rows() {
-        for j in i + 1..a.cols() {
+    for i in 0..a.nrows() {
+        for j in i + 1..a.ncols() {
             a.swap((i, j), (j, i));
         }
     }

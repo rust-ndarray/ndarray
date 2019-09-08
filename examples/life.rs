@@ -58,7 +58,7 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
 }
 
 fn turn_on_corners(z: &mut Board) {
-    let n = z.rows();
+    let n = z.nrows();
     let m = z.cols();
     z[[1, 1]] = 1;
     z[[1, m - 2]] = 1;

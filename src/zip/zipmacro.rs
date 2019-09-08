@@ -102,7 +102,7 @@
 ///     //
 ///     // The row is an array view; use the 'ref' rule on the row, to avoid the
 ///     // default which is to dereference the produced item.
-///     let mut totals = Array1::zeros(a.rows());
+///     let mut totals = Array1::zeros(a.nrows());
 ///
 ///     azip!(mut totals, ref row (a.genrows()) in {
 ///         *totals = row.sum();
