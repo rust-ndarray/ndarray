@@ -11,6 +11,7 @@ use std::ptr as std_ptr;
 use std::slice;
 
 use itertools::{izip, zip};
+use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
 
@@ -138,7 +139,7 @@ where
         S: Data,
     {
         debug_assert!(self.pointer_is_inbounds());
-        unsafe { ArrayView::new_(self.ptr, self.dim.clone(), self.strides.clone()) }
+        unsafe { ArrayView::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return a read-write view of the array
@@ -147,7 +148,7 @@ where
         S: DataMut,
     {
         self.ensure_unique();
-        unsafe { ArrayViewMut::new_(self.ptr, self.dim.clone(), self.strides.clone()) }
+        unsafe { ArrayViewMut::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return an uniquely owned copy of the array.
@@ -506,7 +507,7 @@ where
         let ptr = self.ptr;
         index
             .index_checked(&self.dim, &self.strides)
-            .map(move |offset| unsafe { ptr.offset(offset) as *const _ })
+            .map(move |offset| unsafe { ptr.as_ptr().offset(offset) as *const _ })
     }
 
     /// Return a mutable reference to the element at `index`, or return `None`
@@ -545,7 +546,7 @@ where
     {
         arraytraits::debug_bounds_check(self, &index);
         let off = index.index_unchecked(&self.strides);
-        &*self.ptr.offset(off)
+        &*self.ptr.as_ptr().offset(off)
     }
 
     /// Perform *unchecked* array indexing.
@@ -563,7 +564,7 @@ where
         debug_assert!(self.data.is_unique());
         arraytraits::debug_bounds_check(self, &index);
         let off = index.index_unchecked(&self.strides);
-        &mut *self.ptr.offset(off)
+        &mut *self.ptr.as_ptr().offset(off)
     }
 
     /// Swap elements at indices `index1` and `index2`.
@@ -599,7 +600,10 @@ where
         arraytraits::debug_bounds_check(self, &index2);
         let off1 = index1.index_unchecked(&self.strides);
         let off2 = index2.index_unchecked(&self.strides);
-        std_ptr::swap(self.ptr.offset(off1), self.ptr.offset(off2));
+        std_ptr::swap(
+            self.ptr.as_ptr().offset(off1),
+            self.ptr.as_ptr().offset(off2),
+        );
     }
 
     // `get` for zero-dimensional arrays
@@ -1293,7 +1297,7 @@ where
     /// where *d* is `self.ndim()`.
     #[inline(always)]
     pub fn as_ptr(&self) -> *const A {
-        self.ptr
+        self.ptr.as_ptr() as *const A
     }
 
     /// Return a mutable pointer to the first element in the array.
@@ -1303,13 +1307,13 @@ where
         S: RawDataMut,
     {
         self.try_ensure_unique(); // for RcArray
-        self.ptr
+        self.ptr.as_ptr()
     }
 
     /// Return a raw view of the array.
     #[inline]
     pub fn raw_view(&self) -> RawArrayView<A, D> {
-        unsafe { RawArrayView::new_(self.ptr, self.dim.clone(), self.strides.clone()) }
+        unsafe { RawArrayView::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return a raw mutable view of the array.
@@ -1319,7 +1323,7 @@ where
         S: RawDataMut,
     {
         self.try_ensure_unique(); // for RcArray
-        unsafe { RawArrayViewMut::new_(self.ptr, self.dim.clone(), self.strides.clone()) }
+        unsafe { RawArrayViewMut::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
@@ -1332,7 +1336,7 @@ where
         S: Data,
     {
         if self.is_standard_layout() {
-            unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
+            unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
         } else {
             None
         }
@@ -1346,7 +1350,7 @@ where
     {
         if self.is_standard_layout() {
             self.ensure_unique();
-            unsafe { Some(slice::from_raw_parts_mut(self.ptr, self.len())) }
+            unsafe { Some(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
         } else {
             None
         }
@@ -1364,7 +1368,7 @@ where
         S: Data,
     {
         if self.is_contiguous() {
-            unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
+            unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
         } else {
             None
         }
@@ -1378,7 +1382,7 @@ where
     {
         if self.is_contiguous() {
             self.ensure_unique();
-            unsafe { Some(slice::from_raw_parts_mut(self.ptr, self.len())) }
+            unsafe { Some(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
         } else {
             None
         }
@@ -1616,7 +1620,7 @@ where
             Some(st) => st,
             None => return None,
         };
-        unsafe { Some(ArrayView::new_(self.ptr, dim, broadcast_strides)) }
+        unsafe { Some(ArrayView::new_(self.ptr.as_ptr(), dim, broadcast_strides)) }
     }
 
     /// Swap axes `ax` and `bx`.
@@ -1843,7 +1847,7 @@ where
             Some(slc) => {
                 let ptr = slc.as_ptr() as *mut A;
                 let end = unsafe { ptr.add(slc.len()) };
-                self.ptr >= ptr && self.ptr <= end
+                self.ptr.as_ptr() >= ptr && self.ptr.as_ptr() <= end
             }
         }
     }

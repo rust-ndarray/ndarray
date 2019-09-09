@@ -1,4 +1,5 @@
 use crate::dimension::{self, stride_offset};
+use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
 use crate::{is_aligned, StrideShape};
 
@@ -14,7 +15,7 @@ where
     pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
         RawArrayView {
             data: RawViewRepr::new(),
-            ptr: ptr as *mut A,
+            ptr: nonnull_debug_checked_from_ptr(ptr as *mut _),
             dim,
             strides,
         }
@@ -75,7 +76,7 @@ where
     /// ensure that all of the data is valid and choose the correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
-        ArrayView::new_(self.ptr, self.dim, self.strides)
+        ArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides)
     }
 
     /// Split the array view along `axis` and return one array pointer strictly
@@ -84,13 +85,13 @@ where
     /// **Panics** if `axis` or `index` is out of bounds.
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
         assert!(index <= self.len_of(axis));
-        let left_ptr = self.ptr;
+        let left_ptr = self.ptr.as_ptr();
         let right_ptr = if index == self.len_of(axis) {
-            self.ptr
+            self.ptr.as_ptr()
         } else {
             let offset = stride_offset(index, self.strides.axis(axis));
             // The `.offset()` is safe due to the guarantees of `RawData`.
-            unsafe { self.ptr.offset(offset) }
+            unsafe { self.ptr.as_ptr().offset(offset) }
         };
 
         let mut dim_left = self.dim.clone();
@@ -118,7 +119,7 @@ where
     pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
         RawArrayViewMut {
             data: RawViewRepr::new(),
-            ptr,
+            ptr: nonnull_debug_checked_from_ptr(ptr),
             dim,
             strides,
         }
@@ -175,7 +176,7 @@ where
     /// Converts to a non-mutable `RawArrayView`.
     #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
-        unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     /// Converts to a read-only view of the array.
@@ -185,7 +186,7 @@ where
     /// ensure that all of the data is valid and choose the correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
-        ArrayView::new_(self.ptr, self.dim, self.strides)
+        ArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides)
     }
 
     /// Converts to a mutable view of the array.
@@ -195,7 +196,7 @@ where
     /// ensure that all of the data is valid and choose the correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D> {
-        ArrayViewMut::new_(self.ptr, self.dim, self.strides)
+        ArrayViewMut::new_(self.ptr.as_ptr(), self.dim, self.strides)
     }
 
     /// Split the array view along `axis` and return one array pointer strictly
@@ -206,8 +207,8 @@ where
         let (left, right) = self.into_raw_view().split_at(axis, index);
         unsafe {
             (
-                Self::new_(left.ptr, left.dim, left.strides),
-                Self::new_(right.ptr, right.dim, right.strides),
+                Self::new_(left.ptr.as_ptr(), left.dim, left.strides),
+                Self::new_(right.ptr.as_ptr(), right.dim, right.strides),
             )
         }
     }

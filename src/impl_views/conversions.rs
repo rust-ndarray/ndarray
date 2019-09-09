@@ -35,7 +35,7 @@ where
     #[allow(clippy::wrong_self_convention)]
     pub fn into_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
-            unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
+            unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
         } else {
             None
         }
@@ -45,7 +45,7 @@ where
     /// Return `None` otherwise.
     pub fn to_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
-            unsafe { Some(slice::from_raw_parts(self.ptr, self.len())) }
+            unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
         } else {
             None
         }
@@ -53,7 +53,7 @@ where
 
     /// Converts to a raw array view.
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
-        unsafe { RawArrayView::new_(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 }
 
@@ -132,7 +132,7 @@ where
 {
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     #[inline]
@@ -161,17 +161,17 @@ where
 {
     // Convert into a read-only view
     pub(crate) fn into_view(self) -> ArrayView<'a, A, D> {
-        unsafe { ArrayView::new_(self.ptr, self.dim, self.strides) }
+        unsafe { ArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     /// Converts to a mutable raw array view.
     pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D> {
-        unsafe { RawArrayViewMut::new_(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayViewMut::new_(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     #[inline]
@@ -181,7 +181,7 @@ where
 
     pub(crate) fn into_slice_(self) -> Result<&'a mut [A], Self> {
         if self.is_standard_layout() {
-            unsafe { Ok(slice::from_raw_parts_mut(self.ptr, self.len())) }
+            unsafe { Ok(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
         } else {
             Err(self)
         }

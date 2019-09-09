@@ -153,6 +153,7 @@ pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
 mod error;
+mod extension;
 mod geomspace;
 mod indexes;
 mod iterators;
@@ -1217,7 +1218,7 @@ where
     data: S,
     /// A non-null and aligned pointer into the buffer held by `data`; may
     /// point anywhere in its range.
-    ptr: *mut S::Elem,
+    ptr: std::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
@@ -1523,7 +1524,7 @@ where
         let ptr = self.ptr;
         let mut strides = dim.clone();
         strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe { ArrayView::new_(ptr, dim, strides) }
+        unsafe { ArrayView::new_(ptr.as_ptr(), dim, strides) }
     }
 
     fn raw_strides(&self) -> D {

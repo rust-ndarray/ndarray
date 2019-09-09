@@ -8,7 +8,10 @@
 
 //! The data (inner representation) traits for ndarray
 
+use crate::extension::nonnull::nonnull_from_vec_data;
+use rawpointer::PointerExt;
 use std::mem::{self, size_of};
+use std::ptr::NonNull;
 use std::sync::Arc;
 
 use crate::{
@@ -67,14 +70,14 @@ pub unsafe trait RawDataMut: RawData {
 pub unsafe trait RawDataClone: RawData {
     #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>);
 
     #[doc(hidden)]
     unsafe fn clone_from_with_ptr(
         &mut self,
         other: &Self,
-        ptr: *mut Self::Elem,
-    ) -> *mut Self::Elem {
+        ptr: NonNull<Self::Elem>,
+    ) -> NonNull<Self::Elem> {
         let (data, ptr) = other.clone_with_ptr(ptr);
         *self = data;
         ptr
@@ -148,7 +151,7 @@ unsafe impl<A> RawData for RawViewRepr<*const A> {
 }
 
 unsafe impl<A> RawDataClone for RawViewRepr<*const A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
@@ -177,7 +180,7 @@ unsafe impl<A> RawDataMut for RawViewRepr<*mut A> {
 }
 
 unsafe impl<A> RawDataClone for RawViewRepr<*mut A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
@@ -217,13 +220,13 @@ where
         let rcvec = &mut self_.data.0;
         let a_size = mem::size_of::<A>() as isize;
         let our_off = if a_size != 0 {
-            (self_.ptr as isize - rcvec.as_ptr() as isize) / a_size
+            (self_.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
         } else {
             0
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.ptr = rvec.as_mut_ptr().offset(our_off);
+            self_.ptr = nonnull_from_vec_data(rvec).offset(our_off);
         }
     }
 
@@ -252,7 +255,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
 unsafe impl<A> DataMut for OwnedArcRepr<A> where A: Clone {}
 
 unsafe impl<A> RawDataClone for OwnedArcRepr<A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         // pointer is preserved
         (self.clone(), ptr)
     }
@@ -298,11 +301,12 @@ unsafe impl<A> RawDataClone for OwnedRepr<A>
 where
     A: Clone,
 {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         let mut u = self.clone();
-        let mut new_ptr = u.0.as_mut_ptr();
+        let mut new_ptr = nonnull_from_vec_data(&mut u.0);
         if size_of::<A>() != 0 {
-            let our_off = (ptr as isize - self.0.as_ptr() as isize) / mem::size_of::<A>() as isize;
+            let our_off =
+                (ptr.as_ptr() as isize - self.0.as_ptr() as isize) / mem::size_of::<A>() as isize;
             new_ptr = new_ptr.offset(our_off);
         }
         (u, new_ptr)
@@ -311,15 +315,15 @@ where
     unsafe fn clone_from_with_ptr(
         &mut self,
         other: &Self,
-        ptr: *mut Self::Elem,
-    ) -> *mut Self::Elem {
+        ptr: NonNull<Self::Elem>,
+    ) -> NonNull<Self::Elem> {
         let our_off = if size_of::<A>() != 0 {
-            (ptr as isize - other.0.as_ptr() as isize) / mem::size_of::<A>() as isize
+            (ptr.as_ptr() as isize - other.0.as_ptr() as isize) / mem::size_of::<A>() as isize
         } else {
             0
         };
         self.0.clone_from(&other.0);
-        self.0.as_mut_ptr().offset(our_off)
+        nonnull_from_vec_data(&mut self.0).offset(our_off)
     }
 }
 
@@ -342,7 +346,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
 }
 
 unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
@@ -469,7 +473,7 @@ unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
 where
     A: Clone,
 {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         match self {
             CowRepr::View(view) => {
                 let (new_view, ptr) = view.clone_with_ptr(ptr);
@@ -486,8 +490,8 @@ where
     unsafe fn clone_from_with_ptr(
         &mut self,
         other: &Self,
-        ptr: *mut Self::Elem,
-    ) -> *mut Self::Elem {
+        ptr: NonNull<Self::Elem>,
+    ) -> NonNull<Self::Elem> {
         match (&mut *self, other) {
             (CowRepr::View(self_), CowRepr::View(other)) => self_.clone_from_with_ptr(other, ptr),
             (CowRepr::Owned(self_), CowRepr::Owned(other)) => self_.clone_from_with_ptr(other, ptr),

@@ -805,7 +805,7 @@ impl<A, D: Dimension> AxisIterCore<A, D> {
             stride: v.stride_of(axis),
             inner_dim: v.dim.remove_axis(axis),
             inner_strides: v.strides.remove_axis(axis),
-            ptr: v.ptr,
+            ptr: v.ptr.as_ptr(),
         }
     }
 
@@ -1284,7 +1284,7 @@ fn chunk_iter_parts<A, D: Dimension>(
         stride,
         inner_dim,
         inner_strides: v.strides,
-        ptr: v.ptr,
+        ptr: v.ptr.as_ptr(),
     };
 
     (iter, partial_chunk_index, partial_chunk_dim)

@@ -73,7 +73,7 @@ where
     type Output = ArrayView<'a, A, E::Dim>;
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
         let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
-        unsafe { ArrayView::new_(res.ptr, res.dim, res.strides) }
+        unsafe { ArrayView::new_(res.ptr.as_ptr(), res.dim, res.strides) }
     }
     private_impl! {}
 }
@@ -317,7 +317,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D> {
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
-        self.ptr.offset(i.index_unchecked(&self.strides))
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
@@ -370,7 +370,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
-        self.ptr.offset(i.index_unchecked(&self.strides))
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]

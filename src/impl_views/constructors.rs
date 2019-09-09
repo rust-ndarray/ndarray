@@ -8,6 +8,7 @@
 
 use crate::dimension;
 use crate::error::ShapeError;
+use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
 use crate::{is_aligned, StrideShape};
 
@@ -219,7 +220,7 @@ where
     pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
         ArrayView {
             data: ViewRepr::new(),
-            ptr: ptr as *mut A,
+            ptr: nonnull_debug_checked_from_ptr(ptr as *mut A),
             dim,
             strides,
         }
@@ -242,7 +243,7 @@ where
         }
         ArrayViewMut {
             data: ViewRepr::new(),
-            ptr,
+            ptr: nonnull_debug_checked_from_ptr(ptr),
             dim,
             strides,
         }

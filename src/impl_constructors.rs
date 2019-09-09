@@ -16,6 +16,7 @@ use num_traits::{Float, One, Zero};
 
 use crate::dimension;
 use crate::error::{self, ShapeError};
+use crate::extension::nonnull::nonnull_from_vec_data;
 use crate::imp_prelude::*;
 use crate::indexes;
 use crate::indices;
@@ -422,7 +423,7 @@ where
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
-            ptr: v.as_mut_ptr(),
+            ptr: nonnull_from_vec_data(&mut v),
             data: DataOwned::new(v),
             strides,
             dim,
