@@ -9,6 +9,7 @@
 //!
 //! * [Similarities](#similarities)
 //! * [Some key differences](#some-key-differences)
+//! * [The ndarray ecosystem](#the-ndarray-ecosystem)
 //! * [Other Rust array/matrix crates](#other-rust-arraymatrix-crates)
 //! * [Rough `ndarray`–NumPy equivalents](#rough-ndarraynumpy-equivalents)
 //!
@@ -116,6 +117,17 @@
 //! </tr>
 //! </table>
 //!
+//! # The ndarray ecosystem
+//!
+//! `ndarray` does not provide advanced linear algebra routines out of the box (e.g. SVD decomposition).
+//! Most of the routines that you can find in `SciPy.linalg`/`NumPy.linalg` are provided by another crate,
+//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
+//!
+//! The same holds for statistics: `ndarray` provides some basic functionalities (e.g. `mean`)
+//! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
+//!
+//! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
+//!
 //! # Other Rust array/matrix crates
 //!
 //! Of the array/matrix types in Rust crates, the `ndarray` array type is probably
@@ -146,9 +158,6 @@
 //! operate elementwise by default, so the multiplication operator `*` performs
 //! elementwise multiplication instead of matrix multiplication. (You have to
 //! specifically call `.dot()` if you want matrix multiplication.)
-//!
-//! Linear algebra with `ndarray` is provided by another crates,
-//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
 //!
 //! # Rough `ndarray`–NumPy equivalents
 //!
