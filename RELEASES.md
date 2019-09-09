@@ -4,6 +4,9 @@ Version 0.13.0 (in development)
 New features
 ------------
 
+ - `ndarray-parallel` is merged into `ndarray`. Use the `rayon` feature-flag to get access to parallel iterators and
+   other parallelized methods.
+   ([#563](https://github.com/rust-ndarray/ndarray/pull/563/files) by [@bluss])
  - Add `logspace` and `geomspace` constructors
    ([#617](https://github.com/rust-ndarray/ndarray/pull/617) by [@JP-Ellis])
  - Implement approx traits for `ArrayBase`. They can be enabled using the `approx` feature-flag.
@@ -16,26 +19,32 @@ New features
    ([#632](https://github.com/rust-ndarray/ndarray/pull/632) by [@jturner314] and [@andrei-papou])
  - Add `as_contiguous` to `ArrayBase`: it takes an array by reference and returns a `CoWArray` in standard layout
    ([#616](https://github.com/rust-ndarray/ndarray/pull/616) by [@jturner314] and [@andrei-papou])
+ - Add `Array2::from_diag` method to create 2D arrays from a diagonal
+   ([#673](https://github.com/rust-ndarray/ndarray/pull/673) by [@rth])
+ - Add `fold` method to `Zip`
+   ([#684](https://github.com/rust-ndarray/ndarray/pull/684) by [@jturner314])
+ - Add `nth_back` method to `ndarray`'s iterators
+   ([#686](https://github.com/rust-ndarray/ndarray/pull/686) by [@jturner314]) 
+ - Add `split_at` method to `AxisChunksIter/Mut`
+   ([#691](https://github.com/rust-ndarray/ndarray/pull/691) by [@jturner314])
+ - Add `into_scalar` method to `ArrayView0` and `ArrayViewMut0`
+   ([#700](https://github.com/rust-ndarray/ndarray/pull/700) by [@LukeMathWalker])
 
 Enhancements
 ------------
- - Improved performance for matrix multiplications when using the pure-Rust backend thanks to `matrix-multiply:v0.2`;
+ - Improve performance for matrix multiplications when using the pure-Rust backend thanks to `matrix-multiply:v0.2`
    ([#556](https://github.com/rust-ndarray/ndarray/pull/556) by [@bluss])
- - Improved performance of `.fold`
+ - Improve performance of `fold` for iterators
    ([#574](https://github.com/rust-ndarray/ndarray/pull/574) by [@jturner314])
- - Improved performance of iterators for 1-d arrays
+ - Improve performance of iterators for 1-d arrays
    ([#614](https://github.com/rust-ndarray/ndarray/pull/614) by [@andrei-papou])
  - Better formatting for arrays when using the `Debug` formatter
    ([#606](https://github.com/rust-ndarray/ndarray/pull/606) by [@andrei-papou] and [@LukeMathWalker])
  - Arithmetic operations between arrays with different element types are now allowed when there is a scalar equivalent 
    ([#588](https://github.com/rust-ndarray/ndarray/pull/588) by [@jturner314])
- - `.map_axis/_mut()` won't panic on 0-length `axis`
+ - `.map_axis/_mut` won't panic on 0-length `axis`
    ([#579](https://github.com/rust-ndarray/ndarray/pull/612) by [@andrei-papou]) 
- - `ndarray-parallel` has been merged into `ndarray`. Use the `rayon` feature-flag to get access to parallel iterators and
-   other parallelized methods.
-   ([#563](https://github.com/rust-ndarray/ndarray/pull/563/files) by [@bluss])
  - Various documentation improvements (by [@jturner314], [@JP-Ellis])
- 
 
 API changes
 -----------
@@ -43,8 +52,16 @@ API changes
    ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by [@max-sixty])
  - `RcArray` is deprecated in favour of `ArcArray` 
    ([#560](https://github.com/rust-ndarray/ndarray/pull/560) by [@bluss])
+ - `into_slice` is renamed to `to_slice`. `into_slice` is now deprecated
+   ([#646](https://github.com/rust-ndarray/ndarray/pull/646) by [@max-sixty])
+ - `from_vec` is deprecated in favour of using the `From` to convert a `Vec` into an `Array`
+   ([#648](https://github.com/rust-ndarray/ndarray/pull/648) by [@max-sixty])
  - `mean_axis` returns `Option<A>` instead of `A`, to avoid panicking when invoked on a 0-length axis 
    ([#580](https://github.com/rust-ndarray/ndarray/pull/580) by [@LukeMathWalker])
+ - Remove `rustc-serialize` feature-flag. `serde` is the recommended feature-flag for serialization
+   ([#557](https://github.com/rust-ndarray/ndarray/pull/557) by [@bluss])
+ - `rows`/`cols` are renamed to `nrows`/`ncols`. `rows`/`cols` are now deprecated
+   ([#701](https://github.com/rust-ndarray/ndarray/pull/701) by [@bluss])
 
 Bug fixes
 ---------
@@ -54,12 +71,13 @@ Bug fixes
    ([#585](https://github.com/rust-ndarray/ndarray/pull/585) by [@sebasv])
  - Fix offset computation to avoid UB/panic when slicing in some edge cases
    ([#636](https://github.com/rust-ndarray/ndarray/pull/636) by [@jturner314])
-
+ - Fix issues with axis iterators
+   ([#669](https://github.com/rust-ndarray/ndarray/pull/669) by [@jturner314])
 
 Other changes
 -------------
- - Removed the `rustc-serialize` feature-flag. `serde` is the recommended feature-flag to enable serialization.
-   ([#557](https://github.com/rust-ndarray/ndarray/pull/557) by [@bluss])
+ - Various improvements to `ndarray`'s CI pipeline (`clippy`, `cargo fmt`, etc. by [@max-sixty] and [@termoshtt])
+ 
 
 Version 0.12.1 (2018-11-21)
 ===========================
@@ -846,3 +864,5 @@ Earlier releases
 [@sebasv]: https://github.com/sebasv
 [@andrei-papou]: https://github.com/sebasv
 [@mneumann]: https://github.com/mneumann
+[@termoshtt]: https://github.com/termoshtt
+[@rth]: https://github.com/rth
