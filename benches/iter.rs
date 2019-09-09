@@ -155,7 +155,7 @@ fn sum_3_azip(bench: &mut Bencher) {
     let c = vec![1; ZIPSZ];
     bench.iter(|| {
         let mut s = 0;
-        azip!(a, b, c in {
+        azip!((&a in &a, &b in &b, &c in &c) {
             s += a + b + c;
         });
         s
@@ -182,7 +182,7 @@ fn vector_sum_3_azip(bench: &mut Bencher) {
     let b = vec![1.; ZIPSZ];
     let mut c = vec![1.; ZIPSZ];
     bench.iter(|| {
-        azip!(a, b, mut c in {
+        azip!((&a in &a, &b in &b, c in &mut c) {
             *c += a + b;
         });
     });

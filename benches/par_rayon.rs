@@ -117,7 +117,7 @@ fn add(bench: &mut Bencher) {
     let c = Array2::<f64>::zeros((ADDN, ADDN));
     let d = Array2::<f64>::zeros((ADDN, ADDN));
     bench.iter(|| {
-        azip!(mut a, b, c, d in {
+        azip!((a in &mut a, &b in &b, &c in &c, &d in &d) {
             *a += b.exp() + c.exp() + d.exp();
         });
     });
