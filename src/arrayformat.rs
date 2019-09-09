@@ -160,7 +160,7 @@ where
         format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)?;
         write!(
             f,
-            " shape={:?}, strides={:?}, layout={:?}",
+            ", shape={:?}, strides={:?}, layout={:?}",
             self.shape(),
             self.strides(),
             layout = self.view().layout()
