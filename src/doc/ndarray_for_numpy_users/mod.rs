@@ -194,6 +194,8 @@
 //! `np.array([[1.,2.,3.], [4.,5.,6.]])` | [`array![[1.,2.,3.], [4.,5.,6.]]`][array!] or [`arr2(&[[1.,2.,3.], [4.,5.,6.]])`][arr2()] | 2×3 floating-point array literal
 //! `np.arange(0., 10., 0.5)` or `np.r_[:10.:0.5]` | [`Array::range(0., 10., 0.5)`][::range()] | create a 1-D array with values `0.`, `0.5`, …, `9.5`
 //! `np.linspace(0., 10., 11)` or `np.r_[:10.:11j]` | [`Array::linspace(0., 10., 11)`][::linspace()] | create a 1-D array with 11 elements with values `0.`, …, `10.`
+//! `np.logspace(2.0, 3.0, num=4, base=10.0)` | [`Array::logspace(10.0, 2.0, 3.0, 4)`][::logspace()] | create a 1-D array with 4 elements with values `100.`, `215.4`, `464.1`, `1000.`
+//! `np.geomspace(1., 1000., num=4)` | [`Array::geomspace(1e0, 1e3, 4)`][::geomspace()] | create a 1-D array with 4 elements with values `1.`, `10.`, `100.`, `1000.`
 //! `np.ones((3, 4, 5))` | [`Array::ones((3, 4, 5))`][::ones()] | create a 3×4×5 array filled with ones (inferring the element type)
 //! `np.zeros((3, 4, 5))` | [`Array::zeros((3, 4, 5))`][::zeros()] | create a 3×4×5 array filled with zeros (inferring the element type)
 //! `np.zeros((3, 4, 5), order='F')` | [`Array::zeros((3, 4, 5).f())`][::zeros()] | create a 3×4×5 array with Fortran (column-major) memory layout filled with zeros (inferring the element type)
@@ -607,6 +609,8 @@
 //! [.len()]: ../../struct.ArrayBase.html#method.len
 //! [.len_of()]: ../../struct.ArrayBase.html#method.len_of
 //! [::linspace()]: ../../struct.ArrayBase.html#method.linspace
+//! [::logspace()]: ../../struct.ArrayBase.html#method.logspace
+//! [::geomspace()]: ../../struct.ArrayBase.html#method.geomspace
 //! [.map()]: ../../struct.ArrayBase.html#method.map
 //! [.map_axis()]: ../../struct.ArrayBase.html#method.map_axis
 //! [.map_inplace()]: ../../struct.ArrayBase.html#method.map_inplace
