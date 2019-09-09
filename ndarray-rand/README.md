@@ -10,9 +10,6 @@ Generate a 2-dimensional array with shape `(2,5)` and elements drawn from a unif
 over the `(0., 10.)` interval:
 
 ```rust
-extern crate ndarray;
-extern crate ndarray_rand;
-
 use ndarray::Array;
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
