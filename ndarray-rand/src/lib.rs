@@ -67,9 +67,6 @@ where
     /// overflows usize.
     ///
     /// ```
-    /// extern crate ndarray;
-    /// extern crate ndarray_rand;
-    ///
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
     /// use ndarray_rand::rand_distr::Uniform;
@@ -92,10 +89,6 @@ where
     /// ***Panics*** if the number of elements overflows usize.
     ///
     /// ```
-    /// extern crate ndarray;
-    /// extern crate ndarray_rand;
-    /// extern crate rand_isaac;
-    ///
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
     /// use ndarray_rand::rand::SeedableRng;
@@ -149,9 +142,6 @@ where
 /// A wrapper type that allows casting f64 distributions to f32
 ///
 /// ```
-/// extern crate ndarray;
-/// extern crate ndarray_rand;
-///
 /// use ndarray::Array;
 /// use ndarray_rand::{RandomExt, F32};
 /// use ndarray_rand::rand_distr::Normal;
