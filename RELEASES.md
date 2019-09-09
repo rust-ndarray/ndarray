@@ -15,7 +15,7 @@ New features
    ([#580](https://github.com/rust-ndarray/ndarray/pull/580) by [@LukeMathWalker])
  - Add `Zip::all` to check if all elements of an iterator satisfy a predicate
    ([#615](https://github.com/rust-ndarray/ndarray/pull/615) by [@mneumann])
- - Add `CoWArray`, `C`lone `o`n `Write` array
+ - Add `CowArray`, `C`lone `o`n `write` array
    ([#632](https://github.com/rust-ndarray/ndarray/pull/632) by [@jturner314] and [@andrei-papou])
  - Add `as_contiguous` to `ArrayBase`: it takes an array by reference and returns a `CoWArray` in standard layout
    ([#616](https://github.com/rust-ndarray/ndarray/pull/616) by [@jturner314] and [@andrei-papou])
@@ -32,7 +32,8 @@ New features
 
 Enhancements
 ------------
- - Improve performance for matrix multiplications when using the pure-Rust backend thanks to `matrix-multiply:v0.2`
+ - Improve performance for matrix multiplications when using the pure-Rust backend thanks to `matrix-multiply:v0.2` 
+   (leverage SIMD instructions on x86-64 with runtime feature detection)
    ([#556](https://github.com/rust-ndarray/ndarray/pull/556) by [@bluss])
  - Improve performance of `fold` for iterators
    ([#574](https://github.com/rust-ndarray/ndarray/pull/574) by [@jturner314])
