@@ -4,22 +4,45 @@ use ndarray::rcarr1;
 #[test]
 fn formatting() {
     let a = rcarr1::<f32>(&[1., 2., 3., 4.]);
-    assert_eq!(
-        format!("{}", a),
-        //"[   1,    2,    3,    4]");
-        "[1, 2, 3, 4]"
-    );
+    assert_eq!(format!("{}", a), "[1, 2, 3, 4]");
     assert_eq!(format!("{:4}", a), "[   1,    2,    3,    4]");
     let a = a.reshape((4, 1, 1));
     assert_eq!(
+        format!("{}", a),
+        "\
+[[[1]],
+
+ [[2]],
+
+ [[3]],
+
+ [[4]]]"
+    );
+    assert_eq!(
         format!("{:4}", a),
-        "[[[   1]],\n\n [[   2]],\n\n [[   3]],\n\n [[   4]]]",
+        "\
+[[[   1]],
+
+ [[   2]],
+
+ [[   3]],
+
+ [[   4]]]",
     );
 
     let a = a.reshape((2, 2));
-    assert_eq!(format!("{}", a), "[[1, 2],\n [3, 4]]");
-    assert_eq!(format!("{}", a), "[[1, 2],\n [3, 4]]");
-    assert_eq!(format!("{:4}", a), "[[   1,    2],\n [   3,    4]]");
+    assert_eq!(
+        format!("{}", a),
+        "\
+[[1, 2],
+ [3, 4]]"
+    );
+    assert_eq!(
+        format!("{:4}", a),
+        "\
+[[   1,    2],
+ [   3,    4]]"
+    );
 
     let b = arr0::<f32>(3.5);
     assert_eq!(format!("{}", b), "3.5");
@@ -36,13 +59,15 @@ fn debug_format() {
     let a = Array2::<i32>::zeros((3, 4));
     assert_eq!(
         format!("{:?}", a),
-        "[[0, 0, 0, 0],
+        "\
+[[0, 0, 0, 0],
  [0, 0, 0, 0],
  [0, 0, 0, 0]] shape=[3, 4], strides=[4, 1], layout=C (0x1), const ndim=2"
     );
     assert_eq!(
         format!("{:?}", a.into_dyn()),
-        "[[0, 0, 0, 0],
+        "\
+[[0, 0, 0, 0],
  [0, 0, 0, 0],
  [0, 0, 0, 0]] shape=[3, 4], strides=[4, 1], layout=C (0x1), dynamic ndim=2"
     );

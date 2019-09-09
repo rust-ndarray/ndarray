@@ -229,55 +229,46 @@ mod formatting_with_omit {
     use super::*;
     use crate::prelude::*;
 
-    fn print_output_diff(expected: &str, actual: &str) {
-        println!("Expected output:\n{}\nActual output:\n{}", expected, actual);
+    fn assert_str_eq(expected: &str, actual: &str) {
+        assert_eq!(
+            expected, actual,
+            "\nexpected:\n{}\nactual:\n{}\n",
+            expected, actual,
+        );
     }
 
     #[test]
     fn empty_arrays() {
         let a: Array2<u32> = arr2(&[[], []]);
-        let actual_output = format!("{}", a);
-        let expected_output = String::from("[[]]");
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(expected_output, actual_output);
+        let actual = format!("{}", a);
+        let expected = "[[]]";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
     fn zero_length_axes() {
         let a = Array3::<f32>::zeros((3, 0, 4));
-        let actual_output = format!("{}", a);
-        let expected_output = String::from("[[[]]]");
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(expected_output, actual_output);
+        let actual = format!("{}", a);
+        let expected = "[[[]]]";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
     fn dim_0() {
         let element = 12;
         let a = arr0(element);
-        let actual_output = format!("{}", a);
-        let expected_output = format!("{}", element);
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(expected_output, actual_output);
+        let actual = format!("{}", a);
+        let expected = "12";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
     fn dim_1() {
         let overflow: usize = 5;
         let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow,), 1);
-        let mut expected_output = String::from("[");
-        a.iter()
-            .take(PRINT_ELEMENTS_LIMIT)
-            .for_each(|elem| expected_output.push_str(format!("{}, ", elem).as_str()));
-        expected_output.push_str("...");
-        a.iter()
-            .skip(PRINT_ELEMENTS_LIMIT + overflow)
-            .for_each(|elem| expected_output.push_str(format!(", {}", elem).as_str()));
-        expected_output.push(']');
-        let actual_output = format!("{}", a);
-
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(actual_output, expected_output);
+        let actual = format!("{}", a);
+        let expected = "[1, 1, 1, ..., 1, 1, 1]";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
@@ -287,28 +278,12 @@ mod formatting_with_omit {
             (PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow),
             1,
         );
-        let mut expected_output = String::from("[");
-
-        for i in 0..PRINT_ELEMENTS_LIMIT {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
-            for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str(", ...");
-            for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str(if i < PRINT_ELEMENTS_LIMIT - 1 {
-                "],\n "
-            } else {
-                "]"
-            });
-        }
-        expected_output.push(']');
-        let actual_output = format!("{}", a);
-
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(actual_output, expected_output);
+        let actual = format!("{}", a);
+        let expected = "\
+[[1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1]]";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
@@ -318,32 +293,16 @@ mod formatting_with_omit {
             (PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT),
             1,
         );
-        let mut expected_output = String::from("[");
-
-        for i in 0..PRINT_ELEMENTS_LIMIT {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
-            for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str("],\n ");
-        }
-        expected_output.push_str("...,\n ");
-        for i in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
-            for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str(if i == PRINT_ELEMENTS_LIMIT * 2 + overflow - 1 {
-                "]"
-            } else {
-                "],\n "
-            });
-        }
-        expected_output.push(']');
-        let actual_output = format!("{}", a);
-
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(actual_output, expected_output);
+        let actual = format!("{}", a);
+        let expected = "\
+[[1, 1, 1],
+ [1, 1, 1],
+ [1, 1, 1],
+ ...,
+ [1, 1, 1],
+ [1, 1, 1],
+ [1, 1, 1]]";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
@@ -356,40 +315,16 @@ mod formatting_with_omit {
             ),
             1,
         );
-        let mut expected_output = String::from("[");
-
-        for i in 0..PRINT_ELEMENTS_LIMIT {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
-            for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str(", ...");
-            for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str("],\n ");
-        }
-        expected_output.push_str("...,\n ");
-        for i in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-            expected_output.push_str(format!("[{}", a[(i, 0)]).as_str());
-            for j in 1..PRINT_ELEMENTS_LIMIT {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str(", ...");
-            for j in PRINT_ELEMENTS_LIMIT + overflow..PRINT_ELEMENTS_LIMIT * 2 + overflow {
-                expected_output.push_str(format!(", {}", a[(i, j)]).as_str());
-            }
-            expected_output.push_str(if i == PRINT_ELEMENTS_LIMIT * 2 + overflow - 1 {
-                "]"
-            } else {
-                "],\n "
-            });
-        }
-        expected_output.push(']');
-        let actual_output = format!("{}", a);
-
-        print_output_diff(&expected_output, &actual_output);
-        assert_eq!(actual_output, expected_output);
+        let actual = format!("{}", a);
+        let expected = "\
+[[1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
+ ...,
+ [1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1]]";
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
@@ -397,8 +332,9 @@ mod formatting_with_omit {
         let a = Array3::from_shape_fn((20, 10, 7), |(i, j, k)| {
             1000. + (100. * ((i as f64).sqrt() + (j as f64).sin() + k as f64)).round() / 100.
         });
+        let actual = format!("{:.2}", a);
         // Generated using NumPy with `np.set_printoptions(suppress=True, floatmode='maxprec_equal')`.
-        let correct = "\
+        let expected = "\
 [[[1000.00, 1001.00, 1002.00, ..., 1004.00, 1005.00, 1006.00],
   [1000.84, 1001.84, 1002.84, ..., 1004.84, 1005.84, 1006.84],
   [1000.91, 1001.91, 1002.91, ..., 1004.91, 1005.91, 1006.91],
@@ -448,7 +384,7 @@ mod formatting_with_omit {
   [1005.02, 1006.02, 1007.02, ..., 1009.02, 1010.02, 1011.02],
   [1005.35, 1006.35, 1007.35, ..., 1009.35, 1010.35, 1011.35],
   [1004.77, 1005.77, 1006.77, ..., 1008.77, 1009.77, 1010.77]]]";
-        assert_eq!(format!("{:.2}", a), correct);
+        assert_str_eq(expected, &actual);
     }
 
     #[test]
@@ -458,8 +394,9 @@ mod formatting_with_omit {
                 / 100.
                 + 1000.
         });
+        let actual = format!("{:.2}", a);
         // Generated using NumPy with `np.set_printoptions(suppress=True, floatmode='maxprec_equal')`.
-        let correct = "\
+        let expected = "\
 [[[[1001.00, 1002.00, 1003.00, ..., 1006.00, 1007.00, 1008.00],
    [1001.84, 1002.84, 1003.84, ..., 1006.84, 1007.84, 1008.84],
    [1001.91, 1002.91, 1003.91, ..., 1006.91, 1007.91, 1008.91],
@@ -767,6 +704,6 @@ mod formatting_with_omit {
    [9106.69, 9107.69, 9108.69, ..., 9111.69, 9112.69, 9113.69],
    [9106.48, 9107.48, 9108.48, ..., 9111.48, 9112.48, 9113.48],
    [9107.16, 9108.16, 9109.16, ..., 9112.16, 9113.16, 9114.16]]]]";
-        assert_eq!(format!("{:.2}", a), correct);
+        assert_str_eq(expected, &actual);
     }
 }
