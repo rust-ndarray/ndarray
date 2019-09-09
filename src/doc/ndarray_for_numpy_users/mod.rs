@@ -145,10 +145,10 @@
 //! so it's not restricted to 1-D and 2-D vectors and matrices. Also, operators
 //! operate elementwise by default, so the multiplication operator `*` performs
 //! elementwise multiplication instead of matrix multiplication. (You have to
-//! specifically call `.dot()` if you want matrix multiplication.) Linear algebra
-//! with `ndarray` is provided by other crates, e.g.
-//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg) and
-//! [`linxal`](https://crates.io/crates/linxal).
+//! specifically call `.dot()` if you want matrix multiplication.)
+//!
+//! Linear algebra with `ndarray` is provided by another crates,
+//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
 //!
 //! # Rough `ndarray`–NumPy equivalents
 //!
