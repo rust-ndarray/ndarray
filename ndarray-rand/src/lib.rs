@@ -50,7 +50,7 @@ where
     /// overflows usize.
     ///
     /// ```
-    /// use rand::distributions::Uniform;
+    /// use rand_distr::Uniform;
     /// use ndarray::Array;
     /// use ndarray_rand::RandomExt;
     ///
@@ -105,12 +105,12 @@ where
 /// A wrapper type that allows casting f64 distributions to f32
 ///
 /// ```
-/// use rand::distributions::Normal;
+/// use rand_distr::Normal;
 /// use ndarray::Array;
 /// use ndarray_rand::{RandomExt, F32};
 ///
 /// # fn main() {
-/// let a = Array::random((2, 5), F32(Normal::new(0., 1.)));
+/// let a = Array::random((2, 5), F32(Normal::new(0., 1.).unwrap()));
 /// println!("{:8.4}", a);
 /// // Example Output:
 /// // [[ -0.6910,   1.1730,   1.0902,  -0.4092,  -1.7340],
