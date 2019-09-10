@@ -1,4 +1,4 @@
-// Copyright 2016 bluss and ndarray developers.
+// Copyright 2016-2019 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -12,12 +12,16 @@
 //!
 //! ## Note
 //!
-//! `ndarray-rand` depends on [`rand` 0.7.0](https://docs.rs/rand/0.7.0/rand/).
+//! `ndarray-rand` depends on [`rand` 0.7][rand].
 //!
-//! [`rand`](https://docs.rs/rand/0.7.0/rand/) and [`rand-distr`](https://docs.rs/rand_distr/0.2.1/rand_distr/)
+//! [`rand`][rand] and [`rand_distr`][rand_distr]
 //! are re-exported as sub-modules, [`ndarray_rand::rand`](rand/index.html)
 //! and [`ndarray_rand::rand_distr`](rand_distr/index.html) respectively.
-//! Please rely on these submodules for guaranteed version compatibility.
+//! You can use these submodules for guaranteed version compatibility or
+//! convenience.
+//!
+//! [rand]: https://docs.rs/rand/0.7
+//! [rand_distr]: https://docs.rs/rand_distr/0.2
 //!
 //! If you want to use a random number generator or distribution from another crate
 //! with `ndarray-rand`, you need to make sure that the other crate also depends on the
@@ -32,12 +36,12 @@ use crate::rand::{thread_rng, Rng, SeedableRng};
 use ndarray::ShapeBuilder;
 use ndarray::{ArrayBase, DataOwned, Dimension};
 
-/// [`rand`](https://docs.rs/rand/0.7.0/rand/), re-exported for convenience and version-compatibility.
+/// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
 pub mod rand {
     pub use rand::*;
 }
 
-/// [`rand-distr`](https://docs.rs/rand_distr/0.2.1/rand_distr/), re-exported for convenience and version-compatibility.
+/// [`rand-distr`](https://docs.rs/rand_distr/0.2), re-exported for convenience and version-compatibility.
 pub mod rand_distr {
     pub use rand_distr::*;
 }
