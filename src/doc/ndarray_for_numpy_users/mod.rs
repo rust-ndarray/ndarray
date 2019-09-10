@@ -120,7 +120,7 @@
 //! # The ndarray ecosystem
 //!
 //! `ndarray` does not provide advanced linear algebra routines out of the box (e.g. SVD decomposition).
-//! Most of the routines that you can find in `SciPy.linalg`/`NumPy.linalg` are provided by another crate,
+//! Most of the routines that you can find in `scipy.linalg`/`numpy.linalg` are provided by another crate,
 //! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
 //!
 //! The same holds for statistics: `ndarray` provides some basic functionalities (e.g. `mean`)
