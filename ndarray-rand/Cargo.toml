@@ -26,4 +26,5 @@ rand_isaac = "0.2.0"
 
 [package.metadata.release]
 no-dev-version = true
+tag-name = "ndarray-rand-{{version}}"
 
