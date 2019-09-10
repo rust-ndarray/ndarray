@@ -128,6 +128,9 @@
 //!
 //! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
 //!
+//! It is also possible to serialize `NumPy` arrays in `.npy`/`.npz` format and deserialize them as `ndarray` arrays (and vice versa)
+//! using [`ndarray-npy`](https://crates.io/crates/ndarray-npy).
+//!
 //! # Other Rust array/matrix crates
 //!
 //! Of the array/matrix types in Rust crates, the `ndarray` array type is probably
