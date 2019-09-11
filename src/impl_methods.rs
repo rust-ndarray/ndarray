@@ -2268,9 +2268,9 @@ where
         if self.len_of(axis) <= 1 {
             return;
         }
-        let mut prev = self.raw_view();
+        let mut curr = self.raw_view_mut(); // mut borrow of the array here
+        let mut prev = curr.raw_view(); // derive further raw views from the same borrow
         prev.slice_axis_inplace(axis, Slice::from(..-1));
-        let mut curr = self.raw_view_mut();
         curr.slice_axis_inplace(axis, Slice::from(1..));
         // This implementation relies on `Zip` iterating along `axis` in order.
         Zip::from(prev).and(curr).apply(|prev, curr| unsafe {
