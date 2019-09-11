@@ -11,53 +11,54 @@ use std::fmt;
 
 const PRINT_ELEMENTS_LIMIT: Ix = 3;
 
-fn format_1d_array<A, S, F>(
-    view: &ArrayBase<S, Ix1>,
+const ELLIPSIS: &str = "...";
+
+/// Formats the contents of a list of items, using an ellipsis to indicate when
+/// the length of the list is greater than `2 * limit`.
+///
+/// # Parameters
+///
+/// * `f`: The formatter.
+/// * `length`: The length of the list.
+/// * `limit`: Half the maximum number of items before indicating overflow with
+///   an ellipsis. Also, the number of items on either side of the ellipsis.
+/// * `separator`: Separator to write between items.
+/// * `ellipsis`: Ellipsis for indicating overflow.
+/// * `fmt_elem`: A function that formats an element in the list, given the
+///   formatter and the index of the item in the list.
+fn format_with_overflow<F>(
     f: &mut fmt::Formatter<'_>,
-    mut format: F,
-    limit: Ix,
+    length: usize,
+    limit: usize,
+    separator: &str,
+    ellipsis: &str,
+    mut fmt_elem: F,
 ) -> fmt::Result
 where
-    F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result,
-    S: Data<Elem = A>,
+    F: FnMut(&mut fmt::Formatter<'_>, usize) -> fmt::Result,
 {
-    let to_be_printed = to_be_printed(view.len(), limit);
-
-    let n_to_be_printed = to_be_printed.len();
-
-    write!(f, "[")?;
-    for (j, index) in to_be_printed.into_iter().enumerate() {
-        match index {
-            PrintableCell::ElementIndex(i) => {
-                format(&view[i], f)?;
-                if j != n_to_be_printed - 1 {
-                    write!(f, ", ")?;
-                }
-            }
-            PrintableCell::Ellipses => write!(f, "..., ")?,
-        }
-    }
-    write!(f, "]")?;
-    Ok(())
-}
-
-enum PrintableCell {
-    ElementIndex(usize),
-    Ellipses,
-}
-
-// Returns what indexes should be printed for a certain axis.
-// If the axis is longer than 2 * limit, a `Ellipses` is inserted
-// where indexes are being omitted.
-fn to_be_printed(length: usize, limit: usize) -> Vec<PrintableCell> {
-    if length <= 2 * limit {
-        (0..length).map(PrintableCell::ElementIndex).collect()
+    if length == 0 {
+        // no-op
+    } else if length <= 2 * limit {
+        fmt_elem(f, 0)?;
+        (1..length).try_for_each(|i| {
+            f.write_str(separator)?;
+            fmt_elem(f, i)
+        })?;
     } else {
-        let mut v: Vec<PrintableCell> = (0..limit).map(PrintableCell::ElementIndex).collect();
-        v.push(PrintableCell::Ellipses);
-        v.extend((length - limit..length).map(PrintableCell::ElementIndex));
-        v
+        fmt_elem(f, 0)?;
+        (1..limit).try_for_each(|i| {
+            f.write_str(separator)?;
+            fmt_elem(f, i)
+        })?;
+        f.write_str(separator)?;
+        f.write_str(ellipsis)?;
+        (length - limit..length).try_for_each(|i| {
+            f.write_str(separator)?;
+            fmt_elem(f, i)
+        })?;
     }
+    Ok(())
 }
 
 fn format_array<A, S, D, F>(
@@ -80,54 +81,37 @@ where
     }
     match view.shape() {
         // If it's 0 dimensional, we just print out the scalar
-        [] => format(view.iter().next().unwrap(), f)?,
-        // We delegate 1-dimensional arrays to a specialized function
-        [_] => format_1d_array(
-            &view.view().into_dimensionality::<Ix1>().unwrap(),
-            f,
-            format,
-            limit,
-        )?,
+        &[] => format(view.iter().next().unwrap(), f)?,
+        // We handle 1-D arrays as a special case
+        &[len] => {
+            let view = view.view().into_dimensionality::<Ix1>().unwrap();
+            f.write_str("[")?;
+            format_with_overflow(f, len, limit, ", ", ELLIPSIS, |f, index| {
+                format(&view[index], f)
+            })?;
+            f.write_str("]")?;
+        }
         // For n-dimensional arrays, we proceed recursively
         shape => {
             // Cast into a dynamically dimensioned view
             // This is required to be able to use `index_axis`
             let view = view.view().into_dyn();
-            // We start by checking what indexes from the first axis should be printed
-            // We put a `None` in the middle if we are omitting elements
-            let to_be_printed = to_be_printed(shape[0], limit);
-
-            let n_to_be_printed = to_be_printed.len();
 
             let blank_lines = "\n".repeat(shape.len() - 2);
             let indent = " ".repeat(depth + 1);
+            let separator = format!(",\n{}{}", blank_lines, indent);
 
-            write!(f, "[")?;
-            for (j, index) in to_be_printed.into_iter().enumerate() {
-                match index {
-                    PrintableCell::ElementIndex(i) => {
-                        // Indent all but the first line.
-                        if j != 0 {
-                            write!(f, "{}", indent)?;
-                        }
-                        // Proceed recursively with the (n-1)-dimensional slice
-                        format_array(
-                            &view.index_axis(Axis(0), i),
-                            f,
-                            format.clone(),
-                            limit,
-                            depth + 1,
-                        )?;
-                        // We need to add a separator after each slice,
-                        // apart from the last one
-                        if j != n_to_be_printed - 1 {
-                            write!(f, ",\n{}", blank_lines)?
-                        }
-                    }
-                    PrintableCell::Ellipses => write!(f, "{}...,\n{}", indent, blank_lines)?,
-                }
-            }
-            write!(f, "]")?;
+            f.write_str("[")?;
+            format_with_overflow(f, shape[0], limit, &separator, ELLIPSIS, |f, index| {
+                format_array(
+                    &view.index_axis(Axis(0), index),
+                    f,
+                    format.clone(),
+                    limit,
+                    depth + 1,
+                )
+            })?;
+            f.write_str("]")?;
         }
     }
     Ok(())
