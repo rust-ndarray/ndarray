@@ -9,19 +9,20 @@ use super::{ArrayBase, Axis, Data, Dimension, Ix, NdProducer};
 use crate::aliases::Ix1;
 use std::fmt;
 
-const PRINT_ELEMENTS_LIMIT: Ix = 3;
+/// Maximum axis length before overflowing with an ellipsis.
+const AXIS_LEN_LIMIT: Ix = 6;
 
+/// The string used as an ellipsis.
 const ELLIPSIS: &str = "...";
 
 /// Formats the contents of a list of items, using an ellipsis to indicate when
-/// the length of the list is greater than `2 * limit`.
+/// the `length` of the list is greater than `limit`.
 ///
 /// # Parameters
 ///
 /// * `f`: The formatter.
 /// * `length`: The length of the list.
-/// * `limit`: Half the maximum number of items before indicating overflow with
-///   an ellipsis. Also, the number of items on either side of the ellipsis.
+/// * `limit`: The maximum number of items before overflow.
 /// * `separator`: Separator to write between items.
 /// * `ellipsis`: Ellipsis for indicating overflow.
 /// * `fmt_elem`: A function that formats an element in the list, given the
@@ -39,21 +40,22 @@ where
 {
     if length == 0 {
         // no-op
-    } else if length <= 2 * limit {
+    } else if length <= limit {
         fmt_elem(f, 0)?;
         (1..length).try_for_each(|i| {
             f.write_str(separator)?;
             fmt_elem(f, i)
         })?;
     } else {
+        let edge = limit / 2;
         fmt_elem(f, 0)?;
-        (1..limit).try_for_each(|i| {
+        (1..edge).try_for_each(|i| {
             f.write_str(separator)?;
             fmt_elem(f, i)
         })?;
         f.write_str(separator)?;
         f.write_str(ellipsis)?;
-        (length - limit..length).try_for_each(|i| {
+        (length - edge..length).try_for_each(|i| {
             f.write_str(separator)?;
             fmt_elem(f, i)
         })?;
@@ -127,7 +129,7 @@ where
     S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)
+        format_array(self, f, <_>::fmt, AXIS_LEN_LIMIT, 0)
     }
 }
 
@@ -141,7 +143,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Add extra information for Debug
-        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)?;
+        format_array(self, f, <_>::fmt, AXIS_LEN_LIMIT, 0)?;
         write!(
             f,
             ", shape={:?}, strides={:?}, layout={:?}",
@@ -166,7 +168,7 @@ where
     S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)
+        format_array(self, f, <_>::fmt, AXIS_LEN_LIMIT, 0)
     }
 }
 
@@ -179,7 +181,7 @@ where
     S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)
+        format_array(self, f, <_>::fmt, AXIS_LEN_LIMIT, 0)
     }
 }
 /// Format the array using `LowerHex` and apply the formatting parameters used
@@ -191,7 +193,7 @@ where
     S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)
+        format_array(self, f, <_>::fmt, AXIS_LEN_LIMIT, 0)
     }
 }
 
@@ -204,7 +206,7 @@ where
     S: Data<Elem = A>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        format_array(self, f, <_>::fmt, PRINT_ELEMENTS_LIMIT, 0)
+        format_array(self, f, <_>::fmt, AXIS_LEN_LIMIT, 0)
     }
 }
 
@@ -249,7 +251,7 @@ mod formatting_with_omit {
     #[test]
     fn dim_1() {
         let overflow: usize = 5;
-        let a = Array1::from_elem((PRINT_ELEMENTS_LIMIT * 2 + overflow,), 1);
+        let a = Array1::from_elem(AXIS_LEN_LIMIT + overflow, 1);
         let actual = format!("{}", a);
         let expected = "[1, 1, 1, ..., 1, 1, 1]";
         assert_str_eq(expected, &actual);
@@ -258,13 +260,13 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_last_axis_overflow() {
         let overflow: usize = 3;
-        let a = Array2::from_elem(
-            (PRINT_ELEMENTS_LIMIT, PRINT_ELEMENTS_LIMIT * 2 + overflow),
-            1,
-        );
+        let a = Array2::from_elem((AXIS_LEN_LIMIT, AXIS_LEN_LIMIT + overflow), 1);
         let actual = format!("{}", a);
         let expected = "\
 [[1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
+ [1, 1, 1, ..., 1, 1, 1],
  [1, 1, 1, ..., 1, 1, 1],
  [1, 1, 1, ..., 1, 1, 1]]";
         assert_str_eq(expected, &actual);
@@ -273,32 +275,23 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_non_last_axis_overflow() {
         let overflow: usize = 5;
-        let a = Array2::from_elem(
-            (PRINT_ELEMENTS_LIMIT * 2 + overflow, PRINT_ELEMENTS_LIMIT),
-            1,
-        );
+        let a = Array2::from_elem((AXIS_LEN_LIMIT + overflow, AXIS_LEN_LIMIT), 1);
         let actual = format!("{}", a);
         let expected = "\
-[[1, 1, 1],
- [1, 1, 1],
- [1, 1, 1],
+[[1, 1, 1, 1, 1, 1],
+ [1, 1, 1, 1, 1, 1],
+ [1, 1, 1, 1, 1, 1],
  ...,
- [1, 1, 1],
- [1, 1, 1],
- [1, 1, 1]]";
+ [1, 1, 1, 1, 1, 1],
+ [1, 1, 1, 1, 1, 1],
+ [1, 1, 1, 1, 1, 1]]";
         assert_str_eq(expected, &actual);
     }
 
     #[test]
     fn dim_2_multi_directional_overflow() {
         let overflow: usize = 5;
-        let a = Array2::from_elem(
-            (
-                PRINT_ELEMENTS_LIMIT * 2 + overflow,
-                PRINT_ELEMENTS_LIMIT * 2 + overflow,
-            ),
-            1,
-        );
+        let a = Array2::from_elem((AXIS_LEN_LIMIT + overflow, AXIS_LEN_LIMIT + overflow), 1);
         let actual = format!("{}", a);
         let expected = "\
 [[1, 1, 1, ..., 1, 1, 1],
