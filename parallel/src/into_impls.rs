@@ -1,4 +1,4 @@
-use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, ArcArray};
+use ndarray::{ArcArray, Array, ArrayView, ArrayViewMut, Dimension};
 
 use NdarrayIntoParallelIterator;
 use Parallel;
