@@ -14,14 +14,14 @@ ndarray = { path = "../", features = ["serde-1"] }
 default = ["ron"]
 
 [dev-dependencies.serde]
-version = "1.0"
+version = "1.0.100"
 
 [dev-dependencies.serde_json]
-version = "1.0"
+version = "1.0.40"
 
 [dev-dependencies.rmp-serde]
-version = "0.13.1"
+version = "0.14.0"
 
 [dependencies.ron]
-version = "0.1.1"
+version = "0.5.1"
 optional = true
