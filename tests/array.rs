@@ -1098,7 +1098,7 @@ fn owned_array_with_stride() {
 
 #[test]
 fn owned_array_discontiguous() {
-    use ::std::iter::repeat;
+    use std::iter::repeat;
     let v: Vec<_> = (0..12).flat_map(|x| repeat(x).take(2)).collect();
     let dim = (3, 2, 2);
     let strides = (8, 4, 2);
@@ -1111,9 +1111,9 @@ fn owned_array_discontiguous() {
 
 #[test]
 fn owned_array_discontiguous_drop() {
-    use ::std::cell::RefCell;
-    use ::std::collections::BTreeSet;
-    use ::std::rc::Rc;
+    use std::cell::RefCell;
+    use std::collections::BTreeSet;
+    use std::rc::Rc;
 
     struct InsertOnDrop<T: Ord>(Rc<RefCell<BTreeSet<T>>>, Option<T>);
     impl<T: Ord> Drop for InsertOnDrop<T> {
@@ -1963,6 +1963,7 @@ fn test_accumulate_axis_inplace_noop() {
     assert_eq!(a, Array2::zeros((3, 1)));
 }
 
+#[rustfmt::skip] // Allow block array formatting
 #[test]
 fn test_accumulate_axis_inplace_nonstandard_layout() {
     let a = arr2(&[[1, 2, 3],
