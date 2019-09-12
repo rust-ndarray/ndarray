@@ -7,6 +7,7 @@ FEATURES=$1
 CHANNEL=$2
 
 ([ "$CHANNEL" != "beta" ] || (rustup component add rustfmt && cargo fmt --all -- --check))
+export RUSTFLAGS="-D warnings"
 cargo build --verbose --no-default-features
 # Testing both dev and release profiles helps find bugs, especially in low level code
 cargo test --verbose --no-default-features

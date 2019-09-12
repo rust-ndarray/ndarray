@@ -1,4 +1,4 @@
-use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, RcArray};
+use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, ArcArray};
 
 use NdarrayIntoParallelIterator;
 use Parallel;
@@ -16,7 +16,7 @@ where
 }
 
 // This is allowed: goes through `.view()`
-impl<'a, A, D> NdarrayIntoParallelIterator for &'a RcArray<A, D>
+impl<'a, A, D> NdarrayIntoParallelIterator for &'a ArcArray<A, D>
 where
     D: Dimension,
     A: Sync,
@@ -41,7 +41,7 @@ where
 }
 
 // This is allowed: goes through `.view_mut()`, which is unique access
-impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut RcArray<A, D>
+impl<'a, A, D> NdarrayIntoParallelIterator for &'a mut ArcArray<A, D>
 where
     D: Dimension,
     A: Sync + Send + Clone,
