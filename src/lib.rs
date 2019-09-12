@@ -68,9 +68,9 @@
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
-//! - `serde-1`
+//! - `serde`
 //!   - Optional, compatible with Rust stable
-//!   - Enables serialization support for serde 1.0
+//!   - Enables serialization support for serde 1.x
 //! - `rayon`
 //!   - Optional, compatible with Rust stable
 //!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
@@ -135,7 +135,7 @@ mod private;
 mod aliases;
 #[cfg(feature = "approx")]
 mod array_approx;
-#[cfg(feature = "serde-1")]
+#[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
