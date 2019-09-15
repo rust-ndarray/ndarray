@@ -47,10 +47,10 @@ Crate Feature Flags
 The following crate feature flags are available. They are configured in
 your `Cargo.toml`.
 
-- ``serde-1``
+- ``serde``
 
   - Optional, compatible with Rust stable
-  - Enables serialization support for serde 1.0
+  - Enables serialization support for serde 1.x
 
 - ``rayon``
 

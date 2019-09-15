@@ -32,7 +32,7 @@ where
     }
 }
 
-/// **Requires crate feature `"serde-1"`**
+/// **Requires crate feature `"serde"`**
 impl<I> Serialize for Dim<I>
 where
     I: Serialize,
@@ -45,7 +45,7 @@ where
     }
 }
 
-/// **Requires crate feature `"serde-1"`**
+/// **Requires crate feature `"serde"`**
 impl<'de, I> Deserialize<'de> for Dim<I>
 where
     I: Deserialize<'de>,
@@ -58,7 +58,7 @@ where
     }
 }
 
-/// **Requires crate feature `"serde-1"`**
+/// **Requires crate feature `"serde"`**
 impl Serialize for IxDyn {
     fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
     where
@@ -68,7 +68,7 @@ impl Serialize for IxDyn {
     }
 }
 
-/// **Requires crate feature `"serde-1"`**
+/// **Requires crate feature `"serde"`**
 impl<'de> Deserialize<'de> for IxDyn {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -79,7 +79,7 @@ impl<'de> Deserialize<'de> for IxDyn {
     }
 }
 
-/// **Requires crate feature `"serde-1"`**
+/// **Requires crate feature `"serde"`**
 impl<A, D, S> Serialize for ArrayBase<S, D>
 where
     A: Serialize,
@@ -141,7 +141,7 @@ impl<S, Di> ArrayVisitor<S, Di> {
 
 static ARRAY_FIELDS: &[&str] = &["v", "dim", "data"];
 
-/// **Requires crate feature `"serde-1"`**
+/// **Requires crate feature `"serde"`**
 impl<'de, A, Di, S> Deserialize<'de> for ArrayBase<S, Di>
 where
     A: Deserialize<'de>,
