@@ -233,9 +233,10 @@ mod formatting_with_omit {
     use crate::prelude::*;
 
     fn assert_str_eq(expected: &str, actual: &str) {
-        assert_eq!(
-            expected, actual,
-            "\nexpected:\n{}\nactual:\n{}\n",
+        // use assert to avoid printing the strings twice on failure
+        assert!(
+            expected == actual,
+            "formatting assertion failed\nexpected:\n{}\nactual:\n{}\n",
             expected, actual,
         );
     }
