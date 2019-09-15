@@ -9,6 +9,7 @@
 //!
 //! * [Similarities](#similarities)
 //! * [Some key differences](#some-key-differences)
+//! * [The ndarray ecosystem](#the-ndarray-ecosystem)
 //! * [Other Rust array/matrix crates](#other-rust-arraymatrix-crates)
 //! * [Rough `ndarray`–NumPy equivalents](#rough-ndarraynumpy-equivalents)
 //!
@@ -116,6 +117,20 @@
 //! </tr>
 //! </table>
 //!
+//! # The ndarray ecosystem
+//!
+//! `ndarray` does not provide advanced linear algebra routines out of the box (e.g. SVD decomposition).
+//! Most of the routines that you can find in `scipy.linalg`/`numpy.linalg` are provided by another crate,
+//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
+//!
+//! The same holds for statistics: `ndarray` provides some basic functionalities (e.g. `mean`)
+//! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
+//!
+//! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
+//!
+//! It is also possible to serialize `NumPy` arrays in `.npy`/`.npz` format and deserialize them as `ndarray` arrays (and vice versa)
+//! using [`ndarray-npy`](https://crates.io/crates/ndarray-npy).
+//!
 //! # Other Rust array/matrix crates
 //!
 //! Of the array/matrix types in Rust crates, the `ndarray` array type is probably
@@ -145,10 +160,7 @@
 //! so it's not restricted to 1-D and 2-D vectors and matrices. Also, operators
 //! operate elementwise by default, so the multiplication operator `*` performs
 //! elementwise multiplication instead of matrix multiplication. (You have to
-//! specifically call `.dot()` if you want matrix multiplication.) Linear algebra
-//! with `ndarray` is provided by other crates, e.g.
-//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg) and
-//! [`linxal`](https://crates.io/crates/linxal).
+//! specifically call `.dot()` if you want matrix multiplication.)
 //!
 //! # Rough `ndarray`–NumPy equivalents
 //!
@@ -185,12 +197,15 @@
 //! `np.array([[1.,2.,3.], [4.,5.,6.]])` | [`array![[1.,2.,3.], [4.,5.,6.]]`][array!] or [`arr2(&[[1.,2.,3.], [4.,5.,6.]])`][arr2()] | 2×3 floating-point array literal
 //! `np.arange(0., 10., 0.5)` or `np.r_[:10.:0.5]` | [`Array::range(0., 10., 0.5)`][::range()] | create a 1-D array with values `0.`, `0.5`, …, `9.5`
 //! `np.linspace(0., 10., 11)` or `np.r_[:10.:11j]` | [`Array::linspace(0., 10., 11)`][::linspace()] | create a 1-D array with 11 elements with values `0.`, …, `10.`
+//! `np.logspace(2.0, 3.0, num=4, base=10.0)` | [`Array::logspace(10.0, 2.0, 3.0, 4)`][::logspace()] | create a 1-D array with 4 elements with values `100.`, `215.4`, `464.1`, `1000.`
+//! `np.geomspace(1., 1000., num=4)` | [`Array::geomspace(1e0, 1e3, 4)`][::geomspace()] | create a 1-D array with 4 elements with values `1.`, `10.`, `100.`, `1000.`
 //! `np.ones((3, 4, 5))` | [`Array::ones((3, 4, 5))`][::ones()] | create a 3×4×5 array filled with ones (inferring the element type)
 //! `np.zeros((3, 4, 5))` | [`Array::zeros((3, 4, 5))`][::zeros()] | create a 3×4×5 array filled with zeros (inferring the element type)
 //! `np.zeros((3, 4, 5), order='F')` | [`Array::zeros((3, 4, 5).f())`][::zeros()] | create a 3×4×5 array with Fortran (column-major) memory layout filled with zeros (inferring the element type)
 //! `np.zeros_like(a, order='C')` | [`Array::zeros(a.raw_dim())`][::zeros()] | create an array of zeros of the shape shape as `a`, with row-major memory layout (unlike NumPy, this infers the element type from context instead of duplicating `a`'s element type)
 //! `np.full((3, 4), 7.)` | [`Array::from_elem((3, 4), 7.)`][::from_elem()] | create a 3×4 array filled with the value `7.`
 //! `np.eye(3)` | [`Array::eye(3)`][::eye()] | create a 3×3 identity matrix (inferring the element type)
+//! `np.diag(np.array([1, 2, 3]))` | [`Array2::from_diag(&arr1(&[1, 2, 3]))`][::from_diag()] | create a 3×3 matrix with `[1, 2, 3]` as diagonal and zeros elsewhere (inferring the element type)
 //! `np.array([1, 2, 3, 4]).reshape((2, 2))` | [`Array::from_shape_vec((2, 2), vec![1, 2, 3, 4])?`][::from_shape_vec()] | create a 2×2 array from the elements in the list/`Vec`
 //! `np.array([1, 2, 3, 4]).reshape((2, 2), order='F')` | [`Array::from_shape_vec((2, 2).f(), vec![1, 2, 3, 4])?`][::from_shape_vec()] | create a 2×2 array from the elements in the list/`Vec` using Fortran (column-major) order
 //! `np.random` | See the [`ndarray-rand`](https://crates.io/crates/ndarray-rand) crate. | create arrays of random numbers
@@ -447,8 +462,7 @@
 //!
 //! </td><td>
 //!
-//! `a.sum() / a.len() as f64`
-//!
+//! [`a.mean().unwrap()`][.mean()]
 //! </td><td>
 //!
 //! calculate the mean of the elements in `f64` array `a`
@@ -479,7 +493,7 @@
 //!
 //! </td><td>
 //!
-//! check if the arrays' elementwise differences are within an absolute tolerance
+//! check if the arrays' elementwise differences are within an absolute tolerance (it requires the `approx` feature-flag)
 //!
 //! </td></tr>
 //!
@@ -503,9 +517,7 @@
 //!
 //! </td><td>
 //!
-//! See other crates, e.g.
-//! [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg) and
-//! [`linxal`](https://crates.io/crates/linxal).
+//! See [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg)
 //!
 //! </td><td>
 //!
@@ -584,6 +596,7 @@
 //! [.fold_axis()]: ../../struct.ArrayBase.html#method.fold_axis
 //! [::from_elem()]: ../../struct.ArrayBase.html#method.from_elem
 //! [::from_iter()]: ../../struct.ArrayBase.html#method.from_iter
+//! [::from_diag()]: ../../struct.ArrayBase.html#method.from_diag
 //! [::from_shape_fn()]: ../../struct.ArrayBase.html#method.from_shape_fn
 //! [::from_shape_vec()]: ../../struct.ArrayBase.html#method.from_shape_vec
 //! [::from_shape_vec_unchecked()]: ../../struct.ArrayBase.html#method.from_shape_vec_unchecked
@@ -598,6 +611,8 @@
 //! [.len()]: ../../struct.ArrayBase.html#method.len
 //! [.len_of()]: ../../struct.ArrayBase.html#method.len_of
 //! [::linspace()]: ../../struct.ArrayBase.html#method.linspace
+//! [::logspace()]: ../../struct.ArrayBase.html#method.logspace
+//! [::geomspace()]: ../../struct.ArrayBase.html#method.geomspace
 //! [.map()]: ../../struct.ArrayBase.html#method.map
 //! [.map_axis()]: ../../struct.ArrayBase.html#method.map_axis
 //! [.map_inplace()]: ../../struct.ArrayBase.html#method.map_inplace
@@ -605,6 +620,7 @@
 //! [.mapv_inplace()]: ../../struct.ArrayBase.html#method.mapv_inplace
 //! [.mapv_into()]: ../../struct.ArrayBase.html#method.mapv_into
 //! [matrix-* dot]: ../../struct.ArrayBase.html#method.dot-1
+//! [.mean()]: ../../struct.ArrayBase.html#method.mean
 //! [.mean_axis()]: ../../struct.ArrayBase.html#method.mean_axis
 //! [.ndim()]: ../../struct.ArrayBase.html#method.ndim
 //! [NdProducer]: ../../trait.NdProducer.html

@@ -92,6 +92,19 @@
 //!
 //! * If you have experience with NumPy, you may also be interested in
 //!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
+//!
+//! ## The ndarray ecosystem
+//!
+//! `ndarray` provides a lot of functionality, but it's not a one-stop solution.
+//!
+//! `ndarray` includes matrix multiplication and other binary/unary operations out of the box.
+//! More advanced linear algebra routines (e.g. SVD decomposition or eigenvalue computation)
+//! can be found in [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
+//!
+//! The same holds for statistics: `ndarray` provides some basic functionalities (e.g. `mean`)
+//! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
+//!
+//! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
