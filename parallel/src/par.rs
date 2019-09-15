@@ -8,6 +8,8 @@ use rayon::iter::plumbing::{Consumer, UnindexedConsumer};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 
+use ndarray::iter::AxisChunksIter;
+use ndarray::iter::AxisChunksIterMut;
 use ndarray::iter::AxisIter;
 use ndarray::iter::AxisIterMut;
 use ndarray::Dimension;
@@ -112,6 +114,8 @@ macro_rules! par_iter_wrapper {
 
 par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
+par_iter_wrapper!(AxisChunksIter, [Sync]);
+par_iter_wrapper!(AxisChunksIterMut, [Send + Sync]);
 
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
