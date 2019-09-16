@@ -92,6 +92,13 @@ fn test_slice() {
     assert!(vi.iter().zip(A.iter()).all(|(a, b)| a == b));
 }
 
+#[deny(unsafe_code)]
+#[test]
+fn test_slice_ix0() {
+    let arr = arr0(5);
+    assert_eq!(arr.slice(s![]), aview0(&5));
+}
+
 #[test]
 fn test_slice_edge_cases() {
     let mut arr = Array3::<u8>::zeros((3, 4, 5));
