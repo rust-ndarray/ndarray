@@ -604,6 +604,17 @@ macro_rules! s(
             }
         }
     };
+    // empty call, i.e. `s![]`
+    (@parse ::std::marker::PhantomData::<$crate::Ix0>, []) => {
+        {
+            #[allow(unsafe_code)]
+            unsafe {
+                $crate::SliceInfo::new_unchecked([], ::std::marker::PhantomData::<$crate::Ix0>)
+            }
+        }
+    };
+    // Catch-all clause for syntax errors
+    (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
     // convert range/index into SliceOrIndex
     (@convert $r:expr) => {
         <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r)
@@ -612,8 +623,6 @@ macro_rules! s(
     (@convert $r:expr, $s:expr) => {
         <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };
-    // Catch-all clause for syntax errors
-    (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![], expected at least one index or range") };
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:
         // https://github.com/rust-lang/rust/issues/23014
