@@ -612,6 +612,8 @@ macro_rules! s(
     (@convert $r:expr, $s:expr) => {
         <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };
+    // Catch-all clause for syntax errors
+    (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![], expected at least one index or range") };
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:
         // https://github.com/rust-lang/rust/issues/23014
