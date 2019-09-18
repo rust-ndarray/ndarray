@@ -47,7 +47,7 @@ where
 
 impl<S, D> ArrayBase<S, D>
 where
-    S: Data,
+    S: RawData,
     D: Dimension,
 {
     pub(crate) fn layout_impl(&self) -> Layout {
@@ -57,7 +57,7 @@ where
             } else {
                 CORDER
             }
-        } else if self.ndim() > 1 && self.t().is_standard_layout() {
+        } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
             FORDER
         } else {
             0
@@ -190,6 +190,14 @@ pub trait Offset: Copy {
     type Stride: Copy;
     unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self;
     private_decl! {}
+}
+
+impl<T> Offset for *const T {
+    type Stride = isize;
+    unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self {
+        self.offset(s * (index as isize))
+    }
+    private_impl! {}
 }
 
 impl<T> Offset for *mut T {
@@ -366,6 +374,112 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
     #[doc(hidden)]
     unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item {
         &mut *ptr
+    }
+
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, axis: Axis) -> isize {
+        self.stride_of(axis)
+    }
+
+    #[inline(always)]
+    fn contiguous_stride(&self) -> Self::Stride {
+        1
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(axis, index)
+    }
+}
+
+impl<A, D: Dimension> NdProducer for RawArrayView<A, D> {
+    type Item = *const A;
+    type Dim = D;
+    type Ptr = *const A;
+    type Stride = isize;
+
+    private_impl! {}
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        self.raw_dim()
+    }
+
+    #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.dim.equal(dim)
+    }
+
+    #[doc(hidden)]
+    fn as_ptr(&self) -> *const A {
+        self.as_ptr()
+    }
+
+    #[doc(hidden)]
+    fn layout(&self) -> Layout {
+        self.layout_impl()
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: *const A) -> *const A {
+        ptr
+    }
+
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *const A {
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, axis: Axis) -> isize {
+        self.stride_of(axis)
+    }
+
+    #[inline(always)]
+    fn contiguous_stride(&self) -> Self::Stride {
+        1
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(axis, index)
+    }
+}
+
+impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
+    type Item = *mut A;
+    type Dim = D;
+    type Ptr = *mut A;
+    type Stride = isize;
+
+    private_impl! {}
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        self.raw_dim()
+    }
+
+    #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.dim.equal(dim)
+    }
+
+    #[doc(hidden)]
+    fn as_ptr(&self) -> *mut A {
+        self.as_ptr() as _
+    }
+
+    #[doc(hidden)]
+    fn layout(&self) -> Layout {
+        self.layout_impl()
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: *mut A) -> *mut A {
+        ptr
     }
 
     #[doc(hidden)]
