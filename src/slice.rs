@@ -5,8 +5,9 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
-use crate::Dimension;
+use crate::{ArrayViewMut, Dimension, RawArrayViewMut};
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
@@ -629,3 +630,189 @@ macro_rules! s(
         &*&$crate::s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );
+
+/// Slicing information describing multiple mutable, disjoint slices.
+///
+/// It's unfortunate that we need `'out` and `A` to be parameters of the trait,
+/// but they're necessary until Rust supports generic associated types.
+///
+/// # Safety
+///
+/// Implementers of this trait must ensure that:
+///
+/// * `.slice_and_deref()` panics or aborts if the slices would intersect, and
+///
+/// * the `.intersects_self()`, `.intersects_indices()`, and
+///   `.intersects_other()` implementations are correct.
+pub unsafe trait MultiSlice<'out, A, D>
+where
+    A: 'out,
+    D: Dimension,
+{
+    /// The type of the slices created by `.slice_and_deref()`.
+    type Output;
+
+    /// Slice the raw view into multiple raw views, and dereference them.
+    ///
+    /// **Panics** if performing any individual slice panics or if the slices
+    /// are not disjoint (i.e. if they intersect).
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that it is safe to mutably dereference the view
+    /// using the lifetime `'out`.
+    unsafe fn slice_and_deref(&self, view: RawArrayViewMut<A, D>) -> Self::Output;
+
+    /// Returns `true` if slicing an array of the specified `shape` with `self`
+    /// would result in intersecting slices.
+    ///
+    /// If `self.intersects_self(&view.raw_dim())` is `true`, then
+    /// `self.slice_and_deref(view)` must panic.
+    fn intersects_self(&self, shape: &D) -> bool;
+
+    /// Returns `true` if any slices created by slicing an array of the
+    /// specified `shape` with `self` would intersect with the specified
+    /// indices.
+    ///
+    /// Note that even if this returns `false`, `self.intersects_self(shape)`
+    /// may still return `true`. (`.intersects_indices()` doesn't check for
+    /// intersections within `self`; it only checks for intersections between
+    /// `self` and `indices`.)
+    fn intersects_indices(&self, shape: &D, indices: &D::SliceArg) -> bool;
+
+    /// Returns `true` if any slices created by slicing an array of the
+    /// specified `shape` with `self` would intersect any slices created by
+    /// slicing the array with `other`.
+    ///
+    /// Note that even if this returns `false`, `self.intersects_self(shape)`
+    /// or `other.intersects_self(shape)` may still return `true`.
+    /// (`.intersects_other()` doesn't check for intersections within `self` or
+    /// within `other`; it only checks for intersections between `self` and
+    /// `other`.)
+    fn intersects_other(&self, shape: &D, other: impl MultiSlice<'out, A, D>) -> bool;
+}
+
+unsafe impl<'out, A, D, Do> MultiSlice<'out, A, D> for SliceInfo<D::SliceArg, Do>
+where
+    A: 'out,
+    D: Dimension,
+    Do: Dimension,
+{
+    type Output = ArrayViewMut<'out, A, Do>;
+
+    unsafe fn slice_and_deref(&self, view: RawArrayViewMut<A, D>) -> Self::Output {
+        view.slice_move(self).deref_into_view_mut()
+    }
+
+    fn intersects_self(&self, _shape: &D) -> bool {
+        false
+    }
+
+    fn intersects_indices(&self, shape: &D, indices: &D::SliceArg) -> bool {
+        slices_intersect(shape, &*self, indices)
+    }
+
+    fn intersects_other(&self, shape: &D, other: impl MultiSlice<'out, A, D>) -> bool {
+        other.intersects_indices(shape, &*self)
+    }
+}
+
+unsafe impl<'out, A, D> MultiSlice<'out, A, D> for ()
+where
+    A: 'out,
+    D: Dimension,
+{
+    type Output = ();
+
+    unsafe fn slice_and_deref(&self, _view: RawArrayViewMut<A, D>) -> Self::Output {}
+
+    fn intersects_self(&self, _shape: &D) -> bool {
+        false
+    }
+
+    fn intersects_indices(&self, _shape: &D, _indices: &D::SliceArg) -> bool {
+        false
+    }
+
+    fn intersects_other(&self, _shape: &D, _other: impl MultiSlice<'out, A, D>) -> bool {
+        false
+    }
+}
+
+macro_rules! impl_multislice_tuple {
+    ($($T:ident,)*) => {
+        unsafe impl<'out, A, D, $($T,)*> MultiSlice<'out, A, D> for ($($T,)*)
+        where
+            A: 'out,
+            D: Dimension,
+            $($T: MultiSlice<'out, A, D>,)*
+        {
+            type Output = ($($T::Output,)*);
+
+            unsafe fn slice_and_deref(&self, view: RawArrayViewMut<A, D>) -> Self::Output {
+                assert!(!self.intersects_self(&view.raw_dim()));
+
+                #[allow(non_snake_case)]
+                let ($($T,)*) = self;
+                ($($T.slice_and_deref(view.clone()),)*)
+            }
+
+            fn intersects_self(&self, shape: &D) -> bool {
+                #[allow(non_snake_case)]
+                let ($($T,)*) = self;
+                impl_multislice_tuple!(@intersects_self shape, ($($T,)*))
+            }
+
+            fn intersects_indices(&self, shape: &D, indices: &D::SliceArg) -> bool {
+                #[allow(non_snake_case)]
+                let ($($T,)*) = self;
+                $($T.intersects_indices(shape, indices)) ||*
+            }
+
+            fn intersects_other(&self, shape: &D, other: impl MultiSlice<'out, A, D>) -> bool {
+                #[allow(non_snake_case)]
+                let ($($T,)*) = self;
+                $($T.intersects_other(shape, &other)) ||*
+            }
+        }
+    };
+    (@intersects_self $shape:expr, ($head:expr,)) => {
+        $head.intersects_self($shape)
+    };
+    (@intersects_self $shape:expr, ($head:expr, $($tail:expr,)*)) => {
+        $head.intersects_self($shape) ||
+            $($head.intersects_other($shape, &$tail)) ||* ||
+            impl_multislice_tuple!(@intersects_self $shape, ($($tail,)*))
+    };
+}
+impl_multislice_tuple!(T0,);
+impl_multislice_tuple!(T0, T1,);
+impl_multislice_tuple!(T0, T1, T2,);
+impl_multislice_tuple!(T0, T1, T2, T3,);
+impl_multislice_tuple!(T0, T1, T2, T3, T4,);
+impl_multislice_tuple!(T0, T1, T2, T3, T4, T5,);
+
+unsafe impl<'out, A, D, T> MultiSlice<'out, A, D> for &'_ T
+where
+    A: 'out,
+    D: Dimension,
+    T: MultiSlice<'out, A, D>,
+{
+    type Output = T::Output;
+
+    unsafe fn slice_and_deref(&self, view: RawArrayViewMut<A, D>) -> Self::Output {
+        T::slice_and_deref(self, view)
+    }
+
+    fn intersects_self(&self, shape: &D) -> bool {
+        T::intersects_self(self, shape)
+    }
+
+    fn intersects_indices(&self, shape: &D, indices: &D::SliceArg) -> bool {
+        T::intersects_indices(self, shape, indices)
+    }
+
+    fn intersects_other(&self, shape: &D, other: impl MultiSlice<'out, A, D>) -> bool {
+        T::intersects_other(self, shape, other)
+    }
+}
