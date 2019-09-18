@@ -78,16 +78,14 @@ impl FormatOptions {
 /// * `ellipsis`: Ellipsis for indicating overflow.
 /// * `fmt_elem`: A function that formats an element in the list, given the
 ///   formatter and the index of the item in the list.
-fn format_with_overflow<F>(
+fn format_with_overflow(
     f: &mut fmt::Formatter<'_>,
     length: usize,
     limit: usize,
     separator: &str,
     ellipsis: &str,
-    mut fmt_elem: F,
+    fmt_elem: &mut dyn FnMut(&mut fmt::Formatter, usize) -> fmt::Result
 ) -> fmt::Result
-where
-    F: FnMut(&mut fmt::Formatter<'_>, usize) -> fmt::Result,
 {
     if length == 0 {
         // no-op
@@ -146,7 +144,7 @@ where
                 fmt_opt.collapse_limit(0),
                 ", ",
                 ELLIPSIS,
-                |f, index| format(&view[index], f),
+                &mut |f, index| format(&view[index], f),
             )?;
             f.write_str("]")?;
         }
@@ -162,7 +160,7 @@ where
 
             f.write_str("[")?;
             let limit = fmt_opt.collapse_limit(full_ndim - depth - 1);
-            format_with_overflow(f, shape[0], limit, &separator, ELLIPSIS, |f, index| {
+            format_with_overflow(f, shape[0], limit, &separator, ELLIPSIS, &mut |f, index| {
                 format_array(
                     &view.index_axis(Axis(0), index),
                     f,
