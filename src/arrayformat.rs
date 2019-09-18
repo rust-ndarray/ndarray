@@ -5,8 +5,8 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use super::{ArrayBase, Axis, Data, Dimension, NdProducer};
-use crate::aliases::Ix1;
+use super::{ArrayBase, ArrayView, Axis, Data, Dimension, NdProducer};
+use crate::aliases::{Ix1, IxDyn};
 use std::fmt;
 
 /// Default threshold, below this element count, we don't ellipsize
@@ -84,9 +84,8 @@ fn format_with_overflow(
     limit: usize,
     separator: &str,
     ellipsis: &str,
-    fmt_elem: &mut dyn FnMut(&mut fmt::Formatter, usize) -> fmt::Result
-) -> fmt::Result
-{
+    fmt_elem: &mut dyn FnMut(&mut fmt::Formatter, usize) -> fmt::Result,
+) -> fmt::Result {
     if length == 0 {
         // no-op
     } else if length <= limit {
@@ -113,7 +112,23 @@ fn format_with_overflow(
 }
 
 fn format_array<A, S, D, F>(
-    view: &ArrayBase<S, D>,
+    array: &ArrayBase<S, D>,
+    f: &mut fmt::Formatter<'_>,
+    format: F,
+    fmt_opt: &FormatOptions,
+) -> fmt::Result
+where
+    F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result + Clone,
+    D: Dimension,
+    S: Data<Elem = A>,
+{
+    // Cast into a dynamically dimensioned view
+    // This is required to be able to use `index_axis` for the recursive case
+    format_array_inner(array.view().into_dyn(), f, format, fmt_opt, 0, array.ndim())
+}
+
+fn format_array_inner<A, F>(
+    view: ArrayView<A, IxDyn>,
     f: &mut fmt::Formatter<'_>,
     mut format: F,
     fmt_opt: &FormatOptions,
@@ -122,18 +137,16 @@ fn format_array<A, S, D, F>(
 ) -> fmt::Result
 where
     F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result + Clone,
-    D: Dimension,
-    S: Data<Elem = A>,
 {
     // If any of the axes has 0 length, we return the same empty array representation
     // e.g. [[]] for 2-d arrays
-    if view.shape().iter().any(|&x| x == 0) {
+    if view.is_empty() {
         write!(f, "{}{}", "[".repeat(view.ndim()), "]".repeat(view.ndim()))?;
         return Ok(());
     }
     match view.shape() {
         // If it's 0 dimensional, we just print out the scalar
-        &[] => format(view.iter().next().unwrap(), f)?,
+        &[] => format(&view[[]], f)?,
         // We handle 1-D arrays as a special case
         &[len] => {
             let view = view.view().into_dimensionality::<Ix1>().unwrap();
@@ -150,10 +163,6 @@ where
         }
         // For n-dimensional arrays, we proceed recursively
         shape => {
-            // Cast into a dynamically dimensioned view
-            // This is required to be able to use `index_axis`
-            let view = view.view().into_dyn();
-
             let blank_lines = "\n".repeat(shape.len() - 2);
             let indent = " ".repeat(depth + 1);
             let separator = format!(",\n{}{}", blank_lines, indent);
@@ -161,8 +170,8 @@ where
             f.write_str("[")?;
             let limit = fmt_opt.collapse_limit(full_ndim - depth - 1);
             format_with_overflow(f, shape[0], limit, &separator, ELLIPSIS, &mut |f, index| {
-                format_array(
-                    &view.index_axis(Axis(0), index),
+                format_array_inner(
+                    view.index_axis(Axis(0), index),
                     f,
                     format.clone(),
                     fmt_opt,
@@ -187,7 +196,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
-        format_array(self, f, <_>::fmt, &fmt_opt, 0, self.ndim())
+        format_array(self, f, <_>::fmt, &fmt_opt)
     }
 }
 
@@ -201,7 +210,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
-        format_array(self, f, <_>::fmt, &fmt_opt, 0, self.ndim())?;
+        format_array(self, f, <_>::fmt, &fmt_opt)?;
 
         // Add extra information for Debug
         write!(
@@ -229,7 +238,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
-        format_array(self, f, <_>::fmt, &fmt_opt, 0, self.ndim())
+        format_array(self, f, <_>::fmt, &fmt_opt)
     }
 }
 
@@ -243,7 +252,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
-        format_array(self, f, <_>::fmt, &fmt_opt, 0, self.ndim())
+        format_array(self, f, <_>::fmt, &fmt_opt)
     }
 }
 /// Format the array using `LowerHex` and apply the formatting parameters used
@@ -256,7 +265,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
-        format_array(self, f, <_>::fmt, &fmt_opt, 0, self.ndim())
+        format_array(self, f, <_>::fmt, &fmt_opt)
     }
 }
 
@@ -270,7 +279,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
-        format_array(self, f, <_>::fmt, &fmt_opt, 0, self.ndim())
+        format_array(self, f, <_>::fmt, &fmt_opt)
     }
 }
 
