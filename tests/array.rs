@@ -11,23 +11,9 @@ use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
 use ndarray::indices;
 use ndarray::prelude::*;
-use ndarray::{arr3, multislice, rcarr2};
+use ndarray::{arr3, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 use std::iter::FromIterator;
-
-macro_rules! assert_panics {
-    ($body:expr) => {
-        if let Ok(v) = ::std::panic::catch_unwind(|| $body) {
-            panic!("assertion failed: should_panic; \
-            non-panicking result: {:?}", v);
-        }
-    };
-    ($body:expr, $($arg:tt)*) => {
-        if let Ok(_) = ::std::panic::catch_unwind(|| $body) {
-            panic!($($arg)*);
-        }
-    };
-}
 
 #[test]
 fn test_matmul_arcarray() {
@@ -340,139 +326,6 @@ fn test_slice_collapse_with_indices() {
     vi.slice_collapse(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
     assert_eq!(vi, Array3::from_elem((1, 1, 1), elem));
-}
-
-#[test]
-#[allow(clippy::cognitive_complexity)]
-fn test_multislice() {
-    defmac!(test_multislice mut arr, s1, s2 => {
-        {
-            let copy = arr.clone();
-            assert_eq!(
-                multislice!(arr, mut s1, mut s2,),
-                (copy.clone().slice_mut(s1), copy.clone().slice_mut(s2))
-            );
-        }
-        {
-            let copy = arr.clone();
-            assert_eq!(
-                multislice!(arr, mut s1, s2,),
-                (copy.clone().slice_mut(s1), copy.clone().slice(s2))
-            );
-        }
-        {
-            let copy = arr.clone();
-            assert_eq!(
-                multislice!(arr, s1, mut s2),
-                (copy.clone().slice(s1), copy.clone().slice_mut(s2))
-            );
-        }
-        {
-            let copy = arr.clone();
-            assert_eq!(
-                multislice!(arr, s1, s2),
-                (copy.clone().slice(s1), copy.clone().slice(s2))
-            );
-        }
-    });
-    let mut arr = Array1::from_iter(0..48).into_shape((8, 6)).unwrap();
-
-    assert_eq!((arr.clone().view(),), multislice!(arr, [.., ..]));
-    test_multislice!(&mut arr, s![0, ..], s![1, ..]);
-    test_multislice!(&mut arr, s![0, ..], s![-1, ..]);
-    test_multislice!(&mut arr, s![0, ..], s![1.., ..]);
-    test_multislice!(&mut arr, s![1, ..], s![..;2, ..]);
-    test_multislice!(&mut arr, s![..2, ..], s![2.., ..]);
-    test_multislice!(&mut arr, s![1..;2, ..], s![..;2, ..]);
-    test_multislice!(&mut arr, s![..;-2, ..], s![..;2, ..]);
-    test_multislice!(&mut arr, s![..;12, ..], s![3..;3, ..]);
-}
-
-#[test]
-fn test_multislice_intersecting() {
-    assert_panics!({
-        let mut arr = Array2::<u8>::zeros((8, 6));
-        multislice!(arr, mut [3, ..], [3, ..]);
-    });
-    assert_panics!({
-        let mut arr = Array2::<u8>::zeros((8, 6));
-        multislice!(arr, mut [3, ..], [3.., ..]);
-    });
-    assert_panics!({
-        let mut arr = Array2::<u8>::zeros((8, 6));
-        multislice!(arr, mut [3, ..], [..;3, ..]);
-    });
-    assert_panics!({
-        let mut arr = Array2::<u8>::zeros((8, 6));
-        multislice!(arr, mut [..;6, ..], [3..;3, ..]);
-    });
-    assert_panics!({
-        let mut arr = Array2::<u8>::zeros((8, 6));
-        multislice!(arr, mut [2, ..], mut [..-1;-2, ..]);
-    });
-    {
-        let mut arr = Array2::<u8>::zeros((8, 6));
-        multislice!(arr, [3, ..], [-1..;-2, ..]);
-    }
-}
-
-#[test]
-fn test_multislice_eval_args_only_once() {
-    let mut arr = Array1::<u8>::zeros(10);
-    let mut eval_count = 0;
-    {
-        let mut slice = || {
-            eval_count += 1;
-            *s![1..2]
-        };
-        multislice!(arr, mut &slice(), [3..4], [5..6]);
-    }
-    assert_eq!(eval_count, 1);
-    let mut eval_count = 0;
-    {
-        let mut slice = || {
-            eval_count += 1;
-            *s![1..2]
-        };
-        multislice!(arr, [3..4], mut &slice(), [5..6]);
-    }
-    assert_eq!(eval_count, 1);
-    let mut eval_count = 0;
-    {
-        let mut slice = || {
-            eval_count += 1;
-            *s![1..2]
-        };
-        multislice!(arr, [3..4], [5..6], mut &slice());
-    }
-    assert_eq!(eval_count, 1);
-    let mut eval_count = 0;
-    {
-        let mut slice = || {
-            eval_count += 1;
-            *s![1..2]
-        };
-        multislice!(arr, &slice(), mut [3..4], [5..6]);
-    }
-    assert_eq!(eval_count, 1);
-    let mut eval_count = 0;
-    {
-        let mut slice = || {
-            eval_count += 1;
-            *s![1..2]
-        };
-        multislice!(arr, mut [3..4], &slice(), [5..6]);
-    }
-    assert_eq!(eval_count, 1);
-    let mut eval_count = 0;
-    {
-        let mut slice = || {
-            eval_count += 1;
-            *s![1..2]
-        };
-        multislice!(arr, mut [3..4], [5..6], &slice());
-    }
-    assert_eq!(eval_count, 1);
 }
 
 #[should_panic]
