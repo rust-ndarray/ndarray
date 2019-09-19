@@ -381,7 +381,7 @@ where
         M: MultiSlice<'a, A, D>,
         S: DataMut,
     {
-        unsafe { info.slice_and_deref(self.raw_view_mut()) }
+        info.multi_slice_move(self.view_mut())
     }
 
     /// Slice the array, possibly changing the number of dimensions.

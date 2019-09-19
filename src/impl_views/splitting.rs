@@ -129,10 +129,10 @@ where
     /// * if any of the views would intersect (i.e. if any element would appear in multiple slices)
     /// * if an index is out of bounds or step size is zero
     /// * if `D` is `IxDyn` and `info` does not match the number of array axes
-    pub fn multi_slice_move<M>(mut self, info: M) -> M::Output
+    pub fn multi_slice_move<M>(self, info: M) -> M::Output
     where
         M: MultiSlice<'a, A, D>,
     {
-        unsafe { info.slice_and_deref(self.raw_view_mut()) }
+        info.multi_slice_move(self)
     }
 }

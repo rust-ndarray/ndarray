@@ -354,7 +354,7 @@ fn test_multislice() {
     });
     let mut arr = Array1::from_iter(0..48).into_shape((8, 6)).unwrap();
 
-    assert_eq!(arr.clone().view(), arr.multi_slice_mut(s![.., ..]));
+    assert_eq!((arr.clone().view_mut(),), arr.multi_slice_mut((s![.., ..],)));
     test_multislice!(&mut arr, s![0, ..], s![1, ..]);
     test_multislice!(&mut arr, s![0, ..], s![-1, ..]);
     test_multislice!(&mut arr, s![0, ..], s![1.., ..]);
