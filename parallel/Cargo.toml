@@ -14,7 +14,7 @@ categories = ["data-structures", "science", "concurrency"]
 
 [dependencies]
 rayon = { version = "1.0" }
-ndarray = { version = "0.12.0", path = "../" }
+ndarray = { version = "0.13", path = "../" }
 
 [dev-dependencies]
 num_cpus = "1.2"
