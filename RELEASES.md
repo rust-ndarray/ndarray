@@ -13,22 +13,28 @@ New features
    ([#581](https://github.com/rust-ndarray/ndarray/pull/581) by [@jturner314])
  - Add `mean` method
    ([#580](https://github.com/rust-ndarray/ndarray/pull/580) by [@LukeMathWalker])
- - Add `Zip::all` to check if all elements of an iterator satisfy a predicate
+ - Add `Zip::all` to check if all elements satisfy a predicate
    ([#615](https://github.com/rust-ndarray/ndarray/pull/615) by [@mneumann])
+ - Add `RawArrayView` and `RawArrayViewMut` types and `RawData`, `RawDataMut`, and `RawDataClone` traits
+   ([#496](https://github.com/rust-ndarray/ndarray/pull/496) by [@jturner314])
  - Add `CowArray`, `C`lone `o`n `write` array
    ([#632](https://github.com/rust-ndarray/ndarray/pull/632) by [@jturner314] and [@andrei-papou])
- - Add `as_contiguous` to `ArrayBase`: it takes an array by reference and returns a `CoWArray` in standard layout
+ - Add `as_standard_layout` to `ArrayBase`: it takes an array by reference and returns a `CoWArray` in standard layout
    ([#616](https://github.com/rust-ndarray/ndarray/pull/616) by [@jturner314] and [@andrei-papou])
  - Add `Array2::from_diag` method to create 2D arrays from a diagonal
    ([#673](https://github.com/rust-ndarray/ndarray/pull/673) by [@rth])
  - Add `fold` method to `Zip`
    ([#684](https://github.com/rust-ndarray/ndarray/pull/684) by [@jturner314])
- - Add `nth_back` method to `ndarray`'s iterators
-   ([#686](https://github.com/rust-ndarray/ndarray/pull/686) by [@jturner314]) 
  - Add `split_at` method to `AxisChunksIter/Mut`
    ([#691](https://github.com/rust-ndarray/ndarray/pull/691) by [@jturner314])
+ - Implement parallel iteration for `AxisChunksIter/Mut`
+   ([#639](https://github.com/rust-ndarray/ndarray/pull/639) by [@nitsky])
  - Add `into_scalar` method to `ArrayView0` and `ArrayViewMut0`
    ([#700](https://github.com/rust-ndarray/ndarray/pull/700) by [@LukeMathWalker])
+ - Add `accumulate_axis_inplace` method to `ArrayBase`
+   ([#611](https://github.com/rust-ndarray/ndarray/pull/611) by [@jturner314] and [@bluss])
+ - Add the `array!`, `azip!`, and `s!` macros to `ndarray::prelude`
+   ([#517](https://github.com/rust-ndarray/ndarray/pull/517) by [@jturner314])
 
 Enhancements
 ------------
@@ -37,15 +43,19 @@ Enhancements
    ([#556](https://github.com/rust-ndarray/ndarray/pull/556) by [@bluss])
  - Improve performance of `fold` for iterators
    ([#574](https://github.com/rust-ndarray/ndarray/pull/574) by [@jturner314])
+ - Improve performance of `nth_back` for iterators
+   ([#686](https://github.com/rust-ndarray/ndarray/pull/686) by [@jturner314])
  - Improve performance of iterators for 1-d arrays
    ([#614](https://github.com/rust-ndarray/ndarray/pull/614) by [@andrei-papou])
- - Better formatting for arrays when using the `Debug` formatter
-   ([#606](https://github.com/rust-ndarray/ndarray/pull/606) by [@andrei-papou] and [@LukeMathWalker])
- - Arithmetic operations between arrays with different element types are now allowed when there is a scalar equivalent 
+ - Improve formatting for large arrays
+   ([#606](https://github.com/rust-ndarray/ndarray/pull/606) by [@andrei-papou] and [@LukeMathWalker],
+   [#633](https://github.com/rust-ndarray/ndarray/pull/633) and [#707](https://github.com/rust-ndarray/ndarray/pull/707) by [@jturner314],
+   and [#713](https://github.com/rust-ndarray/ndarray/pull/713) by [@bluss])
+ - Arithmetic operations between arrays with different element types are now allowed when there is a scalar equivalent
    ([#588](https://github.com/rust-ndarray/ndarray/pull/588) by [@jturner314])
  - `.map_axis/_mut` won't panic on 0-length `axis`
-   ([#579](https://github.com/rust-ndarray/ndarray/pull/612) by [@andrei-papou]) 
- - Various documentation improvements (by [@jturner314], [@JP-Ellis])
+   ([#579](https://github.com/rust-ndarray/ndarray/pull/612) by [@andrei-papou])
+ - Various documentation improvements (by [@jturner314], [@JP-Ellis], [@LukeMathWalker], [@bluss])
 
 API changes
 -----------
@@ -63,6 +73,20 @@ API changes
    ([#557](https://github.com/rust-ndarray/ndarray/pull/557) by [@bluss])
  - `rows`/`cols` are renamed to `nrows`/`ncols`. `rows`/`cols` are now deprecated
    ([#701](https://github.com/rust-ndarray/ndarray/pull/701) by [@bluss])
+ - The usage of the `azip!` macro has changed to be more similar to `for` loops
+   ([#626](https://github.com/rust-ndarray/ndarray/pull/626) by [@jturner314])
+ - For `var_axis` and `std_axis`, the constraints on `ddof` and the trait bounds on `A` have been made more strict
+   ([#515](https://github.com/rust-ndarray/ndarray/pull/515) by [@jturner314])
+ - For `mean_axis`, the constraints on `A` have changed
+   ([#518](https://github.com/rust-ndarray/ndarray/pull/518) by [@jturner314])
+ - `DataClone` is deprecated in favor of using `Data + RawDataClone`
+   ([#496](https://github.com/rust-ndarray/ndarray/pull/496) by [@jturner314])
+ - The `Dimension::Pattern` associated type now has more trait bounds
+   ([#634](https://github.com/rust-ndarray/ndarray/pull/634) by [@termoshtt])
+ - `Axis::index()` now takes `self` instead of `&self`
+   ([#642](https://github.com/rust-ndarray/ndarray/pull/642) by [@max-sixty])
+ - The bounds on the implementation of `Hash` for `Dim` have changed
+   ([#642](https://github.com/rust-ndarray/ndarray/pull/642) by [@max-sixty])
 
 Bug fixes
 ---------
@@ -74,11 +98,14 @@ Bug fixes
    ([#636](https://github.com/rust-ndarray/ndarray/pull/636) by [@jturner314])
  - Fix issues with axis iterators
    ([#669](https://github.com/rust-ndarray/ndarray/pull/669) by [@jturner314])
+ - Fix handling of empty input to `s!` macro
+   ([#714](https://github.com/rust-ndarray/ndarray/pull/714) by [@bluss] and [#715](https://github.com/rust-ndarray/ndarray/pull/715) by [@jturner314])
 
 Other changes
 -------------
  - Various improvements to `ndarray`'s CI pipeline (`clippy`, `cargo fmt`, etc. by [@max-sixty] and [@termoshtt])
- 
+ - Bump minimum required Rust version to 1.37.
+
 
 Version 0.12.1 (2018-11-21)
 ===========================
@@ -867,3 +894,4 @@ Earlier releases
 [@mneumann]: https://github.com/mneumann
 [@termoshtt]: https://github.com/termoshtt
 [@rth]: https://github.com/rth
+[@nitsky]: https://github.com/nitsky
