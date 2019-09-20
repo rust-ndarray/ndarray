@@ -101,32 +101,30 @@
 /// ```
 #[macro_export]
 macro_rules! azip {
-    // Indexed with a single producer and no trailing comma.
-    ((index $index:pat, $first_pat:pat in $first_prod:expr) $body:expr) => {
-        $crate::Zip::indexed($first_prod).apply(|$index, $first_pat| $body)
+    // Indexed with a single producer
+    // we allow an optional trailing comma after the producers in each rule.
+    (@build $apply:ident (index $index:pat, $first_pat:pat in $first_prod:expr $(,)?) $body:expr) => {
+        $crate::Zip::indexed($first_prod).$apply(|$index, $first_pat| $body)
     };
-    // Indexed with more than one producer and no trailing comma.
-    ((index $index:pat, $first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),*) $body:expr) => {
+    // Indexed with more than one producer
+    (@build $apply:ident (index $index:pat, $first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),* $(,)?) $body:expr) => {
         $crate::Zip::indexed($first_prod)
             $(.and($prod))*
-            .apply(|$index, $first_pat, $($pat),*| $body)
+            .$apply(|$index, $first_pat, $($pat),*| $body)
     };
-    // Indexed with trailing comma.
-    ((index $index:pat, $($pat:pat in $prod:expr),+,) $body:expr) => {
-        azip!((index $index, $($pat in $prod),+) $body)
+    // Unindexed with a single producer
+    (@build $apply:ident ($first_pat:pat in $first_prod:expr $(,)?) $body:expr) => {
+        $crate::Zip::from($first_prod).$apply(|$first_pat| $body)
     };
-    // Unindexed with a single producer and no trailing comma.
-    (($first_pat:pat in $first_prod:expr) $body:expr) => {
-        $crate::Zip::from($first_prod).apply(|$first_pat| $body)
-    };
-    // Unindexed with more than one producer and no trailing comma.
-    (($first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),*) $body:expr) => {
+    // Unindexed with more than one producer
+    (@build $apply:ident ($first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),* $(,)?) $body:expr) => {
         $crate::Zip::from($first_prod)
             $(.and($prod))*
-            .apply(|$first_pat, $($pat),*| $body)
+            .$apply(|$first_pat, $($pat),*| $body)
     };
-    // Unindexed with trailing comma.
-    (($($pat:pat in $prod:expr),+,) $body:expr) => {
-        azip!(($($pat in $prod),+) $body)
+    // catch-all rule
+    (@build $($t:tt)*) => { compile_error!("Invalid syntax in azip!()") };
+    ($($t:tt)*) => {
+        $crate::azip!(@build apply $($t)*)
     };
 }
