@@ -103,23 +103,28 @@
 macro_rules! azip {
     // Indexed with a single producer
     // we allow an optional trailing comma after the producers in each rule.
-    ((index $index:pat, $first_pat:pat in $first_prod:expr $(,)?) $body:expr) => {
-        $crate::Zip::indexed($first_prod).apply(|$index, $first_pat| $body)
+    (@build $apply:ident (index $index:pat, $first_pat:pat in $first_prod:expr $(,)?) $body:expr) => {
+        $crate::Zip::indexed($first_prod).$apply(|$index, $first_pat| $body)
     };
     // Indexed with more than one producer
-    ((index $index:pat, $first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),* $(,)?) $body:expr) => {
+    (@build $apply:ident (index $index:pat, $first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),* $(,)?) $body:expr) => {
         $crate::Zip::indexed($first_prod)
             $(.and($prod))*
-            .apply(|$index, $first_pat, $($pat),*| $body)
+            .$apply(|$index, $first_pat, $($pat),*| $body)
     };
     // Unindexed with a single producer
-    (($first_pat:pat in $first_prod:expr $(,)?) $body:expr) => {
-        $crate::Zip::from($first_prod).apply(|$first_pat| $body)
+    (@build $apply:ident ($first_pat:pat in $first_prod:expr $(,)?) $body:expr) => {
+        $crate::Zip::from($first_prod).$apply(|$first_pat| $body)
     };
     // Unindexed with more than one producer
-    (($first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),* $(,)?) $body:expr) => {
+    (@build $apply:ident ($first_pat:pat in $first_prod:expr, $($pat:pat in $prod:expr),* $(,)?) $body:expr) => {
         $crate::Zip::from($first_prod)
             $(.and($prod))*
-            .apply(|$first_pat, $($pat),*| $body)
+            .$apply(|$first_pat, $($pat),*| $body)
+    };
+    // catch-all rule
+    (@build $($t:tt)*) => { compile_error!("Invalid syntax in azip!()") };
+    ($($t:tt)*) => {
+        $crate::azip!(@build apply $($t)*)
     };
 }
