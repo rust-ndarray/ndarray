@@ -50,6 +50,16 @@ fn test_azip2_3() {
 }
 
 #[test]
+fn test_azip_syntax_trailing_comma() {
+    let mut b = Array::<i32, _>::zeros((5, 5));
+    let mut c = Array::<i32, _>::ones((5, 5));
+    let a = b.clone();
+    azip!((b in &mut b, c in &mut c, ) swap(b, c));
+    assert_eq!(a, c);
+    assert!(a != b);
+}
+
+#[test]
 #[cfg(feature = "approx")]
 fn test_azip2_sum() {
     use approx::assert_abs_diff_eq;
