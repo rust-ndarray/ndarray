@@ -1,6 +1,11 @@
 Recent Changes
 --------------
 
+- 0.11.0
+
+  - Require ndarray 0.13
+  - Require rand 0.7 (unchanged from previous version)
+
 - 0.10.0
 
   - Require `rand` 0.7
