@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name = "ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.13/")]
 #![allow(
     clippy::many_single_char_names,
     clippy::deref_addrof,
@@ -61,7 +61,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.32**
+//! - **Requires Rust 1.37 or later**
 //!
 //! ## Crate Feature Flags
 //!

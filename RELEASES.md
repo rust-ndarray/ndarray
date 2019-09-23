@@ -1,5 +1,5 @@
-Version 0.13.0 (in development)
-===============================
+Version 0.13.0
+==============
 
 New features
 ------------
