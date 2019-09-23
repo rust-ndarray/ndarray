@@ -44,8 +44,8 @@ where
     /// both 0 and the endpoint are valid split indices.
     ///
     /// **Example 1**: Split `a` along the first axis, in this case the rows, at
-    /// index 1.<br>
-    /// This produces views v1 and v2 of shapes 1 × 4 and 2 × 4:
+    /// index 2.<br>
+    /// This produces views v1 and v2 of shapes 2 × 4 and 1 × 4:
     ///
     /// ```rust
     /// # use ndarray::prelude::*;
