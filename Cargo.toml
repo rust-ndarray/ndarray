@@ -71,7 +71,7 @@ docs = ["approx", "serde", "rayon"]
 debug = true
 
 [workspace]
-members = ["parallel", "ndarray-rand", "serialization-tests", "blas-tests"]
+members = ["ndarray-rand", "serialization-tests", "blas-tests"]
 exclude = ["numeric-tests"]
 
 [package.metadata.release]
