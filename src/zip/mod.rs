@@ -128,7 +128,8 @@ where
 /// for example an array view, mutable array view or an iterator
 /// that yields chunks.
 ///
-/// Producers are used as a arguments to `Zip` and `azip!()`.
+/// Producers are used as a arguments to [`Zip`](struct.Zip.html) and
+/// [`azip!()`](macro.azip.html).
 ///
 /// # Comparison to `IntoIterator`
 ///

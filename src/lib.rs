@@ -38,8 +38,8 @@
 //! - Higher order operations and arithmetic are performant
 //! - Array views can be used to slice and mutate any `[T]` data using
 //!   `ArrayView::from` and `ArrayViewMut::from`.
-//! - `Zip` for lock step function application across two or more arrays or other
-//!   item producers (`NdProducer` trait).
+//! - [`Zip`](struct.Zip.html) for lock step function application across two or more arrays or other
+//!   item producers ([`NdProducer`](trait.NdProducer.html) trait).
 //!
 //! ## Crate Status
 //!
