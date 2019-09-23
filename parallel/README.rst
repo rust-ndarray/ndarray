@@ -49,6 +49,10 @@ How to use with cargo::
 Recent Changes (ndarray-parallel)
 ---------------------------------
 
+- 0.9.1
+
+  - Mark crate as deprecated, replaced by direct support in ndarray.
+
 - 0.9.0
 
   - Upgrade for ndarray 0.12.0

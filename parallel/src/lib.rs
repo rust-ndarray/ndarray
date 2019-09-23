@@ -1,5 +1,8 @@
 //! Parallelization features for ndarray.
 //!
+//! ***This crate is deprecated and was replaced by equivalent `rayon` support
+//! directly integrated to `ndarray`.***
+//!
 //! The array views and references to owned arrays all implement
 //! `NdarrayIntoParallelIterator` (*); the default parallel iterators (each element
 //! by reference or mutable reference) have no ordering guarantee in their
