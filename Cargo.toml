@@ -76,6 +76,7 @@ exclude = ["numeric-tests"]
 
 [package.metadata.release]
 no-dev-version = true
+tag-name = "{{version}}"
 
 [package.metadata.docs.rs]
 features = ["docs"]
