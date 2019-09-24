@@ -246,7 +246,7 @@ where
         R: Rng + ?Sized,
         Sh: ShapeBuilder<Dim = D>,
     {
-        Self::from_shape_fn(shape, |_| dist.sample(rng))
+        Self::from_shape_fn_memory_order(shape, |_| dist.sample(rng))
     }
 
     fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
