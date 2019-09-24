@@ -335,6 +335,23 @@ where
         }
     }
 
+    /// Create an array with values created by the function `f`.
+    ///
+    /// `f` is called with the *linear index* (one dimensional) of the element
+    /// to create; the elements are visited in memory order.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
+    pub fn from_shape_fn_memory_order<Sh, F>(shape: Sh, f: F) -> Self
+    where
+        Sh: ShapeBuilder<Dim = D>,
+        F: FnMut(usize) -> A,
+    {
+        let shape = shape.into_shape();
+        let len = size_of_shape_checked_unwrap!(&shape.dim);
+        let v = to_vec_mapped(0..len, f);
+        unsafe { Self::from_shape_vec_unchecked(shape, v) }
+    }
+
     /// Create an array with the given shape from a vector. (No cloning of
     /// elements needed.)
     ///
