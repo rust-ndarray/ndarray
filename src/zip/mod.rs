@@ -934,14 +934,14 @@ macro_rules! map_impl {
             pub fn all<F>(mut self, mut predicate: F) -> bool
                 where F: FnMut($($p::Item),*) -> bool
             {
-                self.apply_core(true, move |_, args| {
+                !self.apply_core((), move |_, args| {
                     let ($($p,)*) = args;
                     if predicate($($p),*) {
-                        FoldWhile::Continue(true)
+                        FoldWhile::Continue(())
                     } else {
-                        FoldWhile::Done(false)
+                        FoldWhile::Done(())
                     }
-                }).into_inner()
+                }).is_done()
             }
 
             expand_if!(@bool [$notlast]
