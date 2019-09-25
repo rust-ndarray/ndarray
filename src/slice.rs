@@ -701,14 +701,7 @@ macro_rules! impl_multislice_tuple {
             fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
                 #[allow(non_snake_case)]
                 let ($($Do,)*) = self;
-
-                let shape = view.raw_dim();
-                assert!(!impl_multislice_tuple!(@intersects_self &shape, ($(&$Do,)*)));
-
-                let raw_view = view.into_raw_view_mut();
-                unsafe {
-                    ($(raw_view.clone().slice_move(&$Do).deref_into_view_mut(),)*)
-                }
+                ($($Do,)*).multi_slice_move(view)
             }
         }
 
