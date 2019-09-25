@@ -688,46 +688,53 @@ where
 }
 
 macro_rules! impl_multislice_tuple {
-    ($($Do:ident,)*) => {
-        impl<'a, A, D, $($Do,)*> MultiSlice<'a, A, D> for ($(SliceInfo<D::SliceArg, $Do>,)*)
+    ([$($but_last:ident)*] $last:ident) => {
+        impl_multislice_tuple!(@impl_owned ($($but_last,)* $last,));
+        impl_multislice_tuple!(@impl_ref ($($but_last,)* $last,), [$($but_last)*] $last);
+    };
+    (@impl_owned ($($all:ident,)*)) => {
+        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(SliceInfo<D::SliceArg, $all>,)*)
         where
             A: 'a,
             D: Dimension,
             D::SliceArg: Sized,
-            $($Do: Dimension,)*
+            $($all: Dimension,)*
         {
-            type Output = ($(ArrayViewMut<'a, A, $Do>,)*);
+            type Output = ($(ArrayViewMut<'a, A, $all>,)*);
 
             fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
                 #[allow(non_snake_case)]
-                let ($($Do,)*) = self;
-                ($($Do,)*).multi_slice_move(view)
+                let ($($all,)*) = self;
+                ($($all,)*).multi_slice_move(view)
             }
         }
-
-        impl<'a, A, D, $($Do,)*> MultiSlice<'a, A, D> for ($(&SliceInfo<D::SliceArg, $Do>,)*)
+    };
+    (@impl_ref ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
+        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(&SliceInfo<D::SliceArg, $all>,)*)
         where
             A: 'a,
             D: Dimension,
-            $($Do: Dimension,)*
+            $($all: Dimension,)*
         {
-            type Output = ($(ArrayViewMut<'a, A, $Do>,)*);
+            type Output = ($(ArrayViewMut<'a, A, $all>,)*);
 
             fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
                 #[allow(non_snake_case)]
-                let ($($Do,)*) = self;
+                let ($($all,)*) = self;
 
                 let shape = view.raw_dim();
-                assert!(!impl_multislice_tuple!(@intersects_self &shape, ($($Do,)*)));
+                assert!(!impl_multislice_tuple!(@intersects_self &shape, ($($all,)*)));
 
                 let raw_view = view.into_raw_view_mut();
                 unsafe {
-                    ($(raw_view.clone().slice_move($Do).deref_into_view_mut(),)*)
+                    (
+                        $(raw_view.clone().slice_move($but_last).deref_into_view_mut(),)*
+                        raw_view.slice_move($last).deref_into_view_mut(),
+                    )
                 }
             }
         }
     };
-
     (@intersects_self $shape:expr, ($head:expr,)) => {
         false
     };
@@ -737,11 +744,11 @@ macro_rules! impl_multislice_tuple {
     };
 }
 
-impl_multislice_tuple!(Do0, Do1,);
-impl_multislice_tuple!(Do0, Do1, Do2,);
-impl_multislice_tuple!(Do0, Do1, Do2, Do3,);
-impl_multislice_tuple!(Do0, Do1, Do2, Do3, Do4,);
-impl_multislice_tuple!(Do0, Do1, Do2, Do3, Do4, Do5,);
+impl_multislice_tuple!([Do0] Do1);
+impl_multislice_tuple!([Do0 Do1] Do2);
+impl_multislice_tuple!([Do0 Do1 Do2] Do3);
+impl_multislice_tuple!([Do0 Do1 Do2 Do3] Do4);
+impl_multislice_tuple!([Do0 Do1 Do2 Do3 Do4] Do5);
 
 impl<'a, A, D, T> MultiSlice<'a, A, D> for &T
 where
