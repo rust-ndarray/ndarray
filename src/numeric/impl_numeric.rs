@@ -6,11 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use itertools::free::enumerate;
 use num_traits::{self, Float, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
+use crate::itertools::enumerate;
 use crate::numeric_util;
 
 use crate::{FoldWhile, Zip};

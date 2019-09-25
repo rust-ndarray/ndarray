@@ -31,7 +31,6 @@ test = true
 num-integer = "0.1.39"
 num-traits = "0.2"
 num-complex = "0.2"
-itertools = { version = "0.8.0", default-features = false }
 
 rayon = { version = "1.0.3", optional = true }
 

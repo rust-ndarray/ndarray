@@ -141,6 +141,8 @@ mod macro_utils;
 #[macro_use]
 mod private;
 mod aliases;
+#[macro_use]
+mod itertools;
 #[cfg(feature = "approx")]
 mod array_approx;
 #[cfg(feature = "serde")]

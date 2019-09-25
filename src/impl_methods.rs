@@ -10,7 +10,6 @@ use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
 
-use itertools::{izip, zip};
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
@@ -22,6 +21,7 @@ use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
+use crate::itertools::zip;
 use crate::zip::Zip;
 
 use crate::iter::{

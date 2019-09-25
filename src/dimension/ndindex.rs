@@ -1,8 +1,7 @@
 use std::fmt::Debug;
 
-use itertools::zip;
-
 use super::{stride_offset, stride_offset_checked};
+use crate::itertools::zip;
 use crate::{
     Dim, Dimension, IntoDimension, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl,
 };
