@@ -660,20 +660,6 @@ where
     fn multi_slice_move(&self, _view: ArrayViewMut<'a, A, D>) -> Self::Output {}
 }
 
-impl<'a, A, D, Do0> MultiSlice<'a, A, D> for (SliceInfo<D::SliceArg, Do0>,)
-where
-    A: 'a,
-    D: Dimension,
-    D::SliceArg: Sized,
-    Do0: Dimension,
-{
-    type Output = (ArrayViewMut<'a, A, Do0>,);
-
-    fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
-        (view.slice_move(&self.0),)
-    }
-}
-
 impl<'a, A, D, Do0> MultiSlice<'a, A, D> for (&SliceInfo<D::SliceArg, Do0>,)
 where
     A: 'a,
@@ -689,27 +675,9 @@ where
 
 macro_rules! impl_multislice_tuple {
     ([$($but_last:ident)*] $last:ident) => {
-        impl_multislice_tuple!(@impl_owned ($($but_last,)* $last,));
-        impl_multislice_tuple!(@impl_ref ($($but_last,)* $last,), [$($but_last)*] $last);
+        impl_multislice_tuple!(@def_impl ($($but_last,)* $last,), [$($but_last)*] $last);
     };
-    (@impl_owned ($($all:ident,)*)) => {
-        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(SliceInfo<D::SliceArg, $all>,)*)
-        where
-            A: 'a,
-            D: Dimension,
-            D::SliceArg: Sized,
-            $($all: Dimension,)*
-        {
-            type Output = ($(ArrayViewMut<'a, A, $all>,)*);
-
-            fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
-                #[allow(non_snake_case)]
-                let ($($all,)*) = self;
-                ($($all,)*).multi_slice_move(view)
-            }
-        }
-    };
-    (@impl_ref ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
+    (@def_impl ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
         impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(&SliceInfo<D::SliceArg, $all>,)*)
         where
             A: 'a,
