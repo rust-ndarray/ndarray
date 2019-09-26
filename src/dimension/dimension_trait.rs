@@ -10,11 +10,10 @@ use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 use std::ops::{Index, IndexMut};
 
-use itertools::{enumerate, izip, zip};
-
 use super::axes_of;
 use super::conversion::Convert;
 use super::{stride_offset, stride_offset_checked};
+use crate::itertools::{enumerate, zip};
 use crate::Axis;
 use crate::IntoDimension;
 use crate::RemoveAxis;

@@ -8,7 +8,6 @@
 
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::{Ix, Ixs, Slice, SliceOrIndex};
-use itertools::izip;
 use num_integer::div_floor;
 
 pub use self::axes::{axes_of, Axes, AxisDescription};
