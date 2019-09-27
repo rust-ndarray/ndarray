@@ -80,6 +80,25 @@ where
         };
         (l, Some(l))
     }
+
+    fn fold<B, F>(self, init: B, mut f: F) -> B
+    where
+        F: FnMut(B, D::Pattern) -> B,
+    {
+        let IndicesIter { mut index, dim } = self;
+        let inner_axis = dim.ndim() - 1;
+        let inner_len = dim[inner_axis];
+        let mut acc = init;
+        while let Some(mut ix) = index {
+            // unroll innermost axis
+            while ix[inner_axis] < inner_len {
+                acc = f(acc, ix.clone().into_pattern());
+                ix[inner_axis] += 1;
+            }
+            index = dim.next_for(ix);
+        }
+        acc
+    }
 }
 
 impl<D> ExactSizeIterator for IndicesIter<D> where D: Dimension {}
@@ -281,6 +300,21 @@ mod tests {
             assert_eq!(it.len(), len);
         }
         assert_eq!(len, 0);
+    }
+
+    #[test]
+    fn test_indices_iter_c_fold() {
+        let dim = (3, 4);
+        let mut it = indices(dim).into_iter();
+        it.next();
+        let clone = it.clone();
+        let len = it.len();
+        let acc = clone.fold(0, |acc, ix| {
+            assert_eq!(ix, it.next().unwrap());
+            acc + 1
+        });
+        assert_eq!(acc, len);
+        assert!(it.next().is_none());
     }
 
     #[test]
