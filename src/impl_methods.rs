@@ -2187,7 +2187,7 @@ where
         let view_stride = self.strides.axis(axis);
         if view_len == 0 {
             let new_dim = self.dim.remove_axis(axis);
-            Array::from_shape_fn(new_dim, move |_| mapping(ArrayView::from(&[])))
+            Array::from_shape_simple_fn(new_dim, move || mapping(ArrayView::from(&[])))
         } else {
             // use the 0th subview as a map to each 1d array view extended from
             // the 0th element.
@@ -2218,7 +2218,7 @@ where
         let view_stride = self.strides.axis(axis);
         if view_len == 0 {
             let new_dim = self.dim.remove_axis(axis);
-            Array::from_shape_fn(new_dim, move |_| mapping(ArrayViewMut::from(&mut [])))
+            Array::from_shape_simple_fn(new_dim, move || mapping(ArrayViewMut::from(&mut [])))
         } else {
             // use the 0th subview as a map to each 1d array view extended from
             // the 0th element.

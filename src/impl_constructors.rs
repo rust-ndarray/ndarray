@@ -306,9 +306,27 @@ where
         A: Default,
         Sh: ShapeBuilder<Dim = D>,
     {
+        Self::from_shape_simple_fn(shape, A::default)
+    }
+
+    /// Create an array with values created by the function `f`.
+    ///
+    /// `f` is called with no argument, and it should return the element to
+    /// create. If the precise index of the element to create is needed,
+    /// use [`from_shape_fn`](ArrayBase::from_shape_fn) instead.
+    ///
+    /// This constructor can be useful if the element order is not important,
+    /// for example if they are identical or random.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
+    pub fn from_shape_simple_fn<Sh, F>(shape: Sh, mut f: F) -> Self
+    where
+        Sh: ShapeBuilder<Dim = D>,
+        F: FnMut() -> A,
+    {
         let shape = shape.into_shape();
-        let size = size_of_shape_checked_unwrap!(&shape.dim);
-        let v = to_vec((0..size).map(|_| A::default()));
+        let len = size_of_shape_checked_unwrap!(&shape.dim);
+        let v = to_vec_mapped(0..len, move |_| f());
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
@@ -333,23 +351,6 @@ where
             let v = to_vec_mapped(indexes::indices_iter_f(dim), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         }
-    }
-
-    /// Create an array with values created by the function `f`.
-    ///
-    /// `f` is called with the *linear index* (one dimensional) of the element
-    /// to create; the elements are visited in memory order.
-    ///
-    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
-    pub fn from_shape_fn_memory_order<Sh, F>(shape: Sh, f: F) -> Self
-    where
-        Sh: ShapeBuilder<Dim = D>,
-        F: FnMut(usize) -> A,
-    {
-        let shape = shape.into_shape();
-        let len = size_of_shape_checked_unwrap!(&shape.dim);
-        let v = to_vec_mapped(0..len, f);
-        unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
     /// Create an array with the given shape from a vector. (No cloning of
