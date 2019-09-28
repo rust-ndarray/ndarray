@@ -86,14 +86,21 @@ where
         F: FnMut(B, D::Pattern) -> B,
     {
         let IndicesIter { mut index, dim } = self;
-        let inner_axis = dim.ndim() - 1;
+        let ndim = dim.ndim();
+        if ndim == 0 {
+            return match index {
+                Some(ix) => f(init, ix.into_pattern()),
+                None => init,
+            };
+        }
+        let inner_axis = ndim - 1;
         let inner_len = dim[inner_axis];
         let mut acc = init;
         while let Some(mut ix) = index {
             // unroll innermost axis
-            while ix[inner_axis] < inner_len {
+            for i in ix[inner_axis]..inner_len {
+                ix[inner_axis] = i;
                 acc = f(acc, ix.clone().into_pattern());
-                ix[inner_axis] += 1;
             }
             index = dim.next_for(ix);
         }
@@ -304,17 +311,30 @@ mod tests {
 
     #[test]
     fn test_indices_iter_c_fold() {
-        let dim = (3, 4);
-        let mut it = indices(dim).into_iter();
-        it.next();
-        let clone = it.clone();
-        let len = it.len();
-        let acc = clone.fold(0, |acc, ix| {
-            assert_eq!(ix, it.next().unwrap());
-            acc + 1
-        });
-        assert_eq!(acc, len);
-        assert!(it.next().is_none());
+        macro_rules! run_test {
+            ($dim:expr) => {
+                for num_consume in 0..3 {
+                    let mut it = indices($dim).into_iter();
+                    for _ in 0..num_consume {
+                        it.next();
+                    }
+                    let clone = it.clone();
+                    let len = it.len();
+                    let acc = clone.fold(0, |acc, ix| {
+                        assert_eq!(ix, it.next().unwrap());
+                        acc + 1
+                    });
+                    assert_eq!(acc, len);
+                    assert!(it.next().is_none());
+                }
+            };
+        }
+        run_test!(());
+        run_test!((2,));
+        run_test!((2, 3));
+        run_test!((2, 0, 3));
+        run_test!((2, 3, 4));
+        run_test!((2, 3, 4, 2));
     }
 
     #[test]
