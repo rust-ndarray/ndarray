@@ -336,6 +336,20 @@ where
     /// visited in arbitrary order.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
+    ///
+    /// ```
+    /// use ndarray::{Array, arr2};
+    ///
+    /// // Create a table of i × j (with i and j from 1 to 3)
+    /// let ij_table = Array::from_shape_fn((3, 3), |(i, j)| (1 + i) * (1 + j));
+    ///
+    /// assert_eq!(
+    ///     ij_table,
+    ///     arr2(&[[1, 2, 3],
+    ///            [2, 4, 6],
+    ///            [3, 6, 9]])
+    /// );
+    /// ```
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
     where
         Sh: ShapeBuilder<Dim = D>,
