@@ -1,3 +1,4 @@
+use std::mem;
 use std::ptr::NonNull;
 
 use crate::dimension::{self, stride_offset};
@@ -111,6 +112,32 @@ where
 
         (left, right)
     }
+
+    /// Cast the raw pointer of the raw array view to a different type
+    ///
+    /// **Panics** if element size is not compatible.
+    ///
+    /// Lack of panic does not imply it is a valid cast. The cast works the same
+    /// way as regular raw pointer casts.
+    ///
+    /// While this method is safe, for the same reason as regular raw pointer
+    /// casts are safe, access through the produced raw view is only possible
+    /// in an unsafe block or function.
+    pub fn cast<B>(self) -> RawArrayView<B, D> {
+        assert_eq!(
+            mem::size_of::<B>(),
+            mem::size_of::<A>(),
+            "size mismatch in raw view cast"
+        );
+        let ptr = self.ptr.cast::<B>();
+        debug_assert!(
+            is_aligned(ptr.as_ptr()),
+            "alignment mismatch in raw view cast"
+        );
+        /* Alignment checked with debug assertion: alignment could be dynamically correct,
+         * and we don't have a check that compiles out for that. */
+        unsafe { RawArrayView::new(ptr, self.dim, self.strides) }
+    }
 }
 
 impl<A, D> RawArrayViewMut<A, D>
@@ -221,5 +248,31 @@ where
                 Self::new(right.ptr, right.dim, right.strides),
             )
         }
+    }
+
+    /// Cast the raw pointer of the raw array view to a different type
+    ///
+    /// **Panics** if element size is not compatible.
+    ///
+    /// Lack of panic does not imply it is a valid cast. The cast works the same
+    /// way as regular raw pointer casts.
+    ///
+    /// While this method is safe, for the same reason as regular raw pointer
+    /// casts are safe, access through the produced raw view is only possible
+    /// in an unsafe block or function.
+    pub fn cast<B>(self) -> RawArrayViewMut<B, D> {
+        assert_eq!(
+            mem::size_of::<B>(),
+            mem::size_of::<A>(),
+            "size mismatch in raw view cast"
+        );
+        let ptr = self.ptr.cast::<B>();
+        debug_assert!(
+            is_aligned(ptr.as_ptr()),
+            "alignment mismatch in raw view cast"
+        );
+        /* Alignment checked with debug assertion: alignment could be dynamically correct,
+         * and we don't have a check that compiles out for that. */
+        unsafe { RawArrayViewMut::new(ptr, self.dim, self.strides) }
     }
 }
