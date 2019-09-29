@@ -26,7 +26,7 @@ where
     where
         'a: 'b,
     {
-        unsafe { ArrayView::new_(self.as_ptr(), self.dim, self.strides) }
+        unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
@@ -53,7 +53,7 @@ where
 
     /// Converts to a raw array view.
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
-        unsafe { RawArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }
     }
 }
 
@@ -161,12 +161,12 @@ where
 {
     // Convert into a read-only view
     pub(crate) fn into_view(self) -> ArrayView<'a, A, D> {
-        unsafe { ArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
     }
 
     /// Converts to a mutable raw array view.
     pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D> {
-        unsafe { RawArrayViewMut::new_(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { RawArrayViewMut::new(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]

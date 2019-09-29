@@ -1517,7 +1517,7 @@ where
         let ptr = self.ptr;
         let mut strides = dim.clone();
         strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe { ArrayView::new_(ptr.as_ptr(), dim, strides) }
+        unsafe { ArrayView::new(ptr, dim, strides) }
     }
 
     fn raw_strides(&self) -> D {
