@@ -90,23 +90,23 @@ fn format_with_overflow(
         // no-op
     } else if length <= limit {
         fmt_elem(f, 0)?;
-        (1..length).try_for_each(|i| {
+        for i in 1..length {
             f.write_str(separator)?;
-            fmt_elem(f, i)
-        })?;
+            fmt_elem(f, i)?
+        }
     } else {
         let edge = limit / 2;
         fmt_elem(f, 0)?;
-        (1..edge).try_for_each(|i| {
+        for i in 1..edge {
             f.write_str(separator)?;
-            fmt_elem(f, i)
-        })?;
+            fmt_elem(f, i)?;
+        }
         f.write_str(separator)?;
         f.write_str(ellipsis)?;
-        (length - edge..length).try_for_each(|i| {
+        for i in length - edge..length {
             f.write_str(separator)?;
-            fmt_elem(f, i)
-        })?;
+            fmt_elem(f, i)?
+        }
     }
     Ok(())
 }
