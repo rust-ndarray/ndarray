@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::ptr::NonNull;
+
 use crate::dimension;
 use crate::error::ShapeError;
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
@@ -200,11 +202,11 @@ where
 
     /// Convert the view into an `ArrayViewMut<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
-    pub fn reborrow<'b>(mut self) -> ArrayViewMut<'b, A, D>
+    pub fn reborrow<'b>(self) -> ArrayViewMut<'b, A, D>
     where
         'a: 'b,
     {
-        unsafe { ArrayViewMut::new_(self.as_mut_ptr(), self.dim, self.strides) }
+        unsafe { ArrayViewMut::new(self.ptr, self.dim, self.strides) }
     }
 }
 
@@ -217,13 +219,23 @@ where
     ///
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
     #[inline(always)]
-    pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
+    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
+        if cfg!(debug_assertions) {
+            assert!(is_aligned(ptr.as_ptr()), "The pointer must be aligned.");
+            dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+        }
         ArrayView {
             data: ViewRepr::new(),
-            ptr: nonnull_debug_checked_from_ptr(ptr as *mut A),
+            ptr,
             dim,
             strides,
         }
+    }
+
+    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
+    #[inline]
+    pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
+        Self::new(nonnull_debug_checked_from_ptr(ptr as *mut A), dim, strides)
     }
 }
 
@@ -235,17 +247,24 @@ where
     ///
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
     #[inline(always)]
-    pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
+    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
         if cfg!(debug_assertions) {
-            assert!(!ptr.is_null(), "The pointer must be non-null.");
-            assert!(is_aligned(ptr), "The pointer must be aligned.");
+            assert!(is_aligned(ptr.as_ptr()), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
         }
         ArrayViewMut {
             data: ViewRepr::new(),
-            ptr: nonnull_debug_checked_from_ptr(ptr),
+            ptr,
             dim,
             strides,
         }
+    }
+
+    /// Create a new `ArrayView`
+    ///
+    /// Unsafe because: `ptr` must be valid for the given dimension and strides.
+    #[inline(always)]
+    pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
+        Self::new(nonnull_debug_checked_from_ptr(ptr), dim, strides)
     }
 }

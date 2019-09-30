@@ -1,3 +1,6 @@
+use std::mem;
+use std::ptr::NonNull;
+
 use crate::dimension::{self, stride_offset};
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
@@ -11,14 +14,18 @@ where
     ///
     /// Unsafe because caller is responsible for ensuring that the array will
     /// meet all of the invariants of the `ArrayBase` type.
-    #[inline(always)]
-    pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
+    #[inline]
+    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
         RawArrayView {
             data: RawViewRepr::new(),
-            ptr: nonnull_debug_checked_from_ptr(ptr as *mut _),
+            ptr,
             dim,
             strides,
         }
+    }
+
+    unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
+        Self::new(nonnull_debug_checked_from_ptr(ptr as *mut A), dim, strides)
     }
 
     /// Create an `RawArrayView<A, D>` from shape information and a raw pointer
@@ -76,7 +83,7 @@ where
     /// ensure that all of the data is valid and choose the correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
-        ArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides)
+        ArrayView::new(self.ptr, self.dim, self.strides)
     }
 
     /// Split the array view along `axis` and return one array pointer strictly
@@ -105,6 +112,32 @@ where
 
         (left, right)
     }
+
+    /// Cast the raw pointer of the raw array view to a different type
+    ///
+    /// **Panics** if element size is not compatible.
+    ///
+    /// Lack of panic does not imply it is a valid cast. The cast works the same
+    /// way as regular raw pointer casts.
+    ///
+    /// While this method is safe, for the same reason as regular raw pointer
+    /// casts are safe, access through the produced raw view is only possible
+    /// in an unsafe block or function.
+    pub fn cast<B>(self) -> RawArrayView<B, D> {
+        assert_eq!(
+            mem::size_of::<B>(),
+            mem::size_of::<A>(),
+            "size mismatch in raw view cast"
+        );
+        let ptr = self.ptr.cast::<B>();
+        debug_assert!(
+            is_aligned(ptr.as_ptr()),
+            "alignment mismatch in raw view cast"
+        );
+        /* Alignment checked with debug assertion: alignment could be dynamically correct,
+         * and we don't have a check that compiles out for that. */
+        unsafe { RawArrayView::new(ptr, self.dim, self.strides) }
+    }
 }
 
 impl<A, D> RawArrayViewMut<A, D>
@@ -115,14 +148,18 @@ where
     ///
     /// Unsafe because caller is responsible for ensuring that the array will
     /// meet all of the invariants of the `ArrayBase` type.
-    #[inline(always)]
-    pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
+    #[inline]
+    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
         RawArrayViewMut {
             data: RawViewRepr::new(),
-            ptr: nonnull_debug_checked_from_ptr(ptr),
+            ptr,
             dim,
             strides,
         }
+    }
+
+    unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
+        Self::new(nonnull_debug_checked_from_ptr(ptr), dim, strides)
     }
 
     /// Create an `RawArrayViewMut<A, D>` from shape information and a raw
@@ -176,7 +213,7 @@ where
     /// Converts to a non-mutable `RawArrayView`.
     #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
-        unsafe { RawArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }
     }
 
     /// Converts to a read-only view of the array.
@@ -186,7 +223,7 @@ where
     /// ensure that all of the data is valid and choose the correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
-        ArrayView::new_(self.ptr.as_ptr(), self.dim, self.strides)
+        ArrayView::new(self.ptr, self.dim, self.strides)
     }
 
     /// Converts to a mutable view of the array.
@@ -196,7 +233,7 @@ where
     /// ensure that all of the data is valid and choose the correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D> {
-        ArrayViewMut::new_(self.ptr.as_ptr(), self.dim, self.strides)
+        ArrayViewMut::new(self.ptr, self.dim, self.strides)
     }
 
     /// Split the array view along `axis` and return one array pointer strictly
@@ -207,9 +244,35 @@ where
         let (left, right) = self.into_raw_view().split_at(axis, index);
         unsafe {
             (
-                Self::new_(left.ptr.as_ptr(), left.dim, left.strides),
-                Self::new_(right.ptr.as_ptr(), right.dim, right.strides),
+                Self::new(left.ptr, left.dim, left.strides),
+                Self::new(right.ptr, right.dim, right.strides),
             )
         }
+    }
+
+    /// Cast the raw pointer of the raw array view to a different type
+    ///
+    /// **Panics** if element size is not compatible.
+    ///
+    /// Lack of panic does not imply it is a valid cast. The cast works the same
+    /// way as regular raw pointer casts.
+    ///
+    /// While this method is safe, for the same reason as regular raw pointer
+    /// casts are safe, access through the produced raw view is only possible
+    /// in an unsafe block or function.
+    pub fn cast<B>(self) -> RawArrayViewMut<B, D> {
+        assert_eq!(
+            mem::size_of::<B>(),
+            mem::size_of::<A>(),
+            "size mismatch in raw view cast"
+        );
+        let ptr = self.ptr.cast::<B>();
+        debug_assert!(
+            is_aligned(ptr.as_ptr()),
+            "alignment mismatch in raw view cast"
+        );
+        /* Alignment checked with debug assertion: alignment could be dynamically correct,
+         * and we don't have a check that compiles out for that. */
+        unsafe { RawArrayViewMut::new(ptr, self.dim, self.strides) }
     }
 }

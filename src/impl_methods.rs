@@ -139,7 +139,7 @@ where
         S: Data,
     {
         debug_assert!(self.pointer_is_inbounds());
-        unsafe { ArrayView::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
+        unsafe { ArrayView::new(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return a read-write view of the array
@@ -148,7 +148,7 @@ where
         S: DataMut,
     {
         self.ensure_unique();
-        unsafe { ArrayViewMut::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
+        unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return an uniquely owned copy of the array.
@@ -1313,7 +1313,7 @@ where
     /// Return a raw view of the array.
     #[inline]
     pub fn raw_view(&self) -> RawArrayView<A, D> {
-        unsafe { RawArrayView::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
+        unsafe { RawArrayView::new(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return a raw mutable view of the array.
@@ -1323,7 +1323,7 @@ where
         S: RawDataMut,
     {
         self.try_ensure_unique(); // for RcArray
-        unsafe { RawArrayViewMut::new_(self.ptr.as_ptr(), self.dim.clone(), self.strides.clone()) }
+        unsafe { RawArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
@@ -1620,7 +1620,7 @@ where
             Some(st) => st,
             None => return None,
         };
-        unsafe { Some(ArrayView::new_(self.ptr.as_ptr(), dim, broadcast_strides)) }
+        unsafe { Some(ArrayView::new(self.ptr, dim, broadcast_strides)) }
     }
 
     /// Swap axes `ax` and `bx`.
