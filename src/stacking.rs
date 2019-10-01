@@ -29,10 +29,7 @@ use crate::imp_prelude::*;
 ///                  [3., 3.]]))
 /// );
 /// ```
-pub fn concatenate<A, D>(
-    axis: Axis,
-    arrays: &[ArrayView<A, D>],
-) -> Result<Array<A, D>, ShapeError>
+pub fn concatenate<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
 where
     A: Copy,
     D: RemoveAxis,
@@ -90,8 +87,8 @@ where
             return Err(from_kind(ErrorKind::OutOfBounds));
         }
     }
-    let arrays: Vec<ArrayView<A, D::Larger>> = arrays.into_iter()
-        .map(|a| a.insert_axis(axis)).collect();
+    let arrays: Vec<ArrayView<A, D::Larger>> =
+        arrays.into_iter().map(|a| a.insert_axis(axis)).collect();
     concatenate(axis, &arrays)
 }
 
