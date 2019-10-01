@@ -543,14 +543,14 @@ impl_slicenextdim_larger!((), Slice);
 #[macro_export]
 macro_rules! s(
     // convert a..b;c into @convert(a..b, c), final item
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
+    (@parse $dim:expr, [$($concatenate:tt)*] $r:expr;$s:expr) => {
         match $r {
             r => {
                 let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
-                        [$($stack)* $crate::s!(@convert r, $s)],
+                        [$($concatenate)* $crate::s!(@convert r, $s)],
                         out_dim,
                     )
                 }
@@ -558,14 +558,14 @@ macro_rules! s(
         }
     };
     // convert a..b into @convert(a..b), final item
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr) => {
+    (@parse $dim:expr, [$($concatenate:tt)*] $r:expr) => {
         match $r {
             r => {
                 let out_dim = $crate::SliceNextDim::next_dim(&r, $dim);
                 #[allow(unsafe_code)]
                 unsafe {
                     $crate::SliceInfo::new_unchecked(
-                        [$($stack)* $crate::s!(@convert r)],
+                        [$($concatenate)* $crate::s!(@convert r)],
                         out_dim,
                     )
                 }
@@ -573,32 +573,32 @@ macro_rules! s(
         }
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
-        $crate::s![@parse $dim, [$($stack)*] $r;$s]
+    (@parse $dim:expr, [$($concatenate:tt)*] $r:expr;$s:expr ,) => {
+        $crate::s![@parse $dim, [$($concatenate)*] $r;$s]
     };
     // convert a..b into @convert(a..b), final item, trailing comma
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr ,) => {
-        $crate::s![@parse $dim, [$($stack)*] $r]
+    (@parse $dim:expr, [$($concatenate:tt)*] $r:expr ,) => {
+        $crate::s![@parse $dim, [$($concatenate)*] $r]
     };
     // convert a..b;c into @convert(a..b, c)
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
+    (@parse $dim:expr, [$($concatenate:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         match $r {
             r => {
                 $crate::s![@parse
                    $crate::SliceNextDim::next_dim(&r, $dim),
-                   [$($stack)* $crate::s!(@convert r, $s),]
+                   [$($concatenate)* $crate::s!(@convert r, $s),]
                    $($t)*
                 ]
             }
         }
     };
     // convert a..b into @convert(a..b)
-    (@parse $dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
+    (@parse $dim:expr, [$($concatenate:tt)*] $r:expr, $($t:tt)*) => {
         match $r {
             r => {
                 $crate::s![@parse
                    $crate::SliceNextDim::next_dim(&r, $dim),
-                   [$($stack)* $crate::s!(@convert r),]
+                   [$($concatenate)* $crate::s!(@convert r),]
                    $($t)*
                 ]
             }
