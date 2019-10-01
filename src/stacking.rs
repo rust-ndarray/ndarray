@@ -17,21 +17,21 @@ use crate::imp_prelude::*;
 /// if the result is larger than is possible to represent.
 ///
 /// ```
-/// use ndarray::{arr2, Axis, stack};
+/// use ndarray::{arr2, Axis, concatenate};
 ///
 /// let a = arr2(&[[2., 2.],
 ///                [3., 3.]]);
 /// assert!(
-///     stack(Axis(0), &[a.view(), a.view()])
+///     concatenate(Axis(0), &[a.view(), a.view()])
 ///     == Ok(arr2(&[[2., 2.],
 ///                  [3., 3.],
 ///                  [2., 2.],
 ///                  [3., 3.]]))
 /// );
 /// ```
-pub fn stack<'a, A, D>(
+pub fn concatenate<A, D>(
     axis: Axis,
-    arrays: &[ArrayView<'a, A, D>],
+    arrays: &[ArrayView<A, D>],
 ) -> Result<Array<A, D>, ShapeError>
 where
     A: Copy,
@@ -76,26 +76,45 @@ where
     Ok(res)
 }
 
-/// Stack arrays along the given axis.
+pub fn stack<A, D>(
+    axis: Axis,
+    arrays: Vec<ArrayView<A, D>>,
+) -> Result<Array<A, D::Larger>, ShapeError>
+where
+    A: Copy,
+    D: Dimension,
+    D::Larger: RemoveAxis,
+{
+    if let Some(ndim) = D::NDIM {
+        if axis.index() > ndim {
+            return Err(from_kind(ErrorKind::OutOfBounds));
+        }
+    }
+    let arrays: Vec<ArrayView<A, D::Larger>> = arrays.into_iter()
+        .map(|a| a.insert_axis(axis)).collect();
+    concatenate(axis, &arrays)
+}
+
+/// Concatenate arrays along the given axis.
 ///
-/// Uses the [`stack`][1] function, calling `ArrayView::from(&a)` on each
+/// Uses the [`concatenate`][1] function, calling `ArrayView::from(&a)` on each
 /// argument `a`.
 ///
-/// [1]: fn.stack.html
+/// [1]: fn.concatenate.html
 ///
-/// ***Panics*** if the `stack` function would return an error.
+/// ***Panics*** if the `concatenate` function would return an error.
 ///
 /// ```
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, stack, Axis};
+/// use ndarray::{arr2, concatenate, Axis};
 ///
 /// # fn main() {
 ///
 /// let a = arr2(&[[2., 2.],
 ///                [3., 3.]]);
 /// assert!(
-///     stack![Axis(0), a, a]
+///     concatenate![Axis(0), a, a]
 ///     == arr2(&[[2., 2.],
 ///               [3., 3.],
 ///               [2., 2.],
@@ -104,8 +123,42 @@ where
 /// # }
 /// ```
 #[macro_export]
+macro_rules! concatenate {
+    ($axis:expr, $( $array:expr ),+ ) => {
+        $crate::concatenate($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
+    }
+}
+
+/// Stack arrays along the new axis.
+///
+/// Uses the [`stack`][1] function, calling `ArrayView::from(&a)` on each
+/// argument `a`.
+///
+/// [1]: fn.concatenate.html
+///
+/// ***Panics*** if the `stack` function would return an error.
+///
+/// ```
+/// extern crate ndarray;
+///
+/// use ndarray::{arr2, arr3, stack, Axis};
+///
+/// # fn main() {
+///
+/// let a = arr2(&[[2., 2.],
+///                [3., 3.]]);
+/// assert!(
+///     stack![Axis(0), a, a]
+///     == arr3(&[[[2., 2.],
+///                [3., 3.]],
+///               [[2., 2.],
+///                [3., 3.]]])
+/// );
+/// # }
+/// ```
+#[macro_export]
 macro_rules! stack {
     ($axis:expr, $( $array:expr ),+ ) => {
-        $crate::stack($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
+        $crate::stack($axis, vec![ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
     }
 }
