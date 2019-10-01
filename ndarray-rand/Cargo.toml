@@ -1,20 +1,30 @@
 [package]
 name = "ndarray-rand"
-version = "0.9.0"
+version = "0.11.0"
+edition = "2018"
 authors = ["bluss"]
 license = "MIT/Apache-2.0"
 
 repository = "https://github.com/rust-ndarray/ndarray"
 documentation = "https://docs.rs/ndarray-rand/"
+readme = "README.md"
 
 description = "Constructors for randomized arrays. `rand` integration for `ndarray`."
 
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
-rand = "0.6.0"
-ndarray = { version = "0.12.0", path = ".." }
+ndarray = { version = "0.13", path = ".." }
+rand_distr = "0.2.1"
+
+[dependencies.rand]
+version = "0.7.0"
+features = ["small_rng"]
+
+[dev-dependencies]
+rand_isaac = "0.2.0"
 
 [package.metadata.release]
 no-dev-version = true
+tag-name = "ndarray-rand-{{version}}"
 

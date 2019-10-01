@@ -13,10 +13,12 @@
 /// This is a version of the [`azip`] macro that requires the crate feature
 /// `rayon` to be enabled.
 ///
+/// See the [`azip`] macro for more details about the macro syntax!
+///
 /// This example:
 ///
 /// ```rust,ignore
-/// par_azip!(mut a, b, c in { *a = b + c })
+/// par_azip!((a in &mut a, &b in &b, &c in &c) { *a = b + c })
 /// ```
 ///
 /// Is equivalent to:
@@ -47,60 +49,13 @@
 ///     // Compute a simple ternary operation:
 ///     // elementwise addition of b and c, stored in a
 ///
-///     par_azip!(mut a, b, c in { *a = b + c });
+///     par_azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
 ///
 ///     assert_eq!(a, &b + &c);
 /// }
 /// ```
 macro_rules! par_azip {
-    // Build Zip Rule (index)
-    (@parse [index => $a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        $crate::par_azip!(@finish ($crate::Zip::indexed($a)) [$($aa,)*] $t1 in $t2)
-    };
-    // Build Zip Rule (no index)
-    (@parse [$a:expr, $($aa:expr,)*] $t1:tt in $t2:tt) => {
-        $crate::par_azip!(@finish ($crate::Zip::from($a)) [$($aa,)*] $t1 in $t2)
-    };
-    // Build Finish Rule (both)
-    (@finish ($z:expr) [$($aa:expr,)*] [$($p:pat,)+] in { $($t:tt)*}) => {
-        use $crate::parallel::prelude::*;
-        #[allow(unused_mut)]
-        ($z)
-            $(
-                .and($aa)
-            )*
-            .par_apply(|$($p),+| {
-                $($t)*
-            })
-    };
-    // parsing stack: [expressions] [patterns] (one per operand)
-    // index uses empty [] -- must be first
-    (@parse [] [] index $i:pat, $($t:tt)*) => {
-        $crate::par_azip!(@parse [index =>] [$i,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident ($e:expr) $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)* $e,] [$($pats)* mut $x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] mut $x:ident $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)* &mut $x,] [$($pats)* mut $x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] , $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)*] [$($pats)*] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident ($e:expr) $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)* $e,] [$($pats)* $x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] ref $x:ident $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)* &$x,] [$($pats)* $x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident ($e:expr) $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)* $e,] [$($pats)* &$x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] $x:ident $($t:tt)*) => {
-        $crate::par_azip!(@parse [$($exprs)* &$x,] [$($pats)* &$x,] $($t)*);
-    };
-    (@parse [$($exprs:tt)*] [$($pats:tt)*] $($t:tt)*) => { };
     ($($t:tt)*) => {
-        $crate::par_azip!(@parse [] [] $($t)*);
-    }
+        $crate::azip!(@build par_apply $($t)*)
+    };
 }

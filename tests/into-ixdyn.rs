@@ -1,4 +1,10 @@
-extern crate ndarray;
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names,
+    clippy::float_cmp
+)]
 
 use ndarray::prelude::*;
 

@@ -105,7 +105,7 @@
 //!     let bunge = Array2::<f64>::ones((3, nelems));
 //!
 //!     let mut rmat = Array::zeros((3, 3, nelems).f());
-//!     azip!(mut rmat (rmat.axis_iter_mut(Axis(2))), ref bunge (bunge.axis_iter(Axis(1))) in {
+//!     azip!((mut rmat in rmat.axis_iter_mut(Axis(2)), bunge in bunge.axis_iter(Axis(1))) {
 //!         let s1 = bunge[0].sin();
 //!         let c1 = bunge[0].cos();
 //!         let s2 = bunge[1].sin();
@@ -129,8 +129,8 @@
 //!     let eye2d = Array2::<f64>::eye(3);
 //!
 //!     let mut rotated = Array3::<f64>::zeros((3, 3, nelems).f());
-//!     azip!(mut rotated (rotated.axis_iter_mut(Axis(2)), rmat (rmat.axis_iter(Axis(2)))) in {
-//!         rotated.assign({ &rmat.dot(&eye2d) });
+//!     azip!((mut rotated in rotated.axis_iter_mut(Axis(2)), rmat in rmat.axis_iter(Axis(2))) {
+//!         rotated.assign(&rmat.dot(&eye2d));
 //!     });
 //! }
 //! ```

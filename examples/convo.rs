@@ -13,7 +13,7 @@ const SHARPEN: [[f32; 3]; 3] = [[0., -1., 0.], [-1., 5., -1.], [0., -1., 0.]];
 type Kernel3x3<A> = [[A; 3]; 3];
 
 #[inline(never)]
-fn conv_3x3<F>(a: &ArrayView2<F>, out: &mut ArrayViewMut2<F>, kernel: &Kernel3x3<F>)
+fn conv_3x3<F>(a: &ArrayView2<'_, F>, out: &mut ArrayViewMut2<'_, F>, kernel: &Kernel3x3<F>)
 where
     F: Float,
 {
@@ -28,6 +28,7 @@ where
         for i in 0..n - 2 {
             for j in 0..m - 2 {
                 let mut conv = F::zero();
+                #[allow(clippy::needless_range_loop)]
                 for k in 0..3 {
                     for l in 0..3 {
                         conv = conv + *a.uget((i + k, j + l)) * kernel[k][l];

@@ -1,8 +1,6 @@
 #![cfg(feature = "rayon")]
 
-extern crate itertools;
-extern crate ndarray;
-
+#[cfg(feature = "approx")]
 use itertools::enumerate;
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
@@ -12,7 +10,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 fn test_par_azip1() {
     let mut a = Array::zeros(62);
     let b = Array::from_elem(62, 42);
-    par_azip!(mut a in { *a = 42 });
+    par_azip!((a in &mut a) { *a = 42 });
     assert_eq!(a, b);
 }
 
@@ -20,7 +18,7 @@ fn test_par_azip1() {
 fn test_par_azip2() {
     let mut a = Array::zeros((5, 7));
     let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2 * j) as f32);
-    par_azip!(mut a, b in { *a = b; });
+    par_azip!((a in &mut a, &b in &b, ) *a = b );
     assert_eq!(a, b);
 }
 
@@ -36,7 +34,7 @@ fn test_par_azip3() {
         *elt = i as f32;
     }
 
-    par_azip!(mut a (&mut a[..]), b (&b[..]), mut c (&mut c[..]) in {
+    par_azip!((a in &mut a[..], &b in &b[..], c in &mut c[..]) {
         *a += b / 10.;
         *c = a.sin();
     });
@@ -51,7 +49,7 @@ fn test_zip_dim_mismatch_1() {
     let mut d = a.raw_dim();
     d[0] += 1;
     let b = Array::from_shape_fn(d, |(i, j)| 1. / (i + 2 * j) as f32);
-    par_azip!(mut a, b in { *a = b; });
+    par_azip!((a in &mut a, &b in &b) { *a = b; });
 }
 
 #[test]
@@ -62,7 +60,7 @@ fn test_indices_1() {
     }
 
     let count = AtomicUsize::new(0);
-    par_azip!(index i, elt (&a1) in {
+    par_azip!((index i, &elt in &a1) {
         count.fetch_add(1, Ordering::SeqCst);
         assert_eq!(elt, i);
     });

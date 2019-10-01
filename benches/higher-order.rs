@@ -1,10 +1,15 @@
 #![feature(test)]
-
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 extern crate test;
+use std::iter::FromIterator;
 use test::black_box;
 use test::Bencher;
 
-extern crate ndarray;
 use ndarray::prelude::*;
 
 const N: usize = 1024;
@@ -17,7 +22,7 @@ fn map_regular(bench: &mut Bencher) {
     bench.iter(|| a.map(|&x| 2. * x));
 }
 
-pub fn double_array(mut a: ArrayViewMut2<f64>) {
+pub fn double_array(mut a: ArrayViewMut2<'_, f64>) {
     a *= 2.0;
 }
 
@@ -67,7 +72,7 @@ fn map_axis_0(bench: &mut Bencher) {
     let a = Array::from_iter(0..MASZ as i32)
         .into_shape([MA, MA])
         .unwrap();
-    bench.iter(|| a.map_axis(Axis(0), |lane| black_box(lane)));
+    bench.iter(|| a.map_axis(Axis(0), black_box));
 }
 
 #[bench]
@@ -75,5 +80,5 @@ fn map_axis_1(bench: &mut Bencher) {
     let a = Array::from_iter(0..MASZ as i32)
         .into_shape([MA, MA])
         .unwrap();
-    bench.iter(|| a.map_axis(Axis(1), |lane| black_box(lane)));
+    bench.iter(|| a.map_axis(Axis(1), black_box));
 }

@@ -45,20 +45,14 @@ macro_rules! impl_remove_axis_array(
             #[inline]
             fn remove_axis(&self, axis: Axis) -> Self::Smaller {
                 debug_assert!(axis.index() < self.ndim());
-                let mut tup = Dim([0; $n - 1]);
+                let mut result = Dim([0; $n - 1]);
                 {
-                    let mut it = tup.slice_mut().iter_mut();
-                    for (i, &d) in self.slice().iter().enumerate() {
-                        if i == axis.index() {
-                            continue;
-                        }
-                        for rr in it.by_ref() {
-                            *rr = d;
-                            break
-                        }
-                    }
+                    let src = self.slice();
+                    let dst = result.slice_mut();
+                    dst[..axis.index()].copy_from_slice(&src[..axis.index()]);
+                    dst[axis.index()..].copy_from_slice(&src[axis.index() + 1..]);
                 }
-                tup
+                result
             }
         }
     )*

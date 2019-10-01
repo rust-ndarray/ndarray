@@ -6,11 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use itertools::free::enumerate;
 use num_traits::{self, Float, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
+use crate::itertools::enumerate;
 use crate::numeric_util;
 
 use crate::{FoldWhile, Zip};
@@ -184,7 +184,7 @@ where
             let axis_length =
                 A::from_usize(axis_length).expect("Converting axis length to `A` must not fail.");
             let sum = self.sum_axis(axis);
-            Some(sum / &aview0(&axis_length))
+            Some(sum / aview0(&axis_length))
         }
     }
 
@@ -247,7 +247,7 @@ where
         let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
         for (i, subview) in self.axis_iter(axis).enumerate() {
             let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
-            azip!(mut mean, mut sum_sq, x (subview) in {
+            azip!((mean in &mut mean, sum_sq in &mut sum_sq, &x in &subview) {
                 let delta = x - *mean;
                 *mean = *mean + delta / count;
                 *sum_sq = (x - *mean).mul_add(delta, *sum_sq);
@@ -314,7 +314,7 @@ where
     /// **Panics** if broadcasting to the same shape isn’t possible.
     #[deprecated(
         note = "Use `abs_diff_eq` - it requires the `approx` crate feature",
-        since = "0.13"
+        since = "0.13.0"
     )]
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
     where

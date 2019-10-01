@@ -78,7 +78,7 @@ where
         let mut sum = A::zero();
         for i in 0..self.len() {
             unsafe {
-                sum = sum.clone() + self.uget(i).clone() * rhs.uget(i).clone();
+                sum = sum + *self.uget(i) * *rhs.uget(i);
             }
         }
         sum
@@ -108,9 +108,9 @@ where
                     if blas_compat_1d::<$ty, _>(self) && blas_compat_1d::<$ty, _>(rhs) {
                         unsafe {
                             let (lhs_ptr, n, incx) =
-                                blas_1d_params(self.ptr, self.len(), self.strides()[0]);
+                                blas_1d_params(self.ptr.as_ptr(), self.len(), self.strides()[0]);
                             let (rhs_ptr, _, incy) =
-                                blas_1d_params(rhs.ptr, rhs.len(), rhs.strides()[0]);
+                                blas_1d_params(rhs.ptr.as_ptr(), rhs.len(), rhs.strides()[0]);
                             let ret = blas_sys::$func(
                                 n,
                                 lhs_ptr as *const $ty,
@@ -363,10 +363,10 @@ use self::mat_mul_general as mat_mul_impl;
 #[cfg(feature = "blas")]
 fn mat_mul_impl<A>(
     alpha: A,
-    lhs: &ArrayView2<A>,
-    rhs: &ArrayView2<A>,
+    lhs: &ArrayView2<'_, A>,
+    rhs: &ArrayView2<'_, A>,
     beta: A,
-    c: &mut ArrayViewMut2<A>,
+    c: &mut ArrayViewMut2<'_, A>,
 ) where
     A: LinalgScalar,
 {
@@ -432,17 +432,17 @@ fn mat_mul_impl<A>(
                             CblasRowMajor,
                             lhs_trans,
                             rhs_trans,
-                            m as blas_index,      // m, rows of Op(a)
-                            n as blas_index,      // n, cols of Op(b)
-                            k as blas_index,      // k, cols of Op(a)
-                            cast_as(&alpha),      // alpha
-                            lhs_.ptr as *const _, // a
-                            lhs_stride,           // lda
-                            rhs_.ptr as *const _, // b
-                            rhs_stride,           // ldb
-                            cast_as(&beta),       // beta
-                            c_.ptr as *mut _,     // c
-                            c_stride,             // ldc
+                            m as blas_index,               // m, rows of Op(a)
+                            n as blas_index,               // n, cols of Op(b)
+                            k as blas_index,               // k, cols of Op(a)
+                            cast_as(&alpha),               // alpha
+                            lhs_.ptr.as_ptr() as *const _, // a
+                            lhs_stride,                    // lda
+                            rhs_.ptr.as_ptr() as *const _, // b
+                            rhs_stride,                    // ldb
+                            cast_as(&beta),                // beta
+                            c_.ptr.as_ptr() as *mut _,     // c
+                            c_stride,                      // ldc
                         );
                     }
                     return;
@@ -458,10 +458,10 @@ fn mat_mul_impl<A>(
 /// C ← α A B + β C
 fn mat_mul_general<A>(
     alpha: A,
-    lhs: &ArrayView2<A>,
-    rhs: &ArrayView2<A>,
+    lhs: &ArrayView2<'_, A>,
+    rhs: &ArrayView2<'_, A>,
     beta: A,
-    c: &mut ArrayViewMut2<A>,
+    c: &mut ArrayViewMut2<'_, A>,
 ) where
     A: LinalgScalar,
 {
@@ -512,7 +512,7 @@ fn mat_mul_general<A>(
         }
     } else {
         // It's a no-op if `c` has zero length.
-        if c.len() == 0 {
+        if c.is_empty() {
             return;
         }
 
@@ -586,6 +586,7 @@ pub fn general_mat_mul<A, S1, S2, S3>(
 /// ***Panics*** if array shapes are not compatible<br>
 /// *Note:* If enabled, uses blas `gemv` for elements of `f32, f64` when memory
 /// layout allows.
+#[allow(clippy::collapsible_if)]
 pub fn general_mat_vec_mul<A, S1, S2, S3>(
     alpha: A,
     a: &ArrayBase<S1, Ix2>,
@@ -608,10 +609,18 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
             ($ty:ty, $gemv:ident) => {
                 if let Some(layout) = blas_layout::<$ty, _>(&a) {
                     if blas_compat_1d::<$ty, _>(&x) && blas_compat_1d::<$ty, _>(&y) {
+                        // Determine stride between rows or columns. Note that the stride is
+                        // adjusted to at least `k` or `m` to handle the case of a matrix with a
+                        // trivial (length 1) dimension, since the stride for the trivial dimension
+                        // may be arbitrary.
                         let a_trans = CblasNoTrans;
                         let a_stride = match layout {
-                            CBLAS_LAYOUT::CblasRowMajor => a.strides()[0] as blas_index,
-                            CBLAS_LAYOUT::CblasColMajor => a.strides()[1] as blas_index,
+                            CBLAS_LAYOUT::CblasRowMajor => {
+                                a.strides()[0].max(k as isize) as blas_index
+                            }
+                            CBLAS_LAYOUT::CblasColMajor => {
+                                a.strides()[1].max(m as isize) as blas_index
+                            }
                         };
 
                         let x_stride = x.strides()[0] as blas_index;
@@ -621,15 +630,15 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
                             blas_sys::$gemv(
                                 layout,
                                 a_trans,
-                                m as blas_index,   // m, rows of Op(a)
-                                k as blas_index,   // n, cols of Op(a)
-                                cast_as(&alpha),   // alpha
-                                a.ptr as *const _, // a
-                                a_stride,          // lda
-                                x.ptr as *const _, // x
+                                m as blas_index,            // m, rows of Op(a)
+                                k as blas_index,            // n, cols of Op(a)
+                                cast_as(&alpha),            // alpha
+                                a.ptr.as_ptr() as *const _, // a
+                                a_stride,                   // lda
+                                x.ptr.as_ptr() as *const _, // x
                                 x_stride,
-                                cast_as(&beta),  // beta
-                                y.ptr as *mut _, // x
+                                cast_as(&beta),           // beta
+                                y.ptr.as_ptr() as *mut _, // x
                                 y_stride,
                             );
                         }

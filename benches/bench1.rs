@@ -1,7 +1,12 @@
 #![feature(test)]
 #![allow(unused_imports)]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
-extern crate ndarray;
 extern crate test;
 
 use ndarray::ShapeBuilder;
@@ -265,7 +270,7 @@ fn add_2d_zip_alloc(bench: &mut test::Bencher) {
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| unsafe {
         let mut c = Array::uninitialized(a.dim());
-        azip!(a, b, mut c in { *c = a + b });
+        azip!((&a in &a, &b in &b, c in &mut c) *c = a + b);
         c
     });
 }
@@ -304,6 +309,7 @@ fn add_2d_zip_cutout(bench: &mut test::Bencher) {
 }
 
 #[bench]
+#[allow(clippy::identity_op)]
 fn add_2d_cutouts_by_4(bench: &mut test::Bencher) {
     let mut a = Array::<i32, _>::zeros((64 * 1, 64 * 1));
     let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
@@ -316,6 +322,7 @@ fn add_2d_cutouts_by_4(bench: &mut test::Bencher) {
 }
 
 #[bench]
+#[allow(clippy::identity_op)]
 fn add_2d_cutouts_by_16(bench: &mut test::Bencher) {
     let mut a = Array::<i32, _>::zeros((64 * 1, 64 * 1));
     let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
@@ -328,6 +335,7 @@ fn add_2d_cutouts_by_16(bench: &mut test::Bencher) {
 }
 
 #[bench]
+#[allow(clippy::identity_op)]
 fn add_2d_cutouts_by_32(bench: &mut test::Bencher) {
     let mut a = Array::<i32, _>::zeros((64 * 1, 64 * 1));
     let b = Array::<i32, _>::zeros((64 * 1, 64 * 1));
@@ -580,7 +588,7 @@ fn iadd_scalar_2d_strided_dyn(bench: &mut test::Bencher) {
 fn scaled_add_2d_f32_regular(bench: &mut test::Bencher) {
     let mut av = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
-    let scalar = 3.1415926535;
+    let scalar = std::f32::consts::PI;
     bench.iter(|| {
         av.scaled_add(scalar, &bv);
     });
@@ -650,7 +658,7 @@ fn bench_row_iter(bench: &mut test::Bencher) {
     let a = Array::<f32, _>::zeros((1024, 1024));
     let it = a.row(17);
     bench.iter(|| {
-        for elt in it.clone() {
+        for elt in it {
             black_box(elt);
         }
     })
@@ -661,7 +669,7 @@ fn bench_col_iter(bench: &mut test::Bencher) {
     let a = Array::<f32, _>::zeros((1024, 1024));
     let it = a.column(17);
     bench.iter(|| {
-        for elt in it.clone() {
+        for elt in it {
             black_box(elt);
         }
     })

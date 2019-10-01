@@ -10,12 +10,13 @@
 //!
 //!
 
+#![allow(clippy::match_wild_err_arm)]
+
 use num_traits::{Float, One, Zero};
-use std::isize;
-use std::mem;
 
 use crate::dimension;
 use crate::error::{self, ShapeError};
+use crate::extension::nonnull::nonnull_from_vec_data;
 use crate::imp_prelude::*;
 use crate::indexes;
 use crate::indices;
@@ -40,33 +41,11 @@ where
     /// ```rust
     /// use ndarray::Array;
     ///
-    /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
+    /// let array = Array::from(vec![1., 2., 3., 4.]);
     /// ```
+    #[deprecated(note = "use standard `from`", since = "0.13.0")]
     pub fn from_vec(v: Vec<A>) -> Self {
-        if mem::size_of::<A>() == 0 {
-            assert!(
-                v.len() <= isize::MAX as usize,
-                "Length must fit in `isize`.",
-            );
-        }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
-    }
-
-    /// Create a one-dimensional array from an iterable.
-    ///
-    /// **Panics** if the length is greater than `isize::MAX`.
-    ///
-    /// ```rust
-    /// use ndarray::{Array, arr1};
-    ///
-    /// let array = Array::from_iter((0..5).map(|x| x * x));
-    /// assert!(array == arr1(&[0, 1, 4, 9, 16]))
-    /// ```
-    pub fn from_iter<I>(iterable: I) -> Self
-    where
-        I: IntoIterator<Item = A>,
-    {
-        Self::from_vec(iterable.into_iter().collect())
+        Self::from(v)
     }
 
     /// Create a one-dimensional array with `n` evenly spaced elements from
@@ -90,7 +69,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(linspace::linspace(start, end, n)))
+        Self::from(to_vec(linspace::linspace(start, end, n)))
     }
 
     /// Create a one-dimensional array with elements from `start` to `end`
@@ -108,7 +87,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(linspace::range(start, end, step)))
+        Self::from(to_vec(linspace::range(start, end, step)))
     }
 
     /// Create a one-dimensional array with `n` logarithmically spaced
@@ -136,7 +115,7 @@ where
     where
         A: Float,
     {
-        Self::from_vec(to_vec(logspace::logspace(base, start, end, n)))
+        Self::from(to_vec(logspace::logspace(base, start, end, n)))
     }
 
     /// Create a one-dimensional array with `n` geometrically spaced elements
@@ -170,7 +149,7 @@ where
     where
         A: Float,
     {
-        Some(Self::from_vec(to_vec(geomspace::geomspace(start, end, n)?)))
+        Some(Self::from(to_vec(geomspace::geomspace(start, end, n)?)))
     }
 }
 
@@ -193,9 +172,33 @@ where
         }
         eye
     }
+
+    /// Create a 2D matrix from its diagonal
+    ///
+    /// **Panics** if `diag.len() * diag.len()` would overflow `isize`.
+    ///
+    /// ```rust
+    /// use ndarray::{Array2, arr1, arr2};
+    ///
+    /// let diag = arr1(&[1, 2]);
+    /// let array = Array2::from_diag(&diag);
+    /// assert_eq!(array, arr2(&[[1, 0], [0, 2]]));
+    /// ```
+    pub fn from_diag<S2>(diag: &ArrayBase<S2, Ix1>) -> Self
+    where
+        A: Clone + Zero,
+        S: DataMut,
+        S2: Data<Elem = A>,
+    {
+        let n = diag.len();
+        let mut arr = Self::zeros((n, n));
+        arr.diag_mut().assign(&diag);
+        arr
+    }
 }
 
 #[cfg(not(debug_assertions))]
+#[allow(clippy::match_wild_err_arm)]
 macro_rules! size_of_shape_checked_unwrap {
     ($dim:expr) => {
         match dimension::size_of_shape_checked($dim) {
@@ -327,7 +330,7 @@ where
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         } else {
             let dim = shape.dim.clone();
-            let v = to_vec_mapped(indexes::indices_iter_f(dim).into_iter(), f);
+            let v = to_vec_mapped(indexes::indices_iter_f(dim), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         }
     }
@@ -420,10 +423,10 @@ where
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
-            ptr: v.as_mut_ptr(),
+            ptr: nonnull_from_vec_data(&mut v),
             data: DataOwned::new(v),
-            strides: strides,
-            dim: dim,
+            strides,
+            dim,
         }
     }
 

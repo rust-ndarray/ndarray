@@ -6,7 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name = "ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.13/")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -32,8 +38,8 @@
 //! - Higher order operations and arithmetic are performant
 //! - Array views can be used to slice and mutate any `[T]` data using
 //!   `ArrayView::from` and `ArrayViewMut::from`.
-//! - `Zip` for lock step function application across two or more arrays or other
-//!   item producers (`NdProducer` trait).
+//! - [`Zip`](struct.Zip.html) for lock step function application across two or more arrays or other
+//!   item producers ([`NdProducer`](trait.NdProducer.html) trait).
 //!
 //! ## Crate Status
 //!
@@ -55,16 +61,16 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.31**
+//! - **Requires Rust 1.37 or later**
 //!
 //! ## Crate Feature Flags
 //!
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
-//! - `serde-1`
+//! - `serde`
 //!   - Optional, compatible with Rust stable
-//!   - Enables serialization support for serde 1.0
+//!   - Enables serialization support for serde 1.x
 //! - `rayon`
 //!   - Optional, compatible with Rust stable
 //!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
@@ -86,30 +92,24 @@
 //!
 //! * If you have experience with NumPy, you may also be interested in
 //!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
-
-#[cfg(feature = "serde-1")]
-extern crate serde;
-
-#[cfg(feature = "rayon")]
-extern crate rayon;
-
-#[cfg(feature = "approx")]
-extern crate approx;
+//!
+//! ## The ndarray ecosystem
+//!
+//! `ndarray` provides a lot of functionality, but it's not a one-stop solution.
+//!
+//! `ndarray` includes matrix multiplication and other binary/unary operations out of the box.
+//! More advanced linear algebra routines (e.g. SVD decomposition or eigenvalue computation)
+//! can be found in [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
+//!
+//! The same holds for statistics: `ndarray` provides some basic functionalities (e.g. `mean`)
+//! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
+//!
+//! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
-
-extern crate matrixmultiply;
-
-extern crate itertools;
-extern crate num_complex;
-extern crate num_integer;
-extern crate num_traits;
-
-#[cfg(test)]
-extern crate quickcheck;
 
 #[cfg(feature = "docs")]
 pub mod doc;
@@ -118,18 +118,13 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 pub use crate::dimension::dim::*;
-pub use crate::dimension::{
-    slices_intersect, Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis,
-};
+pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
 
 pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
-pub use crate::slice::{
-    deref_raw_view_mut_into_view_mut_with_life, deref_raw_view_mut_into_view_with_life,
-    life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex,
-};
+pub use crate::slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
 
 use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
@@ -146,9 +141,11 @@ mod macro_utils;
 #[macro_use]
 mod private;
 mod aliases;
+#[macro_use]
+mod itertools;
 #[cfg(feature = "approx")]
 mod array_approx;
-#[cfg(feature = "serde-1")]
+#[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
@@ -166,6 +163,7 @@ pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
 mod error;
+mod extension;
 mod geomspace;
 mod indexes;
 mod iterators;
@@ -417,12 +415,12 @@ pub type Ixs = isize;
 ///
 /// // 2. Use Zip to pair each row in 2D `a` with elements in 1D `b`
 /// use ndarray::Zip;
-/// let mut b = Array::zeros(a.rows());
+/// let mut b = Array::zeros(a.nrows());
 ///
 /// Zip::from(a.genrows())
 ///     .and(&mut b)
 ///     .apply(|a_row, b_elt| {
-///         *b_elt = a_row[a.cols() - 1] - a_row[0];
+///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
 ///     });
 /// ```
 ///
@@ -477,13 +475,10 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
-/// It's possible to take multiple simultaneous *mutable* slices with the
-/// [`multislice!()`](macro.multislice!.html) macro.
-///
 /// ```
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3, multislice, s};
+/// use ndarray::{arr2, arr3, s};
 ///
 /// fn main() {
 ///
@@ -530,20 +525,6 @@ pub type Ixs = isize;
 ///                [12, 11, 10]]);
 /// assert_eq!(f, g);
 /// assert_eq!(f.shape(), &[2, 3]);
-///
-/// // Let's take two disjoint, mutable slices of a matrix with
-/// //
-/// // - One containing all the even-index columns in the matrix
-/// // - One containing all the odd-index columns in the matrix
-/// let mut h = arr2(&[[0, 1, 2, 3],
-///                    [4, 5, 6, 7]]);
-/// let (s0, s1) = multislice!(h, mut [.., ..;2], mut [.., 1..;2]);
-/// let i = arr2(&[[0, 2],
-///                [4, 6]]);
-/// let j = arr2(&[[1, 3],
-///                [5, 7]]);
-/// assert_eq!(s0, i);
-/// assert_eq!(s1, j);
 /// }
 /// ```
 ///
@@ -988,7 +969,7 @@ pub type Ixs = isize;
 /// `Array<A, D>` | `Vec<A>` | [`.into_raw_vec()`](type.Array.html#method.into_raw_vec)<sup>[1](#into_raw_vec)</sup>
 /// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[3](#req_contig)</sup>
 /// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
-/// `ArrayView<A, D>` | `&[A]` | [`.into_slice()`](type.ArrayView.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
+/// `ArrayView<A, D>` | `&[A]` | [`.to_slice()`](type.ArrayView.html#method.to_slice)<sup>[2](#req_contig_std)</sup>
 /// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
 /// `Array0<A>` | `A` | [`.into_scalar()`](type.Array.html#method.into_scalar)
 ///
@@ -1230,7 +1211,7 @@ where
     data: S,
     /// A non-null and aligned pointer into the buffer held by `data`; may
     /// point anywhere in its range.
-    ptr: *mut S::Elem,
+    ptr: std::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
@@ -1500,7 +1481,7 @@ where
     D: Dimension,
 {
     #[inline]
-    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
+    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
     where
         E: Dimension,
     {
@@ -1527,7 +1508,7 @@ where
     // Broadcast to dimension `E`, without checking that the dimensions match
     // (Checked in debug assertions).
     #[inline]
-    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<A, E>
+    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<'_, A, E>
     where
         E: Dimension,
     {
@@ -1536,7 +1517,7 @@ where
         let ptr = self.ptr;
         let mut strides = dim.clone();
         strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe { ArrayView::new_(ptr, dim, strides) }
+        unsafe { ArrayView::new(ptr, dim, strides) }
     }
 
     fn raw_strides(&self) -> D {
@@ -1551,14 +1532,11 @@ where
         F: FnMut(&mut A),
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
-            // FIXME: Use for loop when slice iterator is perf is restored
-            for i in 0..slc.len() {
-                f(&mut slc[i]);
+            slc.iter_mut().for_each(f);
+        } else {
+            for row in self.inner_rows_mut() {
+                row.into_iter_().fold((), |(), elt| f(elt));
             }
-            return;
-        }
-        for row in self.inner_rows_mut() {
-            row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
 
@@ -1575,13 +1553,13 @@ where
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller> {
+    fn inner_rows(&self) -> iterators::Lanes<'_, A, D::Smaller> {
         let n = self.ndim();
         Lanes::new(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::LanesMut<A, D::Smaller>
+    fn inner_rows_mut(&mut self) -> iterators::LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {

@@ -23,7 +23,7 @@ where
         if let Some(slc) = self.as_slice() {
             slc.to_vec()
         } else {
-            crate::iterators::to_vec(self.iter().map(|x| x.clone()))
+            crate::iterators::to_vec(self.iter().cloned())
         }
     }
 }

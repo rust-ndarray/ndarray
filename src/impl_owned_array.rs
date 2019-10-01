@@ -29,7 +29,7 @@ impl<A> Array<A, Ix0> {
             // (This is necessary because the element in the array might not be
             // the first element in the `Vec`, such as if the array was created
             // by `array![1, 2, 3, 4].slice_move(s![2])`.)
-            let first = self.ptr as usize;
+            let first = self.ptr.as_ptr() as usize;
             let base = self.data.0.as_ptr() as usize;
             let index = (first - base) / size;
             debug_assert_eq!((first - base) % size, 0);

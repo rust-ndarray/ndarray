@@ -1,8 +1,17 @@
-ndarray-rand
-============
-
 Recent Changes
 --------------
+
+- 0.11.0
+
+  - Require ndarray 0.13
+  - Require rand 0.7 (unchanged from previous version)
+
+- 0.10.0
+
+  - Require `rand` 0.7
+  - Require Rust 1.32 or later
+  - Re-export `rand` as a submodule, `ndarray_rand::rand`
+  - Re-export `rand-distr` as a submodule, `ndarray_rand::rand_distr`
 
 - 0.9.0
 
@@ -45,16 +54,3 @@ Recent Changes
 - 0.1.0
 
   - Initial release
-
-License
-=======
-
-Dual-licensed to be compatible with the Rust project.
-
-Licensed under the Apache License, Version 2.0
-http://www.apache.org/licenses/LICENSE-2.0 or the MIT license
-http://opensource.org/licenses/MIT, at your
-option. This file may not be copied, modified, or distributed
-except according to those terms.
-
-

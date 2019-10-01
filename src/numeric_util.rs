@@ -5,6 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
 use std::cmp;
 
 use crate::LinalgScalar;
@@ -48,11 +49,11 @@ where
 
     // make it clear to the optimizer that this loop is short
     // and can not be autovectorized.
-    for i in 0..xs.len() {
+    for (i, x) in xs.iter().enumerate() {
         if i >= 7 {
             break;
         }
-        acc = f(acc.clone(), xs[i].clone())
+        acc = f(acc.clone(), x.clone())
     }
     acc
 }
@@ -99,14 +100,11 @@ where
     sum = sum + (p2 + p6);
     sum = sum + (p3 + p7);
 
-    for i in 0..xs.len() {
+    for (i, (&x, &y)) in xs.iter().zip(ys).enumerate() {
         if i >= 7 {
             break;
         }
-        unsafe {
-            // get_unchecked is needed to avoid the bounds check
-            sum = sum + xs[i] * *ys.get_unchecked(i);
-        }
+        sum = sum + x * y;
     }
     sum
 }

@@ -1,11 +1,6 @@
 #![cfg(feature = "rayon")]
 #![feature(test)]
 
-extern crate rayon;
-
-extern crate itertools;
-extern crate ndarray;
-
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
 
@@ -16,8 +11,6 @@ use ndarray::Zip;
 
 const EXP_N: usize = 256;
 const ADDN: usize = 512;
-
-use std::cmp::max;
 
 fn set_threads() {
     // Consider setting a fixed number of threads here, for example to avoid
@@ -124,7 +117,7 @@ fn add(bench: &mut Bencher) {
     let c = Array2::<f64>::zeros((ADDN, ADDN));
     let d = Array2::<f64>::zeros((ADDN, ADDN));
     bench.iter(|| {
-        azip!(mut a, b, c, d in {
+        azip!((a in &mut a, &b in &b, &c in &c, &d in &d) {
             *a += b.exp() + c.exp() + d.exp();
         });
     });
@@ -138,7 +131,7 @@ fn rayon_add(bench: &mut Bencher) {
     let c = Array2::<f64>::zeros((ADDN, ADDN));
     let d = Array2::<f64>::zeros((ADDN, ADDN));
     bench.iter(|| {
-        par_azip!(mut a, b, c, d in {
+        par_azip!((a in &mut a, b in &b, c in &c, d in &d) {
             *a += b.exp() + c.exp() + d.exp();
         });
     });
