@@ -8,7 +8,6 @@
 use crate::ScalarOperand;
 use num_traits::{Float, One, Zero};
 use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 /// Elements that support linear algebra operations.
@@ -20,10 +19,6 @@ pub trait LinalgScalar:
     + Copy
     + Zero
     + One
-    + Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
-    + Div<Output = Self>
 {
 }
 
@@ -32,10 +27,6 @@ impl<T> LinalgScalar for T where
         + Copy
         + Zero
         + One
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
 {
 }
 
