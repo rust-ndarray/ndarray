@@ -46,7 +46,7 @@ rawpointer = { version = "0.2" }
 
 [dev-dependencies]
 defmac = "0.2"
-quickcheck = { version = "0.8", default-features = false }
+quickcheck = { version = "0.9", default-features = false }
 approx = "0.3.2"
 itertools = { version = "0.8.0", default-features = false, features = ["use_std"] }
 
