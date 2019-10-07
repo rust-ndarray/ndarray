@@ -108,3 +108,20 @@ fn sampling_with_replacement_from_a_zero_length_axis_should_panic() {
     let a = Array::random((0, n), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithReplacement);
 }
+
+quickcheck! {
+    fn shuffling_works(m: usize, n: usize) -> bool {
+        let a = Array::random((m, n), Uniform::new(0., 2.));
+
+        // Get a clone of `a` and shuffle it in place
+        let mut results = vec![];
+        for &axis in &[Axis(0), Axis(1)] {
+            let mut b = a.clone();
+            b.shuffle_axis_inplace(axis);
+
+            let result = b.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis));
+            results.push(result)
+        }
+        results.into_iter().all(|p| p)
+    }
+}
