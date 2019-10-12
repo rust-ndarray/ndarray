@@ -22,7 +22,7 @@ quickcheck = { version = "0.9", default-features = false, optional = true }
 normaldist = ["ndarray-linalg"]
 
 [dependencies.ndarray-linalg]
-version = "0.10"
+version = "0.11"
 optional = true
 features = ["openblas"]
 

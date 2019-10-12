@@ -1,8 +1,9 @@
 //! Implementation of the multiavariate normal distribution.
 use crate::RandomExt;
 use ndarray::{Array, IntoDimension, Dimension};
-use rand::Rng;
-use rand::distributions::{Distribution, StandardNormal};
+use crate::rand::Rng;
+use crate::rand::distributions::Distribution;
+use crate::rand_distr::{StandardNormal};
 
 #[cfg(feature = "normaldist")]
 pub mod advanced;
@@ -10,12 +11,8 @@ pub mod advanced;
 /// Standard multivariate normal distribution `N(0,1)` for any-dimensional arrays.
 ///
 /// ```
-/// extern crate rand;
-/// extern crate ndarray;
-/// extern crate ndarray_rand;
-/// 
 /// use rand;
-/// use rand::distributions::Distribution;
+/// use rand_distr::Distribution;
 /// use ndarray;
 /// use ndarray_rand::normal::MultivariateStandardNormal;
 /// 

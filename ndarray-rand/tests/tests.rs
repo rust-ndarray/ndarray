@@ -2,6 +2,7 @@ use ndarray::{Array, Array2, ArrayView1, Axis};
 #[cfg(feature = "quickcheck")]
 use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
+use ndarray_rand::normal::MultivariateStandardNormal;
 use ndarray_rand::{RandomExt, SamplingStrategy};
 use quickcheck::quickcheck;
 
