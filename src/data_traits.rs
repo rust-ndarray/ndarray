@@ -8,10 +8,15 @@
 
 //! The data (inner representation) traits for ndarray
 
+use crate::extension::nonnull::nonnull_from_vec_data;
+use rawpointer::PointerExt;
 use std::mem::{self, size_of};
+use std::ptr::NonNull;
 use std::sync::Arc;
 
-use crate::{ArrayBase, Dimension, OwnedArcRepr, OwnedRcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{
+    ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRcRepr, OwnedRepr, RawViewRepr, ViewRepr,
+};
 
 /// Array representation trait.
 ///
@@ -65,14 +70,14 @@ pub unsafe trait RawDataMut: RawData {
 pub unsafe trait RawDataClone: RawData {
     #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem);
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>);
 
     #[doc(hidden)]
     unsafe fn clone_from_with_ptr(
         &mut self,
         other: &Self,
-        ptr: *mut Self::Elem,
-    ) -> *mut Self::Elem {
+        ptr: NonNull<Self::Elem>,
+    ) -> NonNull<Self::Elem> {
         let (data, ptr) = other.clone_with_ptr(ptr);
         *self = data;
         ptr
@@ -131,7 +136,7 @@ pub unsafe trait DataMut: Data + RawDataMut {
 /// accessed with safe code.
 ///
 /// ***Internal trait, see `Data`.***
-#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13")]
+#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13.0")]
 pub trait DataClone: Data + RawDataClone {}
 
 #[allow(deprecated)]
@@ -146,7 +151,7 @@ unsafe impl<A> RawData for RawViewRepr<*const A> {
 }
 
 unsafe impl<A> RawDataClone for RawViewRepr<*const A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
@@ -175,7 +180,7 @@ unsafe impl<A> RawDataMut for RawViewRepr<*mut A> {
 }
 
 unsafe impl<A> RawDataClone for RawViewRepr<*mut A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
@@ -215,13 +220,13 @@ where
         let rcvec = &mut self_.data.0;
         let a_size = mem::size_of::<A>() as isize;
         let our_off = if a_size != 0 {
-            (self_.ptr as isize - rcvec.as_ptr() as isize) / a_size
+            (self_.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
         } else {
             0
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.ptr = rvec.as_mut_ptr().offset(our_off);
+            self_.ptr = nonnull_from_vec_data(rvec).offset(our_off);
         }
     }
 
@@ -239,7 +244,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
         Self::ensure_unique(&mut self_);
         let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
         ArrayBase {
-            data: data,
+            data,
             ptr: self_.ptr,
             dim: self_.dim,
             strides: self_.strides,
@@ -250,7 +255,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
 unsafe impl<A> DataMut for OwnedArcRepr<A> where A: Clone {}
 
 unsafe impl<A> RawDataClone for OwnedArcRepr<A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         // pointer is preserved
         (self.clone(), ptr)
     }
@@ -296,11 +301,12 @@ unsafe impl<A> RawDataClone for OwnedRepr<A>
 where
     A: Clone,
 {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         let mut u = self.clone();
-        let mut new_ptr = u.0.as_mut_ptr();
+        let mut new_ptr = nonnull_from_vec_data(&mut u.0);
         if size_of::<A>() != 0 {
-            let our_off = (ptr as isize - self.0.as_ptr() as isize) / mem::size_of::<A>() as isize;
+            let our_off =
+                (ptr.as_ptr() as isize - self.0.as_ptr() as isize) / mem::size_of::<A>() as isize;
             new_ptr = new_ptr.offset(our_off);
         }
         (u, new_ptr)
@@ -309,15 +315,15 @@ where
     unsafe fn clone_from_with_ptr(
         &mut self,
         other: &Self,
-        ptr: *mut Self::Elem,
-    ) -> *mut Self::Elem {
+        ptr: NonNull<Self::Elem>,
+    ) -> NonNull<Self::Elem> {
         let our_off = if size_of::<A>() != 0 {
-            (ptr as isize - other.0.as_ptr() as isize) / mem::size_of::<A>() as isize
+            (ptr.as_ptr() as isize - other.0.as_ptr() as isize) / mem::size_of::<A>() as isize
         } else {
             0
         };
         self.0.clone_from(&other.0);
-        self.0.as_mut_ptr().offset(our_off)
+        nonnull_from_vec_data(&mut self.0).offset(our_off)
     }
 }
 
@@ -340,7 +346,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
 }
 
 unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A> {
-    unsafe fn clone_with_ptr(&self, ptr: *mut Self::Elem) -> (Self, *mut Self::Elem) {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
@@ -423,3 +429,103 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
         self
     }
 }
+
+unsafe impl<'a, A> RawData for CowRepr<'a, A> {
+    type Elem = A;
+    fn _data_slice(&self) -> Option<&[A]> {
+        match self {
+            CowRepr::View(view) => view._data_slice(),
+            CowRepr::Owned(data) => data._data_slice(),
+        }
+    }
+    private_impl! {}
+}
+
+unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
+where
+    A: Clone,
+{
+    #[inline]
+    fn try_ensure_unique<D>(array: &mut ArrayBase<Self, D>)
+    where
+        Self: Sized,
+        D: Dimension,
+    {
+        match array.data {
+            CowRepr::View(_) => {
+                let owned = array.to_owned();
+                array.data = CowRepr::Owned(owned.data);
+                array.ptr = owned.ptr;
+                array.dim = owned.dim;
+                array.strides = owned.strides;
+            }
+            CowRepr::Owned(_) => {}
+        }
+    }
+
+    #[inline]
+    fn try_is_unique(&mut self) -> Option<bool> {
+        Some(self.is_owned())
+    }
+}
+
+unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
+where
+    A: Clone,
+{
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
+        match self {
+            CowRepr::View(view) => {
+                let (new_view, ptr) = view.clone_with_ptr(ptr);
+                (CowRepr::View(new_view), ptr)
+            }
+            CowRepr::Owned(data) => {
+                let (new_data, ptr) = data.clone_with_ptr(ptr);
+                (CowRepr::Owned(new_data), ptr)
+            }
+        }
+    }
+
+    #[doc(hidden)]
+    unsafe fn clone_from_with_ptr(
+        &mut self,
+        other: &Self,
+        ptr: NonNull<Self::Elem>,
+    ) -> NonNull<Self::Elem> {
+        match (&mut *self, other) {
+            (CowRepr::View(self_), CowRepr::View(other)) => self_.clone_from_with_ptr(other, ptr),
+            (CowRepr::Owned(self_), CowRepr::Owned(other)) => self_.clone_from_with_ptr(other, ptr),
+            (_, CowRepr::Owned(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::Owned(cloned);
+                ptr
+            }
+            (_, CowRepr::View(other)) => {
+                let (cloned, ptr) = other.clone_with_ptr(ptr);
+                *self = CowRepr::View(cloned);
+                ptr
+            }
+        }
+    }
+}
+
+unsafe impl<'a, A> Data for CowRepr<'a, A> {
+    #[inline]
+    fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        match self_.data {
+            CowRepr::View(_) => self_.to_owned(),
+            CowRepr::Owned(data) => ArrayBase {
+                data,
+                ptr: self_.ptr,
+                dim: self_.dim,
+                strides: self_.strides,
+            },
+        }
+    }
+}
+
+unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}

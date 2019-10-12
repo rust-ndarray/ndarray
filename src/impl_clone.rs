@@ -5,6 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
 use crate::imp_prelude::*;
 use crate::RawDataClone;
 
@@ -13,8 +14,8 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
         unsafe {
             let (data, ptr) = self.data.clone_with_ptr(self.ptr);
             ArrayBase {
-                data: data,
-                ptr: ptr,
+                data,
+                ptr,
                 dim: self.dim.clone(),
                 strides: self.strides.clone(),
             }

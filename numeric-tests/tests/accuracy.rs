@@ -1,10 +1,11 @@
 extern crate approx;
+extern crate rand_distr;
 extern crate ndarray;
 extern crate ndarray_rand;
 extern crate rand;
 
 use ndarray_rand::{RandomExt, F32};
-use rand::{FromEntropy, Rng};
+use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
 
 use ndarray::prelude::*;
@@ -14,7 +15,7 @@ use ndarray::{
 };
 use ndarray::linalg::general_mat_mul;
 
-use rand::distributions::Normal;
+use rand_distr::Normal;
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 
@@ -52,12 +53,12 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
 fn gen<D>(d: D) -> Array<f32, D>
     where D: Dimension,
 {
-    Array::random(d, F32(Normal::new(0., 1.)))
+    Array::random(d, F32(Normal::new(0., 1.).unwrap()))
 }
 fn gen_f64<D>(d: D) -> Array<f64, D>
     where D: Dimension,
 {
-    Array::random(d, Normal::new(0., 1.))
+    Array::random(d, Normal::new(0., 1.).unwrap())
 }
 
 #[test]
@@ -229,8 +230,8 @@ fn accurate_mul_with_column_f64() {
 
         // pick dense square or broadcasted to square matrix
         match i {
-            0 ... 3 => b_sq = b_owner.view(),
-            4 ... 7 => {
+            0 ..= 3 => b_sq = b_owner.view(),
+            4 ..= 7 => {
                 b_row_col = b_owner.column(0);
                 b_sq = b_row_col.broadcast((k, k)).unwrap();
             }

@@ -47,7 +47,7 @@ where
 
 impl<S, D> ArrayBase<S, D>
 where
-    S: Data,
+    S: RawData,
     D: Dimension,
 {
     pub(crate) fn layout_impl(&self) -> Layout {
@@ -57,7 +57,7 @@ where
             } else {
                 CORDER
             }
-        } else if self.ndim() > 1 && self.t().is_standard_layout() {
+        } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
             FORDER
         } else {
             0
@@ -72,8 +72,8 @@ where
 {
     type Output = ArrayView<'a, A, E::Dim>;
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
-        let res: ArrayView<A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
-        unsafe { ArrayView::new_(res.ptr, res.dim, res.strides) }
+        let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
+        unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
     }
     private_impl! {}
 }
@@ -128,7 +128,8 @@ where
 /// for example an array view, mutable array view or an iterator
 /// that yields chunks.
 ///
-/// Producers are used as a arguments to `Zip` and `azip!()`.
+/// Producers are used as a arguments to [`Zip`](struct.Zip.html) and
+/// [`azip!()`](macro.azip.html).
 ///
 /// # Comparison to `IntoIterator`
 ///
@@ -178,7 +179,6 @@ pub trait NdProducer {
     #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> <Self::Ptr as Offset>::Stride;
     #[doc(hidden)]
-    #[inline(always)]
     fn contiguous_stride(&self) -> Self::Stride;
     #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self)
@@ -191,6 +191,14 @@ pub trait Offset: Copy {
     type Stride: Copy;
     unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self;
     private_decl! {}
+}
+
+impl<T> Offset for *const T {
+    type Stride = isize;
+    unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self {
+        self.offset(s * (index as isize))
+    }
+    private_impl! {}
 }
 
 impl<T> Offset for *mut T {
@@ -318,7 +326,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D> {
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
-        self.ptr.offset(i.index_unchecked(&self.strides))
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
@@ -371,7 +379,113 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 
     #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
-        self.ptr.offset(i.index_unchecked(&self.strides))
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, axis: Axis) -> isize {
+        self.stride_of(axis)
+    }
+
+    #[inline(always)]
+    fn contiguous_stride(&self) -> Self::Stride {
+        1
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(axis, index)
+    }
+}
+
+impl<A, D: Dimension> NdProducer for RawArrayView<A, D> {
+    type Item = *const A;
+    type Dim = D;
+    type Ptr = *const A;
+    type Stride = isize;
+
+    private_impl! {}
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        self.raw_dim()
+    }
+
+    #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.dim.equal(dim)
+    }
+
+    #[doc(hidden)]
+    fn as_ptr(&self) -> *const A {
+        self.as_ptr()
+    }
+
+    #[doc(hidden)]
+    fn layout(&self) -> Layout {
+        self.layout_impl()
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: *const A) -> *const A {
+        ptr
+    }
+
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *const A {
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+    }
+
+    #[doc(hidden)]
+    fn stride_of(&self, axis: Axis) -> isize {
+        self.stride_of(axis)
+    }
+
+    #[inline(always)]
+    fn contiguous_stride(&self) -> Self::Stride {
+        1
+    }
+
+    #[doc(hidden)]
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
+        self.split_at(axis, index)
+    }
+}
+
+impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
+    type Item = *mut A;
+    type Dim = D;
+    type Ptr = *mut A;
+    type Stride = isize;
+
+    private_impl! {}
+    #[doc(hidden)]
+    fn raw_dim(&self) -> Self::Dim {
+        self.raw_dim()
+    }
+
+    #[doc(hidden)]
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
+        self.dim.equal(dim)
+    }
+
+    #[doc(hidden)]
+    fn as_ptr(&self) -> *mut A {
+        self.as_ptr() as _
+    }
+
+    #[doc(hidden)]
+    fn layout(&self) -> Layout {
+        self.layout_impl()
+    }
+
+    #[doc(hidden)]
+    unsafe fn as_ref(&self, ptr: *mut A) -> *mut A {
+        ptr
+    }
+
+    #[doc(hidden)]
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
+        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
     }
 
     #[doc(hidden)]
@@ -449,7 +563,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D> {
 ///
 /// use ndarray::{Array1, Axis};
 ///
-/// let mut totals = Array1::zeros(a.rows());
+/// let mut totals = Array1::zeros(a.nrows());
 ///
 /// Zip::from(&mut totals)
 ///     .and(a.genrows())
@@ -756,8 +870,44 @@ macro_rules! map_impl {
             /// Apply a fold function to all elements of the input arrays,
             /// visiting elements in lock step.
             ///
-            /// The fold continues while the return value is a
-            /// `FoldWhile::Continue`.
+            /// # Example
+            ///
+            /// The expression `tr(AᵀB)` can be more efficiently computed as
+            /// the equivalent expression `∑ᵢⱼ(A∘B)ᵢⱼ` (i.e. the sum of the
+            /// elements of the entry-wise product). It would be possible to
+            /// evaluate this expression by first computing the entry-wise
+            /// product, `A∘B`, and then computing the elementwise sum of that
+            /// product, but it's possible to do this in a single loop (and
+            /// avoid an extra heap allocation if `A` and `B` can't be
+            /// consumed) by using `Zip`:
+            ///
+            /// ```
+            /// use ndarray::{array, Zip};
+            ///
+            /// let a = array![[1, 5], [3, 7]];
+            /// let b = array![[2, 4], [8, 6]];
+            ///
+            /// // Without using `Zip`. This involves two loops and an extra
+            /// // heap allocation for the result of `&a * &b`.
+            /// let sum_prod_nonzip = (&a * &b).sum();
+            /// // Using `Zip`. This is a single loop without any heap allocations.
+            /// let sum_prod_zip = Zip::from(&a).and(&b).fold(0, |acc, a, b| acc + a * b);
+            ///
+            /// assert_eq!(sum_prod_nonzip, sum_prod_zip);
+            /// ```
+            pub fn fold<F, Acc>(mut self, acc: Acc, mut function: F) -> Acc
+            where
+                F: FnMut(Acc, $($p::Item),*) -> Acc,
+            {
+                self.apply_core(acc, move |acc, args| {
+                    let ($($p,)*) = args;
+                    FoldWhile::Continue(function(acc, $($p),*))
+                }).into_inner()
+            }
+
+            /// Apply a fold function to the input arrays while the return
+            /// value is `FoldWhile::Continue`, visiting elements in lock step.
+            ///
             pub fn fold_while<F, Acc>(mut self, acc: Acc, mut function: F)
                 -> FoldWhile<Acc>
                 where F: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
@@ -784,14 +934,14 @@ macro_rules! map_impl {
             pub fn all<F>(mut self, mut predicate: F) -> bool
                 where F: FnMut($($p::Item),*) -> bool
             {
-                self.apply_core(true, move |_, args| {
+                !self.apply_core((), move |_, args| {
                     let ($($p,)*) = args;
                     if predicate($($p),*) {
-                        FoldWhile::Continue(true)
+                        FoldWhile::Continue(())
                     } else {
-                        FoldWhile::Done(false)
+                        FoldWhile::Done(())
                     }
-                }).into_inner()
+                }).is_done()
             }
 
             expand_if!(@bool [$notlast]

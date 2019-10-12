@@ -17,7 +17,7 @@ where
     /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn row(&self, index: Ix) -> ArrayView1<A>
+    pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
     where
         S: Data,
     {
@@ -27,7 +27,7 @@ where
     /// Return a mutable array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
+    pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
     {
@@ -35,14 +35,20 @@ where
     }
 
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
-    pub fn rows(&self) -> usize {
+    pub fn nrows(&self) -> usize {
         self.len_of(Axis(0))
+    }
+
+    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
+    #[deprecated(note = "Renamed to .nrows(), please use the new name")]
+    pub fn rows(&self) -> usize {
+        self.nrows()
     }
 
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn column(&self, index: Ix) -> ArrayView1<A>
+    pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
     where
         S: Data,
     {
@@ -52,7 +58,7 @@ where
     /// Return a mutable array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
-    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<A>
+    pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
     {
@@ -60,12 +66,18 @@ where
     }
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
-    pub fn cols(&self) -> usize {
+    pub fn ncols(&self) -> usize {
         self.len_of(Axis(1))
+    }
+
+    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
+    #[deprecated(note = "Renamed to .ncols(), please use the new name")]
+    pub fn cols(&self) -> usize {
+        self.ncols()
     }
 
     /// Return true if the array is square, false otherwise.
     pub fn is_square(&self) -> bool {
-        self.rows() == self.cols()
+        self.nrows() == self.ncols()
     }
 }

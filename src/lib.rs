@@ -6,7 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name = "ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.12/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.13/")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -32,8 +38,8 @@
 //! - Higher order operations and arithmetic are performant
 //! - Array views can be used to slice and mutate any `[T]` data using
 //!   `ArrayView::from` and `ArrayViewMut::from`.
-//! - `Zip` for lock step function application across two or more arrays or other
-//!   item producers (`NdProducer` trait).
+//! - [`Zip`](struct.Zip.html) for lock step function application across two or more arrays or other
+//!   item producers ([`NdProducer`](trait.NdProducer.html) trait).
 //!
 //! ## Crate Status
 //!
@@ -55,16 +61,16 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.31**
+//! - **Requires Rust 1.37 or later**
 //!
 //! ## Crate Feature Flags
 //!
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
-//! - `serde-1`
+//! - `serde`
 //!   - Optional, compatible with Rust stable
-//!   - Enables serialization support for serde 1.0
+//!   - Enables serialization support for serde 1.x
 //! - `rayon`
 //!   - Optional, compatible with Rust stable
 //!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
@@ -86,30 +92,24 @@
 //!
 //! * If you have experience with NumPy, you may also be interested in
 //!   [`ndarray_for_numpy_users`](doc/ndarray_for_numpy_users/index.html).
-
-#[cfg(feature = "serde-1")]
-extern crate serde;
-
-#[cfg(feature = "rayon")]
-extern crate rayon;
-
-#[cfg(feature = "approx")]
-extern crate approx;
+//!
+//! ## The ndarray ecosystem
+//!
+//! `ndarray` provides a lot of functionality, but it's not a one-stop solution.
+//!
+//! `ndarray` includes matrix multiplication and other binary/unary operations out of the box.
+//! More advanced linear algebra routines (e.g. SVD decomposition or eigenvalue computation)
+//! can be found in [`ndarray-linalg`](https://crates.io/crates/ndarray-linalg).
+//!
+//! The same holds for statistics: `ndarray` provides some basic functionalities (e.g. `mean`)
+//! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
+//!
+//! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
-
-extern crate matrixmultiply;
-
-extern crate itertools;
-extern crate num_complex;
-extern crate num_integer;
-extern crate num_traits;
-
-#[cfg(test)]
-extern crate quickcheck;
 
 #[cfg(feature = "docs")]
 pub mod doc;
@@ -118,18 +118,13 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 pub use crate::dimension::dim::*;
-pub use crate::dimension::{
-    slices_intersect, Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis,
-};
+pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
 
 pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
-pub use crate::slice::{
-    deref_raw_view_mut_into_view_mut_with_life, deref_raw_view_mut_into_view_with_life,
-    life_of_view_mut, Slice, SliceInfo, SliceNextDim, SliceOrIndex,
-};
+pub use crate::slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
 
 use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
@@ -146,9 +141,11 @@ mod macro_utils;
 #[macro_use]
 mod private;
 mod aliases;
+#[macro_use]
+mod itertools;
 #[cfg(feature = "approx")]
 mod array_approx;
-#[cfg(feature = "serde-1")]
+#[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
@@ -166,6 +163,7 @@ pub use crate::free_functions::*;
 pub use crate::iterators::iter;
 
 mod error;
+mod extension;
 mod geomspace;
 mod indexes;
 mod iterators;
@@ -193,7 +191,7 @@ mod imp_prelude {
     pub use crate::prelude::*;
     pub use crate::ArcArray;
     pub use crate::{
-        Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
+        CowRepr, Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
         RemoveAxis, ViewRepr,
     };
 }
@@ -218,18 +216,21 @@ pub type Ixs = isize;
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.
 ///
-/// Type aliases [`Array`], [`ArcArray`], [`ArrayView`], and [`ArrayViewMut`] refer
-/// to `ArrayBase` with different types for the data container.
+/// Type aliases [`Array`], [`ArcArray`], [`CowArray`], [`ArrayView`], and
+/// [`ArrayViewMut`] refer to `ArrayBase` with different types for the data
+/// container.
 ///
 /// [`Array`]: type.Array.html
 /// [`ArcArray`]: type.ArcArray.html
 /// [`ArrayView`]: type.ArrayView.html
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
+/// [`CowArray`]: type.CowArray.html
 ///
 /// ## Contents
 ///
 /// + [Array](#array)
 /// + [ArcArray](#arcarray)
+/// + [CowArray](#cowarray)
 /// + [Array Views](#array-views)
 /// + [Indexing and Dimension](#indexing-and-dimension)
 /// + [Loops, Producers and Iterators](#loops-producers-and-iterators)
@@ -272,6 +273,16 @@ pub type Ixs = isize;
 /// Calling a method for mutating elements on `ArcArray`, for example
 /// [`view_mut()`](#method.view_mut) or [`get_mut()`](#method.get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
+///
+/// ## `CowArray`
+///
+/// [`CowArray`](type.CowArray.html) is analogous to
+/// [`std::borrow::Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+/// It can represent either an immutable view or a uniquely owned array. If a
+/// `CowArray` instance is the immutable view variant, then calling a method
+/// for mutating elements in the array will cause it to be converted into the
+/// owned variant (by cloning all the elements) before the modification is
+/// performed.
 ///
 /// ## Array Views
 ///
@@ -404,12 +415,12 @@ pub type Ixs = isize;
 ///
 /// // 2. Use Zip to pair each row in 2D `a` with elements in 1D `b`
 /// use ndarray::Zip;
-/// let mut b = Array::zeros(a.rows());
+/// let mut b = Array::zeros(a.nrows());
 ///
 /// Zip::from(a.genrows())
 ///     .and(&mut b)
 ///     .apply(|a_row, b_elt| {
-///         *b_elt = a_row[a.cols() - 1] - a_row[0];
+///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
 ///     });
 /// ```
 ///
@@ -464,13 +475,10 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
-/// It's possible to take multiple simultaneous *mutable* slices with the
-/// [`multislice!()`](macro.multislice!.html) macro.
-///
 /// ```
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3, multislice, s};
+/// use ndarray::{arr2, arr3, s};
 ///
 /// fn main() {
 ///
@@ -517,20 +525,6 @@ pub type Ixs = isize;
 ///                [12, 11, 10]]);
 /// assert_eq!(f, g);
 /// assert_eq!(f.shape(), &[2, 3]);
-///
-/// // Let's take two disjoint, mutable slices of a matrix with
-/// //
-/// // - One containing all the even-index columns in the matrix
-/// // - One containing all the odd-index columns in the matrix
-/// let mut h = arr2(&[[0, 1, 2, 3],
-///                    [4, 5, 6, 7]]);
-/// let (s0, s1) = multislice!(h, mut [.., ..;2], mut [.., 1..;2]);
-/// let i = arr2(&[[0, 2],
-///                [4, 6]]);
-/// let j = arr2(&[[1, 3],
-///                [5, 7]]);
-/// assert_eq!(s0, i);
-/// assert_eq!(s1, j);
 /// }
 /// ```
 ///
@@ -705,7 +699,7 @@ pub type Ixs = isize;
 /// <table>
 /// <tr>
 /// <th rowspan="2">Output</th>
-/// <th colspan="4">Input</th>
+/// <th colspan="5">Input</th>
 /// </tr>
 ///
 /// <tr>
@@ -717,6 +711,11 @@ pub type Ixs = isize;
 /// <td>
 ///
 /// `ArcArray<A, D>`
+///
+/// </td>
+/// <td>
+///
+/// `CowArray<'a, A, D>`
 ///
 /// </td>
 /// <td>
@@ -742,6 +741,11 @@ pub type Ixs = isize;
 /// <td>
 ///
 /// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`a.into_owned()`][.into_owned()]
 ///
 /// </td>
 /// <td>
@@ -781,6 +785,11 @@ pub type Ixs = isize;
 /// </td>
 /// <td>
 ///
+/// [`a.into_owned().into_shared()`][.into_shared()]
+///
+/// </td>
+/// <td>
+///
 /// [`a.to_owned().into_shared()`][.into_shared()]
 ///
 /// </td>
@@ -791,12 +800,52 @@ pub type Ixs = isize;
 /// </td>
 /// </tr>
 ///
+/// <!--Conversions to `CowArray<'a, A, D>`-->
+///
+/// <tr>
+/// <td>
+///
+/// `CowArray<'a, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a)`](type.CowArray.html#impl-From<ArrayBase<OwnedRepr<A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a.into_owned())`](type.CowArray.html#impl-From<ArrayBase<OwnedRepr<A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// no-op
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a)`](type.CowArray.html#impl-From<ArrayBase<ViewRepr<%26%27a%20A>%2C%20D>>)
+///
+/// </td>
+/// <td>
+///
+/// [`CowArray::from(a.view())`](type.CowArray.html#impl-From<ArrayBase<ViewRepr<%26%27a%20A>%2C%20D>>)
+///
+/// </td>
+/// </tr>
+///
 /// <!--Conversions to `ArrayView<'b, A, D>`-->
 ///
 /// <tr>
 /// <td>
 ///
 /// `ArrayView<'b, A, D>`
+///
+/// </td>
+/// <td>
+///
+/// [`a.view()`][.view()]
 ///
 /// </td>
 /// <td>
@@ -841,6 +890,11 @@ pub type Ixs = isize;
 /// </td>
 /// <td>
 ///
+/// [`a.view_mut()`][.view_mut()]
+///
+/// </td>
+/// <td>
+///
 /// illegal
 ///
 /// </td>
@@ -859,7 +913,7 @@ pub type Ixs = isize;
 /// equivalent with dim `D2` (e.g. converting from dynamic dim to const dim)
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.into_dimensionality::<D2>()`][.into_dimensionality()]
 ///
@@ -874,7 +928,7 @@ pub type Ixs = isize;
 /// equivalent with dim `IxDyn`
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.into_dyn()`][.into_dyn()]
 ///
@@ -889,7 +943,7 @@ pub type Ixs = isize;
 /// `Array<B, D>` (new element type)
 ///
 /// </td>
-/// <td colspan="4">
+/// <td colspan="5">
 ///
 /// [`a.map(|x| x.do_your_conversion())`][.map()]
 ///
@@ -915,7 +969,7 @@ pub type Ixs = isize;
 /// `Array<A, D>` | `Vec<A>` | [`.into_raw_vec()`](type.Array.html#method.into_raw_vec)<sup>[1](#into_raw_vec)</sup>
 /// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](#method.as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](#method.as_slice_memory_order)<sup>[3](#req_contig)</sup>
 /// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](#method.as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](#method.as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
-/// `ArrayView<A, D>` | `&[A]` | [`.into_slice()`](type.ArrayView.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
+/// `ArrayView<A, D>` | `&[A]` | [`.to_slice()`](type.ArrayView.html#method.to_slice)<sup>[2](#req_contig_std)</sup>
 /// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](type.ArrayViewMut.html#method.into_slice)<sup>[2](#req_contig_std)</sup>
 /// `Array0<A>` | `A` | [`.into_scalar()`](type.Array.html#method.into_scalar)
 ///
@@ -1052,10 +1106,12 @@ pub type Ixs = isize;
 //      `dim`, and `strides` must be exclusively borrowed and not aliased by
 //      multiple indices.
 //
-// 2. `ptr` must be non-null and aligned, and it must be safe to [`.offset()`]
-//    `ptr` by zero.
+// 2. If the type of `data` implements `Data`, then `ptr` must be aligned.
 //
-// 3. It must be safe to [`.offset()`] the pointer repeatedly along all axes
+// 3. `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
+//    zero.
+//
+// 4. It must be safe to [`.offset()`] the pointer repeatedly along all axes
 //    and calculate the `count`s for the `.offset()` calls without overflow,
 //    even if the array is empty or the elements are zero-sized.
 //
@@ -1123,13 +1179,13 @@ pub type Ixs = isize;
 //    `.offset()` at all, even by zero bytes, but the implementation of
 //    `Vec<A>` does this, so we can too. See rust-lang/rust#54857 for details.)
 //
-// 4. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
+// 5. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
 //    also implies that the length of any individual axis must not exceed
 //    `isize::MAX`, and an array can contain at most `isize::MAX` elements.)
 //    This constraint makes various calculations easier because they don't have
 //    to worry about overflow and axis lengths can be freely cast to `isize`.
 //
-// Constraints 2–4 are carefully designed such that if they're upheld for the
+// Constraints 2–5 are carefully designed such that if they're upheld for the
 // array, they're also upheld for any subset of axes of the array as well as
 // slices/subviews/reshapes of the array. This is important for iterators that
 // produce subviews (and other similar cases) to be safe without extra (easy to
@@ -1155,9 +1211,9 @@ where
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
-    /// A non-null and aligned pointer into the buffer held by `data`; may
-    /// point anywhere in its range.
-    ptr: *mut S::Elem,
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Data`, this pointer must be aligned.
+    ptr: std::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
@@ -1219,6 +1275,27 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
+/// An array with copy-on-write behavior.
+///
+/// An `CowArray` represents either a uniquely owned array or a view of an
+/// array. The `'a` corresponds to the lifetime of the view variant.
+///
+/// This type is analogous to
+/// [`std::borrow::Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+/// If a `CowArray` instance is the immutable view variant, then calling a
+/// method for mutating elements in the array will cause it to be converted
+/// into the owned variant (by cloning all the elements) before the
+/// modification is performed.
+///
+/// Array views have all the methods of an array (see [`ArrayBase`][ab]).
+///
+/// See also [`ArcArray`](type.ArcArray.html), which also provides
+/// copy-on-write behavior but has a reference-counted pointer to the data
+/// instead of either a view or a uniquely owned copy.
+///
+/// [ab]: struct.ArrayBase.html
+pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+
 /// A read-only array view.
 ///
 /// An array view represents an array or a part of it, created from
@@ -1256,7 +1333,7 @@ pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 /// conversion into an [`ArrayView`]. The relationship between `RawArrayView`
 /// and [`ArrayView`] is somewhat analogous to the relationship between `*const
 /// T` and `&T`, but `RawArrayView` has additional requirements that `*const T`
-/// does not, such as alignment and non-nullness.
+/// does not, such as non-nullness.
 ///
 /// [`ArrayView`]: type.ArrayView.html
 ///
@@ -1281,8 +1358,7 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 /// unsafe conversion into an [`ArrayViewMut`]. The relationship between
 /// `RawArrayViewMut` and [`ArrayViewMut`] is somewhat analogous to the
 /// relationship between `*mut T` and `&mut T`, but `RawArrayViewMut` has
-/// additional requirements that `*mut T` does not, such as alignment and
-/// non-nullness.
+/// additional requirements that `*mut T` does not, such as non-nullness.
 ///
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
@@ -1363,6 +1439,35 @@ impl<A> ViewRepr<A> {
     }
 }
 
+/// CowArray's representation.
+///
+/// *Don't use this type directly—use the type alias
+/// [`CowArray`](type.CowArray.html) for the array type!*
+pub enum CowRepr<'a, A> {
+    /// Borrowed data.
+    View(ViewRepr<&'a A>),
+    /// Owned data.
+    Owned(OwnedRepr<A>),
+}
+
+impl<'a, A> CowRepr<'a, A> {
+    /// Returns `true` iff the data is the `View` variant.
+    pub fn is_view(&self) -> bool {
+        match self {
+            CowRepr::View(_) => true,
+            CowRepr::Owned(_) => false,
+        }
+    }
+
+    /// Returns `true` iff the data is the `Owned` variant.
+    pub fn is_owned(&self) -> bool {
+        match self {
+            CowRepr::View(_) => false,
+            CowRepr::Owned(_) => true,
+        }
+    }
+}
+
 mod impl_clone;
 
 mod impl_constructors;
@@ -1377,7 +1482,7 @@ where
     D: Dimension,
 {
     #[inline]
-    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<A, E>
+    fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
     where
         E: Dimension,
     {
@@ -1404,7 +1509,7 @@ where
     // Broadcast to dimension `E`, without checking that the dimensions match
     // (Checked in debug assertions).
     #[inline]
-    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<A, E>
+    fn broadcast_assume<E>(&self, dim: E) -> ArrayView<'_, A, E>
     where
         E: Dimension,
     {
@@ -1413,7 +1518,7 @@ where
         let ptr = self.ptr;
         let mut strides = dim.clone();
         strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe { ArrayView::new_(ptr, dim, strides) }
+        unsafe { ArrayView::new(ptr, dim, strides) }
     }
 
     fn raw_strides(&self) -> D {
@@ -1428,14 +1533,11 @@ where
         F: FnMut(&mut A),
     {
         if let Some(slc) = self.as_slice_memory_order_mut() {
-            // FIXME: Use for loop when slice iterator is perf is restored
-            for i in 0..slc.len() {
-                f(&mut slc[i]);
+            slc.iter_mut().for_each(f);
+        } else {
+            for row in self.inner_rows_mut() {
+                row.into_iter_().fold((), |(), elt| f(elt));
             }
-            return;
-        }
-        for row in self.inner_rows_mut() {
-            row.into_iter_().fold((), |(), elt| f(elt));
         }
     }
 
@@ -1452,13 +1554,13 @@ where
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Lanes<A, D::Smaller> {
+    fn inner_rows(&self) -> iterators::Lanes<'_, A, D::Smaller> {
         let n = self.ndim();
         Lanes::new(self.view(), Axis(n.saturating_sub(1)))
     }
 
     /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::LanesMut<A, D::Smaller>
+    fn inner_rows_mut(&mut self) -> iterators::LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
@@ -1487,6 +1589,9 @@ mod impl_views;
 
 // Array raw view methods
 mod impl_raw_views;
+
+// Copy-on-write array methods
+mod impl_cow;
 
 /// A contiguous array shape of n dimensions.
 ///

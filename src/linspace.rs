@@ -82,7 +82,7 @@ where
     };
     Linspace {
         start: a,
-        step: step,
+        step,
         index: 0,
         len: n,
     }
@@ -106,7 +106,7 @@ where
     let steps = F::ceil(len / step);
     Linspace {
         start: a,
-        step: step,
+        step,
         len: steps.to_usize().expect(
             "Converting the length to `usize` must not fail. The most likely \
              cause of this failure is if the sign of `end - start` is \

@@ -1,4 +1,5 @@
 use crate::imp_prelude::*;
+use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 const CAP: usize = 4;
@@ -48,9 +49,7 @@ impl<T: Copy + Zero> IxDynRepr<T> {
     pub fn copy_from(x: &[T]) -> Self {
         if x.len() <= CAP {
             let mut arr = [T::zero(); CAP];
-            for i in 0..x.len() {
-                arr[i] = x[i];
-            }
+            arr[..x.len()].copy_from_slice(&x[..]);
             IxDynRepr::Inline(x.len() as _, arr)
         } else {
             Self::from(x)
@@ -104,15 +103,19 @@ impl<T: PartialEq> PartialEq for IxDynRepr<T> {
     }
 }
 
+impl<T: Hash> Hash for IxDynRepr<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        Hash::hash(&self[..], state)
+    }
+}
+
 /// Dynamic dimension or index type.
 ///
 /// Use `IxDyn` directly. This type implements a dynamic number of
 /// dimensions or indices. Short dimensions are stored inline and don't need
 /// any dynamic memory allocation.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct IxDynImpl(IxDynRepr<Ix>);
-unsafe impl Send for IxDynImpl {}
-unsafe impl Sync for IxDynImpl {}
 
 impl IxDynImpl {
     pub(crate) fn insert(&self, i: usize) -> Self {
@@ -121,7 +124,7 @@ impl IxDynImpl {
         IxDynImpl(if len < CAP {
             let mut out = [1; CAP];
             out[0..i].copy_from_slice(&self[0..i]);
-            out[i + 1..len + 1].copy_from_slice(&self[i..len]);
+            out[i + 1..=len].copy_from_slice(&self[i..len]);
             IxDynRepr::Inline((len + 1) as u32, out)
         } else {
             let mut out = Vec::with_capacity(len + 1);
@@ -206,7 +209,7 @@ impl<'a> IntoIterator for &'a IxDynImpl {
     type IntoIter = <&'a [Ix] as IntoIterator>::IntoIter;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self[..].into_iter()
+        self[..].iter()
     }
 }
 
@@ -221,7 +224,7 @@ impl IxDyn {
     /// Create a new dimension value with `n` axes, all zeros
     #[inline]
     pub fn zeros(n: usize) -> IxDyn {
-        const ZEROS: &'static [usize] = &[0; 4];
+        const ZEROS: &[usize] = &[0; 4];
         if n <= ZEROS.len() {
             Dim(&ZEROS[..n])
         } else {

@@ -25,7 +25,7 @@ impl_ndproducer! {
 
 /// See [`.lanes()`](../struct.ArrayBase.html#method.lanes)
 /// for more information.
-pub struct Lanes<'a, A: 'a, D> {
+pub struct Lanes<'a, A, D> {
     base: ArrayView<'a, A, D>,
     inner_len: Ix,
     inner_stride: Ixs,
@@ -94,7 +94,7 @@ where
 
 /// See [`.lanes_mut()`](../struct.ArrayBase.html#method.lanes_mut)
 /// for more information.
-pub struct LanesMut<'a, A: 'a, D> {
+pub struct LanesMut<'a, A, D> {
     base: ArrayViewMut<'a, A, D>,
     inner_len: Ix,
     inner_stride: Ixs,

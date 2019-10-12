@@ -9,8 +9,8 @@
 use std::mem::{forget, size_of};
 use std::slice;
 
-use crate::dimension;
 use crate::imp_prelude::*;
+use crate::{dimension, ArcArray1, ArcArray2};
 
 /// Create an [**`Array`**](type.Array.html) with one, two or
 /// three dimensions.
@@ -48,7 +48,7 @@ macro_rules! array {
         $crate::Array2::from(vec![$([$($x,)*],)*])
     }};
     ($($x:expr),* $(,)*) => {{
-        $crate::Array::from_vec(vec![$($x,)*])
+        $crate::Array::from(vec![$($x,)*])
     }};
 }
 
@@ -59,16 +59,16 @@ pub fn arr0<A>(x: A) -> Array0<A> {
 
 /// Create a one-dimensional array with elements from `xs`.
 pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
-    ArrayBase::from_vec(xs.to_vec())
+    ArrayBase::from(xs.to_vec())
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray<A, Ix1> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray1<A> {
     arr1(xs).into_shared()
 }
 
 /// Create a zero-dimensional array view borrowing `x`.
-pub fn aview0<A>(x: &A) -> ArrayView0<A> {
+pub fn aview0<A>(x: &A) -> ArrayView0<'_, A> {
     unsafe { ArrayView::from_shape_ptr(Ix0(), x) }
 }
 
@@ -84,7 +84,7 @@ pub fn aview0<A>(x: &A) -> ArrayView0<A> {
 ///
 /// assert_eq!(a2d.sum(), 1024.0);
 /// ```
-pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
+pub fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A> {
     ArrayView::from(xs)
 }
 
@@ -92,7 +92,7 @@ pub fn aview1<A>(xs: &[A]) -> ArrayView1<A> {
 ///
 /// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
 /// can only occur when `V` is zero-sized.)
-pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<A> {
+pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<'_, A> {
     let cols = V::len();
     let rows = xs.len();
     let dim = Ix2(rows, cols);
@@ -129,7 +129,7 @@ pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<A> {
 ///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
 /// }
 /// ```
-pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
+pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A> {
     ArrayViewMut::from(xs)
 }
 
@@ -158,7 +158,7 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<A> {
 ///     assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
 /// }
 /// ```
-pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMut2<A> {
+pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMut2<'_, A> {
     let cols = V::len();
     let rows = xs.len();
     let dim = Ix2(rows, cols);
@@ -226,12 +226,6 @@ where
     Array2::from(xs.to_vec())
 }
 
-impl<A> From<Vec<A>> for Array1<A> {
-    fn from(xs: Vec<A>) -> Self {
-        Array1::from_vec(xs)
-    }
-}
-
 impl<A, V> From<Vec<V>> for Array2<A>
 where
     V: FixedInitializer<Elem = A>,
@@ -295,7 +289,7 @@ where
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray<A, Ix2> {
+pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray2<A> {
     arr2(xs).into_shared()
 }
 

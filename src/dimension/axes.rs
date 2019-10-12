@@ -7,7 +7,7 @@ where
 {
     Axes {
         dim: d,
-        strides: strides,
+        strides,
         start: 0,
         end: d.ndim(),
     }
@@ -33,7 +33,7 @@ where
 /// assert_eq!(largest_axis, Axis(1));
 /// ```
 #[derive(Debug)]
-pub struct Axes<'a, D: 'a> {
+pub struct Axes<'a, D> {
     dim: &'a D,
     strides: &'a D,
     start: usize,
@@ -46,6 +46,9 @@ pub struct AxisDescription(pub Axis, pub Ix, pub Ixs);
 
 copy_and_clone!(AxisDescription);
 
+// AxisDescription can't really be empty
+// https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296051702
+#[allow(clippy::len_without_is_empty)]
 impl AxisDescription {
     /// Return axis
     #[inline(always)]

@@ -1,12 +1,16 @@
-extern crate ndarray;
+#![allow(
+    clippy::many_single_char_names,
+    clippy::deref_addrof,
+    clippy::unreadable_literal,
+    clippy::many_single_char_names
+)]
 
 use ndarray::prelude::*;
+use std::iter::FromIterator;
 
-const INPUT: &'static [u8] = include_bytes!("life.txt");
-//const INPUT: &'static [u8] = include_bytes!("lifelite.txt");
+const INPUT: &[u8] = include_bytes!("life.txt");
 
 const N: usize = 100;
-//const N: usize = 8;
 
 type Board = Array2<u8>;
 
@@ -54,8 +58,8 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
 }
 
 fn turn_on_corners(z: &mut Board) {
-    let n = z.rows();
-    let m = z.cols();
+    let n = z.nrows();
+    let m = z.ncols();
     z[[1, 1]] = 1;
     z[[1, m - 2]] = 1;
     z[[n - 2, 1]] = 1;
@@ -71,7 +75,7 @@ fn render(a: &Board) {
                 print!(".");
             }
         }
-        println!("");
+        println!();
     }
 }
 

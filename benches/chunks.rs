@@ -3,7 +3,6 @@
 extern crate test;
 use test::Bencher;
 
-extern crate ndarray;
 use ndarray::prelude::*;
 use ndarray::NdProducer;
 
@@ -13,7 +12,7 @@ fn chunk2x2_iter_sum(bench: &mut Bencher) {
     let chunksz = (2, 2);
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
+        azip!((a in a.exact_chunks(chunksz), sum in &mut sum) {
             *sum = a.iter().sum::<f32>();
         });
     });
@@ -25,7 +24,7 @@ fn chunk2x2_sum(bench: &mut Bencher) {
     let chunksz = (2, 2);
     let mut sum = Array::zeros(a.exact_chunks(chunksz).raw_dim());
     bench.iter(|| {
-        azip!(ref a (a.exact_chunks(chunksz)), mut sum in {
+        azip!((a in a.exact_chunks(chunksz), sum in &mut sum) {
             *sum = a.sum();
         });
     });
@@ -64,6 +63,7 @@ fn chunk2x2_sum_uget1(bench: &mut Bencher) {
 }
 
 #[bench]
+#[allow(clippy::identity_op)]
 fn chunk2x2_sum_get2(bench: &mut Bencher) {
     let a = Array::<f32, _>::zeros((256, 256));
     let chunksz = (2, 2);

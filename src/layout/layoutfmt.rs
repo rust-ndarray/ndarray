@@ -8,29 +8,24 @@
 
 use super::Layout;
 use super::LayoutPriv;
-use itertools::Itertools;
 
-const LAYOUT_NAMES: &'static [&'static str] = &["C", "F"];
+const LAYOUT_NAMES: &[&str] = &["C", "F"];
 
 use std::fmt;
 
 impl fmt::Debug for Layout {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.0 == 0 {
-            write!(f, "Custom")
+            write!(f, "Custom")?
         } else {
-            write!(
-                f,
-                "{}",
-                (0..32)
-                    .filter(|&i| self.is(1 << i))
-                    .format_with(" | ", |i, f| if let Some(name) = LAYOUT_NAMES.get(i) {
-                        f(name)
-                    } else {
-                        f(&format_args!("0x{:x}", i))
-                    })
-            )
-        }?;
+            (0..32).filter(|&i| self.is(1 << i)).try_fold((), |_, i| {
+                if let Some(name) = LAYOUT_NAMES.get(i) {
+                    write!(f, "{}", name)
+                } else {
+                    write!(f, "{:#x}", i)
+                }
+            })?;
+        };
         write!(f, " ({:#x})", self.0)
     }
 }

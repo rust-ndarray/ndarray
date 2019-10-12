@@ -90,7 +90,7 @@ where
         sign: base.signum(),
         base: base.abs(),
         start: a,
-        step: step,
+        step,
         index: 0,
         len: n,
     }
