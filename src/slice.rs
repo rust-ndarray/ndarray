@@ -643,7 +643,7 @@ where
     /// The type of the slices created by `.multi_slice_move()`.
     type Output;
 
-    /// Slice the raw view into multiple raw views, and dereference them.
+    /// Split the view into multiple disjoint slices.
     ///
     /// **Panics** if performing any individual slice panics or if the slices
     /// are not disjoint (i.e. if they intersect).
