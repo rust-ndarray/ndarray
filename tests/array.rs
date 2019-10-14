@@ -343,29 +343,39 @@ fn test_slice_collapse_with_indices() {
 }
 
 #[test]
-#[allow(clippy::cognitive_complexity)]
 fn test_multislice() {
-    defmac!(test_multislice arr, s1, s2 => {
-        let copy = arr.clone();
-        assert_eq!(
-            arr.multi_slice_mut((s1, s2)),
-            (copy.clone().slice_mut(s1), copy.clone().slice_mut(s2))
-        );
-    });
+    macro_rules! do_test {
+        ($arr:expr, $($s:expr),*) => {
+            {
+                let arr = $arr;
+                let copy = arr.clone();
+                assert_eq!(
+                    arr.multi_slice_mut(($($s,)*)),
+                    ($(copy.clone().slice_mut($s),)*)
+                );
+            }
+        };
+    }
+
     let mut arr = Array1::from_iter(0..48).into_shape((8, 6)).unwrap();
 
     assert_eq!(
         (arr.clone().view_mut(),),
         arr.multi_slice_mut((s![.., ..],)),
     );
-    test_multislice!(&mut arr, s![0, ..], s![1, ..]);
-    test_multislice!(&mut arr, s![0, ..], s![-1, ..]);
-    test_multislice!(&mut arr, s![0, ..], s![1.., ..]);
-    test_multislice!(&mut arr, s![1, ..], s![..;2, ..]);
-    test_multislice!(&mut arr, s![..2, ..], s![2.., ..]);
-    test_multislice!(&mut arr, s![1..;2, ..], s![..;2, ..]);
-    test_multislice!(&mut arr, s![..;-2, ..], s![..;2, ..]);
-    test_multislice!(&mut arr, s![..;12, ..], s![3..;3, ..]);
+    assert_eq!(arr.multi_slice_mut(()), ());
+    do_test!(&mut arr, s![0, ..]);
+    do_test!(&mut arr, s![0, ..], s![1, ..]);
+    do_test!(&mut arr, s![0, ..], s![-1, ..]);
+    do_test!(&mut arr, s![0, ..], s![1.., ..]);
+    do_test!(&mut arr, s![1, ..], s![..;2, ..]);
+    do_test!(&mut arr, s![..2, ..], s![2.., ..]);
+    do_test!(&mut arr, s![1..;2, ..], s![..;2, ..]);
+    do_test!(&mut arr, s![..;-2, ..], s![..;2, ..]);
+    do_test!(&mut arr, s![..;12, ..], s![3..;3, ..]);
+    do_test!(&mut arr, s![3, ..], s![..-1;-2, ..]);
+    do_test!(&mut arr, s![0, ..], s![1, ..], s![2, ..]);
+    do_test!(&mut arr, s![0, ..], s![1, ..], s![2, ..], s![3, ..]);
 }
 
 #[test]
@@ -390,10 +400,22 @@ fn test_multislice_intersecting() {
         let mut arr = Array2::<u8>::zeros((8, 6));
         arr.multi_slice_mut((s![2, ..], s![..-1;-2, ..]));
     });
-    {
+    assert_panics!({
         let mut arr = Array2::<u8>::zeros((8, 6));
-        arr.multi_slice_mut((s![3, ..], s![-1..;-2, ..]));
-    }
+        arr.multi_slice_mut((s![4, ..], s![3, ..], s![3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![4, ..], s![3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![3, ..], s![4, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![3, ..], s![4, ..], s![3, ..]));
+    });
 }
 
 #[should_panic]
