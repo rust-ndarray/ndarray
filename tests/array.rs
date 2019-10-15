@@ -15,6 +15,20 @@ use ndarray::{arr3, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 use std::iter::FromIterator;
 
+macro_rules! assert_panics {
+    ($body:expr) => {
+        if let Ok(v) = ::std::panic::catch_unwind(|| $body) {
+            panic!("assertion failed: should_panic; \
+            non-panicking result: {:?}", v);
+        }
+    };
+    ($body:expr, $($arg:tt)*) => {
+        if let Ok(_) = ::std::panic::catch_unwind(|| $body) {
+            panic!($($arg)*);
+        }
+    };
+}
+
 #[test]
 fn test_matmul_arcarray() {
     let mut A = ArcArray::<usize, _>::zeros((2, 3));
@@ -326,6 +340,82 @@ fn test_slice_collapse_with_indices() {
     vi.slice_collapse(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
     assert_eq!(vi, Array3::from_elem((1, 1, 1), elem));
+}
+
+#[test]
+fn test_multislice() {
+    macro_rules! do_test {
+        ($arr:expr, $($s:expr),*) => {
+            {
+                let arr = $arr;
+                let copy = arr.clone();
+                assert_eq!(
+                    arr.multi_slice_mut(($($s,)*)),
+                    ($(copy.clone().slice_mut($s),)*)
+                );
+            }
+        };
+    }
+
+    let mut arr = Array1::from_iter(0..48).into_shape((8, 6)).unwrap();
+
+    assert_eq!(
+        (arr.clone().view_mut(),),
+        arr.multi_slice_mut((s![.., ..],)),
+    );
+    assert_eq!(arr.multi_slice_mut(()), ());
+    do_test!(&mut arr, s![0, ..]);
+    do_test!(&mut arr, s![0, ..], s![1, ..]);
+    do_test!(&mut arr, s![0, ..], s![-1, ..]);
+    do_test!(&mut arr, s![0, ..], s![1.., ..]);
+    do_test!(&mut arr, s![1, ..], s![..;2, ..]);
+    do_test!(&mut arr, s![..2, ..], s![2.., ..]);
+    do_test!(&mut arr, s![1..;2, ..], s![..;2, ..]);
+    do_test!(&mut arr, s![..;-2, ..], s![..;2, ..]);
+    do_test!(&mut arr, s![..;12, ..], s![3..;3, ..]);
+    do_test!(&mut arr, s![3, ..], s![..-1;-2, ..]);
+    do_test!(&mut arr, s![0, ..], s![1, ..], s![2, ..]);
+    do_test!(&mut arr, s![0, ..], s![1, ..], s![2, ..], s![3, ..]);
+}
+
+#[test]
+fn test_multislice_intersecting() {
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![3.., ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![..;3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![..;6, ..], s![3..;3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![2, ..], s![..-1;-2, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![4, ..], s![3, ..], s![3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![4, ..], s![3, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![3, ..], s![4, ..]));
+    });
+    assert_panics!({
+        let mut arr = Array2::<u8>::zeros((8, 6));
+        arr.multi_slice_mut((s![3, ..], s![3, ..], s![4, ..], s![3, ..]));
+    });
 }
 
 #[should_panic]
