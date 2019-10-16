@@ -28,7 +28,7 @@ use crate::iter::{
     IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
 };
 use crate::slice::MultiSlice;
-use crate::stacking::concatenate;
+use crate::stacking::stack;
 use crate::{NdIndex, Slice, SliceInfo, SliceOrIndex};
 
 /// # Methods For All Array Types
@@ -840,7 +840,7 @@ where
             dim.set_axis(axis, 0);
             unsafe { Array::from_shape_vec_unchecked(dim, vec![]) }
         } else {
-            concatenate(axis, &subs).unwrap()
+            stack(axis, &subs).unwrap()
         }
     }
 
