@@ -607,18 +607,18 @@ pub type Ixs = isize;
 ///
 /// ### Binary Operators with Two Arrays
 ///
-/// Let `A` be an array or view of any kind. Let `B` be an array
+/// Let `A` be an array or view of any kind. Let `O` be an array
 /// with owned storage (either `Array` or `ArcArray`).
-/// Let `C` be an array with mutable data (either `Array`, `ArcArray`
-/// or `ArrayViewMut`).
+/// Let `M` be an array with mutable data (either `Array`, `ArcArray`
+/// or `ArrayViewMut`). Let `V` be an `ArrayView`.
 /// The following combinations of operands
 /// are supported for an arbitrary binary operator denoted by `@` (it can be
 /// `+`, `-`, `*`, `/` and so on).
 ///
-/// - `&A @ &A` which produces a new `Array`
-/// - `B @ A` which consumes `B`, updates it with the result, and returns it
-/// - `B @ &A` which consumes `B`, updates it with the result, and returns it
-/// - `C @= &A` which performs an arithmetic operation in place
+/// - `&A @ &A`, `&A @ V`, `V @ &A`, or `V @ V` which produce a new `Array`
+/// - `O @ A` which consumes `O`, updates it with the result, and returns it
+/// - `O @ &A` which consumes `O`, updates it with the result, and returns it
+/// - `M @= &A` or `M @= A` which performs an arithmetic operation in place on `M`
 ///
 /// Note that the element type needs to implement the operator trait and the
 /// `Clone` trait.
@@ -646,18 +646,19 @@ pub type Ixs = isize;
 /// are supported (scalar can be on either the left or right side, but
 /// `ScalarOperand` docs has the detailed condtions).
 ///
-/// - `&A @ K` or `K @ &A` which produces a new `Array`
-/// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
-/// - `C @= K` which performs an arithmetic operation in place
+/// - `&A @ K`, `V @ K`, `K @ &A`, or `K @ V` which produces a new `Array`
+/// - `O @ K` or `K @ O` which consumes `O`, updates it with the result and returns it
+/// - `M @= K` which performs an arithmetic operation in place
 ///
 /// ### Unary Operators
 ///
-/// Let `A` be an array or view of any kind. Let `B` be an array with owned
-/// storage (either `Array` or `ArcArray`). The following operands are supported
-/// for an arbitrary unary operator denoted by `@` (it can be `-` or `!`).
+/// Let `A` be an array or view of any kind. Let `O` be an array with owned
+/// storage (either `Array` or `ArcArray`). Let `V` be an `ArrayView`. The
+/// following operands are supported for an arbitrary unary operator denoted by
+/// `@` (it can be `-` or `!`).
 ///
-/// - `@&A` which produces a new `Array`
-/// - `@B` which consumes `B`, updates it with the result, and returns it
+/// - `@&A` or `@V` which produces a new `Array`
+/// - `@O` which consumes `O`, updates it with the result, and returns it
 ///
 /// ## Broadcasting
 ///

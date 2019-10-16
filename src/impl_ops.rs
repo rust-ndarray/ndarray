@@ -129,6 +129,74 @@ where
 
 /// Perform elementwise
 #[doc=$doc]
+/// between references `self` and `rhs`,
+/// and return the result as a new `Array`.
+///
+/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, 'b, A, B, S2, D, E> $trt<&'b ArrayBase<S2, E>> for ArrayView<'a, A, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
+{
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: &'b ArrayBase<S2, E>) -> Array<A, D> {
+        // FIXME: Can we co-broadcast arrays here? And how?
+        self.to_owned().$mth(rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between references `self` and `rhs`,
+/// and return the result as a new `Array`.
+///
+/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, 'b, A, B, S, D, E> $trt<ArrayView<'b, B, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: Data<Elem=A>,
+    D: Dimension,
+    E: Dimension,
+{
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: ArrayView<'b, B, E>) -> Array<A, D> {
+        // FIXME: Can we co-broadcast arrays here? And how?
+        self.to_owned().$mth(rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between references `self` and `rhs`,
+/// and return the result as a new `Array`.
+///
+/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, 'b, A, B, D, E> $trt<ArrayView<'b, B, E>> for ArrayView<'a, A, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    D: Dimension,
+    E: Dimension,
+{
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: ArrayView<'b, B, E>) -> Array<A, D> {
+        // FIXME: Can we co-broadcast arrays here? And how?
+        self.to_owned().$mth(rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
 /// between `self` and the scalar `x`,
 /// and return the result (based on `self`).
 ///
@@ -155,6 +223,21 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
 impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
           S: Data<Elem=A>,
+          D: Dimension,
+          B: ScalarOperand,
+{
+    type Output = Array<A, D>;
+    fn $mth(self, x: B) -> Array<A, D> {
+        self.to_owned().$mth(x)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between the reference `self` and the scalar `x`,
+/// and return the result as a new `Array`.
+impl<'a, A, D, B> $trt<B> for ArrayView<'a, A, D>
+    where A: Clone + $trt<B, Output=A>,
           D: Dimension,
           B: ScalarOperand,
 {
@@ -211,6 +294,23 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
 {
     type Output = Array<$scalar, D>;
     fn $mth(self, rhs: &ArrayBase<S, D>) -> Array<$scalar, D> {
+        if_commutative!($commutative {
+            rhs.$mth(self)
+        } or {
+            self.$mth(rhs.to_owned())
+        })
+    }
+}
+
+/// Perform elementwise
+/// between the scalar `self` and array `rhs`,
+/// and return the result as a new `Array`.
+impl<'a, D> $trt<ArrayView<'a, $scalar, D>> for $scalar
+where
+    D: Dimension,
+{
+    type Output = Array<$scalar, D>;
+    fn $mth(self, rhs: ArrayView<'a, $scalar, D>) -> Array<$scalar, D> {
         if_commutative!($commutative {
             rhs.$mth(self)
         } or {
@@ -320,6 +420,19 @@ mod arithmetic_ops {
         }
     }
 
+    impl<'a, A, D> Neg for ArrayView<'a, A, D>
+    where
+        for<'b> &'b A: Neg<Output = A>,
+        D: Dimension,
+    {
+        type Output = Array<A, D>;
+        /// Perform an elementwise negation of reference `self` and return the
+        /// result as a new `Array`.
+        fn neg(self) -> Array<A, D> {
+            self.map(Neg::neg)
+        }
+    }
+
     impl<A, S, D> Not for ArrayBase<S, D>
     where
         A: Clone + Not<Output = A>,
@@ -349,6 +462,19 @@ mod arithmetic_ops {
             self.map(Not::not)
         }
     }
+
+    impl<'a, A, D> Not for ArrayView<'a, A, D>
+    where
+        for<'b> &'b A: Not<Output = A>,
+        D: Dimension,
+    {
+        type Output = Array<A, D>;
+        /// Perform an elementwise unary not of reference `self` and return the
+        /// result as a new `Array`.
+        fn not(self) -> Array<A, D> {
+            self.map(Not::not)
+        }
+    }
 }
 
 mod assign_ops {
@@ -358,6 +484,23 @@ mod assign_ops {
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {
             use std::ops::$trt;
+
+            #[doc=$doc]
+            /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+            ///
+            /// **Panics** if broadcasting isn’t possible.
+            impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
+            where
+                A: Clone + $trt<A>,
+                S: DataMut<Elem = A>,
+                S2: Data<Elem = A>,
+                D: Dimension,
+                E: Dimension,
+            {
+                fn $method(&mut self, rhs: ArrayBase<S2, E>) {
+                    self.$method(&rhs)
+                }
+            }
 
             #[doc=$doc]
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
