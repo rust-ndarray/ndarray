@@ -2,8 +2,6 @@ use ndarray::prelude::*;
 use ndarray::Zip;
 
 use std::cell::Cell;
-#[cfg(debug_assertions)]
-use std::mem;
 
 #[test]
 fn raw_view_cast_cell() {
@@ -59,28 +57,27 @@ fn raw_view_mut_invalid_size_cast() {
 }
 
 #[test]
-#[cfg(debug_assertions)]
-#[should_panic = "alignment mismatch"]
-fn raw_view_invalid_align_cast() {
-    #[derive(Copy, Clone, Debug)]
-    #[repr(transparent)]
-    struct A([u8; 16]);
-    #[derive(Copy, Clone, Debug)]
-    #[repr(transparent)]
-    struct B([f64; 2]);
-
+fn raw_view_misaligned() {
+    let data: [u16; 2] = [0x0011, 0x2233];
+    let ptr: *const u16 = data.as_ptr();
     unsafe {
-        const LEN: usize = 16;
-        let mut buffer = [0u8; mem::size_of::<A>() * (LEN + 1)];
-        // Take out a slice of buffer as &[A] which is misaligned for B
-        let mut ptr = buffer.as_mut_ptr();
-        if ptr as usize % mem::align_of::<B>() == 0 {
-            ptr = ptr.add(1);
-        }
-
-        let view = RawArrayViewMut::from_shape_ptr(LEN, ptr as *mut A);
-
-        // misaligned cast - test debug assertion
-        view.cast::<B>();
+        let misaligned_ptr = (ptr as *const u8).add(1) as *const u16;
+        RawArrayView::from_shape_ptr(1, misaligned_ptr);
     }
+}
+
+#[test]
+#[cfg(debug_assertions)]
+#[should_panic = "The pointer must be aligned."]
+fn raw_view_deref_into_view_misaligned() {
+    fn misaligned_deref(data: &[u16; 2]) -> ArrayView1<'_, u16> {
+        let ptr: *const u16 = data.as_ptr();
+        unsafe {
+            let misaligned_ptr = (ptr as *const u8).add(1) as *const u16;
+            let raw_view = RawArrayView::from_shape_ptr(1, misaligned_ptr);
+            raw_view.deref_into_view()
+        }
+    }
+    let data: [u16; 2] = [0x0011, 0x2233];
+    misaligned_deref(&data);
 }

@@ -28,6 +28,7 @@ use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
     IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
 };
+use crate::slice::MultiSlice;
 use crate::stacking::stack;
 use crate::{NdIndex, Slice, SliceInfo, SliceOrIndex};
 
@@ -348,6 +349,39 @@ where
         S: DataMut,
     {
         self.view_mut().slice_move(info)
+    }
+
+    /// Return multiple disjoint, sliced, mutable views of the array.
+    ///
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
+    ///
+    /// [`SliceInfo`]: struct.SliceInfo.html
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if any of the following occur:
+    ///
+    /// * if any of the views would intersect (i.e. if any element would appear in multiple slices)
+    /// * if an index is out of bounds or step size is zero
+    /// * if `D` is `IxDyn` and `info` does not match the number of array axes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{arr2, s};
+    ///
+    /// let mut a = arr2(&[[1, 2, 3], [4, 5, 6]]);
+    /// let (mut edges, mut middle) = a.multi_slice_mut((s![.., ..;2], s![.., 1]));
+    /// edges.fill(1);
+    /// middle.fill(0);
+    /// assert_eq!(a, arr2(&[[1, 0, 1], [1, 0, 1]]));
+    /// ```
+    pub fn multi_slice_mut<'a, M>(&'a mut self, info: M) -> M::Output
+    where
+        M: MultiSlice<'a, A, D>,
+        S: DataMut,
+    {
+        info.multi_slice_move(self.view_mut())
     }
 
     /// Slice the array, possibly changing the number of dimensions.
@@ -2187,7 +2221,7 @@ where
         let view_stride = self.strides.axis(axis);
         if view_len == 0 {
             let new_dim = self.dim.remove_axis(axis);
-            Array::from_shape_fn(new_dim, move |_| mapping(ArrayView::from(&[])))
+            Array::from_shape_simple_fn(new_dim, move || mapping(ArrayView::from(&[])))
         } else {
             // use the 0th subview as a map to each 1d array view extended from
             // the 0th element.
@@ -2218,7 +2252,7 @@ where
         let view_stride = self.strides.axis(axis);
         if view_len == 0 {
             let new_dim = self.dim.remove_axis(axis);
-            Array::from_shape_fn(new_dim, move |_| mapping(ArrayViewMut::from(&mut [])))
+            Array::from_shape_simple_fn(new_dim, move || mapping(ArrayViewMut::from(&mut [])))
         } else {
             // use the 0th subview as a map to each 1d array view extended from
             // the 0th element.

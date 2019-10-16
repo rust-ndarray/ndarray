@@ -16,6 +16,7 @@ keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 [dependencies]
 ndarray = { version = "0.13", path = ".." }
 rand_distr = "0.2.1"
+quickcheck = { version = "0.9", default-features = false, optional = true }
 
 [dependencies.rand]
 version = "0.7.0"
@@ -23,6 +24,7 @@ features = ["small_rng"]
 
 [dev-dependencies]
 rand_isaac = "0.2.0"
+quickcheck = { version = "0.9", default-features = false }
 
 [package.metadata.release]
 no-dev-version = true

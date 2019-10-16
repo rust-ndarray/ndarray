@@ -544,7 +544,6 @@ fn slice_min_max(axis_len: usize, slice: Slice) -> Option<(usize, usize)> {
 }
 
 /// Returns `true` iff the slices intersect.
-#[allow(dead_code)]
 pub fn slices_intersect<D: Dimension>(
     dim: &D,
     indices1: &D::SliceArg,

@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use crate::imp_prelude::*;
+use crate::slice::MultiSlice;
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -108,5 +109,30 @@ where
             let (left, right) = self.into_raw_view_mut().split_at(axis, index);
             (left.deref_into_view_mut(), right.deref_into_view_mut())
         }
+    }
+
+    /// Split the view into multiple disjoint slices.
+    ///
+    /// This is similar to [`.multi_slice_mut()`], but `.multi_slice_move()`
+    /// consumes `self` and produces views with lifetimes matching that of
+    /// `self`.
+    ///
+    /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`SliceInfo`] and [`D::SliceArg`].
+    ///
+    /// [`.multi_slice_mut()`]: struct.ArrayBase.html#method.multi_slice_mut
+    /// [`SliceInfo`]: struct.SliceInfo.html
+    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    ///
+    /// **Panics** if any of the following occur:
+    ///
+    /// * if any of the views would intersect (i.e. if any element would appear in multiple slices)
+    /// * if an index is out of bounds or step size is zero
+    /// * if `D` is `IxDyn` and `info` does not match the number of array axes
+    pub fn multi_slice_move<M>(self, info: M) -> M::Output
+    where
+        M: MultiSlice<'a, A, D>,
+    {
+        info.multi_slice_move(self)
     }
 }
