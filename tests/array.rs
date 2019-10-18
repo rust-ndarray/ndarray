@@ -394,11 +394,11 @@ fn test_add() {
     }
 
     let B = A.clone();
-    A = A + &B;
-    assert_eq!(A[[0, 0]], 0);
-    assert_eq!(A[[0, 1]], 2);
-    assert_eq!(A[[1, 0]], 4);
-    assert_eq!(A[[1, 1]], 6);
+    let C = A + &B;
+    assert_eq!(C[[0, 0]], 0);
+    assert_eq!(C[[0, 1]], 2);
+    assert_eq!(C[[1, 0]], 4);
+    assert_eq!(C[[1, 1]], 6);
 }
 
 #[test]
