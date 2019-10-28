@@ -324,7 +324,7 @@ where
         Sh: ShapeBuilder<Dim = D>,
         S: DataOwned<Elem=A>,
     {
-        Self::from_shape_fn(shape, |_| dist.sample(rng))
+        Self::from_shape_simple_fn(shape, move || dist.sample(rng))
     }
 
     fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>

@@ -9,8 +9,8 @@
 use std::mem::{forget, size_of};
 use std::slice;
 
-use crate::dimension;
 use crate::imp_prelude::*;
+use crate::{dimension, ArcArray1, ArcArray2};
 
 /// Create an [**`Array`**](type.Array.html) with one, two or
 /// three dimensions.
@@ -63,7 +63,7 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray<A, Ix1> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray1<A> {
     arr1(xs).into_shared()
 }
 
@@ -289,7 +289,7 @@ where
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray<A, Ix2> {
+pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray2<A> {
     arr2(xs).into_shared()
 }
 

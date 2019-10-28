@@ -9,7 +9,7 @@ extern crate rmp_serde;
 #[cfg(feature = "ron")]
 extern crate ron;
 
-use ndarray::{arr0, arr1, arr2, s, ArcArray, ArrayD, Ix2, IxDyn};
+use ndarray::{arr0, arr1, arr2, s, ArcArray, ArcArray2, ArrayD, IxDyn};
 
 #[test]
 fn serial_many_dim_serde() {
@@ -98,13 +98,13 @@ fn serial_ixdyn_serde() {
 fn serial_wrong_count_serde() {
     // one element too few
     let text = r##"{"v":1,"dim":[2,3],"data":[3,1,2.2,3.1,4]}"##;
-    let arr = serde_json::from_str::<ArcArray<f32, Ix2>>(text);
+    let arr = serde_json::from_str::<ArcArray2<f32>>(text);
     println!("{:?}", arr);
     assert!(arr.is_err());
 
     // future version
     let text = r##"{"v":200,"dim":[2,3],"data":[3,1,2.2,3.1,4,7]}"##;
-    let arr = serde_json::from_str::<ArcArray<f32, Ix2>>(text);
+    let arr = serde_json::from_str::<ArcArray2<f32>>(text);
     println!("{:?}", arr);
     assert!(arr.is_err());
 }

@@ -475,6 +475,13 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
+/// It's possible to take multiple simultaneous *mutable* slices with
+/// [`.multi_slice_mut()`] or (for [`ArrayViewMut`] only)
+/// [`.multi_slice_move()`].
+///
+/// [`.multi_slice_mut()`]: #method.multi_slice_mut
+/// [`.multi_slice_move()`]: type.ArrayViewMut.html#method.multi_slice_move
+///
 /// ```
 /// extern crate ndarray;
 ///
@@ -525,6 +532,20 @@ pub type Ixs = isize;
 ///                [12, 11, 10]]);
 /// assert_eq!(f, g);
 /// assert_eq!(f.shape(), &[2, 3]);
+///
+/// // Let's take two disjoint, mutable slices of a matrix with
+/// //
+/// // - One containing all the even-index columns in the matrix
+/// // - One containing all the odd-index columns in the matrix
+/// let mut h = arr2(&[[0, 1, 2, 3],
+///                    [4, 5, 6, 7]]);
+/// let (s0, s1) = h.multi_slice_mut((s![.., ..;2], s![.., 1..;2]));
+/// let i = arr2(&[[0, 2],
+///                [4, 6]]);
+/// let j = arr2(&[[1, 3],
+///                [5, 7]]);
+/// assert_eq!(s0, i);
+/// assert_eq!(s1, j);
 /// }
 /// ```
 ///
@@ -1106,10 +1127,12 @@ pub type Ixs = isize;
 //      `dim`, and `strides` must be exclusively borrowed and not aliased by
 //      multiple indices.
 //
-// 2. `ptr` must be non-null and aligned, and it must be safe to [`.offset()`]
-//    `ptr` by zero.
+// 2. If the type of `data` implements `Data`, then `ptr` must be aligned.
 //
-// 3. It must be safe to [`.offset()`] the pointer repeatedly along all axes
+// 3. `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
+//    zero.
+//
+// 4. It must be safe to [`.offset()`] the pointer repeatedly along all axes
 //    and calculate the `count`s for the `.offset()` calls without overflow,
 //    even if the array is empty or the elements are zero-sized.
 //
@@ -1177,13 +1200,13 @@ pub type Ixs = isize;
 //    `.offset()` at all, even by zero bytes, but the implementation of
 //    `Vec<A>` does this, so we can too. See rust-lang/rust#54857 for details.)
 //
-// 4. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
+// 5. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
 //    also implies that the length of any individual axis must not exceed
 //    `isize::MAX`, and an array can contain at most `isize::MAX` elements.)
 //    This constraint makes various calculations easier because they don't have
 //    to worry about overflow and axis lengths can be freely cast to `isize`.
 //
-// Constraints 2–4 are carefully designed such that if they're upheld for the
+// Constraints 2–5 are carefully designed such that if they're upheld for the
 // array, they're also upheld for any subset of axes of the array as well as
 // slices/subviews/reshapes of the array. This is important for iterators that
 // produce subviews (and other similar cases) to be safe without extra (easy to
@@ -1209,8 +1232,8 @@ where
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
-    /// A non-null and aligned pointer into the buffer held by `data`; may
-    /// point anywhere in its range.
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Data`, this pointer must be aligned.
     ptr: std::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
@@ -1331,7 +1354,7 @@ pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 /// conversion into an [`ArrayView`]. The relationship between `RawArrayView`
 /// and [`ArrayView`] is somewhat analogous to the relationship between `*const
 /// T` and `&T`, but `RawArrayView` has additional requirements that `*const T`
-/// does not, such as alignment and non-nullness.
+/// does not, such as non-nullness.
 ///
 /// [`ArrayView`]: type.ArrayView.html
 ///
@@ -1356,8 +1379,7 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 /// unsafe conversion into an [`ArrayViewMut`]. The relationship between
 /// `RawArrayViewMut` and [`ArrayViewMut`] is somewhat analogous to the
 /// relationship between `*mut T` and `&mut T`, but `RawArrayViewMut` has
-/// additional requirements that `*mut T` does not, such as alignment and
-/// non-nullness.
+/// additional requirements that `*mut T` does not, such as non-nullness.
 ///
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///
