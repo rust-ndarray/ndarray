@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::fmt::Debug;
+use std::hash::Hash;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 use std::ops::{Index, IndexMut};
 
@@ -71,7 +72,7 @@ pub trait Dimension:
     /// - For `Ix2`: `(usize, usize)`
     /// - and so on..
     /// - For `IxDyn`: `IxDyn`
-    type Pattern: IntoDimension<Dim = Self> + Clone + Debug + PartialEq + Eq + Default;
+    type Pattern: IntoDimension<Dim = Self> + Clone + Debug + PartialEq + Eq + Hash + Default;
     /// Next smaller dimension (if applicable)
     type Smaller: Dimension;
     /// Next larger dimension
