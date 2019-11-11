@@ -1067,6 +1067,7 @@ pub type Ixs = isize;
 /// }
 /// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
 /// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
+/// # Ok::<(), io::Error>(())
 /// ```
 ///
 /// If neither of these options works for you, and you really need to convert
@@ -1091,6 +1092,7 @@ pub type Ixs = isize;
 ///     [[1, 2, 3], [4, 5, 6]],
 ///     [[7, 8, 9], [10, 11, 12]],
 /// ]);
+/// # Ok::<(), io::Error>(())
 /// ```
 ///
 /// Note that this implementation assumes that the nested `Vec`s are all the
