@@ -341,15 +341,15 @@ pub type Ixs = isize;
 ///
 /// Important traits and types for dimension and indexing:
 ///
-/// - A [`Dim`](Dim.t.html) value represents a dimensionality or index.
-/// - Trait [`Dimension`](Dimension.t.html) is implemented by all
+/// - A [`Dim`](struct.Dim.html) value represents a dimensionality or index.
+/// - Trait [`Dimension`](trait.Dimension.html) is implemented by all
 /// dimensionalities. It defines many operations for dimensions and indices.
-/// - Trait [`IntoDimension`](IntoDimension.t.html) is used to convert into a
+/// - Trait [`IntoDimension`](trait.IntoDimension.html) is used to convert into a
 /// `Dim` value.
-/// - Trait [`ShapeBuilder`](ShapeBuilder.t.html) is an extension of
+/// - Trait [`ShapeBuilder`](trait.ShapeBuilder.html) is an extension of
 /// `IntoDimension` and is used when constructing an array. A shape describes
 /// not just the extent of each axis but also their strides.
-/// - Trait [`NdIndex`](NdIndex.t.html) is an extension of `Dimension` and is
+/// - Trait [`NdIndex`](trait.NdIndex.html) is an extension of `Dimension` and is
 /// for values that can be used with indexing syntax.
 ///
 ///
@@ -1289,10 +1289,10 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
 /// + Dimensionality-specific type alises
-/// [`Array1`](Array1.t.html),
-/// [`Array2`](Array2.t.html),
-/// [`Array3`](Array3.t.html), ...,
-/// [`ArrayD`](ArrayD.t.html),
+/// [`Array1`](type.Array1.html),
+/// [`Array2`](type.Array2.html),
+/// [`Array3`](type.Array3.html), ...,
+/// [`ArrayD`](type.ArrayD.html),
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
