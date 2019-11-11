@@ -133,10 +133,10 @@ where
     /// use ndarray::{Array, arr1};
     ///
     /// # #[cfg(feature = "approx")] {
-    /// let array = Array::geomspace(1e0, 1e3, 4)?;
+    /// let array = Array::geomspace(1e0, 1e3, 4).unwrap();
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
-    /// let array = Array::geomspace(-1e3, -1e0, 4)?;
+    /// let array = Array::geomspace(-1e3, -1e0, 4).unwrap();
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
     /// # }
     /// ```
