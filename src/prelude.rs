@@ -14,7 +14,6 @@
 //! ```
 //!
 //! use ndarray::prelude::*;
-//! # fn main() { }
 //! ```
 
 #[doc(no_inline)]
