@@ -306,6 +306,67 @@ where
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
     }
 
+    /// Return variance for the flattened array.
+    ///
+    /// This uses the same method as var_axis.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.],
+    ///                [5., 6.]]);
+    ///
+    /// let a_flat = a.view().into_shape(6).expect("This must not fail.");
+    /// assert_eq!(a.var(1.), a_flat.var_axis(Axis(0), 1.).into_scalar());
+    /// ```
+    pub fn var(&self, ddof: A) -> A
+    where
+        A: Float + FromPrimitive,
+    {
+        let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
+        let n = A::from_usize(self.len()).expect("Converting length to `A` must not fail.");
+        assert!(
+            !(ddof < zero || ddof > n),
+            "`ddof` must not be less than zero or greater than the length of \
+             the axis",
+        );
+        let dof = n - ddof;
+        let mut mean = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
+        let mut sum_sq = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
+        for (count, x) in self.iter().enumerate() {
+            let delta = *x - mean;
+            mean = mean + delta / A::from_usize(count + 1).unwrap();
+            sum_sq = (*x - mean).mul_add(delta, sum_sq);
+        }
+        sum_sq / dof
+    }
+
+    /// Return standard deviation for the flattened array.
+    ///
+    /// The standard deviation is computed from the variance.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.],
+    ///                [5., 6.]]);
+    ///
+    /// let a_flat = a.view().into_shape(6).expect("This must not fail.");
+    /// assert_eq!(a.std(1.), a_flat.std_axis(Axis(0), 1.).into_scalar());
+    /// ```
+    pub fn std(&self, ddof: A) -> A
+    where
+        A: Float + FromPrimitive,
+    {
+        self.var(ddof).sqrt()
+    }
+
     /// Return `true` if the arrays' elementwise differences are all within
     /// the given absolute tolerance, `false` otherwise.
     ///

@@ -7,7 +7,7 @@
 )]
 
 use approx::assert_abs_diff_eq;
-use ndarray::{arr0, arr1, arr2, array, aview1, Array, Array1, Array2, Array3, Axis};
+use ndarray::{arr0, arr1, arr2, arr3, array, aview1, Array, Array1, Array2, Array3, Axis};
 use std::f64;
 
 #[test]
@@ -224,4 +224,36 @@ fn std_axis_empty_axis() {
     let v = a.std_axis(Axis(1), 0.);
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
+}
+
+#[test]
+fn var_var_axis() {
+    let a = arr3(&[
+        [[1., 2.], [1., 3.]],
+        [[3., 5.], [1., 3.]],
+        [[5., 7.], [1., 3.]],
+    ]);
+
+    let a_flat = a
+        .view()
+        .into_shape(a.len().clone())
+        .expect("into_shape to a.len() must not fail.");
+
+    assert_eq!(a.var(1.), a_flat.var_axis(Axis(0), 1.).into_scalar());
+}
+
+#[test]
+fn std_std_axis() {
+    let a = arr3(&[
+        [[1., 2.], [1., 3.]],
+        [[3., 5.], [1., 3.]],
+        [[5., 7.], [1., 3.]],
+    ]);
+
+    let a_flat = a
+        .view()
+        .into_shape(a.len().clone())
+        .expect("into_shape to a.len() must not fail.");
+
+    assert_eq!(a.std(1.), a_flat.std_axis(Axis(0), 1.).into_scalar());
 }
