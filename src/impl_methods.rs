@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cmp;
 use std::ptr as std_ptr;
 use std::slice;
 
@@ -1917,18 +1916,20 @@ where
         F: FnMut(&mut A, &B),
     {
         debug_assert_eq!(self.shape(), rhs.shape());
-        if let Some(self_s) = self.as_slice_mut() {
-            if let Some(rhs_s) = rhs.as_slice() {
-                let len = cmp::min(self_s.len(), rhs_s.len());
-                let s = &mut self_s[..len];
-                let r = &rhs_s[..len];
-                for i in 0..len {
-                    f(&mut s[i], &r[i]);
+
+        // Same shape and order should have same strides
+        if self.strides() == rhs.strides() {
+            if let Some(self_s) = self.as_slice_memory_order_mut() {
+                if let Some(rhs_s) = rhs.as_slice_memory_order() {
+                    for (s, r) in self_s.iter_mut().zip(rhs_s) {
+                        f(s, &r);
+                    }
+                    return;
                 }
-                return;
             }
         }
-        // otherwise, fall back to the outer iter
+
+        // Otherwise, fall back to the outer iter
         self.zip_mut_with_by_rows(rhs, f);
     }
 
