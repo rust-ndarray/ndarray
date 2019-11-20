@@ -143,7 +143,7 @@ where
     /// # Some(())
     /// # }
     /// #
-    /// # fn main() { example().unwrap() }
+    /// # example().unwrap();
     /// ```
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
@@ -485,8 +485,6 @@ where
     /// ### Examples
     ///
     /// ```
-    /// extern crate ndarray;
-    ///
     /// use ndarray::{s, Array2};
     ///
     /// // Example Task: Let's create a column shifted copy of a in b
@@ -503,9 +501,7 @@ where
     ///     b
     /// }
     ///
-    /// # fn main() {
-    /// #   shift_by_two(&Array2::zeros((8, 8)));
-    /// # }
+    /// # shift_by_two(&Array2::zeros((8, 8)));
     /// ```
     pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
     where
