@@ -143,7 +143,7 @@ where
     /// # Some(())
     /// # }
     /// #
-    /// # fn main() { example().unwrap() }
+    /// # example().unwrap();
     /// ```
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
