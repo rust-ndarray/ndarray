@@ -8,4 +8,7 @@ fn main() {
     if cfg!(feature = "test-blas-openblas-sys") {
         println!("cargo:rustc-link-lib={}=openblas", "dylib");
     }
+    if cfg!(all(not(target_os = "macos"), feature = "blas")) {
+        println!("cargo:rustc-link-lib={}=blas", "dylib");
+    }
 }
