@@ -1917,8 +1917,7 @@ where
     {
         debug_assert_eq!(self.shape(), rhs.shape());
 
-        // Same shape and order should have same strides
-        if self.strides() == rhs.strides() {
+        if self.dim.strides_equivalent(&self.strides, &rhs.strides) {
             if let Some(self_s) = self.as_slice_memory_order_mut() {
                 if let Some(rhs_s) = rhs.as_slice_memory_order() {
                     for (s, r) in self_s.iter_mut().zip(rhs_s) {
