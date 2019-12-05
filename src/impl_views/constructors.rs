@@ -65,7 +65,9 @@ where
     /// Create an `ArrayView<A, D>` from shape information and a raw pointer to
     /// the elements.
     ///
-    /// Unsafe because caller is responsible for ensuring all of the following:
+    /// # Safety
+    ///
+    /// The caller is responsible for ensuring all of the following:
     ///
     /// * The elements seen by moving `ptr` according to the shape and strides
     ///   must live at least as long as `'a` and must not be not mutably
@@ -159,7 +161,9 @@ where
     /// Create an `ArrayViewMut<A, D>` from shape information and a
     /// raw pointer to the elements.
     ///
-    /// Unsafe because caller is responsible for ensuring all of the following:
+    /// # Safety
+    ///
+    /// The caller is responsible for ensuring all of the following:
     ///
     /// * The elements seen by moving `ptr` according to the shape and strides
     ///   must live at least as long as `'a` and must not be aliased for the

@@ -425,6 +425,8 @@ where
     /// Creates an array from a vector and interpret it according to the
     /// provided shape and strides. (No cloning of elements needed.)
     ///
+    /// # Safety
+    ///
     /// The caller must ensure that the following conditions are met:
     ///
     /// 1. The ndim of `dim` and `strides` must be the same.
