@@ -5,8 +5,9 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
-use crate::Dimension;
+use crate::{ArrayViewMut, Dimension};
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
@@ -629,3 +630,103 @@ macro_rules! s(
         &*&$crate::s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );
+
+/// Slicing information describing multiple mutable, disjoint slices.
+///
+/// It's unfortunate that we need `'a` and `A` to be parameters of the trait,
+/// but they're necessary until Rust supports generic associated types.
+pub trait MultiSlice<'a, A, D>
+where
+    A: 'a,
+    D: Dimension,
+{
+    /// The type of the slices created by `.multi_slice_move()`.
+    type Output;
+
+    /// Split the view into multiple disjoint slices.
+    ///
+    /// **Panics** if performing any individual slice panics or if the slices
+    /// are not disjoint (i.e. if they intersect).
+    fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output;
+}
+
+impl<'a, A, D> MultiSlice<'a, A, D> for ()
+where
+    A: 'a,
+    D: Dimension,
+{
+    type Output = ();
+
+    fn multi_slice_move(&self, _view: ArrayViewMut<'a, A, D>) -> Self::Output {}
+}
+
+impl<'a, A, D, Do0> MultiSlice<'a, A, D> for (&SliceInfo<D::SliceArg, Do0>,)
+where
+    A: 'a,
+    D: Dimension,
+    Do0: Dimension,
+{
+    type Output = (ArrayViewMut<'a, A, Do0>,);
+
+    fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
+        (view.slice_move(self.0),)
+    }
+}
+
+macro_rules! impl_multislice_tuple {
+    ([$($but_last:ident)*] $last:ident) => {
+        impl_multislice_tuple!(@def_impl ($($but_last,)* $last,), [$($but_last)*] $last);
+    };
+    (@def_impl ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
+        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(&SliceInfo<D::SliceArg, $all>,)*)
+        where
+            A: 'a,
+            D: Dimension,
+            $($all: Dimension,)*
+        {
+            type Output = ($(ArrayViewMut<'a, A, $all>,)*);
+
+            fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
+                #[allow(non_snake_case)]
+                let ($($all,)*) = self;
+
+                let shape = view.raw_dim();
+                assert!(!impl_multislice_tuple!(@intersects_self &shape, ($($all,)*)));
+
+                let raw_view = view.into_raw_view_mut();
+                unsafe {
+                    (
+                        $(raw_view.clone().slice_move($but_last).deref_into_view_mut(),)*
+                        raw_view.slice_move($last).deref_into_view_mut(),
+                    )
+                }
+            }
+        }
+    };
+    (@intersects_self $shape:expr, ($head:expr,)) => {
+        false
+    };
+    (@intersects_self $shape:expr, ($head:expr, $($tail:expr,)*)) => {
+        $(slices_intersect($shape, $head, $tail)) ||*
+            || impl_multislice_tuple!(@intersects_self $shape, ($($tail,)*))
+    };
+}
+
+impl_multislice_tuple!([Do0] Do1);
+impl_multislice_tuple!([Do0 Do1] Do2);
+impl_multislice_tuple!([Do0 Do1 Do2] Do3);
+impl_multislice_tuple!([Do0 Do1 Do2 Do3] Do4);
+impl_multislice_tuple!([Do0 Do1 Do2 Do3 Do4] Do5);
+
+impl<'a, A, D, T> MultiSlice<'a, A, D> for &T
+where
+    A: 'a,
+    D: Dimension,
+    T: MultiSlice<'a, A, D>,
+{
+    type Output = T::Output;
+
+    fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
+        T::multi_slice_move(self, view)
+    }
+}

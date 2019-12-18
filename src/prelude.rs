@@ -12,10 +12,8 @@
 //! and macros that you can import easily as a group.
 //!
 //! ```
-//! extern crate ndarray;
 //!
 //! use ndarray::prelude::*;
-//! # fn main() { }
 //! ```
 
 #[doc(no_inline)]

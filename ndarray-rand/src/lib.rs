@@ -29,12 +29,15 @@
 //! that the items are not compatible (e.g. that a type doesn't implement a
 //! necessary trait).
 
-use crate::rand::distributions::Distribution;
+use crate::rand::distributions::{Distribution, Uniform};
 use crate::rand::rngs::SmallRng;
+use crate::rand::seq::index;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
-use ndarray::ShapeBuilder;
+use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
 use ndarray::{ArrayBase, DataOwned, Dimension};
+#[cfg(feature = "quickcheck")]
+use quickcheck::{Arbitrary, Gen};
 
 /// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
 pub mod rand {
@@ -59,9 +62,9 @@ pub mod rand_distr {
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
 /// documentation for information. You can select a different RNG with
 /// [`.random_using()`](#tymethod.random_using).
-pub trait RandomExt<S, D>
+pub trait RandomExt<S, A, D>
 where
-    S: DataOwned,
+    S: DataOwned<Elem = A>,
     D: Dimension,
 {
     /// Create an array with shape `dim` with elements drawn from
@@ -116,11 +119,117 @@ where
         IdS: Distribution<S::Elem>,
         R: Rng + ?Sized,
         Sh: ShapeBuilder<Dim = D>;
+
+    /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
+    ///
+    /// If `strategy==SamplingStrategy::WithoutReplacement`, each lane can only be sampled once.
+    /// If `strategy==SamplingStrategy::WithReplacement`, each lane can be sampled multiple times.
+    ///
+    /// ***Panics*** when:
+    /// - creation of the RNG fails;
+    /// - `n_samples` is greater than the length of `axis` (if sampling without replacement);
+    /// - length of `axis` is 0.
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    /// use ndarray_rand::{RandomExt, SamplingStrategy};
+    ///
+    /// # fn main() {
+    /// let a = array![
+    ///     [1., 2., 3.],
+    ///     [4., 5., 6.],
+    ///     [7., 8., 9.],
+    ///     [10., 11., 12.],
+    /// ];
+    /// // Sample 2 rows, without replacement
+    /// let sample_rows = a.sample_axis(Axis(0), 2, SamplingStrategy::WithoutReplacement);
+    /// println!("{:?}", sample_rows);
+    /// // Example Output: (1st and 3rd rows)
+    /// // [
+    /// //  [1., 2., 3.],
+    /// //  [7., 8., 9.]
+    /// // ]
+    /// // Sample 2 columns, with replacement
+    /// let sample_columns = a.sample_axis(Axis(1), 1, SamplingStrategy::WithReplacement);
+    /// println!("{:?}", sample_columns);
+    /// // Example Output: (2nd column, sampled twice)
+    /// // [
+    /// //  [2., 2.],
+    /// //  [5., 5.],
+    /// //  [8., 8.],
+    /// //  [11., 11.]
+    /// // ]
+    /// # }
+    /// ```
+    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
+    where
+        A: Copy,
+        D: RemoveAxis;
+
+    /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
+    ///
+    /// If `strategy==SamplingStrategy::WithoutReplacement`, each lane can only be sampled once.
+    /// If `strategy==SamplingStrategy::WithReplacement`, each lane can be sampled multiple times.
+    ///
+    /// ***Panics*** when:
+    /// - creation of the RNG fails;
+    /// - `n_samples` is greater than the length of `axis` (if sampling without replacement);
+    /// - length of `axis` is 0.
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    /// use ndarray_rand::{RandomExt, SamplingStrategy};
+    /// use ndarray_rand::rand::SeedableRng;
+    /// use rand_isaac::isaac64::Isaac64Rng;
+    ///
+    /// # fn main() {
+    /// // Get a seeded random number generator for reproducibility (Isaac64 algorithm)
+    /// let seed = 42;
+    /// let mut rng = Isaac64Rng::seed_from_u64(seed);
+    ///
+    /// let a = array![
+    ///     [1., 2., 3.],
+    ///     [4., 5., 6.],
+    ///     [7., 8., 9.],
+    ///     [10., 11., 12.],
+    /// ];
+    /// // Sample 2 rows, without replacement
+    /// let sample_rows = a.sample_axis_using(Axis(0), 2, SamplingStrategy::WithoutReplacement, &mut rng);
+    /// println!("{:?}", sample_rows);
+    /// // Example Output: (1st and 3rd rows)
+    /// // [
+    /// //  [1., 2., 3.],
+    /// //  [7., 8., 9.]
+    /// // ]
+    ///
+    /// // Sample 2 columns, with replacement
+    /// let sample_columns = a.sample_axis_using(Axis(1), 1, SamplingStrategy::WithReplacement, &mut rng);
+    /// println!("{:?}", sample_columns);
+    /// // Example Output: (2nd column, sampled twice)
+    /// // [
+    /// //  [2., 2.],
+    /// //  [5., 5.],
+    /// //  [8., 8.],
+    /// //  [11., 11.]
+    /// // ]
+    /// # }
+    /// ```
+    fn sample_axis_using<R>(
+        &self,
+        axis: Axis,
+        n_samples: usize,
+        strategy: SamplingStrategy,
+        rng: &mut R,
+    ) -> Array<A, D>
+    where
+        R: Rng + ?Sized,
+        A: Copy,
+        D: RemoveAxis;
 }
 
-impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
+impl<S, A, D> RandomExt<S, A, D> for ArrayBase<S, D>
 where
-    S: DataOwned,
+    S: DataOwned<Elem = A>,
     D: Dimension,
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
@@ -128,9 +237,7 @@ where
         IdS: Distribution<S::Elem>,
         Sh: ShapeBuilder<Dim = D>,
     {
-        let mut rng =
-            SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed");
-        Self::random_using(shape, dist, &mut rng)
+        Self::random_using(shape, dist, &mut get_rng())
     }
 
     fn random_using<Sh, IdS, R>(shape: Sh, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
@@ -139,8 +246,68 @@ where
         R: Rng + ?Sized,
         Sh: ShapeBuilder<Dim = D>,
     {
-        Self::from_shape_fn(shape, |_| dist.sample(rng))
+        Self::from_shape_simple_fn(shape, move || dist.sample(rng))
     }
+
+    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
+    where
+        A: Copy,
+        D: RemoveAxis,
+    {
+        self.sample_axis_using(axis, n_samples, strategy, &mut get_rng())
+    }
+
+    fn sample_axis_using<R>(
+        &self,
+        axis: Axis,
+        n_samples: usize,
+        strategy: SamplingStrategy,
+        rng: &mut R,
+    ) -> Array<A, D>
+    where
+        R: Rng + ?Sized,
+        A: Copy,
+        D: RemoveAxis,
+    {
+        let indices: Vec<_> = match strategy {
+            SamplingStrategy::WithReplacement => {
+                let distribution = Uniform::from(0..self.len_of(axis));
+                (0..n_samples).map(|_| distribution.sample(rng)).collect()
+            }
+            SamplingStrategy::WithoutReplacement => {
+                index::sample(rng, self.len_of(axis), n_samples).into_vec()
+            }
+        };
+        self.select(axis, &indices)
+    }
+}
+
+/// Used as parameter in [`sample_axis`] and [`sample_axis_using`] to determine
+/// if lanes from the original array should only be sampled once (*without replacement*) or
+/// multiple times (*with replacement*).
+///
+/// [`sample_axis`]: trait.RandomExt.html#tymethod.sample_axis
+/// [`sample_axis_using`]: trait.RandomExt.html#tymethod.sample_axis_using
+#[derive(Debug, Clone)]
+pub enum SamplingStrategy {
+    WithReplacement,
+    WithoutReplacement,
+}
+
+// `Arbitrary` enables `quickcheck` to generate random `SamplingStrategy` values for testing.
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for SamplingStrategy {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        if g.gen_bool(0.5) {
+            SamplingStrategy::WithReplacement
+        } else {
+            SamplingStrategy::WithoutReplacement
+        }
+    }
+}
+
+fn get_rng() -> SmallRng {
+    SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
 }
 
 /// A wrapper type that allows casting f64 distributions to f32

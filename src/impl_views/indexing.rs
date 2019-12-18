@@ -90,6 +90,10 @@ pub trait IndexLonger<I> {
     /// [1]: struct.ArrayBase.html#method.uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the index is in-bounds.
     unsafe fn uget(self, index: I) -> Self::Output;
 }
 

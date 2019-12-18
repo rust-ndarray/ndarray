@@ -31,10 +31,12 @@ where
     /// Create an `RawArrayView<A, D>` from shape information and a raw pointer
     /// to the elements.
     ///
-    /// Unsafe because caller is responsible for ensuring all of the following:
+    /// # Safety
     ///
-    /// * `ptr` must be non-null and aligned, and it must be safe to
-    ///   [`.offset()`] `ptr` by zero.
+    /// The caller is responsible for ensuring all of the following:
+    ///
+    /// * `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
+    ///   zero.
     ///
     /// * It must be safe to [`.offset()`] the pointer repeatedly along all
     ///   axes and calculate the `count`s for the `.offset()` calls without
@@ -70,7 +72,6 @@ where
         let strides = shape.strides;
         if cfg!(debug_assertions) {
             assert!(!ptr.is_null(), "The pointer must be non-null.");
-            assert!(is_aligned(ptr), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
         }
         RawArrayView::new_(ptr, dim, strides)
@@ -78,11 +79,18 @@ where
 
     /// Converts to a read-only view of the array.
     ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid and choose the correct lifetime.
+    /// # Safety
+    ///
+    /// From a safety standpoint, this is equivalent to dereferencing a raw
+    /// pointer for every element in the array. You must ensure that all of the
+    /// data is valid, ensure that the pointer is aligned, and choose the
+    /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
+        debug_assert!(
+            is_aligned(self.ptr.as_ptr()),
+            "The pointer must be aligned."
+        );
         ArrayView::new(self.ptr, self.dim, self.strides)
     }
 
@@ -130,12 +138,6 @@ where
             "size mismatch in raw view cast"
         );
         let ptr = self.ptr.cast::<B>();
-        debug_assert!(
-            is_aligned(ptr.as_ptr()),
-            "alignment mismatch in raw view cast"
-        );
-        /* Alignment checked with debug assertion: alignment could be dynamically correct,
-         * and we don't have a check that compiles out for that. */
         unsafe { RawArrayView::new(ptr, self.dim, self.strides) }
     }
 }
@@ -165,10 +167,12 @@ where
     /// Create an `RawArrayViewMut<A, D>` from shape information and a raw
     /// pointer to the elements.
     ///
-    /// Unsafe because caller is responsible for ensuring all of the following:
+    /// # Safety
     ///
-    /// * `ptr` must be non-null and aligned, and it must be safe to
-    ///   [`.offset()`] `ptr` by zero.
+    /// The caller is responsible for ensuring all of the following:
+    ///
+    /// * `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
+    ///   zero.
     ///
     /// * It must be safe to [`.offset()`] the pointer repeatedly along all
     ///   axes and calculate the `count`s for the `.offset()` calls without
@@ -204,7 +208,6 @@ where
         let strides = shape.strides;
         if cfg!(debug_assertions) {
             assert!(!ptr.is_null(), "The pointer must be non-null.");
-            assert!(is_aligned(ptr), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
         }
         RawArrayViewMut::new_(ptr, dim, strides)
@@ -218,21 +221,35 @@ where
 
     /// Converts to a read-only view of the array.
     ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid and choose the correct lifetime.
+    /// # Safety
+    ///
+    /// From a safety standpoint, this is equivalent to dereferencing a raw
+    /// pointer for every element in the array. You must ensure that all of the
+    /// data is valid, ensure that the pointer is aligned, and choose the
+    /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
+        debug_assert!(
+            is_aligned(self.ptr.as_ptr()),
+            "The pointer must be aligned."
+        );
         ArrayView::new(self.ptr, self.dim, self.strides)
     }
 
     /// Converts to a mutable view of the array.
     ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid and choose the correct lifetime.
+    /// # Safety
+    ///
+    /// From a safety standpoint, this is equivalent to dereferencing a raw
+    /// pointer for every element in the array. You must ensure that all of the
+    /// data is valid, ensure that the pointer is aligned, and choose the
+    /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D> {
+        debug_assert!(
+            is_aligned(self.ptr.as_ptr()),
+            "The pointer must be aligned."
+        );
         ArrayViewMut::new(self.ptr, self.dim, self.strides)
     }
 
@@ -267,12 +284,6 @@ where
             "size mismatch in raw view cast"
         );
         let ptr = self.ptr.cast::<B>();
-        debug_assert!(
-            is_aligned(ptr.as_ptr()),
-            "alignment mismatch in raw view cast"
-        );
-        /* Alignment checked with debug assertion: alignment could be dynamically correct,
-         * and we don't have a check that compiles out for that. */
         unsafe { RawArrayViewMut::new(ptr, self.dim, self.strides) }
     }
 }

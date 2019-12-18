@@ -9,30 +9,25 @@
 use std::mem::{forget, size_of};
 use std::slice;
 
-use crate::dimension;
 use crate::imp_prelude::*;
+use crate::{dimension, ArcArray1, ArcArray2};
 
 /// Create an [**`Array`**](type.Array.html) with one, two or
 /// three dimensions.
 ///
 /// ```
-/// extern crate ndarray;
-///
 /// use ndarray::array;
+/// let a1 = array![1, 2, 3, 4];
 ///
-/// fn main() {
-///     let a1 = array![1, 2, 3, 4];
+/// let a2 = array![[1, 2],
+///                 [3, 4]];
 ///
-///     let a2 = array![[1, 2],
-///                     [3, 4]];
+/// let a3 = array![[[1, 2], [3, 4]],
+///                 [[5, 6], [7, 8]]];
 ///
-///     let a3 = array![[[1, 2], [3, 4]],
-///                     [[5, 6], [7, 8]]];
-///
-///     assert_eq!(a1.shape(), &[4]);
-///     assert_eq!(a2.shape(), &[2, 2]);
-///     assert_eq!(a3.shape(), &[2, 2, 2]);
-/// }
+/// assert_eq!(a1.shape(), &[4]);
+/// assert_eq!(a2.shape(), &[2, 2]);
+/// assert_eq!(a3.shape(), &[2, 2, 2]);
 /// ```
 ///
 /// This macro uses `vec![]`, and has the same ownership semantics;
@@ -63,7 +58,7 @@ pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray<A, Ix1> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray1<A> {
     arr1(xs).into_shared()
 }
 
@@ -115,19 +110,14 @@ pub fn aview2<A, V: FixedInitializer<Elem = A>>(xs: &[V]) -> ArrayView2<'_, A> {
 /// Create a one-dimensional read-write array view with elements borrowing `xs`.
 ///
 /// ```
-/// extern crate ndarray;
-///
 /// use ndarray::{aview_mut1, s};
-///
 /// // Create an array view over some data, then slice it and modify it.
-/// fn main() {
-///     let mut data = [0; 1024];
-///     {
-///         let mut a = aview_mut1(&mut data).into_shape((32, 32)).unwrap();
-///         a.slice_mut(s![.., ..;3]).fill(5);
-///     }
-///     assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
+/// let mut data = [0; 1024];
+/// {
+///     let mut a = aview_mut1(&mut data).into_shape((32, 32)).unwrap();
+///     a.slice_mut(s![.., ..;3]).fill(5);
 /// }
+/// assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
 /// ```
 pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A> {
     ArrayViewMut::from(xs)
@@ -143,20 +133,18 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A> {
 /// ```
 /// use ndarray::aview_mut2;
 ///
-/// fn main() {
-///     // The inner (nested) array must be of length 1 to 16, but the outer
-///     // can be of any length.
-///     let mut data = [[0.; 2]; 128];
-///     {
-///         // Make a 128 x 2 mut array view then turn it into 2 x 128
-///         let mut a = aview_mut2(&mut data).reversed_axes();
-///         // Make the first row ones and second row minus ones.
-///         a.row_mut(0).fill(1.);
-///         a.row_mut(1).fill(-1.);
-///     }
-///     // look at the start of the result
-///     assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
+/// // The inner (nested) array must be of length 1 to 16, but the outer
+/// // can be of any length.
+/// let mut data = [[0.; 2]; 128];
+/// {
+///     // Make a 128 x 2 mut array view then turn it into 2 x 128
+///     let mut a = aview_mut2(&mut data).reversed_axes();
+///     // Make the first row ones and second row minus ones.
+///     a.row_mut(0).fill(1.);
+///     a.row_mut(1).fill(-1.);
 /// }
+/// // look at the start of the result
+/// assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
 /// ```
 pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMut2<'_, A> {
     let cols = V::len();
@@ -289,7 +277,7 @@ where
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray<A, Ix2> {
+pub fn rcarr2<A: Clone, V: Clone + FixedInitializer<Elem = A>>(xs: &[V]) -> ArcArray2<A> {
     arr2(xs).into_shared()
 }
 

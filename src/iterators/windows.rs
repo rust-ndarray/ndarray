@@ -41,7 +41,7 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
 
         unsafe {
             Windows {
-                base: ArrayView::from_shape_ptr(size.clone().strides(a.strides), a.ptr.as_ptr()),
+                base: ArrayView::from_shape_ptr(size.strides(a.strides), a.ptr.as_ptr()),
                 window,
                 strides: window_strides,
             }

@@ -343,15 +343,15 @@ pub type Ixs = isize;
 ///
 /// Important traits and types for dimension and indexing:
 ///
-/// - A [`Dim`](Dim.t.html) value represents a dimensionality or index.
-/// - Trait [`Dimension`](Dimension.t.html) is implemented by all
+/// - A [`Dim`](struct.Dim.html) value represents a dimensionality or index.
+/// - Trait [`Dimension`](trait.Dimension.html) is implemented by all
 /// dimensionalities. It defines many operations for dimensions and indices.
-/// - Trait [`IntoDimension`](IntoDimension.t.html) is used to convert into a
+/// - Trait [`IntoDimension`](trait.IntoDimension.html) is used to convert into a
 /// `Dim` value.
-/// - Trait [`ShapeBuilder`](ShapeBuilder.t.html) is an extension of
+/// - Trait [`ShapeBuilder`](trait.ShapeBuilder.html) is an extension of
 /// `IntoDimension` and is used when constructing an array. A shape describes
 /// not just the extent of each axis but also their strides.
-/// - Trait [`NdIndex`](NdIndex.t.html) is an extension of `Dimension` and is
+/// - Trait [`NdIndex`](trait.NdIndex.html) is an extension of `Dimension` and is
 /// for values that can be used with indexing syntax.
 ///
 ///
@@ -477,12 +477,16 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
+/// It's possible to take multiple simultaneous *mutable* slices with
+/// [`.multi_slice_mut()`] or (for [`ArrayViewMut`] only)
+/// [`.multi_slice_move()`].
+///
+/// [`.multi_slice_mut()`]: #method.multi_slice_mut
+/// [`.multi_slice_move()`]: type.ArrayViewMut.html#method.multi_slice_move
+///
 /// ```
-/// extern crate ndarray;
 ///
 /// use ndarray::{arr2, arr3, s};
-///
-/// fn main() {
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -527,7 +531,20 @@ pub type Ixs = isize;
 ///                [12, 11, 10]]);
 /// assert_eq!(f, g);
 /// assert_eq!(f.shape(), &[2, 3]);
-/// }
+///
+/// // Let's take two disjoint, mutable slices of a matrix with
+/// //
+/// // - One containing all the even-index columns in the matrix
+/// // - One containing all the odd-index columns in the matrix
+/// let mut h = arr2(&[[0, 1, 2, 3],
+///                    [4, 5, 6, 7]]);
+/// let (s0, s1) = h.multi_slice_mut((s![.., ..;2], s![.., 1..;2]));
+/// let i = arr2(&[[0, 2],
+///                [4, 6]]);
+/// let j = arr2(&[[1, 3],
+///                [5, 7]]);
+/// assert_eq!(s0, i);
+/// assert_eq!(s1, j);
 /// ```
 ///
 /// ## Subviews
@@ -560,11 +577,9 @@ pub type Ixs = isize;
 /// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
-/// extern crate ndarray;
 ///
 /// use ndarray::{arr3, aview1, aview2, s, Axis};
 ///
-/// # fn main() {
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -598,7 +613,6 @@ pub type Ixs = isize;
 /// // You can take multiple subviews at once (and slice at the same time)
 /// let double_sub = a.slice(s![1, .., 0]);
 /// assert_eq!(double_sub, aview1(&[7, 10]));
-/// # }
 /// ```
 ///
 /// ## Arithmetic Operations
@@ -1044,7 +1058,6 @@ pub type Ixs = isize;
 /// ```rust
 /// use ndarray::{array, Array2};
 ///
-/// # fn main() -> Result<(), Box<std::error::Error>> {
 /// let ncols = 3;
 /// let mut data = Vec::new();
 /// let mut nrows = 0;
@@ -1056,8 +1069,7 @@ pub type Ixs = isize;
 /// }
 /// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
 /// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
-/// # Ok(())
-/// # }
+/// # Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// If neither of these options works for you, and you really need to convert
@@ -1070,7 +1082,6 @@ pub type Ixs = isize;
 /// ```rust
 /// use ndarray::{array, Array2, Array3};
 ///
-/// # fn main() -> Result<(), Box<std::error::Error>> {
 /// let nested: Vec<Array2<i32>> = vec![
 ///     array![[1, 2, 3], [4, 5, 6]],
 ///     array![[7, 8, 9], [10, 11, 12]],
@@ -1083,8 +1094,7 @@ pub type Ixs = isize;
 ///     [[1, 2, 3], [4, 5, 6]],
 ///     [[7, 8, 9], [10, 11, 12]],
 /// ]);
-/// # Ok(())
-/// # }
+/// # Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// Note that this implementation assumes that the nested `Vec`s are all the
@@ -1108,10 +1118,12 @@ pub type Ixs = isize;
 //      `dim`, and `strides` must be exclusively borrowed and not aliased by
 //      multiple indices.
 //
-// 2. `ptr` must be non-null and aligned, and it must be safe to [`.offset()`]
-//    `ptr` by zero.
+// 2. If the type of `data` implements `Data`, then `ptr` must be aligned.
 //
-// 3. It must be safe to [`.offset()`] the pointer repeatedly along all axes
+// 3. `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
+//    zero.
+//
+// 4. It must be safe to [`.offset()`] the pointer repeatedly along all axes
 //    and calculate the `count`s for the `.offset()` calls without overflow,
 //    even if the array is empty or the elements are zero-sized.
 //
@@ -1179,13 +1191,13 @@ pub type Ixs = isize;
 //    `.offset()` at all, even by zero bytes, but the implementation of
 //    `Vec<A>` does this, so we can too. See rust-lang/rust#54857 for details.)
 //
-// 4. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
+// 5. The product of non-zero axis lengths must not exceed `isize::MAX`. (This
 //    also implies that the length of any individual axis must not exceed
 //    `isize::MAX`, and an array can contain at most `isize::MAX` elements.)
 //    This constraint makes various calculations easier because they don't have
 //    to worry about overflow and axis lengths can be freely cast to `isize`.
 //
-// Constraints 2–4 are carefully designed such that if they're upheld for the
+// Constraints 2–5 are carefully designed such that if they're upheld for the
 // array, they're also upheld for any subset of axes of the array as well as
 // slices/subviews/reshapes of the array. This is important for iterators that
 // produce subviews (and other similar cases) to be safe without extra (easy to
@@ -1211,8 +1223,8 @@ where
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
-    /// A non-null and aligned pointer into the buffer held by `data`; may
-    /// point anywhere in its range.
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Data`, this pointer must be aligned.
     ptr: std::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
@@ -1268,10 +1280,10 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
 /// + Dimensionality-specific type alises
-/// [`Array1`](Array1.t.html),
-/// [`Array2`](Array2.t.html),
-/// [`Array3`](Array3.t.html), ...,
-/// [`ArrayD`](ArrayD.t.html),
+/// [`Array1`](type.Array1.html),
+/// [`Array2`](type.Array2.html),
+/// [`Array3`](type.Array3.html), ...,
+/// [`ArrayD`](type.ArrayD.html),
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
@@ -1333,7 +1345,7 @@ pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 /// conversion into an [`ArrayView`]. The relationship between `RawArrayView`
 /// and [`ArrayView`] is somewhat analogous to the relationship between `*const
 /// T` and `&T`, but `RawArrayView` has additional requirements that `*const T`
-/// does not, such as alignment and non-nullness.
+/// does not, such as non-nullness.
 ///
 /// [`ArrayView`]: type.ArrayView.html
 ///
@@ -1358,8 +1370,7 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 /// unsafe conversion into an [`ArrayViewMut`]. The relationship between
 /// `RawArrayViewMut` and [`ArrayViewMut`] is somewhat analogous to the
 /// relationship between `*mut T` and `&mut T`, but `RawArrayViewMut` has
-/// additional requirements that `*mut T` does not, such as alignment and
-/// non-nullness.
+/// additional requirements that `*mut T` does not, such as non-nullness.
 ///
 /// [`ArrayViewMut`]: type.ArrayViewMut.html
 ///

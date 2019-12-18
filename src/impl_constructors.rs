@@ -143,7 +143,7 @@ where
     /// # Some(())
     /// # }
     /// #
-    /// # fn main() { example().unwrap() }
+    /// # example().unwrap();
     /// ```
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
@@ -306,9 +306,27 @@ where
         A: Default,
         Sh: ShapeBuilder<Dim = D>,
     {
+        Self::from_shape_simple_fn(shape, A::default)
+    }
+
+    /// Create an array with values created by the function `f`.
+    ///
+    /// `f` is called with no argument, and it should return the element to
+    /// create. If the precise index of the element to create is needed,
+    /// use [`from_shape_fn`](ArrayBase::from_shape_fn) instead.
+    ///
+    /// This constructor can be useful if the element order is not important,
+    /// for example if they are identical or random.
+    ///
+    /// **Panics** if the product of non-zero axis lengths overflows `isize`.
+    pub fn from_shape_simple_fn<Sh, F>(shape: Sh, mut f: F) -> Self
+    where
+        Sh: ShapeBuilder<Dim = D>,
+        F: FnMut() -> A,
+    {
         let shape = shape.into_shape();
-        let size = size_of_shape_checked_unwrap!(&shape.dim);
-        let v = to_vec((0..size).map(|_| A::default()));
+        let len = size_of_shape_checked_unwrap!(&shape.dim);
+        let v = to_vec_mapped(0..len, move |_| f());
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
     }
 
@@ -318,6 +336,20 @@ where
     /// visited in arbitrary order.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
+    ///
+    /// ```
+    /// use ndarray::{Array, arr2};
+    ///
+    /// // Create a table of i × j (with i and j from 1 to 3)
+    /// let ij_table = Array::from_shape_fn((3, 3), |(i, j)| (1 + i) * (1 + j));
+    ///
+    /// assert_eq!(
+    ///     ij_table,
+    ///     arr2(&[[1, 2, 3],
+    ///            [2, 4, 6],
+    ///            [3, 6, 9]])
+    /// );
+    /// ```
     pub fn from_shape_fn<Sh, F>(shape: Sh, f: F) -> Self
     where
         Sh: ShapeBuilder<Dim = D>,
@@ -393,6 +425,8 @@ where
     /// Creates an array from a vector and interpret it according to the
     /// provided shape and strides. (No cloning of elements needed.)
     ///
+    /// # Safety
+    ///
     /// The caller must ensure that the following conditions are met:
     ///
     /// 1. The ndim of `dim` and `strides` must be the same.
@@ -453,8 +487,6 @@ where
     /// ### Examples
     ///
     /// ```
-    /// extern crate ndarray;
-    ///
     /// use ndarray::{s, Array2};
     ///
     /// // Example Task: Let's create a column shifted copy of a in b
@@ -471,9 +503,7 @@ where
     ///     b
     /// }
     ///
-    /// # fn main() {
-    /// #   shift_by_two(&Array2::zeros((8, 8)));
-    /// # }
+    /// # shift_by_two(&Array2::zeros((8, 8)));
     /// ```
     pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
     where
