@@ -341,15 +341,15 @@ pub type Ixs = isize;
 ///
 /// Important traits and types for dimension and indexing:
 ///
-/// - A [`Dim`](Dim.t.html) value represents a dimensionality or index.
-/// - Trait [`Dimension`](Dimension.t.html) is implemented by all
+/// - A [`Dim`](struct.Dim.html) value represents a dimensionality or index.
+/// - Trait [`Dimension`](trait.Dimension.html) is implemented by all
 /// dimensionalities. It defines many operations for dimensions and indices.
-/// - Trait [`IntoDimension`](IntoDimension.t.html) is used to convert into a
+/// - Trait [`IntoDimension`](trait.IntoDimension.html) is used to convert into a
 /// `Dim` value.
-/// - Trait [`ShapeBuilder`](ShapeBuilder.t.html) is an extension of
+/// - Trait [`ShapeBuilder`](trait.ShapeBuilder.html) is an extension of
 /// `IntoDimension` and is used when constructing an array. A shape describes
 /// not just the extent of each axis but also their strides.
-/// - Trait [`NdIndex`](NdIndex.t.html) is an extension of `Dimension` and is
+/// - Trait [`NdIndex`](trait.NdIndex.html) is an extension of `Dimension` and is
 /// for values that can be used with indexing syntax.
 ///
 ///
@@ -483,11 +483,8 @@ pub type Ixs = isize;
 /// [`.multi_slice_move()`]: type.ArrayViewMut.html#method.multi_slice_move
 ///
 /// ```
-/// extern crate ndarray;
 ///
 /// use ndarray::{arr2, arr3, s};
-///
-/// fn main() {
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -546,7 +543,6 @@ pub type Ixs = isize;
 ///                [5, 7]]);
 /// assert_eq!(s0, i);
 /// assert_eq!(s1, j);
-/// }
 /// ```
 ///
 /// ## Subviews
@@ -579,11 +575,9 @@ pub type Ixs = isize;
 /// [`.outer_iter_mut()`]: #method.outer_iter_mut
 ///
 /// ```
-/// extern crate ndarray;
 ///
 /// use ndarray::{arr3, aview1, aview2, s, Axis};
 ///
-/// # fn main() {
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -617,7 +611,6 @@ pub type Ixs = isize;
 /// // You can take multiple subviews at once (and slice at the same time)
 /// let double_sub = a.slice(s![1, .., 0]);
 /// assert_eq!(double_sub, aview1(&[7, 10]));
-/// # }
 /// ```
 ///
 /// ## Arithmetic Operations
@@ -1063,7 +1056,6 @@ pub type Ixs = isize;
 /// ```rust
 /// use ndarray::{array, Array2};
 ///
-/// # fn main() -> Result<(), Box<std::error::Error>> {
 /// let ncols = 3;
 /// let mut data = Vec::new();
 /// let mut nrows = 0;
@@ -1075,8 +1067,7 @@ pub type Ixs = isize;
 /// }
 /// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
 /// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
-/// # Ok(())
-/// # }
+/// # Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// If neither of these options works for you, and you really need to convert
@@ -1089,7 +1080,6 @@ pub type Ixs = isize;
 /// ```rust
 /// use ndarray::{array, Array2, Array3};
 ///
-/// # fn main() -> Result<(), Box<std::error::Error>> {
 /// let nested: Vec<Array2<i32>> = vec![
 ///     array![[1, 2, 3], [4, 5, 6]],
 ///     array![[7, 8, 9], [10, 11, 12]],
@@ -1102,8 +1092,7 @@ pub type Ixs = isize;
 ///     [[1, 2, 3], [4, 5, 6]],
 ///     [[7, 8, 9], [10, 11, 12]],
 /// ]);
-/// # Ok(())
-/// # }
+/// # Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// Note that this implementation assumes that the nested `Vec`s are all the
@@ -1289,10 +1278,10 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// + [Constructor Methods for Owned Arrays](struct.ArrayBase.html#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](struct.ArrayBase.html#methods-for-all-array-types)
 /// + Dimensionality-specific type alises
-/// [`Array1`](Array1.t.html),
-/// [`Array2`](Array2.t.html),
-/// [`Array3`](Array3.t.html), ...,
-/// [`ArrayD`](ArrayD.t.html),
+/// [`Array1`](type.Array1.html),
+/// [`Array2`](type.Array2.html),
+/// [`Array3`](type.Array3.html), ...,
+/// [`ArrayD`](type.ArrayD.html),
 /// and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 

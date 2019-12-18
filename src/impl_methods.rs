@@ -572,6 +572,10 @@ where
     /// Return a reference to the element at `index`.
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the index is in-bounds.
     #[inline]
     pub unsafe fn uget<I>(&self, index: I) -> &A
     where
@@ -587,8 +591,16 @@ where
     ///
     /// Return a mutable reference to the element at `index`.
     ///
-    /// **Note:** Only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** (For `ArcArray`) The array must be uniquely held when mutating it.
+    /// **Note:** Only unchecked for non-debug builds of ndarray.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    ///
+    /// 1. the index is in-bounds and
+    ///
+    /// 2. the data is uniquely held by the array. (This property is guaranteed
+    ///    for `Array` and `ArrayViewMut`, but not for `ArcArray` or `CowArray`.)
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
     where
@@ -622,8 +634,16 @@ where
     ///
     /// Indices may be equal.
     ///
-    /// **Note:** only unchecked for non-debug builds of ndarray.<br>
-    /// **Note:** (For `ArcArray`) The array must be uniquely held.
+    /// **Note:** only unchecked for non-debug builds of ndarray.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    ///
+    /// 1. both `index1 and `index2` are in-bounds and
+    ///
+    /// 2. the data is uniquely held by the array. (This property is guaranteed
+    ///    for `Array` and `ArrayViewMut`, but not for `ArcArray` or `CowArray`.)
     pub unsafe fn uswap<I>(&mut self, index1: I, index2: I)
     where
         S: DataMut,
