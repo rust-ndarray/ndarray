@@ -28,7 +28,7 @@ use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
     IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
 };
-use crate::stacking::stack;
+use crate::stacking::concatenate;
 use crate::{NdIndex, Slice, SliceInfo, SliceOrIndex};
 
 /// # Methods For All Array Types
@@ -787,7 +787,7 @@ where
             dim.set_axis(axis, 0);
             unsafe { Array::from_shape_vec_unchecked(dim, vec![]) }
         } else {
-            stack(axis, &subs).unwrap()
+            concatenate(axis, &subs).unwrap()
         }
     }
 

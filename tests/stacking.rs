@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use ndarray::{arr2, arr3, aview1, concatenate, stack, Array2, Axis, ErrorKind, Ix1};
 
 #[test]
