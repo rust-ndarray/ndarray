@@ -30,7 +30,7 @@ use crate::imp_prelude::*;
 /// );
 /// ```
 #[deprecated(
-    since = "0.13.0",
+    since = "0.13.1",
     note = "Please use the `concatenate` function instead"
 )]
 pub fn stack<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
@@ -97,6 +97,7 @@ where
 ///                  [3., 3.]]))
 /// );
 /// ```
+#[allow(deprecated)]
 pub fn concatenate<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
 where
     A: Copy,

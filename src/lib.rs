@@ -131,6 +131,8 @@ use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, Lane
 
 pub use crate::arraytraits::AsArray;
 pub use crate::linalg_traits::{LinalgScalar, NdFloat};
+
+#[allow(deprecated)]
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::impl_views::IndexLonger;
