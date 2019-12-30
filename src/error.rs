@@ -70,9 +70,11 @@ impl PartialEq for ShapeError {
     }
 }
 
-impl Error for ShapeError {
-    fn description(&self) -> &str {
-        match self.kind() {
+impl Error for ShapeError {}
+
+impl fmt::Display for ShapeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let description = match self.kind() {
             ErrorKind::IncompatibleShape => "incompatible shapes",
             ErrorKind::IncompatibleLayout => "incompatible memory layout",
             ErrorKind::RangeLimited => "the shape does not fit in type limits",
@@ -80,19 +82,14 @@ impl Error for ShapeError {
             ErrorKind::Unsupported => "unsupported operation",
             ErrorKind::Overflow => "arithmetic overflow",
             ErrorKind::__Incomplete => "this error variant is not in use",
-        }
-    }
-}
-
-impl fmt::Display for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ShapeError/{:?}: {}", self.kind(), self.description())
+        };
+        write!(f, "ShapeError/{:?}: {}", self.kind(), description)
     }
 }
 
 impl fmt::Debug for ShapeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ShapeError/{:?}: {}", self.kind(), self.description())
+        write!(f, "{}", self)
     }
 }
 
