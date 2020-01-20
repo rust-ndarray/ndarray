@@ -235,25 +235,13 @@ where
         A: Float + FromPrimitive,
         D: RemoveAxis,
     {
-        let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
-        let n = A::from_usize(self.len_of(axis)).expect("Converting length to `A` must not fail.");
-        assert!(
-            !(ddof < zero || ddof > n),
-            "`ddof` must not be less than zero or greater than the length of \
-             the axis",
-        );
-        let dof = n - ddof;
-        let mut mean = Array::<A, _>::zeros(self.dim.remove_axis(axis));
-        let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
-        for (i, subview) in self.axis_iter(axis).enumerate() {
-            let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
-            azip!((mean in &mut mean, sum_sq in &mut sum_sq, &x in &subview) {
-                let delta = x - *mean;
-                *mean = *mean + delta / count;
-                *sum_sq = (x - *mean).mul_add(delta, *sum_sq);
+        let mut output = Array::zeros(self.dim.remove_axis(axis));
+        Zip::from(output.view_mut())
+            .and(self.lanes(axis))
+            .apply(|o, l| {
+                *o = l.var(ddof);
             });
-        }
-        sum_sq.mapv_into(|s| s / dof)
+        output
     }
 
     /// Return standard deviation along `axis`.
