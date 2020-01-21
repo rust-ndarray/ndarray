@@ -84,6 +84,15 @@ provider::
     blas-src = { version = "0.4.0", default-features = false, features = ["openblas"] }
     openblas-src = { version = "0.7.0", default-features = false, features = ["cblas", "system"] }
 
+For official releases of ``ndarray``, the versions are:
+
+=========== ============ ================
+``ndarray`` ``blas-src`` ``openblas-src``
+=========== ============ ================
+0.13.0      0.2.0        0.6.0
+0.12.\*     0.2.0        0.6.0
+0.11.\*     0.1.2        0.5.0
+=========== ============ ================
 
 Recent Changes
 --------------
