@@ -1443,8 +1443,8 @@ where
     }
 
     /// Transform the array into `shape`; any shape with the same number of
-    /// elements is accepted, but the source array or view must be
-    /// contiguous, otherwise we cannot rearrange the dimension.
+    /// elements is accepted, but the source array or view must be in standard
+    /// or column-major (Fortran) layout.
     ///
     /// **Errors** if the shapes don't have the same number of elements.<br>
     /// **Errors** if the input array is not c- or f-contiguous.
