@@ -31,7 +31,9 @@ where
     /// Create an `RawArrayView<A, D>` from shape information and a raw pointer
     /// to the elements.
     ///
-    /// Unsafe because caller is responsible for ensuring all of the following:
+    /// # Safety
+    ///
+    /// The caller is responsible for ensuring all of the following:
     ///
     /// * `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
     ///   zero.
@@ -77,10 +79,12 @@ where
 
     /// Converts to a read-only view of the array.
     ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid, ensure that the pointer is
-    /// aligned, and choose the correct lifetime.
+    /// # Safety
+    ///
+    /// From a safety standpoint, this is equivalent to dereferencing a raw
+    /// pointer for every element in the array. You must ensure that all of the
+    /// data is valid, ensure that the pointer is aligned, and choose the
+    /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
         debug_assert!(
@@ -163,7 +167,9 @@ where
     /// Create an `RawArrayViewMut<A, D>` from shape information and a raw
     /// pointer to the elements.
     ///
-    /// Unsafe because caller is responsible for ensuring all of the following:
+    /// # Safety
+    ///
+    /// The caller is responsible for ensuring all of the following:
     ///
     /// * `ptr` must be non-null, and it must be safe to [`.offset()`] `ptr` by
     ///   zero.
@@ -215,10 +221,12 @@ where
 
     /// Converts to a read-only view of the array.
     ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid, ensure that the pointer is
-    /// aligned, and choose the correct lifetime.
+    /// # Safety
+    ///
+    /// From a safety standpoint, this is equivalent to dereferencing a raw
+    /// pointer for every element in the array. You must ensure that all of the
+    /// data is valid, ensure that the pointer is aligned, and choose the
+    /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D> {
         debug_assert!(
@@ -230,10 +238,12 @@ where
 
     /// Converts to a mutable view of the array.
     ///
-    /// **Warning** from a safety standpoint, this is equivalent to
-    /// dereferencing a raw pointer for every element in the array. You must
-    /// ensure that all of the data is valid, ensure that the pointer is
-    /// aligned, and choose the correct lifetime.
+    /// # Safety
+    ///
+    /// From a safety standpoint, this is equivalent to dereferencing a raw
+    /// pointer for every element in the array. You must ensure that all of the
+    /// data is valid, ensure that the pointer is aligned, and choose the
+    /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D> {
         debug_assert!(

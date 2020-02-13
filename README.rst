@@ -81,8 +81,8 @@ provider::
 
     [dependencies]
     ndarray = { version = "0.13.0", features = ["blas"] }
-    blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
-    openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
+    blas-src = { version = "0.4.0", default-features = false, features = ["openblas"] }
+    openblas-src = { version = "0.7.0", default-features = false, features = ["cblas", "system"] }
 
 
 Recent Changes
