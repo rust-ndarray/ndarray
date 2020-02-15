@@ -152,15 +152,15 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
 #[doc=$doc]
 /// between the reference `self` and the scalar `x`,
 /// and return the result as a new `Array`.
-impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
-    where A: Clone + $trt<B, Output=A>,
+impl<'a, A, S, D, B, C> $trt<B> for &'a ArrayBase<S, D>
+    where A: Clone + $trt<B, Output=C>,
           S: Data<Elem=A>,
           D: Dimension,
           B: ScalarOperand,
 {
-    type Output = Array<A, D>;
-    fn $mth(self, x: B) -> Array<A, D> {
-        self.to_owned().$mth(x)
+    type Output = Array<C, D>;
+    fn $mth(self, x: B) -> Self::Output {
+        self.map(move |elt| elt.clone() $operator x.clone())
     }
 }
     );
