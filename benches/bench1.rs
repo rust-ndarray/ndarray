@@ -432,6 +432,22 @@ fn scalar_add_2(bench: &mut test::Bencher) {
 }
 
 #[bench]
+fn scalar_add_strided_1(bench: &mut test::Bencher) {
+    let a =
+        Array::from_shape_fn((64, 64 * 2), |(i, j)| (i * 64 + j) as f32).slice_move(s![.., ..;2]);
+    let n = 1.;
+    bench.iter(|| &a + n);
+}
+
+#[bench]
+fn scalar_add_strided_2(bench: &mut test::Bencher) {
+    let a =
+        Array::from_shape_fn((64, 64 * 2), |(i, j)| (i * 64 + j) as f32).slice_move(s![.., ..;2]);
+    let n = 1.;
+    bench.iter(|| n + &a);
+}
+
+#[bench]
 fn scalar_sub_1(bench: &mut test::Bencher) {
     let a = Array::<f32, _>::zeros((64, 64));
     let n = 1.;
