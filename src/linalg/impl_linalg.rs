@@ -864,10 +864,13 @@ where
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
     I: Dimension,
-    T: crate::ScalarOperand,
+    T: crate::ScalarOperand + std::ops::MulAssign,
     for<'a> &'a ArrayBase<Sb, I>: std::ops::Mul<T, Output = Array<T, I>>,
 {
-    general_outer_to_dyn(a, b, |mut res, x, a| res.assign(&(a * x)))
+    general_outer_to_dyn(a, b, |mut res, x, a| {
+        res.assign(a);
+        res *= x
+    })
 }
 
 #[allow(dead_code)]
@@ -902,10 +905,13 @@ where
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
     I: Dimension,
-    T: crate::ScalarOperand,
+    T: crate::ScalarOperand + std::ops::MulAssign,
     for<'a> &'a ArrayBase<Sb, I>: std::ops::Mul<T, Output = Array<T, I>>,
 {
-    general_outer_same_size(a, b, |mut res, x, a| res.assign(&(a * x)))
+    general_outer_same_size(a, b, |mut res, x, a| {
+        res.assign(&a);
+        res *= x
+    })
 }
 
 #[cfg(test)]
