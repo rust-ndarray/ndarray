@@ -851,8 +851,7 @@ where
     unsafe {
         let mut res: ArrayD<T> = ArrayBase::uninitialized(res_dim);
         let res_chunks = res.exact_chunks_mut(b.shape());
-        //azip!(mut r_c (res_chunks), a in {f(r_c, a, b)});
-        Zip::from(res_chunks).and(a).apply(|r_c, &x| f(r_c, x, b));
+        Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| f(res_chunk, a_elem, b));
         res
     }
 }
@@ -886,7 +885,7 @@ where
     I: Dimension,
     F: Fn(ArrayViewMut<T, I>, T, &ArrayBase<Sb, I>) -> (),
 {
-    let mut res_dim = a.raw_dim().clone();
+    let mut res_dim = a.raw_dim();
     let mut res_dim_view = res_dim.as_array_view_mut();
     res_dim_view *= &b.raw_dim().as_array_view();
 
