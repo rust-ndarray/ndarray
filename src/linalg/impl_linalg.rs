@@ -825,17 +825,16 @@ mod blas_tests {
 }
 
 #[allow(dead_code)]
-fn general_outer_to_dyn<Sa, Sb, I, F, T>(
+fn general_outer_to_dyn<Sa, Sb, F, T>(
     a: &ArrayBase<Sa, IxDyn>,
-    b: &ArrayBase<Sb, I>,
+    b: &ArrayBase<Sb, IxDyn>,
     f: F,
 ) -> ArrayD<T>
 where
     T: Copy,
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
-    I: Dimension,
-    F: Fn(ArrayViewMut<T, IxDyn>, T, &ArrayBase<Sb, I>) -> (),
+    F: Fn(T, T) -> T,
 {
     //Iterators on the shapes, compelted by 1s
     let a_shape_iter = a.shape().iter().chain([1].iter().cycle());
@@ -851,25 +850,24 @@ where
     unsafe {
         let mut res: ArrayD<T> = ArrayBase::uninitialized(res_dim);
         let res_chunks = res.exact_chunks_mut(b.shape());
-        Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| f(res_chunk, a_elem, b));
+        Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
+            Zip::from(res_chunk)
+                .and(b)
+                .apply(|res_elem, &b_elem| *res_elem = f(a_elem, b_elem))
+        });
         res
     }
 }
 
 #[allow(dead_code, clippy::type_repetition_in_bounds)]
-fn kron_to_dyn<Sa, I, Sb, T>(a: &ArrayBase<Sa, IxDyn>, b: &ArrayBase<Sb, I>) -> Array<T, IxDyn>
+fn kron_to_dyn<Sa, Sb, T>(a: &ArrayBase<Sa, IxDyn>, b: &ArrayBase<Sb, IxDyn>) -> Array<T, IxDyn>
 where
     T: Copy,
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
-    I: Dimension,
-    T: crate::ScalarOperand + std::ops::MulAssign,
-    for<'a> &'a ArrayBase<Sb, I>: std::ops::Mul<T, Output = Array<T, I>>,
+    T: crate::ScalarOperand + std::ops::Mul<Output = T>,
 {
-    general_outer_to_dyn(a, b, |mut res, x, a| {
-        res.assign(a);
-        res *= x
-    })
+    general_outer_to_dyn(a, b, std::ops::Mul::mul)
 }
 
 #[allow(dead_code)]
@@ -883,7 +881,7 @@ where
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
     I: Dimension,
-    F: Fn(ArrayViewMut<T, I>, T, &ArrayBase<Sb, I>) -> (),
+    F: Fn(T, T) -> T,
 {
     let mut res_dim = a.raw_dim();
     let mut res_dim_view = res_dim.as_array_view_mut();
@@ -892,7 +890,11 @@ where
     unsafe {
         let mut res: Array<T, I> = ArrayBase::uninitialized(res_dim);
         let res_chunks = res.exact_chunks_mut(b.raw_dim());
-        Zip::from(res_chunks).and(a).apply(|r_c, &x| f(r_c, x, b));
+        Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
+            Zip::from(res_chunk)
+                .and(b)
+                .apply(|r_elem, &b_elem| *r_elem = f(a_elem, b_elem))
+        });
         res
     }
 }
@@ -904,13 +906,9 @@ where
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
     I: Dimension,
-    T: crate::ScalarOperand + std::ops::MulAssign,
-    for<'a> &'a ArrayBase<Sb, I>: std::ops::Mul<T, Output = Array<T, I>>,
+    T: crate::ScalarOperand + std::ops::Mul<Output = T>,
 {
-    general_outer_same_size(a, b, |mut res, x, a| {
-        res.assign(&a);
-        res *= x
-    })
+    general_outer_same_size(a, b, std::ops::Mul::mul)
 }
 
 #[cfg(test)]
@@ -930,7 +928,7 @@ mod kron_test {
             [[110, 0, 7], [523, 21, -12]]
         ];
         let res1 = kron_same_size(&a, &b);
-        let res2 = kron_to_dyn(&a.clone().into_dyn(), &b);
+        let res2 = kron_to_dyn(&a.clone().into_dyn(), &b.clone().into_dyn());
         assert_eq!(res1.clone().into_dyn(), res2);
         for a0 in 0..a.len_of(Axis(0)) {
             for a1 in 0..a.len_of(Axis(1)) {
