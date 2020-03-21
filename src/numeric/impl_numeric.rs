@@ -154,7 +154,7 @@ where
     /// ```
     pub fn var(&self, ddof: A) -> A
     where
-        A: Float + FromPrimitive
+        A: Float + FromPrimitive,
     {
         let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
         let n = A::from_usize(self.len()).expect("Converting length to `A` must not fail.");
@@ -216,11 +216,10 @@ where
     /// ```
     pub fn std(&self, ddof: A) -> A
     where
-        A: Float + FromPrimitive
+        A: Float + FromPrimitive,
     {
         self.var(ddof).sqrt()
     }
-
 
     /// Return sum along `axis`.
     ///

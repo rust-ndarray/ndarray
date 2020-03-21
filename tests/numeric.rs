@@ -68,7 +68,6 @@ fn sum_mean_empty() {
 fn var() {
     let a = array![1., -4.32, 1.14, 0.32];
     assert_abs_diff_eq!(a.var(0.), 5.049875, epsilon = 1e-8);
-
 }
 
 #[test]
@@ -102,7 +101,6 @@ fn var_empty_arr() {
 fn std() {
     let a = array![1., -4.32, 1.14, 0.32];
     assert_abs_diff_eq!(a.std(0.), 2.24719, epsilon = 1e-5);
-
 }
 
 #[test]
