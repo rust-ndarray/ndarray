@@ -213,7 +213,7 @@ where
     ///
     /// let a = array![1., -4.32, 1.14, 0.32];
     /// let stddev = a.std(1.);
-    /// assert_abs_diff_eq!(stddev, 6.7331, epsilon = 1e-4);
+    /// assert_abs_diff_eq!(stddev, 2.59483, epsilon = 1e-4);
     /// ```
     pub fn std(&self, ddof: A) -> A
     where
