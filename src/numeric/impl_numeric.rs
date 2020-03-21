@@ -139,7 +139,7 @@ where
     ///     n  i=1
     /// ```
     ///
-    /// and `n` is the length of the axis.
+    /// and `n` is the length of the array.
     ///
     /// **Panics** if `ddof` is less than zero or greater than `n`
     ///
