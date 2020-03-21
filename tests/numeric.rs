@@ -65,6 +65,74 @@ fn sum_mean_empty() {
 }
 
 #[test]
+fn var() {
+    let a = array![1., -4.32, 1.14, 0.32];
+    assert_abs_diff_eq!(a.var(0.), 5.049875, epsilon = 1e-8);
+
+}
+
+#[test]
+#[should_panic]
+fn var_negative_ddof() {
+    let a = array![1., 2., 3.];
+    a.var(-1.);
+}
+
+#[test]
+#[should_panic]
+fn var_too_large_ddof() {
+    let a = array![1., 2., 3.];
+    a.var(4.);
+}
+
+#[test]
+fn var_nan_ddof() {
+    let a = Array2::<f64>::zeros((2, 3));
+    let v = a.var(::std::f64::NAN);
+    assert!(v.is_nan());
+}
+
+#[test]
+fn var_empty_arr() {
+    let a: Array1<f64> = array![];
+    assert!(a.var(0.0).is_nan());
+}
+
+#[test]
+fn std() {
+    let a = array![1., -4.32, 1.14, 0.32];
+    assert_abs_diff_eq!(a.std(0.), 2.24719, epsilon = 1e-5);
+
+}
+
+#[test]
+#[should_panic]
+fn std_negative_ddof() {
+    let a = array![1., 2., 3.];
+    a.std(-1.);
+}
+
+#[test]
+#[should_panic]
+fn std_too_large_ddof() {
+    let a = array![1., 2., 3.];
+    a.std(4.);
+}
+
+#[test]
+fn std_nan_ddof() {
+    let a = Array2::<f64>::zeros((2, 3));
+    let v = a.std(::std::f64::NAN);
+    assert!(v.is_nan());
+}
+
+#[test]
+fn std_empty_arr() {
+    let a: Array1<f64> = array![];
+    assert!(a.std(0.0).is_nan());
+}
+
+#[test]
 #[cfg(feature = "approx")]
 fn var_axis() {
     use ndarray::{aview0, aview2};
