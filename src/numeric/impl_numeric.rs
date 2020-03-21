@@ -14,7 +14,6 @@ use crate::itertools::enumerate;
 use crate::numeric_util;
 
 use crate::{FoldWhile, Zip};
-use num_traits::real::Real;
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
