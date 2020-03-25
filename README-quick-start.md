@@ -3,7 +3,7 @@
 If you are familiar with Python Numpy, do check out this [For Numpy User Doc](https://docs.rs/ndarray/0.13.0/ndarray/doc/ndarray_for_numpy_users/index.html)
 after you go through this tutorial. 
 
-You can use [play.integer32.com](https://play.integer32.com/) site to immediately trying out the following examples.
+You can use [play.integer32.com](https://play.integer32.com/) to immediately try out the examples.
 
 ## The Basics
 
