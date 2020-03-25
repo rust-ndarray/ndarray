@@ -3,7 +3,7 @@
 If you are familiar with Python Numpy, do check out this [For Numpy User Doc](https://docs.rs/ndarray/0.13.0/ndarray/doc/ndarray_for_numpy_users/index.html)
 after you go through this tutorial. 
 
-You can use [play.integer32.com](https://play.integer32.com/) site to immediately trying out the following examples.
+You can use [play.integer32.com](https://play.integer32.com/) to immediately try out the examples.
 
 ## The Basics
 
@@ -72,7 +72,7 @@ and now it works:
   [0.0, 0.0, 0.0, 0.0]]], shape=[3, 2, 4], strides=[1, 3, 6], layout=F (0x2), const ndim=3
 ```
 
-We can also specify it's dimensionality
+We can also specify its dimensionality
 
 ```rust
 use ndarray::prelude::*;
@@ -124,17 +124,17 @@ fn main() {
 }
 ```
 
-And try remove all the `&` sign in front of `a` and `b`, see if it still compiles. Why?
+Try remove all the `&` sign in front of `a` and `b`, does it still compile? Why?
 
 Note that
-* `&A @ &A` which produces a new `Array`
-* `B @ A` which consumes `B`, updates it with the result, and returns it
-* `B @ &A` which consumes `B`, updates it with the result, and returns it
-* `C @= &A` which performs an arithmetic operation in place
+* `&A @ &A` produces a new `Array`
+* `B @ A` consumes `B`, updates it with the result, and returns it
+* `B @ &A` consumes `B`, updates it with the result, and returns it
+* `C @= &A` performs an arithmetic operation in place
 
 More info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
 
-Some operations have `_axis` appended on the function name that can take in `Axis` as parameters,
+Some operations have `_axis` appended to the function name: they generally take in a parameter of type `Axis` as one of their inputs,
 such as `sum_axis`:
 
 ```rust
@@ -225,7 +225,7 @@ The output is:
 
 More info about iteration see [Loops, Producers, and Iterators](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#loops-producers-and-iterators)
 
-Let's try a 3D array having element type as `isize`. This is how you can indexing 
+Let's try a 3D array with elements of type `isize`. This is how you index it: 
 ```rust
 use ndarray::prelude::*;
 
