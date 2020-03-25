@@ -127,10 +127,10 @@ fn main() {
 Try remove all the `&` sign in front of `a` and `b`, does it still compile? Why?
 
 Note that
-* `&A @ &A` which produces a new `Array`
-* `B @ A` which consumes `B`, updates it with the result, and returns it
-* `B @ &A` which consumes `B`, updates it with the result, and returns it
-* `C @= &A` which performs an arithmetic operation in place
+* `&A @ &A` produces a new `Array`
+* `B @ A` consumes `B`, updates it with the result, and returns it
+* `B @ &A` consumes `B`, updates it with the result, and returns it
+* `C @= &A` performs an arithmetic operation in place
 
 More info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
 
