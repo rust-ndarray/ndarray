@@ -72,7 +72,7 @@ and now it works:
   [0.0, 0.0, 0.0, 0.0]]], shape=[3, 2, 4], strides=[1, 3, 6], layout=F (0x2), const ndim=3
 ```
 
-We can also specify it's dimensionality
+We can also specify its dimensionality
 
 ```rust
 use ndarray::prelude::*;
