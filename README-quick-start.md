@@ -134,7 +134,7 @@ Note that
 
 More info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
 
-Some operations have `_axis` appended on the function name that can take in `Axis` as parameters,
+Some operations have `_axis` appended to the function name: they generally take in a parameter of type `Axis` as one of their inputs,
 such as `sum_axis`:
 
 ```rust
