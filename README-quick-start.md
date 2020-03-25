@@ -84,7 +84,7 @@ fn main() {
 ```
 `Ix3` stands for 3D array.
 
-And now we are type checked. Try change the above code to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`
+And now we are type checked. Try change the code above to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`
 and compile, see what happens.
 
 ### Some common create helper functions
@@ -524,6 +524,9 @@ b clone of a =
 [[0, 1],
  [2, 3]]
 ```
+
+Noticing that `clone()` will perform a deep copy of the array elements only if you are cloning an owned array (i.e. `Array`).
+Cloning an `ArrayView` does not clone the underlying elements - you are just cloning the view reference (as it happens in Rust when cloning a `&` reference).
 
 ## Broadcasting
 
