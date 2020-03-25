@@ -124,7 +124,7 @@ fn main() {
 }
 ```
 
-And try remove all the `&` sign in front of `a` and `b`, see if it still compiles. Why?
+Try remove all the `&` sign in front of `a` and `b`, does it still compile? Why?
 
 Note that
 * `&A @ &A` which produces a new `Array`
