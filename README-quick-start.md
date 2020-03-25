@@ -223,7 +223,7 @@ The output is:
 9.999999999999998, 1, 9.999999999999998, 3, 9.999999999999998, 4.999999999999999, 5.999999999999999, 6.999999999999999, 7.999999999999999, 8.999999999999998,
 ```
 
-More info about iteration see [Loops, Producers, and Iterators](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#loops-producers-and-iterators)
+For more info about iteration see [Loops, Producers, and Iterators](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#loops-producers-and-iterators)
 
 Let's try a 3D array with elements of type `isize`. This is how you index it: 
 ```rust
