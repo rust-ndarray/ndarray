@@ -225,7 +225,7 @@ The output is:
 
 More info about iteration see [Loops, Producers, and Iterators](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#loops-producers-and-iterators)
 
-Let's try a 3D array having element type as `isize`. This is how you can indexing 
+Let's try a 3D array with elements of type `isize`. This is how you index it: 
 ```rust
 use ndarray::prelude::*;
 
