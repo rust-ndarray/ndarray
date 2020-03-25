@@ -5,6 +5,7 @@ The ``ndarray`` crate provides an *n*-dimensional container for general elements
 and for numerics.
 
 Please read the `API documentation on docs.rs`__
+or take a look at the `quickstart tutorial <./README-quick-start.md>`_.
 
 __ https://docs.rs/ndarray/
 
