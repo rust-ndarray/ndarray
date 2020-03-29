@@ -75,7 +75,7 @@ pub trait Dimension:
     /// Next smaller dimension (if applicable)
     type Smaller: Dimension;
     /// Next larger dimension
-    type Larger: Dimension;
+    type Larger: Dimension + RemoveAxis;
 
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
