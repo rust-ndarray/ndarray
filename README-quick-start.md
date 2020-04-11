@@ -87,6 +87,18 @@ fn main() {
 And now we are type checked. Try change the code above to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`
 and compile, see what happens.
 
+### How about create array of different type and having different initial values?
+
+The [`from_elm`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method can be handy here:
+
+```rust
+use ndarray::{Array, Ix3};
+fn main() {
+  let a = Array::<bool, Ix3>::from_elem((3, 2, 4), false);
+  println!("{:?}", a);
+}
+```
+
 ### Some common create helper functions
 `linspace` - Create a 1-D array with 21 elements with values 0., …, 5.
 ```rust
