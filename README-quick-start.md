@@ -144,7 +144,7 @@ Note that
 * `B @ &A` consumes `B`, updates it with the result, and returns it
 * `C @= &A` performs an arithmetic operation in place
 
-More info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
+For more info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
 
 Some operations have `_axis` appended to the function name: they generally take in a parameter of type `Axis` as one of their inputs,
 such as `sum_axis`:
