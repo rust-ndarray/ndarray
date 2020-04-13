@@ -471,8 +471,9 @@ where
     /// ### Safety
     ///
     /// Accessing uninitalized values is undefined behaviour. You must
-    /// overwrite *all* the elements in the array after it is created; for
-    /// example using the methods `.fill()` or `.assign()`.
+    /// overwrite *all* the elements in the array after it is created; this must
+    /// be done carefully, for example using the methods `.fill()` or `.assign()`,
+    /// which are documented to support this use case.
     ///
     /// The contents of the array is indeterminate before initialization and it
     /// is an error to perform operations that use the previous values. For

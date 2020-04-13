@@ -1909,6 +1909,9 @@ where
     ///
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
+    /// Assign can be used to overwrite uninitialized data in `self`, if the element
+    /// type is `Copy`. Only a few array methods will work correctly in this way.
+    ///
     /// **Panics** if broadcasting isn’t possible.
     pub fn assign<E: Dimension, S2>(&mut self, rhs: &ArrayBase<S2, E>)
     where
@@ -1916,16 +1919,31 @@ where
         A: Clone,
         S2: Data<Elem = A>,
     {
-        self.zip_mut_with(rhs, |x, y| *x = y.clone());
+        // guarantee validity even for uninited elements and A: Copy (conservative) because we
+        // traverse using raw pointer
+        Zip::from(self.raw_view_mut()).and_broadcast(rhs).apply(|x, y|
+            unsafe {
+                *x = y.clone();
+            }
+        );
     }
 
     /// Perform an elementwise assigment to `self` from element `x`.
+    ///
+    /// Fill can be used to overwrite uninitialized data in `self`, if the element
+    /// type is `Copy`. Only a few array methods will work correctly in this way.
     pub fn fill(&mut self, x: A)
     where
         S: DataMut,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |elt| *elt = x.clone());
+        // guarantee validity even for uninited elements and A: Copy (conservative) because we
+        // traverse using raw pointer
+        Zip::from(self.raw_view_mut()).apply(move |elt|
+            unsafe {
+                *elt = x.clone();
+            }
+        );
     }
 
     fn zip_mut_with_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
