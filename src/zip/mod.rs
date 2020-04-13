@@ -982,6 +982,29 @@ macro_rules! map_impl {
                     dimension: self.dimension,
                 }
             }
+
+            /// Apply and collect the results into a new array, which has the same size as the
+            /// inputs.
+            ///
+            /// If all inputs are c- or f-order respectively, that is preserved in the output.
+            ///
+            /// Restricted to functions that produce copyable results for technical reasons; other
+            /// cases are not yet implemented.
+            pub fn apply_collect<R>(self, mut f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
+                where R: Copy,
+            {
+                unsafe {
+                    let is_c = self.layout.is(CORDER);
+                    let is_f = !is_c && self.layout.is(FORDER);
+                    let mut output = Array::maybe_uninit(self.dimension.clone().set_f(is_f));
+                    self.and(&mut output)
+                        .apply(move |$($p, )* output_| {
+                            std::ptr::write(output_.as_mut_ptr(), f($($p ),*));
+                        });
+                    output.assume_init()
+                }
+            }
+
             );
 
             /// Split the `Zip` evenly in two.
