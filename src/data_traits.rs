@@ -242,7 +242,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
         D: Dimension,
     {
         Self::ensure_unique(&mut self_);
-        let data = OwnedRepr(Arc::try_unwrap(self_.data.0).ok().unwrap());
+        let data = OwnedRepr::from(Arc::try_unwrap(self_.data.0).ok().unwrap());
         ArrayBase {
             data,
             ptr: self_.ptr,
@@ -264,7 +264,7 @@ unsafe impl<A> RawDataClone for OwnedArcRepr<A> {
 unsafe impl<A> RawData for OwnedRepr<A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
-        Some(&self.0)
+        Some(self.as_slice())
     }
     private_impl! {}
 }
@@ -303,10 +303,10 @@ where
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         let mut u = self.clone();
-        let mut new_ptr = nonnull_from_vec_data(&mut u.0);
+        let mut new_ptr = u.as_nonnull_mut();
         if size_of::<A>() != 0 {
             let our_off =
-                (ptr.as_ptr() as isize - self.0.as_ptr() as isize) / mem::size_of::<A>() as isize;
+                (ptr.as_ptr() as isize - self.as_ptr() as isize) / mem::size_of::<A>() as isize;
             new_ptr = new_ptr.offset(our_off);
         }
         (u, new_ptr)
@@ -318,12 +318,12 @@ where
         ptr: NonNull<Self::Elem>,
     ) -> NonNull<Self::Elem> {
         let our_off = if size_of::<A>() != 0 {
-            (ptr.as_ptr() as isize - other.0.as_ptr() as isize) / mem::size_of::<A>() as isize
+            (ptr.as_ptr() as isize - other.as_ptr() as isize) / mem::size_of::<A>() as isize
         } else {
             0
         };
-        self.0.clone_from(&other.0);
-        nonnull_from_vec_data(&mut self.0).offset(our_off)
+        self.clone_from(&other);
+        self.as_nonnull_mut().offset(our_off)
     }
 }
 
@@ -413,10 +413,10 @@ unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
 
 unsafe impl<A> DataOwned for OwnedRepr<A> {
     fn new(elements: Vec<A>) -> Self {
-        OwnedRepr(elements)
+        OwnedRepr::from(elements)
     }
     fn into_shared(self) -> OwnedRcRepr<A> {
-        OwnedArcRepr(Arc::new(self.0))
+        OwnedArcRepr(Arc::new(self.into_vec()))
     }
 }
 

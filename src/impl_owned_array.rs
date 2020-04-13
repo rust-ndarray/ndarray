@@ -19,22 +19,22 @@ impl<A> Array<A, Ix0> {
     /// let scalar: Foo = array.into_scalar();
     /// assert_eq!(scalar, Foo);
     /// ```
-    pub fn into_scalar(mut self) -> A {
+    pub fn into_scalar(self) -> A {
         let size = ::std::mem::size_of::<A>();
         if size == 0 {
             // Any index in the `Vec` is fine since all elements are identical.
-            self.data.0.remove(0)
+            self.data.into_vec().remove(0)
         } else {
             // Find the index in the `Vec` corresponding to `self.ptr`.
             // (This is necessary because the element in the array might not be
             // the first element in the `Vec`, such as if the array was created
             // by `array![1, 2, 3, 4].slice_move(s![2])`.)
             let first = self.ptr.as_ptr() as usize;
-            let base = self.data.0.as_ptr() as usize;
+            let base = self.data.as_ptr() as usize;
             let index = (first - base) / size;
             debug_assert_eq!((first - base) % size, 0);
             // Remove the element at the index and return it.
-            self.data.0.remove(index)
+            self.data.into_vec().remove(index)
         }
     }
 }
@@ -54,6 +54,6 @@ where
     /// If the array is in standard memory layout, the logical element order
     /// of the array (`.iter()` order) and of the returned vector will be the same.
     pub fn into_raw_vec(self) -> Vec<A> {
-        self.data.0
+        self.data.into_vec()
     }
 }
