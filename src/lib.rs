@@ -1402,7 +1402,7 @@ pub use self::OwnedArcRepr as OwnedRcRepr;
 /// *Don’t use this type directly—use the type alias
 /// [`ArcArray`](type.ArcArray.html) for the array type!*
 #[derive(Debug)]
-pub struct OwnedArcRepr<A>(Arc<Vec<A>>);
+pub struct OwnedArcRepr<A>(Arc<OwnedRepr<A>>);
 
 impl<A> Clone for OwnedArcRepr<A> {
     fn clone(&self) -> Self {
