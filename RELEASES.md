@@ -1,3 +1,47 @@
+Version 0.13.1 (2020-04)
+===========================
+
+New features
+------------
+
+- New *amazing* slicing methods `multi_slice_*` by [@jturner314]
+  https://github.com/rust-ndarray/ndarray/pull/717
+- New method `.cast()` for raw views by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/734
+- New aliases `ArcArray1`, `ArcArray2` by [@d-dorazio]
+  https://github.com/rust-ndarray/ndarray/pull/741
+- New array constructor `from_shape_simple_fn` by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/728
+- `Dimension::Larger` now requires `RemoveAxis` by [@TheLortex]
+  https://github.com/rust-ndarray/ndarray/pull/792
+
+
+Enhancements
+------------
+
+- Remove itertools as dependency by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/730
+- Improve `zip_mut_with` (and thus arithmetic ops) for f-order arrays by [@nilgoyette]
+  https://github.com/rust-ndarray/ndarray/pull/754
+- Implement `fold` for `IndicesIter` by [@jturner314]
+  https://github.com/rust-ndarray/ndarray/pull/733
+
+API changes
+-----------
+
+- Remove alignment restriction on raw views by [@jturner314]
+  https://github.com/rust-ndarray/ndarray/pull/738
+
+Other changes
+-------------
+
+- Fix documentation in ndarray for numpy users by [@jturner314]
+- Improve blas version documentation by [@jturner314]
+- Doc improvements by [@mockersf] https://github.com/rust-ndarray/ndarray/pull/751
+- Doc and lint related improvements by [@viniciusd] https://github.com/rust-ndarray/ndarray/pull/750
+- Release management by [@bluss]
+
+
 Version 0.13.0 (2019-09-23)
 ===========================
 
@@ -895,3 +939,8 @@ Earlier releases
 [@termoshtt]: https://github.com/termoshtt
 [@rth]: https://github.com/rth
 [@nitsky]: https://github.com/nitsky
+[@d-dorazio]: https://github.com/d-dorazio
+[@nilgoyette]: https://github.com/nilgoyette
+[@TheLortex]: https://github.com/TheLortex
+[@mockersf]: https://github.com/mockersf
+[@viniciusd]: https://github.com/viniciusd
