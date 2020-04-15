@@ -10,6 +10,7 @@
 mod zipmacro;
 
 use crate::imp_prelude::*;
+use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdIndex;
@@ -579,6 +580,7 @@ pub struct Zip<Parts, D> {
     layout: Layout,
 }
 
+
 impl<P, D> Zip<(P,), D>
 where
     D: Dimension,
@@ -990,20 +992,35 @@ macro_rules! map_impl {
             ///
             /// Restricted to functions that produce copyable results for technical reasons; other
             /// cases are not yet implemented.
-            pub fn apply_collect<R>(self, mut f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
+            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
                 where R: Copy,
             {
+                // To support non-Copy elements, implementation of dropping partial array (on
+                // panic) is needed
+                let is_c = self.layout.is(CORDER);
+                let is_f = !is_c && self.layout.is(FORDER);
+                let mut output = Array::maybe_uninit(self.dimension.clone().set_f(is_f));
+                self.apply_assign_into(&mut output, f);
                 unsafe {
-                    let is_c = self.layout.is(CORDER);
-                    let is_f = !is_c && self.layout.is(FORDER);
-                    let mut output = Array::maybe_uninit(self.dimension.clone().set_f(is_f));
-                    self.and(&mut output)
-                        .apply(move |$($p, )* output_| {
-                            std::ptr::write(output_.as_mut_ptr(), f($($p ),*));
-                        });
                     output.assume_init()
                 }
             }
+
+            /// Apply and assign the results into the producer `into`, which should have the same
+            /// size as the other inputs.
+            ///
+            /// The producer should have assignable items as dictated by the `AssignElem` trait,
+            /// for example `&mut R`.
+            pub fn apply_assign_into<R, Q>(self, into: Q, mut f: impl FnMut($($p::Item,)* ) -> R)
+                where Q: IntoNdProducer<Dim=D>,
+                      Q::Item: AssignElem<R>
+            {
+                self.and(into)
+                    .apply(move |$($p, )* output_| {
+                        output_.assign_elem(f($($p ),*));
+                    });
+            }
+
 
             );
 

@@ -149,6 +149,8 @@ mod array_approx;
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
+mod argument_traits;
+pub use crate::argument_traits::AssignElem;
 mod data_traits;
 
 pub use crate::aliases::*;

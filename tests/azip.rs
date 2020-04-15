@@ -78,6 +78,37 @@ fn test_zip_collect() {
 }
 
 #[test]
+#[cfg(feature = "approx")]
+fn test_zip_assign_into() {
+    use approx::assert_abs_diff_eq;
+
+    let mut a = Array::<f32, _>::zeros((5, 10));
+    let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
+    let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
+
+    Zip::from(&b).and(&c).apply_assign_into(&mut a, |x, y| x + y);
+
+    assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
+}
+
+#[test]
+#[cfg(feature = "approx")]
+fn test_zip_assign_into_cell() {
+    use approx::assert_abs_diff_eq;
+    use std::cell::Cell;
+
+    let a = Array::<Cell<f32>, _>::default((5, 10));
+    let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
+    let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
+
+    Zip::from(&b).and(&c).apply_assign_into(&a, |x, y| x + y);
+    let a2 = a.mapv(|elt| elt.get());
+
+    assert_abs_diff_eq!(a2, &b + &c, epsilon = 1e-6);
+}
+
+
+#[test]
 fn test_azip_syntax_trailing_comma() {
     let mut b = Array::<i32, _>::zeros((5, 5));
     let mut c = Array::<i32, _>::ones((5, 5));
