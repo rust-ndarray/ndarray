@@ -9,6 +9,8 @@
 #[macro_use]
 mod zipmacro;
 
+use std::mem::MaybeUninit;
+
 use crate::imp_prelude::*;
 use crate::AssignElem;
 use crate::IntoDimension;
@@ -737,6 +739,12 @@ where
         self.dimension[unroll_axis] = inner_len;
         FoldWhile::Continue(acc)
     }
+
+    pub(crate) fn uninitalized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D>
+    {
+        let is_f = !self.layout.is(CORDER) && self.layout.is(FORDER);
+        Array::maybe_uninit(self.dimension.clone().set_f(is_f))
+    }
 }
 
 /*
@@ -997,9 +1005,7 @@ macro_rules! map_impl {
             {
                 // To support non-Copy elements, implementation of dropping partial array (on
                 // panic) is needed
-                let is_c = self.layout.is(CORDER);
-                let is_f = !is_c && self.layout.is(FORDER);
-                let mut output = Array::maybe_uninit(self.dimension.clone().set_f(is_f));
+                let mut output = self.uninitalized_for_current_layout::<R>();
                 self.apply_assign_into(&mut output, f);
                 unsafe {
                     output.assume_init()
