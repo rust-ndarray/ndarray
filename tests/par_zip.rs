@@ -70,3 +70,45 @@ fn test_zip_index_4() {
         assert_eq!(*elt, j);
     }
 }
+
+#[test]
+#[cfg(feature = "approx")]
+fn test_zip_collect() {
+    use approx::assert_abs_diff_eq;
+
+    // test Zip::apply_collect and that it preserves c/f layout.
+
+    let b = Array::from_shape_fn((M, N), |(i, j)| 1. / (i + 2 * j + 1) as f32);
+    let c = Array::from_shape_fn((M, N), |(i, j)| f32::ln((1 + i + j) as f32));
+
+    {
+        let a = Zip::from(&b).and(&c).par_apply_collect(|x, y| x + y);
+
+        assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
+        assert_eq!(a.strides(), b.strides());
+    }
+
+    {
+        let b = b.t();
+        let c = c.t();
+
+        let a = Zip::from(&b).and(&c).par_apply_collect(|x, y| x + y);
+
+        assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
+        assert_eq!(a.strides(), b.strides());
+    }
+}
+
+#[test]
+#[cfg(feature = "approx")]
+fn test_zip_assign_into() {
+    use approx::assert_abs_diff_eq;
+
+    let mut a = Array::<f32, _>::zeros((M, N));
+    let b = Array::from_shape_fn((M, N), |(i, j)| 1. / (i + 2 * j + 1) as f32);
+    let c = Array::from_shape_fn((M, N), |(i, j)| f32::ln((1 + i + j) as f32));
+
+    Zip::from(&b).and(&c).par_apply_assign_into(&mut a, |x, y| x + y);
+
+    assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
+}
