@@ -533,19 +533,21 @@ where
     /// an easier way to handle uninit values correctly.
     ///
     /// Only *when* the array is completely initialized with valid elements, can it be
-    /// converted to an array of `A` elements using [`assume_init()`].
+    /// converted to an array of `A` elements using [`.assume_init()`].
     ///
     /// **Panics** if the number of elements in `shape` would overflow isize.
     ///
     /// ### Safety
     ///
     /// The whole of the array must be initialized before it is converted
-    /// using [`assume_init()`] or otherwise traversed.
+    /// using [`.assume_init()`] or otherwise traversed.
     ///
     /// ### Examples
     ///
     /// It is possible to assign individual values through `*elt = MaybeUninit::new(value)`
     /// and so on.
+    ///
+    /// [`.assume_init()`]: ArrayBase::assume_init
     ///
     /// ```
     /// use ndarray::{s, Array2};

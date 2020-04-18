@@ -27,7 +27,15 @@ where
     /// **Promise** that the array's elements are all fully initialized, and convert
     /// the array from element type `MaybeUninit<A>` to `A`.
     ///
-    /// For owned arrays, the promise must include all of the Array's storage
+    /// For example, it can convert an `Array<MaybeUninit<f64>, D>` to `Array<f64, D>`.
+    ///
+    /// ## Safety
+    ///
+    /// Safe to use if all the array's elements have been initialized.
+    ///
+    /// Note that for owned and shared ownership arrays, the promise must include all of the
+    /// array's storage; it is for example possible to slice these in place, but that must
+    /// only be done after all elements have been initialized.
     pub unsafe fn assume_init(self) -> ArrayBase<<S as RawDataSubst<A>>::Output, D> {
         // NOTE: Fully initialized includes elements not reachable in current slicing/view.
 
