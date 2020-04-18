@@ -159,6 +159,7 @@ pub use crate::aliases::*;
 #[allow(deprecated)]
 pub use crate::data_traits::{
     Data, DataClone, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
+    RawDataSubst,
 };
 
 mod free_functions;
@@ -1483,6 +1484,7 @@ mod impl_constructors;
 
 mod impl_methods;
 mod impl_owned_array;
+mod impl_special_element_types;
 
 /// Private Methods
 impl<A, S, D> ArrayBase<S, D>

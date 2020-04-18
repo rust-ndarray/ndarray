@@ -7,6 +7,7 @@
 
 use defmac::defmac;
 use ndarray::prelude::*;
+use ndarray::Zip;
 
 #[test]
 fn test_from_shape_fn() {
@@ -192,5 +193,48 @@ fn deny_wraparound_from_shape_fn() {
 fn deny_wraparound_uninit() {
     unsafe {
         let _five_large = Array::<f32, _>::uninitialized((3, 7, 29, 36760123, 823996703));
+    }
+}
+
+
+#[test]
+fn maybe_uninit_1() {
+    use std::mem::MaybeUninit;
+
+    unsafe {
+        // Array
+        type Mat<D> = Array<MaybeUninit<f32>, D>;
+
+        let mut a = Mat::maybe_uninit((10, 10));
+        a.mapv_inplace(|_| MaybeUninit::new(1.));
+
+        let a_init = a.assume_init();
+        assert_eq!(a_init, Array2::from_elem(a_init.dim(), 1.));
+
+        // ArcArray
+        type ArcMat<D> = ArcArray<MaybeUninit<f32>, D>;
+
+        let mut a = ArcMat::maybe_uninit((10, 10));
+        a.mapv_inplace(|_| MaybeUninit::new(1.));
+        let a2 = a.clone();
+
+        let a_init = a.assume_init();
+        assert_eq!(a_init, Array2::from_elem(a_init.dim(), 1.));
+
+        // ArrayView
+        let av_init = a2.view().assume_init();
+        assert_eq!(av_init, Array2::from_elem(a_init.dim(), 1.));
+
+        // RawArrayViewMut
+        let mut a = Mat::maybe_uninit((10, 10));
+        let v = a.raw_view_mut();
+        Zip::from(v)
+            .apply(|ptr| *(*ptr).as_mut_ptr() = 1.);
+
+        let u = a.raw_view_mut().assume_init();
+
+        Zip::from(u)
+            .apply(|ptr| assert_eq!(*ptr, 1.));
+
     }
 }
