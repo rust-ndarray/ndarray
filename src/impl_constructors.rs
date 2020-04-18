@@ -467,6 +467,9 @@ where
 
     /// Create an array with uninitalized elements, shape `shape`.
     ///
+    /// Prefer to use [`maybe_uninit()`](ArrayBase::maybe_uninit) if possible, because it is
+    /// easier to use correctly.
+    ///
     /// **Panics** if the number of elements in `shape` would overflow isize.
     ///
     /// ### Safety
