@@ -13,6 +13,7 @@
 #![allow(clippy::match_wild_err_arm)]
 
 use num_traits::{Float, One, Zero};
+use std::mem::MaybeUninit;
 
 use crate::dimension;
 use crate::error::{self, ShapeError};
@@ -515,5 +516,24 @@ where
         let mut v = Vec::with_capacity(size);
         v.set_len(size);
         Self::from_shape_vec_unchecked(shape, v)
+    }
+}
+
+impl<S, A, D> ArrayBase<S, D>
+where
+    S: DataOwned<Elem = MaybeUninit<A>>,
+    D: Dimension,
+{
+    pub(crate) fn maybe_uninit<Sh>(shape: Sh) -> Self
+    where
+        Sh: ShapeBuilder<Dim = D>,
+    {
+        unsafe {
+            let shape = shape.into_shape();
+            let size = size_of_shape_checked_unwrap!(&shape.dim);
+            let mut v = Vec::with_capacity(size);
+            v.set_len(size);
+            Self::from_shape_vec_unchecked(shape, v)
+        }
     }
 }

@@ -7,7 +7,6 @@
 // except according to those terms.
 
 use super::Layout;
-use super::LayoutPriv;
 
 const LAYOUT_NAMES: &[&str] = &["C", "F"];
 

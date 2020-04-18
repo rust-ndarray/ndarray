@@ -1,4 +1,5 @@
-use crate::{ArrayBase, DataMut, Dimension, NdProducer, Zip};
+use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
+use crate::AssignElem;
 
 use crate::parallel::prelude::*;
 
@@ -43,7 +44,7 @@ where
 // Zip
 
 macro_rules! zip_impl {
-    ($([$($p:ident)*],)+) => {
+    ($([$notlast:ident $($p:ident)*],)+) => {
         $(
         #[allow(non_snake_case)]
         impl<D, $($p),*> Zip<($($p,)*), D>
@@ -63,16 +64,52 @@ macro_rules! zip_impl {
             {
                 self.into_par_iter().for_each(move |($($p,)*)| function($($p),*))
             }
+
+            expand_if!(@bool [$notlast]
+
+            /// Apply and collect the results into a new array, which has the same size as the
+            /// inputs.
+            ///
+            /// If all inputs are c- or f-order respectively, that is preserved in the output.
+            ///
+            /// Restricted to functions that produce copyable results for technical reasons; other
+            /// cases are not yet implemented.
+            pub fn par_apply_collect<R>(self, f: impl Fn($($p::Item,)* ) -> R + Sync + Send) -> Array<R, D>
+                where R: Copy + Send
+            {
+                let mut output = self.uninitalized_for_current_layout::<R>();
+                self.par_apply_assign_into(&mut output, f);
+                unsafe {
+                    output.assume_init()
+                }
+            }
+
+            /// Apply and assign the results into the producer `into`, which should have the same
+            /// size as the other inputs.
+            ///
+            /// The producer should have assignable items as dictated by the `AssignElem` trait,
+            /// for example `&mut R`.
+            pub fn par_apply_assign_into<R, Q>(self, into: Q, f: impl Fn($($p::Item,)* ) -> R + Sync + Send)
+                where Q: IntoNdProducer<Dim=D>,
+                      Q::Item: AssignElem<R> + Send,
+                      Q::Output: Send,
+            {
+                self.and(into)
+                    .par_apply(move |$($p, )* output_| {
+                        output_.assign_elem(f($($p ),*));
+                    });
+            }
+            );
         }
         )+
     }
 }
 
 zip_impl! {
-    [P1],
-    [P1 P2],
-    [P1 P2 P3],
-    [P1 P2 P3 P4],
-    [P1 P2 P3 P4 P5],
-    [P1 P2 P3 P4 P5 P6],
+    [true P1],
+    [true P1 P2],
+    [true P1 P2 P3],
+    [true P1 P2 P3 P4],
+    [true P1 P2 P3 P4 P5],
+    [false P1 P2 P3 P4 P5 P6],
 }
