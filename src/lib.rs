@@ -152,6 +152,7 @@ mod arraytraits;
 mod argument_traits;
 pub use crate::argument_traits::AssignElem;
 mod data_traits;
+mod data_repr;
 
 pub use crate::aliases::*;
 
@@ -1388,12 +1389,8 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 
-/// Array's representation.
-///
-/// *Don’t use this type directly—use the type alias
-/// [`Array`](type.Array.html) for the array type!*
-#[derive(Clone, Debug)]
-pub struct OwnedRepr<A>(Vec<A>);
+pub use data_repr::OwnedRepr;
+
 
 /// RcArray's representation.
 ///
@@ -1407,7 +1404,7 @@ pub use self::OwnedArcRepr as OwnedRcRepr;
 /// *Don’t use this type directly—use the type alias
 /// [`ArcArray`](type.ArcArray.html) for the array type!*
 #[derive(Debug)]
-pub struct OwnedArcRepr<A>(Arc<Vec<A>>);
+pub struct OwnedArcRepr<A>(Arc<OwnedRepr<A>>);
 
 impl<A> Clone for OwnedArcRepr<A> {
     fn clone(&self) -> Self {
