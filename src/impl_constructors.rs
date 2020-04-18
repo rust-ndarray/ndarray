@@ -524,7 +524,64 @@ where
     S: DataOwned<Elem = MaybeUninit<A>>,
     D: Dimension,
 {
-    pub(crate) fn maybe_uninit<Sh>(shape: Sh) -> Self
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
+    /// an easier way to handle uninit values correctly.
+    ///
+    /// Only *when* the array is completely initialized with valid elements, can it be
+    /// converted to an array of `A` elements using [`assume_init()`].
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow isize.
+    ///
+    /// ### Safety
+    ///
+    /// The whole of the array must be initialized before it is converted
+    /// using [`assume_init()`] or otherwise traversed.
+    ///
+    /// ### Examples
+    ///
+    /// It is possible to assign individual values through `*elt = MaybeUninit::new(value)`
+    /// and so on.
+    ///
+    /// ```
+    /// use ndarray::{s, Array2};
+    /// use ndarray::Zip;
+    /// use ndarray::Axis;
+    ///
+    /// // Example Task: Let's create a transposed copy of the input
+    ///
+    /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
+    ///     // create an uninitialized array
+    ///     let mut b = Array2::maybe_uninit(a.dim());
+    ///
+    ///     // two first columns in b are two last in a
+    ///     // rest of columns in b are the initial columns in a
+    ///
+    ///     assign_to(a.slice(s![.., -2..]), b.slice_mut(s![.., ..2]));
+    ///     assign_to(a.slice(s![.., 2..]), b.slice_mut(s![.., ..-2]));
+    ///
+    ///     // Now we can promise that `b` is safe to use with all operations
+    ///     unsafe {
+    ///         b.assume_init()
+    ///     }
+    /// }
+    ///
+    /// use ndarray::{IntoNdProducer, AssignElem};
+    ///
+    /// fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
+    ///     where P1: IntoNdProducer<Item = &'a A>,
+    ///           P2: IntoNdProducer<Dim = P1::Dim>,
+    ///           P2::Item: AssignElem<A>,
+    ///           A: Clone + 'a
+    /// {
+    ///     Zip::from(from)
+    ///         .apply_assign_into(to, A::clone);
+    /// }
+    ///
+    /// # shift_by_two(&Array2::zeros((8, 8)));
+    /// ```
+    pub fn maybe_uninit<Sh>(shape: Sh) -> Self
     where
         Sh: ShapeBuilder<Dim = D>,
     {
