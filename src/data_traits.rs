@@ -528,3 +528,38 @@ unsafe impl<'a, A> Data for CowRepr<'a, A> {
 }
 
 unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
+
+/// Array representation trait.
+///
+/// The RawDataSubst trait maps the element type of array storage, while
+/// keeping the same kind of storage.
+///
+/// For example, `RawDataSubst<B>` can map the type `OwnedRepr<A>` to `OwnedRepr<B>`.
+pub trait RawDataSubst<A>: RawData {
+    /// The resulting array storage of the same kind but substituted element type
+    type Output: RawData<Elem = A>;
+}
+
+impl<A, B> RawDataSubst<B> for OwnedRepr<A> {
+    type Output = OwnedRepr<B>;
+}
+
+impl<A, B> RawDataSubst<B> for OwnedArcRepr<A> {
+    type Output = OwnedArcRepr<B>;
+}
+
+impl<A, B> RawDataSubst<B> for RawViewRepr<*const A> {
+    type Output = RawViewRepr<*const B>;
+}
+
+impl<A, B> RawDataSubst<B> for RawViewRepr<*mut A> {
+    type Output = RawViewRepr<*mut B>;
+}
+
+impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a A> {
+    type Output = ViewRepr<&'a B>;
+}
+
+impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a mut A> {
+    type Output = ViewRepr<&'a mut B>;
+}

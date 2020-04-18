@@ -1,8 +1,5 @@
-use std::mem::MaybeUninit;
-use std::mem::transmute;
 
 use crate::imp_prelude::*;
-use crate::OwnedRepr;
 
 /// Methods specific to `Array0`.
 ///
@@ -59,35 +56,5 @@ where
     /// of the array (`.iter()` order) and of the returned vector will be the same.
     pub fn into_raw_vec(self) -> Vec<A> {
         self.data.into_vec()
-    }
-}
-
-/// Methods specific to `Array` of `MaybeUninit`.
-///
-/// ***See also all methods for [`ArrayBase`]***
-///
-/// [`ArrayBase`]: struct.ArrayBase.html
-impl<A, D> Array<MaybeUninit<A>, D>
-where
-    D: Dimension,
-{
-    /// Assert that the array's storage's elements are all fully initialized, and conver
-    /// the array from element type `MaybeUninit<A>` to `A`.
-    pub(crate) unsafe fn assume_init(self) -> Array<A, D> {
-        // NOTE: Fully initialized includes elements not reachable in current slicing/view.
-        //
-        // Should this method be generalized to all array types?
-        // (Will need a way to map the RawData<Elem=X> to RawData<Elem=Y> of same kind)
-
-        let Array { data, ptr, dim, strides } = self;
-        let data = transmute::<OwnedRepr<MaybeUninit<A>>, OwnedRepr<A>>(data);
-        let ptr = ptr.cast::<A>();
-
-        Array {
-            data,
-            ptr,
-            dim,
-            strides,
-        }
     }
 }
