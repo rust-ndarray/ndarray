@@ -86,6 +86,18 @@ impl<A> Clone for OwnedRepr<A>
 impl<A> Drop for OwnedRepr<A> {
     fn drop(&mut self) {
         if self.capacity > 0 {
+            // correct because: If the elements don't need dropping, an
+            // empty Vec is ok. Only the Vec's allocation needs dropping.
+            //
+            // implemented because: in some places in ndarray
+            // where A: Copy (hence does not need drop) we use uninitialized elements in
+            // vectors. Setting the length to 0 avoids that the vector tries to
+            // drop, slice or otherwise produce values of these elements.
+            // (The details of the validity letting this happen with nonzero len, are
+            // under discussion as of this writing.)
+            if !mem::needs_drop::<A>() {
+                self.len = 0;
+            }
             // drop as a Vec.
             self.take_as_vec();
         }
