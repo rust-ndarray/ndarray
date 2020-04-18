@@ -573,6 +573,14 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 ///
 /// // Check the result against the built in `.sum_axis()` along axis 1.
 /// assert_eq!(totals, a.sum_axis(Axis(1)));
+///
+///
+/// // Example 3: Recreate Example 2 using apply_collect to make a new array
+///
+/// let mut totals2 = Zip::from(a.genrows()).apply_collect(|row| row.sum());
+///
+/// // Check the result against the previous example.
+/// assert_eq!(totals, totals2);
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {
