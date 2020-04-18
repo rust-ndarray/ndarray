@@ -18,7 +18,6 @@ use crate::Layout;
 use crate::NdIndex;
 
 use crate::indexes::{indices, Indices};
-use crate::layout::LayoutPriv;
 use crate::layout::{CORDER, FORDER};
 
 /// Return if the expression is a break value.
