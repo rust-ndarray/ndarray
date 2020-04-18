@@ -1,5 +1,6 @@
 
 use std::mem;
+use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
 use std::slice;
 use crate::extension::nonnull;
@@ -17,11 +18,11 @@ pub struct OwnedRepr<A> {
 }
 
 impl<A> OwnedRepr<A> {
-    pub(crate) fn from(mut v: Vec<A>) -> Self {
+    pub(crate) fn from(v: Vec<A>) -> Self {
+        let mut v = ManuallyDrop::new(v);
         let len = v.len();
         let capacity = v.capacity();
         let ptr = nonnull::nonnull_from_vec_data(&mut v);
-        mem::forget(v);
         Self {
             ptr,
             len,
@@ -29,10 +30,8 @@ impl<A> OwnedRepr<A> {
         }
     }
 
-    pub(crate) fn into_vec(mut self) -> Vec<A> {
-        let v = self.take_as_vec();
-        mem::forget(self);
-        v
+    pub(crate) fn into_vec(self) -> Vec<A> {
+        ManuallyDrop::new(self).take_as_vec()
     }
 
     pub(crate) fn as_slice(&self) -> &[A] {
