@@ -104,7 +104,6 @@ where
 
         let mut result = Array::maybe_uninit(self.dim());
 
-        // panic-critical begin: we must not panic
         unsafe {
             // logically move ownership of all elements from self into result
             // the result realizes this ownership at .assume_init() further down
@@ -118,15 +117,16 @@ where
                         moved_elements += 1;
                     });
             }
+            debug_assert_eq!(result.len(), moved_elements);
+            // panic-critical begin: we must not panic
             // forget moved array elements but not its vec
             // old_storage drops empty
             let mut old_storage = self.into_raw_vec();
             old_storage.set_len(0);
 
-            debug_assert_eq!(result.len(), moved_elements);
             result.assume_init()
+            // panic-critical end
         }
-        // panic-critical end
     }
 }
 
