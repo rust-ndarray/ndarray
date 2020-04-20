@@ -12,6 +12,7 @@ use crate::numeric_util;
 use crate::{LinalgScalar, Zip};
 
 use std::any::TypeId;
+use std::mem::MaybeUninit;
 
 #[cfg(feature = "blas")]
 use std::cmp;
@@ -828,13 +829,13 @@ mod blas_tests {
 fn general_outer_to_dyn<Sa, Sb, F, T>(
     a: &ArrayBase<Sa, IxDyn>,
     b: &ArrayBase<Sb, IxDyn>,
-    f: F,
+    mut f: F,
 ) -> ArrayD<T>
 where
     T: Copy,
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
-    F: Fn(T, T) -> T,
+    F: FnMut(T, T) -> T,
 {
     //Iterators on the shapes, compelted by 1s
     let a_shape_iter = a.shape().iter().chain([1].iter().cycle());
@@ -847,16 +848,14 @@ where
         .map(|(x, y)| x * y)
         .collect();
 
-    unsafe {
-        let mut res: ArrayD<T> = ArrayBase::uninitialized(res_dim);
-        let res_chunks = res.exact_chunks_mut(b.shape());
-        Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
-            Zip::from(res_chunk)
-                .and(b)
-                .apply(|res_elem, &b_elem| *res_elem = f(a_elem, b_elem))
-        });
-        res
-    }
+    let mut res: ArrayD<MaybeUninit<T>> = ArrayBase::maybe_uninit(res_dim);
+    let res_chunks = res.exact_chunks_mut(b.shape());
+    Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
+        Zip::from(res_chunk)
+            .and(b)
+            .apply(|res_elem, &b_elem| *res_elem = MaybeUninit::new(f(a_elem, b_elem)))
+    });
+    unsafe { res.assume_init() }
 }
 
 #[allow(dead_code, clippy::type_repetition_in_bounds)]
@@ -874,29 +873,27 @@ where
 fn general_outer_same_size<Sa, I, Sb, F, T>(
     a: &ArrayBase<Sa, I>,
     b: &ArrayBase<Sb, I>,
-    f: F,
+    mut f: F,
 ) -> Array<T, I>
 where
     T: Copy,
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
     I: Dimension,
-    F: Fn(T, T) -> T,
+    F: FnMut(T, T) -> T,
 {
     let mut res_dim = a.raw_dim();
     let mut res_dim_view = res_dim.as_array_view_mut();
     res_dim_view *= &b.raw_dim().as_array_view();
 
-    unsafe {
-        let mut res: Array<T, I> = ArrayBase::uninitialized(res_dim);
-        let res_chunks = res.exact_chunks_mut(b.raw_dim());
-        Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
-            Zip::from(res_chunk)
-                .and(b)
-                .apply(|r_elem, &b_elem| *r_elem = f(a_elem, b_elem))
-        });
-        res
-    }
+    let mut res: Array<MaybeUninit<T>, I> = ArrayBase::maybe_uninit(res_dim);
+    let res_chunks = res.exact_chunks_mut(b.raw_dim());
+    Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
+        Zip::from(res_chunk)
+            .and(b)
+            .apply(|r_elem, &b_elem| *r_elem = MaybeUninit::new(f(a_elem, b_elem)))
+    });
+    unsafe { res.assume_init() }
 }
 
 #[allow(dead_code, clippy::type_repetition_in_bounds)]
