@@ -537,9 +537,9 @@ b clone of a =
  [2, 3]]
 ```
 
-Noticing that using `clone()` (or cloning) an `Array` type will also copies the array's elements, it creates an independently owned array of the same type.
+Noticing that using `clone()` (or cloning) an `Array` type also copies the array's elements. It creates an independently owned array of the same type.
 
-Cloning an `ArrayView` does not clone the underlying elements - you are just cloning the view reference (as it happens in Rust when cloning a `&` reference).
+Cloning an `ArrayView` does not clone or copy the underlying elements - it just clones the view reference (as it happens in Rust when cloning a `&` reference).
 
 ## Broadcasting
 
