@@ -22,6 +22,8 @@
 //! - [`ArrayBase::par_map_inplace()`]
 //! - [`ArrayBase::par_mapv_inplace()`]
 //! - [`Zip::par_apply()`] (all arities)
+//! - [`Zip::par_apply_collect()`] (all arities)
+//! - [`Zip::par_apply_assign_into()`] (all arities)
 //!
 //! Note that you can use the parallel iterator for [Zip] to access all other
 //! rayon parallel iterator methods.

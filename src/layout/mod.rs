@@ -1,35 +1,28 @@
 mod layoutfmt;
 
-// public but users don't interact with it
+// public struct but users don't interact with it
 #[doc(hidden)]
 /// Memory layout description
 #[derive(Copy, Clone)]
 pub struct Layout(u32);
 
-pub trait LayoutPriv: Sized {
-    fn new(x: u32) -> Self;
-    fn and(self, flag: Self) -> Self;
-    fn is(self, flag: u32) -> bool;
-    fn flag(self) -> u32;
-}
-
-impl LayoutPriv for Layout {
+impl Layout {
     #[inline(always)]
-    fn new(x: u32) -> Self {
+    pub(crate) fn new(x: u32) -> Self {
         Layout(x)
     }
 
     #[inline(always)]
-    fn is(self, flag: u32) -> bool {
+    pub(crate) fn is(self, flag: u32) -> bool {
         self.0 & flag != 0
     }
     #[inline(always)]
-    fn and(self, flag: Layout) -> Layout {
+    pub(crate) fn and(self, flag: Layout) -> Layout {
         Layout(self.0 & flag.0)
     }
 
     #[inline(always)]
-    fn flag(self) -> u32 {
+    pub(crate) fn flag(self) -> u32 {
         self.0
     }
 }

@@ -9,13 +9,15 @@
 #[macro_use]
 mod zipmacro;
 
+use std::mem::MaybeUninit;
+
 use crate::imp_prelude::*;
+use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdIndex;
 
 use crate::indexes::{indices, Indices};
-use crate::layout::LayoutPriv;
 use crate::layout::{CORDER, FORDER};
 
 /// Return if the expression is a break value.
@@ -571,6 +573,14 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 ///
 /// // Check the result against the built in `.sum_axis()` along axis 1.
 /// assert_eq!(totals, a.sum_axis(Axis(1)));
+///
+///
+/// // Example 3: Recreate Example 2 using apply_collect to make a new array
+///
+/// let mut totals2 = Zip::from(a.genrows()).apply_collect(|row| row.sum());
+///
+/// // Check the result against the previous example.
+/// assert_eq!(totals, totals2);
 /// ```
 #[derive(Debug, Clone)]
 pub struct Zip<Parts, D> {
@@ -578,6 +588,7 @@ pub struct Zip<Parts, D> {
     dimension: D,
     layout: Layout,
 }
+
 
 impl<P, D> Zip<(P,), D>
 where
@@ -734,6 +745,12 @@ where
         }
         self.dimension[unroll_axis] = inner_len;
         FoldWhile::Continue(acc)
+    }
+
+    pub(crate) fn uninitalized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D>
+    {
+        let is_f = !self.layout.is(CORDER) && self.layout.is(FORDER);
+        Array::maybe_uninit(self.dimension.clone().set_f(is_f))
     }
 }
 
@@ -982,6 +999,42 @@ macro_rules! map_impl {
                     dimension: self.dimension,
                 }
             }
+
+            /// Apply and collect the results into a new array, which has the same size as the
+            /// inputs.
+            ///
+            /// If all inputs are c- or f-order respectively, that is preserved in the output.
+            ///
+            /// Restricted to functions that produce copyable results for technical reasons; other
+            /// cases are not yet implemented.
+            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
+                where R: Copy,
+            {
+                // To support non-Copy elements, implementation of dropping partial array (on
+                // panic) is needed
+                let mut output = self.uninitalized_for_current_layout::<R>();
+                self.apply_assign_into(&mut output, f);
+                unsafe {
+                    output.assume_init()
+                }
+            }
+
+            /// Apply and assign the results into the producer `into`, which should have the same
+            /// size as the other inputs.
+            ///
+            /// The producer should have assignable items as dictated by the `AssignElem` trait,
+            /// for example `&mut R`.
+            pub fn apply_assign_into<R, Q>(self, into: Q, mut f: impl FnMut($($p::Item,)* ) -> R)
+                where Q: IntoNdProducer<Dim=D>,
+                      Q::Item: AssignElem<R>
+            {
+                self.and(into)
+                    .apply(move |$($p, )* output_| {
+                        output_.assign_elem(f($($p ),*));
+                    });
+            }
+
+
             );
 
             /// Split the `Zip` evenly in two.

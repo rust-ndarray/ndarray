@@ -102,26 +102,31 @@ where
         assert_eq!(axis_len, perm.indices.len());
         debug_assert!(perm.correct());
 
-        let mut v = Vec::with_capacity(self.len());
-        let mut result;
+        let mut result = Array::maybe_uninit(self.dim());
 
-        // panic-critical begin: we must not panic
         unsafe {
-            v.set_len(self.len());
-            result = Array::from_shape_vec_unchecked(self.dim(), v);
+            // logically move ownership of all elements from self into result
+            // the result realizes this ownership at .assume_init() further down
+            let mut moved_elements = 0;
             for i in 0..axis_len {
                 let perm_i = perm.indices[i];
                 Zip::from(result.index_axis_mut(axis, perm_i))
                     .and(self.index_axis(axis, i))
-                    .apply(|to, from| copy_nonoverlapping(from, to, 1));
+                    .apply(|to, from| {
+                        copy_nonoverlapping(from, to.as_mut_ptr(), 1);
+                        moved_elements += 1;
+                    });
             }
+            debug_assert_eq!(result.len(), moved_elements);
+            // panic-critical begin: we must not panic
             // forget moved array elements but not its vec
+            // old_storage drops empty
             let mut old_storage = self.into_raw_vec();
             old_storage.set_len(0);
-            // old_storage drops empty
+
+            result.assume_init()
+            // panic-critical end
         }
-        // panic-critical end
-        result
     }
 }
 

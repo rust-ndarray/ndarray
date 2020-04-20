@@ -258,22 +258,34 @@ fn add_2d_zip(bench: &mut test::Bencher) {
 }
 
 #[bench]
-fn add_2d_alloc(bench: &mut test::Bencher) {
+fn add_2d_alloc_plus(bench: &mut test::Bencher) {
     let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| &a + &b);
 }
 
 #[bench]
-fn add_2d_zip_alloc(bench: &mut test::Bencher) {
+fn add_2d_alloc_zip_uninit(bench: &mut test::Bencher) {
     let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| unsafe {
         let mut c = Array::uninitialized(a.dim());
-        azip!((&a in &a, &b in &b, c in &mut c) *c = a + b);
+        azip!((&a in &a, &b in &b, c in c.raw_view_mut())
+            std::ptr::write(c, a + b)
+        );
         c
     });
 }
+
+#[bench]
+fn add_2d_alloc_zip_collect(bench: &mut test::Bencher) {
+    let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
+    bench.iter(|| {
+        Zip::from(&a).and(&b).apply_collect(|&x, &y| x + y)
+    });
+}
+
 
 #[bench]
 fn add_2d_assign_ops(bench: &mut test::Bencher) {

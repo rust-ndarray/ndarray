@@ -273,18 +273,14 @@ where
         if !self.has_remaining {
             return (0, Some(0));
         }
-        let l = match self.index {
-            ref ix => {
-                let gone = self
-                    .dim
-                    .fortran_strides()
-                    .slice()
-                    .iter()
-                    .zip(ix.slice().iter())
-                    .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
-                self.dim.size() - gone
-            }
-        };
+        let gone = self
+            .dim
+            .fortran_strides()
+            .slice()
+            .iter()
+            .zip(self.index.slice().iter())
+            .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+        let l = self.dim.size() - gone;
         (l, Some(l))
     }
 }

@@ -149,13 +149,17 @@ mod array_approx;
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
+mod argument_traits;
+pub use crate::argument_traits::AssignElem;
 mod data_traits;
+mod data_repr;
 
 pub use crate::aliases::*;
 
 #[allow(deprecated)]
 pub use crate::data_traits::{
     Data, DataClone, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
+    RawDataSubst,
 };
 
 mod free_functions;
@@ -1386,12 +1390,8 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 
-/// Array's representation.
-///
-/// *Don’t use this type directly—use the type alias
-/// [`Array`](type.Array.html) for the array type!*
-#[derive(Clone, Debug)]
-pub struct OwnedRepr<A>(Vec<A>);
+pub use data_repr::OwnedRepr;
+
 
 /// RcArray's representation.
 ///
@@ -1405,7 +1405,7 @@ pub use self::OwnedArcRepr as OwnedRcRepr;
 /// *Don’t use this type directly—use the type alias
 /// [`ArcArray`](type.ArcArray.html) for the array type!*
 #[derive(Debug)]
-pub struct OwnedArcRepr<A>(Arc<Vec<A>>);
+pub struct OwnedArcRepr<A>(Arc<OwnedRepr<A>>);
 
 impl<A> Clone for OwnedArcRepr<A> {
     fn clone(&self) -> Self {
@@ -1484,6 +1484,7 @@ mod impl_constructors;
 
 mod impl_methods;
 mod impl_owned_array;
+mod impl_special_element_types;
 
 /// Private Methods
 impl<A, S, D> ArrayBase<S, D>
