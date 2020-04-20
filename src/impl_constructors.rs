@@ -533,7 +533,7 @@ where
     /// use ndarray::Zip;
     /// use ndarray::Axis;
     ///
-    /// // Example Task: Let's create a transposed copy of the input
+    /// // Example Task: Let's create a column shifted copy of the input
     ///
     /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
     ///     // create an uninitialized array
@@ -553,6 +553,8 @@ where
     ///
     /// use ndarray::{IntoNdProducer, AssignElem};
     ///
+    /// // This function clones elements from the first input to the second;
+    /// // the two producers must have the same shape
     /// fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
     ///     where P1: IntoNdProducer<Item = &'a A>,
     ///           P2: IntoNdProducer<Dim = P1::Dim>,
