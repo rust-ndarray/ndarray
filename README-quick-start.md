@@ -435,7 +435,7 @@ s2  =
 As in Rust we have owner ship, so we cannot simply 
 update an element of an array while we have a 
 shared view of it. This will help us write more
-robust code than numpy.
+robust code.
 
 ```rust
 use ndarray::prelude::*;
@@ -537,7 +537,8 @@ b clone of a =
  [2, 3]]
 ```
 
-Noticing that `clone()` will perform a deep copy of the array elements only if you are cloning an owned array (i.e. `Array`).
+Noticing that using `clone()` (or cloning) an `Array` type will also copies the array's elements, it creates an independently owned array of the same type.
+
 Cloning an `ArrayView` does not clone the underlying elements - you are just cloning the view reference (as it happens in Rust when cloning a `&` reference).
 
 ## Broadcasting
@@ -602,4 +603,4 @@ a is broadcased to 3x2x2 =
 ## Want to learn more?
 Please checkout these docs for more information
 * [`ArrayBase` doc page](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html)
-* [`ndarray` for `numpy` user doc page](https://docs.rs/ndarray/0.13.0/ndarray/doc/ndarray_for_numpy_users/index.html)
+* [`ndarray` for `numpy` user doc page](https://docs.rs/ndarray/latest/ndarray/doc/ndarray_for_numpy_users/index.html)
