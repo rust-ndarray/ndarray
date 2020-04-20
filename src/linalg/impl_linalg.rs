@@ -851,9 +851,8 @@ where
     let mut res: ArrayD<MaybeUninit<T>> = ArrayBase::maybe_uninit(res_dim);
     let res_chunks = res.exact_chunks_mut(b.shape());
     Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
-        Zip::from(res_chunk)
-            .and(b)
-            .apply(|res_elem, &b_elem| *res_elem = MaybeUninit::new(f(a_elem, b_elem)))
+        Zip::from(b)
+            .apply_assign_into(res_chunk, |&b_elem| MaybeUninit::new(f(a_elem, b_elem)))
     });
     unsafe { res.assume_init() }
 }
@@ -889,9 +888,8 @@ where
     let mut res: Array<MaybeUninit<T>, I> = ArrayBase::maybe_uninit(res_dim);
     let res_chunks = res.exact_chunks_mut(b.raw_dim());
     Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
-        Zip::from(res_chunk)
-            .and(b)
-            .apply(|r_elem, &b_elem| *r_elem = MaybeUninit::new(f(a_elem, b_elem)))
+        Zip::from(b)
+            .apply_assign_into(res_chunk, |&b_elem| MaybeUninit::new(f(a_elem, b_elem)))
     });
     unsafe { res.assume_init() }
 }
