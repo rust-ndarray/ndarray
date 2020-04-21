@@ -9,7 +9,7 @@
 use crate::imp_prelude::*;
 use crate::numeric_util;
 
-use crate::{LinalgScalar, Zip};
+use crate::{ErrorKind, LinalgScalar, Zip};
 
 use std::any::TypeId;
 use std::mem::MaybeUninit;
@@ -826,84 +826,92 @@ mod blas_tests {
 }
 
 #[allow(dead_code)]
-fn general_outer_to_dyn<Sa, Sb, F, T>(
-    a: &ArrayBase<Sa, IxDyn>,
-    b: &ArrayBase<Sb, IxDyn>,
+fn general_kron<Sa, Sb, D, F, T>(
+    a: &ArrayBase<Sa, D>,
+    b: &ArrayBase<Sb, D>,
     mut f: F,
-) -> ArrayD<T>
+) -> Result<Array<T, D>, ErrorKind>
 where
     T: Copy,
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
+    D: Dimension,
     F: FnMut(T, T) -> T,
 {
-    //Iterators on the shapes, compelted by 1s
-    let a_shape_iter = a.shape().iter().chain([1].iter().cycle());
-    let b_shape_iter = b.shape().iter().chain([1].iter().cycle());
-
     let res_ndim = std::cmp::max(a.ndim(), b.ndim());
-    let res_dim: Vec<Ix> = a_shape_iter
-        .zip(b_shape_iter)
-        .take(res_ndim)
-        .map(|(x, y)| x * y)
-        .collect();
 
-    let mut res: ArrayD<MaybeUninit<T>> = ArrayBase::maybe_uninit(res_dim);
-    let res_chunks = res.exact_chunks_mut(b.shape());
-    Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
-        Zip::from(b)
-            .apply_assign_into(res_chunk, |&b_elem| MaybeUninit::new(f(a_elem, b_elem)))
-    });
-    unsafe { res.assume_init() }
+    //Creates shapes completed by 1s to have res_ndim dims for each input array,
+    let a_shape_completed = {
+        let a_shape_iter = a.shape().iter().cloned().chain(std::iter::repeat(1));
+        let mut a_shape_completed = D::zeros(res_ndim);
+        for (a_shape_completed_elem, a_shape_completed_value) in a_shape_completed
+            .as_array_view_mut()
+            .iter_mut()
+            .zip(a_shape_iter)
+        {
+            *a_shape_completed_elem = a_shape_completed_value;
+        }
+        a_shape_completed
+    };
+
+    let b_shape_completed = {
+        let b_shape_iter = b.shape().iter().cloned().chain(std::iter::repeat(1));
+        let mut b_shape_completed = D::zeros(res_ndim);
+        for (b_shape_completed_elem, b_shape_completed_value) in b_shape_completed
+            .as_array_view_mut()
+            .iter_mut()
+            .zip(b_shape_iter)
+        {
+            *b_shape_completed_elem = b_shape_completed_value;
+        }
+        b_shape_completed
+    };
+
+    // Create result shape, checking that the multiplication doesn't overflow to guarantee safety below
+    let res_dim = {
+        let mut res_dim: D = D::zeros(res_ndim);
+        for ((res_dim_elem, &a_shape_value), &b_shape_value) in res_dim
+            .as_array_view_mut()
+            .iter_mut()
+            .zip(a_shape_completed.as_array_view())
+            .zip(b_shape_completed.as_array_view())
+        {
+            match a_shape_value.checked_mul(b_shape_value) {
+                Some(n) => *res_dim_elem = n,
+                None => return Err(ErrorKind::Overflow),
+            }
+        }
+        res_dim
+    };
+
+    // Reshape input arrays to compatible shapes
+    let a_reshape = a.view().into_shape(a_shape_completed).unwrap();
+    let b_reshape = b.view().into_shape(b_shape_completed.clone()).unwrap();
+
+    //Create and fill the result array
+    let mut res: Array<MaybeUninit<T>, D> = ArrayBase::maybe_uninit(res_dim);
+    let res_chunks = res.exact_chunks_mut(b_shape_completed);
+    Zip::from(res_chunks)
+        .and(a_reshape)
+        .apply(|res_chunk, &a_elem| {
+            Zip::from(&b_reshape)
+                .apply_assign_into(res_chunk, |&b_elem| MaybeUninit::new(f(a_elem, b_elem)))
+        });
+    // This is safe because the exact chunks covered exactly the res
+    let res = unsafe { res.assume_init() };
+    Ok(res)
 }
 
 #[allow(dead_code, clippy::type_repetition_in_bounds)]
-fn kron_to_dyn<Sa, Sb, T>(a: &ArrayBase<Sa, IxDyn>, b: &ArrayBase<Sb, IxDyn>) -> Array<T, IxDyn>
+fn kron<Sa, Sb, D, T>(a: &ArrayBase<Sa, D>, b: &ArrayBase<Sb, D>) -> Result<Array<T, D>, ErrorKind>
 where
     T: Copy,
     Sa: Data<Elem = T>,
     Sb: Data<Elem = T>,
+    D: Dimension,
     T: crate::ScalarOperand + std::ops::Mul<Output = T>,
 {
-    general_outer_to_dyn(a, b, std::ops::Mul::mul)
-}
-
-#[allow(dead_code)]
-fn general_outer_same_size<Sa, I, Sb, F, T>(
-    a: &ArrayBase<Sa, I>,
-    b: &ArrayBase<Sb, I>,
-    mut f: F,
-) -> Array<T, I>
-where
-    T: Copy,
-    Sa: Data<Elem = T>,
-    Sb: Data<Elem = T>,
-    I: Dimension,
-    F: FnMut(T, T) -> T,
-{
-    let mut res_dim = a.raw_dim();
-    let mut res_dim_view = res_dim.as_array_view_mut();
-    res_dim_view *= &b.raw_dim().as_array_view();
-
-    let mut res: Array<MaybeUninit<T>, I> = ArrayBase::maybe_uninit(res_dim);
-    let res_chunks = res.exact_chunks_mut(b.raw_dim());
-    Zip::from(res_chunks).and(a).apply(|res_chunk, &a_elem| {
-        Zip::from(b)
-            .apply_assign_into(res_chunk, |&b_elem| MaybeUninit::new(f(a_elem, b_elem)))
-    });
-    unsafe { res.assume_init() }
-}
-
-#[allow(dead_code, clippy::type_repetition_in_bounds)]
-fn kron_same_size<Sa, I, Sb, T>(a: &ArrayBase<Sa, I>, b: &ArrayBase<Sb, I>) -> Array<T, I>
-where
-    T: Copy,
-    Sa: Data<Elem = T>,
-    Sb: Data<Elem = T>,
-    I: Dimension,
-    T: crate::ScalarOperand + std::ops::Mul<Output = T>,
-{
-    general_outer_same_size(a, b, std::ops::Mul::mul)
+    general_kron(a, b, std::ops::Mul::mul)
 }
 
 #[cfg(test)]
@@ -911,7 +919,7 @@ mod kron_test {
     use super::*;
 
     #[test]
-    fn test_same_size() {
+    fn same_dim() {
         let a = array![
             [[1, 2, 3], [4, 5, 6]],
             [[17, 42, 69], [0, -1, 1]],
@@ -922,9 +930,7 @@ mod kron_test {
             [[42, 42, 0], [1, -3, 10]],
             [[110, 0, 7], [523, 21, -12]]
         ];
-        let res1 = kron_same_size(&a, &b);
-        let res2 = kron_to_dyn(&a.clone().into_dyn(), &b.clone().into_dyn());
-        assert_eq!(res1.clone().into_dyn(), res2);
+        let res = kron(&a.view(), &b.view()).unwrap();
         for a0 in 0..a.len_of(Axis(0)) {
             for a1 in 0..a.len_of(Axis(1)) {
                 for a2 in 0..a.len_of(Axis(2)) {
@@ -932,7 +938,7 @@ mod kron_test {
                         for b1 in 0..b.len_of(Axis(1)) {
                             for b2 in 0..b.len_of(Axis(2)) {
                                 assert_eq!(
-                                    res2[[
+                                    res[[
                                         b.shape()[0] * a0 + b0,
                                         b.shape()[1] * a1 + b1,
                                         b.shape()[2] * a2 + b2
@@ -940,6 +946,64 @@ mod kron_test {
                                     a[[a0, a1, a2]] * b[[b0, b1, b2]]
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn different_dim() {
+        let a = array![
+            [1, 2, 3, 4, 5, 6],
+            [17, 42, 69, 0, -1, 1],
+            [1337, 1, 0, -1337, -1, 0]
+        ];
+        let b = array![
+            [[55, 66, 77], [88, 99, 1010]],
+            [[42, 42, 0], [1, -3, 10]],
+            [[110, 0, 7], [523, 21, -12]]
+        ];
+        let res = kron(&a.view().into_dyn(), &b.view().into_dyn()).unwrap();
+        for a0 in 0..a.len_of(Axis(0)) {
+            for a1 in 0..a.len_of(Axis(1)) {
+                for b0 in 0..b.len_of(Axis(0)) {
+                    for b1 in 0..b.len_of(Axis(1)) {
+                        for b2 in 0..b.len_of(Axis(2)) {
+                            assert_eq!(
+                                res[[b.shape()[0] * a0 + b0, b.shape()[1] * a1 + b1, b2]],
+                                a[[a0, a1]] * b[[b0, b1, b2]]
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn different_dim2() {
+        let a = array![
+            [1, 2, 3, 4, 5, 6],
+            [17, 42, 69, 0, -1, 1],
+            [1337, 1, 0, -1337, -1, 0]
+        ];
+        let b = array![
+            [[55, 66, 77], [88, 99, 1010]],
+            [[42, 42, 0], [1, -3, 10]],
+            [[110, 0, 7], [523, 21, -12]]
+        ];
+        let res = kron(&b.view().into_dyn(), &a.view().into_dyn()).unwrap();
+        for a0 in 0..a.len_of(Axis(0)) {
+            for a1 in 0..a.len_of(Axis(1)) {
+                for b0 in 0..b.len_of(Axis(0)) {
+                    for b1 in 0..b.len_of(Axis(1)) {
+                        for b2 in 0..b.len_of(Axis(2)) {
+                            assert_eq!(
+                                res[[a.shape()[0] * b0 + a0, a.shape()[1] * b1 + a1, b2]],
+                                a[[a0, a1]] * b[[b0, b1, b2]]
+                            )
                         }
                     }
                 }
