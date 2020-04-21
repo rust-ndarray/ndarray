@@ -474,41 +474,20 @@ where
     ///
     /// ### Safety
     ///
-    /// Accessing uninitalized values is undefined behaviour. You must
-    /// overwrite *all* the elements in the array after it is created; for
-    /// example using the methods `.fill()` or `.assign()`.
+    /// Accessing uninitalized values is undefined behaviour. You must overwrite *all* the elements
+    /// in the array after it is created; for example using
+    /// [`raw_view_mut`](ArrayBase::raw_view_mut) or other low-level element access.
     ///
     /// The contents of the array is indeterminate before initialization and it
     /// is an error to perform operations that use the previous values. For
     /// example it would not be legal to use `a += 1.;` on such an array.
     ///
     /// This constructor is limited to elements where `A: Copy` (no destructors)
-    /// to avoid users shooting themselves too hard in the foot; it is not
-    /// a problem to drop an array created with this method even before elements
-    /// are initialized. (Note that constructors `from_shape_vec` and
-    /// `from_shape_vec_unchecked` allow the user yet more control).
-    ///
-    /// ### Examples
-    ///
-    /// ```
-    /// use ndarray::{s, Array2};
-    ///
-    /// // Example Task: Let's create a column shifted copy of a in b
-    ///
-    /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
-    ///     let mut b = unsafe { Array2::uninitialized(a.dim()) };
-    ///
-    ///     // two first columns in b are two last in a
-    ///     // rest of columns in b are the initial columns in a
-    ///     b.slice_mut(s![.., ..2]).assign(&a.slice(s![.., -2..]));
-    ///     b.slice_mut(s![.., 2..]).assign(&a.slice(s![.., ..-2]));
-    ///
-    ///     // `b` is safe to use with all operations at this point
-    ///     b
-    /// }
-    ///
-    /// # shift_by_two(&Array2::zeros((8, 8)));
-    /// ```
+    /// to avoid users shooting themselves too hard in the foot.
+    /// 
+    /// (Also note that the constructors `from_shape_vec` and
+    /// `from_shape_vec_unchecked` allow the user yet more control, in the sense
+    /// that Arrays can be created from arbitrary vectors.)
     pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
     where
         A: Copy,
@@ -554,7 +533,7 @@ where
     /// use ndarray::Zip;
     /// use ndarray::Axis;
     ///
-    /// // Example Task: Let's create a transposed copy of the input
+    /// // Example Task: Let's create a column shifted copy of the input
     ///
     /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
     ///     // create an uninitialized array
@@ -574,6 +553,8 @@ where
     ///
     /// use ndarray::{IntoNdProducer, AssignElem};
     ///
+    /// // This function clones elements from the first input to the second;
+    /// // the two producers must have the same shape
     /// fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
     ///     where P1: IntoNdProducer<Item = &'a A>,
     ///           P2: IntoNdProducer<Dim = P1::Dim>,

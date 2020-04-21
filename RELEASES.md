@@ -1,4 +1,4 @@
-Version 0.13.1 (2020-04)
+Version 0.13.1 (2020-04-21)
 ===========================
 
 New features
@@ -14,7 +14,10 @@ New features
   https://github.com/rust-ndarray/ndarray/pull/728
 - `Dimension::Larger` now requires `RemoveAxis` by [@TheLortex]
   https://github.com/rust-ndarray/ndarray/pull/792
-
+- New methods for collecting Zip into an array by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/797
+- New `Array::maybe_uninit` and `.assume_init()` by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/803
 
 Enhancements
 ------------
@@ -25,6 +28,8 @@ Enhancements
   https://github.com/rust-ndarray/ndarray/pull/754
 - Implement `fold` for `IndicesIter` by [@jturner314]
   https://github.com/rust-ndarray/ndarray/pull/733
+- New Quick Start readme by [@lifuyang]
+  https://github.com/rust-ndarray/ndarray/pull/785
 
 API changes
 -----------
@@ -39,6 +44,9 @@ Other changes
 - Improve blas version documentation by [@jturner314]
 - Doc improvements by [@mockersf] https://github.com/rust-ndarray/ndarray/pull/751
 - Doc and lint related improvements by [@viniciusd] https://github.com/rust-ndarray/ndarray/pull/750
+- Minor fixes related to best practices for unsafe code by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/799
+  https://github.com/rust-ndarray/ndarray/pull/802
 - Release management by [@bluss]
 
 
@@ -944,3 +952,4 @@ Earlier releases
 [@TheLortex]: https://github.com/TheLortex
 [@mockersf]: https://github.com/mockersf
 [@viniciusd]: https://github.com/viniciusd
+[@lifuyang]: https://github.com/liufuyang
