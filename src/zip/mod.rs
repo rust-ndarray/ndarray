@@ -969,15 +969,9 @@ macro_rules! map_impl {
             pub fn and<P>(self, p: P) -> Zip<($($p,)* P::Output, ), D>
                 where P: IntoNdProducer<Dim=D>,
             {
-                let array = p.into_producer();
-                self.check(&array);
-                let part_layout = array.layout();
-                let ($($p,)*) = self.parts;
-                Zip {
-                    parts: ($($p,)* array, ),
-                    layout: self.layout.and(part_layout),
-                    dimension: self.dimension,
-                }
+                let part = p.into_producer();
+                self.check(&part);
+                self.build_and(part)
             }
 
             /// Include the producer `p` in the Zip, broadcasting if needed.
@@ -990,11 +984,17 @@ macro_rules! map_impl {
                 where P: IntoNdProducer<Dim=D2, Output=ArrayView<'a, Elem, D2>, Item=&'a Elem>,
                       D2: Dimension,
             {
-                let array = p.into_producer().broadcast_unwrap(self.dimension.clone());
-                let part_layout = array.layout();
+                let part = p.into_producer().broadcast_unwrap(self.dimension.clone());
+                self.build_and(part)
+            }
+
+            fn build_and<P>(self, part: P) -> Zip<($($p,)* P, ), D>
+                where P: NdProducer<Dim=D>,
+            {
+                let part_layout = part.layout();
                 let ($($p,)*) = self.parts;
                 Zip {
-                    parts: ($($p,)* array, ),
+                    parts: ($($p,)* part, ),
                     layout: self.layout.and(part_layout),
                     dimension: self.dimension,
                 }
