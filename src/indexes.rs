@@ -157,6 +157,20 @@ where
     private_impl! {}
 }
 
+// How the NdProducer for Indices works.
+//
+// NdProducer allows for raw pointers (Ptr), strides (Stride) and the produced
+// item (Item).
+//
+// Instead of Ptr, there is `IndexPtr<D>` which is an index value, like [0, 0, 0]
+// for the three dimensional case.
+//
+// The stride is simply which axis is currently being incremented. The stride for axis 1, is 1.
+//
+// .stride_offset(stride, index) simply computes the new index along that axis, for example:
+// [0, 0, 0].stride_offset(1, 10) => [0, 10, 0]  axis 1 is incremented by 10.
+//
+// .as_ref() converts the Ptr value to an Item. For example [0, 10, 0] => (0, 10, 0)
 impl<D: Dimension + Copy> NdProducer for Indices<D> {
     type Item = D::Pattern;
     type Dim = D;
