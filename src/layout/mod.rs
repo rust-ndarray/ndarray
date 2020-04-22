@@ -69,3 +69,77 @@ pub const CORDER: u32 = 0b01;
 pub const FORDER: u32 = 0b10;
 pub const CPREFER: u32 = 0b0100;
 pub const FPREFER: u32 = 0b1000;
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::imp_prelude::*;
+    use crate::NdProducer;
+
+    type M = Array2<f32>;
+
+    #[test]
+    fn contig_layouts() {
+        let a = M::zeros((5, 5));
+        let b = M::zeros((5, 5).f());
+        let ac = a.view().layout();
+        let af = b.view().layout();
+        assert!(ac.is(CORDER) && ac.is(CPREFER));
+        assert!(!ac.is(FORDER) && !ac.is(FPREFER));
+        assert!(!af.is(CORDER) && !af.is(CPREFER));
+        assert!(af.is(FORDER) && af.is(FPREFER));
+    }
+
+    #[test]
+    fn stride_layouts() {
+        let a = M::zeros((5, 5));
+
+        {
+            let v1 = a.slice(s![1.., ..]).layout();
+            let v2 = a.slice(s![.., 1..]).layout();
+
+            assert!(v1.is(CORDER) && v1.is(CPREFER));
+            assert!(!v1.is(FORDER) && !v1.is(FPREFER));
+            assert!(!v2.is(CORDER) && v2.is(CPREFER));
+            assert!(!v2.is(FORDER) && !v2.is(FPREFER));
+        }
+
+        let b = M::zeros((5, 5).f());
+
+        {
+            let v1 = b.slice(s![1.., ..]).layout();
+            let v2 = b.slice(s![.., 1..]).layout();
+
+            assert!(!v1.is(CORDER) && !v1.is(CPREFER));
+            assert!(!v1.is(FORDER) && v1.is(FPREFER));
+            assert!(!v2.is(CORDER) && !v2.is(CPREFER));
+            assert!(v2.is(FORDER) && v2.is(FPREFER));
+        }
+    }
+
+    #[test]
+    fn skip_layouts() {
+        let a = M::zeros((5, 5));
+        {
+            let v1 = a.slice(s![..;2, ..]).layout();
+            let v2 = a.slice(s![.., ..;2]).layout();
+
+            assert!(!v1.is(CORDER) && v1.is(CPREFER));
+            assert!(!v1.is(FORDER) && !v1.is(FPREFER));
+            assert!(!v2.is(CORDER) && !v2.is(CPREFER));
+            assert!(!v2.is(FORDER) && !v2.is(FPREFER));
+        }
+
+        let b = M::zeros((5, 5).f());
+        {
+            let v1 = b.slice(s![..;2, ..]).layout();
+            let v2 = b.slice(s![.., ..;2]).layout();
+
+            assert!(!v1.is(CORDER) && !v1.is(CPREFER));
+            assert!(!v1.is(FORDER) && !v1.is(FPREFER));
+            assert!(!v2.is(CORDER) && !v2.is(CPREFER));
+            assert!(!v2.is(FORDER) && v2.is(FPREFER));
+        }
+    }
+}
