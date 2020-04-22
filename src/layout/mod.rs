@@ -25,27 +25,24 @@ impl Layout {
     pub(crate) fn flag(self) -> u32 {
         self.0
     }
-}
 
-impl Layout {
-    #[doc(hidden)]
     #[inline(always)]
-    pub fn one_dimensional() -> Layout {
+    pub(crate) fn one_dimensional() -> Layout {
         Layout(CORDER | FORDER)
     }
-    #[doc(hidden)]
+
     #[inline(always)]
-    pub fn c() -> Layout {
+    pub(crate) fn c() -> Layout {
         Layout(CORDER)
     }
-    #[doc(hidden)]
+
     #[inline(always)]
-    pub fn f() -> Layout {
+    pub(crate) fn f() -> Layout {
         Layout(FORDER)
     }
+
     #[inline(always)]
-    #[doc(hidden)]
-    pub fn none() -> Layout {
+    pub(crate) fn none() -> Layout {
         Layout(0)
     }
 }
