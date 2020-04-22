@@ -62,13 +62,13 @@ fn debug_format() {
         "\
 [[0, 0, 0, 0],
  [0, 0, 0, 0],
- [0, 0, 0, 0]], shape=[3, 4], strides=[4, 1], layout=C (0x1), const ndim=2"
+ [0, 0, 0, 0]], shape=[3, 4], strides=[4, 1], layout=Cc (0x5), const ndim=2"
     );
     assert_eq!(
         format!("{:?}", a.into_dyn()),
         "\
 [[0, 0, 0, 0],
  [0, 0, 0, 0],
- [0, 0, 0, 0]], shape=[3, 4], strides=[4, 1], layout=C (0x1), dynamic ndim=2"
+ [0, 0, 0, 0]], shape=[3, 4], strides=[4, 1], layout=Cc (0x5), dynamic ndim=2"
     );
 }
