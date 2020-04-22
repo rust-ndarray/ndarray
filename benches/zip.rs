@@ -1,6 +1,6 @@
 #![feature(test)]
 extern crate test;
-use test::{Bencher};
+use test::{black_box, Bencher};
 use ndarray::{Array3, ShapeBuilder, Zip};
 use ndarray::s;
 use ndarray::IntoNdProducer;
@@ -33,6 +33,7 @@ pub fn zip_copy_split<'a, A, P, Q>(data: P, out: Q)
 
 pub fn zip_indexed(data: &Array3<f32>, out: &mut Array3<f32>) {
     Zip::indexed(data).and(out).apply(|idx, &i, o| {
+        let _ = black_box(idx);
         *o = i;
     });
 }
