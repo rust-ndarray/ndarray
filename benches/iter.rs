@@ -381,12 +381,12 @@ pub fn zip_mut_with(data: &Array3<f32>, out: &mut Array3<f32>) {
 fn zip_mut_with_cc(b: &mut Bencher) {
     let data: Array3<f32> = Array3::zeros((ISZ, ISZ, ISZ));
     let mut out = Array3::zeros(data.dim());
-    b.iter(|| black_box(zip_mut_with(&data, &mut out)));
+    b.iter(|| zip_mut_with(&data, &mut out));
 }
 
 #[bench]
 fn zip_mut_with_ff(b: &mut Bencher) {
     let data: Array3<f32> = Array3::zeros((ISZ, ISZ, ISZ).f());
     let mut out = Array3::zeros(data.dim().f());
-    b.iter(|| black_box(zip_mut_with(&data, &mut out)));
+    b.iter(|| zip_mut_with(&data, &mut out));
 }

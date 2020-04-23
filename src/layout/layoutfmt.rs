@@ -8,7 +8,7 @@
 
 use super::Layout;
 
-const LAYOUT_NAMES: &[&str] = &["C", "F"];
+const LAYOUT_NAMES: &[&str] = &["C", "F", "c", "f"];
 
 use std::fmt;
 

@@ -53,17 +53,26 @@ where
     D: Dimension,
 {
     pub(crate) fn layout_impl(&self) -> Layout {
-        Layout::new(if self.is_standard_layout() {
-            if self.ndim() <= 1 {
-                FORDER | CORDER
+        let n = self.ndim();
+        if self.is_standard_layout() {
+            if n <= 1 {
+                Layout::one_dimensional()
             } else {
-                CORDER
+                Layout::c()
             }
-        } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
-            FORDER
+        } else if n > 1 && self.raw_view().reversed_axes().is_standard_layout() {
+            Layout::f()
+        } else if n > 1 {
+            if self.stride_of(Axis(0)) == 1 {
+                Layout::fpref()
+            } else if self.stride_of(Axis(n - 1)) == 1 {
+                Layout::cpref()
+            } else {
+                Layout::none()
+            }
         } else {
-            0
-        })
+            Layout::none()
+        }
     }
 }
 
@@ -587,6 +596,9 @@ pub struct Zip<Parts, D> {
     parts: Parts,
     dimension: D,
     layout: Layout,
+    /// The sum of the layout tendencies of the parts;
+    /// positive for c- and negative for f-layout preference.
+    layout_tendency: i32,
 }
 
 
@@ -605,10 +617,12 @@ where
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
+        let layout = array.layout();
         Zip {
             dimension: dim,
-            layout: array.layout(),
+            layout,
             parts: (array,),
+            layout_tendency: layout.tendency(),
         }
     }
 }
@@ -661,24 +675,29 @@ where
         self.dimension[axis.index()]
     }
 
+    fn prefer_f(&self) -> bool {
+        !self.layout.is(CORDER) && (self.layout.is(FORDER) || self.layout_tendency < 0)
+    }
+
     /// Return an *approximation* to the max stride axis; if
     /// component arrays disagree, there may be no choice better than the
     /// others.
     fn max_stride_axis(&self) -> Axis {
-        let i = match self.layout.flag() {
-            FORDER => self
+        let i = if self.prefer_f() {
+            self
                 .dimension
                 .slice()
                 .iter()
                 .rposition(|&len| len > 1)
-                .unwrap_or(self.dimension.ndim() - 1),
+                .unwrap_or(self.dimension.ndim() - 1)
+        } else {
             /* corder or default */
-            _ => self
+            self
                 .dimension
                 .slice()
                 .iter()
                 .position(|&len| len > 1)
-                .unwrap_or(0),
+                .unwrap_or(0)
         };
         Axis(i)
     }
@@ -699,6 +718,7 @@ where
             self.apply_core_strided(acc, function)
         }
     }
+
     fn apply_core_contiguous<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
@@ -717,7 +737,7 @@ where
         FoldWhile::Continue(acc)
     }
 
-    fn apply_core_strided<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+    fn apply_core_strided<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -726,13 +746,27 @@ where
         if n == 0 {
             panic!("Unreachable: ndim == 0 is contiguous")
         }
+        if n == 1 || self.layout_tendency >= 0 {
+            self.apply_core_strided_c(acc, function)
+        } else {
+            self.apply_core_strided_f(acc, function)
+        }
+    }
+
+    // Non-contiguous but preference for C - unroll over Axis(ndim - 1)
+    fn apply_core_strided_c<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+    where
+        F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
+        P: ZippableTuple<Dim = D>,
+    {
+        let n = self.dimension.ndim();
         let unroll_axis = n - 1;
         let inner_len = self.dimension[unroll_axis];
         self.dimension[unroll_axis] = 1;
         let mut index_ = self.dimension.first_index();
         let inner_strides = self.parts.stride_of(unroll_axis);
+        // Loop unrolled over closest axis
         while let Some(index) = index_ {
-            // Let's “unroll” the loop over the innermost axis
             unsafe {
                 let ptr = self.parts.uget_ptr(&index);
                 for i in 0..inner_len {
@@ -747,9 +781,40 @@ where
         FoldWhile::Continue(acc)
     }
 
+    // Non-contiguous but preference for F - unroll over Axis(0)
+    fn apply_core_strided_f<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+    where
+        F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
+        P: ZippableTuple<Dim = D>,
+    {
+        let unroll_axis = 0;
+        let inner_len = self.dimension[unroll_axis];
+        self.dimension[unroll_axis] = 1;
+        let index_ = self.dimension.first_index();
+        let inner_strides = self.parts.stride_of(unroll_axis);
+        // Loop unrolled over closest axis
+        if let Some(mut index) = index_ {
+            loop {
+                unsafe {
+                    let ptr = self.parts.uget_ptr(&index);
+                    for i in 0..inner_len {
+                        let p = ptr.stride_offset(inner_strides, i);
+                        acc = fold_while!(function(acc, self.parts.as_ref(p)));
+                    }
+                }
+
+                if !self.dimension.next_for_f(&mut index) {
+                    break;
+                }
+            }
+        }
+        self.dimension[unroll_axis] = inner_len;
+        FoldWhile::Continue(acc)
+    }
+
     pub(crate) fn uninitalized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D>
     {
-        let is_f = !self.layout.is(CORDER) && self.layout.is(FORDER);
+        let is_f = self.prefer_f();
         Array::maybe_uninit(self.dimension.clone().set_f(is_f))
     }
 }
@@ -995,8 +1060,9 @@ macro_rules! map_impl {
                 let ($($p,)*) = self.parts;
                 Zip {
                     parts: ($($p,)* part, ),
-                    layout: self.layout.and(part_layout),
+                    layout: self.layout.intersect(part_layout),
                     dimension: self.dimension,
+                    layout_tendency: self.layout_tendency + part_layout.tendency(),
                 }
             }
 
@@ -1052,11 +1118,13 @@ macro_rules! map_impl {
                     dimension: d1,
                     layout: self.layout,
                     parts: p1,
+                    layout_tendency: self.layout_tendency,
                 },
                 Zip {
                     dimension: d2,
                     layout: self.layout,
                     parts: p2,
+                    layout_tendency: self.layout_tendency,
                 })
             }
         }
