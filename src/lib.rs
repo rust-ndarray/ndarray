@@ -11,7 +11,6 @@
     clippy::many_single_char_names,
     clippy::deref_addrof,
     clippy::unreadable_literal,
-    clippy::many_single_char_names
 )]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
