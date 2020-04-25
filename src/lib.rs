@@ -53,8 +53,9 @@
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
-//!   + The higher order functions like ``.map()``, ``.map_inplace()``,
-//!     ``.zip_mut_with()``, ``Zip`` and ``azip!()`` are the most efficient ways
+//!   + The higher order functions like [`.map()`](ArrayBase::map),
+//!     [`.map_inplace()`](ArrayBase::map_inplace), [`.zip_mut_with()`](ArrayBase::zip_mut_with),
+//!     [`Zip`] and [`azip!()`](azip) are the most efficient ways
 //!     to perform single traversal and lock step traversal respectively.
 //!   + Performance of an operation depends on the memory layout of the array
 //!     or array view. Especially if it's a binary operation, which
@@ -300,9 +301,10 @@ pub type Ixs = isize;
 /// Please see the documentation for the respective array view for an overview
 /// of methods specific to array views: [`ArrayView`], [`ArrayViewMut`].
 ///
-/// A view is created from an array using `.view()`, `.view_mut()`, using
-/// slicing (`.slice()`, `.slice_mut()`) or from one of the many iterators
-/// that yield array views.
+/// A view is created from an array using [`.view()`](ArrayBase::view),
+/// [`.view_mut()`](ArrayBase::view_mut), using
+/// slicing ([`.slice()`](ArrayBase::slice), [`.slice_mut()`](ArrayBase::slice_mut)) or from one of
+/// the many iterators that yield array views.
 ///
 /// You can also create an array view from a regular slice of data not
 /// allocated with `Array` — see array view methods or their `From` impls.
