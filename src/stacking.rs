@@ -86,8 +86,6 @@ where
 /// ***Panics*** if the `stack` function would return an error.
 ///
 /// ```
-/// extern crate ndarray;
-///
 /// use ndarray::{arr2, stack, Axis};
 ///
 /// # fn main() {
