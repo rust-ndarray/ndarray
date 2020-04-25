@@ -10,11 +10,11 @@
 //! The following types implement parallel iterators, accessed using these
 //! methods:
 //!
-//! - [`Array`], [`ArcArray`]: `.par_iter()` and `.par_iter_mut()`
-//! - [`ArrayView`](ArrayView): `.into_par_iter()`
-//! - [`ArrayViewMut`](ArrayViewMut): `.into_par_iter()`
-//! - [`AxisIter`](iter::AxisIter), [`AxisIterMut`](iter::AxisIterMut): `.into_par_iter()`
-//! - [`AxisChunksIter`](iter::AxisChunksIter), [`AxisChunksIterMut`](iter::AxisChunksIterMut): `.into_par_iter()`
+//! - [`Array`], [`ArcArray`] `.par_iter()` and `.par_iter_mut()`
+//! - [`ArrayView`] `.into_par_iter()`
+//! - [`ArrayViewMut`] `.into_par_iter()`
+//! - [`AxisIter`], [`AxisIterMut`] `.into_par_iter()`
+//! - [`AxisChunksIter`], [`AxisChunksIterMut`] `.into_par_iter()`
 //! - [`Zip`] `.into_par_iter()`
 //!
 //! The following other parallelized methods exist:
@@ -120,6 +120,23 @@
 //!         });
 //! }
 //! ```
+
+#[allow(unused_imports)] // used by rustdoc links
+use crate::{
+    ArrayBase,
+    Array,
+    ArcArray,
+    ArrayView,
+    ArrayViewMut,
+    Zip,
+};
+#[allow(unused_imports)] // used by rustdoc links
+use crate::iter::{
+    AxisIter,
+    AxisIterMut,
+    AxisChunksIter,
+    AxisChunksIterMut,
+};
 
 /// Into- traits for creating parallelized iterators and/or using [`par_azip!`]
 pub mod prelude {
