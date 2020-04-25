@@ -34,8 +34,6 @@
 /// ## Examples
 ///
 /// ```rust
-/// extern crate ndarray;
-///
 /// use ndarray::Array2;
 /// use ndarray::parallel::par_azip;
 ///

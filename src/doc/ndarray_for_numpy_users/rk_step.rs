@@ -71,8 +71,6 @@
 //! A direct translation to `ndarray` looks like this:
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::prelude::*;
 //!
 //! fn rk_step<F>(
@@ -129,8 +127,6 @@
 //!   some places, but that's not demonstrated in the example below.
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::prelude::*;
 //!
 //! fn rk_step<F>(

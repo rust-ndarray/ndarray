@@ -49,8 +49,6 @@
 //! This is a direct translation to `ndarray`:
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::prelude::*;
 //!
 //! fn main() {
@@ -96,8 +94,6 @@
 //! this:
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::prelude::*;
 //!
 //! fn main() {

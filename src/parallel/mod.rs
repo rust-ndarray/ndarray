@@ -39,8 +39,6 @@
 //! Compute the exponential of each element in an array, parallelized.
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::Array2;
 //! use ndarray::parallel::prelude::*;
 //!
@@ -61,8 +59,6 @@
 //! Use the parallel `.axis_iter()` to compute the sum of each row.
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::Array;
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
@@ -84,8 +80,6 @@
 //! Use the parallel `.axis_chunks_iter()` to process your data in chunks.
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::Array;
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
@@ -107,8 +101,6 @@
 //! Use zip for lock step function application across several arrays
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::Array3;
 //! use ndarray::Zip;
 //!

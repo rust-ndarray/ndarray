@@ -496,8 +496,6 @@ impl_slicenextdim_larger!((), Slice);
 /// # Example
 ///
 /// ```
-/// extern crate ndarray;
-///
 /// use ndarray::{s, Array2, ArrayView2};
 ///
 /// fn laplacian(v: &ArrayView2<f32>) -> Array2<f32> {
@@ -528,8 +526,6 @@ impl_slicenextdim_larger!((), Slice);
 /// For example,
 ///
 /// ```
-/// # extern crate ndarray;
-/// #
 /// # use ndarray::prelude::*;
 /// #
 /// # fn main() {

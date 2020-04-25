@@ -38,8 +38,6 @@
 /// ## Examples
 ///
 /// ```rust
-/// extern crate ndarray;
-///
 /// use ndarray::{azip, Array1, Array2, Axis};
 ///
 /// type M = Array2<f32>;

@@ -51,8 +51,6 @@
 //! <td>
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::prelude::*;
 //!
 //! # fn main() {

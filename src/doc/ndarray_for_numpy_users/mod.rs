@@ -177,8 +177,6 @@
 //! and `ndarray` like this:
 //!
 //! ```
-//! extern crate ndarray;
-//!
 //! use ndarray::prelude::*;
 //! #
 //! # fn main() {}
