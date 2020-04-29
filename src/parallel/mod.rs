@@ -28,9 +28,12 @@
 //! Note that you can use the parallel iterator for [Zip] to access all other
 //! rayon parallel iterator methods.
 //!
-//! Only the axis iterators are indexed parallel iterators, the rest are all
-//! “unindexed”. Use ndarray’s [Zip] for lock step parallel iteration of
-//! multiple arrays or producers at a time.
+//! Only the axis iterators and one-dimensional array views make indexed parallel iterators, the
+//! rest are all “unindexed” in rayon terms.
+//!
+//! Ndarray’s [Zip] is specially made to handle lock step parallel iteration of multiple arrays or
+//! producers at a time, and it can handle multidimensional inputs efficiently, even with
+//! multidimensional indexing. [Zip] is always recommended over rayon `.zip()` for performance.
 //!
 //! # Examples
 //!

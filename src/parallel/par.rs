@@ -1,4 +1,5 @@
 use rayon::iter::plumbing::bridge;
+use rayon::iter::plumbing::bridge_producer_consumer;
 use rayon::iter::plumbing::bridge_unindexed;
 use rayon::iter::plumbing::Folder;
 use rayon::iter::plumbing::Producer;
@@ -143,13 +144,23 @@ macro_rules! par_iter_view_wrapper {
         fn drive_unindexed<C>(self, consumer: C) -> C::Result
             where C: UnindexedConsumer<Self::Item>
         {
-            bridge_unindexed(ParallelProducer(self.iter), consumer)
+            // Self is an IndexedParallelIterator when dimension is Ix1: use the indexed driver in that
+            // case, otherwise the general `bridge_unindexed`
+            if let Some(1) = D::NDIM {
+                let iter = self.iter.into_dimensionality::<Ix1>().unwrap();
+                bridge_producer_consumer(iter.len(), ParallelProducer(iter), consumer)
+            } else {
+                bridge_unindexed(ParallelProducer(self.iter), consumer)
+            }
         }
 
         fn opt_len(&self) -> Option<usize> {
-            // Even if self is also an IndexedParallelIterator in the Ix1 case, we can't return a
-            // known length here while we use `bridge_unindexed` in drive_unindexed,
-            None
+            // We can return a known length here if we use an indexed bridge function in in drive_unindexed,
+            if let Some(1) = D::NDIM {
+                Some(self.iter.len())
+            } else {
+                None
+            }
         }
     }
 
@@ -158,6 +169,7 @@ macro_rules! par_iter_view_wrapper {
               A: $($thread_bounds)*,
     {
         type Item = <$view_name<'a, A, D> as IntoIterator>::Item;
+
         fn split(self) -> (Self, Option<Self>) {
             if self.0.len() <= 1 {
                 return (self, None)
@@ -218,6 +230,7 @@ macro_rules! par_iter_view_wrapper {
     {
         type Item = <$view_name<'a, A, D> as IntoIterator>::Item;
         type IntoIter = <$view_name<'a, A, D> as IntoIterator>::IntoIter;
+
         fn into_iter(self) -> Self::IntoIter {
             self.0.into_iter()
         }
