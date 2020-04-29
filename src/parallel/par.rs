@@ -13,7 +13,7 @@ use crate::iter::AxisChunksIter;
 use crate::iter::AxisChunksIterMut;
 use crate::iter::AxisIter;
 use crate::iter::AxisIterMut;
-use crate::Dimension;
+use crate::{Dimension, Ix1, Axis};
 use crate::{ArrayView, ArrayViewMut};
 
 /// Parallel iterator wrapper.
@@ -147,6 +147,8 @@ macro_rules! par_iter_view_wrapper {
         }
 
         fn opt_len(&self) -> Option<usize> {
+            // Even if self is also an IndexedParallelIterator in the Ix1 case, we can't return a
+            // known length here while we use `bridge_unindexed` in drive_unindexed,
             None
         }
     }
@@ -171,6 +173,42 @@ macro_rules! par_iter_view_wrapper {
             where F: Folder<Self::Item>,
         {
             self.into_iter().fold(folder, move |f, elt| f.consume(elt))
+        }
+    }
+
+    impl<'a, A> Producer for ParallelProducer<$view_name<'a, A, Ix1>>
+        where A: $($thread_bounds)*,
+    {
+        type Item = <$view_name<'a, A, Ix1> as IntoIterator>::Item;
+        type IntoIter = <$view_name<'a, A, Ix1> as IntoIterator>::IntoIter;
+
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.into_iter()
+        }
+
+        fn split_at(self, index: usize) -> (Self, Self) {
+            let (a, b) = self.0.split_at(Axis(0), index);
+            (ParallelProducer(a), ParallelProducer(b))
+        }
+    }
+
+    impl<'a, A> IndexedParallelIterator for Parallel<$view_name<'a, A, Ix1>>
+        where A: $($thread_bounds)*,
+    {
+        fn with_producer<Cb>(self, callback: Cb) -> Cb::Output
+            where Cb: ProducerCallback<Self::Item>
+        {
+            callback.callback(ParallelProducer(self.iter))
+        }
+
+        fn len(&self) -> usize {
+            self.iter.len()
+        }
+
+        fn drive<C>(self, consumer: C) -> C::Result
+            where C: Consumer<Self::Item>
+        {
+            bridge(self, consumer)
         }
     }
 

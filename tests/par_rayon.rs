@@ -2,6 +2,8 @@
 
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
+use std::iter::FromIterator;
+use std::iter::repeat;
 
 const M: usize = 1024 * 10;
 const N: usize = 100;
@@ -85,4 +87,22 @@ fn test_axis_chunks_iter_mut() {
         .for_each(|mut v| v.mapv_inplace(|x| x.exp()));
     println!("{:?}", a.slice(s![..10, ..5]));
     assert_abs_diff_eq!(a, b, epsilon = 0.001);
+}
+
+#[test]
+fn view_1d_indexeded() {
+    // test that .zip() can be used on 1D ArrayViews.
+    let mut a = Array::from_iter(0..((M * N) as i64)).into_shape((M, N)).unwrap();
+
+    // For columns A0 and A1, compute A0 = A1 - A0  (== 1)
+    let (a0, a1) = a.multi_slice_mut((s![.., 0], s![.., 1]));
+    let a1_items = a1.view().into_par_iter().cloned().collect::<Vec<_>>();
+
+    a0.into_par_iter()
+        .zip(a1.view())
+        .for_each(|(x, &y)| *x = y - *x);
+
+    assert_eq!(a.column(0), Array::from_iter(repeat(1).take(M)));
+
+    assert_eq!(a.column(1), Array::from(a1_items));
 }
