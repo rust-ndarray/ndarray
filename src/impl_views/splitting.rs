@@ -51,7 +51,7 @@ where
     /// ```rust
     /// # use ndarray::prelude::*;
     /// # let a = aview2(&[[0; 4]; 3]);
-    /// let (v1, v2) = a.split_at(Axis(0), 1);
+    /// let (v1, v2) = a.split_at(Axis(0), 2);
     /// ```
     /// ```text
     ///         ┌─────┬─────┬─────┬─────┐       0  ↓ indices
