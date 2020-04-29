@@ -540,6 +540,14 @@ impl Dimension for Dim<[Ix; 1]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
+
+    fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self> {
+        if 1 == d.ndim() {
+            Some(Ix1(d[0]))
+        } else {
+            None
+        }
+    }
     private_impl! {}
 }
 
