@@ -107,6 +107,78 @@ fn test_zip_assign_into_cell() {
     assert_abs_diff_eq!(a2, &b + &c, epsilon = 1e-6);
 }
 
+#[test]
+fn test_zip_collect_drop() {
+    use std::cell::RefCell;
+    use std::panic;
+
+    struct Recorddrop<'a>((usize, usize), &'a RefCell<Vec<(usize, usize)>>);
+
+    impl<'a> Drop for Recorddrop<'a> {
+        fn drop(&mut self) {
+            self.1.borrow_mut().push(self.0);
+        }
+    }
+
+    #[derive(Copy, Clone)]
+    enum Config {
+        CC,
+        CF,
+        FF,
+    }
+
+    impl Config {
+        fn a_is_f(self) -> bool {
+            match self {
+                Config::CC | Config::CF => false,
+                _ => true,
+            }
+        }
+        fn b_is_f(self) -> bool {
+            match self {
+                Config::CC => false,
+                _ => true,
+            }
+        }
+    }
+
+    let test_collect_panic = |config: Config, will_panic: bool, slice: bool| {
+        let mut inserts = RefCell::new(Vec::new());
+        let mut drops = RefCell::new(Vec::new());
+
+        let mut a = Array::from_shape_fn((5, 10).set_f(config.a_is_f()), |idx| idx);
+        let mut b = Array::from_shape_fn((5, 10).set_f(config.b_is_f()), |_| 0);
+        if slice {
+            a = a.slice_move(s![.., ..-1]);
+            b = b.slice_move(s![.., ..-1]);
+        }
+
+        let _result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+            Zip::from(&a).and(&b).apply_collect(|&elt, _| {
+                if elt.0 > 3 && will_panic {
+                    panic!();
+                }
+                inserts.borrow_mut().push(elt);
+                Recorddrop(elt, &drops)
+            });
+        }));
+
+        println!("{:?}", inserts.get_mut());
+        println!("{:?}", drops.get_mut());
+
+        assert_eq!(inserts.get_mut().len(), drops.get_mut().len(), "Incorrect number of drops");
+        assert_eq!(inserts.get_mut(), drops.get_mut(), "Incorrect order of drops");
+    };
+
+    for &should_panic in &[true, false] {
+        for &should_slice in &[false, true] {
+            test_collect_panic(Config::CC, should_panic, should_slice);
+            test_collect_panic(Config::CF, should_panic, should_slice);
+            test_collect_panic(Config::FF, should_panic, should_slice);
+        }
+    }
+}
+
 
 #[test]
 fn test_azip_syntax_trailing_comma() {

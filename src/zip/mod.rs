@@ -8,6 +8,7 @@
 
 #[macro_use]
 mod zipmacro;
+mod partial_array;
 
 use std::mem::MaybeUninit;
 
@@ -19,6 +20,8 @@ use crate::NdIndex;
 
 use crate::indexes::{indices, Indices};
 use crate::layout::{CORDER, FORDER};
+
+use partial_array::PartialArray;
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -195,6 +198,7 @@ pub trait NdProducer {
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self)
     where
         Self: Sized;
+
     private_decl! {}
 }
 
@@ -1070,16 +1074,24 @@ macro_rules! map_impl {
             /// inputs.
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            ///
-            /// Restricted to functions that produce copyable results for technical reasons; other
-            /// cases are not yet implemented.
             pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
-                where R: Copy,
             {
-                // To support non-Copy elements, implementation of dropping partial array (on
-                // panic) is needed
+                // Make uninit result
                 let mut output = self.uninitalized_for_current_layout::<R>();
-                self.apply_assign_into(&mut output, f);
+                if !std::mem::needs_drop::<R>() {
+                    // For elements with no drop glue, just overwrite into the array
+                    self.apply_assign_into(&mut output, f);
+                } else {
+                    // For generic elements, use a proxy that counts the number of filled elements,
+                    // and can drop the right number of elements on unwinding
+                    unsafe {
+                        PartialArray::scope(output.view_mut(), move |partial| {
+                            debug_assert_eq!(partial.layout().tendency() >= 0, self.layout_tendency >= 0);
+                            self.apply_assign_into(partial, f);
+                        });
+                    }
+                }
+
                 unsafe {
                     output.assume_init()
                 }
