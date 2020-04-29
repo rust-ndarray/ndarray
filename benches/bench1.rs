@@ -286,6 +286,38 @@ fn add_2d_alloc_zip_collect(bench: &mut test::Bencher) {
     });
 }
 
+#[bench]
+fn vec_string_collect(bench: &mut test::Bencher) {
+    let v = vec![""; 10240];
+    bench.iter(|| {
+        v.iter().map(|s| s.to_owned()).collect::<Vec<_>>()
+    });
+}
+
+#[bench]
+fn array_string_collect(bench: &mut test::Bencher) {
+    let v = Array::from(vec![""; 10240]);
+    bench.iter(|| {
+        Zip::from(&v).apply_collect(|s| s.to_owned())
+    });
+}
+
+#[bench]
+fn vec_f64_collect(bench: &mut test::Bencher) {
+    let v = vec![1.; 10240];
+    bench.iter(|| {
+        v.iter().map(|s| s + 1.).collect::<Vec<_>>()
+    });
+}
+
+#[bench]
+fn array_f64_collect(bench: &mut test::Bencher) {
+    let v = Array::from(vec![1.; 10240]);
+    bench.iter(|| {
+        Zip::from(&v).apply_collect(|s| s + 1.)
+    });
+}
+
 
 #[bench]
 fn add_2d_assign_ops(bench: &mut test::Bencher) {
