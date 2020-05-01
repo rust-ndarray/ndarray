@@ -170,7 +170,14 @@ macro_rules! par_iter_view_wrapper {
         fn fold_with<F>(self, folder: F) -> F
             where F: Folder<Self::Item>,
         {
-            self.into_iter().fold(folder, move |f, elt| f.consume(elt))
+            Zip::from(self.0).fold_while(folder, |mut folder, elt| {
+                folder = folder.consume(elt);
+                if folder.full() {
+                    FoldWhile::Done(folder)
+                } else {
+                    FoldWhile::Continue(folder)
+                }
+            }).into_inner()
         }
     }
 
