@@ -97,6 +97,28 @@ fn test_zip_collect() {
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
     }
+
+}
+
+#[test]
+#[cfg(feature = "approx")]
+fn test_zip_small_collect() {
+    use approx::assert_abs_diff_eq;
+
+    for m in 0..32 {
+        for n in 0..16 {
+            let dim = (m, n);
+            let b = Array::from_shape_fn(dim, |(i, j)| 1. / (i + 2 * j + 1) as f32);
+            let c = Array::from_shape_fn(dim, |(i, j)| f32::ln((1 + i + j) as f32));
+
+            {
+                let a = Zip::from(&b).and(&c).par_apply_collect(|x, y| x + y);
+
+                assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
+                assert_eq!(a.strides(), b.strides());
+            }
+        }
+    }
 }
 
 #[test]
