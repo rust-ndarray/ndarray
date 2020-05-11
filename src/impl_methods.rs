@@ -1293,7 +1293,11 @@ where
         is_standard_layout(&self.dim, &self.strides)
     }
 
-    fn is_contiguous(&self) -> bool {
+    /// Return true if the array is known to be contiguous.
+    ///
+    /// Will detect c- and f-contig arrays correctly, but otherwise
+    /// There are some false negatives.
+    pub(crate) fn is_contiguous(&self) -> bool {
         D::is_contiguous(&self.dim, &self.strides)
     }
 
