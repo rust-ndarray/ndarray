@@ -916,6 +916,11 @@ zipt_impl! {
     [A B C D E F][ a b c d e f],
 }
 
+macro_rules! last_of {
+    ($q:ty) => { $q };
+    ($p:ty, $($q:ty),+) => { last_of!($($q),+) };
+}
+
 macro_rules! map_impl {
     ($([$notlast:ident $($p:ident)*],)+) => {
         $(
@@ -1010,6 +1015,14 @@ macro_rules! map_impl {
                         FoldWhile::Done(())
                     }
                 }).is_done()
+            }
+
+            #[cfg(feature = "rayon")]
+            #[allow(dead_code)] // unused for the first of the Zip arities
+            /// Return a reference to the last producer
+            pub(crate) fn last_producer(&self) -> &last_of!($($p),*) {
+                let (.., ref last) = &self.parts;
+                last
             }
 
             expand_if!(@bool [$notlast]
