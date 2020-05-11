@@ -179,6 +179,7 @@ mod numeric_util;
 mod shape_builder;
 #[macro_use]
 mod slice;
+mod split_at;
 mod stacking;
 #[macro_use]
 mod zip;

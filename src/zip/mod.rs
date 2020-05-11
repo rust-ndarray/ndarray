@@ -20,6 +20,7 @@ use crate::NdIndex;
 
 use crate::indexes::{indices, Indices};
 use crate::layout::{CORDER, FORDER};
+use crate::split_at::{SplitPreference, SplitAt};
 
 use partial_array::PartialArray;
 
@@ -90,25 +91,6 @@ where
         unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
     }
     private_impl! {}
-}
-
-pub trait Splittable: Sized {
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self);
-}
-
-impl<D> Splittable for D
-where
-    D: Dimension,
-{
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
-        let mut d1 = self;
-        let mut d2 = d1.clone();
-        let i = axis.index();
-        let len = d1[i];
-        d1[i] = index;
-        d2[i] = len - index;
-        (d1, d2)
-    }
 }
 
 /// Argument conversion into a producer.
@@ -1121,9 +1103,31 @@ macro_rules! map_impl {
             pub fn split(self) -> (Self, Self) {
                 debug_assert_ne!(self.size(), 0, "Attempt to split empty zip");
                 debug_assert_ne!(self.size(), 1, "Attempt to split zip with 1 elem");
+                SplitPreference::split(self)
+            }
+        }
+
+        impl<D, $($p),*> SplitPreference for Zip<($($p,)*), D>
+            where D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
+        {
+            fn can_split(&self) -> bool { self.size() > 1 }
+
+            fn size(&self) -> usize { self.size() }
+
+            fn split_preference(&self) -> (Axis, usize) {
                 // Always split in a way that preserves layout (if any)
                 let axis = self.max_stride_axis();
                 let index = self.len_of(axis) / 2;
+                (axis, index)
+            }
+        }
+
+        impl<D, $($p),*> SplitAt for Zip<($($p,)*), D>
+            where D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
+        {
+            fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
                 let (p1, p2) = self.parts.split_at(axis, index);
                 let (d1, d2) = self.dimension.split_at(axis, index);
                 (Zip {
@@ -1139,7 +1143,9 @@ macro_rules! map_impl {
                     layout_tendency: self.layout_tendency,
                 })
             }
+
         }
+
         )+
     }
 }
