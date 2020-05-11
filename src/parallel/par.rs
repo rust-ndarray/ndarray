@@ -15,6 +15,7 @@ use crate::iter::AxisIter;
 use crate::iter::AxisIterMut;
 use crate::Dimension;
 use crate::{ArrayView, ArrayViewMut};
+use crate::split_at::SplitPreference;
 
 /// Parallel iterator wrapper.
 #[derive(Copy, Clone, Debug)]
@@ -250,7 +251,7 @@ macro_rules! zip_impl {
             type Item = ($($p::Item ,)*);
 
             fn split(self) -> (Self, Option<Self>) {
-                if self.0.size() <= 1 {
+                if !self.0.can_split() {
                     return (self, None)
                 }
                 let (a, b) = self.0.split();
@@ -281,4 +282,54 @@ zip_impl! {
     [P1 P2 P3 P4],
     [P1 P2 P3 P4 P5],
     [P1 P2 P3 P4 P5 P6],
+}
+
+/// A parallel iterator (unindexed) that produces the splits of the array
+/// or producer `P`.
+pub(crate) struct ParallelSplits<P> {
+    pub(crate) iter: P,
+    pub(crate) min_size: usize,
+}
+
+impl<P> ParallelIterator for ParallelSplits<P>
+    where P: SplitPreference + Send,
+{
+    type Item = P;
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+        where C: UnindexedConsumer<Self::Item>
+    {
+        bridge_unindexed(self, consumer)
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        None
+    }
+}
+
+impl<P> UnindexedProducer for ParallelSplits<P>
+    where P: SplitPreference + Send,
+{
+    type Item = P;
+
+    fn split(self) -> (Self, Option<Self>) {
+        if self.iter.size() <= self.min_size || !self.iter.can_split() {
+            return (self, None)
+        }
+        let (a, b) = self.iter.split();
+        (ParallelSplits {
+            iter: a,
+            min_size: self.min_size,
+        },
+        Some(ParallelSplits {
+            iter: b,
+            min_size: self.min_size,
+        }))
+    }
+
+    fn fold_with<Fold>(self, folder: Fold) -> Fold
+        where Fold: Folder<Self::Item>,
+    {
+        folder.consume(self.iter)
+    }
 }
