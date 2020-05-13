@@ -87,7 +87,7 @@ where
     /// ```
     /// # use ndarray::{Array2,array};
     /// let mut array:Array2<f32> = array![[1f32,2f32],[3f32,4f32]];
-    /// array.col_mut(0)[1] = 5f32;
+    /// array.column_mut(0)[1] = 5f32;
     /// assert_eq!(array,array![[1f32,2f32],[5f32,4f32]]);
     /// ```
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
