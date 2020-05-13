@@ -35,7 +35,7 @@ where
     /// **Panics** if `index` is out of bounds.
     ///
     /// ```
-    /// # use ndarray::{Array2,arr2};
+    /// # use ndarray::{Array2,array};
     /// let mut array:Array2<f32> = array![[1f32,2f32],[3f32,4f32]];
     /// array.row_mut(0)[1] = 5f32;
     /// assert_eq!(array,array![[1f32,5f32],[3f32,4f32]]);
@@ -119,13 +119,13 @@ where
     /// # Examples
     /// Sqaure:
     /// ```
-    /// # use ndarray::{Array1,Array2,array};
+    /// # use ndarray::{Array2,array};
     /// let array:Array2<f32> = array![[1f32,2f32],[3f32,4f32]];
     /// assert!(array.is_square());
     /// ```
     /// Not sqaure:
     /// ```
-    /// # use ndarray::{Array1,Array2,array};
+    /// # use ndarray::{Array2,array};
     /// let array:Array2<f32> = array![[1f32,2f32,5f32],[3f32,4f32,6f32]];
     /// assert!(!array.is_square());
     /// ```
