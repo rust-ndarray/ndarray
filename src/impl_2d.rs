@@ -20,8 +20,8 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1.,2.],[3.,4.]];
-    /// assert_eq!(array.row(0),array![1.,2.]);
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert_eq!(array.row(0), array![1., 2.]);
     /// ```
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
     where
@@ -36,9 +36,9 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let mut array = array![[1.,2.],[3.,4.]];
+    /// let mut array = array![[1., 2.], [3., 4.]];
     /// array.row_mut(0)[1] = 5.;
-    /// assert_eq!(array,array![[1.,5.],[3.,4.]]);
+    /// assert_eq!(array, array![[1., 5.], [3., 4.]]);
     /// ```
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
@@ -51,8 +51,8 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1.,2.],[3.,4.]];
-    /// assert_eq!(array.nrows(),2usize);
+    /// let array = array![[1., 2.],[3., 4.]];
+    /// assert_eq!(array.nrows(), 2usize);
     /// ```
     pub fn nrows(&self) -> usize {
         self.len_of(Axis(0))
@@ -70,8 +70,8 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1.,2.],[3.,4.]];
-    /// assert_eq!(array.column(0),array![1.,3.]);
+    /// let array = array![[1., 2.],[3., 4.]];
+    /// assert_eq!(array.column(0), array![1., 3.]);
     /// ```
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
     where
@@ -86,9 +86,9 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let mut array = array![[1.,2.],[3.,4.]];
+    /// let mut array = array![[1., 2.],[3., 4.]];
     /// array.column_mut(0)[1] = 5.;
-    /// assert_eq!(array,array![[1.,2.],[5.,4.]]);
+    /// assert_eq!(array, array![[1., 2.], [5., 4.]]);
     /// ```
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
@@ -101,8 +101,8 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1.,2.],[3.,4.]];
-    /// assert_eq!(array.ncols(),2usize);
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert_eq!(array.ncols(), 2usize);
     /// ```
     pub fn ncols(&self) -> usize {
         self.len_of(Axis(1))
@@ -120,13 +120,13 @@ where
     /// Sqaure:
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1.,2.],[3.,4.]];
+    /// let array = array![[1., 2.], [3., 4.]];
     /// assert!(array.is_square());
     /// ```
     /// Not sqaure:
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1.,2.,5.],[3.,4.,6.]];
+    /// let array = array![[1., 2., 5.], [3., 4., 6.]];
     /// assert!(!array.is_square());
     /// ```
     pub fn is_square(&self) -> bool {
