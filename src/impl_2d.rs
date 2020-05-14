@@ -51,7 +51,7 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1., 2.],[3., 4.]];
+    /// let array = array![[1., 2.], [3., 4.]];
     /// assert_eq!(array.nrows(), 2usize);
     /// ```
     pub fn nrows(&self) -> usize {
@@ -70,7 +70,7 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let array = array![[1., 2.],[3., 4.]];
+    /// let array = array![[1., 2.], [3., 4.]];
     /// assert_eq!(array.column(0), array![1., 3.]);
     /// ```
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
@@ -86,7 +86,7 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// let mut array = array![[1., 2.],[3., 4.]];
+    /// let mut array = array![[1., 2.], [3., 4.]];
     /// array.column_mut(0)[1] = 5.;
     /// assert_eq!(array, array![[1., 2.], [5., 4.]]);
     /// ```
