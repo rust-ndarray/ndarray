@@ -781,7 +781,6 @@ where
 
             index_ = self.dimension.next_for(index);
         }
-        self.dimension[unroll_axis] = inner_len;
         FoldWhile::Continue(acc)
     }
 
@@ -812,7 +811,6 @@ where
                 }
             }
         }
-        self.dimension[unroll_axis] = inner_len;
         FoldWhile::Continue(acc)
     }
 
