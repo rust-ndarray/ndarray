@@ -142,6 +142,14 @@ pub fn max_abs_offset_check_overflow<A, D>(dim: &D, strides: &D) -> Result<usize
 where
     D: Dimension,
 {
+    max_abs_offset_check_overflow_impl(mem::size_of::<A>(), dim, strides)
+}
+
+fn max_abs_offset_check_overflow_impl<D>(elem_size: usize, dim: &D, strides: &D)
+    -> Result<usize, ShapeError>
+where
+    D: Dimension,
+{
     // Condition 1.
     if dim.ndim() != strides.ndim() {
         return Err(from_kind(ErrorKind::IncompatibleLayout));
@@ -168,7 +176,7 @@ where
     // Determine absolute difference in units of bytes between least and
     // greatest address accessible by moving along all axes
     let max_offset_bytes = max_offset
-        .checked_mul(mem::size_of::<A>())
+        .checked_mul(elem_size)
         .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
     // Condition 2b.
     if max_offset_bytes > isize::MAX as usize {
@@ -216,13 +224,21 @@ pub fn can_index_slice<A, D: Dimension>(
 ) -> Result<(), ShapeError> {
     // Check conditions 1 and 2 and calculate `max_offset`.
     let max_offset = max_abs_offset_check_overflow::<A, _>(dim, strides)?;
+    can_index_slice_impl(max_offset, data.len(), dim, strides)
+}
 
+fn can_index_slice_impl<D: Dimension>(
+    max_offset: usize,
+    data_len: usize,
+    dim: &D,
+    strides: &D,
+) -> Result<(), ShapeError> {
     // Check condition 4.
     let is_empty = dim.slice().iter().any(|&d| d == 0);
-    if is_empty && max_offset > data.len() {
+    if is_empty && max_offset > data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
-    if !is_empty && max_offset >= data.len() {
+    if !is_empty && max_offset >= data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
 

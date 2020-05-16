@@ -723,7 +723,7 @@ where
         }
     }
 
-    fn apply_core_contiguous<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+    fn apply_core_contiguous<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -732,14 +732,34 @@ where
         let size = self.dimension.size();
         let ptrs = self.parts.as_ptr();
         let inner_strides = self.parts.contiguous_stride();
-        for i in 0..size {
-            unsafe {
-                let ptr_i = ptrs.stride_offset(inner_strides, i);
-                acc = fold_while![function(acc, self.parts.as_ref(ptr_i))];
-            }
+        unsafe {
+            self.inner(acc, ptrs, inner_strides, size, &mut function)
+        }
+    }
+
+    /// The innermost loop of the Zip apply methods
+    ///
+    /// Run the fold while operation on a stretch of elements with constant strides
+    ///
+    /// `ptr`: base pointer for the first element in this stretch
+    /// `strides`: strides for the elements in this stretch
+    /// `len`: number of elements
+    /// `function`: closure
+    unsafe fn inner<F, Acc>(&self, mut acc: Acc, ptr: P::Ptr, strides: P::Stride,
+                            len: usize, function: &mut F) -> FoldWhile<Acc>
+    where
+        F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
+        P: ZippableTuple
+    {
+        let mut i = 0;
+        while i < len {
+            let p = ptr.stride_offset(strides, i);
+            acc = fold_while!(function(acc, self.parts.as_ref(p)));
+            i += 1;
         }
         FoldWhile::Continue(acc)
     }
+
 
     fn apply_core_strided<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
     where
@@ -773,15 +793,11 @@ where
         while let Some(index) = index_ {
             unsafe {
                 let ptr = self.parts.uget_ptr(&index);
-                for i in 0..inner_len {
-                    let p = ptr.stride_offset(inner_strides, i);
-                    acc = fold_while!(function(acc, self.parts.as_ref(p)));
-                }
+                acc = fold_while![self.inner(acc, ptr, inner_strides, inner_len, &mut function)];
             }
 
             index_ = self.dimension.next_for(index);
         }
-        self.dimension[unroll_axis] = inner_len;
         FoldWhile::Continue(acc)
     }
 
@@ -801,10 +817,7 @@ where
             loop {
                 unsafe {
                     let ptr = self.parts.uget_ptr(&index);
-                    for i in 0..inner_len {
-                        let p = ptr.stride_offset(inner_strides, i);
-                        acc = fold_while!(function(acc, self.parts.as_ref(p)));
-                    }
+                    acc = fold_while![self.inner(acc, ptr, inner_strides, inner_len, &mut function)];
                 }
 
                 if !self.dimension.next_for_f(&mut index) {
@@ -812,7 +825,6 @@ where
                 }
             }
         }
-        self.dimension[unroll_axis] = inner_len;
         FoldWhile::Continue(acc)
     }
 

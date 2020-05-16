@@ -79,15 +79,18 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
         let ndim = self.dim.ndim();
         debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        while let Some(mut index) = self.index.clone() {
+        while let Some(mut index) = self.index {
             let stride = self.strides.last_elem() as isize;
             let elem_index = index.last_elem();
             let len = self.dim.last_elem();
             let offset = D::stride_offset(&index, &self.strides);
             unsafe {
                 let row_ptr = self.ptr.offset(offset);
-                for i in 0..(len - elem_index) {
+                let mut i = 0;
+                let i_end = len - elem_index;
+                while i < i_end {
                     accum = g(accum, row_ptr.offset(i as isize * stride));
+                    i += 1;
                 }
             }
             index.set_last_elem(len - 1);
