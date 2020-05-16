@@ -17,6 +17,12 @@ where
     /// Return an array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert_eq!(array.row(0), array![1., 2.]);
+    /// ```
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
     where
         S: Data,
@@ -27,6 +33,13 @@ where
     /// Return a mutable array view of row `index`.
     ///
     /// **Panics** if `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// let mut array = array![[1., 2.], [3., 4.]];
+    /// array.row_mut(0)[1] = 5.;
+    /// assert_eq!(array, array![[1., 5.], [3., 4.]]);
+    /// ```
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
@@ -35,6 +48,12 @@ where
     }
 
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert_eq!(array.nrows(), 2usize);
+    /// ```
     pub fn nrows(&self) -> usize {
         self.len_of(Axis(0))
     }
@@ -48,6 +67,12 @@ where
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert_eq!(array.column(0), array![1., 3.]);
+    /// ```
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
     where
         S: Data,
@@ -58,6 +83,13 @@ where
     /// Return a mutable array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// let mut array = array![[1., 2.], [3., 4.]];
+    /// array.column_mut(0)[1] = 5.;
+    /// assert_eq!(array, array![[1., 2.], [5., 4.]]);
+    /// ```
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
     where
         S: DataMut,
@@ -66,6 +98,12 @@ where
     }
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert_eq!(array.ncols(), 2usize);
+    /// ```
     pub fn ncols(&self) -> usize {
         self.len_of(Axis(1))
     }
@@ -77,6 +115,20 @@ where
     }
 
     /// Return true if the array is square, false otherwise.
+    ///
+    /// # Examples
+    /// Sqaure:
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert!(array.is_square());
+    /// ```
+    /// Not sqaure:
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2., 5.], [3., 4., 6.]];
+    /// assert!(!array.is_square());
+    /// ```
     pub fn is_square(&self) -> bool {
         self.nrows() == self.ncols()
     }
