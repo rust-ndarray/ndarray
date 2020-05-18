@@ -288,7 +288,7 @@ zip_impl! {
 /// or producer `P`.
 pub(crate) struct ParallelSplits<P> {
     pub(crate) iter: P,
-    pub(crate) min_size: usize,
+    pub(crate) max_splits: usize,
 }
 
 impl<P> ParallelIterator for ParallelSplits<P>
@@ -313,17 +313,17 @@ impl<P> UnindexedProducer for ParallelSplits<P>
     type Item = P;
 
     fn split(self) -> (Self, Option<Self>) {
-        if self.iter.size() <= self.min_size || !self.iter.can_split() {
+        if self.max_splits == 0 || !self.iter.can_split() {
             return (self, None)
         }
         let (a, b) = self.iter.split();
         (ParallelSplits {
             iter: a,
-            min_size: self.min_size,
+            max_splits: self.max_splits - 1,
         },
         Some(ParallelSplits {
             iter: b,
-            min_size: self.min_size,
+            max_splits: self.max_splits - 1,
         }))
     }
 

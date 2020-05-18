@@ -45,7 +45,7 @@ where
 
 // Zip
 
-const COLLECT_MAX_PARTS: usize = 256;
+const COLLECT_MAX_SPLITS: usize = 10;
 
 macro_rules! zip_impl {
     ($([$notlast:ident $($p:ident)*],)+) => {
@@ -92,7 +92,7 @@ macro_rules! zip_impl {
                     ParallelSplits {
                         iter: self.and(SendProducer::new(output.raw_view_mut().cast::<R>())),
                         // Keep it from splitting the Zip down too small
-                        min_size: total_len / COLLECT_MAX_PARTS,
+                        max_splits: COLLECT_MAX_SPLITS,
                     }
                 };
 

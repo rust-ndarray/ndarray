@@ -1126,8 +1126,6 @@ macro_rules! map_impl {
         {
             fn can_split(&self) -> bool { self.size() > 1 }
 
-            fn size(&self) -> usize { self.size() }
-
             fn split_preference(&self) -> (Axis, usize) {
                 // Always split in a way that preserves layout (if any)
                 let axis = self.max_stride_axis();

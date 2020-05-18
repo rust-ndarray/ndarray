@@ -8,7 +8,6 @@ pub(crate) trait SplitAt  {
 
 pub(crate) trait SplitPreference : SplitAt {
     fn can_split(&self) -> bool;
-    fn size(&self) -> usize;
     fn split_preference(&self) -> (Axis, usize);
     fn split(self) -> (Self, Self) where Self: Sized {
         let (axis, index) = self.split_preference();
