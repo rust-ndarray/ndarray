@@ -916,6 +916,7 @@ zipt_impl! {
     [A B C D E F][ a b c d e f],
 }
 
+#[cfg(feature = "rayon")]
 macro_rules! last_of {
     ($q:ty) => { $q };
     ($p:ty, $($q:ty),+) => { last_of!($($q),+) };
