@@ -120,8 +120,10 @@ macro_rules! zip_impl {
                 .reduce(Partial::stub, Partial::try_merge);
 
                 if std::mem::needs_drop::<R>() {
-                    debug_assert_eq!(total_len, collect_result.len, "collect len is not correct, expected {}", total_len);
-                    assert!(collect_result.len == total_len, "Collect: Expected number of writes not completed");
+                    debug_assert_eq!(total_len, collect_result.len,
+                        "collect len is not correct, expected {}", total_len);
+                    assert!(collect_result.len == total_len,
+                        "Collect: Expected number of writes not completed");
                 }
 
                 // Here the collect result is complete, and we release its ownership and transfer
