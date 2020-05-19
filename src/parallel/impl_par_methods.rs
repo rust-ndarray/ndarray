@@ -100,8 +100,10 @@ macro_rules! zip_impl {
                     // Create a partial result for the contiguous slice of data being written to
                     let output = zip.last_producer();
                     debug_assert!(output.is_contiguous());
-
-                    let mut partial = Partial::new(output.as_ptr());
+                    let mut partial;
+                    unsafe {
+                        partial = Partial::new(output.as_ptr());
+                    }
 
                     // Apply the mapping function on this chunk of the zip
                     let partial_len = &mut partial.len;
@@ -173,7 +175,12 @@ pub(crate) struct Partial<T> {
 
 impl<T> Partial<T> {
     /// Create an empty partial for this data pointer
-    pub(crate) fn new(ptr: *mut T) -> Self {
+    ///
+    /// Safety: Unless ownership is released, the 
+    /// Partial acts as an owner of the slice of data (not the allocation);
+    /// and will free the elements on drop; the pointer must be dereferenceable
+    /// and the `len` elements following it valid.
+    pub(crate) unsafe fn new(ptr: *mut T) -> Self {
         Self {
             ptr,
             len: 0,
