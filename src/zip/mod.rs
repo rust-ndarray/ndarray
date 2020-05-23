@@ -8,7 +8,6 @@
 
 #[macro_use]
 mod zipmacro;
-mod partial_array;
 
 use std::mem::MaybeUninit;
 
@@ -17,12 +16,11 @@ use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdIndex;
+use crate::partial::Partial;
 
 use crate::indexes::{indices, Indices};
 use crate::layout::{CORDER, FORDER};
 use crate::split_at::{SplitPreference, SplitAt};
-
-use partial_array::PartialArray;
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -1070,7 +1068,7 @@ macro_rules! map_impl {
             /// inputs.
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
+            pub fn apply_collect<R>(self, mut f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
             {
                 // Make uninit result
                 let mut output = self.uninitalized_for_current_layout::<R>();
@@ -1078,13 +1076,20 @@ macro_rules! map_impl {
                     // For elements with no drop glue, just overwrite into the array
                     self.apply_assign_into(&mut output, f);
                 } else {
-                    // For generic elements, use a proxy that counts the number of filled elements,
+                    // For generic elements, use a Partial to counts the number of filled elements,
                     // and can drop the right number of elements on unwinding
                     unsafe {
-                        PartialArray::scope(output.view_mut(), move |partial| {
-                            debug_assert_eq!(partial.layout().tendency() >= 0, self.layout_tendency >= 0);
-                            self.apply_assign_into(partial, f);
+                        let mut output = output.raw_view_mut().cast::<R>();
+                        let mut partial = Partial::new(output.as_mut_ptr());
+                        let partial_ref = &mut partial;
+                        debug_assert!(output.is_contiguous());
+                        debug_assert_eq!(output.layout().tendency() >= 0, self.layout_tendency >= 0);
+                        self.and(output)
+                            .apply(move |$($p, )* output_: *mut R| {
+                                output_.write(f($($p ),*));
+                                partial_ref.len += 1;
                         });
+                        partial.release_ownership();
                     }
                 }
 
