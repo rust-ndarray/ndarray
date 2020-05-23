@@ -99,25 +99,11 @@ macro_rules! zip_impl {
                 };
 
                 let collect_result = splits.map(move |zip| {
-                    // Create a partial result for the contiguous slice of data being written to
-                    let output = zip.last_producer();
-                    debug_assert!(output.is_contiguous());
-                    let mut partial;
-                    unsafe {
-                        partial = Partial::new(output.as_ptr());
-                    }
-
                     // Apply the mapping function on this chunk of the zip
-                    let partial_len = &mut partial.len;
-                    let f = &f;
-                    zip.apply(move |$($p,)* output_elem: *mut R| unsafe {
-                        output_elem.write(f($($p),*));
-                        if std::mem::needs_drop::<R>() {
-                            *partial_len += 1;
-                        }
-                    });
-
-                    partial
+                    // Create a partial result for the contiguous slice of data being written to
+                    unsafe {
+                        zip.collect_with_partial(&f)
+                    }
                 })
                 .reduce(Partial::stub, Partial::try_merge);
 

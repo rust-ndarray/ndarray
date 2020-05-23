@@ -914,12 +914,6 @@ zipt_impl! {
     [A B C D E F][ a b c d e f],
 }
 
-#[cfg(feature = "rayon")]
-macro_rules! last_of {
-    ($q:ty) => { $q };
-    ($p:ty, $($q:ty),+) => { last_of!($($q),+) };
-}
-
 macro_rules! map_impl {
     ($([$notlast:ident $($p:ident)*],)+) => {
         $(
@@ -1016,14 +1010,6 @@ macro_rules! map_impl {
                 }).is_done()
             }
 
-            #[cfg(feature = "rayon")]
-            #[allow(dead_code)] // unused for the first of the Zip arities
-            /// Return a reference to the last producer
-            pub(crate) fn last_producer(&self) -> &last_of!($($p),*) {
-                let (.., ref last) = &self.parts;
-                last
-            }
-
             expand_if!(@bool [$notlast]
 
             /// Include the producer `p` in the Zip.
@@ -1068,32 +1054,19 @@ macro_rules! map_impl {
             /// inputs.
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            pub fn apply_collect<R>(self, mut f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
+            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
             {
                 // Make uninit result
                 let mut output = self.uninitalized_for_current_layout::<R>();
-                if !std::mem::needs_drop::<R>() {
-                    // For elements with no drop glue, just overwrite into the array
-                    self.apply_assign_into(&mut output, f);
-                } else {
-                    // For generic elements, use a Partial to counts the number of filled elements,
-                    // and can drop the right number of elements on unwinding
-                    unsafe {
-                        let mut output = output.raw_view_mut().cast::<R>();
-                        let mut partial = Partial::new(output.as_mut_ptr());
-                        let partial_ref = &mut partial;
-                        debug_assert!(output.is_contiguous());
-                        debug_assert_eq!(output.layout().tendency() >= 0, self.layout_tendency >= 0);
-                        self.and(output)
-                            .apply(move |$($p, )* output_: *mut R| {
-                                output_.write(f($($p ),*));
-                                partial_ref.len += 1;
-                        });
-                        partial.release_ownership();
-                    }
-                }
 
+                // Use partial to counts the number of filled elements, and can drop the right
+                // number of elements on unwinding (if it happens during apply/collect).
                 unsafe {
+                    let output_view = output.raw_view_mut().cast::<R>();
+                    self.and(output_view)
+                        .collect_with_partial(f)
+                        .release_ownership();
+
                     output.assume_init()
                 }
             }
@@ -1125,6 +1098,54 @@ macro_rules! map_impl {
                 SplitPreference::split(self)
             }
         }
+
+        expand_if!(@bool [$notlast]
+            // For collect; Last producer is a RawViewMut
+            #[allow(non_snake_case)]
+            impl<D, PLast, R, $($p),*> Zip<($($p,)* PLast), D>
+                where D: Dimension,
+                      $($p: NdProducer<Dim=D> ,)*
+                      PLast: NdProducer<Dim = D, Item = *mut R, Ptr = *mut R, Stride = isize>,
+            {
+                /// The inner workings of apply_collect and par_apply_collect
+                ///
+                /// Apply the function and collect the results into the output (last producer)
+                /// which should be a raw array view; a Partial that owns the written
+                /// elements is returned.
+                ///
+                /// Elements will be overwritten in place (in the sense of std::ptr::write).
+                ///
+                /// ## Safety
+                ///
+                /// The last producer is a RawArrayViewMut and must be safe to write into.
+                /// The producer must be c- or f-contig and have the same layout tendency
+                /// as the whole Zip.
+                ///
+                /// The returned Partial's proxy ownership of the elements must be handled,
+                /// before the array the raw view points to realizes its ownership.
+                pub(crate) unsafe fn collect_with_partial<F>(self, mut f: F) -> Partial<R>
+                    where F: FnMut($($p::Item,)* ) -> R
+                {
+                    // Get the last producer; and make a Partial that aliases its data pointer
+                    let (.., ref output) = &self.parts;
+                    debug_assert!(output.layout().is(CORDER | FORDER));
+                    debug_assert_eq!(output.layout().tendency() >= 0, self.layout_tendency >= 0);
+                    let mut partial = Partial::new(output.as_ptr());
+
+                    // Apply the mapping function on this zip
+                    // if we panic with unwinding; Partial will drop the written elements.
+                    let partial_len = &mut partial.len;
+                    self.apply(move |$($p,)* output_elem: *mut R| {
+                        output_elem.write(f($($p),*));
+                        if std::mem::needs_drop::<R>() {
+                            *partial_len += 1;
+                        }
+                    });
+
+                    partial
+                }
+            }
+        );
 
         impl<D, $($p),*> SplitPreference for Zip<($($p,)*), D>
             where D: Dimension,
