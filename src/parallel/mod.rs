@@ -155,4 +155,5 @@ pub use crate::par_azip;
 mod impl_par_methods;
 mod into_impls;
 mod par;
+mod send_producer;
 mod zipmacro;

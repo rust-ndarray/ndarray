@@ -176,9 +176,11 @@ mod linalg_traits;
 mod linspace;
 mod logspace;
 mod numeric_util;
+mod partial;
 mod shape_builder;
 #[macro_use]
 mod slice;
+mod split_at;
 mod stacking;
 #[macro_use]
 mod zip;

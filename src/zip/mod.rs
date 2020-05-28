@@ -8,7 +8,6 @@
 
 #[macro_use]
 mod zipmacro;
-mod partial_array;
 
 use std::mem::MaybeUninit;
 
@@ -17,11 +16,11 @@ use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdIndex;
+use crate::partial::Partial;
 
 use crate::indexes::{indices, Indices};
 use crate::layout::{CORDER, FORDER};
-
-use partial_array::PartialArray;
+use crate::split_at::{SplitPreference, SplitAt};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -90,25 +89,6 @@ where
         unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
     }
     private_impl! {}
-}
-
-pub trait Splittable: Sized {
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self);
-}
-
-impl<D> Splittable for D
-where
-    D: Dimension,
-{
-    fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
-        let mut d1 = self;
-        let mut d2 = d1.clone();
-        let i = axis.index();
-        let len = d1[i];
-        d1[i] = index;
-        d2[i] = len - index;
-        (d1, d2)
-    }
 }
 
 /// Argument conversion into a producer.
@@ -1090,21 +1070,15 @@ macro_rules! map_impl {
             {
                 // Make uninit result
                 let mut output = self.uninitalized_for_current_layout::<R>();
-                if !std::mem::needs_drop::<R>() {
-                    // For elements with no drop glue, just overwrite into the array
-                    self.apply_assign_into(&mut output, f);
-                } else {
-                    // For generic elements, use a proxy that counts the number of filled elements,
-                    // and can drop the right number of elements on unwinding
-                    unsafe {
-                        PartialArray::scope(output.view_mut(), move |partial| {
-                            debug_assert_eq!(partial.layout().tendency() >= 0, self.layout_tendency >= 0);
-                            self.apply_assign_into(partial, f);
-                        });
-                    }
-                }
 
+                // Use partial to counts the number of filled elements, and can drop the right
+                // number of elements on unwinding (if it happens during apply/collect).
                 unsafe {
+                    let output_view = output.raw_view_mut().cast::<R>();
+                    self.and(output_view)
+                        .collect_with_partial(f)
+                        .release_ownership();
+
                     output.assume_init()
                 }
             }
@@ -1133,9 +1107,77 @@ macro_rules! map_impl {
             pub fn split(self) -> (Self, Self) {
                 debug_assert_ne!(self.size(), 0, "Attempt to split empty zip");
                 debug_assert_ne!(self.size(), 1, "Attempt to split zip with 1 elem");
+                SplitPreference::split(self)
+            }
+        }
+
+        expand_if!(@bool [$notlast]
+            // For collect; Last producer is a RawViewMut
+            #[allow(non_snake_case)]
+            impl<D, PLast, R, $($p),*> Zip<($($p,)* PLast), D>
+                where D: Dimension,
+                      $($p: NdProducer<Dim=D> ,)*
+                      PLast: NdProducer<Dim = D, Item = *mut R, Ptr = *mut R, Stride = isize>,
+            {
+                /// The inner workings of apply_collect and par_apply_collect
+                ///
+                /// Apply the function and collect the results into the output (last producer)
+                /// which should be a raw array view; a Partial that owns the written
+                /// elements is returned.
+                ///
+                /// Elements will be overwritten in place (in the sense of std::ptr::write).
+                ///
+                /// ## Safety
+                ///
+                /// The last producer is a RawArrayViewMut and must be safe to write into.
+                /// The producer must be c- or f-contig and have the same layout tendency
+                /// as the whole Zip.
+                ///
+                /// The returned Partial's proxy ownership of the elements must be handled,
+                /// before the array the raw view points to realizes its ownership.
+                pub(crate) unsafe fn collect_with_partial<F>(self, mut f: F) -> Partial<R>
+                    where F: FnMut($($p::Item,)* ) -> R
+                {
+                    // Get the last producer; and make a Partial that aliases its data pointer
+                    let (.., ref output) = &self.parts;
+                    debug_assert!(output.layout().is(CORDER | FORDER));
+                    debug_assert_eq!(output.layout().tendency() >= 0, self.layout_tendency >= 0);
+                    let mut partial = Partial::new(output.as_ptr());
+
+                    // Apply the mapping function on this zip
+                    // if we panic with unwinding; Partial will drop the written elements.
+                    let partial_len = &mut partial.len;
+                    self.apply(move |$($p,)* output_elem: *mut R| {
+                        output_elem.write(f($($p),*));
+                        if std::mem::needs_drop::<R>() {
+                            *partial_len += 1;
+                        }
+                    });
+
+                    partial
+                }
+            }
+        );
+
+        impl<D, $($p),*> SplitPreference for Zip<($($p,)*), D>
+            where D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
+        {
+            fn can_split(&self) -> bool { self.size() > 1 }
+
+            fn split_preference(&self) -> (Axis, usize) {
                 // Always split in a way that preserves layout (if any)
                 let axis = self.max_stride_axis();
                 let index = self.len_of(axis) / 2;
+                (axis, index)
+            }
+        }
+
+        impl<D, $($p),*> SplitAt for Zip<($($p,)*), D>
+            where D: Dimension,
+                  $($p: NdProducer<Dim=D> ,)*
+        {
+            fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
                 let (p1, p2) = self.parts.split_at(axis, index);
                 let (d1, d2) = self.dimension.split_at(axis, index);
                 (Zip {
@@ -1151,7 +1193,9 @@ macro_rules! map_impl {
                     layout_tendency: self.layout_tendency,
                 })
             }
+
         }
+
         )+
     }
 }

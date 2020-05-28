@@ -2,6 +2,10 @@ use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zi
 use crate::AssignElem;
 
 use crate::parallel::prelude::*;
+use crate::parallel::par::ParallelSplits;
+use super::send_producer::SendProducer;
+
+use crate::partial::Partial;
 
 /// # Parallel methods
 ///
@@ -43,6 +47,8 @@ where
 
 // Zip
 
+const COLLECT_MAX_SPLITS: usize = 10;
+
 macro_rules! zip_impl {
     ($([$notlast:ident $($p:ident)*],)+) => {
         $(
@@ -71,14 +77,46 @@ macro_rules! zip_impl {
             /// inputs.
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            ///
-            /// Restricted to functions that produce copyable results for technical reasons; other
-            /// cases are not yet implemented.
-            pub fn par_apply_collect<R>(self, f: impl Fn($($p::Item,)* ) -> R + Sync + Send) -> Array<R, D>
-                where R: Copy + Send
+            pub fn par_apply_collect<R>(self, f: impl Fn($($p::Item,)* ) -> R + Sync + Send)
+                -> Array<R, D>
+                where R: Send
             {
                 let mut output = self.uninitalized_for_current_layout::<R>();
-                self.par_apply_assign_into(&mut output, f);
+                let total_len = output.len();
+
+                // Create a parallel iterator that produces chunks of the zip with the output
+                // array.  It's crucial that both parts split in the same way, and in a way
+                // so that the chunks of the output are still contig.
+                //
+                // Use a raw view so that we can alias the output data here and in the partial
+                // result.
+                let splits = unsafe {
+                    ParallelSplits {
+                        iter: self.and(SendProducer::new(output.raw_view_mut().cast::<R>())),
+                        // Keep it from splitting the Zip down too small
+                        max_splits: COLLECT_MAX_SPLITS,
+                    }
+                };
+
+                let collect_result = splits.map(move |zip| {
+                    // Apply the mapping function on this chunk of the zip
+                    // Create a partial result for the contiguous slice of data being written to
+                    unsafe {
+                        zip.collect_with_partial(&f)
+                    }
+                })
+                .reduce(Partial::stub, Partial::try_merge);
+
+                if std::mem::needs_drop::<R>() {
+                    debug_assert_eq!(total_len, collect_result.len,
+                        "collect len is not correct, expected {}", total_len);
+                    assert!(collect_result.len == total_len,
+                        "Collect: Expected number of writes not completed");
+                }
+
+                // Here the collect result is complete, and we release its ownership and transfer
+                // it to the output array.
+                collect_result.release_ownership();
                 unsafe {
                     output.assume_init()
                 }
