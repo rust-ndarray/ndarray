@@ -117,3 +117,20 @@ fn test_window_zip() {
         }
     }
 }
+
+/// Test mutating while iterating with windows
+#[test]
+fn windows_mut() {
+    use ndarray::arr2;
+    let mut a = Array::from_iter(10..19).into_shape((3, 3)).unwrap();
+    for (i, mut window) in a.windows_mut((2, 2)).into_iter().enumerate() {
+        match i {
+            0 => assert_eq!(window, arr2(&[[10, 11], [13, 14]])),
+            1 => assert_eq!(window, arr2(&[[11, 12], [0, 15]])),
+            2 => assert_eq!(window, arr2(&[[13, 0], [16, 17]])),
+            3 => assert_eq!(window, arr2(&[[0, 1], [2, 18]])),
+            _ => unreachable!(),
+        }
+        window[(1, 1)] = i;
+    }
+}

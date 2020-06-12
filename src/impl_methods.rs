@@ -25,7 +25,7 @@ use crate::zip::Zip;
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
-    IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
+    IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows, WindowsMut,
 };
 use crate::slice::MultiSlice;
 use crate::stacking::stack;
@@ -1202,6 +1202,28 @@ where
         S: Data,
     {
         Windows::new(self.view(), window_size)
+    }
+
+    /// Return a window producer and iterable.
+    ///
+    /// The windows are all distinct overlapping views of size `window_size`
+    /// that fit into the array's shape.
+    ///
+    /// Will yield over no elements if window size is larger
+    /// than the actual array size of any dimension.
+    ///
+    /// The produced element is an `ArrayViewMut<A, D>` with exactly the dimension
+    /// `window_size`.
+    ///
+    /// **Panics** if any dimension of `window_size` is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
+    /// number of array axes.)
+    pub fn windows_mut<E>(&mut self, window_size: E) -> WindowsMut<'_, A, D>
+    where
+        E: IntoDimension<Dim = D>,
+        S: DataMut,
+    {
+        WindowsMut::new(self.view_mut(), window_size)
     }
 
     // Return (length, stride) for diagonal

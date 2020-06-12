@@ -1,4 +1,4 @@
-use super::ElementsBase;
+use super::{ElementsBase, ElementsBaseMut};
 use crate::imp_prelude::*;
 use crate::IntoDimension;
 use crate::Layout;
@@ -108,6 +108,118 @@ impl_iterator! {
         fn item(&mut self, elt) {
             unsafe {
                 ArrayView::new_(
+                    elt,
+                    self.window.clone(),
+                    self.strides.clone())
+            }
+        }
+    }
+}
+
+/// Mutable window producer and iterable
+///
+/// See [`.windows_mut()`](../struct.ArrayBase.html#method.windows_mut) for more
+/// information.
+pub struct WindowsMut<'a, A, D> {
+    base: ArrayViewMut<'a, A, D>,
+    window: D,
+    strides: D,
+}
+
+impl<'a, A, D: Dimension> WindowsMut<'a, A, D> {
+    pub(crate) fn new<E>(a: ArrayViewMut<'a, A, D>, window_size: E) -> Self
+    where
+        E: IntoDimension<Dim = D>,
+    {
+        let window = window_size.into_dimension();
+        ndassert!(
+            a.ndim() == window.ndim(),
+            concat!(
+                "Window dimension {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            window.ndim(),
+            a.ndim(),
+            a.shape()
+        );
+        let mut size = a.dim;
+        for (sz, &ws) in size.slice_mut().iter_mut().zip(window.slice()) {
+            assert_ne!(ws, 0, "window-size must not be zero!");
+            // cannot use std::cmp::max(0, ..) since arithmetic underflow panics
+            *sz = if *sz < ws { 0 } else { *sz - ws + 1 };
+        }
+
+        let window_strides = a.strides.clone();
+
+        unsafe {
+            WindowsMut {
+                base: ArrayViewMut::from_shape_ptr(size.strides(a.strides), a.ptr.as_ptr()),
+                window,
+                strides: window_strides,
+            }
+        }
+    }
+}
+
+impl_ndproducer! {
+    ['a, A, D: Dimension]
+    [Clone =>]
+    WindowsMut {
+        base,
+        window,
+        strides,
+    }
+    WindowsMut<'a, A, D> {
+        type Item = ArrayViewMut<'a, A, D>;
+        type Dim = D;
+
+        unsafe fn item(&self, ptr) {
+            ArrayViewMut::new_(ptr, self.window.clone(),
+                            self.strides.clone())
+        }
+    }
+}
+
+impl<'a, A, D> IntoIterator for WindowsMut<'a, A, D>
+where
+    D: Dimension,
+    A: 'a,
+{
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = WindowsIterMut<'a, A, D>;
+    fn into_iter(self) -> Self::IntoIter {
+        WindowsIterMut {
+            iter: self.base.into_elements_base(),
+            window: self.window,
+            strides: self.strides,
+        }
+    }
+}
+
+/// Mutable window iterator.
+///
+/// See [`.windows_mut()`](../struct.ArrayBase.html#method.windows) for more
+/// information.
+pub struct WindowsIterMut<'a, A, D> {
+    iter: ElementsBaseMut<'a, A, D>,
+    window: D,
+    strides: D,
+}
+
+impl_iterator! {
+    ['a, A, D: Dimension]
+    [Clone =>]
+    WindowsIterMut {
+        iter,
+        window,
+        strides,
+    }
+    WindowsIterMut<'a, A, D> {
+        type Item = ArrayViewMut<'a, A, D>;
+
+        fn item(&mut self, elt) {
+            unsafe {
+                ArrayViewMut::new_(
                     elt,
                     self.window.clone(),
                     self.strides.clone())
