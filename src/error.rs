@@ -5,6 +5,11 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
+// Clippy complains about not using #[non_exhaustive] attribute but the
+// attribute is not available in 1.37.0, which is MSRV of this library.
+#![allow(clippy::manual_non_exhaustive)]
+
 use super::Dimension;
 use std::error::Error;
 use std::fmt;
