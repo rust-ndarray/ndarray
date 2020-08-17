@@ -225,3 +225,61 @@ fn std_axis_empty_axis() {
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
 }
+
+#[test]
+fn cumsum_1_d_array_intlike() {
+    let a = array![1, 2, 3, 4];
+    let csum = a.cumsum();
+
+    assert_eq!(csum, array![1, 3, 6, 10]);
+}
+
+#[test]
+fn cumsum_1_d_array_floatlike() {
+    let a = array![1.0, 2.0, 3.0, 4.0];
+    let csum = a.cumsum();
+
+    assert_eq!(csum, array![1.0, 3.0, 6.0, 10.0]);
+}
+
+#[test]
+fn cumsum_along_axis_2_d_intlike() {
+    let a0 = array![[1, 2], [3, 4]];
+    let res0 = a0.cumsum_along_axis(Axis(0));
+
+    assert_eq!(res0, array![[1, 2], [4, 6]]);
+
+    let a1 = array![[1, 2], [3, 4]];
+    let res1 = a1.cumsum_along_axis(Axis(1));
+
+    assert_eq!(res1, array![[1, 3], [3, 7]]);
+}
+
+#[test]
+fn cumsum_along_axis_2_d_floatlike() {
+    let a0 = array![[1.0, 2.0], [3.0, 4.0]];
+    let res0 = a0.cumsum_along_axis(Axis(0));
+
+    assert_eq!(res0, array![[1.0, 2.0], [4.0, 6.0]]);
+}
+
+#[test]
+fn cumsum_along_axis_3_d() {
+    // just going to trying int for implementation's sake
+    let a0 = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]];
+    let res0 = a0.cumsum_along_axis(Axis(2));
+
+    assert_eq!(
+        res0,
+        array![[[1, 3], [3, 7]], [[5, 11], [7, 15]], [[9, 19], [11, 23]]]
+    );
+}
+
+#[test]
+fn cumsum_along_axis_1_d() {
+    // just going to trying int for implementation's sake
+    let a0 = array![1, 2, 3, 4];
+    let res0 = a0.cumsum_along_axis(Axis(0));
+
+    assert_eq!(res0, array![1, 3, 6, 10]);
+}

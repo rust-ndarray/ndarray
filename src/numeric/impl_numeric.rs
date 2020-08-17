@@ -7,7 +7,8 @@
 // except according to those terms.
 
 use num_traits::{self, Float, FromPrimitive, Zero};
-use std::ops::{Add, Div, Mul};
+use std::ops::{Add, Div, Mul, AddAssign};
+use std::iter::FromIterator;
 
 use crate::imp_prelude::*;
 use crate::itertools::enumerate;
@@ -333,4 +334,56 @@ where
             })
             .is_done()
     }
+
+    /// Returns a cumulative sum along a flattened array.
+    /// 
+    /// # Example
+    /// ```
+    /// use ndarray::{array};
+    /// 
+    /// let a = array![1, 2, 3, 4];
+    /// let csum = a.cumsum();
+    /// assert_eq!(csum, array![ 1,  3,  6, 10]);
+    /// ```
+    pub fn cumsum(&self) -> Array<A, Ix1>
+    where    
+        A: AddAssign + Copy + Zero,
+    {
+        Array::from_iter(
+            self.iter().scan(A::zero(), |acc, &x| {
+                *acc += x;
+                Some(*acc)
+            })
+        )
+    }
+
+    /// Returns a cumulative sum along the selected axis.
+    /// 
+    /// # Example
+    /// ```
+    /// use ndarray::{array};
+    /// 
+    /// let a = array![[1, 2], [3, 4]];
+    /// let csum = a.cumsum_along_axis(Axis(1));
+    /// assert_eq!(csum, array![[1, 3], [3, 7]]));
+    /// ```
+    pub fn cumsum_along_axis(&self, axis: Axis) -> Array<A, D>
+    where
+        A: AddAssign + Copy + Zero,
+        D: RemoveAxis,
+    {
+        let mut m = Array::zeros(self.raw_dim());
+        m.assign(&self);
+
+        let n = self.len_of(axis);
+        for i in 0..n {
+            let mut slice = m.index_axis_mut(axis, i);
+            for j in 0..i {
+                let next = self.index_axis(axis, j);
+                slice += &next;
+            }
+        }
+        m
+    }
+
 }
