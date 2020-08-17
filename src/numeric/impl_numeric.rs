@@ -365,7 +365,7 @@ where
     /// 
     /// let a = array![[1, 2], [3, 4]];
     /// let csum = a.cumsum_along_axis(Axis(1));
-    /// assert_eq!(csum, array![[1, 3], [3, 7]]));
+    /// assert_eq!(csum, array![[1, 3], [3, 7]]);
     /// ```
     pub fn cumsum_along_axis(&self, axis: Axis) -> Array<A, D>
     where
