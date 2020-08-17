@@ -361,7 +361,7 @@ where
     /// 
     /// # Example
     /// ```
-    /// use ndarray::{array};
+    /// use ndarray::{array, Axis};
     /// 
     /// let a = array![[1, 2], [3, 4]];
     /// let csum = a.cumsum_along_axis(Axis(1));
