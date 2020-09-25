@@ -30,7 +30,7 @@ use crate::imp_prelude::*;
 /// );
 /// ```
 #[deprecated(
-    since = "0.13.1",
+    since = "0.13.2",
     note = "Please use the `concatenate` function instead"
 )]
 pub fn stack<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
@@ -106,9 +106,33 @@ where
     stack(axis, arrays)
 }
 
+/// Stack arrays along the new axis.
+///
+/// ***Errors*** if the arrays have mismatching shapes.
+/// ***Errors*** if `arrays` is empty, if `axis` is out of bounds,
+/// if the result is larger than is possible to represent.
+///
+/// ```
+/// extern crate ndarray;
+///
+/// use ndarray::{arr2, arr3, stack_new_axis, Axis};
+///
+/// # fn main() {
+///
+/// let a = arr2(&[[2., 2.],
+///                [3., 3.]]);
+/// assert!(
+///     stack_new_axis(Axis(0), &[a.view(), a.view()])
+///     == Ok(arr3(&[[[2., 2.],
+///                   [3., 3.]],
+///                  [[2., 2.],
+///                   [3., 3.]]]))
+/// );
+/// # }
+/// ```
 pub fn stack_new_axis<A, D>(
     axis: Axis,
-    arrays: Vec<ArrayView<A, D>>,
+    arrays: &[ArrayView<A, D>],
 ) -> Result<Array<A, D::Larger>, ShapeError>
 where
     A: Copy,
@@ -176,6 +200,10 @@ where
 /// );
 /// # }
 /// ```
+#[deprecated(
+    since = "0.13.2",
+    note = "Please use the `concatenate!` macro instead"
+)]
 #[macro_export]
 macro_rules! stack {
     ($axis:expr, $( $array:expr ),+ ) => {
@@ -247,6 +275,6 @@ macro_rules! concatenate {
 #[macro_export]
 macro_rules! stack_new_axis {
     ($axis:expr, $( $array:expr ),+ ) => {
-        $crate::stack_new_axis($axis, vec![ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
+        $crate::stack_new_axis($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
     }
 }

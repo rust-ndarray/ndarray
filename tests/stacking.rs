@@ -52,16 +52,16 @@ fn concatenating() {
 #[test]
 fn stacking() {
     let a = arr2(&[[2., 2.], [3., 3.]]);
-    let b = ndarray::stack_new_axis(Axis(0), vec![a.view(), a.view()]).unwrap();
+    let b = ndarray::stack_new_axis(Axis(0), &[a.view(), a.view()]).unwrap();
     assert_eq!(b, arr3(&[[[2., 2.], [3., 3.]], [[2., 2.], [3., 3.]]]));
 
     let c = arr2(&[[3., 2., 3.], [2., 3., 2.]]);
-    let res = ndarray::stack_new_axis(Axis(1), vec![a.view(), c.view()]);
+    let res = ndarray::stack_new_axis(Axis(1), &[a.view(), c.view()]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);
 
-    let res = ndarray::stack_new_axis(Axis(3), vec![a.view(), a.view()]);
+    let res = ndarray::stack_new_axis(Axis(3), &[a.view(), a.view()]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::OutOfBounds);
 
-    let res: Result<Array2<f64>, _> = ndarray::stack_new_axis::<_, Ix1>(Axis(0), vec![]);
+    let res: Result<Array2<f64>, _> = ndarray::stack_new_axis::<_, Ix1>(Axis(0), &[]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::Unsupported);
 }
