@@ -33,6 +33,7 @@ impl ShapeError {
 ///
 /// This enumeration is not exhaustive. The representation of the enum
 /// is not guaranteed.
+#[non_exhaustive]
 #[derive(Copy, Clone, Debug)]
 pub enum ErrorKind {
     /// incompatible shape
