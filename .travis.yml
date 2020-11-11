@@ -4,7 +4,7 @@ sudo: required
 dist: trusty
 matrix:
   include:
-    - rust: 1.37.0
+    - rust: 1.40.0
       env:
        - FEATURES='test docs'
        - RUSTFLAGS='-D warnings'
