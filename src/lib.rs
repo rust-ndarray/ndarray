@@ -105,6 +105,9 @@
 //! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
 //!
 //! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
+//!
+//! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and 
+//! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
