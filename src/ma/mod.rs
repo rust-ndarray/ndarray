@@ -1,6 +1,8 @@
-use std::cmp::{PartialEq};
+use std::cmp::PartialEq;
+use std::marker::PhantomData;
 use std::ops::{Add, Index};
-use crate::{ArrayBase, Array1, Iter, RawData, Data, DataOwned, Dimension, NdIndex, Array, DataMut};
+use crate::{ArrayBase, Array1, RawData, Data, DataOwned, Dimension, NdIndex, Array, DataMut};
+use crate::iter::IndexedIter;
 
 /// Enum that represents a value that can potentially be masked.
 /// We could potentially use `Option<T>` for that, but that produces
@@ -57,9 +59,6 @@ impl<T> From<Masked<T>> for Option<T> {
 /// we can implement a mask as a whitelist/blacklist of indices or as a
 /// struct which treats some value or range of values as a mask.
 pub trait Mask<A, D> {
-    /// Return the dimension of the mask, used only by iterators so far.
-    fn get_dim(&self) -> &D;
-
     /// Given an index of the element and a reference to it, return masked
     /// version of the reference. Accepting a pair allows masking by index,
     /// value or both.
@@ -73,10 +72,11 @@ pub trait Mask<A, D> {
 
     fn mask_iter<'a, 'b: 'a, I>(&'b self, iter: I) -> MaskedIter<'a, A, Self, I, D>
     where
-        I: Iterator<Item = &'a A>,
+        I: Iterator<Item = (D::Pattern, &'a A)>,
         D: Dimension,
+        D::Pattern: NdIndex<D>,
     {
-        MaskedIter::new(self, iter, self.get_dim().first_index())
+        MaskedIter::new(self, iter)
     }
 }
 
@@ -93,39 +93,40 @@ where
 
 pub struct MaskedIter<'a, A: 'a, M, I, D>
 where
-    I: Iterator<Item = &'a A>,
+    I: Iterator<Item = (D::Pattern, &'a A)>,
     D: Dimension,
+    D::Pattern: NdIndex<D>,
     M: ?Sized + Mask<A, D>
 {
     mask: &'a M,
     iter: I,
-    idx: Option<D>,
+    _dim: PhantomData<D>,
 }
 
 impl<'a, A, M, I, D> MaskedIter<'a, A, M, I, D>
 where
-    I: Iterator<Item = &'a A>,
+    I: Iterator<Item = (D::Pattern, &'a A)>,
     D: Dimension,
+    D::Pattern: NdIndex<D>,
     M: ?Sized + Mask<A, D>
 {
-    fn new(mask: &'a M, iter: I, start_idx: Option<D>) -> MaskedIter<'a, A, M, I, D> {
-        MaskedIter { mask, iter, idx: start_idx }
+    fn new(mask: &'a M, iter: I) -> MaskedIter<'a, A, M, I, D> {
+        MaskedIter { mask, iter, _dim: PhantomData }
     }
 }
 
 impl<'a, A, M, I, D> Iterator for MaskedIter<'a, A, M, I, D>
 where
-    I: Iterator<Item = &'a A>,
+    I: Iterator<Item = (D::Pattern, &'a A)>,
     D: Dimension,
+    D::Pattern: NdIndex<D>,
     M: Mask<A, D>
 {
-    type Item = Masked<I::Item>;
+    type Item = Masked<&'a A>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let nex_val = self.iter.next()?;
-        let elem = Some(self.mask.mask_ref((self.idx.clone()?, nex_val)));
-        self.idx = self.mask.get_dim().next_for(self.idx.clone()?);
-        elem
+        Some(self.mask.mask_ref(nex_val))
     }
 }
 
@@ -135,10 +136,6 @@ where
     D: Dimension,
     S: Data<Elem = bool>,
 {
-    fn get_dim(&self) -> &D {
-        &self.dim
-    }
-
     fn mask_ref<'a, I: NdIndex<D>>(&self, pair: (I, &'a A)) -> Masked<&'a A> {
         if *self.index(pair.0) { Masked::Value(pair.1) } else { Masked::Empty }
     }
@@ -178,17 +175,19 @@ where
     where
         S::Elem: Clone,
         S: Data,
+        D::Pattern: NdIndex<D>,
     {
         self.iter()
             .filter_map(|mv: Masked<&S::Elem>| mv.cloned().into())
             .collect()
     }
 
-    pub fn iter(&self) -> MaskedIter<'_, S::Elem, M, Iter<'_, S::Elem, D>, D>
+    pub fn iter(&self) -> MaskedIter<'_, S::Elem, M, IndexedIter<'_, S::Elem, D>, D>
     where
-        S: Data
+        S: Data,
+        D::Pattern: NdIndex<D>,
     {
-        self.mask.mask_iter(self.data.iter())
+        self.mask.mask_iter(self.data.indexed_iter())
     }
 }
 
