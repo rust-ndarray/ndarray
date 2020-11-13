@@ -1608,6 +1608,7 @@ mod impl_raw_views;
 
 // Copy-on-write array methods
 mod impl_cow;
+pub mod ma;
 
 /// A contiguous array shape of n dimensions.
 ///
