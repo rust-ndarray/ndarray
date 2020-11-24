@@ -9,6 +9,42 @@
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
 
+/// Stack arrays along the new axis.
+///
+/// ***Errors*** if the arrays have mismatching shapes.
+/// ***Errors*** if `arrays` is empty, if `axis` is out of bounds,
+/// if the result is larger than is possible to represent.
+///
+/// ```
+/// extern crate ndarray;
+///
+/// use ndarray::{arr2, arr3, stack, Axis};
+///
+/// # fn main() {
+///
+/// let a = arr2(&[[2., 2.],
+///                [3., 3.]]);
+/// assert!(
+///     stack(Axis(0), &[a.view(), a.view()])
+///     == Ok(arr3(&[[[2., 2.],
+///                   [3., 3.]],
+///                  [[2., 2.],
+///                   [3., 3.]]]))
+/// );
+/// # }
+/// ```
+pub fn stack<A, D>(
+    axis: Axis,
+    arrays: &[ArrayView<A, D>],
+) -> Result<Array<A, D::Larger>, ShapeError>
+where
+    A: Copy,
+    D: Dimension,
+    D::Larger: RemoveAxis,
+{
+    stack_new_axis(axis, arrays)
+}
+
 /// Concatenate arrays along the given axis.
 ///
 /// ***Errors*** if the arrays have mismatching shapes, apart from along `axis`.
@@ -17,23 +53,20 @@ use crate::imp_prelude::*;
 /// if the result is larger than is possible to represent.
 ///
 /// ```
-/// use ndarray::{arr2, Axis, stack};
+/// use ndarray::{arr2, Axis, concatenate};
 ///
 /// let a = arr2(&[[2., 2.],
 ///                [3., 3.]]);
 /// assert!(
-///     stack(Axis(0), &[a.view(), a.view()])
+///     concatenate(Axis(0), &[a.view(), a.view()])
 ///     == Ok(arr2(&[[2., 2.],
 ///                  [3., 3.],
 ///                  [2., 2.],
 ///                  [3., 3.]]))
 /// );
 /// ```
-#[deprecated(
-    since = "0.13.2",
-    note = "Please use the `concatenate` function instead"
-)]
-pub fn stack<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
+#[allow(deprecated)]
+pub fn concatenate<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
 where
     A: Copy,
     D: RemoveAxis,
@@ -75,35 +108,6 @@ where
         }
     }
     Ok(res)
-}
-
-/// Concatenate arrays along the given axis.
-///
-/// ***Errors*** if the arrays have mismatching shapes, apart from along `axis`.
-/// (may be made more flexible in the future).<br>
-/// ***Errors*** if `arrays` is empty, if `axis` is out of bounds,
-/// if the result is larger than is possible to represent.
-///
-/// ```
-/// use ndarray::{arr2, Axis, concatenate};
-///
-/// let a = arr2(&[[2., 2.],
-///                [3., 3.]]);
-/// assert!(
-///     concatenate(Axis(0), &[a.view(), a.view()])
-///     == Ok(arr2(&[[2., 2.],
-///                  [3., 3.],
-///                  [2., 2.],
-///                  [3., 3.]]))
-/// );
-/// ```
-#[allow(deprecated)]
-pub fn concatenate<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
-where
-    A: Copy,
-    D: RemoveAxis,
-{
-    stack(axis, arrays)
 }
 
 /// Stack arrays along the new axis.
@@ -173,7 +177,7 @@ where
     Ok(res)
 }
 
-/// Concatenate arrays along the given axis.
+/// Stack arrays along the new axis.
 ///
 /// Uses the [`stack`][1] function, calling `ArrayView::from(&a)` on each
 /// argument `a`.
@@ -183,7 +187,9 @@ where
 /// ***Panics*** if the `stack` function would return an error.
 ///
 /// ```
-/// use ndarray::{arr2, stack, Axis};
+/// extern crate ndarray;
+///
+/// use ndarray::{arr2, arr3, stack, Axis};
 ///
 /// # fn main() {
 ///
@@ -191,17 +197,13 @@ where
 ///                [3., 3.]]);
 /// assert!(
 ///     stack![Axis(0), a, a]
-///     == arr2(&[[2., 2.],
-///               [3., 3.],
-///               [2., 2.],
-///               [3., 3.]])
+///     == arr3(&[[[2., 2.],
+///                [3., 3.]],
+///               [[2., 2.],
+///                [3., 3.]]])
 /// );
 /// # }
 /// ```
-#[deprecated(
-    since = "0.13.2",
-    note = "Please use the `concatenate!` macro instead"
-)]
 #[macro_export]
 macro_rules! stack {
     ($axis:expr, $( $array:expr ),+ ) => {
