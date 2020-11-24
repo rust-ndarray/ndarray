@@ -65,7 +65,6 @@ where
 ///                  [3., 3.]]))
 /// );
 /// ```
-#[allow(deprecated)]
 pub fn concatenate<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
 where
     A: Copy,
