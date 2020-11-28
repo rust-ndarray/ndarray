@@ -30,7 +30,7 @@ test = true
 [dependencies]
 num-integer = "0.1.39"
 num-traits = "0.2"
-num-complex = "0.2"
+num-complex = { version = "0.3", default-features = false }
 
 rayon = { version = "1.0.3", optional = true }
 
