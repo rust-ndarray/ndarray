@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name = "ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.13/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.14/")]
 #![allow(
     clippy::many_single_char_names,
     clippy::deref_addrof,

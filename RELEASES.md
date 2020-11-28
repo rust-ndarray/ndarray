@@ -1,3 +1,67 @@
+Version 0.14.0 (2020-11-28)
+===========================
+
+New features
+------------
+
+- `Zip::apply_collect` and `Zip::par_apply_collect` now supports general
+  elements (not just `Copy`)
+  https://github.com/rust-ndarray/ndarray/pull/817
+- New function `stack` (new behaviour!) by [@andrei-papou]
+
+Enhancements
+------------
+
+- Handle inhomogenous shape inputs better in Zip, in practice, guess better whether
+  to prefer c- or f-order for the inner loop by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/809
+
+API changes
+-----------
+
+- The **old function** `stack` has been renamed to `concatenate`.
+  A new function `stack` with numpy-like semantics have taken its place.
+  Old usages of `stack` should change to use `concatenate`.
+  
+  `concatenate` produces an array with the same number of axes as the inputs.  
+  `stack` produces an array that has one more axis than the inputs.
+
+  This change was unfortunately done without a deprecation period, due to the long period between releases.
+
+- Enum ErrorKind is now properly non-exhaustive and has lost its old placeholder invalid variant. By [@Zuse64]
+  https://github.com/rust-ndarray/ndarray/pull/848
+
+- Remove deprecated items:
+
+  - RcArray (deprecated alias for ArcArray)
+  - Removed `subview_inplace` use `collapse_axis`
+  - Removed `subview_mut` use `index_axis_mut`
+  - Removed `into_subview` use `index_axis_move`
+  - Removed `subview` use `index_axis`
+  - Removed `slice_inplace` use `slice_collapse`
+  - Undeprecate `remove_axis` because its replacement is hard to find out on your own.
+
+- Update public external dependencies to new versions by [@Eijebong] and [@bluss]
+
+  - num-complex 0.3
+  - approx 0.4 (optional)
+  - blas-src 0.6.1 and openblas-src 0.9.0 (optional)
+
+  https://github.com/rust-ndarray/ndarray/pull/810  
+  https://github.com/rust-ndarray/ndarray/pull/851  
+
+
+Other changes
+-------------
+
+- Minor doc fixes by [@acj]
+  https://github.com/rust-ndarray/ndarray/pull/834
+
+- Minor doc fixes by [@xd009642]
+  https://github.com/rust-ndarray/ndarray/pull/847
+
+- The minimum required rust version is Rust 1.42.
+
 Version 0.13.1 (2020-04-21)
 ===========================
 
@@ -942,7 +1006,6 @@ Earlier releases
 [@max-sixty]: https://github.com/max-sixty
 [@JP-Ellis]: https://github.com/JP-Ellis
 [@sebasv]: https://github.com/sebasv
-[@andrei-papou]: https://github.com/sebasv
 [@mneumann]: https://github.com/mneumann
 [@termoshtt]: https://github.com/termoshtt
 [@rth]: https://github.com/rth
@@ -953,3 +1016,7 @@ Earlier releases
 [@mockersf]: https://github.com/mockersf
 [@viniciusd]: https://github.com/viniciusd
 [@lifuyang]: https://github.com/liufuyang
+[@acj]: https://github.com/acj
+[@Eijebong]: https://github.com/Eijebong
+[@andrei-papou]: https://github.com/andrei-papou
+[@xd009642]: https://github.com/xd009642

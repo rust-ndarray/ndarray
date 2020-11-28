@@ -14,7 +14,7 @@ description = "Constructors for randomized arrays. `rand` integration for `ndarr
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
-ndarray = { version = "0.13", path = ".." }
+ndarray = { version = "0.14", path = ".." }
 rand_distr = "0.2.1"
 quickcheck = { version = "0.9", default-features = false, optional = true }
 
