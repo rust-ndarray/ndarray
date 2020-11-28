@@ -14,7 +14,7 @@ use std::ptr::NonNull;
 use std::sync::Arc;
 
 use crate::{
-    ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRcRepr, OwnedRepr, RawViewRepr, ViewRepr,
+    ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr,
 };
 
 /// Array representation trait.
@@ -397,7 +397,7 @@ pub unsafe trait DataOwned: Data {
     /// Converts the data representation to a shared (copy on write)
     /// representation, without any copying.
     #[doc(hidden)]
-    fn into_shared(self) -> OwnedRcRepr<Self::Elem>;
+    fn into_shared(self) -> OwnedArcRepr<Self::Elem>;
 }
 
 /// Array representation trait.
@@ -407,14 +407,14 @@ pub unsafe trait DataOwned: Data {
 /// ***Internal trait, see `Data`.***
 pub unsafe trait DataShared: Clone + Data + RawDataClone {}
 
-unsafe impl<A> DataShared for OwnedRcRepr<A> {}
+unsafe impl<A> DataShared for OwnedArcRepr<A> {}
 unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
 
 unsafe impl<A> DataOwned for OwnedRepr<A> {
     fn new(elements: Vec<A>) -> Self {
         OwnedRepr::from(elements)
     }
-    fn into_shared(self) -> OwnedRcRepr<A> {
+    fn into_shared(self) -> OwnedArcRepr<A> {
         OwnedArcRepr(Arc::new(self))
     }
 }
@@ -424,7 +424,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
         OwnedArcRepr(Arc::new(OwnedRepr::from(elements)))
     }
 
-    fn into_shared(self) -> OwnedRcRepr<A> {
+    fn into_shared(self) -> OwnedArcRepr<A> {
         self
     }
 }

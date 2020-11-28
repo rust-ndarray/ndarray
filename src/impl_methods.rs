@@ -1363,7 +1363,7 @@ where
     where
         S: RawDataMut,
     {
-        self.try_ensure_unique(); // for RcArray
+        self.try_ensure_unique(); // for ArcArray
         self.ptr.as_ptr()
     }
 
@@ -1379,7 +1379,7 @@ where
     where
         S: RawDataMut,
     {
-        self.try_ensure_unique(); // for RcArray
+        self.try_ensure_unique(); // for ArcArray
         unsafe { RawArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 

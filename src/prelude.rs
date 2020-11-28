@@ -20,7 +20,6 @@
 #[allow(deprecated)]
 pub use crate::{
     ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, CowArray, RawArrayView, RawArrayViewMut,
-    RcArray,
 };
 
 #[doc(no_inline)]

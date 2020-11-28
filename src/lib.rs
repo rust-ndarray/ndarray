@@ -1243,14 +1243,6 @@ where
 
 /// An array where the data has shared ownership and is copy on write.
 ///
-/// It can act as both an owner as the data as well as a shared reference (view like).
-///
-/// **Note: this type alias is obsolete.** See the equivalent [`ArcArray`] instead.
-#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
-pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
-
-/// An array where the data has shared ownership and is copy on write.
-///
 /// The `ArcArray<A, D>` is parameterized by `A` for the element type and `D` for
 /// the dimensionality.
 ///
@@ -1398,14 +1390,6 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 
 pub use data_repr::OwnedRepr;
-
-
-/// RcArray's representation.
-///
-/// *Don’t use this type directly—use the type alias
-/// [`RcArray`](type.RcArray.html) for the array type!*
-#[deprecated(note = "RcArray is replaced by ArcArray")]
-pub use self::OwnedArcRepr as OwnedRcRepr;
 
 /// ArcArray's representation.
 ///
