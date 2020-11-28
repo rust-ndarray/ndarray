@@ -61,7 +61,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.37 or later**
+//! - **Requires Rust 1.42 or later**
 //!
 //! ## Crate Feature Flags
 //!

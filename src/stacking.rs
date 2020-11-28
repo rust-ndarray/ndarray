@@ -165,7 +165,7 @@ where
     let mut res = Array::from_shape_vec(res_dim, v)?;
 
     res.axis_iter_mut(axis)
-        .zip(arrays.into_iter())
+        .zip(arrays.iter())
         .for_each(|(mut assign_view, array)| {
             assign_view.assign(&array);
         });

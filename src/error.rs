@@ -33,6 +33,7 @@ impl ShapeError {
 ///
 /// This enumeration is not exhaustive. The representation of the enum
 /// is not guaranteed.
+#[non_exhaustive]
 #[derive(Copy, Clone, Debug)]
 pub enum ErrorKind {
     /// incompatible shape
@@ -47,8 +48,6 @@ pub enum ErrorKind {
     Unsupported,
     /// overflow when computing offset, length, etc.
     Overflow,
-    #[doc(hidden)]
-    __Incomplete,
 }
 
 #[inline(always)]
@@ -81,7 +80,6 @@ impl fmt::Display for ShapeError {
             ErrorKind::OutOfBounds => "out of bounds indexing",
             ErrorKind::Unsupported => "unsupported operation",
             ErrorKind::Overflow => "arithmetic overflow",
-            ErrorKind::__Incomplete => "this error variant is not in use",
         };
         write!(f, "ShapeError/{:?}: {}", self.kind(), description)
     }
