@@ -7,7 +7,7 @@ authors = [
   "bluss",
   "Jim Turner"
 ]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 readme = "README-crates.io.md"
 
 repository = "https://github.com/rust-ndarray/ndarray"
@@ -30,11 +30,11 @@ test = true
 [dependencies]
 num-integer = "0.1.39"
 num-traits = "0.2"
-num-complex = "0.2"
+num-complex = { version = "0.3", default-features = false }
 
 rayon = { version = "1.0.3", optional = true }
 
-approx = { version = "0.3.2", optional = true }
+approx = { version = "0.4", optional = true }
 
 # Use via the `blas` crate feature!
 cblas-sys = { version = "0.1.4", optional = true, default-features = false }
@@ -47,7 +47,7 @@ rawpointer = { version = "0.2" }
 [dev-dependencies]
 defmac = "0.2"
 quickcheck = { version = "0.9", default-features = false }
-approx = "0.3.2"
+approx = "0.4"
 itertools = { version = "0.9.0", default-features = false, features = ["use_std"] }
 
 [features]
