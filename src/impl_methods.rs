@@ -456,15 +456,6 @@ where
             });
     }
 
-    /// Slice the array in place without changing the number of dimensions.
-    ///
-    /// **Panics** if an index is out of bounds or step size is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `indices` does not match the number of array axes.)
-    #[deprecated(note = "renamed to `slice_collapse`", since = "0.12.1")]
-    pub fn slice_inplace(&mut self, indices: &D::SliceArg) {
-        self.slice_collapse(indices)
-    }
-
     /// Return a view of the array, sliced along the specified axis.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
@@ -757,51 +748,6 @@ where
         let offset = dimension::do_collapse_axis(&mut self.dim, &self.strides, axis.index(), index);
         self.ptr = unsafe { self.ptr.offset(offset) };
         debug_assert!(self.pointer_is_inbounds());
-    }
-
-    /// Along `axis`, select the subview `index` and return a
-    /// view with that axis removed.
-    ///
-    /// **Panics** if `axis` or `index` is out of bounds.
-    #[deprecated(note = "renamed to `index_axis`", since = "0.12.1")]
-    pub fn subview(&self, axis: Axis, index: Ix) -> ArrayView<'_, A, D::Smaller>
-    where
-        S: Data,
-        D: RemoveAxis,
-    {
-        self.index_axis(axis, index)
-    }
-
-    /// Along `axis`, select the subview `index` and return a read-write view
-    /// with the axis removed.
-    ///
-    /// **Panics** if `axis` or `index` is out of bounds.
-    #[deprecated(note = "renamed to `index_axis_mut`", since = "0.12.1")]
-    pub fn subview_mut(&mut self, axis: Axis, index: Ix) -> ArrayViewMut<'_, A, D::Smaller>
-    where
-        S: DataMut,
-        D: RemoveAxis,
-    {
-        self.index_axis_mut(axis, index)
-    }
-
-    /// Collapse dimension `axis` into length one,
-    /// and select the subview of `index` along that axis.
-    ///
-    /// **Panics** if `index` is past the length of the axis.
-    #[deprecated(note = "renamed to `collapse_axis`", since = "0.12.1")]
-    pub fn subview_inplace(&mut self, axis: Axis, index: Ix) {
-        self.collapse_axis(axis, index)
-    }
-
-    /// Along `axis`, select the subview `index` and return `self`
-    /// with that axis removed.
-    #[deprecated(note = "renamed to `index_axis_move`", since = "0.12.1")]
-    pub fn into_subview(self, axis: Axis, index: Ix) -> ArrayBase<S, D::Smaller>
-    where
-        D: RemoveAxis,
-    {
-        self.index_axis_move(axis, index)
     }
 
     /// Along `axis`, select arbitrary subviews corresponding to `indices`
@@ -1886,8 +1832,10 @@ where
 
     /// Remove array axis `axis` and return the result.
     ///
+    /// This is equivalent to `.index-axis_move(axis, 0)` and makes most sense to use if the
+    /// axis to remove is of length 1.
+    ///
     /// **Panics** if the axis is out of bounds or its length is zero.
-    #[deprecated(note = "use `.index_axis_move(Axis(_), 0)` instead", since = "0.12.1")]
     pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     where
         D: RemoveAxis,
