@@ -7,7 +7,7 @@ authors = [
   "bluss",
   "Jim Turner"
 ]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 readme = "README-crates.io.md"
 
 repository = "https://github.com/rust-ndarray/ndarray"
