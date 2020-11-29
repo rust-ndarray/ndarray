@@ -21,7 +21,7 @@
 //! convenience.
 //!
 //! [rand]: https://docs.rs/rand/0.7
-//! [rand_distr]: https://docs.rs/rand_distr/0.2
+//! [rand_distr]: https://docs.rs/rand_distr/0.3
 //!
 //! If you want to use a random number generator or distribution from another crate
 //! with `ndarray-rand`, you need to make sure that the other crate also depends on the
@@ -44,7 +44,7 @@ pub mod rand {
     pub use rand::*;
 }
 
-/// [`rand-distr`](https://docs.rs/rand_distr/0.2), re-exported for convenience and version-compatibility.
+/// [`rand-distr`](https://docs.rs/rand_distr/0.3), re-exported for convenience and version-compatibility.
 pub mod rand_distr {
     pub use rand_distr::*;
 }
