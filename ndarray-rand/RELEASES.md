@@ -1,6 +1,12 @@
 Recent Changes
 --------------
 
+- 0.12.0
+
+  - Require ndarray 0.14
+  - Require rand 0.7 (unchanged from previous version)
+  - Require rand_distr 0.3
+
 - 0.11.0
 
   - Require ndarray 0.13
