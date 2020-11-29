@@ -28,7 +28,7 @@ Dependencies
 
 ``ndarray-rand`` depends on ``rand`` 0.7.
 
-[`rand`](https://docs.rs/rand/0.7.0/rand/) and [`rand-distr`](https://docs.rs/rand_distr/0.2.1/rand_distr/) are 
+[`rand`](https://docs.rs/rand/0.7.0/rand/) and [`rand-distr`](https://docs.rs/rand_distr/0.3/) are 
 re-exported as sub-modules, `ndarray_rand::rand` and `ndarray_rand::rand_distr` respectively. 
 Please rely on these submodules for guaranteed version compatibility.
 
@@ -41,15 +41,7 @@ necessary trait).
 Recent changes
 ==============
 
-0.10.0
-------
-
-  - Require `rand` 0.7
-  - Require Rust 1.32 or later
-  - Re-export `rand` as a submodule, `ndarray_rand::rand`
-  - Re-export `rand-distr` as a submodule, `ndarray_rand::rand_distr`
-  
-Check _[Changelogs](https://github.com/rust-ndarray/ndarray/ndarray-rand/RELEASES.md)_ to see 
+Check _[RELEASES.md](https://github.com/rust-ndarray/ndarray/blob/master/ndarray-rand/RELEASES.md)_ to see 
 the changes introduced in previous releases.
 
 
