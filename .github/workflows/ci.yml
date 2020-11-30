@@ -4,9 +4,7 @@ on:
   pull_request:
     branches: [ master ]
 
-
 name: Continuous integration
-
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,7 +12,7 @@ env:
   FEATURES: "test docs"
 
 jobs:
-  ci:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,8 +29,23 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-          components: rustfmt, clippy
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
+
+  clippy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - beta
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: clippy
+      - run: cargo clippy
 
