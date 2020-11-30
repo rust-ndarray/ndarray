@@ -4,17 +4,24 @@ Version 0.14.0 (2020-11-28)
 New features
 ------------
 
-- `Zip::apply_collect` and `Zip::par_apply_collect` now supports general
-  elements (not just `Copy`)
+- `Zip::apply_collect` and `Zip::par_apply_collect` now support all
+  elements (not just `Copy` elements) by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/814  
   https://github.com/rust-ndarray/ndarray/pull/817
-- New function `stack` (new behaviour!) by [@andrei-papou]
+
+- New function `stack` by [@andrei-papou]  
+  https://github.com/rust-ndarray/ndarray/pull/844  
+  https://github.com/rust-ndarray/ndarray/pull/850
 
 Enhancements
 ------------
 
-- Handle inhomogenous shape inputs better in Zip, in practice, guess better whether
+- Handle inhomogenous shape inputs better in Zip, in practice: guess better whether
   to prefer c- or f-order for the inner loop by [@bluss]
   https://github.com/rust-ndarray/ndarray/pull/809
+
+- Improve code sharing in some commonly used code by [@bluss]
+  https://github.com/rust-ndarray/ndarray/pull/819
 
 API changes
 -----------
@@ -28,6 +35,9 @@ API changes
 
   This change was unfortunately done without a deprecation period, due to the long period between releases.
 
+  https://github.com/rust-ndarray/ndarray/pull/844  
+  https://github.com/rust-ndarray/ndarray/pull/850
+
 - Enum ErrorKind is now properly non-exhaustive and has lost its old placeholder invalid variant. By [@Zuse64]
   https://github.com/rust-ndarray/ndarray/pull/848
 
@@ -39,7 +49,8 @@ API changes
   - Removed `into_subview` use `index_axis_move`
   - Removed `subview` use `index_axis`
   - Removed `slice_inplace` use `slice_collapse`
-  - Undeprecate `remove_axis` because its replacement is hard to find out on your own.
+
+- Undeprecated `remove_axis` because its replacement is hard to find out on your own.
 
 - Update public external dependencies to new versions by [@Eijebong] and [@bluss]
 
@@ -61,6 +72,8 @@ Other changes
   https://github.com/rust-ndarray/ndarray/pull/847
 
 - The minimum required rust version is Rust 1.42.
+
+- Release management by [@bluss]
 
 Version 0.13.1 (2020-04-21)
 ===========================
@@ -1020,3 +1033,4 @@ Earlier releases
 [@Eijebong]: https://github.com/Eijebong
 [@andrei-papou]: https://github.com/andrei-papou
 [@xd009642]: https://github.com/xd009642
+[@Zuse64]: https://github.com/Zuse64
