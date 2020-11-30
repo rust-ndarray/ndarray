@@ -1832,7 +1832,7 @@ where
 
     /// Remove array axis `axis` and return the result.
     ///
-    /// This is equivalent to `.index-axis_move(axis, 0)` and makes most sense to use if the
+    /// This is equivalent to `.index_axis_move(axis, 0)` and makes most sense to use if the
     /// axis to remove is of length 1.
     ///
     /// **Panics** if the axis is out of bounds or its length is zero.
