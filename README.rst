@@ -11,8 +11,8 @@ __ https://docs.rs/ndarray/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://api.travis-ci.org/rust-ndarray/ndarray.svg?branch=master
-.. _build_status: https://travis-ci.org/rust-ndarray/ndarray
+.. |build_status| image:: https://github.com/rust-ndarray/ndarray/workflows/Continuous%20integration/badge.svg?branch=master
+.. _build_status: https://github.com/rust-ndarray/ndarray/actions
 
 .. |crates| image:: http://meritbadge.herokuapp.com/ndarray
 .. _crates: https://crates.io/crates/ndarray
