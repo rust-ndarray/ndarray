@@ -138,7 +138,7 @@ pub use crate::linalg_traits::{LinalgScalar, NdFloat};
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::ShapeBuilder;
+pub use crate::shape_builder::{Shape, StrideShape, ShapeBuilder};
 
 #[macro_use]
 mod macro_utils;
@@ -1595,24 +1595,8 @@ mod impl_raw_views;
 // Copy-on-write array methods
 mod impl_cow;
 
-/// A contiguous array shape of n dimensions.
-///
-/// Either c- or f- memory ordered (*c* a.k.a *row major* is the default).
-#[derive(Copy, Clone, Debug)]
-pub struct Shape<D> {
-    dim: D,
-    is_c: bool,
-}
-
-/// An array shape of n dimensions in c-order, f-order or custom strides.
-#[derive(Copy, Clone, Debug)]
-pub struct StrideShape<D> {
-    dim: D,
-    strides: D,
-    custom: bool,
-}
-
 /// Returns `true` if the pointer is aligned.
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }
+

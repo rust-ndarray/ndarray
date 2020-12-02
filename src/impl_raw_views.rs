@@ -4,7 +4,8 @@ use std::ptr::NonNull;
 use crate::dimension::{self, stride_offset};
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
-use crate::{is_aligned, StrideShape};
+use crate::is_aligned;
+use crate::shape_builder::{Strides, StrideShape};
 
 impl<A, D> RawArrayView<A, D>
 where
@@ -69,11 +70,15 @@ where
     {
         let shape = shape.into();
         let dim = shape.dim;
-        let strides = shape.strides;
         if cfg!(debug_assertions) {
             assert!(!ptr.is_null(), "The pointer must be non-null.");
-            dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+            if let Strides::Custom(strides) = &shape.strides {
+                dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+            } else {
+                dimension::size_of_shape_checked(&dim).unwrap();
+            }
         }
+        let strides = shape.strides.strides_for_dim(&dim);
         RawArrayView::new_(ptr, dim, strides)
     }
 
@@ -205,11 +210,15 @@ where
     {
         let shape = shape.into();
         let dim = shape.dim;
-        let strides = shape.strides;
         if cfg!(debug_assertions) {
             assert!(!ptr.is_null(), "The pointer must be non-null.");
-            dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+            if let Strides::Custom(strides) = &shape.strides {
+                dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+            } else {
+                dimension::size_of_shape_checked(&dim).unwrap();
+            }
         }
+        let strides = shape.strides.strides_for_dim(&dim);
         RawArrayViewMut::new_(ptr, dim, strides)
     }
 
