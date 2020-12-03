@@ -358,7 +358,7 @@ where
     {
         let shape = shape.into_shape();
         let _ = size_of_shape_checked_unwrap!(&shape.dim);
-        if shape.is_c {
+        if shape.is_c() {
             let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
             unsafe { Self::from_shape_vec_unchecked(shape, v) }
         } else {
@@ -411,15 +411,12 @@ where
 
     fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError> {
         let dim = shape.dim;
-        let strides = shape.strides;
-        if shape.custom {
-            dimension::can_index_slice(&v, &dim, &strides)?;
-        } else {
-            dimension::can_index_slice_not_custom::<A, _>(&v, &dim)?;
-            if dim.size() != v.len() {
-                return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
-            }
+        let is_custom = shape.strides.is_custom();
+        dimension::can_index_slice_with_strides(&v, &dim, &shape.strides)?;
+        if !is_custom && dim.size() != v.len() {
+            return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
         }
+        let strides = shape.strides.strides_for_dim(&dim);
         unsafe { Ok(Self::from_vec_dim_stride_unchecked(dim, strides, v)) }
     }
 
@@ -451,7 +448,9 @@ where
         Sh: Into<StrideShape<D>>,
     {
         let shape = shape.into();
-        Self::from_vec_dim_stride_unchecked(shape.dim, shape.strides, v)
+        let dim = shape.dim;
+        let strides = shape.strides.strides_for_dim(&dim);
+        Self::from_vec_dim_stride_unchecked(dim, strides, v)
     }
 
     unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {

@@ -53,12 +53,8 @@ where
 
     fn from_shape_impl(shape: StrideShape<D>, xs: &'a [A]) -> Result<Self, ShapeError> {
         let dim = shape.dim;
-        let strides = shape.strides;
-        if shape.custom {
-            dimension::can_index_slice(xs, &dim, &strides)?;
-        } else {
-            dimension::can_index_slice_not_custom::<A, _>(xs, &dim)?;
-        }
+        dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
+        let strides = shape.strides.strides_for_dim(&dim);
         unsafe { Ok(Self::new_(xs.as_ptr(), dim, strides)) }
     }
 
@@ -149,12 +145,8 @@ where
 
     fn from_shape_impl(shape: StrideShape<D>, xs: &'a mut [A]) -> Result<Self, ShapeError> {
         let dim = shape.dim;
-        let strides = shape.strides;
-        if shape.custom {
-            dimension::can_index_slice(xs, &dim, &strides)?;
-        } else {
-            dimension::can_index_slice_not_custom::<A, _>(xs, &dim)?;
-        }
+        dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
+        let strides = shape.strides.strides_for_dim(&dim);
         unsafe { Ok(Self::new_(xs.as_mut_ptr(), dim, strides)) }
     }
 

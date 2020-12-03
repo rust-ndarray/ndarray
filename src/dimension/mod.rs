@@ -19,6 +19,8 @@ pub use self::dynindeximpl::IxDynImpl;
 pub use self::ndindex::NdIndex;
 pub use self::remove_axis::RemoveAxis;
 
+use crate::shape_builder::Strides;
+
 use std::isize;
 use std::mem;
 
@@ -114,11 +116,24 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
 /// conditions 1 and 2 are sufficient to guarantee that the offset in units of
 /// `A` and in units of bytes between the least address and greatest address
 /// accessible by moving along all axes does not exceed `isize::MAX`.
-pub fn can_index_slice_not_custom<A, D: Dimension>(data: &[A], dim: &D) -> Result<(), ShapeError> {
+pub(crate) fn can_index_slice_with_strides<A, D: Dimension>(data: &[A], dim: &D,
+                                                            strides: &Strides<D>)
+    -> Result<(), ShapeError>
+{
+    if let Strides::Custom(strides) = strides {
+        can_index_slice(data, dim, strides)
+    } else {
+        can_index_slice_not_custom(data.len(), dim)
+    }
+}
+
+pub(crate) fn can_index_slice_not_custom<D: Dimension>(data_len: usize, dim: &D)
+    -> Result<(), ShapeError>
+{
     // Condition 1.
     let len = size_of_shape_checked(dim)?;
     // Condition 2.
-    if len > data.len() {
+    if len > data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
     Ok(())
@@ -217,7 +232,7 @@ where
 /// condition 4 is sufficient to guarantee that the absolute difference in
 /// units of `A` and in units of bytes between the least address and greatest
 /// address accessible by moving along all axes does not exceed `isize::MAX`.
-pub fn can_index_slice<A, D: Dimension>(
+pub(crate) fn can_index_slice<A, D: Dimension>(
     data: &[A],
     dim: &D,
     strides: &D,
@@ -771,7 +786,7 @@ mod test {
     quickcheck! {
         fn can_index_slice_not_custom_same_as_can_index_slice(data: Vec<u8>, dim: Vec<usize>) -> bool {
             let dim = IxDyn(&dim);
-            let result = can_index_slice_not_custom(&data, &dim);
+            let result = can_index_slice_not_custom(data.len(), &dim);
             if dim.size_checked().is_none() {
                 // Avoid overflow `dim.default_strides()` or `dim.fortran_strides()`.
                 result.is_err()
