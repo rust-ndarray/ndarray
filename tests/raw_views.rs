@@ -14,7 +14,7 @@ fn raw_view_cast_cell() {
         let raw_cell_view = a.raw_view_mut().cast::<Cell<f32>>();
         let cell_view = unsafe { raw_cell_view.deref_into_view() };
 
-        Zip::from(cell_view).apply(|elt| elt.set(elt.get() + 1.));
+        Zip::from(cell_view).for_each(|elt| elt.set(elt.get() + 1.));
     }
     assert_eq!(a, answer);
 }

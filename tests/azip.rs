@@ -243,7 +243,7 @@ fn test_broadcast() {
             .and_broadcast(&b)
             .and_broadcast(&d)
             .and_broadcast(&e);
-        z.apply(|x, &y, &z, &w| *x = y + z + w);
+        z.for_each(|x, &y, &z, &w| *x = y + z + w);
     }
     let sum = &b + &d + &e;
     assert_abs_diff_eq!(a, sum.broadcast((n, n)).unwrap(), epsilon = 1e-4);
@@ -293,11 +293,11 @@ fn test_clone() {
     let z = Zip::from(&a).and(a.exact_chunks((1, 1, 1)));
     let w = z.clone();
     let mut result = Vec::new();
-    z.apply(|x, y| {
+    z.for_each(|x, y| {
         result.push((x, y));
     });
     let mut i = 0;
-    w.apply(|x, y| {
+    w.for_each(|x, y| {
         assert_eq!(result[i], (x, y));
         i += 1;
     });
@@ -324,7 +324,7 @@ fn test_indices_1() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1).apply(|i, elt| {
+    Zip::indexed(&a1).for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -334,12 +334,12 @@ fn test_indices_1() {
     let len = a1.len();
     let (x, y) = Zip::indexed(&mut a1).split();
 
-    x.apply(|i, elt| {
+    x.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
     assert_eq!(count, len / 2);
-    y.apply(|i, elt| {
+    y.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -364,12 +364,12 @@ fn test_indices_2() {
     let len = a1.len();
     let (x, y) = Zip::indexed(&mut a1).split();
 
-    x.apply(|i, elt| {
+    x.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
     assert_eq!(count, len / 2);
-    y.apply(|i, elt| {
+    y.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -384,7 +384,7 @@ fn test_indices_3() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1).apply(|i, elt| {
+    Zip::indexed(&a1).for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -394,12 +394,12 @@ fn test_indices_3() {
     let len = a1.len();
     let (x, y) = Zip::indexed(&mut a1).split();
 
-    x.apply(|i, elt| {
+    x.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
     assert_eq!(count, len / 2);
-    y.apply(|i, elt| {
+    y.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -418,12 +418,12 @@ fn test_indices_split_1() {
             let mut seen = Vec::new();
 
             let mut ac = 0;
-            a.apply(|i, _| {
+            a.for_each(|i, _| {
                 ac += 1;
                 seen.push(i);
             });
             let mut bc = 0;
-            b.apply(|i, _| {
+            b.for_each(|i, _| {
                 bc += 1;
                 seen.push(i);
             });

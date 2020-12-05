@@ -112,7 +112,7 @@ where
                 let perm_i = perm.indices[i];
                 Zip::from(result.index_axis_mut(axis, perm_i))
                     .and(self.index_axis(axis, i))
-                    .apply(|to, from| {
+                    .for_each(|to, from| {
                         copy_nonoverlapping(from, to.as_mut_ptr(), 1);
                         moved_elements += 1;
                     });

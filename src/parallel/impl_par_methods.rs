@@ -59,12 +59,25 @@ macro_rules! zip_impl {
                   D: Dimension,
                   $($p: NdProducer<Dim=D> ,)*
         {
+            /// The `par_for_each` method for `Zip`.
+            ///
+            /// This is a shorthand for using `.into_par_iter().for_each()` on
+            /// `Zip`.
+            ///
+            /// Requires crate feature `rayon`.
+            pub fn par_for_each<F>(self, function: F)
+                where F: Fn($($p::Item),*) + Sync + Send
+            {
+                self.into_par_iter().for_each(move |($($p,)*)| function($($p),*))
+            }
+
             /// The `par_apply` method for `Zip`.
             ///
             /// This is a shorthand for using `.into_par_iter().for_each()` on
             /// `Zip`.
             ///
             /// Requires crate feature `rayon`.
+            #[deprecated(note="Renamed to .par_for_each()", since="0.15.0")]
             pub fn par_apply<F>(self, function: F)
                 where F: Fn($($p::Item),*) + Sync + Send
             {
@@ -133,7 +146,7 @@ macro_rules! zip_impl {
                       Q::Output: Send,
             {
                 self.and(into)
-                    .par_apply(move |$($p, )* output_| {
+                    .par_for_each(move |$($p, )* output_| {
                         output_.assign_elem(f($($p ),*));
                     });
             }

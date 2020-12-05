@@ -308,7 +308,7 @@ fn axis_iter_zip() {
     let a = Array::from_iter(0..5);
     let iter = a.axis_iter(Axis(0));
     let mut b = Array::zeros(5);
-    Zip::from(&mut b).and(iter).apply(|b, a| *b = a[()]);
+    Zip::from(&mut b).and(iter).for_each(|b, a| *b = a[()]);
     assert_eq!(a, b);
 }
 
@@ -320,7 +320,7 @@ fn axis_iter_zip_partially_consumed() {
     while iter.next().is_some() {
         consumed += 1;
         let mut b = Array::zeros(a.len() - consumed);
-        Zip::from(&mut b).and(iter.clone()).apply(|b, a| *b = a[()]);
+        Zip::from(&mut b).and(iter.clone()).for_each(|b, a| *b = a[()]);
         assert_eq!(a.slice(s![consumed..]), b);
     }
 }
@@ -334,7 +334,7 @@ fn axis_iter_zip_partially_consumed_discontiguous() {
         consumed += 1;
         let mut b = Array::zeros((a.len() - consumed) * 2);
         b.slice_collapse(s![..;2]);
-        Zip::from(&mut b).and(iter.clone()).apply(|b, a| *b = a[()]);
+        Zip::from(&mut b).and(iter.clone()).for_each(|b, a| *b = a[()]);
         assert_eq!(a.slice(s![consumed..]), b);
     }
 }
@@ -487,7 +487,7 @@ fn axis_iter_mut_zip() {
     let mut cloned = orig.clone();
     let iter = cloned.axis_iter_mut(Axis(0));
     let mut b = Array::zeros(5);
-    Zip::from(&mut b).and(iter).apply(|b, mut a| {
+    Zip::from(&mut b).and(iter).for_each(|b, mut a| {
         a[()] += 1;
         *b = a[()];
     });
@@ -505,7 +505,7 @@ fn axis_iter_mut_zip_partially_consumed() {
             iter.next();
         }
         let mut b = Array::zeros(remaining);
-        Zip::from(&mut b).and(iter).apply(|b, a| *b = a[()]);
+        Zip::from(&mut b).and(iter).for_each(|b, a| *b = a[()]);
         assert_eq!(a.slice(s![consumed..]), b);
     }
 }
@@ -521,7 +521,7 @@ fn axis_iter_mut_zip_partially_consumed_discontiguous() {
         }
         let mut b = Array::zeros(remaining * 2);
         b.slice_collapse(s![..;2]);
-        Zip::from(&mut b).and(iter).apply(|b, a| *b = a[()]);
+        Zip::from(&mut b).and(iter).for_each(|b, a| *b = a[()]);
         assert_eq!(a.slice(s![consumed..]), b);
     }
 }

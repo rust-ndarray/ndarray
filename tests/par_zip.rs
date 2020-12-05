@@ -11,14 +11,14 @@ const N: usize = 100;
 fn test_zip_1() {
     let mut a = Array2::<f64>::zeros((M, N));
 
-    Zip::from(&mut a).par_apply(|x| *x = x.exp());
+    Zip::from(&mut a).par_for_each(|x| *x = x.exp());
 }
 
 #[test]
 fn test_zip_index_1() {
     let mut a = Array2::default((10, 10));
 
-    Zip::indexed(&mut a).par_apply(|i, x| {
+    Zip::indexed(&mut a).par_for_each(|i, x| {
         *x = i;
     });
 
@@ -31,7 +31,7 @@ fn test_zip_index_1() {
 fn test_zip_index_2() {
     let mut a = Array2::default((M, N));
 
-    Zip::indexed(&mut a).par_apply(|i, x| {
+    Zip::indexed(&mut a).par_for_each(|i, x| {
         *x = i;
     });
 
@@ -44,7 +44,7 @@ fn test_zip_index_2() {
 fn test_zip_index_3() {
     let mut a = Array::default((1, 2, 1, 2, 3));
 
-    Zip::indexed(&mut a).par_apply(|i, x| {
+    Zip::indexed(&mut a).par_for_each(|i, x| {
         *x = i;
     });
 
@@ -58,7 +58,7 @@ fn test_zip_index_4() {
     let mut a = Array2::zeros((M, N));
     let mut b = Array2::zeros((M, N));
 
-    Zip::indexed(&mut a).and(&mut b).par_apply(|(i, j), x, y| {
+    Zip::indexed(&mut a).and(&mut b).par_for_each(|(i, j), x, y| {
         *x = i;
         *y = j;
     });

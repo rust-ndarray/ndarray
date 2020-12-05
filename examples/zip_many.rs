@@ -41,11 +41,11 @@ fn main() {
     // Let's imagine we split to parallelize
     {
         let (x, y) = Zip::indexed(&mut a).split();
-        x.apply(|(_, j), elt| {
+        x.for_each(|(_, j), elt| {
             *elt = elt.powi(j as i32);
         });
 
-        y.apply(|(_, j), elt| {
+        y.for_each(|(_, j), elt| {
             *elt = elt.powi(j as i32);
         });
     }
