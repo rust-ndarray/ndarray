@@ -9,8 +9,8 @@
 //! The data (inner representation) traits for ndarray
 
 use rawpointer::PointerExt;
-use std::mem::{self, size_of};
-use std::ptr::NonNull;
+use core::mem::{self, size_of};
+use core::ptr::NonNull;
 use std::sync::Arc;
 
 use crate::{

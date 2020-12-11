@@ -19,8 +19,8 @@ pub use self::dynindeximpl::IxDynImpl;
 pub use self::ndindex::NdIndex;
 pub use self::remove_axis::RemoveAxis;
 
-use std::isize;
-use std::mem;
+use core::isize;
+use core::mem;
 
 #[macro_use]
 mod macros;

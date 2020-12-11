@@ -6,12 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::hash;
-use std::isize;
-use std::iter::FromIterator;
-use std::iter::IntoIterator;
-use std::mem;
-use std::ops::{Index, IndexMut};
+use core::hash;
+use core::isize;
+use core::iter::FromIterator;
+use core::iter::IntoIterator;
+use core::mem;
+use core::ops::{Index, IndexMut};
 
 use crate::imp_prelude::*;
 use crate::iter::{Iter, IterMut};
@@ -154,7 +154,7 @@ where
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
-    /// use std::iter::FromIterator;
+    /// use core::iter::FromIterator;
     ///
     /// // Either use `from_iter` directly or use `Iterator::collect`.
     /// let array = Array::from_iter((0..5).map(|x| x * x));
@@ -281,7 +281,7 @@ where
         let xs = slice.as_ref();
         if mem::size_of::<A>() == 0 {
             assert!(
-                xs.len() <= ::std::isize::MAX as usize,
+                xs.len() <= ::core::isize::MAX as usize,
                 "Slice length must fit in `isize`.",
             );
         }
@@ -313,7 +313,7 @@ where
         let xs = slice.as_mut();
         if mem::size_of::<A>() == 0 {
             assert!(
-                xs.len() <= ::std::isize::MAX as usize,
+                xs.len() <= ::core::isize::MAX as usize,
                 "Slice length must fit in `isize`.",
             );
         }

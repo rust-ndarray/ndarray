@@ -13,7 +13,7 @@
 #![allow(clippy::match_wild_err_arm)]
 
 use num_traits::{Float, One, Zero};
-use std::mem::MaybeUninit;
+use core::mem::MaybeUninit;
 
 use crate::dimension;
 use crate::error::{self, ShapeError};

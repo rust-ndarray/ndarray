@@ -1,4 +1,4 @@
-use std::ptr::NonNull;
+use core::ptr::NonNull;
 
 /// Return a NonNull<T> pointer to the vector's data
 pub(crate) fn nonnull_from_vec_data<T>(v: &mut Vec<T>) -> NonNull<T> {

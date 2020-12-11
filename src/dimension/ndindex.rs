@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::zip;

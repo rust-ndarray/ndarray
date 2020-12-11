@@ -21,7 +21,7 @@ impl<A> Array<A, Ix0> {
     /// assert_eq!(scalar, Foo);
     /// ```
     pub fn into_scalar(self) -> A {
-        let size = ::std::mem::size_of::<A>();
+        let size = ::core::mem::size_of::<A>();
         if size == 0 {
             // Any index in the `Vec` is fine since all elements are identical.
             self.data.into_vec().remove(0)

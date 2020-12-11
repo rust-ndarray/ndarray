@@ -114,7 +114,7 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 use std::sync::Arc;
 
 pub use crate::dimension::dim::*;
@@ -1232,7 +1232,7 @@ where
     data: S,
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<S::Elem>,
+    ptr: core::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
@@ -1628,5 +1628,5 @@ pub struct StrideShape<D> {
 
 /// Returns `true` if the pointer is aligned.
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
-    (ptr as usize) % ::std::mem::align_of::<T>() == 0
+    (ptr as usize) % ::core::mem::align_of::<T>() == 0
 }

@@ -226,7 +226,7 @@ mod arithmetic_ops {
     use crate::imp_prelude::*;
 
     use num_complex::Complex;
-    use std::ops::*;
+    use core::ops::*;
 
     impl_binary_op!(Add, +, add, +=, "addition");
     impl_binary_op!(Sub, -, sub, -=, "subtraction");
@@ -357,7 +357,7 @@ mod assign_ops {
 
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {
-            use std::ops::$trt;
+            use core::ops::$trt;
 
             #[doc=$doc]
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.

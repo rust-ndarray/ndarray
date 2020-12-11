@@ -1,7 +1,7 @@
 
-use std::mem;
-use std::mem::ManuallyDrop;
-use std::ptr::NonNull;
+use core::mem;
+use core::mem::ManuallyDrop;
+use core::ptr::NonNull;
 use std::slice;
 use crate::extension::nonnull;
 

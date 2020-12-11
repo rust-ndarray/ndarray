@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::fmt;
 
+use core::fmt;
 use super::Dimension;
 use super::IntoDimension;
 use crate::itertools::zip;
@@ -82,7 +82,7 @@ where
     }
 }
 
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 macro_rules! impl_op {
     ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {

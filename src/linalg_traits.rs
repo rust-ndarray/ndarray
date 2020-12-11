@@ -7,9 +7,9 @@
 // except according to those terms.
 use crate::ScalarOperand;
 use num_traits::{Float, One, Zero};
-use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
-use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
+use core::fmt;
+use core::ops::{Add, Div, Mul, Sub};
+use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 /// Elements that support linear algebra operations.
 ///

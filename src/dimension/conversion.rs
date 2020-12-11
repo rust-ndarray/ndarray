@@ -9,7 +9,7 @@
 //! Tuple to array conversion, IntoDimension, and related things
 
 use num_traits::Zero;
-use std::ops::{Index, IndexMut};
+use core::ops::{Index, IndexMut};
 
 use crate::{Dim, Dimension, Ix, Ix1, IxDyn, IxDynImpl};
 

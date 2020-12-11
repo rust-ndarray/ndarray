@@ -1,6 +1,6 @@
 use crate::imp_prelude::*;
-use std::hash::{Hash, Hasher};
-use std::ops::{Deref, DerefMut, Index, IndexMut};
+use core::hash::{Hash, Hasher};
+use core::ops::{Deref, DerefMut, Index, IndexMut};
 
 const CAP: usize = 4;
 

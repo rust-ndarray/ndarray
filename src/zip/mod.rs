@@ -9,7 +9,7 @@
 #[macro_use]
 mod zipmacro;
 
-use std::mem::MaybeUninit;
+use core::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
 use crate::AssignElem;

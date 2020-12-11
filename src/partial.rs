@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ptr;
+use core::ptr;
 
 /// Partial is a partially written contiguous slice of data;
 /// it is the owner of the elements, but not the allocation,

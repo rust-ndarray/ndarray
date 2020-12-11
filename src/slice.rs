@@ -8,9 +8,9 @@
 use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
 use crate::{ArrayViewMut, Dimension};
-use std::fmt;
-use std::marker::PhantomData;
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use core::fmt;
+use core::marker::PhantomData;
+use core::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 /// A slice (range with step size).
 ///
@@ -602,11 +602,11 @@ macro_rules! s(
         }
     };
     // empty call, i.e. `s![]`
-    (@parse ::std::marker::PhantomData::<$crate::Ix0>, []) => {
+    (@parse ::core::marker::PhantomData::<$crate::Ix0>, []) => {
         {
             #[allow(unsafe_code)]
             unsafe {
-                $crate::SliceInfo::new_unchecked([], ::std::marker::PhantomData::<$crate::Ix0>)
+                $crate::SliceInfo::new_unchecked([], ::core::marker::PhantomData::<$crate::Ix0>)
             }
         }
     };
@@ -614,16 +614,16 @@ macro_rules! s(
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
     // convert range/index into SliceOrIndex
     (@convert $r:expr) => {
-        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r)
+        <$crate::SliceOrIndex as ::core::convert::From<_>>::from($r)
     };
     // convert range/index and step into SliceOrIndex
     (@convert $r:expr, $s:expr) => {
-        <$crate::SliceOrIndex as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        <$crate::SliceOrIndex as ::core::convert::From<_>>::from($r).step_by($s as isize)
     };
     ($($t:tt)*) => {
         // The extra `*&` is a workaround for this compiler bug:
         // https://github.com/rust-lang/rust/issues/23014
-        &*&$crate::s![@parse ::std::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
+        &*&$crate::s![@parse ::core::marker::PhantomData::<$crate::Ix0>, [] $($t)*]
     };
 );
 

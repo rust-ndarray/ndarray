@@ -13,9 +13,9 @@ pub mod iter;
 mod lanes;
 mod windows;
 
-use std::iter::FromIterator;
-use std::marker::PhantomData;
-use std::ptr;
+use core::iter::FromIterator;
+use core::marker::PhantomData;
+use core::ptr;
 
 use crate::Ix1;
 

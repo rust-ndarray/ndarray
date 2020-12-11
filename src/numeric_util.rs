@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cmp;
+use core::cmp;
 
 use crate::LinalgScalar;
 

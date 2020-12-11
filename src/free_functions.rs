@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::mem::{forget, size_of};
+use core::mem::{forget, size_of};
 use std::slice;
 
 use crate::imp_prelude::*;
