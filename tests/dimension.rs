@@ -4,7 +4,7 @@ use defmac::defmac;
 
 use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IntoDimension, IxDyn, RemoveAxis};
 
-use std::hash::{Hash, Hasher};
+use core::hash::{Hash, Hasher};
 
 #[test]
 fn insert_axis() {

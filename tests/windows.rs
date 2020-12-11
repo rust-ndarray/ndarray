@@ -7,7 +7,7 @@
 
 use ndarray::prelude::*;
 use ndarray::Zip;
-use std::iter::FromIterator;
+use core::iter::FromIterator;
 
 // Edge Cases for Windows iterator:
 //

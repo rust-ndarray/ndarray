@@ -10,7 +10,7 @@ use ndarray::prelude::*;
 fn regularize<A, D>(a: &mut Array<A, D>) -> Result<(), ()>
 where
     D: Dimension,
-    A: ::std::fmt::Debug,
+    A: ::core::fmt::Debug,
 {
     println!("Regularize:\n{:?}", a);
     // reverse all neg axes

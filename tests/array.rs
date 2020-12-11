@@ -13,7 +13,7 @@ use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
-use std::iter::FromIterator;
+use core::iter::FromIterator;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -1048,7 +1048,7 @@ fn owned_array_with_stride() {
 
 #[test]
 fn owned_array_discontiguous() {
-    use std::iter::repeat;
+    use core::iter::repeat;
     let v: Vec<_> = (0..12).flat_map(|x| repeat(x).take(2)).collect();
     let dim = (3, 2, 2);
     let strides = (8, 4, 2);
@@ -1061,7 +1061,7 @@ fn owned_array_discontiguous() {
 
 #[test]
 fn owned_array_discontiguous_drop() {
-    use std::cell::RefCell;
+    use core::cell::RefCell;
     use std::collections::BTreeSet;
     use std::rc::Rc;
 
@@ -2018,7 +2018,7 @@ fn array_macros() {
 mod as_standard_layout_tests {
     use super::*;
     use ndarray::Data;
-    use std::fmt::Debug;
+    use core::fmt::Debug;
 
     fn test_as_standard_layout_for<S, D>(orig: ArrayBase<S, D>)
     where

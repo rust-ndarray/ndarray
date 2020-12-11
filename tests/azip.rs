@@ -8,11 +8,11 @@
 
 use ndarray::prelude::*;
 use ndarray::Zip;
-use std::iter::FromIterator;
+use core::iter::FromIterator;
 
 use itertools::{assert_equal, cloned};
 
-use std::mem::swap;
+use core::mem::swap;
 
 #[test]
 fn test_azip1() {
@@ -95,7 +95,7 @@ fn test_zip_assign_into() {
 #[cfg(feature = "approx")]
 fn test_zip_assign_into_cell() {
     use approx::assert_abs_diff_eq;
-    use std::cell::Cell;
+    use core::cell::Cell;
 
     let a = Array::<Cell<f32>, _>::default((5, 10));
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
@@ -109,8 +109,8 @@ fn test_zip_assign_into_cell() {
 
 #[test]
 fn test_zip_collect_drop() {
-    use std::cell::RefCell;
-    use std::panic;
+    use core::cell::RefCell;
+    use core::panic;
 
     struct Recorddrop<'a>((usize, usize), &'a RefCell<Vec<(usize, usize)>>);
 

@@ -11,7 +11,7 @@ use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice, Zip}
 
 use itertools::assert_equal;
 use itertools::{enumerate, rev};
-use std::iter::FromIterator;
+use core::iter::FromIterator;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -80,7 +80,7 @@ fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
 where
     S: Data<Elem = A>,
     D: Dimension,
-    A: PartialEq + std::fmt::Debug,
+    A: PartialEq + core::fmt::Debug,
 {
     let slc = v.as_slice();
     assert!(slc.is_some());
