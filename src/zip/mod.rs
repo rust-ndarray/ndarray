@@ -691,12 +691,14 @@ impl<P, D> Zip<P, D>
 where
     D: Dimension,
 {
-    fn apply_core<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
+    fn apply_core<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
     {
-        if self.layout.is(CORDER | FORDER) {
+        if self.dimension.ndim() == 0 {
+            function(acc, unsafe { self.parts.as_ref(self.parts.as_ptr()) })
+        } else if self.layout.is(CORDER | FORDER) {
             self.apply_core_contiguous(acc, function)
         } else {
             self.apply_core_strided(acc, function)
