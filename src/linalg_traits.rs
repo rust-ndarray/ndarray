@@ -6,7 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use crate::ScalarOperand;
-use num_traits::{Float, One, Zero};
+#[cfg(feature = "std")]
+use num_traits::Float;
+use num_traits::{One, Zero};
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
@@ -47,6 +49,7 @@ impl<T> LinalgScalar for T where
 /// operations (`ScalarOperand`).
 ///
 /// This trait can only be implemented by `f32` and `f64`.
+#[cfg(feature = "std")]
 pub trait NdFloat:
     Float
     + AddAssign
@@ -65,5 +68,8 @@ pub trait NdFloat:
 {
 }
 
+#[cfg(feature = "std")]
 impl NdFloat for f32 {}
+#[cfg(feature = "std")]
 impl NdFloat for f64 {}
+

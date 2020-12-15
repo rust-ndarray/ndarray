@@ -10,7 +10,7 @@
 #![allow(
     clippy::many_single_char_names,
     clippy::deref_addrof,
-    clippy::unreadable_literal,
+    clippy::unreadable_literal
 )]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
@@ -106,7 +106,7 @@
 //!
 //! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
 //!
-//! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and 
+//! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
 //! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
 #[cfg(feature = "blas")]
@@ -133,12 +133,14 @@ use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
 
 pub use crate::arraytraits::AsArray;
-pub use crate::linalg_traits::{LinalgScalar, NdFloat};
+#[cfg(feature = "std")]
+pub use crate::linalg_traits::NdFloat;
+pub use crate::linalg_traits::LinalgScalar; 
 
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::{Shape, StrideShape, ShapeBuilder};
+pub use crate::shape_builder::{Shape, ShapeBuilder, StrideShape};
 
 #[macro_use]
 mod macro_utils;
@@ -147,16 +149,16 @@ mod private;
 mod aliases;
 #[macro_use]
 mod itertools;
+mod argument_traits;
 #[cfg(feature = "approx")]
 mod array_approx;
 #[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
-mod argument_traits;
 pub use crate::argument_traits::AssignElem;
-mod data_traits;
 mod data_repr;
+mod data_traits;
 
 pub use crate::aliases::*;
 
@@ -1599,4 +1601,3 @@ mod impl_cow;
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }
-
