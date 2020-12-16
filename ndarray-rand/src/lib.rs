@@ -49,6 +49,8 @@ pub mod rand_distr {
     pub use rand_distr::*;
 }
 
+pub mod normal;
+
 /// Constructors for n-dimensional arrays with random elements.
 ///
 /// This trait extends ndarray’s `ArrayBase` and can not be implemented
@@ -90,7 +92,7 @@ where
         IdS: Distribution<S::Elem>,
         Sh: ShapeBuilder<Dim = D>;
 
-    /// Create an array with shape `dim` with elements drawn from
+    /// Create an array with shape `shape` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
     ///
     /// ***Panics*** if the number of elements overflows usize.

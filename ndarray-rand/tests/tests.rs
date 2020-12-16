@@ -4,6 +4,7 @@ use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 
 use ndarray::ShapeBuilder;
 use ndarray_rand::rand_distr::Uniform;
+use ndarray_rand::normal::MultivariateStandardNormal;
 use ndarray_rand::{RandomExt, SamplingStrategy};
 use quickcheck::quickcheck;
 
@@ -36,6 +37,30 @@ fn test_dim_f() {
 }
 
 #[test]
+fn test_standard_normal() {
+    let shape = 2usize;
+    let n = MultivariateStandardNormal::new(shape);
+    let ref mut rng = rand::thread_rng();
+    let s: ndarray::Array1<f64> = n.sample(rng);
+    assert_eq!(s.shape(), &[2]);
+}
+
+#[cfg(features = "normaldist")]
+#[test]
+fn test_normal() {
+    use ndarray::IntoDimension;
+    use ndarray::{Array1, arr2};
+    use ndarray_rand::normal::advanced::MultivariateNormal;
+    let mean = Array1::from_vec([1., 0.]);
+    let covar = arr2([
+        [1., 0.8], [0.8, 1.]]);
+    let ref mut rng = rand::thread_rng();
+    let n = MultivariateNormal::new(mean, covar);
+    if let Ok(n) = n {
+        let x = n.sample(rng);
+        assert_eq!(x.shape(), &[2, 2]);
+    }
+}
 #[should_panic]
 fn oversampling_without_replacement_should_panic() {
     let m = 5;

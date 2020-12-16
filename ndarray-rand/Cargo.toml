@@ -18,6 +18,14 @@ ndarray = { version = "0.14", path = ".." }
 rand_distr = "0.3.0"
 quickcheck = { version = "0.9", default-features = false, optional = true }
 
+[features]
+normaldist = ["ndarray-linalg"]
+
+[dependencies.ndarray-linalg]
+version = "0.11"
+optional = true
+features = ["openblas"]
+
 [dependencies.rand]
 version = "0.7.0"
 features = ["small_rng"]
