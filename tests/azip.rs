@@ -110,7 +110,7 @@ fn test_zip_assign_into_cell() {
 #[test]
 fn test_zip_collect_drop() {
     use core::cell::RefCell;
-    use core::panic;
+    use std::panic;
 
     struct Recorddrop<'a>((usize, usize), &'a RefCell<Vec<(usize, usize)>>);
 
