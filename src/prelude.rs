@@ -20,7 +20,6 @@
 #[allow(deprecated)]
 pub use crate::{
     ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, CowArray, RawArrayView, RawArrayViewMut,
-    RcArray,
 };
 
 #[doc(no_inline)]
@@ -52,4 +51,8 @@ pub use crate::{array, azip, s};
 pub use crate::ShapeBuilder;
 
 #[doc(no_inline)]
-pub use crate::{AsArray, NdFloat};
+pub use crate::AsArray;
+
+#[doc(no_inline)]
+#[cfg(feature = "std")]
+pub use crate::NdFloat;

@@ -304,6 +304,19 @@ fn test_clone() {
 }
 
 #[test]
+fn test_indices_0() {
+    let a1 = arr0(3);
+
+    let mut count = 0;
+    Zip::indexed(&a1).apply(|i, elt| {
+        count += 1;
+        assert_eq!(i, ());
+        assert_eq!(*elt, 3);
+    });
+    assert_eq!(count, 1);
+}
+
+#[test]
 fn test_indices_1() {
     let mut a1 = Array::default(12);
     for (i, elt) in a1.indexed_iter_mut() {

@@ -11,8 +11,8 @@ __ https://docs.rs/ndarray/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://api.travis-ci.org/rust-ndarray/ndarray.svg?branch=master
-.. _build_status: https://travis-ci.org/rust-ndarray/ndarray
+.. |build_status| image:: https://github.com/rust-ndarray/ndarray/workflows/Continuous%20integration/badge.svg?branch=master
+.. _build_status: https://github.com/rust-ndarray/ndarray/actions
 
 .. |crates| image:: http://meritbadge.herokuapp.com/ndarray
 .. _crates: https://crates.io/crates/ndarray
@@ -71,7 +71,7 @@ How to use with cargo
 ::
 
     [dependencies]
-    ndarray = "0.13.0"
+    ndarray = "0.14.0"
 
 How to enable blas integration. Depend on ``blas-src`` directly to pick a blas
 provider. Depend on the same ``blas-src`` version as ``ndarray`` does, for the
@@ -81,15 +81,16 @@ provider::
 
 
     [dependencies]
-    ndarray = { version = "0.13.0", features = ["blas"] }
-    blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
-    openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
+    ndarray = { version = "0.14.0", features = ["blas"] }
+    blas-src = { version = "0.6.1", default-features = false, features = ["openblas"] }
+    openblas-src = { version = "0.9", default-features = false, features = ["cblas", "system"] }
 
 For official releases of ``ndarray``, the versions are:
 
 =========== ============ ================
 ``ndarray`` ``blas-src`` ``openblas-src``
 =========== ============ ================
+0.14.0      0.6.1        0.9.0
 0.13.0      0.2.0        0.6.0
 0.12.\*     0.2.0        0.6.0
 0.11.\*     0.1.2        0.5.0

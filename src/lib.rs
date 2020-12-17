@@ -6,11 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![crate_name = "ndarray"]
-#![doc(html_root_url = "https://docs.rs/ndarray/0.13/")]
+#![doc(html_root_url = "https://docs.rs/ndarray/0.14/")]
 #![allow(
     clippy::many_single_char_names,
     clippy::deref_addrof,
-    clippy::unreadable_literal,
+    clippy::unreadable_literal
 )]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
@@ -61,7 +61,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.37 or later**
+//! - **Requires Rust 1.42 or later**
 //!
 //! ## Crate Feature Flags
 //!
@@ -105,6 +105,9 @@
 //! but more advanced routines can be found in [`ndarray-stats`](https://crates.io/crates/ndarray-stats).
 //!
 //! If you are looking to generate random arrays instead, check out [`ndarray-rand`](https://crates.io/crates/ndarray-rand).
+//!
+//! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
+//! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
@@ -130,13 +133,14 @@ use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
 
 pub use crate::arraytraits::AsArray;
-pub use crate::linalg_traits::{LinalgScalar, NdFloat};
+#[cfg(feature = "std")]
+pub use crate::linalg_traits::NdFloat;
+pub use crate::linalg_traits::LinalgScalar; 
 
-#[allow(deprecated)]
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::ShapeBuilder;
+pub use crate::shape_builder::{Shape, ShapeBuilder, StrideShape};
 
 #[macro_use]
 mod macro_utils;
@@ -145,16 +149,16 @@ mod private;
 mod aliases;
 #[macro_use]
 mod itertools;
+mod argument_traits;
 #[cfg(feature = "approx")]
 mod array_approx;
 #[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
 mod arraytraits;
-mod argument_traits;
 pub use crate::argument_traits::AssignElem;
-mod data_traits;
 mod data_repr;
+mod data_traits;
 
 pub use crate::aliases::*;
 
@@ -1241,14 +1245,6 @@ where
 
 /// An array where the data has shared ownership and is copy on write.
 ///
-/// It can act as both an owner as the data as well as a shared reference (view like).
-///
-/// **Note: this type alias is obsolete.** See the equivalent [`ArcArray`] instead.
-#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
-pub type RcArray<A, D> = ArrayBase<OwnedRcRepr<A>, D>;
-
-/// An array where the data has shared ownership and is copy on write.
-///
 /// The `ArcArray<A, D>` is parameterized by `A` for the element type and `D` for
 /// the dimensionality.
 ///
@@ -1396,14 +1392,6 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 
 pub use data_repr::OwnedRepr;
-
-
-/// RcArray's representation.
-///
-/// *Don’t use this type directly—use the type alias
-/// [`RcArray`](type.RcArray.html) for the array type!*
-#[deprecated(note = "RcArray is replaced by ArcArray")]
-pub use self::OwnedArcRepr as OwnedRcRepr;
 
 /// ArcArray's representation.
 ///
@@ -1608,23 +1596,6 @@ mod impl_raw_views;
 
 // Copy-on-write array methods
 mod impl_cow;
-
-/// A contiguous array shape of n dimensions.
-///
-/// Either c- or f- memory ordered (*c* a.k.a *row major* is the default).
-#[derive(Copy, Clone, Debug)]
-pub struct Shape<D> {
-    dim: D,
-    is_c: bool,
-}
-
-/// An array shape of n dimensions in c-order, f-order or custom strides.
-#[derive(Copy, Clone, Debug)]
-pub struct StrideShape<D> {
-    dim: D,
-    strides: D,
-    custom: bool,
-}
 
 /// Returns `true` if the pointer is aligned.
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {

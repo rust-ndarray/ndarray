@@ -110,18 +110,12 @@ copy_and_clone! {SliceOrIndex}
 impl SliceOrIndex {
     /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
-        match self {
-            SliceOrIndex::Slice { .. } => true,
-            _ => false,
-        }
+        matches!(self, SliceOrIndex::Slice { .. })
     }
 
     /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
-        match self {
-            SliceOrIndex::Index(_) => true,
-            _ => false,
-        }
+        matches!(self, SliceOrIndex::Index(_))
     }
 
     /// Returns a new `SliceOrIndex` with the given step size (multiplied with

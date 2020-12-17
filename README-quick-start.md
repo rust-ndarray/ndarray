@@ -89,7 +89,7 @@ and compile, see what happens.
 
 ### How about create array of different type and having different initial values?
 
-The [`from_elm`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method can be handy here:
+The [`from_elem`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method can be handy here:
 
 ```rust
 use ndarray::{Array, Ix3};

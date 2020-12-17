@@ -3,7 +3,7 @@
 
 use crate::dimension::Dim;
 #[allow(deprecated)]
-use crate::{ArcArray, Array, ArrayView, ArrayViewMut, Ix, IxDynImpl, RcArray};
+use crate::{ArcArray, Array, ArrayView, ArrayViewMut, Ix, IxDynImpl};
 
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]
@@ -149,15 +149,6 @@ pub type ArrayViewMut5<'a, A> = ArrayViewMut<'a, A, Ix5>;
 pub type ArrayViewMut6<'a, A> = ArrayViewMut<'a, A, Ix6>;
 /// dynamic-dimensional read-write array view
 pub type ArrayViewMutD<'a, A> = ArrayViewMut<'a, A, IxDyn>;
-
-/// one-dimensional shared ownership array
-#[allow(deprecated)]
-#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
-pub type RcArray1<A> = RcArray<A, Ix1>;
-/// two-dimensional shared ownership array
-#[allow(deprecated)]
-#[deprecated(note = "`RcArray` has been renamed to `ArcArray`")]
-pub type RcArray2<A> = RcArray<A, Ix2>;
 
 /// one-dimensional shared ownership array
 pub type ArcArray1<A> = ArcArray<A, Ix1>;

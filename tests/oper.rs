@@ -10,6 +10,7 @@ use ndarray::prelude::*;
 use ndarray::{rcarr1, rcarr2};
 use ndarray::{Data, LinalgScalar};
 use ndarray::{Ix, Ixs};
+use num_traits::Zero;
 use core::iter::FromIterator;
 
 use approx::assert_abs_diff_eq;
@@ -33,10 +34,9 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32]) {
     test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<A, D>(op: &str, mut aa: ArcArray<A, D>, bb: ArcArray<A, D>, cc: ArcArray<A, D>)
+
+fn test_oper_arr<A, D>(op: &str, mut aa: ArcArray<f32, D>, bb: ArcArray<f32, D>, cc: ArcArray<f32, D>)
 where
-    A: NdFloat,
-    for<'a> &'a A: Neg<Output = A>,
     D: Dimension,
 {
     match op {
@@ -147,17 +147,16 @@ fn scalar_operations() {
     }
 }
 
-fn reference_dot<'a, A, V1, V2>(a: V1, b: V2) -> A
+fn reference_dot<'a, V1, V2>(a: V1, b: V2) -> f32
 where
-    A: NdFloat,
-    V1: AsArray<'a, A>,
-    V2: AsArray<'a, A>,
+    V1: AsArray<'a, f32>,
+    V2: AsArray<'a, f32>,
 {
     let a = a.into();
     let b = b.into();
     a.iter()
         .zip(b.iter())
-        .fold(A::zero(), |acc, (&x, &y)| acc + x * y)
+        .fold(f32::zero(), |acc, (&x, &y)| acc + x * y)
 }
 
 #[test]
