@@ -112,10 +112,7 @@
 
 
 extern crate alloc;
-#[cfg(feature = "std")]
 extern crate std;
-#[cfg(not(feature = "std"))]
-extern crate core as std;
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
