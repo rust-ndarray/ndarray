@@ -13,7 +13,9 @@
 #![allow(clippy::match_wild_err_arm)]
 
 use num_traits::{Float, One, Zero};
-use core::mem::MaybeUninit;
+use std::mem::MaybeUninit;
+use alloc::vec;
+use alloc::vec::Vec;
 
 use crate::dimension;
 use crate::error::{self, ShapeError};

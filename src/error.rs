@@ -7,7 +7,7 @@
 // except according to those terms.
 use super::Dimension;
 use std::error::Error;
-use core::fmt;
+use std::fmt;
 
 /// An error related to array shape or layout.
 #[derive(Clone)]

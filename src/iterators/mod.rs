@@ -13,9 +13,10 @@ pub mod iter;
 mod lanes;
 mod windows;
 
-use core::iter::FromIterator;
-use core::marker::PhantomData;
-use core::ptr;
+use std::iter::FromIterator;
+use std::marker::PhantomData;
+use std::ptr;
+use alloc::vec::Vec;
 
 use crate::Ix1;
 
@@ -26,7 +27,7 @@ pub use self::chunks::{ExactChunks, ExactChunksIter, ExactChunksIterMut, ExactCh
 pub use self::lanes::{Lanes, LanesMut};
 pub use self::windows::Windows;
 
-use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
+use alloc::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 /// Base for iterators over all axes.
 ///

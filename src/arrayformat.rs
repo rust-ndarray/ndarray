@@ -7,7 +7,10 @@
 // except according to those terms.
 use super::{ArrayBase, ArrayView, Axis, Data, Dimension, NdProducer};
 use crate::aliases::{Ix1, IxDyn};
-use core::fmt;
+use std::fmt;
+use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 /// Default threshold, below this element count, we don't ellipsize
 const ARRAY_MANY_ELEMENT_LIMIT: usize = 500;
@@ -46,9 +49,9 @@ impl FormatOptions {
 
     fn set_no_limit(mut self, no_limit: bool) -> Self {
         if no_limit {
-            self.axis_collapse_limit = core::usize::MAX;
-            self.axis_collapse_limit_next_last = core::usize::MAX;
-            self.axis_collapse_limit_last = core::usize::MAX;
+            self.axis_collapse_limit = std::usize::MAX;
+            self.axis_collapse_limit_next_last = std::usize::MAX;
+            self.axis_collapse_limit_last = std::usize::MAX;
             self
         } else {
             self
@@ -286,7 +289,7 @@ where
 #[cfg(test)]
 mod formatting_with_omit {
     use itertools::Itertools;
-    use core::fmt;
+    use std::fmt;
 
     use super::*;
     use crate::prelude::*;

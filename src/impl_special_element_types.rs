@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::mem::size_of;
-use core::mem::ManuallyDrop;
-use core::mem::MaybeUninit;
+use std::mem::size_of;
+use std::mem::ManuallyDrop;
+use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
 use crate::RawDataSubst;

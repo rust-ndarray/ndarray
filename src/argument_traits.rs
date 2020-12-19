@@ -1,5 +1,5 @@
-use core::cell::Cell;
-use core::mem::MaybeUninit;
+use std::cell::Cell;
+use std::mem::MaybeUninit;
 
 
 /// A producer element that can be assigned to once

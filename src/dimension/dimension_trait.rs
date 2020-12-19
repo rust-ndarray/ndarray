@@ -6,9 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::fmt::Debug;
-use core::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
-use core::ops::{Index, IndexMut};
+use std::fmt::Debug;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Index, IndexMut};
+use alloc::vec::Vec;
 
 use super::axes_of;
 use super::conversion::Convert;

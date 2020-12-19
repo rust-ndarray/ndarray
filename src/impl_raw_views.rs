@@ -1,5 +1,5 @@
-use core::mem;
-use core::ptr::NonNull;
+use std::mem;
+use std::ptr::NonNull;
 
 use crate::dimension::{self, stride_offset};
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;

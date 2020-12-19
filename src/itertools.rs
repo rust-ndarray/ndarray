@@ -9,7 +9,7 @@
 
 //! A few iterator-related utilities and tools
 
-use core::iter;
+use std::iter;
 
 /// Iterate `iterable` with a running index.
 ///

@@ -9,7 +9,8 @@
 #[macro_use]
 mod zipmacro;
 
-use core::mem::MaybeUninit;
+use std::mem::MaybeUninit;
+use alloc::vec::Vec;
 
 use crate::imp_prelude::*;
 use crate::AssignElem;

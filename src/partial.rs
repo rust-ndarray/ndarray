@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::ptr;
+use std::ptr;
 
 /// Partial is a partially written contiguous slice of data;
 /// it is the owner of the elements, but not the allocation,
@@ -81,7 +81,7 @@ impl<T> Drop for Partial<T> {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
             unsafe {
-                ptr::drop_in_place(std::slice::from_raw_parts_mut(self.ptr, self.len));
+                ptr::drop_in_place(alloc::slice::from_raw_parts_mut(self.ptr, self.len));
             }
         }
     }
