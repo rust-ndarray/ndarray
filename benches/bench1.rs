@@ -271,7 +271,7 @@ fn add_2d_alloc_zip_uninit(bench: &mut test::Bencher) {
     bench.iter(|| unsafe {
         let mut c = Array::uninitialized(a.dim());
         azip!((&a in &a, &b in &b, c in c.raw_view_mut())
-            core::ptr::write(c, a + b)
+            std::ptr::write(c, a + b)
         );
         c
     });
@@ -632,7 +632,7 @@ fn iadd_scalar_2d_strided_dyn(bench: &mut test::Bencher) {
 fn scaled_add_2d_f32_regular(bench: &mut test::Bencher) {
     let mut av = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let bv = Array::<f32, _>::zeros((ADD2DSZ, ADD2DSZ));
-    let scalar = core::f32::consts::PI;
+    let scalar = std::f32::consts::PI;
     bench.iter(|| {
         av.scaled_add(scalar, &bv);
     });

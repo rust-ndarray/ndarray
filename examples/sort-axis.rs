@@ -1,8 +1,8 @@
 use ndarray::prelude::*;
 use ndarray::{Data, RemoveAxis, Zip};
 
-use core::cmp::Ordering;
-use core::ptr::copy_nonoverlapping;
+use std::cmp::Ordering;
+use std::ptr::copy_nonoverlapping;
 
 // Type invariant: Each index appears exactly once
 #[derive(Clone, Debug)]
