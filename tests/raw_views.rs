@@ -1,7 +1,7 @@
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-use core::cell::Cell;
+use std::cell::Cell;
 
 #[test]
 fn raw_view_cast_cell() {

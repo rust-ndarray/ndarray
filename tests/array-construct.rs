@@ -200,7 +200,7 @@ fn deny_wraparound_uninit() {
 
 #[test]
 fn maybe_uninit_1() {
-    use core::mem::MaybeUninit;
+    use std::mem::MaybeUninit;
 
     unsafe {
         // Array
