@@ -7,7 +7,7 @@
 // except according to those terms.
 
 
-use core::fmt;
+use std::fmt;
 use super::Dimension;
 use super::IntoDimension;
 use crate::itertools::zip;
@@ -82,7 +82,7 @@ where
     }
 }
 
-use core::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 macro_rules! impl_op {
     ($op:ident, $op_m:ident, $opassign:ident, $opassign_m:ident, $expr:ident) => {

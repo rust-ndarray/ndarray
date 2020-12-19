@@ -12,6 +12,7 @@
     clippy::deref_addrof,
     clippy::unreadable_literal
 )]
+#![no_std]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -109,6 +110,13 @@
 //! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
 //! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
+
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(not(feature = "std"))]
+extern crate core as std;
+
 #[cfg(feature = "blas")]
 extern crate blas_src;
 #[cfg(feature = "blas")]
@@ -117,7 +125,7 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
-use core::marker::PhantomData;
+use std::marker::PhantomData;
 use std::sync::Arc;
 
 pub use crate::dimension::dim::*;
@@ -135,7 +143,7 @@ use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, Lane
 pub use crate::arraytraits::AsArray;
 #[cfg(feature = "std")]
 pub use crate::linalg_traits::NdFloat;
-pub use crate::linalg_traits::LinalgScalar; 
+pub use crate::linalg_traits::LinalgScalar;
 
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
@@ -1236,7 +1244,7 @@ where
     data: S,
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: core::ptr::NonNull<S::Elem>,
+    ptr: std::ptr::NonNull<S::Elem>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
@@ -1599,5 +1607,5 @@ mod impl_cow;
 
 /// Returns `true` if the pointer is aligned.
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
-    (ptr as usize) % ::core::mem::align_of::<T>() == 0
+    (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }

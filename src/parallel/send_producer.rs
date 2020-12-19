@@ -1,7 +1,7 @@
 
 use crate::imp_prelude::*;
 use crate::{Layout, NdProducer};
-use core::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut};
 
 /// An NdProducer that is unconditionally `Send`.
 #[repr(transparent)]

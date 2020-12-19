@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::ptr::NonNull;
+use std::ptr::NonNull;
 
 use crate::dimension;
 use crate::error::ShapeError;

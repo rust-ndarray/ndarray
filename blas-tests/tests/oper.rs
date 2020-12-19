@@ -8,7 +8,7 @@ use ndarray::linalg::general_mat_vec_mul;
 use ndarray::prelude::*;
 use ndarray::{Data, LinalgScalar};
 use ndarray::{Ix, Ixs, SliceInfo, SliceOrIndex};
-use core::iter::FromIterator;
+use std::iter::FromIterator;
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use defmac::defmac;

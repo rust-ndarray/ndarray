@@ -1,4 +1,4 @@
-use core::marker::PhantomData;
+use std::marker::PhantomData;
 
 use super::LanesIter;
 use super::LanesIterMut;

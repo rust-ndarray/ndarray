@@ -6,9 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::ptr as std_ptr;
-use std::slice;
-
+use std::ptr as std_ptr;
+use alloc::slice;
+use alloc::vec;
+use alloc::vec::Vec;
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
@@ -1013,7 +1014,7 @@ where
     /// ```
     /// use ndarray::Array;
     /// use ndarray::{arr3, Axis};
-    /// use core::iter::FromIterator;
+    /// use std::iter::FromIterator;
     ///
     /// let a = Array::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
     /// let mut iter = a.axis_chunks_iter(Axis(1), 2);

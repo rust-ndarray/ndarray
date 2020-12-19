@@ -8,7 +8,7 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{arr0, arr1, arr2, array, aview1, Array, Array1, Array2, Array3, Axis};
-use core::f64;
+use std::f64;
 
 #[test]
 fn test_mean_with_nan_values() {

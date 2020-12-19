@@ -11,12 +11,13 @@ use crate::numeric_util;
 
 use crate::{LinalgScalar, Zip};
 
-use core::any::TypeId;
+use std::any::TypeId;
+use alloc::vec::Vec;
 
 #[cfg(feature = "blas")]
-use core::cmp;
+use std::cmp;
 #[cfg(feature = "blas")]
-use core::mem::swap;
+use std::mem::swap;
 #[cfg(feature = "blas")]
 use std::os::raw::c_int;
 
@@ -285,7 +286,7 @@ where
 #[inline(never)]
 fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> ! {
     match m.checked_mul(n) {
-        Some(len) if len <= ::core::isize::MAX as usize => {}
+        Some(len) if len <= ::std::isize::MAX as usize => {}
         _ => panic!("ndarray: shape {} × {} overflows isize", m, n),
     }
     panic!(
@@ -677,7 +678,7 @@ fn same_type<A: 'static, B: 'static>() -> bool {
 // **Panics** if `A` and `B` are not the same type
 fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
     assert!(same_type::<A, B>());
-    unsafe { ::core::ptr::read(a as *const _ as *const B) }
+    unsafe { ::std::ptr::read(a as *const _ as *const B) }
 }
 
 #[cfg(feature = "blas")]

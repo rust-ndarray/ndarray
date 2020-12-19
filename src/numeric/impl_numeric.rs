@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use num_traits::{self, Float, FromPrimitive, Zero};
-use core::ops::{Add, Div, Mul};
+use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
 use crate::itertools::enumerate;

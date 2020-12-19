@@ -9,9 +9,9 @@ use crate::ScalarOperand;
 #[cfg(feature = "std")]
 use num_traits::Float;
 use num_traits::{One, Zero};
-use core::fmt;
-use core::ops::{Add, Div, Mul, Sub};
-use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
+use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 /// Elements that support linear algebra operations.
 ///

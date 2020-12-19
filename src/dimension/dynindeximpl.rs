@@ -1,7 +1,9 @@
 use crate::imp_prelude::*;
-use core::hash::{Hash, Hasher};
-use core::ops::{Deref, DerefMut, Index, IndexMut};
-
+use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
+use alloc::vec;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 const CAP: usize = 4;
 
 /// T is usize or isize

@@ -6,7 +6,7 @@
     clippy::many_single_char_names
 )]
 extern crate test;
-use core::iter::FromIterator;
+use std::iter::FromIterator;
 use test::black_box;
 use test::Bencher;
 

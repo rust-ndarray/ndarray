@@ -10,7 +10,7 @@ use super::Layout;
 
 const LAYOUT_NAMES: &[&str] = &["C", "F", "c", "f"];
 
-use core::fmt;
+use std::fmt;
 
 impl fmt::Debug for Layout {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
