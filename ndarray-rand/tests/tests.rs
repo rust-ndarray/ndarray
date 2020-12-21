@@ -36,6 +36,13 @@ fn test_dim_f() {
 }
 
 #[test]
+fn sample_axis_on_view() {
+    let m = 5;
+    let a = Array::random((m, 4), Uniform::new(0., 2.));
+    let _samples = a.view().sample_axis(Axis(0), m, SamplingStrategy::WithoutReplacement);
+}
+
+#[test]
 #[should_panic]
 fn oversampling_without_replacement_should_panic() {
     let m = 5;

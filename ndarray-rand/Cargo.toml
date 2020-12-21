@@ -1,9 +1,9 @@
 [package]
 name = "ndarray-rand"
-version = "0.12.0"
+version = "0.13.0"
 edition = "2018"
 authors = ["bluss"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 repository = "https://github.com/rust-ndarray/ndarray"
 documentation = "https://docs.rs/ndarray-rand/"
@@ -15,15 +15,15 @@ keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
 ndarray = { version = "0.14", path = ".." }
-rand_distr = "0.3.0"
+rand_distr = "0.4.0"
 quickcheck = { version = "0.9", default-features = false, optional = true }
 
 [dependencies.rand]
-version = "0.7.0"
+version = "0.8.0"
 features = ["small_rng"]
 
 [dev-dependencies]
-rand_isaac = "0.2.0"
+rand_isaac = "0.3.0"
 quickcheck = { version = "0.9", default-features = false }
 
 [package.metadata.release]

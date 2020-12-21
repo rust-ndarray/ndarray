@@ -12,7 +12,7 @@
 //!
 //! ## Note
 //!
-//! `ndarray-rand` depends on [`rand` 0.7][rand].
+//! `ndarray-rand` depends on [`rand` 0.8][rand].
 //!
 //! [`rand`][rand] and [`rand_distr`][rand_distr]
 //! are re-exported as sub-modules, [`ndarray_rand::rand`](rand/index.html)
@@ -20,8 +20,8 @@
 //! You can use these submodules for guaranteed version compatibility or
 //! convenience.
 //!
-//! [rand]: https://docs.rs/rand/0.7
-//! [rand_distr]: https://docs.rs/rand_distr/0.3
+//! [rand]: https://docs.rs/rand/0.8
+//! [rand_distr]: https://docs.rs/rand_distr/0.4
 //!
 //! If you want to use a random number generator or distribution from another crate
 //! with `ndarray-rand`, you need to make sure that the other crate also depends on the
@@ -35,16 +35,16 @@ use crate::rand::seq::index;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
-use ndarray::{ArrayBase, DataOwned, Dimension};
+use ndarray::{ArrayBase, DataOwned, RawData, Data, Dimension};
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
-/// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
+/// `rand`, re-exported for convenience and version-compatibility.
 pub mod rand {
     pub use rand::*;
 }
 
-/// [`rand-distr`](https://docs.rs/rand_distr/0.3), re-exported for convenience and version-compatibility.
+/// `rand-distr`, re-exported for convenience and version-compatibility.
 pub mod rand_distr {
     pub use rand_distr::*;
 }
@@ -55,8 +55,7 @@ pub mod rand_distr {
 /// for other types.
 ///
 /// The default RNG is a fast automatically seeded rng (currently
-/// [`rand::rngs::SmallRng`](https://docs.rs/rand/0.7/rand/rngs/struct.SmallRng.html)
-/// seeded from [`rand::thread_rng`](https://docs.rs/rand/0.7/rand/fn.thread_rng.html)).
+/// [`rand::rngs::SmallRng`], seeded from [`rand::thread_rng`]).
 ///
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
@@ -64,7 +63,7 @@ pub mod rand_distr {
 /// [`.random_using()`](#tymethod.random_using).
 pub trait RandomExt<S, A, D>
 where
-    S: DataOwned<Elem = A>,
+    S: RawData<Elem = A>,
     D: Dimension,
 {
     /// Create an array with shape `dim` with elements drawn from
@@ -88,6 +87,7 @@ where
     fn random<Sh, IdS>(shape: Sh, distribution: IdS) -> ArrayBase<S, D>
     where
         IdS: Distribution<S::Elem>,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>;
 
     /// Create an array with shape `dim` with elements drawn from
@@ -118,6 +118,7 @@ where
     where
         IdS: Distribution<S::Elem>,
         R: Rng + ?Sized,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>;
 
     /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
@@ -164,6 +165,7 @@ where
     fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
     where
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis;
 
     /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
@@ -224,17 +226,19 @@ where
     where
         R: Rng + ?Sized,
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis;
 }
 
 impl<S, A, D> RandomExt<S, A, D> for ArrayBase<S, D>
 where
-    S: DataOwned<Elem = A>,
+    S: RawData<Elem = A>,
     D: Dimension,
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
     where
         IdS: Distribution<S::Elem>,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>,
     {
         Self::random_using(shape, dist, &mut get_rng())
@@ -244,6 +248,7 @@ where
     where
         IdS: Distribution<S::Elem>,
         R: Rng + ?Sized,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>,
     {
         Self::from_shape_simple_fn(shape, move || dist.sample(rng))
@@ -252,6 +257,7 @@ where
     fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
     where
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis,
     {
         self.sample_axis_using(axis, n_samples, strategy, &mut get_rng())
@@ -267,6 +273,7 @@ where
     where
         R: Rng + ?Sized,
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis,
     {
         let indices: Vec<_> = match strategy {
@@ -298,7 +305,7 @@ pub enum SamplingStrategy {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for SamplingStrategy {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        if g.gen_bool(0.5) {
+        if bool::arbitrary(g) {
             SamplingStrategy::WithReplacement
         } else {
             SamplingStrategy::WithoutReplacement
