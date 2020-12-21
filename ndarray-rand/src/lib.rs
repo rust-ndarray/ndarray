@@ -12,7 +12,7 @@
 //!
 //! ## Note
 //!
-//! `ndarray-rand` depends on [`rand` 0.7][rand].
+//! `ndarray-rand` depends on [`rand` 0.8][rand].
 //!
 //! [`rand`][rand] and [`rand_distr`][rand_distr]
 //! are re-exported as sub-modules, [`ndarray_rand::rand`](rand/index.html)
@@ -20,8 +20,8 @@
 //! You can use these submodules for guaranteed version compatibility or
 //! convenience.
 //!
-//! [rand]: https://docs.rs/rand/0.7
-//! [rand_distr]: https://docs.rs/rand_distr/0.3
+//! [rand]: https://docs.rs/rand/0.8
+//! [rand_distr]: https://docs.rs/rand_distr/0.4
 //!
 //! If you want to use a random number generator or distribution from another crate
 //! with `ndarray-rand`, you need to make sure that the other crate also depends on the
@@ -39,12 +39,12 @@ use ndarray::{ArrayBase, DataOwned, Dimension};
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
-/// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
+/// `rand`, re-exported for convenience and version-compatibility.
 pub mod rand {
     pub use rand::*;
 }
 
-/// [`rand-distr`](https://docs.rs/rand_distr/0.3), re-exported for convenience and version-compatibility.
+/// `rand-distr`, re-exported for convenience and version-compatibility.
 pub mod rand_distr {
     pub use rand_distr::*;
 }
@@ -55,8 +55,7 @@ pub mod rand_distr {
 /// for other types.
 ///
 /// The default RNG is a fast automatically seeded rng (currently
-/// [`rand::rngs::SmallRng`](https://docs.rs/rand/0.7/rand/rngs/struct.SmallRng.html)
-/// seeded from [`rand::thread_rng`](https://docs.rs/rand/0.7/rand/fn.thread_rng.html)).
+/// [`rand::rngs::SmallRng`], seeded from [`rand::thread_rng`]).
 ///
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
@@ -298,7 +297,7 @@ pub enum SamplingStrategy {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for SamplingStrategy {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        if g.gen_bool(0.5) {
+        if bool::arbitrary(g) {
             SamplingStrategy::WithReplacement
         } else {
             SamplingStrategy::WithoutReplacement

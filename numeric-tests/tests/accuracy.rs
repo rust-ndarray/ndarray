@@ -76,8 +76,8 @@ fn accurate_eye_f32() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for _ in 0..10 {
-        let i = rng.gen_range(15, 512);
-        let j = rng.gen_range(15, 512);
+        let i = rng.gen_range(15..512);
+        let j = rng.gen_range(15..512);
         println!("Testing size {} by {}", i, j);
         let a = gen(Ix2(i, j));
         let eye = Array::eye(i);
@@ -104,8 +104,8 @@ fn accurate_eye_f64() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for _ in 0..10 {
-        let i = rng.gen_range(15, 512);
-        let j = rng.gen_range(15, 512);
+        let i = rng.gen_range(15..512);
+        let j = rng.gen_range(15..512);
         println!("Testing size {} by {}", i, j);
         let a = gen_f64(Ix2(i, j));
         let eye = Array::eye(i);
@@ -121,9 +121,9 @@ fn accurate_mul_f32() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for i in 0..20 {
-        let m = rng.gen_range(15, 512);
-        let k = rng.gen_range(15, 512);
-        let n = rng.gen_range(15, 1560);
+        let m = rng.gen_range(15..512);
+        let k = rng.gen_range(15..512);
+        let n = rng.gen_range(15..1560);
         let a = gen(Ix2(m, k));
         let b = gen(Ix2(n, k));
         let b = b.t();
@@ -145,9 +145,9 @@ fn accurate_mul_f32_general() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for i in 0..20 {
-        let m = rng.gen_range(15, 512);
-        let k = rng.gen_range(15, 512);
-        let n = rng.gen_range(15, 1560);
+        let m = rng.gen_range(15..512);
+        let k = rng.gen_range(15..512);
+        let n = rng.gen_range(15..1560);
         let a = gen(Ix2(m, k));
         let b = gen(Ix2(n, k));
         let mut c = gen(Ix2(m, n));
@@ -171,9 +171,9 @@ fn accurate_mul_f64() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for i in 0..20 {
-        let m = rng.gen_range(15, 512);
-        let k = rng.gen_range(15, 512);
-        let n = rng.gen_range(15, 1560);
+        let m = rng.gen_range(15..512);
+        let k = rng.gen_range(15..512);
+        let n = rng.gen_range(15..1560);
         let a = gen_f64(Ix2(m, k));
         let b = gen_f64(Ix2(n, k));
         let b = b.t();
@@ -195,9 +195,9 @@ fn accurate_mul_f64_general() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for i in 0..20 {
-        let m = rng.gen_range(15, 512);
-        let k = rng.gen_range(15, 512);
-        let n = rng.gen_range(15, 1560);
+        let m = rng.gen_range(15..512);
+        let k = rng.gen_range(15..512);
+        let n = rng.gen_range(15..1560);
         let a = gen_f64(Ix2(m, k));
         let b = gen_f64(Ix2(n, k));
         let mut c = gen_f64(Ix2(m, n));
@@ -221,8 +221,8 @@ fn accurate_mul_with_column_f64() {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
     for i in 0..10 {
-        let m = rng.gen_range(1, 350);
-        let k = rng.gen_range(1, 350);
+        let m = rng.gen_range(1..350);
+        let k = rng.gen_range(1..350);
         let a = gen_f64(Ix2(m, k));
         let b_owner = gen_f64(Ix2(k, k));
         let b_row_col;
