@@ -35,7 +35,7 @@ use crate::rand::seq::index;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
-use ndarray::{ArrayBase, DataOwned, Dimension};
+use ndarray::{ArrayBase, DataOwned, RawData, Data, Dimension};
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
@@ -63,7 +63,7 @@ pub mod rand_distr {
 /// [`.random_using()`](#tymethod.random_using).
 pub trait RandomExt<S, A, D>
 where
-    S: DataOwned<Elem = A>,
+    S: RawData<Elem = A>,
     D: Dimension,
 {
     /// Create an array with shape `dim` with elements drawn from
@@ -87,6 +87,7 @@ where
     fn random<Sh, IdS>(shape: Sh, distribution: IdS) -> ArrayBase<S, D>
     where
         IdS: Distribution<S::Elem>,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>;
 
     /// Create an array with shape `dim` with elements drawn from
@@ -117,6 +118,7 @@ where
     where
         IdS: Distribution<S::Elem>,
         R: Rng + ?Sized,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>;
 
     /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
@@ -163,6 +165,7 @@ where
     fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
     where
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis;
 
     /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
@@ -223,17 +226,19 @@ where
     where
         R: Rng + ?Sized,
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis;
 }
 
 impl<S, A, D> RandomExt<S, A, D> for ArrayBase<S, D>
 where
-    S: DataOwned<Elem = A>,
+    S: RawData<Elem = A>,
     D: Dimension,
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
     where
         IdS: Distribution<S::Elem>,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>,
     {
         Self::random_using(shape, dist, &mut get_rng())
@@ -243,6 +248,7 @@ where
     where
         IdS: Distribution<S::Elem>,
         R: Rng + ?Sized,
+        S: DataOwned<Elem = A>,
         Sh: ShapeBuilder<Dim = D>,
     {
         Self::from_shape_simple_fn(shape, move || dist.sample(rng))
@@ -251,6 +257,7 @@ where
     fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
     where
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis,
     {
         self.sample_axis_using(axis, n_samples, strategy, &mut get_rng())
@@ -266,6 +273,7 @@ where
     where
         R: Rng + ?Sized,
         A: Copy,
+        S: Data<Elem = A>,
         D: RemoveAxis,
     {
         let indices: Vec<_> = match strategy {
