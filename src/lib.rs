@@ -112,7 +112,10 @@
 
 
 extern crate alloc;
+#[cfg(feature = "std")]
 extern crate std;
+#[cfg(not(feature = "std"))]
+extern crate core as std;
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
@@ -123,7 +126,7 @@ extern crate cblas_sys;
 pub mod doc;
 
 use std::marker::PhantomData;
-use std::sync::Arc;
+use alloc::sync::Arc;
 
 pub use crate::dimension::dim::*;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};

@@ -11,7 +11,7 @@
 use rawpointer::PointerExt;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
-use std::sync::Arc;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::{

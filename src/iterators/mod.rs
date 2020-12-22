@@ -27,7 +27,7 @@ pub use self::chunks::{ExactChunks, ExactChunksIter, ExactChunksIterMut, ExactCh
 pub use self::lanes::{Lanes, LanesMut};
 pub use self::windows::Windows;
 
-use alloc::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
+use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 /// Base for iterators over all axes.
 ///
