@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use super::Dimension;
+#[cfg(feature = "std")]
 use std::error::Error;
 use std::fmt;
 
@@ -69,6 +70,7 @@ impl PartialEq for ShapeError {
     }
 }
 
+#[cfg(feature = "std")]
 impl Error for ShapeError {}
 
 impl fmt::Display for ShapeError {
