@@ -13,8 +13,6 @@ use crate::imp_prelude::*;
 use crate::itertools::enumerate;
 use crate::numeric_util;
 
-use crate::{FoldWhile, Zip};
-
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
 where
@@ -303,33 +301,5 @@ where
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
-    }
-
-    /// Return `true` if the arrays' elementwise differences are all within
-    /// the given absolute tolerance, `false` otherwise.
-    ///
-    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
-    ///
-    /// **Panics** if broadcasting to the same shape isn’t possible.
-    #[deprecated(
-        note = "Use `abs_diff_eq` - it requires the `approx` crate feature",
-        since = "0.13.0"
-    )]
-    pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
-    where
-        A: Float,
-        S2: Data<Elem = A>,
-        E: Dimension,
-    {
-        !Zip::from(self)
-            .and(rhs.broadcast_unwrap(self.raw_dim()))
-            .fold_while((), |_, x, y| {
-                if (*x - *y).abs() <= tol {
-                    FoldWhile::Continue(())
-                } else {
-                    FoldWhile::Done(())
-                }
-            })
-            .is_done()
     }
 }
