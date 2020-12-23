@@ -67,7 +67,7 @@ fn turn_on_corners(z: &mut Board) {
 }
 
 fn render(a: &Board) {
-    for row in a.genrows() {
+    for row in a.rows() {
         for &x in row {
             if x > 0 {
                 print!("#");

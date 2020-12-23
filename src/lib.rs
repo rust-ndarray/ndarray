@@ -413,16 +413,16 @@ pub type Ixs = isize;
 ///
 /// The `outer_iter` and `axis_iter` are one dimensional producers.
 ///
-/// ## `.genrows()`, `.gencolumns()` and `.lanes()`
+/// ## `.rows()`, `.columns()` and `.lanes()`
 ///
-/// [`.genrows()`][gr] is a producer (and iterable) of all rows in an array.
+/// [`.rows()`][gr] is a producer (and iterable) of all rows in an array.
 ///
 /// ```
 /// use ndarray::Array;
 ///
 /// // 1. Loop over the rows of a 2D array
 /// let mut a = Array::zeros((10, 10));
-/// for mut row in a.genrows_mut() {
+/// for mut row in a.rows_mut() {
 ///     row.fill(1.);
 /// }
 ///
@@ -430,7 +430,7 @@ pub type Ixs = isize;
 /// use ndarray::Zip;
 /// let mut b = Array::zeros(a.nrows());
 ///
-/// Zip::from(a.genrows())
+/// Zip::from(a.rows())
 ///     .and(&mut b)
 ///     .apply(|a_row, b_elt| {
 ///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
@@ -448,21 +448,21 @@ pub type Ixs = isize;
 /// has *a m* rows. It's composed of *a* times the previous array, so it
 /// has *a* times as many rows.
 ///
-/// All methods: [`.genrows()`][gr], [`.genrows_mut()`][grm],
-/// [`.gencolumns()`][gc], [`.gencolumns_mut()`][gcm],
+/// All methods: [`.rows()`][gr], [`.rows_mut()`][grm],
+/// [`.columns()`][gc], [`.columns_mut()`][gcm],
 /// [`.lanes(axis)`][l], [`.lanes_mut(axis)`][lm].
 ///
-/// [gr]: #method.genrows
-/// [grm]: #method.genrows_mut
-/// [gc]: #method.gencolumns
-/// [gcm]: #method.gencolumns_mut
+/// [gr]: #method.rows
+/// [grm]: #method.rows_mut
+/// [gc]: #method.columns
+/// [gcm]: #method.columns_mut
 /// [l]: #method.lanes
 /// [lm]: #method.lanes_mut
 ///
-/// Yes, for 2D arrays `.genrows()` and `.outer_iter()` have about the same
+/// Yes, for 2D arrays `.rows()` and `.outer_iter()` have about the same
 /// effect:
 ///
-///  + `genrows()` is a producer with *n* - 1 dimensions of 1 dimensional items
+///  + `rows()` is a producer with *n* - 1 dimensions of 1 dimensional items
 ///  + `outer_iter()` is a producer with 1 dimension of *n* - 1 dimensional items
 ///
 /// ## Slicing

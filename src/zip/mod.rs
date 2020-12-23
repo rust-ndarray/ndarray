@@ -561,7 +561,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 /// let mut totals = Array1::zeros(a.nrows());
 ///
 /// Zip::from(&mut totals)
-///     .and(a.genrows())
+///     .and(a.rows())
 ///     .apply(|totals, row| *totals = row.sum());
 ///
 /// // Check the result against the built in `.sum_axis()` along axis 1.
@@ -570,7 +570,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 ///
 /// // Example 3: Recreate Example 2 using apply_collect to make a new array
 ///
-/// let mut totals2 = Zip::from(a.genrows()).apply_collect(|row| row.sum());
+/// let mut totals2 = Zip::from(a.rows()).apply_collect(|row| row.sum());
 ///
 /// // Check the result against the previous example.
 /// assert_eq!(totals, totals2);
