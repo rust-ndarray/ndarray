@@ -2,7 +2,6 @@
 //!
 
 use crate::dimension::Dim;
-#[allow(deprecated)]
 use crate::{ArcArray, Array, ArrayView, ArrayViewMut, Ix, IxDynImpl};
 
 /// Create a zero-dimensional index

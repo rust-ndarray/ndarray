@@ -162,7 +162,6 @@ mod data_traits;
 
 pub use crate::aliases::*;
 
-#[allow(deprecated)]
 pub use crate::data_traits::{
     Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
     RawDataSubst,
