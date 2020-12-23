@@ -48,6 +48,17 @@ where
         sum
     }
 
+    /// Return the sum of all elements in the array.
+    ///
+    /// *This method has been renamed to `.sum()`*
+    #[deprecated(note="renamed to `sum`", since="0.15.0")]
+    pub fn scalar_sum(&self) -> A
+    where
+        A: Clone + Add<Output = A> + num_traits::Zero,
+    {
+        self.sum()
+    }
+
     /// Returns the [arithmetic mean] x̅ of all elements in the array:
     ///
     /// ```text
@@ -73,18 +84,6 @@ where
                 .expect("Converting number of elements to `A` must not fail.");
             Some(self.sum() / n_elements)
         }
-    }
-
-    /// Return the sum of all elements in the array.
-    ///
-    /// *This method has been renamed to `.sum()` and will be deprecated in the
-    /// next version.*
-    // #[deprecated(note="renamed to `sum`", since="0.13")]
-    pub fn scalar_sum(&self) -> A
-    where
-        A: Clone + Add<Output = A> + num_traits::Zero,
-    {
-        self.sum()
     }
 
     /// Return the product of all elements in the array.
