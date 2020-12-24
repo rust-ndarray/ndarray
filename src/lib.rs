@@ -112,10 +112,16 @@
 
 
 extern crate alloc;
+
 #[cfg(feature = "std")]
 extern crate std;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+
+#[cfg(feature = "std")]
+pub use num_traits::Float;
+#[cfg(not(feature = "std"))]
+pub use num_traits::float::FloatCore as Float;
 
 #[cfg(feature = "blas")]
 extern crate blas_src;
@@ -169,7 +175,6 @@ mod data_repr;
 mod data_traits;
 
 pub use crate::aliases::*;
-
 #[allow(deprecated)]
 pub use crate::data_traits::{
     Data, DataClone, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,

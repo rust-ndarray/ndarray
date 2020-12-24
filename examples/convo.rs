@@ -2,7 +2,7 @@
 extern crate ndarray;
 extern crate num_traits;
 
-use num_traits::Float;
+use ndarray::Float;
 
 use ndarray::prelude::*;
 

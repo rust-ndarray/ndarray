@@ -12,7 +12,8 @@
 
 #![allow(clippy::match_wild_err_arm)]
 
-use num_traits::{Float, One, Zero};
+use crate::Float;
+use num_traits::{One, Zero};
 use std::mem::MaybeUninit;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -25,7 +26,10 @@ use crate::indexes;
 use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
 use crate::StrideShape;
-use crate::{geomspace, linspace, logspace};
+use crate::linspace;
+#[cfg(feature = "std")]
+use crate::{geomspace, logspace};
+
 
 /// # Constructor Methods for Owned Arrays
 ///
@@ -114,6 +118,7 @@ where
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]));
     /// # }
     /// ```
+    #[cfg(feature = "std")]
     pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
     where
         A: Float,
@@ -148,6 +153,7 @@ where
     /// #
     /// # example().unwrap();
     /// ```
+    #[cfg(feature = "std")]
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
         A: Float,

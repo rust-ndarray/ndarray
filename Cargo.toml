@@ -29,7 +29,7 @@ test = true
 
 [dependencies]
 num-integer = { version = "0.1.39", default-features = false }
-num-traits = { version = "0.2", default-features = false , features = ["libm"] }
+num-traits = { version = "0.2", default-features = false }
 num-complex = { version = "0.3", default-features = false }
 
 rayon = { version = "1.0.3", optional = true }
@@ -66,7 +66,7 @@ test = ["test-blas-openblas-sys"]
 # This feature is used for docs
 docs = ["approx", "serde", "rayon"]
 
-std = ["num-traits/std"]
+std = ["num-traits/std", "matrixmultiply/std"]
 
 [profile.release]
 [profile.bench]
@@ -74,7 +74,7 @@ debug = true
 
 [workspace]
 members = ["ndarray-rand", "serialization-tests", "blas-tests"]
-exclude = ["numeric-tests"]
+exclude = ["numeric-tests","ensure_no_std"]
 
 [package.metadata.release]
 no-dev-version = true
