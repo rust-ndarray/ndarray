@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![cfg(feature = "std")]
-use crate::Float;
+use num_traits::Float;
 
 /// An iterator of a sequence of logarithmically spaced number.
 ///

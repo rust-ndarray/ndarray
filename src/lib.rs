@@ -118,11 +118,6 @@ extern crate std;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-#[cfg(feature = "std")]
-pub use num_traits::Float;
-#[cfg(not(feature = "std"))]
-pub use num_traits::float::FloatCore as Float;
-
 #[cfg(feature = "blas")]
 extern crate blas_src;
 #[cfg(feature = "blas")]

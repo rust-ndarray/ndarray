@@ -6,7 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::Float;
+#[cfg(feature = "std")]
+use num_traits::Float;
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore as Float;
 use num_traits::{self, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
