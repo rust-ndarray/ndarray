@@ -11,8 +11,10 @@
 //!
 
 #![allow(clippy::match_wild_err_arm)]
-
-use crate::Float;
+#[cfg(feature = "std")]
+use num_traits::Float;
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore as Float;
 use num_traits::{One, Zero};
 use std::mem::MaybeUninit;
 use alloc::vec;

@@ -5,7 +5,10 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::Float;
+#[cfg(feature = "std")]
+use num_traits::Float;
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore as Float;
 
 /// An iterator of a sequence of evenly spaced floats.
 ///
