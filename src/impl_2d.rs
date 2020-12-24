@@ -58,12 +58,6 @@ where
         self.len_of(Axis(0))
     }
 
-    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
-    #[deprecated(note = "Renamed to .nrows(), please use the new name")]
-    pub fn rows(&self) -> usize {
-        self.nrows()
-    }
-
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -106,12 +100,6 @@ where
     /// ```
     pub fn ncols(&self) -> usize {
         self.len_of(Axis(1))
-    }
-
-    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
-    #[deprecated(note = "Renamed to .ncols(), please use the new name")]
-    pub fn cols(&self) -> usize {
-        self.ncols()
     }
 
     /// Return true if the array is square, false otherwise.

@@ -142,7 +142,7 @@ fn inner_iter() {
     //   [8, 9],
     //    ...
     assert_equal(
-        a.genrows(),
+        a.rows(),
         vec![
             aview1(&[0, 1]),
             aview1(&[2, 3]),
@@ -156,7 +156,7 @@ fn inner_iter() {
     b.swap_axes(0, 2);
     b.assign(&a);
     assert_equal(
-        b.genrows(),
+        b.rows(),
         vec![
             aview1(&[0, 1]),
             aview1(&[2, 3]),
@@ -171,13 +171,13 @@ fn inner_iter() {
 #[test]
 fn inner_iter_corner_cases() {
     let a0 = ArcArray::<i32, _>::zeros(());
-    assert_equal(a0.genrows(), vec![aview1(&[0])]);
+    assert_equal(a0.rows(), vec![aview1(&[0])]);
 
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
-    assert_equal(a2.genrows(), vec![aview1(&[]); 0]);
+    assert_equal(a2.rows(), vec![aview1(&[]); 0]);
 
     let a2 = ArcArray::<i32, _>::zeros((3, 0));
-    assert_equal(a2.genrows(), vec![aview1(&[]); 3]);
+    assert_equal(a2.rows(), vec![aview1(&[]); 3]);
 }
 
 #[test]
@@ -185,7 +185,7 @@ fn inner_iter_size_hint() {
     // Check that the size hint is correctly computed
     let a = ArcArray::from_iter(0..24).reshape((2, 3, 4));
     let mut len = 6;
-    let mut it = a.genrows().into_iter();
+    let mut it = a.rows().into_iter();
     assert_eq!(it.len(), len);
     while len > 0 {
         it.next();
@@ -223,7 +223,7 @@ fn outer_iter() {
             found_rows.push(row);
         }
     }
-    assert_equal(a.genrows(), found_rows.clone());
+    assert_equal(a.rows(), found_rows.clone());
 
     let mut found_rows_rev = Vec::new();
     for sub in b.outer_iter().rev() {
@@ -251,7 +251,7 @@ fn outer_iter() {
         }
     }
     println!("{:#?}", found_rows);
-    assert_equal(a.genrows(), found_rows);
+    assert_equal(a.rows(), found_rows);
 }
 
 #[test]
@@ -370,7 +370,7 @@ fn outer_iter_mut() {
             found_rows.push(row);
         }
     }
-    assert_equal(a.genrows(), found_rows);
+    assert_equal(a.rows(), found_rows);
 }
 
 #[test]
@@ -747,8 +747,8 @@ fn iterators_are_send_sync() {
     _send_sync(&a.iter_mut());
     _send_sync(&a.indexed_iter());
     _send_sync(&a.indexed_iter_mut());
-    _send_sync(&a.genrows());
-    _send_sync(&a.genrows_mut());
+    _send_sync(&a.rows());
+    _send_sync(&a.rows_mut());
     _send_sync(&a.outer_iter());
     _send_sync(&a.outer_iter_mut());
     _send_sync(&a.axis_iter(Axis(1)));
