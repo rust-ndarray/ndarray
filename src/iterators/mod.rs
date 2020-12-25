@@ -1449,11 +1449,11 @@ use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
 use crate::linspace::Linspace;
 unsafe impl<F> TrustedIterator for Linspace<F> {}
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use crate::{geomspace::Geomspace, logspace::Logspace};
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 unsafe impl<F> TrustedIterator for Geomspace<F> {}
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 unsafe impl<F> TrustedIterator for Logspace<F> {}
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
 unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}

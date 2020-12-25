@@ -52,6 +52,10 @@ itertools = { version = "0.9.0", default-features = false, features = ["use_std"
 
 [features]
 default = ["std"]
+
+# This feature enalbe num_trait::Float in no_std environment
+libm = ["num-traits/libm"]
+
 # Enable blas usage
 # See README for more instructions
 blas = ["cblas-sys", "blas-src"]
@@ -74,7 +78,7 @@ debug = true
 
 [workspace]
 members = ["ndarray-rand", "serialization-tests", "blas-tests"]
-exclude = ["numeric-tests"]
+exclude = ["numeric-tests","ensure_no_std"]
 
 [package.metadata.release]
 no-dev-version = true

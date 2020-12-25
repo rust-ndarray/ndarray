@@ -11,9 +11,9 @@
 //!
 
 #![allow(clippy::match_wild_err_arm)]
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::Float;
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "libm")))]
 use num_traits::float::FloatCore as Float;
 use num_traits::{One, Zero};
 use std::mem::MaybeUninit;
@@ -29,7 +29,7 @@ use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
 use crate::StrideShape;
 use crate::linspace;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use crate::{geomspace, logspace};
 
 
@@ -120,7 +120,7 @@ where
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]));
     /// # }
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
     where
         A: Float,
@@ -155,7 +155,7 @@ where
     /// #
     /// # example().unwrap();
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
         A: Float,
