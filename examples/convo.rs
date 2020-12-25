@@ -1,9 +1,9 @@
 #![allow(unused)]
 extern crate ndarray;
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::Float;
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "libm")))]
 use num_traits::float::FloatCore as Float;
 
 use ndarray::prelude::*;

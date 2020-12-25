@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::Float;
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "libm")))]
 use num_traits::float::FloatCore as Float;
 use num_traits::{self, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
@@ -234,7 +234,7 @@ where
     /// let var = a.var_axis(Axis(0), 1.);
     /// assert_eq!(var, aview1(&[4., 4.]));
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
@@ -303,7 +303,7 @@ where
     /// let stddev = a.std_axis(Axis(0), 1.);
     /// assert_eq!(stddev, aview1(&[2., 2.]));
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
