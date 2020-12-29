@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::cell::Cell;
 use std::ptr as std_ptr;
 use std::slice;
 
@@ -149,6 +150,20 @@ where
     {
         self.ensure_unique();
         unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
+    }
+
+    /// Return a shared view of the array with elements as if they were embedded in cells.
+    ///
+    /// The cell view requires a mutable borrow of the array. Once borrowed the
+    /// cell view itself can be copied and accessed without exclusivity.
+    ///
+    /// The view acts "as if" the elements are temporarily in cells, and elements
+    /// can be changed through shared references using the regular cell methods.
+    pub fn cell_view(&mut self) -> ArrayView<'_, Cell<A>, D>
+    where
+        S: DataMut,
+    {
+        self.view_mut().into_cell_view()
     }
 
     /// Return an uniquely owned copy of the array.
