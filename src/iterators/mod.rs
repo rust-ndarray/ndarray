@@ -294,7 +294,7 @@ where
 {
     pub(crate) fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
         IterMut {
-            inner: match self_.into_slice_() {
+            inner: match self_.try_into_slice() {
                 Ok(x) => ElementsRepr::Slice(x.iter_mut()),
                 Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
             },

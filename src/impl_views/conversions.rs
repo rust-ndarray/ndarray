@@ -115,7 +115,7 @@ where
     /// Note that while this is similar to [`ArrayBase::as_slice_mut()`], this method tranfers the
     /// view's lifetime to the slice.
     pub fn into_slice(self) -> Option<&'a mut [A]> {
-        self.into_slice_().ok()
+        self.try_into_slice().ok()
     }
 }
 
@@ -173,7 +173,9 @@ where
         ElementsBaseMut::new(self)
     }
 
-    pub(crate) fn into_slice_(self) -> Result<&'a mut [A], Self> {
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Otherwise return self in the Err branch of the result.
+    pub(crate) fn try_into_slice(self) -> Result<&'a mut [A], Self> {
         if self.is_standard_layout() {
             unsafe { Ok(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
         } else {
