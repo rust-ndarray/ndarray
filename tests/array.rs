@@ -1787,17 +1787,6 @@ fn test_contiguous() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn test_all_close() {
-    let c = arr3(&[
-        [[1., 2., 3.], [1.5, 1.5, 3.]],
-        [[1., 2., 3.], [1., 2.5, 3.]],
-    ]);
-    assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
-    assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
-}
-
-#[test]
 fn test_swap() {
     let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
     let b = a.clone();

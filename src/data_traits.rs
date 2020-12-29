@@ -129,18 +129,6 @@ pub unsafe trait DataMut: Data + RawDataMut {
     }
 }
 
-/// Array representation trait.
-///
-/// An array representation that can be cloned and allows elements to be
-/// accessed with safe code.
-///
-/// ***Internal trait, see `Data`.***
-#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13.0")]
-pub trait DataClone: Data + RawDataClone {}
-
-#[allow(deprecated)]
-impl<T> DataClone for T where T: Data + RawDataClone {}
-
 unsafe impl<A> RawData for RawViewRepr<*const A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
