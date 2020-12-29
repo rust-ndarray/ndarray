@@ -1,4 +1,4 @@
-// Copyright 2014-2016 bluss and ndarray developers.
+// Copyright 2014-2020 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -187,6 +187,7 @@ mod shape_builder;
 mod slice;
 mod split_at;
 mod stacking;
+mod traversal_utils;
 #[macro_use]
 mod zip;
 
