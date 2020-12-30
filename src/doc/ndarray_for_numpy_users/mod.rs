@@ -647,7 +647,6 @@
 //! [.index_axis()]: ../../struct.ArrayBase.html#method.index_axis
 //! [.sum_axis()]: ../../struct.ArrayBase.html#method.sum_axis
 //! [.t()]: ../../struct.ArrayBase.html#method.t
-//! [::uninitialized()]: ../../struct.ArrayBase.html#method.uninitialized
 //! [vec-* dot]: ../../struct.ArrayBase.html#method.dot
 //! [.visit()]: ../../struct.ArrayBase.html#method.visit
 //! [::zeros()]: ../../struct.ArrayBase.html#method.zeros

@@ -1,4 +1,4 @@
-// Copyright 2014-2016 bluss and ndarray developers.
+// Copyright 2014-2020 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -325,9 +325,9 @@ where
 
         // Avoid initializing the memory in vec -- set it during iteration
         unsafe {
-            let mut c = Array::uninitialized(m);
-            general_mat_vec_mul(A::one(), self, rhs, A::zero(), &mut c);
-            c
+            let mut c = Array1::maybe_uninit(m);
+            general_mat_vec_mul_impl(A::one(), self, rhs, A::zero(), c.raw_view_mut().cast::<A>());
+            c.assume_init()
         }
     }
 }
@@ -599,6 +599,30 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
     S3: DataMut<Elem = A>,
     A: LinalgScalar,
 {
+    unsafe {
+        general_mat_vec_mul_impl(alpha, a, x, beta, y.raw_view_mut())
+    }
+}
+
+/// General matrix-vector multiplication
+///
+/// Use a raw view for the destination vector, so that it can be uninitalized.
+///
+/// ## Safety
+///
+/// The caller must ensure that the raw view is valid for writing.
+/// the destination may be uninitialized iff beta is zero.
+unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
+    alpha: A,
+    a: &ArrayBase<S1, Ix2>,
+    x: &ArrayBase<S2, Ix1>,
+    beta: A,
+    y: RawArrayViewMut<A, Ix1>,
+) where
+    S1: Data<Elem = A>,
+    S2: Data<Elem = A>,
+    A: LinalgScalar,
+{
     let ((m, k), k2) = (a.dim(), x.dim());
     let m2 = y.dim();
     if k != k2 || m != m2 {
@@ -626,22 +650,20 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
                         let x_stride = x.strides()[0] as blas_index;
                         let y_stride = y.strides()[0] as blas_index;
 
-                        unsafe {
-                            blas_sys::$gemv(
-                                layout,
-                                a_trans,
-                                m as blas_index,            // m, rows of Op(a)
-                                k as blas_index,            // n, cols of Op(a)
-                                cast_as(&alpha),            // alpha
-                                a.ptr.as_ptr() as *const _, // a
-                                a_stride,                   // lda
-                                x.ptr.as_ptr() as *const _, // x
-                                x_stride,
-                                cast_as(&beta),           // beta
-                                y.ptr.as_ptr() as *mut _, // x
-                                y_stride,
-                            );
-                        }
+                        blas_sys::$gemv(
+                            layout,
+                            a_trans,
+                            m as blas_index,            // m, rows of Op(a)
+                            k as blas_index,            // n, cols of Op(a)
+                            cast_as(&alpha),            // alpha
+                            a.ptr.as_ptr() as *const _, // a
+                            a_stride,                   // lda
+                            x.ptr.as_ptr() as *const _, // x
+                            x_stride,
+                            cast_as(&beta),           // beta
+                            y.ptr.as_ptr() as *mut _, // x
+                            y_stride,
+                        );
                         return;
                     }
                 }
@@ -655,8 +677,9 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
         /* general */
 
         if beta.is_zero() {
+            // when beta is zero, c may be uninitialized
             Zip::from(a.outer_iter()).and(y).apply(|row, elt| {
-                *elt = row.dot(x) * alpha;
+                elt.write(row.dot(x) * alpha);
             });
         } else {
             Zip::from(a.outer_iter()).and(y).apply(|row, elt| {
@@ -683,7 +706,7 @@ fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
 #[cfg(feature = "blas")]
 fn blas_compat_1d<A, S>(a: &ArrayBase<S, Ix1>) -> bool
 where
-    S: Data,
+    S: RawData,
     A: 'static,
     S::Elem: 'static,
 {
