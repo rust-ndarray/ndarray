@@ -1362,7 +1362,7 @@ pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 ///
 /// # Warning
 ///
-/// You can't use this type wih an arbitrary raw pointer; see
+/// You can't use this type with an arbitrary raw pointer; see
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
 pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 
@@ -1387,7 +1387,7 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 ///
 /// # Warning
 ///
-/// You can't use this type wih an arbitrary raw pointer; see
+/// You can't use this type with an arbitrary raw pointer; see
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 

@@ -1151,8 +1151,8 @@ where
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
     ///
-    /// Will yield over no elements if window size is larger
-    /// than the actual array size of any dimension.
+    /// This produces no elements if the window size is larger than the actual array size along any
+    /// axis.
     ///
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.
