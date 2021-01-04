@@ -10,7 +10,9 @@ use crate::error::{ErrorKind, ShapeError};
 use crate::{ArrayViewMut, Dimension};
 use std::fmt;
 use std::marker::PhantomData;
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use std::ops::{
+    Deref, DerefMut, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
+};
 
 /// A slice (range with step size).
 ///
@@ -297,6 +299,15 @@ where
     type Target = T;
     fn deref(&self) -> &Self::Target {
         &self.indices
+    }
+}
+
+impl<T: ?Sized, D> DerefMut for SliceInfo<T, D>
+where
+    D: Dimension,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.indices
     }
 }
 
