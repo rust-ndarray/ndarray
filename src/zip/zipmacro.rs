@@ -89,8 +89,8 @@
 ///     // entry in `totals` with the sum across each row.
 ///     //
 ///     // The row is an array view; it doesn't need to be dereferenced.
-///     let mut totals = Array1::zeros(a.rows());
-///     azip!((totals in &mut totals, row in a.genrows()) *totals = row.sum());
+///     let mut totals = Array1::zeros(a.nrows());
+///     azip!((totals in &mut totals, row in a.rows()) *totals = row.sum());
 ///
 ///     // Check the result against the built in `.sum_axis()` along axis 1.
 ///     assert_eq!(totals, a.sum_axis(Axis(1)));

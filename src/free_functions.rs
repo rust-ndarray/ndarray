@@ -7,9 +7,7 @@
 // except according to those terms.
 
 use std::mem::{forget, size_of};
-use alloc::slice;
-use alloc::vec;
-use alloc::vec::Vec;
+use std::slice;
 
 use crate::imp_prelude::*;
 use crate::{dimension, ArcArray1, ArcArray2};

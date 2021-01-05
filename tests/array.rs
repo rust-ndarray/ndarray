@@ -1701,7 +1701,7 @@ fn test_f_order() {
     assert_eq!(c.strides(), &[3, 1]);
     assert_eq!(f.strides(), &[1, 2]);
     itertools::assert_equal(f.iter(), c.iter());
-    itertools::assert_equal(f.genrows(), c.genrows());
+    itertools::assert_equal(f.rows(), c.rows());
     itertools::assert_equal(f.outer_iter(), c.outer_iter());
     itertools::assert_equal(f.axis_iter(Axis(0)), c.axis_iter(Axis(0)));
     itertools::assert_equal(f.axis_iter(Axis(1)), c.axis_iter(Axis(1)));
@@ -1784,17 +1784,6 @@ fn test_contiguous() {
     assert!(b.as_slice().is_some());
     assert!(a.as_slice_memory_order().is_some());
     assert!(b.as_slice_memory_order().is_some());
-}
-
-#[test]
-#[allow(deprecated)]
-fn test_all_close() {
-    let c = arr3(&[
-        [[1., 2., 3.], [1.5, 1.5, 3.]],
-        [[1., 2., 3.], [1., 2.5, 3.]],
-    ]);
-    assert!(c.all_close(&aview1(&[1., 2., 3.]), 1.));
-    assert!(!c.all_close(&aview1(&[1., 2., 3.]), 0.1));
 }
 
 #[test]

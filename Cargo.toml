@@ -28,19 +28,19 @@ bench = false
 test = true
 
 [dependencies]
-num-integer = { version = "0.1.39", default-features = false }
+num-integer = "0.1.39"
 num-traits = { version = "0.2", default-features = false }
 num-complex = { version = "0.3", default-features = false }
 
 rayon = { version = "1.0.3", optional = true }
 
-approx = { version = "0.4", optional = true , default-features = false }
+approx = { version = "0.4", optional = true }
 
 # Use via the `blas` crate feature!
 cblas-sys = { version = "0.1.4", optional = true, default-features = false }
 blas-src = { version = "0.6.1", optional = true, default-features = false }
 
-matrixmultiply = { version = "0.2.0", default-features = false}
+matrixmultiply = { version = "0.2.0" }
 serde = { version = "1.0", optional = true }
 rawpointer = { version = "0.2" }
 
@@ -52,10 +52,6 @@ itertools = { version = "0.9.0", default-features = false, features = ["use_std"
 
 [features]
 default = ["std"]
-
-# This feature enalbe num_trait::Float in no_std environment
-libm = ["num-traits/libm"]
-
 # Enable blas usage
 # See README for more instructions
 blas = ["cblas-sys", "blas-src"]
@@ -70,7 +66,7 @@ test = ["test-blas-openblas-sys"]
 # This feature is used for docs
 docs = ["approx", "serde", "rayon"]
 
-std = ["num-traits/std", "matrixmultiply/std"]
+std = ["num-traits/std"]
 
 [profile.release]
 [profile.bench]
@@ -78,7 +74,7 @@ debug = true
 
 [workspace]
 members = ["ndarray-rand", "serialization-tests", "blas-tests"]
-exclude = ["numeric-tests","ensure_no_std"]
+exclude = ["numeric-tests"]
 
 [package.metadata.release]
 no-dev-version = true

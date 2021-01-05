@@ -7,7 +7,6 @@
 // except according to those terms.
 
 //! Methods for one-dimensional arrays.
-use alloc::vec::Vec;
 use crate::imp_prelude::*;
 
 /// # Methods For 1-D Arrays

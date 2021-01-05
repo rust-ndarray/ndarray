@@ -8,9 +8,6 @@
 use super::{ArrayBase, ArrayView, Axis, Data, Dimension, NdProducer};
 use crate::aliases::{Ix1, IxDyn};
 use std::fmt;
-use alloc::format;
-use alloc::string::String;
-use alloc::vec::Vec;
 
 /// Default threshold, below this element count, we don't ellipsize
 const ARRAY_MANY_ELEMENT_LIMIT: usize = 500;

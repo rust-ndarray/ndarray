@@ -16,7 +16,6 @@ mod windows;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ptr;
-use alloc::vec::Vec;
 
 use crate::Ix1;
 
@@ -295,7 +294,7 @@ where
 {
     pub(crate) fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
         IterMut {
-            inner: match self_.into_slice_() {
+            inner: match self_.try_into_slice() {
                 Ok(x) => ElementsRepr::Slice(x.iter_mut()),
                 Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
             },
@@ -1447,13 +1446,10 @@ pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
-use crate::linspace::Linspace;
-unsafe impl<F> TrustedIterator for Linspace<F> {}
-#[cfg(any(feature = "std", feature = "libm"))]
-use crate::{geomspace::Geomspace, logspace::Logspace};
-#[cfg(any(feature = "std", feature = "libm"))]
+use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
+
 unsafe impl<F> TrustedIterator for Geomspace<F> {}
-#[cfg(any(feature = "std", feature = "libm"))]
+unsafe impl<F> TrustedIterator for Linspace<F> {}
 unsafe impl<F> TrustedIterator for Logspace<F> {}
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
 unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}

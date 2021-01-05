@@ -1,13 +1,14 @@
-// Copyright 2014-2016 bluss and ndarray developers.
+// Copyright 2014-2020 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use alloc::vec::Vec;
+
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
+use crate::traversal_utils::assign_to;
 
 /// Stack arrays along the new axis.
 ///
@@ -88,25 +89,23 @@ where
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
     res_dim.set_axis(axis, stacked_dim);
 
-    // we can safely use uninitialized values here because they are Copy
-    // and we will only ever write to them
-    let size = res_dim.size();
-    let mut v = Vec::with_capacity(size);
-    unsafe {
-        v.set_len(size);
-    }
-    let mut res = Array::from_shape_vec(res_dim, v)?;
+    // we can safely use uninitialized values here because we will
+    // overwrite every one of them.
+    let mut res = Array::maybe_uninit(res_dim);
 
     {
         let mut assign_view = res.view_mut();
         for array in arrays {
             let len = array.len_of(axis);
-            let (mut front, rest) = assign_view.split_at(axis, len);
-            front.assign(array);
+            let (front, rest) = assign_view.split_at(axis, len);
+            assign_to(array, front);
             assign_view = rest;
         }
+        debug_assert_eq!(assign_view.len(), 0);
     }
-    Ok(res)
+    unsafe {
+        Ok(res.assume_init())
+    }
 }
 
 /// Stack arrays along the new axis.
@@ -158,22 +157,24 @@ where
 
     res_dim.set_axis(axis, arrays.len());
 
-    // we can safely use uninitialized values here because they are Copy
-    // and we will only ever write to them
-    let size = res_dim.size();
-    let mut v = Vec::with_capacity(size);
-    unsafe {
-        v.set_len(size);
-    }
-    let mut res = Array::from_shape_vec(res_dim, v)?;
+    // we can safely use uninitialized values here because we will
+    // overwrite every one of them.
+    let mut res = Array::maybe_uninit(res_dim);
 
     res.axis_iter_mut(axis)
         .zip(arrays.iter())
-        .for_each(|(mut assign_view, array)| {
-            assign_view.assign(&array);
+        .for_each(|(assign_view, array)| {
+            // assign_view is D::Larger::Smaller which is usually == D
+            // (but if D is Ix6, we have IxD != Ix6 here; differing types
+            // but same number of axes).
+            let assign_view = assign_view.into_dimensionality::<D>()
+                .expect("same-dimensionality cast");
+            assign_to(array, assign_view);
         });
 
-    Ok(res)
+    unsafe {
+        Ok(res.assume_init())
+    }
 }
 
 /// Stack arrays along the new axis.

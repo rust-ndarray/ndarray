@@ -6,18 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(any(feature = "std", feature = "libm"))]
-use num_traits::Float;
-#[cfg(not(any(feature = "std", feature = "libm")))]
-use num_traits::float::FloatCore as Float;
-use num_traits::{self, FromPrimitive, Zero};
+use num_traits::{self, Float, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
 use crate::itertools::enumerate;
 use crate::numeric_util;
-
-use crate::{FoldWhile, Zip};
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
@@ -52,6 +46,17 @@ where
         sum
     }
 
+    /// Return the sum of all elements in the array.
+    ///
+    /// *This method has been renamed to `.sum()`*
+    #[deprecated(note="renamed to `sum`", since="0.15.0")]
+    pub fn scalar_sum(&self) -> A
+    where
+        A: Clone + Add<Output = A> + num_traits::Zero,
+    {
+        self.sum()
+    }
+
     /// Returns the [arithmetic mean] x̅ of all elements in the array:
     ///
     /// ```text
@@ -77,18 +82,6 @@ where
                 .expect("Converting number of elements to `A` must not fail.");
             Some(self.sum() / n_elements)
         }
-    }
-
-    /// Return the sum of all elements in the array.
-    ///
-    /// *This method has been renamed to `.sum()` and will be deprecated in the
-    /// next version.*
-    // #[deprecated(note="renamed to `sum`", since="0.13")]
-    pub fn scalar_sum(&self) -> A
-    where
-        A: Clone + Add<Output = A> + num_traits::Zero,
-    {
-        self.sum()
     }
 
     /// Return the product of all elements in the array.
@@ -234,7 +227,6 @@ where
     /// let var = a.var_axis(Axis(0), 1.);
     /// assert_eq!(var, aview1(&[4., 4.]));
     /// ```
-    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
@@ -303,40 +295,11 @@ where
     /// let stddev = a.std_axis(Axis(0), 1.);
     /// assert_eq!(stddev, aview1(&[2., 2.]));
     /// ```
-    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
-    }
-
-    /// Return `true` if the arrays' elementwise differences are all within
-    /// the given absolute tolerance, `false` otherwise.
-    ///
-    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
-    ///
-    /// **Panics** if broadcasting to the same shape isn’t possible.
-    #[deprecated(
-        note = "Use `abs_diff_eq` - it requires the `approx` crate feature",
-        since = "0.13.0"
-    )]
-    pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
-    where
-        A: Float,
-        S2: Data<Elem = A>,
-        E: Dimension,
-    {
-        !Zip::from(self)
-            .and(rhs.broadcast_unwrap(self.raw_dim()))
-            .fold_while((), |_, x, y| {
-                if (*x - *y).abs() <= tol {
-                    FoldWhile::Continue(())
-                } else {
-                    FoldWhile::Done(())
-                }
-            })
-            .is_done()
     }
 }

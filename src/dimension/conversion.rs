@@ -10,7 +10,6 @@
 
 use num_traits::Zero;
 use std::ops::{Index, IndexMut};
-use alloc::vec::Vec;
 
 use crate::{Dim, Dimension, Ix, Ix1, IxDyn, IxDynImpl};
 

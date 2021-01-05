@@ -1,9 +1,8 @@
+
 use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
-use alloc::slice;
-use alloc::borrow::ToOwned;
-use alloc::vec::Vec;
+use std::slice;
 use crate::extension::nonnull;
 
 /// Array's representation.
@@ -11,7 +10,11 @@ use crate::extension::nonnull;
 /// *Don’t use this type directly—use the type alias
 /// [`Array`](type.Array.html) for the array type!*
 // Like a Vec, but with non-unique ownership semantics
+//
+// repr(C) to make it transmutable OwnedRepr<A> -> OwnedRepr<B> if
+// transmutable A -> B.
 #[derive(Debug)]
+#[repr(C)]
 pub struct OwnedRepr<A> {
     ptr: NonNull<A>,
     len: usize,
@@ -49,6 +52,23 @@ impl<A> OwnedRepr<A> {
 
     pub(crate) fn as_nonnull_mut(&mut self) -> NonNull<A> {
         self.ptr
+    }
+
+    /// Cast self into equivalent repr of other element type
+    ///
+    /// ## Safety
+    ///
+    /// Caller must ensure the two types have the same representation.
+    /// **Panics** if sizes don't match (which is not a sufficient check).
+    pub(crate) unsafe fn data_subst<B>(self) -> OwnedRepr<B> {
+        // necessary but not sufficient check
+        assert_eq!(mem::size_of::<A>(), mem::size_of::<B>());
+        let self_ = ManuallyDrop::new(self);
+        OwnedRepr {
+            ptr: self_.ptr.cast::<B>(),
+            len: self_.len,
+            capacity: self_.capacity,
+        }
     }
 
     fn take_as_vec(&mut self) -> Vec<A> {

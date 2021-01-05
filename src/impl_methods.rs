@@ -7,9 +7,8 @@
 // except according to those terms.
 
 use std::ptr as std_ptr;
-use alloc::slice;
-use alloc::vec;
-use alloc::vec::Vec;
+use std::slice;
+
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
@@ -812,12 +811,12 @@ where
     ///                [[ 6,  7,  8],    // -- row 1, 0
     ///                 [ 9, 10, 11]]]); // -- row 1, 1
     ///
-    /// // `genrows` will yield the four generalized rows of the array.
-    /// for row in a.genrows() {
+    /// // `rows` will yield the four generalized rows of the array.
+    /// for row in a.rows() {
     ///     /* loop body */
     /// }
     /// ```
-    pub fn genrows(&self) -> Lanes<'_, A, D::Smaller>
+    pub fn rows(&self) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -828,11 +827,19 @@ where
         Lanes::new(self.view(), Axis(n - 1))
     }
 
+    #[deprecated(note="Renamed to .rows()", since="0.15.0")]
+    pub fn genrows(&self) -> Lanes<'_, A, D::Smaller>
+    where
+        S: Data,
+    {
+        self.rows()
+    }
+
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn genrows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    pub fn rows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
@@ -841,6 +848,14 @@ where
             n += 1;
         }
         LanesMut::new(self.view_mut(), Axis(n - 1))
+    }
+
+    #[deprecated(note="Renamed to .rows_mut()", since="0.15.0")]
+    pub fn genrows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    where
+        S: DataMut,
+    {
+        self.rows_mut()
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -864,12 +879,12 @@ where
     /// let a = arr3(&[[[ 0,  1,  2], [ 3,  4,  5]],
     ///                [[ 6,  7,  8], [ 9, 10, 11]]]);
     ///
-    /// // Here `gencolumns` will yield the six generalized columns of the array.
-    /// for row in a.gencolumns() {
+    /// // Here `columns` will yield the six generalized columns of the array.
+    /// for row in a.columns() {
     ///     /* loop body */
     /// }
     /// ```
-    pub fn gencolumns(&self) -> Lanes<'_, A, D::Smaller>
+    pub fn columns(&self) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -877,14 +892,38 @@ where
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
+    /// columns of the array. For a 2D array these are the regular columns.
+    ///
+    /// Renamed to `.columns()`
+    #[deprecated(note="Renamed to .columns()", since="0.15.0")]
+    pub fn gencolumns(&self) -> Lanes<'_, A, D::Smaller>
+    where
+        S: Data,
+    {
+        self.columns()
+    }
+
+    /// Return a producer and iterable that traverses over the *generalized*
     /// columns of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn gencolumns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    pub fn columns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
         LanesMut::new(self.view_mut(), Axis(0))
+    }
+
+    /// Return a producer and iterable that traverses over the *generalized*
+    /// columns of the array and yields mutable array views.
+    ///
+    /// Renamed to `.columns_mut()`
+    #[deprecated(note="Renamed to .columns_mut()", since="0.15.0")]
+    pub fn gencolumns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    where
+        S: DataMut,
+    {
+        self.columns_mut()
     }
 
     /// Return a producer and iterable that traverses over all 1D lanes
@@ -1112,8 +1151,8 @@ where
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
     ///
-    /// Will yield over no elements if window size is larger
-    /// than the actual array size of any dimension.
+    /// This produces no elements if the window size is larger than the actual array size along any
+    /// axis.
     ///
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.

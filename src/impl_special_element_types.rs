@@ -6,8 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::mem::size_of;
-use std::mem::ManuallyDrop;
 use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
@@ -37,12 +35,10 @@ where
     /// array's storage; it is for example possible to slice these in place, but that must
     /// only be done after all elements have been initialized.
     pub unsafe fn assume_init(self) -> ArrayBase<<S as RawDataSubst<A>>::Output, D> {
-        // NOTE: Fully initialized includes elements not reachable in current slicing/view.
-
         let ArrayBase { data, ptr, dim, strides } = self;
 
-        // transmute from storage of MaybeUninit<A> to storage of A
-        let data = unlimited_transmute::<S, S::Output>(data);
+        // "transmute" from storage of MaybeUninit<A> to storage of A
+        let data = S::data_subst(data);
         let ptr = ptr.cast::<A>();
 
         ArrayBase {
@@ -52,16 +48,4 @@ where
             strides,
         }
     }
-}
-
-/// Transmute from A to B.
-///
-/// Like transmute, but does not have the compile-time size check which blocks
-/// using regular transmute for "S to S::Output".
-///
-/// **Panics** if the size of A and B are different.
-unsafe fn unlimited_transmute<A, B>(data: A) -> B {
-    assert_eq!(size_of::<A>(), size_of::<B>());
-    let old_data = ManuallyDrop::new(data);
-    (&*old_data as *const A as *const B).read()
 }
