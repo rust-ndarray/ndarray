@@ -8,10 +8,10 @@ publish = false
 approx = "0.4"
 ndarray = { path = "..", features = ["approx"] }
 ndarray-rand = { path = "../ndarray-rand/" }
-rand_distr = "0.3"
+rand_distr = "0.4"
 
 [dependencies.rand]
-version = "0.7.0"
+version = "0.8.0"
 features = ["small_rng"]
 
 [lib]

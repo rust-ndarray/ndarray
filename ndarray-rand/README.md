@@ -26,9 +26,9 @@ fn main() {
 Dependencies
 ============
 
-``ndarray-rand`` depends on ``rand`` 0.7.
+``ndarray-rand`` depends on ``rand``.
 
-[`rand`](https://docs.rs/rand/0.7.0/rand/) and [`rand-distr`](https://docs.rs/rand_distr/0.3/) are 
+[`rand`](https://docs.rs/rand/) and [`rand-distr`](https://docs.rs/rand_distr/) are 
 re-exported as sub-modules, `ndarray_rand::rand` and `ndarray_rand::rand_distr` respectively. 
 Please rely on these submodules for guaranteed version compatibility.
 
