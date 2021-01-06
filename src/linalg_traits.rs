@@ -15,10 +15,8 @@ use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 #[cfg(feature = "std")]
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
-
 #[cfg(feature = "std")]
 use crate::ScalarOperand;
-
 /// Elements that support linear algebra operations.
 ///
 /// `'static` for type-based specialization, `Copy` so that they don't need move
