@@ -46,15 +46,12 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize {
 /// There is overlap if, when iterating through the dimensions in order of
 /// increasing stride, the current stride is less than or equal to the maximum
 /// possible offset along the preceding axes. (Axes of length ≤1 are ignored.)
-///
-/// The current implementation assumes that strides of axes with length > 1 are
-/// nonnegative. Additionally, it does not check for overflow.
 pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
     let order = strides._fastest_varying_stride_order();
     let mut sum_prev_offsets = 0;
     for &index in order.slice() {
         let d = dim[index];
-        let s = strides[index] as isize;
+        let s = (strides[index] as isize).abs();
         match d {
             0 => return false,
             1 => {}
@@ -210,8 +207,7 @@ where
 ///
 /// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
 ///
-/// 3. For axes with length > 1, the stride must be nonnegative. This is
-///    necessary to make sure the pointer cannot move backwards outside the
+/// 3. For axes with length > 1, the pointer cannot move outside the
 ///    slice. For axes with length ≤ 1, the stride can be anything.
 ///
 /// 4. If the array will be empty (any axes are zero-length), the difference
@@ -255,14 +251,6 @@ fn can_index_slice_impl<D: Dimension>(
     }
     if !is_empty && max_offset >= data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
-    }
-
-    // Check condition 3.
-    for (&d, &s) in izip!(dim.slice(), strides.slice()) {
-        let s = s as isize;
-        if d > 1 && s < 0 {
-            return Err(from_kind(ErrorKind::Unsupported));
-        }
     }
 
     // Check condition 5.
@@ -394,6 +382,19 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
     (start, end, step)
 }
 
+/// The offset value of the data pointer relative to the actual pointer of the given
+/// dim and strides. The result is always <= 0.
+pub fn head_ptr_offset(dim: &[Ix], strides: &[Ix]) -> isize{
+    let offset=izip!(dim, strides)
+        .fold(0,|_offset, (d, s)|{
+            if (*s as isize) < 0{
+                _offset + *s as isize * (*d as isize -1)
+            }else{
+                _offset
+            }
+        });
+    offset
+}
 /// Modify dimension, stride and return data pointer offset
 ///
 /// **Panics** if stride is 0 or if any index is out of bounds.
@@ -693,12 +694,20 @@ mod test {
         let dim = (2, 3, 2).into_dimension();
         let strides = (5, 2, 1).into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
+        let strides = (-5isize as usize, 2, -1isize as usize).into_dimension();
+        assert!(super::dim_stride_overlap(&dim, &strides));
         let strides = (6, 2, 1).into_dimension();
+        assert!(!super::dim_stride_overlap(&dim, &strides));
+        let strides = (6, -2isize as usize, 1).into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
         let strides = (6, 0, 1).into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
+        let strides = (-6isize as usize, 0, 1).into_dimension();
+        assert!(super::dim_stride_overlap(&dim, &strides));
         let dim = (2, 2).into_dimension();
         let strides = (3, 2).into_dimension();
+        assert!(!super::dim_stride_overlap(&dim, &strides));
+        let strides = (3, -2isize as usize).into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
     }
 
@@ -736,7 +745,7 @@ mod test {
         can_index_slice::<i32, _>(&[1], &Ix1(2), &Ix1(1)).unwrap_err();
         can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(0)).unwrap_err();
         can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(1)).unwrap();
-        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(-1isize as usize)).unwrap_err();
+        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(-1isize as usize)).unwrap();
     }
 
     #[test]

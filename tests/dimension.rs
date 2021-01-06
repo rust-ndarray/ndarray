@@ -118,10 +118,20 @@ fn fastest_varying_order() {
     let order = strides._fastest_varying_stride_order();
     assert_eq!(order.slice(), &[3, 0, 2, 1]);
 
+    let strides = Dim([-2isize as usize, 8, -4isize as usize, -1isize as usize]);
+    let order = strides._fastest_varying_stride_order();
+    assert_eq!(order.slice(), &[3, 0, 2, 1]);
+
     assert_eq!(Dim([1, 3])._fastest_varying_stride_order(), Dim([0, 1]));
+    assert_eq!(Dim([1, -3isize as usize])._fastest_varying_stride_order(), Dim([0, 1]));
     assert_eq!(Dim([7, 2])._fastest_varying_stride_order(), Dim([1, 0]));
+    assert_eq!(Dim([-7isize as usize, 2])._fastest_varying_stride_order(), Dim([1, 0]));
     assert_eq!(
         Dim([6, 1, 3])._fastest_varying_stride_order(),
+        Dim([1, 2, 0])
+    );
+    assert_eq!(
+        Dim([-6isize as usize, 1, -3isize as usize])._fastest_varying_stride_order(),
         Dim([1, 2, 0])
     );
 
@@ -130,7 +140,7 @@ fn fastest_varying_order() {
     assert_eq!(Dim([2, 2])._fastest_varying_stride_order(), [0, 1]);
     assert_eq!(Dim([2, 2, 1])._fastest_varying_stride_order(), [2, 0, 1]);
     assert_eq!(
-        Dim([2, 2, 3, 1, 2])._fastest_varying_stride_order(),
+        Dim([-2isize as usize, -2isize as usize, 3, 1, -2isize as usize])._fastest_varying_stride_order(),
         [3, 0, 1, 4, 2]
     );
 }

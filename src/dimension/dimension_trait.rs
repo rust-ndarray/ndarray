@@ -291,12 +291,11 @@ pub trait Dimension:
         let order = strides._fastest_varying_stride_order();
         let strides = strides.slice();
 
-        // FIXME: Negative strides
         let dim_slice = dim.slice();
         let mut cstride = 1;
         for &i in order.slice() {
             // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && strides[i] != cstride {
+            if dim_slice[i] != 1 && (strides[i] as isize).abs() as usize != cstride {
                 return false;
             }
             cstride *= dim_slice[i];
@@ -307,8 +306,7 @@ pub trait Dimension:
     /// Return the axis ordering corresponding to the fastest variation
     /// (in ascending order).
     ///
-    /// Assumes that no stride value appears twice. This cannot yield the correct
-    /// result the strides are not positive.
+    /// Assumes that no stride value appears twice.
     #[doc(hidden)]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut indices = self.clone();
