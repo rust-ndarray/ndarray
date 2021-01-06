@@ -67,6 +67,7 @@ fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
@@ -609,6 +610,7 @@ fn test_cow_shrink() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_sub() {
     let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
     let s1 = mat.index_axis(Axis(0), 0);
@@ -623,6 +625,7 @@ fn test_sub() {
 
 #[should_panic]
 #[test]
+#[cfg(feature = "std")]
 fn test_sub_oob_1() {
     let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
     mat.index_axis(Axis(0), 2);
@@ -1610,6 +1613,7 @@ fn scalar_ops() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn split_at() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
 
@@ -1661,6 +1665,7 @@ fn deny_split_at_index_out_of_bounds() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_range() {
     let a = Array::range(0., 5., 1.);
     assert_eq!(a.len(), 5);
@@ -1788,6 +1793,7 @@ fn test_contiguous() {
 
 #[test]
 #[allow(deprecated)]
+#[cfg(feature = "std")]
 fn test_all_close() {
     let c = arr3(&[
         [[1., 2., 3.], [1.5, 1.5, 3.]],

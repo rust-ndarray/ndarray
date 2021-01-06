@@ -1,10 +1,8 @@
 #![allow(unused)]
 extern crate ndarray;
 
-#[cfg(any(feature = "std", feature = "libm"))]
+#[cfg(feature = "std")]
 use num_traits::Float;
-#[cfg(not(any(feature = "std", feature = "libm")))]
-use num_traits::float::FloatCore as Float;
 
 use ndarray::prelude::*;
 
@@ -15,6 +13,7 @@ const SHARPEN: [[f32; 3]; 3] = [[0., -1., 0.], [-1., 5., -1.], [0., -1., 0.]];
 type Kernel3x3<A> = [[A; 3]; 3];
 
 #[inline(never)]
+#[cfg(feature = "std")]
 fn conv_3x3<F>(a: &ArrayView2<'_, F>, out: &mut ArrayViewMut2<'_, F>, kernel: &Kernel3x3<F>)
 where
     F: Float,
@@ -43,6 +42,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 fn main() {
     let n = 16;
     let mut a = Array::zeros((n, n));
@@ -63,3 +63,5 @@ fn main() {
     }
     println!("{:2}", res);
 }
+#[cfg(not(feature = "std"))]
+fn main() {}

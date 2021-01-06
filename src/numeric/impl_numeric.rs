@@ -6,10 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(any(feature = "std", feature = "libm"))]
+#[cfg(feature = "std")]
 use num_traits::Float;
-#[cfg(not(any(feature = "std", feature = "libm")))]
-use num_traits::float::FloatCore as Float;
 use num_traits::{self, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
@@ -234,7 +232,7 @@ where
     /// let var = a.var_axis(Axis(0), 1.);
     /// assert_eq!(var, aview1(&[4., 4.]));
     /// ```
-    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "std")]
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
@@ -303,7 +301,7 @@ where
     /// let stddev = a.std_axis(Axis(0), 1.);
     /// assert_eq!(stddev, aview1(&[2., 2.]));
     /// ```
-    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "std")]
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
@@ -322,6 +320,7 @@ where
         note = "Use `abs_diff_eq` - it requires the `approx` crate feature",
         since = "0.13.0"
     )]
+    #[cfg(feature = "std")]
     pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
     where
         A: Float,

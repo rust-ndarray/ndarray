@@ -10,6 +10,7 @@ use ndarray::prelude::*;
 use ndarray::NdProducer;
 
 #[test]
+#[cfg(feature = "std")]
 fn chunks() {
     let a = <Array1<f32>>::linspace(1., 100., 10 * 10)
         .into_shape((10, 10))

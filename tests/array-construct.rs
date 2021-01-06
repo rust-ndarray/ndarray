@@ -51,6 +51,7 @@ fn test_arcarray_thread_safe() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_uninit() {
     unsafe {
         let mut a = Array::<f32, _>::uninitialized((3, 4).f());

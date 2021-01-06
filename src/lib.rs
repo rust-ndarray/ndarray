@@ -12,7 +12,7 @@
     clippy::deref_addrof,
     clippy::unreadable_literal
 )]
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -170,7 +170,7 @@ mod data_repr;
 mod data_traits;
 
 pub use crate::aliases::*;
-#[allow(deprecated)]
+
 pub use crate::data_traits::{
     Data, DataClone, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
     RawDataSubst,

@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-#![cfg(any(feature = "std", feature = "libm"))]
+#![cfg(feature = "std")]
 use num_traits::Float;
 
 /// An iterator of a sequence of logarithmically spaced number.

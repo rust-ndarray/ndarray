@@ -1447,13 +1447,13 @@ pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
-use crate::linspace::Linspace;
+#[cfg(feature = "std")]
+use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
+#[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Linspace<F> {}
-#[cfg(any(feature = "std", feature = "libm"))]
-use crate::{geomspace::Geomspace, logspace::Logspace};
-#[cfg(any(feature = "std", feature = "libm"))]
+#[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Geomspace<F> {}
-#[cfg(any(feature = "std", feature = "libm"))]
+#[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Logspace<F> {}
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
 unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}

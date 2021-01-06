@@ -11,10 +11,8 @@
 //!
 
 #![allow(clippy::match_wild_err_arm)]
-#[cfg(any(feature = "std", feature = "libm"))]
+#[cfg(feature = "std")]
 use num_traits::Float;
-#[cfg(not(any(feature = "std", feature = "libm")))]
-use num_traits::float::FloatCore as Float;
 use num_traits::{One, Zero};
 use std::mem::MaybeUninit;
 use alloc::vec;
@@ -28,9 +26,8 @@ use crate::indexes;
 use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
 use crate::StrideShape;
-use crate::linspace;
-#[cfg(any(feature = "std", feature = "libm"))]
-use crate::{geomspace, logspace};
+#[cfg(feature = "std")]
+use crate::{geomspace, linspace, logspace};
 
 
 /// # Constructor Methods for Owned Arrays
@@ -74,6 +71,7 @@ where
     /// let array = Array::linspace(0., 1., 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
+    #[cfg(feature = "std")]
     pub fn linspace(start: A, end: A, n: usize) -> Self
     where
         A: Float,
@@ -92,6 +90,7 @@ where
     /// let array = Array::range(0., 5., 1.);
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
+    #[cfg(feature = "std")]
     pub fn range(start: A, end: A, step: A) -> Self
     where
         A: Float,
@@ -120,7 +119,7 @@ where
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]));
     /// # }
     /// ```
-    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "std")]
     pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
     where
         A: Float,
@@ -155,7 +154,7 @@ where
     /// #
     /// # example().unwrap();
     /// ```
-    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "std")]
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where
         A: Float,

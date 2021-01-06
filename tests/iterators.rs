@@ -28,6 +28,7 @@ macro_rules! assert_panics {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn double_ended() {
     let a = ArcArray::linspace(0., 7., 8);
     let mut it = a.iter().cloned();
@@ -58,6 +59,7 @@ fn iter_size_hint() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn indexed() {
     let a = ArcArray::linspace(0., 7., 8);
     for (i, elt) in a.indexed_iter() {
@@ -90,6 +92,7 @@ where
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn as_slice() {
     let a = ArcArray::linspace(0., 7., 8);
     let a = a.reshape((2, 4, 1));
@@ -524,6 +527,7 @@ fn axis_iter_mut_zip_partially_consumed_discontiguous() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn axis_chunks_iter_corner_cases() {
     // examples provided by @bluss in PR #65
     // these tests highlight corner cases of the axis_chunks_iter implementation

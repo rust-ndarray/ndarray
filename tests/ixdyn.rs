@@ -155,6 +155,7 @@ fn test_0_add_broad() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_into_dimension() {
     let a = Array::linspace(0., 41., 6 * 7).into_shape((6, 7)).unwrap();
     let a2 = a.clone().into_shape(IxDyn(&[6, 7])).unwrap();

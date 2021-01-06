@@ -287,6 +287,7 @@ fn test_array_view() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 #[allow(clippy::cognitive_complexity)]
 fn test_all_ndindex() {
     macro_rules! ndindex {
