@@ -316,7 +316,7 @@ pub trait Dimension:
             *elt = i;
         }
         let strides = self.slice();
-        indices.slice_mut().sort_by_key(|&i| strides[i]);
+        indices.slice_mut().sort_by_key(|&i| (strides[i] as isize).abs());
         indices
     }
 
@@ -645,7 +645,7 @@ impl Dimension for Dim<[Ix; 2]> {
 
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
-        if get!(self, 0) as Ixs <= get!(self, 1) as Ixs {
+        if (get!(self, 0) as Ixs).abs() <= (get!(self, 1) as Ixs).abs() {
             Ix2(0, 1)
         } else {
             Ix2(1, 0)
@@ -805,7 +805,7 @@ impl Dimension for Dim<[Ix; 3]> {
         let mut order = Ix3(0, 1, 2);
         macro_rules! swap {
             ($stride:expr, $order:expr, $x:expr, $y:expr) => {
-                if $stride[$x] > $stride[$y] {
+                if ($stride[$x] as isize).abs() > ($stride[$y] as isize).abs() {
                     $stride.swap($x, $y);
                     $order.ixm().swap($x, $y);
                 }
