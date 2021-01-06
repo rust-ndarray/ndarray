@@ -707,7 +707,7 @@ fn gen_mat_vec_mul() {
         S2: Data<Elem = A>,
     {
         let ((m, _), k) = (lhs.dim(), rhs.dim());
-        reference_mat_mul(lhs, &rhs.to_owned().into_shape((k, 1)).unwrap())
+        reference_mat_mul(lhs, &rhs.as_standard_layout().into_shape((k, 1)).unwrap())
             .into_shape(m)
             .unwrap()
     }
@@ -772,7 +772,7 @@ fn vec_mat_mul() {
         S2: Data<Elem = A>,
     {
         let (m, (_, n)) = (lhs.dim(), rhs.dim());
-        reference_mat_mul(&lhs.to_owned().into_shape((1, m)).unwrap(), rhs)
+        reference_mat_mul(&lhs.as_standard_layout().into_shape((1, m)).unwrap(), rhs)
             .into_shape(n)
             .unwrap()
     }

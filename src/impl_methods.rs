@@ -17,7 +17,8 @@ use crate::arraytraits;
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
-    abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
+    abs_index, axes_of, do_slice, merge_axes, offset_from_ptr_to_memory, size_of_shape_checked,
+    stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
 use crate::itertools::zip;
@@ -1280,9 +1281,6 @@ where
     }
 
     /// Return true if the array is known to be contiguous.
-    ///
-    /// Will detect c- and f-contig arrays correctly, but otherwise
-    /// There are some false negatives.
     pub(crate) fn is_contiguous(&self) -> bool {
         D::is_contiguous(&self.dim, &self.strides)
     }
@@ -1404,14 +1402,18 @@ where
     ///
     /// If this function returns `Some(_)`, then the elements in the slice
     /// have whatever order the elements have in memory.
-    ///
-    /// Implementation notes: Does not yet support negatively strided arrays.
     pub fn as_slice_memory_order(&self) -> Option<&[A]>
     where
         S: Data,
     {
         if self.is_contiguous() {
-            unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
+            let offset = offset_from_ptr_to_memory(self.dim.slice(), self.strides.slice());
+            unsafe {
+                Some(slice::from_raw_parts(
+                    self.ptr.offset(offset).as_ptr(),
+                    self.len(),
+                ))
+            }
         } else {
             None
         }
@@ -1425,7 +1427,13 @@ where
     {
         if self.is_contiguous() {
             self.ensure_unique();
-            unsafe { Some(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
+            let offset = offset_from_ptr_to_memory(self.dim.slice(), self.strides.slice());
+            unsafe {
+                Some(slice::from_raw_parts_mut(
+                    self.ptr.offset(offset).as_ptr(),
+                    self.len(),
+                ))
+            }
         } else {
             None
         }
