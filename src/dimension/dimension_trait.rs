@@ -291,11 +291,12 @@ pub trait Dimension:
         let order = strides._fastest_varying_stride_order();
         let strides = strides.slice();
 
+        // FIXME: Negative strides
         let dim_slice = dim.slice();
         let mut cstride = 1;
         for &i in order.slice() {
             // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && (strides[i] as isize).abs() as usize != cstride {
+            if dim_slice[i] != 1 && strides[i] != cstride {
                 return false;
             }
             cstride *= dim_slice[i];
@@ -306,7 +307,8 @@ pub trait Dimension:
     /// Return the axis ordering corresponding to the fastest variation
     /// (in ascending order).
     ///
-    /// Assumes that no stride value appears twice.
+    /// Assumes that no stride value appears twice. This cannot yield the correct
+    /// result the strides are not positive.
     #[doc(hidden)]
     fn _fastest_varying_stride_order(&self) -> Self {
         let mut indices = self.clone();
@@ -314,7 +316,7 @@ pub trait Dimension:
             *elt = i;
         }
         let strides = self.slice();
-        indices.slice_mut().sort_by_key(|&i| (strides[i] as isize).abs());
+        indices.slice_mut().sort_by_key(|&i| strides[i]);
         indices
     }
 
@@ -643,7 +645,7 @@ impl Dimension for Dim<[Ix; 2]> {
 
     #[inline]
     fn _fastest_varying_stride_order(&self) -> Self {
-        if (get!(self, 0) as Ixs).abs() <= (get!(self, 1) as Ixs).abs() {
+        if get!(self, 0) as Ixs <= get!(self, 1) as Ixs {
             Ix2(0, 1)
         } else {
             Ix2(1, 0)
@@ -803,7 +805,7 @@ impl Dimension for Dim<[Ix; 3]> {
         let mut order = Ix3(0, 1, 2);
         macro_rules! swap {
             ($stride:expr, $order:expr, $x:expr, $y:expr) => {
-                if ($stride[$x] as isize).abs() > ($stride[$y] as isize).abs() {
+                if $stride[$x] > $stride[$y] {
                     $stride.swap($x, $y);
                     $order.ixm().swap($x, $y);
                 }
