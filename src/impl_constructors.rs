@@ -24,6 +24,8 @@ use crate::indices;
 use crate::iterators::{to_vec, to_vec_mapped};
 use crate::StrideShape;
 use crate::{geomspace, linspace, logspace};
+use rawpointer::PointerExt;
+use crate::dimension::head_ptr_offset;
 
 /// # Constructor Methods for Owned Arrays
 ///
@@ -431,7 +433,8 @@ where
     ///
     /// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
     ///
-    /// 3. For axes with length > 1, the stride must be nonnegative.
+    /// 3. For axes with length > 1, the pointer cannot move outside the
+    ///    slice.
     ///
     /// 4. If the array will be empty (any axes are zero-length), the
     ///    difference between the least address and greatest address accessible
@@ -457,7 +460,7 @@ where
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
-            ptr: nonnull_from_vec_data(&mut v),
+            ptr: nonnull_from_vec_data(&mut v).offset(head_ptr_offset(dim.slice(),strides.slice()).abs()),
             data: DataOwned::new(v),
             strides,
             dim,
