@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cell::Cell;
 use std::ptr as std_ptr;
 use std::slice;
 
@@ -21,6 +20,7 @@ use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
+use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::zip::Zip;
 
@@ -159,7 +159,7 @@ where
     ///
     /// The view acts "as if" the elements are temporarily in cells, and elements
     /// can be changed through shared references using the regular cell methods.
-    pub fn cell_view(&mut self) -> ArrayView<'_, Cell<A>, D>
+    pub fn cell_view(&mut self) -> ArrayView<'_, MathCell<A>, D>
     where
         S: DataMut,
     {

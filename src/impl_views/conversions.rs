@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cell::Cell;
 use std::slice;
 
 use crate::imp_prelude::*;
@@ -14,6 +13,7 @@ use crate::imp_prelude::*;
 use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
+use crate::math_cell::MathCell;
 use crate::IndexLonger;
 
 /// Methods for read-only array views.
@@ -125,12 +125,12 @@ where
     ///
     /// The view acts "as if" the elements are temporarily in cells, and elements
     /// can be changed through shared references using the regular cell methods.
-    pub fn into_cell_view(self) -> ArrayView<'a, Cell<A>, D> {
+    pub fn into_cell_view(self) -> ArrayView<'a, MathCell<A>, D> {
         // safety: valid because
-        // A and Cell<A> have the same representation
-        // &'a mut T is interchangeable with &'a Cell<T> -- see method Cell::from_mut
+        // A and MathCell<A> have the same representation
+        // &'a mut T is interchangeable with &'a Cell<T> -- see method Cell::from_mut in std
         unsafe {
-            self.into_raw_view_mut().cast::<Cell<A>>().deref_into_view()
+            self.into_raw_view_mut().cast::<MathCell<A>>().deref_into_view()
         }
     }
 }
