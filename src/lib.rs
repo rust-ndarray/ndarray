@@ -302,7 +302,7 @@ pub type Ixs = isize;
 ///
 /// [`ArrayView`] and [`ArrayViewMut`] are read-only and read-write array views
 /// respectively. They use dimensionality, indexing, and almost all other
-/// methods the same was as the other array types.
+/// methods the same way as the other array types.
 ///
 /// Methods for `ArrayBase` apply to array views too, when the trait bounds
 /// allow.
