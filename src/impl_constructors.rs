@@ -460,8 +460,7 @@ where
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
-            ptr: nonnull_from_vec_data(&mut v)
-                .offset(offset_from_ptr_to_memory(dim.slice(), strides.slice()).abs()),
+            ptr: nonnull_from_vec_data(&mut v).offset(-offset_from_ptr_to_memory(&dim, &strides)),
             data: DataOwned::new(v),
             strides,
             dim,

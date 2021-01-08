@@ -314,7 +314,8 @@ pub trait Dimension:
             *elt = i;
         }
         let strides = self.slice();
-        indices.slice_mut()
+        indices
+            .slice_mut()
             .sort_by_key(|&i| (strides[i] as isize).abs());
         indices
     }

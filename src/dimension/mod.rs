@@ -207,10 +207,7 @@ where
 ///
 /// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
 ///
-/// 3. For axes with length > 1, the pointer cannot move outside the
-///    slice. For axes with length ≤ 1, the stride can be anything.
-///
-/// 4. If the array will be empty (any axes are zero-length), the difference
+/// 3. If the array will be empty (any axes are zero-length), the difference
 ///    between the least address and greatest address accessible by moving
 ///    along all axes must be ≤ `data.len()`. (It's fine in this case to move
 ///    one byte past the end of the slice since the pointers will be offset but
@@ -221,13 +218,19 @@ where
 ///    `data.len()`. This and #3 ensure that all dereferenceable pointers point
 ///    to elements within the slice.
 ///
-/// 5. The strides must not allow any element to be referenced by two different
+/// 4. The strides must not allow any element to be referenced by two different
 ///    indices.
 ///
 /// Note that since slices cannot contain more than `isize::MAX` bytes,
 /// condition 4 is sufficient to guarantee that the absolute difference in
 /// units of `A` and in units of bytes between the least address and greatest
 /// address accessible by moving along all axes does not exceed `isize::MAX`.
+///
+/// Warning: This function is sufficient to check the invariants of ArrayBase only
+/// if the pointer to the first element of the array is chosen such that the element
+/// with the smallest memory address is at the start of data. (In other words, the
+/// pointer to the first element of the array must be computed using offset_from_ptr_to_memory
+/// so that negative strides are correctly handled.)
 pub(crate) fn can_index_slice<A, D: Dimension>(
     data: &[A],
     dim: &D,
@@ -244,7 +247,7 @@ fn can_index_slice_impl<D: Dimension>(
     dim: &D,
     strides: &D,
 ) -> Result<(), ShapeError> {
-    // Check condition 4.
+    // Check condition 3.
     let is_empty = dim.slice().iter().any(|&d| d == 0);
     if is_empty && max_offset > data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
@@ -253,7 +256,7 @@ fn can_index_slice_impl<D: Dimension>(
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
 
-    // Check condition 5.
+    // Check condition 4.
     if !is_empty && dim_stride_overlap(dim, strides) {
         return Err(from_kind(ErrorKind::Unsupported));
     }
@@ -384,8 +387,8 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
 
 /// This function computes the offset from the logically first element to the first element in
 /// memory of the array. The result is always <= 0.
-pub fn offset_from_ptr_to_memory(dim: &[Ix], strides: &[Ix]) -> isize {
-    let offset = izip!(dim, strides).fold(0, |_offset, (d, s)| {
+pub fn offset_from_ptr_to_memory<D: Dimension>(dim: &D, strides: &D) -> isize {
+    let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (d, s)| {
         if (*s as isize) < 0 {
             _offset + *s as isize * (*d as isize - 1)
         } else {

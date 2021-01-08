@@ -1787,6 +1787,64 @@ fn test_contiguous() {
 }
 
 #[test]
+fn test_contiguous_neg_strides() {
+    let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let mut a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)), &s).unwrap();
+    assert_eq!(
+        a,
+        arr3(&[[[0, 2], [4, 6], [8, 10]], [[1, 3], [5, 7], [9, 11]]])
+    );
+    assert!(a.as_slice_memory_order().is_some());
+
+    let mut b = a.slice(s![..;1, ..;-1, ..;-1]);
+    assert_eq!(
+        b,
+        arr3(&[[[10, 8], [6, 4], [2, 0]], [[11, 9], [7, 5], [3, 1]]])
+    );
+    assert!(b.as_slice_memory_order().is_some());
+
+    b.swap_axes(1, 2);
+    assert_eq!(b, arr3(&[[[10, 6, 2], [8, 4, 0]], [[11, 7, 3], [9, 5, 1]]]));
+    assert!(b.as_slice_memory_order().is_some());
+
+    b.invert_axis(Axis(0));
+    assert_eq!(b, arr3(&[[[11, 7, 3], [9, 5, 1]], [[10, 6, 2], [8, 4, 0]]]));
+    assert!(b.as_slice_memory_order().is_some());
+
+    let mut c = b.reversed_axes();
+    assert_eq!(
+        c,
+        arr3(&[[[11, 10], [9, 8]], [[7, 6], [5, 4]], [[3, 2], [1, 0]]])
+    );
+    assert!(c.as_slice_memory_order().is_some());
+
+    c.merge_axes(Axis(1), Axis(2));
+    assert_eq!(c, arr3(&[[[11, 10, 9, 8]], [[7, 6, 5, 4]], [[3, 2, 1, 0]]]));
+    assert!(c.as_slice_memory_order().is_some());
+
+    let d = b.remove_axis(Axis(1));
+    assert_eq!(d, arr2(&[[11, 7, 3], [10, 6, 2]]));
+    assert!(d.as_slice_memory_order().is_none());
+
+    let e = b.remove_axis(Axis(2));
+    assert_eq!(e, arr2(&[[11, 9], [10, 8]]));
+    assert!(e.as_slice_memory_order().is_some());
+
+    let f = e.insert_axis(Axis(2));
+    assert_eq!(f, arr3(&[[[11], [9]], [[10], [8]]]));
+    assert!(f.as_slice_memory_order().is_some());
+
+    let mut g = b.clone();
+    g.collapse_axis(Axis(1), 0);
+    assert_eq!(g, arr3(&[[[11, 7, 3]], [[10, 6, 2]]]));
+    assert!(g.as_slice_memory_order().is_none());
+
+    b.collapse_axis(Axis(2), 0);
+    assert_eq!(b, arr3(&[[[11], [9]], [[10], [8]]]));
+    assert!(b.as_slice_memory_order().is_some());
+}
+
+#[test]
 fn test_swap() {
     let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
     let b = a.clone();

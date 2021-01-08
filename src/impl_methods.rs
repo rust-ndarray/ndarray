@@ -154,12 +154,12 @@ where
 
     /// Return an uniquely owned copy of the array.
     ///
-    /// If the input array is contiguous and its strides are positive, then the
-    /// output array will have the same memory layout. Otherwise, the layout of
-    /// the output array is unspecified. If you need a particular layout, you
-    /// can allocate a new array with the desired memory layout and
-    /// [`.assign()`](#method.assign) the data. Alternatively, you can collect
-    /// an iterator, like this for a result in standard layout:
+    /// If the input array is contiguous, then the output array will have the same
+    /// memory layout. Otherwise, the layout of the output array is unspecified.
+    /// If you need a particular layout, you can allocate a new array with the
+    /// desired memory layout and [`.assign()`](#method.assign) the data.
+    /// Alternatively, you can collectan iterator, like this for a result in
+    /// standard layout:
     ///
     /// ```
     /// # use ndarray::prelude::*;
@@ -1407,7 +1407,7 @@ where
         S: Data,
     {
         if self.is_contiguous() {
-            let offset = offset_from_ptr_to_memory(self.dim.slice(), self.strides.slice());
+            let offset = offset_from_ptr_to_memory(&self.dim, &self.strides);
             unsafe {
                 Some(slice::from_raw_parts(
                     self.ptr.offset(offset).as_ptr(),
@@ -1427,7 +1427,7 @@ where
     {
         if self.is_contiguous() {
             self.ensure_unique();
-            let offset = offset_from_ptr_to_memory(self.dim.slice(), self.strides.slice());
+            let offset = offset_from_ptr_to_memory(&self.dim, &self.strides);
             unsafe {
                 Some(slice::from_raw_parts_mut(
                     self.ptr.offset(offset).as_ptr(),
