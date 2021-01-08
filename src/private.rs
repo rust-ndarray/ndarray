@@ -21,5 +21,5 @@ macro_rules! private_impl {
         fn __private__(&self) -> crate::private::PrivateMarker {
             crate::private::PrivateMarker
         }
-    }
+    };
 }
