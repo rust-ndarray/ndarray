@@ -69,7 +69,7 @@ where
         self.dim.clone().into_pattern()
     }
 
-    /// Return the shape of the array as it stored in the array.
+    /// Return the shape of the array as it's stored in the array.
     ///
     /// This is primarily useful for passing to other `ArrayBase`
     /// functions, such as when creating another array of the same
@@ -630,7 +630,7 @@ where
     ///
     /// The caller must ensure that:
     ///
-    /// 1. both `index1 and `index2` are in-bounds and
+    /// 1. both `index1` and `index2` are in-bounds and
     ///
     /// 2. the data is uniquely held by the array. (This property is guaranteed
     ///    for `Array` and `ArrayViewMut`, but not for `ArcArray` or `CowArray`.)
@@ -929,7 +929,7 @@ where
     /// Return a producer and iterable that traverses over all 1D lanes
     /// pointing in the direction of `axis`.
     ///
-    /// When the pointing in the direction of the first axis, they are *columns*,
+    /// When pointing in the direction of the first axis, they are *columns*,
     /// in the direction of the last axis *rows*; in general they are all
     /// *lanes* and are one dimensional.
     ///
@@ -1198,7 +1198,7 @@ where
         (len, stride)
     }
 
-    /// Return an view of the diagonal elements of the array.
+    /// Return a view of the diagonal elements of the array.
     ///
     /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
     /// *(1, 1, ..., 1)* etc as long as all axes have elements.
@@ -1257,7 +1257,7 @@ where
     /// Return `true` if the array data is laid out in contiguous “C order” in
     /// memory (where the last index is the most rapidly varying).
     ///
-    /// Return `false` otherwise, i.e the array is possibly not
+    /// Return `false` otherwise, i.e. the array is possibly not
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
