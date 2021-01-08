@@ -13,6 +13,7 @@ use crate::imp_prelude::*;
 use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
+use crate::math_cell::MathCell;
 use crate::IndexLonger;
 
 /// Methods for read-only array views.
@@ -116,6 +117,21 @@ where
     /// view's lifetime to the slice.
     pub fn into_slice(self) -> Option<&'a mut [A]> {
         self.try_into_slice().ok()
+    }
+
+    /// Return a shared view of the array with elements as if they were embedded in cells.
+    ///
+    /// The cell view itself can be copied and accessed without exclusivity.
+    ///
+    /// The view acts "as if" the elements are temporarily in cells, and elements
+    /// can be changed through shared references using the regular cell methods.
+    pub fn into_cell_view(self) -> ArrayView<'a, MathCell<A>, D> {
+        // safety: valid because
+        // A and MathCell<A> have the same representation
+        // &'a mut T is interchangeable with &'a Cell<T> -- see method Cell::from_mut in std
+        unsafe {
+            self.into_raw_view_mut().cast::<MathCell<A>>().deref_into_view()
+        }
     }
 }
 

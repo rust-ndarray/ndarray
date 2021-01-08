@@ -20,6 +20,7 @@ use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
+use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::zip::Zip;
 
@@ -149,6 +150,20 @@ where
     {
         self.ensure_unique();
         unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
+    }
+
+    /// Return a shared view of the array with elements as if they were embedded in cells.
+    ///
+    /// The cell view requires a mutable borrow of the array. Once borrowed the
+    /// cell view itself can be copied and accessed without exclusivity.
+    ///
+    /// The view acts "as if" the elements are temporarily in cells, and elements
+    /// can be changed through shared references using the regular cell methods.
+    pub fn cell_view(&mut self) -> ArrayView<'_, MathCell<A>, D>
+    where
+        S: DataMut,
+    {
+        self.view_mut().into_cell_view()
     }
 
     /// Return an uniquely owned copy of the array.

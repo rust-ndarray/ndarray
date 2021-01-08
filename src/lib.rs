@@ -139,6 +139,7 @@ pub use crate::linalg_traits::LinalgScalar;
 
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
+pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
 pub use crate::shape_builder::{Shape, ShapeBuilder, StrideShape};
 
@@ -180,6 +181,7 @@ mod layout;
 mod linalg_traits;
 mod linspace;
 mod logspace;
+mod math_cell;
 mod numeric_util;
 mod partial;
 mod shape_builder;
