@@ -48,6 +48,17 @@ Crate Feature Flags
 The following crate feature flags are available. They are configured in
 your `Cargo.toml`.
 
+- ``std``
+
+  - This crate can be used without the standard library by disabling the
+    default `std` feature. Use this in `Cargo.toml`:
+
+    [dependencies]
+    ndarray = { version = "0.14.0", default-features = false }
+
+  - The `geomspace` `linspace` `logspace` `range` `var_axis` `std_axis`
+    and `all_close` methods are only available when `std` is enabled.
+
 - ``serde``
 
   - Optional, compatible with Rust stable

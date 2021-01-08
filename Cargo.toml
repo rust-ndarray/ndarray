@@ -75,7 +75,7 @@ debug = true
 
 [workspace]
 members = ["ndarray-rand", "serialization-tests", "blas-tests"]
-exclude = ["numeric-tests","ensure_no_std"]
+exclude = ["numeric-tests"]
 
 [package.metadata.release]
 no-dev-version = true
