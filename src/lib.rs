@@ -1,4 +1,4 @@
-// Copyright 2014-2016 bluss and ndarray developers.
+// Copyright 2014-2020 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -155,6 +155,7 @@ pub use crate::linalg_traits::LinalgScalar;
 
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
+pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
 pub use crate::shape_builder::{Shape, ShapeBuilder, StrideShape};
 
@@ -179,7 +180,7 @@ mod data_traits;
 pub use crate::aliases::*;
 
 pub use crate::data_traits::{
-    Data, DataClone, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
+    Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
     RawDataSubst,
 };
 
@@ -196,6 +197,7 @@ mod layout;
 mod linalg_traits;
 mod linspace;
 mod logspace;
+mod math_cell;
 mod numeric_util;
 mod partial;
 mod shape_builder;
@@ -203,6 +205,7 @@ mod shape_builder;
 mod slice;
 mod split_at;
 mod stacking;
+mod traversal_utils;
 #[macro_use]
 mod zip;
 
@@ -315,7 +318,7 @@ pub type Ixs = isize;
 ///
 /// [`ArrayView`] and [`ArrayViewMut`] are read-only and read-write array views
 /// respectively. They use dimensionality, indexing, and almost all other
-/// methods the same was as the other array types.
+/// methods the same way as the other array types.
 ///
 /// Methods for `ArrayBase` apply to array views too, when the trait bounds
 /// allow.
@@ -428,16 +431,16 @@ pub type Ixs = isize;
 ///
 /// The `outer_iter` and `axis_iter` are one dimensional producers.
 ///
-/// ## `.genrows()`, `.gencolumns()` and `.lanes()`
+/// ## `.rows()`, `.columns()` and `.lanes()`
 ///
-/// [`.genrows()`][gr] is a producer (and iterable) of all rows in an array.
+/// [`.rows()`][gr] is a producer (and iterable) of all rows in an array.
 ///
 /// ```
 /// use ndarray::Array;
 ///
 /// // 1. Loop over the rows of a 2D array
 /// let mut a = Array::zeros((10, 10));
-/// for mut row in a.genrows_mut() {
+/// for mut row in a.rows_mut() {
 ///     row.fill(1.);
 /// }
 ///
@@ -445,7 +448,7 @@ pub type Ixs = isize;
 /// use ndarray::Zip;
 /// let mut b = Array::zeros(a.nrows());
 ///
-/// Zip::from(a.genrows())
+/// Zip::from(a.rows())
 ///     .and(&mut b)
 ///     .apply(|a_row, b_elt| {
 ///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
@@ -463,21 +466,21 @@ pub type Ixs = isize;
 /// has *a m* rows. It's composed of *a* times the previous array, so it
 /// has *a* times as many rows.
 ///
-/// All methods: [`.genrows()`][gr], [`.genrows_mut()`][grm],
-/// [`.gencolumns()`][gc], [`.gencolumns_mut()`][gcm],
+/// All methods: [`.rows()`][gr], [`.rows_mut()`][grm],
+/// [`.columns()`][gc], [`.columns_mut()`][gcm],
 /// [`.lanes(axis)`][l], [`.lanes_mut(axis)`][lm].
 ///
-/// [gr]: #method.genrows
-/// [grm]: #method.genrows_mut
-/// [gc]: #method.gencolumns
-/// [gcm]: #method.gencolumns_mut
+/// [gr]: #method.rows
+/// [grm]: #method.rows_mut
+/// [gc]: #method.columns
+/// [gcm]: #method.columns_mut
 /// [l]: #method.lanes
 /// [lm]: #method.lanes_mut
 ///
-/// Yes, for 2D arrays `.genrows()` and `.outer_iter()` have about the same
+/// Yes, for 2D arrays `.rows()` and `.outer_iter()` have about the same
 /// effect:
 ///
-///  + `genrows()` is a producer with *n* - 1 dimensions of 1 dimensional items
+///  + `rows()` is a producer with *n* - 1 dimensions of 1 dimensional items
 ///  + `outer_iter()` is a producer with 1 dimension of *n* - 1 dimensional items
 ///
 /// ## Slicing
@@ -1377,7 +1380,7 @@ pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 ///
 /// # Warning
 ///
-/// You can't use this type wih an arbitrary raw pointer; see
+/// You can't use this type with an arbitrary raw pointer; see
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
 pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 
@@ -1402,7 +1405,7 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 ///
 /// # Warning
 ///
-/// You can't use this type wih an arbitrary raw pointer; see
+/// You can't use this type with an arbitrary raw pointer; see
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 

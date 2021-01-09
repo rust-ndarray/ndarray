@@ -50,6 +50,17 @@ where
         sum
     }
 
+    /// Return the sum of all elements in the array.
+    ///
+    /// *This method has been renamed to `.sum()`*
+    #[deprecated(note="renamed to `sum`", since="0.15.0")]
+    pub fn scalar_sum(&self) -> A
+    where
+        A: Clone + Add<Output = A> + num_traits::Zero,
+    {
+        self.sum()
+    }
+
     /// Returns the [arithmetic mean] x̅ of all elements in the array:
     ///
     /// ```text
@@ -77,18 +88,6 @@ where
         }
     }
 
-    /// Return the sum of all elements in the array.
-    ///
-    /// *This method has been renamed to `.sum()` and will be deprecated in the
-    /// next version.*
-    // #[deprecated(note="renamed to `sum`", since="0.13")]
-    pub fn scalar_sum(&self) -> A
-    where
-        A: Clone + Add<Output = A> + num_traits::Zero,
-    {
-        self.sum()
-    }
-
     /// Return the product of all elements in the array.
     ///
     /// ```
@@ -114,6 +113,114 @@ where
             }
         }
         sum
+    }
+
+    /// Return variance of elements in the array.
+    ///
+    /// The variance is computed using the [Welford one-pass
+    /// algorithm](https://www.jstor.org/stable/1266577).
+    ///
+    /// The parameter `ddof` specifies the "delta degrees of freedom". For
+    /// example, to calculate the population variance, use `ddof = 0`, or to
+    /// calculate the sample variance, use `ddof = 1`.
+    ///
+    /// The variance is defined as:
+    ///
+    /// ```text
+    ///               1       n
+    /// variance = ――――――――   ∑ (xᵢ - x̅)²
+    ///            n - ddof  i=1
+    /// ```
+    ///
+    /// where
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// and `n` is the length of the array.
+    ///
+    /// **Panics** if `ddof` is less than zero or greater than `n`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use approx::assert_abs_diff_eq;
+    ///
+    /// let a = array![1., -4.32, 1.14, 0.32];
+    /// let var = a.var(1.);
+    /// assert_abs_diff_eq!(var, 6.7331, epsilon = 1e-4);
+    /// ```
+    pub fn var(&self, ddof: A) -> A
+    where
+        A: Float + FromPrimitive,
+    {
+        let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
+        let n = A::from_usize(self.len()).expect("Converting length to `A` must not fail.");
+        assert!(
+            !(ddof < zero || ddof > n),
+            "`ddof` must not be less than zero or greater than the length of \
+             the axis",
+        );
+        let dof = n - ddof;
+        let mut mean = A::zero();
+        let mut sum_sq = A::zero();
+        for (i, &x) in self.into_iter().enumerate() {
+            let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
+            let delta = x - mean;
+            mean = mean + delta / count;
+            sum_sq = (x - mean).mul_add(delta, sum_sq);
+        }
+        sum_sq / dof
+    }
+
+    /// Return standard deviation of elements in the array.
+    ///
+    /// The standard deviation is computed from the variance using
+    /// the [Welford one-pass algorithm](https://www.jstor.org/stable/1266577).
+    ///
+    /// The parameter `ddof` specifies the "delta degrees of freedom". For
+    /// example, to calculate the population standard deviation, use `ddof = 0`,
+    /// or to calculate the sample standard deviation, use `ddof = 1`.
+    ///
+    /// The standard deviation is defined as:
+    ///
+    /// ```text
+    ///               ⎛    1       n          ⎞
+    /// stddev = sqrt ⎜ ――――――――   ∑ (xᵢ - x̅)²⎟
+    ///               ⎝ n - ddof  i=1         ⎠
+    /// ```
+    ///
+    /// where
+    ///
+    /// ```text
+    ///     1   n
+    /// x̅ = ―   ∑ xᵢ
+    ///     n  i=1
+    /// ```
+    ///
+    /// and `n` is the length of the array.
+    ///
+    /// **Panics** if `ddof` is less than zero or greater than `n`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use approx::assert_abs_diff_eq;
+    ///
+    /// let a = array![1., -4.32, 1.14, 0.32];
+    /// let stddev = a.std(1.);
+    /// assert_abs_diff_eq!(stddev, 2.59483, epsilon = 1e-4);
+    /// ```
+    pub fn std(&self, ddof: A) -> A
+    where
+        A: Float + FromPrimitive,
+    {
+        self.var(ddof).sqrt()
     }
 
     /// Return sum along `axis`.
@@ -308,34 +415,5 @@ where
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
-    }
-
-    /// Return `true` if the arrays' elementwise differences are all within
-    /// the given absolute tolerance, `false` otherwise.
-    ///
-    /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
-    ///
-    /// **Panics** if broadcasting to the same shape isn’t possible.
-    #[deprecated(
-        note = "Use `abs_diff_eq` - it requires the `approx` crate feature",
-        since = "0.13.0"
-    )]
-    #[cfg(feature = "std")]
-    pub fn all_close<S2, E>(&self, rhs: &ArrayBase<S2, E>, tol: A) -> bool
-    where
-        A: Float,
-        S2: Data<Elem = A>,
-        E: Dimension,
-    {
-        !Zip::from(self)
-            .and(rhs.broadcast_unwrap(self.raw_dim()))
-            .fold_while((), |_, x, y| {
-                if (*x - *y).abs() <= tol {
-                    FoldWhile::Continue(())
-                } else {
-                    FoldWhile::Done(())
-                }
-            })
-            .is_done()
     }
 }

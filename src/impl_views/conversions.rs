@@ -13,6 +13,7 @@ use crate::imp_prelude::*;
 use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 use crate::iter::{self, AxisIter, AxisIterMut};
+use crate::math_cell::MathCell;
 use crate::IndexLonger;
 
 /// Methods for read-only array views.
@@ -31,18 +32,9 @@ where
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
-    #[deprecated(note = "`into_slice` has been renamed to `to_slice`", since = "0.13.0")]
-    #[allow(clippy::wrong_self_convention)]
-    pub fn into_slice(&self) -> Option<&'a [A]> {
-        if self.is_standard_layout() {
-            unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
-        } else {
-            None
-        }
-    }
-
-    /// Return the array’s data as a slice, if it is contiguous and in standard order.
-    /// Return `None` otherwise.
+    ///
+    /// Note that while the method is similar to [`ArrayBase::as_slice()`], this method tranfers
+    /// the view's lifetime to the slice, so it is a bit more powerful.
     pub fn to_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
             unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
@@ -120,8 +112,26 @@ where
 {
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
+    ///
+    /// Note that while this is similar to [`ArrayBase::as_slice_mut()`], this method tranfers the
+    /// view's lifetime to the slice.
     pub fn into_slice(self) -> Option<&'a mut [A]> {
-        self.into_slice_().ok()
+        self.try_into_slice().ok()
+    }
+
+    /// Return a shared view of the array with elements as if they were embedded in cells.
+    ///
+    /// The cell view itself can be copied and accessed without exclusivity.
+    ///
+    /// The view acts "as if" the elements are temporarily in cells, and elements
+    /// can be changed through shared references using the regular cell methods.
+    pub fn into_cell_view(self) -> ArrayView<'a, MathCell<A>, D> {
+        // safety: valid because
+        // A and MathCell<A> have the same representation
+        // &'a mut T is interchangeable with &'a Cell<T> -- see method Cell::from_mut in std
+        unsafe {
+            self.into_raw_view_mut().cast::<MathCell<A>>().deref_into_view()
+        }
     }
 }
 
@@ -179,7 +189,9 @@ where
         ElementsBaseMut::new(self)
     }
 
-    pub(crate) fn into_slice_(self) -> Result<&'a mut [A], Self> {
+    /// Return the array’s data as a slice, if it is contiguous and in standard order.
+    /// Otherwise return self in the Err branch of the result.
+    pub(crate) fn try_into_slice(self) -> Result<&'a mut [A], Self> {
         if self.is_standard_layout() {
             unsafe { Ok(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
         } else {

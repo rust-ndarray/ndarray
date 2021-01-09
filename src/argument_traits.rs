@@ -1,6 +1,7 @@
 use std::cell::Cell;
 use std::mem::MaybeUninit;
 
+use crate::math_cell::MathCell;
 
 /// A producer element that can be assigned to once
 pub trait AssignElem<T> {
@@ -17,6 +18,13 @@ impl<'a, T> AssignElem<T> for &'a mut T {
 
 /// Assignable element, simply `self.set(input)`.
 impl<'a, T> AssignElem<T> for &'a Cell<T> {
+    fn assign_elem(self, input: T) {
+        self.set(input);
+    }
+}
+
+/// Assignable element, simply `self.set(input)`.
+impl<'a, T> AssignElem<T> for &'a MathCell<T> {
     fn assign_elem(self, input: T) {
         self.set(input);
     }

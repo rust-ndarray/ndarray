@@ -9,6 +9,8 @@
 
 extern crate test;
 
+use std::mem::MaybeUninit;
+
 use ndarray::ShapeBuilder;
 use ndarray::{arr0, arr1, arr2, azip, s};
 use ndarray::{Array, Array1, Array2, Axis, Ix, Zip};
@@ -61,7 +63,7 @@ fn iter_sum_2d_by_row(bench: &mut test::Bencher) {
     let a = black_box(a);
     bench.iter(|| {
         let mut sum = 0;
-        for row in a.genrows() {
+        for row in a.rows() {
             for &elt in row {
                 sum += elt;
             }
@@ -121,7 +123,7 @@ fn iter_sum_2d_cutout_outer_iter(bench: &mut test::Bencher) {
     let a = black_box(av);
     bench.iter(|| {
         let mut sum = 0;
-        for row in a.genrows() {
+        for row in a.rows() {
             for &elt in row {
                 sum += elt;
             }
@@ -269,9 +271,9 @@ fn add_2d_alloc_zip_uninit(bench: &mut test::Bencher) {
     let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| unsafe {
-        let mut c = Array::uninitialized(a.dim());
-        azip!((&a in &a, &b in &b, c in c.raw_view_mut())
-            std::ptr::write(c, a + b)
+        let mut c = Array::<MaybeUninit<i32>, _>::maybe_uninit(a.dim());
+        azip!((&a in &a, &b in &b, c in c.raw_view_mut().cast::<i32>())
+            c.write(a + b)
         );
         c
     });

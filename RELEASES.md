@@ -1,3 +1,56 @@
+Version 0.15.0 (Not released yet)
+=================================
+
+New features
+------------
+
+- Support for compiling ndarray as `no_std` (using core and alloc) by [@xd009642]
+
+  https://github.com/rust-ndarray/ndarray/pull/861
+
+- New methods `.cell_view()` and `ArrayViewMut::into_cell_view` that enable
+  new ways of working with array elements as if they were in Cells - setting
+  elements through shared views and broadcast views.
+
+  https://github.com/rust-ndarray/ndarray/pull/877
+
+
+Enhancements
+------------
+
+- Fix `Zip` for the 0-dimensional case by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/862
+
+API changes
+-----------
+
+- Removed deprecated methods by [@bluss]:
+
+  - Remove deprecated `.all_close()` - use approx feature and methods like  `.abs_diff_eq` instead
+  - Mark `.scalar_sum()` as deprecated - use `.sum()` instead
+  - Remove deprecated `DataClone` - use `Data + RawDataClone` instead
+  - Remove deprecated `ArrayView::into_slice` - use `to_slice()` instead.
+
+  https://github.com/rust-ndarray/ndarray/pull/874
+
+- Remove deprecated methods: rows, cols (for row and column count; the new
+  names are nrows and ncols) by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/872
+
+- Renamed methods (old names are now deprecated) by [@bluss]
+
+  - `genrows/_mut` -> `rows/_mut`
+  - `gencolumns/_mut` -> `columns/_mut`
+
+  https://github.com/rust-ndarray/ndarray/pull/872
+
+Other changes
+-------------
+
+
+
 Version 0.14.0 (2020-11-28)
 ===========================
 

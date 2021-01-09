@@ -21,6 +21,7 @@ use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
+use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::zip::Zip;
 
@@ -70,7 +71,7 @@ where
         self.dim.clone().into_pattern()
     }
 
-    /// Return the shape of the array as it stored in the array.
+    /// Return the shape of the array as it's stored in the array.
     ///
     /// This is primarily useful for passing to other `ArrayBase`
     /// functions, such as when creating another array of the same
@@ -150,6 +151,20 @@ where
     {
         self.ensure_unique();
         unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
+    }
+
+    /// Return a shared view of the array with elements as if they were embedded in cells.
+    ///
+    /// The cell view requires a mutable borrow of the array. Once borrowed the
+    /// cell view itself can be copied and accessed without exclusivity.
+    ///
+    /// The view acts "as if" the elements are temporarily in cells, and elements
+    /// can be changed through shared references using the regular cell methods.
+    pub fn cell_view(&mut self) -> ArrayView<'_, MathCell<A>, D>
+    where
+        S: DataMut,
+    {
+        self.view_mut().into_cell_view()
     }
 
     /// Return an uniquely owned copy of the array.
@@ -631,7 +646,7 @@ where
     ///
     /// The caller must ensure that:
     ///
-    /// 1. both `index1 and `index2` are in-bounds and
+    /// 1. both `index1` and `index2` are in-bounds and
     ///
     /// 2. the data is uniquely held by the array. (This property is guaranteed
     ///    for `Array` and `ArrayViewMut`, but not for `ArcArray` or `CowArray`.)
@@ -812,12 +827,12 @@ where
     ///                [[ 6,  7,  8],    // -- row 1, 0
     ///                 [ 9, 10, 11]]]); // -- row 1, 1
     ///
-    /// // `genrows` will yield the four generalized rows of the array.
-    /// for row in a.genrows() {
+    /// // `rows` will yield the four generalized rows of the array.
+    /// for row in a.rows() {
     ///     /* loop body */
     /// }
     /// ```
-    pub fn genrows(&self) -> Lanes<'_, A, D::Smaller>
+    pub fn rows(&self) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -828,11 +843,19 @@ where
         Lanes::new(self.view(), Axis(n - 1))
     }
 
+    #[deprecated(note="Renamed to .rows()", since="0.15.0")]
+    pub fn genrows(&self) -> Lanes<'_, A, D::Smaller>
+    where
+        S: Data,
+    {
+        self.rows()
+    }
+
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn genrows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    pub fn rows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
@@ -841,6 +864,14 @@ where
             n += 1;
         }
         LanesMut::new(self.view_mut(), Axis(n - 1))
+    }
+
+    #[deprecated(note="Renamed to .rows_mut()", since="0.15.0")]
+    pub fn genrows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    where
+        S: DataMut,
+    {
+        self.rows_mut()
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -864,12 +895,12 @@ where
     /// let a = arr3(&[[[ 0,  1,  2], [ 3,  4,  5]],
     ///                [[ 6,  7,  8], [ 9, 10, 11]]]);
     ///
-    /// // Here `gencolumns` will yield the six generalized columns of the array.
-    /// for row in a.gencolumns() {
+    /// // Here `columns` will yield the six generalized columns of the array.
+    /// for row in a.columns() {
     ///     /* loop body */
     /// }
     /// ```
-    pub fn gencolumns(&self) -> Lanes<'_, A, D::Smaller>
+    pub fn columns(&self) -> Lanes<'_, A, D::Smaller>
     where
         S: Data,
     {
@@ -877,20 +908,44 @@ where
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
+    /// columns of the array. For a 2D array these are the regular columns.
+    ///
+    /// Renamed to `.columns()`
+    #[deprecated(note="Renamed to .columns()", since="0.15.0")]
+    pub fn gencolumns(&self) -> Lanes<'_, A, D::Smaller>
+    where
+        S: Data,
+    {
+        self.columns()
+    }
+
+    /// Return a producer and iterable that traverses over the *generalized*
     /// columns of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
-    pub fn gencolumns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    pub fn columns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
     where
         S: DataMut,
     {
         LanesMut::new(self.view_mut(), Axis(0))
     }
 
+    /// Return a producer and iterable that traverses over the *generalized*
+    /// columns of the array and yields mutable array views.
+    ///
+    /// Renamed to `.columns_mut()`
+    #[deprecated(note="Renamed to .columns_mut()", since="0.15.0")]
+    pub fn gencolumns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
+    where
+        S: DataMut,
+    {
+        self.columns_mut()
+    }
+
     /// Return a producer and iterable that traverses over all 1D lanes
     /// pointing in the direction of `axis`.
     ///
-    /// When the pointing in the direction of the first axis, they are *columns*,
+    /// When pointing in the direction of the first axis, they are *columns*,
     /// in the direction of the last axis *rows*; in general they are all
     /// *lanes* and are one dimensional.
     ///
@@ -1112,8 +1167,8 @@ where
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
     ///
-    /// Will yield over no elements if window size is larger
-    /// than the actual array size of any dimension.
+    /// This produces no elements if the window size is larger than the actual array size along any
+    /// axis.
     ///
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.
@@ -1159,7 +1214,7 @@ where
         (len, stride)
     }
 
-    /// Return an view of the diagonal elements of the array.
+    /// Return a view of the diagonal elements of the array.
     ///
     /// The diagonal is simply the sequence indexed by *(0, 0, .., 0)*,
     /// *(1, 1, ..., 1)* etc as long as all axes have elements.
@@ -1218,7 +1273,7 @@ where
     /// Return `true` if the array data is laid out in contiguous “C order” in
     /// memory (where the last index is the most rapidly varying).
     ///
-    /// Return `false` otherwise, i.e the array is possibly not
+    /// Return `false` otherwise, i.e. the array is possibly not
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
         fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {

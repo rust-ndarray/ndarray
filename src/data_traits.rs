@@ -130,18 +130,6 @@ pub unsafe trait DataMut: Data + RawDataMut {
     }
 }
 
-/// Array representation trait.
-///
-/// An array representation that can be cloned and allows elements to be
-/// accessed with safe code.
-///
-/// ***Internal trait, see `Data`.***
-#[deprecated(note = "use `Data + RawDataClone` instead", since = "0.13.0")]
-pub trait DataClone: Data + RawDataClone {}
-
-#[allow(deprecated)]
-impl<T> DataClone for T where T: Data + RawDataClone {}
-
 unsafe impl<A> RawData for RawViewRepr<*const A> {
     type Elem = A;
     fn _data_slice(&self) -> Option<&[A]> {
@@ -539,28 +527,60 @@ unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
 pub trait RawDataSubst<A>: RawData {
     /// The resulting array storage of the same kind but substituted element type
     type Output: RawData<Elem = A>;
+
+    /// Unsafely translate the data representation from one element
+    /// representation to another.
+    ///
+    /// ## Safety
+    ///
+    /// Caller must ensure the two types have the same representation.
+    unsafe fn data_subst(self) -> Self::Output;
 }
 
 impl<A, B> RawDataSubst<B> for OwnedRepr<A> {
     type Output = OwnedRepr<B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        self.data_subst()
+    }
 }
 
 impl<A, B> RawDataSubst<B> for OwnedArcRepr<A> {
     type Output = OwnedArcRepr<B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        OwnedArcRepr(Arc::from_raw(Arc::into_raw(self.0) as *const OwnedRepr<B>))
+    }
 }
 
 impl<A, B> RawDataSubst<B> for RawViewRepr<*const A> {
     type Output = RawViewRepr<*const B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        RawViewRepr::new()
+    }
 }
 
 impl<A, B> RawDataSubst<B> for RawViewRepr<*mut A> {
     type Output = RawViewRepr<*mut B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        RawViewRepr::new()
+    }
 }
 
 impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a A> {
     type Output = ViewRepr<&'a B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        ViewRepr::new()
+    }
 }
 
 impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a mut A> {
     type Output = ViewRepr<&'a mut B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        ViewRepr::new()
+    }
 }
