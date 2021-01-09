@@ -154,6 +154,7 @@ where
     /// let var = a.var(1.);
     /// assert_abs_diff_eq!(var, 6.7331, epsilon = 1e-4);
     /// ```
+    #[cfg(feature = "std")]
     pub fn var(&self, ddof: A) -> A
     where
         A: Float + FromPrimitive,
@@ -216,6 +217,7 @@ where
     /// let stddev = a.std(1.);
     /// assert_abs_diff_eq!(stddev, 2.59483, epsilon = 1e-4);
     /// ```
+    #[cfg(feature = "std")]
     pub fn std(&self, ddof: A) -> A
     where
         A: Float + FromPrimitive,
