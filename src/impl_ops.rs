@@ -159,8 +159,8 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
           B: ScalarOperand,
 {
     type Output = Array<A, D>;
-    fn $mth(self, x: B) -> Array<A, D> {
-        self.to_owned().$mth(x)
+    fn $mth(self, x: B) -> Self::Output {
+        self.map(move |elt| elt.clone() $operator x.clone())
     }
 }
     );
@@ -210,11 +210,11 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
           D: Dimension,
 {
     type Output = Array<$scalar, D>;
-    fn $mth(self, rhs: &ArrayBase<S, D>) -> Array<$scalar, D> {
+    fn $mth(self, rhs: &ArrayBase<S, D>) -> Self::Output {
         if_commutative!($commutative {
             rhs.$mth(self)
         } or {
-            self.$mth(rhs.to_owned())
+            rhs.map(move |elt| self.clone() $operator elt.clone())
         })
     }
 }
