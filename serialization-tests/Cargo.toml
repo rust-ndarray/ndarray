@@ -15,6 +15,7 @@ default = ["ron"]
 
 [dev-dependencies.serde]
 version = "1.0.100"
+default-features = false
 
 [dev-dependencies.serde_json]
 version = "1.0.40"

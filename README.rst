@@ -50,7 +50,7 @@ your `Cargo.toml`.
 
 - ``std``
 
-  - Rust Standard Library
+  - Rust standard library (enabled by default)
 
   - This crate can be used without the standard library by disabling the
     default `std` feature. To do so, use this in your `Cargo.toml`:
@@ -63,20 +63,18 @@ your `Cargo.toml`.
 
 - ``serde``
 
-  - Optional, compatible with Rust stable
   - Enables serialization support for serde 1.x
 
 - ``rayon``
 
-  - Optional, compatible with Rust stable
   - Enables parallel iterators, parallelized methods and ``par_azip!``.
+  - Implies std
 
 - ``blas``
 
-  - Optional and experimental, compatible with Rust stable
   - Enable transparent BLAS support for matrix multiplication.
     Uses ``blas-src`` for pluggable backend, which needs to be configured
-    separately.
+    separately (see below).
 
 How to use with cargo
 ---------------------

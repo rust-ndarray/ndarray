@@ -19,7 +19,7 @@ use std::cmp;
 #[cfg(feature = "blas")]
 use std::mem::swap;
 #[cfg(feature = "blas")]
-use std::os::raw::c_int;
+use libc::c_int;
 
 #[cfg(feature = "blas")]
 use cblas_sys as blas_sys;
