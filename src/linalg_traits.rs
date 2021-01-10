@@ -5,13 +5,19 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::ScalarOperand;
+
 #[cfg(feature = "std")]
 use num_traits::Float;
 use num_traits::{One, Zero};
+
+#[cfg(feature = "std")]
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
+#[cfg(feature = "std")]
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
+
+#[cfg(feature = "std")]
+use crate::ScalarOperand;
 
 /// Elements that support linear algebra operations.
 ///

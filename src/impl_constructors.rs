@@ -24,7 +24,9 @@ use crate::extension::nonnull::nonnull_from_vec_data;
 use crate::imp_prelude::*;
 use crate::indexes;
 use crate::indices;
-use crate::iterators::{to_vec, to_vec_mapped};
+#[cfg(feature = "std")]
+use crate::iterators::to_vec;
+use crate::iterators::to_vec_mapped;
 use crate::StrideShape;
 #[cfg(feature = "std")]
 use crate::{geomspace, linspace, logspace};

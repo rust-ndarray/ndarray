@@ -70,27 +70,23 @@
 //! `Cargo.toml`.
 //!
 //! - `std`
-//!  - Rust Standard Library
+//!  - Rust standard library (enabled by default)
 //!  - This crate can be used without the standard library by disabling the
 //!    default `std` feature. To do so, use `default-features = false` in
 //!    your `Cargo.toml`.
 //!  - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis`
-//!    and `std_axis` methods are only available when `std` is
-//!     enabled.
+//!    and `std_axis` methods are only available when `std` is enabled.
 //! - `serde`
-//!   - Optional, compatible with Rust stable
 //!   - Enables serialization support for serde 1.x
 //! - `rayon`
-//!   - Optional, compatible with Rust stable
 //!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
+//!   - Implies std
 //! - `approx`
-//!   - Optional, compatible with Rust stable
 //!   - Enables implementations of traits from the [`approx`] crate.
 //! - `blas`
-//!   - Optional and experimental, compatible with Rust stable
 //!   - Enable transparent BLAS support for matrix multiplication.
 //!     Uses ``blas-src`` for pluggable backend, which needs to be configured
-//!     separately.
+//!     separately (see the README).
 //!
 //! ## Documentation
 //!
@@ -1593,6 +1589,8 @@ where
 }
 
 // parallel methods
+#[cfg(feature = "rayon")]
+extern crate rayon_ as rayon;
 #[cfg(feature = "rayon")]
 pub mod parallel;
 
