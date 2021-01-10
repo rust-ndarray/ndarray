@@ -75,7 +75,7 @@
 //!    default `std` feature. To do so, use `default-features = false` in
 //!    your `Cargo.toml`.
 //!  - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis`
-//!    `std_axis` and `all_close` methods are only available when `std` is
+//!    and `std_axis` methods are only available when `std` is
 //!     enabled.
 //! - `serde`
 //!   - Optional, compatible with Rust stable

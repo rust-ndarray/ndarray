@@ -58,8 +58,8 @@ your `Cargo.toml`.
     [dependencies]
     ndarray = { version = "0.x.y", default-features = false }
 
-  - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis` `std_axis`
-    and `all_close` methods are only available when `std` is enabled.
+  - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis` and `std_axis`
+    methods are only available when `std` is enabled.
 
 - ``serde``
 
@@ -124,5 +124,4 @@ http://www.apache.org/licenses/LICENSE-2.0 or the MIT license
 http://opensource.org/licenses/MIT, at your
 option. This file may not be copied, modified, or distributed
 except according to those terms.
-
 
