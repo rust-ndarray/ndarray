@@ -7,8 +7,9 @@
 // except according to those terms.
 
 use std::ptr as std_ptr;
-use std::slice;
-
+use alloc::slice;
+use alloc::vec;
+use alloc::vec::Vec;
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;

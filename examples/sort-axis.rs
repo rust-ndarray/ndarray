@@ -129,7 +129,7 @@ where
         }
     }
 }
-
+#[cfg(feature = "std")]
 fn main() {
     let a = Array::linspace(0., 63., 64).into_shape((8, 8)).unwrap();
     let strings = a.map(|x| x.to_string());
@@ -143,3 +143,5 @@ fn main() {
     let c = strings.permute_axis(Axis(1), &perm);
     println!("{:?}", c);
 }
+#[cfg(not(feature = "std"))]
+fn main() {}

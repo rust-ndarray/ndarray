@@ -6,7 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use num_traits::{self, Float, FromPrimitive, Zero};
+#[cfg(feature = "std")]
+use num_traits::Float;
+use num_traits::{self, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
@@ -152,6 +154,7 @@ where
     /// let var = a.var(1.);
     /// assert_abs_diff_eq!(var, 6.7331, epsilon = 1e-4);
     /// ```
+    #[cfg(feature = "std")]
     pub fn var(&self, ddof: A) -> A
     where
         A: Float + FromPrimitive,
@@ -214,6 +217,7 @@ where
     /// let stddev = a.std(1.);
     /// assert_abs_diff_eq!(stddev, 2.59483, epsilon = 1e-4);
     /// ```
+    #[cfg(feature = "std")]
     pub fn std(&self, ddof: A) -> A
     where
         A: Float + FromPrimitive,
@@ -337,6 +341,7 @@ where
     /// let var = a.var_axis(Axis(0), 1.);
     /// assert_eq!(var, aview1(&[4., 4.]));
     /// ```
+    #[cfg(feature = "std")]
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
@@ -405,6 +410,7 @@ where
     /// let stddev = a.std_axis(Axis(0), 1.);
     /// assert_eq!(stddev, aview1(&[2., 2.]));
     /// ```
+    #[cfg(feature = "std")]
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,

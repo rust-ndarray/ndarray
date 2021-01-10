@@ -12,6 +12,7 @@
     clippy::deref_addrof,
     clippy::unreadable_literal
 )]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -68,6 +69,14 @@
 //! The following crate feature flags are available. They are configured in your
 //! `Cargo.toml`.
 //!
+//! - `std`
+//!  - Rust Standard Library
+//!  - This crate can be used without the standard library by disabling the
+//!    default `std` feature. To do so, use `default-features = false` in
+//!    your `Cargo.toml`.
+//!  - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis`
+//!    and `std_axis` methods are only available when `std` is
+//!     enabled.
 //! - `serde`
 //!   - Optional, compatible with Rust stable
 //!   - Enables serialization support for serde 1.x
@@ -109,6 +118,14 @@
 //! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
 //! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
+
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(not(feature = "std"))]
+extern crate core as std;
+
 #[cfg(feature = "blas")]
 extern crate blas_src;
 #[cfg(feature = "blas")]
@@ -118,7 +135,7 @@ extern crate cblas_sys;
 pub mod doc;
 
 use std::marker::PhantomData;
-use std::sync::Arc;
+use alloc::sync::Arc;
 
 pub use crate::dimension::dim::*;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
@@ -135,7 +152,7 @@ use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, Lane
 pub use crate::arraytraits::AsArray;
 #[cfg(feature = "std")]
 pub use crate::linalg_traits::NdFloat;
-pub use crate::linalg_traits::LinalgScalar; 
+pub use crate::linalg_traits::LinalgScalar;
 
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 

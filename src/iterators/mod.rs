@@ -16,6 +16,7 @@ mod windows;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ptr;
+use alloc::vec::Vec;
 
 use crate::Ix1;
 
@@ -1446,10 +1447,13 @@ pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
+#[cfg(feature = "std")]
 use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
-
-unsafe impl<F> TrustedIterator for Geomspace<F> {}
+#[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Linspace<F> {}
+#[cfg(feature = "std")]
+unsafe impl<F> TrustedIterator for Geomspace<F> {}
+#[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Logspace<F> {}
 unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
 unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}

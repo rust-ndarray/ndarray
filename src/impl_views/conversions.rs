@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::slice;
+use alloc::slice;
 
 use crate::imp_prelude::*;
 

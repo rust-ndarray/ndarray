@@ -1,6 +1,7 @@
 use ndarray::prelude::*;
 
 #[test]
+#[cfg(feature = "std")]
 fn broadcast_1() {
     let a_dim = Dim([2, 4, 2, 2]);
     let b_dim = Dim([2, 1, 2, 1]);
@@ -26,6 +27,7 @@ fn broadcast_1() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_add() {
     let a_dim = Dim([2, 4, 2, 2]);
     let b_dim = Dim([2, 1, 2, 1]);
@@ -38,6 +40,7 @@ fn test_add() {
 
 #[test]
 #[should_panic]
+#[cfg(feature = "std")]
 fn test_add_incompat() {
     let a_dim = Dim([2, 4, 2, 2]);
     let mut a = ArcArray::linspace(0.0, 1., a_dim.size()).reshape(a_dim);

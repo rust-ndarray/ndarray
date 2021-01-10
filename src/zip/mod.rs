@@ -10,6 +10,7 @@
 mod zipmacro;
 
 use std::mem::MaybeUninit;
+use alloc::vec::Vec;
 
 use crate::imp_prelude::*;
 use crate::AssignElem;

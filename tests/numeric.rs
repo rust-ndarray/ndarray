@@ -65,12 +65,14 @@ fn sum_mean_empty() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn var() {
     let a = array![1., -4.32, 1.14, 0.32];
     assert_abs_diff_eq!(a.var(0.), 5.049875, epsilon = 1e-8);
 }
 
 #[test]
+#[cfg(feature = "std")]
 #[should_panic]
 fn var_negative_ddof() {
     let a = array![1., 2., 3.];
@@ -78,6 +80,7 @@ fn var_negative_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 #[should_panic]
 fn var_too_large_ddof() {
     let a = array![1., 2., 3.];
@@ -85,6 +88,7 @@ fn var_too_large_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn var_nan_ddof() {
     let a = Array2::<f64>::zeros((2, 3));
     let v = a.var(::std::f64::NAN);
@@ -92,18 +96,21 @@ fn var_nan_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn var_empty_arr() {
     let a: Array1<f64> = array![];
     assert!(a.var(0.0).is_nan());
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn std() {
     let a = array![1., -4.32, 1.14, 0.32];
     assert_abs_diff_eq!(a.std(0.), 2.24719, epsilon = 1e-5);
 }
 
 #[test]
+#[cfg(feature = "std")]
 #[should_panic]
 fn std_negative_ddof() {
     let a = array![1., 2., 3.];
@@ -111,6 +118,7 @@ fn std_negative_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 #[should_panic]
 fn std_too_large_ddof() {
     let a = array![1., 2., 3.];
@@ -118,6 +126,7 @@ fn std_too_large_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn std_nan_ddof() {
     let a = Array2::<f64>::zeros((2, 3));
     let v = a.std(::std::f64::NAN);
@@ -125,6 +134,7 @@ fn std_nan_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn std_empty_arr() {
     let a: Array1<f64> = array![];
     assert!(a.std(0.0).is_nan());
@@ -249,6 +259,7 @@ fn std_axis() {
 
 #[test]
 #[should_panic]
+#[cfg(feature = "std")]
 fn var_axis_negative_ddof() {
     let a = array![1., 2., 3.];
     a.var_axis(Axis(0), -1.);
@@ -256,12 +267,14 @@ fn var_axis_negative_ddof() {
 
 #[test]
 #[should_panic]
+#[cfg(feature = "std")]
 fn var_axis_too_large_ddof() {
     let a = array![1., 2., 3.];
     a.var_axis(Axis(0), 4.);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn var_axis_nan_ddof() {
     let a = Array2::<f64>::zeros((2, 3));
     let v = a.var_axis(Axis(1), ::std::f64::NAN);
@@ -270,6 +283,7 @@ fn var_axis_nan_ddof() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn var_axis_empty_axis() {
     let a = Array2::<f64>::zeros((2, 0));
     let v = a.var_axis(Axis(1), 0.);
@@ -279,12 +293,14 @@ fn var_axis_empty_axis() {
 
 #[test]
 #[should_panic]
+#[cfg(feature = "std")]
 fn std_axis_bad_dof() {
     let a = array![1., 2., 3.];
     a.std_axis(Axis(0), 4.);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn std_axis_empty_axis() {
     let a = Array2::<f64>::zeros((2, 0));
     let v = a.std_axis(Axis(1), 0.);

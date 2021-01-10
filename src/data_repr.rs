@@ -1,8 +1,9 @@
-
 use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
-use std::slice;
+use alloc::slice;
+use alloc::borrow::ToOwned;
+use alloc::vec::Vec;
 use crate::extension::nonnull;
 
 /// Array's representation.

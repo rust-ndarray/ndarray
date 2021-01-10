@@ -4,7 +4,7 @@
     clippy::unreadable_literal,
     clippy::many_single_char_names
 )]
-
+#![cfg(feature = "std")]
 use ndarray::linalg::general_mat_mul;
 use ndarray::prelude::*;
 use ndarray::{rcarr1, rcarr2};

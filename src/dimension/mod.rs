@@ -676,7 +676,7 @@ mod test {
 
     #[test]
     fn slice_indexing_uncommon_strides() {
-        let v: Vec<_> = (0..12).collect();
+        let v: alloc::vec::Vec<_> = (0..12).collect();
         let dim = (2, 3, 2).into_dimension();
         let strides = (1, 2, 6).into_dimension();
         assert!(super::can_index_slice(&v, &dim, &strides).is_ok());
@@ -784,7 +784,7 @@ mod test {
     }
 
     quickcheck! {
-        fn can_index_slice_not_custom_same_as_can_index_slice(data: Vec<u8>, dim: Vec<usize>) -> bool {
+        fn can_index_slice_not_custom_same_as_can_index_slice(data: alloc::vec::Vec<u8>, dim: alloc::vec::Vec<usize>) -> bool {
             let dim = IxDyn(&dim);
             let result = can_index_slice_not_custom(data.len(), &dim);
             if dim.size_checked().is_none() {
@@ -871,7 +871,7 @@ mod test {
             let (min2, max2) = (cmp::min(first2, last2), cmp::max(first2, last2));
 
             // Naively determine if the sequences intersect.
-            let seq1: Vec<_> = (0..len1)
+            let seq1: alloc::vec::Vec<_> = (0..len1)
                 .map(|n| first1 + step1 * n)
                 .collect();
             let intersects = (0..len2)
