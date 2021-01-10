@@ -15,8 +15,6 @@ use crate::imp_prelude::*;
 use crate::itertools::enumerate;
 use crate::numeric_util;
 
-use crate::{FoldWhile, Zip};
-
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
 where
@@ -169,12 +167,14 @@ where
         let dof = n - ddof;
         let mut mean = A::zero();
         let mut sum_sq = A::zero();
-        for (i, &x) in self.into_iter().enumerate() {
+        let mut i = 0;
+        self.visit(|&x| {
             let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
             let delta = x - mean;
             mean = mean + delta / count;
             sum_sq = (x - mean).mul_add(delta, sum_sq);
-        }
+            i += 1;
+        });
         sum_sq / dof
     }
 
