@@ -1717,10 +1717,18 @@ fn to_owned_memory_order() {
     // input.
     let c = arr2(&[[1, 2, 3], [4, 5, 6]]);
     let mut f = c.view();
+
+    // transposed array
     f.swap_axes(0, 1);
     let fo = f.to_owned();
     assert_eq!(f, fo);
     assert_eq!(f.strides(), fo.strides());
+
+    // negated stride axis
+    f.invert_axis(Axis(1));
+    let fo2 = f.to_owned();
+    assert_eq!(f, fo2);
+    assert_eq!(f.strides(), fo2.strides());
 }
 
 #[test]
@@ -1729,6 +1737,7 @@ fn to_owned_neg_stride() {
     c.slice_collapse(s![.., ..;-1]);
     let co = c.to_owned();
     assert_eq!(c, co);
+    assert_eq!(c.strides(), co.strides());
 }
 
 #[test]
