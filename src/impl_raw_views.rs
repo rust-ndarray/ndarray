@@ -62,6 +62,11 @@ where
     ///     [`.offset()`] regardless of the starting point due to past offsets.
     ///
     /// * The product of non-zero axis lengths must not exceed `isize::MAX`.
+    /// 
+    /// * Strides must be non-negative.
+    ///
+    /// This function can use debug assertions to check some of these requirements,
+    /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
@@ -73,6 +78,7 @@ where
         if cfg!(debug_assertions) {
             assert!(!ptr.is_null(), "The pointer must be non-null.");
             if let Strides::Custom(strides) = &shape.strides {
+                dimension::strides_non_negative(strides).unwrap();
                 dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
             } else {
                 dimension::size_of_shape_checked(&dim).unwrap();
@@ -202,6 +208,11 @@ where
     ///     [`.offset()`] regardless of the starting point due to past offsets.
     ///
     /// * The product of non-zero axis lengths must not exceed `isize::MAX`.
+    /// 
+    /// * Strides must be non-negative.
+    ///
+    /// This function can use debug assertions to check some of these requirements,
+    /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
@@ -213,6 +224,7 @@ where
         if cfg!(debug_assertions) {
             assert!(!ptr.is_null(), "The pointer must be non-null.");
             if let Strides::Custom(strides) = &shape.strides {
+                dimension::strides_non_negative(strides).unwrap();
                 dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
             } else {
                 dimension::size_of_shape_checked(&dim).unwrap();

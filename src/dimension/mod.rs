@@ -280,6 +280,19 @@ pub fn stride_offset_checked(dim: &[Ix], strides: &[Ix], index: &[Ix]) -> Option
     Some(offset)
 }
 
+/// Checks if strides are non-negative.
+pub fn strides_non_negative<D>(strides: &D) -> Result<(), ShapeError>
+where
+    D: Dimension,
+{
+    for &stride in strides.slice() {
+        if (stride as isize) < 0 {
+            return Err(from_kind(ErrorKind::Unsupported));
+        }
+    }
+    Ok(())
+}
+
 /// Implementation-specific extensions to `Dimension`
 pub trait DimensionExt {
     // note: many extensions go in the main trait if they need to be special-
