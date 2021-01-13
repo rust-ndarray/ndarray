@@ -1331,15 +1331,15 @@ where
         if self.is_standard_layout() {
             CowArray::from(self.view())
         } else {
-            let v: Vec<A> = self.iter().cloned().collect();
+            let v = crate::iterators::to_vec_mapped(self.iter(), A::clone);
             let dim = self.dim.clone();
-            assert_eq!(v.len(), dim.size());
-            let owned_array: Array<A, D> = unsafe {
+            debug_assert_eq!(v.len(), dim.size());
+
+            unsafe {
                 // Safe because the shape and element type are from the existing array
                 // and the strides are the default strides.
-                Array::from_shape_vec_unchecked(dim, v)
-            };
-            CowArray::from(owned_array)
+                CowArray::from(Array::from_shape_vec_unchecked(dim, v))
+            }
         }
     }
 
