@@ -82,7 +82,7 @@ fn test_zip_collect() {
     let c = Array::from_shape_fn((M, N), |(i, j)| f32::ln((1 + i + j) as f32));
 
     {
-        let a = Zip::from(&b).and(&c).par_apply_collect(|x, y| x + y);
+        let a = Zip::from(&b).and(&c).par_map_collect(|x, y| x + y);
 
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
@@ -92,7 +92,7 @@ fn test_zip_collect() {
         let b = b.t();
         let c = c.t();
 
-        let a = Zip::from(&b).and(&c).par_apply_collect(|x, y| x + y);
+        let a = Zip::from(&b).and(&c).par_map_collect(|x, y| x + y);
 
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
@@ -112,7 +112,7 @@ fn test_zip_small_collect() {
             let c = Array::from_shape_fn(dim, |(i, j)| f32::ln((1 + i + j) as f32));
 
             {
-                let a = Zip::from(&b).and(&c).par_apply_collect(|x, y| x + y);
+                let a = Zip::from(&b).and(&c).par_map_collect(|x, y| x + y);
 
                 assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
                 assert_eq!(a.strides(), b.strides());
@@ -130,7 +130,7 @@ fn test_zip_assign_into() {
     let b = Array::from_shape_fn((M, N), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((M, N), |(i, j)| f32::ln((1 + i + j) as f32));
 
-    Zip::from(&b).and(&c).par_apply_assign_into(&mut a, |x, y| x + y);
+    Zip::from(&b).and(&c).par_map_assign_into(&mut a, |x, y| x + y);
 
     assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
 }

@@ -1074,12 +1074,11 @@ macro_rules! map_impl {
                 }
             }
 
-            /// Apply and collect the results into a new array, which has the same size as the
+            /// Map and collect the results into a new array, which has the same size as the
             /// inputs.
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
-            {
+            pub fn map_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D> {
                 // Make uninit result
                 let mut output = self.uninitalized_for_current_layout::<R>();
 
@@ -1095,12 +1094,21 @@ macro_rules! map_impl {
                 }
             }
 
-            /// Apply and assign the results into the producer `into`, which should have the same
+            /// Map and collect the results into a new array, which has the same size as the
+            /// inputs.
+            ///
+            /// If all inputs are c- or f-order respectively, that is preserved in the output.
+            #[deprecated(note="Renamed to .map_collect()", since="0.15.0")]
+            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D> {
+                self.map_collect(f)
+            }
+
+            /// Map and assign the results into the producer `into`, which should have the same
             /// size as the other inputs.
             ///
             /// The producer should have assignable items as dictated by the `AssignElem` trait,
             /// for example `&mut R`.
-            pub fn apply_assign_into<R, Q>(self, into: Q, mut f: impl FnMut($($p::Item,)* ) -> R)
+            pub fn map_assign_into<R, Q>(self, into: Q, mut f: impl FnMut($($p::Item,)* ) -> R)
                 where Q: IntoNdProducer<Dim=D>,
                       Q::Item: AssignElem<R>
             {
@@ -1108,6 +1116,19 @@ macro_rules! map_impl {
                     .for_each(move |$($p, )* output_| {
                         output_.assign_elem(f($($p ),*));
                     });
+            }
+
+            /// Map and assign the results into the producer `into`, which should have the same
+            /// size as the other inputs.
+            ///
+            /// The producer should have assignable items as dictated by the `AssignElem` trait,
+            /// for example `&mut R`.
+            #[deprecated(note="Renamed to .map_assign_into()", since="0.15.0")]
+            pub fn apply_assign_into<R, Q>(self, into: Q, f: impl FnMut($($p::Item,)* ) -> R)
+                where Q: IntoNdProducer<Dim=D>,
+                      Q::Item: AssignElem<R>
+            {
+                self.map_assign_into(into, f)
             }
 
 

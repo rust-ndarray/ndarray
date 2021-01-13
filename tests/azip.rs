@@ -54,13 +54,13 @@ fn test_azip2_3() {
 fn test_zip_collect() {
     use approx::assert_abs_diff_eq;
 
-    // test Zip::apply_collect and that it preserves c/f layout.
+    // test Zip::map_collect and that it preserves c/f layout.
 
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
 
     {
-        let a = Zip::from(&b).and(&c).apply_collect(|x, y| x + y);
+        let a = Zip::from(&b).and(&c).map_collect(|x, y| x + y);
 
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
@@ -70,7 +70,7 @@ fn test_zip_collect() {
         let b = b.t();
         let c = c.t();
 
-        let a = Zip::from(&b).and(&c).apply_collect(|x, y| x + y);
+        let a = Zip::from(&b).and(&c).map_collect(|x, y| x + y);
 
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
@@ -86,7 +86,7 @@ fn test_zip_assign_into() {
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
 
-    Zip::from(&b).and(&c).apply_assign_into(&mut a, |x, y| x + y);
+    Zip::from(&b).and(&c).map_assign_into(&mut a, |x, y| x + y);
 
     assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
 }
@@ -101,7 +101,7 @@ fn test_zip_assign_into_cell() {
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
 
-    Zip::from(&b).and(&c).apply_assign_into(&a, |x, y| x + y);
+    Zip::from(&b).and(&c).map_assign_into(&a, |x, y| x + y);
     let a2 = a.mapv(|elt| elt.get());
 
     assert_abs_diff_eq!(a2, &b + &c, epsilon = 1e-6);
@@ -154,7 +154,7 @@ fn test_zip_collect_drop() {
         }
 
         let _result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
-            Zip::from(&a).and(&b).apply_collect(|&elt, _| {
+            Zip::from(&a).and(&b).map_collect(|&elt, _| {
                 if elt.0 > 3 && will_panic {
                     panic!();
                 }
@@ -308,7 +308,7 @@ fn test_indices_0() {
     let a1 = arr0(3);
 
     let mut count = 0;
-    Zip::indexed(&a1).apply(|i, elt| {
+    Zip::indexed(&a1).for_each(|i, elt| {
         count += 1;
         assert_eq!(i, ());
         assert_eq!(*elt, 3);

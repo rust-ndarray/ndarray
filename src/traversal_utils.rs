@@ -21,6 +21,6 @@ pub(crate) fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
           A: Clone + 'a
 {
     Zip::from(from)
-        .apply_assign_into(to, A::clone);
+        .map_assign_into(to, A::clone);
 }
 
