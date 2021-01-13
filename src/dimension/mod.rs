@@ -46,15 +46,12 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize {
 /// There is overlap if, when iterating through the dimensions in order of
 /// increasing stride, the current stride is less than or equal to the maximum
 /// possible offset along the preceding axes. (Axes of length ≤1 are ignored.)
-///
-/// The current implementation assumes that strides of axes with length > 1 are
-/// nonnegative. Additionally, it does not check for overflow.
 pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool {
     let order = strides._fastest_varying_stride_order();
     let mut sum_prev_offsets = 0;
     for &index in order.slice() {
         let d = dim[index];
-        let s = strides[index] as isize;
+        let s = (strides[index] as isize).abs();
         match d {
             0 => return false,
             1 => {}
@@ -210,11 +207,7 @@ where
 ///
 /// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
 ///
-/// 3. For axes with length > 1, the stride must be nonnegative. This is
-///    necessary to make sure the pointer cannot move backwards outside the
-///    slice. For axes with length ≤ 1, the stride can be anything.
-///
-/// 4. If the array will be empty (any axes are zero-length), the difference
+/// 3. If the array will be empty (any axes are zero-length), the difference
 ///    between the least address and greatest address accessible by moving
 ///    along all axes must be ≤ `data.len()`. (It's fine in this case to move
 ///    one byte past the end of the slice since the pointers will be offset but
@@ -225,13 +218,19 @@ where
 ///    `data.len()`. This and #3 ensure that all dereferenceable pointers point
 ///    to elements within the slice.
 ///
-/// 5. The strides must not allow any element to be referenced by two different
+/// 4. The strides must not allow any element to be referenced by two different
 ///    indices.
 ///
 /// Note that since slices cannot contain more than `isize::MAX` bytes,
 /// condition 4 is sufficient to guarantee that the absolute difference in
 /// units of `A` and in units of bytes between the least address and greatest
 /// address accessible by moving along all axes does not exceed `isize::MAX`.
+///
+/// Warning: This function is sufficient to check the invariants of ArrayBase only
+/// if the pointer to the first element of the array is chosen such that the element
+/// with the smallest memory address is at the start of data. (In other words, the
+/// pointer to the first element of the array must be computed using offset_from_ptr_to_memory
+/// so that negative strides are correctly handled.)
 pub(crate) fn can_index_slice<A, D: Dimension>(
     data: &[A],
     dim: &D,
@@ -248,7 +247,7 @@ fn can_index_slice_impl<D: Dimension>(
     dim: &D,
     strides: &D,
 ) -> Result<(), ShapeError> {
-    // Check condition 4.
+    // Check condition 3.
     let is_empty = dim.slice().iter().any(|&d| d == 0);
     if is_empty && max_offset > data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
@@ -257,15 +256,7 @@ fn can_index_slice_impl<D: Dimension>(
         return Err(from_kind(ErrorKind::OutOfBounds));
     }
 
-    // Check condition 3.
-    for (&d, &s) in izip!(dim.slice(), strides.slice()) {
-        let s = s as isize;
-        if d > 1 && s < 0 {
-            return Err(from_kind(ErrorKind::Unsupported));
-        }
-    }
-
-    // Check condition 5.
+    // Check condition 4.
     if !is_empty && dim_stride_overlap(dim, strides) {
         return Err(from_kind(ErrorKind::Unsupported));
     }
@@ -287,6 +278,19 @@ pub fn stride_offset_checked(dim: &[Ix], strides: &[Ix], index: &[Ix]) -> Option
         offset += stride_offset(i, s);
     }
     Some(offset)
+}
+
+/// Checks if strides are non-negative.
+pub fn strides_non_negative<D>(strides: &D) -> Result<(), ShapeError>
+where
+    D: Dimension,
+{
+    for &stride in strides.slice() {
+        if (stride as isize) < 0 {
+            return Err(from_kind(ErrorKind::Unsupported));
+        }
+    }
+    Ok(())
 }
 
 /// Implementation-specific extensions to `Dimension`
@@ -392,6 +396,19 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
     );
     ndassert!(step != 0, "Slice stride must not be zero");
     (start, end, step)
+}
+
+/// This function computes the offset from the logically first element to the first element in
+/// memory of the array. The result is always <= 0.
+pub fn offset_from_ptr_to_memory<D: Dimension>(dim: &D, strides: &D) -> isize {
+    let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (d, s)| {
+        if (*s as isize) < 0 {
+            _offset + *s as isize * (*d as isize - 1)
+        } else {
+            _offset
+        }
+    });
+    offset
 }
 
 /// Modify dimension, stride and return data pointer offset
@@ -693,12 +710,20 @@ mod test {
         let dim = (2, 3, 2).into_dimension();
         let strides = (5, 2, 1).into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
+        let strides = (-5isize as usize, 2, -1isize as usize).into_dimension();
+        assert!(super::dim_stride_overlap(&dim, &strides));
         let strides = (6, 2, 1).into_dimension();
+        assert!(!super::dim_stride_overlap(&dim, &strides));
+        let strides = (6, -2isize as usize, 1).into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
         let strides = (6, 0, 1).into_dimension();
         assert!(super::dim_stride_overlap(&dim, &strides));
+        let strides = (-6isize as usize, 0, 1).into_dimension();
+        assert!(super::dim_stride_overlap(&dim, &strides));
         let dim = (2, 2).into_dimension();
         let strides = (3, 2).into_dimension();
+        assert!(!super::dim_stride_overlap(&dim, &strides));
+        let strides = (3, -2isize as usize).into_dimension();
         assert!(!super::dim_stride_overlap(&dim, &strides));
     }
 
@@ -736,7 +761,7 @@ mod test {
         can_index_slice::<i32, _>(&[1], &Ix1(2), &Ix1(1)).unwrap_err();
         can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(0)).unwrap_err();
         can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(1)).unwrap();
-        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(-1isize as usize)).unwrap_err();
+        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(-1isize as usize)).unwrap();
     }
 
     #[test]

@@ -81,3 +81,18 @@ fn raw_view_deref_into_view_misaligned() {
     let data: [u16; 2] = [0x0011, 0x2233];
     misaligned_deref(&data);
 }
+
+#[test]
+#[cfg(debug_assertions)]
+#[should_panic = "Unsupported"]
+fn raw_view_negative_strides() {
+    fn misaligned_deref(data: &[u16; 2]) -> ArrayView1<'_, u16> {
+        let ptr: *const u16 = data.as_ptr();
+        unsafe {
+            let raw_view = RawArrayView::from_shape_ptr(1.strides((-1isize) as usize), ptr);
+            raw_view.deref_into_view()
+        }
+    }
+    let data: [u16; 2] = [0x0011, 0x2233];
+    misaligned_deref(&data);
+}

@@ -19,6 +19,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::dimension;
+use crate::dimension::offset_from_ptr_to_memory;
 use crate::error::{self, ShapeError};
 use crate::extension::nonnull::nonnull_from_vec_data;
 use crate::imp_prelude::*;
@@ -30,6 +31,7 @@ use crate::iterators::to_vec_mapped;
 use crate::StrideShape;
 #[cfg(feature = "std")]
 use crate::{geomspace, linspace, logspace};
+use rawpointer::PointerExt;
 
 
 /// # Constructor Methods for Owned Arrays
@@ -442,7 +444,8 @@ where
     ///
     /// 2. The product of non-zero axis lengths must not exceed `isize::MAX`.
     ///
-    /// 3. For axes with length > 1, the stride must be nonnegative.
+    /// 3. For axes with length > 1, the pointer cannot move outside the
+    ///    slice.
     ///
     /// 4. If the array will be empty (any axes are zero-length), the
     ///    difference between the least address and greatest address accessible
@@ -468,7 +471,7 @@ where
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
         ArrayBase {
-            ptr: nonnull_from_vec_data(&mut v),
+            ptr: nonnull_from_vec_data(&mut v).offset(-offset_from_ptr_to_memory(&dim, &strides)),
             data: DataOwned::new(v),
             strides,
             dim,
@@ -494,7 +497,7 @@ where
     ///
     /// This constructor is limited to elements where `A: Copy` (no destructors)
     /// to avoid users shooting themselves too hard in the foot.
-    /// 
+    ///
     /// (Also note that the constructors `from_shape_vec` and
     /// `from_shape_vec_unchecked` allow the user yet more control, in the sense
     /// that Arrays can be created from arbitrary vectors.)

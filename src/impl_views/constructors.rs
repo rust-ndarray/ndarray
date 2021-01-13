@@ -96,6 +96,11 @@ where
     ///
     /// * The product of non-zero axis lengths must not exceed `isize::MAX`.
     ///
+    /// * Strides must be non-negative.
+    ///
+    /// This function can use debug assertions to check some of these requirements,
+    /// but it's not a complete check.
+    ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
     where
@@ -187,6 +192,11 @@ where
     ///     [`.offset()`] regardless of the starting point due to past offsets.
     ///
     /// * The product of non-zero axis lengths must not exceed `isize::MAX`.
+    ///
+    /// * Strides must be non-negative.
+    ///
+    /// This function can use debug assertions to check some of these requirements,
+    /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
