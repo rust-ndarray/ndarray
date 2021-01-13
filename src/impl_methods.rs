@@ -214,14 +214,14 @@ where
         }
     }
 
-    /// Return a shared ownership (copy on write) array.
+    /// Return a shared ownership (copy on write) array, cloning the array
+    /// elements if necessary.
     pub fn to_shared(&self) -> ArcArray<A, D>
     where
         A: Clone,
         S: Data,
     {
-        // FIXME: Avoid copying if it’s already an ArcArray.
-        self.to_owned().into_shared()
+        S::to_share(self)
     }
 
     /// Turn the array into a uniquely owned array, cloning the array elements
