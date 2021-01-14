@@ -221,7 +221,7 @@ where
         A: Clone,
         S: Data,
     {
-        S::to_share(self)
+        S::to_shared(self)
     }
 
     /// Turn the array into a uniquely owned array, cloning the array elements
