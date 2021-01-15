@@ -96,6 +96,18 @@ pub unsafe trait Data: RawData {
     where
         Self::Elem: Clone,
         D: Dimension;
+
+    /// Return a shared ownership (copy on write) array based on the existing one,
+    /// cloning elements if necessary.
+    #[doc(hidden)]
+    fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension,
+    {
+        // clone to shared
+        self_.to_owned().into_shared()
+    }
 }
 
 /// Array representation trait.
@@ -237,6 +249,15 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
             dim: self_.dim,
             strides: self_.strides,
         }
+    }
+
+    fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension,
+    {
+        // to shared using clone of OwnedArcRepr without clone of raw data.
+        self_.clone()
     }
 }
 
