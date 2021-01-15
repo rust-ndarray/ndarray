@@ -20,7 +20,6 @@ use crate::Layout;
 use crate::partial::Partial;
 
 use crate::indexes::{indices, Indices};
-use crate::layout::{CORDER, FORDER};
 use crate::split_at::{SplitPreference, SplitAt};
 
 pub use self::ndproducer::{NdProducer, IntoNdProducer, Offset};
@@ -272,7 +271,8 @@ where
     }
 
     fn prefer_f(&self) -> bool {
-        !self.layout.is(CORDER) && (self.layout.is(FORDER) || self.layout_tendency < 0)
+        !self.layout.is(Layout::CORDER) &&
+            (self.layout.is(Layout::FORDER) || self.layout_tendency < 0)
     }
 
     /// Return an *approximation* to the max stride axis; if
@@ -310,7 +310,7 @@ where
     {
         if self.dimension.ndim() == 0 {
             function(acc, unsafe { self.parts.as_ref(self.parts.as_ptr()) })
-        } else if self.layout.is(CORDER | FORDER) {
+        } else if self.layout.is(Layout::CORDER | Layout::FORDER) {
             self.for_each_core_contiguous(acc, function)
         } else {
             self.for_each_core_strided(acc, function)
@@ -322,7 +322,7 @@ where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
     {
-        debug_assert!(self.layout.is(CORDER | FORDER));
+        debug_assert!(self.layout.is(Layout::CORDER | Layout::FORDER));
         let size = self.dimension.size();
         let ptrs = self.parts.as_ptr();
         let inner_strides = self.parts.contiguous_stride();
@@ -440,7 +440,7 @@ where
     // Method placement: only used for binary Zip at the moment.
     #[inline]
     pub(crate) fn debug_assert_c_order(self) -> Self {
-        debug_assert!(self.layout.is(CORDER) || self.layout_tendency >= 0 ||
+        debug_assert!(self.layout.is(Layout::CORDER) || self.layout_tendency >= 0 ||
                       self.dimension.slice().iter().filter(|&&d| d > 1).count() <= 1,
                       "Assertion failed: traversal is not c-order or 1D for \
                       layout {:?}, tendency {}, dimension {:?}",
@@ -839,7 +839,7 @@ macro_rules! map_impl {
                     // debug assert that the output is contiguous in the memory layout we need
                     if cfg!(debug_assertions) {
                         let out_layout = output.layout();
-                        assert!(out_layout.is(CORDER | FORDER));
+                        assert!(out_layout.is(Layout::CORDER | Layout::FORDER));
                         assert!(
                             (self.layout_tendency <= 0 && out_layout.tendency() <= 0) ||
                             (self.layout_tendency >= 0 && out_layout.tendency() >= 0),
