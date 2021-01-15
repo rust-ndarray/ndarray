@@ -2226,17 +2226,14 @@ where
         A: 'a,
         S: Data,
     {
-        if let Some(slc) = self.as_slice_memory_order() {
-            let v = crate::iterators::to_vec_mapped(slc.iter(), f);
-            unsafe {
-                ArrayBase::from_shape_vec_unchecked(
+        unsafe {
+            if let Some(slc) = self.as_slice_memory_order() {
+                ArrayBase::from_shape_trusted_iter_unchecked(
                     self.dim.clone().strides(self.strides.clone()),
-                    v,
-                )
+                    slc.iter(), f)
+            } else {
+                ArrayBase::from_shape_trusted_iter_unchecked(self.dim.clone(), self.iter(), f)
             }
-        } else {
-            let v = crate::iterators::to_vec_mapped(self.iter(), f);
-            unsafe { ArrayBase::from_shape_vec_unchecked(self.dim.clone(), v) }
         }
     }
 
@@ -2256,11 +2253,10 @@ where
         if self.is_contiguous() {
             let strides = self.strides.clone();
             let slc = self.as_slice_memory_order_mut().unwrap();
-            let v = crate::iterators::to_vec_mapped(slc.iter_mut(), f);
-            unsafe { ArrayBase::from_shape_vec_unchecked(dim.strides(strides), v) }
+            unsafe { ArrayBase::from_shape_trusted_iter_unchecked(dim.strides(strides),
+                        slc.iter_mut(), f) }
         } else {
-            let v = crate::iterators::to_vec_mapped(self.iter_mut(), f);
-            unsafe { ArrayBase::from_shape_vec_unchecked(dim, v) }
+            unsafe { ArrayBase::from_shape_trusted_iter_unchecked(dim, self.iter_mut(), f) }
         }
     }
 

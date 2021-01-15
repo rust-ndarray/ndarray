@@ -29,6 +29,7 @@ use crate::indices;
 #[cfg(feature = "std")]
 use crate::iterators::to_vec;
 use crate::iterators::to_vec_mapped;
+use crate::iterators::TrustedIterator;
 use crate::StrideShape;
 #[cfg(feature = "std")]
 use crate::{geomspace, linspace, logspace};
@@ -494,6 +495,27 @@ where
         let ptr = nonnull_from_vec_data(&mut v).offset(-offset_from_ptr_to_memory(&dim, &strides));
         ArrayBase::from_data_ptr(DataOwned::new(v), ptr).with_strides_dim(strides, dim)
     }
+
+    /// Creates an array from an iterator, mapped by `map` and interpret it according to the
+    /// provided shape and strides.
+    ///
+    /// # Safety
+    ///
+    /// See from_shape_vec_unchecked
+    pub(crate) unsafe fn from_shape_trusted_iter_unchecked<Sh, I, F>(shape: Sh, iter: I, map: F)
+        -> Self
+    where
+        Sh: Into<StrideShape<D>>,
+        I: TrustedIterator + ExactSizeIterator,
+        F: FnMut(I::Item) -> A,
+    {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides.strides_for_dim(&dim);
+        let v = to_vec_mapped(iter, map);
+        Self::from_vec_dim_stride_unchecked(dim, strides, v)
+    }
+
 
     /// Create an array with uninitalized elements, shape `shape`.
     ///
