@@ -231,12 +231,12 @@ fn maybe_uninit_1() {
         let mut a = Mat::maybe_uninit((10, 10));
         let v = a.raw_view_mut();
         Zip::from(v)
-            .apply(|ptr| *(*ptr).as_mut_ptr() = 1.);
+            .for_each(|ptr| *(*ptr).as_mut_ptr() = 1.);
 
         let u = a.raw_view_mut().assume_init();
 
         Zip::from(u)
-            .apply(|ptr| assert_eq!(*ptr, 1.));
+            .for_each(|ptr| assert_eq!(*ptr, 1.));
 
     }
 }

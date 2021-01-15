@@ -24,7 +24,7 @@
 /// Is equivalent to:
 ///
 /// ```rust,ignore
-/// Zip::from(&mut a).and(&b).and(&c).par_apply(|a, &b, &c| {
+/// Zip::from(&mut a).and(&b).and(&c).par_for_each(|a, &b, &c| {
 ///     *a = b + c;
 /// });
 /// ```
@@ -54,6 +54,6 @@
 /// ```
 macro_rules! par_azip {
     ($($t:tt)*) => {
-        $crate::azip!(@build par_apply $($t)*)
+        $crate::azip!(@build par_for_each $($t)*)
     };
 }

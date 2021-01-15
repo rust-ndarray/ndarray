@@ -518,7 +518,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 /// The order elements are visited is not specified. The producers don’t have to
 /// have the same item type.
 ///
-/// The `Zip` has two methods for function application: `apply` and
+/// The `Zip` has two methods for function application: `for_each` and
 /// `fold_while`. The zip object can be split, which allows parallelization.
 /// A read-only zip object (no mutable producers) can be cloned.
 ///
@@ -546,7 +546,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 ///     .and(&b)
 ///     .and(&c)
 ///     .and(&d)
-///     .apply(|w, &x, &y, &z| {
+///     .for_each(|w, &x, &y, &z| {
 ///         *w += x + y * z;
 ///     });
 ///
@@ -563,7 +563,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 ///
 /// Zip::from(&mut totals)
 ///     .and(a.rows())
-///     .apply(|totals, row| *totals = row.sum());
+///     .for_each(|totals, row| *totals = row.sum());
 ///
 /// // Check the result against the built in `.sum_axis()` along axis 1.
 /// assert_eq!(totals, a.sum_axis(Axis(1)));
@@ -692,7 +692,7 @@ impl<P, D> Zip<P, D>
 where
     D: Dimension,
 {
-    fn apply_core<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
+    fn for_each_core<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -700,13 +700,13 @@ where
         if self.dimension.ndim() == 0 {
             function(acc, unsafe { self.parts.as_ref(self.parts.as_ptr()) })
         } else if self.layout.is(CORDER | FORDER) {
-            self.apply_core_contiguous(acc, function)
+            self.for_each_core_contiguous(acc, function)
         } else {
-            self.apply_core_strided(acc, function)
+            self.for_each_core_strided(acc, function)
         }
     }
 
-    fn apply_core_contiguous<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
+    fn for_each_core_contiguous<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -744,7 +744,7 @@ where
     }
 
 
-    fn apply_core_strided<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
+    fn for_each_core_strided<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -754,14 +754,14 @@ where
             panic!("Unreachable: ndim == 0 is contiguous")
         }
         if n == 1 || self.layout_tendency >= 0 {
-            self.apply_core_strided_c(acc, function)
+            self.for_each_core_strided_c(acc, function)
         } else {
-            self.apply_core_strided_f(acc, function)
+            self.for_each_core_strided_f(acc, function)
         }
     }
 
     // Non-contiguous but preference for C - unroll over Axis(ndim - 1)
-    fn apply_core_strided_c<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+    fn for_each_core_strided_c<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -785,7 +785,7 @@ where
     }
 
     // Non-contiguous but preference for F - unroll over Axis(0)
-    fn apply_core_strided_f<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
+    fn for_each_core_strided_f<F, Acc>(&mut self, mut acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
@@ -939,13 +939,22 @@ macro_rules! map_impl {
         {
             /// Apply a function to all elements of the input arrays,
             /// visiting elements in lock step.
-            pub fn apply<F>(mut self, mut function: F)
+            pub fn for_each<F>(mut self, mut function: F)
                 where F: FnMut($($p::Item),*)
             {
-                self.apply_core((), move |(), args| {
+                self.for_each_core((), move |(), args| {
                     let ($($p,)*) = args;
                     FoldWhile::Continue(function($($p),*))
                 });
+            }
+
+            /// Apply a function to all elements of the input arrays,
+            /// visiting elements in lock step.
+            #[deprecated(note="Renamed to .for_each()", since="0.15.0")]
+            pub fn apply<F>(self, function: F)
+                where F: FnMut($($p::Item),*)
+            {
+                self.for_each(function)
             }
 
             /// Apply a fold function to all elements of the input arrays,
@@ -980,7 +989,7 @@ macro_rules! map_impl {
             where
                 F: FnMut(Acc, $($p::Item),*) -> Acc,
             {
-                self.apply_core(acc, move |acc, args| {
+                self.for_each_core(acc, move |acc, args| {
                     let ($($p,)*) = args;
                     FoldWhile::Continue(function(acc, $($p),*))
                 }).into_inner()
@@ -993,7 +1002,7 @@ macro_rules! map_impl {
                 -> FoldWhile<Acc>
                 where F: FnMut(Acc, $($p::Item),*) -> FoldWhile<Acc>
             {
-                self.apply_core(acc, move |acc, args| {
+                self.for_each_core(acc, move |acc, args| {
                     let ($($p,)*) = args;
                     function(acc, $($p),*)
                 })
@@ -1015,7 +1024,7 @@ macro_rules! map_impl {
             pub fn all<F>(mut self, mut predicate: F) -> bool
                 where F: FnMut($($p::Item),*) -> bool
             {
-                !self.apply_core((), move |_, args| {
+                !self.for_each_core((), move |_, args| {
                     let ($($p,)*) = args;
                     if predicate($($p),*) {
                         FoldWhile::Continue(())
@@ -1065,12 +1074,11 @@ macro_rules! map_impl {
                 }
             }
 
-            /// Apply and collect the results into a new array, which has the same size as the
+            /// Map and collect the results into a new array, which has the same size as the
             /// inputs.
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D>
-            {
+            pub fn map_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D> {
                 // Make uninit result
                 let mut output = self.uninitalized_for_current_layout::<R>();
 
@@ -1086,19 +1094,41 @@ macro_rules! map_impl {
                 }
             }
 
-            /// Apply and assign the results into the producer `into`, which should have the same
+            /// Map and collect the results into a new array, which has the same size as the
+            /// inputs.
+            ///
+            /// If all inputs are c- or f-order respectively, that is preserved in the output.
+            #[deprecated(note="Renamed to .map_collect()", since="0.15.0")]
+            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D> {
+                self.map_collect(f)
+            }
+
+            /// Map and assign the results into the producer `into`, which should have the same
             /// size as the other inputs.
             ///
             /// The producer should have assignable items as dictated by the `AssignElem` trait,
             /// for example `&mut R`.
-            pub fn apply_assign_into<R, Q>(self, into: Q, mut f: impl FnMut($($p::Item,)* ) -> R)
+            pub fn map_assign_into<R, Q>(self, into: Q, mut f: impl FnMut($($p::Item,)* ) -> R)
                 where Q: IntoNdProducer<Dim=D>,
                       Q::Item: AssignElem<R>
             {
                 self.and(into)
-                    .apply(move |$($p, )* output_| {
+                    .for_each(move |$($p, )* output_| {
                         output_.assign_elem(f($($p ),*));
                     });
+            }
+
+            /// Map and assign the results into the producer `into`, which should have the same
+            /// size as the other inputs.
+            ///
+            /// The producer should have assignable items as dictated by the `AssignElem` trait,
+            /// for example `&mut R`.
+            #[deprecated(note="Renamed to .map_assign_into()", since="0.15.0")]
+            pub fn apply_assign_into<R, Q>(self, into: Q, f: impl FnMut($($p::Item,)* ) -> R)
+                where Q: IntoNdProducer<Dim=D>,
+                      Q::Item: AssignElem<R>
+            {
+                self.map_assign_into(into, f)
             }
 
 
@@ -1150,7 +1180,7 @@ macro_rules! map_impl {
                     // Apply the mapping function on this zip
                     // if we panic with unwinding; Partial will drop the written elements.
                     let partial_len = &mut partial.len;
-                    self.apply(move |$($p,)* output_elem: *mut R| {
+                    self.for_each(move |$($p,)* output_elem: *mut R| {
                         output_elem.write(f($($p),*));
                         if std::mem::needs_drop::<R>() {
                             *partial_len += 1;

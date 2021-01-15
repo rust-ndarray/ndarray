@@ -12,7 +12,7 @@
 /// Is equivalent to:
 ///
 /// ```rust,ignore
-/// Zip::from(&mut a).and(&b).and(&c).apply(|a, &b, &c| {
+/// Zip::from(&mut a).and(&b).and(&c).for_each(|a, &b, &c| {
 ///     *a = b + c
 /// });
 /// ```
@@ -27,8 +27,8 @@
 ///
 /// The *expr* are expressions whose types must implement `IntoNdProducer`, the
 /// *pat* are the patterns of the parameters to the closure called by
-/// `Zip::apply`, and *body_expr* is the body of the closure called by
-/// `Zip::apply`. You can think of each *pat* `in` *expr* as being analogous to
+/// `Zip::for_each`, and *body_expr* is the body of the closure called by
+/// `Zip::for_each`. You can think of each *pat* `in` *expr* as being analogous to
 /// the `pat in expr` of a normal loop `for pat in expr { statements }`: a
 /// pattern, followed by `in`, followed by an expression that implements
 /// `IntoNdProducer` (analogous to `IntoIterator` for a `for` loop).
@@ -129,6 +129,6 @@ macro_rules! azip {
     // catch-all rule
     (@build $($t:tt)*) => { compile_error!("Invalid syntax in azip!()") };
     ($($t:tt)*) => {
-        $crate::azip!(@build apply $($t)*)
+        $crate::azip!(@build for_each $($t)*)
     };
 }

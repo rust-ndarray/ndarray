@@ -679,11 +679,11 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
 
         if beta.is_zero() {
             // when beta is zero, c may be uninitialized
-            Zip::from(a.outer_iter()).and(y).apply(|row, elt| {
+            Zip::from(a.outer_iter()).and(y).for_each(|row, elt| {
                 elt.write(row.dot(x) * alpha);
             });
         } else {
-            Zip::from(a.outer_iter()).and(y).apply(|row, elt| {
+            Zip::from(a.outer_iter()).and(y).for_each(|row, elt| {
                 *elt = *elt * beta + row.dot(x) * alpha;
             });
         }

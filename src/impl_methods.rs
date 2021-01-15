@@ -1985,7 +1985,7 @@ where
         let dim = self.raw_dim();
         Zip::from(LanesMut::new(self.view_mut(), Axis(n - 1)))
             .and(Lanes::new(rhs.broadcast_assume(dim), Axis(n - 1)))
-            .apply(move |s_row, r_row| Zip::from(s_row).and(r_row).apply(|a, b| f(a, b)));
+            .for_each(move |s_row, r_row| Zip::from(s_row).and(r_row).for_each(|a, b| f(a, b)));
     }
 
     fn zip_mut_with_elem<B, F>(&mut self, rhs_elem: &B, mut f: F)
@@ -2343,7 +2343,7 @@ where
         prev.slice_axis_inplace(axis, Slice::from(..-1));
         curr.slice_axis_inplace(axis, Slice::from(1..));
         // This implementation relies on `Zip` iterating along `axis` in order.
-        Zip::from(prev).and(curr).apply(|prev, curr| unsafe {
+        Zip::from(prev).and(curr).for_each(|prev, curr| unsafe {
             // These pointer dereferences and borrows are safe because:
             //
             // 1. They're pointers to elements in the array.

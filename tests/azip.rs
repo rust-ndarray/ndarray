@@ -54,13 +54,13 @@ fn test_azip2_3() {
 fn test_zip_collect() {
     use approx::assert_abs_diff_eq;
 
-    // test Zip::apply_collect and that it preserves c/f layout.
+    // test Zip::map_collect and that it preserves c/f layout.
 
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
 
     {
-        let a = Zip::from(&b).and(&c).apply_collect(|x, y| x + y);
+        let a = Zip::from(&b).and(&c).map_collect(|x, y| x + y);
 
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
@@ -70,7 +70,7 @@ fn test_zip_collect() {
         let b = b.t();
         let c = c.t();
 
-        let a = Zip::from(&b).and(&c).apply_collect(|x, y| x + y);
+        let a = Zip::from(&b).and(&c).map_collect(|x, y| x + y);
 
         assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
         assert_eq!(a.strides(), b.strides());
@@ -86,7 +86,7 @@ fn test_zip_assign_into() {
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
 
-    Zip::from(&b).and(&c).apply_assign_into(&mut a, |x, y| x + y);
+    Zip::from(&b).and(&c).map_assign_into(&mut a, |x, y| x + y);
 
     assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
 }
@@ -101,7 +101,7 @@ fn test_zip_assign_into_cell() {
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
 
-    Zip::from(&b).and(&c).apply_assign_into(&a, |x, y| x + y);
+    Zip::from(&b).and(&c).map_assign_into(&a, |x, y| x + y);
     let a2 = a.mapv(|elt| elt.get());
 
     assert_abs_diff_eq!(a2, &b + &c, epsilon = 1e-6);
@@ -154,7 +154,7 @@ fn test_zip_collect_drop() {
         }
 
         let _result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
-            Zip::from(&a).and(&b).apply_collect(|&elt, _| {
+            Zip::from(&a).and(&b).map_collect(|&elt, _| {
                 if elt.0 > 3 && will_panic {
                     panic!();
                 }
@@ -243,7 +243,7 @@ fn test_broadcast() {
             .and_broadcast(&b)
             .and_broadcast(&d)
             .and_broadcast(&e);
-        z.apply(|x, &y, &z, &w| *x = y + z + w);
+        z.for_each(|x, &y, &z, &w| *x = y + z + w);
     }
     let sum = &b + &d + &e;
     assert_abs_diff_eq!(a, sum.broadcast((n, n)).unwrap(), epsilon = 1e-4);
@@ -293,11 +293,11 @@ fn test_clone() {
     let z = Zip::from(&a).and(a.exact_chunks((1, 1, 1)));
     let w = z.clone();
     let mut result = Vec::new();
-    z.apply(|x, y| {
+    z.for_each(|x, y| {
         result.push((x, y));
     });
     let mut i = 0;
-    w.apply(|x, y| {
+    w.for_each(|x, y| {
         assert_eq!(result[i], (x, y));
         i += 1;
     });
@@ -308,7 +308,7 @@ fn test_indices_0() {
     let a1 = arr0(3);
 
     let mut count = 0;
-    Zip::indexed(&a1).apply(|i, elt| {
+    Zip::indexed(&a1).for_each(|i, elt| {
         count += 1;
         assert_eq!(i, ());
         assert_eq!(*elt, 3);
@@ -324,7 +324,7 @@ fn test_indices_1() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1).apply(|i, elt| {
+    Zip::indexed(&a1).for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -334,12 +334,12 @@ fn test_indices_1() {
     let len = a1.len();
     let (x, y) = Zip::indexed(&mut a1).split();
 
-    x.apply(|i, elt| {
+    x.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
     assert_eq!(count, len / 2);
-    y.apply(|i, elt| {
+    y.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -364,12 +364,12 @@ fn test_indices_2() {
     let len = a1.len();
     let (x, y) = Zip::indexed(&mut a1).split();
 
-    x.apply(|i, elt| {
+    x.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
     assert_eq!(count, len / 2);
-    y.apply(|i, elt| {
+    y.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -384,7 +384,7 @@ fn test_indices_3() {
     }
 
     let mut count = 0;
-    Zip::indexed(&a1).apply(|i, elt| {
+    Zip::indexed(&a1).for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -394,12 +394,12 @@ fn test_indices_3() {
     let len = a1.len();
     let (x, y) = Zip::indexed(&mut a1).split();
 
-    x.apply(|i, elt| {
+    x.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
     assert_eq!(count, len / 2);
-    y.apply(|i, elt| {
+    y.for_each(|i, elt| {
         count += 1;
         assert_eq!(*elt, i);
     });
@@ -418,12 +418,12 @@ fn test_indices_split_1() {
             let mut seen = Vec::new();
 
             let mut ac = 0;
-            a.apply(|i, _| {
+            a.for_each(|i, _| {
                 ac += 1;
                 seen.push(i);
             });
             let mut bc = 0;
-            b.apply(|i, _| {
+            b.for_each(|i, _| {
                 bc += 1;
                 seen.push(i);
             });
