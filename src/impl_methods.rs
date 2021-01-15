@@ -27,6 +27,9 @@ use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::AxisDescription;
+use crate::Layout;
+use crate::order::Order;
+use crate::shape_builder::ShapeArg;
 use crate::zip::{IntoNdProducer, Zip};
 
 use crate::iter::{
@@ -1574,6 +1577,90 @@ where
             }
         } else {
             Err(self)
+        }
+    }
+
+    /// Transform the array into `new_shape`; any shape with the same number of elements is
+    /// accepted.
+    ///
+    /// `order` specifies the *logical* order in which the array is to be read and reshaped.
+    /// The array is returned as a `CowArray`; a view if possible, otherwise an owned array.
+    ///
+    /// For example, when starting from the one-dimensional sequence 1 2 3 4 5 6, it would be
+    /// understood as a 2 x 3 array in row major ("C") order this way:
+    ///
+    /// ```text
+    /// 1 2 3
+    /// 4 5 6
+    /// ```
+    ///
+    /// and as 2 x 3 in column major ("F") order this way:
+    ///
+    /// ```text
+    /// 1 3 5
+    /// 2 4 6
+    /// ```
+    ///
+    /// This example should show that any time we "reflow" the elements in the array to a different
+    /// number of rows and columns (or more axes if applicable), it is important to pick an index
+    /// ordering, and that's the reason for the function parameter for `order`.
+    ///
+    /// **Errors** if the new shape doesn't have the same number of elements as the array's current
+    /// shape.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use ndarray::Order;
+    ///
+    /// assert!(
+    ///     array![1., 2., 3., 4., 5., 6.].to_shape(((2, 3), Order::RowMajor)).unwrap()
+    ///     == array![[1., 2., 3.],
+    ///               [4., 5., 6.]]
+    /// );
+    ///
+    /// assert!(
+    ///     array![1., 2., 3., 4., 5., 6.].to_shape(((2, 3), Order::ColumnMajor)).unwrap()
+    ///     == array![[1., 3., 5.],
+    ///               [2., 4., 6.]]
+    /// );
+    /// ```
+    pub fn to_shape<E>(&self, new_shape: E) -> Result<CowArray<'_, A, E::Dim>, ShapeError>
+    where
+        E: ShapeArg,
+        A: Clone,
+        S: Data,
+    {
+        let (shape, order) = new_shape.into_shape_and_order();
+        self.to_shape_order(shape, order.unwrap_or(Order::RowMajor))
+    }
+
+    fn to_shape_order<E>(&self, shape: E, order: Order)
+        -> Result<CowArray<'_, A, E>, ShapeError>
+    where
+        E: Dimension,
+        A: Clone,
+        S: Data,
+    {
+        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+        let layout = self.layout_impl();
+
+        unsafe {
+            if layout.is(Layout::CORDER) && order == Order::RowMajor {
+                let strides = shape.default_strides();
+                Ok(CowArray::from(ArrayView::new(self.ptr, shape, strides)))
+            } else if layout.is(Layout::FORDER) && order == Order::ColumnMajor {
+                let strides = shape.fortran_strides();
+                Ok(CowArray::from(ArrayView::new(self.ptr, shape, strides)))
+            } else {
+                let (shape, view) = match order {
+                    Order::RowMajor => (shape.set_f(false), self.view()),
+                    Order::ColumnMajor => (shape.set_f(true), self.t()),
+                };
+                Ok(CowArray::from(Array::from_shape_trusted_iter_unchecked(
+                            shape, view.into_iter(), A::clone)))
+            }
         }
     }
 
