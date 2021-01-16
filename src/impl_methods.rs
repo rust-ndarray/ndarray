@@ -498,6 +498,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
+    #[must_use = "slice_axis returns an array view with the sliced result"]
     pub fn slice_axis(&self, axis: Axis, indices: Slice) -> ArrayView<'_, A, D>
     where
         S: Data,
@@ -511,6 +512,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
+    #[must_use = "slice_axis_mut returns an array view with the sliced result"]
     pub fn slice_axis_mut(&mut self, axis: Axis, indices: Slice) -> ArrayViewMut<'_, A, D>
     where
         S: DataMut,
