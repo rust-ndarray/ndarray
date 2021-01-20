@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::dimension::BroadcastShape;
 use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
@@ -53,24 +54,48 @@ macro_rules! impl_binary_op(
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
-/// and return the result (based on `self`).
+/// and return the result.
 ///
-/// `self` must be an `Array` or `ArcArray`.
-///
-/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 where
     A: Clone + $trt<B, Output=A>,
     B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
+    S: Data<Elem=A>,
     S2: Data<Elem=B>,
-    D: Dimension,
+    D: Dimension + BroadcastShape<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
+    type Output = Array<A, <D as BroadcastShape<E>>::BroadcastOutput>;
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    {
+        self.$mth(&rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between reference `self` and `rhs`,
+/// and return the result as a new `Array`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: Data<Elem=B>,
+    D: Dimension + BroadcastShape<E>,
+    E: Dimension,
+{
+    type Output = Array<A, <D as BroadcastShape<E>>::BroadcastOutput>;
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
         self.$mth(&rhs)
     }
@@ -79,27 +104,34 @@ where
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and reference `rhs`,
-/// and return the result (based on `self`).
+/// and return the result.
 ///
-/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 where
     A: Clone + $trt<B, Output=A>,
     B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
+    S: Data<Elem=A>,
     S2: Data<Elem=B>,
-    D: Dimension,
+    D: Dimension + BroadcastShape<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
+    type Output = Array<A, <D as BroadcastShape<E>>::BroadcastOutput>;
+    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
     {
-        self.zip_mut_with(rhs, |x, y| {
+        let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
+        let mut self_ = if shape.slice() == self.dim.slice() {
+            self.into_owned().into_dimensionality::<<D as BroadcastShape<E>>::BroadcastOutput>().unwrap()
+        } else {
+            self.broadcast(shape).unwrap().to_owned()
+        };
+        self_.zip_mut_with(rhs, |x, y| {
             *x = x.clone() $operator y.clone();
         });
-        self
+        self_
     }
 }
 
@@ -108,7 +140,8 @@ where
 /// between references `self` and `rhs`,
 /// and return the result as a new `Array`.
 ///
-/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
@@ -117,13 +150,21 @@ where
     B: Clone,
     S: Data<Elem=A>,
     S2: Data<Elem=B>,
-    D: Dimension,
+    D: Dimension + BroadcastShape<E>,
     E: Dimension,
 {
-    type Output = Array<A, D>;
-    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Array<A, D> {
-        // FIXME: Can we co-broadcast arrays here? And how?
-        self.to_owned().$mth(rhs)
+    type Output = Array<A, <D as BroadcastShape<E>>::BroadcastOutput>;
+    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
+        let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
+        let mut self_ = if shape.slice() == self.dim.slice() {
+            self.to_owned().into_dimensionality::<<D as BroadcastShape<E>>::BroadcastOutput>().unwrap()
+        } else {
+            self.broadcast(shape).unwrap().to_owned()
+        };
+        self_.zip_mut_with(rhs, |x, y| {
+            *x = x.clone() $operator y.clone();
+        });
+        self_
     }
 }
 

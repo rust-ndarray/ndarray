@@ -9,9 +9,9 @@
 
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
-use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
+use ndarray::{indices, BroadcastShape, ErrorKind, IxDynImpl, ShapeError};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 
 macro_rules! assert_panics {
@@ -484,7 +484,7 @@ fn test_add() {
     }
 
     let B = A.clone();
-    A = A + &B;
+    let A = A + &B;
     assert_eq!(A[[0, 0]], 0);
     assert_eq!(A[[0, 1]], 2);
     assert_eq!(A[[1, 0]], 4);
@@ -1558,6 +1558,53 @@ fn insert_axis_view() {
 }
 
 #[test]
+fn test_broadcast_shape() {
+    fn test_co<D1, D2>(
+        d1: &D1,
+        d2: &D2,
+        r: Result<<D1 as BroadcastShape<D2>>::BroadcastOutput, ShapeError>,
+    ) where
+        D1: Dimension + BroadcastShape<D2>,
+        D2: Dimension,
+    {
+        let d = d1.broadcast_shape(&d2);
+        assert_eq!(d, r);
+    }
+    test_co(&Dim([2, 3]), &Dim([4, 1, 3]), Ok(Dim([4, 2, 3])));
+    test_co(
+        &Dim([1, 2, 2]),
+        &Dim([1, 3, 4]),
+        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
+    );
+    test_co(&Dim([3, 4, 5]), &Ix0(), Ok(Dim([3, 4, 5])));
+    let v = vec![1, 2, 3, 4, 5, 6, 7];
+    test_co(
+        &Dim(vec![1, 1, 3, 1, 5, 1, 7]),
+        &Dim([2, 1, 4, 1, 6, 1]),
+        Ok(Dim(IxDynImpl::from(v.as_slice()))),
+    );
+    let d = Dim([1, 2, 1, 3]);
+    test_co(&d, &d, Ok(d));
+    test_co(
+        &Dim([2, 1, 2]).into_dyn(),
+        &Dim(0),
+        Ok(Dim([2, 1, 2]).into_dyn()),
+    );
+    test_co(
+        &Dim([2, 1, 1]),
+        &Dim([0, 0, 0, 3, 4]),
+        Ok(Dim([0, 0, 2, 3, 4])),
+    );
+    test_co(&Dim([0]), &Dim([0, 0, 0]), Ok(Dim([0, 0, 0])));
+    test_co(&Dim(1), &Dim([1, 0, 0]), Ok(Dim([1, 0, 1])));
+    test_co(
+        &Dim([1, 3, 0, 1, 1]),
+        &Dim([1, 2, 3, 1]),
+        Ok(Dim([1, 3, 2, 3, 1])),
+    );
+}
+
+#[test]
 fn arithmetic_broadcast() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
     let b = a.clone() * aview0(&1.);
@@ -1565,6 +1612,49 @@ fn arithmetic_broadcast() {
     a.swap_axes(0, 1);
     let b = a.clone() / aview0(&1.);
     assert_eq!(a, b);
+
+    // reference
+    let a = arr2(&[[2], [3], [4]]);
+    let b = arr1(&[5, 6, 7]);
+    assert_eq!(&a + &b, arr2(&[[7, 8, 9], [8, 9, 10], [9, 10, 11]]));
+    assert_eq!(
+        a.clone() - &b,
+        arr2(&[[-3, -4, -5], [-2, -3, -4], [-1, -2, -3]])
+    );
+    assert_eq!(
+        a.clone() * b.clone(),
+        arr2(&[[10, 12, 14], [15, 18, 21], [20, 24, 28]])
+    );
+    assert_eq!(&b / a, arr2(&[[2, 3, 3], [1, 2, 2], [1, 1, 1]]));
+
+    // Negative strides and non-contiguous memory
+    let s = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let s = Array3::from_shape_vec((2, 3, 2).strides((1, 4, 2)), s.to_vec()).unwrap();
+    let a = s.slice(s![..;-1,..;2,..]);
+    let b = s.slice(s![..2, -1, ..]);
+    let mut c = s.clone();
+    c.collapse_axis(Axis(2), 1);
+    let c = c.slice(s![1,..;2,..]);
+    assert_eq!(
+        &a.to_owned() + &b,
+        arr3(&[[[11, 15], [20, 24]], [[10, 14], [19, 23]]])
+    );
+    assert_eq!(
+        &a + b + c.into_owned(),
+        arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
+    );
+
+    // shared array
+    let sa = a.to_shared();
+    let sa2 = sa.to_shared();
+    let sb = b.to_shared();
+    let sb2 = sb.to_shared();
+    let sc = c.to_shared();
+    let sc2 = sc.into_shared();
+    assert_eq!(
+        sa2 + sb2 + sc2.into_owned(),
+        arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
+    );
 }
 
 #[test]
