@@ -1567,7 +1567,7 @@ fn test_broadcast_shape() {
         D1: Dimension + BroadcastShape<D2>,
         D2: Dimension,
     {
-        let d = d1.broadcast_shape(&d2);
+        let d = d1.broadcast_shape(d2);
         assert_eq!(d, r);
     }
     test_co(&Dim([2, 3]), &Dim([4, 1, 3]), Ok(Dim([4, 2, 3])));

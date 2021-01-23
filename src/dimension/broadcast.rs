@@ -41,7 +41,7 @@ where
     Ok(out)
 }
 
-pub trait BroadcastShape<Other: Dimension>: Dimension {
+pub trait BroadcastShape<Other: Dimension> {
     /// The resulting dimension type after broadcasting.
     type BroadcastOutput: Dimension;
 
@@ -51,9 +51,7 @@ pub trait BroadcastShape<Other: Dimension>: Dimension {
     ///
     /// Uses the [NumPy broadcasting rules]
     /// (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
-    fn broadcast_shape(&self, other: &Other) -> Result<Self::BroadcastOutput, ShapeError> {
-        broadcast_shape::<Self, Other, Self::BroadcastOutput>(self, other)
-    }
+    fn broadcast_shape(&self, other: &Other) -> Result<Self::BroadcastOutput, ShapeError>;
 }
 
 /// Dimensions of the same type remain unchanged when co_broadcast.
@@ -61,16 +59,28 @@ pub trait BroadcastShape<Other: Dimension>: Dimension {
 /// (Instead of <D as BroadcastShape<D>>::BroadcastOutput)
 impl<D: Dimension> BroadcastShape<D> for D {
     type BroadcastOutput = D;
+
+    fn broadcast_shape(&self, other: &D) -> Result<Self::BroadcastOutput, ShapeError> {
+        broadcast_shape::<D, D, Self::BroadcastOutput>(self, other)
+    }
 }
 
 macro_rules! impl_broadcast_distinct_fixed {
     ($smaller:ty, $larger:ty) => {
         impl BroadcastShape<$larger> for $smaller {
             type BroadcastOutput = $larger;
+
+            fn broadcast_shape(&self, other: &$larger) -> Result<Self::BroadcastOutput, ShapeError> {
+                broadcast_shape::<Self, $larger, Self::BroadcastOutput>(self, other)
+            }
         }
 
         impl BroadcastShape<$smaller> for $larger {
             type BroadcastOutput = $larger;
+
+            fn broadcast_shape(&self, other: &$smaller) -> Result<Self::BroadcastOutput, ShapeError> {
+                broadcast_shape::<Self, $smaller, Self::BroadcastOutput>(self, other)
+            }
         }
     };
 }
