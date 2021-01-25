@@ -484,7 +484,7 @@ fn test_add() {
     }
 
     let B = A.clone();
-    let A = A + &B;
+    A = A + &B;
     assert_eq!(A[[0, 0]], 0);
     assert_eq!(A[[0, 1]], 2);
     assert_eq!(A[[1, 0]], 4);
@@ -1640,7 +1640,7 @@ fn arithmetic_broadcast() {
         arr3(&[[[11, 15], [20, 24]], [[10, 14], [19, 23]]])
     );
     assert_eq!(
-        &a + b + c.into_owned(),
+        &a + b.into_owned() + c,
         arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
     );
 
@@ -1652,7 +1652,7 @@ fn arithmetic_broadcast() {
     let sc = c.to_shared();
     let sc2 = sc.into_shared();
     assert_eq!(
-        sa2 + sb2 + sc2.into_owned(),
+        sa2 + &sb2 + sc2.into_owned(),
         arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
     );
 }
