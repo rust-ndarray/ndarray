@@ -43,7 +43,7 @@ where
 
 pub trait BroadcastShape<Other: Dimension> {
     /// The resulting dimension type after broadcasting.
-    type BroadcastOutput: Dimension;
+    type Output: Dimension;
 
     /// Determines the shape after broadcasting the dimensions together.
     ///
@@ -51,35 +51,35 @@ pub trait BroadcastShape<Other: Dimension> {
     ///
     /// Uses the [NumPy broadcasting rules]
     /// (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
-    fn broadcast_shape(&self, other: &Other) -> Result<Self::BroadcastOutput, ShapeError>;
+    fn broadcast_shape(&self, other: &Other) -> Result<Self::Output, ShapeError>;
 }
 
 /// Dimensions of the same type remain unchanged when co_broadcast.
 /// So you can directly use D as the resulting type.
 /// (Instead of <D as BroadcastShape<D>>::BroadcastOutput)
 impl<D: Dimension> BroadcastShape<D> for D {
-    type BroadcastOutput = D;
+    type Output = D;
 
-    fn broadcast_shape(&self, other: &D) -> Result<Self::BroadcastOutput, ShapeError> {
-        broadcast_shape::<D, D, Self::BroadcastOutput>(self, other)
+    fn broadcast_shape(&self, other: &D) -> Result<Self::Output, ShapeError> {
+        broadcast_shape::<D, D, Self::Output>(self, other)
     }
 }
 
 macro_rules! impl_broadcast_distinct_fixed {
     ($smaller:ty, $larger:ty) => {
         impl BroadcastShape<$larger> for $smaller {
-            type BroadcastOutput = $larger;
+            type Output = $larger;
 
-            fn broadcast_shape(&self, other: &$larger) -> Result<Self::BroadcastOutput, ShapeError> {
-                broadcast_shape::<Self, $larger, Self::BroadcastOutput>(self, other)
+            fn broadcast_shape(&self, other: &$larger) -> Result<Self::Output, ShapeError> {
+                broadcast_shape::<Self, $larger, Self::Output>(self, other)
             }
         }
 
         impl BroadcastShape<$smaller> for $larger {
-            type BroadcastOutput = $larger;
+            type Output = $larger;
 
-            fn broadcast_shape(&self, other: &$smaller) -> Result<Self::BroadcastOutput, ShapeError> {
-                broadcast_shape::<Self, $smaller, Self::BroadcastOutput>(self, other)
+            fn broadcast_shape(&self, other: &$smaller) -> Result<Self::Output, ShapeError> {
+                broadcast_shape::<Self, $smaller, Self::Output>(self, other)
             }
         }
     };

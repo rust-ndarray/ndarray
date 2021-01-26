@@ -2037,46 +2037,6 @@ where
         self.zip_mut_with_by_rows(rhs, f);
     }
 
-    /// Traverse two arrays in unspecified order, in lock step,
-    /// calling the closure `f` on each element pair, and put
-    /// the result into the corresponding element of self.
-    pub fn zip_mut_from_pair<B, C, S1, S2, F>(&mut self, lhs: &ArrayBase<S1, D>, rhs: &ArrayBase<S2, D>, f: F, )
-    where
-        S: DataMut,
-        S1: Data<Elem = B>,
-        S2: Data<Elem = C>,
-        F: Fn(&B, &C) -> A,
-    {
-        debug_assert_eq!(self.shape(), lhs.shape());
-        debug_assert_eq!(self.shape(), rhs.shape());
-
-        if self.dim.strides_equivalent(&self.strides, &lhs.strides)
-            && self.dim.strides_equivalent(&self.strides, &rhs.strides)
-        {
-            if let Some(self_s) = self.as_slice_memory_order_mut() {
-                if let Some(lhs_s) = lhs.as_slice_memory_order() {
-                    if let Some(rhs_s) = rhs.as_slice_memory_order() {
-                        for (s, (l, r)) in
-                        self_s.iter_mut().zip(lhs_s.iter().zip(rhs_s)) {
-                            *s = f(&l, &r);
-                        }
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Otherwise, fall back to the outer iter
-        let n = self.ndim();
-        let dim = self.raw_dim();
-        Zip::from(LanesMut::new(self.view_mut(), Axis(n - 1)))
-            .and(Lanes::new(lhs.broadcast_assume(dim.clone()), Axis(n - 1)))
-            .and(Lanes::new(rhs.broadcast_assume(dim), Axis(n - 1)))
-            .for_each(move |s_row, l_row, r_row| {
-                Zip::from(s_row).and(l_row).and(r_row).for_each(|s, a, b| *s = f(a, b))
-            });
-    }
-
     // zip two arrays where they have different layout or strides
     #[inline(always)]
     fn zip_mut_with_by_rows<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)

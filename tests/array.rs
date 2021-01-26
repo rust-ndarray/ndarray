@@ -1562,7 +1562,7 @@ fn test_broadcast_shape() {
     fn test_co<D1, D2>(
         d1: &D1,
         d2: &D2,
-        r: Result<<D1 as BroadcastShape<D2>>::BroadcastOutput, ShapeError>,
+        r: Result<<D1 as BroadcastShape<D2>>::Output, ShapeError>,
     ) where
         D1: Dimension + BroadcastShape<D2>,
         D2: Dimension,

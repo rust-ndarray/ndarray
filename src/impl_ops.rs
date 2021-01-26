@@ -7,6 +7,8 @@
 // except according to those terms.
 
 use crate::dimension::BroadcastShape;
+use crate::data_traits::MaybeUninitSubst;
+use crate::Zip;
 use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
@@ -64,17 +66,69 @@ macro_rules! impl_binary_op(
 /// **Panics** if broadcasting isn’t possible.
 impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 where
-    A: Copy + $trt<B, Output=A>,
+    A: Clone + $trt<B, Output=A>,
     B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
+    S: DataOwned<Elem=A> + DataMut + MaybeUninitSubst<A>,
+    <S as MaybeUninitSubst<A>>::Output: DataMut,
     S2: Data<Elem=B>,
     D: Dimension + BroadcastShape<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, <D as BroadcastShape<E>>::BroadcastOutput>;
+    type Output = ArrayBase<S, <D as BroadcastShape<E>>::Output>;
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
         self.$mth(&rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between `self` and reference `rhs`,
+/// and return the result.
+///
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut + MaybeUninitSubst<A>,
+    <S as MaybeUninitSubst<A>>::Output: DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension + BroadcastShape<E>,
+    E: Dimension,
+{
+    type Output = ArrayBase<S, <D as BroadcastShape<E>>::Output>;
+    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
+    {
+        let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
+        if shape.slice() == self.dim.slice() {
+            let mut out = self.into_dimensionality::<<D as BroadcastShape<E>>::Output>().unwrap();
+            out.zip_mut_with(rhs, |x, y| {
+                *x = x.clone() $operator y.clone();
+            });
+            out
+        } else {
+            let lhs = self.broadcast(shape.clone()).unwrap();
+            let rhs = rhs.broadcast(shape.clone()).unwrap();
+            // SAFETY: Overwrite all the elements in the array after
+            // it is created via `raw_view_mut`.
+            unsafe {
+                let mut out =ArrayBase::<<S as MaybeUninitSubst<A>>::Output, <D as BroadcastShape<E>>::Output>::maybe_uninit(shape.into_pattern());
+                let output_view = out.raw_view_mut().cast::<A>();
+                Zip::from(&lhs).and(&rhs)
+                    .and(output_view)
+                    .collect_with_partial(|x, y| {
+                        x.clone() $operator y.clone()
+                    })
+                    .release_ownership();
+                out.assume_init()
+            }
+        }
     }
 }
 
@@ -92,80 +146,40 @@ where
 impl<'a, A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 where
     A: Clone + $trt<B, Output=B>,
-    B: Copy,
+    B: Clone,
     S: Data<Elem=A>,
-    S2: DataOwned<Elem=B> + DataMut,
+    S2: DataOwned<Elem=B> + DataMut + MaybeUninitSubst<B>,
+    <S2 as MaybeUninitSubst<B>>::Output: DataMut,
     D: Dimension,
     E: Dimension + BroadcastShape<D>,
 {
-    type Output = ArrayBase<S2, <E as BroadcastShape<D>>::BroadcastOutput>;
+    type Output = ArrayBase<S2, <E as BroadcastShape<D>>::Output>;
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    where
     {
         let shape = rhs.dim.broadcast_shape(&self.dim).unwrap();
         if shape.slice() == rhs.dim.slice() {
-            let mut out = rhs.into_dimensionality::<<E as BroadcastShape<D>>::BroadcastOutput>().unwrap();
+            let mut out = rhs.into_dimensionality::<<E as BroadcastShape<D>>::Output>().unwrap();
             out.zip_mut_with(self, |x, y| {
                 *x = y.clone() $operator x.clone();
             });
             out
         } else {
-            // SAFETY: Overwrite all the elements in the array after
-            // it is created via `zip_mut_from_pair`.
-            let mut out = unsafe {
-                Self::Output::uninitialized(shape.clone().into_pattern())
-            };
             let lhs = self.broadcast(shape.clone()).unwrap();
-            let rhs = rhs.broadcast(shape).unwrap();
-            out.zip_mut_from_pair(&lhs, &rhs, |x, y| {
-                x.clone() $operator y.clone()
-            });
-            out
-        }
-    }
-}
-
-/// Perform elementwise
-#[doc=$doc]
-/// between `self` and reference `rhs`,
-/// and return the result.
-///
-/// `rhs` must be an `Array` or `ArcArray`.
-///
-/// If their shapes disagree, `self` is broadcast to their broadcast shape,
-/// cloning the data if needed.
-///
-/// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
-where
-    A: Copy + $trt<B, Output=A>,
-    B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
-    S2: Data<Elem=B>,
-    D: Dimension + BroadcastShape<E>,
-    E: Dimension,
-{
-    type Output = ArrayBase<S, <D as BroadcastShape<E>>::BroadcastOutput>;
-    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
-    {
-        let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
-        if shape.slice() == self.dim.slice() {
-            let mut out = self.into_dimensionality::<<D as BroadcastShape<E>>::BroadcastOutput>().unwrap();
-            out.zip_mut_with(rhs, |x, y| {
-                *x = x.clone() $operator y.clone();
-            });
-            out
-        } else {
+            let rhs = rhs.broadcast(shape.clone()).unwrap();
             // SAFETY: Overwrite all the elements in the array after
-            // it is created via `zip_mut_from_pair`.
-            let mut out = unsafe {
-                Self::Output::uninitialized(shape.clone().into_pattern())
-            };
-            let lhs = self.broadcast(shape.clone()).unwrap();
-            let rhs = rhs.broadcast(shape).unwrap();
-            out.zip_mut_from_pair(&lhs, &rhs, |x, y| {
-                x.clone() $operator y.clone()
-            });
-            out
+            // it is created via `raw_view_mut`.
+            unsafe {
+                let mut out =ArrayBase::<<S2 as MaybeUninitSubst<B>>::Output, <E as BroadcastShape<D>>::Output>::maybe_uninit(shape.into_pattern());
+                let output_view = out.raw_view_mut().cast::<B>();
+                Zip::from(&lhs).and(&rhs)
+                    .and(output_view)
+                    .collect_with_partial(|x, y| {
+                        x.clone() $operator y.clone()
+                    })
+                    .release_ownership();
+                out.assume_init()
+            }
         }
     }
 }
@@ -188,19 +202,12 @@ where
     D: Dimension + BroadcastShape<E>,
     E: Dimension,
 {
-    type Output = Array<A, <D as BroadcastShape<E>>::BroadcastOutput>;
+    type Output = Array<A, <D as BroadcastShape<E>>::Output>;
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
         let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
-        // SAFETY: Overwrite all the elements in the array after
-        // it is created via `zip_mut_from_pair`.
-        let mut out = unsafe {
-            Self::Output::uninitialized(shape.clone().into_pattern())
-        };
         let lhs = self.broadcast(shape.clone()).unwrap();
         let rhs = rhs.broadcast(shape).unwrap();
-        out.zip_mut_from_pair(&lhs, &rhs, |x, y| {
-                x.clone() $operator y.clone()
-        });
+        let out = Zip::from(&lhs).and(&rhs).map_collect(|x, y| x.clone() $operator y.clone());
         out
     }
 }

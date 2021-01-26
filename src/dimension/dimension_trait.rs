@@ -46,11 +46,11 @@ pub trait Dimension:
     + MulAssign
     + for<'x> MulAssign<&'x Self>
     + MulAssign<usize>
-    + BroadcastShape<Ix0, BroadcastOutput=Self>
-    + BroadcastShape<Self, BroadcastOutput=Self>
-    + BroadcastShape<IxDyn, BroadcastOutput=IxDyn>
-    + BroadcastShape<<Self as Dimension>::Smaller, BroadcastOutput=Self>
-    + BroadcastShape<<Self as Dimension>::Larger, BroadcastOutput=<Self as Dimension>::Larger>
+    + BroadcastShape<Ix0, Output=Self>
+    + BroadcastShape<Self, Output=Self>
+    + BroadcastShape<IxDyn, Output=IxDyn>
+    + BroadcastShape<<Self as Dimension>::Smaller, Output=Self>
+    + BroadcastShape<<Self as Dimension>::Larger, Output=<Self as Dimension>::Larger>
 {
     /// For fixed-size dimension representations (e.g. `Ix2`), this should be
     /// `Some(ndim)`, and for variable-size dimension representations (e.g.
