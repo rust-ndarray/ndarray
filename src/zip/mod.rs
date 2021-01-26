@@ -58,7 +58,8 @@ where
     pub(crate) fn layout_impl(&self) -> Layout {
         let n = self.ndim();
         if self.is_standard_layout() {
-            if n <= 1 {
+            // effectively one-dimensional => C and F layout compatible
+            if n <= 1 || self.shape().iter().filter(|&&len| len > 1).count() <= 1 {
                 Layout::one_dimensional()
             } else {
                 Layout::c()
@@ -1173,8 +1174,19 @@ macro_rules! map_impl {
                 {
                     // Get the last producer; and make a Partial that aliases its data pointer
                     let (.., ref output) = &self.parts;
-                    debug_assert!(output.layout().is(CORDER | FORDER));
-                    debug_assert_eq!(output.layout().tendency() >= 0, self.layout_tendency >= 0);
+
+                    // debug assert that the output is contiguous in the memory layout we need
+                    if cfg!(debug_assertions) {
+                        let out_layout = output.layout();
+                        assert!(out_layout.is(CORDER | FORDER));
+                        assert!(
+                            (self.layout_tendency <= 0 && out_layout.tendency() <= 0) ||
+                            (self.layout_tendency >= 0 && out_layout.tendency() >= 0),
+                            "layout tendency violation for self layout {:?}, output layout {:?},\
+                            output shape {:?}",
+                            self.layout, out_layout, output.raw_dim());
+                    }
+
                     let mut partial = Partial::new(output.as_ptr());
 
                     // Apply the mapping function on this zip
