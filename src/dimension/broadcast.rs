@@ -23,15 +23,13 @@ where
     // (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
     //
     // Zero dimension element is not in the original rules of broadcasting.
-    // We currently treat it as the same as 1. Especially, when one side is
-    // zero with one side is empty, or both sides are zero, the result will
-    // remain zero.
+    // We currently treat it like any other number greater than 1. As numpy does.
     for i in 0..shape1.ndim() {
         out_slice[i] = s1[i];
     }
     for i in 0..shape2.ndim() {
-        if out_slice[i + k] != s2[i] && s2[i] != 0 {
-            if out_slice[i + k] <= 1 {
+        if out_slice[i + k] != s2[i] {
+            if out_slice[i + k] == 1 {
                 out_slice[i + k] = s2[i]
             } else if s2[i] != 1 {
                 return Err(from_kind(ErrorKind::IncompatibleShape));

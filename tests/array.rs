@@ -1588,19 +1588,19 @@ fn test_broadcast_shape() {
     test_co(
         &Dim([2, 1, 2]).into_dyn(),
         &Dim(0),
-        Ok(Dim([2, 1, 2]).into_dyn()),
+        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
     );
     test_co(
         &Dim([2, 1, 1]),
-        &Dim([0, 0, 0, 3, 4]),
+        &Dim([0, 0, 1, 3, 4]),
         Ok(Dim([0, 0, 2, 3, 4])),
     );
     test_co(&Dim([0]), &Dim([0, 0, 0]), Ok(Dim([0, 0, 0])));
-    test_co(&Dim(1), &Dim([1, 0, 0]), Ok(Dim([1, 0, 1])));
+    test_co(&Dim(1), &Dim([1, 0, 0]), Ok(Dim([1, 0, 0])));
     test_co(
         &Dim([1, 3, 0, 1, 1]),
         &Dim([1, 2, 3, 1]),
-        Ok(Dim([1, 3, 2, 3, 1])),
+        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
     );
 }
 

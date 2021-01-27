@@ -243,7 +243,7 @@ where
     /// **Panics** if `axis` is out of bounds.
     pub fn sum_axis(&self, axis: Axis) -> Array<A, D::Smaller>
     where
-        A: Copy + Zero + Add<Output = A>,
+        A: Clone + Zero + Add<Output = A>,
         D: RemoveAxis,
     {
         let n = self.len_of(axis);
@@ -285,7 +285,7 @@ where
     /// ```
     pub fn mean_axis(&self, axis: Axis) -> Option<Array<A, D::Smaller>>
     where
-        A: Copy + Zero + FromPrimitive + Add<Output = A> + Div<Output = A>,
+        A: Clone + Zero + FromPrimitive + Add<Output = A> + Div<Output = A>,
         D: RemoveAxis,
     {
         let axis_length = self.len_of(axis);
