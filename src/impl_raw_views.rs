@@ -1,7 +1,7 @@
 use std::mem;
 use std::ptr::NonNull;
 
-use crate::dimension::{self, stride_offset};
+use crate::dimension::{self, stride_offset, offset_from_ptr_to_memory};
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
 use crate::is_aligned;
@@ -85,7 +85,7 @@ where
             }
         }
         let strides = shape.strides.strides_for_dim(&dim);
-        RawArrayView::new_(ptr, dim, strides)
+        RawArrayView::new_(ptr.offset(-offset_from_ptr_to_memory(&dim, &strides)), dim, strides)
     }
 
     /// Converts to a read-only view of the array.
@@ -231,7 +231,7 @@ where
             }
         }
         let strides = shape.strides.strides_for_dim(&dim);
-        RawArrayViewMut::new_(ptr, dim, strides)
+        RawArrayViewMut::new_(ptr.offset(-offset_from_ptr_to_memory(&dim, &strides)), dim, strides)
     }
 
     /// Converts to a non-mutable `RawArrayView`.
