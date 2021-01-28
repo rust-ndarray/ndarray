@@ -480,7 +480,7 @@ where
 
     /// Create an array with uninitalized elements, shape `shape`.
     ///
-    /// Prefer to use [`maybe_uninit()`](ArrayBase::maybe_uninit) if possible, because it is
+    /// Prefer to use [`uninit()`](ArrayBase::uninit) if possible, because it is
     /// easier to use correctly.
     ///
     /// **Panics** if the number of elements in `shape` would overflow isize.
@@ -512,13 +512,7 @@ where
         v.set_len(size);
         Self::from_shape_vec_unchecked(shape, v)
     }
-}
 
-impl<S, A, D> ArrayBase<S, D>
-where
-    S: DataOwned<Elem = MaybeUninit<A>>,
-    D: Dimension,
-{
     /// Create an array with uninitalized elements, shape `shape`.
     ///
     /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
@@ -550,7 +544,7 @@ where
     ///
     /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
     ///     // create an uninitialized array
-    ///     let mut b = Array2::maybe_uninit(a.dim());
+    ///     let mut b = Array2::uninit(a.dim());
     ///
     ///     // two first columns in b are two last in a
     ///     // rest of columns in b are the initial columns in a
@@ -580,6 +574,29 @@ where
     ///
     /// # shift_by_two(&Array2::zeros((8, 8)));
     /// ```
+    pub fn uninit<Sh>(shape: Sh) -> ArrayBase<S::MaybeUninit, D>
+    where
+        Sh: ShapeBuilder<Dim = D>,
+    {
+        unsafe {
+            let shape = shape.into_shape();
+            let size = size_of_shape_checked_unwrap!(&shape.dim);
+            let mut v = Vec::with_capacity(size);
+            v.set_len(size);
+            ArrayBase::from_shape_vec_unchecked(shape, v)
+        }
+    }
+}
+
+impl<S, A, D> ArrayBase<S, D>
+where
+    S: DataOwned<Elem = MaybeUninit<A>>,
+    D: Dimension,
+{
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// This method has been renamed to `uninit`
+    #[deprecated(note = "Renamed to `uninit`", since = "0.15.0")]
     pub fn maybe_uninit<Sh>(shape: Sh) -> Self
     where
         Sh: ShapeBuilder<Dim = D>,

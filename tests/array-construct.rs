@@ -205,18 +205,18 @@ fn maybe_uninit_1() {
 
     unsafe {
         // Array
-        type Mat<D> = Array<MaybeUninit<f32>, D>;
+        type Mat<D> = Array<f32, D>;
 
-        let mut a = Mat::maybe_uninit((10, 10));
+        let mut a = Mat::uninit((10, 10));
         a.mapv_inplace(|_| MaybeUninit::new(1.));
 
         let a_init = a.assume_init();
         assert_eq!(a_init, Array2::from_elem(a_init.dim(), 1.));
 
         // ArcArray
-        type ArcMat<D> = ArcArray<MaybeUninit<f32>, D>;
+        type ArcMat<D> = ArcArray<f32, D>;
 
-        let mut a = ArcMat::maybe_uninit((10, 10));
+        let mut a = ArcMat::uninit((10, 10));
         a.mapv_inplace(|_| MaybeUninit::new(1.));
         let a2 = a.clone();
 
@@ -228,7 +228,7 @@ fn maybe_uninit_1() {
         assert_eq!(av_init, Array2::from_elem(a_init.dim(), 1.));
 
         // RawArrayViewMut
-        let mut a = Mat::maybe_uninit((10, 10));
+        let mut a = Mat::uninit((10, 10));
         let v = a.raw_view_mut();
         Zip::from(v)
             .for_each(|ptr| *(*ptr).as_mut_ptr() = 1.);

@@ -9,7 +9,9 @@
 //! The data (inner representation) traits for ndarray
 
 use rawpointer::PointerExt;
+
 use std::mem::{self, size_of};
+use std::mem::MaybeUninit;
 use std::ptr::NonNull;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -401,6 +403,10 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {}
 ///
 /// ***Internal trait, see `Data`.***
 pub unsafe trait DataOwned: Data {
+    /// Corresponding owned data with MaybeUninit elements
+    type MaybeUninit: DataOwned<Elem = MaybeUninit<Self::Elem>>
+        + RawDataSubst<Self::Elem, Output=Self>;
+
     #[doc(hidden)]
     fn new(elements: Vec<Self::Elem>) -> Self;
 
@@ -421,6 +427,8 @@ unsafe impl<A> DataShared for OwnedArcRepr<A> {}
 unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
 
 unsafe impl<A> DataOwned for OwnedRepr<A> {
+    type MaybeUninit = OwnedRepr<MaybeUninit<A>>;
+
     fn new(elements: Vec<A>) -> Self {
         OwnedRepr::from(elements)
     }
@@ -430,6 +438,8 @@ unsafe impl<A> DataOwned for OwnedRepr<A> {
 }
 
 unsafe impl<A> DataOwned for OwnedArcRepr<A> {
+    type MaybeUninit = OwnedArcRepr<MaybeUninit<A>>;
+
     fn new(elements: Vec<A>) -> Self {
         OwnedArcRepr(Arc::new(OwnedRepr::from(elements)))
     }

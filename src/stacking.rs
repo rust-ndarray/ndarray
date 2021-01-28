@@ -91,7 +91,7 @@ where
 
     // we can safely use uninitialized values here because we will
     // overwrite every one of them.
-    let mut res = Array::maybe_uninit(res_dim);
+    let mut res = Array::uninit(res_dim);
 
     {
         let mut assign_view = res.view_mut();
@@ -159,7 +159,7 @@ where
 
     // we can safely use uninitialized values here because we will
     // overwrite every one of them.
-    let mut res = Array::maybe_uninit(res_dim);
+    let mut res = Array::uninit(res_dim);
 
     res.axis_iter_mut(axis)
         .zip(arrays.iter())

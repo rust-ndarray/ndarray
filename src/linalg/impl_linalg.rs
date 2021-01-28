@@ -326,7 +326,7 @@ where
 
         // Avoid initializing the memory in vec -- set it during iteration
         unsafe {
-            let mut c = Array1::maybe_uninit(m);
+            let mut c = Array1::uninit(m);
             general_mat_vec_mul_impl(A::one(), self, rhs, A::zero(), c.raw_view_mut().cast::<A>());
             c.assume_init()
         }
