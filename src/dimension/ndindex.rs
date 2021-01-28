@@ -2,9 +2,7 @@ use std::fmt::Debug;
 
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::zip;
-use crate::{
-    Dim, Dimension, IntoDimension, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl,
-};
+use crate::{Dim, Dimension, IntoDimension, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl, Ixs};
 
 /// Tuple or fixed size arrays that can be used to index an array.
 ///
@@ -199,6 +197,7 @@ ndindex_with_array! {
 
 impl<'a> IntoDimension for &'a [Ix] {
     type Dim = IxDyn;
+    type Strides = &'a [Ixs];
     fn into_dimension(self) -> Self::Dim {
         Dim(IxDynImpl::from(self))
     }
