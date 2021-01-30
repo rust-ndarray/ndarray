@@ -480,41 +480,6 @@ where
 
     /// Create an array with uninitalized elements, shape `shape`.
     ///
-    /// Prefer to use [`uninit()`](ArrayBase::uninit) if possible, because it is
-    /// easier to use correctly.
-    ///
-    /// **Panics** if the number of elements in `shape` would overflow isize.
-    ///
-    /// ### Safety
-    ///
-    /// Accessing uninitalized values is undefined behaviour. You must overwrite *all* the elements
-    /// in the array after it is created; for example using
-    /// [`raw_view_mut`](ArrayBase::raw_view_mut) or other low-level element access.
-    ///
-    /// The contents of the array is indeterminate before initialization and it
-    /// is an error to perform operations that use the previous values. For
-    /// example it would not be legal to use `a += 1.;` on such an array.
-    ///
-    /// This constructor is limited to elements where `A: Copy` (no destructors)
-    /// to avoid users shooting themselves too hard in the foot.
-    ///
-    /// (Also note that the constructors `from_shape_vec` and
-    /// `from_shape_vec_unchecked` allow the user yet more control, in the sense
-    /// that Arrays can be created from arbitrary vectors.)
-    pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
-    where
-        A: Copy,
-        Sh: ShapeBuilder<Dim = D>,
-    {
-        let shape = shape.into_shape();
-        let size = size_of_shape_checked_unwrap!(&shape.dim);
-        let mut v = Vec::with_capacity(size);
-        v.set_len(size);
-        Self::from_shape_vec_unchecked(shape, v)
-    }
-
-    /// Create an array with uninitalized elements, shape `shape`.
-    ///
     /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
     /// an easier way to handle uninit values correctly.
     ///
@@ -619,6 +584,44 @@ where
         }
         array
     }
+
+    #[deprecated(note = "This method is hard to use correctly. Use `uninit` instead.",
+                 since = "0.15.0")]
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// Prefer to use [`uninit()`](ArrayBase::uninit) if possible, because it is
+    /// easier to use correctly.
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow isize.
+    ///
+    /// ### Safety
+    ///
+    /// Accessing uninitalized values is undefined behaviour. You must overwrite *all* the elements
+    /// in the array after it is created; for example using
+    /// [`raw_view_mut`](ArrayBase::raw_view_mut) or other low-level element access.
+    ///
+    /// The contents of the array is indeterminate before initialization and it
+    /// is an error to perform operations that use the previous values. For
+    /// example it would not be legal to use `a += 1.;` on such an array.
+    ///
+    /// This constructor is limited to elements where `A: Copy` (no destructors)
+    /// to avoid users shooting themselves too hard in the foot.
+    ///
+    /// (Also note that the constructors `from_shape_vec` and
+    /// `from_shape_vec_unchecked` allow the user yet more control, in the sense
+    /// that Arrays can be created from arbitrary vectors.)
+    pub unsafe fn uninitialized<Sh>(shape: Sh) -> Self
+    where
+        A: Copy,
+        Sh: ShapeBuilder<Dim = D>,
+    {
+        let shape = shape.into_shape();
+        let size = size_of_shape_checked_unwrap!(&shape.dim);
+        let mut v = Vec::with_capacity(size);
+        v.set_len(size);
+        Self::from_shape_vec_unchecked(shape, v)
+    }
+
 }
 
 impl<S, A, D> ArrayBase<S, D>

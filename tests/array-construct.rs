@@ -52,6 +52,7 @@ fn test_arcarray_thread_safe() {
 
 #[test]
 #[cfg(feature = "std")]
+#[allow(deprecated)] // uninitialized
 fn test_uninit() {
     unsafe {
         let mut a = Array::<f32, _>::uninitialized((3, 4).f());
@@ -192,10 +193,17 @@ fn deny_wraparound_from_shape_fn() {
 
 #[should_panic]
 #[test]
-fn deny_wraparound_uninit() {
+#[allow(deprecated)] // uninitialized
+fn deny_wraparound_uninitialized() {
     unsafe {
         let _five_large = Array::<f32, _>::uninitialized((3, 7, 29, 36760123, 823996703));
     }
+}
+
+#[should_panic]
+#[test]
+fn deny_wraparound_uninit() {
+    let _five_large = Array::<f32, _>::uninit((3, 7, 29, 36760123, 823996703));
 }
 
 
