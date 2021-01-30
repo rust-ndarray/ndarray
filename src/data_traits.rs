@@ -402,6 +402,13 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {}
 /// A representation that is a unique or shared owner of its data.
 ///
 /// ***Internal trait, see `Data`.***
+// The owned storage represents the ownership and allocation of the array's elements.
+// The storage may be unique or shared ownership style; it must be an aliasable owner
+// (permit aliasing pointers, such as our separate array head pointer).
+//
+// The array storage must be initially mutable - copy on write arrays may require copying for
+// unsharing storage before mutating it. The initially allocated storage must be mutable so
+// that it can be mutated directly - through .raw_view_mut_unchecked() - for initialization.
 pub unsafe trait DataOwned: Data {
     /// Corresponding owned data with MaybeUninit elements
     type MaybeUninit: DataOwned<Elem = MaybeUninit<Self::Elem>>

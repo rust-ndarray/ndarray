@@ -1383,6 +1383,17 @@ where
         unsafe { RawArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
     }
 
+    /// Return a raw mutable view of the array.
+    ///
+    /// Safety: The caller must ensure that the owned array is unshared when this is called
+    #[inline]
+    pub(crate) unsafe fn raw_view_mut_unchecked(&mut self) -> RawArrayViewMut<A, D>
+    where
+        S: DataOwned,
+    {
+        RawArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone())
+    }
+
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     ///

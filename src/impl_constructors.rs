@@ -586,6 +586,39 @@ where
             ArrayBase::from_shape_vec_unchecked(shape, v)
         }
     }
+
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
+    /// an easier way to handle uninit values correctly.
+    ///
+    /// The `builder` closure gets unshared access to the array through a raw view
+    /// and can use it to modify the array before it is returned. This allows initializing
+    /// the array for any owned array type (avoiding clone requirements for copy-on-write,
+    /// because the array is unshared when initially created).
+    ///
+    /// Only *when* the array is completely initialized with valid elements, can it be
+    /// converted to an array of `A` elements using [`.assume_init()`].
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow isize.
+    ///
+    /// ### Safety
+    ///
+    /// The whole of the array must be initialized before it is converted
+    /// using [`.assume_init()`] or otherwise traversed.
+    ///
+    pub(crate) fn build_uninit<Sh, F>(shape: Sh, builder: F) -> ArrayBase<S::MaybeUninit, D>
+    where
+        Sh: ShapeBuilder<Dim = D>,
+        F: FnOnce(RawArrayViewMut<MaybeUninit<A>, D>),
+    {
+        let mut array = Self::uninit(shape);
+        // Safe because: the array is unshared here
+        unsafe {
+            builder(array.raw_view_mut_unchecked());
+        }
+        array
+    }
 }
 
 impl<S, A, D> ArrayBase<S, D>
