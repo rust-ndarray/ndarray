@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ptr as std_ptr;
 use alloc::slice;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -630,11 +629,18 @@ where
         S: DataMut,
         I: NdIndex<D>,
     {
-        let ptr1: *mut _ = &mut self[index1];
-        let ptr2: *mut _ = &mut self[index2];
-        unsafe {
-            std_ptr::swap(ptr1, ptr2);
+        let ptr = self.as_mut_ptr();
+        let offset1 = index1.index_checked(&self.dim, &self.strides);
+        let offset2 = index2.index_checked(&self.dim, &self.strides);
+        if let Some(offset1) = offset1 {
+            if let Some(offset2) = offset2 {
+                unsafe {
+                    std::ptr::swap(ptr.offset(offset1), ptr.offset(offset2));
+                }
+                return;
+            }
         }
+        panic!("swap: index out of bounds for indices {:?} {:?}", index1, index2);
     }
 
     /// Swap elements *unchecked* at indices `index1` and `index2`.
@@ -661,7 +667,7 @@ where
         arraytraits::debug_bounds_check(self, &index2);
         let off1 = index1.index_unchecked(&self.strides);
         let off2 = index2.index_unchecked(&self.strides);
-        std_ptr::swap(
+        std::ptr::swap(
             self.ptr.as_ptr().offset(off1),
             self.ptr.as_ptr().offset(off2),
         );
