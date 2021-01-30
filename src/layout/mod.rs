@@ -78,6 +78,30 @@ mod tests {
     use crate::NdProducer;
 
     type M = Array2<f32>;
+    type M1 = Array1<f32>;
+    type M0 = Array0<f32>;
+
+    macro_rules! assert_layouts {
+        ($mat:expr, $($layout:expr),*) => {{
+            let layout = $mat.view().layout();
+            $(
+            assert!(layout.is($layout), "Assertion failed: array {:?} is not layout {}",
+                $mat,
+                stringify!($layout));
+            )*
+        }}
+    }
+
+    macro_rules! assert_not_layouts {
+        ($mat:expr, $($layout:expr),*) => {{
+            let layout = $mat.view().layout();
+            $(
+            assert!(!layout.is($layout), "Assertion failed: array {:?} show not have layout {}",
+                $mat,
+                stringify!($layout));
+            )*
+        }}
+    }
 
     #[test]
     fn contig_layouts() {
@@ -89,6 +113,34 @@ mod tests {
         assert!(!ac.is(FORDER) && !ac.is(FPREFER));
         assert!(!af.is(CORDER) && !af.is(CPREFER));
         assert!(af.is(FORDER) && af.is(FPREFER));
+    }
+
+    #[test]
+    fn contig_cf_layouts() {
+        let a = M::zeros((5, 1));
+        let b = M::zeros((1, 5).f());
+        assert_layouts!(a, CORDER, CPREFER, FORDER, FPREFER);
+        assert_layouts!(b, CORDER, CPREFER, FORDER, FPREFER);
+
+        let a = M1::zeros(5);
+        let b = M1::zeros(5.f());
+        assert_layouts!(a, CORDER, CPREFER, FORDER, FPREFER);
+        assert_layouts!(b, CORDER, CPREFER, FORDER, FPREFER);
+
+        let a = M0::zeros(());
+        assert_layouts!(a, CORDER, CPREFER, FORDER, FPREFER);
+
+        let a = M::zeros((5, 5));
+        let b = M::zeros((5, 5).f());
+        let arow = a.slice(s![..1, ..]);
+        let bcol = b.slice(s![.., ..1]);
+        assert_layouts!(arow, CORDER, CPREFER, FORDER, FPREFER);
+        assert_layouts!(bcol, CORDER, CPREFER, FORDER, FPREFER);
+
+        let acol = a.slice(s![.., ..1]);
+        let brow = b.slice(s![..1, ..]);
+        assert_not_layouts!(acol, CORDER, CPREFER, FORDER, FPREFER);
+        assert_not_layouts!(brow, CORDER, CPREFER, FORDER, FPREFER);
     }
 
     #[test]

@@ -107,19 +107,25 @@ fn test_zip_small_collect() {
 
     for m in 0..32 {
         for n in 0..16 {
-            let dim = (m, n);
-            let b = Array::from_shape_fn(dim, |(i, j)| 1. / (i + 2 * j + 1) as f32);
-            let c = Array::from_shape_fn(dim, |(i, j)| f32::ln((1 + i + j) as f32));
+            for &is_f in &[false, true] {
+                let dim = (m, n).set_f(is_f);
+                let b = Array::from_shape_fn(dim, |(i, j)| 1. / (i + 2 * j + 1) as f32);
+                let c = Array::from_shape_fn(dim, |(i, j)| f32::ln((1 + i + j) as f32));
 
-            {
-                let a = Zip::from(&b).and(&c).par_map_collect(|x, y| x + y);
+                {
+                    let a = Zip::from(&b).and(&c).par_map_collect(|x, y| x + y);
 
-                assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
-                assert_eq!(a.strides(), b.strides());
+                    assert_abs_diff_eq!(a, &b + &c, epsilon = 1e-6);
+                    if m > 1 && n > 1 {
+                        assert_eq!(a.strides(), b.strides(),
+                            "Failure for {}x{} c/f: {:?}", m, n, is_f);
+                    }
+                }
             }
         }
     }
 }
+
 
 #[test]
 #[cfg(feature = "approx")]
