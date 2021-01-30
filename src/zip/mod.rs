@@ -9,6 +9,7 @@
 #[macro_use]
 mod zipmacro;
 
+#[cfg(feature = "rayon")]
 use std::mem::MaybeUninit;
 use alloc::vec::Vec;
 
@@ -811,6 +812,7 @@ where
         FoldWhile::Continue(acc)
     }
 
+    #[cfg(feature = "rayon")]
     pub(crate) fn uninitalized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D>
     {
         let is_f = self.prefer_f();
@@ -1079,17 +1081,27 @@ macro_rules! map_impl {
             ///
             /// If all inputs are c- or f-order respectively, that is preserved in the output.
             pub fn map_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D> {
-                // Make uninit result
-                let mut output = self.uninitalized_for_current_layout::<R>();
+                self.map_collect_owned(f)
+            }
 
-                // Use partial to counts the number of filled elements, and can drop the right
-                // number of elements on unwinding (if it happens during apply/collect).
+            pub(crate) fn map_collect_owned<S, R>(self, f: impl FnMut($($p::Item,)* ) -> R)
+                -> ArrayBase<S, D>
+                where S: DataOwned<Elem = R>
+            {
+                // safe because: all elements are written before the array is completed
+
+                let shape = self.dimension.clone().set_f(self.prefer_f());
+                let output = <ArrayBase<S, D>>::build_uninit(shape, |output| {
+                    // Use partial to count the number of filled elements, and can drop the right
+                    // number of elements on unwinding (if it happens during apply/collect).
+                    unsafe {
+                        let output_view = output.cast::<R>();
+                        self.and(output_view)
+                            .collect_with_partial(f)
+                            .release_ownership();
+                    }
+                });
                 unsafe {
-                    let output_view = output.raw_view_mut().cast::<R>();
-                    self.and(output_view)
-                        .collect_with_partial(f)
-                        .release_ownership();
-
                     output.assume_init()
                 }
             }
