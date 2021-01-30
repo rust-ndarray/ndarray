@@ -102,7 +102,7 @@ where
         assert_eq!(axis_len, perm.indices.len());
         debug_assert!(perm.correct());
 
-        let mut result = Array::maybe_uninit(self.dim());
+        let mut result = Array::uninit(self.dim());
 
         unsafe {
             // logically move ownership of all elements from self into result

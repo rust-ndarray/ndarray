@@ -480,7 +480,116 @@ where
 
     /// Create an array with uninitalized elements, shape `shape`.
     ///
-    /// Prefer to use [`maybe_uninit()`](ArrayBase::maybe_uninit) if possible, because it is
+    /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
+    /// an easier way to handle uninit values correctly.
+    ///
+    /// Only *when* the array is completely initialized with valid elements, can it be
+    /// converted to an array of `A` elements using [`.assume_init()`].
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow isize.
+    ///
+    /// ### Safety
+    ///
+    /// The whole of the array must be initialized before it is converted
+    /// using [`.assume_init()`] or otherwise traversed.
+    ///
+    /// ### Examples
+    ///
+    /// It is possible to assign individual values through `*elt = MaybeUninit::new(value)`
+    /// and so on.
+    ///
+    /// [`.assume_init()`]: ArrayBase::assume_init
+    ///
+    /// ```
+    /// use ndarray::{s, Array2};
+    /// use ndarray::Zip;
+    /// use ndarray::Axis;
+    ///
+    /// // Example Task: Let's create a column shifted copy of the input
+    ///
+    /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
+    ///     // create an uninitialized array
+    ///     let mut b = Array2::uninit(a.dim());
+    ///
+    ///     // two first columns in b are two last in a
+    ///     // rest of columns in b are the initial columns in a
+    ///
+    ///     assign_to(a.slice(s![.., -2..]), b.slice_mut(s![.., ..2]));
+    ///     assign_to(a.slice(s![.., 2..]), b.slice_mut(s![.., ..-2]));
+    ///
+    ///     // Now we can promise that `b` is safe to use with all operations
+    ///     unsafe {
+    ///         b.assume_init()
+    ///     }
+    /// }
+    ///
+    /// use ndarray::{IntoNdProducer, AssignElem};
+    ///
+    /// // This function clones elements from the first input to the second;
+    /// // the two producers must have the same shape
+    /// fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
+    ///     where P1: IntoNdProducer<Item = &'a A>,
+    ///           P2: IntoNdProducer<Dim = P1::Dim>,
+    ///           P2::Item: AssignElem<A>,
+    ///           A: Clone + 'a
+    /// {
+    ///     Zip::from(from)
+    ///         .apply_assign_into(to, A::clone);
+    /// }
+    ///
+    /// # shift_by_two(&Array2::zeros((8, 8)));
+    /// ```
+    pub fn uninit<Sh>(shape: Sh) -> ArrayBase<S::MaybeUninit, D>
+    where
+        Sh: ShapeBuilder<Dim = D>,
+    {
+        unsafe {
+            let shape = shape.into_shape();
+            let size = size_of_shape_checked_unwrap!(&shape.dim);
+            let mut v = Vec::with_capacity(size);
+            v.set_len(size);
+            ArrayBase::from_shape_vec_unchecked(shape, v)
+        }
+    }
+
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
+    /// an easier way to handle uninit values correctly.
+    ///
+    /// The `builder` closure gets unshared access to the array through a raw view
+    /// and can use it to modify the array before it is returned. This allows initializing
+    /// the array for any owned array type (avoiding clone requirements for copy-on-write,
+    /// because the array is unshared when initially created).
+    ///
+    /// Only *when* the array is completely initialized with valid elements, can it be
+    /// converted to an array of `A` elements using [`.assume_init()`].
+    ///
+    /// **Panics** if the number of elements in `shape` would overflow isize.
+    ///
+    /// ### Safety
+    ///
+    /// The whole of the array must be initialized before it is converted
+    /// using [`.assume_init()`] or otherwise traversed.
+    ///
+    pub(crate) fn build_uninit<Sh, F>(shape: Sh, builder: F) -> ArrayBase<S::MaybeUninit, D>
+    where
+        Sh: ShapeBuilder<Dim = D>,
+        F: FnOnce(RawArrayViewMut<MaybeUninit<A>, D>),
+    {
+        let mut array = Self::uninit(shape);
+        // Safe because: the array is unshared here
+        unsafe {
+            builder(array.raw_view_mut_unchecked());
+        }
+        array
+    }
+
+    #[deprecated(note = "This method is hard to use correctly. Use `uninit` instead.",
+                 since = "0.15.0")]
+    /// Create an array with uninitalized elements, shape `shape`.
+    ///
+    /// Prefer to use [`uninit()`](ArrayBase::uninit) if possible, because it is
     /// easier to use correctly.
     ///
     /// **Panics** if the number of elements in `shape` would overflow isize.
@@ -512,6 +621,7 @@ where
         v.set_len(size);
         Self::from_shape_vec_unchecked(shape, v)
     }
+
 }
 
 impl<S, A, D> ArrayBase<S, D>
@@ -521,65 +631,8 @@ where
 {
     /// Create an array with uninitalized elements, shape `shape`.
     ///
-    /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
-    /// an easier way to handle uninit values correctly.
-    ///
-    /// Only *when* the array is completely initialized with valid elements, can it be
-    /// converted to an array of `A` elements using [`.assume_init()`].
-    ///
-    /// **Panics** if the number of elements in `shape` would overflow isize.
-    ///
-    /// ### Safety
-    ///
-    /// The whole of the array must be initialized before it is converted
-    /// using [`.assume_init()`] or otherwise traversed.
-    ///
-    /// ### Examples
-    ///
-    /// It is possible to assign individual values through `*elt = MaybeUninit::new(value)`
-    /// and so on.
-    ///
-    /// [`.assume_init()`]: ArrayBase::assume_init
-    ///
-    /// ```
-    /// use ndarray::{s, Array2};
-    /// use ndarray::Zip;
-    /// use ndarray::Axis;
-    ///
-    /// // Example Task: Let's create a column shifted copy of the input
-    ///
-    /// fn shift_by_two(a: &Array2<f32>) -> Array2<f32> {
-    ///     // create an uninitialized array
-    ///     let mut b = Array2::maybe_uninit(a.dim());
-    ///
-    ///     // two first columns in b are two last in a
-    ///     // rest of columns in b are the initial columns in a
-    ///
-    ///     assign_to(a.slice(s![.., -2..]), b.slice_mut(s![.., ..2]));
-    ///     assign_to(a.slice(s![.., 2..]), b.slice_mut(s![.., ..-2]));
-    ///
-    ///     // Now we can promise that `b` is safe to use with all operations
-    ///     unsafe {
-    ///         b.assume_init()
-    ///     }
-    /// }
-    ///
-    /// use ndarray::{IntoNdProducer, AssignElem};
-    ///
-    /// // This function clones elements from the first input to the second;
-    /// // the two producers must have the same shape
-    /// fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
-    ///     where P1: IntoNdProducer<Item = &'a A>,
-    ///           P2: IntoNdProducer<Dim = P1::Dim>,
-    ///           P2::Item: AssignElem<A>,
-    ///           A: Clone + 'a
-    /// {
-    ///     Zip::from(from)
-    ///         .apply_assign_into(to, A::clone);
-    /// }
-    ///
-    /// # shift_by_two(&Array2::zeros((8, 8)));
-    /// ```
+    /// This method has been renamed to `uninit`
+    #[deprecated(note = "Renamed to `uninit`", since = "0.15.0")]
     pub fn maybe_uninit<Sh>(shape: Sh) -> Self
     where
         Sh: ShapeBuilder<Dim = D>,

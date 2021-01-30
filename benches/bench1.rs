@@ -271,7 +271,7 @@ fn add_2d_alloc_zip_uninit(bench: &mut test::Bencher) {
     let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| unsafe {
-        let mut c = Array::<MaybeUninit<i32>, _>::maybe_uninit(a.dim());
+        let mut c = Array::<i32, _>::uninit(a.dim());
         azip!((&a in &a, &b in &b, c in c.raw_view_mut().cast::<i32>())
             c.write(a + b)
         );
