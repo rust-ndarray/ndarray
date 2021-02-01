@@ -179,7 +179,7 @@ pub use crate::aliases::*;
 
 pub use crate::data_traits::{
     Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
-    RawDataSubst, MaybeUninitSubst,
+    RawDataSubst,
 };
 
 mod free_functions;
