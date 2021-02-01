@@ -255,7 +255,7 @@ fn add_2d_zip(bench: &mut test::Bencher) {
     let mut a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
-        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+        Zip::from(&mut a).and(&b).for_each(|a, &b| *a += b);
     });
 }
 
@@ -284,7 +284,7 @@ fn add_2d_alloc_zip_collect(bench: &mut test::Bencher) {
     let a = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
-        Zip::from(&a).and(&b).apply_collect(|&x, &y| x + y)
+        Zip::from(&a).and(&b).map_collect(|&x, &y| x + y)
     });
 }
 
@@ -300,7 +300,7 @@ fn vec_string_collect(bench: &mut test::Bencher) {
 fn array_string_collect(bench: &mut test::Bencher) {
     let v = Array::from(vec![""; 10240]);
     bench.iter(|| {
-        Zip::from(&v).apply_collect(|s| s.to_owned())
+        Zip::from(&v).map_collect(|s| s.to_owned())
     });
 }
 
@@ -316,7 +316,7 @@ fn vec_f64_collect(bench: &mut test::Bencher) {
 fn array_f64_collect(bench: &mut test::Bencher) {
     let v = Array::from(vec![1.; 10240]);
     bench.iter(|| {
-        Zip::from(&v).apply_collect(|s| s + 1.)
+        Zip::from(&v).map_collect(|s| s + 1.)
     });
 }
 
@@ -350,7 +350,7 @@ fn add_2d_zip_cutout(bench: &mut test::Bencher) {
     let mut acut = a.slice_mut(s![1..-1, 1..-1]);
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
-        Zip::from(&mut acut).and(&b).apply(|a, &b| *a += b);
+        Zip::from(&mut acut).and(&b).for_each(|a, &b| *a += b);
     });
 }
 
@@ -363,7 +363,7 @@ fn add_2d_cutouts_by_4(bench: &mut test::Bencher) {
     bench.iter(|| {
         Zip::from(a.exact_chunks_mut(chunksz))
             .and(b.exact_chunks(chunksz))
-            .apply(|mut a, b| a += &b);
+            .for_each(|mut a, b| a += &b);
     });
 }
 
@@ -376,7 +376,7 @@ fn add_2d_cutouts_by_16(bench: &mut test::Bencher) {
     bench.iter(|| {
         Zip::from(a.exact_chunks_mut(chunksz))
             .and(b.exact_chunks(chunksz))
-            .apply(|mut a, b| a += &b);
+            .for_each(|mut a, b| a += &b);
     });
 }
 
@@ -389,7 +389,7 @@ fn add_2d_cutouts_by_32(bench: &mut test::Bencher) {
     bench.iter(|| {
         Zip::from(a.exact_chunks_mut(chunksz))
             .and(b.exact_chunks(chunksz))
-            .apply(|mut a, b| a += &b);
+            .for_each(|mut a, b| a += &b);
     });
 }
 
@@ -511,7 +511,7 @@ fn add_2d_zip_strided(bench: &mut test::Bencher) {
     let mut a = a.slice_mut(s![.., ..;2]);
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
-        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+        Zip::from(&mut a).and(&b).for_each(|a, &b| *a += b);
     });
 }
 
@@ -531,7 +531,7 @@ fn add_2d_zip_one_transposed(bench: &mut test::Bencher) {
     a.swap_axes(0, 1);
     let b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     bench.iter(|| {
-        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+        Zip::from(&mut a).and(&b).for_each(|a, &b| *a += b);
     });
 }
 
@@ -553,7 +553,7 @@ fn add_2d_zip_both_transposed(bench: &mut test::Bencher) {
     let mut b = Array::<i32, _>::zeros((ADD2DSZ, ADD2DSZ));
     b.swap_axes(0, 1);
     bench.iter(|| {
-        Zip::from(&mut a).and(&b).apply(|a, &b| *a += b);
+        Zip::from(&mut a).and(&b).for_each(|a, &b| *a += b);
     });
 }
 

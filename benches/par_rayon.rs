@@ -152,7 +152,7 @@ fn vec_string_collect(bench: &mut test::Bencher) {
 fn array_string_collect(bench: &mut test::Bencher) {
     let v = Array::from_elem((COLL_STRING_N, COLL_STRING_N), "");
     bench.iter(|| {
-        Zip::from(&v).par_apply_collect(|s| s.to_owned())
+        Zip::from(&v).par_map_collect(|s| s.to_owned())
     });
 }
 
@@ -168,7 +168,7 @@ fn vec_f64_collect(bench: &mut test::Bencher) {
 fn array_f64_collect(bench: &mut test::Bencher) {
     let v = Array::from_elem((COLL_F64_N, COLL_F64_N), 1.);
     bench.iter(|| {
-        Zip::from(&v).par_apply_collect(|s| s + 1.)
+        Zip::from(&v).par_map_collect(|s| s + 1.)
     });
 }
 

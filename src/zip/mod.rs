@@ -571,9 +571,9 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D> {
 /// assert_eq!(totals, a.sum_axis(Axis(1)));
 ///
 ///
-/// // Example 3: Recreate Example 2 using apply_collect to make a new array
+/// // Example 3: Recreate Example 2 using map_collect to make a new array
 ///
-/// let mut totals2 = Zip::from(a.rows()).apply_collect(|row| row.sum());
+/// let mut totals2 = Zip::from(a.rows()).map_collect(|row| row.sum());
 ///
 /// // Check the result against the previous example.
 /// assert_eq!(totals, totals2);
@@ -722,7 +722,7 @@ where
         }
     }
 
-    /// The innermost loop of the Zip apply methods
+    /// The innermost loop of the Zip for_each methods
     ///
     /// Run the fold while operation on a stretch of elements with constant strides
     ///
@@ -1165,7 +1165,7 @@ macro_rules! map_impl {
                       $($p: NdProducer<Dim=D> ,)*
                       PLast: NdProducer<Dim = D, Item = *mut R, Ptr = *mut R, Stride = isize>,
             {
-                /// The inner workings of apply_collect and par_apply_collect
+                /// The inner workings of map_collect and par_map_collect
                 ///
                 /// Apply the function and collect the results into the output (last producer)
                 /// which should be a raw array view; a Partial that owns the written
