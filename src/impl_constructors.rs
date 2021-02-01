@@ -534,7 +534,7 @@ where
     ///           A: Clone + 'a
     /// {
     ///     Zip::from(from)
-    ///         .apply_assign_into(to, A::clone);
+    ///         .map_assign_into(to, A::clone);
     /// }
     ///
     /// # shift_by_two(&Array2::zeros((8, 8)));

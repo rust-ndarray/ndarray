@@ -447,7 +447,7 @@ pub type Ixs = isize;
 ///
 /// Zip::from(a.rows())
 ///     .and(&mut b)
-///     .apply(|a_row, b_elt| {
+///     .for_each(|a_row, b_elt| {
 ///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
 ///     });
 /// ```

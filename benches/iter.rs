@@ -249,7 +249,7 @@ fn indexed_zip_1d_ix1(bench: &mut Bencher) {
     }
 
     bench.iter(|| {
-        Zip::indexed(&a).apply(|i, &_elt| {
+        Zip::indexed(&a).for_each(|i, &_elt| {
             black_box(i);
             //assert!(a[i] == elt);
         });
@@ -278,7 +278,7 @@ fn indexed_zip_2d_ix2(bench: &mut Bencher) {
     }
 
     bench.iter(|| {
-        Zip::indexed(&a).apply(|i, &_elt| {
+        Zip::indexed(&a).for_each(|i, &_elt| {
             black_box(i);
             //assert!(a[i] == elt);
         });
@@ -308,7 +308,7 @@ fn indexed_zip_3d_ix3(bench: &mut Bencher) {
     }
 
     bench.iter(|| {
-        Zip::indexed(&a).apply(|i, &_elt| {
+        Zip::indexed(&a).for_each(|i, &_elt| {
             black_box(i);
             //assert!(a[i] == elt);
         });
