@@ -14,6 +14,7 @@ use std::mem::MaybeUninit;
 use ndarray::ShapeBuilder;
 use ndarray::{arr0, arr1, arr2, azip, s};
 use ndarray::{Array, Array1, Array2, Axis, Ix, Zip};
+use ndarray::{Ix1, Ix2, Ix3, Ix5, IxDyn};
 
 use test::black_box;
 
@@ -940,4 +941,60 @@ fn sum_axis0(bench: &mut test::Bencher) {
 fn sum_axis1(bench: &mut test::Bencher) {
     let a = range_mat(MEAN_SUM_N, MEAN_SUM_N);
     bench.iter(|| a.sum_axis(Axis(1)));
+}
+
+#[bench]
+fn into_dimensionality_ix1_ok(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(Ix1(10));
+    let a = a.view();
+    bench.iter(|| a.into_dimensionality::<Ix1>());
+}
+
+#[bench]
+fn into_dimensionality_ix3_ok(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(Ix3(10, 10, 10));
+    let a = a.view();
+    bench.iter(|| a.into_dimensionality::<Ix3>());
+}
+
+#[bench]
+fn into_dimensionality_ix3_err(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(Ix3(10, 10, 10));
+    let a = a.view();
+    bench.iter(|| a.into_dimensionality::<Ix2>());
+}
+
+#[bench]
+fn into_dimensionality_dyn_to_ix3(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(IxDyn(&[10, 10, 10]));
+    let a = a.view();
+    bench.iter(|| a.clone().into_dimensionality::<Ix3>());
+}
+
+#[bench]
+fn into_dimensionality_dyn_to_dyn(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(IxDyn(&[10, 10, 10]));
+    let a = a.view();
+    bench.iter(|| a.clone().into_dimensionality::<IxDyn>());
+}
+
+#[bench]
+fn into_dyn_ix3(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(Ix3(10, 10, 10));
+    let a = a.view();
+    bench.iter(|| a.into_dyn());
+}
+
+#[bench]
+fn into_dyn_ix5(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(Ix5(2, 2, 2, 2, 2));
+    let a = a.view();
+    bench.iter(|| a.into_dyn());
+}
+
+#[bench]
+fn into_dyn_dyn(bench: &mut test::Bencher) {
+    let a = Array::<f32, _>::zeros(IxDyn(&[10, 10, 10]));
+    let a = a.view();
+    bench.iter(|| a.clone().into_dyn());
 }
