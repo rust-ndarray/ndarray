@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::mem::{size_of, ManuallyDrop};
 use alloc::slice;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -1583,8 +1584,11 @@ where
         }
     }
 
-    /// Convert an array or array view to another with the same type, but
-    /// different dimensionality type. Errors if the dimensions don't agree.
+    /// Convert an array or array view to another with the same type, but different dimensionality
+    /// type. Errors if the dimensions don't agree (the number of axes must match).
+    ///
+    /// Note that conversion to a dynamic dimensional array will never fail (and is equivalent to
+    /// the `into_dyn` method).
     ///
     /// ```
     /// use ndarray::{ArrayD, Ix2, IxDyn};
@@ -1600,14 +1604,28 @@ where
     where
         D2: Dimension,
     {
-        if let Some(dim) = D2::from_dimension(&self.dim) {
-            if let Some(strides) = D2::from_dimension(&self.strides) {
+        if D::NDIM == D2::NDIM {
+            // safe because D == D2
+            unsafe {
+                let dim = unlimited_transmute::<D, D2>(self.dim);
+                let strides = unlimited_transmute::<D, D2>(self.strides);
                 return Ok(ArrayBase {
                     data: self.data,
                     ptr: self.ptr,
                     dim,
                     strides,
                 });
+            }
+        } else if D::NDIM == None || D2::NDIM == None { // one is dynamic dim
+            if let Some(dim) = D2::from_dimension(&self.dim) {
+                if let Some(strides) = D2::from_dimension(&self.strides) {
+                    return Ok(ArrayBase {
+                        data: self.data,
+                        ptr: self.ptr,
+                        dim,
+                        strides,
+                    });
+                }
             }
         }
         Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
@@ -2374,4 +2392,19 @@ where
             f(&*prev, &mut *curr)
         });
     }
+}
+
+
+/// Transmute from A to B.
+///
+/// Like transmute, but does not have the compile-time size check which blocks
+/// using regular transmute in some cases.
+///
+/// **Panics** if the size of A and B are different.
+#[inline]
+unsafe fn unlimited_transmute<A, B>(data: A) -> B {
+    // safe when sizes are equal and caller guarantees that representations are equal
+    assert_eq!(size_of::<A>(), size_of::<B>());
+    let old_data = ManuallyDrop::new(data);
+    (&*old_data as *const A as *const B).read()
 }
