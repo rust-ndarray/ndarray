@@ -217,7 +217,7 @@ fn test_slice_dyninput_array_fixed() {
 #[test]
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
-    let info = &SliceInfo::<_, IxDyn>::new([
+    let info = &SliceInfo::<_, IxDyn, IxDyn>::new([
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -232,7 +232,7 @@ fn test_slice_array_dyn() {
 #[test]
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, IxDyn>::new([
+    let info = &SliceInfo::<_, IxDyn, IxDyn>::new([
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -247,7 +247,7 @@ fn test_slice_dyninput_array_dyn() {
 #[test]
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, Ix2>::new(vec![
+    let info = &SliceInfo::<_, Ix2, Ix3>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -262,7 +262,7 @@ fn test_slice_dyninput_vec_fixed() {
 #[test]
 fn test_slice_dyninput_vec_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, IxDyn>::new(vec![
+    let info = &SliceInfo::<_, IxDyn, IxDyn>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -272,6 +272,30 @@ fn test_slice_dyninput_vec_dyn() {
     arr.slice_mut(info.as_ref());
     arr.view().slice_move(info.as_ref());
     arr.view().slice_collapse(info.as_ref());
+}
+
+#[test]
+fn test_slice_arg() {
+    fn use_arg_map<Sh, D>(shape: Sh, f: impl Fn(&usize) -> SliceOrIndex, shape2: D)
+        where
+            Sh: ShapeBuilder,
+            D: Dimension,
+    {
+        let shape = shape.into_shape();
+        let mut x = Array::from_elem(shape, 0);
+        let indices = x.shape().iter().map(f).collect::<Vec<_>>();
+        let s = x.slice_mut(
+            SliceInfo::<_, Sh::Dim, Sh::Dim>::new(indices)
+                .unwrap()
+                .as_ref(),
+        );
+        let s2 = shape2.slice();
+        assert_eq!(s.shape(), s2)
+    }
+    use_arg_map(0,|x| SliceOrIndex::from(*x/2..*x),Dim([0]));
+    use_arg_map((2, 4, 8),|x| SliceOrIndex::from(*x/2..*x),Dim([1, 2, 4]));
+    use_arg_map(vec![3, 6, 9],|x| SliceOrIndex::from(*x/3..*x/2),Dim([0, 1, 1]));
+    use_arg_map(vec![1, 2, 3, 4, 5, 6, 7], |x| SliceOrIndex::from(x-1), Dim([]));
 }
 
 #[test]

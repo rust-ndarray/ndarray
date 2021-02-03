@@ -9,6 +9,7 @@
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 use std::ops::{Index, IndexMut};
+use std::convert::TryInto;
 use alloc::vec::Vec;
 
 use super::axes_of;
@@ -63,7 +64,7 @@ pub trait Dimension:
     /// - and so on..
     /// - For `IxDyn`: `[SliceOrIndex]`
     ///
-    /// The easiest way to create a `&SliceInfo<SliceArg, Do>` is using the
+    /// The easiest way to create a `&SliceInfo<SliceArg, Do, D>` is using the
     /// [`s![]`](macro.s!.html) macro.
     type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
@@ -77,7 +78,9 @@ pub trait Dimension:
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
-
+    /// Convert index to &Self::SliceArg. Make sure that length of index
+    /// consists with Self::NDIM(if it exists).
+    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg ;
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
 
@@ -398,6 +401,10 @@ impl Dimension for Dim<[Ix; 0]> {
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
+    #[inline]
+    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
+        index.try_into().unwrap()
+    }
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize {
@@ -442,6 +449,9 @@ impl Dimension for Dim<[Ix; 1]> {
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
+    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
+        index.try_into().unwrap()
+    }
     #[inline]
     fn ndim(&self) -> usize {
         1
@@ -558,6 +568,9 @@ impl Dimension for Dim<[Ix; 2]> {
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
+    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
+        index.try_into().unwrap()
+    }
     #[inline]
     fn ndim(&self) -> usize {
         2
@@ -715,6 +728,9 @@ impl Dimension for Dim<[Ix; 3]> {
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
+    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
+        index.try_into().unwrap()
+    }
     #[inline]
     fn ndim(&self) -> usize {
         3
@@ -838,6 +854,9 @@ macro_rules! large_dim {
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
+            fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
+                index.try_into().unwrap()
+            }
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -889,6 +908,9 @@ impl Dimension for IxDyn {
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
+    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
+        index
+    }
     #[inline]
     fn ndim(&self) -> usize {
         self.ix().len()
