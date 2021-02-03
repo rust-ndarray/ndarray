@@ -2238,17 +2238,30 @@ where
         self.unordered_foreach_mut(move |x| *x = f(x.clone()));
     }
 
-    /// Visit each element in the array by calling `f` by reference
-    /// on each element.
+    /// Call `f` for each element in the array.
     ///
     /// Elements are visited in arbitrary order.
-    pub fn visit<'a, F>(&'a self, mut f: F)
+    pub fn for_each<'a, F>(&'a self, mut f: F)
     where
         F: FnMut(&'a A),
         A: 'a,
         S: Data,
     {
         self.fold((), move |(), elt| f(elt))
+    }
+
+    /// Visit each element in the array by calling `f` by reference
+    /// on each element.
+    ///
+    /// Elements are visited in arbitrary order.
+    #[deprecated(note="Renamed to .for_each()", since="0.15.0")]
+    pub fn visit<'a, F>(&'a self, f: F)
+    where
+        F: FnMut(&'a A),
+        A: 'a,
+        S: Data,
+    {
+        self.for_each(f)
     }
 
     /// Fold along an axis.

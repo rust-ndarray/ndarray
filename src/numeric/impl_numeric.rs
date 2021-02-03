@@ -168,7 +168,7 @@ where
         let mut mean = A::zero();
         let mut sum_sq = A::zero();
         let mut i = 0;
-        self.visit(|&x| {
+        self.for_each(|&x| {
             let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
             let delta = x - mean;
             mean = mean + delta / count;
