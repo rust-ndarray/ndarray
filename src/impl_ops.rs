@@ -166,7 +166,7 @@ where
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 where
-    A: Copy + $trt<B, Output=A>,
+    A: Clone + $trt<B, Output=A>,
     B: Clone,
     S: Data<Elem=A>,
     S2: Data<Elem=B>,

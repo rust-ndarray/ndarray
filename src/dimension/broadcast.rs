@@ -16,22 +16,19 @@ where
     }
     // The output should be the same length as shape1.
     let mut out = Output::zeros(shape1.ndim());
-    let out_slice = out.slice_mut();
-    let s1 = shape1.slice();
-    let s2 = shape2.slice();
     // Uses the [NumPy broadcasting rules]
     // (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
     //
     // Zero dimension element is not in the original rules of broadcasting.
     // We currently treat it like any other number greater than 1. As numpy does.
-    for i in 0..shape1.ndim() {
-        out_slice[i] = s1[i];
+    for (out, s) in izip!(out.slice_mut(), shape1.slice()) {
+        *out = *s;
     }
-    for i in 0..shape2.ndim() {
-        if out_slice[i + k] != s2[i] {
-            if out_slice[i + k] == 1 {
-                out_slice[i + k] = s2[i]
-            } else if s2[i] != 1 {
+    for (out, s2) in izip!(&mut out.slice_mut()[k..], shape2.slice()) {
+        if *out != *s2 {
+            if *out == 1 {
+                *out = *s2
+            } else if *s2 != 1 {
                 return Err(from_kind(ErrorKind::IncompatibleShape));
             }
         }
