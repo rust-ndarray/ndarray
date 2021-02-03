@@ -1976,7 +1976,7 @@ where
         S: DataMut,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |elt| *elt = x.clone());
+        self.for_each_mut(move |elt| *elt = x.clone());
     }
 
     fn zip_mut_with_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
@@ -2028,7 +2028,7 @@ where
         S: DataMut,
         F: FnMut(&mut A, &B),
     {
-        self.unordered_foreach_mut(move |elt| f(elt, rhs_elem));
+        self.for_each_mut(move |elt| f(elt, rhs_elem));
     }
 
     /// Traverse two arrays in unspecified order, in lock step,
@@ -2205,7 +2205,7 @@ where
         S: DataMut,
         F: FnMut(&mut A),
     {
-        self.unordered_foreach_mut(f);
+        self.for_each_mut(f);
     }
 
     /// Modify the array in place by calling `f` by **v**alue on each element.
@@ -2235,7 +2235,7 @@ where
         F: FnMut(A) -> A,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |x| *x = f(x.clone()));
+        self.for_each_mut(move |x| *x = f(x.clone()));
     }
 
     /// Call `f` for each element in the array.
@@ -2248,6 +2248,23 @@ where
         S: Data,
     {
         self.fold((), move |(), elt| f(elt))
+    }
+
+    /// Call `f` for each element in the array.
+    ///
+    /// Elements are visited in arbitrary order.
+    pub(crate) fn for_each_mut<F>(&mut self, mut f: F)
+    where
+        S: DataMut,
+        F: FnMut(&mut A),
+    {
+        if let Some(slc) = self.as_slice_memory_order_mut() {
+            slc.iter_mut().for_each(f);
+        } else {
+            for row in self.inner_rows_mut() {
+                row.into_iter_().fold((), |(), elt| f(elt));
+            }
+        }
     }
 
     /// Visit each element in the array by calling `f` by reference

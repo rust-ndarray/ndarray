@@ -1544,22 +1544,6 @@ where
         self.strides.clone()
     }
 
-    /// Apply closure `f` to each element in the array, in whatever
-    /// order is the fastest to visit.
-    fn unordered_foreach_mut<F>(&mut self, mut f: F)
-    where
-        S: DataMut,
-        F: FnMut(&mut A),
-    {
-        if let Some(slc) = self.as_slice_memory_order_mut() {
-            slc.iter_mut().for_each(f);
-        } else {
-            for row in self.inner_rows_mut() {
-                row.into_iter_().fold((), |(), elt| f(elt));
-            }
-        }
-    }
-
     /// Remove array axis `axis` and return the result.
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
         let d = self.dim.try_remove_axis(axis);
