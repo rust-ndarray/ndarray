@@ -2233,12 +2233,14 @@ where
     /// Call `f` for each element in the array.
     ///
     /// Elements are visited in arbitrary order.
-    pub fn for_each_mut<F>(&mut self, f: F)
+    pub fn for_each_mut<'a, F>(&'a mut self, f: F)
     where
+        F: FnMut(&'a mut A),
+        A: 'a,
         S: DataMut,
-        F: FnMut(&mut A),
     {
-        if let Some(slc) = self.as_slice_memory_order_mut() {
+        if self.is_contiguous() {
+            let slc = self.as_slice_memory_order_mut().unwrap();
             slc.iter_mut().for_each(f);
         } else {
             let mut v = self.view_mut();
