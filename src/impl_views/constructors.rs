@@ -230,12 +230,7 @@ where
             assert!(is_aligned(ptr.as_ptr()), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
         }
-        ArrayView {
-            data: ViewRepr::new(),
-            ptr,
-            dim,
-            strides,
-        }
+        ArrayView::from_data_ptr(ViewRepr::new(), ptr).with_strides_dim(strides, dim)
     }
 
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
@@ -258,12 +253,7 @@ where
             assert!(is_aligned(ptr.as_ptr()), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
         }
-        ArrayViewMut {
-            data: ViewRepr::new(),
-            ptr,
-            dim,
-            strides,
-        }
+        ArrayViewMut::from_data_ptr(ViewRepr::new(), ptr).with_strides_dim(strides, dim)
     }
 
     /// Create a new `ArrayView`

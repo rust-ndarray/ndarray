@@ -33,11 +33,10 @@ where
     D: Dimension,
 {
     fn from(view: ArrayView<'a, A, D>) -> CowArray<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::View(view.data),
-            ptr: view.ptr,
-            dim: view.dim,
-            strides: view.strides,
+        // safe because equivalent data
+        unsafe {
+            ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr)
+                .with_strides_dim(view.strides, view.dim)
         }
     }
 }
@@ -47,11 +46,10 @@ where
     D: Dimension,
 {
     fn from(array: Array<A, D>) -> CowArray<'a, A, D> {
-        ArrayBase {
-            data: CowRepr::Owned(array.data),
-            ptr: array.ptr,
-            dim: array.dim,
-            strides: array.strides,
+        // safe because equivalent data
+        unsafe {
+            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.ptr)
+                .with_strides_dim(array.strides, array.dim)
         }
     }
 }

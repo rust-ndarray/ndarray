@@ -17,12 +17,8 @@ where
     /// meet all of the invariants of the `ArrayBase` type.
     #[inline]
     pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
-        RawArrayView {
-            data: RawViewRepr::new(),
-            ptr,
-            dim,
-            strides,
-        }
+        RawArrayView::from_data_ptr(RawViewRepr::new(), ptr)
+            .with_strides_dim(strides, dim)
     }
 
     unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
@@ -163,12 +159,8 @@ where
     /// meet all of the invariants of the `ArrayBase` type.
     #[inline]
     pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
-        RawArrayViewMut {
-            data: RawViewRepr::new(),
-            ptr,
-            dim,
-            strides,
-        }
+        RawArrayViewMut::from_data_ptr(RawViewRepr::new(), ptr)
+            .with_strides_dim(strides, dim)
     }
 
     unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
