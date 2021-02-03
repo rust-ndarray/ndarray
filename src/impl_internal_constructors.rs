@@ -55,6 +55,7 @@ where
     where
         E: Dimension
     {
+        debug_assert_eq!(strides.ndim(), dim.ndim());
         ArrayBase {
             data: self.data,
             ptr: self.ptr,
