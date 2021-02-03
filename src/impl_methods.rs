@@ -1942,7 +1942,7 @@ where
         self.index_axis_move(axis, 0)
     }
 
-    fn pointer_is_inbounds(&self) -> bool {
+    pub(crate) fn pointer_is_inbounds(&self) -> bool {
         match self.data._data_slice() {
             None => {
                 // special case for non-owned views

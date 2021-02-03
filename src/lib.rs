@@ -1488,6 +1488,7 @@ impl<'a, A> CowRepr<'a, A> {
 
 mod impl_clone;
 
+mod impl_internal_constructors;
 mod impl_constructors;
 
 mod impl_methods;
