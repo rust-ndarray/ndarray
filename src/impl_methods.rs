@@ -1985,7 +1985,7 @@ where
         S: DataMut,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |elt| *elt = x.clone());
+        self.map_inplace(move |elt| *elt = x.clone());
     }
 
     fn zip_mut_with_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
@@ -2037,7 +2037,7 @@ where
         S: DataMut,
         F: FnMut(&mut A, &B),
     {
-        self.unordered_foreach_mut(move |elt| f(elt, rhs_elem));
+        self.map_inplace(move |elt| f(elt, rhs_elem));
     }
 
     /// Traverse two arrays in unspecified order, in lock step,
@@ -2232,7 +2232,7 @@ where
         F: FnMut(A) -> A,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |x| *x = f(x.clone()));
+        self.map_inplace(move |x| *x = f(x.clone()));
     }
 
     /// Call `f` for each element in the array.

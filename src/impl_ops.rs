@@ -141,7 +141,7 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
 {
     type Output = ArrayBase<S, D>;
     fn $mth(mut self, x: B) -> ArrayBase<S, D> {
-        self.unordered_foreach_mut(move |elt| {
+        self.map_inplace(move |elt| {
             *elt = elt.clone() $operator x.clone();
         });
         self
@@ -194,7 +194,7 @@ impl<S, D> $trt<ArrayBase<S, D>> for $scalar
             rhs.$mth(self)
         } or {{
             let mut rhs = rhs;
-            rhs.unordered_foreach_mut(move |elt| {
+            rhs.map_inplace(move |elt| {
                 *elt = self $operator *elt;
             });
             rhs
@@ -299,7 +299,7 @@ mod arithmetic_ops {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
         fn neg(mut self) -> Self {
-            self.unordered_foreach_mut(|elt| {
+            self.map_inplace(|elt| {
                 *elt = -elt.clone();
             });
             self
@@ -329,7 +329,7 @@ mod arithmetic_ops {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
         fn not(mut self) -> Self {
-            self.unordered_foreach_mut(|elt| {
+            self.map_inplace(|elt| {
                 *elt = !elt.clone();
             });
             self
@@ -386,7 +386,7 @@ mod assign_ops {
                 D: Dimension,
             {
                 fn $method(&mut self, rhs: A) {
-                    self.unordered_foreach_mut(move |elt| {
+                    self.map_inplace(move |elt| {
                         elt.$method(rhs.clone());
                     });
                 }
