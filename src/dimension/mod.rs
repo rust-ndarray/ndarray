@@ -678,6 +678,36 @@ where
     }
 }
 
+/// Move the axis which has the smallest absolute stride and a length
+/// greater than one to be the last axis.
+pub fn move_min_stride_axis_to_last<D>(dim: &mut D, strides: &mut D)
+where
+    D: Dimension,
+{
+    debug_assert_eq!(dim.ndim(), strides.ndim());
+    match dim.ndim() {
+        0 | 1 => {}
+        2 => {
+            if dim[1] <= 1
+                || dim[0] > 1 && (strides[0] as isize).abs() < (strides[1] as isize).abs()
+            {
+                dim.slice_mut().swap(0, 1);
+                strides.slice_mut().swap(0, 1);
+            }
+        }
+        n => {
+            if let Some(min_stride_axis) = (0..n)
+                .filter(|&ax| dim[ax] > 1)
+                .min_by_key(|&ax| (strides[ax] as isize).abs())
+            {
+                let last = n - 1;
+                dim.slice_mut().swap(last, min_stride_axis);
+                strides.slice_mut().swap(last, min_stride_axis);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::{

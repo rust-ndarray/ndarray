@@ -143,7 +143,7 @@ pub use crate::indexes::{indices, indices_of};
 pub use crate::slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
 
 use crate::iterators::Baseiter;
-use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes, LanesMut};
+use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes};
 
 pub use crate::arraytraits::AsArray;
 #[cfg(feature = "std")]
@@ -1560,15 +1560,6 @@ where
     fn inner_rows(&self) -> iterators::Lanes<'_, A, D::Smaller> {
         let n = self.ndim();
         Lanes::new(self.view(), Axis(n.saturating_sub(1)))
-    }
-
-    /// n-d generalization of rows, just like inner iter
-    fn inner_rows_mut(&mut self) -> iterators::LanesMut<'_, A, D::Smaller>
-    where
-        S: DataMut,
-    {
-        let n = self.ndim();
-        LanesMut::new(self.view_mut(), Axis(n.saturating_sub(1)))
     }
 }
 

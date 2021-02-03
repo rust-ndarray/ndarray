@@ -18,8 +18,8 @@ use crate::arraytraits;
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
-    abs_index, axes_of, do_slice, merge_axes, offset_from_ptr_to_memory, size_of_shape_checked,
-    stride_offset, Axes,
+    abs_index, axes_of, do_slice, merge_axes, move_min_stride_axis_to_last,
+    offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
 use crate::math_cell::MathCell;
@@ -2070,27 +2070,7 @@ where
             slc.iter().fold(init, f)
         } else {
             let mut v = self.view();
-            // put the narrowest axis at the last position
-            match v.ndim() {
-                0 | 1 => {}
-                2 => {
-                    if self.len_of(Axis(1)) <= 1
-                        || self.len_of(Axis(0)) > 1
-                            && self.stride_of(Axis(0)).abs() < self.stride_of(Axis(1)).abs()
-                    {
-                        v.swap_axes(0, 1);
-                    }
-                }
-                n => {
-                    let last = n - 1;
-                    let narrow_axis = v
-                        .axes()
-                        .filter(|ax| ax.len() > 1)
-                        .min_by_key(|ax| ax.stride().abs())
-                        .map_or(last, |ax| ax.axis().index());
-                    v.swap_axes(last, narrow_axis);
-                }
-            }
+            move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
             v.into_elements_base().fold(init, f)
         }
     }
@@ -2253,7 +2233,7 @@ where
     /// Call `f` for each element in the array.
     ///
     /// Elements are visited in arbitrary order.
-    pub fn for_each_mut<F>(&mut self, mut f: F)
+    pub fn for_each_mut<F>(&mut self, f: F)
     where
         S: DataMut,
         F: FnMut(&mut A),
@@ -2261,9 +2241,9 @@ where
         if let Some(slc) = self.as_slice_memory_order_mut() {
             slc.iter_mut().for_each(f);
         } else {
-            for row in self.inner_rows_mut() {
-                row.into_iter_().fold((), |(), elt| f(elt));
-            }
+            let mut v = self.view_mut();
+            move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
+            v.into_elements_base().for_each(f);
         }
     }
 
