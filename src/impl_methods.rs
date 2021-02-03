@@ -2253,7 +2253,7 @@ where
     /// Call `f` for each element in the array.
     ///
     /// Elements are visited in arbitrary order.
-    pub(crate) fn for_each_mut<F>(&mut self, mut f: F)
+    pub fn for_each_mut<F>(&mut self, mut f: F)
     where
         S: DataMut,
         F: FnMut(&mut A),

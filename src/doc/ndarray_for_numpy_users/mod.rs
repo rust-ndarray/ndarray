@@ -282,8 +282,8 @@
 //! Note that [`.mapv()`][.mapv()] has corresponding methods [`.map()`][.map()],
 //! [`.mapv_into()`][.mapv_into()], [`.map_inplace()`][.map_inplace()], and
 //! [`.mapv_inplace()`][.mapv_inplace()]. Also look at [`.fold()`][.fold()],
-//! [`.for_each()`][.for_each()], [`.fold_axis()`][.fold_axis()], and
-//! [`.map_axis()`][.map_axis()].
+//! [`.for_each()`][.for_each()], [`.for_each_mut()`][.for_each_mut()],
+//! [`.fold_axis()`][.fold_axis()], and [`.map_axis()`][.map_axis()].
 //!
 //! <table>
 //! <tr><th>
@@ -649,6 +649,7 @@
 //! [.t()]: ../../struct.ArrayBase.html#method.t
 //! [vec-* dot]: ../../struct.ArrayBase.html#method.dot
 //! [.for_each()]: ../../struct.ArrayBase.html#method.for_each
+//! [.for_each_mut()]: ../../struct.ArrayBase.html#method.for_each_mut
 //! [::zeros()]: ../../struct.ArrayBase.html#method.zeros
 //! [Zip]: ../../struct.Zip.html
 
