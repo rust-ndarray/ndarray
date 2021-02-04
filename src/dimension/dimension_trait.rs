@@ -16,7 +16,7 @@ use super::axes_of;
 use super::conversion::Convert;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
-use crate::Axis;
+use crate::{Axis, SliceInfo};
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
@@ -64,7 +64,7 @@ pub trait Dimension:
     /// - and so on..
     /// - For `IxDyn`: `[SliceOrIndex]`
     ///
-    /// The easiest way to create a `&SliceInfo<SliceArg, Do, D>` is using the
+    /// The easiest way to create a `&SliceInfo<SliceArg, Do>` is using the
     /// [`s![]`](macro.s!.html) macro.
     type SliceArg: ?Sized + AsRef<[SliceOrIndex]>;
     /// Pattern matching friendly form of the dimension value.
@@ -78,9 +78,35 @@ pub trait Dimension:
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
+
     /// Convert index to &Self::SliceArg. Make sure that length of index
     /// consists with Self::NDIM(if it exists).
+    ///
+    /// Panics if conversion failed.
+    #[doc(hidden)]
     fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg ;
+
+    /// Convert &SliceInfo<AsRef<[SliceOrIndex]>, Do> to &SliceInfo<D::SliceArg, Do>.
+    /// Generate SliceArg of any dimension via this method.
+    ///
+    /// Panics if conversion failed.
+    #[doc(hidden)]
+    fn slice_info_from<T, Do>(indices: &T) -> &SliceInfo<Self::SliceArg, Do>
+    where
+        T: AsRef<[SliceOrIndex]>,
+        Do: Dimension,
+    {
+        let arg_ref = Self::slice_arg_from(indices.as_ref());
+        unsafe {
+            // This is okay because the only non-zero-sized member of
+            // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
+            // should have the same bitwise representation as
+            // `&[SliceOrIndex]`.
+            &*(arg_ref as *const Self::SliceArg
+                as *const SliceInfo<Self::SliceArg, Do>)
+        }
+    }
+
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
 

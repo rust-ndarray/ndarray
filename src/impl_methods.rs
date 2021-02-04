@@ -340,10 +340,9 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice<Do, D2>(&self, info: &SliceInfo<D::SliceArg, Do, D2>) -> ArrayView<'_, A, Do>
+    pub fn slice<Do>(&self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayView<'_, A, Do>
     where
         Do: Dimension,
-        D2: Dimension,
         S: Data,
     {
         self.view().slice_move(info)
@@ -359,10 +358,9 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_mut<Do, D2>(&mut self, info: &SliceInfo<D::SliceArg, Do, D2>) -> ArrayViewMut<'_, A, Do>
+    pub fn slice_mut<Do>(&mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayViewMut<'_, A, Do>
     where
         Do: Dimension,
-        D2: Dimension,
         S: DataMut,
     {
         self.view_mut().slice_move(info)
@@ -411,10 +409,9 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_move<Do, D2>(mut self, info: &SliceInfo<D::SliceArg, Do, D2>) -> ArrayBase<S, Do>
+    pub fn slice_move<Do>(mut self, info: &SliceInfo<D::SliceArg, Do>) -> ArrayBase<S, Do>
     where
         Do: Dimension,
-        D2: Dimension,
     {
         // Slice and collapse in-place without changing the number of dimensions.
         self.slice_collapse(&*info);

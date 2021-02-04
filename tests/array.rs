@@ -217,7 +217,7 @@ fn test_slice_dyninput_array_fixed() {
 #[test]
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
-    let info = &SliceInfo::<_, IxDyn, IxDyn>::new([
+    let info = &SliceInfo::<_, IxDyn>::new([
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -232,7 +232,7 @@ fn test_slice_array_dyn() {
 #[test]
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, IxDyn, IxDyn>::new([
+    let info = &SliceInfo::<_, IxDyn>::new([
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -247,7 +247,7 @@ fn test_slice_dyninput_array_dyn() {
 #[test]
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, Ix2, Ix3>::new(vec![
+    let info = &SliceInfo::<_, Ix2>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -262,7 +262,7 @@ fn test_slice_dyninput_vec_fixed() {
 #[test]
 fn test_slice_dyninput_vec_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, IxDyn, IxDyn>::new(vec![
+    let info = &SliceInfo::<_, IxDyn>::new(vec![
         SliceOrIndex::from(1..),
         SliceOrIndex::from(1),
         SliceOrIndex::from(..).step_by(2),
@@ -285,9 +285,7 @@ fn test_slice_arg() {
         let mut x = Array::from_elem(shape, 0);
         let indices = x.shape().iter().map(f).collect::<Vec<_>>();
         let s = x.slice_mut(
-            SliceInfo::<_, Sh::Dim, Sh::Dim>::new(indices)
-                .unwrap()
-                .as_ref(),
+            <Sh::Dim as Dimension>::slice_info_from::<_, Sh::Dim>(&indices)
         );
         let s2 = shape2.slice();
         assert_eq!(s.shape(), s2)
