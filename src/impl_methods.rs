@@ -1459,17 +1459,26 @@ where
     where
         S: DataMut,
     {
+        self.try_as_slice_memory_order_mut().ok()
+    }
+
+    /// Return the array’s data as a slice if it is contiguous, otherwise
+    /// return `self` in the `Err` variant.
+    pub(crate) fn try_as_slice_memory_order_mut(&mut self) -> Result<&mut [A], &mut Self>
+    where
+        S: DataMut,
+    {
         if self.is_contiguous() {
             self.ensure_unique();
             let offset = offset_from_ptr_to_memory(&self.dim, &self.strides);
             unsafe {
-                Some(slice::from_raw_parts_mut(
+                Ok(slice::from_raw_parts_mut(
                     self.ptr.offset(offset).as_ptr(),
                     self.len(),
                 ))
             }
         } else {
-            None
+            Err(self)
         }
     }
 
@@ -2239,13 +2248,13 @@ where
         A: 'a,
         S: DataMut,
     {
-        if self.is_contiguous() {
-            let slc = self.as_slice_memory_order_mut().unwrap();
-            slc.iter_mut().for_each(f);
-        } else {
-            let mut v = self.view_mut();
-            move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
-            v.into_elements_base().for_each(f);
+        match self.try_as_slice_memory_order_mut() {
+            Ok(slc) => slc.iter_mut().for_each(f),
+            Err(arr) => {
+                let mut v = arr.view_mut();
+                move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
+                v.into_elements_base().for_each(f);
+            }
         }
     }
 
