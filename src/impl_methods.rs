@@ -242,11 +242,9 @@ where
         S: DataOwned,
     {
         let data = self.data.into_shared();
-        ArrayBase {
-            data,
-            ptr: self.ptr,
-            dim: self.dim,
-            strides: self.strides,
+        // safe because: equivalent unmoved data, ptr and dims remain valid
+        unsafe {
+            ArrayBase::from_data_ptr(data, self.ptr).with_strides_dim(self.strides, self.dim)
         }
     }
 
@@ -434,11 +432,9 @@ where
                 *new_s = *s;
             });
 
-        ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim: new_dim,
-            strides: new_strides,
+        // safe because new dimension, strides allow access to a subset of old data
+        unsafe {
+            self.with_strides_dim(new_strides, new_dim)
         }
     }
 
@@ -757,11 +753,9 @@ where
         self.collapse_axis(axis, index);
         let dim = self.dim.remove_axis(axis);
         let strides = self.strides.remove_axis(axis);
-        ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim,
-            strides,
+        // safe because new dimension, strides allow access to a subset of old data
+        unsafe {
+            self.with_strides_dim(strides, dim)
         }
     }
 
@@ -1244,11 +1238,9 @@ where
     /// Return the diagonal as a one-dimensional array.
     pub fn into_diag(self) -> ArrayBase<S, Ix1> {
         let (len, stride) = self.diag_params();
-        ArrayBase {
-            data: self.data,
-            ptr: self.ptr,
-            dim: Ix1(len),
-            strides: Ix1(stride as Ix),
+        // safe because new len stride allows access to a subset of the current elements
+        unsafe {
+            self.with_strides_dim(Ix1(stride as Ix), Ix1(len))
         }
     }
 
@@ -1498,22 +1490,15 @@ where
             return Err(error::incompatible_shapes(&self.dim, &shape));
         }
         // Check if contiguous, if not => copy all, else just adapt strides
-        if self.is_standard_layout() {
-            Ok(ArrayBase {
-                data: self.data,
-                ptr: self.ptr,
-                strides: shape.default_strides(),
-                dim: shape,
-            })
-        } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
-            Ok(ArrayBase {
-                data: self.data,
-                ptr: self.ptr,
-                strides: shape.fortran_strides(),
-                dim: shape,
-            })
-        } else {
-            Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+        unsafe {
+            // safe because arrays are contiguous and len is unchanged
+            if self.is_standard_layout() {
+                Ok(self.with_strides_dim(shape.default_strides(), shape))
+            } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
+                Ok(self.with_strides_dim(shape.fortran_strides(), shape))
+            } else {
+                Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+            }
         }
     }
 
@@ -1554,11 +1539,9 @@ where
         // Check if contiguous, if not => copy all, else just adapt strides
         if self.is_standard_layout() {
             let cl = self.clone();
-            ArrayBase {
-                data: cl.data,
-                ptr: cl.ptr,
-                strides: shape.default_strides(),
-                dim: shape,
+            // safe because array is contiguous and shape has equal number of elements
+            unsafe {
+                cl.with_strides_dim(shape.default_strides(), shape)
             }
         } else {
             let v = self.iter().cloned().collect::<Vec<A>>();
@@ -1576,11 +1559,10 @@ where
     ///                                 [3, 4]]).into_dyn();
     /// ```
     pub fn into_dyn(self) -> ArrayBase<S, IxDyn> {
-        ArrayBase {
-            data: self.data,
-            ptr: self.ptr,
-            dim: self.dim.into_dyn(),
-            strides: self.strides.into_dyn(),
+        // safe because new dims equivalent
+        unsafe {
+            ArrayBase::from_data_ptr(self.data, self.ptr)
+                .with_strides_dim(self.strides.into_dyn(), self.dim.into_dyn())
         }
     }
 
@@ -1604,27 +1586,19 @@ where
     where
         D2: Dimension,
     {
-        if D::NDIM == D2::NDIM {
-            // safe because D == D2
-            unsafe {
+        unsafe {
+            if D::NDIM == D2::NDIM {
+                // safe because D == D2
                 let dim = unlimited_transmute::<D, D2>(self.dim);
                 let strides = unlimited_transmute::<D, D2>(self.strides);
-                return Ok(ArrayBase {
-                    data: self.data,
-                    ptr: self.ptr,
-                    dim,
-                    strides,
-                });
-            }
-        } else if D::NDIM == None || D2::NDIM == None { // one is dynamic dim
-            if let Some(dim) = D2::from_dimension(&self.dim) {
-                if let Some(strides) = D2::from_dimension(&self.strides) {
-                    return Ok(ArrayBase {
-                        data: self.data,
-                        ptr: self.ptr,
-                        dim,
-                        strides,
-                    });
+                return Ok(ArrayBase::from_data_ptr(self.data, self.ptr)
+                            .with_strides_dim(strides, dim));
+            } else if D::NDIM == None || D2::NDIM == None { // one is dynamic dim
+                // safe because dim, strides are equivalent under a different type
+                if let Some(dim) = D2::from_dimension(&self.dim) {
+                    if let Some(strides) = D2::from_dimension(&self.strides) {
+                        return Ok(self.with_strides_dim(strides, dim));
+                    }
                 }
             }
         }
@@ -1792,10 +1766,9 @@ where
                 new_strides[new_axis] = strides[axis];
             }
         }
-        ArrayBase {
-            dim: new_dim,
-            strides: new_strides,
-            ..self
+        // safe because axis invariants are checked above; they are a permutation of the old
+        unsafe {
+            self.with_strides_dim(new_strides, new_dim)
         }
     }
 
@@ -1915,17 +1888,11 @@ where
     /// ***Panics*** if the axis is out of bounds.
     pub fn insert_axis(self, axis: Axis) -> ArrayBase<S, D::Larger> {
         assert!(axis.index() <= self.ndim());
-        let ArrayBase {
-            ptr,
-            data,
-            dim,
-            strides,
-        } = self;
-        ArrayBase {
-            ptr,
-            data,
-            dim: dim.insert_axis(axis),
-            strides: strides.insert_axis(axis),
+        // safe because a new axis of length one does not affect memory layout
+        unsafe {
+            let strides = self.strides.insert_axis(axis);
+            let dim = self.dim.insert_axis(axis);
+            self.with_strides_dim(strides, dim)
         }
     }
 
@@ -1942,7 +1909,7 @@ where
         self.index_axis_move(axis, 0)
     }
 
-    fn pointer_is_inbounds(&self) -> bool {
+    pub(crate) fn pointer_is_inbounds(&self) -> bool {
         match self.data._data_slice() {
             None => {
                 // special case for non-owned views
