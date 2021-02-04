@@ -53,9 +53,7 @@ macro_rules! impl_binary_op(
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
-/// and return the result (based on `self`).
-///
-/// `self` must be an `Array` or `ArcArray`.
+/// and return the result.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -64,13 +62,13 @@ impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
 where
     A: Clone + $trt<B, Output=A>,
     B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
+    S: Data<Elem=A>,
     S2: Data<Elem=B>,
     D: Dimension,
     E: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Array<A, D>
     {
         self.$mth(&rhs)
     }
@@ -79,7 +77,7 @@ where
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and reference `rhs`,
-/// and return the result (based on `self`).
+/// and return the result.
 ///
 /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
 ///
@@ -88,18 +86,19 @@ impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 where
     A: Clone + $trt<B, Output=A>,
     B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
+    S: Data<Elem=A>,
     S2: Data<Elem=B>,
     D: Dimension,
     E: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Array<A, D>
     {
-        self.zip_mut_with(rhs, |x, y| {
+        let mut lhs = self.into_owned();
+        lhs.zip_mut_with(rhs, |x, y| {
             *x = x.clone() $operator y.clone();
         });
-        self
+        lhs
     }
 }
 
@@ -129,22 +128,45 @@ where
 
 /// Perform elementwise
 #[doc=$doc]
-/// between `self` and the scalar `x`,
-/// and return the result (based on `self`).
+/// between `self` and `rhs`,
+/// and return the result as a new `Array`.
 ///
-/// `self` must be an `Array` or `ArcArray`.
+/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: Data<Elem=B>,
+    D: Dimension,
+    E: Dimension,
+{
+    type Output = Array<A, D>;
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Array<A, D> {
+        // FIXME: Can we co-broadcast arrays here? And how?
+        self.to_owned().$mth(rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between `self` and the scalar `x`,
+/// and return the result.
 impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
     where A: Clone + $trt<B, Output=A>,
-          S: DataOwned<Elem=A> + DataMut,
+          S: Data<Elem=A>,
           D: Dimension,
           B: ScalarOperand,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(mut self, x: B) -> ArrayBase<S, D> {
-        self.unordered_foreach_mut(move |elt| {
+    type Output = Array<A, D>;
+    fn $mth(self, x: B) -> Array<A, D> {
+        let mut lhs = self.into_owned();
+        lhs.unordered_foreach_mut(move |elt| {
             *elt = elt.clone() $operator x.clone();
         });
-        self
+        lhs
     }
 }
 
@@ -183,17 +205,17 @@ macro_rules! impl_scalar_lhs_op {
 // these have no doc -- they are not visible in rustdoc
 // Perform elementwise
 // between the scalar `self` and array `rhs`,
-// and return the result (based on `self`).
+// and return the result.
 impl<S, D> $trt<ArrayBase<S, D>> for $scalar
-    where S: DataOwned<Elem=$scalar> + DataMut,
+    where S: Data<Elem=$scalar>,
           D: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(self, rhs: ArrayBase<S, D>) -> ArrayBase<S, D> {
+    type Output = Array<$scalar, D>;
+    fn $mth(self, rhs: ArrayBase<S, D>) -> Array<$scalar, D> {
         if_commutative!($commutative {
             rhs.$mth(self)
         } or {{
-            let mut rhs = rhs;
+            let mut rhs = rhs.into_owned();
             rhs.unordered_foreach_mut(move |elt| {
                 *elt = self $operator *elt;
             });
@@ -293,16 +315,17 @@ mod arithmetic_ops {
     impl<A, S, D> Neg for ArrayBase<S, D>
     where
         A: Clone + Neg<Output = A>,
-        S: DataOwned<Elem = A> + DataMut,
+        S: Data<Elem = A>,
         D: Dimension,
     {
-        type Output = Self;
+        type Output = Array<A, D>;
         /// Perform an elementwise negation of `self` and return the result.
-        fn neg(mut self) -> Self {
-            self.unordered_foreach_mut(|elt| {
+        fn neg(self) -> Array<A, D> {
+            let mut array = self.into_owned();
+            array.unordered_foreach_mut(|elt| {
                 *elt = -elt.clone();
             });
-            self
+            array
         }
     }
 
@@ -323,16 +346,17 @@ mod arithmetic_ops {
     impl<A, S, D> Not for ArrayBase<S, D>
     where
         A: Clone + Not<Output = A>,
-        S: DataOwned<Elem = A> + DataMut,
+        S: Data<Elem = A>,
         D: Dimension,
     {
-        type Output = Self;
+        type Output = Array<A, D>;
         /// Perform an elementwise unary not of `self` and return the result.
-        fn not(mut self) -> Self {
-            self.unordered_foreach_mut(|elt| {
+        fn not(self) -> Array<A, D> {
+            let mut array = self.into_owned();
+            array.unordered_foreach_mut(|elt| {
                 *elt = !elt.clone();
             });
-            self
+            array
         }
     }
 
@@ -358,6 +382,23 @@ mod assign_ops {
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {
             use std::ops::$trt;
+
+            #[doc=$doc]
+            /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+            ///
+            /// **Panics** if broadcasting isn’t possible.
+            impl<A, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
+            where
+                A: Clone + $trt<A>,
+                S: DataMut<Elem = A>,
+                S2: Data<Elem = A>,
+                D: Dimension,
+                E: Dimension,
+            {
+                fn $method(&mut self, rhs: ArrayBase<S2, E>) {
+                    self.$method(&rhs)
+                }
+            }
 
             #[doc=$doc]
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.

@@ -649,18 +649,14 @@ pub type Ixs = isize;
 ///
 /// ### Binary Operators with Two Arrays
 ///
-/// Let `A` be an array or view of any kind. Let `B` be an array
-/// with owned storage (either `Array` or `ArcArray`).
-/// Let `C` be an array with mutable data (either `Array`, `ArcArray`
-/// or `ArrayViewMut`).
-/// The following combinations of operands
-/// are supported for an arbitrary binary operator denoted by `@` (it can be
-/// `+`, `-`, `*`, `/` and so on).
+/// Let `A` be an array or view of any kind. Let `M` be an array with mutable
+/// data (either `Array`, `ArcArray` or `ArrayViewMut`). The following
+/// combinations of operands are supported for an arbitrary binary operator
+/// denoted by `@` (it can be `+`, `-`, `*`, `/` and so on).
 ///
-/// - `&A @ &A` which produces a new `Array`
-/// - `B @ A` which consumes `B`, updates it with the result, and returns it
-/// - `B @ &A` which consumes `B`, updates it with the result, and returns it
-/// - `C @= &A` which performs an arithmetic operation in place
+/// - `&A @ &A` or `&A @ A` which produce a new `Array`
+/// - `A @ &A` or `A @ A` which may reuse the allocation of the LHS if it's an owned array
+/// - `M @= &A` or `M @= A` which performs an arithmetic operation in place on `M`
 ///
 /// Note that the element type needs to implement the operator trait and the
 /// `Clone` trait.
@@ -689,17 +685,16 @@ pub type Ixs = isize;
 /// `ScalarOperand` docs has the detailed condtions).
 ///
 /// - `&A @ K` or `K @ &A` which produces a new `Array`
-/// - `B @ K` or `K @ B` which consumes `B`, updates it with the result and returns it
-/// - `C @= K` which performs an arithmetic operation in place
+/// - `A @ K` or `K @ A` which may reuse the allocation of the array if it's an owned array
+/// - `M @= K` which performs an arithmetic operation in place
 ///
 /// ### Unary Operators
 ///
-/// Let `A` be an array or view of any kind. Let `B` be an array with owned
-/// storage (either `Array` or `ArcArray`). The following operands are supported
-/// for an arbitrary unary operator denoted by `@` (it can be `-` or `!`).
+/// The following operands are supported for an arbitrary unary operator
+/// denoted by `@` (it can be `-` or `!`).
 ///
 /// - `@&A` which produces a new `Array`
-/// - `@B` which consumes `B`, updates it with the result, and returns it
+/// - `@A` which may reuse the allocation of the array if it's an owned array
 ///
 /// ## Broadcasting
 ///
