@@ -11,6 +11,7 @@ use crate::RawDataClone;
 
 impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D> {
     fn clone(&self) -> ArrayBase<S, D> {
+        // safe because `clone_with_ptr` promises to provide equivalent data and ptr
         unsafe {
             let (data, ptr) = self.data.clone_with_ptr(self.ptr);
             ArrayBase {

@@ -76,7 +76,7 @@ fn test_zip_index_4() {
 fn test_zip_collect() {
     use approx::assert_abs_diff_eq;
 
-    // test Zip::apply_collect and that it preserves c/f layout.
+    // test Zip::map_collect and that it preserves c/f layout.
 
     let b = Array::from_shape_fn((M, N), |(i, j)| 1. / (i + 2 * j + 1) as f32);
     let c = Array::from_shape_fn((M, N), |(i, j)| f32::ln((1 + i + j) as f32));

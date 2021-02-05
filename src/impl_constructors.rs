@@ -470,12 +470,9 @@ where
     unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
-        ArrayBase {
-            ptr: nonnull_from_vec_data(&mut v).offset(-offset_from_ptr_to_memory(&dim, &strides)),
-            data: DataOwned::new(v),
-            strides,
-            dim,
-        }
+
+        let ptr = nonnull_from_vec_data(&mut v).offset(-offset_from_ptr_to_memory(&dim, &strides));
+        ArrayBase::from_data_ptr(DataOwned::new(v), ptr).with_strides_dim(strides, dim)
     }
 
     /// Create an array with uninitalized elements, shape `shape`.
@@ -534,7 +531,7 @@ where
     ///           A: Clone + 'a
     /// {
     ///     Zip::from(from)
-    ///         .apply_assign_into(to, A::clone);
+    ///         .map_assign_into(to, A::clone);
     /// }
     ///
     /// # shift_by_two(&Array2::zeros((8, 8)));

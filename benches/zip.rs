@@ -10,7 +10,7 @@ pub fn zip_copy<'a, A, P, Q>(data: P, out: Q)
           Q: IntoNdProducer<Item = &'a mut A, Dim = P::Dim>,
           A: Copy + 'a
 {
-    Zip::from(data).and(out).apply(|&i, o| {
+    Zip::from(data).and(out).for_each(|&i, o| {
         *o = i;
     });
 }
@@ -25,14 +25,14 @@ pub fn zip_copy_split<'a, A, P, Q>(data: P, out: Q)
     let (z11, z12) = z1.split();
     let (z21, z22) = z2.split();
     let f = |&i: &A, o: &mut A| *o = i;
-    z11.apply(f);
-    z12.apply(f);
-    z21.apply(f);
-    z22.apply(f);
+    z11.for_each(f);
+    z12.for_each(f);
+    z21.for_each(f);
+    z22.for_each(f);
 }
 
 pub fn zip_indexed(data: &Array3<f32>, out: &mut Array3<f32>) {
-    Zip::indexed(data).and(out).apply(|idx, &i, o| {
+    Zip::indexed(data).and(out).for_each(|idx, &i, o| {
         let _ = black_box(idx);
         *o = i;
     });

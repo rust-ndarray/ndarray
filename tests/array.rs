@@ -947,7 +947,7 @@ fn zero_axes() {
     }
     a.map(|_| panic!());
     a.map_inplace(|_| panic!());
-    a.visit(|_| panic!());
+    a.for_each(|_| panic!());
     println!("{:?}", a);
     let b = arr2::<f32, _>(&[[], [], [], []]);
     println!("{:?}\n{:?}", b.shape(), b);

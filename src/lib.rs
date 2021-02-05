@@ -447,7 +447,7 @@ pub type Ixs = isize;
 ///
 /// Zip::from(a.rows())
 ///     .and(&mut b)
-///     .apply(|a_row, b_elt| {
+///     .for_each(|a_row, b_elt| {
 ///         *b_elt = a_row[a.ncols() - 1] - a_row[0];
 ///     });
 /// ```
@@ -1488,6 +1488,7 @@ impl<'a, A> CowRepr<'a, A> {
 
 mod impl_clone;
 
+mod impl_internal_constructors;
 mod impl_constructors;
 
 mod impl_methods;
@@ -1564,11 +1565,9 @@ where
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
-        ArrayBase {
-            ptr: self.ptr,
-            data: self.data,
-            dim: d,
-            strides: s,
+        // safe because new dimension, strides allow access to a subset of old data
+        unsafe {
+            self.with_strides_dim(s, d)
         }
     }
 

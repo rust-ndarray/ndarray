@@ -245,11 +245,10 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
     {
         Self::ensure_unique(&mut self_);
         let data = Arc::try_unwrap(self_.data.0).ok().unwrap();
-        ArrayBase {
-            data,
-            ptr: self_.ptr,
-            dim: self_.dim,
-            strides: self_.strides,
+        // safe because data is equivalent
+        unsafe {
+            ArrayBase::from_data_ptr(data, self_.ptr)
+                .with_strides_dim(self_.strides, self_.dim)
         }
     }
 
@@ -544,11 +543,10 @@ unsafe impl<'a, A> Data for CowRepr<'a, A> {
     {
         match self_.data {
             CowRepr::View(_) => self_.to_owned(),
-            CowRepr::Owned(data) => ArrayBase {
-                data,
-                ptr: self_.ptr,
-                dim: self_.dim,
-                strides: self_.strides,
+            CowRepr::Owned(data) => unsafe {
+                // safe because the data is equivalent so ptr, dims remain valid
+                ArrayBase::from_data_ptr(data, self_.ptr)
+                    .with_strides_dim(self_.strides, self_.dim)
             },
         }
     }

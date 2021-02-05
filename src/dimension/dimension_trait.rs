@@ -971,10 +971,16 @@ impl Dimension for IxDyn {
     fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self> {
         Some(IxDyn(d.slice()))
     }
+
     #[inline]
     fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
         Ok(index.as_ref())
     }
+
+    fn into_dyn(self) -> IxDyn {
+        self
+    }
+
     private_impl! {}
 }
 
