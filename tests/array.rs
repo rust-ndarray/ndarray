@@ -11,7 +11,7 @@ use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
-use ndarray::{indices, BroadcastShape, ErrorKind, IxDynImpl, ShapeError};
+use ndarray::indices;
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 
 macro_rules! assert_panics {
@@ -1554,53 +1554,6 @@ fn insert_axis_view() {
     assert_eq!(
         a.index_axis(Axis(1), 0).insert_axis(Axis(2)),
         array![[[1], [2]], [[5], [6]], [[9], [10]]]
-    );
-}
-
-#[test]
-fn test_broadcast_shape() {
-    fn test_co<D1, D2>(
-        d1: &D1,
-        d2: &D2,
-        r: Result<<D1 as BroadcastShape<D2>>::Output, ShapeError>,
-    ) where
-        D1: Dimension + BroadcastShape<D2>,
-        D2: Dimension,
-    {
-        let d = d1.broadcast_shape(d2);
-        assert_eq!(d, r);
-    }
-    test_co(&Dim([2, 3]), &Dim([4, 1, 3]), Ok(Dim([4, 2, 3])));
-    test_co(
-        &Dim([1, 2, 2]),
-        &Dim([1, 3, 4]),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-    );
-    test_co(&Dim([3, 4, 5]), &Ix0(), Ok(Dim([3, 4, 5])));
-    let v = vec![1, 2, 3, 4, 5, 6, 7];
-    test_co(
-        &Dim(vec![1, 1, 3, 1, 5, 1, 7]),
-        &Dim([2, 1, 4, 1, 6, 1]),
-        Ok(Dim(IxDynImpl::from(v.as_slice()))),
-    );
-    let d = Dim([1, 2, 1, 3]);
-    test_co(&d, &d, Ok(d));
-    test_co(
-        &Dim([2, 1, 2]).into_dyn(),
-        &Dim(0),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-    );
-    test_co(
-        &Dim([2, 1, 1]),
-        &Dim([0, 0, 1, 3, 4]),
-        Ok(Dim([0, 0, 2, 3, 4])),
-    );
-    test_co(&Dim([0]), &Dim([0, 0, 0]), Ok(Dim([0, 0, 0])));
-    test_co(&Dim(1), &Dim([1, 0, 0]), Ok(Dim([1, 0, 0])));
-    test_co(
-        &Dim([1, 3, 0, 1, 1]),
-        &Dim([1, 2, 3, 1]),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
     );
 }
 

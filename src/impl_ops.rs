@@ -68,7 +68,6 @@ where
     A: Clone + $trt<B, Output=A>,
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
-    S::MaybeUninit: DataMut,
     S2: Data<Elem=B>,
     D: Dimension + BroadcastShape<E>,
     E: Dimension,
@@ -96,7 +95,6 @@ where
     A: Clone + $trt<B, Output=A>,
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
-    S::MaybeUninit: DataMut,
     S2: Data<Elem=B>,
     D: Dimension + BroadcastShape<E>,
     E: Dimension,
@@ -134,7 +132,6 @@ where
     B: Clone,
     S: Data<Elem=A>,
     S2: DataOwned<Elem=B> + DataMut,
-    S2::MaybeUninit: DataMut,
     D: Dimension,
     E: Dimension + BroadcastShape<D>,
 {

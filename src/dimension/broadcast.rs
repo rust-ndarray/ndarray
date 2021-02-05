@@ -1,26 +1,24 @@
 use crate::error::*;
 use crate::{Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 
-/// Calculate the co_broadcast shape of two dimensions. Return error if shapes are
-/// not compatible.
-fn broadcast_shape<D1, D2, Output>(shape1: &D1, shape2: &D2) -> Result<Output, ShapeError>
-where
-    D1: Dimension,
-    D2: Dimension,
-    Output: Dimension,
+/// Calculate the common shape for a pair of array shapes, which can be broadcasted
+/// to each other. Return an error if shapes are not compatible.
+///
+/// Uses the [NumPy broadcasting rules]
+//  (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
+fn co_broadcasting<D1, D2, Output>(shape1: &D1, shape2: &D2) -> Result<Output, ShapeError>
+    where
+        D1: Dimension,
+        D2: Dimension,
+        Output: Dimension,
 {
     let (k, overflow) = shape1.ndim().overflowing_sub(shape2.ndim());
     // Swap the order if d2 is longer.
     if overflow {
-        return broadcast_shape::<D2, D1, Output>(shape2, shape1);
+        return co_broadcasting::<D2, D1, Output>(shape2, shape1);
     }
     // The output should be the same length as shape1.
     let mut out = Output::zeros(shape1.ndim());
-    // Uses the [NumPy broadcasting rules]
-    // (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
-    //
-    // Zero dimension element is not in the original rules of broadcasting.
-    // We currently treat it like any other number greater than 1. As numpy does.
     for (out, s) in izip!(out.slice_mut(), shape1.slice()) {
         *out = *s;
     }
@@ -42,10 +40,7 @@ pub trait BroadcastShape<Other: Dimension> {
 
     /// Determines the shape after broadcasting the dimensions together.
     ///
-    /// If the dimensions are not compatible, returns `Err`.
-    ///
-    /// Uses the [NumPy broadcasting rules]
-    /// (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules).
+    /// If the shapes are not compatible, returns `Err`.
     fn broadcast_shape(&self, other: &Other) -> Result<Self::Output, ShapeError>;
 }
 
@@ -56,7 +51,7 @@ impl<D: Dimension> BroadcastShape<D> for D {
     type Output = D;
 
     fn broadcast_shape(&self, other: &D) -> Result<Self::Output, ShapeError> {
-        broadcast_shape::<D, D, Self::Output>(self, other)
+        co_broadcasting::<D, D, Self::Output>(self, other)
     }
 }
 
@@ -66,7 +61,7 @@ macro_rules! impl_broadcast_distinct_fixed {
             type Output = $larger;
 
             fn broadcast_shape(&self, other: &$larger) -> Result<Self::Output, ShapeError> {
-                broadcast_shape::<Self, $larger, Self::Output>(self, other)
+                co_broadcasting::<Self, $larger, Self::Output>(self, other)
             }
         }
 
@@ -74,7 +69,7 @@ macro_rules! impl_broadcast_distinct_fixed {
             type Output = $larger;
 
             fn broadcast_shape(&self, other: &$smaller) -> Result<Self::Output, ShapeError> {
-                broadcast_shape::<Self, $smaller, Self::Output>(self, other)
+                co_broadcasting::<Self, $smaller, Self::Output>(self, other)
             }
         }
     };
