@@ -285,14 +285,14 @@ fn test_slice_arg() {
         let mut x = Array::from_elem(shape, 0);
         let indices = x.shape().iter().map(f).collect::<Vec<_>>();
         let s = x.slice_mut(
-            <Sh::Dim as Dimension>::slice_info_from::<_, Sh::Dim>(&indices)
+            SliceInfo::<_, Sh::Dim>::for_dimensionality::<Sh::Dim>(&indices).unwrap()
         );
         let s2 = shape2.slice();
         assert_eq!(s.shape(), s2)
     }
-    use_arg_map(0,|x| SliceOrIndex::from(*x/2..*x),Dim([0]));
-    use_arg_map((2, 4, 8),|x| SliceOrIndex::from(*x/2..*x),Dim([1, 2, 4]));
-    use_arg_map(vec![3, 6, 9],|x| SliceOrIndex::from(*x/3..*x/2),Dim([0, 1, 1]));
+    use_arg_map(0, |x| SliceOrIndex::from(*x/2..*x),Dim([0]));
+    use_arg_map((2, 4, 8), |x| SliceOrIndex::from(*x/2..*x),Dim([1, 2, 4]));
+    use_arg_map(vec![3, 6, 9], |x| SliceOrIndex::from(*x/3..*x/2),Dim([0, 1, 1]));
     use_arg_map(vec![1, 2, 3, 4, 5, 6, 7], |x| SliceOrIndex::from(x-1), Dim([]));
 }
 

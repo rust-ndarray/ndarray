@@ -333,6 +333,23 @@ where
             indices,
         })
     }
+
+    /// Generate the corresponding SliceInfo from AsRef<[SliceOrIndex]>
+    /// for the specific dimension E.
+    ///
+    /// Return ShapeError if length does not match
+    pub fn for_dimensionality<E: Dimension>(indices: &T) -> Result<&SliceInfo<E::SliceArg, D>, ShapeError>
+    {
+        let arg_ref = E::slice_arg_from(indices)?;
+        unsafe {
+            // This is okay because the only non-zero-sized member of
+            // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
+            // should have the same bitwise representation as
+            // `&[SliceOrIndex]`.
+            Ok(&*(arg_ref as *const E::SliceArg
+                as *const SliceInfo<E::SliceArg, D>))
+        }
+    }
 }
 
 impl<T: ?Sized, D> SliceInfo<T, D>

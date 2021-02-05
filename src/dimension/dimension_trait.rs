@@ -16,7 +16,7 @@ use super::axes_of;
 use super::conversion::Convert;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
-use crate::{Axis, SliceInfo};
+use crate::{Axis, ShapeError, ErrorKind};
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
@@ -78,35 +78,6 @@ pub trait Dimension:
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
-
-    /// Convert index to &Self::SliceArg. Make sure that length of index
-    /// consists with Self::NDIM(if it exists).
-    ///
-    /// Panics if conversion failed.
-    #[doc(hidden)]
-    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg ;
-
-    /// Convert &SliceInfo<AsRef<[SliceOrIndex]>, Do> to &SliceInfo<D::SliceArg, Do>.
-    /// Generate SliceArg of any dimension via this method.
-    ///
-    /// Panics if conversion failed.
-    #[doc(hidden)]
-    fn slice_info_from<T, Do>(indices: &T) -> &SliceInfo<Self::SliceArg, Do>
-    where
-        T: AsRef<[SliceOrIndex]>,
-        Do: Dimension,
-    {
-        let arg_ref = Self::slice_arg_from(indices.as_ref());
-        unsafe {
-            // This is okay because the only non-zero-sized member of
-            // `SliceInfo` is `indices`, so `&SliceInfo<[SliceOrIndex], D>`
-            // should have the same bitwise representation as
-            // `&[SliceOrIndex]`.
-            &*(arg_ref as *const Self::SliceArg
-                as *const SliceInfo<Self::SliceArg, Do>)
-        }
-    }
-
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
 
@@ -404,6 +375,11 @@ pub trait Dimension:
     #[doc(hidden)]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 
+    /// Convert index to &Self::SliceArg. Return ShapeError if the length of index
+    /// doesn't consist with Self::NDIM(if it exists).
+    #[doc(hidden)]
+    fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError>;
+
     private_decl! {}
 }
 
@@ -427,10 +403,6 @@ impl Dimension for Dim<[Ix; 0]> {
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
-    #[inline]
-    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
-        index.try_into().unwrap()
-    }
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize {
@@ -465,6 +437,13 @@ impl Dimension for Dim<[Ix; 0]> {
     fn try_remove_axis(&self, _ignore: Axis) -> Self::Smaller {
         *self
     }
+    #[inline]
+    fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
+        match index.as_ref().try_into() {
+            Ok(arg) => Ok(arg),
+            Err(_) => Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        }
+    }
 
     private_impl! {}
 }
@@ -475,9 +454,6 @@ impl Dimension for Dim<[Ix; 1]> {
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
-    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
-        index.try_into().unwrap()
-    }
     #[inline]
     fn ndim(&self) -> usize {
         1
@@ -585,6 +561,15 @@ impl Dimension for Dim<[Ix; 1]> {
             None
         }
     }
+
+    #[inline]
+    fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
+        match index.as_ref().try_into() {
+            Ok(arg) => Ok(arg),
+            Err(_) => Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        }
+    }
+
     private_impl! {}
 }
 
@@ -594,9 +579,6 @@ impl Dimension for Dim<[Ix; 2]> {
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
-    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
-        index.try_into().unwrap()
-    }
     #[inline]
     fn ndim(&self) -> usize {
         2
@@ -745,6 +727,13 @@ impl Dimension for Dim<[Ix; 2]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
+    #[inline]
+    fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
+        match index.as_ref().try_into() {
+            Ok(arg) => Ok(arg),
+            Err(_) => Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        }
+    }
     private_impl! {}
 }
 
@@ -754,9 +743,6 @@ impl Dimension for Dim<[Ix; 3]> {
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
-    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
-        index.try_into().unwrap()
-    }
     #[inline]
     fn ndim(&self) -> usize {
         3
@@ -869,6 +855,13 @@ impl Dimension for Dim<[Ix; 3]> {
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
         self.remove_axis(axis)
     }
+    #[inline]
+    fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
+        match index.as_ref().try_into() {
+            Ok(arg) => Ok(arg),
+            Err(_) => Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        }
+    }
     private_impl! {}
 }
 
@@ -880,9 +873,6 @@ macro_rules! large_dim {
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
-            fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
-                index.try_into().unwrap()
-            }
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -903,6 +893,13 @@ macro_rules! large_dim {
             #[inline]
             fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
                 self.remove_axis(axis)
+            }
+            #[inline]
+            fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
+                match index.as_ref().try_into() {
+                    Ok(arg) => Ok(arg),
+                    Err(_) => Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+                }
             }
             private_impl!{}
         }
@@ -934,9 +931,6 @@ impl Dimension for IxDyn {
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
-    fn slice_arg_from(index: &[SliceOrIndex]) -> &Self::SliceArg {
-        index
-    }
     #[inline]
     fn ndim(&self) -> usize {
         self.ix().len()
@@ -976,6 +970,10 @@ impl Dimension for IxDyn {
 
     fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self> {
         Some(IxDyn(d.slice()))
+    }
+    #[inline]
+    fn slice_arg_from<T: AsRef<[SliceOrIndex]>>(index: &T) -> Result<&Self::SliceArg, ShapeError> {
+        Ok(index.as_ref())
     }
     private_impl! {}
 }
