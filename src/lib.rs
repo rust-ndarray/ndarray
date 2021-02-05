@@ -503,6 +503,16 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
+/// When slicing arrays with generic dimensionality, creating an instance of
+/// [`&SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
+/// is awkward. In these cases, it's usually more convenient to create a view
+/// and then slice individual axes of the view using methods such as
+/// [`.slice_axis_inplace()`] and [`.collapse_axis()`]. See the
+/// `view_even_indices` example function below.
+///
+/// [`.slice_axis_inplace()`]: #method.slice_axis_inplace
+/// [`.collapse_axis()`]: #method.collapse_axis
+///
 /// It's possible to take multiple simultaneous *mutable* slices with
 /// [`.multi_slice_mut()`] or (for [`ArrayViewMut`] only)
 /// [`.multi_slice_move()`].
@@ -512,7 +522,7 @@ pub type Ixs = isize;
 ///
 /// ```
 ///
-/// use ndarray::{arr2, arr3, s};
+/// use ndarray::{arr2, arr3, s, ArrayBase, ArrayView, Axis, Data, Dimension, Slice};
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -571,6 +581,22 @@ pub type Ixs = isize;
 ///                [5, 7]]);
 /// assert_eq!(s0, i);
 /// assert_eq!(s1, j);
+///
+/// // Generic function which creates a view of the elements which have even
+/// // indices along all axes:
+/// fn view_even_indices<S, D>(arr: &ArrayBase<S, D>) -> ArrayView<'_, S::Elem, D>
+/// where
+///     S: Data,
+///     D: Dimension,
+/// {
+///     let mut view = arr.view();
+///     (0..view.ndim()).for_each(|ax| {
+///         view.slice_axis_inplace(Axis(ax), Slice::new(0, None, 2))
+///     });
+///     view
+/// }
+/// assert_eq!(view_even_indices(&a), arr3(&[[[1, 3]]]));
+/// assert_eq!(view_even_indices(&g), arr2(&[[6, 4]]));
 /// ```
 ///
 /// ## Subviews
