@@ -18,8 +18,8 @@ use crate::arraytraits;
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
-    abs_index, axes_of, do_slice, merge_axes, offset_from_ptr_to_memory, size_of_shape_checked,
-    stride_offset, Axes,
+    abs_index, axes_of, do_slice, merge_axes, move_min_stride_axis_to_last,
+    offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::error::{self, ErrorKind, ShapeError};
 use crate::math_cell::MathCell;
@@ -1451,17 +1451,26 @@ where
     where
         S: DataMut,
     {
+        self.try_as_slice_memory_order_mut().ok()
+    }
+
+    /// Return the array’s data as a slice if it is contiguous, otherwise
+    /// return `self` in the `Err` variant.
+    pub(crate) fn try_as_slice_memory_order_mut(&mut self) -> Result<&mut [A], &mut Self>
+    where
+        S: DataMut,
+    {
         if self.is_contiguous() {
             self.ensure_unique();
             let offset = offset_from_ptr_to_memory(&self.dim, &self.strides);
             unsafe {
-                Some(slice::from_raw_parts_mut(
+                Ok(slice::from_raw_parts_mut(
                     self.ptr.offset(offset).as_ptr(),
                     self.len(),
                 ))
             }
         } else {
-            None
+            Err(self)
         }
     }
 
@@ -1943,7 +1952,7 @@ where
         S: DataMut,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |elt| *elt = x.clone());
+        self.map_inplace(move |elt| *elt = x.clone());
     }
 
     fn zip_mut_with_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
@@ -1995,7 +2004,7 @@ where
         S: DataMut,
         F: FnMut(&mut A, &B),
     {
-        self.unordered_foreach_mut(move |elt| f(elt, rhs_elem));
+        self.map_inplace(move |elt| f(elt, rhs_elem));
     }
 
     /// Traverse two arrays in unspecified order, in lock step,
@@ -2037,27 +2046,7 @@ where
             slc.iter().fold(init, f)
         } else {
             let mut v = self.view();
-            // put the narrowest axis at the last position
-            match v.ndim() {
-                0 | 1 => {}
-                2 => {
-                    if self.len_of(Axis(1)) <= 1
-                        || self.len_of(Axis(0)) > 1
-                            && self.stride_of(Axis(0)).abs() < self.stride_of(Axis(1)).abs()
-                    {
-                        v.swap_axes(0, 1);
-                    }
-                }
-                n => {
-                    let last = n - 1;
-                    let narrow_axis = v
-                        .axes()
-                        .filter(|ax| ax.len() > 1)
-                        .min_by_key(|ax| ax.stride().abs())
-                        .map_or(last, |ax| ax.axis().index());
-                    v.swap_axes(last, narrow_axis);
-                }
-            }
+            move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
             v.into_elements_base().fold(init, f)
         }
     }
@@ -2167,12 +2156,20 @@ where
     /// Modify the array in place by calling `f` by mutable reference on each element.
     ///
     /// Elements are visited in arbitrary order.
-    pub fn map_inplace<F>(&mut self, f: F)
+    pub fn map_inplace<'a, F>(&'a mut self, f: F)
     where
         S: DataMut,
-        F: FnMut(&mut A),
+        A: 'a,
+        F: FnMut(&'a mut A),
     {
-        self.unordered_foreach_mut(f);
+        match self.try_as_slice_memory_order_mut() {
+            Ok(slc) => slc.iter_mut().for_each(f),
+            Err(arr) => {
+                let mut v = arr.view_mut();
+                move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
+                v.into_elements_base().for_each(f);
+            }
+        }
     }
 
     /// Modify the array in place by calling `f` by **v**alue on each element.
@@ -2202,7 +2199,7 @@ where
         F: FnMut(A) -> A,
         A: Clone,
     {
-        self.unordered_foreach_mut(move |x| *x = f(x.clone()));
+        self.map_inplace(move |x| *x = f(x.clone()));
     }
 
     /// Call `f` for each element in the array.
