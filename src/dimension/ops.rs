@@ -27,14 +27,9 @@ macro_rules! impl_dimadd_const_out_dyn {
     };
 }
 
-impl_dimadd_const_out_const!(0, 0);
-impl_dimadd_const_out_const!(0, 1);
-impl_dimadd_const_out_const!(0, 2);
-impl_dimadd_const_out_const!(0, 3);
-impl_dimadd_const_out_const!(0, 4);
-impl_dimadd_const_out_const!(0, 5);
-impl_dimadd_const_out_const!(0, 6);
-impl_dimadd_const_out_dyn!(0, IxDyn);
+impl<D: Dimension> DimAdd<D> for Ix0 {
+    type Out = D;
+}
 
 impl_dimadd_const_out_const!(1, 0);
 impl_dimadd_const_out_const!(1, 1);
