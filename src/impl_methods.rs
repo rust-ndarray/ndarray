@@ -25,6 +25,7 @@ use crate::error::{self, ErrorKind, ShapeError};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::zip::Zip;
+use crate::AxisDescription;
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
@@ -509,6 +510,63 @@ where
             self.ptr = self.ptr.offset(offset);
         }
         debug_assert!(self.pointer_is_inbounds());
+    }
+
+    /// Return a view of a slice of the array, with a closure specifying the
+    /// slice for each axis.
+    ///
+    /// This is especially useful for code which is generic over the
+    /// dimensionality of the array.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.
+    pub fn slice_each_axis<F>(&self, f: F) -> ArrayView<'_, A, D>
+    where
+        F: FnMut(AxisDescription) -> Slice,
+        S: Data,
+    {
+        let mut view = self.view();
+        view.slice_each_axis_inplace(f);
+        view
+    }
+
+    /// Return a mutable view of a slice of the array, with a closure
+    /// specifying the slice for each axis.
+    ///
+    /// This is especially useful for code which is generic over the
+    /// dimensionality of the array.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.
+    pub fn slice_each_axis_mut<F>(&mut self, f: F) -> ArrayViewMut<'_, A, D>
+    where
+        F: FnMut(AxisDescription) -> Slice,
+        S: DataMut,
+    {
+        let mut view = self.view_mut();
+        view.slice_each_axis_inplace(f);
+        view
+    }
+
+    /// Slice the array in place, with a closure specifying the slice for each
+    /// axis.
+    ///
+    /// This is especially useful for code which is generic over the
+    /// dimensionality of the array.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.
+    pub fn slice_each_axis_inplace<F>(&mut self, mut f: F)
+    where
+        F: FnMut(AxisDescription) -> Slice,
+    {
+        (0..self.ndim()).for_each(|ax| {
+            self.slice_axis_inplace(
+                Axis(ax),
+                f(AxisDescription(
+                    Axis(ax),
+                    self.dim[ax],
+                    self.strides[ax] as isize,
+                )),
+            )
+        })
     }
 
     /// Return a reference to the element at `index`, or return `None`

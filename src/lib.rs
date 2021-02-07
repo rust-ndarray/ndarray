@@ -503,6 +503,19 @@ pub type Ixs = isize;
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
 ///
+/// When slicing arrays with generic dimensionality, creating an instance of
+/// [`&SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
+/// is awkward. In these cases, it's usually more convenient to use
+/// [`.slice_each_axis()`]/[`.slice_each_axis_mut()`]/[`.slice_each_axis_inplace()`]
+/// or to create a view and then slice individual axes of the view using
+/// methods such as [`.slice_axis_inplace()`] and [`.collapse_axis()`].
+///
+/// [`.slice_each_axis()`]: #method.slice_each_axis
+/// [`.slice_each_axis_mut()`]: #method.slice_each_axis_mut
+/// [`.slice_each_axis_inplace()`]: #method.slice_each_axis_inplace
+/// [`.slice_axis_inplace()`]: #method.slice_axis_inplace
+/// [`.collapse_axis()`]: #method.collapse_axis
+///
 /// It's possible to take multiple simultaneous *mutable* slices with
 /// [`.multi_slice_mut()`] or (for [`ArrayViewMut`] only)
 /// [`.multi_slice_move()`].
@@ -511,8 +524,7 @@ pub type Ixs = isize;
 /// [`.multi_slice_move()`]: type.ArrayViewMut.html#method.multi_slice_move
 ///
 /// ```
-///
-/// use ndarray::{arr2, arr3, s};
+/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, Slice};
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -571,6 +583,21 @@ pub type Ixs = isize;
 ///                [5, 7]]);
 /// assert_eq!(s0, i);
 /// assert_eq!(s1, j);
+///
+/// // Generic function which assigns the specified value to the elements which
+/// // have indices in the lower half along all axes.
+/// fn fill_lower<S, D>(arr: &mut ArrayBase<S, D>, x: S::Elem)
+/// where
+///     S: DataMut,
+///     S::Elem: Clone,
+///     D: Dimension,
+/// {
+///     arr.slice_each_axis_mut(|ax| Slice::from(0..ax.len() / 2)).fill(x);
+/// }
+/// fill_lower(&mut h, 9);
+/// let k = arr2(&[[9, 9, 2, 3],
+///                [4, 5, 6, 7]]);
+/// assert_eq!(h, k);
 /// ```
 ///
 /// ## Subviews
