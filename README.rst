@@ -9,13 +9,23 @@ or take a look at the `quickstart tutorial <./README-quick-start.md>`_.
 
 __ https://docs.rs/ndarray/
 
-|build_status|_ |crates|_
+|build_status|_ |crates|_ |matrix-chat|_ |irc|_
 
 .. |build_status| image:: https://github.com/rust-ndarray/ndarray/workflows/Continuous%20integration/badge.svg?branch=master
+   :alt: CI build status
 .. _build_status: https://github.com/rust-ndarray/ndarray/actions
 
 .. |crates| image:: http://meritbadge.herokuapp.com/ndarray
+   :alt: ndarray at crates.io
 .. _crates: https://crates.io/crates/ndarray
+
+.. |matrix-chat| image:: https://img.shields.io/badge/Matrix-%23rust--sci%3Amatrix.org-lightgrey
+   :alt: Matrix chat at #rust-sci:matrix.org
+.. _matrix-chat: https://matrix.to/#/#rust-sci:matrix.org
+
+.. |irc| image:: https://img.shields.io/badge/IRC-%23rust--sci%20on%20OFTC-lightgrey
+   :alt: IRC at #rust-sci on OFTC
+.. _irc: https://webchat.oftc.net/?channels=rust-sci
 
 Highlights
 ----------
