@@ -557,7 +557,7 @@ where
     where
         F: FnMut(AxisDescription) -> Slice,
     {
-        (0..self.ndim()).for_each(|ax| {
+        for ax in 0..self.ndim() {
             self.slice_axis_inplace(
                 Axis(ax),
                 f(AxisDescription {
@@ -566,7 +566,7 @@ where
                     stride: self.strides[ax] as isize,
                 }),
             )
-        })
+        }
     }
 
     /// Return a reference to the element at `index`, or return `None`
