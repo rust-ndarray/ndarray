@@ -560,11 +560,11 @@ where
         (0..self.ndim()).for_each(|ax| {
             self.slice_axis_inplace(
                 Axis(ax),
-                f(AxisDescription(
-                    Axis(ax),
-                    self.dim[ax],
-                    self.strides[ax] as isize,
-                )),
+                f(AxisDescription {
+                    axis: Axis(ax),
+                    len: self.dim[ax],
+                    stride: self.strides[ax] as isize,
+                }),
             )
         })
     }
