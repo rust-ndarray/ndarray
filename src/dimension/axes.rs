@@ -55,16 +55,19 @@ copy_and_clone!(AxisDescription);
 #[allow(clippy::len_without_is_empty)]
 impl AxisDescription {
     /// Return axis
+    #[deprecated(note = "Use .axis field instead", since = "0.15.0")]
     #[inline(always)]
     pub fn axis(self) -> Axis {
         self.axis
     }
     /// Return length
+    #[deprecated(note = "Use .len field instead", since = "0.15.0")]
     #[inline(always)]
     pub fn len(self) -> Ix {
         self.len
     }
     /// Return stride
+    #[deprecated(note = "Use .stride field instead", since = "0.15.0")]
     #[inline(always)]
     pub fn stride(self) -> Ixs {
         self.stride
