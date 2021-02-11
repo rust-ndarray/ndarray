@@ -16,5 +16,6 @@ cargo test --manifest-path=ndarray-rand/Cargo.toml --no-default-features --verbo
 cargo test --manifest-path=ndarray-rand/Cargo.toml --features quickcheck --verbose
 cargo test --manifest-path=serialization-tests/Cargo.toml --verbose
 cargo test --manifest-path=blas-tests/Cargo.toml --verbose
+cargo test --examples
 CARGO_TARGET_DIR=target/ cargo test --manifest-path=numeric-tests/Cargo.toml --verbose
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")
