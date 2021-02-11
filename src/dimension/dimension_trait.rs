@@ -332,8 +332,8 @@ pub trait Dimension:
         };
         axes_of(self, strides)
             .rev()
-            .min_by_key(|ax| ax.stride().abs())
-            .map_or(Axis(n - 1), |ax| ax.axis())
+            .min_by_key(|ax| ax.stride.abs())
+            .map_or(Axis(n - 1), |ax| ax.axis)
     }
 
     /// Compute the maximum stride axis (absolute value), under the constraint
@@ -346,9 +346,9 @@ pub trait Dimension:
             _ => {}
         }
         axes_of(self, strides)
-            .filter(|ax| ax.len() > 1)
-            .max_by_key(|ax| ax.stride().abs())
-            .map_or(Axis(0), |ax| ax.axis())
+            .filter(|ax| ax.len > 1)
+            .max_by_key(|ax| ax.stride.abs())
+            .map_or(Axis(0), |ax| ax.axis)
     }
 
     /// Convert the dimensional into a dynamic dimensional (IxDyn).

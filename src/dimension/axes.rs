@@ -42,7 +42,11 @@ pub struct Axes<'a, D> {
 
 /// Description of the axis, its length and its stride.
 #[derive(Debug)]
-pub struct AxisDescription(pub Axis, pub Ix, pub Ixs);
+pub struct AxisDescription {
+    pub axis: Axis,
+    pub len: usize,
+    pub stride: isize,
+}
 
 copy_and_clone!(AxisDescription);
 
@@ -51,19 +55,22 @@ copy_and_clone!(AxisDescription);
 #[allow(clippy::len_without_is_empty)]
 impl AxisDescription {
     /// Return axis
+    #[deprecated(note = "Use .axis field instead", since = "0.15.0")]
     #[inline(always)]
     pub fn axis(self) -> Axis {
-        self.0
+        self.axis
     }
     /// Return length
+    #[deprecated(note = "Use .len field instead", since = "0.15.0")]
     #[inline(always)]
     pub fn len(self) -> Ix {
-        self.1
+        self.len
     }
     /// Return stride
+    #[deprecated(note = "Use .stride field instead", since = "0.15.0")]
     #[inline(always)]
     pub fn stride(self) -> Ixs {
-        self.2
+        self.stride
     }
 }
 
@@ -79,11 +86,11 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
             let i = self.start.post_inc();
-            Some(AxisDescription(
-                Axis(i),
-                self.dim[i],
-                self.strides[i] as Ixs,
-            ))
+            Some(AxisDescription {
+                axis: Axis(i),
+                len: self.dim[i],
+                stride: self.strides[i] as Ixs,
+            })
         } else {
             None
         }
@@ -94,7 +101,11 @@ where
         F: FnMut(B, AxisDescription) -> B,
     {
         (self.start..self.end)
-            .map(move |i| AxisDescription(Axis(i), self.dim[i], self.strides[i] as isize))
+            .map(move |i| AxisDescription {
+                axis: Axis(i),
+                len: self.dim[i],
+                stride: self.strides[i] as isize,
+            })
             .fold(init, f)
     }
 
@@ -111,11 +122,11 @@ where
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
             let i = self.end.pre_dec();
-            Some(AxisDescription(
-                Axis(i),
-                self.dim[i],
-                self.strides[i] as Ixs,
-            ))
+            Some(AxisDescription {
+                axis: Axis(i),
+                len: self.dim[i],
+                stride: self.strides[i] as Ixs,
+            })
         } else {
             None
         }

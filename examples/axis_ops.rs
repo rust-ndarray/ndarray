@@ -14,21 +14,21 @@ where
 {
     println!("Regularize:\n{:?}", a);
     // reverse all neg axes
-    while let Some(ax) = a.axes().find(|ax| ax.stride() <= 0) {
-        if ax.stride() == 0 {
+    while let Some(ax) = a.axes().find(|ax| ax.stride <= 0) {
+        if ax.stride == 0 {
             return Err(());
         }
         // reverse ax
-        println!("Reverse {:?}", ax.axis());
-        a.invert_axis(ax.axis());
+        println!("Reverse {:?}", ax.axis);
+        a.invert_axis(ax.axis);
     }
 
     // sort by least stride
     let mut i = 0;
     let n = a.ndim();
-    while let Some(ax) = a.axes().rev().skip(i).min_by_key(|ax| ax.stride().abs()) {
-        a.swap_axes(n - 1 - i, ax.axis().index());
-        println!("Swap {:?} <=> {}", ax.axis(), n - 1 - i);
+    while let Some(ax) = a.axes().rev().skip(i).min_by_key(|ax| ax.stride.abs()) {
+        a.swap_axes(n - 1 - i, ax.axis.index());
+        println!("Swap {:?} <=> {}", ax.axis, n - 1 - i);
         i += 1;
     }
 
