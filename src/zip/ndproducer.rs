@@ -2,6 +2,8 @@
 use crate::imp_prelude::*;
 use crate::Layout;
 use crate::NdIndex;
+#[cfg(not(features = "std"))]
+use alloc::vec::Vec;
 
 /// Argument conversion into a producer.
 ///
