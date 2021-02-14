@@ -6,7 +6,7 @@ extern crate num_traits;
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::prelude::*;
-use ndarray::{AxisSliceInfo, Ix, Ixs, SliceInfo};
+use ndarray::{AxisSliceInfo, Ix, Ixs};
 use ndarray::{Data, LinalgScalar};
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
@@ -432,7 +432,7 @@ fn scaled_add_3() {
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(&SliceInfo::<_, IxDyn, IxDyn>::new(cslice).unwrap());
+                    let c = c.slice(&*cslice);
 
                     let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
                     answerv += &(beta * &c);

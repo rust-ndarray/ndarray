@@ -343,7 +343,7 @@ where
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice<I>(&self, info: &I) -> ArrayView<'_, A, I::OutDim>
     where
-        I: CanSlice<D>,
+        I: CanSlice<D> + ?Sized,
         S: Data,
     {
         self.view().slice_move(info)
@@ -361,7 +361,7 @@ where
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_mut<I>(&mut self, info: &I) -> ArrayViewMut<'_, A, I::OutDim>
     where
-        I: CanSlice<D>,
+        I: CanSlice<D> + ?Sized,
         S: DataMut,
     {
         self.view_mut().slice_move(info)
@@ -412,7 +412,7 @@ where
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_move<I>(mut self, info: &I) -> ArrayBase<S, I::OutDim>
     where
-        I: CanSlice<D>,
+        I: CanSlice<D> + ?Sized,
     {
         // Slice and collapse in-place without changing the number of dimensions.
         self.slice_collapse(info);
@@ -464,7 +464,7 @@ where
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_collapse<I>(&mut self, info: &I)
     where
-        I: CanSlice<D>,
+        I: CanSlice<D> + ?Sized,
     {
         assert_eq!(
             info.in_ndim(),

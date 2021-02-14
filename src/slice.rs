@@ -360,6 +360,18 @@ where
     }
 }
 
+unsafe impl CanSlice<IxDyn> for [AxisSliceInfo] {
+    type OutDim = IxDyn;
+
+    fn in_ndim(&self) -> usize {
+        self.iter().filter(|s| !s.is_new_axis()).count()
+    }
+
+    fn out_ndim(&self) -> usize {
+        self.iter().filter(|s| !s.is_index()).count()
+    }
+}
+
 /// Represents all of the necessary information to perform a slice.
 ///
 /// The type `T` is typically `[AxisSliceInfo; n]`, `[AxisSliceInfo]`, or
@@ -422,13 +434,13 @@ where
     ///
     /// Errors if `Din` or `Dout` is not consistent with `indices`.
     pub fn new(indices: T) -> Result<SliceInfo<T, Din, Dout>, ShapeError> {
-        if let Some(ndim) = Din::NDIM {
-            if ndim != indices.as_ref().iter().filter(|s| !s.is_new_axis()).count() {
+        if let Some(in_ndim) = Din::NDIM {
+            if in_ndim != indices.as_ref().in_ndim() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
         }
-        if let Some(ndim) = Dout::NDIM {
-            if ndim != indices.as_ref().iter().filter(|s| !s.is_index()).count() {
+        if let Some(out_ndim) = Dout::NDIM {
+            if out_ndim != indices.as_ref().out_ndim() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
             }
         }
@@ -456,11 +468,7 @@ where
         if let Some(ndim) = Din::NDIM {
             ndim
         } else {
-            self.indices
-                .as_ref()
-                .iter()
-                .filter(|s| !s.is_new_axis())
-                .count()
+            self.indices.as_ref().in_ndim()
         }
     }
 
@@ -475,11 +483,7 @@ where
         if let Some(ndim) = Dout::NDIM {
             ndim
         } else {
-            self.indices
-                .as_ref()
-                .iter()
-                .filter(|s| !s.is_index())
-                .count()
+            self.indices.as_ref().out_ndim()
         }
     }
 }
