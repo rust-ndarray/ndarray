@@ -8,6 +8,8 @@
 use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
 use crate::{ArrayViewMut, DimAdd, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
+use alloc::vec::Vec;
+use std::convert::TryFrom;
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
@@ -402,6 +404,24 @@ where
     }
 }
 
+fn check_dims_for_sliceinfo<Din, Dout>(indices: &[AxisSliceInfo]) -> Result<(), ShapeError>
+where
+    Din: Dimension,
+    Dout: Dimension,
+{
+    if let Some(in_ndim) = Din::NDIM {
+        if in_ndim != indices.in_ndim() {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+        }
+    }
+    if let Some(out_ndim) = Dout::NDIM {
+        if out_ndim != indices.out_ndim() {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+        }
+    }
+    Ok(())
+}
+
 impl<T, Din, Dout> SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
@@ -424,12 +444,8 @@ where
         out_dim: PhantomData<Dout>,
     ) -> SliceInfo<T, Din, Dout> {
         if cfg!(debug_assertions) {
-            if let Some(in_ndim) = Din::NDIM {
-                assert_eq!(in_ndim, indices.as_ref().in_ndim());
-            }
-            if let Some(out_ndim) = Dout::NDIM {
-                assert_eq!(out_ndim, indices.as_ref().out_ndim());
-            }
+            check_dims_for_sliceinfo::<Din, Dout>(indices.as_ref())
+                .expect("`Din` and `Dout` must be consistent with `indices`.");
         }
         SliceInfo {
             in_dim,
@@ -449,21 +465,14 @@ where
     ///
     /// Errors if `Din` or `Dout` is not consistent with `indices`.
     ///
+    /// For common types, a safe alternative is to use `TryFrom` instead.
+    ///
     /// # Safety
     ///
     /// The caller must ensure `indices.as_ref()` always returns the same value
     /// when called multiple times.
     pub unsafe fn new(indices: T) -> Result<SliceInfo<T, Din, Dout>, ShapeError> {
-        if let Some(in_ndim) = Din::NDIM {
-            if in_ndim != indices.as_ref().in_ndim() {
-                return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
-            }
-        }
-        if let Some(out_ndim) = Dout::NDIM {
-            if out_ndim != indices.as_ref().out_ndim() {
-                return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
-            }
-        }
+        check_dims_for_sliceinfo::<Din, Dout>(indices.as_ref())?;
         Ok(SliceInfo {
             in_dim: PhantomData,
             out_dim: PhantomData,
@@ -507,6 +516,79 @@ where
         }
     }
 }
+
+impl<'a, Din, Dout> TryFrom<&'a [AxisSliceInfo]> for &'a SliceInfo<[AxisSliceInfo], Din, Dout>
+where
+    Din: Dimension,
+    Dout: Dimension,
+{
+    type Error = ShapeError;
+
+    fn try_from(
+        indices: &'a [AxisSliceInfo],
+    ) -> Result<&'a SliceInfo<[AxisSliceInfo], Din, Dout>, ShapeError> {
+        check_dims_for_sliceinfo::<Din, Dout>(indices)?;
+        unsafe {
+            // This is okay because we've already checked the correctness of
+            // `Din` and `Dout`, and the only non-zero-sized member of
+            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], Din,
+            // Dout>` should have the same bitwise representation as
+            // `&[AxisSliceInfo]`.
+            Ok(&*(indices as *const [AxisSliceInfo]
+                as *const SliceInfo<[AxisSliceInfo], Din, Dout>))
+        }
+    }
+}
+
+impl<Din, Dout> TryFrom<Vec<AxisSliceInfo>> for SliceInfo<Vec<AxisSliceInfo>, Din, Dout>
+where
+    Din: Dimension,
+    Dout: Dimension,
+{
+    type Error = ShapeError;
+
+    fn try_from(
+        indices: Vec<AxisSliceInfo>,
+    ) -> Result<SliceInfo<Vec<AxisSliceInfo>, Din, Dout>, ShapeError> {
+        unsafe {
+            // This is okay because `Vec` always returns the same value for
+            // `.as_ref()`.
+            Self::new(indices)
+        }
+    }
+}
+
+macro_rules! impl_tryfrom_array_for_sliceinfo {
+    ($len:expr) => {
+        impl<Din, Dout> TryFrom<[AxisSliceInfo; $len]>
+            for SliceInfo<[AxisSliceInfo; $len], Din, Dout>
+        where
+            Din: Dimension,
+            Dout: Dimension,
+        {
+            type Error = ShapeError;
+
+            fn try_from(
+                indices: [AxisSliceInfo; $len],
+            ) -> Result<SliceInfo<[AxisSliceInfo; $len], Din, Dout>, ShapeError> {
+                unsafe {
+                    // This is okay because `[AxisSliceInfo; N]` always returns
+                    // the same value for `.as_ref()`.
+                    Self::new(indices)
+                }
+            }
+        }
+    };
+}
+impl_tryfrom_array_for_sliceinfo!(0);
+impl_tryfrom_array_for_sliceinfo!(1);
+impl_tryfrom_array_for_sliceinfo!(2);
+impl_tryfrom_array_for_sliceinfo!(3);
+impl_tryfrom_array_for_sliceinfo!(4);
+impl_tryfrom_array_for_sliceinfo!(5);
+impl_tryfrom_array_for_sliceinfo!(6);
+impl_tryfrom_array_for_sliceinfo!(7);
+impl_tryfrom_array_for_sliceinfo!(8);
 
 impl<T, Din, Dout> AsRef<[AxisSliceInfo]> for SliceInfo<T, Din, Dout>
 where

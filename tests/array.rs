@@ -13,6 +13,7 @@ use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::indices;
 use ndarray::{AxisSliceInfo, Slice, SliceInfo};
+use std::convert::TryFrom;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -216,15 +217,13 @@ fn test_slice_dyninput_array_fixed() {
 #[test]
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
-    let info = &unsafe {
-        SliceInfo::<_, Ix3, IxDyn>::new([
-            AxisSliceInfo::from(1..),
-            AxisSliceInfo::from(1),
-            AxisSliceInfo::from(NewAxis),
-            AxisSliceInfo::from(..).step_by(2),
-        ])
-        .unwrap()
-    };
+    let info = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -234,15 +233,13 @@ fn test_slice_array_dyn() {
 #[test]
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &unsafe {
-        SliceInfo::<_, Ix3, IxDyn>::new([
-            AxisSliceInfo::from(1..),
-            AxisSliceInfo::from(1),
-            AxisSliceInfo::from(NewAxis),
-            AxisSliceInfo::from(..).step_by(2),
-        ])
-        .unwrap()
-    };
+    let info = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -252,15 +249,13 @@ fn test_slice_dyninput_array_dyn() {
 #[test]
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &unsafe {
-        SliceInfo::<_, Ix3, Ix3>::new(vec![
-            AxisSliceInfo::from(1..),
-            AxisSliceInfo::from(1),
-            AxisSliceInfo::from(NewAxis),
-            AxisSliceInfo::from(..).step_by(2),
-        ])
-        .unwrap()
-    };
+    let info = &SliceInfo::<_, Ix3, Ix3>::try_from(vec![
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
@@ -270,15 +265,13 @@ fn test_slice_dyninput_vec_fixed() {
 #[test]
 fn test_slice_dyninput_vec_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &unsafe {
-        SliceInfo::<_, Ix3, IxDyn>::new(vec![
-            AxisSliceInfo::from(1..),
-            AxisSliceInfo::from(1),
-            AxisSliceInfo::from(NewAxis),
-            AxisSliceInfo::from(..).step_by(2),
-        ])
-        .unwrap()
-    };
+    let info = &SliceInfo::<_, Ix3, IxDyn>::try_from(vec![
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(NewAxis),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);

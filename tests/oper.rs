@@ -562,6 +562,7 @@ fn scaled_add_2() {
 fn scaled_add_3() {
     use approx::assert_relative_eq;
     use ndarray::{SliceInfo, AxisSliceInfo};
+    use std::convert::TryFrom;
 
     let beta = -2.3;
     let sizes = vec![
@@ -595,7 +596,7 @@ fn scaled_add_3() {
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(&unsafe { SliceInfo::<_, IxDyn, IxDyn>::new(cslice).unwrap() });
+                    let c = c.slice(&SliceInfo::<_, IxDyn, IxDyn>::try_from(cslice).unwrap());
 
                     let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
                     answerv += &(beta * &c);
