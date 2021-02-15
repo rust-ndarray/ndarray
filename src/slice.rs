@@ -403,6 +403,7 @@ where
 
 impl<T, Din, Dout> SliceInfo<T, Din, Dout>
 where
+    T: AsRef<[AxisSliceInfo]>,
     Din: Dimension,
     Dout: Dimension,
 {
@@ -410,16 +411,26 @@ where
     ///
     /// If you call this method, you are guaranteeing that `in_dim` and
     /// `out_dim` are consistent with `indices`.
+    ///
+    /// **Note:** only unchecked for non-debug builds of `ndarray`.
     #[doc(hidden)]
     pub unsafe fn new_unchecked(
         indices: T,
         in_dim: PhantomData<Din>,
         out_dim: PhantomData<Dout>,
     ) -> SliceInfo<T, Din, Dout> {
+        if cfg!(debug_assertions) {
+            if let Some(in_ndim) = Din::NDIM {
+                assert_eq!(in_ndim, indices.as_ref().in_ndim());
+            }
+            if let Some(out_ndim) = Dout::NDIM {
+                assert_eq!(out_ndim, indices.as_ref().out_ndim());
+            }
+        }
         SliceInfo {
-            in_dim: in_dim,
-            out_dim: out_dim,
-            indices: indices,
+            in_dim,
+            out_dim,
+            indices,
         }
     }
 }
