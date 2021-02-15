@@ -595,7 +595,7 @@ fn scaled_add_3() {
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(&SliceInfo::<_, IxDyn, IxDyn>::new(cslice).unwrap());
+                    let c = c.slice(&unsafe { SliceInfo::<_, IxDyn, IxDyn>::new(cslice).unwrap() });
 
                     let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
                     answerv += &(beta * &c);

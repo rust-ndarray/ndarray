@@ -307,7 +307,8 @@ impl From<NewAxis> for AxisSliceInfo {
 ///
 /// This trait is unsafe to implement because the implementation must ensure
 /// that `D`, `Self::OutDim`, `self.in_dim()`, and `self.out_ndim()` are
-/// consistent with the `&[AxisSliceInfo]` returned by `self.as_ref()`.
+/// consistent with the `&[AxisSliceInfo]` returned by `self.as_ref()` and that
+/// `self.as_ref()` always returns the same value when called multiple times.
 pub unsafe trait CanSlice<D: Dimension>: AsRef<[AxisSliceInfo]> {
     type OutDim: Dimension;
 
@@ -409,10 +410,13 @@ where
 {
     /// Returns a new `SliceInfo` instance.
     ///
-    /// If you call this method, you are guaranteeing that `in_dim` and
-    /// `out_dim` are consistent with `indices`.
-    ///
     /// **Note:** only unchecked for non-debug builds of `ndarray`.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `in_dim` and `out_dim` are consistent with
+    /// `indices` and that `indices.as_ref()` always returns the same value
+    /// when called multiple times.
     #[doc(hidden)]
     pub unsafe fn new_unchecked(
         indices: T,
@@ -444,7 +448,12 @@ where
     /// Returns a new `SliceInfo` instance.
     ///
     /// Errors if `Din` or `Dout` is not consistent with `indices`.
-    pub fn new(indices: T) -> Result<SliceInfo<T, Din, Dout>, ShapeError> {
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure `indices.as_ref()` always returns the same value
+    /// when called multiple times.
+    pub unsafe fn new(indices: T) -> Result<SliceInfo<T, Din, Dout>, ShapeError> {
         if let Some(in_ndim) = Din::NDIM {
             if in_ndim != indices.as_ref().in_ndim() {
                 return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
