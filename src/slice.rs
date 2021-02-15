@@ -383,7 +383,7 @@ unsafe impl CanSlice<IxDyn> for [AxisSliceInfo] {
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 #[derive(Debug)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct SliceInfo<T: ?Sized, Din: Dimension, Dout: Dimension> {
     in_dim: PhantomData<Din>,
     out_dim: PhantomData<Dout>,
