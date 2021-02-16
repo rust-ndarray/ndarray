@@ -915,6 +915,8 @@ where
     /// **Panics** if performing any individual slice panics or if the slices
     /// are not disjoint (i.e. if they intersect).
     fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output;
+
+    private_decl! {}
 }
 
 impl<'a, A, D> MultiSlice<'a, A, D> for ()
@@ -925,6 +927,8 @@ where
     type Output = ();
 
     fn multi_slice_move(&self, _view: ArrayViewMut<'a, A, D>) -> Self::Output {}
+
+    private_impl! {}
 }
 
 impl<'a, A, D, I0> MultiSlice<'a, A, D> for (&I0,)
@@ -938,6 +942,8 @@ where
     fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
         (view.slice_move(self.0),)
     }
+
+    private_impl! {}
 }
 
 macro_rules! impl_multislice_tuple {
@@ -968,6 +974,8 @@ macro_rules! impl_multislice_tuple {
                     )
                 }
             }
+
+            private_impl! {}
         }
     };
     (@intersects_self $shape:expr, ($head:expr,)) => {
@@ -996,4 +1004,6 @@ where
     fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
         T::multi_slice_move(self, view)
     }
+
+    private_impl! {}
 }

@@ -141,7 +141,7 @@ pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
-pub use crate::slice::{AxisSliceInfo, CanSlice, NewAxis, Slice, SliceArg, SliceInfo};
+pub use crate::slice::{AxisSliceInfo, CanSlice, MultiSlice, NewAxis, Slice, SliceArg, SliceInfo};
 
 use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes};
