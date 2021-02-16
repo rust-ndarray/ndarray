@@ -332,7 +332,7 @@ fn axis_iter_zip_partially_consumed_discontiguous() {
     while iter.next().is_some() {
         consumed += 1;
         let mut b = Array::zeros((a.len() - consumed) * 2);
-        b.slice_collapse(s![..;2]);
+        b.slice_collapse(s![..;2]).unwrap();
         Zip::from(&mut b).and(iter.clone()).for_each(|b, a| *b = a[()]);
         assert_eq!(a.slice(s![consumed..]), b);
     }
@@ -519,7 +519,7 @@ fn axis_iter_mut_zip_partially_consumed_discontiguous() {
             iter.next();
         }
         let mut b = Array::zeros(remaining * 2);
-        b.slice_collapse(s![..;2]);
+        b.slice_collapse(s![..;2]).unwrap();
         Zip::from(&mut b).and(iter).for_each(|b, a| *b = a[()]);
         assert_eq!(a.slice(s![consumed..]), b);
     }

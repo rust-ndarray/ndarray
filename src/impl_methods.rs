@@ -461,13 +461,15 @@ where
 
     /// Slice the array in place without changing the number of dimensions.
     ///
-    /// Note that `NewAxis` elements in `info` are ignored.
+    /// If there are any `NewAxis` elements in `info`, slicing is performed
+    /// using the other elements in `info` (i.e. ignoring the `NewAxis`
+    /// elements), and `Err(_)` is returned to notify the caller.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_collapse<I>(&mut self, info: &I)
+    pub fn slice_collapse<I>(&mut self, info: &I) -> Result<(), ShapeError>
     where
         I: CanSlice<D> + ?Sized,
     {
@@ -476,20 +478,28 @@ where
             self.ndim(),
             "The input dimension of `info` must match the array to be sliced.",
         );
+        let mut new_axis_in_info = false;
         let mut axis = 0;
         info.as_ref().iter().for_each(|&ax_info| match ax_info {
-                AxisSliceInfo::Slice { start, end, step } => {
-                    self.slice_axis_inplace(Axis(axis), Slice { start, end, step });
-                    axis += 1;
-                }
-                AxisSliceInfo::Index(index) => {
-                    let i_usize = abs_index(self.len_of(Axis(axis)), index);
-                    self.collapse_axis(Axis(axis), i_usize);
-                    axis += 1;
-                }
-                AxisSliceInfo::NewAxis => {}
-            });
+            AxisSliceInfo::Slice { start, end, step } => {
+                self.slice_axis_inplace(Axis(axis), Slice { start, end, step });
+                axis += 1;
+            }
+            AxisSliceInfo::Index(index) => {
+                let i_usize = abs_index(self.len_of(Axis(axis)), index);
+                self.collapse_axis(Axis(axis), i_usize);
+                axis += 1;
+            }
+            AxisSliceInfo::NewAxis => {
+                new_axis_in_info = true;
+            }
+        });
         debug_assert_eq!(axis, self.ndim());
+        if new_axis_in_info {
+            Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        } else {
+            Ok(())
+        }
     }
 
     /// Return a view of the array, sliced along the specified axis.
