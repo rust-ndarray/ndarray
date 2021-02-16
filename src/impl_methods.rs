@@ -414,44 +414,49 @@ where
     where
         I: CanSlice<D> + ?Sized,
     {
-        // Slice and collapse in-place without changing the number of dimensions.
-        self.slice_collapse(info);
-
+        assert_eq!(
+            info.in_ndim(),
+            self.ndim(),
+            "The input dimension of `info` must match the array to be sliced.",
+        );
         let out_ndim = info.out_ndim();
         let mut new_dim = I::OutDim::zeros(out_ndim);
         let mut new_strides = I::OutDim::zeros(out_ndim);
 
-        // Write the dim and strides to the correct new axes.
-        {
-            let mut old_axis = 0;
-            let mut new_axis = 0;
-            info.as_ref().iter().for_each(|ax_info| match ax_info {
-                AxisSliceInfo::Slice { .. } => {
-                    // Copy the old dim and stride to corresponding axis.
-                    new_dim[new_axis] = self.dim[old_axis];
-                    new_strides[new_axis] = self.strides[old_axis];
-                    old_axis += 1;
-                    new_axis += 1;
-                }
-                AxisSliceInfo::Index(_) => {
-                    // Skip the old axis since it should be removed.
-                    old_axis += 1;
-                }
-                AxisSliceInfo::NewAxis => {
-                    // Set the dim and stride of the new axis.
-                    new_dim[new_axis] = 1;
-                    new_strides[new_axis] = 0;
-                    new_axis += 1;
-                }
-            });
-            debug_assert_eq!(old_axis, self.ndim());
-            debug_assert_eq!(new_axis, out_ndim);
-        }
+        let mut old_axis = 0;
+        let mut new_axis = 0;
+        info.as_ref().iter().for_each(|&ax_info| match ax_info {
+            AxisSliceInfo::Slice { start, end, step } => {
+                // Slice the axis in-place to update the `dim`, `strides`, and `ptr`.
+                self.slice_axis_inplace(Axis(old_axis), Slice { start, end, step });
+                // Copy the sliced dim and stride to corresponding axis.
+                new_dim[new_axis] = self.dim[old_axis];
+                new_strides[new_axis] = self.strides[old_axis];
+                old_axis += 1;
+                new_axis += 1;
+            }
+            AxisSliceInfo::Index(index) => {
+                // Collapse the axis in-place to update the `ptr`.
+                let i_usize = abs_index(self.len_of(Axis(old_axis)), index);
+                self.collapse_axis(Axis(old_axis), i_usize);
+                // Skip copying the axis since it should be removed. Note that
+                // removing this axis is safe because `.collapse_axis()` panics
+                // if the index is out-of-bounds, so it will panic if the axis
+                // is zero length.
+                old_axis += 1;
+            }
+            AxisSliceInfo::NewAxis => {
+                // Set the dim and stride of the new axis.
+                new_dim[new_axis] = 1;
+                new_strides[new_axis] = 0;
+                new_axis += 1;
+            }
+        });
+        debug_assert_eq!(old_axis, self.ndim());
+        debug_assert_eq!(new_axis, out_ndim);
 
         // safe because new dimension, strides allow access to a subset of old data
-        unsafe {
-            self.with_strides_dim(new_strides, new_dim)
-        }
+        unsafe { self.with_strides_dim(new_strides, new_dim) }
     }
 
     /// Slice the array in place without changing the number of dimensions.
