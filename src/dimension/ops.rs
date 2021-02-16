@@ -1,7 +1,7 @@
 use crate::imp_prelude::*;
 
 /// Adds the two dimensions at compile time.
-pub trait DimAdd<D: Dimension>: Dimension {
+pub trait DimAdd<D: Dimension> {
     /// The sum of the two dimensions.
     type Out: Dimension;
 }

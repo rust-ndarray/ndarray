@@ -13,6 +13,7 @@ use alloc::vec::Vec;
 
 use super::axes_of;
 use super::conversion::Convert;
+use super::ops::DimAdd;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
 use crate::{Axis, DimMax};
@@ -51,6 +52,12 @@ pub trait Dimension:
     + DimMax<IxDyn, Output=IxDyn>
     + DimMax<<Self as Dimension>::Smaller, Output=Self>
     + DimMax<<Self as Dimension>::Larger, Output=<Self as Dimension>::Larger>
+    + DimAdd<Self>
+    + DimAdd<<Self as Dimension>::Smaller>
+    + DimAdd<<Self as Dimension>::Larger>
+    + DimAdd<Ix0, Out = Self>
+    + DimAdd<Ix1, Out = <Self as Dimension>::Larger>
+    + DimAdd<IxDyn, Out = IxDyn>
 {
     /// For fixed-size dimension representations (e.g. `Ix2`), this should be
     /// `Some(ndim)`, and for variable-size dimension representations (e.g.
