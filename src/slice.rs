@@ -312,11 +312,16 @@ impl From<NewAxis> for AxisSliceInfo {
 /// consistent with the `&[AxisSliceInfo]` returned by `self.as_ref()` and that
 /// `self.as_ref()` always returns the same value when called multiple times.
 pub unsafe trait CanSlice<D: Dimension>: AsRef<[AxisSliceInfo]> {
+    /// Dimensionality of the output array.
     type OutDim: Dimension;
 
+    /// Returns the number of axes in the input array.
     fn in_ndim(&self) -> usize;
 
+    /// Returns the number of axes in the output array.
     fn out_ndim(&self) -> usize;
+
+    private_decl! {}
 }
 
 macro_rules! impl_canslice_samedim {
@@ -335,6 +340,8 @@ macro_rules! impl_canslice_samedim {
             fn out_ndim(&self) -> usize {
                 self.out_ndim()
             }
+
+            private_impl! {}
         }
     };
 }
@@ -361,6 +368,8 @@ where
     fn out_ndim(&self) -> usize {
         self.out_ndim()
     }
+
+    private_impl! {}
 }
 
 unsafe impl CanSlice<IxDyn> for [AxisSliceInfo] {
@@ -373,6 +382,8 @@ unsafe impl CanSlice<IxDyn> for [AxisSliceInfo] {
     fn out_ndim(&self) -> usize {
         self.iter().filter(|s| !s.is_index()).count()
     }
+
+    private_impl! {}
 }
 
 /// Represents all of the necessary information to perform a slice.
