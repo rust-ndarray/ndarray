@@ -72,7 +72,7 @@ pub trait NdProducer {
 
     #[doc(hidden)]
     fn layout(&self) -> Layout;
-    #[doc(hidden)]
+    /// Return the shape of the producer.
     fn raw_dim(&self) -> Self::Dim;
     #[doc(hidden)]
     fn equal_dim(&self, dim: &Self::Dim) -> bool {
