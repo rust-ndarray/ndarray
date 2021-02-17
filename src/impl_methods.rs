@@ -32,7 +32,7 @@ use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
     IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
 };
-use crate::slice::{CanSlice, MultiSlice};
+use crate::slice::{MultiSlice, SliceArg};
 use crate::stacking::concatenate;
 use crate::{AxisSliceInfo, NdIndex, Slice};
 
@@ -334,16 +334,13 @@ where
     /// Return a sliced view of the array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`SliceInfo`] and [`D::SliceArg`].
-    ///
-    /// [`SliceInfo`]: struct.SliceInfo.html
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice<I>(&self, info: &I) -> ArrayView<'_, A, I::OutDim>
     where
-        I: CanSlice<D> + ?Sized,
+        I: SliceArg<D> + ?Sized,
         S: Data,
     {
         self.view().slice_move(info)
@@ -352,16 +349,13 @@ where
     /// Return a sliced read-write view of the array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`SliceInfo`] and [`D::SliceArg`].
-    ///
-    /// [`SliceInfo`]: struct.SliceInfo.html
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_mut<I>(&mut self, info: &I) -> ArrayViewMut<'_, A, I::OutDim>
     where
-        I: CanSlice<D> + ?Sized,
+        I: SliceArg<D> + ?Sized,
         S: DataMut,
     {
         self.view_mut().slice_move(info)
@@ -370,10 +364,7 @@ where
     /// Return multiple disjoint, sliced, mutable views of the array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`SliceInfo`] and [`D::SliceArg`].
-    ///
-    /// [`SliceInfo`]: struct.SliceInfo.html
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if any of the following occur:
     ///
@@ -403,16 +394,13 @@ where
     /// Slice the array, possibly changing the number of dimensions.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`SliceInfo`] and [`D::SliceArg`].
-    ///
-    /// [`SliceInfo`]: struct.SliceInfo.html
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
+    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
     pub fn slice_move<I>(mut self, info: &I) -> ArrayBase<S, I::OutDim>
     where
-        I: CanSlice<D> + ?Sized,
+        I: SliceArg<D> + ?Sized,
     {
         assert_eq!(
             info.in_ndim(),
@@ -462,6 +450,7 @@ where
     /// Slice the array in place without changing the number of dimensions.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
+    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** in the following cases:
     ///
@@ -472,7 +461,7 @@ where
     /// - if `D` is `IxDyn` and `info` does not match the number of array axes
     pub fn slice_collapse<I>(&mut self, info: &I)
     where
-        I: CanSlice<D> + ?Sized,
+        I: SliceArg<D> + ?Sized,
     {
         assert_eq!(
             info.in_ndim(),

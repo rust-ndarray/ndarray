@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use crate::error::{from_kind, ErrorKind, ShapeError};
-use crate::slice::CanSlice;
+use crate::slice::SliceArg;
 use crate::{AxisSliceInfo, Ix, Ixs, Slice};
 use num_integer::div_floor;
 
@@ -599,8 +599,8 @@ fn slice_min_max(axis_len: usize, slice: Slice) -> Option<(usize, usize)> {
 /// Returns `true` iff the slices intersect.
 pub fn slices_intersect<D: Dimension>(
     dim: &D,
-    indices1: &impl CanSlice<D>,
-    indices2: &impl CanSlice<D>,
+    indices1: &impl SliceArg<D>,
+    indices2: &impl SliceArg<D>,
 ) -> bool {
     debug_assert_eq!(indices1.in_ndim(), indices2.in_ndim());
     for (&axis_len, &si1, &si2) in izip!(

@@ -117,12 +117,10 @@ where
     /// consumes `self` and produces views with lifetimes matching that of
     /// `self`.
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`SliceInfo`] and [`D::SliceArg`].
+    /// See [*Slicing*](#slicing) for full documentation. See also [`s!`],
+    /// [`SliceArg`](crate::SliceArg), and [`SliceInfo`](crate::SliceInfo).
     ///
     /// [`.multi_slice_mut()`]: struct.ArrayBase.html#method.multi_slice_mut
-    /// [`SliceInfo`]: struct.SliceInfo.html
-    /// [`D::SliceArg`]: trait.Dimension.html#associatedtype.SliceArg
     ///
     /// **Panics** if any of the following occur:
     ///

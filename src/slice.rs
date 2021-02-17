@@ -311,7 +311,7 @@ impl From<NewAxis> for AxisSliceInfo {
 /// that `D`, `Self::OutDim`, `self.in_dim()`, and `self.out_ndim()` are
 /// consistent with the `&[AxisSliceInfo]` returned by `self.as_ref()` and that
 /// `self.as_ref()` always returns the same value when called multiple times.
-pub unsafe trait CanSlice<D: Dimension>: AsRef<[AxisSliceInfo]> {
+pub unsafe trait SliceArg<D: Dimension>: AsRef<[AxisSliceInfo]> {
     /// Dimensionality of the output array.
     type OutDim: Dimension;
 
@@ -324,9 +324,9 @@ pub unsafe trait CanSlice<D: Dimension>: AsRef<[AxisSliceInfo]> {
     private_decl! {}
 }
 
-macro_rules! impl_canslice_samedim {
+macro_rules! impl_slicearg_samedim {
     ($in_dim:ty) => {
-        unsafe impl<T, Dout> CanSlice<$in_dim> for SliceInfo<T, $in_dim, Dout>
+        unsafe impl<T, Dout> SliceArg<$in_dim> for SliceInfo<T, $in_dim, Dout>
         where
             T: AsRef<[AxisSliceInfo]>,
             Dout: Dimension,
@@ -345,15 +345,15 @@ macro_rules! impl_canslice_samedim {
         }
     };
 }
-impl_canslice_samedim!(Ix0);
-impl_canslice_samedim!(Ix1);
-impl_canslice_samedim!(Ix2);
-impl_canslice_samedim!(Ix3);
-impl_canslice_samedim!(Ix4);
-impl_canslice_samedim!(Ix5);
-impl_canslice_samedim!(Ix6);
+impl_slicearg_samedim!(Ix0);
+impl_slicearg_samedim!(Ix1);
+impl_slicearg_samedim!(Ix2);
+impl_slicearg_samedim!(Ix3);
+impl_slicearg_samedim!(Ix4);
+impl_slicearg_samedim!(Ix5);
+impl_slicearg_samedim!(Ix6);
 
-unsafe impl<T, Din, Dout> CanSlice<IxDyn> for SliceInfo<T, Din, Dout>
+unsafe impl<T, Din, Dout> SliceArg<IxDyn> for SliceInfo<T, Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
     Din: Dimension,
@@ -372,7 +372,7 @@ where
     private_impl! {}
 }
 
-unsafe impl CanSlice<IxDyn> for [AxisSliceInfo] {
+unsafe impl SliceArg<IxDyn> for [AxisSliceInfo] {
     type OutDim = IxDyn;
 
     fn in_ndim(&self) -> usize {
@@ -937,7 +937,7 @@ impl<'a, A, D, I0> MultiSlice<'a, A, D> for (&I0,)
 where
     A: 'a,
     D: Dimension,
-    I0: CanSlice<D>,
+    I0: SliceArg<D>,
 {
     type Output = (ArrayViewMut<'a, A, I0::OutDim>,);
 
@@ -957,7 +957,7 @@ macro_rules! impl_multislice_tuple {
         where
             A: 'a,
             D: Dimension,
-            $($all: CanSlice<D>,)*
+            $($all: SliceArg<D>,)*
         {
             type Output = ($(ArrayViewMut<'a, A, $all::OutDim>,)*);
 
