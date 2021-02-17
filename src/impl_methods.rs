@@ -450,6 +450,14 @@ where
 
     /// Slice the array in place without changing the number of dimensions.
     ///
+    /// In particular, if an axis is sliced with an index, the axis is
+    /// collapsed, as in [`.collapse_axis()`], rather than removed, as in
+    /// [`.slice_move()`] or [`.index_axis_move()`].
+    ///
+    /// [`.collapse_axis()`]: #method.collapse_axis
+    /// [`.slice_move()`]: #method.slice_move
+    /// [`.index_axis_move()`]: #method.index_axis_move
+    ///
     /// See [*Slicing*](#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
