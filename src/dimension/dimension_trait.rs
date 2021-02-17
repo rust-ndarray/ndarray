@@ -55,9 +55,9 @@ pub trait Dimension:
     + DimAdd<Self>
     + DimAdd<<Self as Dimension>::Smaller>
     + DimAdd<<Self as Dimension>::Larger>
-    + DimAdd<Ix0, Out = Self>
-    + DimAdd<Ix1, Out = <Self as Dimension>::Larger>
-    + DimAdd<IxDyn, Out = IxDyn>
+    + DimAdd<Ix0, Output = Self>
+    + DimAdd<Ix1, Output = <Self as Dimension>::Larger>
+    + DimAdd<IxDyn, Output = IxDyn>
 {
     /// For fixed-size dimension representations (e.g. `Ix2`), this should be
     /// `Some(ndim)`, and for variable-size dimension representations (e.g.

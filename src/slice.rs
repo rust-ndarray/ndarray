@@ -661,14 +661,14 @@ pub trait SliceArg {
     /// Number of dimensions that this slicing argument produces in the output array.
     type OutDim: Dimension;
 
-    fn next_in_dim<D>(&self, _: PhantomData<D>) -> PhantomData<<D as DimAdd<Self::InDim>>::Out>
+    fn next_in_dim<D>(&self, _: PhantomData<D>) -> PhantomData<<D as DimAdd<Self::InDim>>::Output>
     where
         D: Dimension + DimAdd<Self::InDim>,
     {
         PhantomData
     }
 
-    fn next_out_dim<D>(&self, _: PhantomData<D>) -> PhantomData<<D as DimAdd<Self::OutDim>>::Out>
+    fn next_out_dim<D>(&self, _: PhantomData<D>) -> PhantomData<<D as DimAdd<Self::OutDim>>::Output>
     where
         D: Dimension + DimAdd<Self::OutDim>,
     {
