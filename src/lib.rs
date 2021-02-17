@@ -498,7 +498,7 @@ pub type Ixs = isize;
 /// is selected and the axis is removed; this selects a subview. See
 /// [*Subviews*](#subviews) for more information about subviews. If a
 /// [`NewAxis`] instance is used, a new axis is inserted. Note that
-/// [`.slice_collapse()`] ignores `NewAxis` elements and behaves like
+/// [`.slice_collapse()`] panics on `NewAxis` elements and behaves like
 /// [`.collapse_axis()`] by preserving the number of dimensions.
 ///
 /// [`.slice()`]: #method.slice

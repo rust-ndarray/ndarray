@@ -723,6 +723,7 @@ impl_slicearg!((), NewAxis, Ix0, Ix1);
 /// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
 ///   instance, with new step size *step*, to use for slicing that axis.
 /// * *new-axis*: a [`NewAxis`] instance that represents the creation of a new axis.
+///   (Except for [`.slice_collapse()`], which panics on [`NewAxis`] elements.)
 ///
 /// [`Slice`]: struct.Slice.html
 /// [`NewAxis`]: struct.NewAxis.html
@@ -734,13 +735,14 @@ impl_slicearg!((), NewAxis, Ix0, Ix1);
 /// `RangeFull` where `I` is `isize`, `usize`, or `i32`. *step* must be a type
 /// that can be converted to `isize` with the `as` keyword.
 ///
-/// For example `s![0..4;2, 6, 1..5, NewAxis]` is a slice of the first axis for
-/// 0..4 with step size 2, a subview of the second axis at index 6, a slice of
-/// the third axis for 1..5 with default step size 1, and a new axis of length
-/// 1 at the end of the shape. The input array must have 3 dimensions. The
-/// resulting slice would have shape `[2, 4, 1]` for [`.slice()`],
-/// [`.slice_mut()`], and [`.slice_move()`], and shape `[2, 1, 4]` for
-/// [`.slice_collapse()`].
+/// For example, `s![0..4;2, 6, 1..5, NewAxis]` is a slice of the first axis
+/// for 0..4 with step size 2, a subview of the second axis at index 6, a slice
+/// of the third axis for 1..5 with default step size 1, and a new axis of
+/// length 1 at the end of the shape. The input array must have 3 dimensions.
+/// The resulting slice would have shape `[2, 4, 1]` for [`.slice()`],
+/// [`.slice_mut()`], and [`.slice_move()`], while [`.slice_collapse()`] would
+/// panic. Without the `NewAxis`, i.e. `s![0..4;2, 6, 1..5]`,
+/// [`.slice_collapse()`] would result in an array of shape `[2, 1, 4]`.
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 /// [`.slice_mut()`]: struct.ArrayBase.html#method.slice_mut

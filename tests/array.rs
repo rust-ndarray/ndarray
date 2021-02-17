@@ -201,7 +201,8 @@ fn test_slice_array_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info);
+    let info2 = s![1.., 1, ..;2];
+    arr.view().slice_collapse(info2);
 }
 
 #[test]
@@ -211,7 +212,8 @@ fn test_slice_dyninput_array_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info);
+    let info2 = s![1.., 1, ..;2];
+    arr.view().slice_collapse(info2);
 }
 
 #[test]
@@ -227,7 +229,13 @@ fn test_slice_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info);
+    let info2 = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
+    arr.view().slice_collapse(info2);
 }
 
 #[test]
@@ -243,7 +251,13 @@ fn test_slice_dyninput_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info);
+    let info2 = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
+    arr.view().slice_collapse(info2);
 }
 
 #[test]
@@ -259,7 +273,13 @@ fn test_slice_dyninput_vec_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info);
+    let info2 = &SliceInfo::<_, Ix3, Ix2>::try_from(vec![
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
+    arr.view().slice_collapse(info2);
 }
 
 #[test]
@@ -275,7 +295,13 @@ fn test_slice_dyninput_vec_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info);
+    let info2 = &SliceInfo::<_, Ix3, IxDyn>::try_from(vec![
+        AxisSliceInfo::from(1..),
+        AxisSliceInfo::from(1),
+        AxisSliceInfo::from(..).step_by(2),
+    ])
+    .unwrap();
+    arr.view().slice_collapse(info2);
 }
 
 #[test]
@@ -324,7 +350,7 @@ fn test_slice_collapse_with_indices() {
 
     {
         let mut vi = arr.view();
-        vi.slice_collapse(s![NewAxis, 1.., 2, ..;2]);
+        vi.slice_collapse(s![1.., 2, ..;2]);
         assert_eq!(vi.shape(), &[2, 1, 2]);
         assert!(vi
             .iter()
@@ -332,7 +358,7 @@ fn test_slice_collapse_with_indices() {
             .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
-        vi.slice_collapse(s![1, NewAxis, 2, ..;2]);
+        vi.slice_collapse(s![1, 2, ..;2]);
         assert_eq!(vi.shape(), &[1, 1, 2]);
         assert!(vi
             .iter()
@@ -340,7 +366,7 @@ fn test_slice_collapse_with_indices() {
             .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
-        vi.slice_collapse(s![1, 2, NewAxis, 3]);
+        vi.slice_collapse(s![1, 2, 3]);
         assert_eq!(vi.shape(), &[1, 1, 1]);
         assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
     }
@@ -348,9 +374,16 @@ fn test_slice_collapse_with_indices() {
     // Do it to the ArcArray itself
     let elem = arr[(1, 2, 3)];
     let mut vi = arr;
-    vi.slice_collapse(s![1, 2, 3, NewAxis]);
+    vi.slice_collapse(s![1, 2, 3]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
     assert_eq!(vi, Array3::from_elem((1, 1, 1), elem));
+}
+
+#[test]
+#[should_panic]
+fn test_slice_collapse_with_newaxis() {
+    let mut arr = Array2::<u8>::zeros((2, 3));
+    arr.slice_collapse(s![0, 0, NewAxis]);
 }
 
 #[test]

@@ -461,12 +461,15 @@ where
 
     /// Slice the array in place without changing the number of dimensions.
     ///
-    /// Note that `NewAxis` elements in `info` are ignored.
-    ///
     /// See [*Slicing*](#slicing) for full documentation.
     ///
-    /// **Panics** if an index is out of bounds or step size is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    /// **Panics** in the following cases:
+    ///
+    /// - if an index is out of bounds
+    /// - if a step size is zero
+    /// - if [`AxisSliceInfo::NewAxis`] is in `info`, e.g. if [`NewAxis`] was
+    ///   used in the [`s!`] macro
+    /// - if `D` is `IxDyn` and `info` does not match the number of array axes
     pub fn slice_collapse<I>(&mut self, info: &I)
     where
         I: CanSlice<D> + ?Sized,
@@ -487,7 +490,7 @@ where
                     self.collapse_axis(Axis(axis), i_usize);
                     axis += 1;
                 }
-                AxisSliceInfo::NewAxis => {}
+                AxisSliceInfo::NewAxis => panic!("`slice_collapse` does not support `NewAxis`."),
             });
         debug_assert_eq!(axis, self.ndim());
     }
