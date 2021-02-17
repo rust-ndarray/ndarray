@@ -103,10 +103,10 @@ fn test_slice_ix0() {
 #[test]
 fn test_slice_edge_cases() {
     let mut arr = Array3::<u8>::zeros((3, 4, 5));
-    arr.slice_collapse(s![0..0;-1, .., ..]).unwrap();
+    arr.slice_collapse(s![0..0;-1, .., ..]);
     assert_eq!(arr.shape(), &[0, 4, 5]);
     let mut arr = Array2::<u8>::from_shape_vec((1, 1).strides((10, 1)), vec![5]).unwrap();
-    arr.slice_collapse(s![1..1, ..]).unwrap();
+    arr.slice_collapse(s![1..1, ..]);
     assert_eq!(arr.shape(), &[0, 1]);
 }
 
@@ -201,7 +201,7 @@ fn test_slice_array_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info).unwrap_err();
+    arr.view().slice_collapse(info);
 }
 
 #[test]
@@ -211,7 +211,7 @@ fn test_slice_dyninput_array_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info).unwrap_err();
+    arr.view().slice_collapse(info);
 }
 
 #[test]
@@ -227,7 +227,7 @@ fn test_slice_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info).unwrap_err();
+    arr.view().slice_collapse(info);
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn test_slice_dyninput_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info).unwrap_err();
+    arr.view().slice_collapse(info);
 }
 
 #[test]
@@ -259,7 +259,7 @@ fn test_slice_dyninput_vec_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info).unwrap_err();
+    arr.view().slice_collapse(info);
 }
 
 #[test]
@@ -275,7 +275,7 @@ fn test_slice_dyninput_vec_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    arr.view().slice_collapse(info).unwrap_err();
+    arr.view().slice_collapse(info);
 }
 
 #[test]
@@ -324,7 +324,7 @@ fn test_slice_collapse_with_indices() {
 
     {
         let mut vi = arr.view();
-        vi.slice_collapse(s![NewAxis, 1.., 2, ..;2]).unwrap_err();
+        vi.slice_collapse(s![NewAxis, 1.., 2, ..;2]);
         assert_eq!(vi.shape(), &[2, 1, 2]);
         assert!(vi
             .iter()
@@ -332,7 +332,7 @@ fn test_slice_collapse_with_indices() {
             .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
-        vi.slice_collapse(s![1, NewAxis, 2, ..;2]).unwrap_err();
+        vi.slice_collapse(s![1, NewAxis, 2, ..;2]);
         assert_eq!(vi.shape(), &[1, 1, 2]);
         assert!(vi
             .iter()
@@ -340,7 +340,7 @@ fn test_slice_collapse_with_indices() {
             .all(|(a, b)| a == b));
 
         let mut vi = arr.view();
-        vi.slice_collapse(s![1, 2, 3]).unwrap();
+        vi.slice_collapse(s![1, 2, NewAxis, 3]);
         assert_eq!(vi.shape(), &[1, 1, 1]);
         assert_eq!(vi, Array3::from_elem((1, 1, 1), arr[(1, 2, 3)]));
     }
@@ -348,7 +348,7 @@ fn test_slice_collapse_with_indices() {
     // Do it to the ArcArray itself
     let elem = arr[(1, 2, 3)];
     let mut vi = arr;
-    vi.slice_collapse(s![1, 2, 3, NewAxis]).unwrap_err();
+    vi.slice_collapse(s![1, 2, 3, NewAxis]);
     assert_eq!(vi.shape(), &[1, 1, 1]);
     assert_eq!(vi, Array3::from_elem((1, 1, 1), elem));
 }
@@ -567,7 +567,7 @@ fn test_cow() {
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
     let mut rev = mat.reshape(4);
-    rev.slice_collapse(s![..;-1]).unwrap();
+    rev.slice_collapse(s![..;-1]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
     assert_eq!(rev[2], 2);
@@ -591,7 +591,7 @@ fn test_cow_shrink() {
     // mutation shrinks the array and gives it different strides
     //
     let mut mat = ArcArray::zeros((2, 3));
-    //mat.slice_collapse(s![.., ..;2]).unwrap();
+    //mat.slice_collapse(s![.., ..;2]);
     mat[[0, 0]] = 1;
     let n = mat.clone();
     mat[[0, 1]] = 2;
@@ -606,7 +606,7 @@ fn test_cow_shrink() {
     assert_eq!(n.get((0, 1)), Some(&0));
     // small has non-C strides this way
     let mut small = mat.reshape(6);
-    small.slice_collapse(s![4..;-1]).unwrap();
+    small.slice_collapse(s![4..;-1]);
     assert_eq!(small[0], 6);
     assert_eq!(small[1], 5);
     let before = small.clone();
@@ -886,7 +886,7 @@ fn assign() {
     let mut a = arr2(&[[1, 2], [3, 4]]);
     {
         let mut v = a.view_mut();
-        v.slice_collapse(s![..1, ..]).unwrap();
+        v.slice_collapse(s![..1, ..]);
         v.fill(0);
     }
     assert_eq!(a, arr2(&[[0, 0], [3, 4]]));
@@ -1093,7 +1093,7 @@ fn owned_array_discontiguous_drop() {
             .collect();
         let mut a = Array::from_shape_vec((2, 6), v).unwrap();
         // discontiguous and non-zero offset
-        a.slice_collapse(s![.., 1..]).unwrap();
+        a.slice_collapse(s![.., 1..]);
     }
     // each item was dropped exactly once
     itertools::assert_equal(set.borrow().iter().cloned(), 0..12);
@@ -1792,7 +1792,7 @@ fn to_owned_memory_order() {
 #[test]
 fn to_owned_neg_stride() {
     let mut c = arr2(&[[1, 2, 3], [4, 5, 6]]);
-    c.slice_collapse(s![.., ..;-1]).unwrap();
+    c.slice_collapse(s![.., ..;-1]);
     let co = c.to_owned();
     assert_eq!(c, co);
     assert_eq!(c.strides(), co.strides());
@@ -1801,7 +1801,7 @@ fn to_owned_neg_stride() {
 #[test]
 fn discontiguous_owned_to_owned() {
     let mut c = arr2(&[[1, 2, 3], [4, 5, 6]]);
-    c.slice_collapse(s![.., ..;2]).unwrap();
+    c.slice_collapse(s![.., ..;2]);
 
     let co = c.to_owned();
     assert_eq!(c.strides(), &[3, 2]);
@@ -2062,10 +2062,10 @@ fn test_accumulate_axis_inplace_nonstandard_layout() {
 fn test_to_vec() {
     let mut a = arr2(&[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]);
 
-    a.slice_collapse(s![..;-1, ..]).unwrap();
+    a.slice_collapse(s![..;-1, ..]);
     assert_eq!(a.row(3).to_vec(), vec![1, 2, 3]);
     assert_eq!(a.column(2).to_vec(), vec![12, 9, 6, 3]);
-    a.slice_collapse(s![.., ..;-1]).unwrap();
+    a.slice_collapse(s![.., ..;-1]);
     assert_eq!(a.row(3).to_vec(), vec![3, 2, 1]);
 }
 
@@ -2081,7 +2081,7 @@ fn test_array_clone_unalias() {
 #[test]
 fn test_array_clone_same_view() {
     let mut a = Array::from_iter(0..9).into_shape((3, 3)).unwrap();
-    a.slice_collapse(s![..;-1, ..;-1]).unwrap();
+    a.slice_collapse(s![..;-1, ..;-1]);
     let b = a.clone();
     assert_eq!(a, b);
 }
