@@ -7,7 +7,6 @@
 // except according to those terms.
 
 use std::hash;
-use std::isize;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
 use std::mem;
@@ -135,13 +134,7 @@ where
     /// let array = Array::from(vec![1., 2., 3., 4.]);
     /// ```
     fn from(v: Vec<A>) -> Self {
-        if mem::size_of::<A>() == 0 {
-            assert!(
-                v.len() <= isize::MAX as usize,
-                "Length must fit in `isize`.",
-            );
-        }
-        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+        Self::from_vec(v)
     }
 }
 
@@ -165,7 +158,7 @@ where
     where
         I: IntoIterator<Item = A>,
     {
-        Self::from(iterable.into_iter().collect::<Vec<A>>())
+        Self::from_iter(iterable)
     }
 }
 

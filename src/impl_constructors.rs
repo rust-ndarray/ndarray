@@ -14,6 +14,7 @@
 #[cfg(feature = "std")]
 use num_traits::Float;
 use num_traits::{One, Zero};
+use std::mem;
 use std::mem::MaybeUninit;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -51,11 +52,29 @@ where
     /// ```rust
     /// use ndarray::Array;
     ///
-    /// let array = Array::from(vec![1., 2., 3., 4.]);
+    /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
-    #[deprecated(note = "use standard `from`", since = "0.13.0")]
     pub fn from_vec(v: Vec<A>) -> Self {
-        Self::from(v)
+        if mem::size_of::<A>() == 0 {
+            assert!(
+                v.len() <= isize::MAX as usize,
+                "Length must fit in `isize`.",
+            );
+        }
+        unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
+    }
+
+    /// Create a one-dimensional array from an iterator or iterable.
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::Array;
+    ///
+    /// let array = Array::from_iter(0..10);
+    /// ```
+    pub fn from_iter<I: IntoIterator<Item = A>>(iterable: I) -> Self {
+        Self::from_vec(iterable.into_iter().collect())
     }
 
     /// Create a one-dimensional array with `n` evenly spaced elements from
