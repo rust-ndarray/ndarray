@@ -142,7 +142,7 @@ pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
 pub use crate::slice::{
-    AxisSliceInfo, MultiSlice, NewAxis, Slice, SliceArg, SliceInfo, SliceNextDim,
+    AxisSliceInfo, MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceNextDim,
 };
 
 use crate::iterators::Baseiter;

@@ -32,7 +32,7 @@ use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
     IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
 };
-use crate::slice::{MultiSlice, SliceArg};
+use crate::slice::{MultiSliceArg, SliceArg};
 use crate::stacking::concatenate;
 use crate::{AxisSliceInfo, NdIndex, Slice};
 
@@ -363,8 +363,9 @@ where
 
     /// Return multiple disjoint, sliced, mutable views of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
+    /// See [*Slicing*](#slicing) for full documentation. See also
+    /// [`MultiSliceArg`], [`s!`], [`SliceArg`], and
+    /// [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if any of the following occur:
     ///
@@ -385,7 +386,7 @@ where
     /// ```
     pub fn multi_slice_mut<'a, M>(&'a mut self, info: M) -> M::Output
     where
-        M: MultiSlice<'a, A, D>,
+        M: MultiSliceArg<'a, A, D>,
         S: DataMut,
     {
         info.multi_slice_move(self.view_mut())

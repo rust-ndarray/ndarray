@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use crate::imp_prelude::*;
-use crate::slice::MultiSlice;
+use crate::slice::MultiSliceArg;
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -117,8 +117,9 @@ where
     /// consumes `self` and produces views with lifetimes matching that of
     /// `self`.
     ///
-    /// See [*Slicing*](#slicing) for full documentation. See also [`s!`],
-    /// [`SliceArg`](crate::SliceArg), and [`SliceInfo`](crate::SliceInfo).
+    /// See [*Slicing*](#slicing) for full documentation. See also
+    /// [`MultiSliceArg`], [`s!`], [`SliceArg`](crate::SliceArg), and
+    /// [`SliceInfo`](crate::SliceInfo).
     ///
     /// [`.multi_slice_mut()`]: struct.ArrayBase.html#method.multi_slice_mut
     ///
@@ -129,7 +130,7 @@ where
     /// * if `D` is `IxDyn` and `info` does not match the number of array axes
     pub fn multi_slice_move<M>(self, info: M) -> M::Output
     where
-        M: MultiSlice<'a, A, D>,
+        M: MultiSliceArg<'a, A, D>,
     {
         info.multi_slice_move(self)
     }

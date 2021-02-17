@@ -904,7 +904,7 @@ macro_rules! s(
 ///
 /// It's unfortunate that we need `'a` and `A` to be parameters of the trait,
 /// but they're necessary until Rust supports generic associated types.
-pub trait MultiSlice<'a, A, D>
+pub trait MultiSliceArg<'a, A, D>
 where
     A: 'a,
     D: Dimension,
@@ -921,7 +921,7 @@ where
     private_decl! {}
 }
 
-impl<'a, A, D> MultiSlice<'a, A, D> for ()
+impl<'a, A, D> MultiSliceArg<'a, A, D> for ()
 where
     A: 'a,
     D: Dimension,
@@ -933,7 +933,7 @@ where
     private_impl! {}
 }
 
-impl<'a, A, D, I0> MultiSlice<'a, A, D> for (&I0,)
+impl<'a, A, D, I0> MultiSliceArg<'a, A, D> for (&I0,)
 where
     A: 'a,
     D: Dimension,
@@ -953,7 +953,7 @@ macro_rules! impl_multislice_tuple {
         impl_multislice_tuple!(@def_impl ($($but_last,)* $last,), [$($but_last)*] $last);
     };
     (@def_impl ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
-        impl<'a, A, D, $($all,)*> MultiSlice<'a, A, D> for ($(&$all,)*)
+        impl<'a, A, D, $($all,)*> MultiSliceArg<'a, A, D> for ($(&$all,)*)
         where
             A: 'a,
             D: Dimension,
@@ -995,11 +995,11 @@ impl_multislice_tuple!([I0 I1 I2] I3);
 impl_multislice_tuple!([I0 I1 I2 I3] I4);
 impl_multislice_tuple!([I0 I1 I2 I3 I4] I5);
 
-impl<'a, A, D, T> MultiSlice<'a, A, D> for &T
+impl<'a, A, D, T> MultiSliceArg<'a, A, D> for &T
 where
     A: 'a,
     D: Dimension,
-    T: MultiSlice<'a, A, D>,
+    T: MultiSliceArg<'a, A, D>,
 {
     type Output = T::Output;
 
