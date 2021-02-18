@@ -59,8 +59,7 @@ macro_rules! impl_binary_op(
 ///
 /// `self` must be an `Array` or `ArcArray`.
 ///
-/// If their shapes disagree, `self` is broadcast to their broadcast shape,
-/// cloning the data if needed.
+/// If their shapes disagree, `self` is broadcast to their broadcast shape.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
