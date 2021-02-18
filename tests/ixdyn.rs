@@ -9,7 +9,7 @@
 use ndarray::Array;
 use ndarray::IntoDimension;
 use ndarray::ShapeBuilder;
-use ndarray::{Ix0, Ix1, Ix2, Ix3, IxDyn};
+use ndarray::Ix3;
 
 #[test]
 fn test_ixdyn() {
@@ -157,6 +157,8 @@ fn test_0_add_broad() {
 #[test]
 #[cfg(feature = "std")]
 fn test_into_dimension() {
+    use ndarray::{Ix0, Ix1, Ix2, IxDyn};
+
     let a = Array::linspace(0., 41., 6 * 7).into_shape((6, 7)).unwrap();
     let a2 = a.clone().into_shape(IxDyn(&[6, 7])).unwrap();
     let b = a2.clone().into_dimensionality::<Ix2>().unwrap();

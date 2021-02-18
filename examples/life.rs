@@ -6,7 +6,6 @@
 )]
 
 use ndarray::prelude::*;
-use std::iter::FromIterator;
 
 const INPUT: &[u8] = include_bytes!("life.txt");
 
