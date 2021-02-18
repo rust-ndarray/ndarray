@@ -106,9 +106,7 @@ where
             out.zip_mut_with_same_shape(rhs, clone_iopf(A::$mth));
             out
         } else {
-            let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
-            let lhs = self.broadcast(shape.clone()).unwrap();
-            let rhs = rhs.broadcast(shape).unwrap();
+            let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
             Zip::from(&lhs).and(&rhs).map_collect_owned(clone_opf(A::$mth))
         }
     }
@@ -143,9 +141,7 @@ where
             out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$mth));
             out
         } else {
-            let shape = rhs.dim.broadcast_shape(&self.dim).unwrap();
-            let lhs = self.broadcast(shape.clone()).unwrap();
-            let rhs = rhs.broadcast(shape).unwrap();
+            let (rhs, lhs) = rhs.broadcast_with(self).unwrap();
             Zip::from(&lhs).and(&rhs).map_collect_owned(clone_opf(A::$mth))
         }
     }
@@ -171,9 +167,7 @@ where
 {
     type Output = Array<A, <D as BroadcastShape<E>>::Output>;
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
-        let shape = self.dim.broadcast_shape(&rhs.dim).unwrap();
-        let lhs = self.broadcast(shape.clone()).unwrap();
-        let rhs = rhs.broadcast(shape).unwrap();
+        let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
         Zip::from(&lhs).and(&rhs).map_collect(clone_opf(A::$mth))
     }
 }

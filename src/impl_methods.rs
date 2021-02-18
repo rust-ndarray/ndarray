@@ -14,14 +14,14 @@ use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
 
-use crate::arraytraits;
+use crate::{arraytraits, BroadcastShape};
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, move_min_stride_axis_to_last,
     offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
-use crate::error::{self, ErrorKind, ShapeError};
+use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::zip::Zip;
@@ -1764,6 +1764,36 @@ where
             None => return None,
         };
         unsafe { Some(ArrayView::new(self.ptr, dim, broadcast_strides)) }
+    }
+
+    /// Calculate the views of two ArrayBases after broadcasting each other, if possible.
+    ///
+    /// Return `ShapeError` if their shapes can not be broadcast together.
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr2};
+    ///
+    /// let a = arr2(&[[2], [3], [4]]);
+    /// let b = arr1(&[5, 6, 7]);
+    /// let (a1, b1) = a.broadcast_with(&b).unwrap();
+    /// assert_eq!(a1, arr2(&[[2, 2, 2], [3, 3, 3], [4, 4, 4]]));
+    /// assert_eq!(b1, arr2(&[[5, 6, 7], [5, 6, 7], [5, 6, 7]]));
+    /// ```
+    pub fn broadcast_with<'a, 'b, B, S2, E>(&'a self, other: &'b ArrayBase<S2, E>) ->
+        Result<(ArrayView<'a, A, <D as BroadcastShape<E>>::Output>, ArrayView<'b, B, <D as BroadcastShape<E>>::Output>), ShapeError>
+    where
+        S: Data<Elem=A>,
+        S2: Data<Elem=B>,
+        D: Dimension + BroadcastShape<E>,
+        E: Dimension,
+    {
+        let shape = self.dim.broadcast_shape(&other.dim)?;
+        if let Some(view1) = self.broadcast(shape.clone()) {
+            if let Some(view2) = other.broadcast(shape) {
+                return Ok((view1, view2))
+            }
+        }
+        return Err(from_kind(ErrorKind::IncompatibleShape));
     }
 
     /// Swap axes `ax` and `bx`.
