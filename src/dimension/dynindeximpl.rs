@@ -51,7 +51,7 @@ impl<T: Copy + Zero> IxDynRepr<T> {
     pub fn copy_from(x: &[T]) -> Self {
         if x.len() <= CAP {
             let mut arr = [T::zero(); CAP];
-            arr[..x.len()].copy_from_slice(&x[..]);
+            arr[..x.len()].copy_from_slice(x);
             IxDynRepr::Inline(x.len() as _, arr)
         } else {
             Self::from(x)

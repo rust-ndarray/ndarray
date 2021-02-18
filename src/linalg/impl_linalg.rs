@@ -613,6 +613,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
 ///
 /// The caller must ensure that the raw view is valid for writing.
 /// the destination may be uninitialized iff beta is zero.
+#[allow(clippy::collapsible_else_if)]
 unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
     alpha: A,
     a: &ArrayBase<S1, Ix2>,

@@ -25,8 +25,8 @@ where
     /// See ArrayView::from_shape_ptr for general pointer validity documentation.
     pub(crate) unsafe fn from_data_ptr(data: S, ptr: NonNull<A>) -> Self {
         let array = ArrayBase {
-            data: data,
-            ptr: ptr,
+            data,
+            ptr,
             dim: Ix1(0),
             strides: Ix1(1),
         };

@@ -94,6 +94,7 @@ pub unsafe trait RawDataClone: RawData {
 pub unsafe trait Data: RawData {
     /// Converts the array to a uniquely owned array, cloning elements if necessary.
     #[doc(hidden)]
+    #[allow(clippy::wrong_self_convention)]
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
     where
         Self::Elem: Clone,
@@ -102,6 +103,7 @@ pub unsafe trait Data: RawData {
     /// Return a shared ownership (copy on write) array based on the existing one,
     /// cloning elements if necessary.
     #[doc(hidden)]
+    #[allow(clippy::wrong_self_convention)]
     fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
     where
         Self::Elem: Clone,
