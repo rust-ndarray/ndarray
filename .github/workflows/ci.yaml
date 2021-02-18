@@ -85,12 +85,28 @@ jobs:
       - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
       - run: cargo careful test -Zcareful-sanitizer -p ndarray-rand
 
+  docs:
+    if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+    name: docs/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo doc
+
   conclusion:
     needs:
       - clippy
       - tests
       - cross_test
       - cargo-careful
+      - docs
     if: always()
     runs-on: ubuntu-latest
     steps:
