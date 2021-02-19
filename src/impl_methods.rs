@@ -1766,20 +1766,11 @@ where
         unsafe { Some(ArrayView::new(self.ptr, dim, broadcast_strides)) }
     }
 
-    /// Calculate the views of two ArrayBases after broadcasting each other, if possible.
+    /// For two arrays or views, find their common shape if possible and
+    /// broadcast them as array views into that shape.
     ///
     /// Return `ShapeError` if their shapes can not be broadcast together.
-    ///
-    /// ```
-    /// use ndarray::{arr1, arr2};
-    ///
-    /// let a = arr2(&[[2], [3], [4]]);
-    /// let b = arr1(&[5, 6, 7]);
-    /// let (a1, b1) = a.broadcast_with(&b).unwrap();
-    /// assert_eq!(a1, arr2(&[[2, 2, 2], [3, 3, 3], [4, 4, 4]]));
-    /// assert_eq!(b1, arr2(&[[5, 6, 7], [5, 6, 7], [5, 6, 7]]));
-    /// ```
-    pub fn broadcast_with<'a, 'b, B, S2, E>(&'a self, other: &'b ArrayBase<S2, E>) ->
+    pub(crate) fn broadcast_with<'a, 'b, B, S2, E>(&'a self, other: &'b ArrayBase<S2, E>) ->
         Result<(ArrayView<'a, A, <D as BroadcastShape<E>>::Output>, ArrayView<'b, B, <D as BroadcastShape<E>>::Output>), ShapeError>
     where
         S: Data<Elem=A>,
