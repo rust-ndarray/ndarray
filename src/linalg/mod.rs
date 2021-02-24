@@ -11,5 +11,7 @@
 pub use self::impl_linalg::general_mat_mul;
 pub use self::impl_linalg::general_mat_vec_mul;
 pub use self::impl_linalg::Dot;
+#[cfg(feature = "rayon")]
+pub use self::impl_linalg::ParDot;
 
 mod impl_linalg;

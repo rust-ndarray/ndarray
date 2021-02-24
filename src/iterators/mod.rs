@@ -676,6 +676,184 @@ where
     }
 }
 
+pub struct LanesIterCore<A, D> {
+    ptr: *mut A,
+    dim: D,
+    strides: D,
+    dis: usize,
+    end: usize,
+}
+
+clone_bounds!(
+    [A, D: Clone]
+    LanesIterCore[A, D] {
+        @copy {
+            ptr,
+            dis,
+            end,
+        }
+        dim,
+        strides,
+    }
+);
+
+impl<A, D: Dimension> LanesIterCore<A, D> {
+    #[inline]
+    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> LanesIterCore<A, D> {
+        LanesIterCore {
+            ptr,
+            dis: 0,
+            end: len.size(),
+            dim: len,
+            strides: stride,
+        }
+    }
+}
+
+impl<A, D: Dimension> Iterator for LanesIterCore<A, D> {
+    type Item = *mut A;
+
+    #[inline]
+    fn next(&mut self) -> Option<*mut A> {
+        if self.dis < self.end {
+            let index = index_from_distance(&self.dim, self.dis);
+            let offset = D::stride_offset(&index, &self.strides);
+            self.dis += 1;
+            unsafe { Some(self.ptr.offset(offset)) }
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
+    }
+
+    fn fold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
+        where
+            G: FnMut(Acc, *mut A) -> Acc,
+    {
+        let ndim = self.dim.ndim();
+        debug_assert_ne!(ndim, 0);
+        let mut accum = init;
+        while self.dis < self.end {
+            let index = index_from_distance(&self.dim, self.dis);
+            let stride = self.strides.last_elem() as isize;
+            let elem_index = index.last_elem();
+            let mut len = self.dim.last_elem();
+            if self.len() < len {
+                len = self.len();
+            }
+            let offset = D::stride_offset(&index, &self.strides);
+            unsafe {
+                let row_ptr = self.ptr.offset(offset);
+                let mut i = 0;
+                let i_end = len - elem_index;
+                while i < i_end {
+                    accum = g(accum, row_ptr.offset(i as isize * stride));
+                    i += 1;
+                }
+                self.dis += i_end;
+            }
+        }
+        accum
+    }
+}
+
+impl<'a, A, D: Dimension> ExactSizeIterator for LanesIterCore<A, D> {
+    fn len(&self) -> usize {
+        if let Some(len) = self.end.checked_sub(self.dis) {
+            len
+        } else {
+            0
+        }
+    }
+}
+
+impl<A, D: Dimension> DoubleEndedIterator for LanesIterCore<A, D> {
+    #[inline]
+    fn next_back(&mut self) -> Option<*mut A> {
+        if self.end <= self.dis {
+            return None
+        }
+        let index = index_from_distance(&self.dim, self.end - 1);
+        self.end -= 1;
+        let offset = D::stride_offset(&index, &self.strides);
+
+        unsafe { Some(self.ptr.offset(offset)) }
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<*mut A> {
+        let len = self.len();
+        if n < len {
+            self.end -= n + 1;
+            let index = index_from_distance(&self.dim, self.end);
+            let offset = D::stride_offset(&index, &self.strides);
+            unsafe { Some(self.ptr.offset(offset)) }
+        } else {
+            None
+        }
+    }
+
+    fn rfold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
+        where
+            G: FnMut(Acc, *mut A) -> Acc,
+    {
+        let mut accum = init;
+        while self.dis < self.end {
+            let index = index_from_distance(&self.dim, self.end - 1);
+            let stride = self.strides.last_elem() as isize;
+            let elem_index = index.last_elem();
+            let mut len = self.dim.last_elem();
+            if self.len() < len {
+                len = self.len();
+            }
+            let offset = D::stride_offset(&index, &self.strides);
+            unsafe {
+                let row_ptr = self.ptr.offset(offset);
+                let mut i = 0;
+                let i_end = len - elem_index;
+                while i < i_end {
+                    accum = g(accum, row_ptr.offset(i as isize * -stride));
+                    i += 1;
+                }
+                self.end -= i_end;
+            }
+        }
+        accum
+    }
+}
+
+impl<A, D: Dimension> LanesIterCore<A, D> {
+    /// Splits the iterator at `index`, yielding two disjoint iterators.
+    ///
+    /// `index` is relative to the current state of the iterator (which is not
+    /// necessarily the start of the axis).
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's remaining
+    /// length.
+    fn split_at(self, index: usize) -> (Self, Self) {
+        assert!(index <= self.len());
+        let mid = self.dis + index;
+        let left = LanesIterCore {
+            dim: self.dim.clone(),
+            strides: self.strides.clone(),
+            dis: self.dis,
+            end: mid,
+            ptr: self.ptr,
+        };
+        let right = LanesIterCore{
+            dim: self.dim,
+            strides: self.strides,
+            dis: mid,
+            end: self.end,
+            ptr: self.ptr,
+        };
+        (left, right)
+    }
+}
+
 /// An iterator that traverses over all axes but one, and yields a view for
 /// each lane along that axis.
 ///
@@ -683,7 +861,7 @@ where
 pub struct LanesIter<'a, A, D> {
     inner_len: Ix,
     inner_stride: Ixs,
-    iter: Baseiter<A, D>,
+    iter: LanesIterCore<A, D>,
     life: PhantomData<&'a A>,
 }
 
@@ -715,12 +893,50 @@ where
     }
 }
 
+impl<'a, A, D> DoubleEndedIterator for LanesIter<'a, A, D>
+    where
+        D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| unsafe {
+            ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+        })
+    }
+}
+
 impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
 where
     D: Dimension,
 {
     fn len(&self) -> usize {
         self.iter.len()
+    }
+}
+
+impl<'a, A, D: Dimension> LanesIter<'a, A, D> {
+    /// Splits the iterator at `index`, yielding two disjoint iterators.
+    ///
+    /// `index` is relative to the current state of the iterator (which is not
+    /// necessarily the start of the axis).
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's remaining
+    /// length.
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            LanesIter {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: left,
+                life: self.life,
+            },
+            LanesIter {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: right,
+                life: self.life,
+            },
+        )
     }
 }
 
@@ -735,7 +951,7 @@ where
 pub struct LanesIterMut<'a, A, D> {
     inner_len: Ix,
     inner_stride: Ixs,
-    iter: Baseiter<A, D>,
+    iter: LanesIterCore<A, D>,
     life: PhantomData<&'a mut A>,
 }
 
@@ -755,12 +971,50 @@ where
     }
 }
 
+impl<'a, A, D> DoubleEndedIterator for LanesIterMut<'a, A, D>
+    where
+        D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| unsafe {
+            ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+        })
+    }
+}
+
 impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
 where
     D: Dimension,
 {
     fn len(&self) -> usize {
         self.iter.len()
+    }
+}
+
+impl<'a, A, D: Dimension> LanesIterMut<'a, A, D> {
+    /// Splits the iterator at `index`, yielding two disjoint iterators.
+    ///
+    /// `index` is relative to the current state of the iterator (which is not
+    /// necessarily the start of the axis).
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's remaining
+    /// length.
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            LanesIterMut {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: left,
+                life: self.life,
+            },
+            LanesIterMut {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: right,
+                life: self.life,
+            },
+        )
     }
 }
 
@@ -1449,6 +1703,8 @@ use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
 #[cfg(feature = "std")]
 use crate::{geomspace::Geomspace, linspace::Linspace, logspace::Logspace};
+use crate::dimension::index_from_distance;
+
 #[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Linspace<F> {}
 #[cfg(feature = "std")]

@@ -134,6 +134,8 @@ use crate::{
 use crate::iter::{
     AxisIter,
     AxisIterMut,
+    LanesIter,
+    LanesIterMut,
     AxisChunksIter,
     AxisChunksIterMut,
 };

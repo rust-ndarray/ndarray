@@ -411,6 +411,25 @@ pub fn offset_from_ptr_to_memory<D: Dimension>(dim: &D, strides: &D) -> isize {
     offset
 }
 
+/// Return the index of the dimension from a specific distance from first index.
+///
+/// Panics if dis is greater than or equal to the count of dim elements.
+pub(crate) fn index_from_distance<D: Dimension>(dim: &D, dis: usize) -> D {
+    let mut dis = dis;
+    let mut index = D::zeros(dim.ndim());
+    let len = dim.ndim();
+    for i in 0..len {
+        let m = len - i -1;
+        index[m] = dis % dim[m];
+        dis = dis / dim[m];
+        if dis == 0 {
+            break;
+        }
+    }
+    assert!(dis == 0);
+    index
+}
+
 /// Modify dimension, stride and return data pointer offset
 ///
 /// **Panics** if stride is 0 or if any index is out of bounds.
