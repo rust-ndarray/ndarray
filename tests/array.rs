@@ -14,6 +14,7 @@ use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 use std::iter::FromIterator;
+use ndarray::linalg::Dot;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -69,6 +70,13 @@ fn test_muti_dot() {
     assert_eq!(c, Array4::from_shape_vec((2, 2, 2, 2), v).unwrap());
 
     let a = Array::range(0., 6., 1.).into_shape((2, 3)).unwrap();
+    let v =vec![1, 2, 1, 2, 1, 3, 2];
+    let b = Array::range(0., 24., 1.).into_shape(v.clone()).unwrap();
+    let c =a.dot(&b);
+    let v2 = vec![10.0, 13.0, 28.0, 31.0, 46.0, 49.0, 64.0, 67.0, 28.0, 40.0, 100.0, 112.0, 172.0, 184.0, 244.0, 256.0];
+    assert_eq!(c, Array::from_shape_vec(vec![2, 1, 2, 1, 2, 1, 2], v2).unwrap());
+
+    let a = Array::range(0., 6., 1.).into_shape(vec![2, 3]).unwrap();
     let v =vec![1, 2, 1, 2, 1, 3, 2];
     let b = Array::range(0., 24., 1.).into_shape(v.clone()).unwrap();
     let c =a.dot(&b);
