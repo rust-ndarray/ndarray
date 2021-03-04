@@ -2,7 +2,7 @@
 
 use defmac::defmac;
 
-use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IntoDimension, IxDyn, RemoveAxis};
+use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IxDyn, RemoveAxis};
 
 use std::hash::{Hash, Hasher};
 
@@ -307,6 +307,7 @@ fn test_array_view() {
 #[cfg(feature = "std")]
 #[allow(clippy::cognitive_complexity)]
 fn test_all_ndindex() {
+    use ndarray::IntoDimension;
     macro_rules! ndindex {
     ($($i:expr),*) => {
         for &rev in &[false, true] {

@@ -10,6 +10,7 @@ env:
   CARGO_TERM_COLOR: always
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "test docs"
+  RUSTFLAGS: "-D warnings"
 
 jobs:
   tests:

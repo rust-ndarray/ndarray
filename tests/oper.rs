@@ -11,11 +11,9 @@ use ndarray::{rcarr1, rcarr2};
 use ndarray::{Data, LinalgScalar};
 use ndarray::{Ix, Ixs};
 use num_traits::Zero;
-use std::iter::FromIterator;
 
 use approx::assert_abs_diff_eq;
 use defmac::defmac;
-use std::ops::Neg;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32]) {
     let aa = rcarr1(a);

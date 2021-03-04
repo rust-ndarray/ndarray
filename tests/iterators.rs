@@ -6,12 +6,9 @@
 )]
 
 use ndarray::prelude::*;
-use ndarray::Ix;
-use ndarray::{arr2, arr3, aview1, indices, s, Axis, Data, Dimension, Slice, Zip};
+use ndarray::{arr3, aview1, indices, s, Axis, Slice, Zip};
 
-use itertools::assert_equal;
-use itertools::{enumerate, rev};
-use std::iter::FromIterator;
+use itertools::{assert_equal, enumerate};
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -37,7 +34,7 @@ fn double_ended() {
     assert_eq!(it.next(), Some(1.));
     assert_eq!(it.rev().last(), Some(2.));
     assert_equal(aview1(&[1, 2, 3]), &[1, 2, 3]);
-    assert_equal(rev(aview1(&[1, 2, 3])), rev(&[1, 2, 3]));
+    assert_equal(aview1(&[1, 2, 3]).into_iter().rev(), [1, 2, 3].iter().rev());
 }
 
 #[test]
@@ -63,7 +60,7 @@ fn iter_size_hint() {
 fn indexed() {
     let a = ArcArray::linspace(0., 7., 8);
     for (i, elt) in a.indexed_iter() {
-        assert_eq!(i, *elt as Ix);
+        assert_eq!(i, *elt as usize);
     }
     let a = a.reshape((2, 4, 1));
     let (mut i, mut j, k) = (0, 0, 0);
@@ -78,22 +75,24 @@ fn indexed() {
     }
 }
 
-fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
-where
-    S: Data<Elem = A>,
-    D: Dimension,
-    A: PartialEq + std::fmt::Debug,
-{
-    let slc = v.as_slice();
-    assert!(slc.is_some());
-    let slc = slc.unwrap();
-    assert_eq!(v.len(), slc.len());
-    assert_equal(v.iter(), slc);
-}
-
 #[test]
 #[cfg(feature = "std")]
 fn as_slice() {
+    use ndarray::Data;
+
+    fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
+    where
+        S: Data<Elem = A>,
+        D: Dimension,
+        A: PartialEq + std::fmt::Debug,
+    {
+        let slc = v.as_slice();
+        assert!(slc.is_some());
+        let slc = slc.unwrap();
+        assert_eq!(v.len(), slc.len());
+        assert_equal(v.iter(), slc);
+    }
+
     let a = ArcArray::linspace(0., 7., 8);
     let a = a.reshape((2, 4, 1));
 
@@ -544,9 +543,9 @@ fn axis_chunks_iter_corner_cases() {
     assert_equal(
         it,
         vec![
-            arr2(&[[7.], [6.], [5.]]),
-            arr2(&[[4.], [3.], [2.]]),
-            arr2(&[[1.], [0.]]),
+            array![[7.], [6.], [5.]],
+            array![[4.], [3.], [2.]],
+            array![[1.], [0.]],
         ],
     );
 

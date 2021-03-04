@@ -73,6 +73,7 @@ where
     ///
     /// let array = Array::from_iter(0..10);
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn from_iter<I: IntoIterator<Item = A>>(iterable: I) -> Self {
         Self::from_vec(iterable.into_iter().collect())
     }

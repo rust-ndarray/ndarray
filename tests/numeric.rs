@@ -40,7 +40,7 @@ fn test_mean_with_array_of_floats() {
 
 #[test]
 fn sum_mean() {
-    let a = arr2(&[[1., 2.], [3., 4.]]);
+    let a: Array2<f64> = arr2(&[[1., 2.], [3., 4.]]);
     assert_eq!(a.sum_axis(Axis(0)), arr1(&[4., 6.]));
     assert_eq!(a.sum_axis(Axis(1)), arr1(&[3., 7.]));
     assert_eq!(a.mean_axis(Axis(0)), Some(arr1(&[2., 3.])));

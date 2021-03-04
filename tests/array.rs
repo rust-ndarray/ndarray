@@ -13,7 +13,6 @@ use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
-use std::iter::FromIterator;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -1803,7 +1802,7 @@ fn test_contiguous() {
 #[test]
 fn test_contiguous_neg_strides() {
     let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-    let mut a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)), &s).unwrap();
+    let a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)), &s).unwrap();
     assert_eq!(
         a,
         arr3(&[[[0, 2], [4, 6], [8, 10]], [[1, 3], [5, 7], [9, 11]]])
