@@ -235,8 +235,8 @@ pub type Ixs = isize;
 
 /// An *n*-dimensional array.
 ///
-/// The array is a general container of elements. It cannot grow or shrink, but
-/// can be sliced into subsets of its data.
+/// The array is a general container of elements. It cannot grow or shrink (with some exceptions),
+/// but can be sliced into subsets of its data.
 /// The array supports arithmetic operations by applying them elementwise.
 ///
 /// In *n*-dimensional we include for example 1-dimensional rows or columns,

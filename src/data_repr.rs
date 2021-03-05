@@ -6,6 +6,8 @@ use alloc::borrow::ToOwned;
 use alloc::vec::Vec;
 use crate::extension::nonnull;
 
+use rawpointer::PointerExt;
+
 /// Array's representation.
 ///
 /// *Don’t use this type directly—use the type alias
@@ -55,6 +57,37 @@ impl<A> OwnedRepr<A> {
         self.ptr
     }
 
+    /// Return end pointer
+    pub(crate) fn as_end_nonnull(&self) -> NonNull<A> {
+        unsafe {
+            self.ptr.add(self.len)
+        }
+    }
+
+    /// Reserve `additional` elements; return the new pointer
+    /// 
+    /// ## Safety
+    ///
+    /// Note that existing pointers into the data are invalidated
+    #[must_use = "must use new pointer to update existing pointers"]
+    pub(crate) fn reserve(&mut self, additional: usize) -> NonNull<A> {
+        self.modify_as_vec(|mut v| {
+            v.reserve(additional);
+            v
+        });
+        self.as_nonnull_mut()
+    }
+
+    /// Set the valid length of the data
+    ///
+    /// ## Safety
+    ///
+    /// The first `new_len` elements of the data should be valid.
+    pub(crate) unsafe fn set_len(&mut self, new_len: usize) {
+        debug_assert!(new_len <= self.capacity);
+        self.len = new_len;
+    }
+
     /// Cast self into equivalent repr of other element type
     ///
     /// ## Safety
@@ -70,6 +103,11 @@ impl<A> OwnedRepr<A> {
             len: self_.len,
             capacity: self_.capacity,
         }
+    }
+
+    fn modify_as_vec(&mut self, f: impl FnOnce(Vec<A>) -> Vec<A>) {
+        let v = self.take_as_vec();
+        *self = Self::from(f(v));
     }
 
     fn take_as_vec(&mut self) -> Vec<A> {
