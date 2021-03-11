@@ -89,7 +89,7 @@ fn raw_view_negative_strides() {
     fn misaligned_deref(data: &[u16; 2]) -> ArrayView1<'_, u16> {
         let ptr: *const u16 = data.as_ptr();
         unsafe {
-            let raw_view = RawArrayView::from_shape_ptr(1.strides((-1isize) as usize), ptr);
+            let raw_view = RawArrayView::from_shape_ptr(1.strides(-1), ptr);
             raw_view.deref_into_view()
         }
     }

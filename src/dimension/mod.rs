@@ -12,7 +12,7 @@ use num_integer::div_floor;
 
 pub use self::axes::{axes_of, Axes, AxisDescription};
 pub use self::axis::Axis;
-pub use self::conversion::IntoDimension;
+pub use self::conversion::{IntoDimension, IntoStrides};
 pub use self::dim::*;
 pub use self::dimension_trait::Dimension;
 pub use self::dynindeximpl::IxDynImpl;
@@ -402,7 +402,7 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
 /// memory of the array. The result is always <= 0.
 pub fn offset_from_ptr_to_memory<D: Dimension>(dim: &D, strides: &D) -> isize {
     let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (d, s)| {
-        if (*s as isize) < 0 {
+        if (*s as isize) < 0 && *d != 0 {
             _offset + *s as isize * (*d as isize - 1)
         } else {
             _offset

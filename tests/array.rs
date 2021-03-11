@@ -1895,6 +1895,50 @@ fn test_shape() {
     assert_eq!(a.strides(), &[6, 3, 1]);
     assert_eq!(b.strides(), &[1, 1, 2]);
     assert_eq!(c.strides(), &[1, 3, 1]);
+
+    // negative strides
+    let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].to_vec();
+    let a= Array::from_shape_vec((2, 3, 2).strides((-1, -4, 2)),s.clone()).unwrap();
+    assert_eq!(a, arr3(&[[[9, 11], [5, 7], [1, 3]], [[8, 10], [4, 6], [0, 2]]]));
+    assert_eq!(a.shape(), &[2, 3, 2]);
+    assert_eq!(a.strides(), &[-1, -4, 2]);
+
+    // ()
+    let b=Array::from_shape_vec(().strides(()),s.clone()).unwrap();
+    assert_eq!(b,arr0(0));
+
+    let v = vec![5];
+    let mut c = ArrayView2::<u8>::from_shape((1, 1).strides((-10, -1)), v.as_slice()).unwrap();
+    assert_eq!(c, arr2(&[[5]]));
+    c.slice_collapse(s![1..1, ..]);
+    assert_eq!(c.shape(), &[0, 1]);
+
+    // discontinuous
+    let d = Array3::from_shape_vec((3, 2, 2).strides((-8, -4, -2)), (0..24).collect()).unwrap();
+    assert_eq!(d, arr3(&[[[22, 20], [18, 16]], [[14, 12], [10, 8]], [[6, 4], [2, 0]]]));
+
+    // empty
+    let empty: [f32; 0] = [];
+    let e = Array::from_shape_vec(0.strides(-2), empty.to_vec()).unwrap();
+    assert_eq!(e, arr1(&[]));
+
+    let a = [1., 2., 3., 4., 5., 6.];
+    let d = (2, 1, 1);
+    let s = (-2, 2, 1);
+    let b = ArrayView::from_shape(d.strides(s), &a).unwrap();
+    assert_eq!(b, arr3(&[[[3.0]], [[1.0]]]));
+
+    let d = (1, 2, 1);
+    let s = (2, -2, -1);
+    let b = Array::from_shape_vec(d.strides(s), a.to_vec()).unwrap();
+    assert_eq!(b, arr3(&[[[3.0], [1.0]]]));
+
+    let a: [f32; 0] = [];
+    // [[]] shape=[4, 0], strides=[0, 1]
+    let d = (4, 0);
+    let s = (0, -1);
+    let b = ArrayView::from_shape(d.strides(s), &a).unwrap();
+    assert_eq!(b, arr2(&[[],[],[],[]]));
 }
 
 #[test]

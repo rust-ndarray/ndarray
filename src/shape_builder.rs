@@ -1,4 +1,4 @@
-use crate::dimension::IntoDimension;
+use crate::dimension::{IntoDimension, IntoStrides};
 use crate::Dimension;
 
 /// A contiguous array shape of n dimensions.
@@ -111,7 +111,7 @@ where
     T: IntoDimension,
 {
     type Dim = T::Dim;
-    type Strides = T;
+    type Strides = T::Strides;
     fn into_shape(self) -> Shape<Self::Dim> {
         Shape {
             dim: self.into_dimension(),
@@ -124,8 +124,8 @@ where
     fn set_f(self, is_f: bool) -> Shape<Self::Dim> {
         self.into_shape().set_f(is_f)
     }
-    fn strides(self, st: T) -> StrideShape<Self::Dim> {
-        self.into_shape().strides(st.into_dimension())
+    fn strides(self, st: Self::Strides) -> StrideShape<Self::Dim> {
+        self.into_shape().strides(st.into_strides())
     }
 }
 
