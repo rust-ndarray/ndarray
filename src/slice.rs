@@ -290,6 +290,25 @@ pub struct SliceInfo<T: ?Sized, D: Dimension> {
     indices: T,
 }
 
+impl<T1, D1, T2, D2> PartialEq<SliceInfo<T2, D2>> for SliceInfo<T1, D1>
+where
+    T1: AsRef<[SliceOrIndex]>,
+    T2: AsRef<[SliceOrIndex]>,
+    D1: Dimension,
+    D2: Dimension,
+{
+    fn eq(&self, other: &SliceInfo<T2, D2>) -> bool {
+        self.indices.as_ref() == other.indices.as_ref()
+    }
+}
+
+impl<T, D> Eq for SliceInfo<T, D>
+where
+    T: AsRef<[SliceOrIndex]>,
+    D: Dimension,
+{
+}
+
 impl<T: ?Sized, D> Deref for SliceInfo<T, D>
 where
     D: Dimension,
