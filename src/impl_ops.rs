@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::dimension::DimMax;
+use crate::Zip;
 use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
@@ -53,11 +55,11 @@ macro_rules! impl_binary_op(
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
-/// and return the result (based on `self`).
+/// and return the result.
 ///
 /// `self` must be an `Array` or `ArcArray`.
 ///
-/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+/// If their shapes disagree, `self` is broadcast to their broadcast shape.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
@@ -66,11 +68,11 @@ where
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
     S2: Data<Elem=B>,
-    D: Dimension,
+    D: Dimension + DimMax<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> ArrayBase<S, D>
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
         self.$mth(&rhs)
     }
@@ -79,9 +81,12 @@ where
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and reference `rhs`,
-/// and return the result (based on `self`).
+/// and return the result.
 ///
-/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
@@ -90,16 +95,55 @@ where
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
     S2: Data<Elem=B>,
-    D: Dimension,
+    D: Dimension + DimMax<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, D>;
-    fn $mth(mut self, rhs: &ArrayBase<S2, E>) -> ArrayBase<S, D>
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
     {
-        self.zip_mut_with(rhs, |x, y| {
-            *x = x.clone() $operator y.clone();
-        });
-        self
+        if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
+            let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+            out.zip_mut_with_same_shape(rhs, clone_iopf(A::$mth));
+            out
+        } else {
+            let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
+            Zip::from(&lhs).and(&rhs).map_collect_owned(clone_opf(A::$mth))
+        }
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between reference `self` and `rhs`,
+/// and return the result.
+///
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=B>,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: DataOwned<Elem=B> + DataMut,
+    D: Dimension,
+    E: Dimension + DimMax<D>,
+{
+    type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    where
+    {
+        if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
+            let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
+            out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$mth));
+            out
+        } else {
+            let (rhs, lhs) = rhs.broadcast_with(self).unwrap();
+            Zip::from(&lhs).and(&rhs).map_collect_owned(clone_opf(A::$mth))
+        }
     }
 }
 
@@ -108,7 +152,8 @@ where
 /// between references `self` and `rhs`,
 /// and return the result as a new `Array`.
 ///
-/// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+/// If their shapes disagree, `self` and `rhs` is broadcast to their broadcast shape,
+/// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
@@ -117,13 +162,13 @@ where
     B: Clone,
     S: Data<Elem=A>,
     S2: Data<Elem=B>,
-    D: Dimension,
+    D: Dimension + DimMax<E>,
     E: Dimension,
 {
-    type Output = Array<A, D>;
-    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Array<A, D> {
-        // FIXME: Can we co-broadcast arrays here? And how?
-        self.to_owned().$mth(rhs)
+    type Output = Array<A, <D as DimMax<E>>::Output>;
+    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
+        let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
+        Zip::from(&lhs).and(&rhs).map_collect(clone_opf(A::$mth))
     }
 }
 
@@ -227,6 +272,18 @@ mod arithmetic_ops {
 
     use num_complex::Complex;
     use std::ops::*;
+
+    fn clone_opf<A: Clone, B: Clone, C>(f: impl Fn(A, B) -> C) -> impl FnMut(&A, &B) -> C {
+        move |x, y| f(x.clone(), y.clone())
+    }
+
+    fn clone_iopf<A: Clone, B: Clone>(f: impl Fn(A, B) -> A) -> impl FnMut(&mut A, &B) {
+        move |x, y| *x = f(x.clone(), y.clone())
+    }
+
+    fn clone_iopf_rev<A: Clone, B: Clone>(f: impl Fn(A, B) -> B) -> impl FnMut(&mut B, &A) {
+        move |x, y| *x = f(y.clone(), x.clone())
+    }
 
     impl_binary_op!(Add, +, add, +=, "addition");
     impl_binary_op!(Sub, -, sub, -=, "subtraction");

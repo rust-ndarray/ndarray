@@ -9,9 +9,9 @@
 
 use defmac::defmac;
 use itertools::{enumerate, zip, Itertools};
-use ndarray::indices;
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
+use ndarray::indices;
 use ndarray::{Slice, SliceInfo, SliceOrIndex};
 
 macro_rules! assert_panics {
@@ -1565,6 +1565,49 @@ fn arithmetic_broadcast() {
     a.swap_axes(0, 1);
     let b = a.clone() / aview0(&1.);
     assert_eq!(a, b);
+
+    // reference
+    let a = arr2(&[[2], [3], [4]]);
+    let b = arr1(&[5, 6, 7]);
+    assert_eq!(&a + &b, arr2(&[[7, 8, 9], [8, 9, 10], [9, 10, 11]]));
+    assert_eq!(
+        a.clone() - &b,
+        arr2(&[[-3, -4, -5], [-2, -3, -4], [-1, -2, -3]])
+    );
+    assert_eq!(
+        a.clone() * b.clone(),
+        arr2(&[[10, 12, 14], [15, 18, 21], [20, 24, 28]])
+    );
+    assert_eq!(&b / a, arr2(&[[2, 3, 3], [1, 2, 2], [1, 1, 1]]));
+
+    // Negative strides and non-contiguous memory
+    let s = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let s = Array3::from_shape_vec((2, 3, 2).strides((1, 4, 2)), s.to_vec()).unwrap();
+    let a = s.slice(s![..;-1,..;2,..]);
+    let b = s.slice(s![..2, -1, ..]);
+    let mut c = s.clone();
+    c.collapse_axis(Axis(2), 1);
+    let c = c.slice(s![1,..;2,..]);
+    assert_eq!(
+        &a.to_owned() + &b,
+        arr3(&[[[11, 15], [20, 24]], [[10, 14], [19, 23]]])
+    );
+    assert_eq!(
+        &a + b.into_owned() + c,
+        arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
+    );
+
+    // shared array
+    let sa = a.to_shared();
+    let sa2 = sa.to_shared();
+    let sb = b.to_shared();
+    let sb2 = sb.to_shared();
+    let sc = c.to_shared();
+    let sc2 = sc.into_shared();
+    assert_eq!(
+        sa2 + &sb2 + sc2.into_owned(),
+        arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
+    );
 }
 
 #[test]

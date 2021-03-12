@@ -16,9 +16,7 @@ use std::ptr::NonNull;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 
-use crate::{
-    ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr,
-};
+use crate::{ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
 
 /// Array representation trait.
 ///
@@ -414,7 +412,6 @@ pub unsafe trait DataOwned: Data {
     /// Corresponding owned data with MaybeUninit elements
     type MaybeUninit: DataOwned<Elem = MaybeUninit<Self::Elem>>
         + RawDataSubst<Self::Elem, Output=Self>;
-
     #[doc(hidden)]
     fn new(elements: Vec<Self::Elem>) -> Self;
 
@@ -440,6 +437,7 @@ unsafe impl<A> DataOwned for OwnedRepr<A> {
     fn new(elements: Vec<A>) -> Self {
         OwnedRepr::from(elements)
     }
+
     fn into_shared(self) -> OwnedArcRepr<A> {
         OwnedArcRepr(Arc::new(self))
     }
@@ -622,3 +620,4 @@ impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a mut A> {
         ViewRepr::new()
     }
 }
+
