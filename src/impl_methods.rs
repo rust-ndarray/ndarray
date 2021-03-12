@@ -1771,8 +1771,9 @@ where
     /// broadcast them as array views into that shape.
     ///
     /// Return `ShapeError` if their shapes can not be broadcast together.
+    #[allow(clippy::type_complexity)]
     pub(crate) fn broadcast_with<'a, 'b, B, S2, E>(&'a self, other: &'b ArrayBase<S2, E>) ->
-        Result<(ArrayView<'a, A, <D as DimMax<E>>::Output>, ArrayView<'b, B, <D as DimMax<E>>::Output>), ShapeError>
+        Result<(ArrayView<'a, A, DimMaxOf<D, E>>, ArrayView<'b, B, DimMaxOf<D, E>>), ShapeError>
     where
         S: Data<Elem=A>,
         S2: Data<Elem=B>,
@@ -1782,10 +1783,10 @@ where
         let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(&self.dim, &other.dim)?;
         if let Some(view1) = self.broadcast(shape.clone()) {
             if let Some(view2) = other.broadcast(shape) {
-                return Ok((view1, view2))
+                return Ok((view1, view2));
             }
         }
-        return Err(from_kind(ErrorKind::IncompatibleShape));
+        Err(from_kind(ErrorKind::IncompatibleShape))
     }
 
     /// Swap axes `ax` and `bx`.
@@ -2465,3 +2466,5 @@ unsafe fn unlimited_transmute<A, B>(data: A) -> B {
     let old_data = ManuallyDrop::new(data);
     (&*old_data as *const A as *const B).read()
 }
+
+type DimMaxOf<A, B> = <A as DimMax<B>>::Output;
