@@ -15,7 +15,7 @@ use super::axes_of;
 use super::conversion::Convert;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
-use crate::{Axis, BroadcastShape};
+use crate::{Axis, DimMax};
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
@@ -46,11 +46,11 @@ pub trait Dimension:
     + MulAssign
     + for<'x> MulAssign<&'x Self>
     + MulAssign<usize>
-    + BroadcastShape<Ix0, Output=Self>
-    + BroadcastShape<Self, Output=Self>
-    + BroadcastShape<IxDyn, Output=IxDyn>
-    + BroadcastShape<<Self as Dimension>::Smaller, Output=Self>
-    + BroadcastShape<<Self as Dimension>::Larger, Output=<Self as Dimension>::Larger>
+    + DimMax<Ix0, Output=Self>
+    + DimMax<Self, Output=Self>
+    + DimMax<IxDyn, Output=IxDyn>
+    + DimMax<<Self as Dimension>::Smaller, Output=Self>
+    + DimMax<<Self as Dimension>::Larger, Output=<Self as Dimension>::Larger>
 {
     /// For fixed-size dimension representations (e.g. `Ix2`), this should be
     /// `Some(ndim)`, and for variable-size dimension representations (e.g.

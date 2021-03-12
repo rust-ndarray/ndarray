@@ -34,7 +34,7 @@ fn co_broadcast<D1, D2, Output>(shape1: &D1, shape2: &D2) -> Result<Output, Shap
     Ok(out)
 }
 
-pub trait BroadcastShape<Other: Dimension> {
+pub trait DimMax<Other: Dimension> {
     /// The resulting dimension type after broadcasting.
     type Output: Dimension;
 
@@ -46,8 +46,8 @@ pub trait BroadcastShape<Other: Dimension> {
 
 /// Dimensions of the same type remain unchanged when co_broadcast.
 /// So you can directly use D as the resulting type.
-/// (Instead of <D as BroadcastShape<D>>::BroadcastOutput)
-impl<D: Dimension> BroadcastShape<D> for D {
+/// (Instead of <D as DimMax<D>>::BroadcastOutput)
+impl<D: Dimension> DimMax<D> for D {
     type Output = D;
 
     fn broadcast_shape(&self, other: &D) -> Result<Self::Output, ShapeError> {
@@ -57,7 +57,7 @@ impl<D: Dimension> BroadcastShape<D> for D {
 
 macro_rules! impl_broadcast_distinct_fixed {
     ($smaller:ty, $larger:ty) => {
-        impl BroadcastShape<$larger> for $smaller {
+        impl DimMax<$larger> for $smaller {
             type Output = $larger;
 
             fn broadcast_shape(&self, other: &$larger) -> Result<Self::Output, ShapeError> {
@@ -65,7 +65,7 @@ macro_rules! impl_broadcast_distinct_fixed {
             }
         }
 
-        impl BroadcastShape<$smaller> for $larger {
+        impl DimMax<$smaller> for $larger {
             type Output = $larger;
 
             fn broadcast_shape(&self, other: &$smaller) -> Result<Self::Output, ShapeError> {

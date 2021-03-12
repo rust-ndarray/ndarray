@@ -14,7 +14,7 @@ use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
 
-use crate::{arraytraits, BroadcastShape};
+use crate::{arraytraits, DimMax};
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
@@ -1771,11 +1771,11 @@ where
     ///
     /// Return `ShapeError` if their shapes can not be broadcast together.
     pub(crate) fn broadcast_with<'a, 'b, B, S2, E>(&'a self, other: &'b ArrayBase<S2, E>) ->
-        Result<(ArrayView<'a, A, <D as BroadcastShape<E>>::Output>, ArrayView<'b, B, <D as BroadcastShape<E>>::Output>), ShapeError>
+        Result<(ArrayView<'a, A, <D as DimMax<E>>::Output>, ArrayView<'b, B, <D as DimMax<E>>::Output>), ShapeError>
     where
         S: Data<Elem=A>,
         S2: Data<Elem=B>,
-        D: Dimension + BroadcastShape<E>,
+        D: Dimension + DimMax<E>,
         E: Dimension,
     {
         let shape = self.dim.broadcast_shape(&other.dim)?;

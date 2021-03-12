@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::dimension::BroadcastShape;
+use crate::dimension::DimMax;
 use crate::Zip;
 use num_complex::Complex;
 
@@ -68,10 +68,10 @@ where
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
     S2: Data<Elem=B>,
-    D: Dimension + BroadcastShape<E>,
+    D: Dimension + DimMax<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, <D as BroadcastShape<E>>::Output>;
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
         self.$mth(&rhs)
@@ -95,14 +95,14 @@ where
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
     S2: Data<Elem=B>,
-    D: Dimension + BroadcastShape<E>,
+    D: Dimension + DimMax<E>,
     E: Dimension,
 {
-    type Output = ArrayBase<S, <D as BroadcastShape<E>>::Output>;
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
     {
         if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
-            let mut out = self.into_dimensionality::<<D as BroadcastShape<E>>::Output>().unwrap();
+            let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
             out.zip_mut_with_same_shape(rhs, clone_iopf(A::$mth));
             out
         } else {
@@ -130,14 +130,14 @@ where
     S: Data<Elem=A>,
     S2: DataOwned<Elem=B> + DataMut,
     D: Dimension,
-    E: Dimension + BroadcastShape<D>,
+    E: Dimension + DimMax<D>,
 {
-    type Output = ArrayBase<S2, <E as BroadcastShape<D>>::Output>;
+    type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     where
     {
         if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
-            let mut out = rhs.into_dimensionality::<<E as BroadcastShape<D>>::Output>().unwrap();
+            let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
             out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$mth));
             out
         } else {
@@ -162,10 +162,10 @@ where
     B: Clone,
     S: Data<Elem=A>,
     S2: Data<Elem=B>,
-    D: Dimension + BroadcastShape<E>,
+    D: Dimension + DimMax<E>,
     E: Dimension,
 {
-    type Output = Array<A, <D as BroadcastShape<E>>::Output>;
+    type Output = Array<A, <D as DimMax<E>>::Output>;
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
         let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
         Zip::from(&lhs).and(&rhs).map_collect(clone_opf(A::$mth))

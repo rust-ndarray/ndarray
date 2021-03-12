@@ -12,7 +12,7 @@ use num_integer::div_floor;
 
 pub use self::axes::{axes_of, Axes, AxisDescription};
 pub use self::axis::Axis;
-pub use self::broadcast::BroadcastShape;
+pub use self::broadcast::DimMax;
 pub use self::conversion::IntoDimension;
 pub use self::dim::*;
 pub use self::dimension_trait::Dimension;

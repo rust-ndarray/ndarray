@@ -3,7 +3,7 @@
 use defmac::defmac;
 
 use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, Ix0, IxDyn, IxDynImpl, RemoveAxis,
-              ErrorKind, ShapeError, BroadcastShape};
+              ErrorKind, ShapeError, DimMax};
 
 use std::hash::{Hash, Hasher};
 
@@ -347,9 +347,9 @@ fn test_broadcast_shape() {
     fn test_co<D1, D2>(
         d1: &D1,
         d2: &D2,
-        r: Result<<D1 as BroadcastShape<D2>>::Output, ShapeError>,
+        r: Result<<D1 as DimMax<D2>>::Output, ShapeError>,
     ) where
-        D1: Dimension + BroadcastShape<D2>,
+        D1: Dimension + DimMax<D2>,
         D2: Dimension,
     {
         let d = d1.broadcast_shape(d2);
