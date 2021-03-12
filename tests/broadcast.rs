@@ -1,5 +1,4 @@
 use ndarray::prelude::*;
-use ndarray::{ShapeError, ErrorKind, arr3};
 
 #[test]
 #[cfg(feature = "std")]
