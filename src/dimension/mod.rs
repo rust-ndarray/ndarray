@@ -29,7 +29,7 @@ use std::mem;
 mod macros;
 mod axes;
 mod axis;
-mod broadcast;
+pub(crate) mod broadcast;
 mod conversion;
 pub mod dim;
 mod dimension_trait;

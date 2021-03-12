@@ -21,6 +21,7 @@ use crate::dimension::{
     abs_index, axes_of, do_slice, merge_axes, move_min_stride_axis_to_last,
     offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
+use crate::dimension::broadcast::co_broadcast;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
@@ -1778,7 +1779,7 @@ where
         D: Dimension + DimMax<E>,
         E: Dimension,
     {
-        let shape = self.dim.broadcast_shape(&other.dim)?;
+        let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(&self.dim, &other.dim)?;
         if let Some(view1) = self.broadcast(shape.clone()) {
             if let Some(view2) = other.broadcast(shape) {
                 return Ok((view1, view2))

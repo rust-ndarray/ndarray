@@ -2,8 +2,7 @@
 
 use defmac::defmac;
 
-use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, Ix0, IxDyn, IxDynImpl, RemoveAxis,
-              ErrorKind, ShapeError, DimMax};
+use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IxDyn, RemoveAxis};
 
 use std::hash::{Hash, Hasher};
 
@@ -340,51 +339,4 @@ fn test_all_ndindex() {
     ndindex!(10, 4, 3, 2);
     ndindex!(10, 4, 3, 2, 2);
     ndindex!(10, 4, 3, 2, 2, 2);
-}
-
-#[test]
-fn test_broadcast_shape() {
-    fn test_co<D1, D2>(
-        d1: &D1,
-        d2: &D2,
-        r: Result<<D1 as DimMax<D2>>::Output, ShapeError>,
-    ) where
-        D1: Dimension + DimMax<D2>,
-        D2: Dimension,
-    {
-        let d = d1.broadcast_shape(d2);
-        assert_eq!(d, r);
-    }
-    test_co(&Dim([2, 3]), &Dim([4, 1, 3]), Ok(Dim([4, 2, 3])));
-    test_co(
-        &Dim([1, 2, 2]),
-        &Dim([1, 3, 4]),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-    );
-    test_co(&Dim([3, 4, 5]), &Ix0(), Ok(Dim([3, 4, 5])));
-    let v = vec![1, 2, 3, 4, 5, 6, 7];
-    test_co(
-        &Dim(vec![1, 1, 3, 1, 5, 1, 7]),
-        &Dim([2, 1, 4, 1, 6, 1]),
-        Ok(Dim(IxDynImpl::from(v.as_slice()))),
-    );
-    let d = Dim([1, 2, 1, 3]);
-    test_co(&d, &d, Ok(d));
-    test_co(
-        &Dim([2, 1, 2]).into_dyn(),
-        &Dim(0),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-    );
-    test_co(
-        &Dim([2, 1, 1]),
-        &Dim([0, 0, 1, 3, 4]),
-        Ok(Dim([0, 0, 2, 3, 4])),
-    );
-    test_co(&Dim([0]), &Dim([0, 0, 0]), Ok(Dim([0, 0, 0])));
-    test_co(&Dim(1), &Dim([1, 0, 0]), Ok(Dim([1, 0, 0])));
-    test_co(
-        &Dim([1, 3, 0, 1, 1]),
-        &Dim([1, 2, 3, 1]),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-    );
 }
