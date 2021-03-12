@@ -151,6 +151,7 @@ pub use crate::arraytraits::AsArray;
 pub use crate::linalg_traits::NdFloat;
 pub use crate::linalg_traits::LinalgScalar;
 
+#[allow(deprecated)] // stack_new_axis
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::math_cell::MathCell;

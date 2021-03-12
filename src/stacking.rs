@@ -43,6 +43,7 @@ where
     D: Dimension,
     D::Larger: RemoveAxis,
 {
+    #[allow(deprecated)]
     stack_new_axis(axis, arrays)
 }
 
@@ -108,6 +109,7 @@ where
     }
 }
 
+#[deprecated(note="Use under the name stack instead.", since="0.15.0")]
 /// Stack arrays along the new axis.
 ///
 /// ***Errors*** if the arrays have mismatching shapes.
@@ -273,6 +275,7 @@ macro_rules! concatenate {
 /// # }
 /// ```
 #[macro_export]
+#[deprecated(note="Use under the name stack instead.", since="0.15.0")]
 macro_rules! stack_new_axis {
     ($axis:expr, $( $array:expr ),+ ) => {
         $crate::stack_new_axis($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
