@@ -4,28 +4,75 @@ Version 0.15.0 (Not released yet)
 New features
 ------------
 
-- Support for compiling ndarray as `no_std` (using core and alloc) by [@xd009642]
+- Support inserting new axes while slicing by [@jturner314]
 
-  https://github.com/rust-ndarray/ndarray/pull/861
+  https://github.com/rust-ndarray/ndarray/pull/570
+
+- Support two-sided broadcasting in arithmetic operations with arrays by [@SparrowLii]
+
+  Note that this means that a new trait bound is required in some places when
+  mixing dimensionality types of arrays in arithmetic operations.
+
+  https://github.com/rust-ndarray/ndarray/pull/898
+
+- Support for compiling ndarray as `no_std` (using core and alloc) by
+  [@xd009642] and [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/861 <br>
+  https://github.com/rust-ndarray/ndarray/pull/889
 
 - New methods `.cell_view()` and `ArrayViewMut::into_cell_view` that enable
   new ways of working with array elements as if they were in Cells - setting
-  elements through shared views and broadcast views.
+  elements through shared views and broadcast views, by [@bluss].
 
   https://github.com/rust-ndarray/ndarray/pull/877
 
+- New methods `slice_each_axis/_mut/_inplace` that make it easier to slice
+  a dynamic number of axes in some situations, by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/913
 
 Enhancements
 ------------
 
-- Fix `Zip` for the 0-dimensional case by [@jturner314]
+- New constructors `Array::from_iter` and `Array::from_vec` by [@bluss].
+  No new functionality, just that these constructors are avaiable without trait
+  imports.
 
-  https://github.com/rust-ndarray/ndarray/pull/862
+  https://github.com/rust-ndarray/ndarray/pull/921
+
+- Ndarray can now correctly determine that arrays can be contiguous, even if
+  they have negative strides, by [@SparrowLii]
+
+  https://github.com/rust-ndarray/ndarray/pull/885
+
+- `NdProducer::raw_dim` is now a documented method by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/918
+
+- `AxisDescription` is now a struct with field names, not a tuple struct by
+  [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/915
+
+- Improvements to `map_inplace` by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/911
+
+- `.into_dimensionality` performance was improved for the `IxDyn` to `IxDyn`
+  case by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/906
+
+- Improved performance for scalar + &array and &array + scalar operations by
+  [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/890
 
 API changes
 -----------
 
-- Removed deprecated methods by [@bluss]:
+- Removed already deprecated methods by [@bluss]:
 
   - Remove deprecated `.all_close()` - use approx feature and methods like  `.abs_diff_eq` instead
   - Mark `.scalar_sum()` as deprecated - use `.sum()` instead
@@ -34,21 +81,100 @@ API changes
 
   https://github.com/rust-ndarray/ndarray/pull/874
 
-- Remove deprecated methods: rows, cols (for row and column count; the new
-  names are nrows and ncols) by [@bluss]
+- Remove already deprecated methods: rows, cols (for row and column count; the
+  new names are nrows and ncols) by [@bluss]
 
   https://github.com/rust-ndarray/ndarray/pull/872
 
-- Renamed methods (old names are now deprecated) by [@bluss]
+- Renamed `Zip` methods by [@bluss] and [@SparrowLii]:
+
+  - `apply` -> `for_each` 
+  - `apply_collect` -> `map_collect`
+  - `apply_collect_into` -> `map_collect_into`
+  - (`par_` prefixed methods renamed accordingly)
+
+  https://github.com/rust-ndarray/ndarray/pull/894 <br>
+  https://github.com/rust-ndarray/ndarray/pull/904 <br>
+
+- Deprecate `Array::uninitialized` and revamped its replacement by [@bluss]
+
+  Please use new new `Array::uninit` which is based on `MaybeUninit` (renamed
+  from `Array::maybe_uninit`, the old name is also deprecated).
+
+  https://github.com/rust-ndarray/ndarray/pull/902 <br>
+  https://github.com/rust-ndarray/ndarray/pull/876
+
+- Renamed methods (old names are now deprecated) by [@bluss] and [@jturner314]
 
   - `genrows/_mut` -> `rows/_mut`
   - `gencolumns/_mut` -> `columns/_mut`
+  - `stack_new_axis` -> `stack` (the new name already existed)
+  - `visit` -> `for_each`
 
-  https://github.com/rust-ndarray/ndarray/pull/872
+  https://github.com/rust-ndarray/ndarray/pull/872 <br>
+  https://github.com/rust-ndarray/ndarray/pull/937 <br>
+  https://github.com/rust-ndarray/ndarray/pull/907 <br>
+
+- `blas-src` dependency updated to 0.7.0 by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/891
+
+- Updated `matrixmultiply` dependency to 0.3.0 by [@bluss]
+  and adding new feature flag `matrixmultiply-threading` to enable its threading
+
+  https://github.com/rust-ndarray/ndarray/pull/888 <br>
+  https://github.com/rust-ndarray/ndarray/pull/938 <br>
+ 
+
+Bug fixes
+---------
+
+- Fix `Zip::indexed` for the 0-dimensional case by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/862
+
+- Fix bug in layout computation that broke parallel collect to f-order
+  array in some circumstances by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/900
+
+- Fix an unwanted panic in shape overflow checking by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/855
 
 Other changes
 -------------
 
+- Various improvements to tests and CI by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/934 <br>
+  https://github.com/rust-ndarray/ndarray/pull/924 <br>
+
+- The `sort-axis.rs` example file's implementation of sort was bugfixed and now
+  has tests, by [@dam5h] and [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/916 <br>
+  https://github.com/rust-ndarray/ndarray/pull/930
+
+- We now link to the #rust-sci room on matrix in the readme by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/619
+
+- Internal cleanup with builder-like methods for creating arrays by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/908
+
+- Implementation fix of `.swap(i, j)` by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/903
+
+- Minimum supported Rust version (MSRV) is Rust 1.49.
+
+  https://github.com/rust-ndarray/ndarray/pull/902
+
+- Minor improvements to docs by [@insideoutclub]
+
+  https://github.com/rust-ndarray/ndarray/pull/887
 
 
 Version 0.14.0 (2020-11-28)
@@ -1069,21 +1195,24 @@ Earlier releases
 [@bluss]: https://github.com/bluss
 [@jturner314]: https://github.com/jturner314
 [@LukeMathWalker]: https://github.com/LukeMathWalker
-[@max-sixty]: https://github.com/max-sixty
-[@JP-Ellis]: https://github.com/JP-Ellis
-[@sebasv]: https://github.com/sebasv
-[@mneumann]: https://github.com/mneumann
-[@termoshtt]: https://github.com/termoshtt
-[@rth]: https://github.com/rth
-[@nitsky]: https://github.com/nitsky
-[@d-dorazio]: https://github.com/d-dorazio
-[@nilgoyette]: https://github.com/nilgoyette
-[@TheLortex]: https://github.com/TheLortex
-[@mockersf]: https://github.com/mockersf
-[@viniciusd]: https://github.com/viniciusd
-[@lifuyang]: https://github.com/liufuyang
 [@acj]: https://github.com/acj
-[@Eijebong]: https://github.com/Eijebong
 [@andrei-papou]: https://github.com/andrei-papou
+[@dam5h]: https://github.com/dam5h
+[@d-dorazio]: https://github.com/d-dorazio
+[@Eijebong]: https://github.com/Eijebong
+[@insideoutclub]: https://github.com/insideoutclub
+[@JP-Ellis]: https://github.com/JP-Ellis
+[@lifuyang]: https://github.com/liufuyang
+[@max-sixty]: https://github.com/max-sixty
+[@mneumann]: https://github.com/mneumann
+[@mockersf]: https://github.com/mockersf
+[@nilgoyette]: https://github.com/nilgoyette
+[@nitsky]: https://github.com/nitsky
+[@rth]: https://github.com/rth
+[@sebasv]: https://github.com/sebasv
+[@SparrowLii]: https://github.com/SparrowLii
+[@termoshtt]: https://github.com/termoshtt
+[@TheLortex]: https://github.com/TheLortex
+[@viniciusd]: https://github.com/viniciusd
 [@xd009642]: https://github.com/xd009642
 [@Zuse64]: https://github.com/Zuse64
