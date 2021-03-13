@@ -134,14 +134,16 @@ use std::marker::PhantomData;
 use alloc::sync::Arc;
 
 pub use crate::dimension::dim::*;
-pub use crate::dimension::DimMax;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
+pub use crate::dimension::{DimAdd, DimMax};
 
 pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
-pub use crate::slice::{Slice, SliceInfo, SliceNextDim, SliceOrIndex};
+pub use crate::slice::{
+    AxisSliceInfo, MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceNextDim,
+};
 
 use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes};
@@ -496,14 +498,16 @@ pub type Ixs = isize;
 ///
 /// If a range is used, the axis is preserved. If an index is used, that index
 /// is selected and the axis is removed; this selects a subview. See
-/// [*Subviews*](#subviews) for more information about subviews. Note that
-/// [`.slice_collapse()`] behaves like [`.collapse_axis()`] by preserving
-/// the number of dimensions.
+/// [*Subviews*](#subviews) for more information about subviews. If a
+/// [`NewAxis`] instance is used, a new axis is inserted. Note that
+/// [`.slice_collapse()`] panics on `NewAxis` elements and behaves like
+/// [`.collapse_axis()`] by preserving the number of dimensions.
 ///
 /// [`.slice()`]: #method.slice
 /// [`.slice_mut()`]: #method.slice_mut
 /// [`.slice_move()`]: #method.slice_move
 /// [`.slice_collapse()`]: #method.slice_collapse
+/// [`NewAxis`]: struct.NewAxis.html
 ///
 /// When slicing arrays with generic dimensionality, creating an instance of
 /// [`&SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
@@ -526,7 +530,7 @@ pub type Ixs = isize;
 /// [`.multi_slice_move()`]: type.ArrayViewMut.html#method.multi_slice_move
 ///
 /// ```
-/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, Slice};
+/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, NewAxis, Slice};
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -561,16 +565,17 @@ pub type Ixs = isize;
 /// assert_eq!(d, e);
 /// assert_eq!(d.shape(), &[2, 1, 3]);
 ///
-/// // Let’s create a slice while selecting a subview with
+/// // Let’s create a slice while selecting a subview and inserting a new axis with
 /// //
 /// // - Both submatrices of the greatest dimension: `..`
 /// // - The last row in each submatrix, removing that axis: `-1`
 /// // - Row elements in reverse order: `..;-1`
-/// let f = a.slice(s![.., -1, ..;-1]);
-/// let g = arr2(&[[ 6,  5,  4],
-///                [12, 11, 10]]);
+/// // - A new axis at the end.
+/// let f = a.slice(s![.., -1, ..;-1, NewAxis]);
+/// let g = arr3(&[[ [6],  [5],  [4]],
+///                [[12], [11], [10]]]);
 /// assert_eq!(f, g);
-/// assert_eq!(f.shape(), &[2, 3]);
+/// assert_eq!(f.shape(), &[2, 3, 1]);
 ///
 /// // Let's take two disjoint, mutable slices of a matrix with
 /// //
