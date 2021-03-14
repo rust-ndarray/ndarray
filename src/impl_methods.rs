@@ -338,9 +338,9 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice<I>(&self, info: &I) -> ArrayView<'_, A, I::OutDim>
+    pub fn slice<I>(&self, info: I) -> ArrayView<'_, A, I::OutDim>
     where
-        I: SliceArg<D> + ?Sized,
+        I: SliceArg<D>,
         S: Data,
     {
         self.view().slice_move(info)
@@ -353,9 +353,9 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_mut<I>(&mut self, info: &I) -> ArrayViewMut<'_, A, I::OutDim>
+    pub fn slice_mut<I>(&mut self, info: I) -> ArrayViewMut<'_, A, I::OutDim>
     where
-        I: SliceArg<D> + ?Sized,
+        I: SliceArg<D>,
         S: DataMut,
     {
         self.view_mut().slice_move(info)
@@ -399,9 +399,9 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
-    pub fn slice_move<I>(mut self, info: &I) -> ArrayBase<S, I::OutDim>
+    pub fn slice_move<I>(mut self, info: I) -> ArrayBase<S, I::OutDim>
     where
-        I: SliceArg<D> + ?Sized,
+        I: SliceArg<D>,
     {
         assert_eq!(
             info.in_ndim(),
@@ -468,9 +468,9 @@ where
     /// - if [`AxisSliceInfo::NewAxis`] is in `info`, e.g. if [`NewAxis`] was
     ///   used in the [`s!`] macro
     /// - if `D` is `IxDyn` and `info` does not match the number of array axes
-    pub fn slice_collapse<I>(&mut self, info: &I)
+    pub fn slice_collapse<I>(&mut self, info: I)
     where
-        I: SliceArg<D> + ?Sized,
+        I: SliceArg<D>,
     {
         assert_eq!(
             info.in_ndim(),

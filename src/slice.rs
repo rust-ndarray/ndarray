@@ -78,7 +78,7 @@ pub struct NewAxis;
 /// A slice (range with step), an index, or a new axis token.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
-/// `&SliceInfo<[AxisSliceInfo; n], Din, Dout>`.
+/// `SliceInfo<[AxisSliceInfo; n], Din, Dout>`.
 ///
 /// ## Examples
 ///
@@ -721,9 +721,7 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 ///
 /// `s![]` takes a list of ranges/slices/indices/new-axes, separated by comma,
 /// with optional step sizes that are separated from the range by a semicolon.
-/// It is converted into a [`&SliceInfo`] instance.
-///
-/// [`&SliceInfo`]: struct.SliceInfo.html
+/// It is converted into a [`SliceInfo`] instance.
 ///
 /// Each range/slice/index uses signed indices, where a negative value is
 /// counted from the end of the axis. Step sizes are also signed and may be
@@ -907,9 +905,7 @@ macro_rules! s(
         <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };
     ($($t:tt)*) => {
-        // The extra `*&` is a workaround for this compiler bug:
-        // https://github.com/rust-lang/rust/issues/23014
-        &*&$crate::s![@parse
+        $crate::s![@parse
               ::std::marker::PhantomData::<$crate::Ix0>,
               ::std::marker::PhantomData::<$crate::Ix0>,
               []
@@ -951,7 +947,7 @@ where
     private_impl! {}
 }
 
-impl<'a, A, D, I0> MultiSliceArg<'a, A, D> for (&I0,)
+impl<'a, A, D, I0> MultiSliceArg<'a, A, D> for (I0,)
 where
     A: 'a,
     D: Dimension,
@@ -960,7 +956,7 @@ where
     type Output = (ArrayViewMut<'a, A, I0::OutDim>,);
 
     fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
-        (view.slice_move(self.0),)
+        (view.slice_move(&self.0),)
     }
 
     private_impl! {}
@@ -971,7 +967,7 @@ macro_rules! impl_multislice_tuple {
         impl_multislice_tuple!(@def_impl ($($but_last,)* $last,), [$($but_last)*] $last);
     };
     (@def_impl ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
-        impl<'a, A, D, $($all,)*> MultiSliceArg<'a, A, D> for ($(&$all,)*)
+        impl<'a, A, D, $($all,)*> MultiSliceArg<'a, A, D> for ($($all,)*)
         where
             A: 'a,
             D: Dimension,
@@ -981,7 +977,7 @@ macro_rules! impl_multislice_tuple {
 
             fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
                 #[allow(non_snake_case)]
-                let &($($all,)*) = self;
+                let ($($all,)*) = self;
 
                 let shape = view.raw_dim();
                 assert!(!impl_multislice_tuple!(@intersects_self &shape, ($($all,)*)));
