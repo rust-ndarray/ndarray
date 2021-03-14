@@ -324,6 +324,24 @@ pub unsafe trait SliceArg<D: Dimension>: AsRef<[AxisSliceInfo]> {
     private_decl! {}
 }
 
+unsafe impl<T, D> SliceArg<D> for &T
+where
+    T: SliceArg<D> + ?Sized,
+    D: Dimension,
+{
+    type OutDim = T::OutDim;
+
+    fn in_ndim(&self) -> usize {
+        T::in_ndim(self)
+    }
+
+    fn out_ndim(&self) -> usize {
+        T::out_ndim(self)
+    }
+
+    private_impl! {}
+}
+
 macro_rules! impl_slicearg_samedim {
     ($in_dim:ty) => {
         unsafe impl<T, Dout> SliceArg<$in_dim> for SliceInfo<T, $in_dim, Dout>
