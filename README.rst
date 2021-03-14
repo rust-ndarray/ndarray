@@ -86,6 +86,10 @@ your `Cargo.toml`.
     Uses ``blas-src`` for pluggable backend, which needs to be configured
     separately (see below).
 
+- ``matrixmultiply-threading``
+
+  - Enable the ``threading`` feature in the matrixmultiply package
+
 How to use with cargo
 ---------------------
 

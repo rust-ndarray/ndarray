@@ -73,6 +73,8 @@ docs = ["approx", "serde", "rayon"]
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["rayon_", "std"]
 
+matrixmultiply-threading = ["matrixmultiply/threading"]
+
 [profile.release]
 [profile.bench]
 debug = true

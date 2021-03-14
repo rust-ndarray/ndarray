@@ -87,6 +87,8 @@
 //!   - Enable transparent BLAS support for matrix multiplication.
 //!     Uses ``blas-src`` for pluggable backend, which needs to be configured
 //!     separately (see the README).
+//! - `matrixmultiply-threading`
+//!   - Enable the ``threading`` feature in the matrixmultiply package
 //!
 //! ## Documentation
 //!
