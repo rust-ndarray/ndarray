@@ -219,7 +219,7 @@ fn test_slice_dyninput_array_fixed() {
 #[test]
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
-    let info = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+    let info = SliceInfo::<_, Ix3, IxDyn>::try_from([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(NewAxis),
@@ -229,7 +229,7 @@ fn test_slice_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    let info2 = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+    let info2 = SliceInfo::<_, Ix3, IxDyn>::try_from([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
@@ -241,7 +241,7 @@ fn test_slice_array_dyn() {
 #[test]
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
-    let info = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+    let info = SliceInfo::<_, Ix3, IxDyn>::try_from([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(NewAxis),
@@ -251,7 +251,7 @@ fn test_slice_dyninput_array_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    let info2 = &SliceInfo::<_, Ix3, IxDyn>::try_from([
+    let info2 = SliceInfo::<_, Ix3, IxDyn>::try_from([
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
@@ -273,7 +273,7 @@ fn test_slice_dyninput_vec_fixed() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    let info2 = &SliceInfo::<_, Ix3, Ix2>::try_from(vec![
+    let info2 = SliceInfo::<_, Ix3, Ix2>::try_from(vec![
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
@@ -295,7 +295,7 @@ fn test_slice_dyninput_vec_dyn() {
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
-    let info2 = &SliceInfo::<_, Ix3, IxDyn>::try_from(vec![
+    let info2 = SliceInfo::<_, Ix3, IxDyn>::try_from(vec![
         AxisSliceInfo::from(1..),
         AxisSliceInfo::from(1),
         AxisSliceInfo::from(..).step_by(2),
