@@ -92,13 +92,13 @@ pub struct NewAxis;
 ///
 /// `AxisSliceInfo::Slice { start: a, end: Some(b), step: 2 }` is every second
 /// element from `a` until `b`. It can also be created with
-/// `AxisSliceInfo::from(a..b).step_by(2)`. The Python equivalent is `[a:b:2]`.
-/// The macro equivalent is `s![a..b;2]`.
+/// `AxisSliceInfo::from(Slice::from(a..b).step_by(2))`. The Python equivalent
+/// is `[a:b:2]`. The macro equivalent is `s![a..b;2]`.
 ///
 /// `AxisSliceInfo::Slice { start: a, end: None, step: -1 }` is every element,
 /// from `a` until the end, in reverse order. It can also be created with
-/// `AxisSliceInfo::from(a..).step_by(-1)`. The Python equivalent is `[a::-1]`.
-/// The macro equivalent is `s![a..;-1]`.
+/// `AxisSliceInfo::from(Slice::from(a..).step_by(-1))`. The Python equivalent
+/// is `[a::-1]`. The macro equivalent is `s![a..;-1]`.
 ///
 /// `AxisSliceInfo::NewAxis` is a new axis of length 1. It can also be created
 /// with `AxisSliceInfo::from(NewAxis)`. The Python equivalent is
@@ -135,30 +135,6 @@ impl AxisSliceInfo {
     /// Returns `true` if `self` is a `NewAxis` value.
     pub fn is_new_axis(&self) -> bool {
         matches!(self, AxisSliceInfo::NewAxis)
-    }
-
-    /// Returns a new `AxisSliceInfo` with the given step size (multiplied with
-    /// the previous step size).
-    ///
-    /// `step` must be nonzero.
-    /// (This method checks with a debug assertion that `step` is not zero.)
-    ///
-    /// **Panics** if `self` is not the `AxisSliceInfo::Slice` variant.
-    #[inline]
-    pub fn step_by(self, step: isize) -> Self {
-        debug_assert_ne!(step, 0, "AxisSliceInfo::step_by: step must be nonzero");
-        match self {
-            AxisSliceInfo::Slice {
-                start,
-                end,
-                step: orig_step,
-            } => AxisSliceInfo::Slice {
-                start,
-                end,
-                step: orig_step * step,
-            },
-            _ => panic!("AxisSliceInfo::step_by: `self` must be the `Slice` variant"),
-        }
     }
 }
 
