@@ -880,7 +880,9 @@ macro_rules! s(
     };
     // convert range/index/new-axis and step into AxisSliceInfo
     (@convert $r:expr, $s:expr) => {
-        <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        <$crate::AxisSliceInfo as ::std::convert::From<_>>::from(
+            <$crate::Slice as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        )
     };
     ($($t:tt)*) => {
         $crate::s![@parse
