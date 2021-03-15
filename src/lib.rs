@@ -494,9 +494,8 @@ pub type Ixs = isize;
 ///
 /// The slicing argument can be passed using the macro [`s![]`](macro.s!.html),
 /// which will be used in all examples. (The explicit form is an instance of
-/// [`&SliceInfo`]; see its docs for more information.)
-///
-/// [`&SliceInfo`]: struct.SliceInfo.html
+/// [`SliceInfo`] or another type which implements [`SliceArg`]; see their docs
+/// for more information.)
 ///
 /// If a range is used, the axis is preserved. If an index is used, that index
 /// is selected and the axis is removed; this selects a subview. See
@@ -512,7 +511,7 @@ pub type Ixs = isize;
 /// [`NewAxis`]: struct.NewAxis.html
 ///
 /// When slicing arrays with generic dimensionality, creating an instance of
-/// [`&SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
+/// [`SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
 /// is awkward. In these cases, it's usually more convenient to use
 /// [`.slice_each_axis()`]/[`.slice_each_axis_mut()`]/[`.slice_each_axis_inplace()`]
 /// or to create a view and then slice individual axes of the view using

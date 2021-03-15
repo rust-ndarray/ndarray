@@ -78,7 +78,7 @@ pub struct NewAxis;
 /// A slice (range with step), an index, or a new axis token.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
-/// `&SliceInfo<[AxisSliceInfo; n], Din, Dout>`.
+/// `SliceInfo<[AxisSliceInfo; n], Din, Dout>`.
 ///
 /// ## Examples
 ///
@@ -324,6 +324,24 @@ pub unsafe trait SliceArg<D: Dimension>: AsRef<[AxisSliceInfo]> {
     private_decl! {}
 }
 
+unsafe impl<T, D> SliceArg<D> for &T
+where
+    T: SliceArg<D> + ?Sized,
+    D: Dimension,
+{
+    type OutDim = T::OutDim;
+
+    fn in_ndim(&self) -> usize {
+        T::in_ndim(self)
+    }
+
+    fn out_ndim(&self) -> usize {
+        T::out_ndim(self)
+    }
+
+    private_impl! {}
+}
+
 macro_rules! impl_slicearg_samedim {
     ($in_dim:ty) => {
         unsafe impl<T, Dout> SliceArg<$in_dim> for SliceInfo<T, $in_dim, Dout>
@@ -388,7 +406,7 @@ unsafe impl SliceArg<IxDyn> for [AxisSliceInfo] {
 
 /// Represents all of the necessary information to perform a slice.
 ///
-/// The type `T` is typically `[AxisSliceInfo; n]`, `[AxisSliceInfo]`, or
+/// The type `T` is typically `[AxisSliceInfo; n]`, `&[AxisSliceInfo]`, or
 /// `Vec<AxisSliceInfo>`. The type `Din` is the dimension of the array to be
 /// sliced, and `Dout` is the output dimension after calling [`.slice()`]. Note
 /// that if `Din` is a fixed dimension type (`Ix0`, `Ix1`, `Ix2`, etc.), the
@@ -397,14 +415,13 @@ unsafe impl SliceArg<IxDyn> for [AxisSliceInfo] {
 ///
 /// [`.slice()`]: struct.ArrayBase.html#method.slice
 #[derive(Debug)]
-#[repr(transparent)]
-pub struct SliceInfo<T: ?Sized, Din: Dimension, Dout: Dimension> {
+pub struct SliceInfo<T, Din: Dimension, Dout: Dimension> {
     in_dim: PhantomData<Din>,
     out_dim: PhantomData<Dout>,
     indices: T,
 }
 
-impl<T: ?Sized, Din, Dout> Deref for SliceInfo<T, Din, Dout>
+impl<T, Din, Dout> Deref for SliceInfo<T, Din, Dout>
 where
     Din: Dimension,
     Dout: Dimension,
@@ -464,14 +481,7 @@ where
             indices,
         }
     }
-}
 
-impl<T, Din, Dout> SliceInfo<T, Din, Dout>
-where
-    T: AsRef<[AxisSliceInfo]>,
-    Din: Dimension,
-    Dout: Dimension,
-{
     /// Returns a new `SliceInfo` instance.
     ///
     /// Errors if `Din` or `Dout` is not consistent with `indices`.
@@ -490,14 +500,7 @@ where
             indices,
         })
     }
-}
 
-impl<T: ?Sized, Din, Dout> SliceInfo<T, Din, Dout>
-where
-    T: AsRef<[AxisSliceInfo]>,
-    Din: Dimension,
-    Dout: Dimension,
-{
     /// Returns the number of dimensions of the input array for
     /// [`.slice()`](struct.ArrayBase.html#method.slice).
     ///
@@ -528,7 +531,7 @@ where
     }
 }
 
-impl<'a, Din, Dout> TryFrom<&'a [AxisSliceInfo]> for &'a SliceInfo<[AxisSliceInfo], Din, Dout>
+impl<'a, Din, Dout> TryFrom<&'a [AxisSliceInfo]> for SliceInfo<&'a [AxisSliceInfo], Din, Dout>
 where
     Din: Dimension,
     Dout: Dimension,
@@ -537,16 +540,11 @@ where
 
     fn try_from(
         indices: &'a [AxisSliceInfo],
-    ) -> Result<&'a SliceInfo<[AxisSliceInfo], Din, Dout>, ShapeError> {
-        check_dims_for_sliceinfo::<Din, Dout>(indices)?;
+    ) -> Result<SliceInfo<&'a [AxisSliceInfo], Din, Dout>, ShapeError> {
         unsafe {
-            // This is okay because we've already checked the correctness of
-            // `Din` and `Dout`, and the only non-zero-sized member of
-            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], Din,
-            // Dout>` should have the same bitwise representation as
-            // `&[AxisSliceInfo]`.
-            Ok(&*(indices as *const [AxisSliceInfo]
-                as *const SliceInfo<[AxisSliceInfo], Din, Dout>))
+            // This is okay because `&[AxisSliceInfo]` always returns the same
+            // value for `.as_ref()`.
+            Self::new(indices)
         }
     }
 }
@@ -612,20 +610,18 @@ where
     }
 }
 
-impl<T, Din, Dout> AsRef<SliceInfo<[AxisSliceInfo], Din, Dout>> for SliceInfo<T, Din, Dout>
+impl<'a, T, Din, Dout> From<&'a SliceInfo<T, Din, Dout>>
+    for SliceInfo<&'a [AxisSliceInfo], Din, Dout>
 where
     T: AsRef<[AxisSliceInfo]>,
     Din: Dimension,
     Dout: Dimension,
 {
-    fn as_ref(&self) -> &SliceInfo<[AxisSliceInfo], Din, Dout> {
-        unsafe {
-            // This is okay because the only non-zero-sized member of
-            // `SliceInfo` is `indices`, so `&SliceInfo<[AxisSliceInfo], Din, Dout>`
-            // should have the same bitwise representation as
-            // `&[AxisSliceInfo]`.
-            &*(self.indices.as_ref() as *const [AxisSliceInfo]
-                as *const SliceInfo<[AxisSliceInfo], Din, Dout>)
+    fn from(info: &'a SliceInfo<T, Din, Dout>) -> SliceInfo<&'a [AxisSliceInfo], Din, Dout> {
+        SliceInfo {
+            in_dim: info.in_dim,
+            out_dim: info.out_dim,
+            indices: info.indices.as_ref(),
         }
     }
 }
@@ -703,9 +699,7 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 ///
 /// `s![]` takes a list of ranges/slices/indices/new-axes, separated by comma,
 /// with optional step sizes that are separated from the range by a semicolon.
-/// It is converted into a [`&SliceInfo`] instance.
-///
-/// [`&SliceInfo`]: struct.SliceInfo.html
+/// It is converted into a [`SliceInfo`] instance.
 ///
 /// Each range/slice/index uses signed indices, where a negative value is
 /// counted from the end of the axis. Step sizes are also signed and may be
@@ -889,9 +883,7 @@ macro_rules! s(
         <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r).step_by($s as isize)
     };
     ($($t:tt)*) => {
-        // The extra `*&` is a workaround for this compiler bug:
-        // https://github.com/rust-lang/rust/issues/23014
-        &*&$crate::s![@parse
+        $crate::s![@parse
               ::std::marker::PhantomData::<$crate::Ix0>,
               ::std::marker::PhantomData::<$crate::Ix0>,
               []
@@ -933,7 +925,7 @@ where
     private_impl! {}
 }
 
-impl<'a, A, D, I0> MultiSliceArg<'a, A, D> for (&I0,)
+impl<'a, A, D, I0> MultiSliceArg<'a, A, D> for (I0,)
 where
     A: 'a,
     D: Dimension,
@@ -942,7 +934,7 @@ where
     type Output = (ArrayViewMut<'a, A, I0::OutDim>,);
 
     fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
-        (view.slice_move(self.0),)
+        (view.slice_move(&self.0),)
     }
 
     private_impl! {}
@@ -953,7 +945,7 @@ macro_rules! impl_multislice_tuple {
         impl_multislice_tuple!(@def_impl ($($but_last,)* $last,), [$($but_last)*] $last);
     };
     (@def_impl ($($all:ident,)*), [$($but_last:ident)*] $last:ident) => {
-        impl<'a, A, D, $($all,)*> MultiSliceArg<'a, A, D> for ($(&$all,)*)
+        impl<'a, A, D, $($all,)*> MultiSliceArg<'a, A, D> for ($($all,)*)
         where
             A: 'a,
             D: Dimension,
@@ -963,7 +955,7 @@ macro_rules! impl_multislice_tuple {
 
             fn multi_slice_move(&self, view: ArrayViewMut<'a, A, D>) -> Self::Output {
                 #[allow(non_snake_case)]
-                let &($($all,)*) = self;
+                let ($($all,)*) = self;
 
                 let shape = view.raw_dim();
                 assert!(!impl_multislice_tuple!(@intersects_self &shape, ($($all,)*)));
