@@ -34,7 +34,7 @@ use crate::iter::{
 };
 use crate::slice::{MultiSliceArg, SliceArg};
 use crate::stacking::concatenate;
-use crate::{AxisSliceInfo, NdIndex, Slice};
+use crate::{NdIndex, Slice, SliceInfoElem};
 
 /// # Methods For All Array Types
 impl<A, S, D> ArrayBase<S, D>
@@ -415,7 +415,7 @@ where
         let mut old_axis = 0;
         let mut new_axis = 0;
         info.as_ref().iter().for_each(|&ax_info| match ax_info {
-            AxisSliceInfo::Slice { start, end, step } => {
+            SliceInfoElem::Slice { start, end, step } => {
                 // Slice the axis in-place to update the `dim`, `strides`, and `ptr`.
                 self.slice_axis_inplace(Axis(old_axis), Slice { start, end, step });
                 // Copy the sliced dim and stride to corresponding axis.
@@ -424,7 +424,7 @@ where
                 old_axis += 1;
                 new_axis += 1;
             }
-            AxisSliceInfo::Index(index) => {
+            SliceInfoElem::Index(index) => {
                 // Collapse the axis in-place to update the `ptr`.
                 let i_usize = abs_index(self.len_of(Axis(old_axis)), index);
                 self.collapse_axis(Axis(old_axis), i_usize);
@@ -434,7 +434,7 @@ where
                 // is zero length.
                 old_axis += 1;
             }
-            AxisSliceInfo::NewAxis => {
+            SliceInfoElem::NewAxis => {
                 // Set the dim and stride of the new axis.
                 new_dim[new_axis] = 1;
                 new_strides[new_axis] = 0;
@@ -465,7 +465,7 @@ where
     ///
     /// - if an index is out of bounds
     /// - if a step size is zero
-    /// - if [`AxisSliceInfo::NewAxis`] is in `info`, e.g. if [`NewAxis`] was
+    /// - if [`SliceInfoElem::NewAxis`] is in `info`, e.g. if [`NewAxis`] was
     ///   used in the [`s!`] macro
     /// - if `D` is `IxDyn` and `info` does not match the number of array axes
     pub fn slice_collapse<I>(&mut self, info: I)
@@ -479,16 +479,16 @@ where
         );
         let mut axis = 0;
         info.as_ref().iter().for_each(|&ax_info| match ax_info {
-                AxisSliceInfo::Slice { start, end, step } => {
+                SliceInfoElem::Slice { start, end, step } => {
                     self.slice_axis_inplace(Axis(axis), Slice { start, end, step });
                     axis += 1;
                 }
-                AxisSliceInfo::Index(index) => {
+                SliceInfoElem::Index(index) => {
                     let i_usize = abs_index(self.len_of(Axis(axis)), index);
                     self.collapse_axis(Axis(axis), i_usize);
                     axis += 1;
                 }
-                AxisSliceInfo::NewAxis => panic!("`slice_collapse` does not support `NewAxis`."),
+                SliceInfoElem::NewAxis => panic!("`slice_collapse` does not support `NewAxis`."),
             });
         debug_assert_eq!(axis, self.ndim());
     }

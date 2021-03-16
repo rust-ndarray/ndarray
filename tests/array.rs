@@ -12,7 +12,7 @@ use itertools::{enumerate, zip, Itertools};
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::indices;
-use ndarray::{AxisSliceInfo, Slice, SliceInfo};
+use ndarray::{Slice, SliceInfo, SliceInfoElem};
 use std::convert::TryFrom;
 
 macro_rules! assert_panics {
@@ -220,19 +220,19 @@ fn test_slice_dyninput_array_fixed() {
 fn test_slice_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5));
     let info = SliceInfo::<_, Ix3, IxDyn>::try_from([
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(NewAxis),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(NewAxis),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
     let info2 = SliceInfo::<_, Ix3, IxDyn>::try_from([
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.view().slice_collapse(info2);
@@ -242,19 +242,19 @@ fn test_slice_array_dyn() {
 fn test_slice_dyninput_array_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
     let info = SliceInfo::<_, Ix3, IxDyn>::try_from([
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(NewAxis),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(NewAxis),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
     let info2 = SliceInfo::<_, Ix3, IxDyn>::try_from([
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.view().slice_collapse(info2);
@@ -264,19 +264,19 @@ fn test_slice_dyninput_array_dyn() {
 fn test_slice_dyninput_vec_fixed() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
     let info = &SliceInfo::<_, Ix3, Ix3>::try_from(vec![
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(NewAxis),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(NewAxis),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
     let info2 = SliceInfo::<_, Ix3, Ix2>::try_from(vec![
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.view().slice_collapse(info2);
@@ -286,19 +286,19 @@ fn test_slice_dyninput_vec_fixed() {
 fn test_slice_dyninput_vec_dyn() {
     let mut arr = Array3::<f64>::zeros((5, 2, 5)).into_dyn();
     let info = &SliceInfo::<_, Ix3, IxDyn>::try_from(vec![
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(NewAxis),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(NewAxis),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.slice(info);
     arr.slice_mut(info);
     arr.view().slice_move(info);
     let info2 = SliceInfo::<_, Ix3, IxDyn>::try_from(vec![
-        AxisSliceInfo::from(1..),
-        AxisSliceInfo::from(1),
-        AxisSliceInfo::from(Slice::from(..).step_by(2)),
+        SliceInfoElem::from(1..),
+        SliceInfoElem::from(1),
+        SliceInfoElem::from(Slice::from(..).step_by(2)),
     ])
     .unwrap();
     arr.view().slice_collapse(info2);

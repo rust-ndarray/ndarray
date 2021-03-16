@@ -561,7 +561,7 @@ fn scaled_add_2() {
 #[test]
 fn scaled_add_3() {
     use approx::assert_relative_eq;
-    use ndarray::{AxisSliceInfo, Slice, SliceInfo};
+    use ndarray::{Slice, SliceInfo, SliceInfoElem};
     use std::convert::TryFrom;
 
     let beta = -2.3;
@@ -583,7 +583,7 @@ fn scaled_add_3() {
                 let mut a = range_mat64(m, k);
                 let mut answer = a.clone();
                 let cdim = if n == 1 { vec![q] } else { vec![n, q] };
-                let cslice: Vec<AxisSliceInfo> = if n == 1 {
+                let cslice: Vec<SliceInfoElem> = if n == 1 {
                     vec![Slice::from(..).step_by(s2).into()]
                 } else {
                     vec![
