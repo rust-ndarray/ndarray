@@ -690,8 +690,8 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 /// * *range*: a range with step size 1 to use for slicing that axis.
 /// * *range* `;` *step*: a range with step size *step* to use for slicing that axis.
 /// * *slice*: a [`Slice`] instance to use for slicing that axis.
-/// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
-///   instance, with new step size *step*, to use for slicing that axis.
+/// * *slice* `;` *step*: a range constructed from a [`Slice`] instance,
+///   multiplying the step size by *step*, to use for slicing that axis.
 /// * *new-axis*: a [`NewAxis`] instance that represents the creation of a new axis.
 ///   (Except for [`.slice_collapse()`], which panics on [`NewAxis`] elements.)
 ///
