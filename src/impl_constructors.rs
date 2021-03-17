@@ -531,30 +531,14 @@ where
     ///     // two first columns in b are two last in a
     ///     // rest of columns in b are the initial columns in a
     ///
-    ///     assign_to(a.slice(s![.., -2..]), b.slice_mut(s![.., ..2]));
-    ///     assign_to(a.slice(s![.., 2..]), b.slice_mut(s![.., ..-2]));
+    ///     a.slice(s![.., -2..]).assign_to(b.slice_mut(s![.., ..2]));
+    ///     a.slice(s![.., 2..]).assign_to(b.slice_mut(s![.., ..-2]));
     ///
     ///     // Now we can promise that `b` is safe to use with all operations
     ///     unsafe {
     ///         b.assume_init()
     ///     }
     /// }
-    ///
-    /// use ndarray::{IntoNdProducer, AssignElem};
-    ///
-    /// // This function clones elements from the first input to the second;
-    /// // the two producers must have the same shape
-    /// fn assign_to<'a, P1, P2, A>(from: P1, to: P2)
-    ///     where P1: IntoNdProducer<Item = &'a A>,
-    ///           P2: IntoNdProducer<Dim = P1::Dim>,
-    ///           P2::Item: AssignElem<A>,
-    ///           A: Clone + 'a
-    /// {
-    ///     Zip::from(from)
-    ///         .map_assign_into(to, A::clone);
-    /// }
-    ///
-    /// # shift_by_two(&Array2::zeros((8, 8)));
     /// ```
     pub fn uninit<Sh>(shape: Sh) -> ArrayBase<S::MaybeUninit, D>
     where

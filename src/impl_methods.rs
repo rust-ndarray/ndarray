@@ -15,6 +15,7 @@ use rawpointer::PointerExt;
 use crate::imp_prelude::*;
 
 use crate::{arraytraits, DimMax};
+use crate::argument_traits::AssignElem;
 use crate::dimension;
 use crate::dimension::IntoDimension;
 use crate::dimension::{
@@ -25,7 +26,7 @@ use crate::dimension::broadcast::co_broadcast;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
-use crate::zip::Zip;
+use crate::zip::{IntoNdProducer, Zip};
 use crate::AxisDescription;
 
 use crate::iter::{
@@ -2047,6 +2048,23 @@ where
         S2: Data<Elem = A>,
     {
         self.zip_mut_with(rhs, |x, y| *x = y.clone());
+    }
+
+    /// Perform an elementwise assigment of values cloned from `self` into array or producer `to`.
+    ///
+    /// The destination `to` can be another array or a producer of assignable elements.
+    /// [`AssignElem`] determines how elements are assigned.
+    ///
+    /// **Panics** if shapes disagree.
+    pub fn assign_to<P>(&self, to: P)
+    where
+        S: Data,
+        P: IntoNdProducer<Dim = D>,
+        P::Item: AssignElem<A>,
+        A: Clone,
+    {
+        Zip::from(self)
+            .map_assign_into(to, A::clone);
     }
 
     /// Perform an elementwise assigment to `self` from element `x`.
