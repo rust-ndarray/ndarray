@@ -8,7 +8,7 @@
 
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::slice::SliceArg;
-use crate::{AxisSliceInfo, Ix, Ixs, Slice};
+use crate::{Ix, Ixs, Slice, SliceInfoElem};
 use num_integer::div_floor;
 
 pub use self::axes::{axes_of, Axes, AxisDescription};
@@ -608,15 +608,15 @@ pub fn slices_intersect<D: Dimension>(
         indices1.as_ref().iter().filter(|si| !si.is_new_axis()),
         indices2.as_ref().iter().filter(|si| !si.is_new_axis()),
     ) {
-        // The slices do not intersect iff any pair of `AxisSliceInfo` does not intersect.
+        // The slices do not intersect iff any pair of `SliceInfoElem` does not intersect.
         match (si1, si2) {
             (
-                AxisSliceInfo::Slice {
+                SliceInfoElem::Slice {
                     start: start1,
                     end: end1,
                     step: step1,
                 },
-                AxisSliceInfo::Slice {
+                SliceInfoElem::Slice {
                     start: start2,
                     end: end2,
                     step: step2,
@@ -637,8 +637,8 @@ pub fn slices_intersect<D: Dimension>(
                     return false;
                 }
             }
-            (AxisSliceInfo::Slice { start, end, step }, AxisSliceInfo::Index(ind))
-            | (AxisSliceInfo::Index(ind), AxisSliceInfo::Slice { start, end, step }) => {
+            (SliceInfoElem::Slice { start, end, step }, SliceInfoElem::Index(ind))
+            | (SliceInfoElem::Index(ind), SliceInfoElem::Slice { start, end, step }) => {
                 let ind = abs_index(axis_len, ind);
                 let (min, max) = match slice_min_max(axis_len, Slice::new(start, end, step)) {
                     Some(m) => m,
@@ -648,14 +648,14 @@ pub fn slices_intersect<D: Dimension>(
                     return false;
                 }
             }
-            (AxisSliceInfo::Index(ind1), AxisSliceInfo::Index(ind2)) => {
+            (SliceInfoElem::Index(ind1), SliceInfoElem::Index(ind2)) => {
                 let ind1 = abs_index(axis_len, ind1);
                 let ind2 = abs_index(axis_len, ind2);
                 if ind1 != ind2 {
                     return false;
                 }
             }
-            (AxisSliceInfo::NewAxis, _) | (_, AxisSliceInfo::NewAxis) => unreachable!(),
+            (SliceInfoElem::NewAxis, _) | (_, SliceInfoElem::NewAxis) => unreachable!(),
         }
     }
     true

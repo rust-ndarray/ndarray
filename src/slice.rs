@@ -78,33 +78,33 @@ pub struct NewAxis;
 /// A slice (range with step), an index, or a new axis token.
 ///
 /// See also the [`s![]`](macro.s!.html) macro for a convenient way to create a
-/// `SliceInfo<[AxisSliceInfo; n], Din, Dout>`.
+/// `SliceInfo<[SliceInfoElem; n], Din, Dout>`.
 ///
 /// ## Examples
 ///
-/// `AxisSliceInfo::Index(a)` is the index `a`. It can also be created with
-/// `AxisSliceInfo::from(a)`. The Python equivalent is `[a]`. The macro
+/// `SliceInfoElem::Index(a)` is the index `a`. It can also be created with
+/// `SliceInfoElem::from(a)`. The Python equivalent is `[a]`. The macro
 /// equivalent is `s![a]`.
 ///
-/// `AxisSliceInfo::Slice { start: 0, end: None, step: 1 }` is the full range
-/// of an axis. It can also be created with `AxisSliceInfo::from(..)`. The
+/// `SliceInfoElem::Slice { start: 0, end: None, step: 1 }` is the full range
+/// of an axis. It can also be created with `SliceInfoElem::from(..)`. The
 /// Python equivalent is `[:]`. The macro equivalent is `s![..]`.
 ///
-/// `AxisSliceInfo::Slice { start: a, end: Some(b), step: 2 }` is every second
+/// `SliceInfoElem::Slice { start: a, end: Some(b), step: 2 }` is every second
 /// element from `a` until `b`. It can also be created with
-/// `AxisSliceInfo::from(Slice::from(a..b).step_by(2))`. The Python equivalent
+/// `SliceInfoElem::from(Slice::from(a..b).step_by(2))`. The Python equivalent
 /// is `[a:b:2]`. The macro equivalent is `s![a..b;2]`.
 ///
-/// `AxisSliceInfo::Slice { start: a, end: None, step: -1 }` is every element,
+/// `SliceInfoElem::Slice { start: a, end: None, step: -1 }` is every element,
 /// from `a` until the end, in reverse order. It can also be created with
-/// `AxisSliceInfo::from(Slice::from(a..).step_by(-1))`. The Python equivalent
+/// `SliceInfoElem::from(Slice::from(a..).step_by(-1))`. The Python equivalent
 /// is `[a::-1]`. The macro equivalent is `s![a..;-1]`.
 ///
-/// `AxisSliceInfo::NewAxis` is a new axis of length 1. It can also be created
-/// with `AxisSliceInfo::from(NewAxis)`. The Python equivalent is
+/// `SliceInfoElem::NewAxis` is a new axis of length 1. It can also be created
+/// with `SliceInfoElem::from(NewAxis)`. The Python equivalent is
 /// `[np.newaxis]`. The macro equivalent is `s![NewAxis]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
-pub enum AxisSliceInfo {
+pub enum SliceInfoElem {
     /// A range with step size. `end` is an exclusive index. Negative `begin`
     /// or `end` indexes are counted from the back of the axis. If `end` is
     /// `None`, the slice extends to the end of the axis.
@@ -119,30 +119,30 @@ pub enum AxisSliceInfo {
     NewAxis,
 }
 
-copy_and_clone! {AxisSliceInfo}
+copy_and_clone! {SliceInfoElem}
 
-impl AxisSliceInfo {
+impl SliceInfoElem {
     /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
-        matches!(self, AxisSliceInfo::Slice { .. })
+        matches!(self, SliceInfoElem::Slice { .. })
     }
 
     /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
-        matches!(self, AxisSliceInfo::Index(_))
+        matches!(self, SliceInfoElem::Index(_))
     }
 
     /// Returns `true` if `self` is a `NewAxis` value.
     pub fn is_new_axis(&self) -> bool {
-        matches!(self, AxisSliceInfo::NewAxis)
+        matches!(self, SliceInfoElem::NewAxis)
     }
 }
 
-impl fmt::Display for AxisSliceInfo {
+impl fmt::Display for SliceInfoElem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            AxisSliceInfo::Index(index) => write!(f, "{}", index)?,
-            AxisSliceInfo::Slice { start, end, step } => {
+            SliceInfoElem::Index(index) => write!(f, "{}", index)?,
+            SliceInfoElem::Slice { start, end, step } => {
                 if start != 0 {
                     write!(f, "{}", start)?;
                 }
@@ -154,7 +154,7 @@ impl fmt::Display for AxisSliceInfo {
                     write!(f, ";{}", step)?;
                 }
             }
-            AxisSliceInfo::NewAxis => write!(f, stringify!(NewAxis))?,
+            SliceInfoElem::NewAxis => write!(f, stringify!(NewAxis))?,
         }
         Ok(())
     }
@@ -223,9 +223,9 @@ macro_rules! impl_slice_variant_from_range {
 impl_slice_variant_from_range!(Slice, Slice, isize);
 impl_slice_variant_from_range!(Slice, Slice, usize);
 impl_slice_variant_from_range!(Slice, Slice, i32);
-impl_slice_variant_from_range!(AxisSliceInfo, AxisSliceInfo::Slice, isize);
-impl_slice_variant_from_range!(AxisSliceInfo, AxisSliceInfo::Slice, usize);
-impl_slice_variant_from_range!(AxisSliceInfo, AxisSliceInfo::Slice, i32);
+impl_slice_variant_from_range!(SliceInfoElem, SliceInfoElem::Slice, isize);
+impl_slice_variant_from_range!(SliceInfoElem, SliceInfoElem::Slice, usize);
+impl_slice_variant_from_range!(SliceInfoElem, SliceInfoElem::Slice, i32);
 
 impl From<RangeFull> for Slice {
     #[inline]
@@ -238,10 +238,10 @@ impl From<RangeFull> for Slice {
     }
 }
 
-impl From<RangeFull> for AxisSliceInfo {
+impl From<RangeFull> for SliceInfoElem {
     #[inline]
-    fn from(_: RangeFull) -> AxisSliceInfo {
-        AxisSliceInfo::Slice {
+    fn from(_: RangeFull) -> SliceInfoElem {
+        SliceInfoElem::Slice {
             start: 0,
             end: None,
             step: 1,
@@ -249,10 +249,10 @@ impl From<RangeFull> for AxisSliceInfo {
     }
 }
 
-impl From<Slice> for AxisSliceInfo {
+impl From<Slice> for SliceInfoElem {
     #[inline]
-    fn from(s: Slice) -> AxisSliceInfo {
-        AxisSliceInfo::Slice {
+    fn from(s: Slice) -> SliceInfoElem {
+        SliceInfoElem::Slice {
             start: s.start,
             end: s.end,
             step: s.step,
@@ -260,24 +260,24 @@ impl From<Slice> for AxisSliceInfo {
     }
 }
 
-macro_rules! impl_axissliceinfo_from_index {
+macro_rules! impl_sliceinfoelem_from_index {
     ($index:ty) => {
-        impl From<$index> for AxisSliceInfo {
+        impl From<$index> for SliceInfoElem {
             #[inline]
-            fn from(r: $index) -> AxisSliceInfo {
-                AxisSliceInfo::Index(r as isize)
+            fn from(r: $index) -> SliceInfoElem {
+                SliceInfoElem::Index(r as isize)
             }
         }
     };
 }
-impl_axissliceinfo_from_index!(isize);
-impl_axissliceinfo_from_index!(usize);
-impl_axissliceinfo_from_index!(i32);
+impl_sliceinfoelem_from_index!(isize);
+impl_sliceinfoelem_from_index!(usize);
+impl_sliceinfoelem_from_index!(i32);
 
-impl From<NewAxis> for AxisSliceInfo {
+impl From<NewAxis> for SliceInfoElem {
     #[inline]
-    fn from(_: NewAxis) -> AxisSliceInfo {
-        AxisSliceInfo::NewAxis
+    fn from(_: NewAxis) -> SliceInfoElem {
+        SliceInfoElem::NewAxis
     }
 }
 
@@ -285,9 +285,9 @@ impl From<NewAxis> for AxisSliceInfo {
 ///
 /// This trait is unsafe to implement because the implementation must ensure
 /// that `D`, `Self::OutDim`, `self.in_dim()`, and `self.out_ndim()` are
-/// consistent with the `&[AxisSliceInfo]` returned by `self.as_ref()` and that
+/// consistent with the `&[SliceInfoElem]` returned by `self.as_ref()` and that
 /// `self.as_ref()` always returns the same value when called multiple times.
-pub unsafe trait SliceArg<D: Dimension>: AsRef<[AxisSliceInfo]> {
+pub unsafe trait SliceArg<D: Dimension>: AsRef<[SliceInfoElem]> {
     /// Dimensionality of the output array.
     type OutDim: Dimension;
 
@@ -322,7 +322,7 @@ macro_rules! impl_slicearg_samedim {
     ($in_dim:ty) => {
         unsafe impl<T, Dout> SliceArg<$in_dim> for SliceInfo<T, $in_dim, Dout>
         where
-            T: AsRef<[AxisSliceInfo]>,
+            T: AsRef<[SliceInfoElem]>,
             Dout: Dimension,
         {
             type OutDim = Dout;
@@ -349,7 +349,7 @@ impl_slicearg_samedim!(Ix6);
 
 unsafe impl<T, Din, Dout> SliceArg<IxDyn> for SliceInfo<T, Din, Dout>
 where
-    T: AsRef<[AxisSliceInfo]>,
+    T: AsRef<[SliceInfoElem]>,
     Din: Dimension,
     Dout: Dimension,
 {
@@ -366,7 +366,7 @@ where
     private_impl! {}
 }
 
-unsafe impl SliceArg<IxDyn> for [AxisSliceInfo] {
+unsafe impl SliceArg<IxDyn> for [SliceInfoElem] {
     type OutDim = IxDyn;
 
     fn in_ndim(&self) -> usize {
@@ -382,8 +382,8 @@ unsafe impl SliceArg<IxDyn> for [AxisSliceInfo] {
 
 /// Represents all of the necessary information to perform a slice.
 ///
-/// The type `T` is typically `[AxisSliceInfo; n]`, `&[AxisSliceInfo]`, or
-/// `Vec<AxisSliceInfo>`. The type `Din` is the dimension of the array to be
+/// The type `T` is typically `[SliceInfoElem; n]`, `&[SliceInfoElem]`, or
+/// `Vec<SliceInfoElem>`. The type `Din` is the dimension of the array to be
 /// sliced, and `Dout` is the output dimension after calling [`.slice()`]. Note
 /// that if `Din` is a fixed dimension type (`Ix0`, `Ix1`, `Ix2`, etc.), the
 /// `SliceInfo` instance can still be used to slice an array with dimension
@@ -408,7 +408,7 @@ where
     }
 }
 
-fn check_dims_for_sliceinfo<Din, Dout>(indices: &[AxisSliceInfo]) -> Result<(), ShapeError>
+fn check_dims_for_sliceinfo<Din, Dout>(indices: &[SliceInfoElem]) -> Result<(), ShapeError>
 where
     Din: Dimension,
     Dout: Dimension,
@@ -428,7 +428,7 @@ where
 
 impl<T, Din, Dout> SliceInfo<T, Din, Dout>
 where
-    T: AsRef<[AxisSliceInfo]>,
+    T: AsRef<[SliceInfoElem]>,
     Din: Dimension,
     Dout: Dimension,
 {
@@ -482,7 +482,7 @@ where
     ///
     /// If `Din` is a fixed-size dimension type, then this is equivalent to
     /// `Din::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
-    /// over the `AxisSliceInfo` elements.
+    /// over the `SliceInfoElem` elements.
     pub fn in_ndim(&self) -> usize {
         if let Some(ndim) = Din::NDIM {
             ndim
@@ -497,7 +497,7 @@ where
     ///
     /// If `Dout` is a fixed-size dimension type, then this is equivalent to
     /// `Dout::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
-    /// over the `AxisSliceInfo` elements.
+    /// over the `SliceInfoElem` elements.
     pub fn out_ndim(&self) -> usize {
         if let Some(ndim) = Dout::NDIM {
             ndim
@@ -507,7 +507,7 @@ where
     }
 }
 
-impl<'a, Din, Dout> TryFrom<&'a [AxisSliceInfo]> for SliceInfo<&'a [AxisSliceInfo], Din, Dout>
+impl<'a, Din, Dout> TryFrom<&'a [SliceInfoElem]> for SliceInfo<&'a [SliceInfoElem], Din, Dout>
 where
     Din: Dimension,
     Dout: Dimension,
@@ -515,17 +515,17 @@ where
     type Error = ShapeError;
 
     fn try_from(
-        indices: &'a [AxisSliceInfo],
-    ) -> Result<SliceInfo<&'a [AxisSliceInfo], Din, Dout>, ShapeError> {
+        indices: &'a [SliceInfoElem],
+    ) -> Result<SliceInfo<&'a [SliceInfoElem], Din, Dout>, ShapeError> {
         unsafe {
-            // This is okay because `&[AxisSliceInfo]` always returns the same
+            // This is okay because `&[SliceInfoElem]` always returns the same
             // value for `.as_ref()`.
             Self::new(indices)
         }
     }
 }
 
-impl<Din, Dout> TryFrom<Vec<AxisSliceInfo>> for SliceInfo<Vec<AxisSliceInfo>, Din, Dout>
+impl<Din, Dout> TryFrom<Vec<SliceInfoElem>> for SliceInfo<Vec<SliceInfoElem>, Din, Dout>
 where
     Din: Dimension,
     Dout: Dimension,
@@ -533,8 +533,8 @@ where
     type Error = ShapeError;
 
     fn try_from(
-        indices: Vec<AxisSliceInfo>,
-    ) -> Result<SliceInfo<Vec<AxisSliceInfo>, Din, Dout>, ShapeError> {
+        indices: Vec<SliceInfoElem>,
+    ) -> Result<SliceInfo<Vec<SliceInfoElem>, Din, Dout>, ShapeError> {
         unsafe {
             // This is okay because `Vec` always returns the same value for
             // `.as_ref()`.
@@ -545,8 +545,8 @@ where
 
 macro_rules! impl_tryfrom_array_for_sliceinfo {
     ($len:expr) => {
-        impl<Din, Dout> TryFrom<[AxisSliceInfo; $len]>
-            for SliceInfo<[AxisSliceInfo; $len], Din, Dout>
+        impl<Din, Dout> TryFrom<[SliceInfoElem; $len]>
+            for SliceInfo<[SliceInfoElem; $len], Din, Dout>
         where
             Din: Dimension,
             Dout: Dimension,
@@ -554,10 +554,10 @@ macro_rules! impl_tryfrom_array_for_sliceinfo {
             type Error = ShapeError;
 
             fn try_from(
-                indices: [AxisSliceInfo; $len],
-            ) -> Result<SliceInfo<[AxisSliceInfo; $len], Din, Dout>, ShapeError> {
+                indices: [SliceInfoElem; $len],
+            ) -> Result<SliceInfo<[SliceInfoElem; $len], Din, Dout>, ShapeError> {
                 unsafe {
-                    // This is okay because `[AxisSliceInfo; N]` always returns
+                    // This is okay because `[SliceInfoElem; N]` always returns
                     // the same value for `.as_ref()`.
                     Self::new(indices)
                 }
@@ -575,25 +575,25 @@ impl_tryfrom_array_for_sliceinfo!(6);
 impl_tryfrom_array_for_sliceinfo!(7);
 impl_tryfrom_array_for_sliceinfo!(8);
 
-impl<T, Din, Dout> AsRef<[AxisSliceInfo]> for SliceInfo<T, Din, Dout>
+impl<T, Din, Dout> AsRef<[SliceInfoElem]> for SliceInfo<T, Din, Dout>
 where
-    T: AsRef<[AxisSliceInfo]>,
+    T: AsRef<[SliceInfoElem]>,
     Din: Dimension,
     Dout: Dimension,
 {
-    fn as_ref(&self) -> &[AxisSliceInfo] {
+    fn as_ref(&self) -> &[SliceInfoElem] {
         self.indices.as_ref()
     }
 }
 
 impl<'a, T, Din, Dout> From<&'a SliceInfo<T, Din, Dout>>
-    for SliceInfo<&'a [AxisSliceInfo], Din, Dout>
+    for SliceInfo<&'a [SliceInfoElem], Din, Dout>
 where
-    T: AsRef<[AxisSliceInfo]>,
+    T: AsRef<[SliceInfoElem]>,
     Din: Dimension,
     Dout: Dimension,
 {
-    fn from(info: &'a SliceInfo<T, Din, Dout>) -> SliceInfo<&'a [AxisSliceInfo], Din, Dout> {
+    fn from(info: &'a SliceInfo<T, Din, Dout>) -> SliceInfo<&'a [SliceInfoElem], Din, Dout> {
         SliceInfo {
             in_dim: info.in_dim,
             out_dim: info.out_dim,
@@ -681,8 +681,8 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 /// counted from the end of the axis. Step sizes are also signed and may be
 /// negative, but must not be zero.
 ///
-/// The syntax is `s![` *[ axis-slice-info [, axis-slice-info [ , ... ] ] ]*
-/// `]`, where *axis-slice-info* is any of the following:
+/// The syntax is `s![` *[ elem [, elem [ , ... ] ] ]* `]`, where *elem* is any
+/// of the following:
 ///
 /// * *index*: an index to use for taking a subview with respect to that axis.
 ///   (The index is selected. The axis is removed except with
@@ -690,15 +690,15 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 /// * *range*: a range with step size 1 to use for slicing that axis.
 /// * *range* `;` *step*: a range with step size *step* to use for slicing that axis.
 /// * *slice*: a [`Slice`] instance to use for slicing that axis.
-/// * *slice* `;` *step*: a range constructed from the start and end of a [`Slice`]
-///   instance, with new step size *step*, to use for slicing that axis.
+/// * *slice* `;` *step*: a range constructed from a [`Slice`] instance,
+///   multiplying the step size by *step*, to use for slicing that axis.
 /// * *new-axis*: a [`NewAxis`] instance that represents the creation of a new axis.
 ///   (Except for [`.slice_collapse()`], which panics on [`NewAxis`] elements.)
 ///
 /// [`Slice`]: struct.Slice.html
 /// [`NewAxis`]: struct.NewAxis.html
 ///
-/// The number of *axis-slice-info*, not including *new-axis*, must match the
+/// The number of *elem*, not including *new-axis*, must match the
 /// number of axes in the array. *index*, *range*, *slice*, *step*, and
 /// *new-axis* can be expressions. *index* must be of type `isize`, `usize`, or
 /// `i32`. *range* must be of type `Range<I>`, `RangeTo<I>`, `RangeFrom<I>`, or
@@ -850,13 +850,13 @@ macro_rules! s(
     };
     // Catch-all clause for syntax errors
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
-    // convert range/index/new-axis into AxisSliceInfo
+    // convert range/index/new-axis into SliceInfoElem
     (@convert $r:expr) => {
-        <$crate::AxisSliceInfo as ::std::convert::From<_>>::from($r)
+        <$crate::SliceInfoElem as ::std::convert::From<_>>::from($r)
     };
-    // convert range/index/new-axis and step into AxisSliceInfo
+    // convert range/index/new-axis and step into SliceInfoElem
     (@convert $r:expr, $s:expr) => {
-        <$crate::AxisSliceInfo as ::std::convert::From<_>>::from(
+        <$crate::SliceInfoElem as ::std::convert::From<_>>::from(
             <$crate::Slice as ::std::convert::From<_>>::from($r).step_by($s as isize)
         )
     };

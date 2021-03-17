@@ -6,8 +6,7 @@ extern crate num_traits;
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::prelude::*;
-use ndarray::{AxisSliceInfo, Ix, Ixs, Slice};
-use ndarray::{Data, LinalgScalar};
+use ndarray::{Data, Ix, Ixs, LinalgScalar, Slice, SliceInfoElem};
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use defmac::defmac;
@@ -419,7 +418,7 @@ fn scaled_add_3() {
                 let mut a = range_mat64(m, k);
                 let mut answer = a.clone();
                 let cdim = if n == 1 { vec![q] } else { vec![n, q] };
-                let cslice: Vec<AxisSliceInfo> = if n == 1 {
+                let cslice: Vec<SliceInfoElem> = if n == 1 {
                     vec![Slice::from(..).step_by(s2).into()]
                 } else {
                     vec![
