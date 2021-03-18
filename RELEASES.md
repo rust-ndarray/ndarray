@@ -4,7 +4,11 @@ Version 0.15.0 (Not released yet)
 New features
 ------------
 
-- Support inserting new axes while slicing by [@jturner314]
+- Support inserting new axes while slicing by [@jturner314]. This is an example:
+
+  ```rust
+  let view = arr.slice(s![.., -1, 2..;-1, NewAxis]);
+  ```
 
   https://github.com/rust-ndarray/ndarray/pull/570
 
@@ -71,6 +75,30 @@ Enhancements
 
 API changes
 -----------
+
+- Changes to the slicing-related types and macro by [@jturner314] and [@bluss]:
+
+  - Remove the `Dimension::SliceArg` associated type, and add a new `SliceArg`
+    trait for this purpose.
+  - Change the return type of the `s![]` macro to an owned `SliceInfo` rather
+    than a reference.
+  - Replace the `SliceOrIndex` enum with `SliceInfoElem`, which has an
+    additional `NewAxis` variant and does not have a `step_by` method.
+  - Change the type parameters of `SliceInfo` in order to support the `NewAxis`
+    functionality and remove some tricky `unsafe` code.
+  - Mark the `SliceInfo::new` method as `unsafe`. The new implementations of
+    `TryFrom` can be used as a safe alternative.
+  - Remove the `AsRef<SliceInfo<[SliceOrIndex], D>> for SliceInfo<T, D>`
+    implementation. Add the similar `From<&'a SliceInfo<T, Din, Dout>> for
+    SliceInfo<&'a [SliceInfoElem], Din, Dout>` conversion as an alternative.
+  - Change the *expr* `;` *step* case in the `s![]` macro to error at compile
+    time if an unsupported type for *expr* is used, instead of panicking at
+    runtime.
+
+  https://github.com/rust-ndarray/ndarray/pull/570 <br>
+  https://github.com/rust-ndarray/ndarray/pull/940 <br>
+  https://github.com/rust-ndarray/ndarray/pull/943 <br>
+  https://github.com/rust-ndarray/ndarray/pull/945 <br>
 
 - Removed already deprecated methods by [@bluss]:
 
@@ -141,6 +169,12 @@ Bug fixes
 - Fix an unwanted panic in shape overflow checking by [@bluss]
 
   https://github.com/rust-ndarray/ndarray/pull/855
+
+- Mark the `SliceInfo::new` method as `unsafe` due to the requirement that
+  `indices.as_ref()` always return the same value when called multiple times,
+  by [@bluss] and [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/570
 
 Other changes
 -------------
