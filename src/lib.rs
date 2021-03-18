@@ -208,7 +208,6 @@ mod shape_builder;
 mod slice;
 mod split_at;
 mod stacking;
-mod traversal_utils;
 #[macro_use]
 mod zip;
 

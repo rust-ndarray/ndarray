@@ -8,7 +8,6 @@
 
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
-use crate::traversal_utils::assign_to;
 
 /// Stack arrays along the new axis.
 ///
@@ -99,7 +98,7 @@ where
         for array in arrays {
             let len = array.len_of(axis);
             let (front, rest) = assign_view.split_at(axis, len);
-            assign_to(array, front);
+            array.assign_to(front);
             assign_view = rest;
         }
         debug_assert_eq!(assign_view.len(), 0);
@@ -171,7 +170,7 @@ where
             // but same number of axes).
             let assign_view = assign_view.into_dimensionality::<D>()
                 .expect("same-dimensionality cast");
-            assign_to(array, assign_view);
+            array.assign_to(assign_view);
         });
 
     unsafe {
