@@ -21,9 +21,10 @@ where
         if self.shape() != other.shape() {
             return false;
         }
+
         Zip::from(self)
             .and(other)
-            .all(|a, b| A::abs_diff_eq(a, b, epsilon.clone()))
+            .all(move |a, b| A::abs_diff_eq(a, b, epsilon.clone()))
     }
 }
 
@@ -49,9 +50,10 @@ where
         if self.shape() != other.shape() {
             return false;
         }
+
         Zip::from(self)
             .and(other)
-            .all(|a, b| A::relative_eq(a, b, epsilon.clone(), max_relative.clone()))
+            .all(move |a, b| A::relative_eq(a, b, epsilon.clone(), max_relative.clone()))
     }
 }
 
@@ -72,11 +74,50 @@ where
         if self.shape() != other.shape() {
             return false;
         }
+
         Zip::from(self)
             .and(other)
-            .all(|a, b| A::ulps_eq(a, b, epsilon.clone(), max_ulps))
+            .all(move |a, b| A::ulps_eq(a, b, epsilon.clone(), max_ulps))
     }
 }
+
+impl<A, S, D> ArrayBase<S, D>
+where
+    S: Data<Elem = A>,
+    D: Dimension,
+{
+    /// A test for equality that uses the elementwise absolute difference to compute the
+    /// approximate equality of two arrays.
+    ///
+    /// **Requires crate feature `"approx"`**
+    pub fn abs_diff_eq<S2>(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon) -> bool
+    where
+        A: AbsDiffEq<S2::Elem>,
+        A::Epsilon: Clone,
+        S2: Data,
+    {
+        <Self as AbsDiffEq<_>>::abs_diff_eq(self, other, epsilon)
+    }
+
+    /// A test for equality that uses an elementwise relative comparison if the values are far
+    /// apart; and the absolute difference otherwise.
+    ///
+    /// **Requires crate feature `"approx"`**
+    pub fn relative_eq<S2>(
+        &self,
+        other: &ArrayBase<S2, D>,
+        epsilon: A::Epsilon,
+        max_relative: A::Epsilon,
+    ) -> bool
+    where
+        A: RelativeEq<S2::Elem>,
+        A::Epsilon: Clone,
+        S2: Data
+    {
+        <Self as RelativeEq<_>>::relative_eq(self, other, epsilon, max_relative)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

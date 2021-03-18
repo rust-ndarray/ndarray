@@ -170,8 +170,6 @@ mod aliases;
 #[macro_use]
 mod itertools;
 mod argument_traits;
-#[cfg(feature = "approx")]
-mod array_approx;
 #[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
@@ -1520,6 +1518,9 @@ impl<'a, A> CowRepr<'a, A> {
     }
 }
 
+// NOTE: The order of modules decides in which order methods on the type ArrayBase
+// (mainly mentioning that as the most relevant type) show up in the documentation.
+// Consider the doc effect of ordering modules here.
 mod impl_clone;
 
 mod impl_internal_constructors;
@@ -1612,6 +1613,9 @@ pub mod linalg;
 
 mod impl_ops;
 pub use crate::impl_ops::ScalarOperand;
+
+#[cfg(feature = "approx")]
+mod array_approx;
 
 // Array view methods
 mod impl_views;
