@@ -36,6 +36,12 @@ New features
 
   https://github.com/rust-ndarray/ndarray/pull/913
 
+- New method `a.assign_to(b)` with the inverse argument order compared to the
+  existing `b.assign(a)` and some extra features like assigning into
+  uninitialized arrays, By [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/947
+
 Enhancements
 ------------
 
@@ -72,6 +78,12 @@ Enhancements
   [@jturner314]
 
   https://github.com/rust-ndarray/ndarray/pull/890
+
+- Methods for array comparison `abs_diff_eq` and `relative_eq` are now
+  exposed as inherent methods too (no trait import needed), still under the approx
+  feature flag by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/946
 
 API changes
 -----------
