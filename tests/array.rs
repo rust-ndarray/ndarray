@@ -1828,6 +1828,27 @@ fn map_memory_order() {
 }
 
 #[test]
+fn test_view_from_shape() {
+    let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    let a = ArrayView::from_shape((2, 3, 2), &s).unwrap();
+    let mut answer = Array::from(s.to_vec()).into_shape((2, 3, 2)).unwrap();
+    assert_eq!(a, answer);
+
+    // custom strides (row major)
+    let a = ArrayView::from_shape((2, 3, 2).strides((6, 2, 1)), &s).unwrap();
+    assert_eq!(a, answer);
+
+    // custom strides (col major)
+    let a = ArrayView::from_shape((2, 3, 2).strides((1, 2, 6)), &s).unwrap();
+    assert_eq!(a, answer.t());
+
+    // negative strides
+    let a = ArrayView::from_shape((2, 3, 2).strides((6, (-2isize) as usize, 1)), &s).unwrap();
+    answer.invert_axis(Axis(1));
+    assert_eq!(a, answer);
+}
+
+#[test]
 fn test_contiguous() {
     let c = arr3(&[[[1, 2, 3], [4, 5, 6]], [[4, 5, 6], [7, 7, 7]]]);
     assert!(c.is_standard_layout());
@@ -1971,6 +1992,46 @@ fn test_view_from_shape_ptr() {
     assert_eq!(view, aview2(&[[0, 1, 2], [3, 4, 6]]));
     view[[0, 1]] = 0;
     assert_eq!(view, aview2(&[[0, 0, 2], [3, 4, 6]]));
+}
+
+#[should_panic(expected = "Unsupported")]
+#[cfg(debug_assertions)]
+#[test]
+fn test_view_from_shape_ptr_deny_neg_strides() {
+    let data = [0, 1, 2, 3, 4, 5];
+    let _view = unsafe {
+        ArrayView::from_shape_ptr((2, 3).strides((-3isize as usize, 1)), data.as_ptr())
+    };
+}
+
+#[should_panic(expected = "Unsupported")]
+#[cfg(debug_assertions)]
+#[test]
+fn test_view_mut_from_shape_ptr_deny_neg_strides() {
+    let mut data = [0, 1, 2, 3, 4, 5];
+    let _view = unsafe {
+        ArrayViewMut::from_shape_ptr((2, 3).strides((-3isize as usize, 1)), data.as_mut_ptr())
+    };
+}
+
+#[should_panic(expected = "Unsupported")]
+#[cfg(debug_assertions)]
+#[test]
+fn test_raw_view_from_shape_ptr_deny_neg_strides() {
+    let data = [0, 1, 2, 3, 4, 5];
+    let _view = unsafe {
+        RawArrayView::from_shape_ptr((2, 3).strides((-3isize as usize, 1)), data.as_ptr())
+    };
+}
+
+#[should_panic(expected = "Unsupported")]
+#[cfg(debug_assertions)]
+#[test]
+fn test_raw_view_mut_from_shape_ptr_deny_neg_strides() {
+    let mut data = [0, 1, 2, 3, 4, 5];
+    let _view = unsafe {
+        RawArrayViewMut::from_shape_ptr((2, 3).strides((-3isize as usize, 1)), data.as_mut_ptr())
+    };
 }
 
 #[test]
