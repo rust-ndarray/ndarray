@@ -80,8 +80,8 @@ matrixmultiply-threading = ["matrixmultiply/threading"]
 debug = true
 
 [workspace]
-members = ["ndarray-rand", "serialization-tests", "blas-tests"]
-exclude = ["numeric-tests"]
+members = ["ndarray-rand", "xtest-serialization", "xtest-blas"]
+exclude = ["xtest-numeric"]
 
 [package.metadata.release]
 no-dev-version = true
