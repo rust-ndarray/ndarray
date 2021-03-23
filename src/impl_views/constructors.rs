@@ -13,6 +13,7 @@ use crate::error::ShapeError;
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
 use crate::{is_aligned, StrideShape};
+use crate::dimension::offset_from_ptr_to_memory;
 
 /// Methods for read-only array views.
 impl<'a, A, D> ArrayView<'a, A, D>
@@ -29,6 +30,7 @@ where
     /// use ndarray::arr3;
     /// use ndarray::ShapeBuilder;
     ///
+    /// // advanced example where we are even specifying exact strides to use (which is optional).
     /// let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     /// let a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)),
     ///                               &s).unwrap();
@@ -55,7 +57,7 @@ where
         let dim = shape.dim;
         dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
         let strides = shape.strides.strides_for_dim(&dim);
-        unsafe { Ok(Self::new_(xs.as_ptr(), dim, strides)) }
+        unsafe { Ok(Self::new_(xs.as_ptr().offset(-offset_from_ptr_to_memory(&dim, &strides)), dim, strides)) }
     }
 
     /// Create an `ArrayView<A, D>` from shape information and a raw pointer to
@@ -152,7 +154,7 @@ where
         let dim = shape.dim;
         dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
         let strides = shape.strides.strides_for_dim(&dim);
-        unsafe { Ok(Self::new_(xs.as_mut_ptr(), dim, strides)) }
+        unsafe { Ok(Self::new_(xs.as_mut_ptr().offset(-offset_from_ptr_to_memory(&dim, &strides)), dim, strides)) }
     }
 
     /// Create an `ArrayViewMut<A, D>` from shape information and a
