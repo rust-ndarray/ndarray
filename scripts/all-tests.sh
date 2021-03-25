@@ -18,4 +18,5 @@ cargo test --manifest-path=xtest-serialization/Cargo.toml --verbose
 cargo test --manifest-path=xtest-blas/Cargo.toml --verbose
 cargo test --examples
 CARGO_TARGET_DIR=target/ cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose
+CARGO_TARGET_DIR=target/ cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose --features test_blas
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")

@@ -2,6 +2,7 @@ extern crate approx;
 extern crate defmac;
 extern crate ndarray;
 extern crate num_traits;
+extern crate blas_src;
 
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;

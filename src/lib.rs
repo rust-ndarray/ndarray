@@ -125,8 +125,6 @@ extern crate std;
 extern crate core as std;
 
 #[cfg(feature = "blas")]
-extern crate blas_src;
-#[cfg(feature = "blas")]
 extern crate cblas_sys;
 
 #[cfg(feature = "docs")]
