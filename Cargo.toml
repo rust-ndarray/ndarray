@@ -28,7 +28,7 @@ test = true
 [dependencies]
 num-integer = { version = "0.1.39", default-features = false }
 num-traits = { version = "0.2", default-features = false }
-num-complex = { version = "0.3", default-features = false }
+num-complex = { version = "0.4", default-features = false }
 
 # Use via the `rayon` crate feature!
 rayon_ = { version = "1.0.3", optional = true, package = "rayon" }
@@ -48,7 +48,7 @@ rawpointer = { version = "0.2" }
 defmac = "0.2"
 quickcheck = { version = "0.9", default-features = false }
 approx = "0.4"
-itertools = { version = "0.9.0", default-features = false, features = ["use_std"] }
+itertools = { version = "0.10.0", default-features = false, features = ["use_std"] }
 
 [features]
 default = ["std"]
