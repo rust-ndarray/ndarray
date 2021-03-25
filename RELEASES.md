@@ -1,5 +1,5 @@
-Version 0.15.0 (Not released yet)
-=================================
+Version 0.15.0 (2021-03-25)
+===========================
 
 New features
 ------------
@@ -13,6 +13,9 @@ New features
   https://github.com/rust-ndarray/ndarray/pull/570
 
 - Support two-sided broadcasting in arithmetic operations with arrays by [@SparrowLii]
+
+  This now allows, for example, addition of a 3 x 1 with a 1 x 3 array; the
+  operands are in this case broadcast to 3 x 3 which is the shape of the result.
 
   Note that this means that a new trait bound is required in some places when
   mixing dimensionality types of arrays in arithmetic operations.
@@ -45,25 +48,11 @@ New features
 Enhancements
 ------------
 
-- New constructors `Array::from_iter` and `Array::from_vec` by [@bluss].
-  No new functionality, just that these constructors are avaiable without trait
-  imports.
-
-  https://github.com/rust-ndarray/ndarray/pull/921
-
 - Ndarray can now correctly determine that arrays can be contiguous, even if
   they have negative strides, by [@SparrowLii]
 
-  https://github.com/rust-ndarray/ndarray/pull/885
-
-- `NdProducer::raw_dim` is now a documented method by [@jturner314]
-
-  https://github.com/rust-ndarray/ndarray/pull/918
-
-- `AxisDescription` is now a struct with field names, not a tuple struct by
-  [@jturner314]
-
-  https://github.com/rust-ndarray/ndarray/pull/915
+  https://github.com/rust-ndarray/ndarray/pull/885 <br>
+  https://github.com/rust-ndarray/ndarray/pull/948
 
 - Improvements to `map_inplace` by [@jturner314]
 
@@ -79,14 +68,29 @@ Enhancements
 
   https://github.com/rust-ndarray/ndarray/pull/890
 
+API changes
+-----------
+
+- New constructors `Array::from_iter` and `Array::from_vec` by [@bluss].
+  No new functionality, just that these constructors are avaiable without trait
+  imports.
+
+  https://github.com/rust-ndarray/ndarray/pull/921
+
+- `NdProducer::raw_dim` is now a documented method by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/918
+
+- `AxisDescription` is now a struct with field names, not a tuple struct by
+  [@jturner314]. Its accessor methods are now deprecated.
+
+  https://github.com/rust-ndarray/ndarray/pull/915
+
 - Methods for array comparison `abs_diff_eq` and `relative_eq` are now
   exposed as inherent methods too (no trait import needed), still under the approx
   feature flag by [@bluss]
 
   https://github.com/rust-ndarray/ndarray/pull/946
-
-API changes
------------
 
 - Changes to the slicing-related types and macro by [@jturner314] and [@bluss]:
 
@@ -155,16 +159,15 @@ API changes
   https://github.com/rust-ndarray/ndarray/pull/937 <br>
   https://github.com/rust-ndarray/ndarray/pull/907 <br>
 
-- `blas-src` dependency updated to 0.7.0 by [@bluss]
-
-  https://github.com/rust-ndarray/ndarray/pull/891
-
 - Updated `matrixmultiply` dependency to 0.3.0 by [@bluss]
   and adding new feature flag `matrixmultiply-threading` to enable its threading
 
   https://github.com/rust-ndarray/ndarray/pull/888 <br>
   https://github.com/rust-ndarray/ndarray/pull/938 <br>
  
+- Updated `num-complex` dependency to 0.4.0 by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/952
 
 Bug fixes
 ---------
@@ -190,6 +193,13 @@ Bug fixes
 
 Other changes
 -------------
+
+- It was changed how we integrate with BLAS and `blas-src`. Users of BLAS need
+  to read the README for the updated instructions. Ndarray itself no longer
+  has public dependency on `blas-src`. Changes by [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/891 <br>
+  https://github.com/rust-ndarray/ndarray/pull/951
 
 - Various improvements to tests and CI by [@jturner314]
 
