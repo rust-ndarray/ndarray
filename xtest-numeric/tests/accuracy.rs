@@ -4,6 +4,8 @@ extern crate ndarray;
 extern crate ndarray_rand;
 extern crate rand;
 
+extern crate numeric_tests;
+
 use ndarray_rand::{RandomExt, F32};
 use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;

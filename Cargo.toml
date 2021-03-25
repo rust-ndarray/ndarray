@@ -18,8 +18,6 @@ description = "An n-dimensional array for general elements and for numerics. Lig
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 categories = ["data-structures", "science"]
 
-build = "build.rs"
-
 exclude = ["docgen/images/*"]
 
 [lib]
@@ -63,8 +61,7 @@ blas = ["cblas-sys", "libc"]
 serde-1 = ["serde"]
 
 # These features are used for testing
-test-blas-openblas-sys = ["blas"]
-test = ["test-blas-openblas-sys"]
+test = []
 
 # This feature is used for docs
 docs = ["approx", "serde", "rayon"]

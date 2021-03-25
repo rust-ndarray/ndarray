@@ -10,6 +10,9 @@ ndarray = { path = "..", features = ["approx"] }
 ndarray-rand = { path = "../ndarray-rand/" }
 rand_distr = "0.4"
 
+blas-src = { optional = true, version = "0.7.0", default-features = false, features = ["openblas"] }
+openblas-src = { optional = true, version = "0.9", default-features = false, features = ["cblas", "system"] }
+
 [dependencies.rand]
 version = "0.8.0"
 features = ["small_rng"]
@@ -18,7 +21,7 @@ features = ["small_rng"]
 test = false
 
 [features]
-test_blas = ["ndarray/blas", "ndarray/test-blas-openblas-sys"]
+test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
 
 [profile.dev]
 opt-level = 2
