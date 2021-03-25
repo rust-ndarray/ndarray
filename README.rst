@@ -96,21 +96,34 @@ How to use with cargo
 ::
 
     [dependencies]
-    ndarray = "0.14.0"
+    ndarray = "0.15.0"
 
-How to enable blas integration. Depend on ``blas-src`` directly to pick a blas
-provider. Depend on the same ``blas-src`` version as ``ndarray`` does, for the
-selection to work.  An example configuration using system openblas is shown
-below. Note that only end-user projects (not libraries) should select
-provider::
+How to enable blas integration
+-----------------------------
 
+Blas integration is an optional add-on.
+
+Depend and link to ``blas-src`` directly to pick a blas provider. Ndarray
+presently requires a blas provider that provides the ``cblas-sys`` interface.  If
+further feature selection is needed then you might need to depend directly on
+the backend crate's source too (for example ``openblas-src``, to select
+``cblas``).  The backend version **must** be the one that ``blas-src`` also
+depends on.
+
+An example configuration using system openblas is shown below. Note that only
+end-user projects (not libraries) should select provider::
 
     [dependencies]
-    ndarray = { version = "0.14.0", features = ["blas"] }
+    ndarray = { version = "0.15.0", features = ["blas"] }
     blas-src = { version = "0.7.0", default-features = false, features = ["openblas"] }
     openblas-src = { version = "0.9", default-features = false, features = ["cblas", "system"] }
 
-For official releases of ``ndarray``, the versions are:
+When this is done, your program must also link to ``blas_src`` by using it or
+explicitly including it in your code::
+
+    extern crate blas_src;
+
+For official releases of ``ndarray``, versions that have been verified to work are:
 
 =========== ============ ================
 ``ndarray`` ``blas-src`` ``openblas-src``
