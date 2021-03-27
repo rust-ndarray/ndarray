@@ -6,7 +6,7 @@ extern crate rand;
 
 extern crate numeric_tests;
 
-use ndarray_rand::{RandomExt, F32};
+use ndarray_rand::RandomExt;
 use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
 
@@ -55,7 +55,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
 fn gen<D>(d: D) -> Array<f32, D>
     where D: Dimension,
 {
-    Array::random(d, F32(Normal::new(0., 1.).unwrap()))
+    Array::random(d, Normal::new(0., 1.).unwrap())
 }
 fn gen_f64<D>(d: D) -> Array<f64, D>
     where D: Dimension,
