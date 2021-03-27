@@ -8,17 +8,24 @@ publish = false
 test = false
 
 [dev-dependencies]
-ndarray = { path = "../", features = ["approx", "blas"] }
-
 approx = "0.4"
 defmac = "0.2"
 num-traits = "0.2"
 
-blas-src = { version = "0.7.0", features = ["openblas"] }
-openblas-src = { version = "0.9.0", features = ["system"] }
+[dependencies]
+ndarray = { path = "../", features = ["approx", "blas"] }
 
-#blas-src = { version = "0.7.0", features = ["netlib"] }
-#netlib-src = { version = "0.8.0", default-features = false, features = ["cblas", "system"] }
+blas-src = { version = "0.8", optional = true }
 
-#blas-src = { version = "0.7.0", features = ["blis"] }
-#blis-src = { version = "0.2.0", features = ["system"] }
+openblas-src = { version = "0.10", optional = true }
+netlib-src = { version = "0.8", optional = true }
+blis-src = { version = "0.2", features = ["system"], optional = true }
+
+[features]
+# Just for making an example and to help testing, , multiple different possible
+# configurations are selectable here.
+openblas-system = ["blas-src", "blas-src/openblas", "openblas-src/system"]
+openblas-cache = ["blas-src", "blas-src/openblas", "openblas-src/cache"]
+netlib = ["blas-src", "blas-src/netlib"]
+netlib-system = ["blas-src", "blas-src/netlib", "netlib-src/system"]
+blis-system = ["blas-src", "blas-src/blis", "blis-src/system"]
