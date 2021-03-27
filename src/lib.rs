@@ -10,7 +10,8 @@
 #![allow(
     clippy::many_single_char_names,
     clippy::deref_addrof,
-    clippy::unreadable_literal
+    clippy::unreadable_literal,
+    clippy::manual_map, // is not an error
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
 

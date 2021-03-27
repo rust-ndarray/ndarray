@@ -4,63 +4,14 @@ extern crate ndarray;
 extern crate num_traits;
 extern crate blas_src;
 
+use ndarray::prelude::*;
+
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
-use ndarray::prelude::*;
-use ndarray::{Data, Ix, Ixs, LinalgScalar, Slice, SliceInfoElem};
+use ndarray::{Data, Ix, LinalgScalar};
 
-use approx::{assert_abs_diff_eq, assert_relative_eq};
+use approx::assert_relative_eq;
 use defmac::defmac;
-
-fn reference_dot<'a, A, V1, V2>(a: V1, b: V2) -> A
-where
-    A: NdFloat,
-    V1: AsArray<'a, A>,
-    V2: AsArray<'a, A>,
-{
-    let a = a.into();
-    let b = b.into();
-    a.iter()
-        .zip(b.iter())
-        .fold(A::zero(), |acc, (&x, &y)| acc + x * y)
-}
-
-#[test]
-fn dot_product() {
-    let a = Array::range(0., 69., 1.);
-    let b = &a * 2. - 7.;
-    let dot = 197846.;
-    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
-
-    // test different alignments
-    let max = 8 as Ixs;
-    for i in 1..max {
-        let a1 = a.slice(s![i..]);
-        let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
-        let a2 = a.slice(s![..-i]);
-        let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
-    }
-
-    let a = a.map(|f| *f as f32);
-    let b = b.map(|f| *f as f32);
-    assert_abs_diff_eq!(a.dot(&b), dot as f32, epsilon = 1e-5);
-
-    let max = 8 as Ixs;
-    for i in 1..max {
-        let a1 = a.slice(s![i..]);
-        let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
-        let a2 = a.slice(s![..-i]);
-        let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
-    }
-
-    let a = a.map(|f| *f as i32);
-    let b = b.map(|f| *f as i32);
-    assert_eq!(a.dot(&b), dot as i32);
-}
 
 #[test]
 fn mat_vec_product_1d() {
@@ -68,46 +19,6 @@ fn mat_vec_product_1d() {
     let b = arr1(&[1., 2.]);
     let ans = arr1(&[5.]);
     assert_eq!(a.t().dot(&b), ans);
-}
-
-// test that we can dot product with a broadcast array
-#[test]
-fn dot_product_0() {
-    let a = Array::range(0., 69., 1.);
-    let x = 1.5;
-    let b = aview0(&x);
-    let b = b.broadcast(a.dim()).unwrap();
-    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
-
-    // test different alignments
-    let max = 8 as Ixs;
-    for i in 1..max {
-        let a1 = a.slice(s![i..]);
-        let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
-        let a2 = a.slice(s![..-i]);
-        let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
-    }
-}
-
-#[test]
-fn dot_product_neg_stride() {
-    // test that we can dot with negative stride
-    let a = Array::range(0., 69., 1.);
-    let b = &a * 2. - 7.;
-    for stride in -10..0 {
-        // both negative
-        let a = a.slice(s![..;stride]);
-        let b = b.slice(s![..;stride]);
-        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
-    }
-    for stride in -10..0 {
-        // mixed
-        let a = a.slice(s![..;-stride]);
-        let b = b.slice(s![..;stride]);
-        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
-    }
 }
 
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
@@ -190,71 +101,11 @@ where
         .unwrap()
 }
 
-#[test]
-fn mat_mul() {
-    let (m, n, k) = (8, 8, 8);
-    let a = range_mat(m, n);
-    let b = range_mat(n, k);
-    let mut b = b / 4.;
-    {
-        let mut c = b.column_mut(0);
-        c += 1.0;
-    }
-    let ab = a.dot(&b);
-
-    let mut af = Array::zeros(a.dim().f());
-    let mut bf = Array::zeros(b.dim().f());
-    af.assign(&a);
-    bf.assign(&b);
-
-    assert_eq!(ab, a.dot(&bf));
-    assert_eq!(ab, af.dot(&b));
-    assert_eq!(ab, af.dot(&bf));
-
-    let (m, n, k) = (10, 5, 11);
-    let a = range_mat(m, n);
-    let b = range_mat(n, k);
-    let mut b = b / 4.;
-    {
-        let mut c = b.column_mut(0);
-        c += 1.0;
-    }
-    let ab = a.dot(&b);
-
-    let mut af = Array::zeros(a.dim().f());
-    let mut bf = Array::zeros(b.dim().f());
-    af.assign(&a);
-    bf.assign(&b);
-
-    assert_eq!(ab, a.dot(&bf));
-    assert_eq!(ab, af.dot(&b));
-    assert_eq!(ab, af.dot(&bf));
-
-    let (m, n, k) = (10, 8, 1);
-    let a = range_mat(m, n);
-    let b = range_mat(n, k);
-    let mut b = b / 4.;
-    {
-        let mut c = b.column_mut(0);
-        c += 1.0;
-    }
-    let ab = a.dot(&b);
-
-    let mut af = Array::zeros(a.dim().f());
-    let mut bf = Array::zeros(b.dim().f());
-    af.assign(&a);
-    bf.assign(&b);
-
-    assert_eq!(ab, a.dot(&bf));
-    assert_eq!(ab, af.dot(&b));
-    assert_eq!(ab, af.dot(&bf));
-}
-
 // Check that matrix multiplication of contiguous matrices returns a
 // matrix with the same order
 #[test]
 fn mat_mul_order() {
-    let (m, n, k) = (8, 8, 8);
+    let (m, n, k) = (50, 50, 50);
     let a = range_mat(m, n);
     let b = range_mat(n, k);
     let mut af = Array::zeros(a.dim().f());
@@ -267,27 +118,6 @@ fn mat_mul_order() {
 
     assert_eq!(cc.strides()[1], 1);
     assert_eq!(ff.strides()[0], 1);
-}
-
-// test matrix multiplication shape mismatch
-#[test]
-#[should_panic]
-fn mat_mul_shape_mismatch() {
-    let (m, k, k2, n) = (8, 8, 9, 8);
-    let a = range_mat(m, k);
-    let b = range_mat(k2, n);
-    a.dot(&b);
-}
-
-// test matrix multiplication shape mismatch
-#[test]
-#[should_panic]
-fn mat_mul_shape_mismatch_2() {
-    let (m, k, k2, n) = (8, 8, 8, 8);
-    let a = range_mat(m, k);
-    let b = range_mat(k2, n);
-    let mut c = range_mat(m, n + 1);
-    general_mat_mul(1., &a, &b, 1., &mut c);
 }
 
 // Check that matrix multiplication
@@ -349,102 +179,6 @@ fn mat_mut_zero_len() {
 }
 
 #[test]
-fn scaled_add() {
-    let a = range_mat(16, 15);
-    let mut b = range_mat(16, 15);
-    b.mapv_inplace(f32::exp);
-
-    let alpha = 0.2_f32;
-    let mut c = a.clone();
-    c.scaled_add(alpha, &b);
-
-    let d = alpha * &b + &a;
-    assert_eq!(c, d);
-}
-
-#[test]
-fn scaled_add_2() {
-    let beta = -2.3;
-    let sizes = vec![
-        (4, 4, 1, 4),
-        (8, 8, 1, 8),
-        (17, 15, 17, 15),
-        (4, 17, 4, 17),
-        (17, 3, 1, 3),
-        (19, 18, 19, 18),
-        (16, 17, 16, 17),
-        (15, 16, 15, 16),
-        (67, 63, 1, 63),
-    ];
-    // test different strides
-    for &s1 in &[1, 2, -1, -2] {
-        for &s2 in &[1, 2, -1, -2] {
-            for &(m, k, n, q) in &sizes {
-                let mut a = range_mat64(m, k);
-                let mut answer = a.clone();
-                let c = range_mat64(n, q);
-
-                {
-                    let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(s![..;s1, ..;s2]);
-
-                    let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
-                    answerv += &(beta * &c);
-                    av.scaled_add(beta, &c);
-                }
-                assert_relative_eq!(a, answer, epsilon = 1e-12, max_relative = 1e-7);
-            }
-        }
-    }
-}
-
-#[test]
-fn scaled_add_3() {
-    let beta = -2.3;
-    let sizes = vec![
-        (4, 4, 1, 4),
-        (8, 8, 1, 8),
-        (17, 15, 17, 15),
-        (4, 17, 4, 17),
-        (17, 3, 1, 3),
-        (19, 18, 19, 18),
-        (16, 17, 16, 17),
-        (15, 16, 15, 16),
-        (67, 63, 1, 63),
-    ];
-    // test different strides
-    for &s1 in &[1, 2, -1, -2] {
-        for &s2 in &[1, 2, -1, -2] {
-            for &(m, k, n, q) in &sizes {
-                let mut a = range_mat64(m, k);
-                let mut answer = a.clone();
-                let cdim = if n == 1 { vec![q] } else { vec![n, q] };
-                let cslice: Vec<SliceInfoElem> = if n == 1 {
-                    vec![Slice::from(..).step_by(s2).into()]
-                } else {
-                    vec![
-                        Slice::from(..).step_by(s1).into(),
-                        Slice::from(..).step_by(s2).into(),
-                    ]
-                };
-
-                let c = range_mat64(n, q).into_shape(cdim).unwrap();
-
-                {
-                    let mut av = a.slice_mut(s![..;s1, ..;s2]);
-                    let c = c.slice(&*cslice);
-
-                    let mut answerv = answer.slice_mut(s![..;s1, ..;s2]);
-                    answerv += &(beta * &c);
-                    av.scaled_add(beta, &c);
-                }
-                assert_relative_eq!(a, answer, epsilon = 1e-12, max_relative = 1e-7);
-            }
-        }
-    }
-}
-
-#[test]
 fn gen_mat_mul() {
     let alpha = -2.3;
     let beta = 3.14;
@@ -495,32 +229,6 @@ fn gemm_64_1_f() {
     let answer = reference_mat_mul(&a, &x) + &y;
     general_mat_mul(1.0, &a, &x, 1.0, &mut y);
     assert_relative_eq!(y, answer, epsilon = 1e-12, max_relative = 1e-7);
-}
-
-#[test]
-fn gen_mat_mul_i32() {
-    let alpha = -1;
-    let beta = 2;
-    let sizes = vec![
-        (4, 4, 4),
-        (8, 8, 8),
-        (17, 15, 16),
-        (4, 17, 3),
-        (17, 3, 22),
-        (19, 18, 2),
-        (16, 17, 15),
-        (15, 16, 17),
-        (67, 63, 62),
-    ];
-    for &(m, k, n) in &sizes {
-        let a = range_i32(m, k);
-        let b = range_i32(k, n);
-        let mut c = range_i32(m, n);
-
-        let answer = alpha * reference_mat_mul(&a, &b) + beta * &c;
-        general_mat_mul(alpha, &a, &b, beta, &mut c);
-        assert_eq!(&c, &answer);
-    }
 }
 
 #[test]

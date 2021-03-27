@@ -101,39 +101,47 @@ How to use with cargo
 How to enable blas integration
 -----------------------------
 
-Blas integration is an optional add-on.
+Blas integration is an optional add-on. Without BLAS, ndarray uses the
+``matrixmultiply`` crate for matrix multiplication for ``f64`` and ``f32``
+arrays (and it's always enabled as a fallback since it supports matrices of
+arbitrary strides in both dimensions).
 
 Depend and link to ``blas-src`` directly to pick a blas provider. Ndarray
 presently requires a blas provider that provides the ``cblas-sys`` interface.  If
-further feature selection is needed then you might need to depend directly on
-the backend crate's source too (for example ``openblas-src``, to select
-``cblas``).  The backend version **must** be the one that ``blas-src`` also
-depends on.
+further feature selection is wanted or needed then you might need to depend directly on
+the backend crate's source too.  The backend version **must** be the one that
+``blas-src`` also depends on.
 
 An example configuration using system openblas is shown below. Note that only
 end-user projects (not libraries) should select provider::
 
     [dependencies]
     ndarray = { version = "0.15.0", features = ["blas"] }
-    blas-src = { version = "0.7.0", default-features = false, features = ["openblas"] }
-    openblas-src = { version = "0.9", default-features = false, features = ["cblas", "system"] }
+    blas-src = { version = "0.7.0", features = ["openblas"] }
+    openblas-src = { version = "0.9", features = ["cblas", "system"] }
+
+Using system-installed dependencies can save a long time building dependencies.
+An example configuration using (compiled) netlib is shown below anyway::
+
+    [dependencies]
+    ndarray = { version = "0.15.0", features = ["blas"] }
+    blas-src = { version = "0.7.0", default-features = false, features = ["netlib"] }
 
 When this is done, your program must also link to ``blas_src`` by using it or
 explicitly including it in your code::
 
     extern crate blas_src;
 
-For official releases of ``ndarray``, versions that have been verified to work are:
+The following versions have been verified to work together. For ndarray 0.15 or later,
+there is no tight coupling to the ``blas-src`` version, so any version should in theory work.
 
-=========== ============ ================
-``ndarray`` ``blas-src`` ``openblas-src``
-=========== ============ ================
-0.15        0.7.0        0.9.0
+=========== ============ ================ ==============
+``ndarray`` ``blas-src`` ``openblas-src`` ``netlib-src``
+=========== ============ ================ ==============
+0.15        0.7.0        0.9.0            0.8.0
 0.14        0.6.1        0.9.0
 0.13        0.2.0        0.6.0
-0.12        0.2.0        0.6.0
-0.11        0.1.2        0.5.0
-=========== ============ ================
+=========== ============ ================ ==============
 
 Recent Changes
 --------------

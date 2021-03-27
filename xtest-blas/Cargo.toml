@@ -8,9 +8,17 @@ publish = false
 test = false
 
 [dev-dependencies]
-approx = "0.4"
 ndarray = { path = "../", features = ["approx", "blas"] }
-blas-src = { version = "0.7.0", default-features = false, features = ["openblas"] }
-openblas-src = { version = "0.9.0", default-features = false, features = ["cblas", "system"] }
+
+approx = "0.4"
 defmac = "0.2"
 num-traits = "0.2"
+
+blas-src = { version = "0.7.0", features = ["openblas"] }
+openblas-src = { version = "0.9.0", features = ["system"] }
+
+#blas-src = { version = "0.7.0", features = ["netlib"] }
+#netlib-src = { version = "0.8.0", default-features = false, features = ["cblas", "system"] }
+
+#blas-src = { version = "0.7.0", features = ["blis"] }
+#blis-src = { version = "0.2.0", features = ["system"] }
