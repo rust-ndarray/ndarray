@@ -116,3 +116,39 @@ fn test_window_zip() {
         }
     }
 }
+
+#[test]
+fn test_window_neg_stride() {
+    let array = Array::from_iter(1..10).into_shape((3, 3)).unwrap();
+
+    // window neg/pos stride combinations
+    
+    // Make a 2 x 2 array of the windows of the 3 x 3 array
+    // and compute test answers from here
+    let mut answer = Array::from_iter(array.windows((2, 2)).into_iter().map(|a| a.to_owned()))
+        .into_shape((2, 2)).unwrap();
+
+    answer.invert_axis(Axis(1));
+    answer.map_inplace(|a| a.invert_axis(Axis(1)));
+
+    itertools::assert_equal(
+        array.slice(s![.., ..;-1]).windows((2, 2)),
+        answer.iter().map(|a| a.view())
+    );
+
+    answer.invert_axis(Axis(0));
+    answer.map_inplace(|a| a.invert_axis(Axis(0)));
+
+    itertools::assert_equal(
+        array.slice(s![..;-1, ..;-1]).windows((2, 2)),
+        answer.iter().map(|a| a.view())
+    );
+
+    answer.invert_axis(Axis(1));
+    answer.map_inplace(|a| a.invert_axis(Axis(1)));
+
+    itertools::assert_equal(
+        array.slice(s![..;-1, ..]).windows((2, 2)),
+        answer.iter().map(|a| a.view())
+    );
+}
