@@ -1,3 +1,13 @@
+Version 0.15.1 (not released yet)
+===========================
+
+Enhancements
+------------
+
+- Arrays and views now implement PartialEq so that it's possible to compare
+  arrays with references to arrays and vice versa by [@bluss]
+
+
 Version 0.15.0 (2021-03-25)
 ===========================
 
