@@ -11,7 +11,8 @@ use crate::slice::SliceArg;
 use crate::{Ix, Ixs, Slice, SliceInfoElem};
 use num_integer::div_floor;
 
-pub use self::axes::{axes_of, Axes, AxisDescription};
+pub use self::axes::{Axes, AxisDescription};
+pub(crate) use self::axes::axes_of;
 pub use self::axis::Axis;
 pub use self::broadcast::DimMax;
 pub use self::conversion::IntoDimension;

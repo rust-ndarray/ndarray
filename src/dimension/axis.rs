@@ -8,11 +8,21 @@
 
 /// An axis index.
 ///
-/// An axis one of an array’s “dimensions”; an *n*-dimensional array has *n* axes.
-/// Axis *0* is the array’s outermost axis and *n*-1 is the innermost.
+/// An axis one of an array’s “dimensions”; an *n*-dimensional array has *n*
+/// axes.  Axis *0* is the array’s outermost axis and *n*-1 is the innermost.
 ///
 /// All array axis arguments use this type to make the code easier to write
 /// correctly and easier to understand.
+/// 
+/// For example: in a method like `index_axis(axis, index)` the code becomes
+/// self-explanatory when it's called like `.index_axis(Axis(1), i)`; it's
+/// evident which integer is the axis number and which is the index.
+///
+/// Note: This type does **not** implement From/Into usize and similar trait
+/// based conversions, because we want to preserve code readability and quality.
+///
+/// `Axis(1)` in itself is a very clear code style and the style that should be
+/// avoided is code like `1.into()`.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Axis(pub usize);
 
