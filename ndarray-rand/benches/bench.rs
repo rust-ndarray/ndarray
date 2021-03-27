@@ -4,7 +4,6 @@ extern crate test;
 
 use ndarray::Array;
 use ndarray_rand::RandomExt;
-use ndarray_rand::F32;
 use rand_distr::Normal;
 use rand_distr::Uniform;
 
@@ -19,11 +18,11 @@ fn uniform_f32(b: &mut Bencher) {
 #[bench]
 fn norm_f32(b: &mut Bencher) {
     let m = 100;
-    b.iter(|| Array::random((m, m), F32(Normal::new(0., 1.).unwrap())));
+    b.iter(|| Array::random((m, m), Normal::new(0f32, 1.).unwrap()));
 }
 
 #[bench]
 fn norm_f64(b: &mut Bencher) {
     let m = 100;
-    b.iter(|| Array::random((m, m), Normal::new(0., 1.).unwrap()));
+    b.iter(|| Array::random((m, m), Normal::new(0f64, 1.).unwrap()));
 }

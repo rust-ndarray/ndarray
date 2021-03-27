@@ -1,12 +1,18 @@
 Recent Changes
 --------------
 
+- 0.14.0
+
+  - Require ndarray 0.15
+  - Require rand 0.8 (unchanged from previous version)
+  - The F32 wrapper is now deprecated, it's redundant
+
 - 0.13.0
 
-- Require ndarray 0.14 (unchanged from previous version)
-- Require rand 0.8
-- Require rand_distr 0.4
-- Fix methods `sample_axis` and `sample_axis_using` so that they can be used on array views too.
+  - Require ndarray 0.14 (unchanged from previous version)
+  - Require rand 0.8
+  - Require rand_distr 0.4
+  - Fix methods `sample_axis` and `sample_axis_using` so that they can be used on array views too.
 
 - 0.12.0
 

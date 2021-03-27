@@ -333,8 +333,10 @@ fn get_rng() -> SmallRng {
 /// //  [ -0.6810,   0.1678,  -0.9487,   0.3150,   1.2981]]
 /// # }
 #[derive(Copy, Clone, Debug)]
+#[deprecated(since="0.14.0", note="Redundant with rand 0.8")]
 pub struct F32<S>(pub S);
 
+#[allow(deprecated)]
 impl<S> Distribution<f32> for F32<S>
 where
     S: Distribution<f64>,
