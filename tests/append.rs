@@ -82,3 +82,26 @@ fn append_column() {
         array![[0., 1., 2., 3.],
                [4., 5., 6., 7.]]);
 }
+
+#[test]
+fn append_array1() {
+    let mut a = Array::zeros((0, 4));
+    a.try_append_array(Axis(0), aview2(&[[0., 1., 2., 3.]])).unwrap();
+    println!("{:?}", a);
+    a.try_append_array(Axis(0), aview2(&[[4., 5., 6., 7.]])).unwrap();
+    println!("{:?}", a);
+    //a.try_append_column(aview1(&[4., 5., 6., 7.])).unwrap();
+    //assert_eq!(a.shape(), &[4, 2]);
+
+    assert_eq!(a,
+        array![[0., 1., 2., 3.],
+               [4., 5., 6., 7.]]);
+
+    a.try_append_array(Axis(0), aview2(&[[5., 5., 4., 4.], [3., 3., 2., 2.]])).unwrap();
+    println!("{:?}", a);
+    assert_eq!(a,
+        array![[0., 1., 2., 3.],
+               [4., 5., 6., 7.],
+               [5., 5., 4., 4.],
+               [3., 3., 2., 2.]]);
+}

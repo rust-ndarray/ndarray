@@ -203,3 +203,143 @@ impl<A> Array<A, Ix2> {
     }
 }
 
+impl<A, D> Array<A, D>
+    where D: Dimension
+{
+    /// Append a row to an array with row major memory layout.
+    ///
+    /// ***Errors*** with a layout error if the array is not in standard order or
+    /// if it has holes, even exterior holes (from slicing). <br>
+    /// ***Errors*** with shape error if the length of the input row does not match
+    /// the length of the rows in the array. <br>
+    ///
+    /// The memory layout matters, since it determines in which direction the array can easily
+    /// grow. Notice that an empty array is compatible both ways. The amortized average
+    /// complexity of the append is O(m) where *m* is the length of the row.
+    ///
+    /// ```rust
+    /// use ndarray::{Array, ArrayView, array};
+    ///
+    /// // create an empty array and append
+    /// let mut a = Array::zeros((0, 4));
+    /// a.try_append_row(ArrayView::from(&[1., 2., 3., 4.])).unwrap();
+    /// a.try_append_row(ArrayView::from(&[0., -2., -3., -4.])).unwrap();
+    ///
+    /// assert_eq!(
+    ///     a,
+    ///     array![[1., 2., 3., 4.],
+    ///            [0., -2., -3., -4.]]);
+    /// ```
+    pub fn try_append_array(&mut self, axis: Axis, array: ArrayView<A, D>)
+        -> Result<(), ShapeError>
+    where
+        A: Clone,
+        D: RemoveAxis,
+    {
+        if self.ndim() == 0 {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+        }
+
+        let remaining_shape = self.raw_dim().remove_axis(axis);
+        let array_rem_shape = array.raw_dim().remove_axis(axis);
+
+        if remaining_shape != array_rem_shape {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+        }
+
+        let len_to_append = array.len();
+        if len_to_append == 0 {
+            return Ok(());
+        }
+
+        let array_shape = array.raw_dim();
+        let mut res_dim = self.raw_dim();
+        res_dim[axis.index()] += array_shape[axis.index()];
+        let new_len = dimension::size_of_shape_checked(&res_dim)?;
+
+        let self_is_empty = self.is_empty();
+
+        // array must be empty or have `axis` as the outermost (longest stride)
+        // axis
+        if !(self_is_empty ||
+             self.axes().max_by_key(|ax| ax.stride).map(|ax| ax.axis) == Some(axis))
+        {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
+        }
+
+        // array must be be "full" (have no exterior holes)
+        if self.len() != self.data.len() {
+            return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
+        }
+        let strides = if self_is_empty {
+            // recompute strides - if the array was previously empty, it could have
+            // zeros in strides.
+            res_dim.default_strides()
+        } else {
+            self.strides.clone()
+        };
+
+        unsafe {
+            // grow backing storage and update head ptr
+            debug_assert_eq!(self.data.as_ptr(), self.as_ptr());
+            self.ptr = self.data.reserve(len_to_append); // because we are standard order
+
+            // copy elements from view to the array now
+            //
+            // make a raw view with the new row
+            // safe because the data was "full"
+            let tail_ptr = self.data.as_end_nonnull();
+            let tail_view = RawArrayViewMut::new(tail_ptr, array_shape, strides.clone());
+
+            struct SetLenOnDrop<'a, A: 'a> {
+                len: usize,
+                data: &'a mut OwnedRepr<A>,
+            }
+
+            let mut length_guard = SetLenOnDrop {
+                len: self.data.len(),
+                data: &mut self.data,
+            };
+
+            impl<A> Drop for SetLenOnDrop<'_, A> {
+                fn drop(&mut self) {
+                    unsafe {
+                        self.data.set_len(self.len);
+                    }
+                }
+            }
+
+            // we have a problem here XXX
+            //
+            // To be robust for panics and drop the right elements, we want
+            // to fill the tail in-order, so that we can drop the right elements on
+            // panic. Don't know how to achieve that.
+            //
+            // It might be easier to retrace our steps in a scope guard to drop the right
+            // elements.. (PartialArray style).
+            //
+            // assign the new elements
+            Zip::from(tail_view).and(array)
+                .for_each(|to, from| {
+                    to.write(from.clone());
+                    length_guard.len += 1;
+                });
+
+            //length_guard.len += len_to_append;
+            dbg!(len_to_append);
+            drop(length_guard);
+
+            // update array dimension
+            self.strides = strides;
+            self.dim = res_dim;
+            dbg!(&self.dim);
+
+        }
+        // multiple assertions after pointer & dimension update
+        debug_assert_eq!(self.data.len(), self.len());
+        debug_assert_eq!(self.len(), new_len);
+        debug_assert!(self.is_standard_layout());
+
+        Ok(())
+    }
+}
