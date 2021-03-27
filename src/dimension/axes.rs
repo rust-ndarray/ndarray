@@ -1,7 +1,7 @@
 use crate::{Axis, Dimension, Ix, Ixs};
 
 /// Create a new Axes iterator
-pub fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
+pub(crate) fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
 where
     D: Dimension,
 {
@@ -15,9 +15,10 @@ where
 
 /// An iterator over the length and stride of each axis of an array.
 ///
-/// See [`.axes()`](../struct.ArrayBase.html#method.axes) for more information.
+/// This iterator is created from the array method
+/// [`.axes()`](crate::ArrayBase::axes).
 ///
-/// Iterator element type is `AxisDescription`.
+/// Iterator element type is [`AxisDescription`].
 ///
 /// # Examples
 ///
@@ -27,10 +28,14 @@ where
 ///
 /// let a = Array3::<f32>::zeros((3, 5, 4));
 ///
+/// // find the largest axis in the array
+/// // check the axis index and its length
+///
 /// let largest_axis = a.axes()
-///                     .max_by_key(|ax| ax.len())
-///                     .unwrap().axis();
-/// assert_eq!(largest_axis, Axis(1));
+///                     .max_by_key(|ax| ax.len)
+///                     .unwrap();
+/// assert_eq!(largest_axis.axis, Axis(1));
+/// assert_eq!(largest_axis.len, 5);
 /// ```
 #[derive(Debug)]
 pub struct Axes<'a, D> {
