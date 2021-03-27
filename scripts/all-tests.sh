@@ -15,7 +15,7 @@ cargo test --verbose --features "$FEATURES"
 cargo test --manifest-path=ndarray-rand/Cargo.toml --no-default-features --verbose
 cargo test --manifest-path=ndarray-rand/Cargo.toml --features quickcheck --verbose
 cargo test --manifest-path=xtest-serialization/Cargo.toml --verbose
-cargo test --manifest-path=xtest-blas/Cargo.toml --verbose
+cargo test --manifest-path=xtest-blas/Cargo.toml --verbose --features openblas-system
 cargo test --examples
 CARGO_TARGET_DIR=target/ cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose
 CARGO_TARGET_DIR=target/ cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose --features test_blas

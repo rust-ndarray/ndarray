@@ -133,12 +133,13 @@ explicitly including it in your code::
     extern crate blas_src;
 
 The following versions have been verified to work together. For ndarray 0.15 or later,
-there is no tight coupling to the ``blas-src`` version, so any version should in theory work.
+there is no tight coupling to the ``blas-src`` version, so version selection is more flexible.
 
 =========== ============ ================ ==============
 ``ndarray`` ``blas-src`` ``openblas-src`` ``netlib-src``
 =========== ============ ================ ==============
-0.15        0.7.0        0.9.0            0.8.0
+0.15        0.8          0.10             0.8
+0.15        0.7          0.9              0.8
 0.14        0.6.1        0.9.0
 0.13        0.2.0        0.6.0
 =========== ============ ================ ==============
