@@ -596,7 +596,7 @@ pub type Ixs = isize;
 ///     S::Elem: Clone,
 ///     D: Dimension,
 /// {
-///     arr.slice_each_axis_mut(|ax| Slice::from(0..ax.len() / 2)).fill(x);
+///     arr.slice_each_axis_mut(|ax| Slice::from(0..ax.len / 2)).fill(x);
 /// }
 /// fill_lower(&mut h, 9);
 /// let k = arr2(&[[9, 9, 2, 3],
