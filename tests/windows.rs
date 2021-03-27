@@ -133,7 +133,7 @@ fn test_window_neg_stride() {
 
     itertools::assert_equal(
         array.slice(s![.., ..;-1]).windows((2, 2)),
-        answer.iter().map(|a| a.view())
+        answer.iter()
     );
 
     answer.invert_axis(Axis(0));
@@ -141,7 +141,7 @@ fn test_window_neg_stride() {
 
     itertools::assert_equal(
         array.slice(s![..;-1, ..;-1]).windows((2, 2)),
-        answer.iter().map(|a| a.view())
+        answer.iter()
     );
 
     answer.invert_axis(Axis(1));
@@ -149,6 +149,6 @@ fn test_window_neg_stride() {
 
     itertools::assert_equal(
         array.slice(s![..;-1, ..]).windows((2, 2)),
-        answer.iter().map(|a| a.view())
+        answer.iter()
     );
 }

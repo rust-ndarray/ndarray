@@ -112,6 +112,34 @@ where
     }
 }
 
+/// Return `true` if the array shapes and all elements of `self` and
+/// `rhs` are equal. Return `false` otherwise.
+impl<'a, A, B, S, S2, D> PartialEq<&'a ArrayBase<S2, D>> for ArrayBase<S, D>
+where
+    A: PartialEq<B>,
+    S: Data<Elem = A>,
+    S2: Data<Elem = B>,
+    D: Dimension,
+{
+    fn eq(&self, rhs: &&ArrayBase<S2, D>) -> bool {
+        *self == **rhs
+    }
+}
+
+/// Return `true` if the array shapes and all elements of `self` and
+/// `rhs` are equal. Return `false` otherwise.
+impl<'a, A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for &'a ArrayBase<S, D>
+where
+    A: PartialEq<B>,
+    S: Data<Elem = A>,
+    S2: Data<Elem = B>,
+    D: Dimension,
+{
+    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool {
+        **self == *rhs
+    }
+}
+
 impl<S, D> Eq for ArrayBase<S, D>
 where
     D: Dimension,
