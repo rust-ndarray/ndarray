@@ -118,6 +118,7 @@ where
     /// assert!(!array.is_square());
     /// ```
     pub fn is_square(&self) -> bool {
-        self.nrows() == self.ncols()
+        let (m, n) = self.dim();
+        m == n
     }
 }
