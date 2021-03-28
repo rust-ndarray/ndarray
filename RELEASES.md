@@ -55,6 +55,11 @@ New features
 
   https://github.com/rust-ndarray/ndarray/pull/947
 
+- New methods `.std()` and `.var()` for standard deviation and variance by
+  [@kdubovikov]
+
+  https://github.com/rust-ndarray/ndarray/pull/790
+
 Enhancements
 ------------
 
@@ -1269,6 +1274,7 @@ Earlier releases
 [@insideoutclub]: https://github.com/insideoutclub
 [@JP-Ellis]: https://github.com/JP-Ellis
 [@lifuyang]: https://github.com/liufuyang
+[@kdubovikov]: https://github.com/kdubovikov
 [@max-sixty]: https://github.com/max-sixty
 [@mneumann]: https://github.com/mneumann
 [@mockersf]: https://github.com/mockersf
