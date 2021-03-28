@@ -1377,7 +1377,9 @@ fn reshape() {
 fn reshape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
-    let _u = v.into_shape((2, 5)).unwrap();
+    let res = v.into_shape((2, 5));
+    println!("{:?}", res);
+    res.unwrap();
 }
 
 #[test]
@@ -1387,7 +1389,9 @@ fn reshape_error2() {
     let v = aview1(&data);
     let mut u = v.into_shape((2, 2, 2)).unwrap();
     u.swap_axes(0, 1);
-    let _s = u.into_shape((2, 4)).unwrap();
+    let res = u.into_shape((2, 4));
+    println!("{:?}", res);
+    res.unwrap();
 }
 
 #[test]

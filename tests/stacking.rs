@@ -16,12 +16,15 @@ fn concatenating() {
     assert_eq!(d, aview1(&[2., 2., 9., 9.]));
 
     let res = ndarray::concatenate(Axis(1), &[a.view(), c.view()]);
+    println!("{:?}", res);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);
 
     let res = ndarray::concatenate(Axis(2), &[a.view(), c.view()]);
+    println!("{:?}", res);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::OutOfBounds);
 
     let res: Result<Array2<f64>, _> = ndarray::concatenate(Axis(0), &[]);
+    println!("{:?}", res);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::Unsupported);
 }
 
@@ -36,11 +39,14 @@ fn stacking() {
 
     let c = arr2(&[[3., 2., 3.], [2., 3., 2.]]);
     let res = ndarray::stack(Axis(1), &[a.view(), c.view()]);
+    println!("{:?}", res);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);
 
     let res = ndarray::stack(Axis(3), &[a.view(), a.view()]);
+    println!("{:?}", res);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::OutOfBounds);
 
     let res: Result<Array2<f64>, _> = ndarray::stack::<_, Ix1>(Axis(0), &[]);
+    println!("{:?}", res);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::Unsupported);
 }
