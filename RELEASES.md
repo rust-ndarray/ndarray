@@ -1,4 +1,4 @@
-Version 0.15.1 (not released yet)
+Version 0.15.1 (2021-03-29)
 ===========================
 
 Enhancements
