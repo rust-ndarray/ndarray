@@ -4,8 +4,26 @@ Version 0.15.1 (not released yet)
 Enhancements
 ------------
 
-- Arrays and views now implement PartialEq so that it's possible to compare
-  arrays with references to arrays and vice versa by [@bluss]
+- Arrays and views now have additional PartialEq impls so that it's possible to
+  compare arrays with references to arrays and vice versa by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/958
+
+Bug fixes
+---------
+
+- Fix panic in creation of `.windows()` producer from negative stride array by
+  [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/957
+
+Other changes
+-------------
+
+- Update BLAS documentation further by @bluss
+
+  https://github.com/rust-ndarray/ndarray/pull/955 <br>
+  https://github.com/rust-ndarray/ndarray/pull/959
 
 
 Version 0.15.0 (2021-03-25)
