@@ -8,6 +8,7 @@
 
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
+use crate::NdProducer;
 
 /// Stack arrays along the new axis.
 ///
@@ -72,18 +73,22 @@ where
     D: RemoveAxis,
 {
     if arrays.is_empty() {
+        // TODO More specific error for empty input not supported
         return Err(from_kind(ErrorKind::Unsupported));
     }
     let mut res_dim = arrays[0].raw_dim();
     if axis.index() >= res_dim.ndim() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(ShapeError::invalid_axis(res_dim.ndim().wrapping_sub(1), axis.index()));
     }
     let common_dim = res_dim.remove_axis(axis);
-    if arrays
-        .iter()
-        .any(|a| a.raw_dim().remove_axis(axis) != common_dim)
+    if let Some(a) = arrays.iter().find_map(|a|
+        if a.raw_dim().remove_axis(axis) != common_dim {
+            Some(a)
+        } else {
+            None
+        })
     {
-        return Err(from_kind(ErrorKind::IncompatibleShape));
+        return Err(ShapeError::incompatible_shapes(&common_dim, &a.dim));
     }
 
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
@@ -143,17 +148,20 @@ where
     D::Larger: RemoveAxis,
 {
     if arrays.is_empty() {
+        // TODO More specific error for empty input not supported
         return Err(from_kind(ErrorKind::Unsupported));
     }
     let common_dim = arrays[0].raw_dim();
     // Avoid panic on `insert_axis` call, return an Err instead of it.
     if axis.index() > common_dim.ndim() {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(ShapeError::invalid_axis(common_dim.ndim(), axis.index()));
     }
     let mut res_dim = common_dim.insert_axis(axis);
 
-    if arrays.iter().any(|a| a.raw_dim() != common_dim) {
-        return Err(from_kind(ErrorKind::IncompatibleShape));
+    if let Some(array) = arrays.iter().find_map(|array| if !array.equal_dim(&common_dim) {
+        Some(array)
+    } else { None }) {
+        return Err(ShapeError::incompatible_shapes(&common_dim, &array.dim));
     }
 
     res_dim.set_axis(axis, arrays.len());

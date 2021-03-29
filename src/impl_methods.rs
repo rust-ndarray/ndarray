@@ -23,7 +23,7 @@ use crate::dimension::{
     offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::dimension::broadcast::co_broadcast;
-use crate::error::{self, ErrorKind, ShapeError, from_kind};
+use crate::error::{self, ErrorKind, ShapeError};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::zip::{IntoNdProducer, Zip};
@@ -1588,7 +1588,7 @@ where
             } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
                 Ok(self.with_strides_dim(shape.fortran_strides(), shape))
             } else {
-                Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+                Err(ShapeError::incompatible_layout(error::ExpectedLayout::ContiguousCF))
             }
         }
     }
@@ -1693,6 +1693,7 @@ where
                 }
             }
         }
+        // TODO More specific error incompatible ndim
         Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
     }
 
@@ -1805,11 +1806,14 @@ where
     {
         let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(&self.dim, &other.dim)?;
         if let Some(view1) = self.broadcast(shape.clone()) {
-            if let Some(view2) = other.broadcast(shape) {
-                return Ok((view1, view2));
+            if let Some(view2) = other.broadcast(shape.clone()) {
+                Ok((view1, view2))
+            } else {
+                Err(ShapeError::incompatible_shapes(&other.dim, &shape))
             }
+        } else {
+            Err(ShapeError::incompatible_shapes(&other.dim, &shape))
         }
-        Err(from_kind(ErrorKind::IncompatibleShape))
     }
 
     /// Swap axes `ax` and `bx`.

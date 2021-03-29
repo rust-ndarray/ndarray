@@ -89,6 +89,7 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
         .try_fold(1usize, |acc, &d| acc.checked_mul(d))
         .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
     if size_nonzero > ::std::isize::MAX as usize {
+        // TODO More specific error
         Err(from_kind(ErrorKind::Overflow))
     } else {
         Ok(dim.size())
@@ -137,7 +138,7 @@ pub(crate) fn can_index_slice_not_custom<D: Dimension>(data_len: usize, dim: &D)
     let len = size_of_shape_checked(dim)?;
     // Condition 2.
     if len > data_len {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(ShapeError::shape_length_exceeds_data_length(data_len, len));
     }
     Ok(())
 }
@@ -170,6 +171,7 @@ where
 {
     // Condition 1.
     if dim.ndim() != strides.ndim() {
+        // TODO More specific error for dimension stride dimensionality mismatch
         return Err(from_kind(ErrorKind::IncompatibleLayout));
     }
 
@@ -185,9 +187,11 @@ where
             let off = d.saturating_sub(1).checked_mul(s.abs() as usize)?;
             acc.checked_add(off)
         })
+        // TODO More specific error
         .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
     // Condition 2a.
     if max_offset > isize::MAX as usize {
+        // TODO More specific error
         return Err(from_kind(ErrorKind::Overflow));
     }
 
@@ -195,9 +199,11 @@ where
     // greatest address accessible by moving along all axes
     let max_offset_bytes = max_offset
         .checked_mul(elem_size)
+        // TODO More specific error
         .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
     // Condition 2b.
     if max_offset_bytes > isize::MAX as usize {
+        // TODO More specific error
         return Err(from_kind(ErrorKind::Overflow));
     }
 
@@ -256,15 +262,16 @@ fn can_index_slice_impl<D: Dimension>(
     // Check condition 3.
     let is_empty = dim.slice().iter().any(|&d| d == 0);
     if is_empty && max_offset > data_len {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(ShapeError::shape_length_exceeds_data_length(data_len, max_offset));
     }
     if !is_empty && max_offset >= data_len {
-        return Err(from_kind(ErrorKind::OutOfBounds));
+        return Err(ShapeError::shape_length_exceeds_data_length(data_len.wrapping_sub(1), max_offset));
     }
 
     // Check condition 4.
     if !is_empty && dim_stride_overlap(dim, strides) {
-        return Err(from_kind(ErrorKind::Unsupported));
+        // TODO: More specific error kind Strides result in overlapping elements
+        return Err(ShapeError::from_kind(ErrorKind::Unsupported));
     }
 
     Ok(())
@@ -293,6 +300,7 @@ where
 {
     for &stride in strides.slice() {
         if (stride as isize) < 0 {
+        // TODO: More specific error kind Non-negative strides required
             return Err(from_kind(ErrorKind::Unsupported));
         }
     }
