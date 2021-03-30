@@ -106,8 +106,14 @@ where
             out.zip_mut_with_same_shape(rhs, clone_iopf(A::$mth));
             out
         } else {
-            let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
-            Zip::from(&lhs).and(&rhs).map_collect_owned(clone_opf(A::$mth))
+            let (lhs_view, rhs_view) = self.broadcast_with(&rhs).unwrap();
+            if lhs_view.shape() == self.shape() {
+                let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+                out.zip_mut_with_same_shape(&rhs_view, clone_iopf(A::$mth));
+                out
+            } else {
+                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$mth))
+            }
         }
     }
 }
@@ -141,8 +147,14 @@ where
             out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$mth));
             out
         } else {
-            let (rhs, lhs) = rhs.broadcast_with(self).unwrap();
-            Zip::from(&lhs).and(&rhs).map_collect_owned(clone_opf(A::$mth))
+            let (rhs_view, lhs_view) = rhs.broadcast_with(self).unwrap();
+            if rhs_view.shape() == rhs.shape() {
+                let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
+                out.zip_mut_with_same_shape(&lhs_view, clone_iopf_rev(A::$mth));
+                out
+            } else {
+                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$mth))
+            }
         }
     }
 }
