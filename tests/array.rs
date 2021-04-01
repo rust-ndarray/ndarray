@@ -1627,6 +1627,12 @@ fn arithmetic_broadcast() {
         sa2 + &sb2 + sc2.into_owned(),
         arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
     );
+
+    // Same shape
+    let a = s.slice(s![..;-1, ..;2, ..]);
+    let b = s.slice(s![.., ..;2, ..]);
+    assert_eq!(a.shape(), b.shape());
+    assert_eq!(&a + &b, arr3(&[[[3, 7], [19, 23]], [[3, 7], [19, 23]]]));
 }
 
 #[test]

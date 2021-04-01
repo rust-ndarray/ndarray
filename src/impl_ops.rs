@@ -179,7 +179,13 @@ where
 {
     type Output = Array<A, <D as DimMax<E>>::Output>;
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
-        let (lhs, rhs) = self.broadcast_with(rhs).unwrap();
+        let (lhs, rhs) = if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
+            let lhs = self.to_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+            let rhs = rhs.to_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+            (lhs, rhs)
+        } else {
+            self.broadcast_with(rhs).unwrap()
+        };
         Zip::from(&lhs).and(&rhs).map_collect(clone_opf(A::$mth))
     }
 }

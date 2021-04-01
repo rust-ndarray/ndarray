@@ -1804,12 +1804,36 @@ where
         E: Dimension,
     {
         let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(&self.dim, &other.dim)?;
-        if let Some(view1) = self.broadcast(shape.clone()) {
-            if let Some(view2) = other.broadcast(shape) {
+        let view1 = if shape.slice() == self.dim.slice() {
+            self.to_dimensionality::<<D as DimMax<E>>::Output>()
+        } else {
+            self.broadcast(shape.clone())
+        };
+        let view2 = if shape.slice() == other.dim.slice() {
+            other.to_dimensionality::<<D as DimMax<E>>::Output>()
+        } else {
+            other.broadcast(shape)
+        };
+        if let Some(view1) = view1 {
+            if let Some(view2) = view2 {
                 return Ok((view1, view2));
             }
         }
         Err(from_kind(ErrorKind::IncompatibleShape))
+    }
+
+    /// Creat an array view from an array with the same shape, but different dimensionality
+    /// type. Return None if the numbers of axes mismatch.
+    #[inline]
+    pub(crate) fn to_dimensionality<D2>(&self) -> Option<ArrayView<'_, A, D2>>
+    where
+        D2: Dimension,
+        S: Data,
+    {
+        let dim = <D2>::from_dimension(&self.dim)?;
+        let strides = <D2>::from_dimension(&self.strides)?;
+
+        unsafe { Some(ArrayView::new(self.ptr, dim, strides)) }
     }
 
     /// Swap axes `ax` and `bx`.
