@@ -11,7 +11,7 @@ extern crate test;
 
 use std::mem::MaybeUninit;
 
-use ndarray::ShapeBuilder;
+use ndarray::{ShapeBuilder, Array3, Array4};
 use ndarray::{arr0, arr1, arr2, azip, s};
 use ndarray::{Array, Array1, Array2, Axis, Ix, Zip};
 use ndarray::{Ix1, Ix2, Ix3, Ix5, IxDyn};
@@ -997,4 +997,22 @@ fn into_dyn_dyn(bench: &mut test::Bencher) {
     let a = Array::<f32, _>::zeros(IxDyn(&[10, 10, 10]));
     let a = a.view();
     bench.iter(|| a.clone().into_dyn());
+}
+
+#[bench]
+fn broadcast_same_dim(bench: &mut test::Bencher) {
+    let s = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let s = Array4::from_shape_vec((2, 2, 3, 2), s.to_vec()).unwrap();
+    let a = s.slice(s![.., ..;-1, ..;2, ..]);
+    let b = s.slice(s![.., .., ..;2, ..]);
+    bench.iter(|| &a + &b);
+}
+
+#[bench]
+fn broadcast_one_side(bench: &mut test::Bencher) {
+    let s = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let s2 = [1 ,2 ,3 ,4 ,5 ,6];
+    let a = Array4::from_shape_vec((4, 1, 3, 2), s.to_vec()).unwrap();
+    let b = Array3::from_shape_vec((1, 3, 2), s2.to_vec()).unwrap();
+    bench.iter(|| &a + &b);
 }

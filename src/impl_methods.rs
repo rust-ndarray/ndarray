@@ -1804,12 +1804,21 @@ where
         E: Dimension,
     {
         let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(&self.dim, &other.dim)?;
-        if let Some(view1) = self.broadcast(shape.clone()) {
-            if let Some(view2) = other.broadcast(shape) {
-                return Ok((view1, view2));
-            }
-        }
-        Err(from_kind(ErrorKind::IncompatibleShape))
+        let view1 = if shape.slice() == self.dim.slice() {
+            self.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap()
+        } else if let Some(view1) = self.broadcast(shape.clone()) {
+            view1
+        } else {
+            return Err(from_kind(ErrorKind::IncompatibleShape))
+        };
+        let view2 = if shape.slice() == other.dim.slice() {
+            other.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap()
+        } else if let Some(view2) = other.broadcast(shape) {
+            view2
+        } else {
+            return Err(from_kind(ErrorKind::IncompatibleShape))
+        };
+        Ok((view1, view2))
     }
 
     /// Swap axes `ax` and `bx`.
