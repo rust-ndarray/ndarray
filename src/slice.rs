@@ -415,11 +415,13 @@ where
 {
     if let Some(in_ndim) = Din::NDIM {
         if in_ndim != indices.in_ndim() {
+            // TODO More specific error incompatible ndim
             return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
         }
     }
     if let Some(out_ndim) = Dout::NDIM {
         if out_ndim != indices.out_ndim() {
+            // TODO More specific error incompatible ndim
             return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
         }
     }

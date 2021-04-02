@@ -27,6 +27,7 @@ where
             if *out == 1 {
                 *out = *s2
             } else if *s2 != 1 {
+                // TODO More specific error axis length mismatch
                 return Err(from_kind(ErrorKind::IncompatibleShape));
             }
         }

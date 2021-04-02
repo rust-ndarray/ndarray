@@ -49,6 +49,7 @@ defmac = "0.2"
 quickcheck = { version = "0.9", default-features = false }
 approx = "0.4"
 itertools = { version = "0.10.0", default-features = false, features = ["use_std"] }
+matches = "0.1.8"
 
 [features]
 default = ["std"]
