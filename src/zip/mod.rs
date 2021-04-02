@@ -673,6 +673,13 @@ macro_rules! map_impl {
                 self.build_and(part)
             }
 
+            #[allow(unused)]
+            #[inline]
+            pub(crate) fn debug_assert_c_order(self) -> Self {
+                debug_assert!(self.layout.is(CORDER) || self.layout_tendency >= 0);
+                self
+            }
+
             fn build_and<P>(self, part: P) -> Zip<($($p,)* P, ), D>
                 where P: NdProducer<Dim=D>,
             {

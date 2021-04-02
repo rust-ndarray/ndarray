@@ -251,7 +251,7 @@ impl<A, D> Array<A, D>
     ///            [1., 1., 1., 1.],
     ///            [1., 1., 1., 1.]]);
     /// ```
-    pub fn try_append_array(&mut self, axis: Axis, array: ArrayView<A, D>)
+    pub fn try_append_array(&mut self, axis: Axis, mut array: ArrayView<A, D>)
         -> Result<(), ShapeError>
     where
         A: Clone,
@@ -310,7 +310,7 @@ impl<A, D> Array<A, D>
             // make a raw view with the new row
             // safe because the data was "full"
             let tail_ptr = self.data.as_end_nonnull();
-            let tail_view = RawArrayViewMut::new(tail_ptr, array_shape, strides.clone());
+            let mut tail_view = RawArrayViewMut::new(tail_ptr, array_shape, strides.clone());
 
             struct SetLenOnDrop<'a, A: 'a> {
                 len: usize,
@@ -330,37 +330,86 @@ impl<A, D> Array<A, D>
                 }
             }
 
-            // we have a problem here XXX
-            //
             // To be robust for panics and drop the right elements, we want
             // to fill the tail in-order, so that we can drop the right elements on
-            // panic. Don't know how to achieve that.
+            // panic.
             //
-            // It might be easier to retrace our steps in a scope guard to drop the right
-            // elements.. (PartialArray style).
+            // We have: Zip::from(tail_view).and(array)
+            // Transform tail_view into standard order by inverting and moving its axes.
+            // Keep the Zip traversal unchanged by applying the same axis transformations to
+            // `array`. This ensures the Zip traverses the underlying memory in order.
             //
-            // assign the new elements
+            // XXX It would be possible to skip this transformation if the element
+            // doesn't have drop. However, in the interest of code coverage, all elements
+            // use this code initially.
+
+            if tail_view.ndim() > 1 {
+                for i in 0..tail_view.ndim() {
+                    if tail_view.stride_of(Axis(i)) < 0 {
+                        tail_view.invert_axis(Axis(i));
+                        array.invert_axis(Axis(i));
+                    }
+                }
+                sort_axes_to_standard_order(&mut tail_view, &mut array);
+            } 
             Zip::from(tail_view).and(array)
+                .debug_assert_c_order()
                 .for_each(|to, from| {
                     to.write(from.clone());
                     length_guard.len += 1;
                 });
 
-            //length_guard.len += len_to_append;
-            dbg!(len_to_append);
             drop(length_guard);
 
             // update array dimension
             self.strides = strides;
             self.dim = res_dim;
-            dbg!(&self.dim);
-
         }
         // multiple assertions after pointer & dimension update
         debug_assert_eq!(self.data.len(), self.len());
         debug_assert_eq!(self.len(), new_len);
-        debug_assert!(self.is_standard_layout());
 
         Ok(())
     }
 }
+
+fn sort_axes_to_standard_order<S, S2, D>(a: &mut ArrayBase<S, D>, b: &mut ArrayBase<S2, D>)
+where
+    S: RawData,
+    S2: RawData,
+    D: Dimension,
+{
+    if a.ndim() <= 1 {
+        return;
+    }
+    sort_axes_impl(&mut a.dim, &mut a.strides, &mut b.dim, &mut b.strides);
+    debug_assert!(a.is_standard_layout());
+}
+
+fn sort_axes_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)
+where
+    D: Dimension,
+{
+    debug_assert!(adim.ndim() > 1);
+    debug_assert_eq!(adim.ndim(), bdim.ndim());
+    // bubble sort axes
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for i in 0..adim.ndim() - 1 {
+            let axis_i = i;
+            let next_axis = i + 1;
+
+            // make sure higher stride axes sort before.
+            debug_assert!(astrides.slice()[axis_i] as isize >= 0);
+            if (astrides.slice()[axis_i] as isize) < astrides.slice()[next_axis] as isize {
+                changed = true;
+                adim.slice_mut().swap(axis_i, next_axis);
+                astrides.slice_mut().swap(axis_i, next_axis);
+                bdim.slice_mut().swap(axis_i, next_axis);
+                bstrides.slice_mut().swap(axis_i, next_axis);
+            }
+        }
+    }
+}
+

@@ -105,3 +105,44 @@ fn append_array1() {
                [5., 5., 4., 4.],
                [3., 3., 2., 2.]]);
 }
+
+#[test]
+fn append_array_3d() {
+    let mut a = Array::zeros((0, 2, 2));
+    a.try_append_array(Axis(0), array![[[0, 1], [2, 3]]].view()).unwrap();
+    println!("{:?}", a);
+
+    let aa = array![[[51, 52], [53, 54]], [[55, 56], [57, 58]]];
+    let av = aa.view();
+    println!("Send {:?} to append", av);
+    a.try_append_array(Axis(0), av.clone()).unwrap();
+
+    a.swap_axes(0, 1);
+    let aa = array![[[71, 72], [73, 74]], [[75, 76], [77, 78]]];
+    let mut av = aa.view();
+    av.swap_axes(0, 1);
+    println!("Send {:?} to append", av);
+    a.try_append_array(Axis(1), av.clone()).unwrap();
+    println!("{:?}", a);
+    let aa = array![[[81, 82], [83, 84]], [[85, 86], [87, 88]]];
+    let mut av = aa.view();
+    av.swap_axes(0, 1);
+    println!("Send {:?} to append", av);
+    a.try_append_array(Axis(1), av).unwrap();
+    println!("{:?}", a);
+    assert_eq!(a,
+        array![[[0, 1],
+                [51, 52],
+                [55, 56],
+                [71, 72],
+                [75, 76],
+                [81, 82],
+                [85, 86]],
+               [[2, 3],
+                [53, 54],
+                [57, 58],
+                [73, 74],
+                [77, 78],
+                [83, 84],
+                [87, 88]]]);
+}
