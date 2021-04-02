@@ -186,7 +186,7 @@ where
         } else {
             self.broadcast_with(rhs).unwrap()
         };
-        Zip::from(&lhs).and(&rhs).map_collect(clone_opf(A::$mth))
+        Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$mth))
     }
 }
 
