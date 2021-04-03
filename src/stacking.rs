@@ -6,6 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use alloc::vec::Vec;
+
+use crate::dimension;
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
 
@@ -68,7 +71,7 @@ where
 /// ```
 pub fn concatenate<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D>, ShapeError>
 where
-    A: Copy,
+    A: Clone,
     D: RemoveAxis,
 {
     if arrays.is_empty() {
@@ -88,24 +91,21 @@ where
 
     let stacked_dim = arrays.iter().fold(0, |acc, a| acc + a.len_of(axis));
     res_dim.set_axis(axis, stacked_dim);
+    let new_len = dimension::size_of_shape_checked(&res_dim)?;
 
-    // we can safely use uninitialized values here because we will
-    // overwrite every one of them.
-    let mut res = Array::uninit(res_dim);
+    // start with empty array with precomputed capacity
+    // try_append_array's handling of empty arrays makes sure `axis` is ok for appending
+    res_dim.set_axis(axis, 0);
+    let mut res = unsafe {
+        // Safety: dimension is size 0 and vec is empty
+        Array::from_shape_vec_unchecked(res_dim, Vec::with_capacity(new_len))
+    };
 
-    {
-        let mut assign_view = res.view_mut();
-        for array in arrays {
-            let len = array.len_of(axis);
-            let (front, rest) = assign_view.split_at(axis, len);
-            array.assign_to(front);
-            assign_view = rest;
-        }
-        debug_assert_eq!(assign_view.len(), 0);
+    for array in arrays {
+        res.try_append_array(axis, array.clone())?;
     }
-    unsafe {
-        Ok(res.assume_init())
-    }
+    debug_assert_eq!(res.len_of(axis), stacked_dim);
+    Ok(res)
 }
 
 #[deprecated(note="Use under the name stack instead.", since="0.15.0")]
