@@ -430,6 +430,26 @@ where
     }
 }
 
+impl<D, P1, P2> Zip<(P1, P2), D>
+where
+    D: Dimension,
+    P1: NdProducer<Dim=D>,
+    P1: NdProducer<Dim=D>,
+{
+    /// Debug assert traversal order is like c (including 1D case)
+    // Method placement: only used for binary Zip at the moment.
+    #[inline]
+    pub(crate) fn debug_assert_c_order(self) -> Self {
+        debug_assert!(self.layout.is(CORDER) || self.layout_tendency >= 0 ||
+                      self.dimension.slice().iter().filter(|&&d| d > 1).count() <= 1,
+                      "Assertion failed: traversal is not c-order or 1D for \
+                      layout {:?}, tendency {}, dimension {:?}",
+                      self.layout, self.layout_tendency, self.dimension);
+        self
+    }
+}
+
+
 /*
 trait Offset : Copy {
     unsafe fn offset(self, off: isize) -> Self;
@@ -671,13 +691,6 @@ macro_rules! map_impl {
             {
                 let part = p.into_producer().broadcast_unwrap(self.dimension.clone());
                 self.build_and(part)
-            }
-
-            #[allow(unused)]
-            #[inline]
-            pub(crate) fn debug_assert_c_order(self) -> Self {
-                debug_assert!(self.layout.is(CORDER) || self.layout_tendency >= 0);
-                self
             }
 
             fn build_and<P>(self, part: P) -> Zip<($($p,)* P, ), D>
