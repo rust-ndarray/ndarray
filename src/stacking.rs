@@ -41,7 +41,7 @@ pub fn stack<A, D>(
     arrays: &[ArrayView<A, D>],
 ) -> Result<Array<A, D::Larger>, ShapeError>
 where
-    A: Copy,
+    A: Clone,
     D: Dimension,
     D::Larger: RemoveAxis,
 {
@@ -138,7 +138,7 @@ pub fn stack_new_axis<A, D>(
     arrays: &[ArrayView<A, D>],
 ) -> Result<Array<A, D::Larger>, ShapeError>
 where
-    A: Copy,
+    A: Clone,
     D: Dimension,
     D::Larger: RemoveAxis,
 {
@@ -158,24 +158,22 @@ where
 
     res_dim.set_axis(axis, arrays.len());
 
-    // we can safely use uninitialized values here because we will
-    // overwrite every one of them.
-    let mut res = Array::uninit(res_dim);
+    let new_len = dimension::size_of_shape_checked(&res_dim)?;
 
-    res.axis_iter_mut(axis)
-        .zip(arrays.iter())
-        .for_each(|(assign_view, array)| {
-            // assign_view is D::Larger::Smaller which is usually == D
-            // (but if D is Ix6, we have IxD != Ix6 here; differing types
-            // but same number of axes).
-            let assign_view = assign_view.into_dimensionality::<D>()
-                .expect("same-dimensionality cast");
-            array.assign_to(assign_view);
-        });
+    // start with empty array with precomputed capacity
+    // try_append_array's handling of empty arrays makes sure `axis` is ok for appending
+    res_dim.set_axis(axis, 0);
+    let mut res = unsafe {
+        // Safety: dimension is size 0 and vec is empty
+        Array::from_shape_vec_unchecked(res_dim, Vec::with_capacity(new_len))
+    };
 
-    unsafe {
-        Ok(res.assume_init())
+    for array in arrays {
+        res.try_append_array(axis, array.clone().insert_axis(axis))?;
     }
+
+    debug_assert_eq!(res.len_of(axis), arrays.len());
+    Ok(res)
 }
 
 /// Stack arrays along the new axis.
