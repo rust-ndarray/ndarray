@@ -240,22 +240,25 @@ where
     }
 }
 
+#[inline]
+fn zip_dimension_check<D, P>(dimension: &D, part: &P)
+where
+    D: Dimension,
+    P: NdProducer<Dim = D>,
+{
+    ndassert!(
+        part.equal_dim(&dimension),
+        "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
+        dimension,
+        part.raw_dim()
+    );
+}
+
+
 impl<Parts, D> Zip<Parts, D>
 where
     D: Dimension,
 {
-    fn check<P>(&self, part: &P)
-    where
-        P: NdProducer<Dim = D>,
-    {
-        ndassert!(
-            part.equal_dim(&self.dimension),
-            "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
-            self.dimension,
-            part.raw_dim()
-        );
-    }
-
     /// Return a the number of element tuples in the Zip
     pub fn size(&self) -> usize {
         self.dimension.size()
@@ -652,7 +655,7 @@ macro_rules! map_impl {
                 where P: IntoNdProducer<Dim=D>,
             {
                 let part = p.into_producer();
-                self.check(&part);
+                zip_dimension_check(&self.dimension, &part);
                 self.build_and(part)
             }
 
