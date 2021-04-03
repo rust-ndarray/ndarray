@@ -206,29 +206,50 @@ impl<A> Array<A, Ix2> {
 impl<A, D> Array<A, D>
     where D: Dimension
 {
-    /// Append a row to an array with row major memory layout.
+    /// Append an array to the array
+    ///
+    /// The axis-to-append-to `axis` must be the array's "growing axis" for this operation
+    /// to succeed. The growing axis is the outermost or last-visited when elements are visited in
+    /// memory order:
+    ///
+    /// `axis` must be the growing axis of the current array, an axis with length 0 or 1.
+    ///
+    /// - This is the 0th axis for standard layout arrays
+    /// - This is the *n*-1 th axis for fortran layout arrays
+    /// - If the array is empty (the axis or any other has length 0) or if `axis`
+    ///   has length 1, then the array can always be appended.
     ///
     /// ***Errors*** with a layout error if the array is not in standard order or
     /// if it has holes, even exterior holes (from slicing). <br>
     /// ***Errors*** with shape error if the length of the input row does not match
     /// the length of the rows in the array. <br>
     ///
-    /// The memory layout matters, since it determines in which direction the array can easily
-    /// grow. Notice that an empty array is compatible both ways. The amortized average
-    /// complexity of the append is O(m) where *m* is the length of the row.
+    /// The memory layout of the `self` array matters, since it determines in which direction the
+    /// array can easily grow. Notice that an empty array is compatible both ways. The amortized
+    /// average complexity of the append is O(m) where *m* is the number of elements in the
+    /// array-to-append (equivalent to how `Vec::extend` works).
+    ///
+    /// The memory layout of the argument `array` does not matter.
     ///
     /// ```rust
-    /// use ndarray::{Array, ArrayView, array};
+    /// use ndarray::{Array, ArrayView, array, Axis};
     ///
     /// // create an empty array and append
     /// let mut a = Array::zeros((0, 4));
-    /// a.try_append_row(ArrayView::from(&[1., 2., 3., 4.])).unwrap();
-    /// a.try_append_row(ArrayView::from(&[0., -2., -3., -4.])).unwrap();
+    /// let ones  = ArrayView::from(&[1.; 8]).into_shape((2, 4)).unwrap();
+    /// let zeros = ArrayView::from(&[0.; 8]).into_shape((2, 4)).unwrap();
+    /// a.try_append_array(Axis(0), ones).unwrap();
+    /// a.try_append_array(Axis(0), zeros).unwrap();
+    /// a.try_append_array(Axis(0), ones).unwrap();
     ///
     /// assert_eq!(
     ///     a,
-    ///     array![[1., 2., 3., 4.],
-    ///            [0., -2., -3., -4.]]);
+    ///     array![[1., 1., 1., 1.],
+    ///            [1., 1., 1., 1.],
+    ///            [0., 0., 0., 0.],
+    ///            [0., 0., 0., 0.],
+    ///            [1., 1., 1., 1.],
+    ///            [1., 1., 1., 1.]]);
     /// ```
     pub fn try_append_array(&mut self, axis: Axis, array: ArrayView<A, D>)
         -> Result<(), ShapeError>
