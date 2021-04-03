@@ -873,7 +873,7 @@ where
     /// ```
     pub fn select(&self, axis: Axis, indices: &[Ix]) -> Array<A, D>
     where
-        A: Copy,
+        A: Clone,
         S: Data,
         D: RemoveAxis,
     {
