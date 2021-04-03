@@ -22,6 +22,32 @@ fn append_row() {
 }
 
 #[test]
+fn append_row_wrong_layout() {
+    let mut a = Array::zeros((0, 4));
+    a.try_append_row(aview1(&[0., 1., 2., 3.])).unwrap();
+    a.try_append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a.shape(), &[2, 4]);
+
+    assert_eq!(a.try_append_column(aview1(&[1., 2.])),
+        Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
+
+    assert_eq!(a,
+        array![[0., 1., 2., 3.],
+               [4., 5., 6., 7.]]);
+
+    // Clone the array
+
+    let mut dim = a.raw_dim();
+    dim[1] = 0;
+    let mut b = Array::zeros(dim);
+    b.try_append_array(Axis(1), a.view()).unwrap();
+    assert_eq!(b.try_append_column(aview1(&[1., 2.])), Ok(()));
+    assert_eq!(b,
+        array![[0., 1., 2., 3., 1.],
+               [4., 5., 6., 7., 2.]]);
+}
+
+#[test]
 fn append_row_error() {
     let mut a = Array::zeros((3, 4));
 
