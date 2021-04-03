@@ -261,6 +261,7 @@ impl<A, D> Array<A, D>
             return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
         }
 
+        let current_axis_len = self.len_of(axis);
         let remaining_shape = self.raw_dim().remove_axis(axis);
         let array_rem_shape = array.raw_dim().remove_axis(axis);
 
@@ -280,22 +281,46 @@ impl<A, D> Array<A, D>
 
         let self_is_empty = self.is_empty();
 
-        // array must be empty or have `axis` as the outermost (longest stride)
-        // axis
-        if !(self_is_empty ||
-             self.axes().max_by_key(|ax| ax.stride).map(|ax| ax.axis) == Some(axis))
-        {
-            return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
+        // array must be empty or have `axis` as the outermost (longest stride) axis
+        if !self_is_empty && current_axis_len > 1 {
+            // `axis` must be max stride axis or equal to its stride
+            let max_stride_axis = self.axes().max_by_key(|ax| ax.stride).unwrap();
+            if max_stride_axis.axis != axis && max_stride_axis.stride > self.stride_of(axis) {
+                return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
+            }
         }
 
         // array must be be "full" (have no exterior holes)
         if self.len() != self.data.len() {
             return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
         }
+
         let strides = if self_is_empty {
-            // recompute strides - if the array was previously empty, it could have
-            // zeros in strides.
-            res_dim.default_strides()
+            // recompute strides - if the array was previously empty, it could have zeros in
+            // strides.
+            // The new order is based on c/f-contig but must have `axis` as outermost axis.
+            if axis == Axis(self.ndim() - 1) {
+                // prefer f-contig when appending to the last axis
+                // Axis n - 1 is outermost axis
+                res_dim.fortran_strides()
+            } else {
+                // Default with modification
+                res_dim.slice_mut().swap(0, axis.index());
+                let mut strides = res_dim.default_strides();
+                res_dim.slice_mut().swap(0, axis.index());
+                strides.slice_mut().swap(0, axis.index());
+                strides
+            }
+        } else if current_axis_len == 1 {
+            // This is the outermost/longest stride axis; so we find the max across the other axes
+            let new_stride = self.axes().fold(1, |acc, ax| {
+                if ax.axis == axis { acc } else {
+                    Ord::max(acc, ax.len as isize * ax.stride)
+                }
+            });
+            let mut strides = self.strides.clone();
+            strides[axis.index()] = new_stride as usize;
+            strides
         } else {
             self.strides.clone()
         };
@@ -383,7 +408,8 @@ where
         return;
     }
     sort_axes_impl(&mut a.dim, &mut a.strides, &mut b.dim, &mut b.strides);
-    debug_assert!(a.is_standard_layout());
+    debug_assert!(a.is_standard_layout(), "not std layout dim: {:?}, strides: {:?}",
+                  a.shape(), a.strides());
 }
 
 fn sort_axes_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)

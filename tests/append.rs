@@ -146,3 +146,52 @@ fn append_array_3d() {
                 [83, 84],
                 [87, 88]]]);
 }
+
+#[test]
+fn test_append_2d() {
+    // create an empty array and append
+    let mut a = Array::zeros((0, 4));
+    let ones = ArrayView::from(&[1.; 12]).into_shape((3, 4)).unwrap();
+    let zeros = ArrayView::from(&[0.; 8]).into_shape((2, 4)).unwrap();
+    a.try_append_array(Axis(0), ones).unwrap();
+    a.try_append_array(Axis(0), zeros).unwrap();
+    a.try_append_array(Axis(0), ones).unwrap();
+    println!("{:?}", a);
+    assert_eq!(a.shape(), &[8, 4]);
+    for (i, row) in a.rows().into_iter().enumerate() {
+        let ones = i < 3 || i >= 5;
+        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}", i);
+    }
+
+    let mut a = Array::zeros((0, 4));
+    a = a.reversed_axes();
+    let ones = ones.reversed_axes();
+    let zeros = zeros.reversed_axes();
+    a.try_append_array(Axis(1), ones).unwrap();
+    a.try_append_array(Axis(1), zeros).unwrap();
+    a.try_append_array(Axis(1), ones).unwrap();
+    println!("{:?}", a);
+    assert_eq!(a.shape(), &[4, 8]);
+
+    for (i, row) in a.columns().into_iter().enumerate() {
+        let ones = i < 3 || i >= 5;
+        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}", i);
+    }
+}
+
+#[test]
+fn test_append_middle_axis() {
+    // ensure we can append to Axis(1) by letting it become outermost
+    let mut a = Array::<i32, _>::zeros((3, 0, 2));
+    a.try_append_array(Axis(1), Array::from_iter(0..12).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    println!("{:?}", a);
+    a.try_append_array(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    println!("{:?}", a);
+
+    // ensure we can append to Axis(1) by letting it become outermost
+    let mut a = Array::<i32, _>::zeros((3, 1, 2));
+    a.try_append_array(Axis(1), Array::from_iter(0..12).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    println!("{:?}", a);
+    a.try_append_array(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    println!("{:?}", a);
+}
