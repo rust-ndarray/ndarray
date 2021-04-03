@@ -99,73 +99,7 @@ impl<A> Array<A, Ix2> {
     where
         A: Clone,
     {
-        let row_len = row.len();
-        if row_len != self.len_of(Axis(1)) {
-            return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
-        }
-        let mut res_dim = self.raw_dim();
-        res_dim[0] += 1;
-        let new_len = dimension::size_of_shape_checked(&res_dim)?;
-
-        // array must be c-contiguous and be "full" (have no exterior holes)
-        if !self.is_standard_layout() || self.len() != self.data.len() {
-            return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
-        }
-
-        unsafe {
-            // grow backing storage and update head ptr
-            debug_assert_eq!(self.data.as_ptr(), self.as_ptr());
-            self.ptr = self.data.reserve(row_len);  // because we are standard order
-
-            // recompute strides - if the array was previously empty, it could have
-            // zeros in strides.
-            let strides = res_dim.default_strides();
-
-            // copy elements from view to the array now
-            //
-            // make a raw view with the new row
-            // safe because the data was "full"
-            let tail_ptr = self.data.as_end_nonnull();
-            let tail_view = RawArrayViewMut::new(tail_ptr, Ix1(row_len), Ix1(1));
-
-            struct SetLenOnDrop<'a, A: 'a> {
-                len: usize,
-                data: &'a mut OwnedRepr<A>,
-            }
-
-            let mut length_guard = SetLenOnDrop {
-                len: self.data.len(),
-                data: &mut self.data,
-            };
-
-            impl<A> Drop for SetLenOnDrop<'_, A> {
-                fn drop(&mut self) {
-                    unsafe {
-                        self.data.set_len(self.len);
-                    }
-                }
-            }
-
-            // assign the new elements
-            Zip::from(tail_view).and(row)
-                .for_each(|to, from| {
-                    to.write(from.clone());
-                    length_guard.len += 1;
-                });
-
-            drop(length_guard);
-
-            // update array dimension
-            self.strides = strides;
-            self.dim[0] += 1;
-
-        }
-        // multiple assertions after pointer & dimension update
-        debug_assert_eq!(self.data.len(), self.len());
-        debug_assert_eq!(self.len(), new_len);
-        debug_assert!(self.is_standard_layout());
-
-        Ok(())
+        self.try_append_array(Axis(0), row.insert_axis(Axis(0)))
     }
 
     /// Append a column to an array with column major memory layout.
@@ -196,10 +130,7 @@ impl<A> Array<A, Ix2> {
     where
         A: Clone,
     {
-        self.swap_axes(0, 1);
-        let ret = self.try_append_row(column);
-        self.swap_axes(0, 1);
-        ret
+        self.try_append_array(Axis(1), column.insert_axis(Axis(1)))
     }
 }
 
