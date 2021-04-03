@@ -201,14 +201,20 @@ impl<A, D> Array<A, D>
         }
 
         let len_to_append = array.len();
-        if len_to_append == 0 {
-            return Ok(());
-        }
 
         let array_shape = array.raw_dim();
         let mut res_dim = self.raw_dim();
         res_dim[axis.index()] += array_shape[axis.index()];
         let new_len = dimension::size_of_shape_checked(&res_dim)?;
+
+        if len_to_append == 0 {
+            // There are no elements to append and shapes are compatible:
+            // either the dimension increment is zero, or there is an existing
+            // zero in another axis in self.
+            debug_assert_eq!(self.len(), new_len);
+            self.dim = res_dim;
+            return Ok(());
+        }
 
         let self_is_empty = self.is_empty();
 

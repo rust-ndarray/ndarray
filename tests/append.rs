@@ -195,3 +195,22 @@ fn test_append_middle_axis() {
     a.try_append_array(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
     println!("{:?}", a);
 }
+
+#[test]
+fn test_append_zero_size() {
+    {
+        let mut a = Array::<i32, _>::zeros((0, 0));
+        a.try_append_array(Axis(0), aview2(&[[]])).unwrap();
+        a.try_append_array(Axis(0), aview2(&[[]])).unwrap();
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.shape(), &[2, 0]);
+    }
+
+    {
+        let mut a = Array::<i32, _>::zeros((0, 0));
+        a.try_append_array(Axis(1), ArrayView::from(&[]).into_shape((0, 1)).unwrap()).unwrap();
+        a.try_append_array(Axis(1), ArrayView::from(&[]).into_shape((0, 1)).unwrap()).unwrap();
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.shape(), &[0, 2]);
+    }
+}
