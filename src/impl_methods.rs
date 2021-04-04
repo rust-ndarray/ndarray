@@ -2444,6 +2444,31 @@ where
         }
     }
 
+    /// Remove the `index`th elements along `axis` and shift down elements from higher indexes.
+    ///
+    /// Decreases the length of `axis` by one.
+    ///
+    /// ***Panics** if `axis` or `index` is out of bounds.
+    pub fn shift_remove_index(&mut self, axis: Axis, index: usize)
+    where
+        S: DataOwned + DataMut,
+    {
+        let (_, mut tail) = self.view_mut().split_at(axis, index);
+        // shift elements to the back
+        // use swap to keep all elements initialized (as required by owned storage)
+        Zip::from(tail.lanes_mut(axis)).for_each(|mut lane| {
+            let mut lane_iter = lane.iter_mut();
+            let mut dst = if let Some(dst) = lane_iter.next() { dst } else { return };
+
+            for elt in lane_iter {
+                std::mem::swap(dst, elt);
+                dst = elt;
+            }
+        });
+        // then slice the axis in place to cut out the removed final element
+        self.slice_axis_inplace(axis, Slice::new(0, Some(-1), 1));
+    }
+
     /// Iterates over pairs of consecutive elements along the axis.
     ///
     /// The first argument to the closure is an element, and the second
