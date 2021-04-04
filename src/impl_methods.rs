@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::mem::{size_of, ManuallyDrop};
+use std::mem::{size_of, ManuallyDrop, MaybeUninit};
 use alloc::slice;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -2460,9 +2460,22 @@ where
             let mut lane_iter = lane.iter_mut();
             let mut dst = if let Some(dst) = lane_iter.next() { dst } else { return };
 
-            for elt in lane_iter {
-                std::mem::swap(dst, elt);
-                dst = elt;
+            // Logically we do a circular swap here, all elements in a chain
+            // Using MaybeUninit to avoid unecessary writes in the safe swap solution
+            //
+            //  for elt in lane_iter {
+            //      std::mem::swap(dst, elt);
+            //      dst = elt;
+            //  }
+            //
+            let mut slot = MaybeUninit::<A>::uninit();
+            unsafe {
+                slot.as_mut_ptr().copy_from_nonoverlapping(dst, 1);
+                for elt in lane_iter {
+                    (dst as *mut A).copy_from_nonoverlapping(elt, 1);
+                    dst = elt;
+                }
+                (dst as *mut A).copy_from_nonoverlapping(slot.as_ptr(), 1);
             }
         });
         // then slice the axis in place to cut out the removed final element
