@@ -100,7 +100,7 @@ fn main() {
 ```
 
 ### Some common create helper functions
-`linspace` - Create a 1-D array with 21 elements with values 0., …, 5.
+`linspace` - Create a 1-D array with 11 elements with values 0., …, 5.
 ```rust
 use ndarray::prelude::*;
 use ndarray::{Array, Ix3};
