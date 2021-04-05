@@ -26,6 +26,7 @@ use crate::dimension::broadcast::co_broadcast;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
+use crate::low_level_util::AbortIfPanic;
 use crate::zip::{IntoNdProducer, Zip};
 use crate::AxisDescription;
 
@@ -2476,6 +2477,7 @@ where
             //      dst = elt;
             //  }
             //
+            let guard = AbortIfPanic(&"remove_index: temporarily moving out of owned value");
             let mut slot = MaybeUninit::<A>::uninit();
             unsafe {
                 slot.as_mut_ptr().copy_from_nonoverlapping(dst, 1);
@@ -2485,6 +2487,7 @@ where
                 }
                 (dst as *mut A).copy_from_nonoverlapping(slot.as_ptr(), 1);
             }
+            guard.defuse();
         });
         // then slice the axis in place to cut out the removed final element
         self.slice_axis_inplace(axis, Slice::new(0, Some(-1), 1));
