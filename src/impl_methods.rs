@@ -2449,13 +2449,13 @@ where
     /// Decreases the length of `axis` by one.
     ///
     /// ***Panics** if `axis` or `index` is out of bounds.
-    pub fn shift_remove_index(&mut self, axis: Axis, index: usize)
+    pub fn remove_index(&mut self, axis: Axis, index: usize)
     where
         S: DataOwned + DataMut,
     {
         let (_, mut tail) = self.view_mut().split_at(axis, index);
-        // shift elements to the back
-        // use swap to keep all elements initialized (as required by owned storage)
+        // shift elements to the front
+        // use swapping to keep all elements initialized (as required by owned storage)
         Zip::from(tail.lanes_mut(axis)).for_each(|mut lane| {
             let mut lane_iter = lane.iter_mut();
             let mut dst = if let Some(dst) = lane_iter.next() { dst } else { return };

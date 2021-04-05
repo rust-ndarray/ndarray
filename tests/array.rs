@@ -2399,13 +2399,13 @@ mod array_cow_tests {
 }
 
 #[test]
-fn test_shift_remove() {
+fn test_remove_index() {
     let mut a = arr2(&[[1, 2, 3],
                        [4, 5, 6],
                        [7, 8, 9],
                        [10,11,12]]);
-    a.shift_remove_index(Axis(0), 1);
-    a.shift_remove_index(Axis(1), 2);
+    a.remove_index(Axis(0), 1);
+    a.remove_index(Axis(1), 2);
     assert_eq!(a.shape(), &[3, 2]);
     assert_eq!(a,
         array![[1, 2],
@@ -2417,22 +2417,22 @@ fn test_shift_remove() {
                        [7, 8, 9],
                        [10,11,12]]);
     a.invert_axis(Axis(0));
-    a.shift_remove_index(Axis(0), 1);
-    a.shift_remove_index(Axis(1), 2);
+    a.remove_index(Axis(0), 1);
+    a.remove_index(Axis(1), 2);
     assert_eq!(a.shape(), &[3, 2]);
     assert_eq!(a,
         array![[10,11],
                [4, 5],
                [1, 2]]);
 
-    a.shift_remove_index(Axis(1), 1);
+    a.remove_index(Axis(1), 1);
 
     assert_eq!(a.shape(), &[3, 1]);
     assert_eq!(a,
         array![[10],
                [4],
                [1]]);
-    a.shift_remove_index(Axis(1), 0);
+    a.remove_index(Axis(1), 0);
     assert_eq!(a.shape(), &[3, 0]);
     assert_eq!(a,
         array![[],
