@@ -279,6 +279,45 @@ impl<A, D> Array<A, D>
         self.data
     }
 
+    /// Create an empty array with an all-zeros shape
+    ///
+    /// ***Panics*** if D is zero-dimensional, because it can't be empty
+    pub(crate) fn empty() -> Array<A, D> {
+        assert_ne!(D::NDIM, Some(0));
+        let ndim = D::NDIM.unwrap_or(1);
+        Array::from_shape_simple_fn(D::zeros(ndim), || unreachable!())
+    }
+
+    /// Create new_array with the right layout for appending to `growing_axis`
+    #[cold]
+    fn change_to_contig_append_layout(&mut self, growing_axis: Axis) {
+        let ndim = self.ndim();
+        let mut dim = self.raw_dim();
+
+        // The array will be created with 0 (C) or ndim-1 (F) as the biggest stride
+        // axis. Rearrange the shape so that `growing_axis` is the biggest stride axis
+        // afterwards.
+        let prefer_f_layout = growing_axis == Axis(ndim - 1);
+        if !prefer_f_layout {
+            dim.slice_mut().swap(0, growing_axis.index());
+        }
+        let mut new_array = Self::uninit(dim.set_f(prefer_f_layout));
+        if !prefer_f_layout {
+            new_array.swap_axes(0, growing_axis.index());
+        }
+
+        // self -> old_self.
+        // dummy array -> self.
+        // old_self elements are moved -> new_array.
+        let old_self = std::mem::replace(self, Self::empty());
+        old_self.move_into(new_array.view_mut());
+
+        // new_array -> self.
+        unsafe {
+            *self = new_array.assume_init();
+        }
+    }
+
 
     /// Append an array to the array
     ///
@@ -360,19 +399,27 @@ impl<A, D> Array<A, D>
         }
 
         let self_is_empty = self.is_empty();
+        let mut incompatible_layout = false;
 
         // array must be empty or have `axis` as the outermost (longest stride) axis
         if !self_is_empty && current_axis_len > 1 {
             // `axis` must be max stride axis or equal to its stride
             let max_stride_axis = self.axes().max_by_key(|ax| ax.stride).unwrap();
             if max_stride_axis.axis != axis && max_stride_axis.stride > self.stride_of(axis) {
-                return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
+                incompatible_layout = true;
             }
         }
 
         // array must be be "full" (have no exterior holes)
         if self.len() != self.data.len() {
-            return Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout));
+            incompatible_layout = true;
+        }
+
+        if incompatible_layout {
+            self.change_to_contig_append_layout(axis);
+            // safety-check parameters after remodeling
+            debug_assert_eq!(self_is_empty, self.is_empty());
+            debug_assert_eq!(current_axis_len, self.len_of(axis));
         }
 
         let strides = if self_is_empty {

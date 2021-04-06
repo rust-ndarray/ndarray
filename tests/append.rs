@@ -18,7 +18,10 @@ fn append_row() {
     assert_eq!(a.try_append_column(aview1(&[1.])),
         Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
     assert_eq!(a.try_append_column(aview1(&[1., 2.])),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
+        Ok(()));
+    assert_eq!(a,
+        array![[0., 1., 2., 3., 1.],
+               [4., 5., 6., 7., 2.]]);
 }
 
 #[test]
@@ -28,8 +31,7 @@ fn append_row_wrong_layout() {
     a.try_append_row(aview1(&[4., 5., 6., 7.])).unwrap();
     assert_eq!(a.shape(), &[2, 4]);
 
-    assert_eq!(a.try_append_column(aview1(&[1., 2.])),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
+    //assert_eq!(a.try_append_column(aview1(&[1., 2.])), Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
 
     assert_eq!(a,
         array![[0., 1., 2., 3.],
@@ -56,7 +58,13 @@ fn append_row_error() {
     assert_eq!(a.try_append_column(aview1(&[1.])),
         Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
     assert_eq!(a.try_append_column(aview1(&[1., 2., 3.])),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
+        Ok(()));
+    assert_eq!(a.t(),
+        array![[0., 0., 0.],
+               [0., 0., 0.],
+               [0., 0., 0.],
+               [0., 0., 0.],
+               [1., 2., 3.]]);
 }
 
 #[test]
@@ -76,7 +84,11 @@ fn append_row_existing() {
     assert_eq!(a.try_append_column(aview1(&[1.])),
         Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
     assert_eq!(a.try_append_column(aview1(&[1., 2., 3.])),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
+        Ok(()));
+    assert_eq!(a,
+        array![[0., 0., 0., 0., 1.],
+               [0., 1., 2., 3., 2.],
+               [4., 5., 6., 7., 3.]]);
 }
 
 #[test]
@@ -87,8 +99,7 @@ fn append_row_col_len_1() {
     a.try_append_column(aview1(&[2., 3.])).unwrap(); // shape 2 x 2
     assert_eq!(a.try_append_row(aview1(&[1.])),
         Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
-    assert_eq!(a.try_append_row(aview1(&[1., 2.])),
-        Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
+    //assert_eq!(a.try_append_row(aview1(&[1., 2.])), Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
     a.try_append_column(aview1(&[4., 5.])).unwrap(); // shape 2 x 3
     assert_eq!(a.shape(), &[2, 3]);
 
