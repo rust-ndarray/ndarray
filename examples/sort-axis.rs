@@ -1,3 +1,7 @@
+//! This is an example of sorting arrays along an axis.
+//! This file may not be so instructive except for advanced users, instead it
+//! could be a "feature preview" before sorting is added to the main crate.
+//!
 use ndarray::prelude::*;
 use ndarray::{Data, RemoveAxis, Zip};
 
