@@ -1,9 +1,13 @@
 
 use alloc::vec::Vec;
+use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
+
 use crate::dimension;
 use crate::error::{ErrorKind, ShapeError};
+use crate::iterators::Baseiter;
+use crate::low_level_util::AbortIfPanic;
 use crate::OwnedRepr;
 use crate::Zip;
 
@@ -137,6 +141,145 @@ impl<A> Array<A, Ix2> {
 impl<A, D> Array<A, D>
     where D: Dimension
 {
+    /// Move all elements from self into `new_array`, which must be of the same shape but
+    /// can have a different memory layout. The destination is overwritten completely.
+    ///
+    /// The destination should be a mut reference to an array or an `ArrayViewMut` with
+    /// `MaybeUninit<A>` elements (which are overwritten without dropping any existing value).
+    ///
+    /// Minor implementation note: Owned arrays like `self` may be sliced in place and own elements
+    /// that are not part of their active view; these are dropped at the end of this function,
+    /// after all elements in the "active view" are moved into `new_array`. If there is a panic in
+    /// drop of any such element, other elements may be leaked.
+    ///
+    /// ***Panics*** if the shapes don't agree.
+    pub fn move_into<'a, AM>(self, new_array: AM)
+    where
+        AM: Into<ArrayViewMut<'a, MaybeUninit<A>, D>>,
+        A: 'a,
+    {
+        // Remove generic parameter P and call the implementation
+        self.move_into_impl(new_array.into())
+    }
+
+    fn move_into_impl(mut self, new_array: ArrayViewMut<MaybeUninit<A>, D>) {
+        unsafe {
+            // Safety: copy_to_nonoverlapping cannot panic
+            let guard = AbortIfPanic(&"move_into: moving out of owned value");
+            // Move all reachable elements
+            Zip::from(self.raw_view_mut())
+                .and(new_array)
+                .for_each(|src, dst| {
+                    src.copy_to_nonoverlapping(dst.as_mut_ptr(), 1);
+                });
+            guard.defuse();
+            // Drop all unreachable elements
+            self.drop_unreachable_elements();
+        }
+    }
+
+    /// This drops all "unreachable" elements in the data storage of self.
+    ///
+    /// That means those elements that are not visible in the slicing of the array.
+    /// *Reachable elements are assumed to already have been moved from.*
+    ///
+    /// # Safety
+    ///
+    /// This is a panic critical section since `self` is already moved-from.
+    fn drop_unreachable_elements(mut self) -> OwnedRepr<A> {
+        let self_len = self.len();
+
+        // "deconstruct" self; the owned repr releases ownership of all elements and we
+        // and carry on with raw view methods
+        let data_len = self.data.len();
+
+        let has_unreachable_elements = self_len != data_len;
+        if !has_unreachable_elements || std::mem::size_of::<A>() == 0 {
+            unsafe {
+                self.data.set_len(0);
+            }
+            self.data
+        } else {
+            self.drop_unreachable_elements_slow()
+        }
+    }
+
+    #[inline(never)]
+    #[cold]
+    fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A> {
+        // "deconstruct" self; the owned repr releases ownership of all elements and we
+        // and carry on with raw view methods
+        let self_len = self.len();
+        let data_len = self.data.len();
+        let data_ptr = self.data.as_nonnull_mut().as_ptr();
+
+        let mut self_;
+
+        unsafe {
+            // Safety: self.data releases ownership of the elements
+            self_ = self.raw_view_mut();
+            self.data.set_len(0);
+        }
+
+
+        // uninvert axes where needed, so that stride > 0
+        for i in 0..self_.ndim() {
+            if self_.stride_of(Axis(i)) < 0 {
+                self_.invert_axis(Axis(i));
+            }
+        }
+
+        // Sort axes to standard order, Axis(0) has biggest stride and Axis(n - 1) least stride
+        // Note that self_ has holes, so self_ is not C-contiguous
+        sort_axes_in_default_order(&mut self_);
+
+        unsafe {
+            // with uninverted axes this is now the element with lowest address
+            let array_memory_head_ptr = self_.ptr.as_ptr();
+            let data_end_ptr = data_ptr.add(data_len);
+            debug_assert!(data_ptr <= array_memory_head_ptr);
+            debug_assert!(array_memory_head_ptr <= data_end_ptr);
+
+            // iter is a raw pointer iterator traversing self_ in its standard order
+            let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
+            let mut dropped_elements = 0;
+
+            // The idea is simply this: the iterator will yield the elements of self_ in
+            // increasing address order.
+            //
+            // The pointers produced by the iterator are those that we *do not* touch.
+            // The pointers *not mentioned* by the iterator are those we have to drop.
+            //
+            // We have to drop elements in the range from `data_ptr` until (not including)
+            // `data_end_ptr`, except those that are produced by `iter`.
+            let mut last_ptr = data_ptr;
+
+            while let Some(elem_ptr) = iter.next() {
+                // The interval from last_ptr up until (not including) elem_ptr
+                // should now be dropped. This interval may be empty, then we just skip this loop.
+                while last_ptr != elem_ptr {
+                    debug_assert!(last_ptr < data_end_ptr);
+                    std::ptr::drop_in_place(last_ptr);
+                    last_ptr = last_ptr.add(1);
+                    dropped_elements += 1;
+                }
+                // Next interval will continue one past the current element
+                last_ptr = elem_ptr.add(1);
+            }
+
+            while last_ptr < data_end_ptr {
+                std::ptr::drop_in_place(last_ptr);
+                last_ptr = last_ptr.add(1);
+                dropped_elements += 1;
+            }
+
+            assert_eq!(data_len, dropped_elements + self_len,
+                       "Internal error: inconsistency in move_into");
+        }
+        self.data
+    }
+
+
     /// Append an array to the array
     ///
     /// The axis-to-append-to `axis` must be the array's "growing axis" for this operation
@@ -312,7 +455,7 @@ impl<A, D> Array<A, D>
                         array.invert_axis(Axis(i));
                     }
                 }
-                sort_axes_to_standard_order(&mut tail_view, &mut array);
+                sort_axes_to_standard_order_tandem(&mut tail_view, &mut array);
             } 
             Zip::from(tail_view).and(array)
                 .debug_assert_c_order()
@@ -335,7 +478,21 @@ impl<A, D> Array<A, D>
     }
 }
 
-fn sort_axes_to_standard_order<S, S2, D>(a: &mut ArrayBase<S, D>, b: &mut ArrayBase<S2, D>)
+/// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
+///
+/// The axes should have stride >= 0 before calling this method.
+fn sort_axes_in_default_order<S, D>(a: &mut ArrayBase<S, D>)
+where
+    S: RawData,
+    D: Dimension,
+{
+    if a.ndim() <= 1 {
+        return;
+    }
+    sort_axes1_impl(&mut a.dim, &mut a.strides);
+}
+
+fn sort_axes_to_standard_order_tandem<S, S2, D>(a: &mut ArrayBase<S, D>, b: &mut ArrayBase<S2, D>)
 where
     S: RawData,
     S2: RawData,
@@ -348,6 +505,32 @@ where
     debug_assert!(a.is_standard_layout(), "not std layout dim: {:?}, strides: {:?}",
                   a.shape(), a.strides());
 }
+
+fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
+where
+    D: Dimension,
+{
+    debug_assert!(adim.ndim() > 1);
+    debug_assert_eq!(adim.ndim(), astrides.ndim());
+    // bubble sort axes
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for i in 0..adim.ndim() - 1 {
+            let axis_i = i;
+            let next_axis = i + 1;
+
+            // make sure higher stride axes sort before.
+            debug_assert!(astrides.slice()[axis_i] as isize >= 0);
+            if (astrides.slice()[axis_i] as isize) < astrides.slice()[next_axis] as isize {
+                changed = true;
+                adim.slice_mut().swap(axis_i, next_axis);
+                astrides.slice_mut().swap(axis_i, next_axis);
+            }
+        }
+    }
+}
+
 
 fn sort_axes_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)
 where
