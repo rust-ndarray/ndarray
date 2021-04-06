@@ -80,7 +80,7 @@
 //! - `serde`
 //!   - Enables serialization support for serde 1.x
 //! - `rayon`
-//!   - Enables parallel iterators, parallelized methods and [`par_azip!`].
+//!   - Enables parallel iterators, parallelized methods, the [`parallel`] module and [`par_azip!`].
 //!   - Implies std
 //! - `approx`
 //!   - Enables implementations of traits from the [`approx`] crate.
