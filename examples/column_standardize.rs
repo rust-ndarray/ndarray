@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 use ndarray::prelude::*;
 
 #[cfg(feature = "std")]
