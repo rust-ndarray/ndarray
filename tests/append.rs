@@ -31,11 +31,19 @@ fn append_row_wrong_layout() {
     a.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
     assert_eq!(a.shape(), &[2, 4]);
 
-    //assert_eq!(a.append_column(aview1(&[1., 2.])), Err(ShapeError::from_kind(ErrorKind::IncompatibleLayout)));
-
     assert_eq!(a,
         array![[0., 1., 2., 3.],
                [4., 5., 6., 7.]]);
+    assert_eq!(a.strides(), &[4, 1]);
+
+    // Changing the memory layout to fit the next append
+    let mut a2 = a.clone();
+    a2.append_column(aview1(&[1., 2.])).unwrap();
+    assert_eq!(a2,
+        array![[0., 1., 2., 3., 1.],
+               [4., 5., 6., 7., 2.]]);
+    assert_eq!(a2.strides(), &[1, 2]);
+
 
     // Clone the array
 
@@ -47,6 +55,92 @@ fn append_row_wrong_layout() {
     assert_eq!(b,
         array![[0., 1., 2., 3., 1.],
                [4., 5., 6., 7., 2.]]);
+}
+
+#[test]
+fn append_row_neg_stride_1() {
+    let mut a = Array::zeros((0, 4));
+    a.append_row(aview1(&[0., 1., 2., 3.])).unwrap();
+    a.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a.shape(), &[2, 4]);
+
+    assert_eq!(a,
+        array![[0., 1., 2., 3.],
+               [4., 5., 6., 7.]]);
+    assert_eq!(a.strides(), &[4, 1]);
+
+    a.invert_axis(Axis(0));
+
+    // Changing the memory layout to fit the next append
+    let mut a2 = a.clone();
+    println!("a = {:?}", a);
+    println!("a2 = {:?}", a2);
+    a2.append_column(aview1(&[1., 2.])).unwrap();
+    assert_eq!(a2,
+        array![[4., 5., 6., 7., 1.],
+               [0., 1., 2., 3., 2.]]);
+    assert_eq!(a2.strides(), &[1, 2]);
+
+    a.invert_axis(Axis(1));
+    let mut a3 = a.clone();
+    a3.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a3,
+        array![[7., 6., 5., 4.],
+               [3., 2., 1., 0.],
+               [4., 5., 6., 7.]]);
+    assert_eq!(a3.strides(), &[4, 1]);
+
+    a.invert_axis(Axis(0));
+    let mut a4 = a.clone();
+    a4.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a4,
+        array![[3., 2., 1., 0.],
+               [7., 6., 5., 4.],
+               [4., 5., 6., 7.]]);
+    assert_eq!(a4.strides(), &[4, -1]);
+}
+
+#[test]
+fn append_row_neg_stride_2() {
+    let mut a = Array::zeros((0, 4));
+    a.append_row(aview1(&[0., 1., 2., 3.])).unwrap();
+    a.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a.shape(), &[2, 4]);
+
+    assert_eq!(a,
+        array![[0., 1., 2., 3.],
+               [4., 5., 6., 7.]]);
+    assert_eq!(a.strides(), &[4, 1]);
+
+    a.invert_axis(Axis(1));
+
+    // Changing the memory layout to fit the next append
+    let mut a2 = a.clone();
+    println!("a = {:?}", a);
+    println!("a2 = {:?}", a2);
+    a2.append_column(aview1(&[1., 2.])).unwrap();
+    assert_eq!(a2,
+        array![[3., 2., 1., 0., 1.],
+               [7., 6., 5., 4., 2.]]);
+    assert_eq!(a2.strides(), &[1, 2]);
+
+    a.invert_axis(Axis(0));
+    let mut a3 = a.clone();
+    a3.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a3,
+        array![[7., 6., 5., 4.],
+               [3., 2., 1., 0.],
+               [4., 5., 6., 7.]]);
+    assert_eq!(a3.strides(), &[4, 1]);
+
+    a.invert_axis(Axis(1));
+    let mut a4 = a.clone();
+    a4.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a4,
+        array![[4., 5., 6., 7.],
+               [0., 1., 2., 3.],
+               [4., 5., 6., 7.]]);
+    assert_eq!(a4.strides(), &[4, 1]);
 }
 
 #[test]
