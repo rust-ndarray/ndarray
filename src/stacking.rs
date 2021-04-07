@@ -94,7 +94,7 @@ where
     let new_len = dimension::size_of_shape_checked(&res_dim)?;
 
     // start with empty array with precomputed capacity
-    // try_append_array's handling of empty arrays makes sure `axis` is ok for appending
+    // append's handling of empty arrays makes sure `axis` is ok for appending
     res_dim.set_axis(axis, 0);
     let mut res = unsafe {
         // Safety: dimension is size 0 and vec is empty
@@ -102,7 +102,7 @@ where
     };
 
     for array in arrays {
-        res.try_append_array(axis, array.clone())?;
+        res.append(axis, array.clone())?;
     }
     debug_assert_eq!(res.len_of(axis), stacked_dim);
     Ok(res)
@@ -161,7 +161,7 @@ where
     let new_len = dimension::size_of_shape_checked(&res_dim)?;
 
     // start with empty array with precomputed capacity
-    // try_append_array's handling of empty arrays makes sure `axis` is ok for appending
+    // append's handling of empty arrays makes sure `axis` is ok for appending
     res_dim.set_axis(axis, 0);
     let mut res = unsafe {
         // Safety: dimension is size 0 and vec is empty
@@ -169,7 +169,7 @@ where
     };
 
     for array in arrays {
-        res.try_append_array(axis, array.clone().insert_axis(axis))?;
+        res.append(axis, array.clone().insert_axis(axis))?;
     }
 
     debug_assert_eq!(res.len_of(axis), arrays.len());

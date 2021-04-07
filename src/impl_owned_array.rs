@@ -77,66 +77,78 @@ where
 ///
 /// [`ArrayBase`]: struct.ArrayBase.html
 impl<A> Array<A, Ix2> {
-    /// Append a row to an array with row major memory layout.
+    /// Append a row to an array
     ///
-    /// ***Errors*** with a layout error if the array is not in standard order or
-    /// if it has holes, even exterior holes (from slicing). <br>
-    /// ***Errors*** with shape error if the length of the input row does not match
-    /// the length of the rows in the array. <br>
+    /// ***Errors*** with a shape error if the length of the row does not match the length of the
+    /// rows in the array. <br>
     ///
-    /// The memory layout matters, since it determines in which direction the array can easily
-    /// grow. Notice that an empty array is compatible both ways. The amortized average
-    /// complexity of the append is O(m) where *m* is the length of the row.
+    /// The memory layout of the `self` array matters for ensuring that the append is efficient.
+    /// Appending automatically changes memory layout of the array so that it is appended to
+    /// along the "growing axis".
+    ///
+    /// Ensure appending is efficient by for example starting appending an empty array and
+    /// always appending along the same axis. For rows, ndarray's default layout is efficient for
+    /// appending.
+    ///
+    /// Notice that an empty array (where it has an axis of length zero) is the simplest starting
+    /// point. The amortized average complexity of the append is O(m) where *m* is the length of
+    /// the row.
     ///
     /// ```rust
     /// use ndarray::{Array, ArrayView, array};
     ///
     /// // create an empty array and append
     /// let mut a = Array::zeros((0, 4));
-    /// a.try_append_row(ArrayView::from(&[ 1.,  2.,  3.,  4.])).unwrap();
-    /// a.try_append_row(ArrayView::from(&[-1., -2., -3., -4.])).unwrap();
+    /// a.append_row(ArrayView::from(&[ 1.,  2.,  3.,  4.])).unwrap();
+    /// a.append_row(ArrayView::from(&[-1., -2., -3., -4.])).unwrap();
     ///
     /// assert_eq!(
     ///     a,
     ///     array![[ 1.,  2.,  3.,  4.],
     ///            [-1., -2., -3., -4.]]);
     /// ```
-    pub fn try_append_row(&mut self, row: ArrayView<A, Ix1>) -> Result<(), ShapeError>
+    pub fn append_row(&mut self, row: ArrayView<A, Ix1>) -> Result<(), ShapeError>
     where
         A: Clone,
     {
-        self.try_append_array(Axis(0), row.insert_axis(Axis(0)))
+        self.append(Axis(0), row.insert_axis(Axis(0)))
     }
 
-    /// Append a column to an array with column major memory layout.
+    /// Append a column to an array
     ///
-    /// ***Errors*** with a layout error if the array is not in column major order or
-    /// if it has holes, even exterior holes (from slicing). <br>
-    /// ***Errors*** with shape error if the length of the input column does not match
-    /// the length of the columns in the array.<br>
+    /// ***Errors*** with a shape error if the length of the column does not match the length of
+    /// the columns in the array.<br>
     ///
-    /// The memory layout matters, since it determines in which direction the array can easily
-    /// grow. Notice that an empty array is compatible both ways. The amortized average
-    /// complexity of the append is O(m) where *m* is the length of the column.
+    /// The memory layout of the `self` array matters for ensuring that the append is efficient.
+    /// Appending automatically changes memory layout of the array so that it is appended to
+    /// along the "growing axis".
+    ///
+    /// Ensure appending is efficient by for example starting appending an empty array and
+    /// always appending along the same axis. For columns, column major ("F") memory layout is
+    /// efficient for appending.
+    ///
+    /// Notice that an empty array (where it has an axis of length zero) is the simplest starting
+    /// point. The amortized average complexity of the append is O(m) where *m* is the length of
+    /// the row.
     ///
     /// ```rust
     /// use ndarray::{Array, ArrayView, array};
     ///
     /// // create an empty array and append
     /// let mut a = Array::zeros((2, 0));
-    /// a.try_append_column(ArrayView::from(&[1., 2.])).unwrap();
-    /// a.try_append_column(ArrayView::from(&[-1., -2.])).unwrap();
+    /// a.append_column(ArrayView::from(&[1., 2.])).unwrap();
+    /// a.append_column(ArrayView::from(&[-1., -2.])).unwrap();
     ///
     /// assert_eq!(
     ///     a,
     ///     array![[1., -1.],
     ///            [2., -2.]]);
     /// ```
-    pub fn try_append_column(&mut self, column: ArrayView<A, Ix1>) -> Result<(), ShapeError>
+    pub fn append_column(&mut self, column: ArrayView<A, Ix1>) -> Result<(), ShapeError>
     where
         A: Clone,
     {
-        self.try_append_array(Axis(1), column.insert_axis(Axis(1)))
+        self.append(Axis(1), column.insert_axis(Axis(1)))
     }
 }
 
@@ -334,7 +346,7 @@ impl<A, D> Array<A, D>
     /// - If the array is empty (the axis or any other has length 0) or if `axis`
     ///   has length 1, then the array can always be appended.
     ///
-    /// ***Errors*** with shape error if the shape of self does not match the array-to-append;
+    /// ***Errors*** with a shape error if the shape of self does not match the array-to-append;
     /// all axes *except* the axis along which it being appended matter for this check.
     ///
     /// The memory layout of the `self` array matters for ensuring that the append is efficient.
@@ -347,7 +359,7 @@ impl<A, D> Array<A, D>
     /// The amortized average complexity of the append, when appending along its growing axis, is
     /// O(*m*) where *m* is the length of the row.
     ///
-    /// The memory layout of the argument `array` does not matter.
+    /// The memory layout of the argument `array` does not matter to the same extent.
     ///
     /// ```rust
     /// use ndarray::{Array, ArrayView, array, Axis};
@@ -356,9 +368,9 @@ impl<A, D> Array<A, D>
     /// let mut a = Array::zeros((0, 4));
     /// let ones  = ArrayView::from(&[1.; 8]).into_shape((2, 4)).unwrap();
     /// let zeros = ArrayView::from(&[0.; 8]).into_shape((2, 4)).unwrap();
-    /// a.try_append_array(Axis(0), ones).unwrap();
-    /// a.try_append_array(Axis(0), zeros).unwrap();
-    /// a.try_append_array(Axis(0), ones).unwrap();
+    /// a.append(Axis(0), ones).unwrap();
+    /// a.append(Axis(0), zeros).unwrap();
+    /// a.append(Axis(0), ones).unwrap();
     ///
     /// assert_eq!(
     ///     a,
@@ -369,7 +381,7 @@ impl<A, D> Array<A, D>
     ///            [1., 1., 1., 1.],
     ///            [1., 1., 1., 1.]]);
     /// ```
-    pub fn try_append_array(&mut self, axis: Axis, mut array: ArrayView<A, D>)
+    pub fn append(&mut self, axis: Axis, mut array: ArrayView<A, D>)
         -> Result<(), ShapeError>
     where
         A: Clone,
