@@ -1,5 +1,6 @@
 use ndarray::prelude::*;
 
+#[cfg(feature = "std")]
 fn main() {
     // This example recreates the following from python/numpy
     // counts -= np.mean(counts, axis=0)
@@ -19,3 +20,6 @@ fn main() {
     println!("New mean:\n{:8.4}", data.mean_axis(Axis(0)).unwrap());
     println!("New std: \n{:8.4}", data.std_axis(Axis(0), 0.));
 }
+
+#[cfg(not(feature = "std"))]
+fn main() {}
