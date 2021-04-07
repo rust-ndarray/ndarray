@@ -71,12 +71,12 @@
 //! `Cargo.toml`.
 //!
 //! - `std`
-//!  - Rust standard library (enabled by default)
-//!  - This crate can be used without the standard library by disabling the
-//!    default `std` feature. To do so, use `default-features = false` in
-//!    your `Cargo.toml`.
-//!  - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis`
-//!    and `std_axis` methods are only available when `std` is enabled.
+//!   - Rust standard library (enabled by default)
+//!   - This crate can be used without the standard library by disabling the
+//!     default `std` feature. To do so, use `default-features = false` in
+//!     your `Cargo.toml`.
+//!   - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis`
+//!     and `std_axis` methods are only available when `std` is enabled.
 //! - `serde`
 //!   - Enables serialization support for serde 1.x
 //! - `rayon`
