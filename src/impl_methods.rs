@@ -58,6 +58,7 @@ where
     /// number of dimensions (axes) of the array.
     ///
     /// ***Panics*** if the axis is out of bounds.
+    #[track_caller]
     pub fn len_of(&self, axis: Axis) -> usize {
         self.dim[axis.index()]
     }
@@ -138,6 +139,7 @@ where
     /// number of dimensions (axes) of the array.
     ///
     /// ***Panics*** if the axis is out of bounds.
+    #[track_caller]
     pub fn stride_of(&self, axis: Axis) -> isize {
         // strides are reinterpreted as isize
         self.strides[axis.index()] as isize
@@ -457,6 +459,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    #[track_caller]
     pub fn slice<I>(&self, info: I) -> ArrayView<'_, A, I::OutDim>
     where
         I: SliceArg<D>,
@@ -472,6 +475,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    #[track_caller]
     pub fn slice_mut<I>(&mut self, info: I) -> ArrayViewMut<'_, A, I::OutDim>
     where
         I: SliceArg<D>,
@@ -503,6 +507,7 @@ where
     /// middle.fill(0);
     /// assert_eq!(a, arr2(&[[1, 0, 1], [1, 0, 1]]));
     /// ```
+    #[track_caller]
     pub fn multi_slice_mut<'a, M>(&'a mut self, info: M) -> M::Output
     where
         M: MultiSliceArg<'a, A, D>,
@@ -518,6 +523,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
+    #[track_caller]
     pub fn slice_move<I>(mut self, info: I) -> ArrayBase<S, I::OutDim>
     where
         I: SliceArg<D>,
@@ -587,6 +593,7 @@ where
     /// - if [`SliceInfoElem::NewAxis`] is in `info`, e.g. if [`NewAxis`] was
     ///   used in the [`s!`] macro
     /// - if `D` is `IxDyn` and `info` does not match the number of array axes
+    #[track_caller]
     pub fn slice_collapse<I>(&mut self, info: I)
     where
         I: SliceArg<D>,
@@ -616,6 +623,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     #[must_use = "slice_axis returns an array view with the sliced result"]
     pub fn slice_axis(&self, axis: Axis, indices: Slice) -> ArrayView<'_, A, D>
     where
@@ -630,6 +638,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     #[must_use = "slice_axis_mut returns an array view with the sliced result"]
     pub fn slice_axis_mut(&mut self, axis: Axis, indices: Slice) -> ArrayViewMut<'_, A, D>
     where
@@ -644,6 +653,7 @@ where
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     pub fn slice_axis_inplace(&mut self, axis: Axis, indices: Slice) {
         let offset = do_slice(
             &mut self.dim.slice_mut()[axis.index()],
@@ -663,6 +673,7 @@ where
     /// dimensionality of the array.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.
+    #[track_caller]
     pub fn slice_each_axis<F>(&self, f: F) -> ArrayView<'_, A, D>
     where
         F: FnMut(AxisDescription) -> Slice,
@@ -680,6 +691,7 @@ where
     /// dimensionality of the array.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.
+    #[track_caller]
     pub fn slice_each_axis_mut<F>(&mut self, f: F) -> ArrayViewMut<'_, A, D>
     where
         F: FnMut(AxisDescription) -> Slice,
@@ -697,6 +709,7 @@ where
     /// dimensionality of the array.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.
+    #[track_caller]
     pub fn slice_each_axis_inplace<F>(&mut self, mut f: F)
     where
         F: FnMut(AxisDescription) -> Slice,
@@ -853,6 +866,7 @@ where
     /// Indices may be equal.
     ///
     /// ***Panics*** if an index is out of bounds.
+    #[track_caller]
     pub fn swap<I>(&mut self, index1: I, index2: I)
     where
         S: DataMut,
@@ -933,6 +947,7 @@ where
     ///     a.index_axis(Axis(1), 1) == ArrayView::from(&[2., 4., 6.])
     /// );
     /// ```
+    #[track_caller]
     pub fn index_axis(&self, axis: Axis, index: usize) -> ArrayView<'_, A, D::Smaller>
     where
         S: Data,
@@ -965,6 +980,7 @@ where
     ///                   [3., 14.]])
     /// );
     /// ```
+    #[track_caller]
     pub fn index_axis_mut(&mut self, axis: Axis, index: usize) -> ArrayViewMut<'_, A, D::Smaller>
     where
         S: DataMut,
@@ -978,6 +994,7 @@ where
     /// See [`.index_axis()`](Self::index_axis) and [*Subviews*](#subviews) for full documentation.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
+    #[track_caller]
     pub fn index_axis_move(mut self, axis: Axis, index: usize) -> ArrayBase<S, D::Smaller>
     where
         D: RemoveAxis,
@@ -994,6 +1011,7 @@ where
     /// Selects `index` along the axis, collapsing the axis into length one.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
+    #[track_caller]
     pub fn collapse_axis(&mut self, axis: Axis, index: usize) {
         let offset = dimension::do_collapse_axis(&mut self.dim, &self.strides, axis.index(), index);
         self.ptr = unsafe { self.ptr.offset(offset) };
@@ -1021,6 +1039,7 @@ where
     ///                     [6., 7.]])
     ///);
     /// ```
+    #[track_caller]
     pub fn select(&self, axis: Axis, indices: &[Ix]) -> Array<A, D>
     where
         A: Clone,
@@ -1286,6 +1305,7 @@ where
     /// **Panics** if `axis` is out of bounds.
     ///
     /// <img src="https://rust-ndarray.github.io/ndarray/images/axis_iter_3_4_5.svg" height="250px">
+    #[track_caller]
     pub fn axis_iter(&self, axis: Axis) -> AxisIter<'_, A, D::Smaller>
     where
         S: Data,
@@ -1301,6 +1321,7 @@ where
     /// (read-write array view).
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     pub fn axis_iter_mut(&mut self, axis: Axis) -> AxisIterMut<'_, A, D::Smaller>
     where
         S: DataMut,
@@ -1335,6 +1356,7 @@ where
     /// assert_eq!(iter.next_back().unwrap(), arr3(&[[[12, 13]],
     ///                                              [[26, 27]]]));
     /// ```
+    #[track_caller]
     pub fn axis_chunks_iter(&self, axis: Axis, size: usize) -> AxisChunksIter<'_, A, D>
     where
         S: Data,
@@ -1348,6 +1370,7 @@ where
     /// Iterator element is `ArrayViewMut<A, D>`
     ///
     /// **Panics** if `axis` is out of bounds or if `size` is zero.
+    #[track_caller]
     pub fn axis_chunks_iter_mut(&mut self, axis: Axis, size: usize) -> AxisChunksIterMut<'_, A, D>
     where
         S: DataMut,
@@ -1366,6 +1389,7 @@ where
     /// **Panics** if any dimension of `chunk_size` is zero<br>
     /// (**Panics** if `D` is `IxDyn` and `chunk_size` does not match the
     /// number of array axes.)
+    #[track_caller]
     pub fn exact_chunks<E>(&self, chunk_size: E) -> ExactChunks<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
@@ -1406,6 +1430,7 @@ where
     ///          [6, 6, 7, 7, 8, 8, 0],
     ///          [6, 6, 7, 7, 8, 8, 0]]));
     /// ```
+    #[track_caller]
     pub fn exact_chunks_mut<E>(&mut self, chunk_size: E) -> ExactChunksMut<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
@@ -1420,6 +1445,7 @@ where
     /// that fit into the array's shape.
     ///
     /// This is essentially equivalent to [`.windows_with_stride()`] with unit stride.
+    #[track_caller]
     pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
@@ -1472,6 +1498,7 @@ where
     ///          ┃ a₂₀ ┃ a₂₁ ┃     │     │   │     │     ┃ a₂₂ ┃ a₂₃ ┃
     ///          ┗━━━━━┻━━━━━┹─────┴─────┘   └─────┴─────┺━━━━━┻━━━━━┛
     /// ```
+    #[track_caller]
     pub fn windows_with_stride<E>(&self, window_size: E, stride: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
@@ -2110,6 +2137,7 @@ where
     ///                 [3., 4.]])
     /// );
     /// ```
+    #[track_caller]
     #[deprecated(note="Obsolete, use `to_shape` or `into_shape_with_order` instead.", since="0.15.2")]
     pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E::Dim>
     where
@@ -2335,6 +2363,7 @@ where
     ///     a == arr2(&[[1.], [2.], [3.]])
     /// );
     /// ```
+    #[track_caller]
     pub fn swap_axes(&mut self, ax: usize, bx: usize) {
         self.dim.slice_mut().swap(ax, bx);
         self.strides.slice_mut().swap(ax, bx);
@@ -2362,6 +2391,7 @@ where
     /// let b = Array3::<u8>::zeros((1, 2, 3));
     /// assert_eq!(b.permuted_axes([1, 0, 2]).shape(), &[2, 1, 3]);
     /// ```
+    #[track_caller]
     pub fn permuted_axes<T>(self, axes: T) -> ArrayBase<S, D>
     where
         T: IntoDimension<Dim = D>,
@@ -2435,6 +2465,7 @@ where
     /// Reverse the stride of `axis`.
     ///
     /// ***Panics*** if the axis is out of bounds.
+    #[track_caller]
     pub fn invert_axis(&mut self, axis: Axis) {
         unsafe {
             let s = self.strides.axis(axis) as Ixs;
@@ -2481,6 +2512,7 @@ where
     /// ```
     ///
     /// ***Panics*** if an axis is out of bounds.
+    #[track_caller]
     pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool {
         merge_axes(&mut self.dim, &mut self.strides, take, into)
     }
@@ -2506,6 +2538,7 @@ where
     /// ```
     ///
     /// ***Panics*** if the axis is out of bounds.
+    #[track_caller]
     pub fn insert_axis(self, axis: Axis) -> ArrayBase<S, D::Larger> {
         assert!(axis.index() <= self.ndim());
         // safe because a new axis of length one does not affect memory layout
@@ -2522,6 +2555,7 @@ where
     /// axis to remove is of length 1.
     ///
     /// **Panics** if the axis is out of bounds or its length is zero.
+    #[track_caller]
     pub fn remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     where
         D: RemoveAxis,
@@ -2538,6 +2572,7 @@ where
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn’t possible.
+    #[track_caller]
     pub fn assign<E: Dimension, S2>(&mut self, rhs: &ArrayBase<S2, E>)
     where
         S: DataMut,
@@ -2553,6 +2588,7 @@ where
     /// [`AssignElem`] determines how elements are assigned.
     ///
     /// **Panics** if shapes disagree.
+    #[track_caller]
     pub fn assign_to<P>(&self, to: P)
     where
         S: Data,
@@ -2631,6 +2667,7 @@ where
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn’t possible.
+    #[track_caller]
     #[inline]
     pub fn zip_mut_with<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, f: F)
     where
@@ -2892,6 +2929,7 @@ where
     /// Return the result as an `Array`.
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     pub fn fold_axis<B, F>(&self, axis: Axis, init: B, mut fold: F) -> Array<B, D::Smaller>
     where
         D: RemoveAxis,
@@ -2914,6 +2952,7 @@ where
     /// Return the result as an `Array`.
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     pub fn map_axis<'a, B, F>(&'a self, axis: Axis, mut mapping: F) -> Array<B, D::Smaller>
     where
         D: RemoveAxis,
@@ -2939,6 +2978,7 @@ where
     /// Return the result as an `Array`.
     ///
     /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
     pub fn map_axis_mut<'a, B, F>(&'a mut self, axis: Axis, mut mapping: F) -> Array<B, D::Smaller>
     where
         D: RemoveAxis,
@@ -3042,6 +3082,7 @@ where
 /// using regular transmute in some cases.
 ///
 /// **Panics** if the size of A and B are different.
+#[track_caller]
 #[inline]
 unsafe fn unlimited_transmute<A, B>(data: A) -> B {
     // safe when sizes are equal and caller guarantees that representations are equal
