@@ -2,6 +2,8 @@
 use alloc::vec::Vec;
 use std::mem::MaybeUninit;
 
+use rawpointer::PointerExt;
+
 use crate::imp_prelude::*;
 
 use crate::dimension;
@@ -332,15 +334,18 @@ impl<A, D> Array<A, D>
     /// - If the array is empty (the axis or any other has length 0) or if `axis`
     ///   has length 1, then the array can always be appended.
     ///
-    /// ***Errors*** with a layout error if the array is not in standard order or
-    /// if it has holes, even exterior holes (from slicing). <br>
-    /// ***Errors*** with shape error if the length of the input row does not match
-    /// the length of the rows in the array. <br>
+    /// ***Errors*** with shape error if the shape of self does not match the array-to-append;
+    /// all axes *except* the axis along which it being appended matter for this check.
     ///
-    /// The memory layout of the `self` array matters, since it determines in which direction the
-    /// array can easily grow. Notice that an empty array is compatible both ways. The amortized
-    /// average complexity of the append is O(m) where *m* is the number of elements in the
-    /// array-to-append (equivalent to how `Vec::extend` works).
+    /// The memory layout of the `self` array matters for ensuring that the append is efficient.
+    /// Appending automatically changes memory layout of the array so that it is appended to
+    /// along the "growing axis".
+    ///
+    /// Ensure appending is efficient by for example starting from an empty array and/or always
+    /// appending to an array along the same axis.
+    ///
+    /// The amortized average complexity of the append, when appending along its growing axis, is
+    /// O(*m*) where *m* is the length of the row.
     ///
     /// The memory layout of the argument `array` does not matter.
     ///
@@ -404,8 +409,11 @@ impl<A, D> Array<A, D>
         // array must be empty or have `axis` as the outermost (longest stride) axis
         if !self_is_empty && current_axis_len > 1 {
             // `axis` must be max stride axis or equal to its stride
-            let max_stride_axis = self.axes().max_by_key(|ax| ax.stride).unwrap();
-            if max_stride_axis.axis != axis && max_stride_axis.stride > self.stride_of(axis) {
+            let max_axis = self.axes().max_by_key(|ax| ax.stride.abs()).unwrap();
+            if max_axis.axis != axis && max_axis.stride.abs() > self.stride_of(axis) {
+                incompatible_layout = true;
+            }
+            if self.stride_of(axis) < 0 {
                 incompatible_layout = true;
             }
         }
@@ -442,7 +450,8 @@ impl<A, D> Array<A, D>
             // This is the outermost/longest stride axis; so we find the max across the other axes
             let new_stride = self.axes().fold(1, |acc, ax| {
                 if ax.axis == axis { acc } else {
-                    Ord::max(acc, ax.len as isize * ax.stride)
+                    let this_ax = ax.len as isize * ax.stride;
+                    if this_ax.abs() > acc { this_ax } else { acc }
                 }
             });
             let mut strides = self.strides.clone();
@@ -454,37 +463,18 @@ impl<A, D> Array<A, D>
 
         unsafe {
             // grow backing storage and update head ptr
-            debug_assert_eq!(self.data.as_ptr(), self.as_ptr());
-            self.ptr = self.data.reserve(len_to_append); // because we are standard order
-
-            // copy elements from view to the array now
-            //
-            // make a raw view with the new row
-            // safe because the data was "full"
-            let tail_ptr = self.data.as_end_nonnull();
-            let mut tail_view = RawArrayViewMut::new(tail_ptr, array_shape, strides.clone());
-
-            struct SetLenOnDrop<'a, A: 'a> {
-                len: usize,
-                data: &'a mut OwnedRepr<A>,
-            }
-
-            let mut length_guard = SetLenOnDrop {
-                len: self.data.len(),
-                data: &mut self.data,
+            let data_to_array_offset = if std::mem::size_of::<A>() != 0 {
+                self.as_ptr().offset_from(self.data.as_ptr())
+            } else {
+                0
             };
+            debug_assert!(data_to_array_offset >= 0);
+            self.ptr = self.data.reserve(len_to_append).offset(data_to_array_offset);
 
-            impl<A> Drop for SetLenOnDrop<'_, A> {
-                fn drop(&mut self) {
-                    unsafe {
-                        self.data.set_len(self.len);
-                    }
-                }
-            }
-
+            // clone elements from view to the array now
+            //
             // To be robust for panics and drop the right elements, we want
-            // to fill the tail in-order, so that we can drop the right elements on
-            // panic.
+            // to fill the tail in memory order, so that we can drop the right elements on panic.
             //
             // We have: Zip::from(tail_view).and(array)
             // Transform tail_view into standard order by inverting and moving its axes.
@@ -495,23 +485,56 @@ impl<A, D> Array<A, D>
             // doesn't have drop. However, in the interest of code coverage, all elements
             // use this code initially.
 
-            if tail_view.ndim() > 1 {
-                for i in 0..tail_view.ndim() {
-                    if tail_view.stride_of(Axis(i)) < 0 {
-                        tail_view.invert_axis(Axis(i));
+            // Invert axes in tail_view by inverting strides
+            let mut tail_strides = strides.clone();
+            if tail_strides.ndim() > 1 {
+                for i in 0..tail_strides.ndim() {
+                    let s = tail_strides[i] as isize;
+                    if s < 0 {
+                        tail_strides.set_axis(Axis(i), -s as usize);
                         array.invert_axis(Axis(i));
                     }
                 }
-                sort_axes_to_standard_order_tandem(&mut tail_view, &mut array);
+            }
+
+            // With > 0 strides, the current end of data is the correct base pointer for tail_view
+            let tail_ptr = self.data.as_end_nonnull();
+            let mut tail_view = RawArrayViewMut::new(tail_ptr, array_shape, tail_strides);
+
+            if tail_view.ndim() > 1 {
+                sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
+                debug_assert!(tail_view.is_standard_layout(),
+                              "not std layout dim: {:?}, strides: {:?}",
+                              tail_view.shape(), tail_view.strides());
             } 
+
+            // Keep track of currently filled lenght of `self.data` and update it
+            // on scope exit (panic or loop finish).
+            struct SetLenOnDrop<'a, A: 'a> {
+                len: usize,
+                data: &'a mut OwnedRepr<A>,
+            }
+
+            impl<A> Drop for SetLenOnDrop<'_, A> {
+                fn drop(&mut self) {
+                    unsafe {
+                        self.data.set_len(self.len);
+                    }
+                }
+            }
+
+            let mut data_length_guard = SetLenOnDrop {
+                len: self.data.len(),
+                data: &mut self.data,
+            };
+
             Zip::from(tail_view).and(array)
                 .debug_assert_c_order()
                 .for_each(|to, from| {
                     to.write(from.clone());
-                    length_guard.len += 1;
+                    data_length_guard.len += 1;
                 });
-
-            drop(length_guard);
+            drop(data_length_guard);
 
             // update array dimension
             self.strides = strides;
@@ -520,6 +543,7 @@ impl<A, D> Array<A, D>
         // multiple assertions after pointer & dimension update
         debug_assert_eq!(self.data.len(), self.len());
         debug_assert_eq!(self.len(), new_len);
+        debug_assert!(self.pointer_is_inbounds());
 
         Ok(())
     }
@@ -537,20 +561,6 @@ where
         return;
     }
     sort_axes1_impl(&mut a.dim, &mut a.strides);
-}
-
-fn sort_axes_to_standard_order_tandem<S, S2, D>(a: &mut ArrayBase<S, D>, b: &mut ArrayBase<S2, D>)
-where
-    S: RawData,
-    S2: RawData,
-    D: Dimension,
-{
-    if a.ndim() <= 1 {
-        return;
-    }
-    sort_axes_impl(&mut a.dim, &mut a.strides, &mut b.dim, &mut b.strides);
-    debug_assert!(a.is_standard_layout(), "not std layout dim: {:?}, strides: {:?}",
-                  a.shape(), a.strides());
 }
 
 fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
@@ -579,7 +589,23 @@ where
 }
 
 
-fn sort_axes_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)
+/// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
+///
+/// Axes in a and b are sorted by the strides of `a`, and `a`'s axes should have stride >= 0 before
+/// calling this method.
+fn sort_axes_in_default_order_tandem<S, S2, D>(a: &mut ArrayBase<S, D>, b: &mut ArrayBase<S2, D>)
+where
+    S: RawData,
+    S2: RawData,
+    D: Dimension,
+{
+    if a.ndim() <= 1 {
+        return;
+    }
+    sort_axes2_impl(&mut a.dim, &mut a.strides, &mut b.dim, &mut b.strides);
+}
+
+fn sort_axes2_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)
 where
     D: Dimension,
 {
