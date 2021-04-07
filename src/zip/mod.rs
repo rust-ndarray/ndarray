@@ -679,6 +679,26 @@ macro_rules! map_impl {
                 self.build_and(part)
             }
 
+            /// Include the producer `p` in the Zip.
+            ///
+            /// ## Safety
+            ///
+            /// The caller must ensure that the producer's shape is equal to the Zip's shape.
+            /// Uses assertions when debug assertions are enabled.
+            #[allow(unused)]
+            pub(crate) unsafe fn and_unchecked<P>(self, p: P) -> Zip<($($p,)* P::Output, ), D>
+                where P: IntoNdProducer<Dim=D>,
+            {
+                #[cfg(debug_assertions)]
+                {
+                    self.and(p)
+                }
+                #[cfg(not(debug_assertions))]
+                {
+                    self.build_and(p.into_producer())
+                }
+            }
+
             /// Include the producer `p` in the Zip, broadcasting if needed.
             ///
             /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.

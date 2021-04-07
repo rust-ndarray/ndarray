@@ -540,7 +540,10 @@ impl<A, D> Array<A, D>
                 data: &mut self.data,
             };
 
-            Zip::from(tail_view).and(array)
+
+            // Safety: tail_view is constructed to have the same shape as array
+            Zip::from(tail_view)
+                .and_unchecked(array)
                 .debug_assert_c_order()
                 .for_each(|to, from| {
                     to.write(from.clone());
