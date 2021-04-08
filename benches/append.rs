@@ -22,3 +22,14 @@ fn select_axis1(bench: &mut Bencher) {
         a.select(Axis(1), &selectable)
     });
 }
+
+#[bench]
+fn select_1d(bench: &mut Bencher) {
+    let a = Array::<f32, _>::zeros(1024);
+    let mut selectable = (0..a.len()).step_by(17).collect::<Vec<_>>();
+    selectable.extend(selectable.clone().iter().rev());
+
+    bench.iter(|| {
+        a.select(Axis(0), &selectable)
+    });
+}
