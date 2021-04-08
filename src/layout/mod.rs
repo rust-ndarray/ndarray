@@ -171,6 +171,34 @@ mod tests {
     }
 
     #[test]
+    fn no_layouts() {
+        let a = M::zeros((5, 5));
+        let b = M::zeros((5, 5).f());
+
+        // 2D row/column matrixes
+        let arow = a.slice(s![0..1, ..]);
+        let acol = a.slice(s![.., 0..1]);
+        let brow = b.slice(s![0..1, ..]);
+        let bcol = b.slice(s![.., 0..1]);
+        assert_layouts!(arow, CORDER, FORDER);
+        assert_not_layouts!(acol, CORDER, CPREFER, FORDER, FPREFER);
+        assert_layouts!(bcol, CORDER, FORDER);
+        assert_not_layouts!(brow, CORDER, CPREFER, FORDER, FPREFER);
+
+        // 2D row/column matrixes - now made with insert axis
+        for &axis in &[Axis(0), Axis(1)] {
+            let arow = a.slice(s![0, ..]).insert_axis(axis);
+            let acol = a.slice(s![.., 0]).insert_axis(axis);
+            let brow = b.slice(s![0, ..]).insert_axis(axis);
+            let bcol = b.slice(s![.., 0]).insert_axis(axis);
+            assert_layouts!(arow, CORDER, FORDER);
+            assert_not_layouts!(acol, CORDER, CPREFER, FORDER, FPREFER);
+            assert_layouts!(bcol, CORDER, FORDER);
+            assert_not_layouts!(brow, CORDER, CPREFER, FORDER, FPREFER);
+        }
+    }
+
+    #[test]
     fn skip_layouts() {
         let a = M::zeros((5, 5));
         {
