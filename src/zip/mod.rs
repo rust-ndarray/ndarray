@@ -69,9 +69,9 @@ where
         } else if n > 1 && self.raw_view().reversed_axes().is_standard_layout() {
             Layout::f()
         } else if n > 1 {
-            if self.stride_of(Axis(0)) == 1 {
+            if self.len_of(Axis(0)) > 1 && self.stride_of(Axis(0)) == 1 {
                 Layout::fpref()
-            } else if self.stride_of(Axis(n - 1)) == 1 {
+            } else if self.len_of(Axis(n - 1)) > 1 && self.stride_of(Axis(n - 1)) == 1 {
                 Layout::cpref()
             } else {
                 Layout::none()
