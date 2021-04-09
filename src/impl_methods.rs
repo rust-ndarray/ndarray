@@ -2444,6 +2444,30 @@ where
         }
     }
 
+    /// Remove the `index`th elements along `axis` and shift down elements from higher indexes.
+    ///
+    /// Note that this "removes" the elements by swapping them around to the end of the axis and
+    /// shortening the length of the axis; the elements are not deinitialized or dropped by this,
+    /// just moved out of view (this only matters for elements with ownership semantics). It's
+    /// similar to slicing an owned array in place.
+    ///
+    /// Decreases the length of `axis` by one.
+    ///
+    /// ***Panics*** if `axis` is out of bounds<br>
+    /// ***Panics*** if not `index < self.len_of(axis)`.
+    pub fn remove_index(&mut self, axis: Axis, index: usize)
+    where
+        S: DataOwned + DataMut,
+    {
+        assert!(index < self.len_of(axis), "index {} must be less than length of Axis({})",
+                index, axis.index());
+        let (_, mut tail) = self.view_mut().split_at(axis, index);
+        // shift elements to the front
+        Zip::from(tail.lanes_mut(axis)).for_each(|mut lane| lane.rotate1_front());
+        // then slice the axis in place to cut out the removed final element
+        self.slice_axis_inplace(axis, Slice::new(0, Some(-1), 1));
+    }
+
     /// Iterates over pairs of consecutive elements along the axis.
     ///
     /// The first argument to the closure is an element, and the second

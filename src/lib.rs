@@ -205,6 +205,7 @@ mod shape_builder;
 mod slice;
 mod split_at;
 mod stacking;
+mod low_level_util;
 #[macro_use]
 mod zip;
 

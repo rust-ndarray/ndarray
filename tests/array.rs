@@ -2397,3 +2397,79 @@ mod array_cow_tests {
         });
     }
 }
+
+#[test]
+fn test_remove_index() {
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9],
+                       [10,11,12]]);
+    a.remove_index(Axis(0), 1);
+    a.remove_index(Axis(1), 2);
+    assert_eq!(a.shape(), &[3, 2]);
+    assert_eq!(a,
+        array![[1, 2],
+               [7, 8],
+               [10,11]]);
+
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9],
+                       [10,11,12]]);
+    a.invert_axis(Axis(0));
+    a.remove_index(Axis(0), 1);
+    a.remove_index(Axis(1), 2);
+    assert_eq!(a.shape(), &[3, 2]);
+    assert_eq!(a,
+        array![[10,11],
+               [4, 5],
+               [1, 2]]);
+
+    a.remove_index(Axis(1), 1);
+
+    assert_eq!(a.shape(), &[3, 1]);
+    assert_eq!(a,
+        array![[10],
+               [4],
+               [1]]);
+    a.remove_index(Axis(1), 0);
+    assert_eq!(a.shape(), &[3, 0]);
+    assert_eq!(a,
+        array![[],
+               [],
+               []]);
+}
+
+#[should_panic(expected="must be less")]
+#[test]
+fn test_remove_index_oob1() {
+    let mut a = arr2(&[[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9],
+                       [10,11,12]]);
+    a.remove_index(Axis(0), 4);
+}
+
+#[should_panic(expected="must be less")]
+#[test]
+fn test_remove_index_oob2() {
+    let mut a = array![[10], [4], [1]];
+    a.remove_index(Axis(1), 0);
+    assert_eq!(a.shape(), &[3, 0]);
+    assert_eq!(a,
+        array![[],
+               [],
+               []]);
+    a.remove_index(Axis(0), 1); // ok
+    assert_eq!(a,
+        array![[],
+               []]);
+    a.remove_index(Axis(1), 0); // oob
+}
+
+#[should_panic(expected="index out of bounds")]
+#[test]
+fn test_remove_index_oob3() {
+    let mut a = array![[10], [4], [1]];
+    a.remove_index(Axis(2), 0);
+}
