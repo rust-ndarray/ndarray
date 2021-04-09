@@ -16,7 +16,7 @@ use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, Rang
 
 /// A slice (range with step size).
 ///
-/// `end` is an exclusive index. Negative `begin` or `end` indexes are counted
+/// `end` is an exclusive index. Negative `start` or `end` indexes are counted
 /// from the back of the axis. If `end` is `None`, the slice extends to the end
 /// of the axis.
 ///
@@ -36,8 +36,12 @@ use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, Rang
 /// The Python equivalent is `[a::-1]`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Slice {
+    /// start index; negative are counted from the back of the axis
     pub start: isize,
+    /// end index; negative are counted from the back of the axis; when not present
+    /// the default is the full length of the axis.
     pub end: Option<isize>,
+    /// step size in elements; the default is 1, for every element.
     pub step: isize,
 }
 
@@ -105,12 +109,16 @@ pub struct NewAxis;
 /// `[np.newaxis]`. The macro equivalent is `s![NewAxis]`.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SliceInfoElem {
-    /// A range with step size. `end` is an exclusive index. Negative `begin`
+    /// A range with step size. `end` is an exclusive index. Negative `start`
     /// or `end` indexes are counted from the back of the axis. If `end` is
     /// `None`, the slice extends to the end of the axis.
     Slice {
+        /// start index; negative are counted from the back of the axis
         start: isize,
+        /// end index; negative are counted from the back of the axis; when not present
+        /// the default is the full length of the axis.
         end: Option<isize>,
+        /// step size in elements; the default is 1, for every element.
         step: isize,
     },
     /// A single index.
