@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::mem::{size_of, ManuallyDrop, MaybeUninit};
+use std::mem::{size_of, ManuallyDrop};
 use alloc::slice;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -26,7 +26,6 @@ use crate::dimension::broadcast::co_broadcast;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
-use crate::low_level_util::AbortIfPanic;
 use crate::zip::{IntoNdProducer, Zip};
 use crate::AxisDescription;
 
@@ -2464,31 +2463,7 @@ where
                 index, axis.index());
         let (_, mut tail) = self.view_mut().split_at(axis, index);
         // shift elements to the front
-        // use swapping to keep all elements initialized (as required by owned storage)
-        Zip::from(tail.lanes_mut(axis)).for_each(|mut lane| {
-            let mut lane_iter = lane.iter_mut();
-            let mut dst = if let Some(dst) = lane_iter.next() { dst } else { return };
-
-            // Logically we do a circular swap here, all elements in a chain
-            // Using MaybeUninit to avoid unecessary writes in the safe swap solution
-            //
-            //  for elt in lane_iter {
-            //      std::mem::swap(dst, elt);
-            //      dst = elt;
-            //  }
-            //
-            let guard = AbortIfPanic(&"remove_index: temporarily moving out of owned value");
-            let mut slot = MaybeUninit::<A>::uninit();
-            unsafe {
-                slot.as_mut_ptr().copy_from_nonoverlapping(dst, 1);
-                for elt in lane_iter {
-                    (dst as *mut A).copy_from_nonoverlapping(elt, 1);
-                    dst = elt;
-                }
-                (dst as *mut A).copy_from_nonoverlapping(slot.as_ptr(), 1);
-            }
-            guard.defuse();
-        });
+        Zip::from(tail.lanes_mut(axis)).for_each(|mut lane| lane.rotate1_front());
         // then slice the axis in place to cut out the removed final element
         self.slice_axis_inplace(axis, Slice::new(0, Some(-1), 1));
     }
