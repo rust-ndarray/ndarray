@@ -147,7 +147,7 @@ pub use crate::slice::{
 };
 
 use crate::iterators::Baseiter;
-use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut, Lanes};
+use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 pub use crate::arraytraits::AsArray;
 #[cfg(feature = "std")]
@@ -1587,12 +1587,6 @@ where
         unsafe {
             self.with_strides_dim(s, d)
         }
-    }
-
-    /// n-d generalization of rows, just like inner iter
-    fn inner_rows(&self) -> iterators::Lanes<'_, A, D::Smaller> {
-        let n = self.ndim();
-        Lanes::new(self.view(), Axis(n.saturating_sub(1)))
     }
 }
 

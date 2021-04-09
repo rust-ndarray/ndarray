@@ -252,7 +252,7 @@ where
         if let Some(self_s) = self.as_slice() {
             hash::Hash::hash_slice(self_s, state);
         } else {
-            for row in self.inner_rows() {
+            for row in self.rows() {
                 if let Some(row_s) = row.as_slice() {
                     hash::Hash::hash_slice(row_s, state);
                 } else {

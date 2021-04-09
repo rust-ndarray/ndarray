@@ -38,7 +38,7 @@ where
             return numeric_util::unrolled_fold(slc, A::zero, A::add);
         }
         let mut sum = A::zero();
-        for row in self.inner_rows() {
+        for row in self.rows() {
             if let Some(slc) = row.as_slice() {
                 sum = sum + numeric_util::unrolled_fold(slc, A::zero, A::add);
             } else {
@@ -103,7 +103,7 @@ where
             return numeric_util::unrolled_fold(slc, A::one, A::mul);
         }
         let mut sum = A::one();
-        for row in self.inner_rows() {
+        for row in self.rows() {
             if let Some(slc) = row.as_slice() {
                 sum = sum * numeric_util::unrolled_fold(slc, A::one, A::mul);
             } else {
