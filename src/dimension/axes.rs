@@ -48,8 +48,11 @@ pub struct Axes<'a, D> {
 /// Description of the axis, its length and its stride.
 #[derive(Debug)]
 pub struct AxisDescription {
+    /// Axis identifier (index)
     pub axis: Axis,
+    /// Length in count of elements of the current axis
     pub len: usize,
+    /// Stride in count of elements of the current axis
     pub stride: isize,
 }
 
