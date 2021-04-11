@@ -36,7 +36,7 @@ use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 ///
 /// Iterator element type is `*mut A`.
 #[derive(Debug)]
-pub struct Baseiter<A, D>
+pub(crate) struct Baseiter<A, D>
 {
     ptr: *mut A,
     dim: D,
@@ -341,7 +341,7 @@ pub struct Iter<'a, A, D>
 
 /// Counted read only iterator
 #[derive(Debug)]
-pub struct ElementsBase<'a, A, D>
+pub(crate) struct ElementsBase<'a, A, D>
 {
     inner: Baseiter<A, D>,
     life: PhantomData<&'a A>,
@@ -362,7 +362,7 @@ pub struct IterMut<'a, A, D>
 ///
 /// Iterator element type is `&'a mut A`.
 #[derive(Debug)]
-pub struct ElementsBaseMut<'a, A, D>
+pub(crate) struct ElementsBaseMut<'a, A, D>
 {
     inner: Baseiter<A, D>,
     life: PhantomData<&'a mut A>,
@@ -829,7 +829,7 @@ impl<'a, A> DoubleEndedIterator for LanesIterMut<'a, A, Ix1>
 }
 
 #[derive(Debug)]
-pub struct AxisIterCore<A, D>
+struct AxisIterCore<A, D>
 {
     /// Index along the axis of the value of `.next()`, relative to the start
     /// of the axis.
@@ -1532,8 +1532,7 @@ send_sync_read_write!(ElementsBaseMut);
 ///
 /// The iterator must produce exactly the number of elements it reported or
 /// diverge before reaching the end.
-#[allow(clippy::missing_safety_doc)] // not nameable downstream
-pub unsafe trait TrustedIterator {}
+pub(crate) unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;
 use crate::iter::IndicesIter;
@@ -1558,14 +1557,14 @@ unsafe impl<D> TrustedIterator for IndicesIterF<D> where D: Dimension {}
 unsafe impl<A, D> TrustedIterator for IntoIter<A, D> where D: Dimension {}
 
 /// Like Iterator::collect, but only for trusted length iterators
-pub fn to_vec<I>(iter: I) -> Vec<I::Item>
+pub(crate) fn to_vec<I>(iter: I) -> Vec<I::Item>
 where I: TrustedIterator + ExactSizeIterator
 {
     to_vec_mapped(iter, |x| x)
 }
 
 /// Like Iterator::collect, but only for trusted length iterators
-pub fn to_vec_mapped<I, F, B>(iter: I, mut f: F) -> Vec<B>
+pub(crate) fn to_vec_mapped<I, F, B>(iter: I, mut f: F) -> Vec<B>
 where
     I: TrustedIterator + ExactSizeIterator,
     F: FnMut(I::Item) -> B,
