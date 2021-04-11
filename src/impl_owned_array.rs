@@ -537,7 +537,9 @@ impl<A, D> Array<A, D>
             } 
 
             // Keep track of currently filled length of `self.data` and update it
-            // on scope exit (panic or loop finish).
+            // on scope exit (panic or loop finish). This "indirect" way to
+            // write the length is used to help the compiler, the len store to self.data may
+            // otherwise be mistaken to alias with other stores in the loop.
             struct SetLenOnDrop<'a, A: 'a> {
                 len: usize,
                 data: &'a mut OwnedRepr<A>,
