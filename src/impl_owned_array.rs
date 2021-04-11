@@ -255,10 +255,6 @@ impl<A, D> Array<A, D>
             debug_assert!(data_ptr <= array_memory_head_ptr);
             debug_assert!(array_memory_head_ptr <= data_end_ptr);
 
-            // iter is a raw pointer iterator traversing self_ in its standard order
-            let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
-            let mut dropped_elements = 0;
-
             // The idea is simply this: the iterator will yield the elements of self_ in
             // increasing address order.
             //
@@ -267,6 +263,25 @@ impl<A, D> Array<A, D>
             //
             // We have to drop elements in the range from `data_ptr` until (not including)
             // `data_end_ptr`, except those that are produced by `iter`.
+
+            // As an optimization, the innermost axis is removed if it has stride 1, because
+            // we then have a long stretch of contiguous elements we can skip as one.
+            let inner_lane_len;
+            if self_.ndim() > 1 && self_.strides.last_elem() == 1 {
+                self_.dim.slice_mut().rotate_right(1);
+                self_.strides.slice_mut().rotate_right(1);
+                inner_lane_len = self_.dim[0];
+                self_.dim[0] = 1;
+                self_.strides[0] = 1;
+            } else {
+                inner_lane_len = 1;
+            }
+
+            // iter is a raw pointer iterator traversing the array in memory order now with the
+            // sorted axes.
+            let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
+            let mut dropped_elements = 0;
+
             let mut last_ptr = data_ptr;
 
             while let Some(elem_ptr) = iter.next() {
@@ -278,8 +293,8 @@ impl<A, D> Array<A, D>
                     last_ptr = last_ptr.add(1);
                     dropped_elements += 1;
                 }
-                // Next interval will continue one past the current element
-                last_ptr = elem_ptr.add(1);
+                // Next interval will continue one past the current lane
+                last_ptr = elem_ptr.add(inner_lane_len);
             }
 
             while last_ptr < data_end_ptr {
