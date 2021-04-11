@@ -345,3 +345,34 @@ fn test_append_zero_size() {
         assert_eq!(a.shape(), &[0, 2]);
     }
 }
+
+#[test]
+fn append_row_neg_stride_3() {
+    let mut a = Array::zeros((0, 4));
+    a.append_row(aview1(&[0., 1., 2., 3.])).unwrap();
+    a.invert_axis(Axis(1));
+    a.append_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    assert_eq!(a.shape(), &[2, 4]);
+    assert_eq!(a, array![[3., 2., 1., 0.], [4., 5., 6., 7.]]);
+    assert_eq!(a.strides(), &[4, -1]);
+}
+
+#[test]
+fn append_row_ignore_strides_length_one_axes() {
+    let strides = &[0, 1, 10, 20];
+    for invert in &[vec![], vec![0], vec![1], vec![0, 1]] {
+        for &stride0 in strides {
+            for &stride1 in strides {
+                let mut a =
+                    Array::from_shape_vec([1, 1].strides([stride0, stride1]), vec![0.]).unwrap();
+                for &ax in invert {
+                    a.invert_axis(Axis(ax));
+                }
+                a.append_row(aview1(&[1.])).unwrap();
+                assert_eq!(a.shape(), &[2, 1]);
+                assert_eq!(a, array![[0.], [1.]]);
+                assert_eq!(a.stride_of(Axis(0)), 1);
+            }
+        }
+    }
+}

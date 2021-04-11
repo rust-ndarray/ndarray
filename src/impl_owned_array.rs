@@ -480,9 +480,11 @@ impl<A, D> Array<A, D>
         } else if current_axis_len == 1 {
             // This is the outermost/longest stride axis; so we find the max across the other axes
             let new_stride = self.axes().fold(1, |acc, ax| {
-                if ax.axis == axis { acc } else {
-                    let this_ax = ax.len as isize * ax.stride;
-                    if this_ax.abs() > acc { this_ax } else { acc }
+                if ax.axis == axis || ax.len <= 1 {
+                    acc
+                } else {
+                    let this_ax = ax.len as isize * ax.stride.abs();
+                    if this_ax > acc { this_ax } else { acc }
                 }
             });
             let mut strides = self.strides.clone();
