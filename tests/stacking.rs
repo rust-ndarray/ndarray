@@ -20,7 +20,7 @@ fn concatenating() {
                            [2., 9.]]));
 
     let d = concatenate![Axis(0), a.row(0).insert_axis(Axis(1)), aview1(&[9., 9.]).insert_axis(Axis(1))];
-    assert_eq!(d.t(), aview2(&[[2., 2., 9., 9.]]));
+    assert_eq!(d, aview2(&[[2.], [2.], [9.], [9.]]));
 
     let res = ndarray::concatenate(Axis(1), &[a.view(), c.view()]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);
