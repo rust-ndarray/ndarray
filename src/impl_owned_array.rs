@@ -327,13 +327,14 @@ impl<A, D> Array<A, D>
         // The array will be created with 0 (C) or ndim-1 (F) as the biggest stride
         // axis. Rearrange the shape so that `growing_axis` is the biggest stride axis
         // afterwards.
-        let prefer_f_layout = growing_axis == Axis(ndim - 1);
-        if !prefer_f_layout {
-            dim.slice_mut().swap(0, growing_axis.index());
-        }
-        let mut new_array = Self::uninit(dim.set_f(prefer_f_layout));
-        if !prefer_f_layout {
-            new_array.swap_axes(0, growing_axis.index());
+        let mut new_array;
+        if growing_axis == Axis(ndim - 1) {
+            new_array = Self::uninit(dim.f());
+        } else {
+            dim.slice_mut()[..=growing_axis.index()].rotate_right(1);
+            new_array = Self::uninit(dim);
+            new_array.dim.slice_mut()[..=growing_axis.index()].rotate_left(1);
+            new_array.strides.slice_mut()[..=growing_axis.index()].rotate_left(1);
         }
 
         // self -> old_self.
@@ -467,11 +468,13 @@ impl<A, D> Array<A, D>
                 // Axis n - 1 is outermost axis
                 res_dim.fortran_strides()
             } else {
-                // Default with modification
-                res_dim.slice_mut().swap(0, axis.index());
+                // standard axis order except for the growing axis;
+                // anticipates that it's likely that `array` has standard order apart from the
+                // growing axis.
+                res_dim.slice_mut()[..=axis.index()].rotate_right(1);
                 let mut strides = res_dim.default_strides();
-                res_dim.slice_mut().swap(0, axis.index());
-                strides.slice_mut().swap(0, axis.index());
+                res_dim.slice_mut()[..=axis.index()].rotate_left(1);
+                strides.slice_mut()[..=axis.index()].rotate_left(1);
                 strides
             }
         } else if current_axis_len == 1 {
