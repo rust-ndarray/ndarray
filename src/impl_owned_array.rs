@@ -86,12 +86,12 @@ impl<A> Array<A, Ix2> {
     /// Appending automatically changes memory layout of the array so that it is appended to
     /// along the "growing axis".
     ///
-    /// Ensure appending is efficient by for example starting appending an empty array and
+    /// Ensure appending is efficient by, for example, appending to an empty array and then
     /// always appending along the same axis. For rows, ndarray's default layout is efficient for
     /// appending.
     ///
     /// Notice that an empty array (where it has an axis of length zero) is the simplest starting
-    /// point. The amortized average complexity of the append is O(m) where *m* is the length of
+    /// point. When repeatedly appending to a single axis, the amortized average complexity of each append is O(m), where *m* is the length of
     /// the row.
     ///
     /// ```rust
@@ -123,12 +123,12 @@ impl<A> Array<A, Ix2> {
     /// Appending automatically changes memory layout of the array so that it is appended to
     /// along the "growing axis".
     ///
-    /// Ensure appending is efficient by for example starting appending an empty array and
+    /// Ensure appending is efficient by, for example, appending to an empty array and then
     /// always appending along the same axis. For columns, column major ("F") memory layout is
     /// efficient for appending.
     ///
     /// Notice that an empty array (where it has an axis of length zero) is the simplest starting
-    /// point. The amortized average complexity of the append is O(m) where *m* is the length of
+    /// point. When repeatedly appending to a single axis, the amortized average complexity of each append is O(m), where *m* is the length of
     /// the row.
     ///
     /// ```rust
@@ -222,7 +222,7 @@ impl<A, D> Array<A, D>
     #[cold]
     fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A> {
         // "deconstruct" self; the owned repr releases ownership of all elements and we
-        // and carry on with raw view methods
+        // carry on with raw view methods
         let self_len = self.len();
         let data_len = self.data.len();
         let data_ptr = self.data.as_nonnull_mut().as_ptr();
@@ -230,7 +230,8 @@ impl<A, D> Array<A, D>
         let mut self_;
 
         unsafe {
-            // Safety: self.data releases ownership of the elements
+            // Safety: self.data releases ownership of the elements. Any panics below this point
+            // will result in leaking elements instead of double drops.
             self_ = self.raw_view_mut();
             self.data.set_len(0);
         }
@@ -430,7 +431,7 @@ impl<A, D> Array<A, D>
             }
         }
 
-        // array must be be "full" (have no exterior holes)
+        // array must be be "full" (contiguous and have no exterior holes)
         if self.len() != self.data.len() {
             incompatible_layout = true;
         }
@@ -520,7 +521,7 @@ impl<A, D> Array<A, D>
                               tail_view.shape(), tail_view.strides());
             } 
 
-            // Keep track of currently filled lenght of `self.data` and update it
+            // Keep track of currently filled length of `self.data` and update it
             // on scope exit (panic or loop finish).
             struct SetLenOnDrop<'a, A: 'a> {
                 len: usize,
@@ -646,4 +647,3 @@ where
         }
     }
 }
-
