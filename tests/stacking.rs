@@ -1,4 +1,4 @@
-use ndarray::{arr2, arr3, aview1, concatenate, stack, Array2, Axis, ErrorKind, Ix1};
+use ndarray::{arr2, arr3, aview1, aview2, concatenate, stack, Array2, Axis, ErrorKind, Ix1};
 
 #[test]
 fn concatenating() {
@@ -14,6 +14,13 @@ fn concatenating() {
 
     let d = concatenate![Axis(0), a.row(0), &[9., 9.]];
     assert_eq!(d, aview1(&[2., 2., 9., 9.]));
+
+    let d = concatenate![Axis(1), a.row(0).insert_axis(Axis(1)), aview1(&[9., 9.]).insert_axis(Axis(1))];
+    assert_eq!(d, aview2(&[[2., 9.],
+                           [2., 9.]]));
+
+    let d = concatenate![Axis(0), a.row(0).insert_axis(Axis(1)), aview1(&[9., 9.]).insert_axis(Axis(1))];
+    assert_eq!(d, aview2(&[[2.], [2.], [9.], [9.]]));
 
     let res = ndarray::concatenate(Axis(1), &[a.view(), c.view()]);
     assert_eq!(res.unwrap_err().kind(), ErrorKind::IncompatibleShape);

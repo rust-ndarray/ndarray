@@ -240,22 +240,25 @@ where
     }
 }
 
+#[inline]
+fn zip_dimension_check<D, P>(dimension: &D, part: &P)
+where
+    D: Dimension,
+    P: NdProducer<Dim = D>,
+{
+    ndassert!(
+        part.equal_dim(&dimension),
+        "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
+        dimension,
+        part.raw_dim()
+    );
+}
+
+
 impl<Parts, D> Zip<Parts, D>
 where
     D: Dimension,
 {
-    fn check<P>(&self, part: &P)
-    where
-        P: NdProducer<Dim = D>,
-    {
-        ndassert!(
-            part.equal_dim(&self.dimension),
-            "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
-            self.dimension,
-            part.raw_dim()
-        );
-    }
-
     /// Return a the number of element tuples in the Zip
     pub fn size(&self) -> usize {
         self.dimension.size()
@@ -426,6 +429,26 @@ where
         Array::uninit(self.dimension.clone().set_f(is_f))
     }
 }
+
+impl<D, P1, P2> Zip<(P1, P2), D>
+where
+    D: Dimension,
+    P1: NdProducer<Dim=D>,
+    P1: NdProducer<Dim=D>,
+{
+    /// Debug assert traversal order is like c (including 1D case)
+    // Method placement: only used for binary Zip at the moment.
+    #[inline]
+    pub(crate) fn debug_assert_c_order(self) -> Self {
+        debug_assert!(self.layout.is(CORDER) || self.layout_tendency >= 0 ||
+                      self.dimension.slice().iter().filter(|&&d| d > 1).count() <= 1,
+                      "Assertion failed: traversal is not c-order or 1D for \
+                      layout {:?}, tendency {}, dimension {:?}",
+                      self.layout, self.layout_tendency, self.dimension);
+        self
+    }
+}
+
 
 /*
 trait Offset : Copy {
@@ -652,8 +675,28 @@ macro_rules! map_impl {
                 where P: IntoNdProducer<Dim=D>,
             {
                 let part = p.into_producer();
-                self.check(&part);
+                zip_dimension_check(&self.dimension, &part);
                 self.build_and(part)
+            }
+
+            /// Include the producer `p` in the Zip.
+            ///
+            /// ## Safety
+            ///
+            /// The caller must ensure that the producer's shape is equal to the Zip's shape.
+            /// Uses assertions when debug assertions are enabled.
+            #[allow(unused)]
+            pub(crate) unsafe fn and_unchecked<P>(self, p: P) -> Zip<($($p,)* P::Output, ), D>
+                where P: IntoNdProducer<Dim=D>,
+            {
+                #[cfg(debug_assertions)]
+                {
+                    self.and(p)
+                }
+                #[cfg(not(debug_assertions))]
+                {
+                    self.build_and(p.into_producer())
+                }
             }
 
             /// Include the producer `p` in the Zip, broadcasting if needed.

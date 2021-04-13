@@ -710,6 +710,19 @@ fn test_select() {
 }
 
 #[test]
+fn test_select_1d() {
+    let x = arr1(&[0, 1, 2, 3, 4, 5, 6]);
+    let r1 = x.select(Axis(0), &[1, 3, 4, 2, 2, 5]);
+    assert_eq!(r1, arr1(&[1, 3, 4, 2, 2, 5]));
+    // select nothing
+    let r2 = x.select(Axis(0), &[]);
+    assert_eq!(r2, arr1(&[]));
+    // select nothing from empty
+    let r3 = r2.select(Axis(0), &[]);
+    assert_eq!(r3, arr1(&[]));
+}
+
+#[test]
 fn diag() {
     let d = arr2(&[[1., 2., 3.0f32]]).into_diag();
     assert_eq!(d.dim(), 1);

@@ -12,6 +12,8 @@
     clippy::deref_addrof,
     clippy::unreadable_literal,
     clippy::manual_map, // is not an error
+    clippy::while_let_on_iterator, // is not an error
+    clippy::from_iter_instead_of_collect, // using from_iter is good style
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -235,8 +237,8 @@ pub type Ixs = isize;
 
 /// An *n*-dimensional array.
 ///
-/// The array is a general container of elements. It cannot grow or shrink, but
-/// can be sliced into subsets of its data.
+/// The array is a general container of elements. It cannot grow or shrink (with some exceptions),
+/// but can be sliced into subsets of its data.
 /// The array supports arithmetic operations by applying them elementwise.
 ///
 /// In *n*-dimensional we include for example 1-dimensional rows or columns,

@@ -873,20 +873,39 @@ where
     /// ```
     pub fn select(&self, axis: Axis, indices: &[Ix]) -> Array<A, D>
     where
-        A: Copy,
+        A: Clone,
         S: Data,
         D: RemoveAxis,
     {
-        let mut subs = vec![self.view(); indices.len()];
-        for (&i, sub) in zip(indices, &mut subs[..]) {
-            sub.collapse_axis(axis, i);
-        }
-        if subs.is_empty() {
-            let mut dim = self.raw_dim();
-            dim.set_axis(axis, 0);
-            unsafe { Array::from_shape_vec_unchecked(dim, vec![]) }
+        if self.ndim() == 1 {
+            // using .len_of(axis) means that we check if `axis` is in bounds too.
+            let axis_len = self.len_of(axis);
+            // bounds check the indices first
+            if let Some(max_index) = indices.iter().cloned().max() {
+                if max_index >= axis_len {
+                    panic!("ndarray: index {} is out of bounds in array of len {}",
+                           max_index, self.len_of(axis));
+                }
+            } // else: indices empty is ok
+            let view = self.view().into_dimensionality::<Ix1>().unwrap();
+            Array::from_iter(indices.iter().map(move |&index| {
+                // Safety: bounds checked indexes
+                unsafe {
+                    view.uget(index).clone()
+                }
+            })).into_dimensionality::<D>().unwrap()
         } else {
-            concatenate(axis, &subs).unwrap()
+            let mut subs = vec![self.view(); indices.len()];
+            for (&i, sub) in zip(indices, &mut subs[..]) {
+                sub.collapse_axis(axis, i);
+            }
+            if subs.is_empty() {
+                let mut dim = self.raw_dim();
+                dim.set_axis(axis, 0);
+                unsafe { Array::from_shape_vec_unchecked(dim, vec![]) }
+            } else {
+                concatenate(axis, &subs).unwrap()
+            }
         }
     }
 
