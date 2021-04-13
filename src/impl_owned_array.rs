@@ -438,12 +438,19 @@ impl<A, D> Array<A, D>
         // array must be empty or have `axis` as the outermost (longest stride) axis
         if !self_is_empty && current_axis_len > 1 {
             // `axis` must be max stride axis or equal to its stride
-            let max_axis = self.axes().max_by_key(|ax| ax.stride.abs()).unwrap();
-            if max_axis.axis != axis && max_axis.stride.abs() > self.stride_of(axis) {
+            let axis_stride = self.stride_of(axis);
+            if axis_stride < 0 {
                 incompatible_layout = true;
-            }
-            if self.stride_of(axis) < 0 {
-                incompatible_layout = true;
+            } else {
+                for ax in self.axes() {
+                    if ax.axis == axis {
+                        continue;
+                    }
+                    if ax.len > 1 && ax.stride.abs() > axis_stride {
+                        incompatible_layout = true;
+                        break;
+                    }
+                }
             }
         }
 
