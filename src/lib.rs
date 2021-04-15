@@ -7,6 +7,7 @@
 // except according to those terms.
 #![crate_name = "ndarray"]
 #![doc(html_root_url = "https://docs.rs/ndarray/0.15/")]
+#![doc(html_logo_url = "https://rust-ndarray.github.io/images/rust-ndarray_logo.svg")]
 #![allow(
     clippy::many_single_char_names,
     clippy::deref_addrof,
