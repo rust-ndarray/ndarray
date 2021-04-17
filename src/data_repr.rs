@@ -53,6 +53,10 @@ impl<A> OwnedRepr<A> {
         self.ptr.as_ptr()
     }
 
+    pub(crate) fn as_ptr_mut(&self) -> *mut A {
+        self.ptr.as_ptr()
+    }
+
     pub(crate) fn as_nonnull_mut(&mut self) -> NonNull<A> {
         self.ptr
     }
