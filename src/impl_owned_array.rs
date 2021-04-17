@@ -223,89 +223,18 @@ impl<A, D> Array<A, D>
     fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A> {
         // "deconstruct" self; the owned repr releases ownership of all elements and we
         // carry on with raw view methods
-        let self_len = self.len();
         let data_len = self.data.len();
         let data_ptr = self.data.as_nonnull_mut().as_ptr();
-
-        let mut self_;
 
         unsafe {
             // Safety: self.data releases ownership of the elements. Any panics below this point
             // will result in leaking elements instead of double drops.
-            self_ = self.raw_view_mut();
+            let self_ = self.raw_view_mut();
             self.data.set_len(0);
+
+            drop_unreachable_raw(self_, data_ptr, data_len);
         }
 
-
-        // uninvert axes where needed, so that stride > 0
-        for i in 0..self_.ndim() {
-            if self_.stride_of(Axis(i)) < 0 {
-                self_.invert_axis(Axis(i));
-            }
-        }
-
-        // Sort axes to standard order, Axis(0) has biggest stride and Axis(n - 1) least stride
-        // Note that self_ has holes, so self_ is not C-contiguous
-        sort_axes_in_default_order(&mut self_);
-
-        unsafe {
-            // with uninverted axes this is now the element with lowest address
-            let array_memory_head_ptr = self_.ptr.as_ptr();
-            let data_end_ptr = data_ptr.add(data_len);
-            debug_assert!(data_ptr <= array_memory_head_ptr);
-            debug_assert!(array_memory_head_ptr <= data_end_ptr);
-
-            // The idea is simply this: the iterator will yield the elements of self_ in
-            // increasing address order.
-            //
-            // The pointers produced by the iterator are those that we *do not* touch.
-            // The pointers *not mentioned* by the iterator are those we have to drop.
-            //
-            // We have to drop elements in the range from `data_ptr` until (not including)
-            // `data_end_ptr`, except those that are produced by `iter`.
-
-            // As an optimization, the innermost axis is removed if it has stride 1, because
-            // we then have a long stretch of contiguous elements we can skip as one.
-            let inner_lane_len;
-            if self_.ndim() > 1 && self_.strides.last_elem() == 1 {
-                self_.dim.slice_mut().rotate_right(1);
-                self_.strides.slice_mut().rotate_right(1);
-                inner_lane_len = self_.dim[0];
-                self_.dim[0] = 1;
-                self_.strides[0] = 1;
-            } else {
-                inner_lane_len = 1;
-            }
-
-            // iter is a raw pointer iterator traversing the array in memory order now with the
-            // sorted axes.
-            let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
-            let mut dropped_elements = 0;
-
-            let mut last_ptr = data_ptr;
-
-            while let Some(elem_ptr) = iter.next() {
-                // The interval from last_ptr up until (not including) elem_ptr
-                // should now be dropped. This interval may be empty, then we just skip this loop.
-                while last_ptr != elem_ptr {
-                    debug_assert!(last_ptr < data_end_ptr);
-                    std::ptr::drop_in_place(last_ptr);
-                    last_ptr = last_ptr.add(1);
-                    dropped_elements += 1;
-                }
-                // Next interval will continue one past the current lane
-                last_ptr = elem_ptr.add(inner_lane_len);
-            }
-
-            while last_ptr < data_end_ptr {
-                std::ptr::drop_in_place(last_ptr);
-                last_ptr = last_ptr.add(1);
-                dropped_elements += 1;
-            }
-
-            assert_eq!(data_len, dropped_elements + self_len,
-                       "Internal error: inconsistency in move_into");
-        }
         self.data
     }
 
@@ -592,6 +521,82 @@ impl<A, D> Array<A, D>
 
         Ok(())
     }
+}
+
+/// This drops all "unreachable" elements in `self_` given the data pointer and data length.
+///
+/// # Safety
+///
+/// This is an internal function for use by move_into and IntoIter only, safety invariants may need
+/// to be upheld across the calls from those implementations.
+pub(crate) unsafe fn drop_unreachable_raw<A, D>(mut self_: RawArrayViewMut<A, D>, data_ptr: *mut A, data_len: usize)
+where
+    D: Dimension,
+{
+    let self_len = self_.len();
+
+    for i in 0..self_.ndim() {
+        if self_.stride_of(Axis(i)) < 0 {
+            self_.invert_axis(Axis(i));
+        }
+    }
+    sort_axes_in_default_order(&mut self_);
+    // with uninverted axes this is now the element with lowest address
+    let array_memory_head_ptr = self_.ptr.as_ptr();
+    let data_end_ptr = data_ptr.add(data_len);
+    debug_assert!(data_ptr <= array_memory_head_ptr);
+    debug_assert!(array_memory_head_ptr <= data_end_ptr);
+
+    // The idea is simply this: the iterator will yield the elements of self_ in
+    // increasing address order.
+    //
+    // The pointers produced by the iterator are those that we *do not* touch.
+    // The pointers *not mentioned* by the iterator are those we have to drop.
+    //
+    // We have to drop elements in the range from `data_ptr` until (not including)
+    // `data_end_ptr`, except those that are produced by `iter`.
+
+    // As an optimization, the innermost axis is removed if it has stride 1, because
+    // we then have a long stretch of contiguous elements we can skip as one.
+    let inner_lane_len;
+    if self_.ndim() > 1 && self_.strides.last_elem() == 1 {
+        self_.dim.slice_mut().rotate_right(1);
+        self_.strides.slice_mut().rotate_right(1);
+        inner_lane_len = self_.dim[0];
+        self_.dim[0] = 1;
+        self_.strides[0] = 1;
+    } else {
+        inner_lane_len = 1;
+    }
+
+    // iter is a raw pointer iterator traversing the array in memory order now with the
+    // sorted axes.
+    let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
+    let mut dropped_elements = 0;
+
+    let mut last_ptr = data_ptr;
+
+    while let Some(elem_ptr) = iter.next() {
+        // The interval from last_ptr up until (not including) elem_ptr
+        // should now be dropped. This interval may be empty, then we just skip this loop.
+        while last_ptr != elem_ptr {
+            debug_assert!(last_ptr < data_end_ptr);
+            std::ptr::drop_in_place(last_ptr);
+            last_ptr = last_ptr.add(1);
+            dropped_elements += 1;
+        }
+        // Next interval will continue one past the current lane
+        last_ptr = elem_ptr.add(inner_lane_len);
+    }
+
+    while last_ptr < data_end_ptr {
+        std::ptr::drop_in_place(last_ptr);
+        last_ptr = last_ptr.add(1);
+        dropped_elements += 1;
+    }
+
+    assert_eq!(data_len, dropped_elements + self_len,
+               "Internal error: inconsistency in move_into");
 }
 
 /// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
