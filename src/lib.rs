@@ -163,7 +163,7 @@ pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::{Shape, ShapeBuilder, StrideShape};
+pub use crate::shape_builder::{Shape, ShapeBuilder, ShapeArg, StrideShape};
 
 #[macro_use]
 mod macro_utils;

@@ -26,8 +26,8 @@ use crate::dimension::broadcast::co_broadcast;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
-use crate::zip::{IntoNdProducer, Zip};
 use crate::AxisDescription;
+use crate::zip::{IntoNdProducer, Zip};
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
