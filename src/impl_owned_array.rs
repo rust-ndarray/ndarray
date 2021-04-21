@@ -1,5 +1,6 @@
 
 use alloc::vec::Vec;
+use std::mem;
 use std::mem::MaybeUninit;
 
 use rawpointer::PointerExt;
@@ -33,7 +34,7 @@ impl<A> Array<A, Ix0> {
     /// assert_eq!(scalar, Foo);
     /// ```
     pub fn into_scalar(self) -> A {
-        let size = ::std::mem::size_of::<A>();
+        let size = mem::size_of::<A>();
         if size == 0 {
             // Any index in the `Vec` is fine since all elements are identical.
             self.data.into_vec().remove(0)
@@ -208,7 +209,7 @@ impl<A, D> Array<A, D>
         let data_len = self.data.len();
 
         let has_unreachable_elements = self_len != data_len;
-        if !has_unreachable_elements || std::mem::size_of::<A>() == 0 {
+        if !has_unreachable_elements || mem::size_of::<A>() == 0 || !mem::needs_drop::<A>() {
             unsafe {
                 self.data.set_len(0);
             }
