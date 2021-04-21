@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use alloc::slice;
+use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
 
@@ -132,6 +133,27 @@ where
         unsafe {
             self.into_raw_view_mut().cast::<MathCell<A>>().deref_into_view()
         }
+    }
+
+    /// Return the array view as a view of `MaybeUninit<A>` elements
+    ///
+    /// This conversion leaves the elements as they were (presumably initialized), but
+    /// they are represented with the `MaybeUninit<A>` type. Effectively this means that
+    /// the elements can be overwritten without dropping the old element in its place.
+    /// (In some situations this is not what you want, while for `Copy` elements it makes
+    /// no difference at all.)
+    ///
+    /// # Safety
+    ///
+    /// This method allows writing uninitialized data into the view, which could leave any
+    /// original array that we borrow from in an inconsistent state. This is not allowed
+    /// when using the resulting array view.
+    pub(crate) unsafe fn into_maybe_uninit(self) -> ArrayViewMut<'a, MaybeUninit<A>, D> {
+        // Safe because: A and MaybeUninit<A> have the same representation;
+        // and we can go from initialized to (maybe) not unconditionally in terms of
+        // representation. However, the user must be careful to not write uninit elements
+        // through the view.
+        self.into_raw_view_mut().cast::<MaybeUninit<A>>().deref_into_view_mut()
     }
 }
 

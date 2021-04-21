@@ -160,6 +160,51 @@ impl<A, D> Array<A, D>
     /// can have a different memory layout. The destination is overwritten completely.
     ///
     /// The destination should be a mut reference to an array or an `ArrayViewMut` with
+    /// `A` elements.
+    ///
+    /// ***Panics*** if the shapes don't agree.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use ndarray::Array;
+    ///
+    /// // Usage example of move_into in safe code
+    /// let mut a = Array::default((10, 10));
+    /// let b = Array::from_shape_fn((10, 10), |(i, j)| (i + j).to_string());
+    /// b.move_into(&mut a);
+    /// ```
+    pub fn move_into<'a, AM>(self, new_array: AM)
+    where
+        AM: Into<ArrayViewMut<'a, A, D>>,
+        A: 'a,
+    {
+        // Remove generic parameter P and call the implementation
+        let new_array = new_array.into();
+        if mem::needs_drop::<A>() {
+            self.move_into_needs_drop(new_array);
+        } else {
+            // If `A` doesn't need drop, we can overwrite the destination.
+            // Safe because: move_into_uninit only writes initialized values
+            unsafe {
+                self.move_into_uninit(new_array.into_maybe_uninit())
+            }
+        }
+    }
+
+    fn move_into_needs_drop(mut self, new_array: ArrayViewMut<A, D>) {
+        // Simple case where `A` has a destructor: just swap values between self and new_array.
+        // Afterwards, `self` drops full of initialized values and dropping works as usual.
+        // This avoids moving out of owned values in `self` while at the same time managing
+        // the dropping if the values being overwritten in `new_array`.
+        Zip::from(&mut self).and(new_array)
+            .for_each(|src, dst| mem::swap(src, dst));
+    }
+
+    /// Move all elements from self into `new_array`, which must be of the same shape but
+    /// can have a different memory layout. The destination is overwritten completely.
+    ///
+    /// The destination should be a mut reference to an array or an `ArrayViewMut` with
     /// `MaybeUninit<A>` elements (which are overwritten without dropping any existing value).
     ///
     /// Minor implementation note: Owned arrays like `self` may be sliced in place and own elements
@@ -168,12 +213,26 @@ impl<A, D> Array<A, D>
     /// drop of any such element, other elements may be leaked.
     ///
     /// ***Panics*** if the shapes don't agree.
-    pub fn move_into<'a, AM>(self, new_array: AM)
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use ndarray::Array;
+    ///
+    /// let a = Array::from_iter(0..100).into_shape((10, 10)).unwrap();
+    /// let mut b = Array::uninit((10, 10));
+    /// a.move_into_uninit(&mut b);
+    /// unsafe {
+    ///     // we can now promise we have fully initialized `b`.
+    ///     let b = b.assume_init();
+    /// }
+    /// ```
+    pub fn move_into_uninit<'a, AM>(self, new_array: AM)
     where
         AM: Into<ArrayViewMut<'a, MaybeUninit<A>, D>>,
         A: 'a,
     {
-        // Remove generic parameter P and call the implementation
+        // Remove generic parameter AM and call the implementation
         self.move_into_impl(new_array.into())
     }
 
@@ -181,7 +240,8 @@ impl<A, D> Array<A, D>
         unsafe {
             // Safety: copy_to_nonoverlapping cannot panic
             let guard = AbortIfPanic(&"move_into: moving out of owned value");
-            // Move all reachable elements
+            // Move all reachable elements; we move elements out of `self`.
+            // and thus must not panic for the whole section until we call `self.data.set_len(0)`.
             Zip::from(self.raw_view_mut())
                 .and(new_array)
                 .for_each(|src, dst| {
@@ -271,7 +331,7 @@ impl<A, D> Array<A, D>
         // dummy array -> self.
         // old_self elements are moved -> new_array.
         let old_self = std::mem::replace(self, Self::empty());
-        old_self.move_into(new_array.view_mut());
+        old_self.move_into_uninit(new_array.view_mut());
 
         // new_array -> self.
         unsafe {

@@ -41,14 +41,14 @@ fn move_into_copy() {
     let a = arr2(&[[1., 2.], [3., 4.]]);
     let acopy = a.clone();
     let mut b = Array::uninit(a.dim());
-    a.move_into(b.view_mut());
+    a.move_into_uninit(b.view_mut());
     let b = unsafe { b.assume_init() };
     assert_eq!(acopy, b);
 
     let a = arr2(&[[1., 2.], [3., 4.]]).reversed_axes();
     let acopy = a.clone();
     let mut b = Array::uninit(a.dim());
-    a.move_into(b.view_mut());
+    a.move_into_uninit(b.view_mut());
     let b = unsafe { b.assume_init() };
     assert_eq!(acopy, b);
 }
@@ -74,7 +74,7 @@ fn move_into_owned() {
 
                 let acopy = a.clone();
                 let mut b = Array::uninit(a.dim());
-                a.move_into(b.view_mut());
+                a.move_into_uninit(b.view_mut());
                 let b = unsafe { b.assume_init() };
 
                 assert_eq!(acopy, b);
@@ -85,7 +85,7 @@ fn move_into_owned() {
 
 #[test]
 fn move_into_slicing() {
-    // Count correct number of drops when using move_into and discontiguous arrays (with holes).
+    // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         for &invert_axis in &[0b00, 0b01, 0b10, 0b11] { // bitmask for axis to invert
             let counter = DropCounter::default();
@@ -102,7 +102,7 @@ fn move_into_slicing() {
                 }
 
                 let mut b = Array::uninit(a.dim());
-                a.move_into(b.view_mut());
+                a.move_into_uninit(b.view_mut());
                 let b = unsafe { b.assume_init() };
 
                 let total = m * n;
@@ -118,7 +118,7 @@ fn move_into_slicing() {
 
 #[test]
 fn move_into_diag() {
-    // Count correct number of drops when using move_into and discontiguous arrays (with holes).
+    // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         let counter = DropCounter::default();
         {
@@ -128,7 +128,7 @@ fn move_into_diag() {
             let a = a.into_diag();
 
             let mut b = Array::uninit(a.dim());
-            a.move_into(b.view_mut());
+            a.move_into_uninit(b.view_mut());
             let b = unsafe { b.assume_init() };
 
             let total = m * n;
@@ -143,7 +143,7 @@ fn move_into_diag() {
 
 #[test]
 fn move_into_0dim() {
-    // Count correct number of drops when using move_into and discontiguous arrays (with holes).
+    // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         let counter = DropCounter::default();
         {
@@ -155,7 +155,7 @@ fn move_into_0dim() {
 
             assert_eq!(a.ndim(), 0);
             let mut b = Array::uninit(a.dim());
-            a.move_into(b.view_mut());
+            a.move_into_uninit(b.view_mut());
             let b = unsafe { b.assume_init() };
 
             let total = m * n;
@@ -170,7 +170,7 @@ fn move_into_0dim() {
 
 #[test]
 fn move_into_empty() {
-    // Count correct number of drops when using move_into and discontiguous arrays (with holes).
+    // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         let counter = DropCounter::default();
         {
@@ -181,7 +181,7 @@ fn move_into_empty() {
             let a = a.slice_move(s![..0, 1..1]);
             assert!(a.is_empty());
             let mut b = Array::uninit(a.dim());
-            a.move_into(b.view_mut());
+            a.move_into_uninit(b.view_mut());
             let b = unsafe { b.assume_init() };
 
             let total = m * n;
@@ -191,6 +191,35 @@ fn move_into_empty() {
             drop(b);
         }
         counter.assert_drop_count();
+    }
+}
+
+#[test]
+fn move_into() {
+    // Test various memory layouts and holes while moving String elements with move_into
+    for &use_f_order in &[false, true] {
+        for &invert_axis in &[0b00, 0b01, 0b10, 0b11] { // bitmask for axis to invert
+            for &slice in &[false, true] {
+                let mut a = Array::from_shape_fn((5, 4).set_f(use_f_order),
+                                                 |idx| format!("{:?}", idx));
+                if slice {
+                    a.slice_collapse(s![1..-1, ..;2]);
+                }
+
+                if invert_axis & 0b01 != 0 {
+                    a.invert_axis(Axis(0));
+                }
+                if invert_axis & 0b10 != 0 {
+                    a.invert_axis(Axis(1));
+                }
+
+                let acopy = a.clone();
+                let mut b = Array::default(a.dim().set_f(!use_f_order ^ !slice));
+                a.move_into(&mut b);
+
+                assert_eq!(acopy, b);
+            }
+        }
     }
 }
 
