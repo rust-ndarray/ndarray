@@ -53,6 +53,10 @@ impl<A> OwnedRepr<A> {
         self.ptr.as_ptr()
     }
 
+    pub(crate) fn as_ptr_mut(&self) -> *mut A {
+        self.ptr.as_ptr()
+    }
+
     pub(crate) fn as_nonnull_mut(&mut self) -> NonNull<A> {
         self.ptr
     }
@@ -86,6 +90,13 @@ impl<A> OwnedRepr<A> {
     pub(crate) unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity);
         self.len = new_len;
+    }
+
+    /// Return the length (number of elements in total)
+    pub(crate) fn release_all_elements(&mut self) -> usize {
+        let ret = self.len;
+        self.len = 0;
+        ret
     }
 
     /// Cast self into equivalent repr of other element type

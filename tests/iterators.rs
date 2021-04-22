@@ -8,7 +8,9 @@
 use ndarray::prelude::*;
 use ndarray::{arr3, aview1, indices, s, Axis, Slice, Zip};
 
-use itertools::{assert_equal, enumerate};
+use itertools::assert_equal;
+use itertools::enumerate;
+use std::cell::Cell;
 
 macro_rules! assert_panics {
     ($body:expr) => {
@@ -890,5 +892,93 @@ fn test_rfold() {
             Array1::from(output),
             Array::from_iter((1..10).rev().map(|i| i * 2))
         );
+    }
+}
+
+#[test]
+fn test_into_iter() {
+    let a = Array1::from(vec![1, 2, 3, 4]);
+    let v = a.into_iter().collect::<Vec<_>>();
+    assert_eq!(v, [1, 2, 3, 4]);
+}
+
+#[test]
+fn test_into_iter_2d() {
+    let a = Array1::from(vec![1, 2, 3, 4]).into_shape((2, 2)).unwrap();
+    let v = a.into_iter().collect::<Vec<_>>();
+    assert_eq!(v, [1, 2, 3, 4]);
+
+    let a = Array1::from(vec![1, 2, 3, 4]).into_shape((2, 2)).unwrap().reversed_axes();
+    let v = a.into_iter().collect::<Vec<_>>();
+    assert_eq!(v, [1, 3, 2, 4]);
+}
+
+#[test]
+fn test_into_iter_sliced() {
+    let (m, n) = (4, 5);
+    let drops = Cell::new(0);
+
+    for i in 0..m - 1 {
+        for j in 0..n - 1 {
+            for i2 in i + 1 .. m {
+                for j2 in j + 1 .. n {
+                    for invert in 0..3 {
+                        drops.set(0);
+                        let i = i as isize;
+                        let j = j as isize;
+                        let i2 = i2 as isize;
+                        let j2 = j2 as isize;
+                        let mut a = Array1::from_iter(0..(m * n) as i32)
+                            .mapv(|v| DropCount::new(v, &drops))
+                            .into_shape((m, n)).unwrap();
+                        a.slice_collapse(s![i..i2, j..j2]);
+                        if invert < a.ndim() {
+                            a.invert_axis(Axis(invert));
+                        }
+
+                        println!("{:?}, {:?}", i..i2, j..j2);
+                        println!("{:?}", a);
+                        let answer = a.iter().cloned().collect::<Vec<_>>();
+                        let v = a.into_iter().collect::<Vec<_>>();
+                        assert_eq!(v, answer);
+
+                        assert_eq!(drops.get(), m * n - v.len());
+                        drop(v);
+                        assert_eq!(drops.get(), m * n);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Helper struct that counts its drops Asserts that it's not dropped twice. Also global number of
+/// drops is counted in the cell.
+///
+/// Compares equal by its "represented value".
+#[derive(Clone, Debug)]
+struct DropCount<'a> {
+    value: i32,
+    my_drops: usize,
+    drops: &'a Cell<usize>
+}
+
+impl PartialEq for DropCount<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+impl<'a> DropCount<'a> {
+    fn new(value: i32, drops: &'a Cell<usize>) -> Self {
+        DropCount { value, my_drops: 0, drops }
+    }
+}
+
+impl Drop for DropCount<'_> {
+    fn drop(&mut self) {
+        assert_eq!(self.my_drops, 0);
+        self.my_drops += 1;
+        self.drops.set(self.drops.get() + 1);
     }
 }

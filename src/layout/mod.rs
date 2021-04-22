@@ -9,6 +9,11 @@ mod layoutfmt;
 pub struct Layout(u32);
 
 impl Layout {
+    pub(crate) const CORDER: u32 = 0b01;
+    pub(crate) const FORDER: u32 = 0b10;
+    pub(crate) const CPREFER: u32 = 0b0100;
+    pub(crate) const FPREFER: u32 = 0b1000;
+
     #[inline(always)]
     pub(crate) fn is(self, flag: u32) -> bool {
         self.0 & flag != 0
@@ -33,22 +38,22 @@ impl Layout {
 
     #[inline(always)]
     pub(crate) fn c() -> Layout {
-        Layout(CORDER | CPREFER)
+        Layout(Layout::CORDER | Layout::CPREFER)
     }
 
     #[inline(always)]
     pub(crate) fn f() -> Layout {
-        Layout(FORDER | FPREFER)
+        Layout(Layout::FORDER | Layout::FPREFER)
     }
 
     #[inline(always)]
     pub(crate) fn cpref() -> Layout {
-        Layout(CPREFER)
+        Layout(Layout::CPREFER)
     }
 
     #[inline(always)]
     pub(crate) fn fpref() -> Layout {
-        Layout(FPREFER)
+        Layout(Layout::FPREFER)
     }
 
     #[inline(always)]
@@ -60,16 +65,11 @@ impl Layout {
     /// Subject to change when we can describe other layouts
     #[inline]
     pub(crate) fn tendency(self) -> i32 {
-        (self.is(CORDER) as i32 - self.is(FORDER) as i32) +
-        (self.is(CPREFER) as i32 - self.is(FPREFER) as i32)
+        (self.is(Layout::CORDER) as i32 - self.is(Layout::FORDER) as i32) +
+        (self.is(Layout::CPREFER) as i32 - self.is(Layout::FPREFER) as i32)
 
     }
 }
-
-pub const CORDER: u32 = 0b01;
-pub const FORDER: u32 = 0b10;
-pub const CPREFER: u32 = 0b0100;
-pub const FPREFER: u32 = 0b1000;
 
 
 #[cfg(test)]
@@ -83,10 +83,11 @@ mod tests {
     type M0 = Array0<f32>;
 
     macro_rules! assert_layouts {
-        ($mat:expr, $($layout:expr),*) => {{
+        ($mat:expr, $($layout:ident),*) => {{
             let layout = $mat.view().layout();
             $(
-            assert!(layout.is($layout), "Assertion failed: array {:?} is not layout {}",
+            assert!(layout.is(Layout::$layout),
+                "Assertion failed: array {:?} is not layout {}",
                 $mat,
                 stringify!($layout));
             )*
@@ -94,10 +95,11 @@ mod tests {
     }
 
     macro_rules! assert_not_layouts {
-        ($mat:expr, $($layout:expr),*) => {{
+        ($mat:expr, $($layout:ident),*) => {{
             let layout = $mat.view().layout();
             $(
-            assert!(!layout.is($layout), "Assertion failed: array {:?} show not have layout {}",
+            assert!(!layout.is(Layout::$layout),
+                "Assertion failed: array {:?} show not have layout {}",
                 $mat,
                 stringify!($layout));
             )*
@@ -110,10 +112,10 @@ mod tests {
         let b = M::zeros((5, 5).f());
         let ac = a.view().layout();
         let af = b.view().layout();
-        assert!(ac.is(CORDER) && ac.is(CPREFER));
-        assert!(!ac.is(FORDER) && !ac.is(FPREFER));
-        assert!(!af.is(CORDER) && !af.is(CPREFER));
-        assert!(af.is(FORDER) && af.is(FPREFER));
+        assert!(ac.is(Layout::CORDER) && ac.is(Layout::CPREFER));
+        assert!(!ac.is(Layout::FORDER) && !ac.is(Layout::FPREFER));
+        assert!(!af.is(Layout::CORDER) && !af.is(Layout::CPREFER));
+        assert!(af.is(Layout::FORDER) && af.is(Layout::FPREFER));
     }
 
     #[test]
@@ -152,10 +154,10 @@ mod tests {
             let v1 = a.slice(s![1.., ..]).layout();
             let v2 = a.slice(s![.., 1..]).layout();
 
-            assert!(v1.is(CORDER) && v1.is(CPREFER));
-            assert!(!v1.is(FORDER) && !v1.is(FPREFER));
-            assert!(!v2.is(CORDER) && v2.is(CPREFER));
-            assert!(!v2.is(FORDER) && !v2.is(FPREFER));
+            assert!(v1.is(Layout::CORDER) && v1.is(Layout::CPREFER));
+            assert!(!v1.is(Layout::FORDER) && !v1.is(Layout::FPREFER));
+            assert!(!v2.is(Layout::CORDER) && v2.is(Layout::CPREFER));
+            assert!(!v2.is(Layout::FORDER) && !v2.is(Layout::FPREFER));
         }
 
         let b = M::zeros((5, 5).f());
@@ -164,10 +166,10 @@ mod tests {
             let v1 = b.slice(s![1.., ..]).layout();
             let v2 = b.slice(s![.., 1..]).layout();
 
-            assert!(!v1.is(CORDER) && !v1.is(CPREFER));
-            assert!(!v1.is(FORDER) && v1.is(FPREFER));
-            assert!(!v2.is(CORDER) && !v2.is(CPREFER));
-            assert!(v2.is(FORDER) && v2.is(FPREFER));
+            assert!(!v1.is(Layout::CORDER) && !v1.is(Layout::CPREFER));
+            assert!(!v1.is(Layout::FORDER) && v1.is(Layout::FPREFER));
+            assert!(!v2.is(Layout::CORDER) && !v2.is(Layout::CPREFER));
+            assert!(v2.is(Layout::FORDER) && v2.is(Layout::FPREFER));
         }
     }
 
@@ -206,10 +208,10 @@ mod tests {
             let v1 = a.slice(s![..;2, ..]).layout();
             let v2 = a.slice(s![.., ..;2]).layout();
 
-            assert!(!v1.is(CORDER) && v1.is(CPREFER));
-            assert!(!v1.is(FORDER) && !v1.is(FPREFER));
-            assert!(!v2.is(CORDER) && !v2.is(CPREFER));
-            assert!(!v2.is(FORDER) && !v2.is(FPREFER));
+            assert!(!v1.is(Layout::CORDER) && v1.is(Layout::CPREFER));
+            assert!(!v1.is(Layout::FORDER) && !v1.is(Layout::FPREFER));
+            assert!(!v2.is(Layout::CORDER) && !v2.is(Layout::CPREFER));
+            assert!(!v2.is(Layout::FORDER) && !v2.is(Layout::FPREFER));
         }
 
         let b = M::zeros((5, 5).f());
@@ -217,10 +219,10 @@ mod tests {
             let v1 = b.slice(s![..;2, ..]).layout();
             let v2 = b.slice(s![.., ..;2]).layout();
 
-            assert!(!v1.is(CORDER) && !v1.is(CPREFER));
-            assert!(!v1.is(FORDER) && !v1.is(FPREFER));
-            assert!(!v2.is(CORDER) && !v2.is(CPREFER));
-            assert!(!v2.is(FORDER) && v2.is(FPREFER));
+            assert!(!v1.is(Layout::CORDER) && !v1.is(Layout::CPREFER));
+            assert!(!v1.is(Layout::FORDER) && !v1.is(Layout::FPREFER));
+            assert!(!v2.is(Layout::CORDER) && !v2.is(Layout::CPREFER));
+            assert!(!v2.is(Layout::FORDER) && v2.is(Layout::FPREFER));
         }
     }
 }
