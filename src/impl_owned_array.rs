@@ -278,8 +278,66 @@ impl<A, D> Array<A, D>
         }
     }
 
+    /// Append an array to the array along an axis
+    ///
+    /// Where the item to push to the array has one dimension less than the `self` array. This
+    /// method is equivalent to `self.append(axis, array.insert_axis(axis))`.
+    ///
+    /// The axis-to-append-to `axis` must be the array's "growing axis" for this operation
+    /// to succeed. The growing axis is the outermost or last-visited when elements are visited in
+    /// memory order:
+    ///
+    /// `axis` must be the growing axis of the current array, an axis with length 0 or 1.
+    ///
+    /// - This is the 0th axis for standard layout arrays
+    /// - This is the *n*-1 th axis for fortran layout arrays
+    /// - If the array is empty (the axis or any other has length 0) or if `axis`
+    ///   has length 1, then the array can always be appended.
+    ///
+    /// ***Errors*** with a shape error if the shape of self does not match the array-to-append;
+    /// all axes *except* the axis along which it being appended matter for this check.
+    ///
+    /// The memory layout of the `self` array matters for ensuring that the append is efficient.
+    /// Appending automatically changes memory layout of the array so that it is appended to
+    /// along the "growing axis".
+    ///
+    /// Ensure appending is efficient by for example starting from an empty array and/or always
+    /// appending to an array along the same axis.
+    ///
+    /// The amortized average complexity of the append, when appending along its growing axis, is
+    /// O(*m*) where *m* is the length of the row.
+    ///
+    /// The memory layout of the argument `array` does not matter to the same extent.
+    ///
+    /// ```rust
+    /// use ndarray::{Array, ArrayView, array, Axis};
+    ///
+    /// // create an empty array and push rows to it
+    /// let mut a = Array::zeros((0, 4));
+    /// let ones  = ArrayView::from(&[1.; 4]);
+    /// let zeros = ArrayView::from(&[0.; 4]);
+    /// a.push(Axis(0), ones).unwrap();
+    /// a.push(Axis(0), zeros).unwrap();
+    /// a.push(Axis(0), ones).unwrap();
+    ///
+    /// assert_eq!(
+    ///     a,
+    ///     array![[1., 1., 1., 1.],
+    ///            [0., 0., 0., 0.],
+    ///            [1., 1., 1., 1.]]);
+    /// ```
+    pub fn push(&mut self, axis: Axis, array: ArrayView<A, D::Smaller>)
+        -> Result<(), ShapeError>
+    where
+        A: Clone,
+        D: RemoveAxis,
+    {
+        // same-dimensionality conversion
+        self.append(axis, array.insert_axis(axis).into_dimensionality::<D>().unwrap())
+    }
 
-    /// Append an array to the array
+
+    /// Append an array to the array along an axis
     ///
     /// The axis-to-append-to `axis` must be the array's "growing axis" for this operation
     /// to succeed. The growing axis is the outermost or last-visited when elements are visited in

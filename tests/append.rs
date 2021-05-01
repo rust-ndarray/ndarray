@@ -376,3 +376,28 @@ fn push_row_ignore_strides_length_one_axes() {
         }
     }
 }
+
+#[test]
+#[should_panic(expected = "IncompatibleShape")]
+fn zero_dimensional_error1() {
+    let mut a = Array::zeros(()).into_dyn();
+    a.append(Axis(0), arr0(0).into_dyn().view()).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "IncompatibleShape")]
+fn zero_dimensional_error2() {
+    let mut a = Array::zeros(()).into_dyn();
+    a.push(Axis(0), arr0(0).into_dyn().view()).unwrap();
+}
+
+#[test]
+fn zero_dimensional_ok() {
+    let mut a = Array::zeros(0);
+    let one = aview0(&1);
+    let two = aview0(&2);
+    a.push(Axis(0), two).unwrap();
+    a.push(Axis(0), one).unwrap();
+    a.push(Axis(0), one).unwrap();
+    assert_eq!(a, array![2, 1, 1]);
+}
