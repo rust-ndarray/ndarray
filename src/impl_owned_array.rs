@@ -396,8 +396,10 @@ impl<A, D> Array<A, D>
         }
 
         let current_axis_len = self.len_of(axis);
-        let remaining_shape = self.raw_dim().remove_axis(axis);
-        let array_rem_shape = array.raw_dim().remove_axis(axis);
+        let self_dim = self.raw_dim();
+        let array_dim = array.raw_dim();
+        let remaining_shape = self_dim.remove_axis(axis);
+        let array_rem_shape = array_dim.remove_axis(axis);
 
         if remaining_shape != array_rem_shape {
             return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
@@ -405,9 +407,8 @@ impl<A, D> Array<A, D>
 
         let len_to_append = array.len();
 
-        let array_shape = array.raw_dim();
-        let mut res_dim = self.raw_dim();
-        res_dim[axis.index()] += array_shape[axis.index()];
+        let mut res_dim = self_dim;
+        res_dim[axis.index()] += array_dim[axis.index()];
         let new_len = dimension::size_of_shape_checked(&res_dim)?;
 
         if len_to_append == 0 {
@@ -526,7 +527,7 @@ impl<A, D> Array<A, D>
 
             // With > 0 strides, the current end of data is the correct base pointer for tail_view
             let tail_ptr = self.data.as_end_nonnull();
-            let mut tail_view = RawArrayViewMut::new(tail_ptr, array_shape, tail_strides);
+            let mut tail_view = RawArrayViewMut::new(tail_ptr, array_dim, tail_strides);
 
             if tail_view.ndim() > 1 {
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
