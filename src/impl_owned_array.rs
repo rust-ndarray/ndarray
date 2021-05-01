@@ -99,15 +99,15 @@ impl<A> Array<A, Ix2> {
     ///
     /// // create an empty array and append
     /// let mut a = Array::zeros((0, 4));
-    /// a.append_row(ArrayView::from(&[ 1.,  2.,  3.,  4.])).unwrap();
-    /// a.append_row(ArrayView::from(&[-1., -2., -3., -4.])).unwrap();
+    /// a.push_row(ArrayView::from(&[ 1.,  2.,  3.,  4.])).unwrap();
+    /// a.push_row(ArrayView::from(&[-1., -2., -3., -4.])).unwrap();
     ///
     /// assert_eq!(
     ///     a,
     ///     array![[ 1.,  2.,  3.,  4.],
     ///            [-1., -2., -3., -4.]]);
     /// ```
-    pub fn append_row(&mut self, row: ArrayView<A, Ix1>) -> Result<(), ShapeError>
+    pub fn push_row(&mut self, row: ArrayView<A, Ix1>) -> Result<(), ShapeError>
     where
         A: Clone,
     {
@@ -136,15 +136,15 @@ impl<A> Array<A, Ix2> {
     ///
     /// // create an empty array and append
     /// let mut a = Array::zeros((2, 0));
-    /// a.append_column(ArrayView::from(&[1., 2.])).unwrap();
-    /// a.append_column(ArrayView::from(&[-1., -2.])).unwrap();
+    /// a.push_column(ArrayView::from(&[1., 2.])).unwrap();
+    /// a.push_column(ArrayView::from(&[-1., -2.])).unwrap();
     ///
     /// assert_eq!(
     ///     a,
     ///     array![[1., -1.],
     ///            [2., -2.]]);
     /// ```
-    pub fn append_column(&mut self, column: ArrayView<A, Ix1>) -> Result<(), ShapeError>
+    pub fn push_column(&mut self, column: ArrayView<A, Ix1>) -> Result<(), ShapeError>
     where
         A: Clone,
     {
