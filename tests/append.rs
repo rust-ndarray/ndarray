@@ -6,7 +6,7 @@ use ndarray::{ShapeError, ErrorKind};
 fn push_row() {
     let mut a = Array::zeros((0, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
-    a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();
+    a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();//创建一个莎婚纱  的玩意然后使用
     assert_eq!(a.shape(), &[2, 4]);
 
     assert_eq!(a,
