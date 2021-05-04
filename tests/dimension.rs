@@ -55,8 +55,8 @@ fn remove_axis() {
     let a = ArcArray::<f32, _>::zeros(vec![4, 5, 6]);
     let _b = a
         .index_axis_move(Axis(1), 0)
-        .reshape((4, 6))
-        .reshape(vec![2, 3, 4]);
+        .to_shape((4, 6)).unwrap()
+        .to_shape(vec![2, 3, 4]).unwrap();
 }
 
 #[test]

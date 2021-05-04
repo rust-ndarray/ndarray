@@ -17,24 +17,24 @@ use approx::assert_abs_diff_eq;
 use defmac::defmac;
 
 fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32]) {
-    let aa = rcarr1(a);
-    let bb = rcarr1(b);
-    let cc = rcarr1(c);
+    let aa = CowArray::from(arr1(a));
+    let bb = CowArray::from(arr1(b));
+    let cc = CowArray::from(arr1(c));
     test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (2, 2);
-    let aa = aa.reshape(dim);
-    let bb = bb.reshape(dim);
-    let cc = cc.reshape(dim);
+    let aa = aa.to_shape(dim).unwrap();
+    let bb = bb.to_shape(dim).unwrap();
+    let cc = cc.to_shape(dim).unwrap();
     test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (1, 2, 1, 2);
-    let aa = aa.reshape(dim);
-    let bb = bb.reshape(dim);
-    let cc = cc.reshape(dim);
+    let aa = aa.to_shape(dim).unwrap();
+    let bb = bb.to_shape(dim).unwrap();
+    let cc = cc.to_shape(dim).unwrap();
     test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
 }
 
 
-fn test_oper_arr<A, D>(op: &str, mut aa: ArcArray<f32, D>, bb: ArcArray<f32, D>, cc: ArcArray<f32, D>)
+fn test_oper_arr<A, D>(op: &str, mut aa: CowArray<f32, D>, bb: CowArray<f32, D>, cc: CowArray<f32, D>)
 where
     D: Dimension,
 {
@@ -66,7 +66,7 @@ where
         }
         "neg" => {
             assert_eq!(-&aa, cc);
-            assert_eq!(-aa.clone(), cc);
+            assert_eq!(-aa.into_owned(), cc);
         }
         _ => panic!(),
     }
