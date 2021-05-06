@@ -1922,6 +1922,74 @@ where
         }
     }
 
+    /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted. Array elements are reordered in place if
+    /// possible, otherwise they are copied to create a new array.
+    ///
+    /// If an index ordering is not specified, the default is `RowMajor`.
+    /// The operation will only succeed if the array's memory layout is compatible with
+    /// the index ordering, so that the array elements can be rearranged in place.
+    ///
+    /// # `.to_shape` vs `.into_shape_clone`
+    ///
+    /// - `to_shape` supports views and outputting views
+    /// - `to_shape` borrows the original array, `into_shape_clone` consumes the original
+    /// - `into_shape_clone` preserves array type (Array vs ArcArray), but does not support views.
+    ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    pub fn into_shape_clone<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+    where
+        S: DataOwned,
+        A: Clone,
+        E: ShapeArg,
+    {
+        let (shape, order) = shape.into_shape_and_order();
+        let order = order.unwrap_or(Order::RowMajor);
+        self.into_shape_clone_order(shape, order)
+    }
+
+    pub fn into_shape_clone_order<E>(self, shape: E, order: Order)
+        -> Result<ArrayBase<S, E>, ShapeError>
+    where
+        S: DataOwned,
+        A: Clone,
+        E: Dimension,
+    {
+        let len = self.dim.size();
+        if size_of_shape_checked(&shape) != Ok(len) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+
+        // Safe because the array and new shape is empty.
+        if len == 0 {
+            unsafe {
+                return Ok(self.with_strides_dim(shape.default_strides(), shape));
+            }
+        }
+
+        // Try to reshape the array's current data
+        match reshape_dim(&self.dim, &self.strides, &shape, order) {
+            Ok(to_strides) => unsafe {
+                return Ok(self.with_strides_dim(to_strides, shape));
+            }
+            Err(err) if err.kind() == ErrorKind::IncompatibleShape => {
+                return Err(error::incompatible_shapes(&self.dim, &shape));
+            }
+            _otherwise => { }
+        }
+
+        // otherwise, clone and allocate a new array
+        unsafe {
+            let (shape, view) = match order {
+                Order::RowMajor => (shape.set_f(false), self.view()),
+                Order::ColumnMajor => (shape.set_f(true), self.t()),
+            };
+
+            Ok(ArrayBase::from_shape_trusted_iter_unchecked(
+                        shape, view.into_iter(), A::clone))
+        }
+    }
+
     /// *Note: Reshape is for `ArcArray` only. Use `.into_shape()` for
     /// other arrays and array views.*
     ///
@@ -1952,6 +2020,7 @@ where
         A: Clone,
         E: IntoDimension,
     {
+        return self.clone().into_shape_clone(shape).unwrap();
         let shape = shape.into_dimension();
         if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
             panic!(
