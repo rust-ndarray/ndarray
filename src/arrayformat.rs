@@ -50,10 +50,8 @@ impl FormatOptions {
             self.axis_collapse_limit = std::usize::MAX;
             self.axis_collapse_limit_next_last = std::usize::MAX;
             self.axis_collapse_limit_last = std::usize::MAX;
-            self
-        } else {
-            self
         }
+        self
     }
 
     /// Axis length collapse limit before ellipsizing, where `axis_rindex` is
