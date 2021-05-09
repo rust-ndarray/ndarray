@@ -101,13 +101,16 @@ where
         if self.is_empty() {
             return None;
         }
-        let offset = if std::mem::size_of::<A>() == 0 {
-            -dimension::offset_from_ptr_to_memory(&self.dim, &self.strides)
+        if std::mem::size_of::<A>() == 0 {
+            Some(dimension::offset_from_low_addr_ptr_to_logical_ptr(
+                &self.dim,
+                &self.strides,
+            ))
         } else {
-            unsafe { self.as_ptr().offset_from(self.data.as_ptr()) }
-        };
-        debug_assert!(offset >= 0);
-        Some(offset as usize)
+            let offset = unsafe { self.as_ptr().offset_from(self.data.as_ptr()) };
+            debug_assert!(offset >= 0);
+            Some(offset as usize)
+        }
     }
 
     /// Return a vector of the elements in the array, in the way they are
