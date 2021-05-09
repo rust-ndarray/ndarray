@@ -9,10 +9,10 @@
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::slice::SliceArg;
 use crate::{Ix, Ixs, Slice, SliceInfoElem};
+use crate::shape_builder::Strides;
 use num_integer::div_floor;
 
 pub use self::axes::{Axes, AxisDescription};
-pub(crate) use self::axes::axes_of;
 pub use self::axis::Axis;
 pub use self::broadcast::DimMax;
 pub use self::conversion::IntoDimension;
@@ -23,7 +23,8 @@ pub use self::ndindex::NdIndex;
 pub use self::ops::DimAdd;
 pub use self::remove_axis::RemoveAxis;
 
-use crate::shape_builder::Strides;
+pub(crate) use self::axes::axes_of;
+pub(crate) use self::reshape::reshape_dim;
 
 use std::isize;
 use std::mem;
@@ -40,6 +41,7 @@ mod dynindeximpl;
 mod ndindex;
 mod ops;
 mod remove_axis;
+pub(crate) mod reshape;
 mod sequence;
 
 /// Calculate offset from `Ix` stride converting sign properly
