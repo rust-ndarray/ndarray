@@ -40,6 +40,7 @@ mod dynindeximpl;
 mod ndindex;
 mod ops;
 mod remove_axis;
+mod sequence;
 
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
