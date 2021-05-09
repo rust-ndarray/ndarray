@@ -63,7 +63,7 @@ where
 {
     /// Returns the offset (in units of `A`) from the start of the allocation
     /// to the first element, or `None` if the array is empty.
-    pub fn offset_from_alloc_to_logical_ptr(&self) -> Option<usize> {
+    fn offset_from_alloc_to_logical_ptr(&self) -> Option<usize> {
         if self.is_empty() {
             return None;
         }
