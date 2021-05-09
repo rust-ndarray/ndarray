@@ -75,7 +75,7 @@ where
     /// arr.slice_axis_inplace(Axis(0), (1..).into());
     /// arr[[0, 0]] = 5.;
     ///
-    /// let offset = arr.offset_to_first_elem().unwrap();
+    /// let offset = arr.offset_from_alloc_to_logical_ptr().unwrap();
     /// assert_eq!(offset, 4);
     ///
     /// let v = arr.into_raw_vec();
@@ -94,10 +94,10 @@ where
     ///
     /// let mut arr: Array2<()> = Array2::from_elem([3, 4], ());
     /// arr.slice_axis_inplace(Axis(0), (1..).into());
-    /// let offset = arr.offset_to_first_elem().unwrap();
+    /// let offset = arr.offset_from_alloc_to_logical_ptr().unwrap();
     /// assert_eq!(offset, 0);
     /// ```
-    pub fn offset_to_first_elem(&self) -> Option<usize> {
+    pub fn offset_from_alloc_to_logical_ptr(&self) -> Option<usize> {
         if self.is_empty() {
             return None;
         }
@@ -543,8 +543,8 @@ impl<A, D> Array<A, D>
 
         unsafe {
             // grow backing storage and update head ptr
-            let data_to_array_offset = self.offset_to_first_elem().unwrap_or(0);
-            self.ptr = self.data.reserve(len_to_append).add(data_to_array_offset);
+            let offset_from_alloc_to_logical = self.offset_from_alloc_to_logical_ptr().unwrap_or(0);
+            self.ptr = self.data.reserve(len_to_append).add(offset_from_alloc_to_logical);
 
             // clone elements from view to the array now
             //
