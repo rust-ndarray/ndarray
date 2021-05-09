@@ -61,6 +61,55 @@ impl<A, D> Array<A, D>
 where
     D: Dimension,
 {
+    /// Returns the offset (in units of `A`) from the start of the raw data to
+    /// the first element, or `None` if the array is empty.
+    ///
+    /// In other words, after converting the array to `Vec<A>` with
+    /// [`.into_raw_vec()`](Self::into_raw_vec), this is the offset from the
+    /// start of the `Vec` to the first element of the array.
+    ///
+    /// ```
+    /// use ndarray::{Array2, Axis};
+    ///
+    /// let mut arr: Array2<f64> = Array2::zeros([3, 4]);
+    /// arr.slice_axis_inplace(Axis(0), (1..).into());
+    /// arr[[0, 0]] = 5.;
+    ///
+    /// let offset = arr.offset_to_first_elem().unwrap();
+    /// assert_eq!(offset, 4);
+    ///
+    /// let v = arr.into_raw_vec();
+    /// assert_eq!(v[offset], 5.);
+    /// ```
+    ///
+    /// In the case of zero-sized elements, the offset is somewhat meaningless.
+    /// For convenience, an offset will be returned such that all indices
+    /// computed using the offset, shape, and strides will be in-bounds for the
+    /// `Vec<A>` returned by [`.into_raw_vec()`](Self::into_raw_vec). Note that
+    /// this offset won't necessarily be the same as the offset for an array of
+    /// nonzero-sized elements sliced in the same way.
+    ///
+    /// ```
+    /// use ndarray::{Array2, Axis};
+    ///
+    /// let mut arr: Array2<()> = Array2::from_elem([3, 4], ());
+    /// arr.slice_axis_inplace(Axis(0), (1..).into());
+    /// let offset = arr.offset_to_first_elem().unwrap();
+    /// assert_eq!(offset, 0);
+    /// ```
+    pub fn offset_to_first_elem(&self) -> Option<usize> {
+        if self.is_empty() {
+            return None;
+        }
+        let offset = if std::mem::size_of::<A>() == 0 {
+            -dimension::offset_from_ptr_to_memory(&self.dim, &self.strides)
+        } else {
+            unsafe { self.as_ptr().offset_from(self.data.as_ptr()) }
+        };
+        debug_assert!(offset >= 0);
+        Some(offset as usize)
+    }
+
     /// Return a vector of the elements in the array, in the way they are
     /// stored internally.
     ///
@@ -491,13 +540,8 @@ impl<A, D> Array<A, D>
 
         unsafe {
             // grow backing storage and update head ptr
-            let data_to_array_offset = if std::mem::size_of::<A>() != 0 {
-                self.as_ptr().offset_from(self.data.as_ptr())
-            } else {
-                0
-            };
-            debug_assert!(data_to_array_offset >= 0);
-            self.ptr = self.data.reserve(len_to_append).offset(data_to_array_offset);
+            let data_to_array_offset = self.offset_to_first_elem().unwrap_or(0);
+            self.ptr = self.data.reserve(len_to_append).add(data_to_array_offset);
 
             // clone elements from view to the array now
             //
