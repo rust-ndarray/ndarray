@@ -23,11 +23,11 @@ use crate::dimension::{
     offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::dimension::broadcast::co_broadcast;
+use crate::dimension::reshape_dim;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
 use crate::AxisDescription;
-use crate::Layout;
 use crate::order::Order;
 use crate::shape_builder::ShapeArg;
 use crate::zip::{IntoNdProducer, Zip};
@@ -1641,26 +1641,37 @@ where
         A: Clone,
         S: Data,
     {
-        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
+        let len = self.dim.size();
+        if size_of_shape_checked(&shape) != Ok(len) {
             return Err(error::incompatible_shapes(&self.dim, &shape));
         }
-        let layout = self.layout_impl();
 
-        unsafe {
-            if layout.is(Layout::CORDER) && order == Order::RowMajor {
-                let strides = shape.default_strides();
-                Ok(CowArray::from(ArrayView::new(self.ptr, shape, strides)))
-            } else if layout.is(Layout::FORDER) && order == Order::ColumnMajor {
-                let strides = shape.fortran_strides();
-                Ok(CowArray::from(ArrayView::new(self.ptr, shape, strides)))
-            } else {
-                let (shape, view) = match order {
-                    Order::RowMajor => (shape.set_f(false), self.view()),
-                    Order::ColumnMajor => (shape.set_f(true), self.t()),
-                };
-                Ok(CowArray::from(Array::from_shape_trusted_iter_unchecked(
-                            shape, view.into_iter(), A::clone)))
+        // Create a view if the length is 0, safe because the array and new shape is empty.
+        if len == 0 {
+            unsafe {
+                return Ok(CowArray::from(ArrayView::from_shape_ptr(shape, self.as_ptr())));
             }
+        }
+
+        // Try to reshape the array as a view into the existing data
+        match reshape_dim(&self.dim, &self.strides, &shape, order) {
+            Ok(to_strides) => unsafe {
+                return Ok(CowArray::from(ArrayView::new(self.ptr, shape, to_strides)));
+            }
+            Err(err) if err.kind() == ErrorKind::IncompatibleShape => {
+                return Err(error::incompatible_shapes(&self.dim, &shape));
+            }
+            _otherwise => { }
+        }
+
+        // otherwise create a new array and copy the elements
+        unsafe {
+            let (shape, view) = match order {
+                Order::RowMajor => (shape.set_f(false), self.view()),
+                Order::ColumnMajor => (shape.set_f(true), self.t()),
+            };
+            Ok(CowArray::from(Array::from_shape_trusted_iter_unchecked(
+                        shape, view.into_iter(), A::clone)))
         }
     }
 

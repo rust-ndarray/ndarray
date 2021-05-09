@@ -133,7 +133,7 @@ fn to_shape_add_axis() {
     let u = v.to_shape(((4, 2), Order::RowMajor)).unwrap();
 
     assert!(u.to_shape(((1, 4, 2), Order::RowMajor)).unwrap().is_view());
-    assert!(u.to_shape(((1, 4, 2), Order::ColumnMajor)).unwrap().is_owned());
+    assert!(u.to_shape(((1, 4, 2), Order::ColumnMajor)).unwrap().is_view());
 }
 
 
@@ -150,10 +150,29 @@ fn to_shape_copy_stride() {
     assert!(lin2.is_owned());
 }
 
+
+#[test]
+fn to_shape_zero_len() {
+    let v = array![[1, 2, 3, 4], [5, 6, 7, 8]];
+    let vs = v.slice(s![.., ..0]);
+    let lin1 = vs.to_shape(0).unwrap();
+    assert_eq!(lin1, array![]);
+    assert!(lin1.is_view());
+}
+
 #[test]
 #[should_panic(expected = "IncompatibleShape")]
 fn to_shape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
     let _u = v.to_shape((2, 5)).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "IncompatibleShape")]
+fn to_shape_error2() {
+    // overflow
+    let data = [3, 4, 5, 6, 7, 8];
+    let v = aview1(&data);
+    let _u = v.to_shape((2, usize::MAX)).unwrap();
 }
