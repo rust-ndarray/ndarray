@@ -176,3 +176,57 @@ fn to_shape_error2() {
     let v = aview1(&data);
     let _u = v.to_shape((2, usize::MAX)).unwrap();
 }
+
+#[test]
+fn to_shape_discontig() {
+    for &create_order in &[Order::C, Order::F] {
+        let a = Array::from_iter(0..64);
+        let mut a1 = a.to_shape(((4, 4, 4), create_order)).unwrap();
+        a1.slice_collapse(s![.., ..;2, ..]); // now shape (4, 2, 4)
+        assert!(a1.as_slice_memory_order().is_none());
+
+        for &order in &[Order::C, Order::F] {
+            let v1 = a1.to_shape(((2, 2, 2, 2, 2), order)).unwrap();
+            assert!(v1.is_view());
+            let v1 = a1.to_shape(((4, 1, 2, 1, 2, 2), order)).unwrap();
+            assert!(v1.is_view());
+            let v1 = a1.to_shape(((4, 2, 4), order)).unwrap();
+            assert!(v1.is_view());
+            let v1 = a1.to_shape(((8, 4), order)).unwrap();
+            assert_eq!(v1.is_view(), order == create_order && create_order == Order::C,
+                       "failed for {:?}, {:?}", create_order, order);
+            let v1 = a1.to_shape(((4, 8), order)).unwrap();
+            assert_eq!(v1.is_view(), order == create_order && create_order == Order::F,
+                       "failed for {:?}, {:?}", create_order, order);
+            let v1 = a1.to_shape((32, order)).unwrap();
+            assert!(!v1.is_view());
+        }
+    }
+}
+
+#[test]
+fn to_shape_broadcast() {
+    for &create_order in &[Order::C, Order::F] {
+        let a = Array::from_iter(0..64);
+        let mut a1 = a.to_shape(((4, 4, 4), create_order)).unwrap();
+        a1.slice_collapse(s![.., ..1, ..]); // now shape (4, 1, 4)
+        let v1 = a1.broadcast((4, 4, 4)).unwrap(); // Now shape (4, 4, 4)
+        assert!(v1.as_slice_memory_order().is_none());
+
+        for &order in &[Order::C, Order::F] {
+            let v2 = v1.to_shape(((2, 2, 2, 2, 2, 2), order)).unwrap();
+            assert_eq!(v2.strides(), match (create_order, order) {
+                (Order::C, Order::C) => { &[32, 16, 0, 0, 2, 1] }
+                (Order::C, Order::F) => { &[16, 32, 0, 0, 1, 2] }
+                (Order::F, Order::C) => { &[2, 1, 0, 0, 32, 16] }
+                (Order::F, Order::F) => { &[1, 2, 0, 0, 16, 32] }
+                _other => unreachable!()
+            });
+
+            let v2 = v1.to_shape(((4, 4, 4), order)).unwrap();
+            assert!(v2.is_view());
+            let v2 = v1.to_shape(((8, 8), order)).unwrap();
+            assert!(v2.is_owned());
+        }
+    }
+}
