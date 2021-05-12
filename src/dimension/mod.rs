@@ -410,9 +410,10 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize) {
 /// This function computes the offset from the logically first element to the first element in
 /// memory of the array. The result is always <= 0.
 pub fn offset_from_ptr_to_memory<D: Dimension>(dim: &D, strides: &D) -> isize {
-    let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (d, s)| {
-        if (*s as isize) < 0 {
-            _offset + *s as isize * (*d as isize - 1)
+    let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (&d, &s)| {
+        let s = s as isize;
+        if s < 0 && d > 1 {
+            _offset + s * (d as isize - 1)
         } else {
             _offset
         }
