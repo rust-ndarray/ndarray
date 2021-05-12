@@ -145,6 +145,7 @@ pub use crate::dimension::IxDynImpl;
 pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
+pub use crate::order::Order;
 pub use crate::slice::{
     MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceInfoElem, SliceNextDim,
 };
@@ -162,7 +163,7 @@ pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
 pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::{Shape, ShapeBuilder, StrideShape};
+pub use crate::shape_builder::{Shape, ShapeBuilder, ShapeArg, StrideShape};
 
 #[macro_use]
 mod macro_utils;
@@ -202,6 +203,7 @@ mod linspace;
 mod logspace;
 mod math_cell;
 mod numeric_util;
+mod order;
 mod partial;
 mod shape_builder;
 #[macro_use]

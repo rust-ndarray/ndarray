@@ -23,11 +23,14 @@ use crate::dimension::{
     offset_from_ptr_to_memory, size_of_shape_checked, stride_offset, Axes,
 };
 use crate::dimension::broadcast::co_broadcast;
+use crate::dimension::reshape_dim;
 use crate::error::{self, ErrorKind, ShapeError, from_kind};
 use crate::math_cell::MathCell;
 use crate::itertools::zip;
-use crate::zip::{IntoNdProducer, Zip};
 use crate::AxisDescription;
+use crate::order::Order;
+use crate::shape_builder::ShapeArg;
+use crate::zip::{IntoNdProducer, Zip};
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
@@ -1574,6 +1577,101 @@ where
             }
         } else {
             Err(self)
+        }
+    }
+
+    /// Transform the array into `new_shape`; any shape with the same number of elements is
+    /// accepted.
+    ///
+    /// `order` specifies the *logical* order in which the array is to be read and reshaped.
+    /// The array is returned as a `CowArray`; a view if possible, otherwise an owned array.
+    ///
+    /// For example, when starting from the one-dimensional sequence 1 2 3 4 5 6, it would be
+    /// understood as a 2 x 3 array in row major ("C") order this way:
+    ///
+    /// ```text
+    /// 1 2 3
+    /// 4 5 6
+    /// ```
+    ///
+    /// and as 2 x 3 in column major ("F") order this way:
+    ///
+    /// ```text
+    /// 1 3 5
+    /// 2 4 6
+    /// ```
+    ///
+    /// This example should show that any time we "reflow" the elements in the array to a different
+    /// number of rows and columns (or more axes if applicable), it is important to pick an index
+    /// ordering, and that's the reason for the function parameter for `order`.
+    ///
+    /// **Errors** if the new shape doesn't have the same number of elements as the array's current
+    /// shape.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use ndarray::Order;
+    ///
+    /// assert!(
+    ///     array![1., 2., 3., 4., 5., 6.].to_shape(((2, 3), Order::RowMajor)).unwrap()
+    ///     == array![[1., 2., 3.],
+    ///               [4., 5., 6.]]
+    /// );
+    ///
+    /// assert!(
+    ///     array![1., 2., 3., 4., 5., 6.].to_shape(((2, 3), Order::ColumnMajor)).unwrap()
+    ///     == array![[1., 3., 5.],
+    ///               [2., 4., 6.]]
+    /// );
+    /// ```
+    pub fn to_shape<E>(&self, new_shape: E) -> Result<CowArray<'_, A, E::Dim>, ShapeError>
+    where
+        E: ShapeArg,
+        A: Clone,
+        S: Data,
+    {
+        let (shape, order) = new_shape.into_shape_and_order();
+        self.to_shape_order(shape, order.unwrap_or(Order::RowMajor))
+    }
+
+    fn to_shape_order<E>(&self, shape: E, order: Order)
+        -> Result<CowArray<'_, A, E>, ShapeError>
+    where
+        E: Dimension,
+        A: Clone,
+        S: Data,
+    {
+        let len = self.dim.size();
+        if size_of_shape_checked(&shape) != Ok(len) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+
+        // Create a view if the length is 0, safe because the array and new shape is empty.
+        if len == 0 {
+            unsafe {
+                return Ok(CowArray::from(ArrayView::from_shape_ptr(shape, self.as_ptr())));
+            }
+        }
+
+        // Try to reshape the array as a view into the existing data
+        match reshape_dim(&self.dim, &self.strides, &shape, order) {
+            Ok(to_strides) => unsafe {
+                return Ok(CowArray::from(ArrayView::new(self.ptr, shape, to_strides)));
+            }
+            Err(err) if err.kind() == ErrorKind::IncompatibleShape => {
+                return Err(error::incompatible_shapes(&self.dim, &shape));
+            }
+            _otherwise => { }
+        }
+
+        // otherwise create a new array and copy the elements
+        unsafe {
+            let (shape, view) = match order {
+                Order::RowMajor => (shape.set_f(false), self.view()),
+                Order::ColumnMajor => (shape.set_f(true), self.t()),
+            };
+            Ok(CowArray::from(Array::from_shape_trusted_iter_unchecked(
+                        shape, view.into_iter(), A::clone)))
         }
     }
 

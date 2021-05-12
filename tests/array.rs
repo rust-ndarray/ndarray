@@ -8,7 +8,7 @@
 )]
 
 use defmac::defmac;
-use itertools::{enumerate, zip, Itertools};
+use itertools::{zip, Itertools};
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::indices;
@@ -1368,64 +1368,6 @@ fn transpose_view_mut() {
     let mut at = a.view_mut().reversed_axes();
     at[[2, 1]] = 7;
     assert_eq!(at, arr2(&[[1, 4], [2, 5], [3, 7]]));
-}
-
-#[test]
-fn reshape() {
-    let data = [1, 2, 3, 4, 5, 6, 7, 8];
-    let v = aview1(&data);
-    let u = v.into_shape((3, 3));
-    assert!(u.is_err());
-    let u = v.into_shape((2, 2, 2));
-    assert!(u.is_ok());
-    let u = u.unwrap();
-    assert_eq!(u.shape(), &[2, 2, 2]);
-    let s = u.into_shape((4, 2)).unwrap();
-    assert_eq!(s.shape(), &[4, 2]);
-    assert_eq!(s, aview2(&[[1, 2], [3, 4], [5, 6], [7, 8]]));
-}
-
-#[test]
-#[should_panic(expected = "IncompatibleShape")]
-fn reshape_error1() {
-    let data = [1, 2, 3, 4, 5, 6, 7, 8];
-    let v = aview1(&data);
-    let _u = v.into_shape((2, 5)).unwrap();
-}
-
-#[test]
-#[should_panic(expected = "IncompatibleLayout")]
-fn reshape_error2() {
-    let data = [1, 2, 3, 4, 5, 6, 7, 8];
-    let v = aview1(&data);
-    let mut u = v.into_shape((2, 2, 2)).unwrap();
-    u.swap_axes(0, 1);
-    let _s = u.into_shape((2, 4)).unwrap();
-}
-
-#[test]
-fn reshape_f() {
-    let mut u = Array::zeros((3, 4).f());
-    for (i, elt) in enumerate(u.as_slice_memory_order_mut().unwrap()) {
-        *elt = i as i32;
-    }
-    let v = u.view();
-    println!("{:?}", v);
-
-    // noop ok
-    let v2 = v.into_shape((3, 4));
-    assert!(v2.is_ok());
-    assert_eq!(v, v2.unwrap());
-
-    let u = v.into_shape((3, 2, 2));
-    assert!(u.is_ok());
-    let u = u.unwrap();
-    println!("{:?}", u);
-    assert_eq!(u.shape(), &[3, 2, 2]);
-    let s = u.into_shape((4, 3)).unwrap();
-    println!("{:?}", s);
-    assert_eq!(s.shape(), &[4, 3]);
-    assert_eq!(s, aview2(&[[0, 4, 8], [1, 5, 9], [2, 6, 10], [3, 7, 11]]));
 }
 
 #[test]

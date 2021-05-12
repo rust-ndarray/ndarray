@@ -1,5 +1,6 @@
 use crate::dimension::IntoDimension;
 use crate::Dimension;
+use crate::order::Order;
 
 /// A contiguous array shape of n dimensions.
 ///
@@ -182,5 +183,35 @@ where
     /// Return the size of the shape in number of elements
     pub fn size(&self) -> usize {
         self.dim.size()
+    }
+}
+
+
+/// Array shape argument with optional order parameter
+///
+/// Shape or array dimension argument, with optional [`Order`] parameter.
+///
+/// This is an argument conversion trait that is used to accept an array shape and
+/// (optionally) an ordering argument.
+///
+/// See for example [`.to_shape()`](crate::ArrayBase::to_shape).
+pub trait ShapeArg {
+    type Dim: Dimension;
+    fn into_shape_and_order(self) -> (Self::Dim, Option<Order>);
+}
+
+impl<T> ShapeArg for T where T: IntoDimension {
+    type Dim = T::Dim;
+
+    fn into_shape_and_order(self) -> (Self::Dim, Option<Order>) {
+        (self.into_dimension(), None)
+    }
+}
+
+impl<T> ShapeArg for (T, Order) where T: IntoDimension {
+    type Dim = T::Dim;
+
+    fn into_shape_and_order(self) -> (Self::Dim, Option<Order>) {
+        (self.0.into_dimension(), Some(self.1))
     }
 }
