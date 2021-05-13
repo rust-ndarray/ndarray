@@ -7,6 +7,7 @@
 
 use defmac::defmac;
 use ndarray::prelude::*;
+use ndarray::arr3;
 use ndarray::Zip;
 
 #[test]
@@ -162,6 +163,43 @@ fn test_ones() {
     a.fill(1.0);
     let b = Array::<f32, _>::ones((2, 3, 4));
     assert_eq!(a, b);
+}
+
+#[test]
+fn test_from_shape_empty_with_neg_stride() {
+    // Issue #998, negative strides for an axis where it doesn't matter.
+    let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let v = s[..12].to_vec();
+    let v_ptr = v.as_ptr();
+    let a = Array::from_shape_vec((2, 0, 2).strides((1, -4isize as usize, 2)), v).unwrap();
+    assert_eq!(a, arr3(&[[[0; 2]; 0]; 2]));
+    assert_eq!(a.as_ptr(), v_ptr);
+}
+
+#[test]
+fn test_from_shape_with_neg_stride() {
+    // Issue #998, negative strides for an axis where it doesn't matter.
+    let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let v = s[..12].to_vec();
+    let v_ptr = v.as_ptr();
+    let a = Array::from_shape_vec((2, 1, 2).strides((1, -4isize as usize, 2)), v).unwrap();
+    assert_eq!(a, arr3(&[[[0, 2]],
+                         [[1, 3]]]));
+    assert_eq!(a.as_ptr(), v_ptr);
+}
+
+#[test]
+fn test_from_shape_2_2_2_with_neg_stride() {
+    // Issue #998, negative strides for an axis where it doesn't matter.
+    let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let v = s[..12].to_vec();
+    let v_ptr = v.as_ptr();
+    let a = Array::from_shape_vec((2, 2, 2).strides((1, -4isize as usize, 2)), v).unwrap();
+    assert_eq!(a, arr3(&[[[4, 6],
+                          [0, 2]],
+                         [[5, 7],
+                          [1, 3]]]));
+    assert_eq!(a.as_ptr(), v_ptr.wrapping_add(4));
 }
 
 #[should_panic]
