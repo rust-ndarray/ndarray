@@ -1,3 +1,87 @@
+Version 0.15.2 (2021-xx-xx Not released yet)
+===========================
+
+New features
+------------
+
+- New methods for growing/appending to owned `Array`s. These methods allow
+  building an array efficiently chunk by chunk. By [@bluss].
+
+  - `.push_row()`, `.push_column()`
+  - `.push(axis, array)`, `.append(axis, array)`
+
+  https://github.com/rust-ndarray/ndarray/pull/932 <br>
+  https://github.com/rust-ndarray/ndarray/pull/990
+
+- New reshaping method `.to_shape(...)`, called with new shape and optional
+  ordering parameter, this is the first improvement for reshaping in terms of
+  added features and increased consistency. By [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/982
+
+- `Array` now implements a by-value iterator, by [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/986
+
+- New methods `.move_into()` and `.move_into_uninit()` which allow assigning
+  into an array by moving values into them, by [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/932 <br>
+  https://github.com/rust-ndarray/ndarray/pull/997
+
+- New method `.remove_index()` for owned arrays by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/967
+
+- New constructor `build_uninit` which makes it easier to initialize
+  uninitialized arrays in a way that's generic over all owned array kinds.
+  By [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/1001
+
+Enhancements
+------------
+
+- Preserve the allocation of the input array in some more cases for arithmetic ops by [@SparrowLii]
+
+  https://github.com/rust-ndarray/ndarray/pull/963
+
+- Improve broadcasting performance for &array + &array arithmetic ops by [@SparrowLii]
+
+  https://github.com/rust-ndarray/ndarray/pull/965
+
+Bug fixes
+---------
+
+- Fix an error in construction of empty array with negative strides, by [@jturner314].
+
+  https://github.com/rust-ndarray/ndarray/pull/998
+
+- Fix minor performance bug with loop order selection in Zip by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/977
+
+API changes
+-----------
+
+- Add dimension getters to `Shape` and `StrideShape` by [@stokhos]
+
+  https://github.com/rust-ndarray/ndarray/pull/978
+
+Other changes
+-------------
+
+- Rustdoc now uses the ndarray logo that [@jturner314] created previously
+
+  https://github.com/rust-ndarray/ndarray/pull/981
+
+- Minor doc changes by [@stokhos], [@cassiersg] and [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/968 <br>
+  https://github.com/rust-ndarray/ndarray/pull/971 <br>
+  https://github.com/rust-ndarray/ndarray/pull/974
+
+
 Version 0.15.1 (2021-03-29)
 ===========================
 
@@ -1286,6 +1370,7 @@ Earlier releases
 [@LukeMathWalker]: https://github.com/LukeMathWalker
 [@acj]: https://github.com/acj
 [@andrei-papou]: https://github.com/andrei-papou
+[@cassiersg]: https://github.com/cassiersg
 [@dam5h]: https://github.com/dam5h
 [@d-dorazio]: https://github.com/d-dorazio
 [@Eijebong]: https://github.com/Eijebong
@@ -1301,6 +1386,7 @@ Earlier releases
 [@rth]: https://github.com/rth
 [@sebasv]: https://github.com/sebasv
 [@SparrowLii]: https://github.com/SparrowLii
+[@stokhos]: https://github.com/stokhos
 [@termoshtt]: https://github.com/termoshtt
 [@TheLortex]: https://github.com/TheLortex
 [@viniciusd]: https://github.com/viniciusd
