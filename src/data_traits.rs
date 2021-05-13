@@ -252,6 +252,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
         }
     }
 
+    #[allow(clippy::wrong_self_convention)]
     fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
     where
         Self::Elem: Clone,
