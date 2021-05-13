@@ -745,7 +745,7 @@ macro_rules! map_impl {
                     // Use partial to count the number of filled elements, and can drop the right
                     // number of elements on unwinding (if it happens during apply/collect).
                     unsafe {
-                        let output_view = output.cast::<R>();
+                        let output_view = output.into_raw_view_mut().cast::<R>();
                         self.and(output_view)
                             .collect_with_partial(f)
                             .release_ownership();

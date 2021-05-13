@@ -530,7 +530,7 @@ where
     /// ### Safety
     ///
     /// The whole of the array must be initialized before it is converted
-    /// using [`.assume_init()`] or otherwise traversed.
+    /// using [`.assume_init()`] or otherwise traversed/read with the element type `A`.
     ///
     /// ### Examples
     ///
@@ -580,10 +580,10 @@ where
     /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
     /// an easier way to handle uninit values correctly.
     ///
-    /// The `builder` closure gets unshared access to the array through a raw view
-    /// and can use it to modify the array before it is returned. This allows initializing
-    /// the array for any owned array type (avoiding clone requirements for copy-on-write,
-    /// because the array is unshared when initially created).
+    /// The `builder` closure gets unshared access to the array through a view and can use it to
+    /// modify the array before it is returned. This allows initializing the array for any owned
+    /// array type (avoiding clone requirements for copy-on-write, because the array is unshared
+    /// when initially created).
     ///
     /// Only *when* the array is completely initialized with valid elements, can it be
     /// converted to an array of `A` elements using [`.assume_init()`].
@@ -593,17 +593,18 @@ where
     /// ### Safety
     ///
     /// The whole of the array must be initialized before it is converted
-    /// using [`.assume_init()`] or otherwise traversed.
+    /// using [`.assume_init()`] or otherwise traversed/read with the element type `A`.
     ///
-    pub(crate) fn build_uninit<Sh, F>(shape: Sh, builder: F) -> ArrayBase<S::MaybeUninit, D>
+    /// [`.assume_init()`]: ArrayBase::assume_init
+    pub fn build_uninit<Sh, F>(shape: Sh, builder: F) -> ArrayBase<S::MaybeUninit, D>
     where
         Sh: ShapeBuilder<Dim = D>,
-        F: FnOnce(RawArrayViewMut<MaybeUninit<A>, D>),
+        F: FnOnce(ArrayViewMut<MaybeUninit<A>, D>),
     {
         let mut array = Self::uninit(shape);
         // Safe because: the array is unshared here
         unsafe {
-            builder(array.raw_view_mut_unchecked());
+            builder(array.raw_view_mut_unchecked().deref_into_view_mut());
         }
         array
     }
