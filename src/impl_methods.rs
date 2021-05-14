@@ -2135,17 +2135,7 @@ where
     }
 
     pub(crate) fn pointer_is_inbounds(&self) -> bool {
-        match self.data._data_slice() {
-            None => {
-                // special case for non-owned views
-                true
-            }
-            Some(slc) => {
-                let ptr = slc.as_ptr() as *mut A;
-                let end = unsafe { ptr.add(slc.len()) };
-                self.ptr.as_ptr() >= ptr && self.ptr.as_ptr() <= end
-            }
-        }
+        self.data._is_pointer_inbounds(self.as_ptr())
     }
 
     /// Perform an elementwise assigment to `self` from `rhs`.

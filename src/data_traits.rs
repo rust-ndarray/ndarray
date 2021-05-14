@@ -33,7 +33,11 @@ pub unsafe trait RawData: Sized {
 
     #[doc(hidden)]
     // This method is only used for debugging
+    #[deprecated(note="Unused", since="0.15.2")]
     fn _data_slice(&self) -> Option<&[Self::Elem]>;
+
+    #[doc(hidden)]
+    fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool;
 
     private_decl! {}
 }
@@ -146,9 +150,15 @@ pub unsafe trait DataMut: Data + RawDataMut {
 
 unsafe impl<A> RawData for RawViewRepr<*const A> {
     type Elem = A;
+
+    #[inline]
     fn _data_slice(&self) -> Option<&[A]> {
         None
     }
+
+    #[inline(always)]
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool { true }
+
     private_impl! {}
 }
 
@@ -160,9 +170,15 @@ unsafe impl<A> RawDataClone for RawViewRepr<*const A> {
 
 unsafe impl<A> RawData for RawViewRepr<*mut A> {
     type Elem = A;
+
+    #[inline]
     fn _data_slice(&self) -> Option<&[A]> {
         None
     }
+
+    #[inline(always)]
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool { true }
+
     private_impl! {}
 }
 
@@ -192,6 +208,11 @@ unsafe impl<A> RawData for OwnedArcRepr<A> {
     fn _data_slice(&self) -> Option<&[A]> {
         Some(self.0.as_slice())
     }
+
+    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool {
+        self.0._is_pointer_inbounds(self_ptr)
+    }
+
     private_impl! {}
 }
 
@@ -274,9 +295,18 @@ unsafe impl<A> RawDataClone for OwnedArcRepr<A> {
 
 unsafe impl<A> RawData for OwnedRepr<A> {
     type Elem = A;
+
     fn _data_slice(&self) -> Option<&[A]> {
         Some(self.as_slice())
     }
+
+    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool {
+        let slc = self.as_slice();
+        let ptr = slc.as_ptr() as *mut A;
+        let end = unsafe { ptr.add(slc.len()) };
+        self_ptr >= ptr && self_ptr <= end
+    }
+
     private_impl! {}
 }
 
@@ -340,9 +370,15 @@ where
 
 unsafe impl<'a, A> RawData for ViewRepr<&'a A> {
     type Elem = A;
+
+    #[inline]
     fn _data_slice(&self) -> Option<&[A]> {
         None
     }
+
+    #[inline(always)]
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool { true }
+
     private_impl! {}
 }
 
@@ -364,9 +400,15 @@ unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A> {
 
 unsafe impl<'a, A> RawData for ViewRepr<&'a mut A> {
     type Elem = A;
+
+    #[inline]
     fn _data_slice(&self) -> Option<&[A]> {
         None
     }
+
+    #[inline(always)]
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool { true }
+
     private_impl! {}
 }
 
@@ -458,12 +500,23 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
 
 unsafe impl<'a, A> RawData for CowRepr<'a, A> {
     type Elem = A;
+
     fn _data_slice(&self) -> Option<&[A]> {
+        #[allow(deprecated)]
         match self {
             CowRepr::View(view) => view._data_slice(),
             CowRepr::Owned(data) => data._data_slice(),
         }
     }
+
+    #[inline]
+    fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool {
+        match self {
+            CowRepr::View(view) => view._is_pointer_inbounds(ptr),
+            CowRepr::Owned(data) => data._is_pointer_inbounds(ptr),
+        }
+    }
+
     private_impl! {}
 }
 
