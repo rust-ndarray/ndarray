@@ -1382,23 +1382,7 @@ where
     /// Return `false` otherwise, i.e. the array is possibly not
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool {
-        fn is_standard_layout<D: Dimension>(dim: &D, strides: &D) -> bool {
-            if let Some(1) = D::NDIM {
-                return strides[0] == 1 || dim[0] <= 1;
-            }
-            if dim.slice().iter().any(|&d| d == 0) {
-                return true;
-            }
-            let defaults = dim.default_strides();
-            // check all dimensions -- a dimension of length 1 can have unequal strides
-            for (&dim, &s, &ds) in izip!(dim.slice(), strides.slice(), defaults.slice()) {
-                if dim != 1 && s != ds {
-                    return false;
-                }
-            }
-            true
-        }
-        is_standard_layout(&self.dim, &self.strides)
+        dimension::is_layout_c(&self.dim, &self.strides)
     }
 
     /// Return true if the array is known to be contiguous.

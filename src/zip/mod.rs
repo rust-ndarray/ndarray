@@ -21,6 +21,7 @@ use crate::partial::Partial;
 
 use crate::indexes::{indices, Indices};
 use crate::split_at::{SplitPreference, SplitAt};
+use crate::dimension;
 
 pub use self::ndproducer::{NdProducer, IntoNdProducer, Offset};
 
@@ -51,33 +52,38 @@ where
     private_decl! {}
 }
 
+/// Compute `Layout` hints for array shape dim, strides
+fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout {
+    let n = dim.ndim();
+    if dimension::is_layout_c(dim, strides) {
+        // effectively one-dimensional => C and F layout compatible
+        if n <= 1 || dim.slice().iter().filter(|&&len| len > 1).count() <= 1 {
+            Layout::one_dimensional()
+        } else {
+            Layout::c()
+        }
+    } else if n > 1 && dimension::is_layout_f(dim, strides) {
+        Layout::f()
+    } else if n > 1 {
+        if dim[0] > 1 && strides[0] == 1 {
+            Layout::fpref()
+        } else if dim[n - 1] > 1 && strides[n - 1] == 1 {
+            Layout::cpref()
+        } else {
+            Layout::none()
+        }
+    } else {
+        Layout::none()
+    }
+}
+
 impl<S, D> ArrayBase<S, D>
 where
     S: RawData,
     D: Dimension,
 {
     pub(crate) fn layout_impl(&self) -> Layout {
-        let n = self.ndim();
-        if self.is_standard_layout() {
-            // effectively one-dimensional => C and F layout compatible
-            if n <= 1 || self.shape().iter().filter(|&&len| len > 1).count() <= 1 {
-                Layout::one_dimensional()
-            } else {
-                Layout::c()
-            }
-        } else if n > 1 && self.raw_view().reversed_axes().is_standard_layout() {
-            Layout::f()
-        } else if n > 1 {
-            if self.len_of(Axis(0)) > 1 && self.stride_of(Axis(0)) == 1 {
-                Layout::fpref()
-            } else if self.len_of(Axis(n - 1)) > 1 && self.stride_of(Axis(n - 1)) == 1 {
-                Layout::cpref()
-            } else {
-                Layout::none()
-            }
-        } else {
-            Layout::none()
-        }
+        array_layout(&self.dim, &self.strides)
     }
 }
 
