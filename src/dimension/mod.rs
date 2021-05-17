@@ -668,6 +668,56 @@ pub fn slices_intersect<D: Dimension>(
     true
 }
 
+pub(crate) fn is_layout_c<D: Dimension>(dim: &D, strides: &D) -> bool {
+    if let Some(1) = D::NDIM {
+        return strides[0] == 1 || dim[0] <= 1;
+    }
+
+    for &d in dim.slice() {
+        if d == 0 {
+            return true;
+        }
+    }
+
+    let mut contig_stride = 1_isize;
+    // check all dimensions -- a dimension of length 1 can have unequal strides
+    for (&dim, &s) in izip!(dim.slice().iter().rev(), strides.slice().iter().rev()) {
+        if dim != 1 {
+            let s = s as isize;
+            if s != contig_stride {
+                return false;
+            }
+            contig_stride *= dim as isize;
+        }
+    }
+    true
+}
+
+pub(crate) fn is_layout_f<D: Dimension>(dim: &D, strides: &D) -> bool {
+    if let Some(1) = D::NDIM {
+        return strides[0] == 1 || dim[0] <= 1;
+    }
+
+    for &d in dim.slice() {
+        if d == 0 {
+            return true;
+        }
+    }
+
+    let mut contig_stride = 1_isize;
+    // check all dimensions -- a dimension of length 1 can have unequal strides
+    for (&dim, &s) in izip!(dim.slice(), strides.slice()) {
+        if dim != 1 {
+            let s = s as isize;
+            if s != contig_stride {
+                return false;
+            }
+            contig_stride *= dim as isize;
+        }
+    }
+    true
+}
+
 pub fn merge_axes<D>(dim: &mut D, strides: &mut D, take: Axis, into: Axis) -> bool
 where
     D: Dimension,
