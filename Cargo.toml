@@ -4,7 +4,7 @@ name = "ndarray"
 version = "0.15.2"
 edition = "2018"
 authors = [
-  "bluss",
+  "Ulrik Sverdrup \"bluss\"",
   "Jim Turner"
 ]
 license = "MIT OR Apache-2.0"

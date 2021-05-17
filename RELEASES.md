@@ -1,5 +1,5 @@
-Version 0.15.2 (2021-xx-xx Not released yet)
-===========================
+Version 0.15.2 (2021-05-17 🇳🇴)
+================================
 
 New features
 ------------
@@ -10,12 +10,15 @@ New features
   - `.push_row()`, `.push_column()`
   - `.push(axis, array)`, `.append(axis, array)`
 
+  `stack`, `concatenate` and `.select()` now support all `Clone`-able elements
+  as a result.
+
   https://github.com/rust-ndarray/ndarray/pull/932 <br>
   https://github.com/rust-ndarray/ndarray/pull/990
 
 - New reshaping method `.to_shape(...)`, called with new shape and optional
   ordering parameter, this is the first improvement for reshaping in terms of
-  added features and increased consistency. By [@bluss].
+  added features and increased consistency, with more to come. By [@bluss].
 
   https://github.com/rust-ndarray/ndarray/pull/982
 
@@ -24,7 +27,7 @@ New features
   https://github.com/rust-ndarray/ndarray/pull/986
 
 - New methods `.move_into()` and `.move_into_uninit()` which allow assigning
-  into an array by moving values into them, by [@bluss].
+  into an array by moving values from an array into another, by [@bluss].
 
   https://github.com/rust-ndarray/ndarray/pull/932 <br>
   https://github.com/rust-ndarray/ndarray/pull/997
@@ -80,6 +83,10 @@ Other changes
   https://github.com/rust-ndarray/ndarray/pull/968 <br>
   https://github.com/rust-ndarray/ndarray/pull/971 <br>
   https://github.com/rust-ndarray/ndarray/pull/974
+
+- A little refactoring to reduce generics bloat in a few places by [@bluss].
+
+  https://github.com/rust-ndarray/ndarray/pull/1004
 
 
 Version 0.15.1 (2021-03-29)
