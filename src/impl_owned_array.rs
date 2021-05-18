@@ -80,20 +80,29 @@ where
 impl<A> Array<A, Ix2> {
     /// Append a row to an array
     ///
+    /// The elements from `row` are cloned and added as a new row in the array.
+    ///
     /// ***Errors*** with a shape error if the length of the row does not match the length of the
-    /// rows in the array. <br>
+    /// rows in the array.
     ///
     /// The memory layout of the `self` array matters for ensuring that the append is efficient.
     /// Appending automatically changes memory layout of the array so that it is appended to
-    /// along the "growing axis".
+    /// along the "growing axis". However, if the memory layout needs adjusting, the array must
+    /// reallocate and move memory.
     ///
-    /// Ensure appending is efficient by, for example, appending to an empty array and then
-    /// always appending along the same axis. For rows, ndarray's default layout is efficient for
-    /// appending.
+    /// The operation leaves the existing data in place and is most efficent if one of these is
+    /// true:
     ///
-    /// Notice that an empty array (where it has an axis of length zero) is the simplest starting
-    /// point. When repeatedly appending to a single axis, the amortized average complexity of each append is O(m), where *m* is the length of
-    /// the row.
+    /// - The axis being appended to is the longest stride axis, i.e the array is in row major
+    ///   ("C") layout.
+    /// - The array has 0 or 1 rows (It is converted to row major)
+    ///
+    /// Ensure appending is efficient by, for example, appending to an empty array and then always
+    /// pushing/appending along the same axis. For pushing rows, ndarray's default layout (C order)
+    /// is efficient.
+    ///
+    /// When repeatedly appending to a single axis, the amortized average complexity of each
+    /// append is O(m), where *m* is the length of the row.
     ///
     /// ```rust
     /// use ndarray::{Array, ArrayView, array};
@@ -117,20 +126,29 @@ impl<A> Array<A, Ix2> {
 
     /// Append a column to an array
     ///
+    /// The elements from `column` are cloned and added as a new row in the array.
+    ///
     /// ***Errors*** with a shape error if the length of the column does not match the length of
-    /// the columns in the array.<br>
+    /// the columns in the array.
     ///
     /// The memory layout of the `self` array matters for ensuring that the append is efficient.
     /// Appending automatically changes memory layout of the array so that it is appended to
-    /// along the "growing axis".
+    /// along the "growing axis". However, if the memory layout needs adjusting, the array must
+    /// reallocate and move memory.
     ///
-    /// Ensure appending is efficient by, for example, appending to an empty array and then
-    /// always appending along the same axis. For columns, column major ("F") memory layout is
-    /// efficient for appending.
+    /// The operation leaves the existing data in place and is most efficent if one of these is
+    /// true:
     ///
-    /// Notice that an empty array (where it has an axis of length zero) is the simplest starting
-    /// point. When repeatedly appending to a single axis, the amortized average complexity of each append is O(m), where *m* is the length of
-    /// the row.
+    /// - The axis being appended to is the longest stride axis, i.e the array is in column major
+    ///   ("F") layout.
+    /// - The array has 0 or 1 columns (It is converted to column major)
+    ///
+    /// Ensure appending is efficient by, for example, appending to an empty array and then always
+    /// pushing/appending along the same axis. For pushing columns, column major layout (F order)
+    /// is efficient.
+    ///
+    /// When repeatedly appending to a single axis, the amortized average complexity of each append
+    /// is O(m), where *m* is the length of the column.
     ///
     /// ```rust
     /// use ndarray::{Array, ArrayView, array};
@@ -339,28 +357,30 @@ impl<A, D> Array<A, D>
         }
     }
 
-    /// Append an array to the array along an axis
+    /// Append an array to the array along an axis.
     ///
-    /// Where the item to push to the array has one dimension less than the `self` array. This
-    /// method is equivalent to `self.append(axis, array.insert_axis(axis))`.
+    /// The elements of `array` are cloned and extend the axis `axis` in the present array;
+    /// `self` will grow in size by 1 along `axis`.
     ///
-    /// The axis-to-append-to `axis` must be the array's "growing axis" for this operation
-    /// to succeed. The growing axis is the outermost or last-visited when elements are visited in
-    /// memory order:
-    ///
-    /// `axis` must be the growing axis of the current array, an axis with length 0 or 1.
-    ///
-    /// - This is the 0th axis for standard layout arrays
-    /// - This is the *n*-1 th axis for fortran layout arrays
-    /// - If the array is empty (the axis or any other has length 0) or if `axis`
-    ///   has length 1, then the array can always be appended.
+    /// Append to the array, where the array being pushed to the array has one dimension less than
+    /// the `self` array. This method is equivalent to [append](ArrayBase::append) in this way:
+    /// `self.append(axis, array.insert_axis(axis))`.
     ///
     /// ***Errors*** with a shape error if the shape of self does not match the array-to-append;
-    /// all axes *except* the axis along which it being appended matter for this check.
+    /// all axes *except* the axis along which it being appended matter for this check:
+    /// the shape of `self` with `axis` removed must be the same as the shape of `array`.
     ///
     /// The memory layout of the `self` array matters for ensuring that the append is efficient.
     /// Appending automatically changes memory layout of the array so that it is appended to
-    /// along the "growing axis".
+    /// along the "growing axis". However, if the memory layout needs adjusting, the array must
+    /// reallocate and move memory.
+    ///
+    /// The operation leaves the existing data in place and is most efficent if `axis` is a
+    /// "growing axis" for the array, i.e. one of these is true:
+    ///
+    /// - The axis is the longest stride axis, for example the 0th axis in a C-layout or the
+    /// *n-1*th axis in an F-layout array.
+    /// - The axis has length 0 or 1 (It is converted to the new growing axis)
     ///
     /// Ensure appending is efficient by for example starting from an empty array and/or always
     /// appending to an array along the same axis.
@@ -398,25 +418,27 @@ impl<A, D> Array<A, D>
     }
 
 
-    /// Append an array to the array along an axis
+    /// Append an array to the array along an axis.
     ///
-    /// The axis-to-append-to `axis` must be the array's "growing axis" for this operation
-    /// to succeed. The growing axis is the outermost or last-visited when elements are visited in
-    /// memory order:
-    ///
-    /// `axis` must be the growing axis of the current array, an axis with length 0 or 1.
-    ///
-    /// - This is the 0th axis for standard layout arrays
-    /// - This is the *n*-1 th axis for fortran layout arrays
-    /// - If the array is empty (the axis or any other has length 0) or if `axis`
-    ///   has length 1, then the array can always be appended.
+    /// The elements of `array` are cloned and extend the axis `axis` in the present array;
+    /// `self` will grow in size by `array.len_of(axis)` along `axis`.
     ///
     /// ***Errors*** with a shape error if the shape of self does not match the array-to-append;
-    /// all axes *except* the axis along which it being appended matter for this check.
+    /// all axes *except* the axis along which it being appended matter for this check:
+    /// the shape of `self` with `axis` removed must be the same as the shape of `array` with
+    /// `axis` removed.
     ///
     /// The memory layout of the `self` array matters for ensuring that the append is efficient.
     /// Appending automatically changes memory layout of the array so that it is appended to
-    /// along the "growing axis".
+    /// along the "growing axis". However, if the memory layout needs adjusting, the array must
+    /// reallocate and move memory.
+    ///
+    /// The operation leaves the existing data in place and is most efficent if `axis` is a
+    /// "growing axis" for the array, i.e. one of these is true:
+    ///
+    /// - The axis is the longest stride axis, for example the 0th axis in a C-layout or the
+    /// *n-1*th axis in an F-layout array.
+    /// - The axis has length 0 or 1 (It is converted to the new growing axis)
     ///
     /// Ensure appending is efficient by for example starting from an empty array and/or always
     /// appending to an array along the same axis.
