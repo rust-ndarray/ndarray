@@ -16,6 +16,9 @@
     clippy::while_let_on_iterator, // is not an error
     clippy::from_iter_instead_of_collect, // using from_iter is good style
 )]
+#![doc(test(attr(deny(warnings))))]
+#![doc(test(attr(allow(unused_variables))))]
+#![doc(test(attr(allow(deprecated))))]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements

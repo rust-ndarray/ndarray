@@ -104,7 +104,7 @@
 //!     (y_new, f_new, error)
 //! }
 //! #
-//! # fn main() {}
+//! # fn main() { let _ = rk_step::<fn(_, ArrayView1<'_, _>) -> _>; }
 //! ```
 //!
 //! It's possible to improve the efficiency by doing the following:
@@ -165,7 +165,7 @@
 //!     (y_new, error)
 //! }
 //! #
-//! # fn main() {}
+//! # fn main() { let _ = rk_step::<fn(_, ArrayView1<'_, f64>, ArrayViewMut1<'_, f64>)>; }
 //! ```
 //!
 //! [f64.mul_add()]: https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add

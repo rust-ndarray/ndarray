@@ -133,10 +133,10 @@ where
     /// to type `A` fails.
     ///
     /// ```rust
+    /// # #[cfg(feature = "approx")] {
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::{Array, arr1};
     ///
-    /// # #[cfg(feature = "approx")] {
     /// let array = Array::logspace(10.0, 0.0, 3.0, 4);
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]));
     ///
@@ -163,11 +163,11 @@ where
     /// to type `A` fails.
     ///
     /// ```rust
+    /// # fn example() -> Option<()> {
+    /// # #[cfg(feature = "approx")] {
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::{Array, arr1};
     ///
-    /// # fn example() -> Option<()> {
-    /// # #[cfg(feature = "approx")] {
     /// let array = Array::geomspace(1e0, 1e3, 4)?;
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
@@ -541,8 +541,6 @@ where
     ///
     /// ```
     /// use ndarray::{s, Array2};
-    /// use ndarray::Zip;
-    /// use ndarray::Axis;
     ///
     /// // Example Task: Let's create a column shifted copy of the input
     ///
@@ -561,6 +559,8 @@ where
     ///         b.assume_init()
     ///     }
     /// }
+    /// 
+    /// # let _ = shift_by_two;
     /// ```
     pub fn uninit<Sh>(shape: Sh) -> ArrayBase<S::MaybeUninit, D>
     where

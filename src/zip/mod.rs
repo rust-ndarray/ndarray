@@ -184,7 +184,7 @@ trait ZippableTuple: Sized {
 ///
 /// // Example 3: Recreate Example 2 using map_collect to make a new array
 ///
-/// let mut totals2 = Zip::from(a.rows()).map_collect(|row| row.sum());
+/// let totals2 = Zip::from(a.rows()).map_collect(|row| row.sum());
 ///
 /// // Check the result against the previous example.
 /// assert_eq!(totals, totals2);

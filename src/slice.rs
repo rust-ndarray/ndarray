@@ -741,7 +741,7 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 ///     + v.slice(s![1..-1, 2..  ])
 ///     + v.slice(s![2..  , 1..-1])
 /// }
-/// # fn main() { }
+/// # fn main() { let _ = laplacian; }
 /// ```
 ///
 /// # Negative *step*

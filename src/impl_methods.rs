@@ -928,7 +928,7 @@ where
     /// Iterator element is `ArrayView1<A>` (1D array view).
     ///
     /// ```
-    /// use ndarray::{arr3, Axis, arr1};
+    /// use ndarray::arr3;
     ///
     /// let a = arr3(&[[[ 0,  1,  2],    // -- row 0, 0
     ///                 [ 3,  4,  5]],   // -- row 0, 1
@@ -996,7 +996,7 @@ where
     /// Iterator element is `ArrayView1<A>` (1D array view).
     ///
     /// ```
-    /// use ndarray::{arr3, Axis, arr1};
+    /// use ndarray::arr3;
     ///
     /// // The generalized columns of a 3D array:
     /// // are directed along the 0th axis: 0 and 6, 1 and 7 and so on...
@@ -1177,7 +1177,6 @@ where
     /// ```
     /// use ndarray::Array;
     /// use ndarray::{arr3, Axis};
-    /// use std::iter::FromIterator;
     ///
     /// let a = Array::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
     /// let mut iter = a.axis_chunks_iter(Axis(1), 2);
@@ -2397,10 +2396,10 @@ where
     /// Elements are visited in arbitrary order.
     ///
     /// ```
+    /// # #[cfg(feature = "approx")] {
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::arr2;
     ///
-    /// # #[cfg(feature = "approx")] {
     /// let mut a = arr2(&[[ 0., 1.],
     ///                    [-1., 2.]]);
     /// a.mapv_inplace(f32::exp);

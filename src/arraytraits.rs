@@ -176,7 +176,6 @@ where
     ///
     /// ```rust
     /// use ndarray::{Array, arr1};
-    /// use std::iter::FromIterator;
     ///
     /// // Either use `from_iter` directly or use `Iterator::collect`.
     /// let array = Array::from_iter((0..5).map(|x| x * x));
