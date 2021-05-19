@@ -179,7 +179,7 @@
 //! ```
 //! use ndarray::prelude::*;
 //! #
-//! # fn main() {}
+//! # fn main() { let _ = arr0(1); }
 //! ```
 //!
 //! ## Array creation

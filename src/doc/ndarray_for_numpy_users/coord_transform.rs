@@ -83,7 +83,7 @@
 //!     for i in 0..nelems {
 //!         rotated
 //!             .slice_mut(s![.., .., i])
-//!             .assign({ &rmat.slice(s![.., .., i]).dot(&eye2d) });
+//!             .assign(&rmat.slice(s![.., .., i]).dot(&eye2d));
 //!     }
 //! }
 //! ```

@@ -96,7 +96,7 @@ impl<'a, A> ArrayViewMut<'a, A, Ix0> {
     ///
     /// let mut array: Array0<f64> = arr0(5.);
     /// let view = array.view_mut();
-    /// let mut scalar = view.into_scalar();
+    /// let scalar = view.into_scalar();
     /// *scalar = 7.;
     /// assert_eq!(scalar, &7.);
     /// assert_eq!(array[()], 7.);
