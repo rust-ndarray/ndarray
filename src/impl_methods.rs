@@ -256,6 +256,19 @@ where
 
     /// Returns a reference to the first element of the array, or `None` if it
     /// is empty.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ndarray::Array3;
+    ///
+    /// let mut a = Array3::<f64>::zeros([3, 4, 2]);
+    /// a[[0, 0, 0]] = 42.;
+    /// assert_eq!(a.first(), Some(&42.));
+    ///
+    /// let b = Array3::<f64>::zeros([3, 0, 5]);
+    /// assert_eq!(b.first(), None);
+    /// ```
     pub fn first(&self) -> Option<&A>
     where
         S: Data,
@@ -269,6 +282,19 @@ where
 
     /// Returns a mutable reference to the first element of the array, or
     /// `None` if it is empty.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ndarray::Array3;
+    ///
+    /// let mut a = Array3::<f64>::zeros([3, 4, 2]);
+    /// *a.first_mut().unwrap() = 42.;
+    /// assert_eq!(a[[0, 0, 0]], 42.);
+    ///
+    /// let mut b = Array3::<f64>::zeros([3, 0, 5]);
+    /// assert_eq!(b.first_mut(), None);
+    /// ```
     pub fn first_mut(&mut self) -> Option<&mut A>
     where
         S: DataMut,
