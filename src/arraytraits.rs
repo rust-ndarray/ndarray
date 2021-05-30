@@ -11,6 +11,7 @@ use std::iter::FromIterator;
 use std::iter::IntoIterator;
 use std::mem;
 use std::ops::{Index, IndexMut};
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use crate::imp_prelude::*;
@@ -146,6 +147,18 @@ where
     S: Data,
     S::Elem: Eq,
 {
+}
+
+impl<A, S> From<Box<[A]>> for ArrayBase<S, Ix1>
+where
+    S: DataOwned<Elem = A>,
+{
+    /// Create a one-dimensional array from a boxed slice (no copying needed).
+    ///
+    /// **Panics** if the length is greater than `isize::MAX`.
+    fn from(b: Box<[A]>) -> Self {
+        Self::from_vec(b.into_vec())
+    }
 }
 
 impl<A, S> From<Vec<A>> for ArrayBase<S, Ix1>
