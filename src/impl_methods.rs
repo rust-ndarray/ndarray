@@ -1446,6 +1446,15 @@ where
     }
 
     /// Return a mutable pointer to the first element in the array.
+    ///
+    /// This method attempts to unshare the data. If `S: DataMut`, then the
+    /// data is guaranteed to be uniquely held on return.
+    ///
+    /// # Warning
+    ///
+    /// When accessing elements through this pointer, make sure to use strides
+    /// obtained *after* calling this method, since the process of unsharing
+    /// the data may change the strides.
     #[inline(always)]
     pub fn as_mut_ptr(&mut self) -> *mut A
     where
@@ -1462,6 +1471,9 @@ where
     }
 
     /// Return a raw mutable view of the array.
+    ///
+    /// This method attempts to unshare the data. If `S: DataMut`, then the
+    /// data is guaranteed to be uniquely held on return.
     #[inline]
     pub fn raw_view_mut(&mut self) -> RawArrayViewMut<A, D>
     where
