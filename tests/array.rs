@@ -1789,6 +1789,29 @@ fn map_memory_order() {
 }
 
 #[test]
+fn map_mut_with_unsharing() {
+    // Fortran-layout `ArcArray`.
+    let a = rcarr2(&[[0, 5], [1, 6], [2, 7], [3, 8], [4, 9]]).reversed_axes();
+    assert_eq!(a.shape(), &[2, 5]);
+    assert_eq!(a.strides(), &[1, 2]);
+    assert_eq!(
+        a.as_slice_memory_order(),
+        Some(&[0, 5, 1, 6, 2, 7, 3, 8, 4, 9][..])
+    );
+
+    // Shared reference of a portion of `a`.
+    let mut b = a.clone().slice_move(s![.., ..2]);
+    assert_eq!(b.shape(), &[2, 2]);
+    assert_eq!(b.strides(), &[1, 2]);
+    assert_eq!(b.as_slice_memory_order(), Some(&[0, 5, 1, 6][..]));
+    assert_eq!(b, array![[0, 1], [5, 6]]);
+
+    // `.map_mut()` unshares the data. Earlier versions of `ndarray` failed
+    // this assertion. See #1018.
+    assert_eq!(b.map_mut(|&mut x| x + 10), array![[10, 11], [15, 16]]);
+}
+
+#[test]
 fn test_view_from_shape() {
     let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     let a = ArrayView::from_shape((2, 3, 2), &s).unwrap();
