@@ -217,7 +217,7 @@ where
                 )
             }
         } else {
-            self.map(|x| x.clone())
+            self.map(A::clone)
         }
     }
 
