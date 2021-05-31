@@ -990,14 +990,46 @@ fn map1() {
 }
 
 #[test]
-fn as_slice_memory_order() {
-    // test that mutation breaks sharing
+fn as_slice_memory_order_mut_arcarray() {
+    // Test that mutation breaks sharing for `ArcArray`.
     let a = rcarr2(&[[1., 2.], [3., 4.0f32]]);
     let mut b = a.clone();
     for elt in b.as_slice_memory_order_mut().unwrap() {
         *elt = 0.;
     }
     assert!(a != b, "{:?} != {:?}", a, b);
+}
+
+#[test]
+fn as_slice_memory_order_mut_cowarray() {
+    // Test that mutation breaks sharing for `CowArray`.
+    let a = arr2(&[[1., 2.], [3., 4.0f32]]);
+    let mut b = CowArray::from(a.view());
+    for elt in b.as_slice_memory_order_mut().unwrap() {
+        *elt = 0.;
+    }
+    assert!(a != b, "{:?} != {:?}", a, b);
+}
+
+#[test]
+fn as_slice_memory_order_mut_contiguous_arcarray() {
+    // Test that unsharing preserves the strides in the contiguous case for `ArcArray`.
+    let a = rcarr2(&[[0, 5], [1, 6], [2, 7], [3, 8], [4, 9]]).reversed_axes();
+    let mut b = a.clone().slice_move(s![.., ..2]);
+    assert_eq!(b.strides(), &[1, 2]);
+    b.as_slice_memory_order_mut().unwrap();
+    assert_eq!(b.strides(), &[1, 2]);
+}
+
+#[test]
+fn as_slice_memory_order_mut_contiguous_cowarray() {
+    // Test that unsharing preserves the strides in the contiguous case for `CowArray`.
+    let a = arr2(&[[0, 5], [1, 6], [2, 7], [3, 8], [4, 9]]).reversed_axes();
+    let mut b = CowArray::from(a.slice(s![.., ..2]));
+    assert!(b.is_view());
+    assert_eq!(b.strides(), &[1, 2]);
+    b.as_slice_memory_order_mut().unwrap();
+    assert_eq!(b.strides(), &[1, 2]);
 }
 
 #[test]
@@ -1809,6 +1841,10 @@ fn map_mut_with_unsharing() {
     // `.map_mut()` unshares the data. Earlier versions of `ndarray` failed
     // this assertion. See #1018.
     assert_eq!(b.map_mut(|&mut x| x + 10), array![[10, 11], [15, 16]]);
+
+    // The strides should be preserved.
+    assert_eq!(b.shape(), &[2, 2]);
+    assert_eq!(b.strides(), &[1, 2]);
 }
 
 #[test]

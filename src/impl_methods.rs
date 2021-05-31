@@ -1536,6 +1536,10 @@ where
 
     /// Return the array’s data as a slice if it is contiguous,
     /// return `None` otherwise.
+    ///
+    /// In the contiguous case, in order to return a unique reference, this
+    /// method unshares the data if necessary, but it preserves the existing
+    /// strides.
     pub fn as_slice_memory_order_mut(&mut self) -> Option<&mut [A]>
     where
         S: DataMut,
