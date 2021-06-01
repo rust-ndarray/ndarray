@@ -354,6 +354,15 @@ where
     }
 }
 
+impl<A, D> From<Array<A, D>> for ArcArray<A, D>
+where
+    D: Dimension,
+{
+    fn from(arr: Array<A, D>) -> ArcArray<A, D> {
+        arr.into_shared()
+    }
+}
+
 /// Argument conversion into an array view
 ///
 /// The trait is parameterized over `A`, the element type, and `D`, the
