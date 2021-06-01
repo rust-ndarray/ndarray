@@ -16,7 +16,9 @@ use std::ptr::NonNull;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 
-use crate::{ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{
+    ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr,
+};
 
 /// Array representation trait.
 ///
@@ -104,7 +106,7 @@ pub unsafe trait Data: RawData {
     /// Converts the array to a uniquely owned array, cloning elements if necessary.
     #[doc(hidden)]
     #[allow(clippy::wrong_self_convention)]
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         Self::Elem: Clone,
         D: Dimension;
@@ -114,7 +116,7 @@ pub unsafe trait Data: RawData {
     #[doc(hidden)]
     fn try_into_owned_nocopy<D>(
         self_: ArrayBase<Self, D>,
-    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where
         D: Dimension;
 
@@ -122,7 +124,7 @@ pub unsafe trait Data: RawData {
     /// cloning elements if necessary.
     #[doc(hidden)]
     #[allow(clippy::wrong_self_convention)]
-    fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
+    fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArcArray<Self::Elem, D>
     where
         Self::Elem: Clone,
         D: Dimension,
@@ -271,7 +273,7 @@ where
 }
 
 unsafe impl<A> Data for OwnedArcRepr<A> {
-    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         A: Clone,
         D: Dimension,
@@ -287,7 +289,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
 
     fn try_into_owned_nocopy<D>(
         self_: ArrayBase<Self, D>,
-    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where
         D: Dimension,
     {
@@ -307,7 +309,7 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
     }
 
     #[allow(clippy::wrong_self_convention)]
-    fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
+    fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArcArray<Self::Elem, D>
     where
         Self::Elem: Clone,
         D: Dimension,
@@ -360,7 +362,7 @@ unsafe impl<A> RawDataMut for OwnedRepr<A> {
 
 unsafe impl<A> Data for OwnedRepr<A> {
     #[inline]
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         A: Clone,
         D: Dimension,
@@ -371,7 +373,7 @@ unsafe impl<A> Data for OwnedRepr<A> {
     #[inline]
     fn try_into_owned_nocopy<D>(
         self_: ArrayBase<Self, D>,
-    ) -> Result<ArrayBase<Self, D>, ArrayBase<Self, D>>
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where
         D: Dimension,
     {
@@ -426,7 +428,7 @@ unsafe impl<'a, A> RawData for ViewRepr<&'a A> {
 }
 
 unsafe impl<'a, A> Data for ViewRepr<&'a A> {
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         Self::Elem: Clone,
         D: Dimension,
@@ -436,7 +438,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
 
     fn try_into_owned_nocopy<D>(
         self_: ArrayBase<Self, D>,
-    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where
         D: Dimension,
     {
@@ -480,7 +482,7 @@ unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A> {
 }
 
 unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
-    fn into_owned<D>(self_: ArrayBase<Self, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         Self::Elem: Clone,
         D: Dimension,
@@ -490,7 +492,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
 
     fn try_into_owned_nocopy<D>(
         self_: ArrayBase<Self, D>,
-    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where
         D: Dimension,
     {
@@ -653,7 +655,7 @@ where
 
 unsafe impl<'a, A> Data for CowRepr<'a, A> {
     #[inline]
-    fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> ArrayBase<OwnedRepr<Self::Elem>, D>
+    fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> Array<Self::Elem, D>
     where
         A: Clone,
         D: Dimension,
@@ -670,7 +672,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A> {
 
     fn try_into_owned_nocopy<D>(
         self_: ArrayBase<Self, D>,
-    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where
         D: Dimension,
     {
