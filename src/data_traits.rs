@@ -534,7 +534,7 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {}
 
 /// Array representation trait.
 ///
-/// A representation that is a unique or shared owner of its data.
+/// A representation which can be the owner of its data.
 ///
 /// ***Internal trait, see `Data`.***
 // The owned storage represents the ownership and allocation of the array's elements.
@@ -729,6 +729,24 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
 }
 
 unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
+
+unsafe impl<'a, A> DataOwned for CowRepr<'a, A>
+{
+    type MaybeUninit = CowRepr<'a, MaybeUninit<A>>;
+
+    fn new(elements: Vec<A>) -> Self
+    {
+        CowRepr::Owned(OwnedRepr::new(elements))
+    }
+
+    fn into_shared<D>(self_: ArrayBase<Self, D>) -> ArcArray<A, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        self_.into_owned().into_shared()
+    }
+}
 
 /// Array representation trait.
 ///
