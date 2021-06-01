@@ -109,6 +109,15 @@ pub unsafe trait Data: RawData {
         Self::Elem: Clone,
         D: Dimension;
 
+    /// Converts the array into `Array<A, D>` if this is possible without
+    /// cloning the array elements. Otherwise, returns `self_` unchanged.
+    #[doc(hidden)]
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension;
+
     /// Return a shared ownership (copy on write) array based on the existing one,
     /// cloning elements if necessary.
     #[doc(hidden)]
@@ -276,6 +285,27 @@ unsafe impl<A> Data for OwnedArcRepr<A> {
         }
     }
 
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension,
+    {
+        match Arc::try_unwrap(self_.data.0) {
+            Ok(owned_data) => unsafe {
+                // Safe because the data is equivalent.
+                Ok(ArrayBase::from_data_ptr(owned_data, self_.ptr)
+                    .with_strides_dim(self_.strides, self_.dim))
+            },
+            Err(arc_data) => unsafe {
+                // Safe because the data is equivalent; we're just
+                // reconstructing `self_`.
+                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.ptr)
+                    .with_strides_dim(self_.strides, self_.dim))
+            },
+        }
+    }
+
     #[allow(clippy::wrong_self_convention)]
     fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArrayBase<OwnedArcRepr<Self::Elem>, D>
     where
@@ -337,6 +367,16 @@ unsafe impl<A> Data for OwnedRepr<A> {
     {
         self_
     }
+
+    #[inline]
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<ArrayBase<Self, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension,
+    {
+        Ok(self_)
+    }
 }
 
 unsafe impl<A> DataMut for OwnedRepr<A> {}
@@ -393,6 +433,15 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     {
         self_.to_owned()
     }
+
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension,
+    {
+        Err(self_)
+    }
 }
 
 unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A> {
@@ -437,6 +486,15 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
         D: Dimension,
     {
         self_.to_owned()
+    }
+
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension,
+    {
+        Err(self_)
     }
 }
 
@@ -606,6 +664,22 @@ unsafe impl<'a, A> Data for CowRepr<'a, A> {
                 // safe because the data is equivalent so ptr, dims remain valid
                 ArrayBase::from_data_ptr(data, self_.ptr)
                     .with_strides_dim(self_.strides, self_.dim)
+            },
+        }
+    }
+
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<ArrayBase<OwnedRepr<Self::Elem>, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension,
+    {
+        match self_.data {
+            CowRepr::View(_) => Err(self_),
+            CowRepr::Owned(data) => unsafe {
+                // safe because the data is equivalent so ptr, dims remain valid
+                Ok(ArrayBase::from_data_ptr(data, self_.ptr)
+                    .with_strides_dim(self_.strides, self_.dim))
             },
         }
     }
