@@ -1,3 +1,54 @@
+Version 0.15.3 (2021-06-05)
+===========================
+
+New features
+------------
+
+- New methods `.last/_mut()` for arrays and array views by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1013
+
+Bug fixes
+---------
+
+- Fix `as_slice_memory_order_mut()` so that it never changes strides (the
+  memory layout) of the array when called.
+
+  This was a bug that impacted `ArcArray` (and for example not `Array` or `ArrayView/Mut`),
+  and multiple methods on `ArcArray` that use `as_slice_memory_order_mut` (for example `map_mut`).
+  Fix by [@jturner314].
+
+  https://github.com/rust-ndarray/ndarray/pull/1019
+
+API changes
+-----------
+
+- Array1 now implements `From<Box<[T]>>` by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1016
+
+- ArcArray now implements `From<Array<...>>` by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1021
+
+- CowArray now implements RawDataSubst by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1020
+
+Other changes
+-------------
+
+- Mention unsharing in `.as_mut_ptr` docs by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1017
+
+- Clarify and fix minor errors in push/append method docs by [@bluss] f21c668a
+
+- Fix several warnings in doc example code by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/1009
+
+
 Version 0.15.2 (2021-05-17 🇳🇴)
 ================================
 
