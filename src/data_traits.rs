@@ -675,3 +675,13 @@ impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a mut A> {
     }
 }
 
+impl<'a, A: 'a, B: 'a> RawDataSubst<B> for CowRepr<'a, A> {
+    type Output = CowRepr<'a, B>;
+
+    unsafe fn data_subst(self) -> Self::Output {
+        match self {
+            CowRepr::View(view) => CowRepr::View(view.data_subst()),
+            CowRepr::Owned(owned) => CowRepr::Owned(owned.data_subst()),
+        }
+    }
+}
