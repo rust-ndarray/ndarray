@@ -198,5 +198,5 @@ macro_rules! impl_approx_traits {
 #[cfg(feature = "approx")]
 impl_approx_traits!(approx, "**Requires crate feature `\"approx\"`.**");
 
-#[cfg(feature = "approx-0p5")]
-impl_approx_traits!(approx_0p5, "**Requires crate feature `\"approx-0p5\"`.**");
+#[cfg(feature = "approx-0_5")]
+impl_approx_traits!(approx_0_5, "**Requires crate feature `\"approx-0_5\"`.**");
