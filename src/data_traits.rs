@@ -553,9 +553,13 @@ pub unsafe trait DataOwned: Data
     fn new(elements: Vec<Self::Elem>) -> Self;
 
     /// Converts the data representation to a shared (copy on write)
-    /// representation, without any copying.
+    /// representation, cloning the array elements if necessary.
     #[doc(hidden)]
-    fn into_shared(self) -> OwnedArcRepr<Self::Elem>;
+    #[allow(clippy::wrong_self_convention)]
+    fn into_shared<D>(self_: ArrayBase<Self, D>) -> ArcArray<Self::Elem, D>
+    where
+        Self::Elem: Clone,
+        D: Dimension;
 }
 
 /// Array representation trait.
@@ -578,9 +582,12 @@ unsafe impl<A> DataOwned for OwnedRepr<A>
         OwnedRepr::from(elements)
     }
 
-    fn into_shared(self) -> OwnedArcRepr<A>
+    fn into_shared<D>(self_: ArrayBase<Self, D>) -> ArcArray<A, D>
+    where
+        A: Clone,
+        D: Dimension,
     {
-        OwnedArcRepr(Arc::new(self))
+        ArcArray::from(self_)
     }
 }
 
@@ -593,9 +600,12 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A>
         OwnedArcRepr(Arc::new(OwnedRepr::from(elements)))
     }
 
-    fn into_shared(self) -> OwnedArcRepr<A>
+    fn into_shared<D>(self_: ArrayBase<Self, D>) -> ArcArray<A, D>
+    where
+        A: Clone,
+        D: Dimension,
     {
-        self
+        self_
     }
 }
 

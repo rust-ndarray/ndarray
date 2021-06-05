@@ -10,18 +10,22 @@
 use alloc::boxed::Box;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use std::hash;
 use std::mem;
+use std::mem::size_of;
 use std::ops::{Index, IndexMut};
-use std::{hash, mem::size_of};
 use std::{iter::FromIterator, slice};
 
 use crate::imp_prelude::*;
+use crate::Arc;
+
 use crate::{
     dimension,
     iter::{Iter, IterMut},
     numeric_util,
     FoldWhile,
     NdIndex,
+    OwnedArcRepr,
     Zip,
 };
 
@@ -457,7 +461,9 @@ where D: Dimension
 {
     fn from(arr: Array<A, D>) -> ArcArray<A, D>
     {
-        arr.into_shared()
+        let data = OwnedArcRepr(Arc::new(arr.data));
+        // safe because: equivalent unmoved data, ptr and dims remain valid
+        unsafe { ArrayBase::from_data_ptr(data, arr.ptr).with_strides_dim(arr.strides, arr.dim) }
     }
 }
 
