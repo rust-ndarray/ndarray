@@ -50,8 +50,11 @@ pub unsafe trait RawData: Sized {
 pub unsafe trait RawDataMut: RawData {
     /// If possible, ensures that the array has unique access to its data.
     ///
-    /// If `Self` provides safe mutable access to array elements, then it
-    /// **must** panic or ensure that the data is unique.
+    /// The implementer must ensure that if the input is contiguous, then the
+    /// output has the same strides as input.
+    ///
+    /// Additionally, if `Self` provides safe mutable access to array elements,
+    /// then this method **must** panic or ensure that the data is unique.
     #[doc(hidden)]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where
@@ -230,14 +233,9 @@ where
             return;
         }
         if self_.dim.size() <= self_.data.0.len() / 2 {
-            // Create a new vec if the current view is less than half of
-            // backing data.
-            unsafe {
-                *self_ = ArrayBase::from_shape_vec_unchecked(
-                    self_.dim.clone(),
-                    self_.iter().cloned().collect(),
-                );
-            }
+            // Clone only the visible elements if the current view is less than
+            // half of backing data.
+            *self_ = self_.to_owned().into_shared();
             return;
         }
         let rcvec = &mut self_.data.0;
