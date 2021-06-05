@@ -90,7 +90,7 @@
 //!   - Implies std
 //! - `approx`
 //!   - Enables implementations of traits from version 0.4 of the [`approx`] crate.
-//! - `approx-0p5`
+//! - `approx-0_5`
 //!   - Enables implementations of traits from version 0.5 of the [`approx`] crate.
 //! - `blas`
 //!   - Enable transparent BLAS support for matrix multiplication.
@@ -1618,7 +1618,7 @@ pub mod linalg;
 mod impl_ops;
 pub use crate::impl_ops::ScalarOperand;
 
-#[cfg(any(feature = "approx", feature = "approx-0p5"))]
+#[cfg(any(feature = "approx", feature = "approx-0_5"))]
 mod array_approx;
 
 // Array view methods
