@@ -47,11 +47,11 @@ where
             // In the empty case, we can just reuse the existing pointer since
             // it won't be dereferenced anyway. It is not safe to offset by one
             // since the allocation may be empty.
-            self.ptr.cast()
+            ptr_re
         } else {
-            // Safe because `self` is nonempty, so we can safely offset into
-            // the first element.
-            unsafe { self.ptr.cast().add(1) }
+            // In the nonempty case, we can safely offset into the first
+            // (complex) element.
+            unsafe { ptr_re.add(1) }
         };
 
         // `Complex` is `repr(C)` with only fields `re: T` and `im: T`. So, the
@@ -125,11 +125,11 @@ where
             // In the empty case, we can just reuse the existing pointer since
             // it won't be dereferenced anyway. It is not safe to offset by one
             // since the allocation may be empty.
-            self.ptr.cast()
+            ptr_re
         } else {
-            // Safe because `self` is nonempty, so we can safely offset into
-            // the first element.
-            unsafe { self.ptr.cast().add(1) }
+            // In the nonempty case, we can safely offset into the first
+            // (complex) element.
+            unsafe { ptr_re.add(1) }
         };
 
         // `Complex` is `repr(C)` with only fields `re: T` and `im: T`. So, the
