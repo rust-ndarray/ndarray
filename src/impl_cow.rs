@@ -71,3 +71,14 @@ where
         Self::from(ArrayView1::from(slice))
     }
 }
+
+impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for CowArray<'a, A, D>
+where
+    S: Data<Elem = A>,
+    D: Dimension,
+{
+    /// Create a read-only clone-on-write view of the array.
+    fn from(array: &'a ArrayBase<S, D>) -> Self {
+        Self::from(array.view())
+    }
+}
