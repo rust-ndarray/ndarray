@@ -252,7 +252,7 @@ where
     P: NdProducer<Dim = D>,
 {
     ndassert!(
-        part.equal_dim(&dimension),
+        part.equal_dim(dimension),
         "Zip: Producer dimension mismatch, expected: {:?}, got: {:?}",
         dimension,
         part.raw_dim()

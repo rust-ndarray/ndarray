@@ -361,7 +361,7 @@ where
         } else {
             0
         };
-        self.clone_from(&other);
+        self.clone_from(other);
         self.as_nonnull_mut().offset(our_off)
     }
 }

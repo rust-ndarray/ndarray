@@ -75,7 +75,7 @@ where
             assert!(!ptr.is_null(), "The pointer must be non-null.");
             if let Strides::Custom(strides) = &shape.strides {
                 dimension::strides_non_negative(strides).unwrap();
-                dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+                dimension::max_abs_offset_check_overflow::<A, _>(&dim, strides).unwrap();
             } else {
                 dimension::size_of_shape_checked(&dim).unwrap();
             }
@@ -217,7 +217,7 @@ where
             assert!(!ptr.is_null(), "The pointer must be non-null.");
             if let Strides::Custom(strides) = &shape.strides {
                 dimension::strides_non_negative(strides).unwrap();
-                dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
+                dimension::max_abs_offset_check_overflow::<A, _>(&dim, strides).unwrap();
             } else {
                 dimension::size_of_shape_checked(&dim).unwrap();
             }

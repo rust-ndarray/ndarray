@@ -2292,7 +2292,7 @@ where
             if let Some(self_s) = self.as_slice_memory_order_mut() {
                 if let Some(rhs_s) = rhs.as_slice_memory_order() {
                     for (s, r) in self_s.iter_mut().zip(rhs_s) {
-                        f(s, &r);
+                        f(s, r);
                     }
                     return;
                 }

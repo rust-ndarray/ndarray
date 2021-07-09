@@ -227,7 +227,7 @@ where
     {
         let n = diag.len();
         let mut arr = Self::zeros((n, n));
-        arr.diag_mut().assign(&diag);
+        arr.diag_mut().assign(diag);
         arr
     }
 }
