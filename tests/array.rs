@@ -990,6 +990,20 @@ fn map1() {
 }
 
 #[test]
+fn mapv_into_any_same_type() {
+    let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    assert_eq!(a.mapv_into_any(|a| a + 1.), a_plus_one);
+}
+
+#[test]
+fn mapv_into_any_diff_types() {
+    let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
+    let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
+    assert_eq!(a.mapv_into_any(|a| a.round() as i32 % 2 == 0), a_even);
+}
+
+#[test]
 fn as_slice_memory_order_mut_arcarray() {
     // Test that mutation breaks sharing for `ArcArray`.
     let a = rcarr2(&[[1., 2.], [3., 4.0f32]]);

@@ -2473,6 +2473,45 @@ where
         self
     }
 
+    /// Consume the array, call `f` by **v**alue on each element, and return an
+    /// owned array with the new values. Works for **any** `F: FnMut(A)->B`.
+    ///
+    /// If `A` and `B` are the same type then the map is performed by delegating
+    /// to [`mapv_into()`] and then converting into an owned array. This avoids
+    /// unnecessary memory allocations in [`mapv()`].
+    ///
+    /// If `A` and `B` are different types then a new array is allocated and the
+    /// map is performed as in [`mapv()`].
+    ///
+    /// Elements are visited in arbitrary order.
+    pub fn mapv_into_any<B, F>(self, mut f: F) -> Array<B, D>
+    where
+        S: DataMut,
+        F: FnMut(A) -> B,
+        A: Clone + 'static,
+        B: 'static,
+    {
+        if core::any::TypeId::of::<A>() == core::any::TypeId::of::<B>() {
+            // A and B are the same type.
+            // Wrap f in a closure of type FnMut(A) -> A .
+            let f = |a| {
+                let b = f(a);
+                // Safe because A and B are the same type.
+                unsafe { unlimited_transmute::<B, A>(b) }
+            };
+            // Delegate to mapv_into() using the wrapped closure.
+            // Convert output to a uniquely owned array of type Array<A, D>.
+            let output = self.mapv_into(f).into_owned();
+            // Change the return type from Array<A, D> to Array<B, D>.
+            // Again, safe because A and B are the same type.
+            unsafe { unlimited_transmute::<Array<A, D>, Array<B, D>>(output) }
+        } else {
+            // A and B are not the same type.
+            // Fallback to mapv().
+            self.mapv(f)
+        }
+    }
+
     /// Modify the array in place by calling `f` by mutable reference on each element.
     ///
     /// Elements are visited in arbitrary order.
