@@ -17,7 +17,7 @@ macro_rules! boolean_op {
     };
 }
 
-macro_rules! map_op {
+macro_rules! unary_op {
     ($(#[$meta:meta])* fn $id:ident) => {
         $(#[$meta])*
         pub fn $id(&self) -> Array<A, D> {
@@ -26,7 +26,7 @@ macro_rules! map_op {
     };
 }
 
-macro_rules! bin_op {
+macro_rules! binary_op {
     ($(#[$meta:meta])* fn $id:ident($ty:ty)) => {
         $(#[$meta])*
         pub fn $id(&self, rhs: $ty) -> Array<A, D> {
@@ -56,31 +56,31 @@ where
         /// Return `true` if any element is infinity.
         fn is_infinite_any -> is_infinite
     }
-    map_op! {
+    unary_op! {
         /// The largest integer less than or equal to each element.
         fn floor
     }
-    map_op! {
+    unary_op! {
         /// The smallest integer less than or equal to each element.
         fn ceil
     }
-    map_op! {
+    unary_op! {
         /// The nearest integer of each element.
         fn round
     }
-    map_op! {
+    unary_op! {
         /// The integer part of each element.
         fn trunc
     }
-    map_op! {
+    unary_op! {
         /// The fractional part of each element.
         fn fract
     }
-    map_op! {
+    unary_op! {
         /// Absolute of each element.
         fn abs
     }
-    map_op! {
+    unary_op! {
         /// Sign number of each element.
         ///
         /// + `1.0` for all positive numbers.
@@ -88,17 +88,17 @@ where
         /// + `NaN` for all `NaN` (not a number).
         fn signum
     }
-    map_op! {
+    unary_op! {
         /// The reciprocal (inverse) of each element, `1/x`.
         fn recip
     }
-    bin_op! {
+    binary_op! {
         /// Integer power of each element.
         ///
         /// This function is generally faster than using float power.
         fn powi(i32)
     }
-    bin_op! {
+    binary_op! {
         /// Float power of each element.
         fn powf(A)
     }
@@ -108,59 +108,59 @@ where
         self.mapv(|v| v * v)
     }
 
-    map_op! {
+    unary_op! {
         /// Square root of each element.
         fn sqrt
     }
-    map_op! {
+    unary_op! {
         /// `e^x` of each element. (Exponential function)
         fn exp
     }
-    map_op! {
+    unary_op! {
         /// `2^x` of each element.
         fn exp2
     }
-    map_op! {
+    unary_op! {
         /// Natural logarithm of each element.
         fn ln
     }
-    bin_op! {
+    binary_op! {
         /// Logarithm of each element with respect to an arbitrary base.
         fn log(A)
     }
-    map_op! {
+    unary_op! {
         /// Base 2 logarithm of each element.
         fn log2
     }
-    map_op! {
+    unary_op! {
         /// Base 10 logarithm of each element.
         fn log10
     }
-    bin_op! {
+    binary_op! {
         /// The positive difference between given number and each element.
         fn abs_sub(A)
     }
-    map_op! {
+    unary_op! {
         /// Cubic root of each element.
         fn cbrt
     }
-    map_op! {
+    unary_op! {
         /// Sine of each element. (in radians)
         fn sin
     }
-    map_op! {
+    unary_op! {
         /// Cosine of each element. (in radians)
         fn cos
     }
-    map_op! {
+    unary_op! {
         /// Tangent of each element. (in radians)
         fn tan
     }
-    map_op! {
+    unary_op! {
         /// Converts radians to degrees for each element.
         fn to_degrees
     }
-    map_op! {
+    unary_op! {
         /// Converts degrees to radians for each element.
         fn to_radians
     }
