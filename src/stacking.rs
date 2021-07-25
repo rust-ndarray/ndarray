@@ -192,22 +192,39 @@ where
 ///
 /// # fn main() {
 ///
-/// let a = arr2(&[[2., 2.],
-///                [3., 3.]]);
-/// assert!(
-///     stack![Axis(0), a, a]
-///     == arr3(&[[[2., 2.],
-///                [3., 3.]],
-///               [[2., 2.],
-///                [3., 3.]]])
+/// let a = arr2(&[[1., 2.],
+///                [3., 4.]]);
+/// assert_eq!(
+///     stack![Axis(0), a, a],
+///     arr3(&[[[1., 2.],
+///             [3., 4.]],
+///            [[1., 2.],
+///             [3., 4.]]]),
+/// );
+/// assert_eq!(
+///     stack![Axis(1), a, a,],
+///     arr3(&[[[1., 2.],
+///             [1., 2.]],
+///            [[3., 4.],
+///             [3., 4.]]]),
+/// );
+/// assert_eq!(
+///     stack![Axis(2), a, a],
+///     arr3(&[[[1., 1.],
+///             [2., 2.]],
+///            [[3., 3.],
+///             [4., 4.]]]),
 /// );
 /// # }
 /// ```
 #[macro_export]
 macro_rules! stack {
+    ($axis:expr, $( $array:expr ),+ ,) => {
+        $crate::stack!($axis, $($array),+)
+    };
     ($axis:expr, $( $array:expr ),+ ) => {
         $crate::stack($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
-    }
+    };
 }
 
 /// Concatenate arrays along the given axis.
@@ -226,22 +243,30 @@ macro_rules! stack {
 ///
 /// # fn main() {
 ///
-/// let a = arr2(&[[2., 2.],
-///                [3., 3.]]);
-/// assert!(
-///     concatenate![Axis(0), a, a]
-///     == arr2(&[[2., 2.],
-///               [3., 3.],
-///               [2., 2.],
-///               [3., 3.]])
+/// let a = arr2(&[[1., 2.],
+///                [3., 4.]]);
+/// assert_eq!(
+///     concatenate![Axis(0), a, a],
+///     arr2(&[[1., 2.],
+///            [3., 4.],
+///            [1., 2.],
+///            [3., 4.]]),
+/// );
+/// assert_eq!(
+///     concatenate![Axis(1), a, a,],
+///     arr2(&[[1., 2., 1., 2.],
+///            [3., 4., 3., 4.]]),
 /// );
 /// # }
 /// ```
 #[macro_export]
 macro_rules! concatenate {
+    ($axis:expr, $( $array:expr ),+ ,) => {
+        $crate::concatenate!($axis, $($array),+)
+    };
     ($axis:expr, $( $array:expr ),+ ) => {
         $crate::concatenate($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
-    }
+    };
 }
 
 /// Stack arrays along the new axis.
