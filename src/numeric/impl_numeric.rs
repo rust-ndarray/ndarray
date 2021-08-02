@@ -8,7 +8,7 @@
 
 #[cfg(feature = "std")]
 use num_traits::Float;
-use num_traits::{self, FromPrimitive, Zero};
+use num_traits::{self, FromPrimitive, Zero, PrimInt, Pow};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
@@ -417,5 +417,40 @@ where
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
+    }
+
+    /// Raises each item in the array to the same power
+    ///
+    /// # Example
+    /// ```
+    /// use ndarray::{array};
+    ///
+    /// let a = array![
+    ///   [1., 2.],
+    ///   [3., 4.],
+    /// ];
+    /// assert_eq!(a.pow(2.), array![
+    ///   [1., 4.],
+    ///   [9., 16.],
+    /// ]);
+    /// ```
+    /// ```
+    /// use ndarray::{array};
+    ///
+    /// let a = array![
+    ///   [1., 4.],
+    ///   [9., 16.],
+    /// ];
+    /// assert_eq!(a.pow(0.5), array![
+    ///   [1., 2.],
+    ///   [3., 4.],
+    /// ]);
+    /// ```
+    pub fn pow<B>(&self, pow: B) -> Array<<A as Pow<B>>::Output, D>
+    where
+        A: Pow<B> + Clone,
+        B: Copy
+    {
+        self.mapv(|a| a.pow(pow))
     }
 }
