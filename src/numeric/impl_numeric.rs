@@ -7,8 +7,8 @@
 // except according to those terms.
 
 #[cfg(feature = "std")]
-use num_traits::Float;
-use num_traits::{self, FromPrimitive, Zero, Pow};
+use num_traits::{Float, Pow};
+use num_traits::{self, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
