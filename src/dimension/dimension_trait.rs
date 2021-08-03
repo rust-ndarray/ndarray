@@ -379,6 +379,7 @@ pub trait Dimension:
 
 macro_rules! impl_insert_axis_array(
     ($n:expr) => (
+        #[inline]
         fn insert_axis(&self, axis: Axis) -> Self::Larger {
             debug_assert!(axis.index() <= $n);
             let mut out = [1; $n + 1];
@@ -422,7 +423,6 @@ impl Dimension for Dim<[Ix; 0]> {
     fn next_for(&self, _index: Self) -> Option<Self> {
         None
     }
-    #[inline]
     impl_insert_axis_array!(0);
     #[inline]
     fn try_remove_axis(&self, _ignore: Axis) -> Self::Smaller {
@@ -530,7 +530,6 @@ impl Dimension for Dim<[Ix; 1]> {
             None
         }
     }
-    #[inline]
     impl_insert_axis_array!(1);
     #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
@@ -694,7 +693,6 @@ impl Dimension for Dim<[Ix; 2]> {
             None
         }
     }
-    #[inline]
     impl_insert_axis_array!(2);
     #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
@@ -814,7 +812,6 @@ impl Dimension for Dim<[Ix; 3]> {
         }
         order
     }
-    #[inline]
     impl_insert_axis_array!(3);
     #[inline]
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
@@ -845,7 +842,6 @@ macro_rules! large_dim {
                 assert_eq!(ndim, $n);
                 Self::default()
             }
-            #[inline]
             $($insert_axis)*
             #[inline]
             fn try_remove_axis(&self, axis: Axis) -> Self::Smaller {
