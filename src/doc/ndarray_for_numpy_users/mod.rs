@@ -390,7 +390,7 @@
 //!
 //! </td><td>
 //!
-//! [`a.mapv(|a| a.powi(3))`][.mapv()]
+//! [`a.pow(3)`][.pow()]
 //!
 //! </td><td>
 //!
@@ -404,7 +404,7 @@
 //!
 //! </td><td>
 //!
-//! [`a.mapv(f64::sqrt)`][.mapv()]
+//! [`a.pow(0.5)`][.pow()]
 //!
 //! </td><td>
 //!
@@ -627,6 +627,7 @@
 //! [NdProducer]: ../../trait.NdProducer.html
 //! [::ones()]: ../../struct.ArrayBase.html#method.ones
 //! [.outer_iter()]: ../../struct.ArrayBase.html#method.outer_iter
+//! [.pow()]: ../../struct.ArrayBase.html#method.pow
 //! [::range()]: ../../struct.ArrayBase.html#method.range
 //! [.raw_dim()]: ../../struct.ArrayBase.html#method.raw_dim
 //! [.reversed_axes()]: ../../struct.ArrayBase.html#method.reversed_axes
