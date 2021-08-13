@@ -2477,13 +2477,16 @@ where
     /// owned array with the new values. Works for **any** `F: FnMut(A)->B`.
     ///
     /// If `A` and `B` are the same type then the map is performed by delegating
-    /// to [`mapv_into()`] and then converting into an owned array. This avoids
-    /// unnecessary memory allocations in [`mapv()`].
+    /// to [`mapv_into`] and then converting into an owned array. This avoids
+    /// unnecessary memory allocations in [`mapv`].
     ///
     /// If `A` and `B` are different types then a new array is allocated and the
-    /// map is performed as in [`mapv()`].
+    /// map is performed as in [`mapv`].
     ///
     /// Elements are visited in arbitrary order.
+    ///
+    /// [`mapv_into`]: ArrayBase::mapv_into
+    /// [`mapv`]: ArrayBase::mapv
     pub fn mapv_into_any<B, F>(self, mut f: F) -> Array<B, D>
     where
         S: DataMut,
