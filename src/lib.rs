@@ -24,7 +24,7 @@
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
 //!
-//! In *n*-dimensional we include for example 1-dimensional rows or columns,
+//! In *n*-dimensional we include, for example, 1-dimensional rows or columns,
 //! 2-dimensional matrices, and higher dimensional arrays. If the array has *n*
 //! dimensions, then an element in the array is accessed by using that many indices.
 //! Each dimension is also called an *axis*.
