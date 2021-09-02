@@ -8,7 +8,7 @@ publish = false
 test = false
 
 [dev-dependencies]
-approx = "0.4"
+approx = "0.5"
 defmac = "0.2"
 num-traits = "0.2"
 
