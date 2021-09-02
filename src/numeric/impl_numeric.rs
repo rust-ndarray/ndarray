@@ -12,7 +12,6 @@ use num_traits::{self, FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;
-use crate::itertools::enumerate;
 use crate::numeric_util;
 
 /// # Numerical Methods for Arrays
@@ -246,22 +245,16 @@ where
         A: Clone + Zero + Add<Output = A>,
         D: RemoveAxis,
     {
-        let n = self.len_of(axis);
-        let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
-        let stride = self.strides()[axis.index()];
-        if self.ndim() == 2 && stride == 1 {
-            // contiguous along the axis we are summing
-            let ax = axis.index();
-            for (i, elt) in enumerate(&mut res) {
-                *elt = self.index_axis(Axis(1 - ax), i).sum();
-            }
+        let min_stride_axis = self.dim.min_stride_axis(&self.strides);
+        if axis == min_stride_axis {
+            crate::Zip::from(self.lanes(axis)).map_collect(|lane| lane.sum())
         } else {
-            for i in 0..n {
-                let view = self.index_axis(axis, i);
-                res = res + &view;
+            let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
+            for subview in self.axis_iter(axis) {
+                res = res + &subview;
             }
+            res
         }
-        res
     }
 
     /// Return mean along `axis`.
