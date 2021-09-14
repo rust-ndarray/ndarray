@@ -1399,6 +1399,50 @@ where
         Windows::new(self.view(), window_size)
     }
 
+    /// Returns a producer which traverses over all windows of a given length along an axis.
+    ///
+    /// The windows are all distinct, possibly-overlapping views. The shape of each window
+    /// is the shape of `self`, with the length of `axis` replaced with `window_size`.
+    ///
+    /// **Panics** if `axis` is out-of-bounds or if `window_size` is zero.
+    ///
+    /// ```
+    /// use ndarray::{Array3, Axis, s};
+    ///
+    /// let arr = Array3::from_shape_fn([4, 5, 2], |(i, j, k)| i * 100 + j * 10 + k);
+    /// let correct = vec![
+    ///     arr.slice(s![.., 0..3, ..]),
+    ///     arr.slice(s![.., 1..4, ..]),
+    ///     arr.slice(s![.., 2..5, ..]),
+    /// ];
+    /// for (window, correct) in arr.axis_windows(Axis(1), 3).into_iter().zip(&correct) {
+    ///     assert_eq!(window, correct);
+    ///     assert_eq!(window.shape(), &[4, 3, 2]);
+    /// }
+    /// ```
+    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> Windows<'_, A, D>
+    where
+        S: Data,
+    {
+        let axis_index = axis.index();
+
+        ndassert!(
+            axis_index < self.ndim(),
+            concat!(
+                "Window axis {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            axis_index,
+            self.ndim(),
+            self.shape()
+        );
+
+        let mut size = self.raw_dim();
+        size[axis_index] = window_size;
+
+        Windows::new(self.view(), size)
+    }
+
     // Return (length, stride) for diagonal
     fn diag_params(&self) -> (Ix, Ixs) {
         /* empty shape has len 1 */
