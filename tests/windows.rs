@@ -6,7 +6,7 @@
 )]
 
 use ndarray::prelude::*;
-use ndarray::Zip;
+use ndarray::{arr3, Zip};
 
 // Edge Cases for Windows iterator:
 //
@@ -79,7 +79,6 @@ fn windows_iterator_2d() {
 /// Simple test for iterating 3d-arrays via `Windows`.
 #[test]
 fn windows_iterator_3d() {
-    use ndarray::arr3;
     let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
     itertools::assert_equal(
         a.windows(Dim((2, 2, 2))),
@@ -116,6 +115,87 @@ fn test_window_zip() {
         }
     }
 }
+
+/// Test verifies that non existant Axis results in panic
+#[test]
+#[should_panic]
+fn axis_windows_outofbound() {
+    let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
+    a.axis_windows(Axis(4), 2);
+}
+
+/// Test verifies that zero sizes results in panic
+#[test]
+#[should_panic]
+fn axis_windows_zero_size() {
+    let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
+    a.axis_windows(Axis(0), 0);
+}
+
+/// Test verifies that over sized windows yield nothing
+#[test]
+fn axis_windows_oversized() {
+    let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
+    let mut iter = a.axis_windows(Axis(2), 4).into_iter();
+    assert_eq!(iter.next(), None);
+}
+
+/// Simple test for iterating 1d-arrays via `Axis Windows`.
+#[test]
+fn test_axis_windows_1d() {
+    let a = Array::from_iter(10..20).into_shape(10).unwrap();
+
+    itertools::assert_equal(
+        a.axis_windows(Axis(0), 5),
+        vec![
+            arr1(&[10, 11, 12, 13, 14]),
+            arr1(&[11, 12, 13, 14, 15]),
+            arr1(&[12, 13, 14, 15, 16]),
+            arr1(&[13, 14, 15, 16, 17]),
+            arr1(&[14, 15, 16, 17, 18]),
+            arr1(&[15, 16, 17, 18, 19]),
+        ],
+    );
+}
+
+/// Simple test for iterating 2d-arrays via `Axis Windows`.
+#[test]
+fn test_axis_windows_2d() {
+    let a = Array::from_iter(10..30).into_shape((5, 4)).unwrap();
+
+    itertools::assert_equal(
+        a.axis_windows(Axis(0), 2),
+        vec![
+            arr2(&[[10, 11, 12, 13], [14, 15, 16, 17]]),
+            arr2(&[[14, 15, 16, 17], [18, 19, 20, 21]]),
+            arr2(&[[18, 19, 20, 21], [22, 23, 24, 25]]),
+            arr2(&[[22, 23, 24, 25], [26, 27, 28, 29]]),
+        ],
+    );
+}
+
+/// Simple test for iterating 3d-arrays via `Axis Windows`.
+#[test]
+fn test_axis_windows_3d() {
+    let a = Array::from_iter(0..27).into_shape((3, 3, 3)).unwrap();
+
+    itertools::assert_equal(
+        a.axis_windows(Axis(1), 2),
+        vec![
+            arr3(&[
+                [[0, 1, 2], [3, 4, 5]],
+                [[9, 10, 11], [12, 13, 14]],
+                [[18, 19, 20], [21, 22, 23]],
+            ]),
+            arr3(&[
+                [[3, 4, 5], [6, 7, 8]],
+                [[12, 13, 14], [15, 16, 17]],
+                [[21, 22, 23], [24, 25, 26]],
+            ]),
+        ],
+    );
+}
+
 
 #[test]
 fn test_window_neg_stride() {
