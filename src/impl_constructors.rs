@@ -230,6 +230,29 @@ where
         arr.diag_mut().assign(diag);
         arr
     }
+
+    /// Create a square 2D matrix of the specified size, with the specified
+    /// element along the diagonal and zeros elsewhere.
+    ///
+    /// **Panics** if `n * n` would overflow `isize`.
+    ///
+    /// ```rust
+    /// use ndarray::{array, Array2};
+    ///
+    /// let array = Array2::from_diag_elem(2, 5.);
+    /// assert_eq!(array, array![[5., 0.], [0., 5.]]);
+    /// ```
+    pub fn from_diag_elem(n: usize, elem: A) -> Self
+    where
+        S: DataMut,
+        A: Clone + Zero,
+    {
+        let mut eye = Self::zeros((n, n));
+        for a_ii in eye.diag_mut() {
+            *a_ii = elem.clone();
+        }
+        eye
+    }
 }
 
 #[cfg(not(debug_assertions))]
