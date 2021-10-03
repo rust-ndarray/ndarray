@@ -7,12 +7,14 @@ use crate::imp_prelude::*;
 macro_rules! boolean_op {
     ($($(#[$meta1:meta])* fn $id1:ident $(#[$meta2:meta])* fn $id2:ident -> $func:ident)+) => {
         $($(#[$meta1])*
+        #[must_use = "method returns a new array and does not mutate the original value"]
         pub fn $id1(&self) -> Array<bool, D> {
             self.mapv(A::$func)
         }
         $(#[$meta2])*
+        #[must_use = "method returns a new boolean value and does not mutate the original value"]
         pub fn $id2(&self) -> bool {
-            self.mapv(A::$func).iter().any(|&b|b)
+            self.mapv(A::$func).iter().any(|&b| b)
         })+
     };
 }
@@ -20,6 +22,7 @@ macro_rules! boolean_op {
 macro_rules! unary_op {
     ($($(#[$meta:meta])* fn $id:ident)+) => {
         $($(#[$meta])*
+        #[must_use = "method returns a new array and does not mutate the original value"]
         pub fn $id(&self) -> Array<A, D> {
             self.mapv(A::$id)
         })+
@@ -29,6 +32,7 @@ macro_rules! unary_op {
 macro_rules! binary_op {
     ($($(#[$meta:meta])* fn $id:ident($ty:ty))+) => {
         $($(#[$meta])*
+        #[must_use = "method returns a new array and does not mutate the original value"]
         pub fn $id(&self, rhs: $ty) -> Array<A, D> {
             self.mapv(|v| A::$id(v, rhs))
         })+
@@ -41,19 +45,19 @@ macro_rules! binary_op {
 impl<A, S, D> ArrayBase<S, D>
 where
     A: Float,
-    S: RawData<Elem = A> + Data,
+    S: Data<Elem = A>,
     D: Dimension,
 {
     boolean_op! {
         /// If the number is `NaN` (not a number), then `true` is returned for each element.
         fn is_nan
         /// Return `true` if any element is `NaN` (not a number).
-        fn is_nan_any -> is_nan
+        fn is_any_nan -> is_nan
 
         /// If the number is infinity, then `true` is returned for each element.
         fn is_infinite
         /// Return `true` if any element is infinity.
-        fn is_infinite_any -> is_infinite
+        fn is_any_infinite -> is_infinite
     }
     unary_op! {
         /// The largest integer less than or equal to each element.
@@ -87,7 +91,7 @@ where
         /// Square root of each element.
         fn sqrt
 
-        /// `e^x` of each element. (Exponential function)
+        /// `e^x` of each element (exponential function).
         fn exp
 
         /// `2^x` of each element.
@@ -105,13 +109,13 @@ where
         /// Cubic root of each element.
         fn cbrt
 
-        /// Sine of each element. (in radians)
+        /// Sine of each element (in radians).
         fn sin
 
-        /// Cosine of each element. (in radians)
+        /// Cosine of each element (in radians).
         fn cos
 
-        /// Tangent of each element. (in radians)
+        /// Tangent of each element (in radians).
         fn tan
 
         /// Converts radians to degrees for each element.
@@ -136,9 +140,10 @@ where
         fn abs_sub(A)
     }
 
-    /// Square of each element.
-    pub fn square(&self) -> Array<A, D> {
-        self.mapv(|v| v * v)
+    /// Square (two powers) of each element.
+    #[must_use = "method returns a new array and does not mutate the original value"]
+    pub fn pow2(&self) -> Array<A, D> {
+        self.mapv(|v: A| v * v)
     }
 
     /// Limit the values for each element.
