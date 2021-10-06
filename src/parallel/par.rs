@@ -21,11 +21,24 @@ use crate::split_at::SplitPreference;
 #[derive(Copy, Clone, Debug)]
 pub struct Parallel<I> {
     iter: I,
+    min_len: usize,
 }
+
+impl<I> Parallel<I> {
+    /// Sets the minimum number of elements desired to process in each job. This will not be split any smaller than this length, but of course a producer could already be smaller to begin with.
+    pub fn with_min_len(self, min_len: usize) -> Self {
+        Self {
+            min_len,
+            ..self
+        }
+    }
+}
+
+const DEFAULT_MIN_LEN: usize = 1;
 
 /// Parallel producer wrapper.
 #[derive(Copy, Clone, Debug)]
-struct ParallelProducer<I>(I);
+struct ParallelProducer<I>(I, usize);
 
 macro_rules! par_iter_wrapper {
     // thread_bounds are either Sync or Send + Sync
@@ -40,6 +53,7 @@ macro_rules! par_iter_wrapper {
         fn into_par_iter(self) -> Self::Iter {
             Parallel {
                 iter: self,
+                min_len: DEFAULT_MIN_LEN,
             }
         }
     }
@@ -67,7 +81,7 @@ macro_rules! par_iter_wrapper {
         fn with_producer<Cb>(self, callback: Cb) -> Cb::Output
             where Cb: ProducerCallback<Self::Item>
         {
-            callback.callback(ParallelProducer(self.iter))
+            callback.callback(ParallelProducer(self.iter, self.min_len))
         }
 
         fn len(&self) -> usize {
@@ -106,7 +120,7 @@ macro_rules! par_iter_wrapper {
 
         fn split_at(self, i: usize) -> (Self, Self) {
             let (a, b) = self.0.split_at(i);
-            (ParallelProducer(a), ParallelProducer(b))
+            (ParallelProducer(a, self.1), ParallelProducer(b, self.1))
         }
     }
 
@@ -131,6 +145,7 @@ macro_rules! par_iter_view_wrapper {
         fn into_par_iter(self) -> Self::Iter {
             Parallel {
                 iter: self,
+                min_len: DEFAULT_MIN_LEN,
             }
         }
     }
@@ -144,7 +159,7 @@ macro_rules! par_iter_view_wrapper {
         fn drive_unindexed<C>(self, consumer: C) -> C::Result
             where C: UnindexedConsumer<Self::Item>
         {
-            bridge_unindexed(ParallelProducer(self.iter), consumer)
+            bridge_unindexed(ParallelProducer(self.iter, self.min_len), consumer)
         }
 
         fn opt_len(&self) -> Option<usize> {
@@ -158,14 +173,14 @@ macro_rules! par_iter_view_wrapper {
     {
         type Item = <$view_name<'a, A, D> as IntoIterator>::Item;
         fn split(self) -> (Self, Option<Self>) {
-            if self.0.len() <= 1 {
+            if self.0.len() <= self.1 {
                 return (self, None)
             }
             let array = self.0;
             let max_axis = array.max_stride_axis();
             let mid = array.len_of(max_axis) / 2;
             let (a, b) = array.split_at(max_axis, mid);
-            (ParallelProducer(a), Some(ParallelProducer(b)))
+            (ParallelProducer(a, self.1), Some(ParallelProducer(b, self.1)))
         }
 
         fn fold_with<F>(self, folder: F) -> F
@@ -217,6 +232,7 @@ macro_rules! zip_impl {
             fn into_par_iter(self) -> Self::Iter {
                 Parallel {
                     iter: self,
+                    min_len: DEFAULT_MIN_LEN,
                 }
             }
         }
@@ -233,7 +249,7 @@ macro_rules! zip_impl {
             fn drive_unindexed<Cons>(self, consumer: Cons) -> Cons::Result
                 where Cons: UnindexedConsumer<Self::Item>
             {
-                bridge_unindexed(ParallelProducer(self.iter), consumer)
+                bridge_unindexed(ParallelProducer(self.iter, self.min_len), consumer)
             }
 
             fn opt_len(&self) -> Option<usize> {
@@ -251,11 +267,11 @@ macro_rules! zip_impl {
             type Item = ($($p::Item ,)*);
 
             fn split(self) -> (Self, Option<Self>) {
-                if !self.0.can_split() {
+                if self.0.size() <= self.1 {
                     return (self, None)
                 }
                 let (a, b) = self.0.split();
-                (ParallelProducer(a), Some(ParallelProducer(b)))
+                (ParallelProducer(a, self.1), Some(ParallelProducer(b, self.1)))
             }
 
             fn fold_with<Fold>(self, folder: Fold) -> Fold
