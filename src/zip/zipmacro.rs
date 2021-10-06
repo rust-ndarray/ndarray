@@ -42,60 +42,57 @@
 ///
 /// type M = Array2<f32>;
 ///
-/// fn main() {
-///     // Setup example arrays
-///     let mut a = M::zeros((16, 16));
-///     let mut b = M::zeros(a.dim());
-///     let mut c = M::zeros(a.dim());
+/// // Setup example arrays
+/// let mut a = M::zeros((16, 16));
+/// let mut b = M::zeros(a.dim());
+/// let mut c = M::zeros(a.dim());
 ///
-///     // assign values
-///     b.fill(1.);
-///     for ((i, j), elt) in c.indexed_iter_mut() {
-///         *elt = (i + 10 * j) as f32;
-///     }
-///
-///     // Example 1: Compute a simple ternary operation:
-///     // elementwise addition of b and c, stored in a
-///     azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
-///
-///     assert_eq!(a, &b + &c);
-///
-///     // Example 2: azip!() with index
-///     azip!((index (i, j), &b in &b, &c in &c) {
-///         a[[i, j]] = b - c;
-///     });
-///
-///     assert_eq!(a, &b - &c);
-///
-///
-///     // Example 3: azip!() on references
-///     // See the definition of the function below
-///     borrow_multiply(&mut a, &b, &c);
-///
-///     assert_eq!(a, &b * &c);
-///
-///
-///     // Since this function borrows its inputs, the `IntoNdProducer`
-///     // expressions don't need to explicitly include `&mut` or `&`.
-///     fn borrow_multiply(a: &mut M, b: &M, c: &M) {
-///         azip!((a in a, &b in b, &c in c) *a = b * c);
-///     }
-///
-///
-///     // Example 4: using azip!() without dereference in pattern.
-///     //
-///     // Create a new array `totals` with one entry per row of `a`.
-///     // Use azip to traverse the rows of `a` and assign to the corresponding
-///     // entry in `totals` with the sum across each row.
-///     //
-///     // The row is an array view; it doesn't need to be dereferenced.
-///     let mut totals = Array1::zeros(a.nrows());
-///     azip!((totals in &mut totals, row in a.rows()) *totals = row.sum());
-///
-///     // Check the result against the built in `.sum_axis()` along axis 1.
-///     assert_eq!(totals, a.sum_axis(Axis(1)));
+/// // assign values
+/// b.fill(1.);
+/// for ((i, j), elt) in c.indexed_iter_mut() {
+///     *elt = (i + 10 * j) as f32;
 /// }
 ///
+/// // Example 1: Compute a simple ternary operation:
+/// // elementwise addition of b and c, stored in a
+/// azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
+///
+/// assert_eq!(a, &b + &c);
+///
+/// // Example 2: azip!() with index
+/// azip!((index (i, j), &b in &b, &c in &c) {
+///     a[[i, j]] = b - c;
+/// });
+///
+/// assert_eq!(a, &b - &c);
+///
+///
+/// // Example 3: azip!() on references
+/// // See the definition of the function below
+/// borrow_multiply(&mut a, &b, &c);
+///
+/// assert_eq!(a, &b * &c);
+///
+///
+/// // Since this function borrows its inputs, the `IntoNdProducer`
+/// // expressions don't need to explicitly include `&mut` or `&`.
+/// fn borrow_multiply(a: &mut M, b: &M, c: &M) {
+///     azip!((a in a, &b in b, &c in c) *a = b * c);
+/// }
+///
+///
+/// // Example 4: using azip!() without dereference in pattern.
+/// //
+/// // Create a new array `totals` with one entry per row of `a`.
+/// // Use azip to traverse the rows of `a` and assign to the corresponding
+/// // entry in `totals` with the sum across each row.
+/// //
+/// // The row is an array view; it doesn't need to be dereferenced.
+/// let mut totals = Array1::zeros(a.nrows());
+/// azip!((totals in &mut totals, row in a.rows()) *totals = row.sum());
+///
+/// // Check the result against the built in `.sum_axis()` along axis 1.
+/// assert_eq!(totals, a.sum_axis(Axis(1)));
 /// ```
 #[macro_export]
 macro_rules! azip {
