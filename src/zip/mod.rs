@@ -190,6 +190,7 @@ trait ZippableTuple: Sized {
 /// assert_eq!(totals, totals2);
 /// ```
 #[derive(Debug, Clone)]
+#[must_use = "zipping producers is lazy and does nothing unless consumed"]
 pub struct Zip<Parts, D> {
     parts: Parts,
     dimension: D,
