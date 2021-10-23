@@ -8,6 +8,8 @@
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
+#[cfg(feature = "blas")]
+use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
 
 use crate::{LinalgScalar, Zip};
 
@@ -649,6 +651,12 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
                             }
                         };
 
+                        // Low addr in memory pointers required for x, y
+                        let x_offset = offset_from_low_addr_ptr_to_logical_ptr(&x.dim, &x.strides);
+                        let x_ptr = x.ptr.as_ptr().sub(x_offset);
+                        let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.dim, &y.strides);
+                        let y_ptr = y.ptr.as_ptr().sub(y_offset);
+
                         let x_stride = x.strides()[0] as blas_index;
                         let y_stride = y.strides()[0] as blas_index;
 
@@ -660,10 +668,10 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
                             cast_as(&alpha),            // alpha
                             a.ptr.as_ptr() as *const _, // a
                             a_stride,                   // lda
-                            x.ptr.as_ptr() as *const _, // x
+                            x_ptr as *const _,          // x
                             x_stride,
-                            cast_as(&beta),           // beta
-                            y.ptr.as_ptr() as *mut _, // x
+                            cast_as(&beta),             // beta
+                            y_ptr as *mut _,            // y
                             y_stride,
                         );
                         return;
@@ -719,7 +727,10 @@ where
         return false;
     }
     let stride = a.strides()[0];
-    if stride > blas_index::max_value() as isize || stride < blas_index::min_value() as isize {
+    if stride == 0
+        || stride > blas_index::max_value() as isize
+        || stride < blas_index::min_value() as isize
+    {
         return false;
     }
     true
