@@ -21,6 +21,25 @@ fn mat_vec_product_1d() {
     assert_eq!(a.t().dot(&b), ans);
 }
 
+#[test]
+fn mat_vec_product_1d_broadcast() {
+    let a = arr2(&[[1.], [2.], [3.]]);
+    let b = arr1(&[1.]);
+    let b = b.broadcast(3).unwrap();
+    let ans = arr1(&[6.]);
+    assert_eq!(a.t().dot(&b), ans);
+}
+
+#[test]
+fn mat_vec_product_1d_inverted_axis() {
+    let a = arr2(&[[1.], [2.], [3.]]);
+    let mut b = arr1(&[1., 2., 3.]);
+    b.invert_axis(Axis(0));
+
+    let ans = arr1(&[3. + 4. + 3.]);
+    assert_eq!(a.t().dot(&b), ans);
+}
+
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
         .into_shape((m, n))
