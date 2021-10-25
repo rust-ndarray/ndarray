@@ -75,5 +75,5 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
           components: clippy
-      - run: cargo clippy
+      - run: cargo clippy --features docs
 
