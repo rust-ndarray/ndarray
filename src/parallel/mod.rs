@@ -32,6 +32,10 @@
 //! “unindexed”. Use ndarray’s [Zip] for lock step parallel iteration of
 //! multiple arrays or producers at a time.
 //!
+//! For the unindexed parallel iterators, an inherent method [`with_min_len`](Parallel::with_min_len)
+//! is provided to limit the number of elements each parallel task processes in way that is
+//! similar to Rayon's [`IndexedParallelIterator::with_min_len`](rayon::prelude::IndexedParallelIterator::with_min_len).
+//!
 //! # Examples
 //!
 //! ## Arrays and array views
