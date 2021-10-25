@@ -295,6 +295,7 @@ impl From<NewAxis> for SliceInfoElem {
 /// that `D`, `Self::OutDim`, `self.in_dim()`, and `self.out_ndim()` are
 /// consistent with the `&[SliceInfoElem]` returned by `self.as_ref()` and that
 /// `self.as_ref()` always returns the same value when called multiple times.
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait SliceArg<D: Dimension>: AsRef<[SliceInfoElem]> {
     /// Dimensionality of the output array.
     type OutDim: Dimension;
