@@ -24,16 +24,6 @@ pub struct Parallel<I> {
     min_len: usize,
 }
 
-impl<I> Parallel<I> {
-    /// Sets the minimum number of elements desired to process in each job. This will not be split any smaller than this length, but of course a producer could already be smaller to begin with.
-    pub fn with_min_len(self, min_len: usize) -> Self {
-        Self {
-            min_len,
-            ..self
-        }
-    }
-}
-
 const DEFAULT_MIN_LEN: usize = 1;
 
 /// Parallel producer wrapper.
@@ -150,7 +140,6 @@ macro_rules! par_iter_view_wrapper {
         }
     }
 
-
     impl<'a, A, D> ParallelIterator for Parallel<$view_name<'a, A, D>>
         where D: Dimension,
               A: $($thread_bounds)*,
@@ -164,6 +153,19 @@ macro_rules! par_iter_view_wrapper {
 
         fn opt_len(&self) -> Option<usize> {
             None
+        }
+    }
+
+    impl<'a, A, D> Parallel<$view_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        /// Sets the minimum number of elements desired to process in each job. This will not be split any smaller than this length, but of course a producer could already be smaller to begin with.
+        pub fn with_min_len(self, min_len: usize) -> Self {
+            Self {
+                min_len,
+                ..self
+            }
         }
     }
 
@@ -298,6 +300,19 @@ zip_impl! {
     [P1 P2 P3 P4],
     [P1 P2 P3 P4 P5],
     [P1 P2 P3 P4 P5 P6],
+}
+
+impl<D, Parts> Parallel<Zip<Parts, D>>
+where
+    D: Dimension,
+{
+    /// Sets the minimum number of elements desired to process in each job. This will not be split any smaller than this length, but of course a producer could already be smaller to begin with.
+    pub fn with_min_len(self, min_len: usize) -> Self {
+        Self {
+            min_len,
+            ..self
+        }
+    }
 }
 
 /// A parallel iterator (unindexed) that produces the splits of the array
