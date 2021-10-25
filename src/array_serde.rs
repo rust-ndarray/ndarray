@@ -276,17 +276,17 @@ where
 
         let _v = match v {
             Some(v) => v,
-            None => Err(de::Error::missing_field("v"))?,
+            None => return Err(de::Error::missing_field("v")),
         };
 
         let data = match data {
             Some(data) => data,
-            None => Err(de::Error::missing_field("data"))?,
+            None => return Err(de::Error::missing_field("data")),
         };
 
         let dim = match dim {
             Some(dim) => dim,
-            None => Err(de::Error::missing_field("dim"))?,
+            None => return Err(de::Error::missing_field("dim")),
         };
 
         if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
