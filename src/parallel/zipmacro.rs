@@ -39,18 +39,16 @@
 ///
 /// type M = Array2<f32>;
 ///
-/// fn main() {
-///     let mut a = M::zeros((16, 16));
-///     let b = M::from_elem(a.dim(), 1.);
-///     let c = M::from_elem(a.dim(), 2.);
+/// let mut a = M::zeros((16, 16));
+/// let b = M::from_elem(a.dim(), 1.);
+/// let c = M::from_elem(a.dim(), 2.);
 ///
-///     // Compute a simple ternary operation:
-///     // elementwise addition of b and c, stored in a
+/// // Compute a simple ternary operation:
+/// // elementwise addition of b and c, stored in a
 ///
-///     par_azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
+/// par_azip!((a in &mut a, &b in &b, &c in &c) *a = b + c);
 ///
-///     assert_eq!(a, &b + &c);
-/// }
+/// assert_eq!(a, &b + &c);
 /// ```
 macro_rules! par_azip {
     ($($t:tt)*) => {
