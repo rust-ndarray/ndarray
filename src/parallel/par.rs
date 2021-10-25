@@ -160,8 +160,14 @@ macro_rules! par_iter_view_wrapper {
         where D: Dimension,
               A: $($thread_bounds)*,
     {
-        /// Sets the minimum number of elements desired to process in each job. This will not be split any smaller than this length, but of course a producer could already be smaller to begin with.
+        /// Sets the minimum number of elements desired to process in each job. This will not be
+        /// split any smaller than this length, but of course a producer could already be smaller
+        /// to begin with.
+        ///
+        /// ***Panics*** if `min_len` is zero.
         pub fn with_min_len(self, min_len: usize) -> Self {
+            assert_ne!(min_len, 0, "Minimum number of elements must at least be one to avoid splitting off empty tasks.");
+
             Self {
                 min_len,
                 ..self
@@ -306,8 +312,14 @@ impl<D, Parts> Parallel<Zip<Parts, D>>
 where
     D: Dimension,
 {
-    /// Sets the minimum number of elements desired to process in each job. This will not be split any smaller than this length, but of course a producer could already be smaller to begin with.
+    /// Sets the minimum number of elements desired to process in each job. This will not be
+    /// split any smaller than this length, but of course a producer could already be smaller
+    /// to begin with.
+    ///
+    /// ***Panics*** if `min_len` is zero.
     pub fn with_min_len(self, min_len: usize) -> Self {
+        assert_ne!(min_len, 0, "Minimum number of elements must at least be one to avoid splitting off empty tasks.");
+
         Self {
             min_len,
             ..self
