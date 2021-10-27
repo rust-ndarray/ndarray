@@ -177,6 +177,56 @@ macro_rules! zip_impl {
                 self.par_map_assign_into(into, f)
             }
 
+            /// Parallel version of `fold`.
+            ///
+            /// Splits the producer in multiple tasks which each accumulate a single value
+            /// using the `fold` closure. Those tasks are executed in parallel and their results
+            /// are then combined to a single value using the `reduce` closure.
+            ///
+            /// The `identity` closure provides the initial values for each of the tasks and
+            /// for the final reduction.
+            ///
+            /// This is a shorthand for calling `self.into_par_iter().fold(...).reduce(...)`.
+            ///
+            /// Note that it is often more efficient to parallelize not per-element but rather
+            /// based on larger chunks of an array like generalized rows and operating on each chunk
+            /// using a sequential variant of the accumulation.
+            /// For example, sum each row sequentially and in parallel, taking advatange of locality
+            /// and vectorization within each task, and then reduce their sums to the sum of the matrix.
+            ///
+            /// Also note that the splitting of the producer into multiple tasks is _not_ deterministic
+            /// which needs to be considered when the accuracy of such an operation is analyzed.
+            ///
+            /// ## Examples
+            ///
+            /// ```rust
+            /// use ndarray::{Array, Zip};
+            ///
+            /// let a = Array::<usize, _>::ones((128, 1024));
+            /// let b = Array::<usize, _>::ones(128);
+            ///
+            /// let weighted_sum = Zip::from(a.rows()).and(&b).par_fold(
+            ///     || 0,
+            ///     |sum, row, factor| sum + row.sum() * factor,
+            ///     |sum, other_sum| sum + other_sum,
+            /// );
+            ///
+            /// assert_eq!(weighted_sum, a.len());
+            /// ```
+            pub fn par_fold<ID, F, R, T>(self, identity: ID, fold: F, reduce: R) -> T
+            where
+                ID: Fn() -> T + Send + Sync + Clone,
+                F: Fn(T, $($p::Item),*) -> T + Send + Sync,
+                R: Fn(T, T) -> T + Send + Sync,
+                T: Send
+            {
+                self.into_par_iter()
+                    .fold(identity.clone(), move |accumulator, ($($p,)*)| {
+                        fold(accumulator, $($p),*)
+                    })
+                    .reduce(identity, reduce)
+            }
+
             );
         }
         )+
