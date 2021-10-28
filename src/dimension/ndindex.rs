@@ -18,6 +18,7 @@ use crate::{
 /// a[[1, 1]] += 1;
 /// assert_eq!(a[(1, 1)], 4);
 /// ```
+#[allow(clippy::missing_safety_doc)] // TODO: Add doc
 pub unsafe trait NdIndex<E>: Debug {
     #[doc(hidden)]
     fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;

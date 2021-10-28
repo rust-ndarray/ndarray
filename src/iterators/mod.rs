@@ -1445,6 +1445,7 @@ send_sync_read_write!(ElementsBaseMut);
 ///
 /// The iterator must produce exactly the number of elements it reported or
 /// diverge before reaching the end.
+#[allow(clippy::missing_safety_doc)] // not nameable downstream
 pub unsafe trait TrustedIterator {}
 
 use crate::indexes::IndicesIterF;

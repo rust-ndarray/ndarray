@@ -27,6 +27,7 @@ use crate::{ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr,
 /// ***Note:*** `RawData` is not an extension interface at this point.
 /// Traits in Rust can serve many different roles. This trait is public because
 /// it is used as a bound on public methods.
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait RawData: Sized {
     /// The array element type.
     type Elem;
@@ -47,6 +48,7 @@ pub unsafe trait RawData: Sized {
 /// For an array with writable elements.
 ///
 /// ***Internal trait, see `RawData`.***
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait RawDataMut: RawData {
     /// If possible, ensures that the array has unique access to its data.
     ///
@@ -74,6 +76,7 @@ pub unsafe trait RawDataMut: RawData {
 /// An array representation that can be cloned.
 ///
 /// ***Internal trait, see `RawData`.***
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait RawDataClone: RawData {
     #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
@@ -96,6 +99,7 @@ pub unsafe trait RawDataClone: RawData {
 /// For an array with elements that can be accessed with safe code.
 ///
 /// ***Internal trait, see `RawData`.***
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait Data: RawData {
     /// Converts the array to a uniquely owned array, cloning elements if necessary.
     #[doc(hidden)]
@@ -131,6 +135,7 @@ pub unsafe trait Data: RawData {
 // `RawDataMut::try_ensure_unique` implementation always panics or ensures that
 // the data is unique. You are also guaranteeing that `try_is_unique` always
 // returns `Some(_)`.
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait DataMut: Data + RawDataMut {
     /// Ensures that the array has unique access to its data.
     #[doc(hidden)]
@@ -449,6 +454,7 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {}
 // The array storage must be initially mutable - copy on write arrays may require copying for
 // unsharing storage before mutating it. The initially allocated storage must be mutable so
 // that it can be mutated directly - through .raw_view_mut_unchecked() - for initialization.
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait DataOwned: Data {
     /// Corresponding owned data with MaybeUninit elements
     type MaybeUninit: DataOwned<Elem = MaybeUninit<Self::Elem>>
@@ -467,6 +473,7 @@ pub unsafe trait DataOwned: Data {
 /// A representation that is a lightweight view.
 ///
 /// ***Internal trait, see `Data`.***
+#[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait DataShared: Clone + Data + RawDataClone {}
 
 unsafe impl<A> DataShared for OwnedArcRepr<A> {}

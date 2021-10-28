@@ -38,7 +38,7 @@ impl<T> Partial<T> {
 
     #[cfg(feature = "rayon")]
     pub(crate) fn stub() -> Self {
-        Self { len: 0, ptr: 0 as *mut _ }
+        Self { len: 0, ptr: ptr::null_mut() }
     }
 
     #[cfg(feature = "rayon")]

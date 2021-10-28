@@ -46,16 +46,14 @@
 //! use ndarray::Array2;
 //! use ndarray::parallel::prelude::*;
 //!
-//! fn main() {
-//!     let mut a = Array2::<f64>::zeros((128, 128));
+//! let mut a = Array2::<f64>::zeros((128, 128));
 //!
-//!     // Parallel versions of regular array methods
-//!     a.par_map_inplace(|x| *x = x.exp());
-//!     a.par_mapv_inplace(f64::exp);
+//! // Parallel versions of regular array methods
+//! a.par_map_inplace(|x| *x = x.exp());
+//! a.par_mapv_inplace(f64::exp);
 //!
-//!     // You can also use the parallel iterator directly
-//!     a.par_iter_mut().for_each(|x| *x = x.exp());
-//! }
+//! // You can also use the parallel iterator directly
+//! a.par_iter_mut().for_each(|x| *x = x.exp());
 //! ```
 //!
 //! ## Axis iterators
@@ -67,16 +65,14 @@
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
 //!
-//! fn main() {
-//!     let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
-//!     let mut sums = Vec::new();
-//!     a.axis_iter(Axis(0))
-//!      .into_par_iter()
-//!      .map(|row| row.sum())
-//!      .collect_into_vec(&mut sums);
+//! let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
+//! let mut sums = Vec::new();
+//! a.axis_iter(Axis(0))
+//!  .into_par_iter()
+//!  .map(|row| row.sum())
+//!  .collect_into_vec(&mut sums);
 //!
-//!     assert_eq!(sums, [120., 376., 632., 888.]);
-//! }
+//! assert_eq!(sums, [120., 376., 632., 888.]);
 //! ```
 //!
 //! ## Axis chunks iterators
@@ -88,16 +84,14 @@
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
 //!
-//! fn main() {
-//!     let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
-//!     let mut shapes = Vec::new();
-//!     a.axis_chunks_iter(Axis(0), 3)
-//!      .into_par_iter()
-//!      .map(|chunk| chunk.shape().to_owned())
-//!      .collect_into_vec(&mut shapes);
+//! let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
+//! let mut shapes = Vec::new();
+//! a.axis_chunks_iter(Axis(0), 3)
+//!  .into_par_iter()
+//!  .map(|chunk| chunk.shape().to_owned())
+//!  .collect_into_vec(&mut shapes);
 //!
-//!     assert_eq!(shapes, [vec![3, 16], vec![1, 16]]);
-//! }
+//! assert_eq!(shapes, [vec![3, 16], vec![1, 16]]);
 //! ```
 //!
 //! ## Zip
@@ -110,19 +104,17 @@
 //!
 //! type Array3f64 = Array3<f64>;
 //!
-//! fn main() {
-//!     const N: usize = 128;
-//!     let a = Array3f64::from_elem((N, N, N), 1.);
-//!     let b = Array3f64::from_elem(a.dim(), 2.);
-//!     let mut c = Array3f64::zeros(a.dim());
+//! const N: usize = 128;
+//! let a = Array3f64::from_elem((N, N, N), 1.);
+//! let b = Array3f64::from_elem(a.dim(), 2.);
+//! let mut c = Array3f64::zeros(a.dim());
 //!
-//!     Zip::from(&mut c)
-//!         .and(&a)
-//!         .and(&b)
-//!         .par_for_each(|c, &a, &b| {
-//!             *c += a - b;
-//!         });
-//! }
+//! Zip::from(&mut c)
+//!     .and(&a)
+//!     .and(&b)
+//!     .par_for_each(|c, &a, &b| {
+//!         *c += a - b;
+//!     });
 //! ```
 
 #[allow(unused_imports)] // used by rustdoc links

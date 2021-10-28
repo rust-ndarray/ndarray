@@ -169,6 +169,7 @@ pub fn aview_mut2<A, V: FixedInitializer<Elem = A>>(xs: &mut [V]) -> ArrayViewMu
 }
 
 /// Fixed-size array used for array initialization
+#[allow(clippy::missing_safety_doc)] // Should not be implemented downstream and to be deprecated.
 pub unsafe trait FixedInitializer {
     type Elem;
     fn as_init_slice(&self) -> &[Self::Elem];
