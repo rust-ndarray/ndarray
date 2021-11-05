@@ -15,7 +15,7 @@ __ https://docs.rs/ndarray/
    :alt: CI build status
 .. _build_status: https://github.com/rust-ndarray/ndarray/actions
 
-.. |crates| image:: http://meritbadge.herokuapp.com/ndarray
+.. |crates| image:: https://img.shields.io/crates/v/ndarray.svg
    :alt: ndarray at crates.io
 .. _crates: https://crates.io/crates/ndarray
 
