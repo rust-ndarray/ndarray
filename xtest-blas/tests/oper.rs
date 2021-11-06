@@ -1,9 +1,9 @@
 extern crate approx;
+extern crate blas_src;
 extern crate defmac;
 extern crate ndarray;
-extern crate num_traits;
-extern crate blas_src;
 extern crate num_complex;
+extern crate num_traits;
 
 use ndarray::prelude::*;
 
@@ -275,8 +275,19 @@ fn gemm_c64_1_f() {
     let x = range_mat_complex64(n, 1);
     let mut y = range_mat_complex64(m, 1);
     let answer = reference_mat_mul(&a, &x) + &y;
-    general_mat_mul(Complex64::new(1.0, 0.), &a, &x, Complex64::new(1.0, 0.), &mut y);
-    assert_relative_eq!(y.mapv(|i| i.norm_sqr()), answer.mapv(|i| i.norm_sqr()), epsilon = 1e-12, max_relative = 1e-7);
+    general_mat_mul(
+        Complex64::new(1.0, 0.),
+        &a,
+        &x,
+        Complex64::new(1.0, 0.),
+        &mut y,
+    );
+    assert_relative_eq!(
+        y.mapv(|i| i.norm_sqr()),
+        answer.mapv(|i| i.norm_sqr()),
+        epsilon = 1e-12,
+        max_relative = 1e-7
+    );
 }
 
 #[test]
@@ -287,8 +298,19 @@ fn gemm_c32_1_f() {
     let x = range_mat_complex(n, 1);
     let mut y = range_mat_complex(m, 1);
     let answer = reference_mat_mul(&a, &x) + &y;
-    general_mat_mul(Complex32::new(1.0, 0.), &a, &x, Complex32::new(1.0, 0.), &mut y);
-    assert_relative_eq!(y.mapv(|i| i.norm_sqr()), answer.mapv(|i| i.norm_sqr()), epsilon = 1e-12, max_relative = 1e-7);
+    general_mat_mul(
+        Complex32::new(1.0, 0.),
+        &a,
+        &x,
+        Complex32::new(1.0, 0.),
+        &mut y,
+    );
+    assert_relative_eq!(
+        y.mapv(|i| i.norm_sqr()),
+        answer.mapv(|i| i.norm_sqr()),
+        epsilon = 1e-12,
+        max_relative = 1e-7
+    );
 }
 
 #[test]

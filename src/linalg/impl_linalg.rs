@@ -7,9 +7,10 @@
 // except according to those terms.
 
 use crate::imp_prelude::*;
-use crate::numeric_util;
+
 #[cfg(feature = "blas")]
 use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
+use crate::numeric_util;
 
 use crate::{LinalgScalar, Zip};
 
@@ -18,11 +19,11 @@ use std::mem::MaybeUninit;
 use alloc::vec::Vec;
 
 #[cfg(feature = "blas")]
+use libc::c_int;
+#[cfg(feature = "blas")]
 use std::cmp;
 #[cfg(feature = "blas")]
 use std::mem::swap;
-#[cfg(feature = "blas")]
-use libc::c_int;
 
 #[cfg(feature = "blas")]
 use cblas_sys as blas_sys;
@@ -377,11 +378,15 @@ fn mat_mul_impl<A>(
 ) where
     A: LinalgScalar,
 {
-
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
     let ((mut m, a), (_, mut n)) = (lhs.dim(), rhs.dim());
-    if !(m > cut || n > cut || a > cut) || !(same_type::<A, f32>() || same_type::<A, f64>()) {
+    if !(m > cut || n > cut || a > cut)
+        || !(same_type::<A, f32>()
+        || same_type::<A, f64>()
+        || same_type::<A, c32>()
+        || same_type::<A, c64>())
+    {
         return mat_mul_general(alpha, lhs, rhs, beta, c);
     }
     {
@@ -459,6 +464,53 @@ fn mat_mul_impl<A>(
         }
         gemm!(f32, cblas_sgemm);
         gemm!(f64, cblas_dgemm);
+
+        macro_rules! gemm {
+            ($ty:ty, $gemm:ident) => {
+                if blas_row_major_2d::<$ty, _>(&lhs_)
+                    && blas_row_major_2d::<$ty, _>(&rhs_)
+                    && blas_row_major_2d::<$ty, _>(&c_)
+                {
+                    let (m, k) = match lhs_trans {
+                        CblasNoTrans => lhs_.dim(),
+                        _ => {
+                            let (rows, cols) = lhs_.dim();
+                            (cols, rows)
+                        }
+                    };
+                    let n = match rhs_trans {
+                        CblasNoTrans => rhs_.raw_dim()[1],
+                        _ => rhs_.raw_dim()[0],
+                    };
+                    // adjust strides, these may [1, 1] for column matrices
+                    let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
+                    let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
+                    let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
+
+                    // gemm is C ← αA^Op B^Op + βC
+                    // Where Op is notrans/trans/conjtrans
+                    unsafe {
+                        blas_sys::$gemm(
+                            CblasRowMajor,
+                            lhs_trans,
+                            rhs_trans,
+                            m as blas_index,                // m, rows of Op(a)
+                            n as blas_index,                // n, cols of Op(b)
+                            k as blas_index,                // k, cols of Op(a)
+                            &alpha as *const A as *const _, // alpha
+                            lhs_.ptr.as_ptr() as *const _,  // a
+                            lhs_stride,                     // lda
+                            rhs_.ptr.as_ptr() as *const _,  // b
+                            rhs_stride,                     // ldb
+                            &beta as *const A as *const _,  // beta
+                            c_.ptr.as_ptr() as *mut _,      // c
+                            c_stride,                       // ldc
+                        );
+                    }
+                    return;
+                }
+            };
+        }
         gemm!(c32, cblas_cgemm);
         gemm!(c64, cblas_zgemm);
     }
@@ -609,9 +661,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
     S3: DataMut<Elem = A>,
     A: LinalgScalar,
 {
-    unsafe {
-        general_mat_vec_mul_impl(alpha, a, x, beta, y.raw_view_mut())
-    }
+    unsafe { general_mat_vec_mul_impl(alpha, a, x, beta, y.raw_view_mut()) }
 }
 
 /// General matrix-vector multiplication
