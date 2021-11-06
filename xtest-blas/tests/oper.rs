@@ -3,6 +3,7 @@ extern crate defmac;
 extern crate ndarray;
 extern crate num_traits;
 extern crate blas_src;
+extern crate num_complex;
 
 use ndarray::prelude::*;
 
@@ -12,6 +13,8 @@ use ndarray::{Data, Ix, LinalgScalar};
 
 use approx::assert_relative_eq;
 use defmac::defmac;
+use num_complex::Complex32;
+use num_complex::Complex64;
 
 #[test]
 fn mat_vec_product_1d() {
@@ -50,6 +53,20 @@ fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
         .into_shape((m, n))
         .unwrap()
+}
+
+fn range_mat_complex(m: Ix, n: Ix) -> Array2<Complex32> {
+    Array::linspace(0., (m * n) as f32 - 1., m * n)
+        .into_shape((m, n))
+        .unwrap()
+        .map_mut(|&mut f| Complex32::new(f, 0.))
+}
+
+fn range_mat_complex64(m: Ix, n: Ix) -> Array2<Complex64> {
+    Array::linspace(0., (m * n) as f64 - 1., m * n)
+        .into_shape((m, n))
+        .unwrap()
+        .map_mut(|&mut f| Complex64::new(f, 0.))
 }
 
 fn range1_mat64(m: Ix) -> Array1<f64> {
@@ -248,6 +265,30 @@ fn gemm_64_1_f() {
     let answer = reference_mat_mul(&a, &x) + &y;
     general_mat_mul(1.0, &a, &x, 1.0, &mut y);
     assert_relative_eq!(y, answer, epsilon = 1e-12, max_relative = 1e-7);
+}
+
+#[test]
+fn gemm_c64_1_f() {
+    let a = range_mat_complex64(64, 64).reversed_axes();
+    let (m, n) = a.dim();
+    // m x n  times n x 1  == m x 1
+    let x = range_mat_complex64(n, 1);
+    let mut y = range_mat_complex64(m, 1);
+    let answer = reference_mat_mul(&a, &x) + &y;
+    general_mat_mul(Complex64::new(1.0, 0.), &a, &x, Complex64::new(1.0, 0.), &mut y);
+    assert_relative_eq!(y.mapv(|i| i.norm_sqr()), answer.mapv(|i| i.norm_sqr()), epsilon = 1e-12, max_relative = 1e-7);
+}
+
+#[test]
+fn gemm_c32_1_f() {
+    let a = range_mat_complex(64, 64).reversed_axes();
+    let (m, n) = a.dim();
+    // m x n  times n x 1  == m x 1
+    let x = range_mat_complex(n, 1);
+    let mut y = range_mat_complex(m, 1);
+    let answer = reference_mat_mul(&a, &x) + &y;
+    general_mat_mul(Complex32::new(1.0, 0.), &a, &x, Complex32::new(1.0, 0.), &mut y);
+    assert_relative_eq!(y.mapv(|i| i.norm_sqr()), answer.mapv(|i| i.norm_sqr()), epsilon = 1e-12, max_relative = 1e-7);
 }
 
 #[test]

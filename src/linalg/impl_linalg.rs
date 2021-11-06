@@ -29,6 +29,9 @@ use cblas_sys as blas_sys;
 #[cfg(feature = "blas")]
 use cblas_sys::{CblasNoTrans, CblasRowMajor, CblasTrans, CBLAS_LAYOUT};
 
+#[cfg(feature = "blas")]
+use num_complex::{Complex32 as c32, Complex64 as c64};
+
 /// len of vector before we use blas
 #[cfg(feature = "blas")]
 const DOT_BLAS_CUTOFF: usize = 32;
@@ -374,6 +377,7 @@ fn mat_mul_impl<A>(
 ) where
     A: LinalgScalar,
 {
+
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
     let ((mut m, a), (_, mut n)) = (lhs.dim(), rhs.dim());
@@ -455,6 +459,8 @@ fn mat_mul_impl<A>(
         }
         gemm!(f32, cblas_sgemm);
         gemm!(f64, cblas_dgemm);
+        gemm!(c32, cblas_cgemm);
+        gemm!(c64, cblas_zgemm);
     }
     mat_mul_general(alpha, lhs, rhs, beta, c)
 }
