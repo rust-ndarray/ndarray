@@ -416,8 +416,23 @@ fn mat_mul_impl<A>(
             rhs_trans = CblasTrans;
         }
 
+        macro_rules! cast_ty {
+            (f32, $var:ident) => {
+                cast_as(&$var)
+            };
+            (f64, $var:ident) => {
+                cast_as(&$var)
+            };
+            (c32, $var:ident) => {
+                &$var as *const A as *const _
+            };
+            (c64, $var:ident) => {
+                &$var as *const A as *const _
+            };
+        }
+
         macro_rules! gemm {
-            ($ty:ty, $gemm:ident) => {
+            ($ty:tt, $gemm:ident) => {
                 if blas_row_major_2d::<$ty, _>(&lhs_)
                     && blas_row_major_2d::<$ty, _>(&rhs_)
                     && blas_row_major_2d::<$ty, _>(&c_)
@@ -437,9 +452,9 @@ fn mat_mul_impl<A>(
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
                     let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
                     let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
-
                     // gemm is C ← αA^Op B^Op + βC
                     // Where Op is notrans/trans/conjtrans
+
                     unsafe {
                         blas_sys::$gemm(
                             CblasRowMajor,
@@ -448,12 +463,12 @@ fn mat_mul_impl<A>(
                             m as blas_index,               // m, rows of Op(a)
                             n as blas_index,               // n, cols of Op(b)
                             k as blas_index,               // k, cols of Op(a)
-                            cast_as(&alpha),               // alpha
+                            cast_ty!($ty, alpha),          // alpha
                             lhs_.ptr.as_ptr() as *const _, // a
                             lhs_stride,                    // lda
                             rhs_.ptr.as_ptr() as *const _, // b
                             rhs_stride,                    // ldb
-                            cast_as(&beta),                // beta
+                            cast_ty!($ty, beta),           // beta
                             c_.ptr.as_ptr() as *mut _,     // c
                             c_stride,                      // ldc
                         );
@@ -465,52 +480,6 @@ fn mat_mul_impl<A>(
         gemm!(f32, cblas_sgemm);
         gemm!(f64, cblas_dgemm);
 
-        macro_rules! gemm {
-            ($ty:ty, $gemm:ident) => {
-                if blas_row_major_2d::<$ty, _>(&lhs_)
-                    && blas_row_major_2d::<$ty, _>(&rhs_)
-                    && blas_row_major_2d::<$ty, _>(&c_)
-                {
-                    let (m, k) = match lhs_trans {
-                        CblasNoTrans => lhs_.dim(),
-                        _ => {
-                            let (rows, cols) = lhs_.dim();
-                            (cols, rows)
-                        }
-                    };
-                    let n = match rhs_trans {
-                        CblasNoTrans => rhs_.raw_dim()[1],
-                        _ => rhs_.raw_dim()[0],
-                    };
-                    // adjust strides, these may [1, 1] for column matrices
-                    let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
-                    let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
-                    let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
-
-                    // gemm is C ← αA^Op B^Op + βC
-                    // Where Op is notrans/trans/conjtrans
-                    unsafe {
-                        blas_sys::$gemm(
-                            CblasRowMajor,
-                            lhs_trans,
-                            rhs_trans,
-                            m as blas_index,                // m, rows of Op(a)
-                            n as blas_index,                // n, cols of Op(b)
-                            k as blas_index,                // k, cols of Op(a)
-                            &alpha as *const A as *const _, // alpha
-                            lhs_.ptr.as_ptr() as *const _,  // a
-                            lhs_stride,                     // lda
-                            rhs_.ptr.as_ptr() as *const _,  // b
-                            rhs_stride,                     // ldb
-                            &beta as *const A as *const _,  // beta
-                            c_.ptr.as_ptr() as *mut _,      // c
-                            c_stride,                       // ldc
-                        );
-                    }
-                    return;
-                }
-            };
-        }
         gemm!(c32, cblas_cgemm);
         gemm!(c64, cblas_zgemm);
     }
