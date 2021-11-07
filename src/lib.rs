@@ -1,4 +1,9 @@
-// Copyright 2014-2020 bluss and ndarray developers.
+// Copyright 2014-2021 ndarray developers.
+// Main authors:
+//
+// Ulrik Sverdrup "bluss"
+// Jim Turner "jturner314"
+// and many others
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -1515,6 +1520,7 @@ mod impl_internal_constructors;
 mod impl_constructors;
 
 mod impl_methods;
+mod impl_expand;
 mod impl_owned_array;
 mod impl_special_element_types;
 
