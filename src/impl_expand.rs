@@ -9,10 +9,87 @@
 use crate::imp_prelude::*;
 
 use crate::data_traits::RawDataSubst;
+use crate::math_cell::MathCell;
 
+use std::cell::Cell;
 use std::mem;
+use std::num::Wrapping;
+use std::num;
+use std::ptr::NonNull;
 
 use num_complex::Complex;
+
+
+pub unsafe trait EqualRepresentation<To> { }
+
+unsafe impl<T> EqualRepresentation<T> for T { }
+
+macro_rules! unsafe_impl_trivial_transmute_t {
+    ($($from:ty => $to:ty,)+) => {
+        $(
+unsafe impl<T> EqualRepresentation<$to> for $from { }
+        )+
+
+    }
+}
+
+macro_rules! unsafe_impl_trivial_transmute_bidir {
+    ($(($from:ty) <=> $to:ty,)+) => {
+        $(
+unsafe impl EqualRepresentation<$to> for $from { }
+unsafe impl EqualRepresentation<$from> for $to { }
+        )+
+
+    }
+}
+
+macro_rules! unsafe_impl_trivial_transmute {
+    ($($from:ty => $to:ty,)+) => {
+        $(
+unsafe impl EqualRepresentation<$to> for $from { }
+        )+
+
+    }
+}
+
+unsafe_impl_trivial_transmute_t! {
+    T => [T; 1],
+    [T; 1] => T,
+    // transmute from cell to T, but not the other way around
+    Cell<T> => T,
+    MathCell<T> => T,
+    *mut T => *const T,
+    *const T => *mut T,
+    NonNull<T> => *mut T,
+    NonNull<T> => *const T,
+    Wrapping<T> => T,
+    T => Wrapping<T>,
+}
+
+unsafe_impl_trivial_transmute_bidir! {
+    (usize) <=> isize,
+    (u128) <=> i128,
+    (u64) <=> i64,
+    (u32) <=> i32,
+    (u16) <=> i16,
+    (u8) <=> i8,
+}
+
+unsafe_impl_trivial_transmute! {
+    // only from nonzero, not to
+    num::NonZeroU8 => u8,
+    num::NonZeroI8 => i8,
+    num::NonZeroU16 => u16,
+    num::NonZeroI16 => i16,
+    num::NonZeroU32 => u32,
+    num::NonZeroI32 => i32,
+    num::NonZeroU64 => u64,
+    num::NonZeroI64 => i64,
+    num::NonZeroU128 => u128,
+    num::NonZeroI128 => i128,
+    num::NonZeroUsize => usize,
+    num::NonZeroIsize => isize,
+}
 
 
 pub unsafe trait MultiElement : MultiElementExtended<<Self as MultiElement>::Elem> {
