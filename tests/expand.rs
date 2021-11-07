@@ -73,3 +73,26 @@ fn test_complex() {
         assert_eq!(av, answer);
     }
 }
+
+
+#[test]
+fn test_u128() {
+    let a = array![[1, 2, 3u128], [4, 5, 6]];
+    let av = a.view();
+    println!("{:?}", av);
+    for ax in 0..=2 {
+        let av = av.expand_to::<u32>(Axis(ax));
+        println!("{:?}", av);
+    }
+}
+
+#[test]
+fn test_u64() {
+    let a = array![[1, 2, 3u64], [4, 5, 6]];
+    let av = a.view();
+    println!("{:?}", av);
+    for ax in 0..=2 {
+        let av = av.expand_to::<u8>(Axis(ax));
+        println!("{:?}", av);
+    }
+}
