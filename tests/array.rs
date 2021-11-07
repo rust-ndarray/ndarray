@@ -7,12 +7,14 @@
     clippy::float_cmp
 )]
 
+use approx::assert_relative_eq;
 use defmac::defmac;
 use itertools::{zip, Itertools};
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::indices;
 use ndarray::{Slice, SliceInfo, SliceInfoElem};
+use num_complex::Complex;
 use std::convert::TryFrom;
 
 macro_rules! assert_panics {
@@ -2500,4 +2502,41 @@ fn test_remove_index_oob2() {
 fn test_remove_index_oob3() {
     let mut a = array![[10], [4], [1]];
     a.remove_index(Axis(2), 0);
+}
+
+#[test]
+fn test_split_re_im_view() {
+    let a = Array3::from_shape_fn((3, 4, 5), |(i, j, k)| {
+        Complex::<f32>::new(i as f32 * j as f32, k as f32)
+    });
+    let Complex { re, im } = a.view().split_re_im();
+    assert_relative_eq!(re.sum(), 90.);
+    assert_relative_eq!(im.sum(), 120.);
+}
+
+#[test]
+fn test_split_re_im_view_roundtrip() {
+    let a_re = Array3::from_shape_fn((3,4,5), |(i, j, _k)| {
+        i * j
+    });
+    let a_im = Array3::from_shape_fn((3,4,5), |(_i, _j, k)| {
+        k
+    });
+    let a = Array3::from_shape_fn((3,4,5), |(i,j,k)| {
+        Complex::new(a_re[[i,j,k]], a_im[[i,j,k]])
+    });
+    let Complex { re, im } = a.view().split_re_im();
+    assert_eq!(a_re, re);
+    assert_eq!(a_im, im);
+}
+
+#[test]
+fn test_split_re_im_view_mut() {
+    let eye_scalar = Array2::<u32>::eye(4);
+    let eye_complex = Array2::<Complex<u32>>::eye(4);
+    let mut a = Array2::<Complex<u32>>::zeros((4, 4));
+    let Complex { mut re, im } = a.view_mut().split_re_im();
+    re.assign(&eye_scalar);
+    assert_eq!(im.sum(), 0);
+    assert_eq!(a, eye_complex);
 }
