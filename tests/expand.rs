@@ -1,6 +1,14 @@
 
 use ndarray::prelude::*;
 
+use ndarray::stack;
+
+use num_complex::Complex;
+
+fn cx<T>(re: T, im: T) -> Complex<T> {
+    Complex::new(re, im)
+}
+
 #[test]
 fn test_expand_from_zero() {
     let a = Array::from_elem((), [[[1, 2], [3, 4], [5, 6]],
@@ -52,4 +60,16 @@ fn test_expand1() {
     println!("{:?}", b);
     let b = a.view().expand(Axis(0));
     println!("{:?}", b);
+}
+
+
+#[test]
+fn test_complex() {
+    let a = arr2(&[[cx(3., 4.), cx(2., 0.)], [cx(0., -2.), cx(3., 0.)]]);
+    let av = a.view();
+    for ax in 0..=2 {
+        let av = av.expand(Axis(ax));
+        let answer = stack![Axis(ax), a.mapv(|z| z.re), a.mapv(|z| z.im)];
+        assert_eq!(av, answer);
+    }
 }

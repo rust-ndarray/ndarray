@@ -13,34 +13,35 @@ use crate::data_traits::RawDataSubst;
 use num_complex::Complex;
 
 
-pub trait MultiElement {
+pub unsafe trait MultiElement {
     type Elem;
     const LEN: usize;
 }
 
-impl<A, const N: usize> MultiElement for [A; N] {
+unsafe impl<A, const N: usize> MultiElement for [A; N] {
     type Elem = A;
     const LEN: usize = N;
 }
 
-impl<A> MultiElement for Complex<A> {
+unsafe impl<A> MultiElement for Complex<A> {
     type Elem = A;
     const LEN: usize = 2;
 }
 
-impl<'a, A, D, const N: usize> ArrayView<'a, [A; N], D>
+impl<'a, A, D> ArrayView<'a, A, D>
 where
     D: Dimension,
+    A: MultiElement,
 {
     ///
     /// Note: expanding a zero-element array leads to a new axis of length zero,
     /// i.e. the array becomes empty.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
-    pub fn expand(self, new_axis: Axis) -> ArrayView<'a, A, D::Larger> {
+    pub fn expand(self, new_axis: Axis) -> ArrayView<'a, A::Elem, D::Larger> {
         let mut strides = self.strides.insert_axis(new_axis);
         let mut dim = self.dim.insert_axis(new_axis);
-        let len = N as isize;
+        let len = A::LEN as isize;
         for ax in 0..strides.ndim() {
             if Axis(ax) == new_axis {
                 continue;
@@ -49,7 +50,7 @@ where
                 strides[ax] = ((strides[ax] as isize) * len) as usize;
             }
         }
-        dim[new_axis.index()] = N;
+        dim[new_axis.index()] = A::LEN;
         // TODO nicer assertion
         crate::dimension::size_of_shape_checked(&dim).unwrap();
 
