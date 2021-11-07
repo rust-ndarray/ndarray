@@ -173,7 +173,7 @@ where
         if mem::size_of::<T>() != 0 {
             for ax in 0..strides.ndim() {
                 if dim[ax] > 1 {
-                    strides[ax] *= 2;
+                    strides[ax] = (strides[ax] as isize * 2) as usize;
                 }
             }
         }
