@@ -59,14 +59,14 @@ fn range_mat_complex(m: Ix, n: Ix) -> Array2<Complex32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
         .into_shape((m, n))
         .unwrap()
-        .map_mut(|&mut f| Complex32::new(f, 0.))
+        .map(|&f| Complex32::new(f, 0.))
 }
 
 fn range_mat_complex64(m: Ix, n: Ix) -> Array2<Complex64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
         .into_shape((m, n))
         .unwrap()
-        .map_mut(|&mut f| Complex64::new(f, 0.))
+        .map(|&f| Complex64::new(f, 0.))
 }
 
 fn range1_mat64(m: Ix) -> Array1<f64> {
