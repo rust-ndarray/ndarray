@@ -452,9 +452,9 @@ fn mat_mul_impl<A>(
                     let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
                     let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
                     let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
+                    
                     // gemm is C ← αA^Op B^Op + βC
                     // Where Op is notrans/trans/conjtrans
-
                     unsafe {
                         blas_sys::$gemm(
                             CblasRowMajor,
