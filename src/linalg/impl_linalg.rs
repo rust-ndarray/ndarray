@@ -727,7 +727,9 @@ where
     Zip::from(out.exact_chunks_mut((dimbr, dimbc)))
         .and(a)
         .for_each(|out, &a| {
-            (a * b).assign_to(out);
+            Zip::from(out).and(b).for_each(|out, &b| {
+                *out = MaybeUninit::new(a * b);
+            })
         });
     unsafe { out.assume_init() }
 }
