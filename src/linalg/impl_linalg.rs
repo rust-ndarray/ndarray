@@ -710,7 +710,6 @@ where
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
-    A: std::ops::Mul<&'a ArrayBase<S2, Ix2>, Output = Array<A, Ix2>>,
 {
     let dimar = a.shape()[0];
     let dimac = a.shape()[1];
