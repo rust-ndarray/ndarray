@@ -706,7 +706,7 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
 ///
 /// The kronecker product of a LxN matrix A and a MxR matrix B is a (L*M)x(N*R)
 /// matrix K formed by the block multiplication A_ij * B.
-pub fn kron<'a, A, S1, S2>(a: &ArrayBase<S1, Ix2>, b: &'a ArrayBase<S2, Ix2>) -> ArrayBase<OwnedRepr<A>, Ix2>
+pub fn kron<'a, A, S1, S2>(a: &ArrayBase<S1, Ix2>, b: &'a ArrayBase<S2, Ix2>) -> Array<A, Ix2>
 where
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
