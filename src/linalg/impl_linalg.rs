@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::OwnedRepr;
 use crate::imp_prelude::*;
 use crate::numeric_util;
 #[cfg(feature = "blas")]
@@ -717,15 +716,21 @@ where
     let dimac = a.shape()[1];
     let dimbr = b.shape()[0];
     let dimbc = b.shape()[1];
-    let mut out: Array2<MaybeUninit<A>> = Array2::uninit((dimar * dimbr, dimac * dimbc));
+    let mut out: Array2<MaybeUninit<A>> = Array2::uninit((
+        dimar
+            .checked_mul(dimbr)
+            .expect("Dimensions of kronecker product output array overflows usize."),
+        dimac
+            .checked_mul(dimbc)
+            .expect("Dimensions of kronecker product output array overflows usize."),
+    ));
     Zip::from(out.exact_chunks_mut((dimbr, dimbc)))
         .and(a)
-        .for_each(|out, a| {
-            (*a * b).assign_to(out);
+        .for_each(|out, &a| {
+            (a * b).assign_to(out);
         });
     unsafe { out.assume_init() }
 }
-
 
 #[inline(always)]
 /// Return `true` if `A` and `B` are the same type
