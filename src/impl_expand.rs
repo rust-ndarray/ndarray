@@ -124,18 +124,24 @@ where
     {
         assert_eq!(mem::size_of::<A>(), mem::size_of::<T>() * A::LEN);
 
-        let mut strides = self.strides.insert_axis(new_axis);
         let mut dim = self.dim.insert_axis(new_axis);
+        let mut strides = self.strides.insert_axis(new_axis);
+
+        // Double the strides. In the zero-sized element case and for axes of
+        // length <= 1, we leave the strides as-is to avoid possible overflow.
         let len = A::LEN as isize;
-        for ax in 0..strides.ndim() {
-            if Axis(ax) == new_axis {
-                continue;
-            }
-            if dim[ax] > 1 {
-                strides[ax] = ((strides[ax] as isize) * len) as usize;
+        if mem::size_of::<T>() != 0 {
+            for ax in 0..strides.ndim() {
+                if Axis(ax) == new_axis {
+                    continue;
+                }
+                if dim[ax] > 1 {
+                    strides[ax] = ((strides[ax] as isize) * len) as usize;
+                }
             }
         }
         dim[new_axis.index()] = A::LEN;
+
         // TODO nicer assertion
         crate::dimension::size_of_shape_checked(&dim).unwrap();
 
