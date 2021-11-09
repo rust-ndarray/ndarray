@@ -314,6 +314,31 @@ fn gemm_c32_1_f() {
 }
 
 #[test]
+fn gemm_c64_actually_complex() {
+    let mut a = range_mat_complex64(4,4);
+    a = a.map(|&i| if i.re > 8. { i.conj() } else { i });
+    let mut b = range_mat_complex64(4,6);
+    b = b.map(|&i| if i.re > 4. { i.conj() } else {i});
+    let mut y = range_mat_complex64(4,6);
+    let alpha = Complex64::new(0., 1.0);
+    let beta = Complex64::new(1.0, 1.0);
+    let answer = alpha * reference_mat_mul(&a, &b) + beta * &y;
+    general_mat_mul(
+        alpha.clone(),
+        &a,
+        &b,
+        beta.clone(),
+        &mut y,
+    );
+    assert_relative_eq!(
+        y.mapv(|i| i.norm_sqr()),
+        answer.mapv(|i| i.norm_sqr()),
+        epsilon = 1e-12,
+        max_relative = 1e-7
+    );
+}
+
+#[test]
 fn gen_mat_vec_mul() {
     let alpha = -2.3;
     let beta = 3.14;

@@ -416,7 +416,7 @@ fn mat_mul_impl<A>(
             rhs_trans = CblasTrans;
         }
 
-        macro_rules! cast_ty {
+        macro_rules! gemm_scalar_cast {
             (f32, $var:ident) => {
                 cast_as(&$var)
             };
@@ -460,17 +460,17 @@ fn mat_mul_impl<A>(
                             CblasRowMajor,
                             lhs_trans,
                             rhs_trans,
-                            m as blas_index,               // m, rows of Op(a)
-                            n as blas_index,               // n, cols of Op(b)
-                            k as blas_index,               // k, cols of Op(a)
-                            cast_ty!($ty, alpha),          // alpha
-                            lhs_.ptr.as_ptr() as *const _, // a
-                            lhs_stride,                    // lda
-                            rhs_.ptr.as_ptr() as *const _, // b
-                            rhs_stride,                    // ldb
-                            cast_ty!($ty, beta),           // beta
-                            c_.ptr.as_ptr() as *mut _,     // c
-                            c_stride,                      // ldc
+                            m as blas_index,                 // m, rows of Op(a)
+                            n as blas_index,                 // n, cols of Op(b)
+                            k as blas_index,                 // k, cols of Op(a)
+                            gemm_scalar_cast!($ty, alpha),   // alpha
+                            lhs_.ptr.as_ptr() as *const _,   // a
+                            lhs_stride,                      // lda
+                            rhs_.ptr.as_ptr() as *const _,   // b
+                            rhs_stride,                      // ldb
+                            gemm_scalar_cast!($ty, beta),    // beta
+                            c_.ptr.as_ptr() as *mut _,       // c
+                            c_stride,                        // ldc
                         );
                     }
                     return;
