@@ -14,6 +14,7 @@ use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
 use crate::{LinalgScalar, Zip};
 
 use std::any::TypeId;
+use std::mem::MaybeUninit;
 use alloc::vec::Vec;
 
 #[cfg(feature = "blas")]
@@ -697,6 +698,39 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
             });
         }
     }
+}
+
+
+/// Kronecker product of 2D matrices.
+///
+/// The kronecker product of a LxN matrix A and a MxR matrix B is a (L*M)x(N*R)
+/// matrix K formed by the block multiplication A_ij * B.
+pub fn kron<A, S1, S2>(a: &ArrayBase<S1, Ix2>, b: &ArrayBase<S2, Ix2>) -> Array<A, Ix2>
+where
+    S1: Data<Elem = A>,
+    S2: Data<Elem = A>,
+    A: LinalgScalar,
+{
+    let dimar = a.shape()[0];
+    let dimac = a.shape()[1];
+    let dimbr = b.shape()[0];
+    let dimbc = b.shape()[1];
+    let mut out: Array2<MaybeUninit<A>> = Array2::uninit((
+        dimar
+            .checked_mul(dimbr)
+            .expect("Dimensions of kronecker product output array overflows usize."),
+        dimac
+            .checked_mul(dimbc)
+            .expect("Dimensions of kronecker product output array overflows usize."),
+    ));
+    Zip::from(out.exact_chunks_mut((dimbr, dimbc)))
+        .and(a)
+        .for_each(|out, &a| {
+            Zip::from(out).and(b).for_each(|out, &b| {
+                *out = MaybeUninit::new(a * b);
+            })
+        });
+    unsafe { out.assume_init() }
 }
 
 #[inline(always)]
