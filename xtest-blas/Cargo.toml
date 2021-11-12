@@ -11,6 +11,7 @@ test = false
 approx = "0.4"
 defmac = "0.2"
 num-traits = "0.2"
+num-complex = { version = "0.4", default-features = false }
 
 [dependencies]
 ndarray = { path = "../", features = ["approx", "blas"] }
