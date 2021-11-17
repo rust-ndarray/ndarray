@@ -5,7 +5,7 @@ use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 use ndarray::ShapeBuilder;
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::{RandomExt, SamplingStrategy};
-use quickcheck::quickcheck;
+use quickcheck::{quickcheck, TestResult};
 
 #[test]
 fn test_dim() {
@@ -51,7 +51,8 @@ fn oversampling_without_replacement_should_panic() {
 }
 
 quickcheck! {
-    fn oversampling_with_replacement_is_fine(m: usize, n: usize) -> bool {
+    fn oversampling_with_replacement_is_fine(m: u8, n: u8) -> TestResult {
+        let (m, n) = (m as usize, n as usize);
         let a = Array::random((m, n), Uniform::new(0., 2.));
         // Higher than the length of both axes
         let n_samples = m + n + 1;
@@ -59,24 +60,28 @@ quickcheck! {
         // We don't want to deal with sampling from 0-length axes in this test
         if m != 0 {
             if !sampling_works(&a, SamplingStrategy::WithReplacement, Axis(0), n_samples) {
-                return false;
+                return TestResult::failed();
             }
+        } else {
+            return TestResult::discard();
         }
 
         // We don't want to deal with sampling from 0-length axes in this test
         if n != 0 {
             if !sampling_works(&a, SamplingStrategy::WithReplacement, Axis(1), n_samples) {
-                return false;
+                return TestResult::failed();
             }
+        } else {
+            return TestResult::discard();
         }
-
-        true
+        TestResult::passed()
     }
 }
 
 #[cfg(feature = "quickcheck")]
 quickcheck! {
-    fn sampling_behaves_as_expected(m: usize, n: usize, strategy: SamplingStrategy) -> bool {
+    fn sampling_behaves_as_expected(m: u8, n: u8, strategy: SamplingStrategy) -> TestResult {
+        let (m, n) = (m as usize, n as usize);
         let a = Array::random((m, n), Uniform::new(0., 2.));
         let mut rng = &mut thread_rng();
 
@@ -84,19 +89,23 @@ quickcheck! {
         if m != 0 {
             let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
             if !sampling_works(&a, strategy.clone(), Axis(0), n_row_samples) {
-                return false;
+                return TestResult::failed();
             }
+        } else {
+            return TestResult::discard();
         }
 
         // We don't want to deal with sampling from 0-length axes in this test
         if n != 0 {
             let n_col_samples = Uniform::from(1..n+1).sample(&mut rng);
             if !sampling_works(&a, strategy, Axis(1), n_col_samples) {
-                return false;
+                return TestResult::failed();
             }
+        } else {
+            return TestResult::discard();
         }
 
-        true
+        TestResult::passed()
     }
 }
 

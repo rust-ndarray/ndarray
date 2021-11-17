@@ -304,7 +304,7 @@ pub enum SamplingStrategy {
 // `Arbitrary` enables `quickcheck` to generate random `SamplingStrategy` values for testing.
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for SamplingStrategy {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         if bool::arbitrary(g) {
             SamplingStrategy::WithReplacement
         } else {
