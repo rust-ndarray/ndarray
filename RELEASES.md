@@ -1,3 +1,120 @@
+Version 0.15.4 (2021-11-xx)
+===========================
+
+New features
+------------
+
+- Complex matrix multiplication now uses BLAS ``cgemm``/``zgemm`` when
+  enabled (and matrix layout allows), by [@ethanhs].
+
+  https://github.com/rust-ndarray/ndarray/pull/1106
+
+- Use `matrixmultiply` as fallback for complex matrix multiplication
+  when BLAS is not available or the matrix layout requires it by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/1118
+
+- Add ``into/to_slice_memory_order`` methods for views, lifetime-preserving
+  versions of existing similar methods by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1015
+
+- ``kron`` function for Kronecker product by [@ethanhs].
+
+  https://github.com/rust-ndarray/ndarray/pull/1105
+
+- ``split_complex`` method for splitting complex arrays into separate
+  real and imag view parts by [@jturner314] and [@ethanhs].
+
+  https://github.com/rust-ndarray/ndarray/pull/1107
+
+- New method ``try_into_owned_nocopy`` by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1022
+
+- New producer and iterable ``axis_windows`` by [@VasanthakumarV]
+  and [@jturner314].
+
+  https://github.com/rust-ndarray/ndarray/pull/1022
+
+- New method ``Zip::par_fold`` by [@adamreichold]
+
+  https://github.com/rust-ndarray/ndarray/pull/1095
+
+- New constructor ``from_diag_elem`` by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1076
+
+- ``Parallel::with_min_len`` method for parallel iterators by [@adamreichold]
+
+  https://github.com/rust-ndarray/ndarray/pull/1081
+
+- Allocation-preserving map function ``.mapv_into_any()`` added by [@benkay86]
+
+Enhancements
+------------
+
+- Improve performance of ``.sum_axis()`` for some cases by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1061
+
+Bug fixes
+---------
+
+- Fix error in calling dgemv (matrix-vector multiplication) with BLAS and
+  broadcasted arrays, by [@jturner314].
+
+  https://github.com/rust-ndarray/ndarray/pull/1088
+
+API changes
+-----------
+
+- Support approx 0.5 partially alongside the already existing approx 0.4 support.
+  New feature flag is `approx-0_5`, by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1025
+
+- Slice and reference-to-array conversions to CowArray added for by [@jturner314].
+
+  https://github.com/rust-ndarray/ndarray/pull/1038
+
+- Allow trailing comma in stack and concatenate macros by [@jturner314]
+
+  https://github.com/rust-ndarray/ndarray/pull/1044
+
+- ``Zip`` now has a ``must_use`` marker to help users by [@adamreichold]
+
+  https://github.com/rust-ndarray/ndarray/pull/1082
+
+Other changes
+-------------
+
+- Fixing the crates.io badge on github by [@atouchet]
+
+  https://github.com/rust-ndarray/ndarray/pull/1104
+
+- Use intra-doc links in docs by [@LeSeulArtichaut]
+
+  https://github.com/rust-ndarray/ndarray/pull/1033
+
+- Clippy fixes by [@adamreichold]
+
+  https://github.com/rust-ndarray/ndarray/pull/1092 <br>
+  https://github.com/rust-ndarray/ndarray/pull/1091
+
+- Minor fixes in links and punctuation in docs by [@jimblandy]
+
+  https://github.com/rust-ndarray/ndarray/pull/1056
+
+- Minor fixes in docs by [@chohner]
+
+  https://github.com/rust-ndarray/ndarray/pull/1119
+
+- Update tests to quickcheck 1.0 by [@bluss]
+
+  https://github.com/rust-ndarray/ndarray/pull/1114
+
+
 Version 0.15.3 (2021-06-05)
 ===========================
 
@@ -1427,13 +1544,20 @@ Earlier releases
 [@jturner314]: https://github.com/jturner314
 [@LukeMathWalker]: https://github.com/LukeMathWalker
 [@acj]: https://github.com/acj
+[@adamreichold]: https://github.com/adamreichold
+[@atouchet]: https://github.com/atouchet
 [@andrei-papou]: https://github.com/andrei-papou
+[@benkay]: https://github.com/benkay
 [@cassiersg]: https://github.com/cassiersg
+[@chohner]: https://github.com/chohner
 [@dam5h]: https://github.com/dam5h
+[@ethanhs]: https://github.com/ethanhs
 [@d-dorazio]: https://github.com/d-dorazio
 [@Eijebong]: https://github.com/Eijebong
 [@insideoutclub]: https://github.com/insideoutclub
 [@JP-Ellis]: https://github.com/JP-Ellis
+[@jimblandy]: https://github.com/jimblandy
+[@LeSeulArtichaut]: https://github.com/LeSeulArtichaut
 [@lifuyang]: https://github.com/liufuyang
 [@kdubovikov]: https://github.com/kdubovikov
 [@max-sixty]: https://github.com/max-sixty
@@ -1448,5 +1572,6 @@ Earlier releases
 [@termoshtt]: https://github.com/termoshtt
 [@TheLortex]: https://github.com/TheLortex
 [@viniciusd]: https://github.com/viniciusd
+[@VasanthakumarV]: https://github.com/VasanthakumarV
 [@xd009642]: https://github.com/xd009642
 [@Zuse64]: https://github.com/Zuse64
