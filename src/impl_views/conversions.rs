@@ -34,7 +34,7 @@ where
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     ///
-    /// Note that while the method is similar to [`ArrayBase::as_slice()`], this method tranfers
+    /// Note that while the method is similar to [`ArrayBase::as_slice()`], this method transfers
     /// the view's lifetime to the slice, so it is a bit more powerful.
     pub fn to_slice(&self) -> Option<&'a [A]> {
         if self.is_standard_layout() {
@@ -108,7 +108,7 @@ where
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     ///
-    /// Note that while this is similar to [`ArrayBase::as_slice_mut()`], this method tranfers the
+    /// Note that while this is similar to [`ArrayBase::as_slice_mut()`], this method transfers the
     /// view's lifetime to the slice.
     pub fn into_slice(self) -> Option<&'a mut [A]> {
         self.try_into_slice().ok()
