@@ -3,6 +3,7 @@ name = "numeric-tests"
 version = "0.1.0"
 authors = ["bluss"]
 publish = false
+edition = "2018"
 
 [dependencies]
 approx = "0.4"
@@ -16,6 +17,10 @@ openblas-src = { optional = true, version = "0.10", default-features = false, fe
 [dependencies.rand]
 version = "0.8.0"
 features = ["small_rng"]
+
+[dev-dependencies]
+num-traits = { version = "0.2.14", default-features = false }
+num-complex = { version = "0.4", default-features = false }
 
 [lib]
 test = false

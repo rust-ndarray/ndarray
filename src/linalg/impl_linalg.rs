@@ -18,6 +18,9 @@ use std::any::TypeId;
 use std::mem::MaybeUninit;
 use alloc::vec::Vec;
 
+use num_complex::Complex;
+use num_complex::{Complex32 as c32, Complex64 as c64};
+
 #[cfg(feature = "blas")]
 use libc::c_int;
 #[cfg(feature = "blas")]
@@ -29,9 +32,6 @@ use std::mem::swap;
 use cblas_sys as blas_sys;
 #[cfg(feature = "blas")]
 use cblas_sys::{CblasNoTrans, CblasRowMajor, CblasTrans, CBLAS_LAYOUT};
-
-#[cfg(feature = "blas")]
-use num_complex::{Complex32 as c32, Complex64 as c64};
 
 /// len of vector before we use blas
 #[cfg(feature = "blas")]
@@ -505,7 +505,7 @@ fn mat_mul_general<A>(
     let (rsc, csc) = (c.strides()[0], c.strides()[1]);
     if same_type::<A, f32>() {
         unsafe {
-            ::matrixmultiply::sgemm(
+            matrixmultiply::sgemm(
                 m,
                 k,
                 n,
@@ -524,7 +524,7 @@ fn mat_mul_general<A>(
         }
     } else if same_type::<A, f64>() {
         unsafe {
-            ::matrixmultiply::dgemm(
+            matrixmultiply::dgemm(
                 m,
                 k,
                 n,
@@ -536,6 +536,48 @@ fn mat_mul_general<A>(
                 rhs.strides()[0],
                 rhs.strides()[1],
                 cast_as(&beta),
+                cp as *mut _,
+                rsc,
+                csc,
+            );
+        }
+    } else if same_type::<A, c32>() {
+        unsafe {
+            matrixmultiply::cgemm(
+                matrixmultiply::CGemmOption::Standard,
+                matrixmultiply::CGemmOption::Standard,
+                m,
+                k,
+                n,
+                complex_array(cast_as(&alpha)),
+                ap as *const _,
+                lhs.strides()[0],
+                lhs.strides()[1],
+                bp as *const _,
+                rhs.strides()[0],
+                rhs.strides()[1],
+                complex_array(cast_as(&beta)),
+                cp as *mut _,
+                rsc,
+                csc,
+            );
+        }
+    } else if same_type::<A, c64>() {
+        unsafe {
+            matrixmultiply::zgemm(
+                matrixmultiply::CGemmOption::Standard,
+                matrixmultiply::CGemmOption::Standard,
+                m,
+                k,
+                n,
+                complex_array(cast_as(&alpha)),
+                ap as *const _,
+                lhs.strides()[0],
+                lhs.strides()[1],
+                bp as *const _,
+                rhs.strides()[0],
+                rhs.strides()[1],
+                complex_array(cast_as(&beta)),
                 cp as *mut _,
                 rsc,
                 csc,
@@ -768,8 +810,15 @@ fn same_type<A: 'static, B: 'static>() -> bool {
 //
 // **Panics** if `A` and `B` are not the same type
 fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
-    assert!(same_type::<A, B>());
+    assert!(same_type::<A, B>(), "expect type {} and {} to match",
+            std::any::type_name::<A>(), std::any::type_name::<B>());
     unsafe { ::std::ptr::read(a as *const _ as *const B) }
+}
+
+/// Return the complex in the form of an array [re, im]
+#[inline]
+fn complex_array<A: 'static + Copy>(z: Complex<A>) -> [A; 2] {
+    [z.re, z.im]
 }
 
 #[cfg(feature = "blas")]
