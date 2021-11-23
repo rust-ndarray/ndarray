@@ -231,9 +231,13 @@ pub type Ixs = isize;
 
 /// An *n*-dimensional array.
 ///
-/// The array is a general container of elements. It cannot grow or shrink (with some exceptions),
-/// but can be sliced into subsets of its data.
-/// The array supports arithmetic operations by applying them elementwise.
+/// The array is a general container of elements.
+/// The array supports arithmetic operations by applying them elementwise, if the
+/// elements are numeric, but it supports non-numeric elements too.
+///
+/// The arrays rarely grow or shrink, since those operations can be costly. On
+/// the other hand there is a rich set of methods and operations for taking views,
+/// slices, and making traversals over one or more arrays.
 ///
 /// In *n*-dimensional we include for example 1-dimensional rows or columns,
 /// 2-dimensional matrices, and higher dimensional arrays. If the array has *n*
@@ -244,7 +248,7 @@ pub type Ixs = isize;
 ///
 /// Type aliases [`Array`], [`ArcArray`], [`CowArray`], [`ArrayView`], and
 /// [`ArrayViewMut`] refer to `ArrayBase` with different types for the data
-/// container.
+/// container: arrays with different kinds of ownership or different kinds of array views.
 ///
 /// ## Contents
 ///
