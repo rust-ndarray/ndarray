@@ -2541,17 +2541,17 @@ fn test_remove_index_oob3() {
 }
 
 #[test]
-fn test_split_re_im_view() {
+fn test_split_complex_view() {
     let a = Array3::from_shape_fn((3, 4, 5), |(i, j, k)| {
         Complex::<f32>::new(i as f32 * j as f32, k as f32)
     });
-    let Complex { re, im } = a.view().split_re_im();
+    let Complex { re, im } = a.view().split_complex();
     assert_relative_eq!(re.sum(), 90.);
     assert_relative_eq!(im.sum(), 120.);
 }
 
 #[test]
-fn test_split_re_im_view_roundtrip() {
+fn test_split_complex_view_roundtrip() {
     let a_re = Array3::from_shape_fn((3,1,5), |(i, j, _k)| {
         i * j
     });
@@ -2561,49 +2561,49 @@ fn test_split_re_im_view_roundtrip() {
     let a = Array3::from_shape_fn((3,1,5), |(i,j,k)| {
         Complex::new(a_re[[i,j,k]], a_im[[i,j,k]])
     });
-    let Complex { re, im } = a.view().split_re_im();
+    let Complex { re, im } = a.view().split_complex();
     assert_eq!(a_re, re);
     assert_eq!(a_im, im);
 }
 
 #[test]
-fn test_split_re_im_view_mut() {
+fn test_split_complex_view_mut() {
     let eye_scalar = Array2::<u32>::eye(4);
     let eye_complex = Array2::<Complex<u32>>::eye(4);
     let mut a = Array2::<Complex<u32>>::zeros((4, 4));
-    let Complex { mut re, im } = a.view_mut().split_re_im();
+    let Complex { mut re, im } = a.view_mut().split_complex();
     re.assign(&eye_scalar);
     assert_eq!(im.sum(), 0);
     assert_eq!(a, eye_complex);
 }
 
 #[test]
-fn test_split_re_im_zerod() {
+fn test_split_complex_zerod() {
     let mut a = Array0::from_elem((), Complex::new(42, 32));
-    let Complex { re, im } = a.view().split_re_im();
+    let Complex { re, im } = a.view().split_complex();
     assert_eq!(re.get(()), Some(&42));
     assert_eq!(im.get(()), Some(&32));
-    let cmplx = a.view_mut().split_re_im();
+    let cmplx = a.view_mut().split_complex();
     cmplx.re.assign_to(cmplx.im);
     assert_eq!(a.get(()).unwrap().im, 42);
 }
 
 #[test]
-fn test_split_re_im_permuted() {
+fn test_split_complex_permuted() {
     let a = Array3::from_shape_fn((3, 4, 5), |(i, j, k)| {
         Complex::new(i * k + j, k)
     });
     let permuted = a.view().permuted_axes([1,0,2]);
-    let Complex { re, im } = permuted.split_re_im();
+    let Complex { re, im } = permuted.split_complex();
     assert_eq!(re.get((3,2,4)).unwrap(), &11);
     assert_eq!(im.get((3,2,4)).unwrap(), &4);
 }
 
 #[test]
-fn test_split_re_im_invert_axis() {
+fn test_split_complex_invert_axis() {
     let mut a = Array::from_shape_fn((2, 3, 2), |(i, j, k)| Complex::new(i as f64 + j as f64, i as f64 + k as f64));
     a.invert_axis(Axis(1));
-    let cmplx = a.view().split_re_im();
+    let cmplx = a.view().split_complex();
     assert_eq!(cmplx.re, a.mapv(|z| z.re));
     assert_eq!(cmplx.im, a.mapv(|z| z.im));
 }
