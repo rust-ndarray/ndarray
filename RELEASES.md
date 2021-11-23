@@ -1,5 +1,7 @@
-Version 0.15.4 (2021-11-xx)
+Version 0.15.4 (2021-11-23)
 ===========================
+
+The Dr. Turner release 🚀
 
 New features
 ------------
