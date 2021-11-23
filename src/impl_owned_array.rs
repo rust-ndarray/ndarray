@@ -120,7 +120,7 @@ impl<A> Array<A, Ix2> {
 
     /// Append a column to an array
     ///
-    /// The elements from `column` are cloned and added as a new row in the array.
+    /// The elements from `column` are cloned and added as a new column in the array.
     ///
     /// ***Errors*** with a shape error if the length of the column does not match the length of
     /// the columns in the array.
@@ -380,7 +380,7 @@ impl<A, D> Array<A, D>
     /// appending to an array along the same axis.
     ///
     /// The amortized average complexity of the append, when appending along its growing axis, is
-    /// O(*m*) where *m* is the length of the row.
+    /// O(*m*) where *m* is the number of individual elements to append.
     ///
     /// The memory layout of the argument `array` does not matter to the same extent.
     ///
@@ -438,14 +438,14 @@ impl<A, D> Array<A, D>
     /// appending to an array along the same axis.
     ///
     /// The amortized average complexity of the append, when appending along its growing axis, is
-    /// O(*m*) where *m* is the length of the row.
+    /// O(*m*) where *m* is the number of individual elements to append.
     ///
     /// The memory layout of the argument `array` does not matter to the same extent.
     ///
     /// ```rust
     /// use ndarray::{Array, ArrayView, array, Axis};
     ///
-    /// // create an empty array and append
+    /// // create an empty array and append two rows at a time
     /// let mut a = Array::zeros((0, 4));
     /// let ones  = ArrayView::from(&[1.; 8]).into_shape((2, 4)).unwrap();
     /// let zeros = ArrayView::from(&[0.; 8]).into_shape((2, 4)).unwrap();
