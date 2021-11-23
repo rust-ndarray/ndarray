@@ -156,7 +156,7 @@ where
 {
     /// Splits the view into views of the real and imaginary components of the
     /// elements.
-    pub fn split_re_im(self) -> Complex<RawArrayView<T, D>> {
+    pub fn split_complex(self) -> Complex<RawArrayView<T, D>> {
         // Check that the size and alignment of `Complex<T>` are as expected.
         // These assertions should always pass, for arbitrary `T`.
         assert_eq!(
@@ -375,8 +375,8 @@ where
 {
     /// Splits the view into views of the real and imaginary components of the
     /// elements.
-    pub fn split_re_im(self) -> Complex<RawArrayViewMut<T, D>> {
-        let Complex { re, im } = self.into_raw_view().split_re_im();
+    pub fn split_complex(self) -> Complex<RawArrayViewMut<T, D>> {
+        let Complex { re, im } = self.into_raw_view().split_complex();
         unsafe {
             Complex {
                 re: RawArrayViewMut::new(re.ptr, re.dim, re.strides),
