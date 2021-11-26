@@ -50,9 +50,19 @@ where
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
     ///
     /// ```
-    /// use ndarray::array;
-    /// let array = array![[1., 2.], [3., 4.]];
-    /// assert_eq!(array.nrows(), 2usize);
+    /// use ndarray::{array, Axis};
+    ///
+    /// let array = array![[1., 2.],
+    ///                    [3., 4.],
+    ///                    [5., 6.]];
+    /// assert_eq!(array.nrows(), 3);
+    ///
+    /// // equivalent ways of getting the dimensions
+    /// // get nrows, ncols by using dim:
+    /// let (m, n) = array.dim();
+    /// assert_eq!(m, array.nrows());
+    /// // get length of any particular axis with .len_of()
+    /// assert_eq!(m, array.len_of(Axis(0)));
     /// ```
     pub fn nrows(&self) -> usize {
         self.len_of(Axis(0))
@@ -94,9 +104,19 @@ where
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
     ///
     /// ```
-    /// use ndarray::array;
-    /// let array = array![[1., 2.], [3., 4.]];
-    /// assert_eq!(array.ncols(), 2usize);
+    /// use ndarray::{array, Axis};
+    ///
+    /// let array = array![[1., 2.],
+    ///                    [3., 4.],
+    ///                    [5., 6.]];
+    /// assert_eq!(array.ncols(), 2);
+    ///
+    /// // equivalent ways of getting the dimensions
+    /// // get nrows, ncols by using dim:
+    /// let (m, n) = array.dim();
+    /// assert_eq!(n, array.ncols());
+    /// // get length of any particular axis with .len_of()
+    /// assert_eq!(n, array.len_of(Axis(1)));
     /// ```
     pub fn ncols(&self) -> usize {
         self.len_of(Axis(1))
