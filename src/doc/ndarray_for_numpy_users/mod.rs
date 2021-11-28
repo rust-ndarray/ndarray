@@ -524,6 +524,101 @@
 //! </td></tr>
 //! </table>
 //!
+//! ## Type conversions
+//!
+//! In `ndarray`, conversions between datatypes are done with `mapv()` by
+//! passing a closure to convert every element independently.
+//! For the conversion itself, we have several options:
+//! - `std::convert::From` ensures lossless, safe conversions at compile-time
+//!   and is generally recommended.
+//! - `std::convert::TryFrom` can be used for potentially unsafe conversions. It
+//!   will return a `Result` which can be handled or `unwrap()`ed to panic if
+//!   any value at runtime cannot be converted losslessly.
+//! - The `as` keyword compiles to lossless/lossy conversions depending on the
+//!   source and target datatypes. It can be useful when `TryFrom` is a
+//!   performance issue or does not apply. A notable difference to NumPy is that
+//!   `as` performs a [*saturating* cast][sat_conv] when casting
+//!   from floats to integers. Further information can be found in the
+//!   [reference on type cast expressions][as_typecast].
+//!
+//! For details, be sure to check out the type conversion examples.
+//!
+
+//! <table>
+//! <tr><th>
+//!
+//! NumPy
+//!
+//! </th><th>
+//!
+//! `ndarray`
+//!
+//! </th><th>
+//!
+//! Notes
+//!
+//! </th></tr>
+//!
+//! <tr><td>
+//!
+//! `a.astype(np.float32)`
+//!
+//! </td><td>
+//!
+//! `a.mapv(|x| f32::from(x))`
+//!
+//! </td><td>
+//!
+//! convert `u8` array infallibly to `f32` array with `std::convert::From`, generally recommended
+//!
+//! </td></tr>
+//!
+//! <tr><td>
+//!
+//! `a.astype(np.int32)`
+//!
+//! </td><td>
+//!
+//! `a.mapv(|x| i32::from(x))`
+//!
+//! </td><td>
+//!
+//! upcast `u8` array to `i32` array with `std::convert::From`, preferable over `as` because it ensures at compile-time that the conversion is lossless
+//!
+//! </td></tr>
+//!
+//! <tr><td>
+//!
+//! `a.astype(np.uint8)`
+//!
+//! </td><td>
+//!
+//! `a.mapv(|x| u8::try_from(x).unwrap())`
+//!
+//! </td><td>
+//!
+//! try to convert `i8` array to `u8` array, panic if any value cannot be converted lossless at runtime (e.g. negative value)
+//!
+//! </td></tr>
+//!
+//! <tr><td>
+//!
+//! `a.astype(np.int32)`
+//!
+//! </td><td>
+//!
+//! `a.mapv(|x| x as i32)`
+//!
+//! </td><td>
+//!
+//! convert `f32` array to `i32` array with ["saturating" conversion][sat_conv]; care needed because it can be a lossy conversion or result in non-finite values! See [the reference for information][as_typecast].
+//!
+//! </td></tr>
+//!
+//! [as_conv]: https://doc.rust-lang.org/rust-by-example/types/cast.html
+//! [sat_conv]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html#fixing-unsoundness-in-casts
+//! [as_typecast]: https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions
+//!
 //! ## Array manipulation
 //!
 //! NumPy | `ndarray` | Notes
