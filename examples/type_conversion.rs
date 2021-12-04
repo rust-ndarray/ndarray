@@ -1,5 +1,10 @@
 #[cfg(feature = "approx")]
-use {approx::assert_abs_diff_eq, ndarray::prelude::*, std::convert::TryFrom};
+use std::convert::TryFrom;
+
+#[cfg(feature = "approx")]
+use approx::assert_abs_diff_eq;
+#[cfg(feature = "approx")]
+use ndarray::prelude::*;
 
 #[cfg(feature = "approx")]
 fn main() {
