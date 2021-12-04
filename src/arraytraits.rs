@@ -14,12 +14,12 @@ use std::ops::{Index, IndexMut};
 use std::{hash, mem::size_of};
 use std::{iter::FromIterator, slice};
 
-use crate::iter::{Iter, IterMut};
-use crate::NdIndex;
-use crate::{dimension, imp_prelude::*};
-
-use crate::numeric_util;
-use crate::{FoldWhile, Zip};
+use crate::imp_prelude::*;
+use crate::{
+    dimension,
+    iter::{Iter, IterMut},
+    numeric_util, FoldWhile, NdIndex, Zip,
+};
 
 #[cold]
 #[inline(never)]
