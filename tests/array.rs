@@ -11,8 +11,7 @@ use approx::assert_relative_eq;
 use defmac::defmac;
 use itertools::{zip, Itertools};
 use ndarray::prelude::*;
-use ndarray::{arr3, rcarr2};
-use ndarray::{Slice, SliceInfo, SliceInfoElem};
+use ndarray::{arr3, indices, rcarr2, Slice, SliceInfo, SliceInfoElem};
 use num_complex::Complex;
 use std::convert::TryFrom;
 
