@@ -336,6 +336,8 @@ mod arithmetic_ops {
     all_scalar_ops!(u32);
     all_scalar_ops!(i64);
     all_scalar_ops!(u64);
+    all_scalar_ops!(isize);
+    all_scalar_ops!(usize);
     all_scalar_ops!(i128);
     all_scalar_ops!(u128);
 
