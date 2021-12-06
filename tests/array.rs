@@ -731,7 +731,7 @@ fn diag() {
     let a = arr2(&[[1., 2., 3.0f32], [0., 0., 0.]]);
     let d = a.view().into_diag();
     assert_eq!(d.dim(), 2);
-    let d = arr2::<f32, _>(&[[]]).into_diag();
+    let d = arr2::<f32, 0>(&[[]]).into_diag();
     assert_eq!(d.dim(), 0);
     let d = ArcArray::<f32, _>::zeros(()).into_diag();
     assert_eq!(d.dim(), 1);
@@ -960,7 +960,7 @@ fn zero_axes() {
     a.map_inplace(|_| panic!());
     a.for_each(|_| panic!());
     println!("{:?}", a);
-    let b = arr2::<f32, _>(&[[], [], [], []]);
+    let b = arr2::<f32, 0>(&[[], [], [], []]);
     println!("{:?}\n{:?}", b.shape(), b);
 
     // we can even get a subarray of b
