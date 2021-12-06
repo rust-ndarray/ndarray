@@ -19,6 +19,7 @@
 //!   * [Mathematics](#mathematics)
 //!   * [Array manipulation](#array-manipulation)
 //!   * [Iteration](#iteration)
+//!   * [Type conversions](#type-conversions)
 //!   * [Convenience methods for 2-D arrays](#convenience-methods-for-2-d-arrays)
 //!
 //! # Similarities
@@ -524,6 +525,42 @@
 //! </td></tr>
 //! </table>
 //!
+//! ## Array manipulation
+//!
+//! NumPy | `ndarray` | Notes
+//! ------|-----------|------
+//! `a[:] = 3.` | [`a.fill(3.)`][.fill()] | set all array elements to the same scalar value
+//! `a[:] = b` | [`a.assign(&b)`][.assign()] | copy the data from array `b` into array `a`
+//! `np.concatenate((a,b), axis=1)` | [`concatenate![Axis(1), a, b]`][concatenate!] or [`concatenate(Axis(1), &[a.view(), b.view()])`][concatenate()] | concatenate arrays `a` and `b` along axis 1
+//! `np.stack((a,b), axis=1)` | [`stack![Axis(1), a, b]`][stack!] or [`stack(Axis(1), vec![a.view(), b.view()])`][stack()] | stack arrays `a` and `b` along axis 1
+//! `a[:,np.newaxis]` or `np.expand_dims(a, axis=1)` | [`a.slice(s![.., NewAxis])`][.slice()] or [`a.insert_axis(Axis(1))`][.insert_axis()] | create an view of 1-D array `a`, inserting a new axis 1
+//! `a.transpose()` or `a.T` | [`a.t()`][.t()] or [`a.reversed_axes()`][.reversed_axes()] | transpose of array `a` (view for `.t()` or by-move for `.reversed_axes()`)
+//! `np.diag(a)` | [`a.diag()`][.diag()] | view the diagonal of `a`
+//! `a.flatten()` | [`use std::iter::FromIterator; Array::from_iter(a.iter().cloned())`][::from_iter()] | create a 1-D array by flattening `a`
+//!
+//! ## Iteration
+//!
+//! `ndarray` has lots of interesting iterators/producers that implement the
+//! [`NdProducer`](crate::NdProducer) trait, which is a generalization of `Iterator`
+//! to multiple dimensions. This makes it possible to correctly and efficiently
+//! zip together slices/subviews of arrays in multiple dimensions with
+//! [`Zip`] or [`azip!()`]. The purpose of this is similar to
+//! [`np.nditer`](https://docs.scipy.org/doc/numpy/reference/generated/numpy.nditer.html),
+//! but [`Zip`] is implemented and used somewhat differently.
+//!
+//! This table lists some of the iterators/producers which have a direct
+//! equivalent in NumPy. For a more complete introduction to producers and
+//! iterators, see [*Loops, Producers, and
+//! Iterators*](ArrayBase#loops-producers-and-iterators).
+//! Note that there are also variants of these iterators (with a `_mut` suffix)
+//! that yield `ArrayViewMut` instead of `ArrayView`.
+//!
+//! NumPy | `ndarray` | Notes
+//! ------|-----------|------
+//! `a.flat` | [`a.iter()`][.iter()] | iterator over the array elements in logical order
+//! `np.ndenumerate(a)` | [`a.indexed_iter()`][.indexed_iter()] | flat iterator yielding the index along with each element reference
+//! `iter(a)` | [`a.outer_iter()`][.outer_iter()] or [`a.axis_iter(Axis(0))`][.axis_iter()] | iterator over the first (outermost) axis, yielding each subview
+//!
 //! ## Type conversions
 //!
 //! In `ndarray`, conversions between datatypes are done with `mapv()` by
@@ -614,46 +651,11 @@
 //! convert `f32` array to `i32` array with ["saturating" conversion][sat_conv]; care needed because it can be a lossy conversion or result in non-finite values! See [the reference for information][as_typecast].
 //!
 //! </td></tr>
+//! <table>
 //!
 //! [as_conv]: https://doc.rust-lang.org/rust-by-example/types/cast.html
 //! [sat_conv]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html#fixing-unsoundness-in-casts
 //! [as_typecast]: https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions
-//!
-//! ## Array manipulation
-//!
-//! NumPy | `ndarray` | Notes
-//! ------|-----------|------
-//! `a[:] = 3.` | [`a.fill(3.)`][.fill()] | set all array elements to the same scalar value
-//! `a[:] = b` | [`a.assign(&b)`][.assign()] | copy the data from array `b` into array `a`
-//! `np.concatenate((a,b), axis=1)` | [`concatenate![Axis(1), a, b]`][concatenate!] or [`concatenate(Axis(1), &[a.view(), b.view()])`][concatenate()] | concatenate arrays `a` and `b` along axis 1
-//! `np.stack((a,b), axis=1)` | [`stack![Axis(1), a, b]`][stack!] or [`stack(Axis(1), vec![a.view(), b.view()])`][stack()] | stack arrays `a` and `b` along axis 1
-//! `a[:,np.newaxis]` or `np.expand_dims(a, axis=1)` | [`a.slice(s![.., NewAxis])`][.slice()] or [`a.insert_axis(Axis(1))`][.insert_axis()] | create an view of 1-D array `a`, inserting a new axis 1
-//! `a.transpose()` or `a.T` | [`a.t()`][.t()] or [`a.reversed_axes()`][.reversed_axes()] | transpose of array `a` (view for `.t()` or by-move for `.reversed_axes()`)
-//! `np.diag(a)` | [`a.diag()`][.diag()] | view the diagonal of `a`
-//! `a.flatten()` | [`use std::iter::FromIterator; Array::from_iter(a.iter().cloned())`][::from_iter()] | create a 1-D array by flattening `a`
-//!
-//! ## Iteration
-//!
-//! `ndarray` has lots of interesting iterators/producers that implement the
-//! [`NdProducer`](crate::NdProducer) trait, which is a generalization of `Iterator`
-//! to multiple dimensions. This makes it possible to correctly and efficiently
-//! zip together slices/subviews of arrays in multiple dimensions with
-//! [`Zip`] or [`azip!()`]. The purpose of this is similar to
-//! [`np.nditer`](https://docs.scipy.org/doc/numpy/reference/generated/numpy.nditer.html),
-//! but [`Zip`] is implemented and used somewhat differently.
-//!
-//! This table lists some of the iterators/producers which have a direct
-//! equivalent in NumPy. For a more complete introduction to producers and
-//! iterators, see [*Loops, Producers, and
-//! Iterators*](ArrayBase#loops-producers-and-iterators).
-//! Note that there are also variants of these iterators (with a `_mut` suffix)
-//! that yield `ArrayViewMut` instead of `ArrayView`.
-//!
-//! NumPy | `ndarray` | Notes
-//! ------|-----------|------
-//! `a.flat` | [`a.iter()`][.iter()] | iterator over the array elements in logical order
-//! `np.ndenumerate(a)` | [`a.indexed_iter()`][.indexed_iter()] | flat iterator yielding the index along with each element reference
-//! `iter(a)` | [`a.outer_iter()`][.outer_iter()] or [`a.axis_iter(Axis(0))`][.axis_iter()] | iterator over the first (outermost) axis, yielding each subview
 //!
 //! ## Convenience methods for 2-D arrays
 //!
