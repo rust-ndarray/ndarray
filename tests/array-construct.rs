@@ -244,6 +244,29 @@ fn deny_wraparound_uninit() {
     let _five_large = Array::<f32, _>::uninit((3, 7, 29, 36760123, 823996703));
 }
 
+#[should_panic]
+#[test]
+fn deny_slice_with_too_many_rows_to_arrayview2() {
+    let _view = ArrayView2::from(&[[0u8; 0]; usize::MAX][..]);
+}
+
+#[should_panic]
+#[test]
+fn deny_slice_with_too_many_zero_sized_elems_to_arrayview2() {
+    let _view = ArrayView2::from(&[[(); isize::MAX as usize]; isize::MAX as usize][..]);
+}
+
+#[should_panic]
+#[test]
+fn deny_slice_with_too_many_rows_to_arrayviewmut2() {
+    let _view = ArrayViewMut2::from(&mut [[0u8; 0]; usize::MAX][..]);
+}
+
+#[should_panic]
+#[test]
+fn deny_slice_with_too_many_zero_sized_elems_to_arrayviewmut2() {
+    let _view = ArrayViewMut2::from(&mut [[(); isize::MAX as usize]; isize::MAX as usize][..]);
+}
 
 #[test]
 fn maybe_uninit_1() {
