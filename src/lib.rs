@@ -1450,7 +1450,7 @@ pub struct RawViewRepr<A> {
 
 impl<A> RawViewRepr<A> {
     #[inline(always)]
-    fn new() -> Self {
+    const fn new() -> Self {
         RawViewRepr { ptr: PhantomData }
     }
 }
@@ -1467,7 +1467,7 @@ pub struct ViewRepr<A> {
 
 impl<A> ViewRepr<A> {
     #[inline(always)]
-    fn new() -> Self {
+    const fn new() -> Self {
         ViewRepr { life: PhantomData }
     }
 }
