@@ -6,7 +6,7 @@ set -e
 FEATURES=$1
 CHANNEL=$2
 
-if [ "$CHANNEL" = "1.51.0" ]; then
+if [ "$CHANNEL" = "1.57.0" ]; then
     cargo update --package openblas-src --precise 0.10.5
     cargo update --package openblas-build --precise 0.10.5
     cargo update --package once_cell --precise 1.14.0
