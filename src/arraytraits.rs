@@ -328,8 +328,9 @@ where
 
 /// Implementation of ArrayView2::from(&S) where S is a slice to a 2D array
 ///
-/// **Panics** if the product of non-zero axis lengths overflows `isize` (This can only occur if A
-/// is zero-sized because slices cannot contain more than `isize::MAX` number of bytes).
+/// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
+/// can only occur if A is zero-sized or if `N` is zero, because slices cannot
+/// contain more than `isize::MAX` number of bytes.)
 impl<'a, A, const N: usize> From<&'a [[A; N]]> for ArrayView<'a, A, Ix2> {
     /// Create a two-dimensional read-only array view of the data in `slice`
     fn from(xs: &'a [[A; N]]) -> Self {
@@ -339,6 +340,11 @@ impl<'a, A, const N: usize> From<&'a [[A; N]]> for ArrayView<'a, A, Ix2> {
         if size_of::<A>() == 0 {
             dimension::size_of_shape_checked(&dim)
                 .expect("Product of non-zero axis lengths must not overflow isize.");
+        } else if N == 0 {
+            assert!(
+                xs.len() <= isize::MAX as usize,
+                "Product of non-zero axis lengths must not overflow isize.",
+            );
         }
 
         // `cols * rows` is guaranteed to fit in `isize` because we checked that it fits in
@@ -384,8 +390,9 @@ where
 
 /// Implementation of ArrayViewMut2::from(&S) where S is a slice to a 2D array
 ///
-/// **Panics** if the product of non-zero axis lengths overflows `isize` (This can only occur if A
-/// is zero-sized because slices cannot contain more than `isize::MAX` number of bytes).
+/// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
+/// can only occur if `A` is zero-sized or if `N` is zero, because slices
+/// cannot contain more than `isize::MAX` number of bytes.)
 impl<'a, A, const N: usize> From<&'a mut [[A; N]]> for ArrayViewMut<'a, A, Ix2> {
     /// Create a two-dimensional read-write array view of the data in `slice`
     fn from(xs: &'a mut [[A; N]]) -> Self {
@@ -395,6 +402,11 @@ impl<'a, A, const N: usize> From<&'a mut [[A; N]]> for ArrayViewMut<'a, A, Ix2> 
         if size_of::<A>() == 0 {
             dimension::size_of_shape_checked(&dim)
                 .expect("Product of non-zero axis lengths must not overflow isize.");
+        } else if N == 0 {
+            assert!(
+                xs.len() <= isize::MAX as usize,
+                "Product of non-zero axis lengths must not overflow isize.",
+            );
         }
 
         // `cols * rows` is guaranteed to fit in `isize` because we checked that it fits in
