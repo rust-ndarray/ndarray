@@ -112,13 +112,12 @@
 //! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
 //! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
-
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+#[cfg(feature = "std")]
+extern crate std;
 
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
@@ -126,8 +125,8 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
-use std::marker::PhantomData;
 use alloc::sync::Arc;
+use std::marker::PhantomData;
 
 pub use crate::dimension::dim::*;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
@@ -146,16 +145,16 @@ use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 pub use crate::arraytraits::AsArray;
+pub use crate::linalg_traits::LinalgScalar;
 #[cfg(feature = "std")]
 pub use crate::linalg_traits::NdFloat;
-pub use crate::linalg_traits::LinalgScalar;
 
 #[allow(deprecated)] // stack_new_axis
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
-pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::{Shape, ShapeBuilder, ShapeArg, StrideShape};
+pub use crate::math_cell::MathCell;
+pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 
 #[macro_use]
 mod macro_utils;
@@ -176,8 +175,7 @@ mod data_traits;
 pub use crate::aliases::*;
 
 pub use crate::data_traits::{
-    Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
-    RawDataSubst,
+    Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut, RawDataSubst,
 };
 
 mod free_functions;
@@ -200,9 +198,9 @@ mod partial;
 mod shape_builder;
 #[macro_use]
 mod slice;
+mod low_level_util;
 mod split_at;
 mod stacking;
-mod low_level_util;
 #[macro_use]
 mod zip;
 
@@ -1502,12 +1500,10 @@ impl<'a, A> CowRepr<'a, A> {
 // Consider the doc effect of ordering modules here.
 mod impl_clone;
 
-mod impl_internal_constructors;
 mod impl_constructors;
+mod impl_internal_constructors;
 
 mod impl_methods;
-#[cfg(feature = "std")]
-mod impl_float_maths;
 mod impl_owned_array;
 mod impl_special_element_types;
 
@@ -1566,9 +1562,7 @@ where
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
-        unsafe {
-            self.with_strides_dim(s, d)
-        }
+        unsafe { self.with_strides_dim(s, d) }
     }
 }
 
