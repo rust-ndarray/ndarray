@@ -366,7 +366,7 @@ API changes
 -----------
 
 - New constructors `Array::from_iter` and `Array::from_vec` by [@bluss].
-  No new functionality, just that these constructors are avaiable without trait
+  No new functionality, just that these constructors are available without trait
   imports.
 
   https://github.com/rust-ndarray/ndarray/pull/921
@@ -545,7 +545,7 @@ New features
 Enhancements
 ------------
 
-- Handle inhomogenous shape inputs better in Zip, in practice: guess better whether
+- Handle inhomogeneous shape inputs better in Zip, in practice: guess better whether
   to prefer c- or f-order for the inner loop by [@bluss]
   https://github.com/rust-ndarray/ndarray/pull/809
 
@@ -978,7 +978,7 @@ Earlier releases
 
   - Add `Zip::indexed`
   - New methods `genrows/_mut, gencolumns/_mut, lanes/_mut` that
-    return iterable producers (producer means `Zip` compatibile).
+    return iterable producers (producer means `Zip` compatible).
   - New method `.windows()` by @Robbepop, returns an iterable producer
   - New function `general_mat_vec_mul` (with fast default and blas acceleration)
   - `Zip::apply` and `fold_while` now take `self` as the first argument
