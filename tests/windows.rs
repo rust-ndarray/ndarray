@@ -116,7 +116,7 @@ fn test_window_zip() {
     }
 }
 
-/// Test verifies that non existant Axis results in panic
+/// Test verifies that non existent Axis results in panic
 #[test]
 #[should_panic]
 fn axis_windows_outofbound() {

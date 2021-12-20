@@ -94,7 +94,7 @@ macro_rules! zip_impl {
                 -> Array<R, D>
                 where R: Send
             {
-                let mut output = self.uninitalized_for_current_layout::<R>();
+                let mut output = self.uninitialized_for_current_layout::<R>();
                 let total_len = output.len();
 
                 // Create a parallel iterator that produces chunks of the zip with the output
@@ -191,7 +191,7 @@ macro_rules! zip_impl {
             /// Note that it is often more efficient to parallelize not per-element but rather
             /// based on larger chunks of an array like generalized rows and operating on each chunk
             /// using a sequential variant of the accumulation.
-            /// For example, sum each row sequentially and in parallel, taking advatange of locality
+            /// For example, sum each row sequentially and in parallel, taking advantage of locality
             /// and vectorization within each task, and then reduce their sums to the sum of the matrix.
             ///
             /// Also note that the splitting of the producer into multiple tasks is _not_ deterministic
