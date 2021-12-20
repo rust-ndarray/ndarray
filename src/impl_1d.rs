@@ -42,7 +42,7 @@ where
         let mut dst = if let Some(dst) = lane_iter.next() { dst } else { return };
 
         // Logically we do a circular swap here, all elements in a chain
-        // Using MaybeUninit to avoid unecessary writes in the safe swap solution
+        // Using MaybeUninit to avoid unnecessary writes in the safe swap solution
         //
         //  for elt in lane_iter {
         //      std::mem::swap(dst, elt);

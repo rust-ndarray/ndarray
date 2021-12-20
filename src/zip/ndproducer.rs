@@ -44,7 +44,7 @@ where
 /// Most `NdProducers` are *iterable* (implement `IntoIterator`) but not directly
 /// iterators. This separation is needed because the producer represents
 /// a multidimensional set of items, it can be split along a particular axis for
-/// parallelization, and it has no fixed correspondance to a sequence.
+/// parallelization, and it has no fixed correspondence to a sequence.
 ///
 /// The natural exception is one dimensional producers, like `AxisIter`, which
 /// implement `Iterator` directly

@@ -11,7 +11,7 @@ use ndarray::prelude::*;
 /// make sure axes are in positive stride direction, and merge adjacent
 /// axes if possible.
 ///
-/// This changes the logical order of the elments in the
+/// This changes the logical order of the elements in the
 /// array, so that if we read them in row-major order after regularization,
 /// it corresponds to their order in memory.
 ///

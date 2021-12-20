@@ -532,8 +532,8 @@ fn axis_iter_mut_zip_partially_consumed_discontiguous() {
 fn axis_chunks_iter_corner_cases() {
     // examples provided by @bluss in PR #65
     // these tests highlight corner cases of the axis_chunks_iter implementation
-    // and enable checking if no pointer offseting is out of bounds. However
-    // checking the absence of of out of bounds offseting cannot (?) be
+    // and enable checking if no pointer offsetting is out of bounds. However
+    // checking the absence of of out of bounds offsetting cannot (?) be
     // done automatically, so one has to launch this test in a debugger.
     let a = ArcArray::<f32, _>::linspace(0., 7., 8).reshape((8, 1));
     let it = a.axis_chunks_iter(Axis(0), 4);

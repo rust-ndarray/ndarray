@@ -540,7 +540,7 @@ where
     }
 
 
-    /// Create an array with uninitalized elements, shape `shape`.
+    /// Create an array with uninitialized elements, shape `shape`.
     ///
     /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
     /// an easier way to handle uninit values correctly.
@@ -598,7 +598,7 @@ where
         }
     }
 
-    /// Create an array with uninitalized elements, shape `shape`.
+    /// Create an array with uninitialized elements, shape `shape`.
     ///
     /// The uninitialized elements of type `A` are represented by the type `MaybeUninit<A>`,
     /// an easier way to handle uninit values correctly.
@@ -634,7 +634,7 @@ where
 
     #[deprecated(note = "This method is hard to use correctly. Use `uninit` instead.",
                  since = "0.15.0")]
-    /// Create an array with uninitalized elements, shape `shape`.
+    /// Create an array with uninitialized elements, shape `shape`.
     ///
     /// Prefer to use [`uninit()`](ArrayBase::uninit) if possible, because it is
     /// easier to use correctly.
@@ -643,7 +643,7 @@ where
     ///
     /// ### Safety
     ///
-    /// Accessing uninitalized values is undefined behaviour. You must overwrite *all* the elements
+    /// Accessing uninitialized values is undefined behaviour. You must overwrite *all* the elements
     /// in the array after it is created; for example using
     /// [`raw_view_mut`](ArrayBase::raw_view_mut) or other low-level element access.
     ///
@@ -676,7 +676,7 @@ where
     S: DataOwned<Elem = MaybeUninit<A>>,
     D: Dimension,
 {
-    /// Create an array with uninitalized elements, shape `shape`.
+    /// Create an array with uninitialized elements, shape `shape`.
     ///
     /// This method has been renamed to `uninit`
     #[deprecated(note = "Renamed to `uninit`", since = "0.15.0")]

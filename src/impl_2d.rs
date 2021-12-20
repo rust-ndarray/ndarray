@@ -125,13 +125,13 @@ where
     /// Return true if the array is square, false otherwise.
     ///
     /// # Examples
-    /// Sqaure:
+    /// Square:
     /// ```
     /// use ndarray::array;
     /// let array = array![[1., 2.], [3., 4.]];
     /// assert!(array.is_square());
     /// ```
-    /// Not sqaure:
+    /// Not square:
     /// ```
     /// use ndarray::array;
     /// let array = array![[1., 2., 5.], [3., 4., 6.]];

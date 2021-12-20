@@ -303,7 +303,7 @@ where
 pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
 // use "raw" form instead of type aliases here so that they show up in docs
-/// Implementation of `ArrayView::from(&S)` where `S` is a slice or slicable.
+/// Implementation of `ArrayView::from(&S)` where `S` is a slice or sliceable.
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
 where
     Slice: AsRef<[A]>,
@@ -335,7 +335,7 @@ where
     }
 }
 
-/// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or slicable.
+/// Implementation of `ArrayViewMut::from(&mut S)` where `S` is a slice or sliceable.
 impl<'a, A, Slice: ?Sized> From<&'a mut Slice> for ArrayViewMut<'a, A, Ix1>
 where
     Slice: AsMut<[A]>,
