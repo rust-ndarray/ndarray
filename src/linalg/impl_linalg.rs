@@ -677,7 +677,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
 
 /// General matrix-vector multiplication
 ///
-/// Use a raw view for the destination vector, so that it can be uninitalized.
+/// Use a raw view for the destination vector, so that it can be uninitialized.
 ///
 /// ## Safety
 ///
