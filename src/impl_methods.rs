@@ -2752,17 +2752,11 @@ where
         A: 'a,
         S: Data,
     {
-        let view_len = self.len_of(axis);
-        let view_stride = self.strides.axis(axis);
-        if view_len == 0 {
+        if self.len_of(axis) == 0 {
             let new_dim = self.dim.remove_axis(axis);
             Array::from_shape_simple_fn(new_dim, move || mapping(ArrayView::from(&[])))
         } else {
-            // use the 0th subview as a map to each 1d array view extended from
-            // the 0th element.
-            self.index_axis(axis, 0).map(|first_elt| unsafe {
-                mapping(ArrayView::new_(first_elt, Ix1(view_len), Ix1(view_stride)))
-            })
+            Zip::from(self.lanes(axis)).map_collect(mapping)
         }
     }
 
@@ -2783,21 +2777,11 @@ where
         A: 'a,
         S: DataMut,
     {
-        let view_len = self.len_of(axis);
-        let view_stride = self.strides.axis(axis);
-        if view_len == 0 {
+        if self.len_of(axis) == 0 {
             let new_dim = self.dim.remove_axis(axis);
             Array::from_shape_simple_fn(new_dim, move || mapping(ArrayViewMut::from(&mut [])))
         } else {
-            // use the 0th subview as a map to each 1d array view extended from
-            // the 0th element.
-            self.index_axis_mut(axis, 0).map_mut(|first_elt| unsafe {
-                mapping(ArrayViewMut::new_(
-                    first_elt,
-                    Ix1(view_len),
-                    Ix1(view_stride),
-                ))
-            })
+            Zip::from(self.lanes_mut(axis)).map_collect(mapping)
         }
     }
 
