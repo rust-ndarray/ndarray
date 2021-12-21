@@ -1,10 +1,10 @@
+use crate::extension::nonnull;
+use alloc::borrow::ToOwned;
+use alloc::slice;
+use alloc::vec::Vec;
 use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
-use alloc::slice;
-use alloc::borrow::ToOwned;
-use alloc::vec::Vec;
-use crate::extension::nonnull;
 
 use rawpointer::PointerExt;
 
@@ -30,11 +30,7 @@ impl<A> OwnedRepr<A> {
         let len = v.len();
         let capacity = v.capacity();
         let ptr = nonnull::nonnull_from_vec_data(&mut v);
-        Self {
-            ptr,
-            len,
-            capacity,
-        }
+        Self { ptr, len, capacity }
     }
 
     pub(crate) fn into_vec(self) -> Vec<A> {
@@ -42,12 +38,12 @@ impl<A> OwnedRepr<A> {
     }
 
     pub(crate) fn as_slice(&self) -> &[A] {
-        unsafe {
-            slice::from_raw_parts(self.ptr.as_ptr(), self.len)
-        }
+        unsafe { slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
     }
 
-    pub(crate) fn len(&self) -> usize { self.len }
+    pub(crate) fn len(&self) -> usize {
+        self.len
+    }
 
     pub(crate) fn as_ptr(&self) -> *const A {
         self.ptr.as_ptr()
@@ -63,13 +59,11 @@ impl<A> OwnedRepr<A> {
 
     /// Return end pointer
     pub(crate) fn as_end_nonnull(&self) -> NonNull<A> {
-        unsafe {
-            self.ptr.add(self.len)
-        }
+        unsafe { self.ptr.add(self.len) }
     }
 
     /// Reserve `additional` elements; return the new pointer
-    /// 
+    ///
     /// ## Safety
     ///
     /// Note that existing pointers into the data are invalidated
@@ -80,6 +74,21 @@ impl<A> OwnedRepr<A> {
             v
         });
         self.as_nonnull_mut()
+    }
+
+    /// Shrink the capacity of the array with lower bound.
+    /// The capacity will remain at least as large as both the length and
+    /// supplied value.
+    /// If the current capacity is less than the lower limit, this is a no-op.
+    pub(crate) fn shrink_to_fit(&mut self, len: usize) {
+        if len < self.len {
+            self.len = len;
+            self.modify_as_vec(|mut v| {
+                v.shrink_to_fit();
+                v
+            });
+            self.capacity = len;
+        }
     }
 
     /// Set the valid length of the data
@@ -126,14 +135,13 @@ impl<A> OwnedRepr<A> {
         let len = self.len;
         self.len = 0;
         self.capacity = 0;
-        unsafe {
-            Vec::from_raw_parts(self.ptr.as_ptr(), len, capacity)
-        }
+        unsafe { Vec::from_raw_parts(self.ptr.as_ptr(), len, capacity) }
     }
 }
 
 impl<A> Clone for OwnedRepr<A>
-    where A: Clone
+where
+    A: Clone,
 {
     fn clone(&self) -> Self {
         Self::from(self.as_slice().to_owned())
@@ -174,6 +182,5 @@ impl<A> Drop for OwnedRepr<A> {
     }
 }
 
-unsafe impl<A> Sync for OwnedRepr<A> where A: Sync { }
-unsafe impl<A> Send for OwnedRepr<A> where A: Send { }
-
+unsafe impl<A> Sync for OwnedRepr<A> where A: Sync {}
+unsafe impl<A> Send for OwnedRepr<A> where A: Send {}
