@@ -424,6 +424,7 @@ where
         }
     }
 
+    /// Convert from any stride to the default stride
     pub fn to_default_stride(&mut self) {
         let view_mut =
             unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) };
