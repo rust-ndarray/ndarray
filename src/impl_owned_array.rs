@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use std::collections::HashSet;
 use std::mem;
 use std::mem::MaybeUninit;
 
@@ -6,7 +7,6 @@ use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
 
-use crate::azip;
 use crate::dimension;
 use crate::error::{ErrorKind, ShapeError};
 use crate::iterators::Baseiter;
@@ -424,6 +424,49 @@ where
         }
     }
 
+    pub fn to_default_stride(&mut self) {
+        let view_mut =
+            unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) };
+        let offset = unsafe { self.offset_from_data() };
+        unsafe { self.ptr.offset(offset) };
+        self.strides = self.dim.default_strides();
+        let mut index_ = match self.dim.first_index() {
+            Some(x) => x,
+            None => unreachable!(),
+        };
+        let mut swap_idx: Vec<(isize, isize)> = Vec::new();
+        loop {
+            let self_index = self
+                .dim
+                .stride_offset_checked(&self.strides, &index_)
+                .unwrap();
+            let view_mut_index = view_mut
+                .dim
+                .stride_offset_checked(&view_mut.strides, &index_)
+                .unwrap()
+                + offset;
+            swap_idx.push((
+                std::cmp::min(self_index, view_mut_index),
+                std::cmp::max(self_index, view_mut_index),
+            ));
+
+            index_ = match self.dim.next_for(index_) {
+                Some(x) => x,
+                None => {
+                    break;
+                }
+            };
+        }
+        let swap_idx = swap_idx
+            .into_iter()
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+        for (x, y) in swap_idx.iter() {
+            unsafe { mem::swap(self.ptr.offset(*x).as_mut(), self.ptr.offset(*y).as_mut()) };
+        }
+    }
+
     /// Shrinks the capacity of the array as much as possible.
     ///
     /// ```
@@ -437,14 +480,7 @@ where
     /// assert_eq!(a, b);
     /// ```
     pub fn shrink_to_fit(&mut self) {
-        // Get ArrayViewMut without consuming variable references.
-        let view_mut =
-            unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) };
-        unsafe { self.ptr.as_ptr().offset(self.offset_from_data()) };
-        self.strides = self.dim.default_strides();
-        azip!((self_elm in &mut *self, view_elm in view_mut) {
-            mem::swap(self_elm, view_elm);
-        });
+        self.to_default_stride();
         self.data.shrink_to_fit(self.len());
     }
 
