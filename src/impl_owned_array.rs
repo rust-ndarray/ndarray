@@ -414,9 +414,8 @@ where
         )
     }
 
-    /// Return the offset between the pointer to the beginning of the heap
-    /// allocated by Array (`self.data.ptr`) and `self.ptr`.
-    unsafe fn offset_from_data(&self) -> isize {
+    /// Calculates the distance from `self.ptr` to `self.data.ptr`.
+    unsafe fn offset_from_data_ptr_to_logical_ptr(&self) -> isize {
         if std::mem::size_of::<A>() != 0 {
             self.as_ptr().offset_from(self.data.as_ptr())
         } else {
@@ -428,7 +427,7 @@ where
     pub fn to_default_stride(&mut self) {
         let view_mut =
             unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) };
-        let offset = unsafe { self.offset_from_data() };
+        let offset = unsafe { self.offset_from_data_ptr_to_logical_ptr() };
         unsafe { self.ptr.offset(offset) };
         self.strides = self.dim.default_strides();
         let mut index_ = match self.dim.first_index() {
