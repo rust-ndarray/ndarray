@@ -1559,10 +1559,6 @@ where
         unsafe { ArrayView::new(ptr, dim, strides) }
     }
 
-    fn raw_strides(&self) -> D {
-        self.strides.clone()
-    }
-
     /// Remove array axis `axis` and return the result.
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
         let d = self.dim.try_remove_axis(axis);

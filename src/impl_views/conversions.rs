@@ -183,6 +183,27 @@ where
     }
 }
 
+/// Private raw array view methods
+impl<A, D> RawArrayView<A, D>
+where
+    D: Dimension,
+{
+    #[inline]
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
+        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
+    }
+}
+
+impl<A, D> RawArrayViewMut<A, D>
+where
+    D: Dimension,
+{
+    #[inline]
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
+        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
+    }
+}
+
 /// Private array view methods
 impl<'a, A, D> ArrayView<'a, A, D>
 where

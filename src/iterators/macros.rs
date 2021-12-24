@@ -84,7 +84,7 @@ impl<$($typarm)*> NdProducer for $fulltype {
     }
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
-        self.$base.uget_ptr(i)
+        self.$base.uget_ptr(i) as *mut _
     }
 
     fn stride_of(&self, axis: Axis) -> isize {
