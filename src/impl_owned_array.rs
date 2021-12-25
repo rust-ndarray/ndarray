@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use std::collections::HashSet;
 use std::mem;
 use std::mem::MaybeUninit;
 
@@ -423,50 +422,6 @@ where
         }
     }
 
-    /// Convert from any stride to the default stride
-    pub fn to_default_stride(&mut self) {
-        let view_mut =
-            unsafe { ArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) };
-        let offset = unsafe { self.offset_from_data_ptr_to_logical_ptr() };
-        unsafe { self.ptr.offset(offset) };
-        self.strides = self.dim.default_strides();
-        let mut index_ = match self.dim.first_index() {
-            Some(x) => x,
-            None => unreachable!(),
-        };
-        let mut swap_idx: Vec<(isize, isize)> = Vec::new();
-        loop {
-            let self_index = self
-                .dim
-                .stride_offset_checked(&self.strides, &index_)
-                .unwrap();
-            let view_mut_index = view_mut
-                .dim
-                .stride_offset_checked(&view_mut.strides, &index_)
-                .unwrap()
-                + offset;
-            swap_idx.push((
-                std::cmp::min(self_index, view_mut_index),
-                std::cmp::max(self_index, view_mut_index),
-            ));
-
-            index_ = match self.dim.next_for(index_) {
-                Some(x) => x,
-                None => {
-                    break;
-                }
-            };
-        }
-        let swap_idx = swap_idx
-            .into_iter()
-            .collect::<HashSet<_>>()
-            .into_iter()
-            .collect::<Vec<_>>();
-        for (x, y) in swap_idx.iter() {
-            unsafe { mem::swap(self.ptr.offset(*x).as_mut(), self.ptr.offset(*y).as_mut()) };
-        }
-    }
-
     /// Shrinks the capacity of the array as much as possible.
     ///
     /// ```
@@ -479,8 +434,52 @@ where
     /// a.shrink_to_fit();
     /// assert_eq!(a, b);
     /// ```
-    pub fn shrink_to_fit(&mut self) {
-        self.to_default_stride();
+    pub fn shrink_to_fit(&mut self)
+    where
+        A: Copy,
+    {
+        let dim = self.dim.clone();
+        let strides = self.strides.clone();
+        let mut shrinked_stride = D::zeros(dim.ndim());
+
+        // Calculate the new stride after shrink
+        // Even after shrink, the order of stride size is maintained.
+        // For example, if dim is [3, 2, 3] and stride is [1, 9, 3], the default
+        // stride will be [6, 3, 1], but the stride order will be [1, 6, 3]
+        // because the size order of the original stride is maintained.
+        let mut stride_order = (0..dim.ndim()).collect::<Vec<_>>();
+        stride_order.sort_unstable_by(|&i, &j| strides[i].cmp(&strides[j]));
+        let mut stride_ = 1;
+        for i in stride_order.iter() {
+            shrinked_stride[*i] = stride_;
+            stride_ = stride_ * dim[*i];
+        }
+
+        // Calculate which index in shrinked_stride from the pointer offset.
+        let mut stride_order_order = (0..dim.ndim()).collect::<Vec<_>>();
+        stride_order_order.sort_unstable_by(|&i, &j| stride_order[j].cmp(&stride_order[i]));
+        let offset_stride = |offset: usize| {
+            let mut offset = offset;
+            let mut index = D::zeros(dim.ndim());
+            for i in stride_order_order.iter() {
+                index[*i] = offset / shrinked_stride[*i];
+                offset = offset % shrinked_stride[*i];
+            }
+            index
+        };
+
+        // Change the memory order only if it needs to be changed.
+        let ptr_offset = unsafe { self.offset_from_data_ptr_to_logical_ptr() };
+        self.ptr = unsafe { self.ptr.offset(ptr_offset * -1) };
+        for offset in 0..self.len() {
+            let index = offset_stride(offset);
+            let old_offset = dim.stride_offset_checked(&strides, &index).unwrap();
+            unsafe {
+                *self.ptr.as_ptr().offset(offset as isize) =
+                    *self.ptr.as_ptr().offset(old_offset + ptr_offset);
+            }
+        }
+        self.strides = shrinked_stride;
         self.data.shrink_to_fit(self.len());
     }
 
