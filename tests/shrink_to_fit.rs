@@ -47,7 +47,7 @@ fn stride_negative() {
     for i in 0..4 * 5 * 6 {
         raw_vec.push(i);
     }
-    let mut a = Array::from_shape_vec((4, 5, 6), raw_vec).unwrap();
+    let a = Array::from_shape_vec((4, 5, 6), raw_vec).unwrap();
     let mut a_slice = a.slice_move(s![2..3, 0..3, 0..;-1]);
     let a_slice_clone = a_slice.view().to_owned();
     a_slice.shrink_to_fit();

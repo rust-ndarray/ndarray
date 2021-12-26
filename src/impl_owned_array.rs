@@ -452,7 +452,7 @@ where
         let mut stride_ = 1;
         for i in stride_order.iter() {
             shrinked_stride[*i] = stride_;
-            stride_ = stride_ * dim[*i];
+            stride_ *= dim[*i];
         }
 
         // Calculate which index in shrinked_stride from the pointer offset.
@@ -463,20 +463,20 @@ where
             let mut index = D::zeros(dim.ndim());
             for i in stride_order_order.iter() {
                 index[*i] = offset / shrinked_stride[*i];
-                offset = offset % shrinked_stride[*i];
+                offset %= shrinked_stride[*i];
             }
             index
         };
 
         // Change the memory order only if it needs to be changed.
         let ptr_offset = unsafe { self.offset_from_data_ptr_to_logical_ptr() };
-        self.ptr = unsafe { self.ptr.offset(ptr_offset * -1) };
+        self.ptr = unsafe { self.ptr.sub(ptr_offset as usize) };
         for offset in 0..self.len() {
             let index = offset_stride(offset);
             let old_offset = dim.stride_offset_checked(&strides, &index).unwrap();
             unsafe {
-                *self.ptr.as_ptr().offset(offset as isize) =
-                    *self.ptr.as_ptr().offset(old_offset + ptr_offset);
+                *self.ptr.as_ptr().add(offset as usize) =
+                    *self.ptr.as_ptr().add((old_offset + ptr_offset) as usize);
             }
         }
         self.strides = shrinked_stride;
