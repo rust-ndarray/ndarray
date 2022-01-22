@@ -732,13 +732,26 @@ where
     /// ```
     pub fn get<I>(&self, index: I) -> Option<&A>
     where
-        I: NdIndex<D>,
         S: Data,
+        I: NdIndex<D>,
     {
         unsafe { self.get_ptr(index).map(|ptr| &*ptr) }
     }
 
-    pub(crate) fn get_ptr<I>(&self, index: I) -> Option<*const A>
+    /// Return a raw pointer to the element at `index`, or return `None`
+    /// if the index is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.], [3., 4.]]);
+    ///
+    /// let v = a.raw_view();
+    /// let p = a.get_ptr((0, 1)).unwrap();
+    ///
+    /// assert_eq!(unsafe { *p }, 2.);
+    /// ```
+    pub fn get_ptr<I>(&self, index: I) -> Option<*const A>
     where
         I: NdIndex<D>,
     {
@@ -758,7 +771,24 @@ where
         unsafe { self.get_ptr_mut(index).map(|ptr| &mut *ptr) }
     }
 
-    pub(crate) fn get_ptr_mut<I>(&mut self, index: I) -> Option<*mut A>
+    /// Return a raw pointer to the element at `index`, or return `None`
+    /// if the index is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let mut a = arr2(&[[1., 2.], [3., 4.]]);
+    ///
+    /// let v = a.raw_view_mut();
+    /// let p = a.get_ptr_mut((0, 1)).unwrap();
+    ///
+    /// unsafe {
+    ///     *p = 5.;
+    /// }
+    ///
+    /// assert_eq!(a.get((0, 1)), Some(&5.));
+    /// ```
+    pub fn get_ptr_mut<I>(&mut self, index: I) -> Option<*mut A>
     where
         S: RawDataMut,
         I: NdIndex<D>,
