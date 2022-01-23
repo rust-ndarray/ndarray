@@ -768,7 +768,7 @@ where
         S: DataMut,
         I: NdIndex<D>,
     {
-        unsafe { self.get_ptr_mut(index).map(|ptr| &mut *ptr) }
+        unsafe { self.get_mut_ptr(index).map(|ptr| &mut *ptr) }
     }
 
     /// Return a raw pointer to the element at `index`, or return `None`
@@ -780,7 +780,7 @@ where
     /// let mut a = arr2(&[[1., 2.], [3., 4.]]);
     ///
     /// let v = a.raw_view_mut();
-    /// let p = a.get_ptr_mut((0, 1)).unwrap();
+    /// let p = a.get_mut_ptr((0, 1)).unwrap();
     ///
     /// unsafe {
     ///     *p = 5.;
@@ -788,7 +788,7 @@ where
     ///
     /// assert_eq!(a.get((0, 1)), Some(&5.));
     /// ```
-    pub fn get_ptr_mut<I>(&mut self, index: I) -> Option<*mut A>
+    pub fn get_mut_ptr<I>(&mut self, index: I) -> Option<*mut A>
     where
         S: RawDataMut,
         I: NdIndex<D>,
