@@ -9,10 +9,11 @@ use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
 use crate::{ArrayViewMut, DimAdd, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 use alloc::vec::Vec;
-use std::convert::TryFrom;
+use core::convert::TryFrom;
+use core::marker::PhantomData;
+use core::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+#[cfg(feature = "std")]
 use std::fmt;
-use std::marker::PhantomData;
-use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 /// A slice (range with step size).
 ///
@@ -146,6 +147,7 @@ impl SliceInfoElem {
     }
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for SliceInfoElem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
@@ -842,14 +844,14 @@ macro_rules! s(
         }
     };
     // empty call, i.e. `s![]`
-    (@parse ::std::marker::PhantomData::<$crate::Ix0>, ::std::marker::PhantomData::<$crate::Ix0>, []) => {
+    (@parse ::core::marker::PhantomData::<$crate::Ix0>, ::core::marker::PhantomData::<$crate::Ix0>, []) => {
         {
             #[allow(unsafe_code)]
             unsafe {
                 $crate::SliceInfo::new_unchecked(
                     [],
-                    ::std::marker::PhantomData::<$crate::Ix0>,
-                    ::std::marker::PhantomData::<$crate::Ix0>,
+                    ::core::marker::PhantomData::<$crate::Ix0>,
+                    ::core::marker::PhantomData::<$crate::Ix0>,
                 )
             }
         }
@@ -858,18 +860,18 @@ macro_rules! s(
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
     // convert range/index/new-axis into SliceInfoElem
     (@convert $r:expr) => {
-        <$crate::SliceInfoElem as ::std::convert::From<_>>::from($r)
+        <$crate::SliceInfoElem as ::core::convert::From<_>>::from($r)
     };
     // convert range/index/new-axis and step into SliceInfoElem
     (@convert $r:expr, $s:expr) => {
-        <$crate::SliceInfoElem as ::std::convert::From<_>>::from(
-            <$crate::Slice as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        <$crate::SliceInfoElem as ::core::convert::From<_>>::from(
+            <$crate::Slice as ::core::convert::From<_>>::from($r).step_by($s as isize)
         )
     };
     ($($t:tt)*) => {
         $crate::s![@parse
-              ::std::marker::PhantomData::<$crate::Ix0>,
-              ::std::marker::PhantomData::<$crate::Ix0>,
+              ::core::marker::PhantomData::<$crate::Ix0>,
+              ::core::marker::PhantomData::<$crate::Ix0>,
               []
               $($t)*
         ]
