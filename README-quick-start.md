@@ -352,39 +352,68 @@ c =
  [4.0, 9.0]], shape=[6, 2], strides=[2, 1], layout=C (0x1), const ndim=2
 ```
 
-### Stacking together different arrays
+### Stacking/concatenating together different arrays
 
-Macro `stack!` is helpful for stacking arrays: 
+The `stack!` and `concatenate!` macros are helpful for stacking/concatenating
+arrays. The `stack!` macro stacks arrays along a new axis, while the
+`concatenate!` macro concatenates arrays along an existing axis:
+
 ```rust
 use ndarray::prelude::*;
-use ndarray::{Array, Axis, stack};
+use ndarray::{concatenate, stack, Axis};
 
 fn main() {
-
     let a = array![
-        [9., 7.],
-        [5., 2.]];
-    
+        [3., 7., 8.],
+        [5., 2., 4.],
+    ];
+
     let b = array![
-        [1., 9.],
-        [5., 1.]];
-        
-    println!("a vstack b = \n{:?}\n", stack![Axis(0), a, b]);
-    
-    println!("a hstack b = \n{:?}\n", stack![Axis(1), a, b]);
+        [1., 9., 0.],
+        [5., 4., 1.],
+    ];
+
+    println!("stack, axis 0:\n{:?}\n", stack![Axis(0), a, b]);
+    println!("stack, axis 1:\n{:?}\n", stack![Axis(1), a, b]);
+    println!("stack, axis 2:\n{:?}\n", stack![Axis(2), a, b]);
+    println!("concatenate, axis 0:\n{:?}\n", concatenate![Axis(0), a, b]);
+    println!("concatenate, axis 1:\n{:?}\n", concatenate![Axis(1), a, b]);
 }
 ```
 The output is:
 ```
-a vstack b = 
-[[9.0, 7.0],
- [5.0, 2.0],
- [1.0, 9.0],
- [5.0, 1.0]], shape=[4, 2], strides=[2, 1], layout=C (0x1), const ndim=2
+stack, axis 0:
+[[[3.0, 7.0, 8.0],
+  [5.0, 2.0, 4.0]],
 
-a hstack b = 
-[[9.0, 7.0, 1.0, 9.0],
- [5.0, 2.0, 5.0, 1.0]], shape=[2, 4], strides=[4, 1], layout=C (0x1), const ndim=2
+ [[1.0, 9.0, 0.0],
+  [5.0, 4.0, 1.0]]], shape=[2, 2, 3], strides=[6, 3, 1], layout=Cc (0x5), const ndim=3
+
+stack, axis 1:
+[[[3.0, 7.0, 8.0],
+  [1.0, 9.0, 0.0]],
+
+ [[5.0, 2.0, 4.0],
+  [5.0, 4.0, 1.0]]], shape=[2, 2, 3], strides=[3, 6, 1], layout=c (0x4), const ndim=3
+
+stack, axis 2:
+[[[3.0, 1.0],
+  [7.0, 9.0],
+  [8.0, 0.0]],
+
+ [[5.0, 5.0],
+  [2.0, 4.0],
+  [4.0, 1.0]]], shape=[2, 3, 2], strides=[1, 2, 6], layout=Ff (0xa), const ndim=3
+
+concatenate, axis 0:
+[[3.0, 7.0, 8.0],
+ [5.0, 2.0, 4.0],
+ [1.0, 9.0, 0.0],
+ [5.0, 4.0, 1.0]], shape=[4, 3], strides=[3, 1], layout=Cc (0x5), const ndim=2
+
+concatenate, axis 1:
+[[3.0, 7.0, 8.0, 1.0, 9.0, 0.0],
+ [5.0, 2.0, 4.0, 5.0, 4.0, 1.0]], shape=[2, 6], strides=[1, 2], layout=Ff (0xa), const ndim=2
 ```
 
 ### Splitting one array into several smaller ones
