@@ -12,8 +12,7 @@ use alloc::vec::Vec;
 use core::convert::TryFrom;
 use core::marker::PhantomData;
 use core::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
-#[cfg(feature = "std")]
-use std::fmt;
+use core::fmt;
 
 /// A slice (range with step size).
 ///
@@ -147,7 +146,6 @@ impl SliceInfoElem {
     }
 }
 
-#[cfg(feature = "std")]
 impl fmt::Display for SliceInfoElem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
