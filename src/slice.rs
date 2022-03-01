@@ -9,10 +9,10 @@ use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
 use crate::{ArrayViewMut, DimAdd, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 use alloc::vec::Vec;
-use core::convert::TryFrom;
-use core::marker::PhantomData;
-use core::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
-use core::fmt;
+use std::convert::TryFrom;
+use std::fmt;
+use std::marker::PhantomData;
+use std::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 /// A slice (range with step size).
 ///
