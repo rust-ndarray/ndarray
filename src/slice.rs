@@ -842,14 +842,14 @@ macro_rules! s(
         }
     };
     // empty call, i.e. `s![]`
-    (@parse ::std::marker::PhantomData::<$crate::Ix0>, ::std::marker::PhantomData::<$crate::Ix0>, []) => {
+    (@parse ::core::marker::PhantomData::<$crate::Ix0>, ::core::marker::PhantomData::<$crate::Ix0>, []) => {
         {
             #[allow(unsafe_code)]
             unsafe {
                 $crate::SliceInfo::new_unchecked(
                     [],
-                    ::std::marker::PhantomData::<$crate::Ix0>,
-                    ::std::marker::PhantomData::<$crate::Ix0>,
+                    ::core::marker::PhantomData::<$crate::Ix0>,
+                    ::core::marker::PhantomData::<$crate::Ix0>,
                 )
             }
         }
@@ -858,18 +858,18 @@ macro_rules! s(
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
     // convert range/index/new-axis into SliceInfoElem
     (@convert $r:expr) => {
-        <$crate::SliceInfoElem as ::std::convert::From<_>>::from($r)
+        <$crate::SliceInfoElem as ::core::convert::From<_>>::from($r)
     };
     // convert range/index/new-axis and step into SliceInfoElem
     (@convert $r:expr, $s:expr) => {
-        <$crate::SliceInfoElem as ::std::convert::From<_>>::from(
-            <$crate::Slice as ::std::convert::From<_>>::from($r).step_by($s as isize)
+        <$crate::SliceInfoElem as ::core::convert::From<_>>::from(
+            <$crate::Slice as ::core::convert::From<_>>::from($r).step_by($s as isize)
         )
     };
     ($($t:tt)*) => {
         $crate::s![@parse
-              ::std::marker::PhantomData::<$crate::Ix0>,
-              ::std::marker::PhantomData::<$crate::Ix0>,
+              ::core::marker::PhantomData::<$crate::Ix0>,
+              ::core::marker::PhantomData::<$crate::Ix0>,
               []
               $($t)*
         ]
