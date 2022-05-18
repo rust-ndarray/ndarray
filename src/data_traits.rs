@@ -630,7 +630,6 @@ where
         }
     }
 
-    #[doc(hidden)]
     unsafe fn clone_from_with_ptr(
         &mut self,
         other: &Self,
