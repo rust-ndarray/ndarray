@@ -40,8 +40,8 @@
 //! ## Highlights
 //!
 //! - Generic *n*-dimensional array
-//! - Slicing, also with arbitrary step size, and negative indices to mean
-//!   elements from the end of the axis.
+//! - [Slicing](ArrayBase#slicing), also with arbitrary step size, and negative
+//!   indices to mean elements from the end of the axis.
 //! - Views and subviews of arrays; iterators that yield subviews.
 //! - Higher order operations and arithmetic are performant
 //! - Array views can be used to slice and mutate any `[T]` data using
