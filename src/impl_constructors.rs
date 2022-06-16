@@ -634,6 +634,7 @@ where
 
     #[deprecated(note = "This method is hard to use correctly. Use `uninit` instead.",
                  since = "0.15.0")]
+    #[allow(clippy::uninit_vec)]  // this is explicitly intended to create uninitialized memory
     /// Create an array with uninitialized elements, shape `shape`.
     ///
     /// Prefer to use [`uninit()`](ArrayBase::uninit) if possible, because it is

@@ -162,6 +162,7 @@ pub unsafe trait DataMut: Data + RawDataMut {
     /// Returns whether the array has unique access to its data.
     #[doc(hidden)]
     #[inline]
+    #[allow(clippy::wrong_self_convention)]  // mut needed for Arc types
     fn is_unique(&mut self) -> bool {
         self.try_is_unique().unwrap()
     }
