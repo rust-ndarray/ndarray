@@ -103,7 +103,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
     }
 }
 
-impl<'a, A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
+impl<A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
     fn len(&self) -> usize {
         match self.index {
             None => 0,

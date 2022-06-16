@@ -189,7 +189,7 @@ where
 /// to each element.
 ///
 /// The array is shown in multiline style.
-impl<'a, A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
+impl<A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
@@ -203,7 +203,7 @@ where
 /// to each element.
 ///
 /// The array is shown in multiline style.
-impl<'a, A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
+impl<A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
@@ -231,7 +231,7 @@ where
 /// to each element.
 ///
 /// The array is shown in multiline style.
-impl<'a, A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
+impl<A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
@@ -245,7 +245,7 @@ where
 /// to each element.
 ///
 /// The array is shown in multiline style.
-impl<'a, A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
+impl<A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
@@ -258,7 +258,7 @@ where
 /// to each element.
 ///
 /// The array is shown in multiline style.
-impl<'a, A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
+impl<A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
@@ -272,7 +272,7 @@ where
 /// to each element.
 ///
 /// The array is shown in multiline style.
-impl<'a, A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
+impl<A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
 where
     S: Data<Elem = A>,
 {
