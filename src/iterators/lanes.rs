@@ -39,17 +39,16 @@ impl<'a, A, D: Dimension> Lanes<'a, A, D> {
         let ndim = v.ndim();
         let len;
         let stride;
-        let iter_v;
-        if ndim == 0 {
+        let iter_v = if ndim == 0 {
             len = 1;
             stride = 1;
-            iter_v = v.try_remove_axis(Axis(0))
+            v.try_remove_axis(Axis(0))
         } else {
             let i = axis.index();
             len = v.dim[i];
             stride = v.strides[i] as isize;
-            iter_v = v.try_remove_axis(axis)
-        }
+            v.try_remove_axis(axis)
+        };
         Lanes {
             inner_len: len,
             inner_stride: stride,
@@ -108,17 +107,16 @@ impl<'a, A, D: Dimension> LanesMut<'a, A, D> {
         let ndim = v.ndim();
         let len;
         let stride;
-        let iter_v;
-        if ndim == 0 {
+        let iter_v = if ndim == 0 {
             len = 1;
             stride = 1;
-            iter_v = v.try_remove_axis(Axis(0))
+            v.try_remove_axis(Axis(0))
         } else {
             let i = axis.index();
             len = v.dim[i];
             stride = v.strides[i] as isize;
-            iter_v = v.try_remove_axis(axis)
-        }
+            v.try_remove_axis(axis)
+        };
         LanesMut {
             inner_len: len,
             inner_stride: stride,
