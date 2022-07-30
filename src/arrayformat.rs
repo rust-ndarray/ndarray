@@ -217,7 +217,7 @@ where
             ", shape={:?}, strides={:?}, layout={:?}",
             self.shape(),
             self.strides(),
-            layout = self.view().layout()
+            self.view().layout(),
         )?;
         match D::NDIM {
             Some(ndim) => write!(f, ", const ndim={}", ndim)?,
