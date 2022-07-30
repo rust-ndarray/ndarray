@@ -1,3 +1,22 @@
+Version 0.15.5 (2022-07-30)
+===========================
+
+Enhancements
+------------
+
+- The `s!` macro now works in `no_std` environments, by [@makotokato].
+
+  https://github.com/rust-ndarray/ndarray/pull/1154
+
+Other changes
+-------------
+
+- Improve docs and fix typos, by [@steffahn] and [@Rikorose].
+
+  https://github.com/rust-ndarray/ndarray/pull/1134
+  https://github.com/rust-ndarray/ndarray/pull/1164
+
+
 Version 0.15.4 (2021-11-23)
 ===========================
 
@@ -1562,14 +1581,17 @@ Earlier releases
 [@LeSeulArtichaut]: https://github.com/LeSeulArtichaut
 [@lifuyang]: https://github.com/liufuyang
 [@kdubovikov]: https://github.com/kdubovikov
+[@makotokato]: https://github.com/makotokato
 [@max-sixty]: https://github.com/max-sixty
 [@mneumann]: https://github.com/mneumann
 [@mockersf]: https://github.com/mockersf
 [@nilgoyette]: https://github.com/nilgoyette
 [@nitsky]: https://github.com/nitsky
+[@Rikorose]: https://github.com/Rikorose
 [@rth]: https://github.com/rth
 [@sebasv]: https://github.com/sebasv
 [@SparrowLii]: https://github.com/SparrowLii
+[@steffahn]: https://github.com/steffahn
 [@stokhos]: https://github.com/stokhos
 [@termoshtt]: https://github.com/termoshtt
 [@TheLortex]: https://github.com/TheLortex
