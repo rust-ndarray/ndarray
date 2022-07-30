@@ -333,7 +333,7 @@ where
     }
 }
 
-impl<'a> DimensionExt for [Ix] {
+impl DimensionExt for [Ix] {
     #[inline]
     fn axis(&self, axis: Axis) -> Ix {
         self[axis.index()]

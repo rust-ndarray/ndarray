@@ -216,7 +216,7 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a IxDyn {
 
 unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix] {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize> {
-        stride_offset_checked(dim.ix(), strides.ix(), *self)
+        stride_offset_checked(dim.ix(), strides.ix(), self)
     }
     fn index_unchecked(&self, strides: &IxDyn) -> isize {
         zip(strides.ix(), *self)

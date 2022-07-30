@@ -86,7 +86,8 @@ where
 /// **Note:** To enable the macros in this crate, use the `#[macro_use]`
 /// attribute when importing the crate:
 ///
-/// ```
+/// ```no_run
+/// # #[allow(unused_imports)]
 /// #[macro_use] extern crate itertools;
 /// # fn main() { }
 /// ```
