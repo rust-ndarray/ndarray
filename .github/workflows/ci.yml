@@ -1,8 +1,8 @@
 on:
   push:
-    branches: [ master ]
+    branches: [ master, 0.15.x ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, 0.15.x ]
 
 name: Continuous integration
 
