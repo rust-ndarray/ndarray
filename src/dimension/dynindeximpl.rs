@@ -21,7 +21,7 @@ impl<T> Deref for IxDynRepr<T> {
                 debug_assert!(len as usize <= ar.len());
                 unsafe { ar.get_unchecked(..len as usize) }
             }
-            IxDynRepr::Alloc(ref ar) => &*ar,
+            IxDynRepr::Alloc(ref ar) => ar,
         }
     }
 }
@@ -33,7 +33,7 @@ impl<T> DerefMut for IxDynRepr<T> {
                 debug_assert!(len as usize <= ar.len());
                 unsafe { ar.get_unchecked_mut(..len as usize) }
             }
-            IxDynRepr::Alloc(ref mut ar) => &mut *ar,
+            IxDynRepr::Alloc(ref mut ar) => ar,
         }
     }
 }
