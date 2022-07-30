@@ -180,22 +180,18 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
 
     private_impl! {}
 
-    #[doc(hidden)]
     fn raw_dim(&self) -> Self::Dim {
         self.dim
     }
 
-    #[doc(hidden)]
     fn equal_dim(&self, dim: &Self::Dim) -> bool {
         self.dim.equal(dim)
     }
 
-    #[doc(hidden)]
     fn as_ptr(&self) -> Self::Ptr {
         IndexPtr { index: self.start }
     }
 
-    #[doc(hidden)]
     fn layout(&self) -> Layout {
         if self.dim.ndim() <= 1 {
             Layout::one_dimensional()
@@ -204,19 +200,16 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
         }
     }
 
-    #[doc(hidden)]
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ptr.index.into_pattern()
     }
 
-    #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         let mut index = *i;
         index += &self.start;
         IndexPtr { index }
     }
 
-    #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> Self::Stride {
         axis.index()
     }
@@ -226,7 +219,6 @@ impl<D: Dimension + Copy> NdProducer for Indices<D> {
         0
     }
 
-    #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         let start_a = self.start;
         let mut start_b = start_a;
