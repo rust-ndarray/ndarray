@@ -1105,15 +1105,14 @@ impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D> {
     type Ptr = *mut A;
     type Stride = isize;
 
-    #[doc(hidden)]
     fn layout(&self) -> crate::Layout {
         crate::Layout::one_dimensional()
     }
-    #[doc(hidden)]
+
     fn raw_dim(&self) -> Self::Dim {
         Ix1(self.len())
     }
-    #[doc(hidden)]
+
     fn as_ptr(&self) -> Self::Ptr {
         if self.len() > 0 {
             // `self.iter.index` is guaranteed to be in-bounds if any of the
@@ -1131,7 +1130,6 @@ impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D> {
         self.iter.stride
     }
 
-    #[doc(hidden)]
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ArrayView::new_(
             ptr,
@@ -1139,20 +1137,19 @@ impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D> {
             self.iter.inner_strides.clone(),
         )
     }
-    #[doc(hidden)]
+
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         self.iter.offset(self.iter.index + i[0])
     }
 
-    #[doc(hidden)]
     fn stride_of(&self, _axis: Axis) -> isize {
         self.contiguous_stride()
     }
 
-    #[doc(hidden)]
     fn split_at(self, _axis: Axis, index: usize) -> (Self, Self) {
         self.split_at(index)
     }
+
     private_impl! {}
 }
 
@@ -1162,15 +1159,14 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D> {
     type Ptr = *mut A;
     type Stride = isize;
 
-    #[doc(hidden)]
     fn layout(&self) -> crate::Layout {
         crate::Layout::one_dimensional()
     }
-    #[doc(hidden)]
+
     fn raw_dim(&self) -> Self::Dim {
         Ix1(self.len())
     }
-    #[doc(hidden)]
+
     fn as_ptr(&self) -> Self::Ptr {
         if self.len() > 0 {
             // `self.iter.index` is guaranteed to be in-bounds if any of the
@@ -1188,7 +1184,6 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D> {
         self.iter.stride
     }
 
-    #[doc(hidden)]
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ArrayViewMut::new_(
             ptr,
@@ -1196,20 +1191,19 @@ impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D> {
             self.iter.inner_strides.clone(),
         )
     }
-    #[doc(hidden)]
+
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         self.iter.offset(self.iter.index + i[0])
     }
 
-    #[doc(hidden)]
     fn stride_of(&self, _axis: Axis) -> isize {
         self.contiguous_stride()
     }
 
-    #[doc(hidden)]
     fn split_at(self, _axis: Axis, index: usize) -> (Self, Self) {
         self.split_at(index)
     }
+
     private_impl! {}
 }
 

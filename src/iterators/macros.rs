@@ -63,42 +63,34 @@ impl<$($typarm)*> NdProducer for $fulltype {
     type Ptr = *mut A;
     type Stride = isize;
 
-    #[doc(hidden)]
     fn raw_dim(&self) -> D {
         self.$base.raw_dim()
     }
 
-    #[doc(hidden)]
     fn layout(&self) -> Layout {
         self.$base.layout()
     }
 
-    #[doc(hidden)]
     fn as_ptr(&self) -> *mut A {
         self.$base.as_ptr() as *mut _
     }
 
-    #[doc(hidden)]
     fn contiguous_stride(&self) -> isize {
         self.$base.contiguous_stride()
     }
 
-    #[doc(hidden)]
     unsafe fn as_ref(&$self_, $ptr: *mut A) -> Self::Item {
         $refexpr
     }
 
-    #[doc(hidden)]
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
         self.$base.uget_ptr(i)
     }
 
-    #[doc(hidden)]
     fn stride_of(&self, axis: Axis) -> isize {
         self.$base.stride_of(axis)
     }
 
-    #[doc(hidden)]
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         let (a, b) = self.$base.split_at(axis, index);
         ($typename {
@@ -114,6 +106,7 @@ impl<$($typarm)*> NdProducer for $fulltype {
             )*
         })
     }
+
     private_impl!{}
 }
 
