@@ -164,7 +164,7 @@ where
     fn index(mut self, index: I) -> &'a mut A {
         debug_bounds_check!(self, index);
         unsafe {
-            match self.get_ptr_mut(index) {
+            match self.get_mut_ptr(index) {
                 Some(ptr) => &mut *ptr,
                 None => array_out_of_bounds(),
             }
@@ -182,7 +182,7 @@ where
     fn get(mut self, index: I) -> Option<&'a mut A> {
         debug_bounds_check!(self, index);
         unsafe {
-            match self.get_ptr_mut(index) {
+            match self.get_mut_ptr(index) {
                 Some(ptr) => Some(&mut *ptr),
                 None => None,
             }
