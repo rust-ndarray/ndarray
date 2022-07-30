@@ -13,7 +13,7 @@ Other changes
 
 - Improve docs and fix typos, by [@steffahn] and [@Rikorose].
 
-  https://github.com/rust-ndarray/ndarray/pull/1134
+  https://github.com/rust-ndarray/ndarray/pull/1134 <br>
   https://github.com/rust-ndarray/ndarray/pull/1164
 
 
