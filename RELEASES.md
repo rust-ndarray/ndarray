@@ -1,3 +1,32 @@
+Version 0.15.6 (2022-07-30)
+===========================
+
+New features
+------------
+
+- Add `get_ptr` and `get_mut_ptr` methods for getting an element's pointer from
+  an index, by [@adamreichold].
+
+  https://github.com/rust-ndarray/ndarray/pull/1151
+
+Other changes
+-------------
+
+- Various fixes to resolve compiler and Clippy warnings/errors, by [@aganders3]
+  and [@jturner314].
+
+  https://github.com/rust-ndarray/ndarray/pull/1171
+
+- Fix description of `stack!` in quick start docs, by [@jturner314]. Thanks to
+  [@HyeokSuLee] for pointing out the issue.
+
+  https://github.com/rust-ndarray/ndarray/pull/1156
+
+- Add MSRV to `Cargo.toml`.
+
+  https://github.com/rust-ndarray/ndarray/pull/1191
+
+
 Version 0.15.5 (2022-07-30)
 ===========================
 
@@ -1561,6 +1590,8 @@ Earlier releases
   - Starting point for evolution to come
  
 
+[@adamreichold]: https://github.com/adamreichold
+[@aganders3]: https://github.com/aganders3
 [@bluss]: https://github.com/bluss
 [@jturner314]: https://github.com/jturner314
 [@LukeMathWalker]: https://github.com/LukeMathWalker
@@ -1575,6 +1606,7 @@ Earlier releases
 [@ethanhs]: https://github.com/ethanhs
 [@d-dorazio]: https://github.com/d-dorazio
 [@Eijebong]: https://github.com/Eijebong
+[@HyeokSuLee]: https://github.com/HyeokSuLee
 [@insideoutclub]: https://github.com/insideoutclub
 [@JP-Ellis]: https://github.com/JP-Ellis
 [@jimblandy]: https://github.com/jimblandy
