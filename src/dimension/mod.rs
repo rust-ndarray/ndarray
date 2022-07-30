@@ -185,7 +185,7 @@ where
         .try_fold(0usize, |acc, (&d, &s)| {
             let s = s as isize;
             // Calculate maximum possible absolute movement along this axis.
-            let off = d.saturating_sub(1).checked_mul(s.abs() as usize)?;
+            let off = d.saturating_sub(1).checked_mul(s.unsigned_abs())?;
             acc.checked_add(off)
         })
         .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
@@ -333,7 +333,7 @@ where
     }
 }
 
-impl<'a> DimensionExt for [Ix] {
+impl DimensionExt for [Ix] {
     #[inline]
     fn axis(&self, axis: Axis) -> Ix {
         self[axis.index()]
@@ -457,7 +457,7 @@ pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize {
     };
 
     // Update dimension.
-    let abs_step = step.abs() as usize;
+    let abs_step = step.unsigned_abs();
     *dim = if abs_step == 1 {
         m
     } else {
@@ -651,7 +651,7 @@ pub fn slices_intersect<D: Dimension>(
                     Some(m) => m,
                     None => return false,
                 };
-                if ind < min || ind > max || (ind - min) % step.abs() as usize != 0 {
+                if ind < min || ind > max || (ind - min) % step.unsigned_abs() != 0 {
                     return false;
                 }
             }

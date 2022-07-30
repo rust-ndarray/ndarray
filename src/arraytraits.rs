@@ -252,7 +252,7 @@ where
     }
 }
 
-impl<'a, S, D> hash::Hash for ArrayBase<S, D>
+impl<S, D> hash::Hash for ArrayBase<S, D>
 where
     D: Dimension,
     S: Data,

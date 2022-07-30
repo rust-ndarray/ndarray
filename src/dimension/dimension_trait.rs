@@ -293,7 +293,7 @@ pub trait Dimension:
         let mut cstride = 1;
         for &i in order.slice() {
             // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && (strides[i] as isize).abs() as usize != cstride {
+            if dim_slice[i] != 1 && (strides[i] as isize).unsigned_abs() != cstride {
                 return false;
             }
             cstride *= dim_slice[i];
