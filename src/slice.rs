@@ -844,9 +844,11 @@ macro_rules! s(
     // empty call, i.e. `s![]`
     (@parse $in_dim:expr, $out_dim:expr, []) => {
         {
+            let in_dim = $in_dim;
+            let out_dim = $out_dim;
             #[allow(unsafe_code)]
             unsafe {
-                $crate::SliceInfo::new_unchecked([], $in_dim, $out_dim)
+                $crate::SliceInfo::new_unchecked([], in_dim, out_dim)
             }
         }
     };
