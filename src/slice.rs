@@ -780,14 +780,11 @@ macro_rules! s(
             r => {
                 let in_dim = $crate::SliceNextDim::next_in_dim(&r, $in_dim);
                 let out_dim = $crate::SliceNextDim::next_out_dim(&r, $out_dim);
-                #[allow(unsafe_code)]
-                unsafe {
-                    $crate::SliceInfo::new_unchecked(
-                        [$($stack)* $crate::s!(@convert r, $s)],
-                        in_dim,
-                        out_dim,
-                    )
-                }
+                (
+                    [$($stack)* $crate::s!(@convert r, $s)],
+                    in_dim,
+                    out_dim,
+                )
             }
         }
     };
@@ -797,14 +794,11 @@ macro_rules! s(
             r => {
                 let in_dim = $crate::SliceNextDim::next_in_dim(&r, $in_dim);
                 let out_dim = $crate::SliceNextDim::next_out_dim(&r, $out_dim);
-                #[allow(unsafe_code)]
-                unsafe {
-                    $crate::SliceInfo::new_unchecked(
-                        [$($stack)* $crate::s!(@convert r)],
-                        in_dim,
-                        out_dim,
-                    )
-                }
+                (
+                    [$($stack)* $crate::s!(@convert r)],
+                    in_dim,
+                    out_dim,
+                )
             }
         }
     };
@@ -844,16 +838,11 @@ macro_rules! s(
     };
     // empty call, i.e. `s![]`
     (@parse ::core::marker::PhantomData::<$crate::Ix0>, ::core::marker::PhantomData::<$crate::Ix0>, []) => {
-        {
-            #[allow(unsafe_code)]
-            unsafe {
-                $crate::SliceInfo::new_unchecked(
-                    [],
-                    ::core::marker::PhantomData::<$crate::Ix0>,
-                    ::core::marker::PhantomData::<$crate::Ix0>,
-                )
-            }
-        }
+        (
+            [],
+            ::core::marker::PhantomData::<$crate::Ix0>,
+            ::core::marker::PhantomData::<$crate::Ix0>,
+        )
     };
     // Catch-all clause for syntax errors
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
@@ -868,12 +857,20 @@ macro_rules! s(
         )
     };
     ($($t:tt)*) => {
-        $crate::s![@parse
-              ::core::marker::PhantomData::<$crate::Ix0>,
-              ::core::marker::PhantomData::<$crate::Ix0>,
-              []
-              $($t)*
-        ]
+        {
+            let (indices, in_dim, out_dim) = $crate::s![@parse
+                ::core::marker::PhantomData::<$crate::Ix0>,
+                ::core::marker::PhantomData::<$crate::Ix0>,
+                []
+                $($t)*
+            ];
+            // Safety: The `s![@parse ...]` above always constructs the correct
+            // values to meet the constraints of `SliceInfo::new_unchecked`.
+            #[allow(unsafe_code)]
+            unsafe {
+                $crate::SliceInfo::new_unchecked(indices, in_dim, out_dim)
+            }
+        }
     };
 );
 
