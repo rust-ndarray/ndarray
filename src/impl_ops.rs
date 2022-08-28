@@ -31,7 +31,7 @@ use num_complex::Complex;
 /// This trait ***does not*** limit which elements can be stored in an array in general.
 /// Non-`ScalarOperand` types can still participate in arithmetic as array elements in
 /// in array-array operations.
-pub trait ScalarOperand: 'static + Clone {}
+pub trait ScalarOperand: Clone {}
 impl ScalarOperand for bool {}
 impl ScalarOperand for i8 {}
 impl ScalarOperand for u8 {}
@@ -49,6 +49,22 @@ impl ScalarOperand for f32 {}
 impl ScalarOperand for f64 {}
 impl ScalarOperand for Complex<f32> {}
 impl ScalarOperand for Complex<f64> {}
+
+impl ScalarOperand for &bool {}
+impl ScalarOperand for &i8 {}
+impl ScalarOperand for &u8 {}
+impl ScalarOperand for &i16 {}
+impl ScalarOperand for &u16 {}
+impl ScalarOperand for &i32 {}
+impl ScalarOperand for &u32 {}
+impl ScalarOperand for &i64 {}
+impl ScalarOperand for &u64 {}
+impl ScalarOperand for &i128 {}
+impl ScalarOperand for &u128 {}
+impl ScalarOperand for &isize {}
+impl ScalarOperand for &usize {}
+impl ScalarOperand for &f32 {}
+impl ScalarOperand for &f64 {}
 
 macro_rules! impl_binary_op(
     ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
