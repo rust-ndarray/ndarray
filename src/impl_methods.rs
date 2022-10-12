@@ -1148,7 +1148,7 @@ where
     ///                [[ 6,  7,  8], [ 9, 10, 11]]]);
     ///
     /// // Here `columns` will yield the six generalized columns of the array.
-    /// for row in a.columns() {
+    /// for column in a.columns() {
     ///     /* loop body */
     /// }
     /// ```
