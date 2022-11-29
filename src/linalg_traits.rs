@@ -12,7 +12,7 @@ use num_traits::{One, Zero};
 
 #[cfg(feature = "std")]
 use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Mul, Sub};
 #[cfg(feature = "std")]
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
@@ -31,7 +31,6 @@ pub trait LinalgScalar:
     + Add<Output = Self>
     + Sub<Output = Self>
     + Mul<Output = Self>
-    + Div<Output = Self>
 {
 }
 
@@ -43,7 +42,6 @@ impl<T> LinalgScalar for T where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>
 {
 }
 
