@@ -40,6 +40,22 @@ fn double_ended() {
 }
 
 #[test]
+fn double_ended_rows() {
+    let a = ArcArray::from_iter(0..8).into_shape_clone((4, 2)).unwrap();
+    let mut row_it = a.rows().into_iter();
+    assert_equal(row_it.next_back().unwrap(), &[6, 7]);
+    assert_equal(row_it.next().unwrap(), &[0, 1]);
+    assert_equal(row_it.next_back().unwrap(), &[4, 5]);
+    assert_equal(row_it.next_back().unwrap(), &[2, 3]);
+    assert!(row_it.next().is_none());
+    assert!(row_it.next_back().is_none());
+
+    for (row, check) in a.rows().into_iter().rev().zip(&[[6, 7], [4, 5], [2, 3], [0, 1]]) {
+        assert_equal(row, check);
+    }
+}
+
+#[test]
 fn iter_size_hint() {
     // Check that the size hint is correctly computed
     let a = ArcArray::from_iter(0..24).into_shape_with_order((2, 3, 4)).unwrap();
