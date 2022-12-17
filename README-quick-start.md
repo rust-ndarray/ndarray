@@ -7,7 +7,7 @@ You can use [play.integer32.com](https://play.integer32.com/) to immediately try
 
 ## The Basics
 
-Just create your first 2x3 floating-point ndarray 
+You can create your first 2x3 floating-point ndarray as such: 
 ```rust
 use ndarray::prelude::*;
 
@@ -24,7 +24,7 @@ fn main() {
     println!("{:?}", a);
 }
 ```
-This code will create a simple array and output to stdout:
+This code will create a simple array, then print it to stdout as such:
 ```
 [[1.0, 2.0, 3.0],
  [4.0, 5.0, 6.0]], shape=[2, 3], strides=[3, 1], layout=C (0x1), const ndim=2
@@ -34,8 +34,7 @@ This code will create a simple array and output to stdout:
 
 ### Element type and dimensionality
 
-Now let's create more arrays. How about try make a zero array with dimension of (3, 2, 4)?
-
+Now let's create more arrays. A common operation on matrices is to create a matrix full of 0's of certain dimensions. Let's try to do that with dimensions (3, 2, 4) using the `Array::zeros` function:
 ```rust
 use ndarray::prelude::*;
 use ndarray::Array;
@@ -44,13 +43,13 @@ fn main() {
     println!("{:?}", a);
 }
 ```
-gives
+Unfortunately, this code does not compile.
 ```
 |    let a = Array::zeros((3, 2, 4).f());
 |        -   ^^^^^^^^^^^^ cannot infer type for type parameter `A`
 ```
-Note that the compiler needs to infer the element type and dimensionality from context. In this 
-case the compiler failed to do that. Now we give it the type and let it infer dimensionality
+Indeed, note that the compiler needs to infer the element type and dimensionality from context only. In this 
+case the compiler does not have enough information. To fix the code, we can explicitly give the element type through turbofish syntax, and let it infer the dimensionality type:
 
 ```rust
 use ndarray::prelude::*;
@@ -60,7 +59,7 @@ fn main() {
   println!("{:?}", a);
 }
 ```
-and now it works:
+This code now compiles to what we wanted:
 ```
 [[[0.0, 0.0, 0.0, 0.0],
   [0.0, 0.0, 0.0, 0.0]],
@@ -72,24 +71,11 @@ and now it works:
   [0.0, 0.0, 0.0, 0.0]]], shape=[3, 2, 4], strides=[1, 3, 6], layout=F (0x2), const ndim=3
 ```
 
-We can also specify its dimensionality
+We could also specify its dimensionality explicitly `Array::<f64, Ix3>::zeros(...)`, with`Ix3` standing for 3D array type. Phew! We achieved type safety. If you tried changing the code above to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`, which is not of dimension 3 anymore, Rust's type system would gracefully prevent you from compiling the code.
 
-```rust
-use ndarray::prelude::*;
-use ndarray::{Array, Ix3};
-fn main() {
-  let a = Array::<f64, Ix3>::zeros((3, 2, 4).f());
-  println!("{:?}", a);
-}
-```
-`Ix3` stands for 3D array.
+### Creating arrays with different initial values and/or different types
 
-And now we are type checked. Try change the code above to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`
-and compile, see what happens.
-
-### How about create array of different type and having different initial values?
-
-The [`from_elem`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method can be handy here:
+The [`from_elem`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method allows initializing an array of given dimension to a specific value of any type:
 
 ```rust
 use ndarray::{Array, Ix3};
@@ -99,7 +85,7 @@ fn main() {
 }
 ```
 
-### Some common create helper functions
+### Some common array initializing helper functions
 `linspace` - Create a 1-D array with 11 elements with values 0., …, 5.
 ```rust
 use ndarray::prelude::*;
@@ -114,10 +100,11 @@ The output is:
 [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], shape=[11], strides=[1], layout=C | F (0x3), const ndim=1
 ```
 
-And there are also `range`, `logspace`, `ones`, `eye` and so on you can choose to use.
+Common array initializing methods include [`range`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.range), [`logspace`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.logspace), [`eye`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.eye), [`ones`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.ones)...
 
 ## Basic operations
 
+Basic operations on arrays are all element-wise; you need to use specific methods for operations such as matrix multiplication (see later section).
 ```rust
 use ndarray::prelude::*;
 use ndarray::Array;
@@ -136,15 +123,18 @@ fn main() {
 }
 ```
 
-Try remove all the `&` sign in front of `a` and `b`, does it still compile? Why?
 
-Note that
+Note that (for any binary operator `@`):
 * `&A @ &A` produces a new `Array`
 * `B @ A` consumes `B`, updates it with the result, and returns it
 * `B @ &A` consumes `B`, updates it with the result, and returns it
 * `C @= &A` performs an arithmetic operation in place
 
+Try removing all the `&` sign in front of `a` and `b` in the last example: it will not compile anymore because of those rules.
+
 For more info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
+
+
 
 Some operations have `_axis` appended to the function name: they generally take in a parameter of type `Axis` as one of their inputs,
 such as `sum_axis`:
@@ -237,7 +227,7 @@ The output is:
 
 For more info about iteration see [Loops, Producers, and Iterators](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#loops-producers-and-iterators)
 
-Let's try a 3D array with elements of type `isize`. This is how you index it: 
+Let's try a iterating over a 3D array with elements of type `isize`. This is how you index it: 
 ```rust
 use ndarray::prelude::*;
 
@@ -250,8 +240,8 @@ fn main() {
                      [110,112,113]]
                 ];
 
-    let a = a.mapv(|a: isize| a.pow(1));  // numpy equivlant of `a ** 1`; 
-                                          // This line does nothing but illustrate mapv with isize type 
+    let a = a.mapv(|a: isize| a.pow(1));  // numpy equivalent of `a ** 1`; 
+                                          // This line does nothing except illustrating mapv with isize type 
     println!("a -> \n{}\n", a);
 
     println!("`a.slice(s![1, .., ..])` -> \n{}\n", a.slice(s![1, .., ..]));
@@ -461,11 +451,8 @@ s2  =
 
 ## Copies and Views
 ### View, Ref or Shallow Copy
-As in Rust we have owner ship, so we cannot simply 
-update an element of an array while we have a 
-shared view of it. This will help us write more
-robust code.
 
+Rust has ownership, so we cannot simply update an element of an array while we have a shared view of it. This brings guarantees & helps having more robust code.
 ```rust
 use ndarray::prelude::*;
 use ndarray::{Array, Axis};
@@ -566,9 +553,9 @@ b clone of a =
  [2, 3]]
 ```
 
-Noticing that using `clone()` (or cloning) an `Array` type also copies the array's elements. It creates an independently owned array of the same type.
+Notice that using `clone()` (or cloning) an `Array` type also copies the array's elements. It creates an independently owned array of the same type.
 
-Cloning an `ArrayView` does not clone or copy the underlying elements - it just clones the view reference (as it happens in Rust when cloning a `&` reference).
+Cloning an `ArrayView` does not clone or copy the underlying elements - it only clones the view reference (as it happens in Rust when cloning a `&` reference).
 
 ## Broadcasting
 
@@ -600,7 +587,7 @@ fn main() {
 
 See [.broadcast()](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.broadcast) for a more detailed description.
 
-And there is a short example of it:
+And here is a short example of it:
 ```rust
 use ndarray::prelude::*;
 
