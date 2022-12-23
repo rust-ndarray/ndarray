@@ -27,7 +27,7 @@ fn main() {
     // and this is how to do the *same thing* with azip!()
     azip!((a in &mut a, &b in &b, &c in c) *a = b + c);
 
-    println!("{:8.4}", a);
+    println!("{a:8.4}");
 
     // sum of each row
     let mut sums = Array::zeros(a.nrows());
@@ -44,5 +44,5 @@ fn main() {
     Zip::from(a.exact_chunks(chunk_sz))
         .and(&mut sums)
         .for_each(|chunk, sum| *sum = chunk.sum());
-    println!("{:8.4}", sums);
+    println!("{sums:8.4}");
 }

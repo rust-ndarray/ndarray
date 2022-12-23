@@ -27,7 +27,7 @@ where
     E: de::Error,
 {
     if v != ARRAY_FORMAT_VERSION {
-        let err_msg = format!("unknown array version: {}", v);
+        let err_msg = format!("unknown array version: {v}");
         Err(de::Error::custom(err_msg))
     } else {
         Ok(())
@@ -193,7 +193,7 @@ impl<'de> Deserialize<'de> for ArrayField {
                     b"dim" => Ok(ArrayField::Dim),
                     b"data" => Ok(ArrayField::Data),
                     other => Err(de::Error::unknown_field(
-                        &format!("{:?}", other),
+                        &format!("{other:?}"),
                         ARRAY_FIELDS,
                     )),
                 }

@@ -164,7 +164,7 @@ where
         shape => {
             let blank_lines = "\n".repeat(shape.len() - 2);
             let indent = " ".repeat(depth + 1);
-            let separator = format!(",\n{}{}", blank_lines, indent);
+            let separator = format!(",\n{blank_lines}{indent}");
 
             f.write_str("[")?;
             let limit = fmt_opt.collapse_limit(full_ndim - depth - 1);
@@ -220,7 +220,7 @@ where
             self.view().layout(),
         )?;
         match D::NDIM {
-            Some(ndim) => write!(f, ", const ndim={}", ndim)?,
+            Some(ndim) => write!(f, ", const ndim={ndim}")?,
             None => write!(f, ", dynamic ndim={}", self.ndim())?,
         }
         Ok(())
@@ -296,9 +296,7 @@ mod formatting_with_omit {
         // use assert to avoid printing the strings twice on failure
         assert!(
             expected == actual,
-            "formatting assertion failed\nexpected:\n{}\nactual:\n{}\n",
-            expected,
-            actual,
+            "formatting assertion failed\nexpected:\n{expected}\nactual:\n{actual}\n",
         );
     }
 
@@ -326,7 +324,7 @@ mod formatting_with_omit {
     #[test]
     fn empty_arrays() {
         let a: Array2<u32> = arr2(&[[], []]);
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let expected = "[[]]";
         assert_str_eq(expected, &actual);
     }
@@ -334,7 +332,7 @@ mod formatting_with_omit {
     #[test]
     fn zero_length_axes() {
         let a = Array3::<f32>::zeros((3, 0, 4));
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let expected = "[[[]]]";
         assert_str_eq(expected, &actual);
     }
@@ -343,7 +341,7 @@ mod formatting_with_omit {
     fn dim_0() {
         let element = 12;
         let a = arr0(element);
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let expected = "12";
         assert_str_eq(expected, &actual);
     }
@@ -352,7 +350,7 @@ mod formatting_with_omit {
     fn dim_1() {
         let overflow: usize = 2;
         let a = Array1::from_elem(ARRAY_MANY_ELEMENT_LIMIT + overflow, 1);
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let expected = format!("[{}]", ellipsize(AXIS_LIMIT_ROW, ", ", a.iter()));
         assert_str_eq(&expected, &actual);
     }
@@ -361,7 +359,7 @@ mod formatting_with_omit {
     fn dim_1_alternate() {
         let overflow: usize = 2;
         let a = Array1::from_elem(ARRAY_MANY_ELEMENT_LIMIT + overflow, 1);
-        let actual = format!("{:#}", a);
+        let actual = format!("{a:#}");
         let expected = format!("[{}]", a.iter().format(", "));
         assert_str_eq(&expected, &actual);
     }
@@ -373,7 +371,7 @@ mod formatting_with_omit {
             (AXIS_2D_OVERFLOW_LIMIT, AXIS_2D_OVERFLOW_LIMIT + overflow),
             1,
         );
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let expected = "\
 [[1, 1, 1, 1, 1, ..., 1, 1, 1, 1, 1],
  [1, 1, 1, 1, 1, ..., 1, 1, 1, 1, 1],
@@ -392,7 +390,7 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_non_last_axis_overflow() {
         let a = Array2::from_elem((ARRAY_MANY_ELEMENT_LIMIT / 10, 10), 1);
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let row = format!("{}", a.row(0));
         let expected = format!(
             "[{}]",
@@ -404,7 +402,7 @@ mod formatting_with_omit {
     #[test]
     fn dim_2_non_last_axis_overflow_alternate() {
         let a = Array2::from_elem((AXIS_LIMIT_COL * 4, 6), 1);
-        let actual = format!("{:#}", a);
+        let actual = format!("{a:#}");
         let row = format!("{}", a.row(0));
         let expected = format!("[{}]", (0..a.nrows()).map(|_| &row).format(",\n "));
         assert_str_eq(&expected, &actual);
@@ -420,7 +418,7 @@ mod formatting_with_omit {
             ),
             1,
         );
-        let actual = format!("{}", a);
+        let actual = format!("{a}");
         let row = format!("[{}]", ellipsize(AXIS_LIMIT_ROW, ", ", a.row(0)));
         let expected = format!(
             "[{}]",
@@ -439,7 +437,7 @@ mod formatting_with_omit {
             ),
             1,
         );
-        let actual = format!("{:#}", a);
+        let actual = format!("{a:#}");
         let row = format!("{}", a.row(0));
         let expected = format!("[{}]", (0..a.nrows()).map(|_| &row).format(",\n "));
         assert_str_eq(&expected, &actual);
@@ -453,7 +451,7 @@ mod formatting_with_omit {
                 1000. + (100. * ((i as f64).sqrt() + (j as f64).sin() + k as f64)).round() / 100.
             },
         );
-        let actual = format!("{:6.1}", a);
+        let actual = format!("{a:6.1}");
         let expected = "\
 [[[1000.0, 1001.0, 1002.0, 1003.0, 1004.0, ..., 1007.0, 1008.0, 1009.0, 1010.0, 1011.0],
   [1000.8, 1001.8, 1002.8, 1003.8, 1004.8, ..., 1007.8, 1008.8, 1009.8, 1010.8, 1011.8],
@@ -534,7 +532,7 @@ mod formatting_with_omit {
     #[test]
     fn dim_4_overflow_outer() {
         let a = Array4::from_shape_fn((10, 10, 3, 3), |(i, j, k, l)| i + j + k + l);
-        let actual = format!("{:2}", a);
+        let actual = format!("{a:2}");
         // Generated using NumPy with:
         // np.set_printoptions(threshold=500, edgeitems=3)
         // np.fromfunction(lambda i, j, k, l: i + j + k + l, (10, 10, 3, 3), dtype=int)

@@ -16,6 +16,7 @@ fn test_swap() {
 }
 
 #[test]
+#[allow(clippy::all)] //not sure what lint keeps fixing this, never shows up with clippy , but changes with --fix
 fn test() {
     let c = ArcArray::<(), _>::default((3, 4));
     let mut d = c.clone();

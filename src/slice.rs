@@ -149,17 +149,17 @@ impl SliceInfoElem {
 impl fmt::Display for SliceInfoElem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            SliceInfoElem::Index(index) => write!(f, "{}", index)?,
+            SliceInfoElem::Index(index) => write!(f, "{index}")?,
             SliceInfoElem::Slice { start, end, step } => {
                 if start != 0 {
-                    write!(f, "{}", start)?;
+                    write!(f, "{start}")?;
                 }
                 write!(f, "..")?;
                 if let Some(i) = end {
-                    write!(f, "{}", i)?;
+                    write!(f, "{i}")?;
                 }
                 if step != 1 {
-                    write!(f, ";{}", step)?;
+                    write!(f, ";{step}")?;
                 }
             }
             SliceInfoElem::NewAxis => write!(f, stringify!(NewAxis))?,

@@ -19,9 +19,9 @@ impl fmt::Debug for Layout {
         } else {
             (0..32).filter(|&i| self.is(1 << i)).try_fold((), |_, i| {
                 if let Some(name) = LAYOUT_NAMES.get(i) {
-                    write!(f, "{}", name)
+                    write!(f, "{name}")
                 } else {
-                    write!(f, "{:#x}", i)
+                    write!(f, "{i:#x}")
                 }
             })?;
         };

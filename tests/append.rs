@@ -73,8 +73,8 @@ fn push_row_neg_stride_1() {
 
     // Changing the memory layout to fit the next append
     let mut a2 = a.clone();
-    println!("a = {:?}", a);
-    println!("a2 = {:?}", a2);
+    println!("a = {a:?}");
+    println!("a2 = {a2:?}");
     a2.push_column(aview1(&[1., 2.])).unwrap();
     assert_eq!(a2,
         array![[4., 5., 6., 7., 1.],
@@ -116,8 +116,8 @@ fn push_row_neg_stride_2() {
 
     // Changing the memory layout to fit the next append
     let mut a2 = a.clone();
-    println!("a = {:?}", a);
-    println!("a2 = {:?}", a2);
+    println!("a = {a:?}");
+    println!("a2 = {a2:?}");
     a2.push_column(aview1(&[1., 2.])).unwrap();
     assert_eq!(a2,
         array![[3., 2., 1., 0., 1.],
@@ -218,9 +218,9 @@ fn push_column() {
 fn append_array1() {
     let mut a = Array::zeros((0, 4));
     a.append(Axis(0), aview2(&[[0., 1., 2., 3.]])).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     a.append(Axis(0), aview2(&[[4., 5., 6., 7.]])).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     //a.push_column(aview1(&[4., 5., 6., 7.])).unwrap();
     //assert_eq!(a.shape(), &[4, 2]);
 
@@ -229,7 +229,7 @@ fn append_array1() {
                [4., 5., 6., 7.]]);
 
     a.append(Axis(0), aview2(&[[5., 5., 4., 4.], [3., 3., 2., 2.]])).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     assert_eq!(a,
         array![[0., 1., 2., 3.],
                [4., 5., 6., 7.],
@@ -241,26 +241,26 @@ fn append_array1() {
 fn append_array_3d() {
     let mut a = Array::zeros((0, 2, 2));
     a.append(Axis(0), array![[[0, 1], [2, 3]]].view()).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
 
     let aa = array![[[51, 52], [53, 54]], [[55, 56], [57, 58]]];
     let av = aa.view();
-    println!("Send {:?} to append", av);
+    println!("Send {av:?} to append");
     a.append(Axis(0), av).unwrap();
 
     a.swap_axes(0, 1);
     let aa = array![[[71, 72], [73, 74]], [[75, 76], [77, 78]]];
     let mut av = aa.view();
     av.swap_axes(0, 1);
-    println!("Send {:?} to append", av);
+    println!("Send {av:?} to append");
     a.append(Axis(1), av).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     let aa = array![[[81, 82], [83, 84]], [[85, 86], [87, 88]]];
     let mut av = aa.view();
     av.swap_axes(0, 1);
-    println!("Send {:?} to append", av);
+    println!("Send {av:?} to append");
     a.append(Axis(1), av).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     assert_eq!(a,
         array![[[0, 1],
                 [51, 52],
@@ -287,11 +287,11 @@ fn test_append_2d() {
     a.append(Axis(0), ones).unwrap();
     a.append(Axis(0), zeros).unwrap();
     a.append(Axis(0), ones).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     assert_eq!(a.shape(), &[8, 4]);
     for (i, row) in a.rows().into_iter().enumerate() {
         let ones = !(3..5).contains(&i);
-        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}", i);
+        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {i}");
     }
 
     let mut a = Array::zeros((0, 4));
@@ -301,12 +301,12 @@ fn test_append_2d() {
     a.append(Axis(1), ones).unwrap();
     a.append(Axis(1), zeros).unwrap();
     a.append(Axis(1), ones).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     assert_eq!(a.shape(), &[4, 8]);
 
     for (i, row) in a.columns().into_iter().enumerate() {
         let ones = !(3..5).contains(&i);
-        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}", i);
+        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {i}");
     }
 }
 
@@ -315,16 +315,16 @@ fn test_append_middle_axis() {
     // ensure we can append to Axis(1) by letting it become outermost
     let mut a = Array::<i32, _>::zeros((3, 0, 2));
     a.append(Axis(1), Array::from_iter(0..12).into_shape((3, 2, 2)).unwrap().view()).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     a.append(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
 
     // ensure we can append to Axis(1) by letting it become outermost
     let mut a = Array::<i32, _>::zeros((3, 1, 2));
     a.append(Axis(1), Array::from_iter(0..12).into_shape((3, 2, 2)).unwrap().view()).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
     a.append(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
-    println!("{:?}", a);
+    println!("{a:?}");
 }
 
 #[test]

@@ -89,7 +89,7 @@ impl fmt::Display for ShapeError {
 
 impl fmt::Debug for ShapeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 

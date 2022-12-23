@@ -90,5 +90,5 @@ fn main() {
     }
     render(&a);
     let alive = a.iter().filter(|&&x| x > 0).count();
-    println!("After {} steps there are {} cells alive", steps, alive);
+    println!("After {steps} steps there are {alive} cells alive");
 }

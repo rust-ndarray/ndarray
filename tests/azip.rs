@@ -277,9 +277,9 @@ fn test_contiguous_but_not_c_or_f() {
 
     let mut ans = Array::zeros(a.dim().f());
     azip!((ans in &mut ans, &a in &a, &b in &b) *ans = a + b);
-    println!("{:?}", a);
-    println!("{:?}", b);
-    println!("{:?}", ans);
+    println!("{a:?}");
+    println!("{b:?}");
+    println!("{ans:?}");
 
     assert_eq!(ans[[0, 1, 2]], correct_012);
     assert_eq!(ans, correct);

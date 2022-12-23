@@ -478,7 +478,7 @@ fn mat_mul_rev() {
     let mut rev = Array::zeros(b.dim());
     let mut rev = rev.slice_mut(s![..;-1, ..]);
     rev.assign(&b);
-    println!("{:?}", rev);
+    println!("{rev:?}");
 
     let c1 = a.dot(&b);
     let c2 = a.dot(&rev);
