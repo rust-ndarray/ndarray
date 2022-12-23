@@ -463,7 +463,7 @@ pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize {
     } else {
         let d = m / abs_step;
         let r = m % abs_step;
-        d + if r > 0 { 1 } else { 0 }
+        d + (r>0) as usize
     };
 
     // Update stride. The additional check is necessary to avoid possible
@@ -729,12 +729,12 @@ where
     let merged_len = into_len * take_len;
     if take_len <= 1 {
         dim.set_axis(into, merged_len);
-        dim.set_axis(take, if merged_len == 0 { 0 } else { 1 });
+        dim.set_axis(take, (merged_len != 0) as usize);
         true
     } else if into_len <= 1 {
         strides.set_axis(into, take_stride as usize);
         dim.set_axis(into, merged_len);
-        dim.set_axis(take, if merged_len == 0 { 0 } else { 1 });
+        dim.set_axis(take, (merged_len != 0) as usize);
         true
     } else if take_stride == into_len as isize * into_stride {
         dim.set_axis(into, merged_len);
