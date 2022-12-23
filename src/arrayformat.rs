@@ -296,7 +296,7 @@ mod formatting_with_omit {
         // use assert to avoid printing the strings twice on failure
         assert!(
             expected == actual,
-            "formatting assertion failed\nexpected:\n{expected}\nactual:\n{actual}\n",
+            "formatting assertion failed\nexpected:\n{}\nactual:\n{}\n",expected,actual
         );
     }
 

@@ -291,7 +291,7 @@ fn test_append_2d() {
     assert_eq!(a.shape(), &[8, 4]);
     for (i, row) in a.rows().into_iter().enumerate() {
         let ones = !(3..5).contains(&i);
-        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {i}");
+        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}",i);
     }
 
     let mut a = Array::zeros((0, 4));
@@ -306,7 +306,7 @@ fn test_append_2d() {
 
     for (i, row) in a.columns().into_iter().enumerate() {
         let ones = !(3..5).contains(&i);
-        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {i}");
+        assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}",i);
     }
 }
 
