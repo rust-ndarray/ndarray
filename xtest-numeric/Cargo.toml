@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 approx = "0.4"
-ndarray = { path = "..", features = ["approx"] }
+ndarray = { path = "../", features = ["approx"] }
 ndarray-rand = { path = "../ndarray-rand/" }
 rand_distr = "0.4"
 
