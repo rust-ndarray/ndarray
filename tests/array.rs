@@ -9,7 +9,8 @@
 
 use approx::assert_relative_eq;
 use defmac::defmac;
-use itertools::{zip, Itertools};
+use itertools::Itertools;
+use std::iter::zip;
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
 use ndarray::indices;
