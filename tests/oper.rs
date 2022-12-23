@@ -30,7 +30,7 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32]) {
     let aa = aa.reshape(dim);
     let bb = bb.reshape(dim);
     let cc = cc.reshape(dim);
-    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr::<f32, _>(op, aa, bb, cc);
 }
 
 
@@ -170,24 +170,24 @@ fn dot_product() {
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(a1, b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(a2, b2), epsilon = 1e-5);
     }
 
-    let a = a.map(|f| *f as f32);
-    let b = b.map(|f| *f as f32);
+    let a = a.map(|f| *f);
+    let b = b.map(|f| *f);
     assert_abs_diff_eq!(a.dot(&b), dot as f32, epsilon = 1e-5);
 
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(a1, b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(a2, b2), epsilon = 1e-5);
     }
 
     let a = a.map(|f| *f as i32);
@@ -202,17 +202,17 @@ fn dot_product_0() {
     let x = 1.5;
     let b = aview0(&x);
     let b = b.broadcast(a.dim()).unwrap();
-    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
+    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, b), epsilon = 1e-5);
 
     // test different alignments
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(a1, b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(a2, b2), epsilon = 1e-5);
     }
 }
 
@@ -225,13 +225,13 @@ fn dot_product_neg_stride() {
         // both negative
         let a = a.slice(s![..;stride]);
         let b = b.slice(s![..;stride]);
-        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
+        assert_abs_diff_eq!(a.dot(&b), reference_dot(a, b), epsilon = 1e-5);
     }
     for stride in -10..0 {
         // mixed
         let a = a.slice(s![..;-stride]);
         let b = b.slice(s![..;stride]);
-        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
+        assert_abs_diff_eq!(a.dot(&b), reference_dot(a, b), epsilon = 1e-5);
     }
 }
 
@@ -478,7 +478,7 @@ fn mat_mul_rev() {
     let mut rev = Array::zeros(b.dim());
     let mut rev = rev.slice_mut(s![..;-1, ..]);
     rev.assign(&b);
-    println!("{:.?}", rev);
+    println!("{:?}", rev);
 
     let c1 = a.dot(&b);
     let c2 = a.dot(&rev);

@@ -153,7 +153,7 @@ fn deny_wraparound_from_vec() {
     let five_large = Array::from_shape_vec((3, 7, 29, 36760123, 823996703), five.clone());
     println!("{:?}", five_large);
     assert!(five_large.is_err());
-    let six = Array::from_shape_vec(6, five.clone());
+    let six = Array::from_shape_vec(6, five);
     assert!(six.is_err());
 }
 

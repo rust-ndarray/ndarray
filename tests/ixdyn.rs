@@ -109,7 +109,7 @@ fn test_ixdyn_uget() {
 fn test_0() {
     let mut a = Array::zeros(vec![]);
     let z = vec![].into_dimension();
-    assert_eq!(a[z.clone()], 0.);
+    assert_eq!(a[z], 0.);
     a[[]] = 1.;
     assert_eq!(a[[]], 1.);
     assert_eq!(a.len(), 1);

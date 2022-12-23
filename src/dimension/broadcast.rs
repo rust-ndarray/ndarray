@@ -104,7 +104,7 @@ mod tests {
             D1: Dimension + DimMax<D2>,
             D2: Dimension,
         {
-            let d = co_broadcast::<D1, D2, <D1 as DimMax<D2>>::Output>(&d1, d2);
+            let d = co_broadcast::<D1, D2, <D1 as DimMax<D2>>::Output>(d1, d2);
             assert_eq!(d, r);
         }
         test_co(&Dim([2, 3]), &Dim([4, 1, 3]), Ok(Dim([4, 2, 3])));
