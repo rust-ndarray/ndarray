@@ -246,14 +246,14 @@ fn append_array_3d() {
     let aa = array![[[51, 52], [53, 54]], [[55, 56], [57, 58]]];
     let av = aa.view();
     println!("Send {:?} to append", av);
-    a.append(Axis(0), av.clone()).unwrap();
+    a.append(Axis(0), av).unwrap();
 
     a.swap_axes(0, 1);
     let aa = array![[[71, 72], [73, 74]], [[75, 76], [77, 78]]];
     let mut av = aa.view();
     av.swap_axes(0, 1);
     println!("Send {:?} to append", av);
-    a.append(Axis(1), av.clone()).unwrap();
+    a.append(Axis(1), av).unwrap();
     println!("{:?}", a);
     let aa = array![[[81, 82], [83, 84]], [[85, 86], [87, 88]]];
     let mut av = aa.view();
@@ -290,7 +290,7 @@ fn test_append_2d() {
     println!("{:?}", a);
     assert_eq!(a.shape(), &[8, 4]);
     for (i, row) in a.rows().into_iter().enumerate() {
-        let ones = i < 3 || i >= 5;
+        let ones = !(3..5).contains(&i);
         assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}", i);
     }
 
@@ -305,7 +305,7 @@ fn test_append_2d() {
     assert_eq!(a.shape(), &[4, 8]);
 
     for (i, row) in a.columns().into_iter().enumerate() {
-        let ones = i < 3 || i >= 5;
+        let ones = !(3..5).contains(&i);
         assert!(row.iter().all(|&x| x == ones as i32 as f64), "failed on lane {}", i);
     }
 }
