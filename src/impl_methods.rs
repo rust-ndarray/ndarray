@@ -1990,7 +1990,7 @@ where
                 let strides = unlimited_transmute::<D, D2>(self.strides);
                 return Ok(ArrayBase::from_data_ptr(self.data, self.ptr)
                             .with_strides_dim(strides, dim));
-            } else if D::NDIM == None || D2::NDIM == None { // one is dynamic dim
+            } else if D::NDIM.is_none() || D2::NDIM.is_none() { // one is dynamic dim
                 // safe because dim, strides are equivalent under a different type
                 if let Some(dim) = D2::from_dimension(&self.dim) {
                     if let Some(strides) = D2::from_dimension(&self.strides) {

@@ -47,7 +47,7 @@ mod sequence;
 /// Calculate offset from `Ix` stride converting sign properly
 #[inline(always)]
 pub fn stride_offset(n: Ix, stride: Ix) -> isize {
-    (n as isize) * ((stride as Ixs) as isize)
+    (n as isize) * (stride as Ixs)
 }
 
 /// Check whether the given `dim` and `stride` lead to overlapping indices
