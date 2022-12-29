@@ -30,7 +30,7 @@ fn windows_iterator_zero_size() {
     a.windows(Dim((0, 0, 0)));
 }
 
-/// Test that verifites that no windows are yielded on oversized window sizes.
+/// Test that verifies that no windows are yielded on oversized window sizes.
 #[test]
 fn windows_iterator_oversized() {
     let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
@@ -91,6 +91,76 @@ fn windows_iterator_3d() {
             arr3(&[[[20, 21], [23, 24]], [[29, 30], [32, 33]]]),
             arr3(&[[[22, 23], [25, 26]], [[31, 32], [34, 35]]]),
             arr3(&[[[23, 24], [26, 27]], [[32, 33], [35, 36]]]),
+        ],
+    );
+}
+
+/// Test that verifies the `Windows` iterator panics when stride has an axis equal to zero.
+#[test]
+#[should_panic]
+fn windows_iterator_stride_axis_zero() {
+    let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
+    a.windows_with_stride(Dim((2, 2, 2)), Dim((0,2,2)));
+}
+
+/// Test that verifies that only first window is yielded when stride is oversized on every axis.
+#[test]
+fn windows_iterator_only_one_valid_window_for_oversized_stride() {
+    let a = Array::from_iter(10..135).into_shape((5, 5, 5)).unwrap();
+    let mut iter = a.windows_with_stride((2, 2, 2), (8, 8, 8)).into_iter(); // (4,3,2) doesn't fit into (3,3,3) => oversized!
+    itertools::assert_equal(
+        iter.next(),
+        Some(arr3(&[[[10, 11], [15, 16]],[[35, 36], [40, 41]]]))
+    );
+}
+
+/// Simple test for iterating 1d-arrays via `Windows` with stride.
+#[test]
+fn windows_iterator_1d_with_stride() {
+    let a = Array::from_iter(10..20).into_shape(10).unwrap();
+    itertools::assert_equal(
+        a.windows_with_stride(Dim(4), Dim(2)),
+        vec![
+            arr1(&[10, 11, 12, 13]),
+            arr1(&[12, 13, 14, 15]),
+            arr1(&[14, 15, 16, 17]),
+            arr1(&[16, 17, 18, 19]),
+        ],
+    );
+}
+
+/// Simple test for iterating 2d-arrays via `Windows` with stride.
+#[test]
+fn windows_iterator_2d_with_stride() {
+    let a = Array::from_iter(10..30).into_shape((5, 4)).unwrap();
+    itertools::assert_equal(
+        a.windows_with_stride(Dim((3, 2)), Dim((2,1))),
+        vec![
+            arr2(&[[10, 11], [14, 15], [18, 19]]),
+            arr2(&[[11, 12], [15, 16], [19, 20]]),
+            arr2(&[[12, 13], [16, 17], [20, 21]]),
+            arr2(&[[18, 19], [22, 23], [26, 27]]),
+            arr2(&[[19, 20], [23, 24], [27, 28]]),
+            arr2(&[[20, 21], [24, 25], [28, 29]]),
+        ],
+    );
+}
+
+/// Simple test for iterating 3d-arrays via `Windows` with stride.
+#[test]
+fn windows_iterator_3d_with_stride() {
+    let a = Array::from_iter(10..74).into_shape((4, 4, 4)).unwrap();
+    itertools::assert_equal(
+        a.windows_with_stride(Dim((2, 2, 2)), Dim((2,2,2))),
+        vec![
+            arr3(&[[[10, 11], [14, 15]], [[26, 27], [30, 31]]]),
+            arr3(&[[[12, 13], [16, 17]], [[28, 29], [32, 33]]]),
+            arr3(&[[[18, 19], [22, 23]], [[34, 35], [38, 39]]]),
+            arr3(&[[[20, 21], [24, 25]], [[36, 37], [40, 41]]]),
+            arr3(&[[[42, 43], [46, 47]], [[58, 59], [62, 63]]]),
+            arr3(&[[[44, 45], [48, 49]], [[60, 61], [64, 65]]]),
+            arr3(&[[[50, 51], [54, 55]], [[66, 67], [70, 71]]]),
+            arr3(&[[[52, 53], [56, 57]], [[68, 69], [72, 73]]]),
         ],
     );
 }
