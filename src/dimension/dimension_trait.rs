@@ -184,6 +184,68 @@ pub trait Dimension:
     }
 
     #[doc(hidden)]
+    /// returns if `self` is greater than `index`; ndim of both is expected to match
+    #[inline]
+    fn gt_index(&self, index: &Self) -> bool {
+        zip(self.slice(), index.slice()).fold(false, |acc, (s, i)| acc | (s > i))
+    }
+    #[doc(hidden)]
+    /// returns if `self` is lesser than `index`; ndim of both is expected to match
+    #[inline]
+    fn lt_index(&self, index: &Self) -> bool {
+        zip(self.slice(), index.slice()).fold(false, |acc, (s, i)| acc | (s < i))
+    }
+    #[doc(hidden)]
+    /// Iteration -- Use self as size, and return index jumping `jump_by` indices from base index
+    /// or None if there are no more.
+    #[inline]
+    fn jump_index_by(&self, index: &Self, upper_bound: &Self, jump_by: usize) -> Option<Self> {
+        let mut index = index.clone();
+        let mut carry = jump_by;
+        let mut done = false;
+        for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
+            *ix += carry;
+            if *ix >= dim {
+                carry = *ix / dim;
+                *ix = *ix - dim * carry; //ix modulo dim
+            } else {
+                done = true;
+                break;
+            }
+        }
+        if done & upper_bound.gt_index(&index) {
+            Some(index)
+        } else {
+            None
+        }
+    }
+    #[doc(hidden)]
+    /// Iteration -- Use self as size, and return index jumping `jump_by` indices from base index in back direction
+    /// or None if there are no more.
+    #[inline]
+    fn jump_index_back_by(&self, index: &Self, lower_bound: &Self, jump_by: usize) -> Option<Self> {
+        let mut index = index.clone();
+        let mut carry = jump_by;
+        let mut done = false;
+        for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
+            if *ix >= carry {
+                *ix -= carry;
+                done = true;
+                break;
+            } else {
+                let temp = carry - *ix;
+                carry = temp / dim;
+                *ix = dim - (temp - dim * carry);
+                carry += 1;
+            }
+        }
+        if done & !lower_bound.gt_index(&index) {
+            Some(index)
+        } else {
+            None
+        }
+    }
+    #[doc(hidden)]
     /// Iteration -- Use self as size, and return next index after `index`
     /// or None if there are no more.
     // FIXME: use &Self for index or even &mut?

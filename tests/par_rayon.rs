@@ -5,6 +5,7 @@ use ndarray::prelude::*;
 
 const M: usize = 1024 * 10;
 const N: usize = 100;
+const K: usize = 16;
 const CHUNK_SIZE: usize = 100;
 const N_CHUNKS: usize = (M + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
@@ -85,4 +86,47 @@ fn test_axis_chunks_iter_mut() {
         .for_each(|mut v| v.mapv_inplace(|x| x.exp()));
     println!("{:?}", a.slice(s![..10, ..5]));
     assert_abs_diff_eq!(a, b, epsilon = 0.001);
+}
+
+#[test]
+fn test_lanes_par_iter() {
+    let a = Array::from_iter(0..K * M * N)
+        .into_shape((K, M, N))
+        .unwrap();
+    let serial: Vec<_> = a
+        .clone()
+        .lanes(Axis(1))
+        .into_iter()
+        .map(|x| x.sum())
+        .collect();
+    let paralel: Vec<_> = a
+        .clone()
+        .lanes(Axis(1))
+        .into_iter()
+        .into_par_iter()
+        .map(|x| x.sum())
+        .collect();
+    assert_eq!(serial, paralel);
+}
+
+#[test]
+fn test_lanes_mut_par_iter() {
+    let mut serial = Array::from_iter(0..K * M * N)
+        .into_shape((K, M, N))
+        .unwrap();
+    let mut paralel = serial.clone();
+    serial
+        .lanes_mut(Axis(1))
+        .into_iter()
+        .for_each(|mut x| x[0] *= 3);
+    paralel
+        .lanes_mut(Axis(1))
+        .into_iter()
+        .into_par_iter()
+        .for_each(|mut x| x[0] *= 3);
+    assert_eq!(
+        serial.slice(s![0, 0..2, 0..10]),
+        paralel.slice(s![0, 0..2, 0..10])
+    );
+    assert_eq!(serial, paralel);
 }

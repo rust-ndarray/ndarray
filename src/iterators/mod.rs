@@ -38,6 +38,7 @@ pub struct Baseiter<A, D> {
     ptr: *mut A,
     dim: D,
     strides: D,
+    end: D,
     index: Option<D>,
 }
 
@@ -47,12 +48,52 @@ impl<A, D: Dimension> Baseiter<A, D> {
     /// iterating.
     #[inline]
     pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D> {
+        let mut end = len.clone();
+        if len.ndim() != 0 {
+            end.slice_mut().iter_mut().for_each(|x| {
+                if *x != 0 {
+                    *x -= 1
+                }
+            });
+            end.set_last_elem(end.last_elem() + 1);
+        }
         Baseiter {
             ptr,
             index: len.first_index(),
             dim: len,
             strides: stride,
+            end,
         }
+    }
+
+    /// Splits the iterator at `index`, yielding two disjoint iterators.
+    ///
+    /// `index` is relative to the current state of the iterator (which is not
+    /// necessarily the start of the axis).
+    ///
+    /// **Panics** if `index` is strictly greater than the iterator's remaining
+    /// length.
+    fn split_at(self, index: usize) -> (Self, Self) {
+        assert!(index <= self.len());
+        assert!(self.index != None);
+        let mid = self
+            .dim
+            .jump_index_by(&self.index.clone().unwrap(), &self.end, index);
+        let left = Baseiter {
+            index: self.index,
+            dim: self.dim.clone(),
+            strides: self.strides.clone(),
+            ptr: self.ptr,
+            end: mid.clone().unwrap(),
+        };
+        let right = Baseiter {
+            index: mid,
+            dim: self.dim,
+            strides: self.strides,
+            ptr: self.ptr,
+            end: self.end,
+        };
+        (left, right)
     }
 }
 
@@ -66,7 +107,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
             Some(ref ix) => ix.clone(),
         };
         let offset = D::stride_offset(&index, &self.strides);
-        self.index = self.dim.next_for(index);
+        self.index = self.dim.jump_index_by(&index, &self.end, 1);
         unsafe { Some(self.ptr.offset(offset)) }
     }
 
@@ -79,78 +120,56 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
     where
         G: FnMut(Acc, *mut A) -> Acc,
     {
-        let ndim = self.dim.ndim();
-        debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        while let Some(mut index) = self.index {
-            let stride = self.strides.last_elem() as isize;
-            let elem_index = index.last_elem();
-            let len = self.dim.last_elem();
-            let offset = D::stride_offset(&index, &self.strides);
+        while let Some(new_index) = self.index {
+            self.index = self.dim.jump_index_by(&new_index, &self.end, 1);
+            let offset = <_>::stride_offset(&new_index, &self.strides);
             unsafe {
-                let row_ptr = self.ptr.offset(offset);
-                let mut i = 0;
-                let i_end = len - elem_index;
-                while i < i_end {
-                    accum = g(accum, row_ptr.offset(i as isize * stride));
-                    i += 1;
-                }
+                accum = g(accum, self.ptr.offset(offset));
             }
-            index.set_last_elem(len - 1);
-            self.index = self.dim.next_for(index);
         }
+
         accum
     }
 }
 
-impl<A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
-    fn len(&self) -> usize {
-        match self.index {
-            None => 0,
-            Some(ref ix) => {
-                let gone = self
-                    .dim
-                    .default_strides()
-                    .slice()
-                    .iter()
-                    .zip(ix.slice().iter())
-                    .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
-                self.dim.size() - gone
-            }
-        }
-    }
-}
-
-impl<A> DoubleEndedIterator for Baseiter<A, Ix1> {
-    #[inline]
-    fn next_back(&mut self) -> Option<*mut A> {
-        let index = match self.index {
+impl<A, D> DoubleEndedIterator for Baseiter<A, D>
+where
+    D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        let index = match &self.index {
             None => return None,
             Some(ix) => ix,
         };
-        self.dim[0] -= 1;
-        let offset = <_>::stride_offset(&self.dim, &self.strides);
-        if index == self.dim {
-            self.index = None;
+        match self.dim.jump_index_back_by(&self.end, &index, 1) {
+            Some(idx) => self.end = idx,
+            None => {
+                self.index = None;
+                return None;
+            }
         }
+
+        let offset = <_>::stride_offset(&self.end, &self.strides);
 
         unsafe { Some(self.ptr.offset(offset)) }
     }
-
-    fn nth_back(&mut self, n: usize) -> Option<*mut A> {
-        let index = self.index?;
-        let len = self.dim[0] - index[0];
-        if n < len {
-            self.dim[0] -= n + 1;
-            let offset = <_>::stride_offset(&self.dim, &self.strides);
-            if index == self.dim {
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        let index = match &self.index {
+            None => return None,
+            Some(ix) => ix,
+        };
+        match self.dim.jump_index_back_by(&self.end, &index, n + 1) {
+            Some(idx) => self.end = idx,
+            None => {
                 self.index = None;
+                return None;
             }
-            unsafe { Some(self.ptr.offset(offset)) }
-        } else {
-            self.index = None;
-            None
         }
+
+        let offset = <_>::stride_offset(&self.end, &self.strides);
+
+        unsafe { Some(self.ptr.offset(offset)) }
     }
 
     fn rfold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
@@ -159,20 +178,38 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1> {
     {
         let mut accum = init;
         if let Some(index) = self.index {
-            let elem_index = index[0];
-            unsafe {
-                // self.dim[0] is the current length
-                while self.dim[0] > elem_index {
-                    self.dim[0] -= 1;
-                    accum = g(
-                        accum,
-                        self.ptr
-                            .offset(Ix1::stride_offset(&self.dim, &self.strides)),
-                    );
+            while let Some(new_end) = self.dim.jump_index_back_by(&self.end, &index, 1) {
+                self.end = new_end;
+                let offset = <_>::stride_offset(&self.end, &self.strides);
+                unsafe {
+                    accum = g(accum, self.ptr.offset(offset));
                 }
             }
         }
+
         accum
+    }
+}
+impl<A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
+    fn len(&self) -> usize {
+        match self.index {
+            None => 0,
+            Some(ref ix) => {
+                let (size, gone) = self
+                    .dim
+                    .default_strides()
+                    .slice()
+                    .iter()
+                    .zip(ix.slice().iter().zip(self.end.slice().iter()))
+                    .fold((0, 0), |s, (&stride, (&index, &end))| {
+                        (
+                            s.0 + stride as usize * end as usize,
+                            s.1 + stride as usize * index as usize,
+                        )
+                    });
+                size - gone
+            }
+        }
     }
 }
 
@@ -185,6 +222,7 @@ clone_bounds!(
         dim,
         strides,
         index,
+        end,
     }
 );
 
@@ -700,6 +738,28 @@ clone_bounds!(
         iter,
     }
 );
+impl<'a, A, D: Dimension> LanesIter<'a, A, D> {
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            LanesIter {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: left,
+                life: self.life,
+            },
+            LanesIter {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: right,
+                life: self.life,
+            },
+        )
+    }
+    unsafe fn as_ref(&self, ptr: *mut A) -> <Self as Iterator>::Item {
+        ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+    }
+}
 
 impl<'a, A, D> Iterator for LanesIter<'a, A, D>
 where
@@ -717,6 +777,14 @@ where
     }
 }
 
+impl<'a, A, D> DoubleEndedIterator for LanesIter<'a, A, D>
+where
+    D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| unsafe { self.as_ref(ptr) })
+    }
+}
 impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
 where
     D: Dimension,
@@ -740,7 +808,28 @@ pub struct LanesIterMut<'a, A, D> {
     iter: Baseiter<A, D>,
     life: PhantomData<&'a mut A>,
 }
-
+impl<'a, A, D: Dimension> LanesIterMut<'a, A, D> {
+    pub fn split_at(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.iter.split_at(index);
+        (
+            LanesIterMut {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: left,
+                life: self.life,
+            },
+            LanesIterMut {
+                inner_len: self.inner_len,
+                inner_stride: self.inner_stride,
+                iter: right,
+                life: self.life,
+            },
+        )
+    }
+    unsafe fn as_ref(&self, ptr: *mut A) -> <Self as Iterator>::Item {
+        ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+    }
+}
 impl<'a, A, D> Iterator for LanesIterMut<'a, A, D>
 where
     D: Dimension,
@@ -757,6 +846,14 @@ where
     }
 }
 
+impl<'a, A, D> DoubleEndedIterator for LanesIterMut<'a, A, D>
+where
+    D: Dimension,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| unsafe { self.as_ref(ptr) })
+    }
+}
 impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
 where
     D: Dimension,

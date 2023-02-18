@@ -13,6 +13,8 @@ use crate::iter::AxisChunksIter;
 use crate::iter::AxisChunksIterMut;
 use crate::iter::AxisIter;
 use crate::iter::AxisIterMut;
+use crate::iter::LanesIter;
+use crate::iter::LanesIterMut;
 use crate::Dimension;
 use crate::{ArrayView, ArrayViewMut};
 use crate::split_at::SplitPreference;
@@ -121,6 +123,9 @@ par_iter_wrapper!(AxisIter, [Sync]);
 par_iter_wrapper!(AxisIterMut, [Send + Sync]);
 par_iter_wrapper!(AxisChunksIter, [Sync]);
 par_iter_wrapper!(AxisChunksIterMut, [Send + Sync]);
+
+par_iter_wrapper!(LanesIter, [Sync]);
+par_iter_wrapper!(LanesIterMut, [Send + Sync]);
 
 macro_rules! par_iter_view_wrapper {
     // thread_bounds are either Sync or Send + Sync
