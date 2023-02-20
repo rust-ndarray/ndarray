@@ -34,12 +34,14 @@ use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 /// Base for iterators over all axes.
 ///
 /// Iterator element type is `*mut A`.
+/// index and end values are only valid indices when elements_left >= 1 
 pub struct Baseiter<A, D> {
     ptr: *mut A,
     dim: D,
     strides: D,
     end: D,
-    index: Option<D>,
+    elements_left: usize,
+    index: D,
 }
 
 impl<A, D: Dimension> Baseiter<A, D> {
@@ -48,21 +50,27 @@ impl<A, D: Dimension> Baseiter<A, D> {
     /// iterating.
     #[inline]
     pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D> {
-        let mut end = len.clone();
-        if len.ndim() != 0 {
-            end.slice_mut().iter_mut().for_each(|x| {
-                if *x != 0 {
-                    *x -= 1
-                }
-            });
-            end.set_last_elem(end.last_elem() + 1);
-        }
-        Baseiter {
-            ptr,
-            index: len.first_index(),
-            dim: len,
-            strides: stride,
-            end,
+        if len.size() == 0 {
+            //if size is 0, we have anything to iter through, so no mater what written here
+            Baseiter {
+                ptr,
+                index: len.clone(),
+                dim: len.clone(),
+                strides: stride,
+                end: len.clone(),
+                elements_left: 0,
+            }
+        } else {
+            let mut end = len.clone();
+            end.slice_mut().iter_mut().for_each(|x| *x -= 1);
+            Baseiter {
+                ptr,
+                index: len.first_index().unwrap(),
+                dim: len.clone(),
+                strides: stride,
+                end,
+                elements_left: len.size(),
+            }
         }
     }
 
@@ -75,16 +83,17 @@ impl<A, D: Dimension> Baseiter<A, D> {
     /// length.
     fn split_at(self, index: usize) -> (Self, Self) {
         assert!(index <= self.len());
-        assert!(self.index != None);
-        let mid = self
-            .dim
-            .jump_index_by(&self.index.clone().unwrap(), &self.end, index);
+        let mut mid = self.index.clone();
+        self.dim.jump_index_by_unchecked(&mut mid, index);
+        let mut end1 = mid.clone();
+        self.dim.jump_index_back_unchecked(&mut end1);
         let left = Baseiter {
             index: self.index,
             dim: self.dim.clone(),
             strides: self.strides.clone(),
             ptr: self.ptr,
-            end: mid.clone().unwrap(),
+            end: end1,
+            elements_left: index,
         };
         let right = Baseiter {
             index: mid,
@@ -92,6 +101,7 @@ impl<A, D: Dimension> Baseiter<A, D> {
             strides: self.strides,
             ptr: self.ptr,
             end: self.end,
+            elements_left: self.elements_left - index,
         };
         (left, right)
     }
@@ -102,13 +112,14 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
 
     #[inline]
     fn next(&mut self) -> Option<*mut A> {
-        let index = match self.index {
-            None => return None,
-            Some(ref ix) => ix.clone(),
-        };
-        let offset = D::stride_offset(&index, &self.strides);
-        self.index = self.dim.jump_index_by(&index, &self.end, 1);
-        unsafe { Some(self.ptr.offset(offset)) }
+        if self.elements_left >= 1 {
+            self.elements_left -= 1;
+            let offset = D::stride_offset(&self.index, &self.strides);
+            self.dim.jump_index_unchecked(&mut self.index);
+            unsafe { Some(self.ptr.offset(offset)) }
+        } else {
+            None
+        }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -120,15 +131,32 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
     where
         G: FnMut(Acc, *mut A) -> Acc,
     {
+        let ndim = self.dim.ndim();
+        debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        while let Some(new_index) = self.index {
-            self.index = self.dim.jump_index_by(&new_index, &self.end, 1);
-            let offset = <_>::stride_offset(&new_index, &self.strides);
-            unsafe {
-                accum = g(accum, self.ptr.offset(offset));
+        while self.elements_left >= 1 {
+            let stride = self.strides.last_elem() as isize;
+            let elem_index = self.index.last_elem();
+            let len = self.dim.last_elem();
+            let offset = D::stride_offset(&self.index, &self.strides);
+            let mut i_end = len - elem_index;
+            if self.elements_left >= i_end {
+                self.elements_left -= i_end;
+            } else {
+                i_end = self.elements_left;
+                self.elements_left = 0;
             }
+            unsafe {
+                let row_ptr = self.ptr.offset(offset);
+                let mut i = 0;
+                while i < i_end {
+                    accum = g(accum, row_ptr.offset(i as isize * stride));
+                    i += 1;
+                }
+            }
+            self.index.set_last_elem(len - 1);
+            self.dim.jump_index_unchecked(&mut self.index);
         }
-
         accum
     }
 }
@@ -138,78 +166,68 @@ where
     D: Dimension,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let index = match &self.index {
-            None => return None,
-            Some(ix) => ix,
-        };
-        match self.dim.jump_index_back_by(&self.end, &index, 1) {
-            Some(idx) => self.end = idx,
-            None => {
-                self.index = None;
-                return None;
-            }
+        if self.elements_left >= 1 {
+            self.elements_left -= 1;
+
+            let offset = <_>::stride_offset(&self.end, &self.strides);
+            self.dim.jump_index_back_unchecked(&mut self.end);
+
+            unsafe { Some(self.ptr.offset(offset)) }
+        } else {
+            None
         }
-
-        let offset = <_>::stride_offset(&self.end, &self.strides);
-
-        unsafe { Some(self.ptr.offset(offset)) }
     }
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        let index = match &self.index {
-            None => return None,
-            Some(ix) => ix,
-        };
-        match self.dim.jump_index_back_by(&self.end, &index, n + 1) {
-            Some(idx) => self.end = idx,
-            None => {
-                self.index = None;
-                return None;
-            }
+        if self.elements_left >= n + 1 {
+            self.elements_left -= n + 1;
+            self.dim.jump_index_back_by_unchecked(&mut self.end, n);
+
+            let offset = <_>::stride_offset(&self.end, &self.strides);
+            self.dim.jump_index_back_unchecked(&mut self.end);
+
+            unsafe { Some(self.ptr.offset(offset)) }
+        } else {
+            self.elements_left = 0;
+            None
         }
-
-        let offset = <_>::stride_offset(&self.end, &self.strides);
-
-        unsafe { Some(self.ptr.offset(offset)) }
     }
 
     fn rfold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
     where
         G: FnMut(Acc, *mut A) -> Acc,
     {
+        let ndim = self.dim.ndim();
+        debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        if let Some(index) = self.index {
-            while let Some(new_end) = self.dim.jump_index_back_by(&self.end, &index, 1) {
-                self.end = new_end;
-                let offset = <_>::stride_offset(&self.end, &self.strides);
-                unsafe {
-                    accum = g(accum, self.ptr.offset(offset));
+        while self.elements_left >= 1 {
+            let stride = self.strides.last_elem() as isize;
+            let elem_index = self.end.last_elem();
+            let offset = D::stride_offset(&self.end, &self.strides);
+            let i_end;
+            if self.elements_left >= elem_index {
+                self.elements_left -= elem_index;
+                i_end = -(elem_index as isize);
+            } else {
+                i_end = -(self.elements_left as isize);
+                self.elements_left = 0;
+            }
+            unsafe {
+                let row_ptr = self.ptr.offset(offset);
+                let mut i = 0_isize;
+                while i > i_end {
+                    accum = g(accum, row_ptr.offset(i * stride));
+                    i -= 1;
                 }
             }
+            self.end.set_last_elem(0);
+            self.dim.jump_index_back_unchecked(&mut self.end);
         }
-
         accum
     }
 }
 impl<A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
     fn len(&self) -> usize {
-        match self.index {
-            None => 0,
-            Some(ref ix) => {
-                let (size, gone) = self
-                    .dim
-                    .default_strides()
-                    .slice()
-                    .iter()
-                    .zip(ix.slice().iter().zip(self.end.slice().iter()))
-                    .fold((0, 0), |s, (&stride, (&index, &end))| {
-                        (
-                            s.0 + stride as usize * end as usize,
-                            s.1 + stride as usize * index as usize,
-                        )
-                    });
-                size - gone
-            }
-        }
+        self.elements_left
     }
 }
 
@@ -223,6 +241,7 @@ clone_bounds!(
         strides,
         index,
         end,
+        elements_left,
     }
 );
 
@@ -522,10 +541,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
     type Item = (D::Pattern, &'a A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let index = match self.0.inner.index {
-            None => return None,
-            Some(ref ix) => ix.clone(),
-        };
+        let index = self.0.inner.index.clone();
         match self.0.next() {
             None => None,
             Some(elem) => Some((index.into_pattern(), elem)),
@@ -692,10 +708,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
     type Item = (D::Pattern, &'a mut A);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let index = match self.0.inner.index {
-            None => return None,
-            Some(ref ix) => ix.clone(),
-        };
+        let index = self.0.inner.index.clone();
         match self.0.next() {
             None => None,
             Some(elem) => Some((index.into_pattern(), elem)),

@@ -184,53 +184,44 @@ pub trait Dimension:
     }
 
     #[doc(hidden)]
-    /// returns if `self` is greater than `index`; ndim of both is expected to match
+    /// Iteration -- Use self as size, and return `jump_by`'th index after index; function does not guarantee returning valid index,
+    /// it should be checked before function if iterator to which index belongs, has at least `jump_by` elements
     #[inline]
-    fn gt_index(&self, index: &Self) -> bool {
-        zip(self.slice(), index.slice()).fold(false, |acc, (s, i)| acc | (s > i))
-    }
-    #[doc(hidden)]
-    /// returns if `self` is lesser than `index`; ndim of both is expected to match
-    #[inline]
-    fn lt_index(&self, index: &Self) -> bool {
-        zip(self.slice(), index.slice()).fold(false, |acc, (s, i)| acc | (s < i))
-    }
-    #[doc(hidden)]
-    /// Iteration -- Use self as size, and return index jumping `jump_by` indices from base index
-    /// or None if there are no more.
-    #[inline]
-    fn jump_index_by(&self, index: &Self, upper_bound: &Self, jump_by: usize) -> Option<Self> {
-        let mut index = index.clone();
+    fn jump_index_by_unchecked(&self, index: &mut Self, jump_by: usize) {
         let mut carry = jump_by;
-        let mut done = false;
         for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
             *ix += carry;
             if *ix >= dim {
                 carry = *ix / dim;
                 *ix = *ix - dim * carry; //ix modulo dim
             } else {
-                done = true;
                 break;
             }
         }
-        if done & upper_bound.gt_index(&index) {
-            Some(index)
-        } else {
-            None
+    }
+    #[doc(hidden)]
+    /// Iteration -- Use self as size, and return next index after index; function does not guarantee returning valid index,
+    /// it should be checked before function if iterator to which index belongs, has at least one element
+    #[inline]
+    fn jump_index_unchecked(&self, index: &mut Self) {
+        for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
+            *ix += 1;
+            if *ix == dim {
+                *ix = 0;
+            } else {
+                break;
+            }
         }
     }
     #[doc(hidden)]
-    /// Iteration -- Use self as size, and return index jumping `jump_by` indices from base index in back direction
-    /// or None if there are no more.
+    /// Iteration -- Use self as size, and return `jump_by`'th index before index; function does not guarantee returning valid index,
+    /// it should be checked before function if iterator to which index belongs, has at least `jump_by` elements
     #[inline]
-    fn jump_index_back_by(&self, index: &Self, lower_bound: &Self, jump_by: usize) -> Option<Self> {
-        let mut index = index.clone();
+    fn jump_index_back_by_unchecked(&self, index: &mut Self, jump_by: usize) {
         let mut carry = jump_by;
-        let mut done = false;
         for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
             if *ix >= carry {
                 *ix -= carry;
-                done = true;
                 break;
             } else {
                 let temp = carry - *ix;
@@ -239,10 +230,19 @@ pub trait Dimension:
                 carry += 1;
             }
         }
-        if done & !lower_bound.gt_index(&index) {
-            Some(index)
-        } else {
-            None
+    }
+    #[doc(hidden)]
+    /// Iteration -- Use self as size, and return first index before index; function does not guarantee returning valid index,
+    /// it should be checked before function if iterator to which index belongs, has at least one element
+    #[inline]
+    fn jump_index_back_unchecked(&self, index: &mut Self) {
+        for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
+            if 0 == *ix {
+                *ix = dim - 1;
+            } else {
+                *ix -= 1;
+                break;
+            }
         }
     }
     #[doc(hidden)]
