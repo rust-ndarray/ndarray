@@ -660,14 +660,10 @@ where D: Dimension
             self.strides.clone()
         };
 
-        unsafe {
-            // grow backing storage and update head ptr
-            let offset_from_alloc_to_logical = self.offset_from_alloc_to_logical_ptr().unwrap_or(0);
-            self.ptr = self
-                .data
-                .reserve(len_to_append)
-                .add(offset_from_alloc_to_logical);
+        // grow backing storage and update head ptr
+        self.reserve(axis, array_dim[axis.index()]);
 
+        unsafe {
             // clone elements from view to the array now
             //
             // To be robust for panics and drop the right elements, we want
@@ -750,6 +746,44 @@ where D: Dimension
         debug_assert!(self.pointer_is_inbounds());
 
         Ok(())
+    }
+
+    /// Reserve capacity to grow array along `axis` by at least `additional` elements.
+    ///
+    /// Existing elements of `array` are untouched and the backing storage is grown by
+    /// calling the underlying `reserve` method of the `OwnedRepr`.
+    ///
+    /// This is useful when pushing or appending repeatedly to an array to avoid multiple
+    /// allocations.
+    ///
+    /// ```rust
+    /// use ndarray::{Array3, Axis};
+    /// let mut a = Array3::<i32>::zeros((0,2,4));
+    /// a.reserve(Axis(0), 1000);
+    /// assert!(a.into_raw_vec().capacity() >= 2*4*1000);
+    pub fn reserve(&mut self, axis: Axis, additional: usize)
+    where D: RemoveAxis
+    {
+        if additional == 0 {
+            return;
+        }
+        let self_dim = self.raw_dim();
+        let remaining_shape = self_dim.remove_axis(axis);
+        let len_to_append = remaining_shape.size() * additional;
+
+        unsafe {
+            // grow backing storage and update head ptr
+            let data_to_array_offset = if std::mem::size_of::<A>() != 0 {
+                self.as_ptr().offset_from(self.data.as_ptr())
+            } else {
+                0
+            };
+            debug_assert!(data_to_array_offset >= 0);
+            self.ptr = self
+                .data
+                .reserve(len_to_append)
+                .offset(data_to_array_offset);
+        }
     }
 }
 
