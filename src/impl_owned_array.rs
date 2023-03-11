@@ -251,6 +251,44 @@ impl<A> Array<A, Ix2>
     {
         self.append(Axis(1), column.insert_axis(Axis(1)))
     }
+
+    /// Reserve capacity to grow array by at least `additional` rows.
+    ///
+    /// Existing elements of `array` are untouched and the backing storage is grown by
+    /// calling the underlying `reserve` method of the `OwnedRepr`.
+    ///
+    /// This is useful when pushing or appending repeatedly to an array to avoid multiple
+    /// allocations.
+    ///
+    /// ```rust
+    /// use ndarray::Array2;
+    /// let mut a = Array2::<i32>::zeros((2,4));
+    /// a.reserve_rows(1000);
+    /// assert!(a.into_raw_vec().capacity() >= 4*1002);
+    /// ```
+    pub fn reserve_rows(&mut self, additional: usize)
+    {
+        self.reserve(Axis(0), additional);
+    }
+
+    /// Reserve capacity to grow array by at least `additional` columns.
+    ///
+    /// Existing elements of `array` are untouched and the backing storage is grown by
+    /// calling the underlying `reserve` method of the `OwnedRepr`.
+    ///
+    /// This is useful when pushing or appending repeatedly to an array to avoid multiple
+    /// allocations.
+    ///
+    /// ```rust
+    /// use ndarray::Array2;
+    /// let mut a = Array2::<i32>::zeros((2,4));
+    /// a.reserve_columns(1000);
+    /// assert!(a.into_raw_vec().capacity() >= 2*1002);
+    /// ```
+    pub fn reserve_columns(&mut self, additional: usize)
+    {
+        self.reserve(Axis(1), additional);
+    }
 }
 
 impl<A, D> Array<A, D>
@@ -761,6 +799,7 @@ where D: Dimension
     /// let mut a = Array3::<i32>::zeros((0,2,4));
     /// a.reserve(Axis(0), 1000);
     /// assert!(a.into_raw_vec().capacity() >= 2*4*1000);
+    /// ```
     pub fn reserve(&mut self, axis: Axis, additional: usize)
     where D: RemoveAxis
     {
