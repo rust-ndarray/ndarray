@@ -764,9 +764,6 @@ where D: Dimension
     pub fn reserve(&mut self, axis: Axis, additional: usize)
     where D: RemoveAxis
     {
-        if additional == 0 {
-            return;
-        }
         let self_dim = self.raw_dim();
         let remaining_shape = self_dim.remove_axis(axis);
         let len_to_append = remaining_shape.size() * additional;
