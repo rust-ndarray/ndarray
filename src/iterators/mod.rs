@@ -134,28 +134,39 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D> {
         let ndim = self.dim.ndim();
         debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        while self.elements_left >= 1 {
-            let stride = self.strides.last_elem() as isize;
-            let elem_index = self.index.last_elem();
-            let len = self.dim.last_elem();
-            let offset = D::stride_offset(&self.index, &self.strides);
-            let mut i_end = len - elem_index;
-            if self.elements_left >= i_end {
-                self.elements_left -= i_end;
-            } else {
-                i_end = self.elements_left;
-                self.elements_left = 0;
-            }
-            unsafe {
-                let row_ptr = self.ptr.offset(offset);
+        if self.elements_left >= 1 {
+            loop {
+                let stride = self.strides.last_elem() as isize;
+                let elem_index = self.index.last_elem();
+                let len = self.dim.last_elem();
+                let offset = D::stride_offset(&self.index, &self.strides);
+                let row_ptr = unsafe { self.ptr.offset(offset) };
                 let mut i = 0;
-                while i < i_end {
-                    accum = g(accum, row_ptr.offset(i as isize * stride));
-                    i += 1;
+                let mut i_end = len - elem_index;
+                if self.elements_left > i_end {
+                    self.elements_left -= i_end;
+                    while i < i_end {
+                        unsafe {
+                            accum = g(accum, row_ptr.offset(i as isize * stride));
+                        }
+                        i += 1;
+                    }
+                    self.index.set_last_elem(len - 1);
+                    self.dim.jump_index_unchecked(&mut self.index);
+                } else {
+                    i_end = self.elements_left;
+                    self.elements_left = 0;
+                    while i < i_end {
+                        unsafe {
+                            accum = g(accum, row_ptr.offset(i as isize * stride));
+                        }
+                        i += 1;
+                    }
+                    self.index.set_last_elem(len - 1);
+                    self.dim.jump_index_unchecked(&mut self.index);
+                    break;
                 }
             }
-            self.index.set_last_elem(len - 1);
-            self.dim.jump_index_unchecked(&mut self.index);
         }
         accum
     }
@@ -199,28 +210,39 @@ where
         let ndim = self.dim.ndim();
         debug_assert_ne!(ndim, 0);
         let mut accum = init;
-        while self.elements_left >= 1 {
+        if self.elements_left >= 1 {
             let stride = self.strides.last_elem() as isize;
-            let elem_index = self.end.last_elem();
-            let offset = D::stride_offset(&self.end, &self.strides);
-            let i_end;
-            if self.elements_left >= elem_index {
-                self.elements_left -= elem_index;
-                i_end = -(elem_index as isize);
-            } else {
-                i_end = -(self.elements_left as isize);
-                self.elements_left = 0;
-            }
-            unsafe {
-                let row_ptr = self.ptr.offset(offset);
+            loop {
+                let elem_index = self.end.last_elem();
+                let offset = D::stride_offset(&self.end, &self.strides);
+                let row_ptr = unsafe { self.ptr.offset(offset) };
+                let i_end;
                 let mut i = 0_isize;
-                while i > i_end {
-                    accum = g(accum, row_ptr.offset(i * stride));
-                    i -= 1;
+                if self.elements_left > elem_index {
+                    self.elements_left -= elem_index;
+                    i_end = -(elem_index as isize);
+                    while i > i_end {
+                        unsafe {
+                            accum = g(accum, row_ptr.offset(i * stride));
+                        }
+                        i -= 1;
+                    }
+                    self.end.set_last_elem(0);
+                    self.dim.jump_index_back_unchecked(&mut self.end);
+                } else {
+                    i_end = -(self.elements_left as isize);
+                    self.elements_left = 0;
+                    while i > i_end {
+                        unsafe {
+                            accum = g(accum, row_ptr.offset(i * stride));
+                        }
+                        i -= 1;
+                    }
+                    self.end.set_last_elem(0);
+                    self.dim.jump_index_back_unchecked(&mut self.end);
+                    break;
                 }
             }
-            self.end.set_last_elem(0);
-            self.dim.jump_index_back_unchecked(&mut self.end);
         }
         accum
     }
@@ -547,7 +569,14 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
             Some(elem) => Some((index.into_pattern(), elem)),
         }
     }
-
+    fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+    where
+        G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        let index = self.0.inner.index.clone().into_pattern();
+        self.0
+            .fold(init, move |acc, ptr| g(acc, (index.clone(), ptr)))
+    }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
     }
@@ -715,6 +744,15 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D> {
         }
     }
 
+    fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+    where
+        G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        let index = self.0.inner.index.clone().into_pattern();
+        self.0
+            .fold(init, move |acc, ptr| g(acc, (index.clone(), ptr)))
+    }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
     }
@@ -785,6 +823,18 @@ where
         })
     }
 
+    fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+    where
+        G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        let inner_len = Ix1(self.inner_len.clone());
+        let inner_stride = Ix1(self.inner_stride.clone() as Ix);
+        unsafe {
+            self.iter.fold(init, move |acc, ptr| {
+                g(acc, ArrayView::new_(ptr, inner_len, inner_stride))
+            })
+        }
+    }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -796,6 +846,18 @@ where
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter.next_back().map(|ptr| unsafe { self.as_ref(ptr) })
+    }
+    fn rfold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+    where
+        G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        let inner_len = Ix1(self.inner_len.clone());
+        let inner_stride = Ix1(self.inner_stride.clone() as Ix);
+        unsafe {
+            self.iter.rfold(init, move |acc, ptr| {
+                g(acc, ArrayView::new_(ptr, inner_len, inner_stride))
+            })
+        }
     }
 }
 impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
@@ -853,7 +915,18 @@ where
             ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
         })
     }
-
+    fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+    where
+        G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        let inner_len = Ix1(self.inner_len.clone());
+        let inner_stride = Ix1(self.inner_stride.clone() as Ix);
+        unsafe {
+            self.iter.fold(init, move |acc, ptr| {
+                g(acc, ArrayViewMut::new_(ptr, inner_len, inner_stride))
+            })
+        }
+    }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -865,6 +938,18 @@ where
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter.next_back().map(|ptr| unsafe { self.as_ref(ptr) })
+    }
+    fn rfold<Acc, G>(self, init: Acc, mut g: G) -> Acc
+    where
+        G: FnMut(Acc, Self::Item) -> Acc,
+    {
+        let inner_len = Ix1(self.inner_len.clone());
+        let inner_stride = Ix1(self.inner_stride.clone() as Ix);
+        unsafe {
+            self.iter.rfold(init, move |acc, ptr| {
+                g(acc, ArrayViewMut::new_(ptr, inner_len, inner_stride))
+            })
+        }
     }
 }
 impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
@@ -1594,13 +1679,13 @@ where
     let (size, _) = iter.size_hint();
     let mut result = Vec::with_capacity(size);
     let mut out_ptr = result.as_mut_ptr();
-    let mut len = 0;
     iter.fold((), |(), elt| unsafe {
         ptr::write(out_ptr, f(elt));
-        len += 1;
-        result.set_len(len);
         out_ptr = out_ptr.offset(1);
     });
+    let len = unsafe { out_ptr.offset_from(result.as_ptr()) };
+    debug_assert!(len >= 0);
+    unsafe { result.set_len(len as usize) };
     debug_assert_eq!(size, result.len());
     result
 }

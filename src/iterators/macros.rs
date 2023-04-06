@@ -142,6 +142,8 @@ macro_rules! impl_iterator {
         fn item(&mut $self_:ident, $elt:pat) {
             $refexpr:expr
         }
+        fold_pre{$($fold_pre:stmt)*}
+        fold_cast[$fold_cast:expr]
     }) => {
          expand_if!(@nonempty [$($cloneparm)*]
 
@@ -164,6 +166,14 @@ macro_rules! impl_iterator {
                 $self_.$base.next().map(|$elt| {
                     $refexpr
                 })
+            }
+
+            fn fold<Acc, G>( $self_, init: Acc, mut g: G) -> Acc
+            where
+                G: FnMut(Acc, Self::Item) -> Acc,
+            {
+                $($fold_pre)*
+                $self_.$base.fold(init,move |acc, ptr| g(acc, $fold_cast(ptr)))
             }
 
             fn size_hint(&self) -> (usize, Option<usize>) {

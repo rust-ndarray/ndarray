@@ -113,5 +113,13 @@ impl_iterator! {
                     self.strides.clone())
             }
         }
+        fold_pre{
+            let window=self.window.clone()
+            let strides=self.strides.clone()}
+        fold_cast[(|elt|{
+            unsafe {
+              ArrayView::new_(elt,window.clone(),strides.clone())
+            }
+          })]
     }
 }

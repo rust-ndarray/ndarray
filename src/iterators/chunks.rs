@@ -195,6 +195,14 @@ impl_iterator! {
                     self.inner_strides.clone())
             }
         }
+        fold_pre{
+            let chunk=self.chunk.clone()
+            let strides=self.inner_strides.clone()}
+        fold_cast[(|elt|{
+            unsafe {
+              ArrayView::new_(elt,chunk.clone(),strides.clone())
+            }
+          })]
     }
 }
 
@@ -217,6 +225,14 @@ impl_iterator! {
                     self.inner_strides.clone())
             }
         }
+        fold_pre{
+            let chunk=self.chunk.clone()
+            let strides=self.inner_strides.clone()}
+        fold_cast[(|elt|{
+            unsafe {
+              ArrayViewMut::new_(elt,chunk.clone(),strides.clone())
+            }
+          })]
     }
 }
 
