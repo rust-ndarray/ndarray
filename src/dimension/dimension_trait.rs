@@ -674,13 +674,13 @@ impl Dimension for Dim<[Ix; 2]> {
     fn jump_index_by_unchecked(&self, index: &mut Self, jump_by: usize) {
         let index = index.ixm();
         let max = self.ix();
-        index[1] += jump_by;
+        index[1] = index[1].wrapping_add( jump_by);
         if index[1] >= max[1] {
             index[1] -= jump_by;
         } else {
             let carry = index[1] / max[1];
             index[1] = index[1] - max[1] * carry;
-            index[0] += carry;
+            index[0] = index[0].wrapping_add( carry);
         }
     }
     #[doc(hidden)]
@@ -690,10 +690,10 @@ impl Dimension for Dim<[Ix; 2]> {
     fn jump_index_unchecked(&self, index: &mut Self) {
         let index = index.ixm();
         let max = self.ix();
-        index[1] += 1;
+        index[1] = index[1].wrapping_add( 1);
         if max[1] == index[1] {
             index[1] = 0;
-            index[0] += 1;
+            index[0] = index[0].wrapping_add( 1);
         }
     }
     #[doc(hidden)]
@@ -710,7 +710,7 @@ impl Dimension for Dim<[Ix; 2]> {
             let mut carry = temp / max[1];
             index[1] = max[1] - (temp - max[1] * carry);
             carry += 1;
-            index[0] -= carry;
+            index[0] =index[0].wrapping_sub( carry);
         }
     }
     #[doc(hidden)]
@@ -722,7 +722,7 @@ impl Dimension for Dim<[Ix; 2]> {
         let max = self.ix();
         if 0 == index[1] {
             index[1] = max[1] - 1;
-            index[0] -= 1;
+            index[0] = index[0].wrapping_sub(1);
         } else {
             index[1] -= 1;
         }
@@ -898,19 +898,19 @@ impl Dimension for Dim<[Ix; 3]> {
     fn jump_index_by_unchecked(&self, index: &mut Self, jump_by: usize) {
         let index = index.ixm();
         let max = self.ix();
-        index[2] += jump_by;
+        index[2] = index[2].wrapping_add( jump_by);
         if index[2] >= max[2] {
             index[2] -= jump_by;
         } else {
             let carry = index[2] / max[2];
             index[2] = index[2] - max[2] * carry;
-            index[1] += carry;
+            index[1] = index[1].wrapping_add( carry);
             if index[1] >= max[1] {
                 index[1] -= carry;
             } else {
                 let carry = index[1] / max[1];
                 index[1] = index[1] - max[1] * carry;
-                index[0] += carry;
+                index[0] = index[0].wrapping_add( carry);
             }
         }
     }
@@ -921,13 +921,13 @@ impl Dimension for Dim<[Ix; 3]> {
     fn jump_index_unchecked(&self, index: &mut Self) {
         let index = index.ixm();
         let max = self.ix();
-        index[2] += 1;
+        index[2]= index[2].wrapping_add( 1);
         if max[2] == index[2] {
             index[2] = 0;
-            index[1] += 1;
+            index[1] = index[1].wrapping_add( 1);
             if max[1] == index[1] {
                 index[1] = 0;
-                index[0] += 1;
+                index[0] = index[0].wrapping_add( 1);
             }
         }
     }
@@ -939,20 +939,20 @@ impl Dimension for Dim<[Ix; 3]> {
         let index = index.ixm();
         let max = self.ix();
         if index[2] >= jump_by {
-            index[2] -= jump_by;
+            index[2] = index[2].wrapping_sub(jump_by);
         } else {
             let temp = jump_by - index[2];
             let mut carry = temp / max[2];
             index[2] = max[2] - (temp - max[2] * carry);
             carry += 1;
             if index[1] >= carry {
-                index[1] -= carry;
+                index[1] = index[1].wrapping_sub(carry);
             } else {
                 let temp = carry - index[1];
                 carry = temp / max[1];
                 index[1] = max[1] - (temp - max[1] * carry);
                 carry += 1;
-                index[0] -= carry;
+                index[0] = index[0].wrapping_sub(carry);
             }
         }
     }
@@ -967,7 +967,7 @@ impl Dimension for Dim<[Ix; 3]> {
             index[2] = max[2] - 1;
             if 0 == index[1] {
                 index[1] = max[1] - 1;
-                index[0] -= 1;
+                index[0] = index[0].wrapping_sub(1);
             } else {
                 index[1] -= 1;
             }

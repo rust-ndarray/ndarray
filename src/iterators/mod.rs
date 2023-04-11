@@ -1683,9 +1683,7 @@ where
         ptr::write(out_ptr, f(elt));
         out_ptr = out_ptr.offset(1);
     });
-    let len = unsafe { out_ptr.offset_from(result.as_ptr()) };
-    debug_assert!(len >= 0);
-    unsafe { result.set_len(len as usize) };
+    unsafe { result.set_len(size) };
     debug_assert_eq!(size, result.len());
     result
 }
