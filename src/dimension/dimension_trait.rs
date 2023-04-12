@@ -688,6 +688,7 @@ impl Dimension for Dim<[Ix; 2]> {
     fn jump_index_unchecked(&self, index: &mut Self) {
         let index = index.ixm();
         let max = self.ix();
+        index[1] = index[1].wrapping_add( 1);
         if max[1] == index[1] {
             index[1] = 0;
             index[0] = index[0].wrapping_add(1);
