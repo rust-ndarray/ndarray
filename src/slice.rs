@@ -867,12 +867,17 @@ macro_rules! s(
         )
     };
     ($($t:tt)*) => {
-        $crate::s![@parse
-              ::core::marker::PhantomData::<$crate::Ix0>,
-              ::core::marker::PhantomData::<$crate::Ix0>,
-              []
-              $($t)*
-        ]
+        {
+            #[allow(clippy::reversed_empty_ranges)]
+            {
+                $crate::s![@parse
+                    ::core::marker::PhantomData::<$crate::Ix0>,
+                    ::core::marker::PhantomData::<$crate::Ix0>,
+                    []
+                    $($t)*
+                ]
+            }
+        }
     };
 );
 
