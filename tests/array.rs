@@ -995,14 +995,40 @@ fn map1() {
 fn mapv_into_any_same_type() {
     let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
     let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
-    assert_eq!(a.mapv_into_any(|a| a + 1.), a_plus_one);
+    let b: Array<_, _> = a.mapv_into_any(|a| a + 1.);
+    assert_eq!(b, a_plus_one);
 }
 
 #[test]
 fn mapv_into_any_diff_types() {
     let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
     let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
-    assert_eq!(a.mapv_into_any(|a| a.round() as i32 % 2 == 0), a_even);
+    let b: Array<_, _> = a.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+#[test]
+fn mapv_into_any_arcarray_same_type() {
+    let a: ArcArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into_shared();
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    let b: ArcArray<_, _> = a.mapv_into_any(|a| a + 1.);
+    assert_eq!(b, a_plus_one);
+}
+
+#[test]
+fn mapv_into_any_arcarray_diff_types() {
+    let a: ArcArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into_shared();
+    let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
+    let b: ArcArray<_, _> = a.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+#[test]
+fn mapv_into_any_diff_outer_types() {
+    let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    let b: ArcArray<_, _> = a.mapv_into_any(|a| a + 1.);
+    assert_eq!(b, a_plus_one);
 }
 
 #[test]
