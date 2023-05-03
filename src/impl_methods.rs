@@ -17,6 +17,7 @@ use std::mem::{size_of, ManuallyDrop};
 use crate::imp_prelude::*;
 
 use crate::argument_traits::AssignElem;
+use crate::data_traits::DataMappable;
 use crate::dimension;
 use crate::dimension::broadcast::co_broadcast;
 use crate::dimension::reshape_dim;
@@ -2803,48 +2804,6 @@ where
         self
     }
 
-    /// Consume the array, call `f` by **v**alue on each element, and return an
-    /// owned array with the new values. Works for **any** `F: FnMut(A)->B`.
-    ///
-    /// If `A` and `B` are the same type then the map is performed by delegating
-    /// to [`mapv_into`] and then converting into an owned array. This avoids
-    /// unnecessary memory allocations in [`mapv`].
-    ///
-    /// If `A` and `B` are different types then a new array is allocated and the
-    /// map is performed as in [`mapv`].
-    ///
-    /// Elements are visited in arbitrary order.
-    ///
-    /// [`mapv_into`]: ArrayBase::mapv_into
-    /// [`mapv`]: ArrayBase::mapv
-    pub fn mapv_into_any<B, F>(self, mut f: F) -> Array<B, D>
-    where
-        S: DataMut,
-        F: FnMut(A) -> B,
-        A: Clone + 'static,
-        B: 'static,
-    {
-        if core::any::TypeId::of::<A>() == core::any::TypeId::of::<B>() {
-            // A and B are the same type.
-            // Wrap f in a closure of type FnMut(A) -> A .
-            let f = |a| {
-                let b = f(a);
-                // Safe because A and B are the same type.
-                unsafe { unlimited_transmute::<B, A>(b) }
-            };
-            // Delegate to mapv_into() using the wrapped closure.
-            // Convert output to a uniquely owned array of type Array<A, D>.
-            let output = self.mapv_into(f).into_owned();
-            // Change the return type from Array<A, D> to Array<B, D>.
-            // Again, safe because A and B are the same type.
-            unsafe { unlimited_transmute::<Array<A, D>, Array<B, D>>(output) }
-        } else {
-            // A and B are not the same type.
-            // Fallback to mapv().
-            self.mapv(f)
-        }
-    }
-
     /// Modify the array in place by calling `f` by mutable reference on each element.
     ///
     /// Elements are visited in arbitrary order.
@@ -3056,6 +3015,111 @@ where
             //    cannot occur.
             f(&*prev, &mut *curr)
         });
+    }
+}
+
+/// # Additional Mapping Methods
+impl<'a, A, S, D> ArrayBase<S, D>
+where
+    D: Dimension,
+    // Need 'static lifetime bounds for TypeId to work.
+    // mapv() requires that A be Clone.
+    A: Clone + 'a + 'static,
+    // Output is same memory representation as input, substituting B for A.
+    S: Data<Elem = A> + DataMappable<'a>,
+{
+    /// Consume the array, call `f` by **v**alue on each element, and return an
+    /// owned array with the new values. Works for **any** `F: FnMut(A)->B`.
+    ///
+    /// If `A` and `B` are the same type then the map is performed by delegating
+    /// to [`mapv_into`](`ArrayBase::mapv_into`) and then converting into an
+    /// owned array. This avoids unnecessary memory allocations in
+    /// [`mapv`](`ArrayBase::mapv`).
+    ///
+    /// If `A` and `B` are different types then a new array is allocated and the
+    /// map is performed as in [`mapv`](`ArrayBase::mapv`).
+    ///
+    /// Elements are visited in arbitrary order.
+    /// 
+    /// Example:
+    /// 
+    /// ```rust
+    /// # use ndarray::{array, Array};
+    /// let a: Array<f32, _> = array![[1., 2., 3.]];
+    /// let b = a.clone();
+    /// // Same type, no new memory allocation.
+    /// let a_plus_one = a.mapv_into_any(|a| a + 1.);
+    /// // Different types, allocates new memory.
+    /// let rounded = b.mapv_into_any(|a| a.round() as i32);
+    /// ```
+    /// 
+    /// The return data representation/type depends on the input type and is the
+    /// same as the input type in most cases. See [`DataMappable`] for details.
+    /// 
+    /// - [`OwnedRepr`](`crate::OwnedRepr`)/[`Array`] -> [`OwnedRepr`](`crate::OwnedRepr`)/[`Array`]
+    /// - [`OwnedArcRepr`](`crate::OwnedArcRepr`)/[`ArcArray`] -> [`OwnedArcRepr`](`crate::OwnedArcRepr`)/[`ArcArray`]
+    /// - [`CowRepr`](`crate::CowRepr`)/[`CowArray`] -> [`CowRepr`](`crate::CowRepr`)/[`CowArray`]
+    /// - [`ViewRepr`](`crate::ViewRepr`)/[`ArrayView`] or [`ArrayViewMut`] -> [`OwnedRepr`](`crate::OwnedRepr`)/[`Array`]
+    /// 
+    /// Mapping from `A` to a different type `B` will always require new memory
+    /// to be allocated. Mapping when `A` and `B` are the same type may not need
+    /// a new memory allocation depending on the input data representation/type.
+    /// 
+    /// - [`OwnedRepr`](`crate::OwnedRepr`)/[`Array`]: No new memory allocation.
+    /// - [`OwnedArcRepr`](`crate::OwnedArcRepr`)/[`ArcArray`]: No new memory allocated if data is uniquely owned.
+    /// - [`CowRepr`](`crate::CowRepr`)/[`CowArray`]: No new memory allocated if data is uniquely owned.
+    /// - [`ViewRepr`](`crate::ViewRepr`)/[`ArrayView`] or [`ArrayViewMut`]: Always requires new memory allocation.
+    ///    Consider using [`map_inplace`](`ArrayBase::map_inplace`) instead.
+    /// 
+    /// Example:
+    /// 
+    /// ```rust
+    /// # use ndarray::{array, ArcArray};
+    /// // Uniquely owned data, no new memory allocation.
+    /// let a: ArcArray<f32, _> = array![[1., 2., 3.]].into_shared();
+    /// let a_plus_one = a.mapv_into_any(|a| a + 1.);
+    /// // Shared data, requires new memory allocation.
+    /// let a: ArcArray<f32, _> = array![[1., 2., 3.]].into_shared();
+    /// let b = a.clone(); // `a` is shared here
+    /// let a_plus_one = a.mapv_into_any(|a| a + 1.); // new allocation
+    /// ```
+    /// 
+    /// See also:
+    /// 
+    /// - [`map_inplace`](`ArrayBase::map_inplace`)
+    /// - [`mapv_into`](`ArrayBase::mapv_into`)
+    /// - [`mapv`](`ArrayBase::mapv`)
+    pub fn mapv_into_any<B, F>(self, mut f: F) -> ArrayBase<<S as DataMappable<'a>>::Subst<B>, D>
+    where
+        // Need 'static lifetime bounds for TypeId to work.
+        B: 'static,
+        // Mapping function maps from A to B.
+        F: FnMut(A) -> B,
+    {
+        if core::any::TypeId::of::<A>() == core::any::TypeId::of::<B>() {
+            // A and B are the same type.
+            // Wrap f in a closure of type FnMut(A) -> A .
+            let f = |a| {
+                let b = f(a);
+                // Safe because A and B are the same type.
+                unsafe { unlimited_transmute::<B, A>(b) }
+            };
+            // Convert to a uniquely-owned data representation: Array<A, D>
+            // This will require cloning the data if it is not uniquely owned.
+            let input = self.into_owned();
+            // Delegate to mapv_into() to map from element type A to type A.
+            let output = input.mapv_into(f);
+            // Convert to the output data representation, but still with data A.
+            let output = <S as DataMappable>::from_owned::<A,D>(output);
+            // Transmute to the output representation to data B.
+            // Safe because A and B are the same type,
+            // and we are not changing the data representation.
+            unsafe { unlimited_transmute::<ArrayBase<<S as DataMappable>::Subst<A>, D>, ArrayBase<<S as DataMappable>::Subst<B>, D>>(output) }
+        } else {
+            // A and B are not the same type.
+            // Fallback to mapv().
+            <S as DataMappable>::from_owned::<B,D>(self.mapv(f))
+        }
     }
 }
 
