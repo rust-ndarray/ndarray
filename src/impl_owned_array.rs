@@ -828,6 +828,9 @@ where D: Dimension
         debug_assert!(axis.index() < self.ndim());
         let self_dim = self.raw_dim();
         let remaining_shape = self_dim.remove_axis(axis);
+
+        // Make sure added capacity doesn't overflow
+        debug_assert!(remaining_shape.size().checked_mul(additional).is_some());
         let len_to_append = remaining_shape.size() * additional;
 
         // Make sure new capacity is still in bounds
