@@ -11,7 +11,7 @@ fn push_reserve(bench: &mut Bencher)
     let ones: Array<f32, _> = array![1f32];
     bench.iter(|| {
         let mut a: Array<f32, Ix1> = array![];
-        a.reserve(Axis(0), 100);
+        a.reserve(Axis(0), 100).unwrap();
         for _ in 0..100 {
             a.append(Axis(0), ones.view()).unwrap();
         }
