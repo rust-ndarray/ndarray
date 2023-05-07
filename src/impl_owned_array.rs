@@ -260,6 +260,8 @@ impl<A> Array<A, Ix2>
     /// This is useful when pushing or appending repeatedly to an array to avoid multiple
     /// allocations.
     ///
+    /// ***Panics*** if the new capacity would exceed `usize::MAX`.
+    ///
     /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
     /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
     /// `additional` exceeds `isize::MAX`.
@@ -282,6 +284,8 @@ impl<A> Array<A, Ix2>
     ///
     /// This is useful when pushing or appending repeatedly to an array to avoid multiple
     /// allocations.
+    ///
+    /// ***Panics*** if the new capacity would exceed `usize::MAX`.
     ///
     /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
     /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
@@ -805,7 +809,7 @@ where D: Dimension
     /// This is useful when pushing or appending repeatedly to an array to avoid multiple
     /// allocations.
     ///
-    /// ***Panics*** if the axis is out of bounds.
+    /// ***Panics*** if the axis is out of bounds or if the new capacity would exceed `usize::MAX`.
     ///
     /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
     /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
@@ -830,7 +834,9 @@ where D: Dimension
         let mut res_dim = self_dim;
         res_dim[axis.index()] += additional;
         let new_len = dimension::size_of_shape_checked(&res_dim)?;
-        debug_assert_eq!(self.len() + len_to_append, new_len);
+
+        // Check whether len_to_append would cause an overflow
+        debug_assert_eq!(self.len().checked_add(len_to_append).unwrap(), new_len);
 
         unsafe {
             // grow backing storage and update head ptr
