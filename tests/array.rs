@@ -9,6 +9,7 @@
 
 use approx::assert_relative_eq;
 use defmac::defmac;
+#[allow(deprecated)]
 use itertools::{zip, Itertools};
 use ndarray::prelude::*;
 use ndarray::{arr3, rcarr2};
@@ -499,12 +500,14 @@ fn test_index() {
         *elt = i;
     }
 
+    #[allow(deprecated)]
     for ((i, j), a) in zip(indices((2, 3)), &A) {
         assert_eq!(*a, A[[i, j]]);
     }
 
     let vi = A.slice(s![1.., ..;2]);
     let mut it = vi.iter();
+    #[allow(deprecated)]
     for ((i, j), x) in zip(indices((1, 2)), &mut it) {
         assert_eq!(*x, vi[[i, j]]);
     }
