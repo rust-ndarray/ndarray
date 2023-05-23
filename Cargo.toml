@@ -73,7 +73,6 @@ rayon = ["rayon_", "std"]
 
 matrixmultiply-threading = ["matrixmultiply/threading"]
 
-[profile.release]
 [profile.bench]
 debug = true
 
