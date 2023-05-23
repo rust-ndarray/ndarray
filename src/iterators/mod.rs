@@ -114,7 +114,7 @@ impl<A, D: Dimension> ExactSizeIterator for Baseiter<A, D> {
                     .slice()
                     .iter()
                     .zip(ix.slice().iter())
-                    .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                    .fold(0, |s, (&a, &b)| s + a * b);
                 self.dim.size() - gone
             }
         }

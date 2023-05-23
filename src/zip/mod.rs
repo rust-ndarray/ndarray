@@ -92,6 +92,7 @@ where
 {
     type Output = ArrayView<'a, A, E::Dim>;
     fn broadcast_unwrap(self, shape: E) -> Self::Output {
+        #[allow(clippy::needless_borrow)]
         let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
         unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
     }

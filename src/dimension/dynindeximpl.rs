@@ -96,7 +96,7 @@ impl<T: PartialEq> PartialEq for IxDynRepr<T> {
         match (self, rhs) {
             (&IxDynRepr::Inline(slen, ref sarr), &IxDynRepr::Inline(rlen, ref rarr)) => {
                 slen == rlen
-                    && (0..CAP as usize)
+                    && (0..CAP)
                         .filter(|&i| i < slen as usize)
                         .all(|i| sarr[i] == rarr[i])
             }

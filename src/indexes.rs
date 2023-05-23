@@ -75,7 +75,7 @@ where
                     .slice()
                     .iter()
                     .zip(ix.slice().iter())
-                    .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+                    .fold(0, |s, (&a, &b)| s + a * b);
                 self.dim.size() - gone
             }
         };
@@ -286,7 +286,7 @@ where
             .slice()
             .iter()
             .zip(self.index.slice().iter())
-            .fold(0, |s, (&a, &b)| s + a as usize * b as usize);
+            .fold(0, |s, (&a, &b)| s + a * b);
         let l = self.dim.size() - gone;
         (l, Some(l))
     }
