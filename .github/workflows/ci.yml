@@ -24,12 +24,11 @@ jobs:
           - 1.51.0  # MSRV
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
+      - uses: Swatinem/rust-cache@v2
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
@@ -45,20 +44,14 @@ jobs:
             target: i686-unknown-linux-gnu
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
-      - name: Cache cargo plugins
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/bin/
-          key: ${{ runner.os }}-cargo-plugins
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
       - name: Install cross
-        run: cargo install cross || true
+        run: cargo install cross
       - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
 
   clippy:
@@ -68,12 +61,10 @@ jobs:
         rust:
           - beta
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
           components: clippy
+      - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --features docs
-
