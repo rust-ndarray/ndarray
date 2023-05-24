@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 approx = "0.4"
 ndarray = { path = "..", features = ["approx"] }
-ndarray-rand = { path = "../ndarray-rand/" }
+ndarray-rand = { path = "../ndarray-rand" }
 rand_distr = "0.4"
 
 blas-src = { optional = true, version = "0.8", default-features = false, features = ["openblas"] }
@@ -27,8 +27,3 @@ test = false
 
 [features]
 test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
-
-[profile.dev]
-opt-level = 2
-[profile.test]
-opt-level = 2

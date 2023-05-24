@@ -73,13 +73,15 @@ rayon = ["rayon_", "std"]
 
 matrixmultiply-threading = ["matrixmultiply/threading"]
 
-[profile.release]
 [profile.bench]
 debug = true
+[profile.dev.package.numeric-tests]
+opt-level = 2
+[profile.test.package.numeric-tests]
+opt-level = 2
 
 [workspace]
-members = ["ndarray-rand", "xtest-serialization", "xtest-blas"]
-exclude = ["xtest-numeric"]
+members = ["ndarray-rand", "xtest-serialization", "xtest-blas", "xtest-numeric"]
 
 [package.metadata.release]
 no-dev-version = true

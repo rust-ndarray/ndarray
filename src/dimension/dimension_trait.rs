@@ -83,7 +83,7 @@ pub trait Dimension:
 
     /// Compute the size of the dimension (number of elements)
     fn size(&self) -> usize {
-        self.slice().iter().fold(1, |s, &a| s * a as usize)
+        self.slice().iter().product()
     }
 
     /// Compute the size while checking for overflow.
@@ -603,7 +603,7 @@ impl Dimension for Dim<[Ix; 2]> {
     fn size_checked(&self) -> Option<usize> {
         let m = get!(self, 0);
         let n = get!(self, 1);
-        (m as usize).checked_mul(n as usize)
+        m.checked_mul(n)
     }
 
     #[inline]
@@ -728,7 +728,7 @@ impl Dimension for Dim<[Ix; 3]> {
         let m = get!(self, 0);
         let n = get!(self, 1);
         let o = get!(self, 2);
-        m as usize * n as usize * o as usize
+        m * n * o
     }
 
     #[inline]
