@@ -14,10 +14,6 @@ if [ "$CHANNEL" = "1.51.0" ]; then
     cargo update --package once_cell --precise 1.14.0
     cargo update --package openblas-src --precise 0.10.5
     cargo update --package openblas-build --precise 0.10.5
-
-    cargo update --manifest-path=xtest-numeric/Cargo.toml --package thiserror --precise 1.0.39
-    cargo update --manifest-path=xtest-numeric/Cargo.toml --package openblas-src --precise 0.10.5
-    cargo update --manifest-path=xtest-numeric/Cargo.toml --package openblas-build --precise 0.10.5
 fi
 
 cargo build --verbose --no-default-features
