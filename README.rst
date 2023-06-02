@@ -83,6 +83,14 @@ your `Cargo.toml`.
   - Enables parallel iterators, parallelized methods and ``par_azip!``.
   - Implies std
 
+- ``approx``
+
+  - Implementations of traits from version 0.4 of the [`approx`] crate.
+
+- ``approx-0_5``
+
+  - Implementations of traits from version 0.5 of the [`approx`] crate.
+
 - ``blas``
 
   - Enable transparent BLAS support for matrix multiplication.
