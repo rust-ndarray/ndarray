@@ -20,32 +20,15 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         E: IntoDimension<Dim = D>,
     {
         let window = window_size.into_dimension();
-        ndassert!(
-            a.ndim() == window.ndim(),
-            concat!(
-                "Window dimension {} does not match array dimension {} ",
-                "(with array of shape {:?})"
-            ),
-            window.ndim(),
-            a.ndim(),
-            a.shape()
-        );
-        let mut size = a.dim;
-        for (sz, &ws) in size.slice_mut().iter_mut().zip(window.slice()) {
-            assert_ne!(ws, 0, "window-size must not be zero!");
-            // cannot use std::cmp::max(0, ..) since arithmetic underflow panics
-            *sz = if *sz < ws { 0 } else { *sz - ws + 1 };
+        let ndim = window.ndim();
+
+        let mut unit_stride = D::zeros(ndim);
+        let stride_slice = unit_stride.slice_mut();
+        for s in stride_slice.iter_mut() {
+            *s = 1;
         }
 
-        let window_strides = a.strides.clone();
-
-        unsafe {
-            Windows {
-                base: ArrayView::new(a.ptr, size, a.strides),
-                window,
-                strides: window_strides,
-            }
-        }
+        Windows::new_with_stride(a, window, unit_stride)
     }
 
     pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, strides: E) -> Self
