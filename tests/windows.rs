@@ -100,7 +100,7 @@ fn windows_iterator_3d() {
 #[should_panic]
 fn windows_iterator_stride_axis_zero() {
     let a = Array::from_iter(10..37).into_shape((3, 3, 3)).unwrap();
-    a.windows_with_stride(Dim((2, 2, 2)), Dim((0,2,2)));
+    a.windows_with_stride((2, 2, 2), (0, 2, 2));
 }
 
 /// Test that verifies that only first window is yielded when stride is oversized on every axis.
@@ -110,7 +110,7 @@ fn windows_iterator_only_one_valid_window_for_oversized_stride() {
     let mut iter = a.windows_with_stride((2, 2, 2), (8, 8, 8)).into_iter(); // (4,3,2) doesn't fit into (3,3,3) => oversized!
     itertools::assert_equal(
         iter.next(),
-        Some(arr3(&[[[10, 11], [15, 16]],[[35, 36], [40, 41]]]))
+        Some(arr3(&[[[10, 11], [15, 16]], [[35, 36], [40, 41]]])),
     );
 }
 
@@ -119,7 +119,7 @@ fn windows_iterator_only_one_valid_window_for_oversized_stride() {
 fn windows_iterator_1d_with_stride() {
     let a = Array::from_iter(10..20).into_shape(10).unwrap();
     itertools::assert_equal(
-        a.windows_with_stride(Dim(4), Dim(2)),
+        a.windows_with_stride(4, 2),
         vec![
             arr1(&[10, 11, 12, 13]),
             arr1(&[12, 13, 14, 15]),
@@ -134,7 +134,7 @@ fn windows_iterator_1d_with_stride() {
 fn windows_iterator_2d_with_stride() {
     let a = Array::from_iter(10..30).into_shape((5, 4)).unwrap();
     itertools::assert_equal(
-        a.windows_with_stride(Dim((3, 2)), Dim((2,1))),
+        a.windows_with_stride((3, 2), (2, 1)),
         vec![
             arr2(&[[10, 11], [14, 15], [18, 19]]),
             arr2(&[[11, 12], [15, 16], [19, 20]]),
@@ -151,7 +151,7 @@ fn windows_iterator_2d_with_stride() {
 fn windows_iterator_3d_with_stride() {
     let a = Array::from_iter(10..74).into_shape((4, 4, 4)).unwrap();
     itertools::assert_equal(
-        a.windows_with_stride(Dim((2, 2, 2)), Dim((2,2,2))),
+        a.windows_with_stride((2, 2, 2), (2, 2, 2)),
         vec![
             arr3(&[[[10, 11], [14, 15]], [[26, 27], [30, 31]]]),
             arr3(&[[[12, 13], [16, 17]], [[28, 29], [32, 33]]]),
