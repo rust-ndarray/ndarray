@@ -23,11 +23,8 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         let ndim = window.ndim();
 
         let mut unit_stride = D::zeros(ndim);
-        let stride_slice = unit_stride.slice_mut();
-        for s in stride_slice.iter_mut() {
-            *s = 1;
-        }
-
+        unit_stride.slice_mut().fill(1);
+        
         Windows::new_with_stride(a, window, unit_stride)
     }
 
