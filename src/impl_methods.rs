@@ -1418,37 +1418,7 @@ where
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
     ///
-    /// This produces no elements if the window size is larger than the actual array size along any
-    /// axis.
-    ///
-    /// The produced element is an `ArrayView<A, D>` with exactly the dimension
-    /// `window_size`.
-    ///
-    /// **Panics** if any dimension of `window_size` is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
-    /// number of array axes.)
-    ///
-    /// This is an illustration of the 2×2 windows in a 3×4 array:
-    ///
-    /// ```text
-    ///          ──▶ Axis(1)
-    ///
-    ///      │   ┏━━━━━┳━━━━━┱─────┬─────┐   ┌─────┲━━━━━┳━━━━━┱─────┐   ┌─────┬─────┲━━━━━┳━━━━━┓
-    ///      ▼   ┃ a₀₀ ┃ a₀₁ ┃     │     │   │     ┃ a₀₁ ┃ a₀₂ ┃     │   │     │     ┃ a₀₂ ┃ a₀₃ ┃
-    /// Axis(0)  ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────╊━━━━━╋━━━━━╉─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
-    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     ┃ a₁₁ ┃ a₁₂ ┃     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
-    ///          ┡━━━━━╇━━━━━╃─────┼─────┤   ├─────╄━━━━━╇━━━━━╃─────┤   ├─────┼─────╄━━━━━╇━━━━━┩
-    ///          │     │     │     │     │   │     │     │     │     │   │     │     │     │     │
-    ///          └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘
-    ///
-    ///          ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐
-    ///          │     │     │     │     │   │     │     │     │     │   │     │     │     │     │
-    ///          ┢━━━━━╈━━━━━╅─────┼─────┤   ├─────╆━━━━━╈━━━━━╅─────┤   ├─────┼─────╆━━━━━╈━━━━━┪
-    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     ┃ a₁₁ ┃ a₁₂ ┃     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
-    ///          ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────╊━━━━━╋━━━━━╉─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
-    ///          ┃ a₂₀ ┃ a₂₁ ┃     │     │   │     ┃ a₂₁ ┃ a₂₂ ┃     │   │     │     ┃ a₂₂ ┃ a₂₃ ┃
-    ///          ┗━━━━━┻━━━━━┹─────┴─────┘   └─────┺━━━━━┻━━━━━┹─────┘   └─────┴─────┺━━━━━┻━━━━━┛
-    /// ```
+    /// This is essentially equivalent to [`.windows_with_stride()`] with unit stride.
     pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
