@@ -20,6 +20,20 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         E: IntoDimension<Dim = D>,
     {
         let window = window_size.into_dimension();
+        let ndim = window.ndim();
+
+        let mut unit_stride = D::zeros(ndim);
+        unit_stride.slice_mut().fill(1);
+        
+        Windows::new_with_stride(a, window, unit_stride)
+    }
+
+    pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, strides: E) -> Self
+    where
+        E: IntoDimension<Dim = D>,
+    {
+        let window = window_size.into_dimension();
+        let strides_d = strides.into_dimension();
         ndassert!(
             a.ndim() == window.ndim(),
             concat!(
@@ -30,18 +44,42 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
             a.ndim(),
             a.shape()
         );
+        ndassert!(
+            a.ndim() == strides_d.ndim(),
+            concat!(
+                "Stride dimension {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            strides_d.ndim(),
+            a.ndim(),
+            a.shape()
+        );
         let mut size = a.dim;
-        for (sz, &ws) in size.slice_mut().iter_mut().zip(window.slice()) {
+        for ((sz, &ws), &stride) in size
+            .slice_mut()
+            .iter_mut()
+            .zip(window.slice())
+            .zip(strides_d.slice())
+        {
             assert_ne!(ws, 0, "window-size must not be zero!");
+            assert_ne!(stride, 0, "stride cannot have a dimension as zero!");
             // cannot use std::cmp::max(0, ..) since arithmetic underflow panics
-            *sz = if *sz < ws { 0 } else { *sz - ws + 1 };
+            *sz = if *sz < ws {
+                0
+            } else {
+                ((*sz - (ws - 1) - 1) / stride) + 1
+            };
         }
-
         let window_strides = a.strides.clone();
+
+        let mut array_strides = a.strides.clone();
+        for (arr_stride, ix_stride) in array_strides.slice_mut().iter_mut().zip(strides_d.slice()) {
+            *arr_stride *= ix_stride;
+        }
 
         unsafe {
             Windows {
-                base: ArrayView::new(a.ptr, size, a.strides),
+                base: ArrayView::new(a.ptr, size, array_strides),
                 window,
                 strides: window_strides,
             }

@@ -1418,43 +1418,65 @@ where
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
     ///
-    /// This produces no elements if the window size is larger than the actual array size along any
-    /// axis.
-    ///
-    /// The produced element is an `ArrayView<A, D>` with exactly the dimension
-    /// `window_size`.
-    ///
-    /// **Panics** if any dimension of `window_size` is zero.<br>
-    /// (**Panics** if `D` is `IxDyn` and `window_size` does not match the
-    /// number of array axes.)
-    ///
-    /// This is an illustration of the 2×2 windows in a 3×4 array:
-    ///
-    /// ```text
-    ///          ──▶ Axis(1)
-    ///
-    ///      │   ┏━━━━━┳━━━━━┱─────┬─────┐   ┌─────┲━━━━━┳━━━━━┱─────┐   ┌─────┬─────┲━━━━━┳━━━━━┓
-    ///      ▼   ┃ a₀₀ ┃ a₀₁ ┃     │     │   │     ┃ a₀₁ ┃ a₀₂ ┃     │   │     │     ┃ a₀₂ ┃ a₀₃ ┃
-    /// Axis(0)  ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────╊━━━━━╋━━━━━╉─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
-    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     ┃ a₁₁ ┃ a₁₂ ┃     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
-    ///          ┡━━━━━╇━━━━━╃─────┼─────┤   ├─────╄━━━━━╇━━━━━╃─────┤   ├─────┼─────╄━━━━━╇━━━━━┩
-    ///          │     │     │     │     │   │     │     │     │     │   │     │     │     │     │
-    ///          └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘
-    ///
-    ///          ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐
-    ///          │     │     │     │     │   │     │     │     │     │   │     │     │     │     │
-    ///          ┢━━━━━╈━━━━━╅─────┼─────┤   ├─────╆━━━━━╈━━━━━╅─────┤   ├─────┼─────╆━━━━━╈━━━━━┪
-    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     ┃ a₁₁ ┃ a₁₂ ┃     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
-    ///          ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────╊━━━━━╋━━━━━╉─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
-    ///          ┃ a₂₀ ┃ a₂₁ ┃     │     │   │     ┃ a₂₁ ┃ a₂₂ ┃     │   │     │     ┃ a₂₂ ┃ a₂₃ ┃
-    ///          ┗━━━━━┻━━━━━┹─────┴─────┘   └─────┺━━━━━┻━━━━━┹─────┘   └─────┴─────┺━━━━━┻━━━━━┛
-    /// ```
+    /// This is essentially equivalent to [`.windows_with_stride()`] with unit stride.
     pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
         S: Data,
     {
         Windows::new(self.view(), window_size)
+    }
+
+    /// Return a window producer and iterable.
+    ///
+    /// The windows are all distinct views of size `window_size`
+    /// that fit into the array's shape.
+    /// 
+    /// The stride is ordered by the outermost axis.<br>
+    /// Hence, a (x₀, x₁, ..., xₙ) stride will be applied to
+    /// (A₀, A₁, ..., Aₙ) where Aₓ stands for `Axis(x)`.
+    ///
+    /// This produces all windows that fit within the array for the given stride,
+    /// assuming the window size is not larger than the array size.
+    ///
+    /// The produced element is an `ArrayView<A, D>` with exactly the dimension
+    /// `window_size`.
+    /// 
+    /// Note that passing a stride of only ones is similar to
+    /// calling [`ArrayBase::windows()`].
+    ///
+    /// **Panics** if any dimension of `window_size` or `stride` is zero.<br>
+    /// (**Panics** if `D` is `IxDyn` and `window_size` or `stride` does not match the
+    /// number of array axes.)
+    ///
+    /// This is the same illustration found in [`ArrayBase::windows()`],
+    /// 2×2 windows in a 3×4 array, but now with a (1, 2) stride:
+    ///
+    /// ```text
+    ///          ──▶ Axis(1)
+    ///
+    ///      │   ┏━━━━━┳━━━━━┱─────┬─────┐   ┌─────┬─────┲━━━━━┳━━━━━┓
+    ///      ▼   ┃ a₀₀ ┃ a₀₁ ┃     │     │   │     │     ┃ a₀₂ ┃ a₀₃ ┃
+    /// Axis(0)  ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
+    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
+    ///          ┡━━━━━╇━━━━━╃─────┼─────┤   ├─────┼─────╄━━━━━╇━━━━━┩
+    ///          │     │     │     │     │   │     │     │     │     │
+    ///          └─────┴─────┴─────┴─────┘   └─────┴─────┴─────┴─────┘
+    ///
+    ///          ┌─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┐
+    ///          │     │     │     │     │   │     │     │     │     │
+    ///          ┢━━━━━╈━━━━━╅─────┼─────┤   ├─────┼─────╆━━━━━╈━━━━━┪
+    ///          ┃ a₁₀ ┃ a₁₁ ┃     │     │   │     │     ┃ a₁₂ ┃ a₁₃ ┃
+    ///          ┣━━━━━╋━━━━━╉─────┼─────┤   ├─────┼─────╊━━━━━╋━━━━━┫
+    ///          ┃ a₂₀ ┃ a₂₁ ┃     │     │   │     │     ┃ a₂₂ ┃ a₂₃ ┃
+    ///          ┗━━━━━┻━━━━━┹─────┴─────┘   └─────┴─────┺━━━━━┻━━━━━┛
+    /// ```
+    pub fn windows_with_stride<E>(&self, window_size: E, stride: E) -> Windows<'_, A, D>
+    where
+        E: IntoDimension<Dim = D>,
+        S: Data,
+    {
+        Windows::new_with_stride(self.view(), window_size, stride)
     }
 
     /// Returns a producer which traverses over all windows of a given length along an axis.
