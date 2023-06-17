@@ -302,3 +302,31 @@ fn test_window_neg_stride() {
         answer.iter()
     );
 }
+
+#[test]
+fn test_windows_with_stride_on_inverted_axis() {
+    let mut array = Array::from_iter(1..17).into_shape((4, 4)).unwrap();
+    
+    // inverting axis results in negative stride
+    array.invert_axis(Axis(0));
+    itertools::assert_equal(
+        array.windows_with_stride((2, 2), (2,2)),
+        vec![
+            arr2(&[[13, 14], [9, 10]]),
+            arr2(&[[15, 16], [11, 12]]),
+            arr2(&[[5, 6], [1, 2]]),
+            arr2(&[[7, 8], [3, 4]]),
+        ],
+    );
+
+    array.invert_axis(Axis(1));
+    itertools::assert_equal(
+        array.windows_with_stride((2, 2), (2,2)),
+        vec![
+            arr2(&[[16, 15], [12, 11]]),
+            arr2(&[[14, 13], [10, 9]]),
+            arr2(&[[8, 7], [4, 3]]),
+            arr2(&[[6, 5], [2, 1]]),
+        ],
+    );
+}

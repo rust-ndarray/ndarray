@@ -3,6 +3,7 @@ use crate::imp_prelude::*;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdProducer;
+use crate::Slice;
 
 /// Window producer and iterable
 ///
@@ -24,16 +25,19 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
 
         let mut unit_stride = D::zeros(ndim);
         unit_stride.slice_mut().fill(1);
-        
+
         Windows::new_with_stride(a, window, unit_stride)
     }
 
-    pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, strides: E) -> Self
+    pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, axis_strides: E) -> Self
     where
         E: IntoDimension<Dim = D>,
     {
         let window = window_size.into_dimension();
-        let strides_d = strides.into_dimension();
+
+        let strides = axis_strides.into_dimension();
+        let window_strides = a.strides.clone();
+
         ndassert!(
             a.ndim() == window.ndim(),
             concat!(
@@ -44,45 +48,35 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
             a.ndim(),
             a.shape()
         );
+
         ndassert!(
-            a.ndim() == strides_d.ndim(),
+            a.ndim() == strides.ndim(),
             concat!(
                 "Stride dimension {} does not match array dimension {} ",
                 "(with array of shape {:?})"
             ),
-            strides_d.ndim(),
+            strides.ndim(),
             a.ndim(),
             a.shape()
         );
-        let mut size = a.dim;
-        for ((sz, &ws), &stride) in size
-            .slice_mut()
-            .iter_mut()
-            .zip(window.slice())
-            .zip(strides_d.slice())
-        {
-            assert_ne!(ws, 0, "window-size must not be zero!");
-            assert_ne!(stride, 0, "stride cannot have a dimension as zero!");
-            // cannot use std::cmp::max(0, ..) since arithmetic underflow panics
-            *sz = if *sz < ws {
-                0
+
+        let mut base = a;
+        base.slice_each_axis_inplace(|ax_desc| {
+            let len = ax_desc.len;
+            let wsz = window[ax_desc.axis.index()];
+            let stride = strides[ax_desc.axis.index()];
+
+            if len < wsz {
+                Slice::new(0, Some(0), 1)
             } else {
-                ((*sz - (ws - 1) - 1) / stride) + 1
-            };
-        }
-        let window_strides = a.strides.clone();
-
-        let mut array_strides = a.strides.clone();
-        for (arr_stride, ix_stride) in array_strides.slice_mut().iter_mut().zip(strides_d.slice()) {
-            *arr_stride *= ix_stride;
-        }
-
-        unsafe {
-            Windows {
-                base: ArrayView::new(a.ptr, size, array_strides),
-                window,
-                strides: window_strides,
+                Slice::new(0, Some((len - wsz + 1) as isize), stride as isize)
             }
+        });
+
+        Windows {
+            base,
+            window,
+            strides: window_strides,
         }
     }
 }
