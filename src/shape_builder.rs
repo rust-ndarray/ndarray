@@ -82,6 +82,7 @@ impl<D> Strides<D>
         }
     }
 
+    #[inline]
     pub(crate) fn is_custom(&self) -> bool
     {
         matches!(*self, Strides::Custom(_))
