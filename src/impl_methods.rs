@@ -34,7 +34,7 @@ use crate::zip::{IntoNdProducer, Zip};
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
-    IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows,
+    IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows, AxisWindows
 };
 use crate::slice::{MultiSliceArg, SliceArg};
 use crate::stacking::concatenate;
@@ -1500,7 +1500,7 @@ where
     ///     assert_eq!(window.shape(), &[4, 3, 2]);
     /// }
     /// ```
-    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> Windows<'_, A, D>
+    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> AxisWindows<'_, A, D>
     where
         S: Data,
     {
@@ -1520,7 +1520,7 @@ where
         let mut size = self.raw_dim();
         size[axis_index] = window_size;
 
-        Windows::new(self.view(), size)
+        AxisWindows::new(self.view(), axis, window_size)
     }
 
     // Return (length, stride) for diagonal
