@@ -46,6 +46,7 @@ use crate::iter::{
     AxisChunksIterMut,
     AxisIter,
     AxisIterMut,
+    AxisWindows,
     ExactChunks,
     ExactChunksMut,
     IndexedIter,
@@ -1521,7 +1522,7 @@ where
     ///     assert_eq!(window.shape(), &[4, 3, 2]);
     /// }
     /// ```
-    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> Windows<'_, A, D>
+    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> AxisWindows<'_, A, D>
     where S: Data
     {
         let axis_index = axis.index();
@@ -1537,10 +1538,7 @@ where
             self.shape()
         );
 
-        let mut size = self.raw_dim();
-        size[axis_index] = window_size;
-
-        Windows::new(self.view(), size)
+        AxisWindows::new(self.view(), axis, window_size)
     }
 
     // Return (length, stride) for diagonal
