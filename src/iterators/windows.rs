@@ -154,39 +154,37 @@ impl_iterator! {
 /// information.
 pub struct AxisWindows<'a, A, D>{
     base: ArrayView<'a, A, D>,
-    window_size: usize,
     axis_idx: usize,
+    window: D,
+    strides: D,
 }
 
 impl<'a, A, D: Dimension> AxisWindows<'a, A, D> {
     pub(crate) fn new(a: ArrayView<'a, A, D>, axis: Axis, window_size: usize) -> Self
-    {
+    {   
+        let strides = a.strides.clone();
         let mut base = a;
-        let len = base.raw_dim()[axis.index()];
-        let indices = if len < window_size {
-            Slice::new(0, Some(0), 1)
-        } else {
-            Slice::new(0, Some((len - window_size + 1) as isize), 1)
-        };
-        base.slice_axis_inplace(axis, indices);
+        let axis_idx = axis.index();
+        let mut window = base.raw_dim();
+        window[axis_idx] = window_size;
+
+        base.slice_each_axis_inplace(|ax_desc| {
+            let len = ax_desc.len;
+            let wsz = window[ax_desc.axis.index()];
+
+            if len < wsz {
+                Slice::new(0, Some(0), 1)
+            } else {
+                Slice::new(0, Some((len - wsz + 1) as isize), 1)
+            }
+        });
 
         AxisWindows {
             base,
-            window_size,
-            axis_idx: axis.index(),
+            axis_idx,
+            window,
+            strides,
         }
-    }
-
-    fn window(&self) -> D{
-        let mut window = self.base.raw_dim();
-        window[self.axis_idx] = self.window_size;
-        window
-    }
-
-    fn strides_(&self) -> D{
-        let mut strides = D::zeros(self.base.ndim());
-        strides.slice_mut().fill(1);
-        strides
     }
 }
 
@@ -214,8 +212,8 @@ impl<'a, A, D: Dimension> NdProducer for AxisWindows<'a, A, D> {
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item {
-        ArrayView::new_(ptr, self.window(),
-        self.strides_())
+        ArrayView::new_(ptr, self.window.clone(),
+            self.strides.clone())
     }
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
@@ -234,14 +232,16 @@ impl<'a, A, D: Dimension> NdProducer for AxisWindows<'a, A, D> {
         let (a, b) = self.base.split_at(Axis(self.axis_idx), index);
         (AxisWindows {
             base: a,
-            window_size: self.window_size,
             axis_idx: self.axis_idx,
+            window: self.window.clone(),
+            strides: self.strides.clone()
 
         },
         AxisWindows {
             base: b,
-            window_size: self.window_size,
             axis_idx: self.axis_idx,
+            window: self.window,
+            strides: self.strides,
         })
     }
 
@@ -256,12 +256,10 @@ where
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = WindowsIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        let window =  self.window();
-        let strides = self.strides_();
         WindowsIter {
             iter: self.base.into_elements_base(),
-            window,
-            strides,
+            window: self.window,
+            strides: self.strides,
         }
     }
 }

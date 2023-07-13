@@ -1517,9 +1517,6 @@ where
             self.shape()
         );
 
-        let mut size = self.raw_dim();
-        size[axis_index] = window_size;
-
         AxisWindows::new(self.view(), axis, window_size)
     }
 
