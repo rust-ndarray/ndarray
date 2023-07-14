@@ -17,7 +17,7 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::{
-    ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr,
+    ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr, ManagedRepr
 };
 
 /// Array representation trait.
@@ -346,6 +346,24 @@ unsafe impl<A> RawData for OwnedRepr<A> {
     private_impl! {}
 }
 
+
+unsafe impl<A> RawData for ManagedRepr<A> {
+    type Elem = A;
+
+    fn _data_slice(&self) -> Option<&[A]> {
+        Some(self.as_slice())
+    }
+
+    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool {
+        let slc = self.as_slice();
+        let ptr = slc.as_ptr() as *mut A;
+        let end = unsafe { ptr.add(slc.len()) };
+        self_ptr >= ptr && self_ptr <= end
+    }
+
+    private_impl! {}
+}
+
 unsafe impl<A> RawDataMut for OwnedRepr<A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
@@ -379,6 +397,28 @@ unsafe impl<A> Data for OwnedRepr<A> {
         D: Dimension,
     {
         Ok(self_)
+    }
+}
+
+
+unsafe impl<A> Data for ManagedRepr<A> {
+    #[inline]
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
+    where
+        A: Clone,
+        D: Dimension,
+    {
+        self_.to_owned()
+    }
+
+    #[inline]
+    fn try_into_owned_nocopy<D>(
+        self_: ArrayBase<Self, D>,
+    ) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
+    where
+        D: Dimension,
+    {
+        Err(self_)
     }
 }
 
