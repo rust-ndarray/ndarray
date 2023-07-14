@@ -38,41 +38,7 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         let strides = axis_strides.into_dimension();
         let window_strides = a.strides.clone();
 
-        ndassert!(
-            a.ndim() == window.ndim(),
-            concat!(
-                "Window dimension {} does not match array dimension {} ",
-                "(with array of shape {:?})"
-            ),
-            window.ndim(),
-            a.ndim(),
-            a.shape()
-        );
-
-        ndassert!(
-            a.ndim() == strides.ndim(),
-            concat!(
-                "Stride dimension {} does not match array dimension {} ",
-                "(with array of shape {:?})"
-            ),
-            strides.ndim(),
-            a.ndim(),
-            a.shape()
-        );
-
-        let mut base = a;
-        base.slice_each_axis_inplace(|ax_desc| {
-            let len = ax_desc.len;
-            let wsz = window[ax_desc.axis.index()];
-            let stride = strides[ax_desc.axis.index()];
-
-            if len < wsz {
-                Slice::new(0, Some(0), 1)
-            } else {
-                Slice::new(0, Some((len - wsz + 1) as isize), stride as isize)
-            }
-        });
-
+        let base = build_base(a, window.clone(), strides);
         Windows {
             base,
             window,
@@ -162,28 +128,22 @@ pub struct AxisWindows<'a, A, D>{
 impl<'a, A, D: Dimension> AxisWindows<'a, A, D> {
     pub(crate) fn new(a: ArrayView<'a, A, D>, axis: Axis, window_size: usize) -> Self
     {   
-        let strides = a.strides.clone();
-        let mut base = a;
+        let window_strides = a.strides.clone();
         let axis_idx = axis.index();
-        let mut window = base.raw_dim();
+
+        let mut window = a.raw_dim();
         window[axis_idx] = window_size;
 
-        base.slice_each_axis_inplace(|ax_desc| {
-            let len = ax_desc.len;
-            let wsz = window[ax_desc.axis.index()];
+        let ndim = window.ndim();
+        let mut unit_stride = D::zeros(ndim);
+        unit_stride.slice_mut().fill(1);
 
-            if len < wsz {
-                Slice::new(0, Some(0), 1)
-            } else {
-                Slice::new(0, Some((len - wsz + 1) as isize), 1)
-            }
-        });
-
+        let base = build_base(a, window.clone(), unit_stride);
         AxisWindows {
             base,
             axis_idx,
             window,
-            strides,
+            strides: window_strides,
         }
     }
 }
@@ -262,4 +222,45 @@ where
             strides: self.strides,
         }
     }
+}
+
+/// build the base array of the `Windows` and `AxisWindows` structs
+fn build_base<'a, A, D>(a: ArrayView<'a, A, D>, window: D, strides: D) -> ArrayView<'a, A, D>
+where D:Dimension
+{
+    ndassert!(
+        a.ndim() == window.ndim(),
+        concat!(
+            "Window dimension {} does not match array dimension {} ",
+            "(with array of shape {:?})"
+        ),
+        window.ndim(),
+        a.ndim(),
+        a.shape()
+    );
+
+    ndassert!(
+        a.ndim() == strides.ndim(),
+        concat!(
+            "Stride dimension {} does not match array dimension {} ",
+            "(with array of shape {:?})"
+        ),
+        strides.ndim(),
+        a.ndim(),
+        a.shape()
+    );
+
+    let mut base = a;
+    base.slice_each_axis_inplace(|ax_desc| {
+        let len = ax_desc.len;
+        let wsz = window[ax_desc.axis.index()];
+        let stride = strides[ax_desc.axis.index()];
+
+        if len < wsz {
+            Slice::new(0, Some(0), 1)
+        } else {
+            Slice::new(0, Some((len - wsz + 1) as isize), stride as isize)
+        }
+    });
+    base
 }
