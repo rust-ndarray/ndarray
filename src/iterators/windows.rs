@@ -5,24 +5,18 @@ use crate::Layout;
 use crate::NdProducer;
 use crate::Slice;
 
-#[derive(Clone)]
-pub struct GeneralWindow;
-#[derive(Clone)]
-pub struct AxisWindow{pub(crate) index: usize}
-
 /// Window producer and iterable
 ///
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
-pub struct Windows<'a, A, D, V> {
+pub struct Windows<'a, A, D> {
     base: ArrayView<'a, A, D>,
     window: D,
     strides: D,
-    variant: V,
 }
 
-impl<'a, A, D: Dimension, V> Windows<'a, A, D, V> {
-    pub(crate) fn new<E>(a: ArrayView<'a, A, D>, window_size: E, variant: V) -> Self
+impl<'a, A, D: Dimension> Windows<'a, A, D> {
+    pub(crate) fn new<E>(a: ArrayView<'a, A, D>, window_size: E) -> Self
     where
         E: IntoDimension<Dim = D>,
     {
@@ -32,15 +26,10 @@ impl<'a, A, D: Dimension, V> Windows<'a, A, D, V> {
         let mut unit_stride = D::zeros(ndim);
         unit_stride.slice_mut().fill(1);
 
-        Windows::new_with_stride(a, window, unit_stride, variant)
+        Windows::new_with_stride(a, window, unit_stride)
     }
 
-    pub(crate) fn new_with_stride<E>(
-        a: ArrayView<'a, A, D>,
-        window_size: E,
-        axis_strides: E,
-        variant: V,
-    ) -> Self
+    pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, axis_strides: E) -> Self
     where
         E: IntoDimension<Dim = D>,
     {
@@ -88,7 +77,6 @@ impl<'a, A, D: Dimension, V> Windows<'a, A, D, V> {
             base,
             window,
             strides: window_strides,
-            variant,
         }
     }
 }
@@ -100,9 +88,8 @@ impl_ndproducer! {
         base,
         window,
         strides,
-        variant,
     }
-    Windows<'a, A, D, GeneralWindow> {
+    Windows<'a, A, D> {
         type Item = ArrayView<'a, A, D>;
         type Dim = D;
 
@@ -113,7 +100,7 @@ impl_ndproducer! {
     }
 }
 
-impl<'a, A, D, V> IntoIterator for Windows<'a, A, D, V>
+impl<'a, A, D> IntoIterator for Windows<'a, A, D>
 where
     D: Dimension,
     A: 'a,
@@ -161,14 +148,55 @@ impl_iterator! {
     }
 }
 
-impl<'a, A, D: Dimension> NdProducer for Windows<'a, A, D, AxisWindow> {
+/// Window producer and iterable
+///
+/// See [`.axis_windows()`](ArrayBase::axis_windows) for more
+/// information.
+pub struct AxisWindows<'a, A, D>{
+    base: ArrayView<'a, A, D>,
+    axis_idx: usize,
+    window: D,
+    strides: D,
+}
+
+impl<'a, A, D: Dimension> AxisWindows<'a, A, D> {
+    pub(crate) fn new(a: ArrayView<'a, A, D>, axis: Axis, window_size: usize) -> Self
+    {   
+        let strides = a.strides.clone();
+        let mut base = a;
+        let axis_idx = axis.index();
+        let mut window = base.raw_dim();
+        window[axis_idx] = window_size;
+
+        base.slice_each_axis_inplace(|ax_desc| {
+            let len = ax_desc.len;
+            let wsz = window[ax_desc.axis.index()];
+
+            if len < wsz {
+                Slice::new(0, Some(0), 1)
+            } else {
+                Slice::new(0, Some((len - wsz + 1) as isize), 1)
+            }
+        });
+
+        AxisWindows {
+            base,
+            axis_idx,
+            window,
+            strides,
+        }
+    }
+}
+
+
+impl<'a, A, D: Dimension> NdProducer for AxisWindows<'a, A, D> {
     type Item = ArrayView<'a, A, D>;
     type Dim = Ix1;
     type Ptr = *mut A;
     type Stride = isize;
 
     fn raw_dim(&self) -> Ix1 {
-        Ix1(self.base.raw_dim()[self.variant.index])
+        Ix1(self.base.raw_dim()[self.axis_idx])
     }
 
     fn layout(&self) -> Layout {
@@ -184,38 +212,54 @@ impl<'a, A, D: Dimension> NdProducer for Windows<'a, A, D, AxisWindow> {
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item {
-        ArrayView::new_(ptr, self.window.clone(), self.strides.clone())
+        ArrayView::new_(ptr, self.window.clone(),
+            self.strides.clone())
     }
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
         let mut d = D::zeros(self.base.ndim());
-        d[self.variant.index] = i[0];
+        d[self.axis_idx] = i[0];
         self.base.uget_ptr(&d)
     }
 
     fn stride_of(&self, axis: Axis) -> isize {
         assert_eq!(axis, Axis(0));
-        self.base.stride_of(Axis(self.variant.index))
+        self.base.stride_of(Axis(self.axis_idx))
     }
 
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         assert_eq!(axis, Axis(0));
-        let (a, b) = self.base.split_at(Axis(self.variant.index), index);
-        (
-            Windows {
-                base: a,
-                window: self.window.clone(),
-                strides: self.strides.clone(),
-                variant: self.variant.clone(),
-            },
-            Windows {
-                base: b,
-                window: self.window,
-                strides: self.strides,
-                variant: self.variant,
-            },
-        )
+        let (a, b) = self.base.split_at(Axis(self.axis_idx), index);
+        (AxisWindows {
+            base: a,
+            axis_idx: self.axis_idx,
+            window: self.window.clone(),
+            strides: self.strides.clone()
+
+        },
+        AxisWindows {
+            base: b,
+            axis_idx: self.axis_idx,
+            window: self.window,
+            strides: self.strides,
+        })
     }
 
-    private_impl! {}
+    private_impl!{}
+}
+
+impl<'a, A, D> IntoIterator for AxisWindows<'a, A, D>
+where
+    D: Dimension,
+    A: 'a,
+{
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = WindowsIter<'a, A, D>;
+    fn into_iter(self) -> Self::IntoIter {
+        WindowsIter {
+            iter: self.base.into_elements_base(),
+            window: self.window,
+            strides: self.strides,
+        }
+    }
 }

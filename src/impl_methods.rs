@@ -14,8 +14,6 @@ use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
 
-use crate::iterators::AxisWindow;
-use crate::iterators::GeneralWindow;
 use crate::{arraytraits, DimMax};
 use crate::argument_traits::AssignElem;
 use crate::dimension;
@@ -36,7 +34,7 @@ use crate::zip::{IntoNdProducer, Zip};
 
 use crate::iter::{
     AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut,
-    IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows
+    IndexedIter, IndexedIterMut, Iter, IterMut, Lanes, LanesMut, Windows, AxisWindows
 };
 use crate::slice::{MultiSliceArg, SliceArg};
 use crate::stacking::concatenate;
@@ -1421,12 +1419,12 @@ where
     /// that fit into the array's shape.
     ///
     /// This is essentially equivalent to [`.windows_with_stride()`] with unit stride.
-    pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D, GeneralWindow>
+    pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
         S: Data,
     {
-        Windows::new(self.view(), window_size, GeneralWindow)
+        Windows::new(self.view(), window_size)
     }
 
     /// Return a window producer and iterable.
@@ -1473,12 +1471,12 @@ where
     ///          ┃ a₂₀ ┃ a₂₁ ┃     │     │   │     │     ┃ a₂₂ ┃ a₂₃ ┃
     ///          ┗━━━━━┻━━━━━┹─────┴─────┘   └─────┴─────┺━━━━━┻━━━━━┛
     /// ```
-    pub fn windows_with_stride<E>(&self, window_size: E, stride: E) -> Windows<'_, A, D, GeneralWindow>
+    pub fn windows_with_stride<E>(&self, window_size: E, stride: E) -> Windows<'_, A, D>
     where
         E: IntoDimension<Dim = D>,
         S: Data,
     {
-        Windows::new_with_stride(self.view(), window_size, stride, GeneralWindow)
+        Windows::new_with_stride(self.view(), window_size, stride)
     }
 
     /// Returns a producer which traverses over all windows of a given length along an axis.
@@ -1502,7 +1500,7 @@ where
     ///     assert_eq!(window.shape(), &[4, 3, 2]);
     /// }
     /// ```
-    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> Windows<'_, A, D, AxisWindow>
+    pub fn axis_windows(&self, axis: Axis, window_size: usize) -> AxisWindows<'_, A, D>
     where
         S: Data,
     {
@@ -1519,10 +1517,7 @@ where
             self.shape()
         );
 
-        let mut size = self.raw_dim();
-        size[axis_index] = window_size;
-
-        Windows::new(self.view(), size, AxisWindow{index: axis_index})
+        AxisWindows::new(self.view(), axis, window_size)
     }
 
     // Return (length, stride) for diagonal

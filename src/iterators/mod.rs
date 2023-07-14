@@ -26,8 +26,7 @@ use super::{Dimension, Ix, Ixs};
 
 pub use self::chunks::{ExactChunks, ExactChunksIter, ExactChunksIterMut, ExactChunksMut};
 pub use self::lanes::{Lanes, LanesMut};
-pub use self::windows::Windows;
-pub(crate) use self::windows::{GeneralWindow, AxisWindow};
+pub use self::windows::{Windows, AxisWindows};
 pub use self::into_iter::IntoIter;
 
 use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
