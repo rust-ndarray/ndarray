@@ -17,8 +17,11 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::{
-    ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr, ManagedRepr
+    ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr
 };
+
+#[cfg(feature = "dlpack")]
+use crate::ManagedRepr;
 
 /// Array representation trait.
 ///
@@ -346,7 +349,7 @@ unsafe impl<A> RawData for OwnedRepr<A> {
     private_impl! {}
 }
 
-
+#[cfg(feature = "dlpack")]
 unsafe impl<A> RawData for ManagedRepr<A> {
     type Elem = A;
 
@@ -400,7 +403,7 @@ unsafe impl<A> Data for OwnedRepr<A> {
     }
 }
 
-
+#[cfg(feature = "dlpack")]
 unsafe impl<A> Data for ManagedRepr<A> {
     #[inline]
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
