@@ -46,7 +46,7 @@ matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm
 serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
 
-dlpark = { git = "https://github.com/SunDoge/dlpark", rev = "f4d45cd" }
+dlpark = { version = "0.3.0", optional = true }
 
 [dev-dependencies]
 defmac = "0.2"
@@ -74,6 +74,8 @@ std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["rayon_", "std"]
 
 matrixmultiply-threading = ["matrixmultiply/threading"]
+
+dlpack = ["dep:dlpark"]
 
 [profile.bench]
 debug = true

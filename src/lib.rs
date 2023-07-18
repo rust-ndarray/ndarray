@@ -207,6 +207,7 @@ mod zip;
 
 mod dimension;
 
+#[cfg(feature = "dlpack")]
 mod dlpack;
 
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
@@ -1350,6 +1351,7 @@ pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
 
 
 /// An array from managed memory
+#[cfg(feature = "dlpack")]
 pub type ManagedArray<A, D> = ArrayBase<ManagedRepr<A>, D>;
 
 
@@ -1426,6 +1428,8 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 
 pub use data_repr::OwnedRepr;
+
+#[cfg(feature = "dlpack")]
 pub use dlpack::ManagedRepr;
 
 

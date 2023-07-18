@@ -76,11 +76,12 @@ impl<A> FromDLPack for ManagedArray<A, IxDyn> {
 
         let strides: Vec<usize> = match (managed_tensor.strides(), managed_tensor.is_contiguous()) {
             (Some(s), _) => s.into_iter().map(|&x| x as _).collect(),
-            (None, true) => dlpark::tensor::calculate_contiguous_strides(managed_tensor.shape())
+            (None, true) => managed_tensor
+                .calculate_contiguous_strides()
                 .into_iter()
                 .map(|x| x as _)
                 .collect(),
-            (None, false) => panic!("fail"),
+            (None, false) => panic!("dlpack: invalid strides"),
         };
         let ptr = managed_tensor.data_ptr() as *mut A;
 
