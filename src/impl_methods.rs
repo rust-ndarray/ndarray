@@ -1886,8 +1886,82 @@ where
     }
 
     /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted, but the source array must be contiguous.
+    ///
+    /// If an index ordering is not specified, the default is `RowMajor`.
+    /// The operation will only succeed if the array's memory layout is compatible with
+    /// the index ordering.
+    ///
+    /// Use `.to_shape()` instead for more flexible reshaping of arrays, which
+    /// allows copying elements if required.
+    ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    /// **Errors** if order RowMajor is given but input is not c-contiguous.
+    /// **Errors** if order ColumnMajor is given but input is not f-contiguous.
+    ///
+    /// If shape is not given: use memory layout of incoming array. Row major arrays are
+    /// reshaped using row major index ordering, column major arrays with column major index
+    /// ordering.
+    ///
+    /// ```
+    /// use ndarray::{aview1, aview2};
+    /// use ndarray::Order;
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape_with_order((2, 2)).unwrap()
+    ///     == aview2(&[[1., 2.],
+    ///                 [3., 4.]])
+    /// );
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape_with_order(((2, 2), Order::ColumnMajor)).unwrap()
+    ///     == aview2(&[[1., 3.],
+    ///                 [2., 4.]])
+    /// );
+    /// ```
+    pub fn into_shape_with_order<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+    where
+        E: ShapeArg,
+    {
+        let (shape, order) = shape.into_shape_and_order();
+        self.into_shape_with_order_impl(shape, order.unwrap_or(Order::RowMajor))
+    }
+
+    fn into_shape_with_order_impl<E>(self, shape: E, order: Order)
+        -> Result<ArrayBase<S, E>, ShapeError>
+    where
+        E: Dimension,
+    {
+        let shape = shape.into_dimension();
+        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+
+        // Check if contiguous, then we can change shape
+        unsafe {
+            // safe because arrays are contiguous and len is unchanged
+            match order {
+                Order::RowMajor if self.is_standard_layout() => {
+                    Ok(self.with_strides_dim(shape.default_strides(), shape))
+                }
+                Order::ColumnMajor if self.raw_view().reversed_axes().is_standard_layout() => {
+                    Ok(self.with_strides_dim(shape.fortran_strides(), shape))
+                }
+                _otherwise => Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+            }
+        }
+    }
+
+    /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted, but the source array or view must be in standard
     /// or column-major (Fortran) layout.
+    ///
+    /// **Note** that `.into_shape()` "moves" elements differently depending on if the input array
+    /// is C-contig or F-contig, it follows the index order that corresponds to the memory order.
+    /// Prefer to use `.to_shape()` or `.into_shape_with_order()`.
+    ///
+    /// Because of this, the method is deprecated. That reshapes depend on memory order is not
+    /// intuitive.
     ///
     /// **Errors** if the shapes don't have the same number of elements.<br>
     /// **Errors** if the input array is not c- or f-contiguous.
@@ -1901,6 +1975,7 @@ where
     ///                 [3., 4.]])
     /// );
     /// ```
+    #[deprecated = "Use `.into_shape_with_order()` or `.to_shape()`"]
     pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
     where
         E: IntoDimension,
@@ -1948,7 +2023,7 @@ where
         self.into_shape_clone_order(shape, order)
     }
 
-    pub fn into_shape_clone_order<E>(self, shape: E, order: Order)
+    fn into_shape_clone_order<E>(self, shape: E, order: Order)
         -> Result<ArrayBase<S, E>, ShapeError>
     where
         S: DataOwned,
@@ -2020,7 +2095,7 @@ where
         A: Clone,
         E: IntoDimension,
     {
-        return self.clone().into_shape_clone(shape).unwrap();
+        //return self.clone().into_shape_clone(shape).unwrap();
         let shape = shape.into_dimension();
         if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
             panic!(
