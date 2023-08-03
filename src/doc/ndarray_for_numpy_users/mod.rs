@@ -111,8 +111,8 @@
 //! When slicing in `ndarray`, the axis is first sliced with `start..end`. Then if
 //! `step` is positive, the first index is the front of the slice; if `step` is
 //! negative, the first index is the back of the slice. This means that the
-//! behavior is the same as NumPy except when `step < -1`. See the docs for the
-//! [`s![]` macro][s!] for more details.
+//! behavior is the same as in NumPy when `step` is positive, but different when
+//! `step` is negative. See the docs for the [`s![]` macro][s!] for more details.
 //!
 //! </td>
 //! </tr>
@@ -246,8 +246,8 @@
 //!   methods [`.slice_mut()`][.slice_mut()], [`.slice_move()`][.slice_move()], and
 //!   [`.slice_collapse()`][.slice_collapse()].
 //!
-//! * The behavior of slicing is slightly different from NumPy for slices with
-//!   `step < -1`. See the docs for the [`s![]` macro][s!] for more details.
+//! * The behavior of slicing is different from that in NumPy for slices with
+//!   `step < 0`. See the docs for the [`s![]` macro][s!] for more details.
 //!
 //! NumPy | `ndarray` | Notes
 //! ------|-----------|------
