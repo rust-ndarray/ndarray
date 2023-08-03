@@ -169,7 +169,7 @@ fn main() {
     println!("a shape {:?}", &a.shape());
     println!("b shape {:?}", &b.shape());
     
-    let b = b.into_shape((4,1)).unwrap(); // reshape b to shape [4, 1]
+    let b = b.into_shape_with_order((4,1)).unwrap(); // reshape b to shape [4, 1]
     println!("b shape after reshape {:?}", &b.shape());
     
     println!("{}", a.dot(&b));            // [1, 4] x [4, 1] -> [1, 1] 
@@ -295,7 +295,8 @@ row: [[100, 101, 102],
 ## Shape Manipulation
 
 ### Changing the shape of an array
-The shape of an array can be changed with `into_shape` method.
+The shape of an array can be changed with `into_shape_with_order` method.
+(One can also use `to_shape` for this.)
 
 ````rust
 use ndarray::prelude::*;
@@ -319,7 +320,7 @@ fn main() {
     let b = Array::from_iter(a.iter());
     println!("b = \n{:?}\n", b);
     
-    let c = b.into_shape([6, 2]).unwrap(); // consume b and generate c with new shape
+    let c = b.into_shape_with_order([6, 2]).unwrap(); // consume b and generate c with new shape
     println!("c = \n{:?}", c);
 }
 ````
@@ -459,7 +460,7 @@ use ndarray::{Array, Axis};
 
 fn main() {
 
-    let mut a = Array::range(0., 12., 1.).into_shape([3 ,4]).unwrap();
+    let mut a = Array::range(0., 12., 1.).into_shape_with_order([3 ,4]).unwrap();
     println!("a = \n{}\n", a);
     
     {
@@ -519,7 +520,7 @@ use ndarray::Array;
 
 fn main() {
 
-    let mut a = Array::range(0., 4., 1.).into_shape([2 ,2]).unwrap();
+    let mut a = Array::range(0., 4., 1.).into_shape_with_order([2 ,2]).unwrap();
     let b = a.clone();
     
     println!("a = \n{}\n", a);

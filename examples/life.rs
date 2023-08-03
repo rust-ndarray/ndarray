@@ -22,7 +22,7 @@ fn parse(x: &[u8]) -> Board {
         _ => None,
     }));
 
-    let a = a.into_shape((N, N)).unwrap();
+    let a = a.into_shape_with_order((N, N)).unwrap();
     map.slice_mut(s![1..-1, 1..-1]).assign(&a);
     map
 }

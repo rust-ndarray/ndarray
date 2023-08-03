@@ -237,7 +237,7 @@ fn dot_product_neg_stride() {
 
 #[test]
 fn fold_and_sum() {
-    let a = Array::linspace(0., 127., 128).into_shape((8, 16)).unwrap();
+    let a = Array::linspace(0., 127., 128).into_shape_with_order((8, 16)).unwrap();
     assert_abs_diff_eq!(a.fold(0., |acc, &x| acc + x), a.sum(), epsilon = 1e-5);
 
     // test different strides
@@ -276,7 +276,7 @@ fn fold_and_sum() {
 
 #[test]
 fn product() {
-    let a = Array::linspace(0.5, 2., 128).into_shape((8, 16)).unwrap();
+    let a = Array::linspace(0.5, 2., 128).into_shape_with_order((8, 16)).unwrap();
     assert_abs_diff_eq!(a.fold(1., |acc, &x| acc * x), a.product(), epsilon = 1e-5);
 
     // test different strides
@@ -296,13 +296,13 @@ fn product() {
 
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 
 fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 
@@ -313,7 +313,7 @@ fn range1_mat64(m: Ix) -> Array1<f64> {
 
 fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
     Array::from_iter(0..(m * n) as i32)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 
@@ -593,7 +593,7 @@ fn scaled_add_3() {
                     ]
                 };
 
-                let c = range_mat64(n, q).into_shape(cdim).unwrap();
+                let c = range_mat64(n, q).into_shape_with_order(cdim).unwrap();
 
                 {
                     let mut av = a.slice_mut(s![..;s1, ..;s2]);
@@ -711,8 +711,8 @@ fn gen_mat_vec_mul() {
         S2: Data<Elem = A>,
     {
         let ((m, _), k) = (lhs.dim(), rhs.dim());
-        reference_mat_mul(lhs, &rhs.as_standard_layout().into_shape((k, 1)).unwrap())
-            .into_shape(m)
+        reference_mat_mul(lhs, &rhs.as_standard_layout().into_shape_with_order((k, 1)).unwrap())
+            .into_shape_with_order(m)
             .unwrap()
     }
 
@@ -776,8 +776,8 @@ fn vec_mat_mul() {
         S2: Data<Elem = A>,
     {
         let (m, (_, n)) = (lhs.dim(), rhs.dim());
-        reference_mat_mul(&lhs.as_standard_layout().into_shape((1, m)).unwrap(), rhs)
-            .into_shape(n)
+        reference_mat_mul(&lhs.as_standard_layout().into_shape_with_order((1, m)).unwrap(), rhs)
+            .into_shape_with_order(n)
             .unwrap()
     }
 

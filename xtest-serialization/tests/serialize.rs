@@ -77,7 +77,7 @@ fn serial_ixdyn_serde() {
 
     {
         let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]])
-            .into_shape(IxDyn(&[3, 1, 1, 1, 2, 1]))
+            .into_shape_with_order(IxDyn(&[3, 1, 1, 1, 2, 1]))
             .unwrap();
         let serial = serde_json::to_string(&a).unwrap();
         println!("Serde encode {:?} => {:?}", a, serial);

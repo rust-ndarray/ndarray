@@ -329,7 +329,7 @@ where
         A: Clone,
         Sh: ShapeBuilder<Dim = D>,
     {
-        let shape = shape.into_shape();
+        let shape = shape.into_shape_with_order();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
         let v = vec![elem; size];
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
@@ -383,7 +383,7 @@ where
         Sh: ShapeBuilder<Dim = D>,
         F: FnMut() -> A,
     {
-        let shape = shape.into_shape();
+        let shape = shape.into_shape_with_order();
         let len = size_of_shape_checked_unwrap!(&shape.dim);
         let v = to_vec_mapped(0..len, move |_| f());
         unsafe { Self::from_shape_vec_unchecked(shape, v) }
@@ -414,7 +414,7 @@ where
         Sh: ShapeBuilder<Dim = D>,
         F: FnMut(D::Pattern) -> A,
     {
-        let shape = shape.into_shape();
+        let shape = shape.into_shape_with_order();
         let _ = size_of_shape_checked_unwrap!(&shape.dim);
         if shape.is_c() {
             let v = to_vec_mapped(indices(shape.dim.clone()).into_iter(), f);
@@ -591,7 +591,7 @@ where
         Sh: ShapeBuilder<Dim = D>,
     {
         unsafe {
-            let shape = shape.into_shape();
+            let shape = shape.into_shape_with_order();
             let size = size_of_shape_checked_unwrap!(&shape.dim);
             let mut v = Vec::with_capacity(size);
             v.set_len(size);
@@ -664,7 +664,7 @@ where
         A: Copy,
         Sh: ShapeBuilder<Dim = D>,
     {
-        let shape = shape.into_shape();
+        let shape = shape.into_shape_with_order();
         let size = size_of_shape_checked_unwrap!(&shape.dim);
         let mut v = Vec::with_capacity(size);
         v.set_len(size);
@@ -687,7 +687,7 @@ where
         Sh: ShapeBuilder<Dim = D>,
     {
         unsafe {
-            let shape = shape.into_shape();
+            let shape = shape.into_shape_with_order();
             let size = size_of_shape_checked_unwrap!(&shape.dim);
             let mut v = Vec::with_capacity(size);
             v.set_len(size);

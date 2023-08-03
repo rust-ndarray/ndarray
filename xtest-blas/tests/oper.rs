@@ -45,26 +45,26 @@ fn mat_vec_product_1d_inverted_axis() {
 
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 
 fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 
 fn range_mat_complex(m: Ix, n: Ix) -> Array2<Complex32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
         .map(|&f| Complex32::new(f, 0.))
 }
 
 fn range_mat_complex64(m: Ix, n: Ix) -> Array2<Complex64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
         .map(|&f| Complex64::new(f, 0.))
 }
@@ -75,7 +75,7 @@ fn range1_mat64(m: Ix) -> Array1<f64> {
 
 fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
     Array::from_iter(0..(m * n) as i32)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 
@@ -119,8 +119,8 @@ where
     S2: Data<Elem = A>,
 {
     let ((m, _), k) = (lhs.dim(), rhs.dim());
-    reference_mat_mul(lhs, &rhs.as_standard_layout().into_shape((k, 1)).unwrap())
-        .into_shape(m)
+    reference_mat_mul(lhs, &rhs.as_standard_layout().into_shape_with_order((k, 1)).unwrap())
+        .into_shape_with_order(m)
         .unwrap()
 }
 
@@ -132,8 +132,8 @@ where
     S2: Data<Elem = A>,
 {
     let (m, (_, n)) = (lhs.dim(), rhs.dim());
-    reference_mat_mul(&lhs.as_standard_layout().into_shape((1, m)).unwrap(), rhs)
-        .into_shape(n)
+    reference_mat_mul(&lhs.as_standard_layout().into_shape_with_order((1, m)).unwrap(), rhs)
+        .into_shape_with_order(n)
         .unwrap()
 }
 

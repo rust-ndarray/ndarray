@@ -564,7 +564,7 @@ fn axis_chunks_iter_corner_cases() {
 fn axis_chunks_iter_zero_stride() {
     {
         // stride 0 case
-        let b = Array::from(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
+        let b = Array::from(vec![0f32; 0]).into_shape_with_order((5, 0, 3)).unwrap();
         let shapes: Vec<_> = b
             .axis_chunks_iter(Axis(0), 2)
             .map(|v| v.raw_dim())
@@ -574,7 +574,7 @@ fn axis_chunks_iter_zero_stride() {
 
     {
         // stride 0 case reverse
-        let b = Array::from(vec![0f32; 0]).into_shape((5, 0, 3)).unwrap();
+        let b = Array::from(vec![0f32; 0]).into_shape_with_order((5, 0, 3)).unwrap();
         let shapes: Vec<_> = b
             .axis_chunks_iter(Axis(0), 2)
             .rev()
@@ -744,7 +744,7 @@ fn iterators_are_send_sync() {
     // are too.
     fn _send_sync<T: Send + Sync>(_: &T) {}
 
-    let mut a = ArcArray::from_iter(0..30).into_shape((5, 3, 2)).unwrap();
+    let mut a = ArcArray::from_iter(0..30).into_shape_with_order((5, 3, 2)).unwrap();
 
     _send_sync(&a.view());
     _send_sync(&a.view_mut());
@@ -904,11 +904,11 @@ fn test_into_iter() {
 
 #[test]
 fn test_into_iter_2d() {
-    let a = Array1::from(vec![1, 2, 3, 4]).into_shape((2, 2)).unwrap();
+    let a = Array1::from(vec![1, 2, 3, 4]).into_shape_with_order((2, 2)).unwrap();
     let v = a.into_iter().collect::<Vec<_>>();
     assert_eq!(v, [1, 2, 3, 4]);
 
-    let a = Array1::from(vec![1, 2, 3, 4]).into_shape((2, 2)).unwrap().reversed_axes();
+    let a = Array1::from(vec![1, 2, 3, 4]).into_shape_with_order((2, 2)).unwrap().reversed_axes();
     let v = a.into_iter().collect::<Vec<_>>();
     assert_eq!(v, [1, 3, 2, 4]);
 }
@@ -930,7 +930,7 @@ fn test_into_iter_sliced() {
                         let j2 = j2 as isize;
                         let mut a = Array1::from_iter(0..(m * n) as i32)
                             .mapv(|v| DropCount::new(v, &drops))
-                            .into_shape((m, n)).unwrap();
+                            .into_shape_with_order((m, n)).unwrap();
                         a.slice_collapse(s![i..i2, j..j2]);
                         if invert < a.ndim() {
                             a.invert_axis(Axis(invert));

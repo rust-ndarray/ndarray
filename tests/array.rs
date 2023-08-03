@@ -149,7 +149,7 @@ fn test_slice_with_many_dim() {
         [A[&[0, 0, 0, 0, 0, 1, 0][..]], A[&[0, 0, 2, 0, 0, 1, 0][..]]],
         [A[&[1, 0, 0, 0, 0, 1, 0][..]], A[&[1, 0, 2, 0, 0, 1, 0][..]]]
     ]
-    .into_shape(new_shape)
+    .into_shape_with_order(new_shape)
     .unwrap();
     assert_eq!(vi, correct);
 
@@ -404,7 +404,7 @@ fn test_multislice() {
         };
     }
 
-    let mut arr = Array1::from_iter(0..48).into_shape((8, 6)).unwrap();
+    let mut arr = Array1::from_iter(0..48).into_shape_with_order((8, 6)).unwrap();
 
     assert_eq!(
         (arr.clone().view_mut(),),
@@ -518,9 +518,9 @@ fn test_index() {
 fn test_index_arrays() {
     let a = Array1::from_iter(0..12);
     assert_eq!(a[1], a[[1]]);
-    let v = a.view().into_shape((3, 4)).unwrap();
+    let v = a.view().into_shape_with_order((3, 4)).unwrap();
     assert_eq!(a[1], v[[0, 1]]);
-    let w = v.into_shape((2, 2, 3)).unwrap();
+    let w = v.into_shape_with_order((2, 2, 3)).unwrap();
     assert_eq!(a[1], w[[0, 0, 1]]);
 }
 
@@ -855,7 +855,7 @@ fn permuted_axes() {
     let permuted = a.view().permuted_axes([0]);
     assert_eq!(a, permuted);
 
-    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
+    let a = Array::from_iter(0..24).into_shape_with_order((2, 3, 4)).unwrap();
     let permuted = a.view().permuted_axes([2, 1, 0]);
     for ((i0, i1, i2), elem) in a.indexed_iter() {
         assert_eq!(*elem, permuted[(i2, i1, i0)]);
@@ -865,7 +865,7 @@ fn permuted_axes() {
         assert_eq!(*elem, permuted[&[i0, i2, i1][..]]);
     }
 
-    let a = Array::from_iter(0..120).into_shape((2, 3, 4, 5)).unwrap();
+    let a = Array::from_iter(0..120).into_shape_with_order((2, 3, 4, 5)).unwrap();
     let permuted = a.view().permuted_axes([1, 0, 3, 2]);
     for ((i0, i1, i2, i3), elem) in a.indexed_iter() {
         assert_eq!(*elem, permuted[(i1, i0, i3, i2)]);
@@ -879,7 +879,7 @@ fn permuted_axes() {
 #[should_panic]
 #[test]
 fn permuted_axes_repeated_axis() {
-    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
+    let a = Array::from_iter(0..24).into_shape_with_order((2, 3, 4)).unwrap();
     a.view().permuted_axes([1, 0, 1]);
 }
 
@@ -887,7 +887,7 @@ fn permuted_axes_repeated_axis() {
 #[test]
 fn permuted_axes_missing_axis() {
     let a = Array::from_iter(0..24)
-        .into_shape((2, 3, 4))
+        .into_shape_with_order((2, 3, 4))
         .unwrap()
         .into_dyn();
     a.view().permuted_axes(&[2, 0][..]);
@@ -896,7 +896,7 @@ fn permuted_axes_missing_axis() {
 #[should_panic]
 #[test]
 fn permuted_axes_oob() {
-    let a = Array::from_iter(0..24).into_shape((2, 3, 4)).unwrap();
+    let a = Array::from_iter(0..24).into_shape_with_order((2, 3, 4)).unwrap();
     a.view().permuted_axes([1, 0, 3]);
 }
 
@@ -1055,7 +1055,7 @@ fn as_slice_memory_order_mut_contiguous_cowarray() {
 fn to_slice_memory_order() {
     for shape in vec![[2, 0, 3, 5], [2, 1, 3, 5], [2, 4, 3, 5]] {
         let data: Vec<usize> = (0..shape.iter().product()).collect();
-        let mut orig = Array1::from(data.clone()).into_shape(shape).unwrap();
+        let mut orig = Array1::from(data.clone()).into_shape_with_order(shape).unwrap();
         for perm in vec![[0, 1, 2, 3], [0, 2, 1, 3], [2, 0, 1, 3]] {
             let mut a = orig.view_mut().permuted_axes(perm);
             assert_eq!(a.as_slice_memory_order().unwrap(), &data);
@@ -1424,7 +1424,7 @@ fn aview() {
 fn aview_mut() {
     let mut data = [0; 16];
     {
-        let mut a = aview_mut1(&mut data).into_shape((4, 4)).unwrap();
+        let mut a = aview_mut1(&mut data).into_shape_with_order((4, 4)).unwrap();
         {
             let mut slc = a.slice_mut(s![..2, ..;2]);
             slc += 1;
@@ -1906,7 +1906,7 @@ fn map_mut_with_unsharing() {
 fn test_view_from_shape() {
     let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     let a = ArrayView::from_shape((2, 3, 2), &s).unwrap();
-    let mut answer = Array::from(s.to_vec()).into_shape((2, 3, 2)).unwrap();
+    let mut answer = Array::from(s.to_vec()).into_shape_with_order((2, 3, 2)).unwrap();
     assert_eq!(a, answer);
 
     // custom strides (row major)
@@ -2240,7 +2240,7 @@ fn test_array_clone_unalias() {
 
 #[test]
 fn test_array_clone_same_view() {
-    let mut a = Array::from_iter(0..9).into_shape((3, 3)).unwrap();
+    let mut a = Array::from_iter(0..9).into_shape_with_order((3, 3)).unwrap();
     a.slice_collapse(s![..;-1, ..;-1]);
     let b = a.clone();
     assert_eq!(a, b);

@@ -65,7 +65,7 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
         }
     }
 
-    res_elems.into_shape((m, n)).unwrap()
+    res_elems.into_shape_with_order((m, n)).unwrap()
 }
 
 fn gen<A, D>(d: D, rng: &mut SmallRng) -> Array<A, D>

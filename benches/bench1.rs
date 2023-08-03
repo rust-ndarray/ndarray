@@ -915,7 +915,7 @@ const MEAN_SUM_N: usize = 127;
 fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     assert!(m * n != 0);
     Array::linspace(0., (m * n - 1) as f32, m * n)
-        .into_shape((m, n))
+        .into_shape_with_order((m, n))
         .unwrap()
 }
 

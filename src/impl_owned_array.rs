@@ -232,7 +232,7 @@ impl<A, D> Array<A, D>
     /// ```
     /// use ndarray::Array;
     ///
-    /// let a = Array::from_iter(0..100).into_shape((10, 10)).unwrap();
+    /// let a = Array::from_iter(0..100).into_shape_with_order((10, 10)).unwrap();
     /// let mut b = Array::uninit((10, 10));
     /// a.move_into_uninit(&mut b);
     /// unsafe {
@@ -448,8 +448,8 @@ impl<A, D> Array<A, D>
     ///
     /// // create an empty array and append two rows at a time
     /// let mut a = Array::zeros((0, 4));
-    /// let ones  = ArrayView::from(&[1.; 8]).into_shape((2, 4)).unwrap();
-    /// let zeros = ArrayView::from(&[0.; 8]).into_shape((2, 4)).unwrap();
+    /// let ones  = ArrayView::from(&[1.; 8]).into_shape_with_order((2, 4)).unwrap();
+    /// let zeros = ArrayView::from(&[0.; 8]).into_shape_with_order((2, 4)).unwrap();
     /// a.append(Axis(0), ones).unwrap();
     /// a.append(Axis(0), zeros).unwrap();
     /// a.append(Axis(0), ones).unwrap();
