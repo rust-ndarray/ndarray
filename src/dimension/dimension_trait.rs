@@ -90,7 +90,7 @@ pub trait Dimension:
     fn size_checked(&self) -> Option<usize> {
         self.slice()
             .iter()
-            .fold(Some(1), |s, &a| s.and_then(|s_| s_.checked_mul(a)))
+            .try_fold(1_usize, |s, &a| s.checked_mul(a))
     }
 
     #[doc(hidden)]
