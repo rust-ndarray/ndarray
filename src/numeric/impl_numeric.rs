@@ -319,7 +319,7 @@ where
         self.iter().enumerate().max_by(|(_, x), (_, y)| x.cmp(y)).map(|x| (x.0, *x.1))
     }
 
-    /// Return the index and associated value corresponding to the max value in the entire array.
+    /// Return the index and associated value corresponding to the min value in the entire array.
     /// 
     /// Return `None` if the array is empty.
     /// 
