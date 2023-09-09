@@ -257,6 +257,86 @@ where
         }
     }
 
+    /// Return the max value in the entire array.
+    /// 
+    /// Return `None` if the array is empty.
+    /// 
+    /// ```
+    /// use ndarray::arr2;
+    /// 
+    /// let a = arr2(&[[1, 2, 3],
+    ///                [4, 5, 6]]);
+    /// 
+    /// assert!(
+    ///     a.max().unwrap() == 6
+    /// );
+    /// ```
+    pub fn max(&self) -> Option<A>
+    where 
+        A: Ord + Copy 
+    {
+        self.iter().max_by(|x, y| x.cmp(y)).map(|x| *x)
+    }
+
+
+    /// Return the min value in the entire array.
+    /// 
+    /// Return `None` if the array is empty.
+    /// 
+    /// ```
+    /// use ndarray::arr2;
+    /// 
+    /// let a = arr2(&[[1, 2, 3],
+    ///                [4, 5, 6]]);
+    /// 
+    /// assert!(
+    ///     a.min().unwrap() == 1
+    /// );
+    /// ```
+    pub fn min(&self) -> Option<A>
+    where 
+        A: Ord + Copy 
+    {
+        self.iter().min_by(|x, y| x.cmp(y)).map(|x| *x)
+    }
+
+
+    /// Return the index and associated value corresponding to the max value in the entire array.
+    /// 
+    /// Return `None` if the array is empty.
+    /// 
+    /// ```
+    /// use ndarray::arr2;
+    /// 
+    /// let a = arr2(&[[1, 2, 3],
+    ///                [4, 5, 6]]);
+    /// 
+    /// assert!(
+    ///     a.argmax().unwrap() == (5, 6)
+    /// );
+    /// ```
+    pub fn argmax(&self) -> Option<(usize, A)> where A: Ord + Copy {
+        self.iter().enumerate().max_by(|(_, x), (_, y)| x.cmp(y)).map(|x| (x.0, *x.1))
+    }
+
+    /// Return the index and associated value corresponding to the max value in the entire array.
+    /// 
+    /// Return `None` if the array is empty.
+    /// 
+    /// ```
+    /// use ndarray::arr2;
+    /// 
+    /// let a = arr2(&[[1, 2, 3],
+    ///                [4, 5, 6]]);
+    /// 
+    /// assert!(
+    ///     a.argmin().unwrap() == (0, 1)
+    /// );
+    /// ```
+    pub fn argmin(&self) -> Option<(usize, A)> where A: Ord + Copy {
+        self.iter().enumerate().min_by(|(_, x), (_, y)| x.cmp(y)).map(|x| (x.0, *x.1))
+    }
+
     /// Return mean along `axis`.
     ///
     /// Return `None` if the length of the axis is zero.
