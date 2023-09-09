@@ -307,3 +307,67 @@ fn std_axis_empty_axis() {
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
 }
+
+#[test]
+#[cfg(feature = "std")]
+fn max_argmax_empty_array() {
+    let a = Array::from_iter(std::iter::empty());
+    let v: Option<u32> = a.max();
+    assert!(v.is_none());
+
+    let v: Option<(usize, u32)> = a.argmax();
+    assert!(v.is_none());
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn min_argmin_empty_array() {
+    let a = Array::from_iter(std::iter::empty());
+    let v: Option<u32> = a.min();
+    assert!(v.is_none());
+
+    let v: Option<(usize, u32)> = a.argmin();
+    assert!(v.is_none());
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn max_simple_array() {
+    let a = array![1, 2, 3, 4];
+    let v = a.max();
+    assert_eq!(v, Some(4));
+
+    let v = a.argmax();
+    assert_eq!(v, Some((3, 4)));
+
+    let a = array![
+        [1, 2, 3, 4],
+        [100, 101, 104, 103]
+    ];
+    let v = a.max();
+    assert_eq!(v, Some(104));
+
+    let v = a.argmax();
+    assert_eq!(v, Some((6, 104)));
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn min_simple_array() {
+    let a = array![1, 2, 3, 4];
+    let v = a.min();
+    assert_eq!(v, Some(1));
+
+    let v = a.argmin();
+    assert_eq!(v, Some((0, 1)));
+
+    let a: Array2<i32> = array![
+        [1, -2, 3, 4],
+        [100, 101, 104, 103]
+    ];
+    let v = a.min();
+    assert_eq!(v, Some(-2));
+
+    let v = a.argmin();
+    assert_eq!(v, Some((1, -2)));
+}
