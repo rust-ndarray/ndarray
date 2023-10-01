@@ -141,4 +141,78 @@ where
         let (m, n) = self.dim();
         m == n
     }
+
+    /// Return the elements on and below the kth diagonal of A. 
+    /// If k=-1, it returns the lower triangular part of A excluding the main diagonal. 
+    /// If k=0 it returns the lower triangular part of A including the main diagonal. 
+    /// If k=1 it returns the lower triangular part of A including the main diagonal and the diagonal above it, and so on
+    /// 
+    /// # Examples
+    /// ```
+    /// 
+    /// use ndarray::{array, Array2};
+    /// let A = Array2::<f64>::ones((3, 3));
+
+    /// let L_1 = A.tril(-1);
+    /// let L_2 = A.tril(0);
+    /// let L_3 = A.tril(1);
+
+    /// assert_eq!(
+    ///     L_1,
+    ///     array![
+    ///         [0.0, 0.0, 0.0], 
+    ///         [1.0, 0.0, 0.0], 
+    ///         [1.0, 1.0, 0.0]
+    ///     ]
+    /// );
+    /// assert_eq!(
+    ///     L_2,
+    ///     array![
+    ///         [1.0, 0.0, 0.0], 
+    ///         [1.0, 1.0, 0.0], 
+    ///         [1.0, 1.0, 1.0]
+    ///     ]
+    /// );
+    /// assert_eq!(
+    ///     L_3,
+    ///     array![
+    ///         [1.0, 1.0, 0.0], 
+    ///         [1.0, 1.0, 1.0], 
+    ///         [1.0, 1.0, 1.0]
+    ///     ]
+    /// );
+    /// 
+    /// 
+    /// ```
+    pub fn tril (self, k:i32) -> Self
+    where S: DataMut,
+          A: num_traits::Zero,
+    {
+        let mut b: ArrayBase<S, Dim<[usize; 2]>> = self;
+        let (n,m) = b.dim();
+        for i in 0..n{
+            for j in 0..m{
+                match k.cmp(&0) {
+                    std::cmp::Ordering::Less => {
+                        if j +((- k) as usize)> i {
+                            // A[[i,j]] = 0.0;
+                            b.index_axis_mut(Axis(0), i)[j] = A::zero();
+                        }
+                    },
+                    std::cmp::Ordering::Equal => {
+                        if j > i{
+                            b.index_axis_mut(Axis(0), i)[j] = A::zero();
+                        }
+                    },
+                    std::cmp::Ordering::Greater => {
+                        if j > i + k as usize{
+                            b.index_axis_mut(Axis(0), i)[j] = A::zero();
+                        }
+                    }
+                }
+            }
+        }
+        b
+    }
+
 }
