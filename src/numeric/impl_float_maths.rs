@@ -160,17 +160,9 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if `min > max`, `min` is `NaN`, or `max` is `NaN`.
+    /// Panics if `!(min <= max)`.
     pub fn clamp(&self, min: A, max: A) -> Array<A, D> {
         assert!(min <= max, "min must be less than or equal to max");
-        self.mapv(|v| {
-            if v < min {
-                min.clone()
-            } else if v > max {
-                max.clone()
-            } else {
-                v
-            }
-        })
+        self.mapv(|a| num_traits::clamp(a, min.clone(), max.clone()))
     }
 }
