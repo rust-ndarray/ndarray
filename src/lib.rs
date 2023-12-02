@@ -9,6 +9,7 @@
 #![doc(html_root_url = "https://docs.rs/ndarray/0.15/")]
 #![doc(html_logo_url = "https://rust-ndarray.github.io/images/rust-ndarray_logo.svg")]
 #![allow(
+    unstable_name_collisions, // our `PointerExt` collides with upcoming inherent methods on `NonNull`
     clippy::many_single_char_names,
     clippy::deref_addrof,
     clippy::unreadable_literal,
