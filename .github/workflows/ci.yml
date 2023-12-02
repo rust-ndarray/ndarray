@@ -39,7 +39,7 @@ jobs:
       matrix:
         include:
           - rust: stable
-            target: mips-unknown-linux-gnu
+            target: powerpc-unknown-linux-gnu
           - rust: stable
             target: i686-unknown-linux-gnu
 
