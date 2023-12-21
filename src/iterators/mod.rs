@@ -488,10 +488,10 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D> {
             None => return None,
             Some(ref ix) => ix.clone(),
         };
-        match self.0.next() {
-            None => None,
-            Some(elem) => Some((index.into_pattern(), elem)),
-        }
+
+        self.0.next().map(|elem| {
+            (index.into_pattern(), elem)
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

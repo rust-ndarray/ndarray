@@ -455,12 +455,12 @@ where
         indices: T,
         in_dim: PhantomData<Din>,
         out_dim: PhantomData<Dout>,
-    ) -> SliceInfo<T, Din, Dout> {
+    ) -> Self {
         if cfg!(debug_assertions) {
             check_dims_for_sliceinfo::<Din, Dout>(indices.as_ref())
                 .expect("`Din` and `Dout` must be consistent with `indices`.");
         }
-        SliceInfo {
+        Self {
             in_dim,
             out_dim,
             indices,
@@ -521,7 +521,7 @@ where
 
     fn try_from(
         indices: &'a [SliceInfoElem],
-    ) -> Result<SliceInfo<&'a [SliceInfoElem], Din, Dout>, ShapeError> {
+    ) -> Result<Self, ShapeError> {
         unsafe {
             // This is okay because `&[SliceInfoElem]` always returns the same
             // value for `.as_ref()`.
@@ -539,7 +539,7 @@ where
 
     fn try_from(
         indices: Vec<SliceInfoElem>,
-    ) -> Result<SliceInfo<Vec<SliceInfoElem>, Din, Dout>, ShapeError> {
+    ) -> Result<Self, ShapeError> {
         unsafe {
             // This is okay because `Vec` always returns the same value for
             // `.as_ref()`.
@@ -560,7 +560,7 @@ macro_rules! impl_tryfrom_array_for_sliceinfo {
 
             fn try_from(
                 indices: [SliceInfoElem; $len],
-            ) -> Result<SliceInfo<[SliceInfoElem; $len], Din, Dout>, ShapeError> {
+            ) -> Result<Self, ShapeError> {
                 unsafe {
                     // This is okay because `[SliceInfoElem; N]` always returns
                     // the same value for `.as_ref()`.
@@ -598,8 +598,8 @@ where
     Din: Dimension,
     Dout: Dimension,
 {
-    fn from(info: &'a SliceInfo<T, Din, Dout>) -> SliceInfo<&'a [SliceInfoElem], Din, Dout> {
-        SliceInfo {
+    fn from(info: &'a SliceInfo<T, Din, Dout>) -> Self {
+        Self {
             in_dim: info.in_dim,
             out_dim: info.out_dim,
             indices: info.indices.as_ref(),
@@ -622,7 +622,7 @@ where
     Dout: Dimension,
 {
     fn clone(&self) -> Self {
-        SliceInfo {
+        Self {
             in_dim: PhantomData,
             out_dim: PhantomData,
             indices: self.indices.clone(),

@@ -1528,10 +1528,7 @@ where
             )
         }
 
-        match self.broadcast(dim.clone()) {
-            Some(it) => it,
-            None => broadcast_panic(&self.dim, &dim),
-        }
+        self.broadcast(dim.clone()).unwrap_or_else(|| broadcast_panic(&self.dim, &dim))
     }
 
     // Broadcast to dimension `E`, without checking that the dimensions match
