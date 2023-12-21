@@ -46,7 +46,7 @@ where
             let has_unreachable_elements = array.dim.size() != data_len;
             let inner = Baseiter::new(ptr, array.dim, array.strides);
 
-            IntoIter {
+            Self {
                 array_data,
                 inner,
                 data_len,

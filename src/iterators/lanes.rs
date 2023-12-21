@@ -49,7 +49,7 @@ impl<'a, A, D: Dimension> Lanes<'a, A, D> {
             stride = v.strides[i] as isize;
             v.try_remove_axis(axis)
         };
-        Lanes {
+        Self {
             inner_len: len,
             inner_stride: stride,
             base: iter_v,
@@ -117,7 +117,7 @@ impl<'a, A, D: Dimension> LanesMut<'a, A, D> {
             stride = v.strides[i] as isize;
             v.try_remove_axis(axis)
         };
-        LanesMut {
+        Self {
             inner_len: len,
             inner_stride: stride,
             base: iter_v,

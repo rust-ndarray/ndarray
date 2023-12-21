@@ -26,7 +26,7 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         let mut unit_stride = D::zeros(ndim);
         unit_stride.slice_mut().fill(1);
 
-        Windows::new_with_stride(a, window, unit_stride)
+        Self::new_with_stride(a, window, unit_stride)
     }
 
     pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, axis_strides: E) -> Self
@@ -73,7 +73,7 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
             }
         });
 
-        Windows {
+        Self {
             base,
             window,
             strides: window_strides,

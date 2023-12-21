@@ -46,8 +46,8 @@ impl<A, D: Dimension> Baseiter<A, D> {
     /// to be correct to avoid performing an unsafe pointer offset while
     /// iterating.
     #[inline]
-    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D> {
-        Baseiter {
+    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Self {
+        Self {
             ptr,
             index: len.first_index(),
             dim: len,
@@ -200,7 +200,7 @@ clone_bounds!(
 
 impl<'a, A, D: Dimension> ElementsBase<'a, A, D> {
     pub fn new(v: ArrayView<'a, A, D>) -> Self {
-        ElementsBase {
+        Self {
             inner: v.into_base_iter(),
             life: PhantomData,
         }
@@ -281,7 +281,7 @@ where
     D: Dimension,
 {
     pub(crate) fn new(self_: ArrayView<'a, A, D>) -> Self {
-        Iter {
+        Self {
             inner: if let Some(slc) = self_.to_slice() {
                 ElementsRepr::Slice(slc.iter())
             } else {
@@ -296,7 +296,7 @@ where
     D: Dimension,
 {
     pub(crate) fn new(self_: ArrayViewMut<'a, A, D>) -> Self {
-        IterMut {
+        Self {
             inner: match self_.try_into_slice() {
                 Ok(x) => ElementsRepr::Slice(x.iter_mut()),
                 Err(self_) => ElementsRepr::Counted(self_.into_elements_base()),
@@ -345,7 +345,7 @@ pub struct ElementsBaseMut<'a, A, D> {
 
 impl<'a, A, D: Dimension> ElementsBaseMut<'a, A, D> {
     pub fn new(v: ArrayViewMut<'a, A, D>) -> Self {
-        ElementsBaseMut {
+        Self {
             inner: v.into_base_iter(),
             life: PhantomData,
         }
@@ -367,7 +367,7 @@ where
     D: Dimension,
 {
     pub(crate) fn new(x: ElementsBase<'a, A, D>) -> Self {
-        IndexedIter(x)
+        Self(x)
     }
 }
 
@@ -376,7 +376,7 @@ where
     D: Dimension,
 {
     pub(crate) fn new(x: ElementsBaseMut<'a, A, D>) -> Self {
-        IndexedIterMut(x)
+        Self(x)
     }
 }
 
@@ -805,7 +805,7 @@ impl<A, D: Dimension> AxisIterCore<A, D> {
         Di: RemoveAxis<Smaller = D>,
         S: Data<Elem = A>,
     {
-        AxisIterCore {
+        Self {
             index: 0,
             end: v.len_of(axis),
             stride: v.stride_of(axis),
@@ -952,7 +952,7 @@ impl<'a, A, D: Dimension> AxisIter<'a, A, D> {
     where
         Di: RemoveAxis<Smaller = D>,
     {
-        AxisIter {
+        Self {
             iter: AxisIterCore::new(v, axis),
             life: PhantomData,
         }
@@ -1038,7 +1038,7 @@ impl<'a, A, D: Dimension> AxisIterMut<'a, A, D> {
     where
         Di: RemoveAxis<Smaller = D>,
     {
-        AxisIterMut {
+        Self {
             iter: AxisIterCore::new(v, axis),
             life: PhantomData,
         }
@@ -1293,7 +1293,7 @@ fn chunk_iter_parts<A, D: Dimension>(
 impl<'a, A, D: Dimension> AxisChunksIter<'a, A, D> {
     pub(crate) fn new(v: ArrayView<'a, A, D>, axis: Axis, size: usize) -> Self {
         let (iter, partial_chunk_index, partial_chunk_dim) = chunk_iter_parts(v, axis, size);
-        AxisChunksIter {
+        Self {
             iter,
             partial_chunk_index,
             partial_chunk_dim,
@@ -1408,7 +1408,7 @@ impl<'a, A, D: Dimension> AxisChunksIterMut<'a, A, D> {
     pub(crate) fn new(v: ArrayViewMut<'a, A, D>, axis: Axis, size: usize) -> Self {
         let (iter, partial_chunk_index, partial_chunk_dim) =
             chunk_iter_parts(v.into_view(), axis, size);
-        AxisChunksIterMut {
+            Self {
             iter,
             partial_chunk_index,
             partial_chunk_dim,

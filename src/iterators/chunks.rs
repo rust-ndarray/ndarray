@@ -152,7 +152,7 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D> {
         let inner_strides = a.raw_strides();
         a.strides *= &chunk;
 
-        ExactChunksMut {
+        Self {
             base: a,
             chunk,
             inner_strides,

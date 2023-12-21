@@ -971,7 +971,7 @@ impl PartialEq for DropCount<'_> {
 
 impl<'a> DropCount<'a> {
     fn new(value: i32, drops: &'a Cell<usize>) -> Self {
-        DropCount { value, my_drops: 0, drops }
+        Self { value, my_drops: 0, drops }
     }
 }
 

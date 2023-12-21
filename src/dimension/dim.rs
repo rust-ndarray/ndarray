@@ -42,8 +42,8 @@ pub struct Dim<I: ?Sized> {
 
 impl<I> Dim<I> {
     /// Private constructor and accessors for Dim
-    pub(crate) fn new(index: I) -> Dim<I> {
-        Dim { index }
+    pub(crate) fn new(index: I) -> Self {
+        Self { index }
     }
     #[inline(always)]
     pub(crate) fn ix(&self) -> &I {
