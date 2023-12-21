@@ -53,9 +53,9 @@ impl Slice {
     ///
     /// `step` must be nonzero.
     /// (This method checks with a debug assertion that `step` is not zero.)
-    pub fn new(start: isize, end: Option<isize>, step: isize) -> Slice {
+    pub fn new(start: isize, end: Option<isize>, step: isize) -> Self {
         debug_assert_ne!(step, 0, "Slice::new: step must be nonzero");
-        Slice { start, end, step }
+        Self { start, end, step }
     }
 
     /// Create a new `Slice` with the given step size (multiplied with the
@@ -66,7 +66,7 @@ impl Slice {
     #[inline]
     pub fn step_by(self, step: isize) -> Self {
         debug_assert_ne!(step, 0, "Slice::step_by: step must be nonzero");
-        Slice {
+        Self {
             step: self.step * step,
             ..self
         }
@@ -132,25 +132,25 @@ copy_and_clone! {SliceInfoElem}
 impl SliceInfoElem {
     /// Returns `true` if `self` is a `Slice` value.
     pub fn is_slice(&self) -> bool {
-        matches!(self, SliceInfoElem::Slice { .. })
+        matches!(self, Self::Slice { .. })
     }
 
     /// Returns `true` if `self` is an `Index` value.
     pub fn is_index(&self) -> bool {
-        matches!(self, SliceInfoElem::Index(_))
+        matches!(self, Self::Index(_))
     }
 
     /// Returns `true` if `self` is a `NewAxis` value.
     pub fn is_new_axis(&self) -> bool {
-        matches!(self, SliceInfoElem::NewAxis)
+        matches!(self, Self::NewAxis)
     }
 }
 
 impl fmt::Display for SliceInfoElem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            SliceInfoElem::Index(index) => write!(f, "{}", index)?,
-            SliceInfoElem::Slice { start, end, step } => {
+            Self::Index(index) => write!(f, "{}", index)?,
+            Self::Slice { start, end, step } => {
                 if start != 0 {
                     write!(f, "{}", start)?;
                 }
@@ -162,7 +162,7 @@ impl fmt::Display for SliceInfoElem {
                     write!(f, ";{}", step)?;
                 }
             }
-            SliceInfoElem::NewAxis => write!(f, stringify!(NewAxis))?,
+            Self::NewAxis => write!(f, stringify!(NewAxis))?,
         }
         Ok(())
     }

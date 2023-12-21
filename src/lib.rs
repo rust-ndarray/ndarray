@@ -1464,7 +1464,7 @@ pub struct ViewRepr<A> {
 impl<A> ViewRepr<A> {
     #[inline(always)]
     fn new() -> Self {
-        ViewRepr { life: PhantomData }
+        Self { life: PhantomData }
     }
 }
 
@@ -1482,18 +1482,12 @@ pub enum CowRepr<'a, A> {
 impl<'a, A> CowRepr<'a, A> {
     /// Returns `true` iff the data is the `View` variant.
     pub fn is_view(&self) -> bool {
-        match self {
-            CowRepr::View(_) => true,
-            CowRepr::Owned(_) => false,
-        }
+        matches!(self, Self::View(_))
     }
 
     /// Returns `true` iff the data is the `Owned` variant.
     pub fn is_owned(&self) -> bool {
-        match self {
-            CowRepr::View(_) => false,
-            CowRepr::Owned(_) => true,
-        }
+        matches!(self, Self::Owned(_))
     }
 }
 

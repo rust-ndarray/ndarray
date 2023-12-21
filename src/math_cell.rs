@@ -17,7 +17,7 @@ pub struct MathCell<T>(Cell<T>);
 impl<T> MathCell<T> {
     /// Create a new cell with the given value
     #[inline(always)]
-    pub const fn new(value: T) -> Self { MathCell(Cell::new(value)) }
+    pub const fn new(value: T) -> Self { Self(Cell::new(value)) }
 
     /// Return the inner value
     pub fn into_inner(self) -> T { Cell::into_inner(self.0) }
@@ -43,7 +43,7 @@ impl<T> Clone for MathCell<T>
     where T: Copy
 {
     fn clone(&self) -> Self {
-        MathCell::new(self.get())
+        Self::new(self.get())
     }
 }
 

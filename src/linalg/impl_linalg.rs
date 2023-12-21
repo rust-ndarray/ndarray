@@ -153,12 +153,11 @@ unsafe fn blas_1d_params<A>(
     //        ^--ptr
     //        stride = -1
     //  ^--blas_ptr = ptr + (len - 1) * stride
-    if stride >= 0 || len == 0 {
-        (ptr, len as blas_index, stride as blas_index)
+    (if stride >= 0 || len == 0 {
+        ptr
     } else {
-        let ptr = ptr.offset((len - 1) as isize * stride);
-        (ptr, len as blas_index, stride as blas_index)
-    }
+        ptr.offset((len - 1) as isize * stride)
+    }, len as blas_index, stride as blas_index)
 }
 
 /// Matrix Multiplication
