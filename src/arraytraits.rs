@@ -95,10 +95,8 @@ where
         if self.shape() != rhs.shape() {
             return false;
         }
-        if let Some(self_s) = self.as_slice() {
-            if let Some(rhs_s) = rhs.as_slice() {
-                return numeric_util::unrolled_eq(self_s, rhs_s);
-            }
+        if let Some((self_s, rhs_s)) = self.as_slice().zip(rhs.as_slice()) {
+            return numeric_util::unrolled_eq(self_s, rhs_s);
         }
         Zip::from(self)
             .and(rhs)

@@ -38,10 +38,10 @@ where
         }
         let mut sum = A::zero();
         for row in self.rows() {
-            if let Some(slc) = row.as_slice() {
-                sum = sum + numeric_util::unrolled_fold(slc, A::zero, A::add);
+            sum = sum + if let Some(slc) = row.as_slice() {
+                numeric_util::unrolled_fold(slc, A::zero, A::add)
             } else {
-                sum = sum + row.iter().fold(A::zero(), |acc, elt| acc + elt.clone());
+                row.iter().fold(A::zero(), |acc, elt| acc + elt.clone())
             }
         }
         sum
@@ -103,11 +103,11 @@ where
         }
         let mut sum = A::one();
         for row in self.rows() {
-            if let Some(slc) = row.as_slice() {
-                sum = sum * numeric_util::unrolled_fold(slc, A::one, A::mul);
+            sum = sum * if let Some(slc) = row.as_slice() {
+                numeric_util::unrolled_fold(slc, A::one, A::mul)
             } else {
-                sum = sum * row.iter().fold(A::one(), |acc, elt| acc * elt.clone());
-            }
+                row.iter().fold(A::one(), |acc, elt| acc * elt.clone())
+            };
         }
         sum
     }

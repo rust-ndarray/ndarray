@@ -477,9 +477,9 @@ where
     ///
     /// The caller must ensure `indices.as_ref()` always returns the same value
     /// when called multiple times.
-    pub unsafe fn new(indices: T) -> Result<SliceInfo<T, Din, Dout>, ShapeError> {
+    pub unsafe fn new(indices: T) -> Result<Self, ShapeError> {
         check_dims_for_sliceinfo::<Din, Dout>(indices.as_ref())?;
-        Ok(SliceInfo {
+        Ok(Self {
             in_dim: PhantomData,
             out_dim: PhantomData,
             indices,
@@ -493,11 +493,7 @@ where
     /// `Din::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
     /// over the `SliceInfoElem` elements.
     pub fn in_ndim(&self) -> usize {
-        if let Some(ndim) = Din::NDIM {
-            ndim
-        } else {
-            self.indices.as_ref().in_ndim()
-        }
+        Din::NDIM.unwrap_or_else(|| self.indices.as_ref().in_ndim())
     }
 
     /// Returns the number of dimensions after calling

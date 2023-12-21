@@ -860,13 +860,12 @@ where
         let ptr = self.as_mut_ptr();
         let offset1 = index1.index_checked(&self.dim, &self.strides);
         let offset2 = index2.index_checked(&self.dim, &self.strides);
-        if let Some(offset1) = offset1 {
-            if let Some(offset2) = offset2 {
-                unsafe {
-                    std::ptr::swap(ptr.offset(offset1), ptr.offset(offset2));
-                }
-                return;
+
+        if let Some((offset1, offset2)) = offset1.zip(offset2) {
+            unsafe {
+                std::ptr::swap(ptr.offset(offset1), ptr.offset(offset2));
             }
+            return;
         }
         panic!("swap: index out of bounds for indices {:?} {:?}", index1, index2);
     }
@@ -2014,10 +2013,8 @@ where
                             .with_strides_dim(strides, dim));
             } else if D::NDIM.is_none() || D2::NDIM.is_none() { // one is dynamic dim
                 // safe because dim, strides are equivalent under a different type
-                if let Some(dim) = D2::from_dimension(&self.dim) {
-                    if let Some(strides) = D2::from_dimension(&self.strides) {
-                        return Ok(self.with_strides_dim(strides, dim));
-                    }
+                if let Some((dim, strides)) = D2::from_dimension(&self.dim).zip(D2::from_dimension(&self.strides)) {
+                    return Ok(self.with_strides_dim(strides, dim));
                 }
             }
         }
@@ -2413,13 +2410,11 @@ where
         debug_assert_eq!(self.shape(), rhs.shape());
 
         if self.dim.strides_equivalent(&self.strides, &rhs.strides) {
-            if let Some(self_s) = self.as_slice_memory_order_mut() {
-                if let Some(rhs_s) = rhs.as_slice_memory_order() {
-                    for (s, r) in self_s.iter_mut().zip(rhs_s) {
-                        f(s, r);
-                    }
-                    return;
+            if let Some((self_s,rhs_s)) = self.as_slice_memory_order_mut().zip(rhs.as_slice_memory_order()) {
+                for (s, r) in self_s.iter_mut().zip(rhs_s) {
+                    f(s, r);
                 }
+                return;
             }
         }
 

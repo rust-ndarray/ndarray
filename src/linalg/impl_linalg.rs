@@ -78,16 +78,15 @@ where
     {
         debug_assert_eq!(self.len(), rhs.len());
         assert!(self.len() == rhs.len());
-        if let Some(self_s) = self.as_slice() {
-            if let Some(rhs_s) = rhs.as_slice() {
-                return numeric_util::unrolled_dot(self_s, rhs_s);
-            }
+
+        if let Some((self_s, rhs_s)) =  self.as_slice().zip(rhs.as_slice()) {
+            return numeric_util::unrolled_dot(self_s, rhs_s);
         }
         let mut sum = A::zero();
         for i in 0..self.len() {
-            unsafe {
-                sum = sum + *self.uget(i) * *rhs.uget(i);
-            }
+            sum = sum + unsafe {
+                *self.uget(i) * *rhs.uget(i)
+            };
         }
         sum
     }
