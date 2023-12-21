@@ -1408,7 +1408,7 @@ impl<'a, A, D: Dimension> AxisChunksIterMut<'a, A, D> {
     pub(crate) fn new(v: ArrayViewMut<'a, A, D>, axis: Axis, size: usize) -> Self {
         let (iter, partial_chunk_index, partial_chunk_dim) =
             chunk_iter_parts(v.into_view(), axis, size);
-            Self {
+        Self {
             iter,
             partial_chunk_index,
             partial_chunk_dim,

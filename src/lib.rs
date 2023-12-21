@@ -1447,7 +1447,7 @@ pub struct RawViewRepr<A> {
 impl<A> RawViewRepr<A> {
     #[inline(always)]
     fn new() -> Self {
-        RawViewRepr { ptr: PhantomData }
+        Self { ptr: PhantomData }
     }
 }
 

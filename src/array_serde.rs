@@ -134,7 +134,7 @@ enum ArrayField {
 
 impl<S, Di> ArrayVisitor<S, Di> {
     pub fn new() -> Self {
-        ArrayVisitor {
+        Self {
             _marker_a: PhantomData,
             _marker_b: PhantomData,
         }

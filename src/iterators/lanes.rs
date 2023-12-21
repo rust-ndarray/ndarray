@@ -82,7 +82,7 @@ where
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = LanesIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        LanesIter {
+        Self::IntoIter {
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
             inner_stride: self.inner_stride,
@@ -132,7 +132,7 @@ where
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = LanesIterMut<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        LanesIterMut {
+        Self::IntoIter {
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
             inner_stride: self.inner_stride,

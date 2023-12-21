@@ -108,7 +108,7 @@ where
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = WindowsIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
-        WindowsIter {
+        Self::IntoIter {
             iter: self.base.into_elements_base(),
             window: self.window,
             strides: self.strides,

@@ -120,7 +120,7 @@ where
     fn into_iter(self) -> Self::IntoIter {
         let sz = self.dim.size();
         let index = if sz != 0 { Some(self.start) } else { None };
-        IndicesIter {
+        Self::IntoIter {
             index,
             dim: self.dim,
         }
