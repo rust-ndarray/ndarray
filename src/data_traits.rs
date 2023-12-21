@@ -544,7 +544,7 @@ unsafe impl<A> DataOwned for OwnedRepr<A> {
     type MaybeUninit = OwnedRepr<MaybeUninit<A>>;
 
     fn new(elements: Vec<A>) -> Self {
-        OwnedRepr::from(elements)
+        Self::from(elements)
     }
 
     fn into_shared(self) -> OwnedArcRepr<A> {
@@ -556,7 +556,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A> {
     type MaybeUninit = OwnedArcRepr<MaybeUninit<A>>;
 
     fn new(elements: Vec<A>) -> Self {
-        OwnedArcRepr(Arc::new(OwnedRepr::from(elements)))
+        Self(Arc::new(OwnedRepr::from(elements)))
     }
 
     fn into_shared(self) -> OwnedArcRepr<A> {
@@ -570,16 +570,16 @@ unsafe impl<'a, A> RawData for CowRepr<'a, A> {
     fn _data_slice(&self) -> Option<&[A]> {
         #[allow(deprecated)]
         match self {
-            CowRepr::View(view) => view._data_slice(),
-            CowRepr::Owned(data) => data._data_slice(),
+            Self::View(view) => view._data_slice(),
+            Self::Owned(data) => data._data_slice(),
         }
     }
 
     #[inline]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool {
         match self {
-            CowRepr::View(view) => view._is_pointer_inbounds(ptr),
-            CowRepr::Owned(data) => data._is_pointer_inbounds(ptr),
+            Self::View(view) => view._is_pointer_inbounds(ptr),
+            Self::Owned(data) => data._is_pointer_inbounds(ptr),
         }
     }
 
@@ -597,14 +597,14 @@ where
         D: Dimension,
     {
         match array.data {
-            CowRepr::View(_) => {
+            Self::View(_) => {
                 let owned = array.to_owned();
-                array.data = CowRepr::Owned(owned.data);
+                array.data = Self::Owned(owned.data);
                 array.ptr = owned.ptr;
                 array.dim = owned.dim;
                 array.strides = owned.strides;
             }
-            CowRepr::Owned(_) => {}
+            Self::Owned(_) => {}
         }
     }
 
@@ -620,13 +620,13 @@ where
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         match self {
-            CowRepr::View(view) => {
+            Self::View(view) => {
                 let (new_view, ptr) = view.clone_with_ptr(ptr);
-                (CowRepr::View(new_view), ptr)
+                (Self::View(new_view), ptr)
             }
-            CowRepr::Owned(data) => {
+            Self::Owned(data) => {
                 let (new_data, ptr) = data.clone_with_ptr(ptr);
-                (CowRepr::Owned(new_data), ptr)
+                (Self::Owned(new_data), ptr)
             }
         }
     }
@@ -637,16 +637,16 @@ where
         ptr: NonNull<Self::Elem>,
     ) -> NonNull<Self::Elem> {
         match (&mut *self, other) {
-            (CowRepr::View(self_), CowRepr::View(other)) => self_.clone_from_with_ptr(other, ptr),
-            (CowRepr::Owned(self_), CowRepr::Owned(other)) => self_.clone_from_with_ptr(other, ptr),
-            (_, CowRepr::Owned(other)) => {
+            (Self::View(self_), Self::View(other)) => self_.clone_from_with_ptr(other, ptr),
+            (Self::Owned(self_), Self::Owned(other)) => self_.clone_from_with_ptr(other, ptr),
+            (_, Self::Owned(other)) => {
                 let (cloned, ptr) = other.clone_with_ptr(ptr);
-                *self = CowRepr::Owned(cloned);
+                *self = Self::Owned(cloned);
                 ptr
             }
-            (_, CowRepr::View(other)) => {
+            (_, Self::View(other)) => {
                 let (cloned, ptr) = other.clone_with_ptr(ptr);
-                *self = CowRepr::View(cloned);
+                *self = Self::View(cloned);
                 ptr
             }
         }
@@ -655,14 +655,14 @@ where
 
 unsafe impl<'a, A> Data for CowRepr<'a, A> {
     #[inline]
-    fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> Array<Self::Elem, D>
+    fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         A: Clone,
         D: Dimension,
     {
         match self_.data {
-            CowRepr::View(_) => self_.to_owned(),
-            CowRepr::Owned(data) => unsafe {
+            Self::View(_) => self_.to_owned(),
+            Self::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
                 ArrayBase::from_data_ptr(data, self_.ptr)
                     .with_strides_dim(self_.strides, self_.dim)
@@ -677,8 +677,8 @@ unsafe impl<'a, A> Data for CowRepr<'a, A> {
         D: Dimension,
     {
         match self_.data {
-            CowRepr::View(_) => Err(self_),
-            CowRepr::Owned(data) => unsafe {
+            Self::View(_) => Err(self_),
+            Self::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
                 Ok(ArrayBase::from_data_ptr(data, self_.ptr)
                     .with_strides_dim(self_.strides, self_.dim))

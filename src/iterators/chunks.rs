@@ -62,7 +62,7 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D> {
         let inner_strides = a.raw_strides();
         a.strides *= &chunk;
 
-        ExactChunks {
+        Self {
             base: a,
             chunk,
             inner_strides,
