@@ -13,6 +13,10 @@ if [ "$CHANNEL" = "1.51.0" ]; then
     cargo update --package byteorder --precise 1.4.3
     cargo update --package rayon --precise 1.5.3
     cargo update --package rayon-core --precise 1.9.3
+    cargo update --package crossbeam-channel --precise 0.5.8
+    cargo update --package crossbeam-deque --precise 0.8.3
+    cargo update --package crossbeam-epoch --precise 0.9.15
+    cargo update --package crossbeam-utils --precise 0.8.16
     cargo update --package rmp --precise 0.8.11
     cargo update --package serde_json --precise 1.0.99
     cargo update --package serde --precise 1.0.156
