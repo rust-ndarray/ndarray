@@ -170,7 +170,7 @@ fn main() {
     println!("b shape {:?}", &b.shape());
     
     let b = b.into_shape((4,1)).unwrap(); // reshape b to shape [4, 1]
-    println!("b shape {:?}", &b.shape());
+    println!("b shape after reshape {:?}", &b.shape());
     
     println!("{}", a.dot(&b));            // [1, 4] x [4, 1] -> [1, 1] 
     println!("{}", a.t().dot(&b.t()));    // [4, 1] x [1, 4] -> [4, 4]
