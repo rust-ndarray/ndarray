@@ -1431,7 +1431,7 @@ where
     ///
     /// The windows are all distinct views of size `window_size`
     /// that fit into the array's shape.
-    /// 
+    ///
     /// The stride is ordered by the outermost axis.<br>
     /// Hence, a (x₀, x₁, ..., xₙ) stride will be applied to
     /// (A₀, A₁, ..., Aₙ) where Aₓ stands for `Axis(x)`.
@@ -1441,7 +1441,7 @@ where
     ///
     /// The produced element is an `ArrayView<A, D>` with exactly the dimension
     /// `window_size`.
-    /// 
+    ///
     /// Note that passing a stride of only ones is similar to
     /// calling [`ArrayBase::windows()`].
     ///
@@ -2374,7 +2374,7 @@ where
         A: Clone,
         S2: Data<Elem = A>,
     {
-        self.zip_mut_with(rhs, |x, y| *x = y.clone());
+        self.zip_mut_with(rhs, |x, y| x.clone_from(y));
     }
 
     /// Perform an elementwise assigment of values cloned from `self` into array or producer `to`.
@@ -2400,7 +2400,7 @@ where
         S: DataMut,
         A: Clone,
     {
-        self.map_inplace(move |elt| *elt = x.clone());
+        self.map_inplace(move |elt| elt.clone_from(&x));
     }
 
     pub(crate) fn zip_mut_with_same_shape<B, S2, E, F>(&mut self, rhs: &ArrayBase<S2, E>, mut f: F)
