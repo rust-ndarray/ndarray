@@ -66,8 +66,8 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 ///
 /// The `Linspace` has `n` elements from `a` to `b` (inclusive).
 ///
-/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
-/// `f32` or `f64`.
+/// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
+/// [`f32`] or [`f64`].
 ///
 /// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
@@ -89,13 +89,13 @@ where
     }
 }
 
-/// Return an iterator of floats from `start` to `end` (exclusive),
+/// Return an iterator of floats from `a` to `b` (exclusive),
 /// incrementing by `step`.
 ///
 /// Numerical reasons can result in `b` being included in the result.
 ///
-/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
-/// `f32` or `f64`.
+/// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
+/// [`f32`] or [`f64`].
 ///
 /// **Panics** if converting `((b - a) / step).ceil()` to type `F` fails.
 #[inline]
