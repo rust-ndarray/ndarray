@@ -68,12 +68,12 @@ impl<F> ExactSizeIterator for Logspace<F> where Logspace<F>: Iterator {}
 
 /// An iterator of a sequence of logarithmically spaced numbers.
 ///
-/// The `Logspace` has `n` elements, where the first element is `base.powf(a)`
+/// The [`Logspace`] has `n` elements, where the first element is `base.powf(a)`
 /// and the last element is `base.powf(b)`.  If `base` is negative, this
 /// iterator will return all negative values.
 ///
-/// The iterator element type is `F`, where `F` must implement `Float`, e.g.
-/// `f32` or `f64`.
+/// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
+/// [`f32`] or [`f64`].
 ///
 /// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
