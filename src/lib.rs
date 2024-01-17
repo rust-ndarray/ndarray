@@ -192,8 +192,10 @@ mod iterators;
 mod layout;
 mod linalg_traits;
 mod linspace;
+#[cfg(feature = "std")]
 pub use crate::linspace::{Linspace, linspace, range};
 mod logspace;
+#[cfg(feature = "std")]
 pub use crate::logspace::{Logspace, logspace};
 mod math_cell;
 mod numeric_util;
