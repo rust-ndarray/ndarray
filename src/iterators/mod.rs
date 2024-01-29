@@ -14,11 +14,11 @@ pub mod iter;
 mod lanes;
 mod windows;
 
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ptr;
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
 
 use crate::Ix1;
 
@@ -26,15 +26,16 @@ use super::{ArrayBase, ArrayView, ArrayViewMut, Axis, Data, NdProducer, RemoveAx
 use super::{Dimension, Ix, Ixs};
 
 pub use self::chunks::{ExactChunks, ExactChunksIter, ExactChunksIterMut, ExactChunksMut};
+pub use self::into_iter::IntoIter;
 pub use self::lanes::{Lanes, LanesMut};
 pub use self::windows::Windows;
-pub use self::into_iter::IntoIter;
 
 use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 /// Base for iterators over all axes.
 ///
 /// Iterator element type is `*mut A`.
+#[derive(Debug)]
 pub struct Baseiter<A, D> {
     ptr: *mut A,
     dim: D,
@@ -306,7 +307,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ElementsRepr<S, C> {
     Slice(S),
     Counted(C),
@@ -317,11 +318,19 @@ pub enum ElementsRepr<S, C> {
 /// Iterator element type is `&'a A`.
 ///
 /// See [`.iter()`](ArrayBase::iter) for more information.
+#[derive(Debug)]
 pub struct Iter<'a, A, D> {
     inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
 }
 
+// impl<'a, A, D> fmt::Debug for Iter<'a, A, D> {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         f.debug_struct("Iter").field("inner", &self.inner).finish()
+//     }
+// }
+
 /// Counted read only iterator
+#[derive(Debug)]
 pub struct ElementsBase<'a, A, D> {
     inner: Baseiter<A, D>,
     life: PhantomData<&'a A>,
@@ -332,6 +341,7 @@ pub struct ElementsBase<'a, A, D> {
 /// Iterator element type is `&'a mut A`.
 ///
 /// See [`.iter_mut()`](ArrayBase::iter_mut) for more information.
+#[derive(Debug)]
 pub struct IterMut<'a, A, D> {
     inner: ElementsRepr<SliceIterMut<'a, A>, ElementsBaseMut<'a, A, D>>,
 }
@@ -339,6 +349,7 @@ pub struct IterMut<'a, A, D> {
 /// An iterator over the elements of an array.
 ///
 /// Iterator element type is `&'a mut A`.
+#[derive(Debug)]
 pub struct ElementsBaseMut<'a, A, D> {
     inner: Baseiter<A, D>,
     life: PhantomData<&'a mut A>,
