@@ -323,12 +323,6 @@ pub struct Iter<'a, A, D> {
     inner: ElementsRepr<SliceIter<'a, A>, ElementsBase<'a, A, D>>,
 }
 
-// impl<'a, A, D> fmt::Debug for Iter<'a, A, D> {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         f.debug_struct("Iter").field("inner", &self.inner).finish()
-//     }
-// }
-
 /// Counted read only iterator
 #[derive(Debug)]
 pub struct ElementsBase<'a, A, D> {
