@@ -1,4 +1,3 @@
-
 use alloc::vec::Vec;
 use std::mem;
 use std::mem::MaybeUninit;
@@ -11,6 +10,7 @@ use crate::dimension;
 use crate::error::{ErrorKind, ShapeError};
 use crate::iterators::Baseiter;
 use crate::low_level_util::AbortIfPanic;
+use crate::ArrayViewMut;
 use crate::OwnedRepr;
 use crate::Zip;
 
@@ -166,7 +166,8 @@ impl<A> Array<A, Ix2> {
 }
 
 impl<A, D> Array<A, D>
-    where D: Dimension
+where
+    D: Dimension,
 {
     /// Move all elements from self into `new_array`, which must be of the same shape but
     /// can have a different memory layout. The destination is overwritten completely.
@@ -198,9 +199,7 @@ impl<A, D> Array<A, D>
         } else {
             // If `A` doesn't need drop, we can overwrite the destination.
             // Safe because: move_into_uninit only writes initialized values
-            unsafe {
-                self.move_into_uninit(new_array.into_maybe_uninit())
-            }
+            unsafe { self.move_into_uninit(new_array.into_maybe_uninit()) }
         }
     }
 
@@ -209,7 +208,8 @@ impl<A, D> Array<A, D>
         // Afterwards, `self` drops full of initialized values and dropping works as usual.
         // This avoids moving out of owned values in `self` while at the same time managing
         // the dropping if the values being overwritten in `new_array`.
-        Zip::from(&mut self).and(new_array)
+        Zip::from(&mut self)
+            .and(new_array)
             .for_each(|src, dst| mem::swap(src, dst));
     }
 
@@ -401,16 +401,87 @@ impl<A, D> Array<A, D>
     ///            [0., 0., 0., 0.],
     ///            [1., 1., 1., 1.]]);
     /// ```
-    pub fn push(&mut self, axis: Axis, array: ArrayView<A, D::Smaller>)
-        -> Result<(), ShapeError>
+    pub fn push(&mut self, axis: Axis, array: ArrayView<A, D::Smaller>) -> Result<(), ShapeError>
     where
         A: Clone,
         D: RemoveAxis,
     {
         // same-dimensionality conversion
-        self.append(axis, array.insert_axis(axis).into_dimensionality::<D>().unwrap())
+        self.append(
+            axis,
+            array.insert_axis(axis).into_dimensionality::<D>().unwrap(),
+        )
     }
 
+    /// Calculates the distance from `self.ptr` to `self.data.ptr`.
+    unsafe fn offset_from_data_ptr_to_logical_ptr(&self) -> isize {
+        if std::mem::size_of::<A>() != 0 {
+            self.as_ptr().offset_from(self.data.as_ptr())
+        } else {
+            0
+        }
+    }
+
+    /// Shrinks the capacity of the array as much as possible.
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use ndarray::s;
+    ///
+    /// let a = array![[0, 1, 2], [3, 4, 5], [6, 7,8]];
+    /// let mut a = a.slice_move(s![.., 0..2]);
+    /// let b = a.clone();
+    /// a.shrink_to_fit();
+    /// assert_eq!(a, b);
+    /// ```
+    pub fn shrink_to_fit(&mut self)
+    where
+        A: Copy,
+    {
+        let dim = self.dim.clone();
+        let strides = self.strides.clone();
+        let mut shrinked_stride = D::zeros(dim.ndim());
+
+        // Calculate the new stride after shrink
+        // Even after shrink, the order of stride size is maintained.
+        // For example, if dim is [3, 2, 3] and stride is [1, 9, 3], the default
+        // stride will be [6, 3, 1], but the stride order will be [1, 6, 3]
+        // because the size order of the original stride is maintained.
+        let mut stride_order = (0..dim.ndim()).collect::<Vec<_>>();
+        stride_order.sort_unstable_by(|&i, &j| strides[i].cmp(&strides[j]));
+        let mut stride_ = 1;
+        for i in stride_order.iter() {
+            shrinked_stride[*i] = stride_;
+            stride_ *= dim[*i];
+        }
+
+        // Calculate which index in shrinked_stride from the pointer offset.
+        let mut stride_order_order = (0..dim.ndim()).collect::<Vec<_>>();
+        stride_order_order.sort_unstable_by(|&i, &j| stride_order[j].cmp(&stride_order[i]));
+        let offset_stride = |offset: usize| {
+            let mut offset = offset;
+            let mut index = D::zeros(dim.ndim());
+            for i in stride_order_order.iter() {
+                index[*i] = offset / shrinked_stride[*i];
+                offset %= shrinked_stride[*i];
+            }
+            index
+        };
+
+        // Change the memory order only if it needs to be changed.
+        let ptr_offset = unsafe { self.offset_from_data_ptr_to_logical_ptr() };
+        self.ptr = unsafe { self.ptr.sub(ptr_offset as usize) };
+        for offset in 0..self.len() {
+            let index = offset_stride(offset);
+            let old_offset = dim.stride_offset_checked(&strides, &index).unwrap();
+            unsafe {
+                *self.ptr.as_ptr().add(offset as usize) =
+                    *self.ptr.as_ptr().add((old_offset + ptr_offset) as usize);
+            }
+        }
+        self.strides = shrinked_stride;
+        self.data.shrink_to_fit(self.len());
+    }
 
     /// Append an array to the array along an axis.
     ///
@@ -462,8 +533,7 @@ impl<A, D> Array<A, D>
     ///            [1., 1., 1., 1.],
     ///            [1., 1., 1., 1.]]);
     /// ```
-    pub fn append(&mut self, axis: Axis, mut array: ArrayView<A, D>)
-        -> Result<(), ShapeError>
+    pub fn append(&mut self, axis: Axis, mut array: ArrayView<A, D>) -> Result<(), ShapeError>
     where
         A: Clone,
         D: RemoveAxis,
@@ -556,7 +626,11 @@ impl<A, D> Array<A, D>
                     acc
                 } else {
                     let this_ax = ax.len as isize * ax.stride.abs();
-                    if this_ax > acc { this_ax } else { acc }
+                    if this_ax > acc {
+                        this_ax
+                    } else {
+                        acc
+                    }
                 }
             });
             let mut strides = self.strides.clone();
@@ -574,7 +648,10 @@ impl<A, D> Array<A, D>
                 0
             };
             debug_assert!(data_to_array_offset >= 0);
-            self.ptr = self.data.reserve(len_to_append).offset(data_to_array_offset);
+            self.ptr = self
+                .data
+                .reserve(len_to_append)
+                .offset(data_to_array_offset);
 
             // clone elements from view to the array now
             //
@@ -608,10 +685,13 @@ impl<A, D> Array<A, D>
 
             if tail_view.ndim() > 1 {
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
-                debug_assert!(tail_view.is_standard_layout(),
-                              "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), tail_view.strides());
-            } 
+                debug_assert!(
+                    tail_view.is_standard_layout(),
+                    "not std layout dim: {:?}, strides: {:?}",
+                    tail_view.shape(),
+                    tail_view.strides()
+                );
+            }
 
             // Keep track of currently filled length of `self.data` and update it
             // on scope exit (panic or loop finish). This "indirect" way to
@@ -634,7 +714,6 @@ impl<A, D> Array<A, D>
                 len: self.data.len(),
                 data: &mut self.data,
             };
-
 
             // Safety: tail_view is constructed to have the same shape as array
             Zip::from(tail_view)
@@ -665,8 +744,11 @@ impl<A, D> Array<A, D>
 ///
 /// This is an internal function for use by move_into and IntoIter only, safety invariants may need
 /// to be upheld across the calls from those implementations.
-pub(crate) unsafe fn drop_unreachable_raw<A, D>(mut self_: RawArrayViewMut<A, D>, data_ptr: *mut A, data_len: usize)
-where
+pub(crate) unsafe fn drop_unreachable_raw<A, D>(
+    mut self_: RawArrayViewMut<A, D>,
+    data_ptr: *mut A,
+    data_len: usize,
+) where
     D: Dimension,
 {
     let self_len = self_.len();
@@ -731,8 +813,11 @@ where
         dropped_elements += 1;
     }
 
-    assert_eq!(data_len, dropped_elements + self_len,
-               "Internal error: inconsistency in move_into");
+    assert_eq!(
+        data_len,
+        dropped_elements + self_len,
+        "Internal error: inconsistency in move_into"
+    );
 }
 
 /// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
@@ -773,7 +858,6 @@ where
         }
     }
 }
-
 
 /// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
 ///
