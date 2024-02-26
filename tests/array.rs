@@ -1958,6 +1958,22 @@ fn test_contiguous() {
 }
 
 #[test]
+fn test_contiguous_single_element()
+{
+    assert_matches!(array![1].as_slice_memory_order(), Some(&[1]));
+
+    let arr1 = array![1, 2, 3];
+    assert_matches!(arr1.slice(s![0..1]).as_slice_memory_order(), Some(&[1]));
+    assert_matches!(arr1.slice(s![1..2]).as_slice_memory_order(), Some(&[2]));
+    assert_matches!(arr1.slice(s![2..3]).as_slice_memory_order(), Some(&[3]));
+    assert_matches!(arr1.slice(s![0..0]).as_slice_memory_order(), Some(&[]));
+
+    let arr2 = array![[1, 2, 3], [4, 5, 6]];
+    assert_matches!(arr2.slice(s![.., 2..3]).as_slice_memory_order(), None);
+    assert_matches!(arr2.slice(s![1, 2..3]).as_slice_memory_order(), Some(&[6]));
+}
+
+#[test]
 fn test_contiguous_neg_strides() {
     let s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     let a = ArrayView::from_shape((2, 3, 2).strides((1, 4, 2)), &s).unwrap();

@@ -285,21 +285,25 @@ pub trait Dimension:
             return true;
         }
         if dim.ndim() == 1 {
-            return strides[0] as isize == -1;
-        }
-        let order = strides._fastest_varying_stride_order();
-        let strides = strides.slice();
+            // fast case for ndim == 1:
+            // Either we have length <= 1, then stride is arbitrary,
+            // or we have stride == 1 or stride == -1, but +1 case is already handled above.
+            dim[0] <= 1 || strides[0] as isize == -1
+        } else {
+            let order = strides._fastest_varying_stride_order();
+            let strides = strides.slice();
 
-        let dim_slice = dim.slice();
-        let mut cstride = 1;
-        for &i in order.slice() {
-            // a dimension of length 1 can have unequal strides
-            if dim_slice[i] != 1 && (strides[i] as isize).unsigned_abs() != cstride {
-                return false;
+            let dim_slice = dim.slice();
+            let mut cstride = 1;
+            for &i in order.slice() {
+                // a dimension of length 1 can have unequal strides
+                if dim_slice[i] != 1 && (strides[i] as isize).unsigned_abs() != cstride {
+                    return false;
+                }
+                cstride *= dim_slice[i];
             }
-            cstride *= dim_slice[i];
+            true
         }
-        true
     }
 
     /// Return the axis ordering corresponding to the fastest variation
