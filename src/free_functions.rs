@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use alloc::vec;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use std::mem::{forget, size_of};
 

@@ -1,4 +1,5 @@
 
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use std::mem;
 use std::mem::MaybeUninit;

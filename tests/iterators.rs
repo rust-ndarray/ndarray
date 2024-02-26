@@ -6,7 +6,7 @@
 )]
 
 use ndarray::prelude::*;
-use ndarray::{arr3, aview1, indices, s, Axis, Slice, Zip};
+use ndarray::{arr3, indices, s, Slice, Zip};
 
 use itertools::assert_equal;
 use itertools::enumerate;

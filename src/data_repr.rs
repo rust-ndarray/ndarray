@@ -2,7 +2,9 @@ use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
 use alloc::slice;
+#[cfg(not(feature = "std"))]
 use alloc::borrow::ToOwned;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use crate::extension::nonnull;
 

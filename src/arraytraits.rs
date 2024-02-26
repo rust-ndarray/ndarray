@@ -6,9 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use std::iter::IntoIterator;
 use std::mem;
 use std::ops::{Index, IndexMut};
 use std::{hash, mem::size_of};
@@ -115,6 +116,7 @@ where
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
+#[allow(clippy::unconditional_recursion)] // false positive
 impl<'a, A, B, S, S2, D> PartialEq<&'a ArrayBase<S2, D>> for ArrayBase<S, D>
 where
     A: PartialEq<B>,
@@ -129,6 +131,7 @@ where
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
+#[allow(clippy::unconditional_recursion)] // false positive
 impl<'a, A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for &'a ArrayBase<S, D>
 where
     A: PartialEq<B>,

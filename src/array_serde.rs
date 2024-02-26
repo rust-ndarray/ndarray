@@ -12,6 +12,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::marker::PhantomData;
 use alloc::format;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::imp_prelude::*;

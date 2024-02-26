@@ -143,7 +143,6 @@ where
 
 trait IncOps: Copy {
     fn post_inc(&mut self) -> Self;
-    fn post_dec(&mut self) -> Self;
     fn pre_dec(&mut self) -> Self;
 }
 
@@ -152,12 +151,6 @@ impl IncOps for usize {
     fn post_inc(&mut self) -> Self {
         let x = *self;
         *self += 1;
-        x
-    }
-    #[inline(always)]
-    fn post_dec(&mut self) -> Self {
-        let x = *self;
-        *self -= 1;
         x
     }
     #[inline(always)]

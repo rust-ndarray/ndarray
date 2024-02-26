@@ -8,7 +8,7 @@
 
 #[cfg(feature = "std")]
 use num_traits::Float;
-use num_traits::{self, FromPrimitive, Zero};
+use num_traits::{FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
 use crate::imp_prelude::*;

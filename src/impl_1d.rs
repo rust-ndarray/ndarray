@@ -7,6 +7,7 @@
 // except according to those terms.
 
 //! Methods for one-dimensional arrays.
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use std::mem::MaybeUninit;
 

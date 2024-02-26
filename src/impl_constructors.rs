@@ -17,6 +17,7 @@ use num_traits::{One, Zero};
 use std::mem;
 use std::mem::MaybeUninit;
 use alloc::vec;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::dimension;
