@@ -1,4 +1,5 @@
 use std::ptr::NonNull;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 /// Return a NonNull<T> pointer to the vector's data

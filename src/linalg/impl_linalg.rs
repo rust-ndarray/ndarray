@@ -16,6 +16,7 @@ use crate::{LinalgScalar, Zip};
 
 use std::any::TypeId;
 use std::mem::MaybeUninit;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use num_complex::Complex;

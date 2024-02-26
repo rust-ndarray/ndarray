@@ -285,8 +285,9 @@ where
 #[cfg(test)]
 mod formatting_with_omit {
     use itertools::Itertools;
-    use std::fmt;
+    #[cfg(not(feature = "std"))]
     use alloc::string::String;
+    #[cfg(not(feature = "std"))]
     use alloc::vec::Vec;
 
     use super::*;

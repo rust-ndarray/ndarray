@@ -2,7 +2,9 @@ use crate::imp_prelude::*;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use alloc::vec;
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 const CAP: usize = 4;
 

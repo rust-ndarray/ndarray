@@ -7,6 +7,7 @@ pub(crate) trait SplitAt  {
 }
 
 pub(crate) trait SplitPreference : SplitAt {
+    #[allow(dead_code)] // used only when Rayon support is enabled
     fn can_split(&self) -> bool;
     fn split_preference(&self) -> (Axis, usize);
     fn split(self) -> (Self, Self) where Self: Sized {

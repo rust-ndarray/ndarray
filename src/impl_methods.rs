@@ -9,6 +9,7 @@
 use std::mem::{size_of, ManuallyDrop};
 use alloc::slice;
 use alloc::vec;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use rawpointer::PointerExt;
 

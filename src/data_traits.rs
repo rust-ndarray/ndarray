@@ -14,6 +14,7 @@ use std::mem::{self, size_of};
 use std::mem::MaybeUninit;
 use std::ptr::NonNull;
 use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::{

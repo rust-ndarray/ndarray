@@ -17,6 +17,7 @@ mod windows;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ptr;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::Ix1;

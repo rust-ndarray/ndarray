@@ -288,7 +288,6 @@ mod arithmetic_ops {
     use super::*;
     use crate::imp_prelude::*;
 
-    use num_complex::Complex;
     use std::ops::*;
 
     fn clone_opf<A: Clone, B: Clone, C>(f: impl Fn(A, B) -> C) -> impl FnMut(&A, &B) -> C {
