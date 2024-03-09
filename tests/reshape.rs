@@ -268,3 +268,51 @@ fn into_shape_with_order() {
     assert_eq!(s.shape(), &[4, 2]);
     assert_eq!(s, array![[1, 5], [2, 6], [3, 7], [4, 8]]);
 }
+
+#[test]
+fn into_shape_clone() {
+    // 1D -> C -> C
+    {
+        let data = [1, 2, 3, 4, 5, 6, 7, 8];
+        let v = Array::from(data.to_vec());
+        let u = v.clone().into_shape_clone(((3, 3), Order::RowMajor));
+        assert!(u.is_err());
+
+        let u = v.clone().into_shape_clone(((2, 2, 2), Order::C));
+        assert!(u.is_ok());
+
+        let u = u.unwrap();
+        assert_eq!(u.shape(), &[2, 2, 2]);
+        assert_eq!(u, array![[[1, 2], [3, 4]], [[5, 6], [7, 8]]]);
+
+        let s = u.into_shape_clone((4, 2)).unwrap();
+        assert_eq!(s.shape(), &[4, 2]);
+        assert_eq!(s, aview2(&[[1, 2], [3, 4], [5, 6], [7, 8]]));
+
+        let u = v.clone().into_shape_clone(((2, 2, 2), Order::F));
+        assert!(u.is_ok());
+
+        let u = u.unwrap();
+        assert_eq!(u.shape(), &[2, 2, 2]);
+        assert_eq!(u, array![[[1, 5], [3, 7]], [[2, 6], [4, 8]]]);
+    }
+
+    // 1D -> F -> F
+    {
+        let data = [1, 2, 3, 4, 5, 6, 7, 8];
+        let v = Array::from(data.to_vec());
+        let u = v.clone().into_shape_clone(((3, 3), Order::ColumnMajor));
+        assert!(u.is_err());
+
+        let u = v.into_shape_clone(((2, 2, 2), Order::ColumnMajor));
+        assert!(u.is_ok());
+
+        let u = u.unwrap();
+        assert_eq!(u.shape(), &[2, 2, 2]);
+        assert_eq!(u, array![[[1, 5], [3, 7]], [[2, 6], [4, 8]]]);
+
+        let s = u.into_shape_clone(((4, 2), Order::ColumnMajor)).unwrap();
+        assert_eq!(s.shape(), &[4, 2]);
+        assert_eq!(s, array![[1, 5], [2, 6], [3, 7], [4, 8]]);
+    }
+}
