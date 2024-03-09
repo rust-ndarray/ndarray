@@ -35,6 +35,7 @@ jobs:
 
   cross_test:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         include:
