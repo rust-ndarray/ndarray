@@ -54,7 +54,7 @@ jobs:
       matrix:
         include:
           - rust: stable
-            target: powerpc-unknown-linux-gnu
+            target: s390x-unknown-linux-gnu
           - rust: stable
             target: i686-unknown-linux-gnu
 
