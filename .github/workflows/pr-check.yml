@@ -2,10 +2,12 @@ on:
   pull_request:
   merge_group:
 
-name: PR Check
+name: CI Check
 
 env:
   CARGO_TERM_COLOR: always
+  HOST: x86_64-unknown-linux-gnu
+  FEATURES: "test docs"
   RUSTFLAGS: "-D warnings"
 
 jobs:
@@ -23,3 +25,45 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --features docs
+  tests:
+    if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+          - 1.51.0  # MSRV
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
+
+  cross_test:
+    if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rust: stable
+            target: powerpc-unknown-linux-gnu
+          - rust: stable
+            target: i686-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cross
+        run: cargo install cross
+      - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
