@@ -1,4 +1,6 @@
-use super::ElementsBase;
+use std::marker::PhantomData;
+
+use super::Baseiter;
 use crate::imp_prelude::*;
 use crate::IntoDimension;
 use crate::Layout;
@@ -10,7 +12,8 @@ use crate::Slice;
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
 pub struct Windows<'a, A, D> {
-    base: ArrayView<'a, A, D>,
+    base: RawArrayView<A, D>,
+    life: PhantomData<&'a A>,
     window: D,
     strides: D,
 }
@@ -74,7 +77,8 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
         });
 
         Windows {
-            base,
+            base: base.into_raw_view(),
+            life: PhantomData,
             window,
             strides: window_strides,
         }
@@ -86,6 +90,7 @@ impl_ndproducer! {
     [Clone => 'a, A, D: Clone ]
     Windows {
         base,
+        life,
         window,
         strides,
     }
@@ -109,7 +114,8 @@ where
     type IntoIter = WindowsIter<'a, A, D>;
     fn into_iter(self) -> Self::IntoIter {
         WindowsIter {
-            iter: self.base.into_elements_base(),
+            iter: self.base.into_base_iter(),
+            life: self.life,
             window: self.window,
             strides: self.strides,
         }
@@ -121,7 +127,8 @@ where
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
 pub struct WindowsIter<'a, A, D> {
-    iter: ElementsBase<'a, A, D>,
+    iter: Baseiter<A, D>,
+    life: PhantomData<&'a A>,
     window: D,
     strides: D,
 }
@@ -131,19 +138,23 @@ impl_iterator! {
     [Clone => 'a, A, D: Clone]
     WindowsIter {
         iter,
+        life,
         window,
         strides,
     }
     WindowsIter<'a, A, D> {
         type Item = ArrayView<'a, A, D>;
 
-        fn item(&mut self, elt) {
+        fn item(&mut self, ptr) {
             unsafe {
                 ArrayView::new_(
-                    elt,
+                    ptr,
                     self.window.clone(),
                     self.strides.clone())
             }
         }
     }
 }
+
+send_sync_read_only!(Windows);
+send_sync_read_only!(WindowsIter);
