@@ -70,11 +70,27 @@ jobs:
         run: cargo install cross
       - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
 
+  cargo-careful:
+    if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    name: cargo-careful
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-careful
+        run: cargo install cargo-careful
+      - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
+      - run: cargo careful test -Zcareful-sanitizer -p ndarray-rand
+
   conclusion:
     needs:
       - clippy
       - tests
       - cross_test
+      - cargo-careful
     if: always()
     runs-on: ubuntu-latest
     steps:
