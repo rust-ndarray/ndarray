@@ -74,7 +74,7 @@ fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(
 fn test_mat_mul() {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let a = ArcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize).reshape((n, m));
+    let a = ArcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize).into_shape_with_order((n, m)).unwrap();
     let b = ArcArray::eye(m);
     assert_eq!(a.dot(&b), a);
     let c = ArcArray::eye(n);
@@ -542,7 +542,7 @@ fn test_add() {
 
 #[test]
 fn test_multidim() {
-    let mut mat = ArcArray::zeros(2 * 3 * 4 * 5 * 6).reshape((2, 3, 4, 5, 6));
+    let mut mat = ArcArray::zeros(2 * 3 * 4 * 5 * 6).into_shape_with_order((2, 3, 4, 5, 6)).unwrap();
     mat[(0, 0, 0, 0, 0)] = 22u8;
     {
         for (i, elt) in mat.iter_mut().enumerate() {
@@ -604,7 +604,7 @@ fn test_cow() {
     assert_eq!(n[[0, 0]], 1);
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
-    let mut rev = mat.reshape(4);
+    let mut rev = mat.into_shape_with_order(4).unwrap();
     rev.slice_collapse(s![..;-1]);
     assert_eq!(rev[0], 4);
     assert_eq!(rev[1], 3);
@@ -643,7 +643,7 @@ fn test_cow_shrink() {
     assert_eq!(n[[0, 1]], 0);
     assert_eq!(n.get((0, 1)), Some(&0));
     // small has non-C strides this way
-    let mut small = mat.reshape(6);
+    let mut small = mat.into_shape_with_order(6).unwrap();
     small.slice_collapse(s![4..;-1]);
     assert_eq!(small[0], 6);
     assert_eq!(small[1], 5);
@@ -660,14 +660,14 @@ fn test_cow_shrink() {
 #[test]
 #[cfg(feature = "std")]
 fn test_sub() {
-    let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
+    let mat = ArcArray::linspace(0., 15., 16).into_shape_with_order((2, 4, 2)).unwrap();
     let s1 = mat.index_axis(Axis(0), 0);
     let s2 = mat.index_axis(Axis(0), 1);
     assert_eq!(s1.shape(), &[4, 2]);
     assert_eq!(s2.shape(), &[4, 2]);
-    let n = ArcArray::linspace(8., 15., 8).reshape((4, 2));
+    let n = ArcArray::linspace(8., 15., 8).into_shape_with_order((4, 2)).unwrap();
     assert_eq!(n, s2);
-    let m = ArcArray::from(vec![2., 3., 10., 11.]).reshape((2, 2));
+    let m = ArcArray::from(vec![2., 3., 10., 11.]).into_shape_with_order((2, 2)).unwrap();
     assert_eq!(m, mat.index_axis(Axis(1), 1));
 }
 
@@ -675,7 +675,7 @@ fn test_sub() {
 #[test]
 #[cfg(feature = "std")]
 fn test_sub_oob_1() {
-    let mat = ArcArray::linspace(0., 15., 16).reshape((2, 4, 2));
+    let mat = ArcArray::linspace(0., 15., 16).into_shape_with_order((2, 4, 2)).unwrap();
     mat.index_axis(Axis(0), 2);
 }
 
@@ -1337,7 +1337,7 @@ fn from_vec_dim_stride_2d_rejects() {
 
 #[test]
 fn views() {
-    let a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
+    let a = ArcArray::from(vec![1, 2, 3, 4]).into_shape_with_order((2, 2)).unwrap();
     let b = a.view();
     assert_eq!(a, b);
     assert_eq!(a.shape(), b.shape());
@@ -1354,7 +1354,7 @@ fn views() {
 
 #[test]
 fn view_mut() {
-    let mut a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from(vec![1, 2, 3, 4]).into_shape_with_order((2, 2)).unwrap();
     for elt in &mut a.view_mut() {
         *elt = 0;
     }
@@ -1373,7 +1373,7 @@ fn view_mut() {
 
 #[test]
 fn slice_mut() {
-    let mut a = ArcArray::from(vec![1, 2, 3, 4]).reshape((2, 2));
+    let mut a = ArcArray::from(vec![1, 2, 3, 4]).into_shape_with_order((2, 2)).unwrap();
     for elt in a.slice_mut(s![.., ..]) {
         *elt = 0;
     }
@@ -1680,7 +1680,7 @@ fn arithmetic_broadcast() {
 #[test]
 fn char_array() {
     // test compilation & basics of non-numerical array
-    let cc = ArcArray::from_iter("alphabet".chars()).reshape((4, 2));
+    let cc = ArcArray::from_iter("alphabet".chars()).into_shape_with_order((4, 2)).unwrap();
     assert!(cc.index_axis(Axis(1), 0) == ArcArray::from_iter("apae".chars()));
 }
 
@@ -1740,7 +1740,7 @@ fn split_at() {
     }
     assert_eq!(a, arr2(&[[1., 5.], [8., 4.]]));
 
-    let b = ArcArray::linspace(0., 59., 60).reshape((3, 4, 5));
+    let b = ArcArray::linspace(0., 59., 60).into_shape_with_order((3, 4, 5)).unwrap();
 
     let (left, right) = b.view().split_at(Axis(2), 2);
     assert_eq!(left.shape(), [3, 4, 2]);
