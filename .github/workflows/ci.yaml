@@ -17,6 +17,7 @@ jobs:
       matrix:
         rust:
           - beta
+    name: clippy/${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
@@ -26,7 +27,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --features docs
   tests:
-    if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -54,7 +54,7 @@ jobs:
       matrix:
         include:
           - rust: stable
-            target: powerpc-unknown-linux-gnu
+            target: s390x-unknown-linux-gnu
           - rust: stable
             target: i686-unknown-linux-gnu
 
