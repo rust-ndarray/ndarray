@@ -1,7 +1,8 @@
 on:
+  pull_request:
   merge_group:
 
-name: Merge Queue Check
+name: Continuous integration
 
 env:
   CARGO_TERM_COLOR: always
@@ -10,7 +11,22 @@ env:
   RUSTFLAGS: "-D warnings"
 
 jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - beta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --features docs
   tests:
+    if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,6 +36,7 @@ jobs:
           - nightly
           - 1.51.0  # MSRV
 
+    name: tests/${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
@@ -31,6 +48,7 @@ jobs:
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
   cross_test:
+    if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -40,6 +58,7 @@ jobs:
           - rust: stable
             target: i686-unknown-linux-gnu
 
+    name: cross_test/${{ matrix.target }}/${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
@@ -50,3 +69,19 @@ jobs:
       - name: Install cross
         run: cargo install cross
       - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
+
+  conclusion:
+    needs:
+      - clippy
+      - tests
+      - cross_test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Result
+        run: |
+          jq -C <<< "${needs}"
+          # Check if all needs were successful or skipped.
+          "$(jq -r 'all(.result as $result | (["success", "skipped"] | contains([$result])))' <<< "${needs}")"
+        env:
+          needs: ${{ toJson(needs) }}
