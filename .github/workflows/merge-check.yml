@@ -1,10 +1,7 @@
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  merge_group:
 
-name: Continuous integration
+name: Merge Queue Check
 
 env:
   CARGO_TERM_COLOR: always
@@ -35,7 +32,6 @@ jobs:
 
   cross_test:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         include:
@@ -54,18 +50,3 @@ jobs:
       - name: Install cross
         run: cargo install cross
       - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
-
-  clippy:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - beta
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust }}
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --features docs
