@@ -1815,8 +1815,19 @@ where
     /// number of rows and columns (or more axes if applicable), it is important to pick an index
     /// ordering, and that's the reason for the function parameter for `order`.
     ///
+    /// The `new_shape` parameter should be a dimension and an optional order like these examples:
+    ///
+    /// ```text
+    /// (3, 4)                          // Shape 3 x 4 with default order (RowMajor)
+    /// ((3, 4), Order::RowMajor))      // use specific order
+    /// ((3, 4), Order::ColumnMajor))   // use specific order
+    /// ((3, 4), Order::C))             // use shorthand for order - shorthands C and F
+    /// ```
+    ///
     /// **Errors** if the new shape doesn't have the same number of elements as the array's current
     /// shape.
+    ///
+    /// # Example
     ///
     /// ```
     /// use ndarray::array;
@@ -1890,10 +1901,10 @@ where
     ///
     /// If an index ordering is not specified, the default is `RowMajor`.
     /// The operation will only succeed if the array's memory layout is compatible with
-    /// the index ordering.
+    /// the index ordering, so that the array elements can be rearranged in place.
     ///
-    /// Use `.to_shape()` instead for more flexible reshaping of arrays, which
-    /// allows copying elements if required.
+    /// If required use `.to_shape()` or `.into_shape_clone` instead for more flexible reshaping of
+    /// arrays, which allows copying elements if required.
     ///
     /// **Errors** if the shapes don't have the same number of elements.<br>
     /// **Errors** if order RowMajor is given but input is not c-contiguous.
@@ -1902,6 +1913,17 @@ where
     /// If shape is not given: use memory layout of incoming array. Row major arrays are
     /// reshaped using row major index ordering, column major arrays with column major index
     /// ordering.
+    ///
+    /// The `new_shape` parameter should be a dimension and an optional order like these examples:
+    ///
+    /// ```text
+    /// (3, 4)                          // Shape 3 x 4 with default order (RowMajor)
+    /// ((3, 4), Order::RowMajor))      // use specific order
+    /// ((3, 4), Order::ColumnMajor))   // use specific order
+    /// ((3, 4), Order::C))             // use shorthand for order - shorthands C and F
+    /// ```
+    ///
+    /// # Example
     ///
     /// ```
     /// use ndarray::{aview1, aview2};
@@ -1960,7 +1982,7 @@ where
     /// is C-contig or F-contig, it follows the index order that corresponds to the memory order.
     /// Prefer to use `.to_shape()` or `.into_shape_with_order()`.
     ///
-    /// Because of this, the method is deprecated. That reshapes depend on memory order is not
+    /// Because of this, the method **is deprecated**. That reshapes depend on memory order is not
     /// intuitive.
     ///
     /// **Errors** if the shapes don't have the same number of elements.<br>
