@@ -9,7 +9,22 @@
 pub use crate::dimension::Axes;
 pub use crate::indexes::{Indices, IndicesIter};
 pub use crate::iterators::{
-    AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksIter,
-    ExactChunksIterMut, ExactChunksMut, IndexedIter, IndexedIterMut, Iter, IterMut, Lanes,
-    LanesIter, LanesIterMut, LanesMut, Windows,
+    AxisChunksIter,
+    AxisChunksIterMut,
+    AxisIter,
+    AxisIterMut,
+    ExactChunks,
+    ExactChunksIter,
+    ExactChunksIterMut,
+    ExactChunksMut,
+    IndexedIter,
+    IndexedIterMut,
+    Iter,
+    IterMut,
+    IntoIter,
+    Lanes,
+    LanesIter,
+    LanesIterMut,
+    LanesMut,
+    Windows,
 };
