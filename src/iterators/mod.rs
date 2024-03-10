@@ -732,6 +732,15 @@ where
     }
 }
 
+impl<'a, A> DoubleEndedIterator for LanesIter<'a, A, Ix1>
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| unsafe {
+            ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+        })
+    }
+}
+
 // NOTE: LanesIterMut is a mutable iterator and must not expose aliasing
 // pointers. Due to this we use an empty slice for the raw data (it's unused
 // anyway).
@@ -769,6 +778,15 @@ where
 {
     fn len(&self) -> usize {
         self.iter.len()
+    }
+}
+
+impl<'a, A> DoubleEndedIterator for LanesIterMut<'a, A, Ix1>
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|ptr| unsafe {
+            ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix))
+        })
     }
 }
 
