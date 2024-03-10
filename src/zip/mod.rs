@@ -670,6 +670,33 @@ macro_rules! map_impl {
                 }).is_done()
             }
 
+            /// Tests if at least one element of the iterator matches a predicate.
+            ///
+            /// Returns `true` if `predicate` evaluates to `true` for at least one element.
+            /// Returns `false` if the input arrays are empty.
+            ///
+            /// Example:
+            ///
+            /// ```
+            /// use ndarray::{array, Zip};
+            /// let a = array![1, 2, 3];
+            /// let b = array![1, 4, 9];
+            /// assert!(Zip::from(&a).and(&b).any(|&a, &b| a == b));
+            /// assert!(!Zip::from(&a).and(&b).any(|&a, &b| a - 1 == b));
+            /// ```
+            pub fn any<F>(mut self, mut predicate: F) -> bool
+                where F: FnMut($($p::Item),*) -> bool
+            {
+                self.for_each_core((), move |_, args| {
+                    let ($($p,)*) = args;
+                    if predicate($($p),*) {
+                        FoldWhile::Done(())
+                    } else {
+                        FoldWhile::Continue(())
+                    }
+                }).is_done()
+            }
+
             expand_if!(@bool [$notlast]
 
             /// Include the producer `p` in the Zip.
