@@ -33,7 +33,7 @@ use crate::NdIndex;
 /// let data = [0.; 256];
 /// let long_life_ref = {
 ///     // make a 16 × 16 array view
-///     let view = ArrayView::from(&data[..]).into_shape((16, 16)).unwrap();
+///     let view = ArrayView::from(&data[..]).into_shape_with_order((16, 16)).unwrap();
 ///
 ///     // index the view and with `IndexLonger`.
 ///     // Note here that we get a reference with a life that is derived from

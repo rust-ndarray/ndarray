@@ -90,7 +90,7 @@ pub trait ShapeBuilder {
     type Dim: Dimension;
     type Strides;
 
-    fn into_shape(self) -> Shape<Self::Dim>;
+    fn into_shape_with_order(self) -> Shape<Self::Dim>;
     fn f(self) -> Shape<Self::Dim>;
     fn set_f(self, is_f: bool) -> Shape<Self::Dim>;
     fn strides(self, strides: Self::Strides) -> StrideShape<Self::Dim>;
@@ -102,7 +102,7 @@ where
 {
     /// Create a `Shape` from `dimension`, using the default memory layout.
     fn from(dimension: D) -> Shape<D> {
-        dimension.into_shape()
+        dimension.into_shape_with_order()
     }
 }
 
@@ -112,7 +112,7 @@ where
     T: ShapeBuilder<Dim = D>,
 {
     fn from(value: T) -> Self {
-        let shape = value.into_shape();
+        let shape = value.into_shape_with_order();
         let st = if shape.is_c() { Strides::C } else { Strides::F };
         StrideShape {
             strides: st,
@@ -127,7 +127,7 @@ where
 {
     type Dim = T::Dim;
     type Strides = T;
-    fn into_shape(self) -> Shape<Self::Dim> {
+    fn into_shape_with_order(self) -> Shape<Self::Dim> {
         Shape {
             dim: self.into_dimension(),
             strides: Strides::C,
@@ -137,10 +137,10 @@ where
         self.set_f(true)
     }
     fn set_f(self, is_f: bool) -> Shape<Self::Dim> {
-        self.into_shape().set_f(is_f)
+        self.into_shape_with_order().set_f(is_f)
     }
     fn strides(self, st: T) -> StrideShape<Self::Dim> {
-        self.into_shape().strides(st.into_dimension())
+        self.into_shape_with_order().strides(st.into_dimension())
     }
 }
 
@@ -151,7 +151,7 @@ where
     type Dim = D;
     type Strides = D;
 
-    fn into_shape(self) -> Shape<D> {
+    fn into_shape_with_order(self) -> Shape<D> {
         self
     }
 

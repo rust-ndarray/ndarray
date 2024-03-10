@@ -6,7 +6,7 @@ fn formatting() {
     let a = rcarr1::<f32>(&[1., 2., 3., 4.]);
     assert_eq!(format!("{}", a), "[1, 2, 3, 4]");
     assert_eq!(format!("{:4}", a), "[   1,    2,    3,    4]");
-    let a = a.reshape((4, 1, 1));
+    let a = a.into_shape_clone((4, 1, 1)).unwrap();
     assert_eq!(
         format!("{}", a),
         "\
@@ -30,7 +30,7 @@ fn formatting() {
  [[   4]]]",
     );
 
-    let a = a.reshape((2, 2));
+    let a = a.into_shape_clone((2, 2)).unwrap();
     assert_eq!(
         format!("{}", a),
         "\

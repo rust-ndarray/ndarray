@@ -10,6 +10,7 @@ use ndarray::Array;
 use ndarray::IntoDimension;
 use ndarray::ShapeBuilder;
 use ndarray::Ix3;
+use ndarray::Order;
 
 #[test]
 fn test_ixdyn() {
@@ -39,14 +40,14 @@ fn test_ixdyn_out_of_bounds() {
 
 #[test]
 fn test_ixdyn_iterate() {
-    for &rev in &[false, true] {
-        let mut a = Array::zeros((2, 3, 4).set_f(rev));
+    for &order in &[Order::C, Order::F] {
+        let mut a = Array::zeros((2, 3, 4).set_f(order.is_column_major()));
         let dim = a.shape().to_vec();
         for (i, elt) in a.iter_mut().enumerate() {
             *elt = i;
         }
         println!("{:?}", a.dim());
-        let mut a = a.into_shape(dim).unwrap();
+        let mut a = a.into_shape_with_order((dim, order)).unwrap();
         println!("{:?}", a.dim());
         let mut c = 0;
         for (i, elt) in a.iter_mut().enumerate() {
@@ -59,13 +60,13 @@ fn test_ixdyn_iterate() {
 
 #[test]
 fn test_ixdyn_index_iterate() {
-    for &rev in &[false, true] {
-        let mut a = Array::zeros((2, 3, 4).set_f(rev));
+    for &order in &[Order::C, Order::F] {
+        let mut a = Array::zeros((2, 3, 4).set_f(order.is_column_major()));
         let dim = a.shape().to_vec();
         for ((i, j, k), elt) in a.indexed_iter_mut() {
             *elt = i + 10 * j + 100 * k;
         }
-        let a = a.into_shape(dim).unwrap();
+        let a = a.into_shape_with_order((dim, order)).unwrap();
         println!("{:?}", a.dim());
         let mut c = 0;
         for (i, elt) in a.indexed_iter() {
@@ -159,8 +160,8 @@ fn test_0_add_broad() {
 fn test_into_dimension() {
     use ndarray::{Ix0, Ix1, Ix2, IxDyn};
 
-    let a = Array::linspace(0., 41., 6 * 7).into_shape((6, 7)).unwrap();
-    let a2 = a.clone().into_shape(IxDyn(&[6, 7])).unwrap();
+    let a = Array::linspace(0., 41., 6 * 7).into_shape_with_order((6, 7)).unwrap();
+    let a2 = a.clone().into_shape_with_order(IxDyn(&[6, 7])).unwrap();
     let b = a2.clone().into_dimensionality::<Ix2>().unwrap();
     assert_eq!(a, b);
 

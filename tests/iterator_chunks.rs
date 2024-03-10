@@ -13,7 +13,7 @@ use ndarray::prelude::*;
 fn chunks() {
     use ndarray::NdProducer;
     let a = <Array1<f32>>::linspace(1., 100., 10 * 10)
-        .into_shape((10, 10))
+        .into_shape_with_order((10, 10))
         .unwrap();
 
     let (m, n) = a.dim();

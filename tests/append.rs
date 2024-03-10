@@ -282,8 +282,8 @@ fn append_array_3d() {
 fn test_append_2d() {
     // create an empty array and append
     let mut a = Array::zeros((0, 4));
-    let ones = ArrayView::from(&[1.; 12]).into_shape((3, 4)).unwrap();
-    let zeros = ArrayView::from(&[0.; 8]).into_shape((2, 4)).unwrap();
+    let ones = ArrayView::from(&[1.; 12]).into_shape_with_order((3, 4)).unwrap();
+    let zeros = ArrayView::from(&[0.; 8]).into_shape_with_order((2, 4)).unwrap();
     a.append(Axis(0), ones).unwrap();
     a.append(Axis(0), zeros).unwrap();
     a.append(Axis(0), ones).unwrap();
@@ -314,16 +314,16 @@ fn test_append_2d() {
 fn test_append_middle_axis() {
     // ensure we can append to Axis(1) by letting it become outermost
     let mut a = Array::<i32, _>::zeros((3, 0, 2));
-    a.append(Axis(1), Array::from_iter(0..12).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    a.append(Axis(1), Array::from_iter(0..12).into_shape_with_order((3, 2, 2)).unwrap().view()).unwrap();
     println!("{:?}", a);
-    a.append(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    a.append(Axis(1), Array::from_iter(12..24).into_shape_with_order((3, 2, 2)).unwrap().view()).unwrap();
     println!("{:?}", a);
 
     // ensure we can append to Axis(1) by letting it become outermost
     let mut a = Array::<i32, _>::zeros((3, 1, 2));
-    a.append(Axis(1), Array::from_iter(0..12).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    a.append(Axis(1), Array::from_iter(0..12).into_shape_with_order((3, 2, 2)).unwrap().view()).unwrap();
     println!("{:?}", a);
-    a.append(Axis(1), Array::from_iter(12..24).into_shape((3, 2, 2)).unwrap().view()).unwrap();
+    a.append(Axis(1), Array::from_iter(12..24).into_shape_with_order((3, 2, 2)).unwrap().view()).unwrap();
     println!("{:?}", a);
 }
 
@@ -339,8 +339,8 @@ fn test_append_zero_size() {
 
     {
         let mut a = Array::<i32, _>::zeros((0, 0));
-        a.append(Axis(1), ArrayView::from(&[]).into_shape((0, 1)).unwrap()).unwrap();
-        a.append(Axis(1), ArrayView::from(&[]).into_shape((0, 1)).unwrap()).unwrap();
+        a.append(Axis(1), ArrayView::from(&[]).into_shape_with_order((0, 1)).unwrap()).unwrap();
+        a.append(Axis(1), ArrayView::from(&[]).into_shape_with_order((0, 1)).unwrap()).unwrap();
         assert_eq!(a.len(), 0);
         assert_eq!(a.shape(), &[0, 2]);
     }

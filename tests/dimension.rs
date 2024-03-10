@@ -55,14 +55,14 @@ fn remove_axis() {
     let a = ArcArray::<f32, _>::zeros(vec![4, 5, 6]);
     let _b = a
         .index_axis_move(Axis(1), 0)
-        .reshape((4, 6))
-        .reshape(vec![2, 3, 4]);
+        .to_shape((4, 6)).unwrap()
+        .to_shape(vec![2, 3, 4]).unwrap();
 }
 
 #[test]
 #[allow(clippy::eq_op)]
 fn dyn_dimension() {
-    let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape(vec![2, 2]).unwrap();
+    let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape_with_order(vec![2, 2]).unwrap();
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
     assert_eq!(a[&[0, 0][..]], 1.);
     assert_eq!(a[[0, 0]], 1.);

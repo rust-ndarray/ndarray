@@ -74,7 +74,7 @@ fn main() {
     }
     regularize(&mut b).unwrap();
 
-    let mut b = b.into_shape(a.len()).unwrap();
+    let mut b = b.into_shape_with_order(a.len()).unwrap();
     regularize(&mut b).unwrap();
 
     b.invert_axis(Axis(0));

@@ -46,21 +46,21 @@ fn iter_sum_2d_transpose(bench: &mut Bencher) {
 
 #[bench]
 fn iter_filter_sum_2d_u32(bench: &mut Bencher) {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape_with_order((16, 16)).unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
     bench.iter(|| b.iter().filter(|&&x| x < 75).sum::<u32>());
 }
 
 #[bench]
 fn iter_filter_sum_2d_f32(bench: &mut Bencher) {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape_with_order((16, 16)).unwrap();
     let b = a * 100.;
     bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
 }
 
 #[bench]
 fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher) {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape_with_order((16, 16)).unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
     let b = b.slice(s![.., ..;2]);
     bench.iter(|| b.iter().filter(|&&x| x < 75).sum::<u32>());
@@ -68,7 +68,7 @@ fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher) {
 
 #[bench]
 fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher) {
-    let a = Array::linspace(0., 1., 256).into_shape((16, 16)).unwrap();
+    let a = Array::linspace(0., 1., 256).into_shape_with_order((16, 16)).unwrap();
     let b = a * 100.;
     let b = b.slice(s![.., ..;2]);
     bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
@@ -321,7 +321,7 @@ fn indexed_iter_3d_dyn(bench: &mut Bencher) {
     for ((i, j, k), elt) in a.indexed_iter_mut() {
         *elt = (i + 100 * j + 10000 * k) as _;
     }
-    let a = a.into_shape(&[ISZ; 3][..]).unwrap();
+    let a = a.into_shape_with_order(&[ISZ; 3][..]).unwrap();
 
     bench.iter(|| {
         for (i, &_elt) in a.indexed_iter() {

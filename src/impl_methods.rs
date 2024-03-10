@@ -1323,7 +1323,7 @@ where
     /// use ndarray::Array;
     /// use ndarray::{arr3, Axis};
     ///
-    /// let a = Array::from_iter(0..28).into_shape((2, 7, 2)).unwrap();
+    /// let a = Array::from_iter(0..28).into_shape_with_order((2, 7, 2)).unwrap();
     /// let mut iter = a.axis_chunks_iter(Axis(1), 2);
     ///
     /// // first iteration yields a 2 × 2 × 2 view
@@ -1815,8 +1815,19 @@ where
     /// number of rows and columns (or more axes if applicable), it is important to pick an index
     /// ordering, and that's the reason for the function parameter for `order`.
     ///
+    /// The `new_shape` parameter should be a dimension and an optional order like these examples:
+    ///
+    /// ```text
+    /// (3, 4)                          // Shape 3 x 4 with default order (RowMajor)
+    /// ((3, 4), Order::RowMajor))      // use specific order
+    /// ((3, 4), Order::ColumnMajor))   // use specific order
+    /// ((3, 4), Order::C))             // use shorthand for order - shorthands C and F
+    /// ```
+    ///
     /// **Errors** if the new shape doesn't have the same number of elements as the array's current
     /// shape.
+    ///
+    /// # Example
     ///
     /// ```
     /// use ndarray::array;
@@ -1886,8 +1897,93 @@ where
     }
 
     /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted, but the source array must be contiguous.
+    ///
+    /// If an index ordering is not specified, the default is `RowMajor`.
+    /// The operation will only succeed if the array's memory layout is compatible with
+    /// the index ordering, so that the array elements can be rearranged in place.
+    ///
+    /// If required use `.to_shape()` or `.into_shape_clone` instead for more flexible reshaping of
+    /// arrays, which allows copying elements if required.
+    ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    /// **Errors** if order RowMajor is given but input is not c-contiguous.
+    /// **Errors** if order ColumnMajor is given but input is not f-contiguous.
+    ///
+    /// If shape is not given: use memory layout of incoming array. Row major arrays are
+    /// reshaped using row major index ordering, column major arrays with column major index
+    /// ordering.
+    ///
+    /// The `new_shape` parameter should be a dimension and an optional order like these examples:
+    ///
+    /// ```text
+    /// (3, 4)                          // Shape 3 x 4 with default order (RowMajor)
+    /// ((3, 4), Order::RowMajor))      // use specific order
+    /// ((3, 4), Order::ColumnMajor))   // use specific order
+    /// ((3, 4), Order::C))             // use shorthand for order - shorthands C and F
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::{aview1, aview2};
+    /// use ndarray::Order;
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape_with_order((2, 2)).unwrap()
+    ///     == aview2(&[[1., 2.],
+    ///                 [3., 4.]])
+    /// );
+    ///
+    /// assert!(
+    ///     aview1(&[1., 2., 3., 4.]).into_shape_with_order(((2, 2), Order::ColumnMajor)).unwrap()
+    ///     == aview2(&[[1., 3.],
+    ///                 [2., 4.]])
+    /// );
+    /// ```
+    pub fn into_shape_with_order<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+    where
+        E: ShapeArg,
+    {
+        let (shape, order) = shape.into_shape_and_order();
+        self.into_shape_with_order_impl(shape, order.unwrap_or(Order::RowMajor))
+    }
+
+    fn into_shape_with_order_impl<E>(self, shape: E, order: Order)
+        -> Result<ArrayBase<S, E>, ShapeError>
+    where
+        E: Dimension,
+    {
+        let shape = shape.into_dimension();
+        if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+
+        // Check if contiguous, then we can change shape
+        unsafe {
+            // safe because arrays are contiguous and len is unchanged
+            match order {
+                Order::RowMajor if self.is_standard_layout() => {
+                    Ok(self.with_strides_dim(shape.default_strides(), shape))
+                }
+                Order::ColumnMajor if self.raw_view().reversed_axes().is_standard_layout() => {
+                    Ok(self.with_strides_dim(shape.fortran_strides(), shape))
+                }
+                _otherwise => Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
+            }
+        }
+    }
+
+    /// Transform the array into `shape`; any shape with the same number of
     /// elements is accepted, but the source array or view must be in standard
     /// or column-major (Fortran) layout.
+    ///
+    /// **Note** that `.into_shape()` "moves" elements differently depending on if the input array
+    /// is C-contig or F-contig, it follows the index order that corresponds to the memory order.
+    /// Prefer to use `.to_shape()` or `.into_shape_with_order()`.
+    ///
+    /// Because of this, the method **is deprecated**. That reshapes depend on memory order is not
+    /// intuitive.
     ///
     /// **Errors** if the shapes don't have the same number of elements.<br>
     /// **Errors** if the input array is not c- or f-contiguous.
@@ -1901,6 +1997,7 @@ where
     ///                 [3., 4.]])
     /// );
     /// ```
+    #[deprecated = "Use `.into_shape_with_order()` or `.to_shape()`"]
     pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
     where
         E: IntoDimension,
@@ -1922,7 +2019,75 @@ where
         }
     }
 
-    /// *Note: Reshape is for `ArcArray` only. Use `.into_shape()` for
+    /// Transform the array into `shape`; any shape with the same number of
+    /// elements is accepted. Array elements are reordered in place if
+    /// possible, otherwise they are copied to create a new array.
+    ///
+    /// If an index ordering is not specified, the default is `RowMajor`.
+    /// The operation will only succeed if the array's memory layout is compatible with
+    /// the index ordering, so that the array elements can be rearranged in place.
+    ///
+    /// # `.to_shape` vs `.into_shape_clone`
+    ///
+    /// - `to_shape` supports views and outputting views
+    /// - `to_shape` borrows the original array, `into_shape_clone` consumes the original
+    /// - `into_shape_clone` preserves array type (Array vs ArcArray), but does not support views.
+    ///
+    /// **Errors** if the shapes don't have the same number of elements.<br>
+    pub fn into_shape_clone<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
+    where
+        S: DataOwned,
+        A: Clone,
+        E: ShapeArg,
+    {
+        let (shape, order) = shape.into_shape_and_order();
+        let order = order.unwrap_or(Order::RowMajor);
+        self.into_shape_clone_order(shape, order)
+    }
+
+    fn into_shape_clone_order<E>(self, shape: E, order: Order)
+        -> Result<ArrayBase<S, E>, ShapeError>
+    where
+        S: DataOwned,
+        A: Clone,
+        E: Dimension,
+    {
+        let len = self.dim.size();
+        if size_of_shape_checked(&shape) != Ok(len) {
+            return Err(error::incompatible_shapes(&self.dim, &shape));
+        }
+
+        // Safe because the array and new shape is empty.
+        if len == 0 {
+            unsafe {
+                return Ok(self.with_strides_dim(shape.default_strides(), shape));
+            }
+        }
+
+        // Try to reshape the array's current data
+        match reshape_dim(&self.dim, &self.strides, &shape, order) {
+            Ok(to_strides) => unsafe {
+                return Ok(self.with_strides_dim(to_strides, shape));
+            }
+            Err(err) if err.kind() == ErrorKind::IncompatibleShape => {
+                return Err(error::incompatible_shapes(&self.dim, &shape));
+            }
+            _otherwise => { }
+        }
+
+        // otherwise, clone and allocate a new array
+        unsafe {
+            let (shape, view) = match order {
+                Order::RowMajor => (shape.set_f(false), self.view()),
+                Order::ColumnMajor => (shape.set_f(true), self.t()),
+            };
+
+            Ok(ArrayBase::from_shape_trusted_iter_unchecked(
+                        shape, view.into_iter(), A::clone))
+        }
+    }
+
+    /// *Note: Reshape is for `ArcArray` only. Use `.into_shape_with_order()` for
     /// other arrays and array views.*
     ///
     /// Transform the array into `shape`; any shape with the same number of
@@ -1933,6 +2098,9 @@ where
     ///
     /// **Panics** if shapes are incompatible.
     ///
+    /// *This method is obsolete, because it is inflexible in how logical order
+    /// of the array is handled. See [`.to_shape()`].*
+    ///
     /// ```
     /// use ndarray::{rcarr1, rcarr2};
     ///
@@ -1942,6 +2110,7 @@ where
     ///                 [3., 4.]])
     /// );
     /// ```
+    #[deprecated(note="Obsolete, use `to_shape` or `into_shape_with_order` instead.", since="0.15.2")]
     pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E::Dim>
     where
         S: DataShared + DataOwned,

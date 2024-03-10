@@ -60,7 +60,7 @@ fn test_uninit() {
         assert_eq!(a.dim(), (3, 4));
         assert_eq!(a.strides(), &[1, 3]);
         let b = Array::<f32, _>::linspace(0., 25., a.len())
-            .into_shape(a.dim())
+            .into_shape_with_order(a.dim())
             .unwrap();
         a.assign(&b);
         assert_eq!(&a, &b);
@@ -214,7 +214,7 @@ fn deny_wraparound_zeros() {
 fn deny_wraparound_reshape() {
     //2^64 + 5 = 18446744073709551621 = 3×7×29×36760123×823996703  (5 distinct prime factors)
     let five = Array::<f32, _>::zeros(5);
-    let _five_large = five.into_shape((3, 7, 29, 36760123, 823996703)).unwrap();
+    let _five_large = five.into_shape_with_order((3, 7, 29, 36760123, 823996703)).unwrap();
 }
 
 #[should_panic]

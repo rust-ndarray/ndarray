@@ -166,7 +166,7 @@ where
 
 #[cfg(feature = "std")]
 fn main() {
-    let a = Array::linspace(0., 63., 64).into_shape((8, 8)).unwrap();
+    let a = Array::linspace(0., 63., 64).into_shape_with_order((8, 8)).unwrap();
     let strings = a.map(|x| x.to_string());
 
     let perm = a.sort_axis_by(Axis(1), |i, j| a[[i, 0]] > a[[j, 0]]);

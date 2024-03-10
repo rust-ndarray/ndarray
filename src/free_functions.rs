@@ -88,7 +88,7 @@ pub const fn aview0<A>(x: &A) -> ArrayView0<'_, A> {
 /// let data = [1.0; 1024];
 ///
 /// // Create a 2D array view from borrowed data
-/// let a2d = aview1(&data).into_shape((32, 32)).unwrap();
+/// let a2d = aview1(&data).into_shape_with_order((32, 32)).unwrap();
 ///
 /// assert_eq!(a2d.sum(), 1024.0);
 ///
@@ -174,7 +174,7 @@ pub const fn aview2<A, const N: usize>(xs: &[[A; N]]) -> ArrayView2<'_, A> {
 /// // Create an array view over some data, then slice it and modify it.
 /// let mut data = [0; 1024];
 /// {
-///     let mut a = aview_mut1(&mut data).into_shape((32, 32)).unwrap();
+///     let mut a = aview_mut1(&mut data).into_shape_with_order((32, 32)).unwrap();
 ///     a.slice_mut(s![.., ..;3]).fill(5);
 /// }
 /// assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
