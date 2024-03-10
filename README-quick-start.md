@@ -295,8 +295,7 @@ row: [[100, 101, 102],
 ## Shape Manipulation
 
 ### Changing the shape of an array
-The shape of an array can be changed with `into_shape_with_order` method.
-(One can also use `to_shape` for this.)
+The shape of an array can be changed with the `into_shape_with_order` or `to_shape` method.
 
 ````rust
 use ndarray::prelude::*;

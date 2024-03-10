@@ -1978,7 +1978,7 @@ where
     /// elements is accepted, but the source array or view must be in standard
     /// or column-major (Fortran) layout.
     ///
-    /// **Note** that `.into_shape_with_order()` "moves" elements differently depending on if the input array
+    /// **Note** that `.into_shape()` "moves" elements differently depending on if the input array
     /// is C-contig or F-contig, it follows the index order that corresponds to the memory order.
     /// Prefer to use `.to_shape()` or `.into_shape_with_order()`.
     ///
@@ -1992,7 +1992,7 @@ where
     /// use ndarray::{aview1, aview2};
     ///
     /// assert!(
-    ///     aview1(&[1., 2., 3., 4.]).into_shape_with_order((2, 2)).unwrap()
+    ///     aview1(&[1., 2., 3., 4.]).into_shape((2, 2)).unwrap()
     ///     == aview2(&[[1., 2.],
     ///                 [3., 4.]])
     /// );
@@ -2117,7 +2117,6 @@ where
         A: Clone,
         E: IntoDimension,
     {
-        //return self.clone().into_shape_clone(shape).unwrap();
         let shape = shape.into_dimension();
         if size_of_shape_checked(&shape) != Ok(self.dim.size()) {
             panic!(
