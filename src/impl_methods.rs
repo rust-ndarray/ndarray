@@ -656,6 +656,16 @@ where
         debug_assert!(self.pointer_is_inbounds());
     }
 
+    /// Slice the array in place along the specified axis, then return the sliced array.
+    ///
+    /// **Panics** if an index is out of bounds or step size is zero.<br>
+    /// **Panics** if `axis` is out of bounds.
+    #[must_use = "slice_axis_move returns an array with the sliced result"]
+    pub fn slice_axis_move(mut self, axis: Axis, indices: Slice) -> Self {
+        self.slice_axis_inplace(axis, indices);
+        self
+    }
+
     /// Return a view of a slice of the array, with a closure specifying the
     /// slice for each axis.
     ///
