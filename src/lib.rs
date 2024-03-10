@@ -71,7 +71,7 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.51 or later**
+//! - **Requires Rust 1.57 or later**
 //!
 //! ## Crate Feature Flags
 //!
@@ -1450,7 +1450,7 @@ pub struct RawViewRepr<A> {
 
 impl<A> RawViewRepr<A> {
     #[inline(always)]
-    fn new() -> Self {
+    const fn new() -> Self {
         RawViewRepr { ptr: PhantomData }
     }
 }
@@ -1467,7 +1467,7 @@ pub struct ViewRepr<A> {
 
 impl<A> ViewRepr<A> {
     #[inline(always)]
-    fn new() -> Self {
+    const fn new() -> Self {
         ViewRepr { life: PhantomData }
     }
 }

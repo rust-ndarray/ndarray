@@ -307,6 +307,10 @@ pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
 // use "raw" form instead of type aliases here so that they show up in docs
 /// Implementation of `ArrayView::from(&S)` where `S` is a slice or sliceable.
+///
+/// **Panics** if the length of the slice overflows `isize`. (This can only
+/// occur if `A` is zero-sized, because slices cannot contain more than
+/// `isize::MAX` number of bytes.)
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for ArrayView<'a, A, Ix1>
 where
     Slice: AsRef<[A]>,
@@ -315,14 +319,7 @@ where
     ///
     /// **Panics** if the slice length is greater than `isize::MAX`.
     fn from(slice: &'a Slice) -> Self {
-        let xs = slice.as_ref();
-        if mem::size_of::<A>() == 0 {
-            assert!(
-                xs.len() <= ::std::isize::MAX as usize,
-                "Slice length must fit in `isize`.",
-            );
-        }
-        unsafe { Self::from_shape_ptr(xs.len(), xs.as_ptr()) }
+        aview1(slice.as_ref())
     }
 }
 
@@ -334,25 +331,7 @@ where
 impl<'a, A, const N: usize> From<&'a [[A; N]]> for ArrayView<'a, A, Ix2> {
     /// Create a two-dimensional read-only array view of the data in `slice`
     fn from(xs: &'a [[A; N]]) -> Self {
-        let cols = N;
-        let rows = xs.len();
-        let dim = Ix2(rows, cols);
-        if size_of::<A>() == 0 {
-            dimension::size_of_shape_checked(&dim)
-                .expect("Product of non-zero axis lengths must not overflow isize.");
-        } else if N == 0 {
-            assert!(
-                xs.len() <= isize::MAX as usize,
-                "Product of non-zero axis lengths must not overflow isize.",
-            );
-        }
-
-        // `cols * rows` is guaranteed to fit in `isize` because we checked that it fits in
-        // `isize::MAX`
-        unsafe {
-            let data = slice::from_raw_parts(xs.as_ptr() as *const A, cols * rows);
-            ArrayView::from_shape_ptr(dim, data.as_ptr())
-        }
+        aview2(xs)
     }
 }
 

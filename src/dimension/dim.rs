@@ -42,7 +42,7 @@ pub struct Dim<I: ?Sized> {
 
 impl<I> Dim<I> {
     /// Private constructor and accessors for Dim
-    pub(crate) fn new(index: I) -> Dim<I> {
+    pub(crate) const fn new(index: I) -> Dim<I> {
         Dim { index }
     }
     #[inline(always)]
