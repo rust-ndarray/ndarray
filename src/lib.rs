@@ -212,6 +212,9 @@ mod zip;
 
 mod dimension;
 
+#[cfg(feature = "dlpack")]
+mod dlpack;
+
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 
 pub use crate::layout::Layout;
@@ -1351,6 +1354,12 @@ pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 /// instead of either a view or a uniquely owned copy.
 pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
 
+
+/// An array from managed memory
+#[cfg(feature = "dlpack")]
+pub type ManagedArray<A, D> = ArrayBase<ManagedRepr<A>, D>;
+
+
 /// A read-only array view.
 ///
 /// An array view represents an array or a part of it, created from
@@ -1424,6 +1433,10 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
 
 pub use data_repr::OwnedRepr;
+
+#[cfg(feature = "dlpack")]
+pub use dlpack::ManagedRepr;
+
 
 /// ArcArray's representation.
 ///
