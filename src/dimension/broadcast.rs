@@ -34,6 +34,57 @@ where
     Ok(out)
 }
 
+/// Return new stride when trying to grow `from` into shape `to`
+///
+/// Broadcasting works by returning a "fake stride" where elements
+/// to repeat are in axes with 0 stride, so that several indexes point
+/// to the same element.
+///
+/// **Note:** Cannot be used for mutable iterators, since repeating
+/// elements would create aliasing pointers.
+pub(crate) fn upcast<D: Dimension, E: Dimension>(to: &D, from: &E, stride: &E) -> Option<D> {
+    // Make sure the product of non-zero axis lengths does not exceed
+    // `isize::MAX`. This is the only safety check we need to perform
+    // because all the other constraints of `ArrayBase` are guaranteed
+    // to be met since we're starting from a valid `ArrayBase`.
+    let _ = size_of_shape_checked(to).ok()?;
+
+    let mut new_stride = to.clone();
+    // begin at the back (the least significant dimension)
+    // size of the axis has to either agree or `from` has to be 1
+    if to.ndim() < from.ndim() {
+        return None;
+    }
+
+    {
+        let mut new_stride_iter = new_stride.slice_mut().iter_mut().rev();
+        for ((er, es), dr) in from
+            .slice()
+            .iter()
+            .rev()
+            .zip(stride.slice().iter().rev())
+            .zip(new_stride_iter.by_ref())
+        {
+            /* update strides */
+            if *dr == *er {
+                /* keep stride */
+                *dr = *es;
+            } else if *er == 1 {
+                /* dead dimension, zero stride */
+                *dr = 0
+            } else {
+                return None;
+            }
+        }
+
+        /* set remaining strides to zero */
+        for dr in new_stride_iter {
+            *dr = 0;
+        }
+    }
+    Some(new_stride)
+}
+
 pub trait DimMax<Other: Dimension> {
     /// The resulting dimension type after broadcasting.
     type Output: Dimension;
