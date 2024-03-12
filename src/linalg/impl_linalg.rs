@@ -375,6 +375,7 @@ where
 #[cfg(not(feature = "blas"))]
 use self::mat_mul_general as mat_mul_impl;
 
+#[rustfmt::skip]
 #[cfg(feature = "blas")]
 fn mat_mul_impl<A>(
     alpha: A,
