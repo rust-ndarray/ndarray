@@ -8,72 +8,82 @@ mod layoutfmt;
 #[derive(Copy, Clone)]
 pub struct Layout(u32);
 
-impl Layout {
+impl Layout
+{
     pub(crate) const CORDER: u32 = 0b01;
     pub(crate) const FORDER: u32 = 0b10;
     pub(crate) const CPREFER: u32 = 0b0100;
     pub(crate) const FPREFER: u32 = 0b1000;
 
     #[inline(always)]
-    pub(crate) fn is(self, flag: u32) -> bool {
+    pub(crate) fn is(self, flag: u32) -> bool
+    {
         self.0 & flag != 0
     }
 
     /// Return layout common to both inputs
     #[inline(always)]
-    pub(crate) fn intersect(self, other: Layout) -> Layout {
+    pub(crate) fn intersect(self, other: Layout) -> Layout
+    {
         Layout(self.0 & other.0)
     }
 
     /// Return a layout that simultaneously "is" what both of the inputs are
     #[inline(always)]
-    pub(crate) fn also(self, other: Layout) -> Layout {
+    pub(crate) fn also(self, other: Layout) -> Layout
+    {
         Layout(self.0 | other.0)
     }
 
     #[inline(always)]
-    pub(crate) fn one_dimensional() -> Layout {
+    pub(crate) fn one_dimensional() -> Layout
+    {
         Layout::c().also(Layout::f())
     }
 
     #[inline(always)]
-    pub(crate) fn c() -> Layout {
+    pub(crate) fn c() -> Layout
+    {
         Layout(Layout::CORDER | Layout::CPREFER)
     }
 
     #[inline(always)]
-    pub(crate) fn f() -> Layout {
+    pub(crate) fn f() -> Layout
+    {
         Layout(Layout::FORDER | Layout::FPREFER)
     }
 
     #[inline(always)]
-    pub(crate) fn cpref() -> Layout {
+    pub(crate) fn cpref() -> Layout
+    {
         Layout(Layout::CPREFER)
     }
 
     #[inline(always)]
-    pub(crate) fn fpref() -> Layout {
+    pub(crate) fn fpref() -> Layout
+    {
         Layout(Layout::FPREFER)
     }
 
     #[inline(always)]
-    pub(crate) fn none() -> Layout {
+    pub(crate) fn none() -> Layout
+    {
         Layout(0)
     }
 
     /// A simple "score" method which scores positive for preferring C-order, negative for F-order
     /// Subject to change when we can describe other layouts
     #[inline]
-    pub(crate) fn tendency(self) -> i32 {
-        (self.is(Layout::CORDER) as i32 - self.is(Layout::FORDER) as i32) +
-        (self.is(Layout::CPREFER) as i32 - self.is(Layout::FPREFER) as i32)
-
+    pub(crate) fn tendency(self) -> i32
+    {
+        (self.is(Layout::CORDER) as i32 - self.is(Layout::FORDER) as i32)
+            + (self.is(Layout::CPREFER) as i32 - self.is(Layout::FPREFER) as i32)
     }
 }
 
-
 #[cfg(test)]
-mod tests {
+mod tests
+{
     use super::*;
     use crate::imp_prelude::*;
     use crate::NdProducer;
@@ -91,7 +101,7 @@ mod tests {
                 $mat,
                 stringify!($layout));
             )*
-        }}
+        }};
     }
 
     macro_rules! assert_not_layouts {
@@ -103,11 +113,12 @@ mod tests {
                 $mat,
                 stringify!($layout));
             )*
-        }}
+        }};
     }
 
     #[test]
-    fn contig_layouts() {
+    fn contig_layouts()
+    {
         let a = M::zeros((5, 5));
         let b = M::zeros((5, 5).f());
         let ac = a.view().layout();
@@ -119,7 +130,8 @@ mod tests {
     }
 
     #[test]
-    fn contig_cf_layouts() {
+    fn contig_cf_layouts()
+    {
         let a = M::zeros((5, 1));
         let b = M::zeros((1, 5).f());
         assert_layouts!(a, CORDER, CPREFER, FORDER, FPREFER);
@@ -147,7 +159,8 @@ mod tests {
     }
 
     #[test]
-    fn stride_layouts() {
+    fn stride_layouts()
+    {
         let a = M::zeros((5, 5));
 
         {
@@ -174,7 +187,8 @@ mod tests {
     }
 
     #[test]
-    fn no_layouts() {
+    fn no_layouts()
+    {
         let a = M::zeros((5, 5));
         let b = M::zeros((5, 5).f());
 
@@ -202,7 +216,8 @@ mod tests {
     }
 
     #[test]
-    fn skip_layouts() {
+    fn skip_layouts()
+    {
         let a = M::zeros((5, 5));
         {
             let v1 = a.slice(s![..;2, ..]).layout();

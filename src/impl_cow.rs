@@ -12,49 +12,45 @@ use crate::imp_prelude::*;
 ///
 /// ***See also all methods for [`ArrayBase`]***
 impl<'a, A, D> CowArray<'a, A, D>
-where
-    D: Dimension,
+where D: Dimension
 {
     /// Returns `true` iff the array is the view (borrowed) variant.
-    pub fn is_view(&self) -> bool {
+    pub fn is_view(&self) -> bool
+    {
         self.data.is_view()
     }
 
     /// Returns `true` iff the array is the owned variant.
-    pub fn is_owned(&self) -> bool {
+    pub fn is_owned(&self) -> bool
+    {
         self.data.is_owned()
     }
 }
 
 impl<'a, A, D> From<ArrayView<'a, A, D>> for CowArray<'a, A, D>
-where
-    D: Dimension,
+where D: Dimension
 {
-    fn from(view: ArrayView<'a, A, D>) -> CowArray<'a, A, D> {
+    fn from(view: ArrayView<'a, A, D>) -> CowArray<'a, A, D>
+    {
         // safe because equivalent data
-        unsafe {
-            ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr)
-                .with_strides_dim(view.strides, view.dim)
-        }
+        unsafe { ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr).with_strides_dim(view.strides, view.dim) }
     }
 }
 
 impl<'a, A, D> From<Array<A, D>> for CowArray<'a, A, D>
-where
-    D: Dimension,
+where D: Dimension
 {
-    fn from(array: Array<A, D>) -> CowArray<'a, A, D> {
+    fn from(array: Array<A, D>) -> CowArray<'a, A, D>
+    {
         // safe because equivalent data
         unsafe {
-            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.ptr)
-                .with_strides_dim(array.strides, array.dim)
+            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.ptr).with_strides_dim(array.strides, array.dim)
         }
     }
 }
 
 impl<'a, A, Slice: ?Sized> From<&'a Slice> for CowArray<'a, A, Ix1>
-where
-    Slice: AsRef<[A]>,
+where Slice: AsRef<[A]>
 {
     /// Create a one-dimensional clone-on-write view of the data in `slice`.
     ///
@@ -67,7 +63,8 @@ where
     /// assert!(array.is_view());
     /// assert_eq!(array, array![1., 2., 3., 4.]);
     /// ```
-    fn from(slice: &'a Slice) -> Self {
+    fn from(slice: &'a Slice) -> Self
+    {
         Self::from(ArrayView1::from(slice))
     }
 }
@@ -78,7 +75,8 @@ where
     D: Dimension,
 {
     /// Create a read-only clone-on-write view of the array.
-    fn from(array: &'a ArrayBase<S, D>) -> Self {
+    fn from(array: &'a ArrayBase<S, D>) -> Self
+    {
         Self::from(array.view())
     }
 }

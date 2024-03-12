@@ -51,22 +51,26 @@ macro_rules! array {
 }
 
 /// Create a zero-dimensional array with the element `x`.
-pub fn arr0<A>(x: A) -> Array0<A> {
+pub fn arr0<A>(x: A) -> Array0<A>
+{
     unsafe { ArrayBase::from_shape_vec_unchecked((), vec![x]) }
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A> {
+pub fn arr1<A: Clone>(xs: &[A]) -> Array1<A>
+{
     ArrayBase::from(xs.to_vec())
 }
 
 /// Create a one-dimensional array with elements from `xs`.
-pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray1<A> {
+pub fn rcarr1<A: Clone>(xs: &[A]) -> ArcArray1<A>
+{
     arr1(xs).into_shared()
 }
 
 /// Create a zero-dimensional array view borrowing `x`.
-pub const fn aview0<A>(x: &A) -> ArrayView0<'_, A> {
+pub const fn aview0<A>(x: &A) -> ArrayView0<'_, A>
+{
     ArrayBase {
         data: ViewRepr::new(),
         // Safe because references are always non-null.
@@ -97,7 +101,8 @@ pub const fn aview0<A>(x: &A) -> ArrayView0<'_, A> {
 ///
 /// assert_eq!(C.sum(), 6.);
 /// ```
-pub const fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A> {
+pub const fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A>
+{
     if size_of::<A>() == 0 {
         assert!(
             xs.len() <= isize::MAX as usize,
@@ -131,7 +136,8 @@ pub const fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A> {
 /// const C: ArrayView2<'static, f64> = aview2(&[[1., 2., 3.], [4., 5., 6.]]);
 /// assert_eq!(C.sum(), 21.);
 /// ```
-pub const fn aview2<A, const N: usize>(xs: &[[A; N]]) -> ArrayView2<'_, A> {
+pub const fn aview2<A, const N: usize>(xs: &[[A; N]]) -> ArrayView2<'_, A>
+{
     let cols = N;
     let rows = xs.len();
     if size_of::<A>() == 0 {
@@ -179,7 +185,8 @@ pub const fn aview2<A, const N: usize>(xs: &[[A; N]]) -> ArrayView2<'_, A> {
 /// }
 /// assert_eq!(&data[..10], [5, 0, 0, 5, 0, 0, 5, 0, 0, 5]);
 /// ```
-pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A> {
+pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A>
+{
     ArrayViewMut::from(xs)
 }
 
@@ -205,7 +212,8 @@ pub fn aview_mut1<A>(xs: &mut [A]) -> ArrayViewMut1<'_, A> {
 /// // look at the start of the result
 /// assert_eq!(&data[..3], [[1., -1.], [1., -1.], [1., -1.]]);
 /// ```
-pub fn aview_mut2<A, const N: usize>(xs: &mut [[A; N]]) -> ArrayViewMut2<'_, A> {
+pub fn aview_mut2<A, const N: usize>(xs: &mut [[A; N]]) -> ArrayViewMut2<'_, A>
+{
     ArrayViewMut2::from(xs)
 }
 
@@ -220,20 +228,23 @@ pub fn aview_mut2<A, const N: usize>(xs: &mut [[A; N]]) -> ArrayViewMut2<'_, A> 
 ///     a.shape() == [2, 3]
 /// );
 /// ```
-pub fn arr2<A: Clone, const N: usize>(xs: &[[A; N]]) -> Array2<A> {
+pub fn arr2<A: Clone, const N: usize>(xs: &[[A; N]]) -> Array2<A>
+{
     Array2::from(xs.to_vec())
 }
 
-impl<A, const N: usize> From<Vec<[A; N]>> for Array2<A> {
+impl<A, const N: usize> From<Vec<[A; N]>> for Array2<A>
+{
     /// Converts the `Vec` of arrays to an owned 2-D array.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
-    fn from(mut xs: Vec<[A; N]>) -> Self {
+    fn from(mut xs: Vec<[A; N]>) -> Self
+    {
         let dim = Ix2(xs.len(), N);
         let ptr = xs.as_mut_ptr();
         let cap = xs.capacity();
-        let expand_len = dimension::size_of_shape_checked(&dim)
-            .expect("Product of non-zero axis lengths must not overflow isize.");
+        let expand_len =
+            dimension::size_of_shape_checked(&dim).expect("Product of non-zero axis lengths must not overflow isize.");
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
@@ -251,16 +262,18 @@ impl<A, const N: usize> From<Vec<[A; N]>> for Array2<A> {
     }
 }
 
-impl<A, const N: usize, const M: usize> From<Vec<[[A; M]; N]>> for Array3<A> {
+impl<A, const N: usize, const M: usize> From<Vec<[[A; M]; N]>> for Array3<A>
+{
     /// Converts the `Vec` of arrays to an owned 3-D array.
     ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
-    fn from(mut xs: Vec<[[A; M]; N]>) -> Self {
+    fn from(mut xs: Vec<[[A; M]; N]>) -> Self
+    {
         let dim = Ix3(xs.len(), N, M);
         let ptr = xs.as_mut_ptr();
         let cap = xs.capacity();
-        let expand_len = dimension::size_of_shape_checked(&dim)
-            .expect("Product of non-zero axis lengths must not overflow isize.");
+        let expand_len =
+            dimension::size_of_shape_checked(&dim).expect("Product of non-zero axis lengths must not overflow isize.");
         forget(xs);
         unsafe {
             let v = if size_of::<A>() == 0 {
@@ -280,7 +293,8 @@ impl<A, const N: usize, const M: usize> From<Vec<[[A; M]; N]>> for Array3<A> {
 
 /// Create a two-dimensional array with elements from `xs`.
 ///
-pub fn rcarr2<A: Clone, const N: usize>(xs: &[[A; N]]) -> ArcArray2<A> {
+pub fn rcarr2<A: Clone, const N: usize>(xs: &[[A; N]]) -> ArcArray2<A>
+{
     arr2(xs).into_shared()
 }
 
@@ -301,11 +315,13 @@ pub fn rcarr2<A: Clone, const N: usize>(xs: &[[A; N]]) -> ArcArray2<A> {
 ///     a.shape() == [3, 2, 2]
 /// );
 /// ```
-pub fn arr3<A: Clone, const N: usize, const M: usize>(xs: &[[[A; M]; N]]) -> Array3<A> {
+pub fn arr3<A: Clone, const N: usize, const M: usize>(xs: &[[[A; M]; N]]) -> Array3<A>
+{
     Array3::from(xs.to_vec())
 }
 
 /// Create a three-dimensional array with elements from `xs`.
-pub fn rcarr3<A: Clone, const N: usize, const M: usize>(xs: &[[[A; M]; N]]) -> ArcArray<A, Ix3> {
+pub fn rcarr3<A: Clone, const N: usize, const M: usize>(xs: &[[[A; M]; N]]) -> ArcArray<A, Ix3>
+{
     arr3(xs).into_shared()
 }

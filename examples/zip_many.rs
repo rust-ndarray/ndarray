@@ -1,14 +1,12 @@
 #![allow(
-    clippy::many_single_char_names,
-    clippy::deref_addrof,
-    clippy::unreadable_literal,
-    clippy::many_single_char_names
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
 )]
 
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-fn main() {
+fn main()
+{
     let n = 6;
 
     let mut a = Array::<f32, _>::zeros((n, n));
@@ -20,7 +18,9 @@ fn main() {
     let c = c.slice(s![.., ..-1]);
 
     // Using Zip for arithmetic ops across a, b, c
-    Zip::from(&mut a).and(&b).and(&c)
+    Zip::from(&mut a)
+        .and(&b)
+        .and(&c)
         .for_each(|a, &b, &c| *a = b + c);
     assert_eq!(a, &b + &c);
 
@@ -31,7 +31,8 @@ fn main() {
 
     // sum of each row
     let mut sums = Array::zeros(a.nrows());
-    Zip::from(a.rows()).and(&mut sums)
+    Zip::from(a.rows())
+        .and(&mut sums)
         .for_each(|row, sum| *sum = row.sum());
     // show sums as a column matrix
     println!("{:8.4}", sums.insert_axis(Axis(1)));

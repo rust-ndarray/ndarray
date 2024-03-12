@@ -1,10 +1,8 @@
-
-use crate::{Dimension, Order, ShapeError, ErrorKind};
-use crate::dimension::sequence::{Sequence, SequenceMut, Forward, Reverse};
+use crate::dimension::sequence::{Forward, Reverse, Sequence, SequenceMut};
+use crate::{Dimension, ErrorKind, Order, ShapeError};
 
 #[inline]
-pub(crate) fn reshape_dim<D, E>(from: &D, strides: &D, to: &E, order: Order)
-    -> Result<E, ShapeError>
+pub(crate) fn reshape_dim<D, E>(from: &D, strides: &D, to: &E, order: Order) -> Result<E, ShapeError>
 where
     D: Dimension,
     E: Dimension,
@@ -13,12 +11,10 @@ where
     let mut to_strides = E::zeros(to.ndim());
     match order {
         Order::RowMajor => {
-            reshape_dim_c(&Forward(from), &Forward(strides),
-                          &Forward(to), Forward(&mut to_strides))?;
+            reshape_dim_c(&Forward(from), &Forward(strides), &Forward(to), Forward(&mut to_strides))?;
         }
         Order::ColumnMajor => {
-            reshape_dim_c(&Reverse(from), &Reverse(strides),
-                          &Reverse(to), Reverse(&mut to_strides))?;
+            reshape_dim_c(&Reverse(from), &Reverse(strides), &Reverse(to), Reverse(&mut to_strides))?;
         }
     }
     Ok(to_strides)
@@ -31,7 +27,7 @@ where
 /// This function uses RowMajor index ordering if the inputs are read in the forward direction
 /// (index 0 is axis 0 etc) and ColumnMajor index ordering if the inputs are read in reversed
 /// direction (as made possible with the Sequence trait).
-/// 
+///
 /// Preconditions:
 ///
 /// 1. from_dim and to_dim are valid dimensions (product of all non-zero axes
@@ -47,16 +43,15 @@ where
 /// - IncompatibleLayout if the input shape and stride can not be remapped to the output shape
 ///   without moving the array data into a new memory layout.
 /// - Ok if the from dim could be mapped to the new to dim.
-fn reshape_dim_c<D, E, E2>(from_dim: &D, from_strides: &D, to_dim: &E, mut to_strides: E2)
-    -> Result<(), ShapeError>
+fn reshape_dim_c<D, E, E2>(from_dim: &D, from_strides: &D, to_dim: &E, mut to_strides: E2) -> Result<(), ShapeError>
 where
-    D: Sequence<Output=usize>,
-    E: Sequence<Output=usize>,
-    E2: SequenceMut<Output=usize>,
+    D: Sequence<Output = usize>,
+    E: Sequence<Output = usize>,
+    E2: SequenceMut<Output = usize>,
 {
     // cursor indexes into the from and to dimensions
-    let mut fi = 0;  // index into `from_dim`
-    let mut ti = 0;  // index into `to_dim`.
+    let mut fi = 0; // index into `from_dim`
+    let mut ti = 0; // index into `to_dim`.
 
     while fi < from_dim.len() && ti < to_dim.len() {
         let mut fd = from_dim[fi];
@@ -67,7 +62,7 @@ where
             to_strides[ti] = from_strides[fi];
             fi += 1;
             ti += 1;
-            continue
+            continue;
         }
 
         if fd == 1 {
@@ -88,8 +83,8 @@ where
 
         // stride times element count is to be distributed out over a combination of axes.
         let mut fstride_whole = fs * (fd as isize);
-        let mut fd_product = fd;  // cumulative product of axis lengths in the combination (from)
-        let mut td_product = td;  // cumulative product of axis lengths in the combination (to)
+        let mut fd_product = fd; // cumulative product of axis lengths in the combination (from)
+        let mut td_product = td; // cumulative product of axis lengths in the combination (to)
 
         // The two axis lengths are not a match, so try to combine multiple axes
         // to get it to match up.
@@ -151,7 +146,8 @@ where
 
 #[cfg(feature = "std")]
 #[test]
-fn test_reshape() {
+fn test_reshape()
+{
     use crate::Dim;
 
     macro_rules! test_reshape {
@@ -238,4 +234,3 @@ fn test_reshape() {
     test_reshape!(ok F from [1, 5, 1, 2, 1], [1, 1, 1, 5, 1], to [10], [1]);
     test_reshape!(fail C from [1, 5, 1, 2, 1], [1, 1, 1, 5, 1], to [10]);
 }
-

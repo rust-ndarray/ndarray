@@ -1,8 +1,5 @@
 #![allow(
-    clippy::many_single_char_names,
-    clippy::deref_addrof,
-    clippy::unreadable_literal,
-    clippy::many_single_char_names
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
 )]
 
 use ndarray::prelude::*;
@@ -58,7 +55,8 @@ where
     Ok(())
 }
 
-fn main() {
+fn main()
+{
     let mut a = Array::<u8, _>::zeros((2, 3, 4));
     for (i, elt) in (0..).zip(&mut a) {
         *elt = i;
