@@ -1,4 +1,3 @@
-
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use std::mem;
@@ -18,7 +17,8 @@ use crate::Zip;
 /// Methods specific to `Array0`.
 ///
 /// ***See also all methods for [`ArrayBase`]***
-impl<A> Array<A, Ix0> {
+impl<A> Array<A, Ix0>
+{
     /// Returns the single element in the array without cloning it.
     ///
     /// ```
@@ -32,7 +32,8 @@ impl<A> Array<A, Ix0> {
     /// let scalar: Foo = array.into_scalar();
     /// assert_eq!(scalar, Foo);
     /// ```
-    pub fn into_scalar(self) -> A {
+    pub fn into_scalar(self) -> A
+    {
         let size = mem::size_of::<A>();
         if size == 0 {
             // Any index in the `Vec` is fine since all elements are identical.
@@ -56,15 +57,15 @@ impl<A> Array<A, Ix0> {
 ///
 /// ***See also all methods for [`ArrayBase`]***
 impl<A, D> Array<A, D>
-where
-    D: Dimension,
+where D: Dimension
 {
     /// Return a vector of the elements in the array, in the way they are
     /// stored internally.
     ///
     /// If the array is in standard memory layout, the logical element order
     /// of the array (`.iter()` order) and of the returned vector will be the same.
-    pub fn into_raw_vec(self) -> Vec<A> {
+    pub fn into_raw_vec(self) -> Vec<A>
+    {
         self.data.into_vec()
     }
 }
@@ -72,7 +73,8 @@ where
 /// Methods specific to `Array2`.
 ///
 /// ***See also all methods for [`ArrayBase`]***
-impl<A> Array<A, Ix2> {
+impl<A> Array<A, Ix2>
+{
     /// Append a row to an array
     ///
     /// The elements from `row` are cloned and added as a new row in the array.
@@ -113,8 +115,7 @@ impl<A> Array<A, Ix2> {
     ///            [-1., -2., -3., -4.]]);
     /// ```
     pub fn push_row(&mut self, row: ArrayView<A, Ix1>) -> Result<(), ShapeError>
-    where
-        A: Clone,
+    where A: Clone
     {
         self.append(Axis(0), row.insert_axis(Axis(0)))
     }
@@ -159,15 +160,14 @@ impl<A> Array<A, Ix2> {
     ///            [2., -2.]]);
     /// ```
     pub fn push_column(&mut self, column: ArrayView<A, Ix1>) -> Result<(), ShapeError>
-    where
-        A: Clone,
+    where A: Clone
     {
         self.append(Axis(1), column.insert_axis(Axis(1)))
     }
 }
 
 impl<A, D> Array<A, D>
-    where D: Dimension
+where D: Dimension
 {
     /// Move all elements from self into `new_array`, which must be of the same shape but
     /// can have a different memory layout. The destination is overwritten completely.
@@ -199,18 +199,18 @@ impl<A, D> Array<A, D>
         } else {
             // If `A` doesn't need drop, we can overwrite the destination.
             // Safe because: move_into_uninit only writes initialized values
-            unsafe {
-                self.move_into_uninit(new_array.into_maybe_uninit())
-            }
+            unsafe { self.move_into_uninit(new_array.into_maybe_uninit()) }
         }
     }
 
-    fn move_into_needs_drop(mut self, new_array: ArrayViewMut<A, D>) {
+    fn move_into_needs_drop(mut self, new_array: ArrayViewMut<A, D>)
+    {
         // Simple case where `A` has a destructor: just swap values between self and new_array.
         // Afterwards, `self` drops full of initialized values and dropping works as usual.
         // This avoids moving out of owned values in `self` while at the same time managing
         // the dropping if the values being overwritten in `new_array`.
-        Zip::from(&mut self).and(new_array)
+        Zip::from(&mut self)
+            .and(new_array)
             .for_each(|src, dst| mem::swap(src, dst));
     }
 
@@ -249,7 +249,8 @@ impl<A, D> Array<A, D>
         self.move_into_impl(new_array.into())
     }
 
-    fn move_into_impl(mut self, new_array: ArrayViewMut<MaybeUninit<A>, D>) {
+    fn move_into_impl(mut self, new_array: ArrayViewMut<MaybeUninit<A>, D>)
+    {
         unsafe {
             // Safety: copy_to_nonoverlapping cannot panic
             let guard = AbortIfPanic(&"move_into: moving out of owned value");
@@ -274,7 +275,8 @@ impl<A, D> Array<A, D>
     /// # Safety
     ///
     /// This is a panic critical section since `self` is already moved-from.
-    fn drop_unreachable_elements(mut self) -> OwnedRepr<A> {
+    fn drop_unreachable_elements(mut self) -> OwnedRepr<A>
+    {
         let self_len = self.len();
 
         // "deconstruct" self; the owned repr releases ownership of all elements and we
@@ -294,7 +296,8 @@ impl<A, D> Array<A, D>
 
     #[inline(never)]
     #[cold]
-    fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A> {
+    fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A>
+    {
         // "deconstruct" self; the owned repr releases ownership of all elements and we
         // carry on with raw view methods
         let data_len = self.data.len();
@@ -315,7 +318,8 @@ impl<A, D> Array<A, D>
     /// Create an empty array with an all-zeros shape
     ///
     /// ***Panics*** if D is zero-dimensional, because it can't be empty
-    pub(crate) fn empty() -> Array<A, D> {
+    pub(crate) fn empty() -> Array<A, D>
+    {
         assert_ne!(D::NDIM, Some(0));
         let ndim = D::NDIM.unwrap_or(1);
         Array::from_shape_simple_fn(D::zeros(ndim), || unreachable!())
@@ -323,7 +327,8 @@ impl<A, D> Array<A, D>
 
     /// Create new_array with the right layout for appending to `growing_axis`
     #[cold]
-    fn change_to_contig_append_layout(&mut self, growing_axis: Axis) {
+    fn change_to_contig_append_layout(&mut self, growing_axis: Axis)
+    {
         let ndim = self.ndim();
         let mut dim = self.raw_dim();
 
@@ -402,8 +407,7 @@ impl<A, D> Array<A, D>
     ///            [0., 0., 0., 0.],
     ///            [1., 1., 1., 1.]]);
     /// ```
-    pub fn push(&mut self, axis: Axis, array: ArrayView<A, D::Smaller>)
-        -> Result<(), ShapeError>
+    pub fn push(&mut self, axis: Axis, array: ArrayView<A, D::Smaller>) -> Result<(), ShapeError>
     where
         A: Clone,
         D: RemoveAxis,
@@ -411,7 +415,6 @@ impl<A, D> Array<A, D>
         // same-dimensionality conversion
         self.append(axis, array.insert_axis(axis).into_dimensionality::<D>().unwrap())
     }
-
 
     /// Append an array to the array along an axis.
     ///
@@ -463,8 +466,7 @@ impl<A, D> Array<A, D>
     ///            [1., 1., 1., 1.],
     ///            [1., 1., 1., 1.]]);
     /// ```
-    pub fn append(&mut self, axis: Axis, mut array: ArrayView<A, D>)
-        -> Result<(), ShapeError>
+    pub fn append(&mut self, axis: Axis, mut array: ArrayView<A, D>) -> Result<(), ShapeError>
     where
         A: Clone,
         D: RemoveAxis,
@@ -557,7 +559,11 @@ impl<A, D> Array<A, D>
                     acc
                 } else {
                     let this_ax = ax.len as isize * ax.stride.abs();
-                    if this_ax > acc { this_ax } else { acc }
+                    if this_ax > acc {
+                        this_ax
+                    } else {
+                        acc
+                    }
                 }
             });
             let mut strides = self.strides.clone();
@@ -575,7 +581,10 @@ impl<A, D> Array<A, D>
                 0
             };
             debug_assert!(data_to_array_offset >= 0);
-            self.ptr = self.data.reserve(len_to_append).offset(data_to_array_offset);
+            self.ptr = self
+                .data
+                .reserve(len_to_append)
+                .offset(data_to_array_offset);
 
             // clone elements from view to the array now
             //
@@ -612,19 +621,22 @@ impl<A, D> Array<A, D>
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
                               tail_view.shape(), tail_view.strides());
-            } 
+            }
 
             // Keep track of currently filled length of `self.data` and update it
             // on scope exit (panic or loop finish). This "indirect" way to
             // write the length is used to help the compiler, the len store to self.data may
             // otherwise be mistaken to alias with other stores in the loop.
-            struct SetLenOnDrop<'a, A: 'a> {
+            struct SetLenOnDrop<'a, A: 'a>
+            {
                 len: usize,
                 data: &'a mut OwnedRepr<A>,
             }
 
-            impl<A> Drop for SetLenOnDrop<'_, A> {
-                fn drop(&mut self) {
+            impl<A> Drop for SetLenOnDrop<'_, A>
+            {
+                fn drop(&mut self)
+                {
                     unsafe {
                         self.data.set_len(self.len);
                     }
@@ -635,7 +647,6 @@ impl<A, D> Array<A, D>
                 len: self.data.len(),
                 data: &mut self.data,
             };
-
 
             // Safety: tail_view is constructed to have the same shape as array
             Zip::from(tail_view)
@@ -667,8 +678,7 @@ impl<A, D> Array<A, D>
 /// This is an internal function for use by move_into and IntoIter only, safety invariants may need
 /// to be upheld across the calls from those implementations.
 pub(crate) unsafe fn drop_unreachable_raw<A, D>(mut self_: RawArrayViewMut<A, D>, data_ptr: *mut A, data_len: usize)
-where
-    D: Dimension,
+where D: Dimension
 {
     let self_len = self_.len();
 
@@ -751,8 +761,7 @@ where
 }
 
 fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
-where
-    D: Dimension,
+where D: Dimension
 {
     debug_assert!(adim.ndim() > 1);
     debug_assert_eq!(adim.ndim(), astrides.ndim());
@@ -775,7 +784,6 @@ where
     }
 }
 
-
 /// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
 ///
 /// Axes in a and b are sorted by the strides of `a`, and `a`'s axes should have stride >= 0 before
@@ -793,8 +801,7 @@ where
 }
 
 fn sort_axes2_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)
-where
-    D: Dimension,
+where D: Dimension
 {
     debug_assert!(adim.ndim() > 1);
     debug_assert_eq!(adim.ndim(), bdim.ndim());

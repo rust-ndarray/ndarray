@@ -14,16 +14,16 @@ mod ndproducer;
 use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
+use crate::partial::Partial;
 use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
-use crate::partial::Partial;
 
-use crate::indexes::{indices, Indices};
-use crate::split_at::{SplitPreference, SplitAt};
 use crate::dimension;
+use crate::indexes::{indices, Indices};
+use crate::split_at::{SplitAt, SplitPreference};
 
-pub use self::ndproducer::{NdProducer, IntoNdProducer, Offset};
+pub use self::ndproducer::{IntoNdProducer, NdProducer, Offset};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
@@ -39,8 +39,7 @@ macro_rules! fold_while {
 ///
 /// See [broadcasting](ArrayBase#broadcasting) for more information.
 trait Broadcast<E>
-where
-    E: IntoDimension,
+where E: IntoDimension
 {
     type Output: NdProducer<Dim = E::Dim>;
     /// Broadcast the array to the new dimensions `shape`.
@@ -52,7 +51,8 @@ where
 }
 
 /// Compute `Layout` hints for array shape dim, strides
-fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout {
+fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout
+{
     let n = dim.ndim();
     if dimension::is_layout_c(dim, strides) {
         // effectively one-dimensional => C and F layout compatible
@@ -81,7 +81,8 @@ where
     S: RawData,
     D: Dimension,
 {
-    pub(crate) fn layout_impl(&self) -> Layout {
+    pub(crate) fn layout_impl(&self) -> Layout
+    {
         array_layout(&self.dim, &self.strides)
     }
 }
@@ -92,7 +93,8 @@ where
     D: Dimension,
 {
     type Output = ArrayView<'a, A, E::Dim>;
-    fn broadcast_unwrap(self, shape: E) -> Self::Output {
+    fn broadcast_unwrap(self, shape: E) -> Self::Output
+    {
         #[allow(clippy::needless_borrow)]
         let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
         unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
@@ -100,7 +102,8 @@ where
     private_impl! {}
 }
 
-trait ZippableTuple: Sized {
+trait ZippableTuple: Sized
+{
     type Item;
     type Ptr: OffsetTuple<Args = Self::Stride> + Copy;
     type Dim: Dimension;
@@ -189,7 +192,8 @@ trait ZippableTuple: Sized {
 /// ```
 #[derive(Debug, Clone)]
 #[must_use = "zipping producers is lazy and does nothing unless consumed"]
-pub struct Zip<Parts, D> {
+pub struct Zip<Parts, D>
+{
     parts: Parts,
     dimension: D,
     layout: Layout,
@@ -197,7 +201,6 @@ pub struct Zip<Parts, D> {
     /// positive for c- and negative for f-layout preference.
     layout_tendency: i32,
 }
-
 
 impl<P, D> Zip<(P,), D>
 where
@@ -209,8 +212,7 @@ where
     /// The Zip will take the exact dimension of `p` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     pub fn from<IP>(p: IP) -> Self
-    where
-        IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>,
+    where IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
@@ -235,8 +237,7 @@ where
     ///
     /// *Note:* Indexed zip has overhead.
     pub fn indexed<IP>(p: IP) -> Self
-    where
-        IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>,
+    where IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>
     {
         let array = p.into_producer();
         let dim = array.raw_dim();
@@ -258,13 +259,12 @@ where
     );
 }
 
-
 impl<Parts, D> Zip<Parts, D>
-where
-    D: Dimension,
+where D: Dimension
 {
     /// Return a the number of element tuples in the Zip
-    pub fn size(&self) -> usize {
+    pub fn size(&self) -> usize
+    {
         self.dimension.size()
     }
 
@@ -272,30 +272,30 @@ where
     ///
     /// ***Panics*** if `axis` is out of bounds.
     #[track_caller]
-    fn len_of(&self, axis: Axis) -> usize {
+    fn len_of(&self, axis: Axis) -> usize
+    {
         self.dimension[axis.index()]
     }
 
-    fn prefer_f(&self) -> bool {
-        !self.layout.is(Layout::CORDER) &&
-            (self.layout.is(Layout::FORDER) || self.layout_tendency < 0)
+    fn prefer_f(&self) -> bool
+    {
+        !self.layout.is(Layout::CORDER) && (self.layout.is(Layout::FORDER) || self.layout_tendency < 0)
     }
 
     /// Return an *approximation* to the max stride axis; if
     /// component arrays disagree, there may be no choice better than the
     /// others.
-    fn max_stride_axis(&self) -> Axis {
+    fn max_stride_axis(&self) -> Axis
+    {
         let i = if self.prefer_f() {
-            self
-                .dimension
+            self.dimension
                 .slice()
                 .iter()
                 .rposition(|&len| len > 1)
                 .unwrap_or(self.dimension.ndim() - 1)
         } else {
             /* corder or default */
-            self
-                .dimension
+            self.dimension
                 .slice()
                 .iter()
                 .position(|&len| len > 1)
@@ -306,8 +306,7 @@ where
 }
 
 impl<P, D> Zip<P, D>
-where
-    D: Dimension,
+where D: Dimension
 {
     fn for_each_core<F, Acc>(&mut self, acc: Acc, mut function: F) -> FoldWhile<Acc>
     where
@@ -332,9 +331,7 @@ where
         let size = self.dimension.size();
         let ptrs = self.parts.as_ptr();
         let inner_strides = self.parts.contiguous_stride();
-        unsafe {
-            self.inner(acc, ptrs, inner_strides, size, &mut function)
-        }
+        unsafe { self.inner(acc, ptrs, inner_strides, size, &mut function) }
     }
 
     /// The innermost loop of the Zip for_each methods
@@ -345,11 +342,12 @@ where
     /// `strides`: strides for the elements in this stretch
     /// `len`: number of elements
     /// `function`: closure
-    unsafe fn inner<F, Acc>(&self, mut acc: Acc, ptr: P::Ptr, strides: P::Stride,
-                            len: usize, function: &mut F) -> FoldWhile<Acc>
+    unsafe fn inner<F, Acc>(
+        &self, mut acc: Acc, ptr: P::Ptr, strides: P::Stride, len: usize, function: &mut F,
+    ) -> FoldWhile<Acc>
     where
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
-        P: ZippableTuple
+        P: ZippableTuple,
     {
         let mut i = 0;
         while i < len {
@@ -359,7 +357,6 @@ where
         }
         FoldWhile::Continue(acc)
     }
-
 
     fn for_each_core_strided<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
     where
@@ -439,13 +436,14 @@ where
 impl<D, P1, P2> Zip<(P1, P2), D>
 where
     D: Dimension,
-    P1: NdProducer<Dim=D>,
-    P1: NdProducer<Dim=D>,
+    P1: NdProducer<Dim = D>,
+    P1: NdProducer<Dim = D>,
 {
     /// Debug assert traversal order is like c (including 1D case)
     // Method placement: only used for binary Zip at the moment.
     #[inline]
-    pub(crate) fn debug_assert_c_order(self) -> Self {
+    pub(crate) fn debug_assert_c_order(self) -> Self
+    {
         debug_assert!(self.layout.is(Layout::CORDER) || self.layout_tendency >= 0 ||
                       self.dimension.slice().iter().filter(|&&d| d > 1).count() <= 1,
                       "Assertion failed: traversal is not c-order or 1D for \
@@ -454,7 +452,6 @@ where
         self
     }
 }
-
 
 /*
 trait Offset : Copy {
@@ -471,14 +468,17 @@ impl<T> Offset for *mut T {
 }
 */
 
-trait OffsetTuple {
+trait OffsetTuple
+{
     type Args;
     unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self;
 }
 
-impl<T> OffsetTuple for *mut T {
+impl<T> OffsetTuple for *mut T
+{
     type Args = isize;
-    unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self {
+    unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self
+    {
         self.offset(index as isize * stride)
     }
 }
@@ -496,7 +496,7 @@ macro_rules! offset_impl {
             }
         }
         )+
-    }
+    };
 }
 
 offset_impl! {
@@ -555,7 +555,7 @@ macro_rules! zipt_impl {
             }
         }
         )+
-    }
+    };
 }
 
 zipt_impl! {
@@ -938,7 +938,7 @@ macro_rules! map_impl {
         }
 
         )+
-    }
+    };
 }
 
 map_impl! {
@@ -952,23 +952,27 @@ map_impl! {
 
 /// Value controlling the execution of `.fold_while` on `Zip`.
 #[derive(Debug, Copy, Clone)]
-pub enum FoldWhile<T> {
+pub enum FoldWhile<T>
+{
     /// Continue folding with this value
     Continue(T),
     /// Fold is complete and will return this value
     Done(T),
 }
 
-impl<T> FoldWhile<T> {
+impl<T> FoldWhile<T>
+{
     /// Return the inner value
-    pub fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T
+    {
         match self {
             FoldWhile::Continue(x) | FoldWhile::Done(x) => x,
         }
     }
 
     /// Return true if it is `Done`, false if `Continue`
-    pub fn is_done(&self) -> bool {
+    pub fn is_done(&self) -> bool
+    {
         match *self {
             FoldWhile::Continue(_) => false,
             FoldWhile::Done(_) => true,

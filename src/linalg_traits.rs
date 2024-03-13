@@ -24,28 +24,12 @@ use crate::ScalarOperand;
 /// `'static` for type-based specialization, `Copy` so that they don't need move
 /// semantics or destructors, and the rest are numerical traits.
 pub trait LinalgScalar:
-    'static
-    + Copy
-    + Zero
-    + One
-    + Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
-    + Div<Output = Self>
+    'static + Copy + Zero + One + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Div<Output = Self>
 {
 }
 
-impl<T> LinalgScalar for T where
-    T: 'static
-        + Copy
-        + Zero
-        + One
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-{
-}
+impl<T> LinalgScalar for T where T: 'static + Copy + Zero + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>
+{}
 
 /// Floating-point element types `f32` and `f64`.
 ///
@@ -78,4 +62,3 @@ pub trait NdFloat:
 impl NdFloat for f32 {}
 #[cfg(feature = "std")]
 impl NdFloat for f64 {}
-

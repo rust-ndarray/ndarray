@@ -8,7 +8,8 @@ use ndarray_rand::{RandomExt, SamplingStrategy};
 use quickcheck::{quickcheck, TestResult};
 
 #[test]
-fn test_dim() {
+fn test_dim()
+{
     let (mm, nn) = (5, 5);
     for m in 0..mm {
         for n in 0..nn {
@@ -22,7 +23,8 @@ fn test_dim() {
 }
 
 #[test]
-fn test_dim_f() {
+fn test_dim_f()
+{
     let (mm, nn) = (5, 5);
     for m in 0..mm {
         for n in 0..nn {
@@ -36,15 +38,19 @@ fn test_dim_f() {
 }
 
 #[test]
-fn sample_axis_on_view() {
+fn sample_axis_on_view()
+{
     let m = 5;
     let a = Array::random((m, 4), Uniform::new(0., 2.));
-    let _samples = a.view().sample_axis(Axis(0), m, SamplingStrategy::WithoutReplacement);
+    let _samples = a
+        .view()
+        .sample_axis(Axis(0), m, SamplingStrategy::WithoutReplacement);
 }
 
 #[test]
 #[should_panic]
-fn oversampling_without_replacement_should_panic() {
+fn oversampling_without_replacement_should_panic()
+{
     let m = 5;
     let a = Array::random((m, 4), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), m + 1, SamplingStrategy::WithoutReplacement);
@@ -109,12 +115,8 @@ quickcheck! {
     }
 }
 
-fn sampling_works(
-    a: &Array2<f64>,
-    strategy: SamplingStrategy,
-    axis: Axis,
-    n_samples: usize,
-) -> bool {
+fn sampling_works(a: &Array2<f64>, strategy: SamplingStrategy, axis: Axis, n_samples: usize) -> bool
+{
     let samples = a.sample_axis(axis, n_samples, strategy);
     samples
         .axis_iter(axis)
@@ -122,13 +124,15 @@ fn sampling_works(
 }
 
 // Check if, when sliced along `axis`, there is at least one lane in `a` equal to `b`
-fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool {
+fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool
+{
     a.axis_iter(axis).any(|lane| &lane == b)
 }
 
 #[test]
 #[should_panic]
-fn sampling_without_replacement_from_a_zero_length_axis_should_panic() {
+fn sampling_without_replacement_from_a_zero_length_axis_should_panic()
+{
     let n = 5;
     let a = Array::random((0, n), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithoutReplacement);
@@ -136,7 +140,8 @@ fn sampling_without_replacement_from_a_zero_length_axis_should_panic() {
 
 #[test]
 #[should_panic]
-fn sampling_with_replacement_from_a_zero_length_axis_should_panic() {
+fn sampling_with_replacement_from_a_zero_length_axis_should_panic()
+{
     let n = 5;
     let a = Array::random((0, n), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithReplacement);

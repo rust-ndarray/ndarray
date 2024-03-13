@@ -13,7 +13,7 @@ macro_rules! private_decl {
         /// impossible to implement outside the crate.
         #[doc(hidden)]
         fn __private__(&self) -> crate::private::PrivateMarker;
-    }
+    };
 }
 
 macro_rules! private_impl {

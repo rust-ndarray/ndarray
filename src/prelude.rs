@@ -18,9 +18,7 @@
 //! ```
 
 #[doc(no_inline)]
-pub use crate::{
-    ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, CowArray, RawArrayView, RawArrayViewMut,
-};
+pub use crate::{ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, CowArray, RawArrayView, RawArrayViewMut};
 
 #[doc(no_inline)]
 pub use crate::{Axis, Dim, Dimension};
@@ -29,14 +27,18 @@ pub use crate::{Axis, Dim, Dimension};
 pub use crate::{Array0, Array1, Array2, Array3, Array4, Array5, Array6, ArrayD};
 
 #[doc(no_inline)]
-pub use crate::{
-    ArrayView0, ArrayView1, ArrayView2, ArrayView3, ArrayView4, ArrayView5, ArrayView6, ArrayViewD,
-};
+pub use crate::{ArrayView0, ArrayView1, ArrayView2, ArrayView3, ArrayView4, ArrayView5, ArrayView6, ArrayViewD};
 
 #[doc(no_inline)]
 pub use crate::{
-    ArrayViewMut0, ArrayViewMut1, ArrayViewMut2, ArrayViewMut3, ArrayViewMut4, ArrayViewMut5,
-    ArrayViewMut6, ArrayViewMutD,
+    ArrayViewMut0,
+    ArrayViewMut1,
+    ArrayViewMut2,
+    ArrayViewMut3,
+    ArrayViewMut4,
+    ArrayViewMut5,
+    ArrayViewMut6,
+    ArrayViewMutD,
 };
 
 #[doc(no_inline)]

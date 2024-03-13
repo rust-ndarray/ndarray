@@ -123,7 +123,7 @@ expand_if!(@nonempty [$($cloneparm)*]
     }
 );
 
-    }
+    };
 }
 
 macro_rules! impl_iterator {
@@ -170,5 +170,5 @@ macro_rules! impl_iterator {
                 self.$base.size_hint()
             }
         }
-    }
+    };
 }

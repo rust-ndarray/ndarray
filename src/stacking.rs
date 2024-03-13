@@ -37,10 +37,7 @@ use crate::imp_prelude::*;
 /// );
 /// # }
 /// ```
-pub fn stack<A, D>(
-    axis: Axis,
-    arrays: &[ArrayView<A, D>],
-) -> Result<Array<A, D::Larger>, ShapeError>
+pub fn stack<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D::Larger>, ShapeError>
 where
     A: Clone,
     D: Dimension,
@@ -109,7 +106,7 @@ where
     Ok(res)
 }
 
-#[deprecated(note="Use under the name stack instead.", since="0.15.0")]
+#[deprecated(note = "Use under the name stack instead.", since = "0.15.0")]
 /// Stack arrays along the new axis.
 ///
 /// ***Errors*** if the arrays have mismatching shapes.
@@ -134,10 +131,7 @@ where
 /// );
 /// # }
 /// ```
-pub fn stack_new_axis<A, D>(
-    axis: Axis,
-    arrays: &[ArrayView<A, D>],
-) -> Result<Array<A, D::Larger>, ShapeError>
+pub fn stack_new_axis<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D::Larger>, ShapeError>
 where
     A: Clone,
     D: Dimension,
@@ -292,9 +286,9 @@ macro_rules! concatenate {
 /// # }
 /// ```
 #[macro_export]
-#[deprecated(note="Use under the name stack instead.", since="0.15.0")]
+#[deprecated(note = "Use under the name stack instead.", since = "0.15.0")]
 macro_rules! stack_new_axis {
     ($axis:expr, $( $array:expr ),+ ) => {
         $crate::stack_new_axis($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
-    }
+    };
 }

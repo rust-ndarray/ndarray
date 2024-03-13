@@ -12,14 +12,16 @@ use std::ptr;
 /// it is the owner of the elements, but not the allocation,
 /// and will drop the elements on drop.
 #[must_use]
-pub(crate) struct Partial<T> {
+pub(crate) struct Partial<T>
+{
     /// Data pointer
     ptr: *mut T,
     /// Current length
     pub(crate) len: usize,
 }
 
-impl<T> Partial<T> {
+impl<T> Partial<T>
+{
     /// Create an empty partial for this data pointer
     ///
     /// ## Safety
@@ -29,25 +31,29 @@ impl<T> Partial<T> {
     /// the `len` elements following it valid.
     ///
     /// The Partial has an accessible length field which must only be modified in trusted code.
-    pub(crate) unsafe fn new(ptr: *mut T) -> Self {
+    pub(crate) unsafe fn new(ptr: *mut T) -> Self
+    {
+        Self { ptr, len: 0 }
+    }
+
+    #[cfg(feature = "rayon")]
+    pub(crate) fn stub() -> Self
+    {
         Self {
-            ptr,
             len: 0,
+            ptr: ptr::null_mut(),
         }
     }
 
     #[cfg(feature = "rayon")]
-    pub(crate) fn stub() -> Self {
-        Self { len: 0, ptr: ptr::null_mut() }
-    }
-
-    #[cfg(feature = "rayon")]
-    pub(crate) fn is_stub(&self) -> bool {
+    pub(crate) fn is_stub(&self) -> bool
+    {
         self.ptr.is_null()
     }
 
     /// Release Partial's ownership of the written elements, and return the current length
-    pub(crate) fn release_ownership(mut self) -> usize {
+    pub(crate) fn release_ownership(mut self) -> usize
+    {
         let ret = self.len;
         self.len = 0;
         ret
@@ -56,7 +62,8 @@ impl<T> Partial<T> {
     #[cfg(feature = "rayon")]
     /// Merge if they are in order (left to right) and contiguous.
     /// Skips merge if T does not need drop.
-    pub(crate) fn try_merge(mut left: Self, right: Self) -> Self {
+    pub(crate) fn try_merge(mut left: Self, right: Self) -> Self
+    {
         if !std::mem::needs_drop::<T>() {
             return left;
         }
@@ -75,10 +82,12 @@ impl<T> Partial<T> {
     }
 }
 
-unsafe impl<T> Send for Partial<T> where T: Send { }
+unsafe impl<T> Send for Partial<T> where T: Send {}
 
-impl<T> Drop for Partial<T> {
-    fn drop(&mut self) {
+impl<T> Drop for Partial<T>
+{
+    fn drop(&mut self)
+    {
         if !self.ptr.is_null() {
             unsafe {
                 ptr::drop_in_place(alloc::slice::from_raw_parts_mut(self.ptr, self.len));

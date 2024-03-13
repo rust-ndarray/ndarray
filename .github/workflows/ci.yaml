@@ -26,6 +26,22 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --features docs
+
+  format:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - nightly
+    name: format/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt
+      - run: cargo fmt --all --check
+
   tests:
     runs-on: ubuntu-latest
     strategy:
@@ -103,6 +119,7 @@ jobs:
   conclusion:
     needs:
       - clippy
+      # - format  # should format be required?
       - tests
       - cross_test
       - cargo-careful

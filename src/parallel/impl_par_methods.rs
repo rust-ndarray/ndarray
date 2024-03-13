@@ -1,9 +1,9 @@
-use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
 use crate::AssignElem;
+use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
 
-use crate::parallel::prelude::*;
-use crate::parallel::par::ParallelSplits;
 use super::send_producer::SendProducer;
+use crate::parallel::par::ParallelSplits;
+use crate::parallel::prelude::*;
 
 use crate::partial::Partial;
 
@@ -22,8 +22,7 @@ where
     ///
     /// Elements are visited in arbitrary order.
     pub fn par_map_inplace<F>(&mut self, f: F)
-    where
-        F: Fn(&mut A) + Sync + Send,
+    where F: Fn(&mut A) + Sync + Send
     {
         self.view_mut().into_par_iter().for_each(f)
     }
@@ -230,7 +229,7 @@ macro_rules! zip_impl {
             );
         }
         )+
-    }
+    };
 }
 
 zip_impl! {

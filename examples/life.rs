@@ -1,8 +1,5 @@
 #![allow(
-    clippy::many_single_char_names,
-    clippy::deref_addrof,
-    clippy::unreadable_literal,
-    clippy::many_single_char_names
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
 )]
 
 use ndarray::prelude::*;
@@ -13,7 +10,8 @@ const N: usize = 100;
 
 type Board = Array2<u8>;
 
-fn parse(x: &[u8]) -> Board {
+fn parse(x: &[u8]) -> Board
+{
     // make a border of 0 cells
     let mut map = Board::from_elem(((N + 2), (N + 2)), 0);
     let a = Array::from_iter(x.iter().filter_map(|&b| match b {
@@ -33,7 +31,8 @@ fn parse(x: &[u8]) -> Board {
 // 3 neighbors: birth
 // otherwise: death
 
-fn iterate(z: &mut Board, scratch: &mut Board) {
+fn iterate(z: &mut Board, scratch: &mut Board)
+{
     // compute number of neighbors
     let mut neigh = scratch.view_mut();
     neigh.fill(0);
@@ -56,7 +55,8 @@ fn iterate(z: &mut Board, scratch: &mut Board) {
     zv.zip_mut_with(&neigh, |y, &n| *y = ((n == 3) || (n == 2 && *y > 0)) as u8);
 }
 
-fn turn_on_corners(z: &mut Board) {
+fn turn_on_corners(z: &mut Board)
+{
     let n = z.nrows();
     let m = z.ncols();
     z[[1, 1]] = 1;
@@ -65,7 +65,8 @@ fn turn_on_corners(z: &mut Board) {
     z[[n - 2, m - 2]] = 1;
 }
 
-fn render(a: &Board) {
+fn render(a: &Board)
+{
     for row in a.rows() {
         for &x in row {
             if x > 0 {
@@ -78,7 +79,8 @@ fn render(a: &Board) {
     }
 }
 
-fn main() {
+fn main()
+{
     let mut a = parse(INPUT);
     let mut scratch = Board::zeros((N, N));
     let steps = 100;

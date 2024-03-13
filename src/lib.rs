@@ -112,13 +112,12 @@
 //! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
 //! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
-
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+#[cfg(feature = "std")]
+extern crate std;
 
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
@@ -126,8 +125,8 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
-use std::marker::PhantomData;
 use alloc::sync::Arc;
+use std::marker::PhantomData;
 
 pub use crate::dimension::dim::*;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
@@ -138,24 +137,22 @@ pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
 pub use crate::order::Order;
-pub use crate::slice::{
-    MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceInfoElem, SliceNextDim,
-};
+pub use crate::slice::{MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceInfoElem, SliceNextDim};
 
 use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 pub use crate::arraytraits::AsArray;
+pub use crate::linalg_traits::LinalgScalar;
 #[cfg(feature = "std")]
 pub use crate::linalg_traits::NdFloat;
-pub use crate::linalg_traits::LinalgScalar;
 
 #[allow(deprecated)] // stack_new_axis
 pub use crate::stacking::{concatenate, stack, stack_new_axis};
 
-pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::{Shape, ShapeBuilder, ShapeArg, StrideShape};
+pub use crate::math_cell::MathCell;
+pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 
 #[macro_use]
 mod macro_utils;
@@ -175,10 +172,7 @@ mod data_traits;
 
 pub use crate::aliases::*;
 
-pub use crate::data_traits::{
-    Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
-    RawDataSubst,
-};
+pub use crate::data_traits::{Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut, RawDataSubst};
 
 mod free_functions;
 pub use crate::free_functions::*;
@@ -193,10 +187,10 @@ mod layout;
 mod linalg_traits;
 mod linspace;
 #[cfg(feature = "std")]
-pub use crate::linspace::{Linspace, linspace, range};
+pub use crate::linspace::{linspace, range, Linspace};
 mod logspace;
 #[cfg(feature = "std")]
-pub use crate::logspace::{Logspace, logspace};
+pub use crate::logspace::{logspace, Logspace};
 mod math_cell;
 mod numeric_util;
 mod order;
@@ -217,13 +211,24 @@ pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
-mod imp_prelude {
+mod imp_prelude
+{
     pub use crate::dimension::DimensionExt;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
     pub use crate::{
-        CowRepr, Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
-        RemoveAxis, ViewRepr,
+        CowRepr,
+        Data,
+        DataMut,
+        DataOwned,
+        DataShared,
+        Ix,
+        Ixs,
+        RawData,
+        RawDataMut,
+        RawViewRepr,
+        RemoveAxis,
+        ViewRepr,
     };
 }
 
@@ -1271,8 +1276,7 @@ pub type Ixs = isize;
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
 pub struct ArrayBase<S, D>
-where
-    S: RawData,
+where S: RawData
 {
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
@@ -1432,8 +1436,10 @@ pub use data_repr::OwnedRepr;
 #[derive(Debug)]
 pub struct OwnedArcRepr<A>(Arc<OwnedRepr<A>>);
 
-impl<A> Clone for OwnedArcRepr<A> {
-    fn clone(&self) -> Self {
+impl<A> Clone for OwnedArcRepr<A>
+{
+    fn clone(&self) -> Self
+    {
         OwnedArcRepr(self.0.clone())
     }
 }
@@ -1444,13 +1450,16 @@ impl<A> Clone for OwnedArcRepr<A> {
 /// [`RawArrayView`] / [`RawArrayViewMut`] for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the mutability and element type.
-pub struct RawViewRepr<A> {
+pub struct RawViewRepr<A>
+{
     ptr: PhantomData<A>,
 }
 
-impl<A> RawViewRepr<A> {
+impl<A> RawViewRepr<A>
+{
     #[inline(always)]
-    const fn new() -> Self {
+    const fn new() -> Self
+    {
         RawViewRepr { ptr: PhantomData }
     }
 }
@@ -1461,13 +1470,16 @@ impl<A> RawViewRepr<A> {
 /// [`ArrayView`] / [`ArrayViewMut`] for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the lifetime parameter.
-pub struct ViewRepr<A> {
+pub struct ViewRepr<A>
+{
     life: PhantomData<A>,
 }
 
-impl<A> ViewRepr<A> {
+impl<A> ViewRepr<A>
+{
     #[inline(always)]
-    const fn new() -> Self {
+    const fn new() -> Self
+    {
         ViewRepr { life: PhantomData }
     }
 }
@@ -1476,16 +1488,19 @@ impl<A> ViewRepr<A> {
 ///
 /// *Don't use this type directly—use the type alias
 /// [`CowArray`] for the array type!*
-pub enum CowRepr<'a, A> {
+pub enum CowRepr<'a, A>
+{
     /// Borrowed data.
     View(ViewRepr<&'a A>),
     /// Owned data.
     Owned(OwnedRepr<A>),
 }
 
-impl<'a, A> CowRepr<'a, A> {
+impl<'a, A> CowRepr<'a, A>
+{
     /// Returns `true` iff the data is the `View` variant.
-    pub fn is_view(&self) -> bool {
+    pub fn is_view(&self) -> bool
+    {
         match self {
             CowRepr::View(_) => true,
             CowRepr::Owned(_) => false,
@@ -1493,7 +1508,8 @@ impl<'a, A> CowRepr<'a, A> {
     }
 
     /// Returns `true` iff the data is the `Owned` variant.
-    pub fn is_owned(&self) -> bool {
+    pub fn is_owned(&self) -> bool
+    {
         match self {
             CowRepr::View(_) => false,
             CowRepr::Owned(_) => true,
@@ -1521,8 +1537,7 @@ where
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
-    where
-        E: Dimension,
+    where E: Dimension
     {
         #[cold]
         #[inline(never)]
@@ -1548,8 +1563,7 @@ where
     // (Checked in debug assertions).
     #[inline]
     fn broadcast_assume<E>(&self, dim: E) -> ArrayView<'_, A, E>
-    where
-        E: Dimension,
+    where E: Dimension
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
@@ -1560,13 +1574,12 @@ where
     }
 
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
+    {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
-        unsafe {
-            self.with_strides_dim(s, d)
-        }
+        unsafe { self.with_strides_dim(s, d) }
     }
 }
 
@@ -1600,6 +1613,7 @@ mod impl_raw_views;
 mod impl_cow;
 
 /// Returns `true` if the pointer is aligned.
-pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
+pub(crate) fn is_aligned<T>(ptr: *const T) -> bool
+{
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }

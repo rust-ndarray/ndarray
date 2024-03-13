@@ -8,10 +8,10 @@
 
 //! Tuple to array conversion, IntoDimension, and related things
 
-use num_traits::Zero;
-use std::ops::{Index, IndexMut};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use num_traits::Zero;
+use std::ops::{Index, IndexMut};
 
 use crate::{Dim, Dimension, Ix, Ix1, IxDyn, IxDynImpl};
 
@@ -40,47 +40,55 @@ macro_rules! index_item {
 }
 
 /// Argument conversion a dimension.
-pub trait IntoDimension {
+pub trait IntoDimension
+{
     type Dim: Dimension;
     fn into_dimension(self) -> Self::Dim;
 }
 
-impl IntoDimension for Ix {
+impl IntoDimension for Ix
+{
     type Dim = Ix1;
     #[inline(always)]
-    fn into_dimension(self) -> Ix1 {
+    fn into_dimension(self) -> Ix1
+    {
         Ix1(self)
     }
 }
 
 impl<D> IntoDimension for D
-where
-    D: Dimension,
+where D: Dimension
 {
     type Dim = D;
     #[inline(always)]
-    fn into_dimension(self) -> Self {
+    fn into_dimension(self) -> Self
+    {
         self
     }
 }
 
-impl IntoDimension for IxDynImpl {
+impl IntoDimension for IxDynImpl
+{
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim {
+    fn into_dimension(self) -> Self::Dim
+    {
         Dim::new(self)
     }
 }
 
-impl IntoDimension for Vec<Ix> {
+impl IntoDimension for Vec<Ix>
+{
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim {
+    fn into_dimension(self) -> Self::Dim
+    {
         Dim::new(IxDynImpl::from(self))
     }
 }
 
-pub trait Convert {
+pub trait Convert
+{
     type To;
     fn convert(self) -> Self::To;
 }
@@ -94,25 +102,25 @@ macro_rules! sub {
 macro_rules! tuple_type {
     ([$T:ident] $($index:tt)*) => (
         ( $(sub!($index $T), )* )
-    )
+    );
 }
 
 macro_rules! tuple_expr {
     ([$self_:expr] $($index:tt)*) => (
         ( $($self_[$index], )* )
-    )
+    );
 }
 
 macro_rules! array_expr {
     ([$self_:expr] $($index:tt)*) => (
         [$($self_ . $index, )*]
-    )
+    );
 }
 
 macro_rules! array_zero {
     ([] $($index:tt)*) => (
         [$(sub!($index 0), )*]
-    )
+    );
 }
 
 macro_rules! tuple_to_array {
@@ -168,7 +176,7 @@ macro_rules! tuple_to_array {
         }
 
         )*
-    }
+    };
 }
 
 index_item!(tuple_to_array [] 7);
