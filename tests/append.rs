@@ -383,9 +383,9 @@ fn test_append_zero_size()
 
     {
         let mut a = Array::<i32, _>::zeros((0, 0));
-        a.append(Axis(1), ArrayView::from(&[]).into_shape_with_order((0, 1)).unwrap())
+        a.append(Axis(1), ArrayView1::from(&[]).into_shape_with_order((0, 1)).unwrap())
             .unwrap();
-        a.append(Axis(1), ArrayView::from(&[]).into_shape_with_order((0, 1)).unwrap())
+        a.append(Axis(1), ArrayView1::from(&[]).into_shape_with_order((0, 1)).unwrap())
             .unwrap();
         assert_eq!(a.len(), 0);
         assert_eq!(a.shape(), &[0, 2]);

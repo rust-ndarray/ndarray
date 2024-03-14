@@ -333,7 +333,21 @@ where Slice: AsRef<[A]>
     }
 }
 
-/// Implementation of ArrayView2::from(&S) where S is a slice to a 2D array
+/// Implementation of ArrayView2::from(&[[A; N]; M])
+///
+/// **Panics** if the product of non-zero axis lengths overflows `isize` (This can only occur if A
+/// is zero-sized because slices cannot contain more than `isize::MAX` number of bytes).
+/// **Panics** if N == 0 and the number of rows is greater than isize::MAX.
+impl<'a, A, const M: usize, const N: usize> From<&'a [[A; N]; M]> for ArrayView<'a, A, Ix2>
+{
+    /// Create a two-dimensional read-only array view of the data in `slice`
+    fn from(xs: &'a [[A; N]; M]) -> Self
+    {
+        Self::from(&xs[..])
+    }
+}
+
+/// Implementation of ArrayView2::from(&[[A; N]])
 ///
 /// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
 /// can only occur if A is zero-sized or if `N` is zero, because slices cannot
@@ -380,7 +394,21 @@ where Slice: AsMut<[A]>
     }
 }
 
-/// Implementation of ArrayViewMut2::from(&S) where S is a slice to a 2D array
+/// Implementation of ArrayViewMut2::from(&mut [[A; N]; M])
+///
+/// **Panics** if the product of non-zero axis lengths overflows `isize` (This can only occur if A
+/// is zero-sized because slices cannot contain more than `isize::MAX` number of bytes).
+/// **Panics** if N == 0 and the number of rows is greater than isize::MAX.
+impl<'a, A, const M: usize, const N: usize> From<&'a mut [[A; N]; M]> for ArrayViewMut<'a, A, Ix2>
+{
+    /// Create a two-dimensional read-write array view of the data in `slice`
+    fn from(xs: &'a mut [[A; N]; M]) -> Self
+    {
+        Self::from(&mut xs[..])
+    }
+}
+
+/// Implementation of ArrayViewMut2::from(&mut [[A; N]])
 ///
 /// **Panics** if the product of non-zero axis lengths overflows `isize`. (This
 /// can only occur if `A` is zero-sized or if `N` is zero, because slices
