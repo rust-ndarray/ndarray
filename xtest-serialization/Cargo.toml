@@ -8,7 +8,7 @@ publish = false
 test = false
 
 [dependencies]
-ndarray = { path = "..", features = ["serde"] }
+ndarray = { path = "..", features = ["serde", "borsh"] }
 
 [features]
 default = ["ron"]
@@ -22,6 +22,10 @@ version = "1.0.40"
 
 [dev-dependencies.rmp-serde]
 version = "0.14.0"
+
+[dev-dependencies.borsh]
+version = "1.2"
+default-features = false
 
 [dependencies.ron]
 version = "0.5.1"

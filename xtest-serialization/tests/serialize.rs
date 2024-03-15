@@ -9,6 +9,8 @@ extern crate rmp_serde;
 #[cfg(feature = "ron")]
 extern crate ron;
 
+extern crate borsh;
+
 use ndarray::{arr0, arr1, arr2, s, ArcArray, ArcArray2, ArrayD, IxDyn};
 
 #[test]
@@ -226,6 +228,74 @@ fn serial_many_dim_ron()
 
         let a_de: ArcArray<f32, _> = ron_deserialize(&a_s).unwrap();
 
+        assert_eq!(a, a_de);
+    }
+}
+
+#[test]
+fn serial_ixdyn_borsh() {
+    {
+        let a = arr0::<f32>(2.72).into_dyn();
+        let serial = borsh::to_vec(&a).unwrap();
+        println!("Borsh encode {:?} => {:?}", a, serial);
+        let res = borsh::from_slice::<ArcArray<f32, _>>(&serial);
+        println!("{:?}", res);
+        assert_eq!(a, res.unwrap());
+    }
+
+    {
+        let a = arr1::<f32>(&[2.72, 1., 2.]).into_dyn();
+        let serial = borsh::to_vec(&a).unwrap();
+        println!("Borsh encode {:?} => {:?}", a, serial);
+        let res = borsh::from_slice::<ArrayD<f32>>(&serial);
+        println!("{:?}", res);
+        assert_eq!(a, res.unwrap());
+    }
+
+    {
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]])
+            .into_shape(IxDyn(&[3, 1, 1, 1, 2, 1]))
+            .unwrap();
+        let serial = borsh::to_vec(&a).unwrap();
+        println!("Borsh encode {:?} => {:?}", a, serial);
+        let res = borsh::from_slice::<ArrayD<f32>>(&serial);
+        println!("{:?}", res);
+        assert_eq!(a, res.unwrap());
+    }
+}
+
+#[test]
+fn serial_many_dim_borsh() {
+    use borsh::from_slice as borsh_deserialize;
+    use borsh::to_vec as borsh_serialize;
+
+    {
+        let a = arr0::<f32>(2.72);
+        let a_s = borsh_serialize(&a).unwrap();
+        let a_de: ArcArray<f32, _> = borsh_deserialize(&a_s).unwrap();
+        assert_eq!(a, a_de);
+    }
+
+    {
+        let a = arr1::<f32>(&[2.72, 1., 2.]);
+        let a_s = borsh_serialize(&a).unwrap();
+        let a_de: ArcArray<f32, _> = borsh_deserialize(&a_s).unwrap();
+        assert_eq!(a, a_de);
+    }
+
+    {
+        let a = arr2(&[[3., 1., 2.2], [3.1, 4., 7.]]);
+        let a_s = borsh_serialize(&a).unwrap();
+        let a_de: ArcArray<f32, _> = borsh_deserialize(&a_s).unwrap();
+        assert_eq!(a, a_de);
+    }
+
+    {
+        // Test a sliced array.
+        let mut a = ArcArray::linspace(0., 31., 32).reshape((2, 2, 2, 4));
+        a.slice_collapse(s![..;-1, .., .., ..2]);
+        let a_s = borsh_serialize(&a).unwrap();
+        let a_de: ArcArray<f32, _> = borsh_deserialize(&a_s).unwrap();
         assert_eq!(a, a_de);
     }
 }

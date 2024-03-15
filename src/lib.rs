@@ -162,6 +162,8 @@ mod aliases;
 #[macro_use]
 mod itertools;
 mod argument_traits;
+#[cfg(feature = "borsh")]
+mod array_borsh;
 #[cfg(feature = "serde")]
 mod array_serde;
 mod arrayformat;
