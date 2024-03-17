@@ -173,8 +173,6 @@ impl<A> Array<A, Ix2> {
     /// This is useful when pushing or appending repeatedly to an array to avoid multiple
     /// allocations.
     ///
-    /// ***Panics*** if the new capacity would exceed `usize::MAX`.
-    ///
     /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
     /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
     /// `additional` exceeds `isize::MAX`.
@@ -196,8 +194,6 @@ impl<A> Array<A, Ix2> {
     ///
     /// This is useful when pushing or appending repeatedly to an array to avoid multiple
     /// allocations.
-    ///
-    /// ***Panics*** if the new capacity would exceed `usize::MAX`.
     ///
     /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
     /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
@@ -712,7 +708,7 @@ impl<A, D> Array<A, D>
     /// This is useful when pushing or appending repeatedly to an array to avoid multiple
     /// allocations.
     ///
-    /// ***Panics*** if the axis is out of bounds or if the new capacity would exceed `usize::MAX`.
+    /// ***Panics*** if the axis is out of bounds.
     ///
     /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
     /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
@@ -733,9 +729,11 @@ impl<A, D> Array<A, D>
         let self_dim = self.raw_dim();
         let remaining_shape = self_dim.remove_axis(axis);
 
-        // Make sure added capacity doesn't overflow
-        debug_assert!(remaining_shape.size().checked_mul(additional).is_some());
-        let len_to_append = remaining_shape.size() * additional;
+        // Make sure added capacity doesn't overflow usize::MAX
+        let len_to_append = remaining_shape
+            .size()
+            .checked_mul(additional)
+            .ok_or(ShapeError::from_kind(ErrorKind::Overflow))?;
 
         // Make sure new capacity is still in bounds
         let mut res_dim = self_dim;
