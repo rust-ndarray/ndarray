@@ -1,6 +1,11 @@
 on:
+  push:
+    branches:
+      - "**"
   pull_request:
   merge_group:
+  workflow_dispatch:
+  workflow_call:
 
 name: Continuous integration
 
