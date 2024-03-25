@@ -51,8 +51,7 @@ where E: IntoDimension
 }
 
 /// Compute `Layout` hints for array shape dim, strides
-fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout
-{
+fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout {
     let n = dim.ndim();
     if dimension::is_layout_c(dim, strides) {
         // effectively one-dimensional => C and F layout compatible
@@ -81,8 +80,7 @@ where
     S: RawData,
     D: Dimension,
 {
-    pub(crate) fn layout_impl(&self) -> Layout
-    {
+    pub(crate) fn layout_impl(&self) -> Layout {
         array_layout(&self.dim, &self.strides)
     }
 }
@@ -93,8 +91,7 @@ where
     D: Dimension,
 {
     type Output = ArrayView<'a, A, E::Dim>;
-    fn broadcast_unwrap(self, shape: E) -> Self::Output
-    {
+    fn broadcast_unwrap(self, shape: E) -> Self::Output {
         #[allow(clippy::needless_borrow)]
         let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
         unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
@@ -102,8 +99,7 @@ where
     private_impl! {}
 }
 
-trait ZippableTuple: Sized
-{
+trait ZippableTuple: Sized {
     type Item;
     type Ptr: OffsetTuple<Args = Self::Stride> + Copy;
     type Dim: Dimension;
@@ -192,8 +188,7 @@ trait ZippableTuple: Sized
 /// ```
 #[derive(Debug, Clone)]
 #[must_use = "zipping producers is lazy and does nothing unless consumed"]
-pub struct Zip<Parts, D>
-{
+pub struct Zip<Parts, D> {
     parts: Parts,
     dimension: D,
     layout: Layout,
@@ -212,8 +207,7 @@ where
     /// The Zip will take the exact dimension of `p` and all inputs
     /// must have the same dimensions (or be broadcast to them).
     pub fn from<IP>(p: IP) -> Self
-    where IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>
-    {
+    where IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item> {
         let array = p.into_producer();
         let dim = array.raw_dim();
         let layout = array.layout();
@@ -237,8 +231,7 @@ where
     ///
     /// *Note:* Indexed zip has overhead.
     pub fn indexed<IP>(p: IP) -> Self
-    where IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item>
-    {
+    where IP: IntoNdProducer<Dim = D, Output = P, Item = P::Item> {
         let array = p.into_producer();
         let dim = array.raw_dim();
         Zip::from(indices(dim)).and(array)
@@ -263,8 +256,7 @@ impl<Parts, D> Zip<Parts, D>
 where D: Dimension
 {
     /// Return a the number of element tuples in the Zip
-    pub fn size(&self) -> usize
-    {
+    pub fn size(&self) -> usize {
         self.dimension.size()
     }
 
@@ -272,21 +264,18 @@ where D: Dimension
     ///
     /// ***Panics*** if `axis` is out of bounds.
     #[track_caller]
-    fn len_of(&self, axis: Axis) -> usize
-    {
+    fn len_of(&self, axis: Axis) -> usize {
         self.dimension[axis.index()]
     }
 
-    fn prefer_f(&self) -> bool
-    {
+    fn prefer_f(&self) -> bool {
         !self.layout.is(Layout::CORDER) && (self.layout.is(Layout::FORDER) || self.layout_tendency < 0)
     }
 
     /// Return an *approximation* to the max stride axis; if
     /// component arrays disagree, there may be no choice better than the
     /// others.
-    fn max_stride_axis(&self) -> Axis
-    {
+    fn max_stride_axis(&self) -> Axis {
         let i = if self.prefer_f() {
             self.dimension
                 .slice()
@@ -426,8 +415,7 @@ where D: Dimension
     }
 
     #[cfg(feature = "rayon")]
-    pub(crate) fn uninitialized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D>
-    {
+    pub(crate) fn uninitialized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D> {
         let is_f = self.prefer_f();
         Array::uninit(self.dimension.clone().set_f(is_f))
     }
@@ -442,8 +430,7 @@ where
     /// Debug assert traversal order is like c (including 1D case)
     // Method placement: only used for binary Zip at the moment.
     #[inline]
-    pub(crate) fn debug_assert_c_order(self) -> Self
-    {
+    pub(crate) fn debug_assert_c_order(self) -> Self {
         debug_assert!(self.layout.is(Layout::CORDER) || self.layout_tendency >= 0 ||
                       self.dimension.slice().iter().filter(|&&d| d > 1).count() <= 1,
                       "Assertion failed: traversal is not c-order or 1D for \
@@ -468,17 +455,14 @@ impl<T> Offset for *mut T {
 }
 */
 
-trait OffsetTuple
-{
+trait OffsetTuple {
     type Args;
     unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self;
 }
 
-impl<T> OffsetTuple for *mut T
-{
+impl<T> OffsetTuple for *mut T {
     type Args = isize;
-    unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self
-    {
+    unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self {
         self.offset(index as isize * stride)
     }
 }
@@ -952,27 +936,23 @@ map_impl! {
 
 /// Value controlling the execution of `.fold_while` on `Zip`.
 #[derive(Debug, Copy, Clone)]
-pub enum FoldWhile<T>
-{
+pub enum FoldWhile<T> {
     /// Continue folding with this value
     Continue(T),
     /// Fold is complete and will return this value
     Done(T),
 }
 
-impl<T> FoldWhile<T>
-{
+impl<T> FoldWhile<T> {
     /// Return the inner value
-    pub fn into_inner(self) -> T
-    {
+    pub fn into_inner(self) -> T {
         match self {
             FoldWhile::Continue(x) | FoldWhile::Done(x) => x,
         }
     }
 
     /// Return true if it is `Done`, false if `Continue`
-    pub fn is_done(&self) -> bool
-    {
+    pub fn is_done(&self) -> bool {
         match *self {
             FoldWhile::Continue(_) => false,
             FoldWhile::Done(_) => true,

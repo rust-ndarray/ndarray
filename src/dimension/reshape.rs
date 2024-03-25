@@ -146,8 +146,7 @@ where
 
 #[cfg(feature = "std")]
 #[test]
-fn test_reshape()
-{
+fn test_reshape() {
     use crate::Dim;
 
     macro_rules! test_reshape {

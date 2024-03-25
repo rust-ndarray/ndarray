@@ -5,8 +5,7 @@
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-fn main()
-{
+fn main() {
     let n = 6;
 
     let mut a = Array::<f32, _>::zeros((n, n));

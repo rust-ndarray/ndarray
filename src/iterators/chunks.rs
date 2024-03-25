@@ -30,22 +30,19 @@ impl_ndproducer! {
 /// See [`.exact_chunks()`](ArrayBase::exact_chunks) for more
 /// information.
 //#[derive(Debug)]
-pub struct ExactChunks<'a, A, D>
-{
+pub struct ExactChunks<'a, A, D> {
     base: RawArrayView<A, D>,
     life: PhantomData<&'a A>,
     chunk: D,
     inner_strides: D,
 }
 
-impl<'a, A, D: Dimension> ExactChunks<'a, A, D>
-{
+impl<'a, A, D: Dimension> ExactChunks<'a, A, D> {
     /// Creates a new exact chunks producer.
     ///
     /// **Panics** if any chunk dimension is zero
     pub(crate) fn new<E>(a: ArrayView<'a, A, D>, chunk: E) -> Self
-    where E: IntoDimension<Dim = D>
-    {
+    where E: IntoDimension<Dim = D> {
         let mut a = a.into_raw_view();
         let chunk = chunk.into_dimension();
         ndassert!(
@@ -80,8 +77,7 @@ where
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = ExactChunksIter<'a, A, D>;
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         ExactChunksIter {
             iter: self.base.into_base_iter(),
             life: self.life,
@@ -95,8 +91,7 @@ where
 ///
 /// See [`.exact_chunks()`](ArrayBase::exact_chunks) for more
 /// information.
-pub struct ExactChunksIter<'a, A, D>
-{
+pub struct ExactChunksIter<'a, A, D> {
     iter: Baseiter<A, D>,
     life: PhantomData<&'a A>,
     chunk: D,
@@ -129,22 +124,19 @@ impl_ndproducer! {
 /// See [`.exact_chunks_mut()`](ArrayBase::exact_chunks_mut)
 /// for more information.
 //#[derive(Debug)]
-pub struct ExactChunksMut<'a, A, D>
-{
+pub struct ExactChunksMut<'a, A, D> {
     base: RawArrayViewMut<A, D>,
     life: PhantomData<&'a mut A>,
     chunk: D,
     inner_strides: D,
 }
 
-impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D>
-{
+impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D> {
     /// Creates a new exact chunks producer.
     ///
     /// **Panics** if any chunk dimension is zero
     pub(crate) fn new<E>(a: ArrayViewMut<'a, A, D>, chunk: E) -> Self
-    where E: IntoDimension<Dim = D>
-    {
+    where E: IntoDimension<Dim = D> {
         let mut a = a.into_raw_view_mut();
         let chunk = chunk.into_dimension();
         ndassert!(
@@ -179,8 +171,7 @@ where
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = ExactChunksIterMut<'a, A, D>;
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         ExactChunksIterMut {
             iter: self.base.into_base_iter(),
             life: self.life,
@@ -239,8 +230,7 @@ impl_iterator! {
 ///
 /// See [`.exact_chunks_mut()`](ArrayBase::exact_chunks_mut)
 /// for more information.
-pub struct ExactChunksIterMut<'a, A, D>
-{
+pub struct ExactChunksIterMut<'a, A, D> {
     iter: Baseiter<A, D>,
     life: PhantomData<&'a mut A>,
     chunk: D,

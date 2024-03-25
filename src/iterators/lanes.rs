@@ -25,18 +25,15 @@ impl_ndproducer! {
 
 /// See [`.lanes()`](ArrayBase::lanes)
 /// for more information.
-pub struct Lanes<'a, A, D>
-{
+pub struct Lanes<'a, A, D> {
     base: ArrayView<'a, A, D>,
     inner_len: Ix,
     inner_stride: Ixs,
 }
 
-impl<'a, A, D: Dimension> Lanes<'a, A, D>
-{
+impl<'a, A, D: Dimension> Lanes<'a, A, D> {
     pub(crate) fn new<Di>(v: ArrayView<'a, A, Di>, axis: Axis) -> Self
-    where Di: Dimension<Smaller = D>
-    {
+    where Di: Dimension<Smaller = D> {
         let ndim = v.ndim();
         let len;
         let stride;
@@ -81,8 +78,7 @@ where D: Dimension
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = LanesIter<'a, A, D>;
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         LanesIter {
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,
@@ -94,18 +90,15 @@ where D: Dimension
 
 /// See [`.lanes_mut()`](ArrayBase::lanes_mut)
 /// for more information.
-pub struct LanesMut<'a, A, D>
-{
+pub struct LanesMut<'a, A, D> {
     base: ArrayViewMut<'a, A, D>,
     inner_len: Ix,
     inner_stride: Ixs,
 }
 
-impl<'a, A, D: Dimension> LanesMut<'a, A, D>
-{
+impl<'a, A, D: Dimension> LanesMut<'a, A, D> {
     pub(crate) fn new<Di>(v: ArrayViewMut<'a, A, Di>, axis: Axis) -> Self
-    where Di: Dimension<Smaller = D>
-    {
+    where Di: Dimension<Smaller = D> {
         let ndim = v.ndim();
         let len;
         let stride;
@@ -132,8 +125,7 @@ where D: Dimension
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = LanesIterMut<'a, A, D>;
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         LanesIterMut {
             iter: self.base.into_base_iter(),
             inner_len: self.inner_len,

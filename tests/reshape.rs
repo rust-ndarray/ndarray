@@ -5,8 +5,7 @@ use itertools::enumerate;
 use ndarray::Order;
 
 #[test]
-fn reshape()
-{
+fn reshape() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
     let u = v.into_shape_with_order((3, 3));
@@ -22,8 +21,7 @@ fn reshape()
 
 #[test]
 #[should_panic(expected = "IncompatibleShape")]
-fn reshape_error1()
-{
+fn reshape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
     let _u = v.into_shape_with_order((2, 5)).unwrap();
@@ -31,8 +29,7 @@ fn reshape_error1()
 
 #[test]
 #[should_panic(expected = "IncompatibleLayout")]
-fn reshape_error2()
-{
+fn reshape_error2() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
     let mut u = v.into_shape_with_order((2, 2, 2)).unwrap();
@@ -41,8 +38,7 @@ fn reshape_error2()
 }
 
 #[test]
-fn reshape_f()
-{
+fn reshape_f() {
     let mut u = Array::zeros((3, 4).f());
     for (i, elt) in enumerate(u.as_slice_memory_order_mut().unwrap()) {
         *elt = i as i32;
@@ -67,8 +63,7 @@ fn reshape_f()
 }
 
 #[test]
-fn to_shape_easy()
-{
+fn to_shape_easy() {
     // 1D -> C -> C
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
@@ -107,8 +102,7 @@ fn to_shape_easy()
 }
 
 #[test]
-fn to_shape_copy()
-{
+fn to_shape_copy() {
     // 1D -> C -> F
     let v = ArrayView::from(&[1, 2, 3, 4, 5, 6, 7, 8]);
     let u = v.to_shape(((4, 2), Order::RowMajor)).unwrap();
@@ -131,8 +125,7 @@ fn to_shape_copy()
 }
 
 #[test]
-fn to_shape_add_axis()
-{
+fn to_shape_add_axis() {
     // 1D -> C -> C
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
@@ -143,8 +136,7 @@ fn to_shape_add_axis()
 }
 
 #[test]
-fn to_shape_copy_stride()
-{
+fn to_shape_copy_stride() {
     let v = array![[1, 2, 3, 4], [5, 6, 7, 8]];
     let vs = v.slice(s![.., ..3]);
     let lin1 = vs.to_shape(6).unwrap();
@@ -157,8 +149,7 @@ fn to_shape_copy_stride()
 }
 
 #[test]
-fn to_shape_zero_len()
-{
+fn to_shape_zero_len() {
     let v = array![[1, 2, 3, 4], [5, 6, 7, 8]];
     let vs = v.slice(s![.., ..0]);
     let lin1 = vs.to_shape(0).unwrap();
@@ -168,8 +159,7 @@ fn to_shape_zero_len()
 
 #[test]
 #[should_panic(expected = "IncompatibleShape")]
-fn to_shape_error1()
-{
+fn to_shape_error1() {
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
     let _u = v.to_shape((2, 5)).unwrap();
@@ -177,8 +167,7 @@ fn to_shape_error1()
 
 #[test]
 #[should_panic(expected = "IncompatibleShape")]
-fn to_shape_error2()
-{
+fn to_shape_error2() {
     // overflow
     let data = [3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
@@ -186,8 +175,7 @@ fn to_shape_error2()
 }
 
 #[test]
-fn to_shape_discontig()
-{
+fn to_shape_discontig() {
     for &create_order in &[Order::C, Order::F] {
         let a = Array::from_iter(0..64);
         let mut a1 = a.to_shape(((4, 4, 4), create_order)).unwrap();
@@ -214,8 +202,7 @@ fn to_shape_discontig()
 }
 
 #[test]
-fn to_shape_broadcast()
-{
+fn to_shape_broadcast() {
     for &create_order in &[Order::C, Order::F] {
         let a = Array::from_iter(0..64);
         let mut a1 = a.to_shape(((4, 4, 4), create_order)).unwrap();
@@ -242,8 +229,7 @@ fn to_shape_broadcast()
 }
 
 #[test]
-fn into_shape_with_order()
-{
+fn into_shape_with_order() {
     // 1D -> C -> C
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
@@ -282,8 +268,7 @@ fn into_shape_with_order()
 }
 
 #[test]
-fn into_shape_clone()
-{
+fn into_shape_clone() {
     // 1D -> C -> C
     {
         let data = [1, 2, 3, 4, 5, 6, 7, 8];

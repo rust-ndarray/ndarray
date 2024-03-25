@@ -29,8 +29,7 @@ use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedR
 /// Traits in Rust can serve many different roles. This trait is public because
 /// it is used as a bound on public methods.
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
-pub unsafe trait RawData: Sized
-{
+pub unsafe trait RawData: Sized {
     /// The array element type.
     type Elem;
 
@@ -51,8 +50,7 @@ pub unsafe trait RawData: Sized
 ///
 /// ***Internal trait, see `RawData`.***
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
-pub unsafe trait RawDataMut: RawData
-{
+pub unsafe trait RawDataMut: RawData {
     /// If possible, ensures that the array has unique access to its data.
     ///
     /// The implementer must ensure that if the input is contiguous, then the
@@ -80,15 +78,13 @@ pub unsafe trait RawDataMut: RawData
 ///
 /// ***Internal trait, see `RawData`.***
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
-pub unsafe trait RawDataClone: RawData
-{
+pub unsafe trait RawDataClone: RawData {
     #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>);
 
     #[doc(hidden)]
-    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
-    {
+    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem> {
         let (data, ptr) = other.clone_with_ptr(ptr);
         *self = data;
         ptr
@@ -101,8 +97,7 @@ pub unsafe trait RawDataClone: RawData
 ///
 /// ***Internal trait, see `RawData`.***
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
-pub unsafe trait Data: RawData
-{
+pub unsafe trait Data: RawData {
     /// Converts the array to a uniquely owned array, cloning elements if necessary.
     #[doc(hidden)]
     #[allow(clippy::wrong_self_convention)]
@@ -144,8 +139,7 @@ pub unsafe trait Data: RawData
 // the data is unique. You are also guaranteeing that `try_is_unique` always
 // returns `Some(_)`.
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
-pub unsafe trait DataMut: Data + RawDataMut
-{
+pub unsafe trait DataMut: Data + RawDataMut {
     /// Ensures that the array has unique access to its data.
     #[doc(hidden)]
     #[inline]
@@ -161,60 +155,50 @@ pub unsafe trait DataMut: Data + RawDataMut
     #[doc(hidden)]
     #[inline]
     #[allow(clippy::wrong_self_convention)] // mut needed for Arc types
-    fn is_unique(&mut self) -> bool
-    {
+    fn is_unique(&mut self) -> bool {
         self.try_is_unique().unwrap()
     }
 }
 
-unsafe impl<A> RawData for RawViewRepr<*const A>
-{
+unsafe impl<A> RawData for RawViewRepr<*const A> {
     type Elem = A;
 
     #[inline]
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         None
     }
 
     #[inline(always)]
-    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool {
         true
     }
 
     private_impl! {}
 }
 
-unsafe impl<A> RawDataClone for RawViewRepr<*const A>
-{
-    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    {
+unsafe impl<A> RawDataClone for RawViewRepr<*const A> {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
 
-unsafe impl<A> RawData for RawViewRepr<*mut A>
-{
+unsafe impl<A> RawData for RawViewRepr<*mut A> {
     type Elem = A;
 
     #[inline]
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         None
     }
 
     #[inline(always)]
-    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool {
         true
     }
 
     private_impl! {}
 }
 
-unsafe impl<A> RawDataMut for RawViewRepr<*mut A>
-{
+unsafe impl<A> RawDataMut for RawViewRepr<*mut A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where
@@ -224,30 +208,24 @@ unsafe impl<A> RawDataMut for RawViewRepr<*mut A>
     }
 
     #[inline]
-    fn try_is_unique(&mut self) -> Option<bool>
-    {
+    fn try_is_unique(&mut self) -> Option<bool> {
         None
     }
 }
 
-unsafe impl<A> RawDataClone for RawViewRepr<*mut A>
-{
-    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    {
+unsafe impl<A> RawDataClone for RawViewRepr<*mut A> {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
 
-unsafe impl<A> RawData for OwnedArcRepr<A>
-{
+unsafe impl<A> RawData for OwnedArcRepr<A> {
     type Elem = A;
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         Some(self.0.as_slice())
     }
 
-    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool {
         self.0._is_pointer_inbounds(self_ptr)
     }
 
@@ -285,14 +263,12 @@ where A: Clone
         }
     }
 
-    fn try_is_unique(&mut self) -> Option<bool>
-    {
+    fn try_is_unique(&mut self) -> Option<bool> {
         Some(Arc::get_mut(&mut self.0).is_some())
     }
 }
 
-unsafe impl<A> Data for OwnedArcRepr<A>
-{
+unsafe impl<A> Data for OwnedArcRepr<A> {
     fn into_owned<D>(mut self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         A: Clone,
@@ -305,8 +281,7 @@ unsafe impl<A> Data for OwnedArcRepr<A>
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
-    where D: Dimension
-    {
+    where D: Dimension {
         match Arc::try_unwrap(self_.data.0) {
             Ok(owned_data) => unsafe {
                 // Safe because the data is equivalent.
@@ -334,26 +309,21 @@ unsafe impl<A> Data for OwnedArcRepr<A>
 
 unsafe impl<A> DataMut for OwnedArcRepr<A> where A: Clone {}
 
-unsafe impl<A> RawDataClone for OwnedArcRepr<A>
-{
-    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    {
+unsafe impl<A> RawDataClone for OwnedArcRepr<A> {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         // pointer is preserved
         (self.clone(), ptr)
     }
 }
 
-unsafe impl<A> RawData for OwnedRepr<A>
-{
+unsafe impl<A> RawData for OwnedRepr<A> {
     type Elem = A;
 
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         Some(self.as_slice())
     }
 
-    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool {
         let slc = self.as_slice();
         let ptr = slc.as_ptr() as *mut A;
         let end = unsafe { ptr.add(slc.len()) };
@@ -363,8 +333,7 @@ unsafe impl<A> RawData for OwnedRepr<A>
     private_impl! {}
 }
 
-unsafe impl<A> RawDataMut for OwnedRepr<A>
-{
+unsafe impl<A> RawDataMut for OwnedRepr<A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where
@@ -374,14 +343,12 @@ unsafe impl<A> RawDataMut for OwnedRepr<A>
     }
 
     #[inline]
-    fn try_is_unique(&mut self) -> Option<bool>
-    {
+    fn try_is_unique(&mut self) -> Option<bool> {
         Some(true)
     }
 }
 
-unsafe impl<A> Data for OwnedRepr<A>
-{
+unsafe impl<A> Data for OwnedRepr<A> {
     #[inline]
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
@@ -393,8 +360,7 @@ unsafe impl<A> Data for OwnedRepr<A>
 
     #[inline]
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
-    where D: Dimension
-    {
+    where D: Dimension {
         Ok(self_)
     }
 }
@@ -404,8 +370,7 @@ unsafe impl<A> DataMut for OwnedRepr<A> {}
 unsafe impl<A> RawDataClone for OwnedRepr<A>
 where A: Clone
 {
-    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         let mut u = self.clone();
         let mut new_ptr = u.as_nonnull_mut();
         if size_of::<A>() != 0 {
@@ -415,8 +380,7 @@ where A: Clone
         (u, new_ptr)
     }
 
-    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
-    {
+    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem> {
         let our_off = if size_of::<A>() != 0 {
             (ptr.as_ptr() as isize - other.as_ptr() as isize) / mem::size_of::<A>() as isize
         } else {
@@ -427,27 +391,23 @@ where A: Clone
     }
 }
 
-unsafe impl<'a, A> RawData for ViewRepr<&'a A>
-{
+unsafe impl<'a, A> RawData for ViewRepr<&'a A> {
     type Elem = A;
 
     #[inline]
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         None
     }
 
     #[inline(always)]
-    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool {
         true
     }
 
     private_impl! {}
 }
 
-unsafe impl<'a, A> Data for ViewRepr<&'a A>
-{
+unsafe impl<'a, A> Data for ViewRepr<&'a A> {
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         Self::Elem: Clone,
@@ -457,41 +417,34 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A>
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
-    where D: Dimension
-    {
+    where D: Dimension {
         Err(self_)
     }
 }
 
-unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A>
-{
-    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    {
+unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A> {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         (*self, ptr)
     }
 }
 
-unsafe impl<'a, A> RawData for ViewRepr<&'a mut A>
-{
+unsafe impl<'a, A> RawData for ViewRepr<&'a mut A> {
     type Elem = A;
 
     #[inline]
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         None
     }
 
     #[inline(always)]
-    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool {
         true
     }
 
     private_impl! {}
 }
 
-unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A>
-{
+unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A> {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where
@@ -501,14 +454,12 @@ unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A>
     }
 
     #[inline]
-    fn try_is_unique(&mut self) -> Option<bool>
-    {
+    fn try_is_unique(&mut self) -> Option<bool> {
         Some(true)
     }
 }
 
-unsafe impl<'a, A> Data for ViewRepr<&'a mut A>
-{
+unsafe impl<'a, A> Data for ViewRepr<&'a mut A> {
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
         Self::Elem: Clone,
@@ -518,8 +469,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A>
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
-    where D: Dimension
-    {
+    where D: Dimension {
         Err(self_)
     }
 }
@@ -539,8 +489,7 @@ unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {}
 // unsharing storage before mutating it. The initially allocated storage must be mutable so
 // that it can be mutated directly - through .raw_view_mut_unchecked() - for initialization.
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
-pub unsafe trait DataOwned: Data
-{
+pub unsafe trait DataOwned: Data {
     /// Corresponding owned data with MaybeUninit elements
     type MaybeUninit: DataOwned<Elem = MaybeUninit<Self::Elem>> + RawDataSubst<Self::Elem, Output = Self>;
     #[doc(hidden)]
@@ -563,42 +512,34 @@ pub unsafe trait DataShared: Clone + Data + RawDataClone {}
 unsafe impl<A> DataShared for OwnedArcRepr<A> {}
 unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
 
-unsafe impl<A> DataOwned for OwnedRepr<A>
-{
+unsafe impl<A> DataOwned for OwnedRepr<A> {
     type MaybeUninit = OwnedRepr<MaybeUninit<A>>;
 
-    fn new(elements: Vec<A>) -> Self
-    {
+    fn new(elements: Vec<A>) -> Self {
         OwnedRepr::from(elements)
     }
 
-    fn into_shared(self) -> OwnedArcRepr<A>
-    {
+    fn into_shared(self) -> OwnedArcRepr<A> {
         OwnedArcRepr(Arc::new(self))
     }
 }
 
-unsafe impl<A> DataOwned for OwnedArcRepr<A>
-{
+unsafe impl<A> DataOwned for OwnedArcRepr<A> {
     type MaybeUninit = OwnedArcRepr<MaybeUninit<A>>;
 
-    fn new(elements: Vec<A>) -> Self
-    {
+    fn new(elements: Vec<A>) -> Self {
         OwnedArcRepr(Arc::new(OwnedRepr::from(elements)))
     }
 
-    fn into_shared(self) -> OwnedArcRepr<A>
-    {
+    fn into_shared(self) -> OwnedArcRepr<A> {
         self
     }
 }
 
-unsafe impl<'a, A> RawData for CowRepr<'a, A>
-{
+unsafe impl<'a, A> RawData for CowRepr<'a, A> {
     type Elem = A;
 
-    fn _data_slice(&self) -> Option<&[A]>
-    {
+    fn _data_slice(&self) -> Option<&[A]> {
         #[allow(deprecated)]
         match self {
             CowRepr::View(view) => view._data_slice(),
@@ -607,8 +548,7 @@ unsafe impl<'a, A> RawData for CowRepr<'a, A>
     }
 
     #[inline]
-    fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool
-    {
+    fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool {
         match self {
             CowRepr::View(view) => view._is_pointer_inbounds(ptr),
             CowRepr::Owned(data) => data._is_pointer_inbounds(ptr),
@@ -640,8 +580,7 @@ where A: Clone
     }
 
     #[inline]
-    fn try_is_unique(&mut self) -> Option<bool>
-    {
+    fn try_is_unique(&mut self) -> Option<bool> {
         Some(self.is_owned())
     }
 }
@@ -649,8 +588,7 @@ where A: Clone
 unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
 where A: Clone
 {
-    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    {
+    unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>) {
         match self {
             CowRepr::View(view) => {
                 let (new_view, ptr) = view.clone_with_ptr(ptr);
@@ -663,8 +601,7 @@ where A: Clone
         }
     }
 
-    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
-    {
+    unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem> {
         match (&mut *self, other) {
             (CowRepr::View(self_), CowRepr::View(other)) => self_.clone_from_with_ptr(other, ptr),
             (CowRepr::Owned(self_), CowRepr::Owned(other)) => self_.clone_from_with_ptr(other, ptr),
@@ -682,8 +619,7 @@ where A: Clone
     }
 }
 
-unsafe impl<'a, A> Data for CowRepr<'a, A>
-{
+unsafe impl<'a, A> Data for CowRepr<'a, A> {
     #[inline]
     fn into_owned<D>(self_: ArrayBase<CowRepr<'a, A>, D>) -> Array<Self::Elem, D>
     where
@@ -700,8 +636,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
-    where D: Dimension
-    {
+    where D: Dimension {
         match self_.data {
             CowRepr::View(_) => Err(self_),
             CowRepr::Owned(data) => unsafe {
@@ -720,8 +655,7 @@ unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
 /// keeping the same kind of storage.
 ///
 /// For example, `RawDataSubst<B>` can map the type `OwnedRepr<A>` to `OwnedRepr<B>`.
-pub trait RawDataSubst<A>: RawData
-{
+pub trait RawDataSubst<A>: RawData {
     /// The resulting array storage of the same kind but substituted element type
     type Output: RawData<Elem = A>;
 
@@ -734,72 +668,58 @@ pub trait RawDataSubst<A>: RawData
     unsafe fn data_subst(self) -> Self::Output;
 }
 
-impl<A, B> RawDataSubst<B> for OwnedRepr<A>
-{
+impl<A, B> RawDataSubst<B> for OwnedRepr<A> {
     type Output = OwnedRepr<B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         self.data_subst()
     }
 }
 
-impl<A, B> RawDataSubst<B> for OwnedArcRepr<A>
-{
+impl<A, B> RawDataSubst<B> for OwnedArcRepr<A> {
     type Output = OwnedArcRepr<B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         OwnedArcRepr(Arc::from_raw(Arc::into_raw(self.0) as *const OwnedRepr<B>))
     }
 }
 
-impl<A, B> RawDataSubst<B> for RawViewRepr<*const A>
-{
+impl<A, B> RawDataSubst<B> for RawViewRepr<*const A> {
     type Output = RawViewRepr<*const B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         RawViewRepr::new()
     }
 }
 
-impl<A, B> RawDataSubst<B> for RawViewRepr<*mut A>
-{
+impl<A, B> RawDataSubst<B> for RawViewRepr<*mut A> {
     type Output = RawViewRepr<*mut B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         RawViewRepr::new()
     }
 }
 
-impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a A>
-{
+impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a A> {
     type Output = ViewRepr<&'a B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         ViewRepr::new()
     }
 }
 
-impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a mut A>
-{
+impl<'a, A: 'a, B: 'a> RawDataSubst<B> for ViewRepr<&'a mut A> {
     type Output = ViewRepr<&'a mut B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         ViewRepr::new()
     }
 }
 
-impl<'a, A: 'a, B: 'a> RawDataSubst<B> for CowRepr<'a, A>
-{
+impl<'a, A: 'a, B: 'a> RawDataSubst<B> for CowRepr<'a, A> {
     type Output = CowRepr<'a, B>;
 
-    unsafe fn data_subst(self) -> Self::Output
-    {
+    unsafe fn data_subst(self) -> Self::Output {
         match self {
             CowRepr::View(view) => CowRepr::View(view.data_subst()),
             CowRepr::Owned(owned) => CowRepr::Owned(owned.data_subst()),

@@ -2,8 +2,7 @@ use ndarray::arr2;
 use ndarray::ArcArray;
 
 #[test]
-fn test_swap()
-{
+fn test_swap() {
     let mut a = arr2(&[[(); 3]; 3]);
 
     let b = a.clone();
@@ -17,8 +16,7 @@ fn test_swap()
 }
 
 #[test]
-fn test()
-{
+fn test() {
     let c = ArcArray::<(), _>::default((3, 4));
     let mut d = c.clone();
     for _ in d.iter_mut() {}

@@ -34,8 +34,7 @@ where S: RawData<Elem = A>
     /// Rotate the elements of the array by 1 element towards the front;
     /// the former first element becomes the last.
     pub(crate) fn rotate1_front(&mut self)
-    where S: DataMut
-    {
+    where S: DataMut {
         // use swapping to keep all elements initialized (as required by owned storage)
         let mut lane_iter = self.iter_mut();
         let mut dst = if let Some(dst) = lane_iter.next() { dst } else { return };

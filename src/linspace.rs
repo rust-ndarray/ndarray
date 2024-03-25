@@ -11,8 +11,7 @@ use num_traits::Float;
 /// An iterator of a sequence of evenly spaced floats.
 ///
 /// Iterator element type is `F`.
-pub struct Linspace<F>
-{
+pub struct Linspace<F> {
     start: F,
     step: F,
     index: usize,
@@ -25,8 +24,7 @@ where F: Float
     type Item = F;
 
     #[inline]
-    fn next(&mut self) -> Option<F>
-    {
+    fn next(&mut self) -> Option<F> {
         if self.index >= self.len {
             None
         } else {
@@ -38,8 +36,7 @@ where F: Float
     }
 
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>)
-    {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         let n = self.len - self.index;
         (n, Some(n))
     }
@@ -49,8 +46,7 @@ impl<F> DoubleEndedIterator for Linspace<F>
 where F: Float
 {
     #[inline]
-    fn next_back(&mut self) -> Option<F>
-    {
+    fn next_back(&mut self) -> Option<F> {
         if self.index >= self.len {
             None
         } else {
@@ -74,8 +70,7 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 /// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
 pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
-where F: Float
-{
+where F: Float {
     let step = if n > 1 {
         let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
         (b - a) / num_steps
@@ -101,8 +96,7 @@ where F: Float
 /// **Panics** if converting `((b - a) / step).ceil()` to type `F` fails.
 #[inline]
 pub fn range<F>(a: F, b: F, step: F) -> Linspace<F>
-where F: Float
-{
+where F: Float {
     let len = b - a;
     let steps = F::ceil(len / step);
     Linspace {

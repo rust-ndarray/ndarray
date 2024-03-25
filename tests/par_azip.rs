@@ -7,8 +7,7 @@ use ndarray::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
-fn test_par_azip1()
-{
+fn test_par_azip1() {
     let mut a = Array::zeros(62);
     let b = Array::from_elem(62, 42);
     par_azip!((a in &mut a) { *a = 42 });
@@ -16,8 +15,7 @@ fn test_par_azip1()
 }
 
 #[test]
-fn test_par_azip2()
-{
+fn test_par_azip2() {
     let mut a = Array::zeros((5, 7));
     let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2 * j) as f32);
     par_azip!((a in &mut a, &b in &b, ) *a = b );
@@ -26,8 +24,7 @@ fn test_par_azip2()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_par_azip3()
-{
+fn test_par_azip3() {
     use approx::assert_abs_diff_eq;
 
     let mut a = [0.; 32];
@@ -47,8 +44,7 @@ fn test_par_azip3()
 
 #[should_panic]
 #[test]
-fn test_zip_dim_mismatch_1()
-{
+fn test_zip_dim_mismatch_1() {
     let mut a = Array::zeros((5, 7));
     let mut d = a.raw_dim();
     d[0] += 1;
@@ -57,8 +53,7 @@ fn test_zip_dim_mismatch_1()
 }
 
 #[test]
-fn test_indices_1()
-{
+fn test_indices_1() {
     let mut a1 = Array::default(12);
     for (i, elt) in a1.indexed_iter_mut() {
         *elt = i;

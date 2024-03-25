@@ -31,8 +31,7 @@ where
     /// Note that for owned and shared ownership arrays, the promise must include all of the
     /// array's storage; it is for example possible to slice these in place, but that must
     /// only be done after all elements have been initialized.
-    pub unsafe fn assume_init(self) -> ArrayBase<<S as RawDataSubst<A>>::Output, D>
-    {
+    pub unsafe fn assume_init(self) -> ArrayBase<<S as RawDataSubst<A>>::Output, D> {
         let ArrayBase {
             data,
             ptr,

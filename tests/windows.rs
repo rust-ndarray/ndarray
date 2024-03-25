@@ -22,8 +22,7 @@ use ndarray::{arr3, Zip};
 /// Test that verifies the `Windows` iterator panics on window sizes equal to zero.
 #[test]
 #[should_panic]
-fn windows_iterator_zero_size()
-{
+fn windows_iterator_zero_size() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -32,8 +31,7 @@ fn windows_iterator_zero_size()
 
 /// Test that verifies that no windows are yielded on oversized window sizes.
 #[test]
-fn windows_iterator_oversized()
-{
+fn windows_iterator_oversized() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -43,8 +41,7 @@ fn windows_iterator_oversized()
 
 /// Simple test for iterating 1d-arrays via `Windows`.
 #[test]
-fn windows_iterator_1d()
-{
+fn windows_iterator_1d() {
     let a = Array::from_iter(10..20).into_shape_with_order(10).unwrap();
     itertools::assert_equal(a.windows(Dim(4)), vec![
             arr1(&[10, 11, 12, 13]),
@@ -59,8 +56,7 @@ fn windows_iterator_1d()
 
 /// Simple test for iterating 2d-arrays via `Windows`.
 #[test]
-fn windows_iterator_2d()
-{
+fn windows_iterator_2d() {
     let a = Array::from_iter(10..30)
         .into_shape_with_order((5, 4))
         .unwrap();
@@ -79,8 +75,7 @@ fn windows_iterator_2d()
 
 /// Simple test for iterating 3d-arrays via `Windows`.
 #[test]
-fn windows_iterator_3d()
-{
+fn windows_iterator_3d() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -99,8 +94,7 @@ fn windows_iterator_3d()
 /// Test that verifies the `Windows` iterator panics when stride has an axis equal to zero.
 #[test]
 #[should_panic]
-fn windows_iterator_stride_axis_zero()
-{
+fn windows_iterator_stride_axis_zero() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -109,8 +103,7 @@ fn windows_iterator_stride_axis_zero()
 
 /// Test that verifies that only first window is yielded when stride is oversized on every axis.
 #[test]
-fn windows_iterator_only_one_valid_window_for_oversized_stride()
-{
+fn windows_iterator_only_one_valid_window_for_oversized_stride() {
     let a = Array::from_iter(10..135)
         .into_shape_with_order((5, 5, 5))
         .unwrap();
@@ -120,8 +113,7 @@ fn windows_iterator_only_one_valid_window_for_oversized_stride()
 
 /// Simple test for iterating 1d-arrays via `Windows` with stride.
 #[test]
-fn windows_iterator_1d_with_stride()
-{
+fn windows_iterator_1d_with_stride() {
     let a = Array::from_iter(10..20).into_shape_with_order(10).unwrap();
     itertools::assert_equal(a.windows_with_stride(4, 2), vec![
             arr1(&[10, 11, 12, 13]),
@@ -133,8 +125,7 @@ fn windows_iterator_1d_with_stride()
 
 /// Simple test for iterating 2d-arrays via `Windows` with stride.
 #[test]
-fn windows_iterator_2d_with_stride()
-{
+fn windows_iterator_2d_with_stride() {
     let a = Array::from_iter(10..30)
         .into_shape_with_order((5, 4))
         .unwrap();
@@ -150,8 +141,7 @@ fn windows_iterator_2d_with_stride()
 
 /// Simple test for iterating 3d-arrays via `Windows` with stride.
 #[test]
-fn windows_iterator_3d_with_stride()
-{
+fn windows_iterator_3d_with_stride() {
     let a = Array::from_iter(10..74)
         .into_shape_with_order((4, 4, 4))
         .unwrap();
@@ -168,8 +158,7 @@ fn windows_iterator_3d_with_stride()
 }
 
 #[test]
-fn test_window_zip()
-{
+fn test_window_zip() {
     let a = Array::from_iter(0..64)
         .into_shape_with_order((4, 4, 4))
         .unwrap();
@@ -194,8 +183,7 @@ fn test_window_zip()
 /// Test verifies that non existent Axis results in panic
 #[test]
 #[should_panic]
-fn axis_windows_outofbound()
-{
+fn axis_windows_outofbound() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -205,8 +193,7 @@ fn axis_windows_outofbound()
 /// Test verifies that zero sizes results in panic
 #[test]
 #[should_panic]
-fn axis_windows_zero_size()
-{
+fn axis_windows_zero_size() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -215,8 +202,7 @@ fn axis_windows_zero_size()
 
 /// Test verifies that over sized windows yield nothing
 #[test]
-fn axis_windows_oversized()
-{
+fn axis_windows_oversized() {
     let a = Array::from_iter(10..37)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -226,8 +212,7 @@ fn axis_windows_oversized()
 
 /// Simple test for iterating 1d-arrays via `Axis Windows`.
 #[test]
-fn test_axis_windows_1d()
-{
+fn test_axis_windows_1d() {
     let a = Array::from_iter(10..20).into_shape_with_order(10).unwrap();
 
     itertools::assert_equal(a.axis_windows(Axis(0), 5), vec![
@@ -242,8 +227,7 @@ fn test_axis_windows_1d()
 
 /// Simple test for iterating 2d-arrays via `Axis Windows`.
 #[test]
-fn test_axis_windows_2d()
-{
+fn test_axis_windows_2d() {
     let a = Array::from_iter(10..30)
         .into_shape_with_order((5, 4))
         .unwrap();
@@ -258,8 +242,7 @@ fn test_axis_windows_2d()
 
 /// Simple test for iterating 3d-arrays via `Axis Windows`.
 #[test]
-fn test_axis_windows_3d()
-{
+fn test_axis_windows_3d() {
     let a = Array::from_iter(0..27)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -279,8 +262,7 @@ fn test_axis_windows_3d()
 }
 
 #[test]
-fn test_window_neg_stride()
-{
+fn test_window_neg_stride() {
     let array = Array::from_iter(1..10)
         .into_shape_with_order((3, 3))
         .unwrap();
@@ -310,8 +292,7 @@ fn test_window_neg_stride()
 }
 
 #[test]
-fn test_windows_with_stride_on_inverted_axis()
-{
+fn test_windows_with_stride_on_inverted_axis() {
     let mut array = Array::from_iter(1..17)
         .into_shape_with_order((4, 4))
         .unwrap();

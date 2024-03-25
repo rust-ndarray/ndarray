@@ -18,8 +18,7 @@ use crate::{ArrayBase, Data};
 ///
 /// Iterator element type is `D`.
 #[derive(Clone)]
-pub struct IndicesIter<D>
-{
+pub struct IndicesIter<D> {
     dim: D,
     index: Option<D>,
 }
@@ -29,8 +28,7 @@ pub struct IndicesIter<D>
 /// *Note:* prefer higher order methods, arithmetic operations and
 /// non-indexed iteration before using indices.
 pub fn indices<E>(shape: E) -> Indices<E::Dim>
-where E: IntoDimension
-{
+where E: IntoDimension {
     let dim = shape.into_dimension();
     Indices {
         start: E::Dim::zeros(dim.ndim()),
@@ -55,8 +53,7 @@ where D: Dimension
 {
     type Item = D::Pattern;
     #[inline]
-    fn next(&mut self) -> Option<Self::Item>
-    {
+    fn next(&mut self) -> Option<Self::Item> {
         let index = match self.index {
             None => return None,
             Some(ref ix) => ix.clone(),
@@ -65,8 +62,7 @@ where D: Dimension
         Some(index.into_pattern())
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>)
-    {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         let l = match self.index {
             None => 0,
             Some(ref ix) => {
@@ -84,8 +80,7 @@ where D: Dimension
     }
 
     fn fold<B, F>(self, init: B, mut f: F) -> B
-    where F: FnMut(B, D::Pattern) -> B
-    {
+    where F: FnMut(B, D::Pattern) -> B {
         let IndicesIter { mut index, dim } = self;
         let ndim = dim.ndim();
         if ndim == 0 {
@@ -116,8 +111,7 @@ where D: Dimension
 {
     type Item = D::Pattern;
     type IntoIter = IndicesIter<D>;
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         let sz = self.dim.size();
         let index = if sz != 0 { Some(self.start) } else { None };
         IndicesIter { index, dim: self.dim }
@@ -136,8 +130,7 @@ where D: Dimension
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct IndexPtr<D>
-{
+pub struct IndexPtr<D> {
     index: D,
 }
 
@@ -147,8 +140,7 @@ where D: Dimension + Copy
     // stride: The axis to increment
     type Stride = usize;
 
-    unsafe fn stride_offset(mut self, stride: Self::Stride, index: usize) -> Self
-    {
+    unsafe fn stride_offset(mut self, stride: Self::Stride, index: usize) -> Self {
         self.index[stride] += index;
         self
     }
@@ -169,8 +161,7 @@ where D: Dimension + Copy
 // [0, 0, 0].stride_offset(1, 10) => [0, 10, 0]  axis 1 is incremented by 10.
 //
 // .as_ref() converts the Ptr value to an Item. For example [0, 10, 0] => (0, 10, 0)
-impl<D: Dimension + Copy> NdProducer for Indices<D>
-{
+impl<D: Dimension + Copy> NdProducer for Indices<D> {
     type Item = D::Pattern;
     type Dim = D;
     type Ptr = IndexPtr<D>;
@@ -178,23 +169,19 @@ impl<D: Dimension + Copy> NdProducer for Indices<D>
 
     private_impl! {}
 
-    fn raw_dim(&self) -> Self::Dim
-    {
+    fn raw_dim(&self) -> Self::Dim {
         self.dim
     }
 
-    fn equal_dim(&self, dim: &Self::Dim) -> bool
-    {
+    fn equal_dim(&self, dim: &Self::Dim) -> bool {
         self.dim.equal(dim)
     }
 
-    fn as_ptr(&self) -> Self::Ptr
-    {
+    fn as_ptr(&self) -> Self::Ptr {
         IndexPtr { index: self.start }
     }
 
-    fn layout(&self) -> Layout
-    {
+    fn layout(&self) -> Layout {
         if self.dim.ndim() <= 1 {
             Layout::one_dimensional()
         } else {
@@ -202,31 +189,26 @@ impl<D: Dimension + Copy> NdProducer for Indices<D>
         }
     }
 
-    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item
-    {
+    unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
         ptr.index.into_pattern()
     }
 
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr
-    {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
         let mut index = *i;
         index += &self.start;
         IndexPtr { index }
     }
 
-    fn stride_of(&self, axis: Axis) -> Self::Stride
-    {
+    fn stride_of(&self, axis: Axis) -> Self::Stride {
         axis.index()
     }
 
     #[inline(always)]
-    fn contiguous_stride(&self) -> Self::Stride
-    {
+    fn contiguous_stride(&self) -> Self::Stride {
         0
     }
 
-    fn split_at(self, axis: Axis, index: usize) -> (Self, Self)
-    {
+    fn split_at(self, axis: Axis, index: usize) -> (Self, Self) {
         let start_a = self.start;
         let mut start_b = start_a;
         let (a, b) = self.dim.split_at(axis, index);
@@ -239,16 +221,14 @@ impl<D: Dimension + Copy> NdProducer for Indices<D>
 ///
 /// Iterator element type is `D`.
 #[derive(Clone)]
-pub struct IndicesIterF<D>
-{
+pub struct IndicesIterF<D> {
     dim: D,
     index: D,
     has_remaining: bool,
 }
 
 pub fn indices_iter_f<E>(shape: E) -> IndicesIterF<E::Dim>
-where E: IntoDimension
-{
+where E: IntoDimension {
     let dim = shape.into_dimension();
     let zero = E::Dim::zeros(dim.ndim());
     IndicesIterF {
@@ -263,8 +243,7 @@ where D: Dimension
 {
     type Item = D::Pattern;
     #[inline]
-    fn next(&mut self) -> Option<Self::Item>
-    {
+    fn next(&mut self) -> Option<Self::Item> {
         if !self.has_remaining {
             None
         } else {
@@ -274,8 +253,7 @@ where D: Dimension
         }
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>)
-    {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         if !self.has_remaining {
             return (0, Some(0));
         }
@@ -294,14 +272,12 @@ where D: Dimension
 impl<D> ExactSizeIterator for IndicesIterF<D> where D: Dimension {}
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::indices;
     use super::indices_iter_f;
 
     #[test]
-    fn test_indices_iter_c_size_hint()
-    {
+    fn test_indices_iter_c_size_hint() {
         let dim = (3, 4);
         let mut it = indices(dim).into_iter();
         let mut len = dim.0 * dim.1;
@@ -314,8 +290,7 @@ mod tests
     }
 
     #[test]
-    fn test_indices_iter_c_fold()
-    {
+    fn test_indices_iter_c_fold() {
         macro_rules! run_test {
             ($dim:expr) => {
                 for num_consume in 0..3 {
@@ -343,8 +318,7 @@ mod tests
     }
 
     #[test]
-    fn test_indices_iter_f_size_hint()
-    {
+    fn test_indices_iter_f_size_hint() {
         let dim = (3, 4);
         let mut it = indices_iter_f(dim);
         let mut len = dim.0 * dim.1;

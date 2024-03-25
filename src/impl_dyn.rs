@@ -29,8 +29,7 @@ where S: Data<Elem = A>
     /// assert_eq!(a.shape(), &[2, 1, 3]);
     /// ```
     #[track_caller]
-    pub fn insert_axis_inplace(&mut self, axis: Axis)
-    {
+    pub fn insert_axis_inplace(&mut self, axis: Axis) {
         assert!(axis.index() <= self.ndim());
         self.dim = self.dim.insert_axis(axis);
         self.strides = self.strides.insert_axis(axis);
@@ -52,8 +51,7 @@ where S: Data<Elem = A>
     /// assert_eq!(a.shape(), &[2]);
     /// ```
     #[track_caller]
-    pub fn index_axis_inplace(&mut self, axis: Axis, index: usize)
-    {
+    pub fn index_axis_inplace(&mut self, axis: Axis, index: usize) {
         self.collapse_axis(axis, index);
         self.dim = self.dim.remove_axis(axis);
         self.strides = self.strides.remove_axis(axis);

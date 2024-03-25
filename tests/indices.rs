@@ -3,8 +3,7 @@ use ndarray::prelude::*;
 use ndarray::Order;
 
 #[test]
-fn test_ixdyn_index_iterate()
-{
+fn test_ixdyn_index_iterate() {
     for &order in &[Order::C, Order::F] {
         let mut a = Array::zeros((2, 3, 4).set_f(order.is_column_major()));
         let dim = a.shape().to_vec();

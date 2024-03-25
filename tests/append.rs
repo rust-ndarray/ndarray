@@ -2,8 +2,7 @@ use ndarray::prelude::*;
 use ndarray::{ErrorKind, ShapeError};
 
 #[test]
-fn push_row()
-{
+fn push_row() {
     let mut a = Array::zeros((0, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
     a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();
@@ -25,8 +24,7 @@ fn push_row()
 }
 
 #[test]
-fn push_row_wrong_layout()
-{
+fn push_row_wrong_layout() {
     let mut a = Array::zeros((0, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
     a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();
@@ -58,8 +56,7 @@ fn push_row_wrong_layout()
 }
 
 #[test]
-fn push_row_neg_stride_1()
-{
+fn push_row_neg_stride_1() {
     let mut a = Array::zeros((0, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
     a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();
@@ -102,8 +99,7 @@ fn push_row_neg_stride_1()
 }
 
 #[test]
-fn push_row_neg_stride_2()
-{
+fn push_row_neg_stride_2() {
     let mut a = Array::zeros((0, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
     a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();
@@ -146,8 +142,7 @@ fn push_row_neg_stride_2()
 }
 
 #[test]
-fn push_row_error()
-{
+fn push_row_error() {
     let mut a = Array::zeros((3, 4));
 
     assert_eq!(a.push_row(aview1(&[1.])),
@@ -165,8 +160,7 @@ fn push_row_error()
 }
 
 #[test]
-fn push_row_existing()
-{
+fn push_row_existing() {
     let mut a = Array::zeros((1, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
     a.push_row(aview1(&[4., 5., 6., 7.])).unwrap();
@@ -190,8 +184,7 @@ fn push_row_existing()
 }
 
 #[test]
-fn push_row_col_len_1()
-{
+fn push_row_col_len_1() {
     // Test appending 1 row and then cols from shape 1 x 1
     let mut a = Array::zeros((1, 1));
     a.push_row(aview1(&[1.])).unwrap(); // shape 2 x 1
@@ -208,8 +201,7 @@ fn push_row_col_len_1()
 }
 
 #[test]
-fn push_column()
-{
+fn push_column() {
     let mut a = Array::zeros((4, 0));
     a.push_column(aview1(&[0., 1., 2., 3.])).unwrap();
     a.push_column(aview1(&[4., 5., 6., 7.])).unwrap();
@@ -221,8 +213,7 @@ fn push_column()
 }
 
 #[test]
-fn append_array1()
-{
+fn append_array1() {
     let mut a = Array::zeros((0, 4));
     a.append(Axis(0), aview2(&[[0., 1., 2., 3.]])).unwrap();
     println!("{:?}", a);
@@ -246,8 +237,7 @@ fn append_array1()
 }
 
 #[test]
-fn append_array_3d()
-{
+fn append_array_3d() {
     let mut a = Array::zeros((0, 2, 2));
     a.append(Axis(0), array![[[0, 1], [2, 3]]].view()).unwrap();
     println!("{:?}", a);
@@ -288,8 +278,7 @@ fn append_array_3d()
 }
 
 #[test]
-fn test_append_2d()
-{
+fn test_append_2d() {
     // create an empty array and append
     let mut a = Array::zeros((0, 4));
     let ones = ArrayView::from(&[1.; 12])
@@ -325,8 +314,7 @@ fn test_append_2d()
 }
 
 #[test]
-fn test_append_middle_axis()
-{
+fn test_append_middle_axis() {
     // ensure we can append to Axis(1) by letting it become outermost
     let mut a = Array::<i32, _>::zeros((3, 0, 2));
     a.append(
@@ -371,8 +359,7 @@ fn test_append_middle_axis()
 }
 
 #[test]
-fn test_append_zero_size()
-{
+fn test_append_zero_size() {
     {
         let mut a = Array::<i32, _>::zeros((0, 0));
         a.append(Axis(0), aview2(&[[]])).unwrap();
@@ -393,8 +380,7 @@ fn test_append_zero_size()
 }
 
 #[test]
-fn push_row_neg_stride_3()
-{
+fn push_row_neg_stride_3() {
     let mut a = Array::zeros((0, 4));
     a.push_row(aview1(&[0., 1., 2., 3.])).unwrap();
     a.invert_axis(Axis(1));
@@ -405,8 +391,7 @@ fn push_row_neg_stride_3()
 }
 
 #[test]
-fn push_row_ignore_strides_length_one_axes()
-{
+fn push_row_ignore_strides_length_one_axes() {
     let strides = &[0, 1, 10, 20];
     for invert in &[vec![], vec![0], vec![1], vec![0, 1]] {
         for &stride0 in strides {
@@ -426,23 +411,20 @@ fn push_row_ignore_strides_length_one_axes()
 
 #[test]
 #[should_panic(expected = "IncompatibleShape")]
-fn zero_dimensional_error1()
-{
+fn zero_dimensional_error1() {
     let mut a = Array::zeros(()).into_dyn();
     a.append(Axis(0), arr0(0).into_dyn().view()).unwrap();
 }
 
 #[test]
 #[should_panic(expected = "IncompatibleShape")]
-fn zero_dimensional_error2()
-{
+fn zero_dimensional_error2() {
     let mut a = Array::zeros(()).into_dyn();
     a.push(Axis(0), arr0(0).into_dyn().view()).unwrap();
 }
 
 #[test]
-fn zero_dimensional_ok()
-{
+fn zero_dimensional_ok() {
     let mut a = Array::zeros(0);
     let one = aview0(&1);
     let two = aview0(&2);

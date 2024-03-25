@@ -45,14 +45,12 @@ where D: Dimension
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
     pub fn from_shape<Sh>(shape: Sh, xs: &'a [A]) -> Result<Self, ShapeError>
-    where Sh: Into<StrideShape<D>>
-    {
+    where Sh: Into<StrideShape<D>> {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_impl(shape.into(), xs)
     }
 
-    fn from_shape_impl(shape: StrideShape<D>, xs: &'a [A]) -> Result<Self, ShapeError>
-    {
+    fn from_shape_impl(shape: StrideShape<D>, xs: &'a [A]) -> Result<Self, ShapeError> {
         let dim = shape.dim;
         dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
         let strides = shape.strides.strides_for_dim(&dim);
@@ -111,8 +109,7 @@ where D: Dimension
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
-    where Sh: Into<StrideShape<D>>
-    {
+    where Sh: Into<StrideShape<D>> {
         RawArrayView::from_shape_ptr(shape, ptr).deref_into_view()
     }
 }
@@ -147,14 +144,12 @@ where D: Dimension
     /// assert!(a.strides() == &[1, 4, 2]);
     /// ```
     pub fn from_shape<Sh>(shape: Sh, xs: &'a mut [A]) -> Result<Self, ShapeError>
-    where Sh: Into<StrideShape<D>>
-    {
+    where Sh: Into<StrideShape<D>> {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_impl(shape.into(), xs)
     }
 
-    fn from_shape_impl(shape: StrideShape<D>, xs: &'a mut [A]) -> Result<Self, ShapeError>
-    {
+    fn from_shape_impl(shape: StrideShape<D>, xs: &'a mut [A]) -> Result<Self, ShapeError> {
         let dim = shape.dim;
         dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
         let strides = shape.strides.strides_for_dim(&dim);
@@ -213,16 +208,14 @@ where D: Dimension
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
-    where Sh: Into<StrideShape<D>>
-    {
+    where Sh: Into<StrideShape<D>> {
         RawArrayViewMut::from_shape_ptr(shape, ptr).deref_into_view_mut()
     }
 
     /// Convert the view into an `ArrayViewMut<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
     pub fn reborrow<'b>(self) -> ArrayViewMut<'b, A, D>
-    where 'a: 'b
-    {
+    where 'a: 'b {
         unsafe { ArrayViewMut::new(self.ptr, self.dim, self.strides) }
     }
 }
@@ -235,8 +228,7 @@ where D: Dimension
     ///
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
     #[inline(always)]
-    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self
-    {
+    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
         if cfg!(debug_assertions) {
             assert!(is_aligned(ptr.as_ptr()), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
@@ -246,8 +238,7 @@ where D: Dimension
 
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
     #[inline]
-    pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self
-    {
+    pub(crate) unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self {
         Self::new(nonnull_debug_checked_from_ptr(ptr as *mut A), dim, strides)
     }
 }
@@ -259,8 +250,7 @@ where D: Dimension
     ///
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
     #[inline(always)]
-    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self
-    {
+    pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self {
         if cfg!(debug_assertions) {
             assert!(is_aligned(ptr.as_ptr()), "The pointer must be aligned.");
             dimension::max_abs_offset_check_overflow::<A, _>(&dim, &strides).unwrap();
@@ -272,8 +262,7 @@ where D: Dimension
     ///
     /// Unsafe because: `ptr` must be valid for the given dimension and strides.
     #[inline(always)]
-    pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self
-    {
+    pub(crate) unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self {
         Self::new(nonnull_debug_checked_from_ptr(ptr), dim, strides)
     }
 }

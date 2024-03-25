@@ -11,8 +11,7 @@ use itertools::{assert_equal, cloned};
 use std::mem::swap;
 
 #[test]
-fn test_azip1()
-{
+fn test_azip1() {
     let mut a = Array::zeros(62);
     let mut x = 0;
     azip!((a in &mut a) { *a = x; x += 1; });
@@ -20,8 +19,7 @@ fn test_azip1()
 }
 
 #[test]
-fn test_azip2()
-{
+fn test_azip2() {
     let mut a = Array::zeros((5, 7));
     let b = Array::from_shape_fn(a.dim(), |(i, j)| 1. / (i + 2 * j) as f32);
     azip!((a in &mut a, &b in &b) *a = b);
@@ -29,8 +27,7 @@ fn test_azip2()
 }
 
 #[test]
-fn test_azip2_1()
-{
+fn test_azip2_1() {
     let mut a = Array::zeros((5, 7));
     let b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j) as f32);
     let b = b.slice(s![..;-1, 3..]);
@@ -39,8 +36,7 @@ fn test_azip2_1()
 }
 
 #[test]
-fn test_azip2_3()
-{
+fn test_azip2_3() {
     let mut b = Array::from_shape_fn((5, 10), |(i, j)| 1. / (i + 2 * j) as f32);
     let mut c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
     let a = b.clone();
@@ -51,8 +47,7 @@ fn test_azip2_3()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_zip_collect()
-{
+fn test_zip_collect() {
     use approx::assert_abs_diff_eq;
 
     // test Zip::map_collect and that it preserves c/f layout.
@@ -80,8 +75,7 @@ fn test_zip_collect()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_zip_assign_into()
-{
+fn test_zip_assign_into() {
     use approx::assert_abs_diff_eq;
 
     let mut a = Array::<f32, _>::zeros((5, 10));
@@ -95,8 +89,7 @@ fn test_zip_assign_into()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_zip_assign_into_cell()
-{
+fn test_zip_assign_into_cell() {
     use approx::assert_abs_diff_eq;
     use std::cell::Cell;
 
@@ -111,40 +104,33 @@ fn test_zip_assign_into_cell()
 }
 
 #[test]
-fn test_zip_collect_drop()
-{
+fn test_zip_collect_drop() {
     use std::cell::RefCell;
     use std::panic;
 
     struct Recorddrop<'a>((usize, usize), &'a RefCell<Vec<(usize, usize)>>);
 
-    impl<'a> Drop for Recorddrop<'a>
-    {
-        fn drop(&mut self)
-        {
+    impl<'a> Drop for Recorddrop<'a> {
+        fn drop(&mut self) {
             self.1.borrow_mut().push(self.0);
         }
     }
 
     #[derive(Copy, Clone)]
-    enum Config
-    {
+    enum Config {
         CC,
         CF,
         FF,
     }
 
-    impl Config
-    {
-        fn a_is_f(self) -> bool
-        {
+    impl Config {
+        fn a_is_f(self) -> bool {
             match self {
                 Config::CC | Config::CF => false,
                 _ => true,
             }
         }
-        fn b_is_f(self) -> bool
-        {
+        fn b_is_f(self) -> bool {
             match self {
                 Config::CC => false,
                 _ => true,
@@ -190,8 +176,7 @@ fn test_zip_collect_drop()
 }
 
 #[test]
-fn test_azip_syntax_trailing_comma()
-{
+fn test_azip_syntax_trailing_comma() {
     let mut b = Array::<i32, _>::zeros((5, 5));
     let mut c = Array::<i32, _>::ones((5, 5));
     let a = b.clone();
@@ -202,8 +187,7 @@ fn test_azip_syntax_trailing_comma()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_azip2_sum()
-{
+fn test_azip2_sum() {
     use approx::assert_abs_diff_eq;
 
     let c = Array::from_shape_fn((5, 10), |(i, j)| f32::exp((i + j) as f32));
@@ -217,8 +201,7 @@ fn test_azip2_sum()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_azip3_slices()
-{
+fn test_azip3_slices() {
     use approx::assert_abs_diff_eq;
 
     let mut a = [0.; 32];
@@ -238,8 +221,7 @@ fn test_azip3_slices()
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_broadcast()
-{
+fn test_broadcast() {
     use approx::assert_abs_diff_eq;
 
     let n = 16;
@@ -264,8 +246,7 @@ fn test_broadcast()
 
 #[should_panic]
 #[test]
-fn test_zip_dim_mismatch_1()
-{
+fn test_zip_dim_mismatch_1() {
     let mut a = Array::zeros((5, 7));
     let mut d = a.raw_dim();
     d[0] += 1;
@@ -277,8 +258,7 @@ fn test_zip_dim_mismatch_1()
 // Zip::from(A).and(B)
 // where A is F-contiguous and B contiguous but neither F nor C contiguous.
 #[test]
-fn test_contiguous_but_not_c_or_f()
-{
+fn test_contiguous_but_not_c_or_f() {
     let a = Array::from_iter(0..27)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -304,8 +284,7 @@ fn test_contiguous_but_not_c_or_f()
 }
 
 #[test]
-fn test_clone()
-{
+fn test_clone() {
     let a = Array::from_iter(0..27)
         .into_shape_with_order((3, 3, 3))
         .unwrap();
@@ -324,8 +303,7 @@ fn test_clone()
 }
 
 #[test]
-fn test_indices_0()
-{
+fn test_indices_0() {
     let a1 = arr0(3);
 
     let mut count = 0;
@@ -338,8 +316,7 @@ fn test_indices_0()
 }
 
 #[test]
-fn test_indices_1()
-{
+fn test_indices_1() {
     let mut a1 = Array::default(12);
     for (i, elt) in a1.indexed_iter_mut() {
         *elt = i;
@@ -369,8 +346,7 @@ fn test_indices_1()
 }
 
 #[test]
-fn test_indices_2()
-{
+fn test_indices_2() {
     let mut a1 = Array::default((10, 12));
     for (i, elt) in a1.indexed_iter_mut() {
         *elt = i;
@@ -400,8 +376,7 @@ fn test_indices_2()
 }
 
 #[test]
-fn test_indices_3()
-{
+fn test_indices_3() {
     let mut a1 = Array::default((4, 5, 6));
     for (i, elt) in a1.indexed_iter_mut() {
         *elt = i;
@@ -431,8 +406,7 @@ fn test_indices_3()
 }
 
 #[test]
-fn test_indices_split_1()
-{
+fn test_indices_split_1() {
     for m in (0..4).chain(10..12) {
         for n in (0..4).chain(10..12) {
             let a1 = Array::<f64, _>::default((m, n));
@@ -464,8 +438,7 @@ fn test_indices_split_1()
 }
 
 #[test]
-fn test_zip_all()
-{
+fn test_zip_all() {
     let a = Array::<f32, _>::zeros(62);
     let b = Array::<f32, _>::ones(62);
     let mut c = Array::<f32, _>::ones(62);
@@ -476,8 +449,7 @@ fn test_zip_all()
 }
 
 #[test]
-fn test_zip_all_empty_array()
-{
+fn test_zip_all_empty_array() {
     let a = Array::<f32, _>::zeros(0);
     let b = Array::<f32, _>::ones(0);
     assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| true));

@@ -13,22 +13,18 @@
 #[must_use]
 pub(crate) struct AbortIfPanic(pub(crate) &'static &'static str);
 
-impl AbortIfPanic
-{
+impl AbortIfPanic {
     /// Defuse the AbortIfPanic guard. This *must* be done when finished.
     #[inline]
-    pub(crate) fn defuse(self)
-    {
+    pub(crate) fn defuse(self) {
         std::mem::forget(self);
     }
 }
 
-impl Drop for AbortIfPanic
-{
+impl Drop for AbortIfPanic {
     // The compiler should be able to remove this, if it can see through that there
     // is no panic in the code section.
-    fn drop(&mut self)
-    {
+    fn drop(&mut self) {
         #[cfg(feature = "std")]
         {
             eprintln!("ndarray: panic in no-panic section, aborting: {}", self.0);

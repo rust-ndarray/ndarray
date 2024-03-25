@@ -1,3 +1,4 @@
+#![feature(non_null_convenience)]
 // Copyright 2014-2020 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -208,11 +209,11 @@ mod dimension;
 
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 
+pub use crate::data_repr::Device;
 pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
-mod imp_prelude
-{
+mod imp_prelude {
     pub use crate::dimension::DimensionExt;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
@@ -1129,7 +1130,7 @@ pub type Ixs = isize;
 /// }
 /// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
 /// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
-/// # Ok::<(), ndarray::ShapeError>(())
+/// // Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// If neither of these options works for you, and you really need to convert
@@ -1153,7 +1154,7 @@ pub type Ixs = isize;
 ///     [[1, 2, 3], [4, 5, 6]],
 ///     [[7, 8, 9], [10, 11, 12]],
 /// ]);
-/// # Ok::<(), ndarray::ShapeError>(())
+/// // Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// Note that this implementation assumes that the nested `Vec`s are all the
@@ -1436,10 +1437,8 @@ pub use data_repr::OwnedRepr;
 #[derive(Debug)]
 pub struct OwnedArcRepr<A>(Arc<OwnedRepr<A>>);
 
-impl<A> Clone for OwnedArcRepr<A>
-{
-    fn clone(&self) -> Self
-    {
+impl<A> Clone for OwnedArcRepr<A> {
+    fn clone(&self) -> Self {
         OwnedArcRepr(self.0.clone())
     }
 }
@@ -1450,16 +1449,13 @@ impl<A> Clone for OwnedArcRepr<A>
 /// [`RawArrayView`] / [`RawArrayViewMut`] for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the mutability and element type.
-pub struct RawViewRepr<A>
-{
+pub struct RawViewRepr<A> {
     ptr: PhantomData<A>,
 }
 
-impl<A> RawViewRepr<A>
-{
+impl<A> RawViewRepr<A> {
     #[inline(always)]
-    const fn new() -> Self
-    {
+    const fn new() -> Self {
         RawViewRepr { ptr: PhantomData }
     }
 }
@@ -1470,16 +1466,13 @@ impl<A> RawViewRepr<A>
 /// [`ArrayView`] / [`ArrayViewMut`] for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the lifetime parameter.
-pub struct ViewRepr<A>
-{
+pub struct ViewRepr<A> {
     life: PhantomData<A>,
 }
 
-impl<A> ViewRepr<A>
-{
+impl<A> ViewRepr<A> {
     #[inline(always)]
-    const fn new() -> Self
-    {
+    const fn new() -> Self {
         ViewRepr { life: PhantomData }
     }
 }
@@ -1488,19 +1481,16 @@ impl<A> ViewRepr<A>
 ///
 /// *Don't use this type directly—use the type alias
 /// [`CowArray`] for the array type!*
-pub enum CowRepr<'a, A>
-{
+pub enum CowRepr<'a, A> {
     /// Borrowed data.
     View(ViewRepr<&'a A>),
     /// Owned data.
     Owned(OwnedRepr<A>),
 }
 
-impl<'a, A> CowRepr<'a, A>
-{
+impl<'a, A> CowRepr<'a, A> {
     /// Returns `true` iff the data is the `View` variant.
-    pub fn is_view(&self) -> bool
-    {
+    pub fn is_view(&self) -> bool {
         match self {
             CowRepr::View(_) => true,
             CowRepr::Owned(_) => false,
@@ -1508,8 +1498,7 @@ impl<'a, A> CowRepr<'a, A>
     }
 
     /// Returns `true` iff the data is the `Owned` variant.
-    pub fn is_owned(&self) -> bool
-    {
+    pub fn is_owned(&self) -> bool {
         match self {
             CowRepr::View(_) => false,
             CowRepr::Owned(_) => true,
@@ -1537,8 +1526,7 @@ where
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
-    where E: Dimension
-    {
+    where E: Dimension {
         #[cold]
         #[inline(never)]
         fn broadcast_panic<D, E>(from: &D, to: &E) -> !
@@ -1563,8 +1551,7 @@ where
     // (Checked in debug assertions).
     #[inline]
     fn broadcast_assume<E>(&self, dim: E) -> ArrayView<'_, A, E>
-    where E: Dimension
-    {
+    where E: Dimension {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
         let ptr = self.ptr;
@@ -1574,8 +1561,7 @@ where
     }
 
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
-    {
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
@@ -1613,7 +1599,13 @@ mod impl_raw_views;
 mod impl_cow;
 
 /// Returns `true` if the pointer is aligned.
-pub(crate) fn is_aligned<T>(ptr: *const T) -> bool
-{
+pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
+}
+
+pub fn configure() {
+    #[cfg(feature = "opencl")]
+    unsafe {
+        hasty_::opencl::configure_opencl();
+    }
 }

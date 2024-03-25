@@ -22,8 +22,7 @@ where
     ///
     /// Elements are visited in arbitrary order.
     pub fn par_map_inplace<F>(&mut self, f: F)
-    where F: Fn(&mut A) + Sync + Send
-    {
+    where F: Fn(&mut A) + Sync + Send {
         self.view_mut().into_par_iter().for_each(f)
     }
 

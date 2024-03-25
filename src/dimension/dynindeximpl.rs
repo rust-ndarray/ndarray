@@ -10,17 +10,14 @@ const CAP: usize = 4;
 
 /// T is usize or isize
 #[derive(Debug)]
-enum IxDynRepr<T>
-{
+enum IxDynRepr<T> {
     Inline(u32, [T; CAP]),
     Alloc(Box<[T]>),
 }
 
-impl<T> Deref for IxDynRepr<T>
-{
+impl<T> Deref for IxDynRepr<T> {
     type Target = [T];
-    fn deref(&self) -> &[T]
-    {
+    fn deref(&self) -> &[T] {
         match *self {
             IxDynRepr::Inline(len, ref ar) => {
                 debug_assert!(len as usize <= ar.len());
@@ -31,10 +28,8 @@ impl<T> Deref for IxDynRepr<T>
     }
 }
 
-impl<T> DerefMut for IxDynRepr<T>
-{
-    fn deref_mut(&mut self) -> &mut [T]
-    {
+impl<T> DerefMut for IxDynRepr<T> {
+    fn deref_mut(&mut self) -> &mut [T] {
         match *self {
             IxDynRepr::Inline(len, ref mut ar) => {
                 debug_assert!(len as usize <= ar.len());
@@ -46,20 +41,16 @@ impl<T> DerefMut for IxDynRepr<T>
 }
 
 /// The default is equivalent to `Self::from(&[0])`.
-impl Default for IxDynRepr<Ix>
-{
-    fn default() -> Self
-    {
+impl Default for IxDynRepr<Ix> {
+    fn default() -> Self {
         Self::copy_from(&[0])
     }
 }
 
 use num_traits::Zero;
 
-impl<T: Copy + Zero> IxDynRepr<T>
-{
-    pub fn copy_from(x: &[T]) -> Self
-    {
+impl<T: Copy + Zero> IxDynRepr<T> {
+    pub fn copy_from(x: &[T]) -> Self {
         if x.len() <= CAP {
             let mut arr = [T::zero(); CAP];
             arr[..x.len()].copy_from_slice(x);
@@ -70,11 +61,9 @@ impl<T: Copy + Zero> IxDynRepr<T>
     }
 }
 
-impl<T: Copy + Zero> IxDynRepr<T>
-{
+impl<T: Copy + Zero> IxDynRepr<T> {
     // make an Inline or Alloc version as appropriate
-    fn from_vec_auto(v: Vec<T>) -> Self
-    {
+    fn from_vec_auto(v: Vec<T>) -> Self {
         if v.len() <= CAP {
             Self::copy_from(&v)
         } else {
@@ -83,23 +72,18 @@ impl<T: Copy + Zero> IxDynRepr<T>
     }
 }
 
-impl<T: Copy> IxDynRepr<T>
-{
-    fn from_vec(v: Vec<T>) -> Self
-    {
+impl<T: Copy> IxDynRepr<T> {
+    fn from_vec(v: Vec<T>) -> Self {
         IxDynRepr::Alloc(v.into_boxed_slice())
     }
 
-    fn from(x: &[T]) -> Self
-    {
+    fn from(x: &[T]) -> Self {
         Self::from_vec(x.to_vec())
     }
 }
 
-impl<T: Copy> Clone for IxDynRepr<T>
-{
-    fn clone(&self) -> Self
-    {
+impl<T: Copy> Clone for IxDynRepr<T> {
+    fn clone(&self) -> Self {
         match *self {
             IxDynRepr::Inline(len, arr) => IxDynRepr::Inline(len, arr),
             _ => Self::from(&self[..]),
@@ -109,10 +93,8 @@ impl<T: Copy> Clone for IxDynRepr<T>
 
 impl<T: Eq> Eq for IxDynRepr<T> {}
 
-impl<T: PartialEq> PartialEq for IxDynRepr<T>
-{
-    fn eq(&self, rhs: &Self) -> bool
-    {
+impl<T: PartialEq> PartialEq for IxDynRepr<T> {
+    fn eq(&self, rhs: &Self) -> bool {
         match (self, rhs) {
             (&IxDynRepr::Inline(slen, ref sarr), &IxDynRepr::Inline(rlen, ref rarr)) =>
                 slen == rlen
@@ -124,10 +106,8 @@ impl<T: PartialEq> PartialEq for IxDynRepr<T>
     }
 }
 
-impl<T: Hash> Hash for IxDynRepr<T>
-{
-    fn hash<H: Hasher>(&self, state: &mut H)
-    {
+impl<T: Hash> Hash for IxDynRepr<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self[..], state)
     }
 }
@@ -140,10 +120,8 @@ impl<T: Hash> Hash for IxDynRepr<T>
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct IxDynImpl(IxDynRepr<Ix>);
 
-impl IxDynImpl
-{
-    pub(crate) fn insert(&self, i: usize) -> Self
-    {
+impl IxDynImpl {
+    pub(crate) fn insert(&self, i: usize) -> Self {
         let len = self.len();
         debug_assert!(i <= len);
         IxDynImpl(if len < CAP {
@@ -160,8 +138,7 @@ impl IxDynImpl
         })
     }
 
-    fn remove(&self, i: usize) -> Self
-    {
+    fn remove(&self, i: usize) -> Self {
         IxDynImpl(match self.0 {
             IxDynRepr::Inline(0, _) => IxDynRepr::Inline(0, [0; CAP]),
             IxDynRepr::Inline(1, _) => IxDynRepr::Inline(0, [0; CAP]),
@@ -182,20 +159,16 @@ impl IxDynImpl
     }
 }
 
-impl<'a> From<&'a [Ix]> for IxDynImpl
-{
+impl<'a> From<&'a [Ix]> for IxDynImpl {
     #[inline]
-    fn from(ix: &'a [Ix]) -> Self
-    {
+    fn from(ix: &'a [Ix]) -> Self {
         IxDynImpl(IxDynRepr::copy_from(ix))
     }
 }
 
-impl From<Vec<Ix>> for IxDynImpl
-{
+impl From<Vec<Ix>> for IxDynImpl {
     #[inline]
-    fn from(ix: Vec<Ix>) -> Self
-    {
+    fn from(ix: Vec<Ix>) -> Self {
         IxDynImpl(IxDynRepr::from_vec_auto(ix))
     }
 }
@@ -204,8 +177,7 @@ impl<J> Index<J> for IxDynImpl
 where [Ix]: Index<J>
 {
     type Output = <[Ix] as Index<J>>::Output;
-    fn index(&self, index: J) -> &Self::Output
-    {
+    fn index(&self, index: J) -> &Self::Output {
         &self.0[index]
     }
 }
@@ -213,57 +185,46 @@ where [Ix]: Index<J>
 impl<J> IndexMut<J> for IxDynImpl
 where [Ix]: IndexMut<J>
 {
-    fn index_mut(&mut self, index: J) -> &mut Self::Output
-    {
+    fn index_mut(&mut self, index: J) -> &mut Self::Output {
         &mut self.0[index]
     }
 }
 
-impl Deref for IxDynImpl
-{
+impl Deref for IxDynImpl {
     type Target = [Ix];
     #[inline]
-    fn deref(&self) -> &[Ix]
-    {
+    fn deref(&self) -> &[Ix] {
         &self.0
     }
 }
 
-impl DerefMut for IxDynImpl
-{
+impl DerefMut for IxDynImpl {
     #[inline]
-    fn deref_mut(&mut self) -> &mut [Ix]
-    {
+    fn deref_mut(&mut self) -> &mut [Ix] {
         &mut self.0
     }
 }
 
-impl<'a> IntoIterator for &'a IxDynImpl
-{
+impl<'a> IntoIterator for &'a IxDynImpl {
     type Item = &'a Ix;
     type IntoIter = <&'a [Ix] as IntoIterator>::IntoIter;
     #[inline]
-    fn into_iter(self) -> Self::IntoIter
-    {
+    fn into_iter(self) -> Self::IntoIter {
         self[..].iter()
     }
 }
 
-impl RemoveAxis for Dim<IxDynImpl>
-{
-    fn remove_axis(&self, axis: Axis) -> Self
-    {
+impl RemoveAxis for Dim<IxDynImpl> {
+    fn remove_axis(&self, axis: Axis) -> Self {
         debug_assert!(axis.index() < self.ndim());
         Dim::new(self.ix().remove(axis.index()))
     }
 }
 
-impl IxDyn
-{
+impl IxDyn {
     /// Create a new dimension value with `n` axes, all zeros
     #[inline]
-    pub fn zeros(n: usize) -> IxDyn
-    {
+    pub fn zeros(n: usize) -> IxDyn {
         const ZEROS: &[usize] = &[0; 4];
         if n <= ZEROS.len() {
             Dim(&ZEROS[..n])

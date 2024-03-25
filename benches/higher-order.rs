@@ -13,22 +13,19 @@ const X: usize = 64;
 const Y: usize = 16;
 
 #[bench]
-fn map_regular(bench: &mut Bencher)
-{
+fn map_regular(bench: &mut Bencher) {
     let a = Array::linspace(0., 127., N)
         .into_shape_with_order((X, Y))
         .unwrap();
     bench.iter(|| a.map(|&x| 2. * x));
 }
 
-pub fn double_array(mut a: ArrayViewMut2<'_, f64>)
-{
+pub fn double_array(mut a: ArrayViewMut2<'_, f64>) {
     a *= 2.0;
 }
 
 #[bench]
-fn map_stride_double_f64(bench: &mut Bencher)
-{
+fn map_stride_double_f64(bench: &mut Bencher) {
     let mut a = Array::linspace(0., 127., N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
@@ -39,8 +36,7 @@ fn map_stride_double_f64(bench: &mut Bencher)
 }
 
 #[bench]
-fn map_stride_f64(bench: &mut Bencher)
-{
+fn map_stride_f64(bench: &mut Bencher) {
     let a = Array::linspace(0., 127., N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
@@ -49,8 +45,7 @@ fn map_stride_f64(bench: &mut Bencher)
 }
 
 #[bench]
-fn map_stride_u32(bench: &mut Bencher)
-{
+fn map_stride_u32(bench: &mut Bencher) {
     let a = Array::linspace(0., 127., N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
@@ -60,8 +55,7 @@ fn map_stride_u32(bench: &mut Bencher)
 }
 
 #[bench]
-fn fold_axis(bench: &mut Bencher)
-{
+fn fold_axis(bench: &mut Bencher) {
     let a = Array::linspace(0., 127., N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
@@ -72,8 +66,7 @@ const MA: usize = 64;
 const MASZ: usize = MA * MA;
 
 #[bench]
-fn map_axis_0(bench: &mut Bencher)
-{
+fn map_axis_0(bench: &mut Bencher) {
     let a = Array::from_iter(0..MASZ as i32)
         .into_shape_with_order([MA, MA])
         .unwrap();
@@ -81,8 +74,7 @@ fn map_axis_0(bench: &mut Bencher)
 }
 
 #[bench]
-fn map_axis_1(bench: &mut Bencher)
-{
+fn map_axis_1(bench: &mut Bencher) {
     let a = Array::from_iter(0..MASZ as i32)
         .into_shape_with_order([MA, MA])
         .unwrap();

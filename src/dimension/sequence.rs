@@ -12,8 +12,7 @@ where D: Dimension
     type Output = usize;
 
     #[inline]
-    fn index(&self, index: usize) -> &usize
-    {
+    fn index(&self, index: usize) -> &usize {
         &self.0[index]
     }
 }
@@ -24,8 +23,7 @@ where D: Dimension
     type Output = usize;
 
     #[inline]
-    fn index(&self, index: usize) -> &usize
-    {
+    fn index(&self, index: usize) -> &usize {
         &self.0[index]
     }
 }
@@ -34,8 +32,7 @@ impl<D> IndexMut<usize> for Forward<&mut D>
 where D: Dimension
 {
     #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut usize
-    {
+    fn index_mut(&mut self, index: usize) -> &mut usize {
         &mut self.0[index]
     }
 }
@@ -46,8 +43,7 @@ where D: Dimension
     type Output = usize;
 
     #[inline]
-    fn index(&self, index: usize) -> &usize
-    {
+    fn index(&self, index: usize) -> &usize {
         &self.0[self.len() - index - 1]
     }
 }
@@ -58,8 +54,7 @@ where D: Dimension
     type Output = usize;
 
     #[inline]
-    fn index(&self, index: usize) -> &usize
-    {
+    fn index(&self, index: usize) -> &usize {
         &self.0[self.len() - index - 1]
     }
 }
@@ -68,16 +63,14 @@ impl<D> IndexMut<usize> for Reverse<&mut D>
 where D: Dimension
 {
     #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut usize
-    {
+    fn index_mut(&mut self, index: usize) -> &mut usize {
         let len = self.len();
         &mut self.0[len - index - 1]
     }
 }
 
 /// Indexable sequence with length
-pub(in crate::dimension) trait Sequence: Index<usize>
-{
+pub(in crate::dimension) trait Sequence: Index<usize> {
     fn len(&self) -> usize;
 }
 
@@ -88,8 +81,7 @@ impl<D> Sequence for Forward<&D>
 where D: Dimension
 {
     #[inline]
-    fn len(&self) -> usize
-    {
+    fn len(&self) -> usize {
         self.0.ndim()
     }
 }
@@ -98,8 +90,7 @@ impl<D> Sequence for Forward<&mut D>
 where D: Dimension
 {
     #[inline]
-    fn len(&self) -> usize
-    {
+    fn len(&self) -> usize {
         self.0.ndim()
     }
 }
@@ -110,8 +101,7 @@ impl<D> Sequence for Reverse<&D>
 where D: Dimension
 {
     #[inline]
-    fn len(&self) -> usize
-    {
+    fn len(&self) -> usize {
         self.0.ndim()
     }
 }
@@ -120,8 +110,7 @@ impl<D> Sequence for Reverse<&mut D>
 where D: Dimension
 {
     #[inline]
-    fn len(&self) -> usize
-    {
+    fn len(&self) -> usize {
         self.0.ndim()
     }
 }

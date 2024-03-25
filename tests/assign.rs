@@ -3,8 +3,7 @@ use ndarray::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
-fn assign()
-{
+fn assign() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
     let b = arr2(&[[1., 3.], [2., 4.]]);
     a.assign(&b);
@@ -29,8 +28,7 @@ fn assign()
 }
 
 #[test]
-fn assign_to()
-{
+fn assign_to() {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
     let b = arr2(&[[0., 3.], [2., 0.]]);
     b.assign_to(&mut a);
@@ -38,8 +36,7 @@ fn assign_to()
 }
 
 #[test]
-fn move_into_copy()
-{
+fn move_into_copy() {
     let a = arr2(&[[1., 2.], [3., 4.]]);
     let acopy = a.clone();
     let mut b = Array::uninit(a.dim());
@@ -56,8 +53,7 @@ fn move_into_copy()
 }
 
 #[test]
-fn move_into_owned()
-{
+fn move_into_owned() {
     // Test various memory layouts and holes while moving String elements.
     for &use_f_order in &[false, true] {
         for &invert_axis in &[0b00, 0b01, 0b10, 0b11] {
@@ -87,8 +83,7 @@ fn move_into_owned()
 }
 
 #[test]
-fn move_into_slicing()
-{
+fn move_into_slicing() {
     // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         for &invert_axis in &[0b00, 0b01, 0b10, 0b11] {
@@ -122,8 +117,7 @@ fn move_into_slicing()
 }
 
 #[test]
-fn move_into_diag()
-{
+fn move_into_diag() {
     // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         let counter = DropCounter::default();
@@ -148,8 +142,7 @@ fn move_into_diag()
 }
 
 #[test]
-fn move_into_0dim()
-{
+fn move_into_0dim() {
     // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         let counter = DropCounter::default();
@@ -176,8 +169,7 @@ fn move_into_0dim()
 }
 
 #[test]
-fn move_into_empty()
-{
+fn move_into_empty() {
     // Count correct number of drops when using move_into_uninit and discontiguous arrays (with holes).
     for &use_f_order in &[false, true] {
         let counter = DropCounter::default();
@@ -203,8 +195,7 @@ fn move_into_empty()
 }
 
 #[test]
-fn move_into()
-{
+fn move_into() {
     // Test various memory layouts and holes while moving String elements with move_into
     for &use_f_order in &[false, true] {
         for &invert_axis in &[0b00, 0b01, 0b10, 0b11] {
@@ -235,34 +226,28 @@ fn move_into()
 /// This counter can create elements, and then count and verify
 /// the number of which have actually been dropped again.
 #[derive(Default)]
-struct DropCounter
-{
+struct DropCounter {
     created: AtomicUsize,
     dropped: AtomicUsize,
 }
 
 struct Element<'a>(&'a AtomicUsize);
 
-impl DropCounter
-{
-    fn created(&self) -> usize
-    {
+impl DropCounter {
+    fn created(&self) -> usize {
         self.created.load(Ordering::Relaxed)
     }
 
-    fn dropped(&self) -> usize
-    {
+    fn dropped(&self) -> usize {
         self.dropped.load(Ordering::Relaxed)
     }
 
-    fn element(&self) -> Element<'_>
-    {
+    fn element(&self) -> Element<'_> {
         self.created.fetch_add(1, Ordering::Relaxed);
         Element(&self.dropped)
     }
 
-    fn assert_drop_count(&self)
-    {
+    fn assert_drop_count(&self) {
         assert_eq!(
             self.created(),
             self.dropped(),
@@ -273,10 +258,8 @@ impl DropCounter
     }
 }
 
-impl<'a> Drop for Element<'a>
-{
-    fn drop(&mut self)
-    {
+impl<'a> Drop for Element<'a> {
+    fn drop(&mut self) {
         self.0.fetch_add(1, Ordering::Relaxed);
     }
 }

@@ -40,14 +40,12 @@ use ndarray::{ArrayBase, Data, DataOwned, Dimension, RawData};
 use quickcheck::{Arbitrary, Gen};
 
 /// `rand`, re-exported for convenience and version-compatibility.
-pub mod rand
-{
+pub mod rand {
     pub use rand::*;
 }
 
 /// `rand-distr`, re-exported for convenience and version-compatibility.
-pub mod rand_distr
-{
+pub mod rand_distr {
     pub use rand_distr::*;
 }
 
@@ -286,18 +284,15 @@ where
 /// [`sample_axis`]: RandomExt::sample_axis
 /// [`sample_axis_using`]: RandomExt::sample_axis_using
 #[derive(Debug, Clone)]
-pub enum SamplingStrategy
-{
+pub enum SamplingStrategy {
     WithReplacement,
     WithoutReplacement,
 }
 
 // `Arbitrary` enables `quickcheck` to generate random `SamplingStrategy` values for testing.
 #[cfg(feature = "quickcheck")]
-impl Arbitrary for SamplingStrategy
-{
-    fn arbitrary(g: &mut Gen) -> Self
-    {
+impl Arbitrary for SamplingStrategy {
+    fn arbitrary(g: &mut Gen) -> Self {
         if bool::arbitrary(g) {
             SamplingStrategy::WithReplacement
         } else {
@@ -306,8 +301,7 @@ impl Arbitrary for SamplingStrategy
     }
 }
 
-fn get_rng() -> SmallRng
-{
+fn get_rng() -> SmallRng {
     SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
 }
 
@@ -334,8 +328,7 @@ pub struct F32<S>(pub S);
 impl<S> Distribution<f32> for F32<S>
 where S: Distribution<f64>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32
-    {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
         self.0.sample(rng) as f32
     }
 }

@@ -17,8 +17,7 @@ use num_complex::Complex32;
 use num_complex::Complex64;
 
 #[test]
-fn mat_vec_product_1d()
-{
+fn mat_vec_product_1d() {
     let a = arr2(&[[1.], [2.]]);
     let b = arr1(&[1., 2.]);
     let ans = arr1(&[5.]);
@@ -26,8 +25,7 @@ fn mat_vec_product_1d()
 }
 
 #[test]
-fn mat_vec_product_1d_broadcast()
-{
+fn mat_vec_product_1d_broadcast() {
     let a = arr2(&[[1.], [2.], [3.]]);
     let b = arr1(&[1.]);
     let b = b.broadcast(3).unwrap();
@@ -36,8 +34,7 @@ fn mat_vec_product_1d_broadcast()
 }
 
 #[test]
-fn mat_vec_product_1d_inverted_axis()
-{
+fn mat_vec_product_1d_inverted_axis() {
     let a = arr2(&[[1.], [2.], [3.]]);
     let mut b = arr1(&[1., 2., 3.]);
     b.invert_axis(Axis(0));
@@ -46,43 +43,37 @@ fn mat_vec_product_1d_inverted_axis()
     assert_eq!(a.t().dot(&b), ans);
 }
 
-fn range_mat(m: Ix, n: Ix) -> Array2<f32>
-{
+fn range_mat(m: Ix, n: Ix) -> Array2<f32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
         .into_shape_with_order((m, n))
         .unwrap()
 }
 
-fn range_mat64(m: Ix, n: Ix) -> Array2<f64>
-{
+fn range_mat64(m: Ix, n: Ix) -> Array2<f64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
         .into_shape_with_order((m, n))
         .unwrap()
 }
 
-fn range_mat_complex(m: Ix, n: Ix) -> Array2<Complex32>
-{
+fn range_mat_complex(m: Ix, n: Ix) -> Array2<Complex32> {
     Array::linspace(0., (m * n) as f32 - 1., m * n)
         .into_shape_with_order((m, n))
         .unwrap()
         .map(|&f| Complex32::new(f, 0.))
 }
 
-fn range_mat_complex64(m: Ix, n: Ix) -> Array2<Complex64>
-{
+fn range_mat_complex64(m: Ix, n: Ix) -> Array2<Complex64> {
     Array::linspace(0., (m * n) as f64 - 1., m * n)
         .into_shape_with_order((m, n))
         .unwrap()
         .map(|&f| Complex64::new(f, 0.))
 }
 
-fn range1_mat64(m: Ix) -> Array1<f64>
-{
+fn range1_mat64(m: Ix) -> Array1<f64> {
     Array::linspace(0., m as f64 - 1., m)
 }
 
-fn range_i32(m: Ix, n: Ix) -> Array2<i32>
-{
+fn range_i32(m: Ix, n: Ix) -> Array2<i32> {
     Array::from_iter(0..(m * n) as i32)
         .into_shape_with_order((m, n))
         .unwrap()
@@ -157,8 +148,7 @@ where
 // Check that matrix multiplication of contiguous matrices returns a
 // matrix with the same order
 #[test]
-fn mat_mul_order()
-{
+fn mat_mul_order() {
     let (m, n, k) = (50, 50, 50);
     let a = range_mat(m, n);
     let b = range_mat(n, k);
@@ -177,8 +167,7 @@ fn mat_mul_order()
 // Check that matrix multiplication
 // supports broadcast arrays.
 #[test]
-fn mat_mul_broadcast()
-{
+fn mat_mul_broadcast() {
     let (m, n, k) = (16, 16, 16);
     let a = range_mat(m, n);
     let x1 = 1.;
@@ -197,8 +186,7 @@ fn mat_mul_broadcast()
 
 // Check that matrix multiplication supports reversed axes
 #[test]
-fn mat_mul_rev()
-{
+fn mat_mul_rev() {
     let (m, n, k) = (16, 16, 16);
     let a = range_mat(m, n);
     let b = range_mat(n, k);
@@ -214,8 +202,7 @@ fn mat_mul_rev()
 
 // Check that matrix multiplication supports arrays with zero rows or columns
 #[test]
-fn mat_mut_zero_len()
-{
+fn mat_mut_zero_len() {
     defmac!(mat_mul_zero_len range_mat_fn => {
         for n in 0..4 {
             for m in 0..4 {
@@ -236,8 +223,7 @@ fn mat_mut_zero_len()
 }
 
 #[test]
-fn gen_mat_mul()
-{
+fn gen_mat_mul() {
     let alpha = -2.3;
     let beta = 3.14;
     let sizes = vec![
@@ -278,8 +264,7 @@ fn gen_mat_mul()
 
 // Test y = A x where A is f-order
 #[test]
-fn gemm_64_1_f()
-{
+fn gemm_64_1_f() {
     let a = range_mat64(64, 64).reversed_axes();
     let (m, n) = a.dim();
     // m x n  times n x 1  == m x 1
@@ -291,8 +276,7 @@ fn gemm_64_1_f()
 }
 
 #[test]
-fn gemm_c64_1_f()
-{
+fn gemm_c64_1_f() {
     let a = range_mat_complex64(64, 64).reversed_axes();
     let (m, n) = a.dim();
     // m x n  times n x 1  == m x 1
@@ -309,8 +293,7 @@ fn gemm_c64_1_f()
 }
 
 #[test]
-fn gemm_c32_1_f()
-{
+fn gemm_c32_1_f() {
     let a = range_mat_complex(64, 64).reversed_axes();
     let (m, n) = a.dim();
     // m x n  times n x 1  == m x 1
@@ -327,8 +310,7 @@ fn gemm_c32_1_f()
 }
 
 #[test]
-fn gemm_c64_actually_complex()
-{
+fn gemm_c64_actually_complex() {
     let mut a = range_mat_complex64(4, 4);
     a = a.map(|&i| if i.re > 8. { i.conj() } else { i });
     let mut b = range_mat_complex64(4, 6);
@@ -347,8 +329,7 @@ fn gemm_c64_actually_complex()
 }
 
 #[test]
-fn gen_mat_vec_mul()
-{
+fn gen_mat_vec_mul() {
     let alpha = -2.3;
     let beta = 3.14;
     let sizes = vec![
@@ -394,8 +375,7 @@ fn gen_mat_vec_mul()
 }
 
 #[test]
-fn vec_mat_mul()
-{
+fn vec_mat_mul() {
     let sizes = vec![
         (4, 4),
         (8, 8),

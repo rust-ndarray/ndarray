@@ -35,8 +35,7 @@ pub fn testvec_as_slice(a: &Vec<f64>) -> f64 {
 */
 
 #[no_mangle]
-pub fn test1d_single(a: &Array1<f64>, i: usize) -> f64
-{
+pub fn test1d_single(a: &Array1<f64>, i: usize) -> f64 {
     if i < a.len() {
         a[i]
     } else {
@@ -45,8 +44,7 @@ pub fn test1d_single(a: &Array1<f64>, i: usize) -> f64
 }
 
 #[no_mangle]
-pub fn test1d_single_mut(a: &mut Array1<f64>, i: usize) -> f64
-{
+pub fn test1d_single_mut(a: &mut Array1<f64>, i: usize) -> f64 {
     if i < a.len() {
         *&mut a[i]
     } else {
@@ -55,8 +53,7 @@ pub fn test1d_single_mut(a: &mut Array1<f64>, i: usize) -> f64
 }
 
 #[no_mangle]
-pub fn test1d_len_of(a: &Array1<f64>) -> f64
-{
+pub fn test1d_len_of(a: &Array1<f64>) -> f64 {
     let a = &*a;
     let mut sum = 0.;
     for i in 0..a.len_of(Axis(0)) {
@@ -66,8 +63,7 @@ pub fn test1d_len_of(a: &Array1<f64>) -> f64
 }
 
 #[no_mangle]
-pub fn test1d_range(a: &Array1<f64>) -> f64
-{
+pub fn test1d_range(a: &Array1<f64>) -> f64 {
     let mut sum = 0.;
     for i in 0..a.len() {
         sum += a[i];
@@ -76,8 +72,7 @@ pub fn test1d_range(a: &Array1<f64>) -> f64
 }
 
 #[no_mangle]
-pub fn test1d_while(a: &Array1<f64>) -> f64
-{
+pub fn test1d_while(a: &Array1<f64>) -> f64 {
     let mut sum = 0.;
     let mut i = 0;
     while i < a.len() {
@@ -88,8 +83,7 @@ pub fn test1d_while(a: &Array1<f64>) -> f64
 }
 
 #[no_mangle]
-pub fn test2d_ranges(a: &Array2<f64>) -> f64
-{
+pub fn test2d_ranges(a: &Array2<f64>) -> f64 {
     let mut sum = 0.;
     for i in 0..a.nrows() {
         for j in 0..a.ncols() {
@@ -100,8 +94,7 @@ pub fn test2d_ranges(a: &Array2<f64>) -> f64
 }
 
 #[no_mangle]
-pub fn test2d_whiles(a: &Array2<f64>) -> f64
-{
+pub fn test2d_whiles(a: &Array2<f64>) -> f64 {
     let mut sum = 0.;
     let mut i = 0;
     while i < a.nrows() {

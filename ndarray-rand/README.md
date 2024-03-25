@@ -28,8 +28,8 @@ Dependencies
 
 ``ndarray-rand`` depends on ``rand``.
 
-[`rand`](https://docs.rs/rand/) and [`rand-distr`](https://docs.rs/rand_distr/) are 
-re-exported as sub-modules, `ndarray_rand::rand` and `ndarray_rand::rand_distr` respectively. 
+[`rand`](https://docs.rs/rand/) and [`rand-distr`](https://docs.rs/rand_distr/) are
+re-exported as sub-modules, `ndarray_rand::rand` and `ndarray_rand::rand_distr` respectively.
 Please rely on these submodules for guaranteed version compatibility.
 
 If you want to use a random number generator or distribution from another crate
@@ -41,7 +41,7 @@ necessary trait).
 Recent changes
 ==============
 
-Check _[RELEASES.md](https://github.com/rust-ndarray/ndarray/blob/master/ndarray-rand/RELEASES.md)_ to see 
+Check _[RELEASES.md](https://github.com/rust-ndarray/ndarray/blob/master/ndarray-rand/RELEASES.md)_ to see
 the changes introduced in previous releases.
 
 

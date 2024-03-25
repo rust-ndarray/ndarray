@@ -2,8 +2,7 @@ use ndarray::prelude::*;
 use ndarray::Zip;
 
 #[test]
-fn cell_view()
-{
+fn cell_view() {
     let mut a = Array::from_shape_fn((10, 5), |(i, j)| (i * j) as f32);
     let answer = &a + 1.;
 
