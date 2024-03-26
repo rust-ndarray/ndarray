@@ -60,9 +60,6 @@ impl<A> OwnedRepr<A> {
         // let mut self_ = ManuallyDrop::new(self);
         // self_.device = device;
 
-        let len = self.len;
-        let capacity = self.capacity;
-
         match (self.device, device) {
             (Device::Host, Device::Host) => {
                 // println!("Copying to Host");
@@ -71,7 +68,9 @@ impl<A> OwnedRepr<A> {
 
             #[cfg(feature = "opencl")]
             (Device::Host, Device::OpenCL) => {
-                let bytes = std::mem::size_of::<A>() * self.capacity;
+                let len = self.len;
+                let capacity = self.capacity;
+                let bytes = std::mem::size_of::<A>() * capacity;
 
                 unsafe {
                     if let Ok(buffer) =
@@ -102,6 +101,8 @@ impl<A> OwnedRepr<A> {
 
             #[cfg(feature = "opencl")]
             (Device::OpenCL, Device::Host) => {
+                let len = self.len;
+                let capacity = self.capacity;
                 let bytes = std::mem::size_of::<A>() * capacity;
 
                 unsafe {
@@ -327,8 +328,7 @@ impl<A> OwnedRepr<A> {
 }
 
 impl<A> Clone for OwnedRepr<A>
-where
-    A: Clone,
+where A: Clone
 {
     fn clone(&self) -> Self {
         match self.device {
