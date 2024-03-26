@@ -1,4 +1,3 @@
-#![feature(non_null_convenience)]
 // Copyright 2014-2020 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or

@@ -6,7 +6,6 @@ use alloc::borrow::ToOwned;
 use alloc::slice;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use std::ffi::c_void;
 use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
@@ -55,6 +54,7 @@ impl<A> OwnedRepr<A> {
     }
 
     /// Move this storage object to a specified device.
+    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn copy_to_device(self, device: Device) -> Option<Self> {
         // println!("Copying to {device:?}");
         // let mut self_ = ManuallyDrop::new(self);
@@ -65,12 +65,13 @@ impl<A> OwnedRepr<A> {
 
         match (self.device, device) {
             (Device::Host, Device::Host) => {
-                todo!()
+                // println!("Copying to Host");
+                Some(self)
             }
 
             #[cfg(feature = "opencl")]
             (Device::Host, Device::OpenCL) => {
-                let bytes = std::mem::size_of::<A>() * capacity;
+                let bytes = std::mem::size_of::<A>() * self.capacity;
 
                 unsafe {
                     if let Ok(buffer) =
@@ -108,7 +109,7 @@ impl<A> OwnedRepr<A> {
                     data.set_len(self.len);
                     if let Ok(_) = hasty_::opencl::opencl_read(
                         data.as_mut_ptr() as *mut std::ffi::c_void,
-                        self.ptr.as_ptr() as *mut c_void,
+                        self.ptr.as_ptr() as *mut std::ffi::c_void,
                         bytes,
                     ) {
                         Some(Self {
@@ -128,8 +129,29 @@ impl<A> OwnedRepr<A> {
                 todo!();
             }
 
-            _ => {
-                panic!("Not Implemented")
+            #[cfg(feature = "cuda")]
+            (Device::Host, Device::CUDA) => {
+                todo!();
+            }
+
+            #[cfg(feature = "cuda")]
+            (Device::CUDA, Device::Host) => {
+                todo!();
+            }
+
+            #[cfg(feature = "cuda")]
+            (Device::CUDA, Device::CUDA) => {
+                todo!();
+            }
+
+            #[cfg(all(feature = "opencl", feature = "cuda"))]
+            (Device::OpenCL, Device::CUDA) => {
+                todo!();
+            }
+
+            #[cfg(all(feature = "opencl", feature = "cuda"))]
+            (Device::CUDA, Device::OpenCL) => {
+                todo!();
             }
         }
     }
@@ -153,7 +175,7 @@ impl<A> OwnedRepr<A> {
                 // Free `ptr`
                 // println!("Freeing OpenCL pointer");
 
-                hasty_::opencl::opencl_free(ptr as *mut c_void);
+                hasty_::opencl::opencl_free(ptr as *mut std::ffi::c_void);
 
                 // Should be optimised out, since nothing is allocated
                 Vec::new()
@@ -190,7 +212,7 @@ impl<A> OwnedRepr<A> {
         unsafe { slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub(crate) const fn len(&self) -> usize {
         self.len
     }
 
@@ -200,7 +222,7 @@ impl<A> OwnedRepr<A> {
     /// The pointer **may not necessarily point to the host**.
     /// Using a non-host pointer on the host will almost certainly
     /// cause a segmentation-fault.
-    pub(crate) fn as_ptr(&self) -> *const A {
+    pub(crate) const fn as_ptr(&self) -> *const A {
         self.ptr.as_ptr()
     }
 
@@ -210,11 +232,11 @@ impl<A> OwnedRepr<A> {
     /// The pointer **may not necessarily point to the host**.
     /// Using a non-host pointer on the host will almost certainly
     /// cause a segmentation-fault.
-    pub(crate) fn as_ptr_mut(&self) -> *mut A {
+    pub(crate) const fn as_ptr_mut(&self) -> *mut A {
         self.ptr.as_ptr()
     }
 
-    /// Return underlying [NonNull] ptr.
+    /// Return underlying [`NonNull`] ptr.
     ///
     /// ## Safety
     /// The pointer **may not necessarily point to the host**.
@@ -305,7 +327,8 @@ impl<A> OwnedRepr<A> {
 }
 
 impl<A> Clone for OwnedRepr<A>
-where A: Clone
+where
+    A: Clone,
 {
     fn clone(&self) -> Self {
         match self.device {
