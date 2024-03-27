@@ -18,6 +18,7 @@ env:
 jobs:
   clippy:
     runs-on: ubuntu-latest
+    fail-fast: false
     strategy:
       matrix:
         rust:
@@ -34,6 +35,7 @@ jobs:
 
   format:
     runs-on: ubuntu-latest
+    fail-fast: false
     strategy:
       matrix:
         rust:
@@ -49,6 +51,7 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
+    fail-fast: false
     strategy:
       matrix:
         rust:
@@ -71,6 +74,7 @@ jobs:
   cross_test:
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
+    fail-fast: false
     strategy:
       matrix:
         include:
@@ -94,6 +98,7 @@ jobs:
   cargo-careful:
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
+    fail-fast: false
     name: cargo-careful
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +114,7 @@ jobs:
   docs:
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
+    fail-fast: false
     strategy:
       matrix:
         rust:
@@ -131,6 +137,7 @@ jobs:
       - docs
     if: always()
     runs-on: ubuntu-latest
+    fail-fast: false
     steps:
       - name: Result
         run: |

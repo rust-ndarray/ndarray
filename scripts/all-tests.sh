@@ -6,7 +6,7 @@ set -e
 FEATURES=$1
 CHANNEL=$2
 
-if [ "$CHANNEL" = "1.57.0" ]; then
+if [ "$CHANNEL" = "1.60.0" ]; then
     cargo update --package openblas-src --precise 0.10.5
     cargo update --package openblas-build --precise 0.10.5
     cargo update --package once_cell --precise 1.14.0
@@ -21,8 +21,11 @@ if [ "$CHANNEL" = "1.57.0" ]; then
     cargo update --package serde_json --precise 1.0.99
     cargo update --package serde --precise 1.0.156
     cargo update --package thiserror --precise 1.0.39
-    cargo update --package quote --precise 1.0.30
-    cargo update --package proc-macro2 --precise 1.0.65
+    cargo update --package quote --precise 1.0.35
+    cargo update --package proc-macro2 --precise 1.0.79
+    cargo update --package regex --precise 1.9.6
+    cargo update --package home --precise 0.5.5
+    cargo update --package which --precise 4.4.2
 fi
 
 cargo build --verbose --no-default-features
