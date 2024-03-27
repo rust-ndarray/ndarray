@@ -53,7 +53,7 @@ impl<A> OwnedRepr<A> {
         }
     }
 
-    pub(crate) fn device(&self) -> Device {
+    pub(crate) const fn device(&self) -> Device {
         self.device
     }
 
