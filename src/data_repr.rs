@@ -170,7 +170,6 @@ impl<A> OwnedRepr<A> {
         let ptr = self.ptr.as_ptr();
 
         match self.device {
-            #[cfg(rust_version < "1.70.0")]
             Device::Host => {
                 // println!("Dropping Host pointer");
                 Vec::from_raw_parts(ptr, len, capacity)
