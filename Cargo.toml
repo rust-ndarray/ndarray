@@ -87,15 +87,7 @@ rayon = ["rayon_", "std"]
 matrixmultiply-threading = ["matrixmultiply/threading"]
 
 [profile.bench]
-# debug = true
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = 3
-strip = true
-debug = false
-debug-assertions = false
-
+debug = true
 
 [profile.dev.package.numeric-tests]
 opt-level = 2
