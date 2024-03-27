@@ -170,10 +170,11 @@ impl<A> OwnedRepr<A> {
         let ptr = self.ptr.as_ptr();
 
         match self.device {
-            Device::Host => unsafe {
+            #[cfg(rust_version < "1.70.0")]
+            Device::Host => {
                 // println!("Dropping Host pointer");
                 Vec::from_raw_parts(ptr, len, capacity)
-            },
+            }
 
             #[cfg(feature = "opencl")]
             Device::OpenCL => {
