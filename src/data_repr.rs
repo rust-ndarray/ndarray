@@ -53,9 +53,13 @@ impl<A> OwnedRepr<A> {
         }
     }
 
+    pub(crate) fn device(&self) -> Device {
+        self.device
+    }
+
     /// Move this storage object to a specified device.
     #[allow(clippy::unnecessary_wraps)]
-    pub(crate) fn copy_to_device(self, device: Device) -> Option<Self> {
+    pub(crate) fn move_to_device(self, device: Device) -> Option<Self> {
         // println!("Copying to {device:?}");
         // let mut self_ = ManuallyDrop::new(self);
         // self_.device = device;
@@ -209,7 +213,8 @@ impl<A> OwnedRepr<A> {
     /// on the host device.
     pub(crate) fn as_slice(&self) -> &[A] {
         // Cannot create a slice of a device pointer
-        assert_eq!(self.device, Device::Host);
+        debug_assert_eq!(self.device, Device::Host, "Cannot create a slice of a device pointer");
+
         unsafe { slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
     }
 
@@ -337,8 +342,31 @@ where A: Clone
             #[cfg(feature = "opencl")]
             Device::OpenCL => {
                 println!("Performing OpenCL Clone");
-                // todo: OpenCL clone
-                Self::from(self.as_slice().to_owned())
+                unsafe {
+                    // Allocate new buffer
+                    let bytes = std::mem::size_of::<A>() * self.len();
+
+                    match hasty_::opencl::opencl_allocate(bytes, hasty_::opencl::OpenCLMemoryType::ReadWrite) {
+                        Ok(buffer_ptr) => {
+                            if let Err(err_code) =
+                                hasty_::opencl::opencl_copy(buffer_ptr, self.as_ptr() as *const std::ffi::c_void, bytes)
+                            {
+                                panic!("Failed to copy to OpenCL buffer. Exited with status: {:?}", err_code);
+                            }
+
+                            Self {
+                                ptr: NonNull::new(buffer_ptr as *mut A).unwrap(),
+                                len: self.len,
+                                capacity: self.capacity,
+                                device: self.device,
+                            }
+                        }
+
+                        Err(err_code) => {
+                            panic!("Failed to clone OpenCL buffer. Exited with status: {:?}", err_code);
+                        }
+                    }
+                }
             }
 
             #[cfg(feature = "cuda")]

@@ -34,7 +34,7 @@ num-complex = { version = "0.4", default-features = false }
 
 # Use via the `opencl` crate feature!
 hasty_ = { version = "0.2", optional = true, package = "hasty", default-features = false }
-#hasty_ = { path = "../../hasty_dev/hasty", optional = true, package = "hasty", default-features = false }
+# hasty_ = { path = "../../hasty_dev/hasty", optional = true, package = "hasty", default-features = false }
 
 # Use via the `rayon` crate feature!
 rayon_ = { version = "1.0.3", optional = true, package = "rayon" }

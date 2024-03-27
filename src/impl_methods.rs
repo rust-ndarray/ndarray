@@ -2964,6 +2964,12 @@ where
             f(&*prev, &mut *curr)
         });
     }
+
+    pub fn device(&self) -> Device {
+        // If a device is returned, use that. Otherwise, it's fairly safe to
+        // assume that the data is on the host.
+        self.data._device().unwrap_or(Device::Host)
+    }
 }
 
 /// Transmute from A to B.
@@ -2986,10 +2992,14 @@ type DimMaxOf<A, B> = <A as DimMax<B>>::Output;
 impl<A, D> ArrayBase<OwnedRepr<A>, D>
 where A: std::fmt::Debug
 {
-    pub fn copy_to_device(self, device: Device) -> Option<Self> {
+    // pub fn device(&self) -> Device {
+    //     self.data.device()
+    // }
+
+    pub fn move_to_device(self, device: Device) -> Option<Self> {
         let dim = self.dim;
         let strides = self.strides;
-        let data = self.data.copy_to_device(device)?;
+        let data = self.data.move_to_device(device)?;
         let ptr = std::ptr::NonNull::new(data.as_ptr() as *mut A).unwrap();
 
         Some(Self {

@@ -50,10 +50,18 @@ impl ScalarOperand for f64 {}
 impl ScalarOperand for Complex<f32> {}
 impl ScalarOperand for Complex<f64> {}
 
+macro_rules! device_check_assert(
+    ($self:expr, $rhs:expr) => {
+        debug_assert_eq!($self.device(), $rhs.device(),
+            "Cannot perform operation on arrays on different devices. \
+            Please move them to the same device first.");
+    }
+);
+
 macro_rules! impl_binary_op(
-    ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
+    ($rs_trait:ident, $operator:tt, $math_op:ident, $inplace_op:tt, $docstring:expr) => (
 /// Perform elementwise
-#[doc=$doc]
+#[doc=$docstring]
 /// between `self` and `rhs`,
 /// and return the result.
 ///
@@ -62,9 +70,9 @@ macro_rules! impl_binary_op(
 /// If their shapes disagree, `self` is broadcast to their broadcast shape.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
+impl<A, B, S, S2, D, E> $rs_trait<ArrayBase<S2, E>> for ArrayBase<S, D>
 where
-    A: Clone + $trt<B, Output=A>,
+    A: Clone + $rs_trait<B, Output=A>,
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
     S2: Data<Elem=B>,
@@ -73,14 +81,15 @@ where
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     #[track_caller]
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    fn $math_op(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
-        self.$mth(&rhs)
+        device_check_assert!(self, rhs);
+        self.$math_op(&rhs)
     }
 }
 
 /// Perform elementwise
-#[doc=$doc]
+#[doc=$docstring]
 /// between `self` and reference `rhs`,
 /// and return the result.
 ///
@@ -90,9 +99,9 @@ where
 /// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
+impl<'a, A, B, S, S2, D, E> $rs_trait<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
 where
-    A: Clone + $trt<B, Output=A>,
+    A: Clone + $rs_trait<B, Output=A>,
     B: Clone,
     S: DataOwned<Elem=A> + DataMut,
     S2: Data<Elem=B>,
@@ -101,27 +110,29 @@ where
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     #[track_caller]
-    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
+    fn $math_op(self, rhs: &ArrayBase<S2, E>) -> Self::Output
     {
+        device_check_assert!(self, rhs);
+
         if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
             let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
-            out.zip_mut_with_same_shape(rhs, clone_iopf(A::$mth));
+            out.zip_mut_with_same_shape(rhs, clone_iopf(A::$math_op));
             out
         } else {
             let (lhs_view, rhs_view) = self.broadcast_with(&rhs).unwrap();
             if lhs_view.shape() == self.shape() {
                 let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
-                out.zip_mut_with_same_shape(&rhs_view, clone_iopf(A::$mth));
+                out.zip_mut_with_same_shape(&rhs_view, clone_iopf(A::$math_op));
                 out
             } else {
-                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$mth))
+                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$math_op))
             }
         }
     }
 }
 
 /// Perform elementwise
-#[doc=$doc]
+#[doc=$docstring]
 /// between reference `self` and `rhs`,
 /// and return the result.
 ///
@@ -131,9 +142,9 @@ where
 /// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+impl<'a, A, B, S, S2, D, E> $rs_trait<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 where
-    A: Clone + $trt<B, Output=B>,
+    A: Clone + $rs_trait<B, Output=B>,
     B: Clone,
     S: Data<Elem=A>,
     S2: DataOwned<Elem=B> + DataMut,
@@ -142,28 +153,30 @@ where
 {
     type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
     #[track_caller]
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
-    where
+    fn $math_op(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    // where
     {
+        device_check_assert!(self, rhs);
+
         if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
             let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
-            out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$mth));
+            out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$math_op));
             out
         } else {
             let (rhs_view, lhs_view) = rhs.broadcast_with(self).unwrap();
             if rhs_view.shape() == rhs.shape() {
                 let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
-                out.zip_mut_with_same_shape(&lhs_view, clone_iopf_rev(A::$mth));
+                out.zip_mut_with_same_shape(&lhs_view, clone_iopf_rev(A::$math_op));
                 out
             } else {
-                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$mth))
+                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$math_op))
             }
         }
     }
 }
 
 /// Perform elementwise
-#[doc=$doc]
+#[doc=$docstring]
 /// between references `self` and `rhs`,
 /// and return the result as a new `Array`.
 ///
@@ -171,9 +184,9 @@ where
 /// cloning the data if needed.
 ///
 /// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+impl<'a, A, B, S, S2, D, E> $rs_trait<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 where
-    A: Clone + $trt<B, Output=A>,
+    A: Clone + $rs_trait<B, Output=A>,
     B: Clone,
     S: Data<Elem=A>,
     S2: Data<Elem=B>,
@@ -182,7 +195,9 @@ where
 {
     type Output = Array<A, <D as DimMax<E>>::Output>;
     #[track_caller]
-    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
+    fn $math_op(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
+        device_check_assert!(self, rhs);
+
         let (lhs, rhs) = if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
             let lhs = self.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
             let rhs = rhs.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
@@ -190,24 +205,24 @@ where
         } else {
             self.broadcast_with(rhs).unwrap()
         };
-        Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$mth))
+        Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$math_op))
     }
 }
 
 /// Perform elementwise
-#[doc=$doc]
+#[doc=$docstring]
 /// between `self` and the scalar `x`,
 /// and return the result (based on `self`).
 ///
 /// `self` must be an `Array` or `ArcArray`.
-impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
-    where A: Clone + $trt<B, Output=A>,
+impl<A, S, D, B> $rs_trait<B> for ArrayBase<S, D>
+    where A: Clone + $rs_trait<B, Output=A>,
           S: DataOwned<Elem=A> + DataMut,
           D: Dimension,
           B: ScalarOperand,
 {
     type Output = ArrayBase<S, D>;
-    fn $mth(mut self, x: B) -> ArrayBase<S, D> {
+    fn $math_op(mut self, x: B) -> ArrayBase<S, D> {
         self.map_inplace(move |elt| {
             *elt = elt.clone() $operator x.clone();
         });
@@ -216,17 +231,17 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
 }
 
 /// Perform elementwise
-#[doc=$doc]
+#[doc=$docstring]
 /// between the reference `self` and the scalar `x`,
 /// and return the result as a new `Array`.
-impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
-    where A: Clone + $trt<B, Output=A>,
+impl<'a, A, S, D, B> $rs_trait<B> for &'a ArrayBase<S, D>
+    where A: Clone + $rs_trait<B, Output=A>,
           S: Data<Elem=A>,
           D: Dimension,
           B: ScalarOperand,
 {
     type Output = Array<A, D>;
-    fn $mth(self, x: B) -> Self::Output {
+    fn $math_op(self, x: B) -> Self::Output {
         self.map(move |elt| elt.clone() $operator x.clone())
     }
 }

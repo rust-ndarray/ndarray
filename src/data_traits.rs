@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
-use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{ArcArray, Array, ArrayBase, CowRepr, Device, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
 
 /// Array representation trait.
 ///
@@ -40,6 +40,11 @@ pub unsafe trait RawData: Sized {
 
     #[doc(hidden)]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool;
+
+    #[doc(hidden)]
+    fn _device(&self) -> Option<Device> {
+        None
+    }
 
     private_decl! {}
 }
@@ -328,6 +333,10 @@ unsafe impl<A> RawData for OwnedRepr<A> {
         let ptr = slc.as_ptr() as *mut A;
         let end = unsafe { ptr.add(slc.len()) };
         self_ptr >= ptr && self_ptr <= end
+    }
+
+    fn _device(&self) -> Option<Device> {
+        Some(self.device())
     }
 
     private_impl! {}
