@@ -81,6 +81,13 @@ fn test_mat_mul()
     assert_eq!(c.dot(&a), a);
 }
 
+#[test]
+fn test_outer_product() {
+    let a: Array1<f64> = array![2., 4.];
+    let b: Array1<f64> = array![3., 5.];
+    assert_eq!(a.outer(&b), array![[6., 10.], [12., 20.]]);
+}
+
 #[deny(unsafe_code)]
 #[test]
 fn test_slice()
