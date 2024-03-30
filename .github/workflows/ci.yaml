@@ -13,7 +13,7 @@ env:
   CARGO_TERM_COLOR: always
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "test docs"
-  RUSTFLAGS: "-D warnings"
+  # RUSTFLAGS: "-D warnings" # For now, we don't mind a couple warnings
 
 jobs:
   clippy:

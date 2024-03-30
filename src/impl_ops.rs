@@ -6,12 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::mem::ManuallyDrop;
 use crate::dimension::DimMax;
 use crate::Device;
-use crate::Zip;
 use crate::Layout;
 use crate::OwnedRepr;
+use crate::Zip;
 use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
@@ -245,7 +244,6 @@ where
 
                     let kernel_name = format!("binary_op_{}_{}", stringify!($math_op), typename);
 
-                    #[cold]
                     if unsafe { !KERNEL_BUILT } {
                         let kernel = crate::opencl::gen_contiguous_linear_kernel_3(
                             &kernel_name,
@@ -253,7 +251,9 @@ where
                             stringify!($operator));
 
                         unsafe {
-                            hasty_::opencl::opencl_add_kernel(&kernel);
+                            if let Err(e) = hasty_::opencl::opencl_add_kernel(&kernel) {
+                                panic!("Failed to add OpenCL kernel. Errored with code {:?}", e);
+                            }
                             KERNEL_BUILT = true;
                         }
                     }

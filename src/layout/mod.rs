@@ -77,11 +77,11 @@ impl Layout {
         self.0 & (0b11) == other.0 & (0b11)
     }
 
-    /// Return true if this layout exactly matches the other layout
-    #[inline(always)]
-    pub(crate) fn matches_exact(self, other: Self) -> bool {
-        self.0 == other.0
-    }
+    // /// Return true if this layout exactly matches the other layout
+    // #[inline(always)]
+    // pub(crate) fn matches_exact(self, other: Self) -> bool {
+    //     self.0 == other.0
+    // }
 }
 
 #[cfg(test)]
