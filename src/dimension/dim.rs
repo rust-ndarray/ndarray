@@ -35,21 +35,26 @@ use std::fmt;
 /// assert_eq!(array.raw_dim(), Dim([3, 2]));
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Default)]
-pub struct Dim<I: ?Sized> {
+pub struct Dim<I: ?Sized>
+{
     index: I,
 }
 
-impl<I> Dim<I> {
+impl<I> Dim<I>
+{
     /// Private constructor and accessors for Dim
-    pub(crate) const fn new(index: I) -> Dim<I> {
+    pub(crate) const fn new(index: I) -> Dim<I>
+    {
         Dim { index }
     }
     #[inline(always)]
-    pub(crate) fn ix(&self) -> &I {
+    pub(crate) fn ix(&self) -> &I
+    {
         &self.index
     }
     #[inline(always)]
-    pub(crate) fn ixm(&mut self) -> &mut I {
+    pub(crate) fn ixm(&mut self) -> &mut I
+    {
         &mut self.index
     }
 }
@@ -57,14 +62,16 @@ impl<I> Dim<I> {
 /// Create a new dimension value.
 #[allow(non_snake_case)]
 pub fn Dim<T>(index: T) -> T::Dim
-where T: IntoDimension {
+where T: IntoDimension
+{
     index.into_dimension()
 }
 
 impl<I: ?Sized> PartialEq<I> for Dim<I>
 where I: PartialEq
 {
-    fn eq(&self, rhs: &I) -> bool {
+    fn eq(&self, rhs: &I) -> bool
+    {
         self.index == *rhs
     }
 }
@@ -72,7 +79,8 @@ where I: PartialEq
 impl<I> fmt::Debug for Dim<I>
 where I: fmt::Debug
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         write!(f, "{:?}", self.index)
     }
 }

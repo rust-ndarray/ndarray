@@ -24,7 +24,8 @@ use crate::IntoDimension;
 /// Verifies that the version of the deserialized array matches the current
 /// `ARRAY_FORMAT_VERSION`.
 pub fn verify_version<E>(v: u8) -> Result<(), E>
-where E: de::Error {
+where E: de::Error
+{
     if v != ARRAY_FORMAT_VERSION {
         let err_msg = format!("unknown array version: {}", v);
         Err(de::Error::custom(err_msg))
@@ -38,7 +39,8 @@ impl<I> Serialize for Dim<I>
 where I: Serialize
 {
     fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
-    where Se: Serializer {
+    where Se: Serializer
+    {
         self.ix().serialize(serializer)
     }
 }
@@ -48,23 +50,28 @@ impl<'de, I> Deserialize<'de> for Dim<I>
 where I: Deserialize<'de>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where D: Deserializer<'de>
+    {
         I::deserialize(deserializer).map(Dim::new)
     }
 }
 
 /// **Requires crate feature `"serde"`**
-impl Serialize for IxDyn {
+impl Serialize for IxDyn
+{
     fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
-    where Se: Serializer {
+    where Se: Serializer
+    {
         self.ix().serialize(serializer)
     }
 }
 
 /// **Requires crate feature `"serde"`**
-impl<'de> Deserialize<'de> for IxDyn {
+impl<'de> Deserialize<'de> for IxDyn
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where D: Deserializer<'de>
+    {
         let v = Vec::<Ix>::deserialize(deserializer)?;
         Ok(v.into_dimension())
     }
@@ -78,7 +85,8 @@ where
     S: Data<Elem = A>,
 {
     fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
-    where Se: Serializer {
+    where Se: Serializer
+    {
         let mut state = serializer.serialize_struct("Array", 3)?;
         state.serialize_field("v", &ARRAY_FORMAT_VERSION)?;
         state.serialize_field("dim", &self.raw_dim())?;
@@ -96,7 +104,8 @@ where
     D: Dimension + Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+    where S: Serializer
+    {
         let iter = &self.0;
         let mut seq = serializer.serialize_seq(Some(iter.len()))?;
         for elt in iter.clone() {
@@ -106,19 +115,23 @@ where
     }
 }
 
-struct ArrayVisitor<S, Di> {
+struct ArrayVisitor<S, Di>
+{
     _marker_a: PhantomData<S>,
     _marker_b: PhantomData<Di>,
 }
 
-enum ArrayField {
+enum ArrayField
+{
     Version,
     Dim,
     Data,
 }
 
-impl<S, Di> ArrayVisitor<S, Di> {
-    pub fn new() -> Self {
+impl<S, Di> ArrayVisitor<S, Di>
+{
+    pub fn new() -> Self
+    {
         ArrayVisitor {
             _marker_a: PhantomData,
             _marker_b: PhantomData,
@@ -136,25 +149,31 @@ where
     S: DataOwned<Elem = A>,
 {
     fn deserialize<D>(deserializer: D) -> Result<ArrayBase<S, Di>, D::Error>
-    where D: Deserializer<'de> {
+    where D: Deserializer<'de>
+    {
         deserializer.deserialize_struct("Array", ARRAY_FIELDS, ArrayVisitor::new())
     }
 }
 
-impl<'de> Deserialize<'de> for ArrayField {
+impl<'de> Deserialize<'de> for ArrayField
+{
     fn deserialize<D>(deserializer: D) -> Result<ArrayField, D::Error>
-    where D: Deserializer<'de> {
+    where D: Deserializer<'de>
+    {
         struct ArrayFieldVisitor;
 
-        impl<'de> Visitor<'de> for ArrayFieldVisitor {
+        impl<'de> Visitor<'de> for ArrayFieldVisitor
+        {
             type Value = ArrayField;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result
+            {
                 formatter.write_str(r#""v", "dim", or "data""#)
             }
 
             fn visit_str<E>(self, value: &str) -> Result<ArrayField, E>
-            where E: de::Error {
+            where E: de::Error
+            {
                 match value {
                     "v" => Ok(ArrayField::Version),
                     "dim" => Ok(ArrayField::Dim),
@@ -164,7 +183,8 @@ impl<'de> Deserialize<'de> for ArrayField {
             }
 
             fn visit_bytes<E>(self, value: &[u8]) -> Result<ArrayField, E>
-            where E: de::Error {
+            where E: de::Error
+            {
                 match value {
                     b"v" => Ok(ArrayField::Version),
                     b"dim" => Ok(ArrayField::Dim),
@@ -186,12 +206,14 @@ where
 {
     type Value = ArrayBase<S, Di>;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         formatter.write_str("ndarray representation")
     }
 
     fn visit_seq<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
-    where V: SeqAccess<'de> {
+    where V: SeqAccess<'de>
+    {
         let v: u8 = match visitor.next_element()? {
             Some(value) => value,
             None => {
@@ -223,7 +245,8 @@ where
     }
 
     fn visit_map<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
-    where V: MapAccess<'de> {
+    where V: MapAccess<'de>
+    {
         let mut v: Option<u8> = None;
         let mut data: Option<Vec<A>> = None;
         let mut dim: Option<Di> = None;

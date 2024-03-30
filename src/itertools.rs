@@ -23,7 +23,8 @@ use std::iter;
 /// }
 /// ```
 pub(crate) fn enumerate<I>(iterable: I) -> iter::Enumerate<I::IntoIter>
-where I: IntoIterator {
+where I: IntoIterator
+{
     iterable.into_iter().enumerate()
 }
 

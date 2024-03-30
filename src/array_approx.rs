@@ -1,5 +1,6 @@
 #[cfg(feature = "approx")]
-mod approx_methods {
+mod approx_methods
+{
     use crate::imp_prelude::*;
 
     impl<A, S, D> ArrayBase<S, D>

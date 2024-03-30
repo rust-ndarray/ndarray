@@ -13,7 +13,8 @@ use std::ptr::NonNull;
 use rawpointer::PointerExt;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Device {
+pub enum Device
+{
     Host,
     #[cfg(feature = "opencl")]
     OpenCL,
@@ -31,15 +32,18 @@ pub enum Device {
 // transmutable A -> B.
 #[derive(Debug)]
 #[repr(C)]
-pub struct OwnedRepr<A> {
+pub struct OwnedRepr<A>
+{
     ptr: NonNull<A>,
     len: usize,
     capacity: usize,
     device: Device,
 }
 
-impl<A> OwnedRepr<A> {
-    pub(crate) fn from(v: Vec<A>) -> Self {
+impl<A> OwnedRepr<A>
+{
+    pub(crate) fn from(v: Vec<A>) -> Self
+    {
         let mut v = ManuallyDrop::new(v);
         let len = v.len();
         let capacity = v.capacity();
@@ -53,11 +57,13 @@ impl<A> OwnedRepr<A> {
         }
     }
 
-    pub(crate) const fn device(&self) -> Device {
+    pub(crate) const fn device(&self) -> Device
+    {
         self.device
     }
 
-    pub(crate) const unsafe fn from_components(ptr: NonNull<A>, len: usize, capacity: usize, device: Device) -> Self {
+    pub(crate) const unsafe fn from_components(ptr: NonNull<A>, len: usize, capacity: usize, device: Device) -> Self
+    {
         Self {
             ptr,
             len,
@@ -68,7 +74,8 @@ impl<A> OwnedRepr<A> {
 
     /// Move this storage object to a specified device.
     #[allow(clippy::unnecessary_wraps)]
-    pub(crate) fn move_to_device(self, device: Device) -> Option<Self> {
+    pub(crate) fn move_to_device(self, device: Device) -> Option<Self>
+    {
         // println!("Copying to {device:?}");
         // let mut self_ = ManuallyDrop::new(self);
         // self_.device = device;
@@ -171,7 +178,8 @@ impl<A> OwnedRepr<A> {
     }
 
     /// Drop the object and free the memory
-    pub(crate) unsafe fn drop_impl(&mut self) -> Vec<A> {
+    pub(crate) unsafe fn drop_impl(&mut self) -> Vec<A>
+    {
         let capacity = self.capacity;
         let len = self.len;
         self.len = 0;
@@ -209,7 +217,8 @@ impl<A> OwnedRepr<A> {
     /// # Panics
     /// Will panic if the underlying memory is not allocated on
     /// the host device.
-    pub(crate) fn into_vec(self) -> Vec<A> {
+    pub(crate) fn into_vec(self) -> Vec<A>
+    {
         // Creating a Vec requires the data to be on the host device
         assert_eq!(self.device, Device::Host);
         ManuallyDrop::new(self).take_as_vec()
@@ -220,14 +229,16 @@ impl<A> OwnedRepr<A> {
     /// # Panics
     /// Will panic if the underlying memory is not allocated
     /// on the host device.
-    pub(crate) fn as_slice(&self) -> &[A] {
+    pub(crate) fn as_slice(&self) -> &[A]
+    {
         // Cannot create a slice of a device pointer
         debug_assert_eq!(self.device, Device::Host, "Cannot create a slice of a device pointer");
 
         unsafe { slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
     }
 
-    pub(crate) const fn len(&self) -> usize {
+    pub(crate) const fn len(&self) -> usize
+    {
         self.len
     }
 
@@ -237,7 +248,8 @@ impl<A> OwnedRepr<A> {
     /// The pointer **may not necessarily point to the host**.
     /// Using a non-host pointer on the host will almost certainly
     /// cause a segmentation-fault.
-    pub(crate) const fn as_ptr(&self) -> *const A {
+    pub(crate) const fn as_ptr(&self) -> *const A
+    {
         self.ptr.as_ptr()
     }
 
@@ -247,7 +259,8 @@ impl<A> OwnedRepr<A> {
     /// The pointer **may not necessarily point to the host**.
     /// Using a non-host pointer on the host will almost certainly
     /// cause a segmentation-fault.
-    pub(crate) const fn as_ptr_mut(&self) -> *mut A {
+    pub(crate) const fn as_ptr_mut(&self) -> *mut A
+    {
         self.ptr.as_ptr()
     }
 
@@ -257,7 +270,8 @@ impl<A> OwnedRepr<A> {
     /// The pointer **may not necessarily point to the host**.
     /// Using a non-host pointer on the host will almost certainly
     /// cause a segmentation-fault.
-    pub(crate) fn as_nonnull_mut(&mut self) -> NonNull<A> {
+    pub(crate) fn as_nonnull_mut(&mut self) -> NonNull<A>
+    {
         self.ptr
     }
 
@@ -267,7 +281,8 @@ impl<A> OwnedRepr<A> {
     /// The pointer **may not necessarily point to the host**.
     /// Using a non-host pointer on the host will almost certainly
     /// cause a segmentation-fault.
-    pub(crate) fn as_end_nonnull(&self) -> NonNull<A> {
+    pub(crate) fn as_end_nonnull(&self) -> NonNull<A>
+    {
         unsafe { self.ptr.add(self.len) }
     }
 
@@ -276,7 +291,8 @@ impl<A> OwnedRepr<A> {
     /// ## Safety
     /// Note that existing pointers into the data are invalidated
     #[must_use = "must use new pointer to update existing pointers"]
-    pub(crate) fn reserve(&mut self, additional: usize) -> NonNull<A> {
+    pub(crate) fn reserve(&mut self, additional: usize) -> NonNull<A>
+    {
         self.modify_as_vec(|mut v| {
             v.reserve(additional);
             v
@@ -288,7 +304,8 @@ impl<A> OwnedRepr<A> {
     ///
     /// ## Safety
     /// The first `new_len` elements of the data should be valid.
-    pub(crate) unsafe fn set_len(&mut self, new_len: usize) {
+    pub(crate) unsafe fn set_len(&mut self, new_len: usize)
+    {
         debug_assert!(new_len <= self.capacity);
         self.len = new_len;
     }
@@ -297,7 +314,8 @@ impl<A> OwnedRepr<A> {
     /// the internal length to zero.
     ///
     /// todo: Is this valid/safe? Mark as unsafe?
-    pub(crate) fn release_all_elements(&mut self) -> usize {
+    pub(crate) fn release_all_elements(&mut self) -> usize
+    {
         let ret = self.len;
         self.len = 0;
         ret
@@ -308,7 +326,8 @@ impl<A> OwnedRepr<A> {
     /// ## Safety
     /// Caller must ensure the two types have the same representation.
     /// **Panics** if sizes don't match (which is not a sufficient check).
-    pub(crate) unsafe fn data_subst<B>(self) -> OwnedRepr<B> {
+    pub(crate) unsafe fn data_subst<B>(self) -> OwnedRepr<B>
+    {
         // necessary but not sufficient check
         assert_eq!(mem::size_of::<A>(), mem::size_of::<B>());
         let self_ = ManuallyDrop::new(self);
@@ -321,7 +340,8 @@ impl<A> OwnedRepr<A> {
     }
 
     /// Apply a `f(Vec<A>) -> Vec<A>` to this storage object and update `self`.
-    fn modify_as_vec(&mut self, f: impl FnOnce(Vec<A>) -> Vec<A>) {
+    fn modify_as_vec(&mut self, f: impl FnOnce(Vec<A>) -> Vec<A>)
+    {
         let v = self.take_as_vec();
         *self = Self::from(f(v));
     }
@@ -331,7 +351,8 @@ impl<A> OwnedRepr<A> {
     /// # Panics
     /// Will panic if the underlying memory is not allocated
     /// on the host device.
-    fn take_as_vec(&mut self) -> Vec<A> {
+    fn take_as_vec(&mut self) -> Vec<A>
+    {
         assert_eq!(self.device, Device::Host);
         let capacity = self.capacity;
         let len = self.len;
@@ -344,7 +365,8 @@ impl<A> OwnedRepr<A> {
 impl<A> Clone for OwnedRepr<A>
 where A: Clone
 {
-    fn clone(&self) -> Self {
+    fn clone(&self) -> Self
+    {
         match self.device {
             Device::Host => Self::from(self.as_slice().to_owned()),
 
@@ -387,7 +409,8 @@ where A: Clone
         }
     }
 
-    fn clone_from(&mut self, other: &Self) {
+    fn clone_from(&mut self, other: &Self)
+    {
         match self.device {
             Device::Host => {
                 let mut v = self.take_as_vec();
@@ -437,8 +460,10 @@ where A: Clone
     }
 }
 
-impl<A> Drop for OwnedRepr<A> {
-    fn drop(&mut self) {
+impl<A> Drop for OwnedRepr<A>
+{
+    fn drop(&mut self)
+    {
         if self.capacity > 0 {
             // correct because: If the elements don't need dropping, an
             // empty Vec is ok. Only the Vec's allocation needs dropping.

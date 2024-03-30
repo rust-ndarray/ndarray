@@ -46,7 +46,8 @@ use crate::NdIndex;
 /// assert_eq!(long_life_ref, &0.);
 ///
 /// ```
-pub trait IndexLonger<I> {
+pub trait IndexLonger<I>
+{
     /// The type of the reference to the element that is produced, including
     /// its lifetime.
     type Output;
@@ -119,12 +120,14 @@ where
     ///
     /// **Panics** if index is out of bounds.
     #[track_caller]
-    fn index(self, index: I) -> &'a A {
+    fn index(self, index: I) -> &'a A
+    {
         debug_bounds_check!(self, index);
         unsafe { &*self.get_ptr(index).unwrap_or_else(|| array_out_of_bounds()) }
     }
 
-    fn get(self, index: I) -> Option<&'a A> {
+    fn get(self, index: I) -> Option<&'a A>
+    {
         unsafe { self.get_ptr(index).map(|ptr| &*ptr) }
     }
 
@@ -139,7 +142,8 @@ where
     /// [1]: ArrayBase::uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    unsafe fn uget(self, index: I) -> &'a A {
+    unsafe fn uget(self, index: I) -> &'a A
+    {
         debug_bounds_check!(self, index);
         &*self.as_ptr().offset(index.index_unchecked(&self.strides))
     }
@@ -165,7 +169,8 @@ where
     ///
     /// **Panics** if index is out of bounds.
     #[track_caller]
-    fn index(mut self, index: I) -> &'a mut A {
+    fn index(mut self, index: I) -> &'a mut A
+    {
         debug_bounds_check!(self, index);
         unsafe {
             match self.get_mut_ptr(index) {
@@ -183,7 +188,8 @@ where
     ///
     /// [1]: ArrayBase::get_mut
     ///
-    fn get(mut self, index: I) -> Option<&'a mut A> {
+    fn get(mut self, index: I) -> Option<&'a mut A>
+    {
         debug_bounds_check!(self, index);
         unsafe {
             match self.get_mut_ptr(index) {
@@ -202,7 +208,8 @@ where
     /// [1]: ArrayBase::uget_mut
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    unsafe fn uget(mut self, index: I) -> &'a mut A {
+    unsafe fn uget(mut self, index: I) -> &'a mut A
+    {
         debug_bounds_check!(self, index);
         &mut *self
             .as_mut_ptr()

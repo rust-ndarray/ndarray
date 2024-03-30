@@ -12,21 +12,26 @@ use crate::{Axis, Dim, Dimension, Ix, Ix0, Ix1};
 ///
 /// `RemoveAxis` defines a larger-than relation for array shapes:
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
-pub trait RemoveAxis: Dimension {
+pub trait RemoveAxis: Dimension
+{
     fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
-impl RemoveAxis for Dim<[Ix; 1]> {
+impl RemoveAxis for Dim<[Ix; 1]>
+{
     #[inline]
-    fn remove_axis(&self, axis: Axis) -> Ix0 {
+    fn remove_axis(&self, axis: Axis) -> Ix0
+    {
         debug_assert!(axis.index() < self.ndim());
         Ix0()
     }
 }
 
-impl RemoveAxis for Dim<[Ix; 2]> {
+impl RemoveAxis for Dim<[Ix; 2]>
+{
     #[inline]
-    fn remove_axis(&self, axis: Axis) -> Ix1 {
+    fn remove_axis(&self, axis: Axis) -> Ix1
+    {
         let axis = axis.index();
         debug_assert!(axis < self.ndim());
         if axis == 0 {

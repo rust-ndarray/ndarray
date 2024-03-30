@@ -55,7 +55,8 @@ where
     Ok(())
 }
 
-fn main() {
+fn main()
+{
     let mut a = Array::<u8, _>::zeros((2, 3, 4));
     for (i, elt) in (0..).zip(&mut a) {
         *elt = i;

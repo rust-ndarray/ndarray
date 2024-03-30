@@ -26,10 +26,12 @@
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Axis(pub usize);
 
-impl Axis {
+impl Axis
+{
     /// Return the index of the axis.
     #[inline(always)]
-    pub fn index(self) -> usize {
+    pub fn index(self) -> usize
+    {
         self.0
     }
 }

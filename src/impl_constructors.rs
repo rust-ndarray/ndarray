@@ -54,7 +54,8 @@ where S: DataOwned<Elem = A>
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
-    pub fn from_vec(v: Vec<A>) -> Self {
+    pub fn from_vec(v: Vec<A>) -> Self
+    {
         if mem::size_of::<A>() == 0 {
             assert!(
                 v.len() <= isize::MAX as usize,
@@ -74,7 +75,8 @@ where S: DataOwned<Elem = A>
     /// let array = Array::from_iter(0..10);
     /// ```
     #[allow(clippy::should_implement_trait)]
-    pub fn from_iter<I: IntoIterator<Item = A>>(iterable: I) -> Self {
+    pub fn from_iter<I: IntoIterator<Item = A>>(iterable: I) -> Self
+    {
         Self::from_vec(iterable.into_iter().collect())
     }
 
@@ -97,7 +99,8 @@ where S: DataOwned<Elem = A>
     /// ```
     #[cfg(feature = "std")]
     pub fn linspace(start: A, end: A, n: usize) -> Self
-    where A: Float {
+    where A: Float
+    {
         Self::from(to_vec(linspace::linspace(start, end, n)))
     }
 
@@ -114,7 +117,8 @@ where S: DataOwned<Elem = A>
     /// ```
     #[cfg(feature = "std")]
     pub fn range(start: A, end: A, step: A) -> Self
-    where A: Float {
+    where A: Float
+    {
         Self::from(to_vec(linspace::range(start, end, step)))
     }
 
@@ -141,7 +145,8 @@ where S: DataOwned<Elem = A>
     /// ```
     #[cfg(feature = "std")]
     pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
-    where A: Float {
+    where A: Float
+    {
         Self::from(to_vec(logspace::logspace(base, start, end, n)))
     }
 
@@ -174,7 +179,8 @@ where S: DataOwned<Elem = A>
     /// ```
     #[cfg(feature = "std")]
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
-    where A: Float {
+    where A: Float
+    {
         Some(Self::from(to_vec(geomspace::geomspace(start, end, n)?)))
     }
 }
@@ -449,12 +455,14 @@ where
     /// );
     /// ```
     pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<Self, ShapeError>
-    where Sh: Into<StrideShape<D>> {
+    where Sh: Into<StrideShape<D>>
+    {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_vec_impl(shape.into(), v)
     }
 
-    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError> {
+    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError>
+    {
         let dim = shape.dim;
         let is_custom = shape.strides.is_custom();
         dimension::can_index_slice_with_strides(&v, &dim, &shape.strides)?;
@@ -490,14 +498,16 @@ where
     /// 5. The strides must not allow any element to be referenced by two different
     ///    indices.
     pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
-    where Sh: Into<StrideShape<D>> {
+    where Sh: Into<StrideShape<D>>
+    {
         let shape = shape.into();
         let dim = shape.dim;
         let strides = shape.strides.strides_for_dim(&dim);
         Self::from_vec_dim_stride_unchecked(dim, strides, v)
     }
 
-    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
+    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self
+    {
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
 
@@ -570,7 +580,8 @@ where
     /// # let _ = shift_by_two;
     /// ```
     pub fn uninit<Sh>(shape: Sh) -> ArrayBase<S::MaybeUninit, D>
-    where Sh: ShapeBuilder<Dim = D> {
+    where Sh: ShapeBuilder<Dim = D>
+    {
         unsafe {
             let shape = shape.into_shape_with_order();
             let size = size_of_shape_checked_unwrap!(&shape.dim);
@@ -614,7 +625,8 @@ where
         array
     }
 
-    pub(crate) const unsafe fn from_parts(data: S, ptr: std::ptr::NonNull<S::Elem>, dim: D, strides: D) -> Self {
+    pub(crate) const unsafe fn from_parts(data: S, ptr: std::ptr::NonNull<S::Elem>, dim: D, strides: D) -> Self
+    {
         Self {
             data,
             ptr,
@@ -674,7 +686,8 @@ where
     /// This method has been renamed to `uninit`
     #[deprecated(note = "Renamed to `uninit`", since = "0.15.0")]
     pub fn maybe_uninit<Sh>(shape: Sh) -> Self
-    where Sh: ShapeBuilder<Dim = D> {
+    where Sh: ShapeBuilder<Dim = D>
+    {
         unsafe {
             let shape = shape.into_shape_with_order();
             let size = size_of_shape_checked_unwrap!(&shape.dim);

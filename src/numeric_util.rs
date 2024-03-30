@@ -54,7 +54,8 @@ where
 ///
 /// `xs` and `ys` must be the same length
 pub fn unrolled_dot<A>(xs: &[A], ys: &[A]) -> A
-where A: LinalgScalar {
+where A: LinalgScalar
+{
     debug_assert_eq!(xs.len(), ys.len());
     // eightfold unrolled so that floating point can be vectorized
     // (even with strict floating point accuracy semantics)
@@ -95,7 +96,8 @@ where A: LinalgScalar {
 ///
 /// `xs` and `ys` must be the same length
 pub fn unrolled_eq<A, B>(xs: &[A], ys: &[B]) -> bool
-where A: PartialEq<B> {
+where A: PartialEq<B>
+{
     debug_assert_eq!(xs.len(), ys.len());
     // eightfold unrolled for performance (this is not done by llvm automatically)
     let len = cmp::min(xs.len(), ys.len());

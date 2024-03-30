@@ -34,7 +34,8 @@ where
     Ok(out)
 }
 
-pub trait DimMax<Other: Dimension> {
+pub trait DimMax<Other: Dimension>
+{
     /// The resulting dimension type after broadcasting.
     type Output: Dimension;
 }
@@ -42,7 +43,8 @@ pub trait DimMax<Other: Dimension> {
 /// Dimensions of the same type remain unchanged when co_broadcast.
 /// So you can directly use D as the resulting type.
 /// (Instead of <D as DimMax<D>>::BroadcastOutput)
-impl<D: Dimension> DimMax<D> for D {
+impl<D: Dimension> DimMax<D> for D
+{
     type Output = D;
 }
 
@@ -89,12 +91,14 @@ impl_broadcast_distinct_fixed!(Ix6, IxDyn);
 
 #[cfg(test)]
 #[cfg(feature = "std")]
-mod tests {
+mod tests
+{
     use super::co_broadcast;
     use crate::{Dim, DimMax, Dimension, ErrorKind, Ix0, IxDynImpl, ShapeError};
 
     #[test]
-    fn test_broadcast_shape() {
+    fn test_broadcast_shape()
+    {
         fn test_co<D1, D2>(d1: &D1, d2: &D2, r: Result<<D1 as DimMax<D2>>::Output, ShapeError>)
         where
             D1: Dimension + DimMax<D2>,

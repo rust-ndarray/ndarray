@@ -11,7 +11,8 @@ where
 {
     type Item = &'a A;
     type Iter = Parallel<ArrayView<'a, A, D>>;
-    fn into_par_iter(self) -> Self::Iter {
+    fn into_par_iter(self) -> Self::Iter
+    {
         self.view().into_par_iter()
     }
 }
@@ -25,7 +26,8 @@ where
 {
     type Item = &'a A;
     type Iter = Parallel<ArrayView<'a, A, D>>;
-    fn into_par_iter(self) -> Self::Iter {
+    fn into_par_iter(self) -> Self::Iter
+    {
         self.view().into_par_iter()
     }
 }
@@ -38,7 +40,8 @@ where
 {
     type Item = &'a mut A;
     type Iter = Parallel<ArrayViewMut<'a, A, D>>;
-    fn into_par_iter(self) -> Self::Iter {
+    fn into_par_iter(self) -> Self::Iter
+    {
         self.view_mut().into_par_iter()
     }
 }
@@ -52,7 +55,8 @@ where
 {
     type Item = &'a mut A;
     type Iter = Parallel<ArrayViewMut<'a, A, D>>;
-    fn into_par_iter(self) -> Self::Iter {
+    fn into_par_iter(self) -> Self::Iter
+    {
         self.view_mut().into_par_iter()
     }
 }

@@ -12,13 +12,16 @@ use std::ptr::copy_nonoverlapping;
 
 // Type invariant: Each index appears exactly once
 #[derive(Clone, Debug)]
-pub struct Permutation {
+pub struct Permutation
+{
     indices: Vec<usize>,
 }
 
-impl Permutation {
+impl Permutation
+{
     /// Checks if the permutation is correct
-    pub fn from_indices(v: Vec<usize>) -> Result<Self, ()> {
+    pub fn from_indices(v: Vec<usize>) -> Result<Self, ()>
+    {
         let perm = Permutation { indices: v };
         if perm.correct() {
             Ok(perm)
@@ -27,7 +30,8 @@ impl Permutation {
         }
     }
 
-    fn correct(&self) -> bool {
+    fn correct(&self) -> bool
+    {
         let axis_len = self.indices.len();
         let mut seen = vec![false; axis_len];
         for &i in &self.indices {
@@ -45,14 +49,16 @@ impl Permutation {
     }
 }
 
-pub trait SortArray {
+pub trait SortArray
+{
     /// ***Panics*** if `axis` is out of bounds.
     fn identity(&self, axis: Axis) -> Permutation;
     fn sort_axis_by<F>(&self, axis: Axis, less_than: F) -> Permutation
     where F: FnMut(usize, usize) -> bool;
 }
 
-pub trait PermuteArray {
+pub trait PermuteArray
+{
     type Elem;
     type Dim;
     fn permute_axis(self, axis: Axis, perm: &Permutation) -> Array<Self::Elem, Self::Dim>
@@ -66,14 +72,16 @@ where
     S: Data<Elem = A>,
     D: Dimension,
 {
-    fn identity(&self, axis: Axis) -> Permutation {
+    fn identity(&self, axis: Axis) -> Permutation
+    {
         Permutation {
             indices: (0..self.len_of(axis)).collect(),
         }
     }
 
     fn sort_axis_by<F>(&self, axis: Axis, mut less_than: F) -> Permutation
-    where F: FnMut(usize, usize) -> bool {
+    where F: FnMut(usize, usize) -> bool
+    {
         let mut perm = self.identity(axis);
         perm.indices.sort_by(move |&a, &b| {
             if less_than(a, b) {
@@ -95,7 +103,8 @@ where D: Dimension
     type Dim = D;
 
     fn permute_axis(self, axis: Axis, perm: &Permutation) -> Array<A, D>
-    where D: RemoveAxis {
+    where D: RemoveAxis
+    {
         let axis_len = self.len_of(axis);
         let axis_stride = self.stride_of(axis);
         assert_eq!(axis_len, perm.indices.len());
@@ -158,7 +167,8 @@ where D: Dimension
 }
 
 #[cfg(feature = "std")]
-fn main() {
+fn main()
+{
     let a = Array::linspace(0., 63., 64)
         .into_shape_with_order((8, 8))
         .unwrap();
@@ -178,10 +188,12 @@ fn main() {
 fn main() {}
 
 #[cfg(test)]
-mod tests {
+mod tests
+{
     use super::*;
     #[test]
-    fn test_permute_axis() {
+    fn test_permute_axis()
+    {
         let a = array![
             [107998.96, 1.],
             [107999.08, 2.],

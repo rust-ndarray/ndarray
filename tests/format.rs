@@ -2,7 +2,8 @@ use ndarray::prelude::*;
 use ndarray::rcarr1;
 
 #[test]
-fn formatting() {
+fn formatting()
+{
     let a = rcarr1::<f32>(&[1., 2., 3., 4.]);
     assert_eq!(format!("{}", a), "[1, 2, 3, 4]");
     assert_eq!(format!("{:4}", a), "[   1,    2,    3,    4]");
@@ -55,7 +56,8 @@ fn formatting() {
 }
 
 #[test]
-fn debug_format() {
+fn debug_format()
+{
     let a = Array2::<i32>::zeros((3, 4));
     assert_eq!(
         format!("{:?}", a),

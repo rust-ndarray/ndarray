@@ -66,7 +66,8 @@ where S: Data<Elem = A>
     /// layout allows.
     #[track_caller]
     pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
-    where Self: Dot<Rhs> {
+    where Self: Dot<Rhs>
+    {
         Dot::dot(self, rhs)
     }
 
@@ -144,7 +145,8 @@ where S: Data<Elem = A>
 /// which agrees with our pointer for non-negative strides, but
 /// is at the opposite end for negative strides.
 #[cfg(feature = "blas")]
-unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const A, blas_index, blas_index) {
+unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const A, blas_index, blas_index)
+{
     // [x x x x]
     //        ^--ptr
     //        stride = -1
@@ -161,7 +163,8 @@ unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const
 ///
 /// For two-dimensional arrays, the dot method computes the matrix
 /// multiplication.
-pub trait Dot<Rhs> {
+pub trait Dot<Rhs>
+{
     /// The result of the operation.
     ///
     /// For two-dimensional arrays: a rectangular array.
@@ -186,7 +189,8 @@ where
     /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
     /// layout allows.
     #[track_caller]
-    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> A {
+    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> A
+    {
         self.dot_impl(rhs)
     }
 }
@@ -209,7 +213,8 @@ where
     ///
     /// **Panics** if shapes are incompatible.
     #[track_caller]
-    fn dot(&self, rhs: &ArrayBase<S2, Ix2>) -> Array<A, Ix1> {
+    fn dot(&self, rhs: &ArrayBase<S2, Ix2>) -> Array<A, Ix1>
+    {
         rhs.t().dot(self)
     }
 }
@@ -248,7 +253,8 @@ where S: Data<Elem = A>
     /// ```
     #[track_caller]
     pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
-    where Self: Dot<Rhs> {
+    where Self: Dot<Rhs>
+    {
         Dot::dot(self, rhs)
     }
 }
@@ -260,7 +266,8 @@ where
     A: LinalgScalar,
 {
     type Output = Array2<A>;
-    fn dot(&self, b: &ArrayBase<S2, Ix2>) -> Array2<A> {
+    fn dot(&self, b: &ArrayBase<S2, Ix2>) -> Array2<A>
+    {
         let a = self.view();
         let b = b.view();
         let ((m, k), (k2, n)) = (a.dim(), b.dim());
@@ -286,7 +293,8 @@ where
 /// Assumes that `m` and `n` are ≤ `isize::MAX`.
 #[cold]
 #[inline(never)]
-fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> ! {
+fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> !
+{
     match m.checked_mul(n) {
         Some(len) if len <= ::std::isize::MAX as usize => {}
         _ => panic!("ndarray: shape {} × {} overflows isize", m, n),
@@ -299,7 +307,8 @@ fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> ! {
 
 #[cold]
 #[inline(never)]
-fn general_dot_shape_error(m: usize, k: usize, k2: usize, n: usize, c1: usize, c2: usize) -> ! {
+fn general_dot_shape_error(m: usize, k: usize, k2: usize, n: usize, c1: usize, c2: usize) -> !
+{
     panic!("ndarray: inputs {} × {}, {} × {}, and output {} × {} are not compatible for matrix multiplication",
            m, k, k2, n, c1, c2);
 }
@@ -321,7 +330,8 @@ where
 {
     type Output = Array<A, Ix1>;
     #[track_caller]
-    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1> {
+    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
+    {
         let ((m, a), n) = (self.dim(), rhs.dim());
         if a != n {
             dot_shape_error(m, a, n, 1);
@@ -487,7 +497,8 @@ fn mat_mul_impl<A>(
 /// C ← α A B + β C
 fn mat_mul_general<A>(
     alpha: A, lhs: &ArrayView2<'_, A>, rhs: &ArrayView2<'_, A>, beta: A, c: &mut ArrayViewMut2<'_, A>,
-) where A: LinalgScalar {
+) where A: LinalgScalar
+{
     let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
 
     // common parameters for gemm
@@ -780,14 +791,16 @@ where
 
 #[inline(always)]
 /// Return `true` if `A` and `B` are the same type
-fn same_type<A: 'static, B: 'static>() -> bool {
+fn same_type<A: 'static, B: 'static>() -> bool
+{
     TypeId::of::<A>() == TypeId::of::<B>()
 }
 
 // Read pointer to type `A` as type `B`.
 //
 // **Panics** if `A` and `B` are not the same type
-fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
+fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B
+{
     assert!(same_type::<A, B>(), "expect type {} and {} to match",
             std::any::type_name::<A>(), std::any::type_name::<B>());
     unsafe { ::std::ptr::read(a as *const _ as *const B) }
@@ -795,7 +808,8 @@ fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
 
 /// Return the complex in the form of an array [re, im]
 #[inline]
-fn complex_array<A: 'static + Copy>(z: Complex<A>) -> [A; 2] {
+fn complex_array<A: 'static + Copy>(z: Complex<A>) -> [A; 2]
+{
     [z.re, z.im]
 }
 
@@ -820,7 +834,8 @@ where
 }
 
 #[cfg(feature = "blas")]
-enum MemoryOrder {
+enum MemoryOrder
+{
     C,
     F,
 }
@@ -852,7 +867,8 @@ where
 }
 
 #[cfg(feature = "blas")]
-fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool {
+fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool
+{
     let (m, n) = dim.into_pattern();
     let s0 = stride[0] as isize;
     let s1 = stride[1] as isize;
@@ -895,32 +911,37 @@ where
 
 #[cfg(test)]
 #[cfg(feature = "blas")]
-mod blas_tests {
+mod blas_tests
+{
     use super::*;
 
     #[test]
-    fn blas_row_major_2d_normal_matrix() {
+    fn blas_row_major_2d_normal_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((3, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(!blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
-    fn blas_row_major_2d_row_matrix() {
+    fn blas_row_major_2d_row_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((1, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
-    fn blas_row_major_2d_column_matrix() {
+    fn blas_row_major_2d_column_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((5, 1));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
-    fn blas_row_major_2d_transposed_row_matrix() {
+    fn blas_row_major_2d_transposed_row_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((1, 5));
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
@@ -928,7 +949,8 @@ mod blas_tests {
     }
 
     #[test]
-    fn blas_row_major_2d_transposed_column_matrix() {
+    fn blas_row_major_2d_transposed_column_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((5, 1));
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
@@ -936,7 +958,8 @@ mod blas_tests {
     }
 
     #[test]
-    fn blas_column_major_2d_normal_matrix() {
+    fn blas_column_major_2d_normal_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((3, 5).f());
         assert!(!blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));

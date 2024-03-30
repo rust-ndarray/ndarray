@@ -8,7 +8,8 @@ use ndarray::Ix0;
 use ndarray::ShapeBuilder;
 
 #[test]
-fn test_ix0() {
+fn test_ix0()
+{
     let mut a = Array::zeros(Ix0());
     assert_eq!(a[()], 0.);
     a[()] = 1.;
@@ -27,7 +28,8 @@ fn test_ix0() {
 }
 
 #[test]
-fn test_ix0_add() {
+fn test_ix0_add()
+{
     let mut a = Array::zeros(Ix0());
     a += 1.;
     assert_eq!(a[()], 1.);
@@ -36,7 +38,8 @@ fn test_ix0_add() {
 }
 
 #[test]
-fn test_ix0_add_add() {
+fn test_ix0_add_add()
+{
     let mut a = Array::zeros(Ix0());
     a += 1.;
     let mut b = Array::zeros(Ix0());
@@ -46,7 +49,8 @@ fn test_ix0_add_add() {
 }
 
 #[test]
-fn test_ix0_add_broad() {
+fn test_ix0_add_broad()
+{
     let mut b = Array::from(vec![5., 6.]);
     let mut a = Array::zeros(Ix0());
     a += 1.;

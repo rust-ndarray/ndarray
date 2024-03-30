@@ -8,14 +8,16 @@ const M: usize = 1024 * 10;
 const N: usize = 100;
 
 #[test]
-fn test_zip_1() {
+fn test_zip_1()
+{
     let mut a = Array2::<f64>::zeros((M, N));
 
     Zip::from(&mut a).par_for_each(|x| *x = x.exp());
 }
 
 #[test]
-fn test_zip_index_1() {
+fn test_zip_index_1()
+{
     let mut a = Array2::default((10, 10));
 
     Zip::indexed(&mut a).par_for_each(|i, x| {
@@ -28,7 +30,8 @@ fn test_zip_index_1() {
 }
 
 #[test]
-fn test_zip_index_2() {
+fn test_zip_index_2()
+{
     let mut a = Array2::default((M, N));
 
     Zip::indexed(&mut a).par_for_each(|i, x| {
@@ -41,7 +44,8 @@ fn test_zip_index_2() {
 }
 
 #[test]
-fn test_zip_index_3() {
+fn test_zip_index_3()
+{
     let mut a = Array::default((1, 2, 1, 2, 3));
 
     Zip::indexed(&mut a).par_for_each(|i, x| {
@@ -54,7 +58,8 @@ fn test_zip_index_3() {
 }
 
 #[test]
-fn test_zip_index_4() {
+fn test_zip_index_4()
+{
     let mut a = Array2::zeros((M, N));
     let mut b = Array2::zeros((M, N));
 
@@ -75,7 +80,8 @@ fn test_zip_index_4() {
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_zip_collect() {
+fn test_zip_collect()
+{
     use approx::assert_abs_diff_eq;
 
     // test Zip::map_collect and that it preserves c/f layout.
@@ -103,7 +109,8 @@ fn test_zip_collect() {
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_zip_small_collect() {
+fn test_zip_small_collect()
+{
     use approx::assert_abs_diff_eq;
 
     for m in 0..32 {
@@ -129,7 +136,8 @@ fn test_zip_small_collect() {
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_zip_assign_into() {
+fn test_zip_assign_into()
+{
     use approx::assert_abs_diff_eq;
 
     let mut a = Array::<f32, _>::zeros((M, N));

@@ -11,16 +11,19 @@ use crate::Slice;
 ///
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
-pub struct Windows<'a, A, D> {
+pub struct Windows<'a, A, D>
+{
     base: RawArrayView<A, D>,
     life: PhantomData<&'a A>,
     window: D,
     strides: D,
 }
 
-impl<'a, A, D: Dimension> Windows<'a, A, D> {
+impl<'a, A, D: Dimension> Windows<'a, A, D>
+{
     pub(crate) fn new<E>(a: ArrayView<'a, A, D>, window_size: E) -> Self
-    where E: IntoDimension<Dim = D> {
+    where E: IntoDimension<Dim = D>
+    {
         let window = window_size.into_dimension();
         let ndim = window.ndim();
 
@@ -31,7 +34,8 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
     }
 
     pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, axis_strides: E) -> Self
-    where E: IntoDimension<Dim = D> {
+    where E: IntoDimension<Dim = D>
+    {
         let window = window_size.into_dimension();
 
         let strides = axis_strides.into_dimension();
@@ -108,7 +112,8 @@ where
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = WindowsIter<'a, A, D>;
-    fn into_iter(self) -> Self::IntoIter {
+    fn into_iter(self) -> Self::IntoIter
+    {
         WindowsIter {
             iter: self.base.into_base_iter(),
             life: self.life,
@@ -122,7 +127,8 @@ where
 ///
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
-pub struct WindowsIter<'a, A, D> {
+pub struct WindowsIter<'a, A, D>
+{
     iter: Baseiter<A, D>,
     life: PhantomData<&'a A>,
     window: D,

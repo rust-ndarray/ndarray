@@ -15,7 +15,8 @@ type Kernel3x3<A> = [[A; 3]; 3];
 #[inline(never)]
 #[cfg(feature = "std")]
 fn conv_3x3<F>(a: &ArrayView2<'_, F>, out: &mut ArrayViewMut2<'_, F>, kernel: &Kernel3x3<F>)
-where F: Float {
+where F: Float
+{
     let (n, m) = a.dim();
     let (np, mp) = out.dim();
     if n < 3 || m < 3 {
@@ -41,7 +42,8 @@ where F: Float {
 }
 
 #[cfg(feature = "std")]
-fn main() {
+fn main()
+{
     let n = 16;
     let mut a = Array::zeros((n, n));
     // make a circle

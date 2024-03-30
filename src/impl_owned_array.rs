@@ -17,7 +17,8 @@ use crate::Zip;
 /// Methods specific to `Array0`.
 ///
 /// ***See also all methods for [`ArrayBase`]***
-impl<A> Array<A, Ix0> {
+impl<A> Array<A, Ix0>
+{
     /// Returns the single element in the array without cloning it.
     ///
     /// ```
@@ -31,7 +32,8 @@ impl<A> Array<A, Ix0> {
     /// let scalar: Foo = array.into_scalar();
     /// assert_eq!(scalar, Foo);
     /// ```
-    pub fn into_scalar(self) -> A {
+    pub fn into_scalar(self) -> A
+    {
         let size = mem::size_of::<A>();
         if size == 0 {
             // Any index in the `Vec` is fine since all elements are identical.
@@ -62,7 +64,8 @@ where D: Dimension
     ///
     /// If the array is in standard memory layout, the logical element order
     /// of the array (`.iter()` order) and of the returned vector will be the same.
-    pub fn into_raw_vec(self) -> Vec<A> {
+    pub fn into_raw_vec(self) -> Vec<A>
+    {
         self.data.into_vec()
     }
 }
@@ -70,7 +73,8 @@ where D: Dimension
 /// Methods specific to `Array2`.
 ///
 /// ***See also all methods for [`ArrayBase`]***
-impl<A> Array<A, Ix2> {
+impl<A> Array<A, Ix2>
+{
     /// Append a row to an array
     ///
     /// The elements from `row` are cloned and added as a new row in the array.
@@ -111,7 +115,8 @@ impl<A> Array<A, Ix2> {
     ///            [-1., -2., -3., -4.]]);
     /// ```
     pub fn push_row(&mut self, row: ArrayView<A, Ix1>) -> Result<(), ShapeError>
-    where A: Clone {
+    where A: Clone
+    {
         self.append(Axis(0), row.insert_axis(Axis(0)))
     }
 
@@ -155,7 +160,8 @@ impl<A> Array<A, Ix2> {
     ///            [2., -2.]]);
     /// ```
     pub fn push_column(&mut self, column: ArrayView<A, Ix1>) -> Result<(), ShapeError>
-    where A: Clone {
+    where A: Clone
+    {
         self.append(Axis(1), column.insert_axis(Axis(1)))
     }
 }
@@ -197,7 +203,8 @@ where D: Dimension
         }
     }
 
-    fn move_into_needs_drop(mut self, new_array: ArrayViewMut<A, D>) {
+    fn move_into_needs_drop(mut self, new_array: ArrayViewMut<A, D>)
+    {
         // Simple case where `A` has a destructor: just swap values between self and new_array.
         // Afterwards, `self` drops full of initialized values and dropping works as usual.
         // This avoids moving out of owned values in `self` while at the same time managing
@@ -242,7 +249,8 @@ where D: Dimension
         self.move_into_impl(new_array.into())
     }
 
-    fn move_into_impl(mut self, new_array: ArrayViewMut<MaybeUninit<A>, D>) {
+    fn move_into_impl(mut self, new_array: ArrayViewMut<MaybeUninit<A>, D>)
+    {
         unsafe {
             // Safety: copy_to_nonoverlapping cannot panic
             let guard = AbortIfPanic(&"move_into: moving out of owned value");
@@ -267,7 +275,8 @@ where D: Dimension
     /// # Safety
     ///
     /// This is a panic critical section since `self` is already moved-from.
-    fn drop_unreachable_elements(mut self) -> OwnedRepr<A> {
+    fn drop_unreachable_elements(mut self) -> OwnedRepr<A>
+    {
         let self_len = self.len();
 
         // "deconstruct" self; the owned repr releases ownership of all elements and we
@@ -287,7 +296,8 @@ where D: Dimension
 
     #[inline(never)]
     #[cold]
-    fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A> {
+    fn drop_unreachable_elements_slow(mut self) -> OwnedRepr<A>
+    {
         // "deconstruct" self; the owned repr releases ownership of all elements and we
         // carry on with raw view methods
         let data_len = self.data.len();
@@ -308,7 +318,8 @@ where D: Dimension
     /// Create an empty array with an all-zeros shape
     ///
     /// ***Panics*** if D is zero-dimensional, because it can't be empty
-    pub(crate) fn empty() -> Array<A, D> {
+    pub(crate) fn empty() -> Array<A, D>
+    {
         assert_ne!(D::NDIM, Some(0));
         let ndim = D::NDIM.unwrap_or(1);
         Array::from_shape_simple_fn(D::zeros(ndim), || unreachable!())
@@ -316,7 +327,8 @@ where D: Dimension
 
     /// Create new_array with the right layout for appending to `growing_axis`
     #[cold]
-    fn change_to_contig_append_layout(&mut self, growing_axis: Axis) {
+    fn change_to_contig_append_layout(&mut self, growing_axis: Axis)
+    {
         let ndim = self.ndim();
         let mut dim = self.raw_dim();
 
@@ -615,13 +627,16 @@ where D: Dimension
             // on scope exit (panic or loop finish). This "indirect" way to
             // write the length is used to help the compiler, the len store to self.data may
             // otherwise be mistaken to alias with other stores in the loop.
-            struct SetLenOnDrop<'a, A: 'a> {
+            struct SetLenOnDrop<'a, A: 'a>
+            {
                 len: usize,
                 data: &'a mut OwnedRepr<A>,
             }
 
-            impl<A> Drop for SetLenOnDrop<'_, A> {
-                fn drop(&mut self) {
+            impl<A> Drop for SetLenOnDrop<'_, A>
+            {
+                fn drop(&mut self)
+                {
                     unsafe {
                         self.data.set_len(self.len);
                     }
@@ -663,7 +678,8 @@ where D: Dimension
 /// This is an internal function for use by move_into and IntoIter only, safety invariants may need
 /// to be upheld across the calls from those implementations.
 pub(crate) unsafe fn drop_unreachable_raw<A, D>(mut self_: RawArrayViewMut<A, D>, data_ptr: *mut A, data_len: usize)
-where D: Dimension {
+where D: Dimension
+{
     let self_len = self_.len();
 
     for i in 0..self_.ndim() {
@@ -745,7 +761,8 @@ where
 }
 
 fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
-where D: Dimension {
+where D: Dimension
+{
     debug_assert!(adim.ndim() > 1);
     debug_assert_eq!(adim.ndim(), astrides.ndim());
     // bubble sort axes
@@ -784,7 +801,8 @@ where
 }
 
 fn sort_axes2_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)
-where D: Dimension {
+where D: Dimension
+{
     debug_assert!(adim.ndim() > 1);
     debug_assert_eq!(adim.ndim(), bdim.ndim());
     // bubble sort axes

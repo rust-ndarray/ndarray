@@ -33,7 +33,8 @@ impl<A, D> IntoIter<A, D>
 where D: Dimension
 {
     /// Create a new by-value iterator that consumes `array`
-    pub(crate) fn new(mut array: Array<A, D>) -> Self {
+    pub(crate) fn new(mut array: Array<A, D>) -> Self
+    {
         unsafe {
             let array_head_ptr = array.ptr;
             let ptr = array.as_mut_ptr();
@@ -54,21 +55,26 @@ where D: Dimension
     }
 }
 
-impl<A, D: Dimension> Iterator for IntoIter<A, D> {
+impl<A, D: Dimension> Iterator for IntoIter<A, D>
+{
     type Item = A;
 
     #[inline]
-    fn next(&mut self) -> Option<A> {
+    fn next(&mut self) -> Option<A>
+    {
         self.inner.next().map(|p| unsafe { p.read() })
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>) {
+    fn size_hint(&self) -> (usize, Option<usize>)
+    {
         self.inner.size_hint()
     }
 }
 
-impl<A, D: Dimension> ExactSizeIterator for IntoIter<A, D> {
-    fn len(&self) -> usize {
+impl<A, D: Dimension> ExactSizeIterator for IntoIter<A, D>
+{
+    fn len(&self) -> usize
+    {
         self.inner.len()
     }
 }
@@ -76,7 +82,8 @@ impl<A, D: Dimension> ExactSizeIterator for IntoIter<A, D> {
 impl<A, D> Drop for IntoIter<A, D>
 where D: Dimension
 {
-    fn drop(&mut self) {
+    fn drop(&mut self)
+    {
         if !self.has_unreachable_elements || mem::size_of::<A>() == 0 || !mem::needs_drop::<A>() {
             return;
         }
@@ -100,7 +107,8 @@ where D: Dimension
     type Item = A;
     type IntoIter = IntoIter<A, D>;
 
-    fn into_iter(self) -> Self::IntoIter {
+    fn into_iter(self) -> Self::IntoIter
+    {
         IntoIter::new(self)
     }
 }
@@ -113,7 +121,8 @@ where
     type Item = A;
     type IntoIter = IntoIter<A, D>;
 
-    fn into_iter(self) -> Self::IntoIter {
+    fn into_iter(self) -> Self::IntoIter
+    {
         IntoIter::new(self.into_owned())
     }
 }
@@ -126,7 +135,8 @@ where
     type Item = A;
     type IntoIter = IntoIter<A, D>;
 
-    fn into_iter(self) -> Self::IntoIter {
+    fn into_iter(self) -> Self::IntoIter
+    {
         IntoIter::new(self.into_owned())
     }
 }

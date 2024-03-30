@@ -40,15 +40,18 @@ macro_rules! index_item {
 }
 
 /// Argument conversion a dimension.
-pub trait IntoDimension {
+pub trait IntoDimension
+{
     type Dim: Dimension;
     fn into_dimension(self) -> Self::Dim;
 }
 
-impl IntoDimension for Ix {
+impl IntoDimension for Ix
+{
     type Dim = Ix1;
     #[inline(always)]
-    fn into_dimension(self) -> Ix1 {
+    fn into_dimension(self) -> Ix1
+    {
         Ix1(self)
     }
 }
@@ -58,28 +61,34 @@ where D: Dimension
 {
     type Dim = D;
     #[inline(always)]
-    fn into_dimension(self) -> Self {
+    fn into_dimension(self) -> Self
+    {
         self
     }
 }
 
-impl IntoDimension for IxDynImpl {
+impl IntoDimension for IxDynImpl
+{
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim {
+    fn into_dimension(self) -> Self::Dim
+    {
         Dim::new(self)
     }
 }
 
-impl IntoDimension for Vec<Ix> {
+impl IntoDimension for Vec<Ix>
+{
     type Dim = IxDyn;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim {
+    fn into_dimension(self) -> Self::Dim
+    {
         Dim::new(IxDynImpl::from(self))
     }
 }
 
-pub trait Convert {
+pub trait Convert
+{
     type To;
     fn convert(self) -> Self::To;
 }

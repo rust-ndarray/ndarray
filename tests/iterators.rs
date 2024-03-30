@@ -25,7 +25,8 @@ macro_rules! assert_panics {
 
 #[test]
 #[cfg(feature = "std")]
-fn double_ended() {
+fn double_ended()
+{
     let a = ArcArray::linspace(0., 7., 8);
     let mut it = a.iter().cloned();
     assert_eq!(it.next(), Some(0.));
@@ -37,7 +38,8 @@ fn double_ended() {
 }
 
 #[test]
-fn double_ended_rows() {
+fn double_ended_rows()
+{
     let a = ArcArray::from_iter(0..8).into_shape_clone((4, 2)).unwrap();
     let mut row_it = a.rows().into_iter();
     assert_equal(row_it.next_back().unwrap(), &[6, 7]);
@@ -58,7 +60,8 @@ fn double_ended_rows() {
 }
 
 #[test]
-fn iter_size_hint() {
+fn iter_size_hint()
+{
     // Check that the size hint is correctly computed
     let a = ArcArray::from_iter(0..24)
         .into_shape_with_order((2, 3, 4))
@@ -79,7 +82,8 @@ fn iter_size_hint() {
 
 #[test]
 #[cfg(feature = "std")]
-fn indexed() {
+fn indexed()
+{
     let a = ArcArray::linspace(0., 7., 8);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as usize);
@@ -99,7 +103,8 @@ fn indexed() {
 
 #[test]
 #[cfg(feature = "std")]
-fn as_slice() {
+fn as_slice()
+{
     use ndarray::Data;
 
     fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
@@ -156,7 +161,8 @@ fn as_slice() {
 }
 
 #[test]
-fn inner_iter() {
+fn inner_iter()
+{
     let a = ArcArray::from_iter(0..12);
     let a = a.into_shape_with_order((2, 3, 2)).unwrap();
     // [[[0, 1],
@@ -187,7 +193,8 @@ fn inner_iter() {
 }
 
 #[test]
-fn inner_iter_corner_cases() {
+fn inner_iter_corner_cases()
+{
     let a0 = ArcArray::<i32, _>::zeros(());
     assert_equal(a0.rows(), vec![aview1(&[0])]);
 
@@ -199,7 +206,8 @@ fn inner_iter_corner_cases() {
 }
 
 #[test]
-fn inner_iter_size_hint() {
+fn inner_iter_size_hint()
+{
     // Check that the size hint is correctly computed
     let a = ArcArray::from_iter(0..24)
         .into_shape_with_order((2, 3, 4))
@@ -216,7 +224,8 @@ fn inner_iter_size_hint() {
 
 #[allow(deprecated)] // into_outer_iter
 #[test]
-fn outer_iter() {
+fn outer_iter()
+{
     let a = ArcArray::from_iter(0..12);
     let a = a.into_shape_with_order((2, 3, 2)).unwrap();
     // [[[0, 1],
@@ -266,7 +275,8 @@ fn outer_iter() {
 }
 
 #[test]
-fn axis_iter() {
+fn axis_iter()
+{
     let a = ArcArray::from_iter(0..12);
     let a = a.into_shape_with_order((2, 3, 2)).unwrap();
     // [[[0, 1],
@@ -283,7 +293,8 @@ fn axis_iter() {
 }
 
 #[test]
-fn axis_iter_split_at() {
+fn axis_iter_split_at()
+{
     let a = Array::from_iter(0..5);
     let iter = a.axis_iter(Axis(0));
     let all: Vec<_> = iter.clone().collect();
@@ -295,7 +306,8 @@ fn axis_iter_split_at() {
 }
 
 #[test]
-fn axis_iter_split_at_partially_consumed() {
+fn axis_iter_split_at_partially_consumed()
+{
     let a = Array::from_iter(0..5);
     let mut iter = a.axis_iter(Axis(0));
     while iter.next().is_some() {
@@ -309,7 +321,8 @@ fn axis_iter_split_at_partially_consumed() {
 }
 
 #[test]
-fn axis_iter_zip() {
+fn axis_iter_zip()
+{
     let a = Array::from_iter(0..5);
     let iter = a.axis_iter(Axis(0));
     let mut b = Array::zeros(5);
@@ -318,7 +331,8 @@ fn axis_iter_zip() {
 }
 
 #[test]
-fn axis_iter_zip_partially_consumed() {
+fn axis_iter_zip_partially_consumed()
+{
     let a = Array::from_iter(0..5);
     let mut iter = a.axis_iter(Axis(0));
     let mut consumed = 0;
@@ -333,7 +347,8 @@ fn axis_iter_zip_partially_consumed() {
 }
 
 #[test]
-fn axis_iter_zip_partially_consumed_discontiguous() {
+fn axis_iter_zip_partially_consumed_discontiguous()
+{
     let a = Array::from_iter(0..5);
     let mut iter = a.axis_iter(Axis(0));
     let mut consumed = 0;
@@ -349,7 +364,8 @@ fn axis_iter_zip_partially_consumed_discontiguous() {
 }
 
 #[test]
-fn outer_iter_corner_cases() {
+fn outer_iter_corner_cases()
+{
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
     assert_equal(a2.outer_iter(), vec![aview1(&[]); 0]);
 
@@ -359,7 +375,8 @@ fn outer_iter_corner_cases() {
 
 #[allow(deprecated)]
 #[test]
-fn outer_iter_mut() {
+fn outer_iter_mut()
+{
     let a = ArcArray::from_iter(0..12);
     let a = a.into_shape_with_order((2, 3, 2)).unwrap();
     // [[[0, 1],
@@ -383,7 +400,8 @@ fn outer_iter_mut() {
 }
 
 #[test]
-fn axis_iter_mut() {
+fn axis_iter_mut()
+{
     let a = ArcArray::from_iter(0..12);
     let a = a.into_shape_with_order((2, 3, 2)).unwrap();
     // [[[0, 1],
@@ -403,7 +421,8 @@ fn axis_iter_mut() {
 }
 
 #[test]
-fn axis_chunks_iter() {
+fn axis_chunks_iter()
+{
     let a = ArcArray::from_iter(0..24);
     let a = a.into_shape_with_order((2, 6, 2)).unwrap();
 
@@ -441,7 +460,8 @@ fn axis_chunks_iter() {
 }
 
 #[test]
-fn axis_iter_mut_split_at() {
+fn axis_iter_mut_split_at()
+{
     let mut a = Array::from_iter(0..5);
     let mut a_clone = a.clone();
     let all: Vec<_> = a_clone.axis_iter_mut(Axis(0)).collect();
@@ -453,7 +473,8 @@ fn axis_iter_mut_split_at() {
 }
 
 #[test]
-fn axis_iter_mut_split_at_partially_consumed() {
+fn axis_iter_mut_split_at_partially_consumed()
+{
     let mut a = Array::from_iter(0..5);
     for consumed in 1..=a.len() {
         for mid in 0..=(a.len() - consumed) {
@@ -479,7 +500,8 @@ fn axis_iter_mut_split_at_partially_consumed() {
 }
 
 #[test]
-fn axis_iter_mut_zip() {
+fn axis_iter_mut_zip()
+{
     let orig = Array::from_iter(0..5);
     let mut cloned = orig.clone();
     let iter = cloned.axis_iter_mut(Axis(0));
@@ -493,7 +515,8 @@ fn axis_iter_mut_zip() {
 }
 
 #[test]
-fn axis_iter_mut_zip_partially_consumed() {
+fn axis_iter_mut_zip_partially_consumed()
+{
     let mut a = Array::from_iter(0..5);
     for consumed in 1..=a.len() {
         let remaining = a.len() - consumed;
@@ -508,7 +531,8 @@ fn axis_iter_mut_zip_partially_consumed() {
 }
 
 #[test]
-fn axis_iter_mut_zip_partially_consumed_discontiguous() {
+fn axis_iter_mut_zip_partially_consumed_discontiguous()
+{
     let mut a = Array::from_iter(0..5);
     for consumed in 1..=a.len() {
         let remaining = a.len() - consumed;
@@ -525,7 +549,8 @@ fn axis_iter_mut_zip_partially_consumed_discontiguous() {
 
 #[test]
 #[cfg(feature = "std")]
-fn axis_chunks_iter_corner_cases() {
+fn axis_chunks_iter_corner_cases()
+{
     // examples provided by @bluss in PR #65
     // these tests highlight corner cases of the axis_chunks_iter implementation
     // and enable checking if no pointer offsetting is out of bounds. However
@@ -556,7 +581,8 @@ fn axis_chunks_iter_corner_cases() {
 }
 
 #[test]
-fn axis_chunks_iter_zero_stride() {
+fn axis_chunks_iter_zero_stride()
+{
     {
         // stride 0 case
         let b = Array::from(vec![0f32; 0])
@@ -592,19 +618,22 @@ fn axis_chunks_iter_zero_stride() {
 
 #[should_panic]
 #[test]
-fn axis_chunks_iter_zero_chunk_size() {
+fn axis_chunks_iter_zero_chunk_size()
+{
     let a = Array::from_iter(0..5);
     a.axis_chunks_iter(Axis(0), 0);
 }
 
 #[test]
-fn axis_chunks_iter_zero_axis_len() {
+fn axis_chunks_iter_zero_axis_len()
+{
     let a = Array::from_iter(0..0);
     assert!(a.axis_chunks_iter(Axis(0), 5).next().is_none());
 }
 
 #[test]
-fn axis_chunks_iter_split_at() {
+fn axis_chunks_iter_split_at()
+{
     let mut a = Array2::<usize>::zeros((11, 3));
     a.iter_mut().enumerate().for_each(|(i, elt)| *elt = i);
     for source in &[
@@ -631,7 +660,8 @@ fn axis_chunks_iter_split_at() {
 }
 
 #[test]
-fn axis_chunks_iter_mut() {
+fn axis_chunks_iter_mut()
+{
     let a = ArcArray::from_iter(0..24);
     let mut a = a.into_shape_with_order((2, 6, 2)).unwrap();
 
@@ -643,19 +673,22 @@ fn axis_chunks_iter_mut() {
 
 #[should_panic]
 #[test]
-fn axis_chunks_iter_mut_zero_chunk_size() {
+fn axis_chunks_iter_mut_zero_chunk_size()
+{
     let mut a = Array::from_iter(0..5);
     a.axis_chunks_iter_mut(Axis(0), 0);
 }
 
 #[test]
-fn axis_chunks_iter_mut_zero_axis_len() {
+fn axis_chunks_iter_mut_zero_axis_len()
+{
     let mut a = Array::from_iter(0..0);
     assert!(a.axis_chunks_iter_mut(Axis(0), 5).next().is_none());
 }
 
 #[test]
-fn outer_iter_size_hint() {
+fn outer_iter_size_hint()
+{
     // Check that the size hint is correctly computed
     let a = ArcArray::from_iter(0..24)
         .into_shape_with_order((4, 3, 2))
@@ -690,7 +723,8 @@ fn outer_iter_size_hint() {
 }
 
 #[test]
-fn outer_iter_split_at() {
+fn outer_iter_split_at()
+{
     let a = ArcArray::from_iter(0..30)
         .into_shape_with_order((5, 3, 2))
         .unwrap();
@@ -714,7 +748,8 @@ fn outer_iter_split_at() {
 
 #[test]
 #[should_panic]
-fn outer_iter_split_at_panics() {
+fn outer_iter_split_at_panics()
+{
     let a = ArcArray::from_iter(0..30)
         .into_shape_with_order((5, 3, 2))
         .unwrap();
@@ -724,7 +759,8 @@ fn outer_iter_split_at_panics() {
 }
 
 #[test]
-fn outer_iter_mut_split_at() {
+fn outer_iter_mut_split_at()
+{
     let mut a = ArcArray::from_iter(0..30)
         .into_shape_with_order((5, 3, 2))
         .unwrap();
@@ -746,7 +782,8 @@ fn outer_iter_mut_split_at() {
 }
 
 #[test]
-fn iterators_are_send_sync() {
+fn iterators_are_send_sync()
+{
     // When the element type is Send + Sync, then the iterators and views
     // are too.
     fn _send_sync<T: Send + Sync>(_: &T) {}
@@ -778,7 +815,8 @@ fn iterators_are_send_sync() {
 
 #[test]
 #[allow(clippy::unnecessary_fold)]
-fn test_fold() {
+fn test_fold()
+{
     let mut a = Array2::<i32>::default((20, 20));
     a += 1;
     let mut iter = a.iter();
@@ -791,7 +829,8 @@ fn test_fold() {
 }
 
 #[test]
-fn nth_back_examples() {
+fn nth_back_examples()
+{
     let mut a: Array1<i32> = (0..256).collect();
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     assert_eq!(a.iter().nth_back(0), Some(&a[a.len() - 1]));
@@ -804,7 +843,8 @@ fn nth_back_examples() {
 }
 
 #[test]
-fn nth_back_zero_n() {
+fn nth_back_zero_n()
+{
     let mut a: Array1<i32> = (0..256).collect();
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     let mut iter1 = a.iter();
@@ -816,7 +856,8 @@ fn nth_back_zero_n() {
 }
 
 #[test]
-fn nth_back_nonzero_n() {
+fn nth_back_nonzero_n()
+{
     let mut a: Array1<i32> = (0..256).collect();
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     let mut iter1 = a.iter();
@@ -832,7 +873,8 @@ fn nth_back_nonzero_n() {
 }
 
 #[test]
-fn nth_back_past_end() {
+fn nth_back_past_end()
+{
     let mut a: Array1<i32> = (0..256).collect();
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     let mut iter = a.iter();
@@ -841,7 +883,8 @@ fn nth_back_past_end() {
 }
 
 #[test]
-fn nth_back_partially_consumed() {
+fn nth_back_partially_consumed()
+{
     let mut a: Array1<i32> = (0..256).collect();
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     let mut iter = a.iter();
@@ -859,7 +902,8 @@ fn nth_back_partially_consumed() {
 }
 
 #[test]
-fn test_rfold() {
+fn test_rfold()
+{
     {
         let mut a = Array1::<i32>::default(256);
         a += 1;
@@ -905,14 +949,16 @@ fn test_rfold() {
 }
 
 #[test]
-fn test_into_iter() {
+fn test_into_iter()
+{
     let a = Array1::from(vec![1, 2, 3, 4]);
     let v = a.into_iter().collect::<Vec<_>>();
     assert_eq!(v, [1, 2, 3, 4]);
 }
 
 #[test]
-fn test_into_iter_2d() {
+fn test_into_iter_2d()
+{
     let a = Array1::from(vec![1, 2, 3, 4])
         .into_shape_with_order((2, 2))
         .unwrap();
@@ -928,7 +974,8 @@ fn test_into_iter_2d() {
 }
 
 #[test]
-fn test_into_iter_sliced() {
+fn test_into_iter_sliced()
+{
     let (m, n) = (4, 5);
     let drops = Cell::new(0);
 
@@ -972,20 +1019,25 @@ fn test_into_iter_sliced() {
 ///
 /// Compares equal by its "represented value".
 #[derive(Clone, Debug)]
-struct DropCount<'a> {
+struct DropCount<'a>
+{
     value: i32,
     my_drops: usize,
     drops: &'a Cell<usize>,
 }
 
-impl PartialEq for DropCount<'_> {
-    fn eq(&self, other: &Self) -> bool {
+impl PartialEq for DropCount<'_>
+{
+    fn eq(&self, other: &Self) -> bool
+    {
         self.value == other.value
     }
 }
 
-impl<'a> DropCount<'a> {
-    fn new(value: i32, drops: &'a Cell<usize>) -> Self {
+impl<'a> DropCount<'a>
+{
+    fn new(value: i32, drops: &'a Cell<usize>) -> Self
+    {
         DropCount {
             value,
             my_drops: 0,
@@ -994,8 +1046,10 @@ impl<'a> DropCount<'a> {
     }
 }
 
-impl Drop for DropCount<'_> {
-    fn drop(&mut self) {
+impl Drop for DropCount<'_>
+{
+    fn drop(&mut self)
+    {
         assert_eq!(self.my_drops, 0);
         self.my_drops += 1;
         self.drops.set(self.drops.get() + 1);

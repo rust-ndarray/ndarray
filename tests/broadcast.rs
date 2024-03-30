@@ -2,7 +2,8 @@ use ndarray::prelude::*;
 
 #[test]
 #[cfg(feature = "std")]
-fn broadcast_1() {
+fn broadcast_1()
+{
     let a_dim = Dim([2, 4, 2, 2]);
     let b_dim = Dim([2, 1, 2, 1]);
     let a = ArcArray::linspace(0., 1., a_dim.size())
@@ -34,7 +35,8 @@ fn broadcast_1() {
 
 #[test]
 #[cfg(feature = "std")]
-fn test_add() {
+fn test_add()
+{
     let a_dim = Dim([2, 4, 2, 2]);
     let b_dim = Dim([2, 1, 2, 1]);
     let mut a = ArcArray::linspace(0.0, 1., a_dim.size())
@@ -51,7 +53,8 @@ fn test_add() {
 #[test]
 #[should_panic]
 #[cfg(feature = "std")]
-fn test_add_incompat() {
+fn test_add_incompat()
+{
     let a_dim = Dim([2, 4, 2, 2]);
     let mut a = ArcArray::linspace(0.0, 1., a_dim.size())
         .into_shape_with_order(a_dim)
@@ -61,7 +64,8 @@ fn test_add_incompat() {
 }
 
 #[test]
-fn test_broadcast() {
+fn test_broadcast()
+{
     let (_, n, k) = (16, 16, 16);
     let x1 = 1.;
     // b0 broadcast 1 -> n, k
@@ -81,7 +85,8 @@ fn test_broadcast() {
 }
 
 #[test]
-fn test_broadcast_1d() {
+fn test_broadcast_1d()
+{
     let n = 16;
     let x1 = 1.;
     // b0 broadcast 1 -> n

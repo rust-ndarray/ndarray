@@ -24,7 +24,8 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data {
+    where S: Data
+    {
         self.index_axis(Axis(0), index)
     }
 
@@ -40,7 +41,8 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut {
+    where S: DataMut
+    {
         self.index_axis_mut(Axis(0), index)
     }
 
@@ -61,7 +63,8 @@ where S: RawData<Elem = A>
     /// // get length of any particular axis with .len_of()
     /// assert_eq!(m, array.len_of(Axis(0)));
     /// ```
-    pub fn nrows(&self) -> usize {
+    pub fn nrows(&self) -> usize
+    {
         self.len_of(Axis(0))
     }
 
@@ -76,7 +79,8 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data {
+    where S: Data
+    {
         self.index_axis(Axis(1), index)
     }
 
@@ -92,7 +96,8 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut {
+    where S: DataMut
+    {
         self.index_axis_mut(Axis(1), index)
     }
 
@@ -113,7 +118,8 @@ where S: RawData<Elem = A>
     /// // get length of any particular axis with .len_of()
     /// assert_eq!(n, array.len_of(Axis(1)));
     /// ```
-    pub fn ncols(&self) -> usize {
+    pub fn ncols(&self) -> usize
+    {
         self.len_of(Axis(1))
     }
 
@@ -132,7 +138,8 @@ where S: RawData<Elem = A>
     /// let array = array![[1., 2., 5.], [3., 4., 6.]];
     /// assert!(!array.is_square());
     /// ```
-    pub fn is_square(&self) -> bool {
+    pub fn is_square(&self) -> bool
+    {
         let (m, n) = self.dim();
         m == n
     }

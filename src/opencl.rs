@@ -1,4 +1,5 @@
-pub(crate) fn rust_type_to_c_name<T>() -> Option<&'static str> {
+pub(crate) fn rust_type_to_c_name<T>() -> Option<&'static str>
+{
     match std::any::type_name::<T>() {
         "f32" => Some("float"),
         "f64" => Some("double"),
@@ -14,7 +15,8 @@ pub(crate) fn rust_type_to_c_name<T>() -> Option<&'static str> {
     }
 }
 
-pub(crate) fn gen_contiguous_linear_kernel_3(kernel_name: &str, typename: &str, op: &str) -> String {
+pub(crate) fn gen_contiguous_linear_kernel_3(kernel_name: &str, typename: &str, op: &str) -> String
+{
     format!(
         r#"
         #ifndef NDARRAY_INCLUDE_STDINT

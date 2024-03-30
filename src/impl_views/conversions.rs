@@ -26,7 +26,8 @@ where D: Dimension
     /// Convert the view into an `ArrayView<'b, A, D>` where `'b` is a lifetime
     /// outlived by `'a'`.
     pub fn reborrow<'b>(self) -> ArrayView<'b, A, D>
-    where 'a: 'b {
+    where 'a: 'b
+    {
         unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
     }
 
@@ -35,7 +36,8 @@ where D: Dimension
     ///
     /// Note that while the method is similar to [`ArrayBase::as_slice()`], this method transfers
     /// the view's lifetime to the slice, so it is a bit more powerful.
-    pub fn to_slice(&self) -> Option<&'a [A]> {
+    pub fn to_slice(&self) -> Option<&'a [A]>
+    {
         if self.is_standard_layout() {
             unsafe { Some(slice::from_raw_parts(self.ptr.as_ptr(), self.len())) }
         } else {
@@ -49,7 +51,8 @@ where D: Dimension
     /// Note that while the method is similar to
     /// [`ArrayBase::as_slice_memory_order()`], this method transfers the view's
     /// lifetime to the slice, so it is a bit more powerful.
-    pub fn to_slice_memory_order(&self) -> Option<&'a [A]> {
+    pub fn to_slice_memory_order(&self) -> Option<&'a [A]>
+    {
         if self.is_contiguous() {
             let offset = offset_from_low_addr_ptr_to_logical_ptr(&self.dim, &self.strides);
             unsafe { Some(slice::from_raw_parts(self.ptr.sub(offset).as_ptr(), self.len())) }
@@ -59,7 +62,8 @@ where D: Dimension
     }
 
     /// Converts to a raw array view.
-    pub(crate) fn into_raw_view(self) -> RawArrayView<A, D> {
+    pub(crate) fn into_raw_view(self) -> RawArrayView<A, D>
+    {
         unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }
     }
 }
@@ -67,7 +71,8 @@ where D: Dimension
 /// Methods specific to `ArrayView0`.
 ///
 /// ***See also all methods for [`ArrayView`] and [`ArrayBase`]***
-impl<'a, A> ArrayView<'a, A, Ix0> {
+impl<'a, A> ArrayView<'a, A, Ix0>
+{
     /// Consume the view and return a reference to the single element in the array.
     ///
     /// The lifetime of the returned reference matches the lifetime of the data
@@ -85,7 +90,8 @@ impl<'a, A> ArrayView<'a, A, Ix0> {
     /// let scalar: &Foo = view.into_scalar();
     /// assert_eq!(scalar, &Foo);
     /// ```
-    pub fn into_scalar(self) -> &'a A {
+    pub fn into_scalar(self) -> &'a A
+    {
         self.index(Ix0())
     }
 }
@@ -93,7 +99,8 @@ impl<'a, A> ArrayView<'a, A, Ix0> {
 /// Methods specific to `ArrayViewMut0`.
 ///
 /// ***See also all methods for [`ArrayViewMut`] and [`ArrayBase`]***
-impl<'a, A> ArrayViewMut<'a, A, Ix0> {
+impl<'a, A> ArrayViewMut<'a, A, Ix0>
+{
     /// Consume the mutable view and return a mutable reference to the single element in the array.
     ///
     /// The lifetime of the returned reference matches the lifetime of the data
@@ -109,7 +116,8 @@ impl<'a, A> ArrayViewMut<'a, A, Ix0> {
     /// assert_eq!(scalar, &7.);
     /// assert_eq!(array[()], 7.);
     /// ```
-    pub fn into_scalar(self) -> &'a mut A {
+    pub fn into_scalar(self) -> &'a mut A
+    {
         self.index(Ix0())
     }
 }
@@ -123,7 +131,8 @@ where D: Dimension
     ///
     /// Note that while this is similar to [`ArrayBase::as_slice_mut()`], this method transfers the
     /// view's lifetime to the slice.
-    pub fn into_slice(self) -> Option<&'a mut [A]> {
+    pub fn into_slice(self) -> Option<&'a mut [A]>
+    {
         self.try_into_slice().ok()
     }
 
@@ -133,7 +142,8 @@ where D: Dimension
     /// Note that while this is similar to
     /// [`ArrayBase::as_slice_memory_order_mut()`], this method transfers the
     /// view's lifetime to the slice.
-    pub fn into_slice_memory_order(self) -> Option<&'a mut [A]> {
+    pub fn into_slice_memory_order(self) -> Option<&'a mut [A]>
+    {
         self.try_into_slice_memory_order().ok()
     }
 
@@ -143,7 +153,8 @@ where D: Dimension
     ///
     /// The view acts "as if" the elements are temporarily in cells, and elements
     /// can be changed through shared references using the regular cell methods.
-    pub fn into_cell_view(self) -> ArrayView<'a, MathCell<A>, D> {
+    pub fn into_cell_view(self) -> ArrayView<'a, MathCell<A>, D>
+    {
         // safety: valid because
         // A and MathCell<A> have the same representation
         // &'a mut T is interchangeable with &'a Cell<T> -- see method Cell::from_mut in std
@@ -167,7 +178,8 @@ where D: Dimension
     /// This method allows writing uninitialized data into the view, which could leave any
     /// original array that we borrow from in an inconsistent state. This is not allowed
     /// when using the resulting array view.
-    pub(crate) unsafe fn into_maybe_uninit(self) -> ArrayViewMut<'a, MaybeUninit<A>, D> {
+    pub(crate) unsafe fn into_maybe_uninit(self) -> ArrayViewMut<'a, MaybeUninit<A>, D>
+    {
         // Safe because: A and MaybeUninit<A> have the same representation;
         // and we can go from initialized to (maybe) not unconditionally in terms of
         // representation. However, the user must be careful to not write uninit elements
@@ -183,7 +195,8 @@ impl<A, D> RawArrayView<A, D>
 where D: Dimension
 {
     #[inline]
-    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
+    {
         unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 }
@@ -192,7 +205,8 @@ impl<A, D> RawArrayViewMut<A, D>
 where D: Dimension
 {
     #[inline]
-    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
+    {
         unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 }
@@ -202,16 +216,19 @@ impl<'a, A, D> ArrayView<'a, A, D>
 where D: Dimension
 {
     #[inline]
-    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
+    {
         unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     #[inline]
-    pub(crate) fn into_elements_base(self) -> ElementsBase<'a, A, D> {
+    pub(crate) fn into_elements_base(self) -> ElementsBase<'a, A, D>
+    {
         ElementsBase::new(self)
     }
 
-    pub(crate) fn into_iter_(self) -> Iter<'a, A, D> {
+    pub(crate) fn into_iter_(self) -> Iter<'a, A, D>
+    {
         Iter::new(self)
     }
 
@@ -219,7 +236,8 @@ where D: Dimension
     #[doc(hidden)] // not official
     #[deprecated(note = "This method will be replaced.")]
     pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
-    where D: RemoveAxis {
+    where D: RemoveAxis
+    {
         AxisIter::new(self, Axis(0))
     }
 }
@@ -228,28 +246,33 @@ impl<'a, A, D> ArrayViewMut<'a, A, D>
 where D: Dimension
 {
     // Convert into a read-only view
-    pub(crate) fn into_view(self) -> ArrayView<'a, A, D> {
+    pub(crate) fn into_view(self) -> ArrayView<'a, A, D>
+    {
         unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
     }
 
     /// Converts to a mutable raw array view.
-    pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D> {
+    pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D>
+    {
         unsafe { RawArrayViewMut::new(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]
-    pub(crate) fn into_base_iter(self) -> Baseiter<A, D> {
+    pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
+    {
         unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
     }
 
     #[inline]
-    pub(crate) fn into_elements_base(self) -> ElementsBaseMut<'a, A, D> {
+    pub(crate) fn into_elements_base(self) -> ElementsBaseMut<'a, A, D>
+    {
         ElementsBaseMut::new(self)
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Otherwise return self in the Err branch of the result.
-    pub(crate) fn try_into_slice(self) -> Result<&'a mut [A], Self> {
+    pub(crate) fn try_into_slice(self) -> Result<&'a mut [A], Self>
+    {
         if self.is_standard_layout() {
             unsafe { Ok(slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len())) }
         } else {
@@ -259,7 +282,8 @@ where D: Dimension
 
     /// Return the array’s data as a slice, if it is contiguous.
     /// Otherwise return self in the Err branch of the result.
-    fn try_into_slice_memory_order(self) -> Result<&'a mut [A], Self> {
+    fn try_into_slice_memory_order(self) -> Result<&'a mut [A], Self>
+    {
         if self.is_contiguous() {
             let offset = offset_from_low_addr_ptr_to_logical_ptr(&self.dim, &self.strides);
             unsafe { Ok(slice::from_raw_parts_mut(self.ptr.sub(offset).as_ptr(), self.len())) }
@@ -268,7 +292,8 @@ where D: Dimension
         }
     }
 
-    pub(crate) fn into_iter_(self) -> IterMut<'a, A, D> {
+    pub(crate) fn into_iter_(self) -> IterMut<'a, A, D>
+    {
         IterMut::new(self)
     }
 
@@ -276,7 +301,8 @@ where D: Dimension
     #[doc(hidden)] // not official
     #[deprecated(note = "This method will be replaced.")]
     pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
-    where D: RemoveAxis {
+    where D: RemoveAxis
+    {
         AxisIterMut::new(self, Axis(0))
     }
 }

@@ -30,7 +30,8 @@ where
     /// assert_eq!(a.sum(), 10.);
     /// ```
     pub fn sum(&self) -> A
-    where A: Clone + Add<Output = A> + num_traits::Zero {
+    where A: Clone + Add<Output = A> + num_traits::Zero
+    {
         if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_fold(slc, A::zero, A::add);
         }
@@ -50,7 +51,8 @@ where
     /// *This method has been renamed to `.sum()`*
     #[deprecated(note = "renamed to `sum`", since = "0.15.0")]
     pub fn scalar_sum(&self) -> A
-    where A: Clone + Add<Output = A> + num_traits::Zero {
+    where A: Clone + Add<Output = A> + num_traits::Zero
+    {
         self.sum()
     }
 
@@ -68,7 +70,8 @@ where
     ///
     /// [arithmetic mean]: https://en.wikipedia.org/wiki/Arithmetic_mean
     pub fn mean(&self) -> Option<A>
-    where A: Clone + FromPrimitive + Add<Output = A> + Div<Output = A> + Zero {
+    where A: Clone + FromPrimitive + Add<Output = A> + Div<Output = A> + Zero
+    {
         let n_elements = self.len();
         if n_elements == 0 {
             None
@@ -88,7 +91,8 @@ where
     /// assert_eq!(a.product(), 24.);
     /// ```
     pub fn product(&self) -> A
-    where A: Clone + Mul<Output = A> + num_traits::One {
+    where A: Clone + Mul<Output = A> + num_traits::One
+    {
         if let Some(slc) = self.as_slice_memory_order() {
             return numeric_util::unrolled_fold(slc, A::one, A::mul);
         }
@@ -145,7 +149,8 @@ where
     #[track_caller]
     #[cfg(feature = "std")]
     pub fn var(&self, ddof: A) -> A
-    where A: Float + FromPrimitive {
+    where A: Float + FromPrimitive
+    {
         let zero = A::from_usize(0).expect("Converting 0 to `A` must not fail.");
         let n = A::from_usize(self.len()).expect("Converting length to `A` must not fail.");
         assert!(
@@ -209,7 +214,8 @@ where
     #[track_caller]
     #[cfg(feature = "std")]
     pub fn std(&self, ddof: A) -> A
-    where A: Float + FromPrimitive {
+    where A: Float + FromPrimitive
+    {
         self.var(ddof).sqrt()
     }
 

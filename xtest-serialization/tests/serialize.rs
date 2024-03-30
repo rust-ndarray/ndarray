@@ -12,7 +12,8 @@ extern crate ron;
 use ndarray::{arr0, arr1, arr2, s, ArcArray, ArcArray2, ArrayD, IxDyn};
 
 #[test]
-fn serial_many_dim_serde() {
+fn serial_many_dim_serde()
+{
     {
         let a = arr0::<f32>(2.72);
         let serial = serde_json::to_string(&a).unwrap();
@@ -58,7 +59,8 @@ fn serial_many_dim_serde() {
 }
 
 #[test]
-fn serial_ixdyn_serde() {
+fn serial_ixdyn_serde()
+{
     {
         let a = arr0::<f32>(2.72).into_dyn();
         let serial = serde_json::to_string(&a).unwrap();
@@ -97,7 +99,8 @@ fn serial_ixdyn_serde() {
 }
 
 #[test]
-fn serial_wrong_count_serde() {
+fn serial_wrong_count_serde()
+{
     // one element too few
     let text = r##"{"v":1,"dim":[2,3],"data":[3,1,2.2,3.1,4]}"##;
     let arr = serde_json::from_str::<ArcArray2<f32>>(text);
@@ -112,7 +115,8 @@ fn serial_wrong_count_serde() {
 }
 
 #[test]
-fn serial_many_dim_serde_msgpack() {
+fn serial_many_dim_serde_msgpack()
+{
     {
         let a = arr0::<f32>(2.72);
 
@@ -176,7 +180,8 @@ fn serial_many_dim_serde_msgpack() {
 
 #[test]
 #[cfg(feature = "ron")]
-fn serial_many_dim_ron() {
+fn serial_many_dim_ron()
+{
     use ron::de::from_str as ron_deserialize;
     use ron::ser::to_string as ron_serialize;
 
