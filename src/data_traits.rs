@@ -11,8 +11,8 @@
 use alloc::sync::Arc;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use std::mem::{self, size_of};
 use std::mem::MaybeUninit;
+use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
 use rawpointer::PointerExt;
