@@ -57,6 +57,15 @@ impl<A> OwnedRepr<A> {
         self.device
     }
 
+    pub(crate) const unsafe fn from_components(ptr: NonNull<A>, len: usize, capacity: usize, device: Device) -> Self {
+        Self {
+            ptr,
+            len,
+            capacity,
+            device,
+        }
+    }
+
     /// Move this storage object to a specified device.
     #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn move_to_device(self, device: Device) -> Option<Self> {

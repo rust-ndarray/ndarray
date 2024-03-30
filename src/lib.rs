@@ -1602,6 +1602,9 @@ pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }
 
+#[cfg(feature = "opencl")]
+mod opencl;
+
 pub fn configure() {
     #[cfg(feature = "opencl")]
     unsafe {

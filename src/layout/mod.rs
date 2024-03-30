@@ -68,6 +68,20 @@ impl Layout {
         (self.is(Layout::CORDER) as i32 - self.is(Layout::FORDER) as i32)
             + (self.is(Layout::CPREFER) as i32 - self.is(Layout::FPREFER) as i32)
     }
+
+    /// Return true if the layout order of `self` matches the layout order of `other`
+    ///
+    /// **Note**: We ignore the preference bits
+    #[inline(always)]
+    pub(crate) fn matches(self, other: Self) -> bool {
+        self.0 & (0b11) == other.0 & (0b11)
+    }
+
+    /// Return true if this layout exactly matches the other layout
+    #[inline(always)]
+    pub(crate) fn matches_exact(self, other: Self) -> bool {
+        self.0 == other.0
+    }
 }
 
 #[cfg(test)]

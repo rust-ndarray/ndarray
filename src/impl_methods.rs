@@ -117,6 +117,10 @@ where
         self.dim.clone()
     }
 
+    pub fn raw_strides(&self) -> D {
+        self.strides.clone()
+    }
+
     /// Return the shape of the array as a slice.
     ///
     /// Note that you probably don't want to use this to create an array of the
@@ -2990,7 +2994,7 @@ unsafe fn unlimited_transmute<A, B>(data: A) -> B {
 type DimMaxOf<A, B> = <A as DimMax<B>>::Output;
 
 impl<A, D> ArrayBase<OwnedRepr<A>, D>
-where A: std::fmt::Debug
+// where A: std::fmt::Debug
 {
     // pub fn device(&self) -> Device {
     //     self.data.device()

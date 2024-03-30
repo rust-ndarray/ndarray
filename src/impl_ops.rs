@@ -6,8 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::mem::ManuallyDrop;
 use crate::dimension::DimMax;
+use crate::Device;
 use crate::Zip;
+use crate::Layout;
+use crate::OwnedRepr;
 use num_complex::Complex;
 
 /// Elements that can be used as direct operands in arithmetic with arrays.
@@ -57,6 +61,16 @@ macro_rules! device_check_assert(
             Please move them to the same device first.");
     }
 );
+
+// Pick the expression $a for commutative and $b for ordered binop
+macro_rules! if_commutative {
+    (Commute { $a:expr } or { $b:expr }) => {
+        $a
+    };
+    (Ordered { $a:expr } or { $b:expr }) => {
+        $b
+    };
+}
 
 macro_rules! impl_binary_op(
     ($rs_trait:ident, $operator:tt, $math_op:ident, $inplace_op:tt, $docstring:expr) => (
@@ -186,7 +200,7 @@ where
 /// **Panics** if broadcasting isn’t possible.
 impl<'a, A, B, S, S2, D, E> $rs_trait<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
 where
-    A: Clone + $rs_trait<B, Output=A>,
+    A: Clone + $rs_trait<B, Output=A> + std::fmt::Debug,
     B: Clone,
     S: Data<Elem=A>,
     S2: Data<Elem=B>,
@@ -205,7 +219,97 @@ where
         } else {
             self.broadcast_with(rhs).unwrap()
         };
-        Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$math_op))
+
+        match self.device() {
+            Device::Host => {
+                Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$math_op))
+            }
+
+            #[cfg(feature = "opencl")]
+            Device::OpenCL => {
+                if lhs.raw_dim().ndim() == 0 && rhs.raw_dim().ndim() == 0 {
+                    // println!("Scalar");
+                    todo!();
+                } else if lhs.layout_impl().is(Layout::CORDER | Layout::FORDER) &&
+                    rhs.layout_impl().is(Layout::CORDER | Layout::FORDER) &&
+                    lhs.layout_impl().matches(rhs.layout_impl()) {
+                    // println!("Contiguous");
+
+                    static mut KERNEL_BUILT: bool = false; // todo: fix monomorphization issue
+
+                    let typename = match crate::opencl::rust_type_to_c_name::<A>() {
+                        Some(x) => x,
+                        None => panic!("The Rust type {} is not supported by the \
+                                        OpenCL backend", std::any::type_name::<A>())
+                    };
+
+                    let kernel_name = format!("binary_op_{}_{}", stringify!($math_op), typename);
+
+                    #[cold]
+                    if unsafe { !KERNEL_BUILT } {
+                        let kernel = crate::opencl::gen_contiguous_linear_kernel_3(
+                            &kernel_name,
+                            typename,
+                            stringify!($operator));
+
+                        unsafe {
+                            hasty_::opencl::opencl_add_kernel(&kernel);
+                            KERNEL_BUILT = true;
+                        }
+                    }
+
+                    unsafe {
+                        let elements = self.len();
+                        let self_ptr = self.as_ptr() as *mut std::ffi::c_void;
+                        let other_ptr = rhs.as_ptr() as *mut std::ffi::c_void;
+                        let res_ptr = match hasty_::opencl::opencl_allocate(
+                            elements * std::mem::size_of::<A>(),
+                            hasty_::opencl::OpenCLMemoryType::ReadWrite
+                        ) {
+                            Ok(buf) => buf,
+                            Err(e) => panic!("Failed to allocate OpenCL buffer. Exited with: {:?}", e)
+                        };
+
+                        match hasty_::opencl::opencl_run_contiguous_linear_kernel_3(
+                            &kernel_name,
+                            elements,
+                            self_ptr,
+                            other_ptr,
+                            res_ptr,
+                        ) {
+                            Ok(()) => {
+                                use std::ptr::NonNull;
+
+                                let ptr = NonNull::new(res_ptr as *mut A).unwrap();
+                                let data = OwnedRepr::<A>::from_components(
+                                    ptr,
+                                    self.len(),
+                                    self.len(),
+                                    self.device(),
+                                );
+
+                                Self::Output::from_parts(
+                                    data,
+                                    ptr,
+                                    <D as DimMax<E>>::Output::from_dimension(&self.raw_dim()).unwrap(),
+                                    <D as DimMax<E>>::Output::from_dimension(&self.raw_strides()).unwrap(),
+                                )
+                            }
+                            Err(e) => panic!("Failed to run OpenCL kernel '{}'. \
+                                              Exited with code: {:?}", kernel_name, e),
+                        }
+                    }
+                } else {
+                    println!("Strided");
+                    todo!();
+                }
+            }
+
+            #[cfg(feature = "cuda")]
+            Device::CUDA => {
+                todo!();
+            }
+        }
     }
 }
 
@@ -247,16 +351,6 @@ impl<'a, A, S, D, B> $rs_trait<B> for &'a ArrayBase<S, D>
 }
     );
 );
-
-// Pick the expression $a for commutative and $b for ordered binop
-macro_rules! if_commutative {
-    (Commute { $a:expr } or { $b:expr }) => {
-        $a
-    };
-    (Ordered { $a:expr } or { $b:expr }) => {
-        $b
-    };
-}
 
 macro_rules! impl_scalar_lhs_op {
     // $commutative flag. Reuse the self + scalar impl if we can.
@@ -304,10 +398,11 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
 }
 
 mod arithmetic_ops {
-    use super::*;
+    use std::ops::*;
+
     use crate::imp_prelude::*;
 
-    use std::ops::*;
+    use super::*;
 
     fn clone_opf<A: Clone, B: Clone, C>(f: impl Fn(A, B) -> C) -> impl FnMut(&A, &B) -> C {
         move |x, y| f(x.clone(), y.clone())
@@ -447,8 +542,9 @@ mod arithmetic_ops {
 }
 
 mod assign_ops {
-    use super::*;
     use crate::imp_prelude::*;
+
+    use super::*;
 
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {

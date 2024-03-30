@@ -5,7 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use super::{ArrayBase, ArrayView, Axis, Data, Dimension, NdProducer};
+use super::{ArrayBase, ArrayView, Axis, Data, Device, Dimension, NdProducer};
 use crate::aliases::{Ix1, IxDyn};
 use alloc::format;
 use std::fmt;
@@ -116,6 +116,7 @@ where
 {
     // Cast into a dynamically dimensioned view
     // This is required to be able to use `index_axis` for the recursive case
+    assert_eq!(array.device(), Device::Host, "Cannot print an array that is not on the Host.");
     format_array_inner(array.view().into_dyn(), f, format, fmt_opt, 0, array.ndim())
 }
 
