@@ -58,6 +58,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
@@ -81,6 +82,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
       - name: Install cross
         run: cargo install cross
