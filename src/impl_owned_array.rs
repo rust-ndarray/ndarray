@@ -77,7 +77,7 @@ where D: Dimension
 
     /// Return a vector of the elements in the array, in the way they are
     /// stored internally, and the index in the vector corresponding to the
-    /// logically first element of the array (or `None` if the array is empty).
+    /// logically first element of the array (or 0 if the array is empty).
     ///
     /// If the array is in standard memory layout, the logical element order
     /// of the array (`.iter()` order) and of the returned vector will be the same.
@@ -92,7 +92,7 @@ where D: Dimension
     ///
     /// let shape = arr.shape().to_owned();
     /// let strides = arr.strides().to_owned();
-    /// let (v, offset) = arr.into_raw_vec();
+    /// let (v, offset) = arr.into_raw_vec_and_offset();
     ///
     /// assert_eq!(v, &[1., 2., 3., 4., 5., 6.]);
     /// assert_eq!(offset, Some(2));
@@ -124,7 +124,7 @@ where D: Dimension
     ///
     /// let shape = arr.shape().to_owned();
     /// let strides = arr.strides().to_owned();
-    /// let (v, offset) = arr.into_raw_vec();
+    /// let (v, offset) = arr.into_raw_vec_and_offset();
     ///
     /// assert_eq!(v, &[(), (), (), (), (), ()]);
     /// for row in 0..shape[0] {
@@ -138,10 +138,22 @@ where D: Dimension
     ///     }
     /// }
     /// ```
-    pub fn into_raw_vec(self) -> (Vec<A>, Option<usize>)
+    pub fn into_raw_vec_and_offset(self) -> (Vec<A>, Option<usize>)
     {
         let offset = self.offset_from_alloc_to_logical_ptr();
         (self.data.into_vec(), offset)
+    }
+
+    /// Return a vector of the elements in the array, in the way they are
+    /// stored internally.
+    ///
+    /// Depending on slicing and strides, the logically first element of the
+    /// array can be located at an offset. Because of this, prefer to use
+    /// `.into_raw_vec_and_offset()` instead.
+    #[deprecated(note = "Use .into_raw_vec_and_offset() instead")]
+    pub fn into_raw_vec(self) -> Vec<A>
+    {
+        self.into_raw_vec_and_offset().0
     }
 }
 

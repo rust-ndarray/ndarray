@@ -410,7 +410,7 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize)
 }
 
 /// This function computes the offset from the lowest address element to the
-/// logically first element. The result is always >= 0.
+/// logically first element.
 pub fn offset_from_low_addr_ptr_to_logical_ptr<D: Dimension>(dim: &D, strides: &D) -> usize
 {
     let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (&d, &s)| {
