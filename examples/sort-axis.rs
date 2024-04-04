@@ -157,7 +157,7 @@ where D: Dimension
                 });
             debug_assert_eq!(result.len(), moved_elements);
             // forget the old elements but not the allocation
-            let mut old_storage = self.into_raw_vec();
+            let mut old_storage = self.into_raw_vec_and_offset().0;
             old_storage.set_len(0);
 
             // transfer ownership of the elements into the result
