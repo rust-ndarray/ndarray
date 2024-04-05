@@ -43,6 +43,7 @@ libc = { version = "0.2.82", optional = true }
 
 matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm"] }
 
+borsh = { version = "1.2", optional = true, default-features = false }
 serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
 
@@ -66,7 +67,7 @@ serde-1 = ["serde"]
 test = []
 
 # This feature is used for docs
-docs = ["approx", "approx-0_5", "serde", "rayon"]
+docs = ["approx", "approx-0_5", "serde", "borsh", "rayon"]
 
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["rayon_", "std"]
