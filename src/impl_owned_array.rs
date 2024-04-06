@@ -251,6 +251,52 @@ impl<A> Array<A, Ix2>
     {
         self.append(Axis(1), column.insert_axis(Axis(1)))
     }
+
+    /// Reserve capacity to grow array by at least `additional` rows.
+    ///
+    /// Existing elements of `array` are untouched and the backing storage is grown by
+    /// calling the underlying `reserve` method of the `OwnedRepr`.
+    ///
+    /// This is useful when pushing or appending repeatedly to an array to avoid multiple
+    /// allocations.
+    ///
+    /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
+    /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
+    /// `additional` exceeds `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::Array2;
+    /// let mut a = Array2::<i32>::zeros((2,4));
+    /// a.reserve_rows(1000).unwrap();
+    /// assert!(a.into_raw_vec().capacity() >= 4*1002);
+    /// ```
+    pub fn reserve_rows(&mut self, additional: usize) -> Result<(), ShapeError>
+    {
+        self.reserve(Axis(0), additional)
+    }
+
+    /// Reserve capacity to grow array by at least `additional` columns.
+    ///
+    /// Existing elements of `array` are untouched and the backing storage is grown by
+    /// calling the underlying `reserve` method of the `OwnedRepr`.
+    ///
+    /// This is useful when pushing or appending repeatedly to an array to avoid multiple
+    /// allocations.
+    ///
+    /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
+    /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
+    /// `additional` exceeds `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::Array2;
+    /// let mut a = Array2::<i32>::zeros((2,4));
+    /// a.reserve_columns(1000).unwrap();
+    /// assert!(a.into_raw_vec().capacity() >= 2*1002);
+    /// ```
+    pub fn reserve_columns(&mut self, additional: usize) -> Result<(), ShapeError>
+    {
+        self.reserve(Axis(1), additional)
+    }
 }
 
 impl<A, D> Array<A, D>
@@ -660,14 +706,10 @@ where D: Dimension
             self.strides.clone()
         };
 
-        unsafe {
-            // grow backing storage and update head ptr
-            let offset_from_alloc_to_logical = self.offset_from_alloc_to_logical_ptr().unwrap_or(0);
-            self.ptr = self
-                .data
-                .reserve(len_to_append)
-                .add(offset_from_alloc_to_logical);
+        // grow backing storage and update head ptr
+        self.reserve(axis, array_dim[axis.index()])?;
 
+        unsafe {
             // clone elements from view to the array now
             //
             // To be robust for panics and drop the right elements, we want
@@ -747,6 +789,70 @@ where D: Dimension
         // multiple assertions after pointer & dimension update
         debug_assert_eq!(self.data.len(), self.len());
         debug_assert_eq!(self.len(), new_len);
+        debug_assert!(self.pointer_is_inbounds());
+
+        Ok(())
+    }
+
+    /// Reserve capacity to grow array along `axis` by at least `additional` elements.
+    ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
+    /// Existing elements of `array` are untouched and the backing storage is grown by
+    /// calling the underlying `reserve` method of the `OwnedRepr`.
+    ///
+    /// This is useful when pushing or appending repeatedly to an array to avoid multiple
+    /// allocations.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    ///
+    /// ***Errors*** with a shape error if the resultant capacity is larger than the addressable
+    /// bounds; that is, the product of non-zero axis lengths once `axis` has been extended by
+    /// `additional` exceeds `isize::MAX`.
+    ///
+    /// ```rust
+    /// use ndarray::{Array3, Axis};
+    /// let mut a = Array3::<i32>::zeros((0,2,4));
+    /// a.reserve(Axis(0), 1000).unwrap();
+    /// assert!(a.into_raw_vec().capacity() >= 2*4*1000);
+    /// ```
+    ///
+    pub fn reserve(&mut self, axis: Axis, additional: usize) -> Result<(), ShapeError>
+    where D: RemoveAxis
+    {
+        debug_assert!(axis.index() < self.ndim());
+        let self_dim = self.raw_dim();
+        let remaining_shape = self_dim.remove_axis(axis);
+
+        // Make sure added capacity doesn't overflow usize::MAX
+        let len_to_append = remaining_shape
+            .size()
+            .checked_mul(additional)
+            .ok_or(ShapeError::from_kind(ErrorKind::Overflow))?;
+
+        // Make sure new capacity is still in bounds
+        let mut res_dim = self_dim;
+        res_dim[axis.index()] += additional;
+        let new_len = dimension::size_of_shape_checked(&res_dim)?;
+
+        // Check whether len_to_append would cause an overflow
+        debug_assert_eq!(self.len().checked_add(len_to_append).unwrap(), new_len);
+
+        unsafe {
+            // grow backing storage and update head ptr
+            let data_to_array_offset = if std::mem::size_of::<A>() != 0 {
+                self.as_ptr().offset_from(self.data.as_ptr())
+            } else {
+                0
+            };
+            debug_assert!(data_to_array_offset >= 0);
+            self.ptr = self
+                .data
+                .reserve(len_to_append)
+                .offset(data_to_array_offset);
+        }
+
         debug_assert!(self.pointer_is_inbounds());
 
         Ok(())
