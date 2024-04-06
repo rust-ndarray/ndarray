@@ -85,10 +85,6 @@ your `Cargo.toml`.
 
 - ``approx``
 
-  - Implementations of traits from version 0.4 of the [`approx`] crate.
-
-- ``approx-0_5``
-
   - Implementations of traits from version 0.5 of the [`approx`] crate.
 
 - ``blas``

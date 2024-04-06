@@ -65,7 +65,7 @@ serde-1 = ["serde"]
 test = []
 
 # This feature is used for docs
-docs = ["approx", "approx-0_5", "serde", "rayon"]
+docs = ["approx", "serde", "rayon"]
 
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["rayon_", "std"]
