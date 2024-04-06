@@ -1,4 +1,3 @@
-
 `ndarray` implements an *n*-dimensional container for general elements and for
 numerics.
 

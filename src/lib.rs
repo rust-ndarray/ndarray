@@ -208,6 +208,7 @@ mod dimension;
 
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 
+pub use crate::data_repr::Device;
 pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
@@ -1129,7 +1130,7 @@ pub type Ixs = isize;
 /// }
 /// let arr = Array2::from_shape_vec((nrows, ncols), data)?;
 /// assert_eq!(arr, array![[0, 0, 0], [1, 1, 1]]);
-/// # Ok::<(), ndarray::ShapeError>(())
+/// Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// If neither of these options works for you, and you really need to convert
@@ -1153,7 +1154,7 @@ pub type Ixs = isize;
 ///     [[1, 2, 3], [4, 5, 6]],
 ///     [[7, 8, 9], [10, 11, 12]],
 /// ]);
-/// # Ok::<(), ndarray::ShapeError>(())
+/// Ok::<(), ndarray::ShapeError>(())
 /// ```
 ///
 /// Note that this implementation assumes that the nested `Vec`s are all the
@@ -1616,4 +1617,15 @@ mod impl_cow;
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool
 {
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
+}
+
+#[cfg(feature = "opencl")]
+mod opencl;
+
+pub fn configure()
+{
+    #[cfg(feature = "opencl")]
+    unsafe {
+        hasty_::opencl::configure_opencl();
+    }
 }

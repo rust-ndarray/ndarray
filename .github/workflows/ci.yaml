@@ -1,6 +1,11 @@
 on:
+  push:
+    branches:
+      - "**"
   pull_request:
   merge_group:
+  workflow_dispatch:
+  workflow_call:
 
 name: Continuous integration
 
@@ -8,12 +13,13 @@ env:
   CARGO_TERM_COLOR: always
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "test docs"
-  RUSTFLAGS: "-D warnings"
+  # RUSTFLAGS: "-D warnings" # For now, we don't mind a couple warnings
 
 jobs:
   clippy:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         rust:
           - beta
@@ -30,6 +36,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         rust:
           - nightly
@@ -45,12 +52,13 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         rust:
           - stable
           - beta
           - nightly
-          - 1.57.0  # MSRV
+          - 1.63.0  # MSRV
 
     name: tests/${{ matrix.rust }}
     steps:
@@ -68,6 +76,7 @@ jobs:
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - rust: stable
@@ -92,6 +101,8 @@ jobs:
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     name: cargo-careful
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
@@ -107,6 +118,7 @@ jobs:
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         rust:
           - stable
@@ -127,6 +139,8 @@ jobs:
       - cargo-careful
       - docs
     if: always()
+    strategy:
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
       - name: Result

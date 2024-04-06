@@ -625,6 +625,16 @@ where
         array
     }
 
+    pub(crate) const unsafe fn from_parts(data: S, ptr: std::ptr::NonNull<S::Elem>, dim: D, strides: D) -> Self
+    {
+        Self {
+            data,
+            ptr,
+            dim,
+            strides,
+        }
+    }
+
     #[deprecated(
         note = "This method is hard to use correctly. Use `uninit` instead.",
         since = "0.15.0"

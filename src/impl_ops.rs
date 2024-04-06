@@ -7,6 +7,9 @@
 // except according to those terms.
 
 use crate::dimension::DimMax;
+use crate::Device;
+use crate::Layout;
+use crate::OwnedRepr;
 use crate::Zip;
 use num_complex::Complex;
 
@@ -50,187 +53,12 @@ impl ScalarOperand for f64 {}
 impl ScalarOperand for Complex<f32> {}
 impl ScalarOperand for Complex<f64> {}
 
-macro_rules! impl_binary_op(
-    ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
-/// Perform elementwise
-#[doc=$doc]
-/// between `self` and `rhs`,
-/// and return the result.
-///
-/// `self` must be an `Array` or `ArcArray`.
-///
-/// If their shapes disagree, `self` is broadcast to their broadcast shape.
-///
-/// **Panics** if broadcasting isn’t possible.
-impl<A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for ArrayBase<S, D>
-where
-    A: Clone + $trt<B, Output=A>,
-    B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
-    S2: Data<Elem=B>,
-    D: Dimension + DimMax<E>,
-    E: Dimension,
-{
-    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
-    #[track_caller]
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
-    {
-        self.$mth(&rhs)
+macro_rules! device_check_assert(
+    ($self:expr, $rhs:expr) => {
+        debug_assert_eq!($self.device(), $rhs.device(),
+            "Cannot perform operation on arrays on different devices. \
+            Please move them to the same device first.");
     }
-}
-
-/// Perform elementwise
-#[doc=$doc]
-/// between `self` and reference `rhs`,
-/// and return the result.
-///
-/// `rhs` must be an `Array` or `ArcArray`.
-///
-/// If their shapes disagree, `self` is broadcast to their broadcast shape,
-/// cloning the data if needed.
-///
-/// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
-where
-    A: Clone + $trt<B, Output=A>,
-    B: Clone,
-    S: DataOwned<Elem=A> + DataMut,
-    S2: Data<Elem=B>,
-    D: Dimension + DimMax<E>,
-    E: Dimension,
-{
-    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
-    #[track_caller]
-    fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
-    {
-        if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
-            let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
-            out.zip_mut_with_same_shape(rhs, clone_iopf(A::$mth));
-            out
-        } else {
-            let (lhs_view, rhs_view) = self.broadcast_with(&rhs).unwrap();
-            if lhs_view.shape() == self.shape() {
-                let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
-                out.zip_mut_with_same_shape(&rhs_view, clone_iopf(A::$mth));
-                out
-            } else {
-                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$mth))
-            }
-        }
-    }
-}
-
-/// Perform elementwise
-#[doc=$doc]
-/// between reference `self` and `rhs`,
-/// and return the result.
-///
-/// `rhs` must be an `Array` or `ArcArray`.
-///
-/// If their shapes disagree, `self` is broadcast to their broadcast shape,
-/// cloning the data if needed.
-///
-/// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
-where
-    A: Clone + $trt<B, Output=B>,
-    B: Clone,
-    S: Data<Elem=A>,
-    S2: DataOwned<Elem=B> + DataMut,
-    D: Dimension,
-    E: Dimension + DimMax<D>,
-{
-    type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
-    #[track_caller]
-    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
-    where
-    {
-        if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
-            let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
-            out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$mth));
-            out
-        } else {
-            let (rhs_view, lhs_view) = rhs.broadcast_with(self).unwrap();
-            if rhs_view.shape() == rhs.shape() {
-                let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
-                out.zip_mut_with_same_shape(&lhs_view, clone_iopf_rev(A::$mth));
-                out
-            } else {
-                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$mth))
-            }
-        }
-    }
-}
-
-/// Perform elementwise
-#[doc=$doc]
-/// between references `self` and `rhs`,
-/// and return the result as a new `Array`.
-///
-/// If their shapes disagree, `self` and `rhs` is broadcast to their broadcast shape,
-/// cloning the data if needed.
-///
-/// **Panics** if broadcasting isn’t possible.
-impl<'a, A, B, S, S2, D, E> $trt<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
-where
-    A: Clone + $trt<B, Output=A>,
-    B: Clone,
-    S: Data<Elem=A>,
-    S2: Data<Elem=B>,
-    D: Dimension + DimMax<E>,
-    E: Dimension,
-{
-    type Output = Array<A, <D as DimMax<E>>::Output>;
-    #[track_caller]
-    fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
-        let (lhs, rhs) = if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
-            let lhs = self.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
-            let rhs = rhs.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
-            (lhs, rhs)
-        } else {
-            self.broadcast_with(rhs).unwrap()
-        };
-        Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$mth))
-    }
-}
-
-/// Perform elementwise
-#[doc=$doc]
-/// between `self` and the scalar `x`,
-/// and return the result (based on `self`).
-///
-/// `self` must be an `Array` or `ArcArray`.
-impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
-    where A: Clone + $trt<B, Output=A>,
-          S: DataOwned<Elem=A> + DataMut,
-          D: Dimension,
-          B: ScalarOperand,
-{
-    type Output = ArrayBase<S, D>;
-    fn $mth(mut self, x: B) -> ArrayBase<S, D> {
-        self.map_inplace(move |elt| {
-            *elt = elt.clone() $operator x.clone();
-        });
-        self
-    }
-}
-
-/// Perform elementwise
-#[doc=$doc]
-/// between the reference `self` and the scalar `x`,
-/// and return the result as a new `Array`.
-impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
-    where A: Clone + $trt<B, Output=A>,
-          S: Data<Elem=A>,
-          D: Dimension,
-          B: ScalarOperand,
-{
-    type Output = Array<A, D>;
-    fn $mth(self, x: B) -> Self::Output {
-        self.map(move |elt| elt.clone() $operator x.clone())
-    }
-}
-    );
 );
 
 // Pick the expression $a for commutative and $b for ordered binop
@@ -242,6 +70,287 @@ macro_rules! if_commutative {
         $b
     };
 }
+
+macro_rules! impl_binary_op(
+    ($rs_trait:ident, $operator:tt, $math_op:ident, $inplace_op:tt, $docstring:expr) => (
+/// Perform elementwise
+#[doc=$docstring]
+/// between `self` and `rhs`,
+/// and return the result.
+///
+/// `self` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<A, B, S, S2, D, E> $rs_trait<ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $rs_trait<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension + DimMax<E>,
+    E: Dimension,
+{
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+    #[track_caller]
+    fn $math_op(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    {
+        device_check_assert!(self, rhs);
+        self.$math_op(&rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$docstring]
+/// between `self` and reference `rhs`,
+/// and return the result.
+///
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $rs_trait<&'a ArrayBase<S2, E>> for ArrayBase<S, D>
+where
+    A: Clone + $rs_trait<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    S2: Data<Elem=B>,
+    D: Dimension + DimMax<E>,
+    E: Dimension,
+{
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+    #[track_caller]
+    fn $math_op(self, rhs: &ArrayBase<S2, E>) -> Self::Output
+    {
+        device_check_assert!(self, rhs);
+
+        if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
+            let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+            out.zip_mut_with_same_shape(rhs, clone_iopf(A::$math_op));
+            out
+        } else {
+            let (lhs_view, rhs_view) = self.broadcast_with(&rhs).unwrap();
+            if lhs_view.shape() == self.shape() {
+                let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+                out.zip_mut_with_same_shape(&rhs_view, clone_iopf(A::$math_op));
+                out
+            } else {
+                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$math_op))
+            }
+        }
+    }
+}
+
+/// Perform elementwise
+#[doc=$docstring]
+/// between reference `self` and `rhs`,
+/// and return the result.
+///
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $rs_trait<ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $rs_trait<B, Output=B>,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: DataOwned<Elem=B> + DataMut,
+    D: Dimension,
+    E: Dimension + DimMax<D>,
+{
+    type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
+    #[track_caller]
+    fn $math_op(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    // where
+    {
+        device_check_assert!(self, rhs);
+
+        if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
+            let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
+            out.zip_mut_with_same_shape(self, clone_iopf_rev(A::$math_op));
+            out
+        } else {
+            let (rhs_view, lhs_view) = rhs.broadcast_with(self).unwrap();
+            if rhs_view.shape() == rhs.shape() {
+                let mut out = rhs.into_dimensionality::<<E as DimMax<D>>::Output>().unwrap();
+                out.zip_mut_with_same_shape(&lhs_view, clone_iopf_rev(A::$math_op));
+                out
+            } else {
+                Zip::from(&lhs_view).and(&rhs_view).map_collect_owned(clone_opf(A::$math_op))
+            }
+        }
+    }
+}
+
+/// Perform elementwise
+#[doc=$docstring]
+/// between references `self` and `rhs`,
+/// and return the result as a new `Array`.
+///
+/// If their shapes disagree, `self` and `rhs` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, S2, D, E> $rs_trait<&'a ArrayBase<S2, E>> for &'a ArrayBase<S, D>
+where
+    A: Clone + $rs_trait<B, Output=A> + std::fmt::Debug,
+    B: Clone,
+    S: Data<Elem=A>,
+    S2: Data<Elem=B>,
+    D: Dimension + DimMax<E>,
+    E: Dimension,
+{
+    type Output = Array<A, <D as DimMax<E>>::Output>;
+    #[track_caller]
+    fn $math_op(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
+        device_check_assert!(self, rhs);
+
+        let (lhs, rhs) = if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
+            let lhs = self.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+            let rhs = rhs.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
+            (lhs, rhs)
+        } else {
+            self.broadcast_with(rhs).unwrap()
+        };
+
+        match self.device() {
+            Device::Host => {
+                Zip::from(lhs).and(rhs).map_collect(clone_opf(A::$math_op))
+            }
+
+            #[cfg(feature = "opencl")]
+            Device::OpenCL => {
+                if lhs.raw_dim().ndim() == 0 && rhs.raw_dim().ndim() == 0 {
+                    // println!("Scalar");
+                    todo!();
+                } else if lhs.layout_impl().is(Layout::CORDER | Layout::FORDER) &&
+                    rhs.layout_impl().is(Layout::CORDER | Layout::FORDER) &&
+                    lhs.layout_impl().matches(rhs.layout_impl()) {
+                    // println!("Contiguous");
+
+                    static mut KERNEL_BUILT: bool = false; // todo: fix monomorphization issue
+
+                    let typename = match crate::opencl::rust_type_to_c_name::<A>() {
+                        Some(x) => x,
+                        None => panic!("The Rust type {} is not supported by the \
+                                        OpenCL backend", std::any::type_name::<A>())
+                    };
+
+                    let kernel_name = format!("binary_op_{}_{}", stringify!($math_op), typename);
+
+                    if unsafe { !KERNEL_BUILT } {
+                        let kernel = crate::opencl::gen_contiguous_linear_kernel_3(
+                            &kernel_name,
+                            typename,
+                            stringify!($operator));
+
+                        unsafe {
+                            if let Err(e) = hasty_::opencl::opencl_add_kernel(&kernel) {
+                                panic!("Failed to add OpenCL kernel. Errored with code {:?}", e);
+                            }
+                            KERNEL_BUILT = true;
+                        }
+                    }
+
+                    unsafe {
+                        let elements = self.len();
+                        let self_ptr = self.as_ptr() as *mut std::ffi::c_void;
+                        let other_ptr = rhs.as_ptr() as *mut std::ffi::c_void;
+                        let res_ptr = match hasty_::opencl::opencl_allocate(
+                            elements * std::mem::size_of::<A>(),
+                            hasty_::opencl::OpenCLMemoryType::ReadWrite
+                        ) {
+                            Ok(buf) => buf,
+                            Err(e) => panic!("Failed to allocate OpenCL buffer. Exited with: {:?}", e)
+                        };
+
+                        match hasty_::opencl::opencl_run_contiguous_linear_kernel_3(
+                            &kernel_name,
+                            elements,
+                            self_ptr,
+                            other_ptr,
+                            res_ptr,
+                        ) {
+                            Ok(()) => {
+                                use std::ptr::NonNull;
+
+                                let ptr = NonNull::new(res_ptr as *mut A).unwrap();
+                                let data = OwnedRepr::<A>::from_components(
+                                    ptr,
+                                    self.len(),
+                                    self.len(),
+                                    self.device(),
+                                );
+
+                                Self::Output::from_parts(
+                                    data,
+                                    ptr,
+                                    <D as DimMax<E>>::Output::from_dimension(&self.raw_dim()).unwrap(),
+                                    <D as DimMax<E>>::Output::from_dimension(&self.raw_strides()).unwrap(),
+                                )
+                            }
+                            Err(e) => panic!("Failed to run OpenCL kernel '{}'. \
+                                              Exited with code: {:?}", kernel_name, e),
+                        }
+                    }
+                } else {
+                    println!("Strided");
+                    todo!();
+                }
+            }
+
+            #[cfg(feature = "cuda")]
+            Device::CUDA => {
+                todo!();
+            }
+        }
+    }
+}
+
+/// Perform elementwise
+#[doc=$docstring]
+/// between `self` and the scalar `x`,
+/// and return the result (based on `self`).
+///
+/// `self` must be an `Array` or `ArcArray`.
+impl<A, S, D, B> $rs_trait<B> for ArrayBase<S, D>
+    where A: Clone + $rs_trait<B, Output=A>,
+          S: DataOwned<Elem=A> + DataMut,
+          D: Dimension,
+          B: ScalarOperand,
+{
+    type Output = ArrayBase<S, D>;
+    fn $math_op(mut self, x: B) -> ArrayBase<S, D> {
+        self.map_inplace(move |elt| {
+            *elt = elt.clone() $operator x.clone();
+        });
+        self
+    }
+}
+
+/// Perform elementwise
+#[doc=$docstring]
+/// between the reference `self` and the scalar `x`,
+/// and return the result as a new `Array`.
+impl<'a, A, S, D, B> $rs_trait<B> for &'a ArrayBase<S, D>
+    where A: Clone + $rs_trait<B, Output=A>,
+          S: Data<Elem=A>,
+          D: Dimension,
+          B: ScalarOperand,
+{
+    type Output = Array<A, D>;
+    fn $math_op(self, x: B) -> Self::Output {
+        self.map(move |elt| elt.clone() $operator x.clone())
+    }
+}
+    );
+);
 
 macro_rules! impl_scalar_lhs_op {
     // $commutative flag. Reuse the self + scalar impl if we can.
@@ -290,10 +399,11 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
 
 mod arithmetic_ops
 {
-    use super::*;
+    use std::ops::*;
+
     use crate::imp_prelude::*;
 
-    use std::ops::*;
+    use super::*;
 
     fn clone_opf<A: Clone, B: Clone, C>(f: impl Fn(A, B) -> C) -> impl FnMut(&A, &B) -> C
     {
@@ -441,8 +551,9 @@ mod arithmetic_ops
 
 mod assign_ops
 {
-    use super::*;
     use crate::imp_prelude::*;
+
+    use super::*;
 
     macro_rules! impl_assign_op {
         ($trt:ident, $method:ident, $doc:expr) => {

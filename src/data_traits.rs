@@ -8,8 +8,6 @@
 
 //! The data (inner representation) traits for ndarray
 
-use rawpointer::PointerExt;
-
 use alloc::sync::Arc;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
@@ -17,7 +15,9 @@ use std::mem::MaybeUninit;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
-use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use rawpointer::PointerExt;
+
+use crate::{ArcArray, Array, ArrayBase, CowRepr, Device, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
 
 /// Array representation trait.
 ///
@@ -41,6 +41,12 @@ pub unsafe trait RawData: Sized
 
     #[doc(hidden)]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool;
+
+    #[doc(hidden)]
+    fn _device(&self) -> Option<Device>
+    {
+        None
+    }
 
     private_decl! {}
 }
@@ -354,10 +360,21 @@ unsafe impl<A> RawData for OwnedRepr<A>
 
     fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
     {
-        let slc = self.as_slice();
-        let ptr = slc.as_ptr() as *mut A;
-        let end = unsafe { ptr.add(slc.len()) };
-        self_ptr >= ptr && self_ptr <= end
+        // let slc = self.as_slice();
+        // let ptr = slc.as_ptr() as *mut A;
+        // let end = unsafe { ptr.add(slc.len()) };
+        // self_ptr >= ptr && self_ptr <= end
+
+        // Instead of using a slice, we just get the raw pointer. This assumes that `self.len()`
+        // is correct, but since this is internally managed, it's safe to assume it is
+        let ptr = self.as_ptr();
+        let end = unsafe { ptr.add(self.len()) };
+        ptr <= self_ptr && self_ptr <= end
+    }
+
+    fn _device(&self) -> Option<Device>
+    {
+        Some(self.device())
     }
 
     private_impl! {}
