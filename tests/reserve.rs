@@ -50,3 +50,16 @@ fn reserve_2d_with_data()
     assert_eq!(a, array![[1, 2], [3, 4], [5, 6]]);
     assert!(a.into_raw_vec().capacity() >= 3 * 100);
 }
+
+#[test]
+fn reserve_2d_inverted_with_data()
+{
+    let mut a = array![[1, 2], [3, 4], [5, 6]];
+    a.invert_axis(Axis(1));
+    assert_eq!(a, array![[2, 1], [4, 3], [6, 5]]);
+    a.reserve(Axis(1), 100).unwrap();
+    assert_eq!(a, array![[2, 1], [4, 3], [6, 5]]);
+    let (raw_vec, offset) = a.into_raw_vec_and_offset();
+    assert!(raw_vec.capacity() >= 3 * 100);
+    assert_eq!(offset, Some(1));
+}
