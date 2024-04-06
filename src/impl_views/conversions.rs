@@ -62,6 +62,7 @@ where D: Dimension
     }
 
     /// Converts to a raw array view.
+    #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D>
     {
         unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }

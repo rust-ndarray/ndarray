@@ -88,6 +88,7 @@ where D: Dimension
     ///                                      along Axis(1)
     /// ```
     #[track_caller]
+    #[inline]
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         unsafe {
@@ -137,6 +138,7 @@ where D: Dimension
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     #[track_caller]
+    #[inline]
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         unsafe {

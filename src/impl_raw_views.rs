@@ -21,6 +21,7 @@ where D: Dimension
         RawArrayView::from_data_ptr(RawViewRepr::new(), ptr).with_strides_dim(strides, dim)
     }
 
+    #[inline]
     unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self
     {
         Self::new(nonnull_debug_checked_from_ptr(ptr as *mut A), dim, strides)
@@ -66,6 +67,7 @@ where D: Dimension
     /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
+    #[inline]
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
     where Sh: Into<StrideShape<D>>
     {
@@ -107,6 +109,7 @@ where D: Dimension
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     #[track_caller]
+    #[inline]
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         assert!(index <= self.len_of(axis));
@@ -234,6 +237,7 @@ where D: Dimension
         RawArrayViewMut::from_data_ptr(RawViewRepr::new(), ptr).with_strides_dim(strides, dim)
     }
 
+    #[inline]
     unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self
     {
         Self::new(nonnull_debug_checked_from_ptr(ptr), dim, strides)
@@ -279,6 +283,7 @@ where D: Dimension
     /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
+    #[inline]
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
     where Sh: Into<StrideShape<D>>
     {
@@ -345,6 +350,7 @@ where D: Dimension
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     #[track_caller]
+    #[inline]
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         let (left, right) = self.into_raw_view().split_at(axis, index);

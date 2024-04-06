@@ -110,6 +110,7 @@ where D: Dimension
     /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
+    #[inline]
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
     where Sh: Into<StrideShape<D>>
     {
@@ -212,6 +213,7 @@ where D: Dimension
     /// but it's not a complete check.
     ///
     /// [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset
+    #[inline]
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
     where Sh: Into<StrideShape<D>>
     {
