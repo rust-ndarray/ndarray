@@ -81,8 +81,7 @@
 //! - `std`: Rust standard library-using functionality (enabled by default)
 //! - `serde`: serialization support for serde 1.x
 //! - `rayon`: Parallel iterators, parallelized methods, the [`parallel`] module and [`par_azip!`].
-//! - `approx` Implementations of traits from version 0.4 of the [`approx`] crate.
-//! - `approx-0_5`: Implementations of traits from version 0.5 of the [`approx`] crate.
+//! - `approx` Implementations of traits from the [`approx`] crate.
 //! - `blas`: transparent BLAS support for matrix multiplication, needs configuration.
 //! - `matrixmultiply-threading`: Use threading from `matrixmultiply`.
 //!
@@ -1600,7 +1599,7 @@ pub mod linalg;
 mod impl_ops;
 pub use crate::impl_ops::ScalarOperand;
 
-#[cfg(any(feature = "approx", feature = "approx-0_5"))]
+#[cfg(feature = "approx")]
 mod array_approx;
 
 // Array view methods
