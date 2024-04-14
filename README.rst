@@ -11,7 +11,7 @@ __ https://docs.rs/ndarray/
 
 |build_status|_ |crates|_ |matrix-chat|_ |irc|_
 
-.. |build_status| image:: https://github.com/rust-ndarray/ndarray/workflows/Continuous%20integration/badge.svg?branch=master
+.. |build_status| image:: https://github.com/rust-ndarray/ndarray/actions/workflows/ci.yaml/badge.svg
    :alt: CI build status
 .. _build_status: https://github.com/rust-ndarray/ndarray/actions
 
