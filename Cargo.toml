@@ -45,6 +45,9 @@ matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm
 serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
 
+portable-atomic = { git = "https://github.com/taiki-e/portable-atomic.git", rev = "4e66bd3", optional = true }
+portable-atomic-util = { git = "https://github.com/taiki-e/portable-atomic.git", rev = "4e66bd3", features = ["alloc"], optional = true}
+
 [dev-dependencies]
 defmac = "0.2"
 quickcheck = { version = "1.0", default-features = false }
@@ -69,6 +72,9 @@ docs = ["approx", "serde", "rayon"]
 
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["rayon_", "std"]
+
+portable-atomic = ["dep:portable-atomic", "dep:portable-atomic-util"]
+critical-section = ["portable-atomic/critical-section"]
 
 matrixmultiply-threading = ["matrixmultiply/threading"]
 

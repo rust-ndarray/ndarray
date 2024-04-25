@@ -124,7 +124,12 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
+#[cfg(not(feature = "portable-atomic"))]
 use alloc::sync::Arc;
+
+#[cfg(feature = "portable-atomic")]
+use portable_atomic_util::Arc;
+
 use std::marker::PhantomData;
 
 pub use crate::dimension::dim::*;
