@@ -44,6 +44,7 @@ matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm
 serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
 
+
 [dev-dependencies]
 defmac = "0.2"
 quickcheck = { version = "1.0", default-features = false }
@@ -70,7 +71,13 @@ docs = ["approx", "serde", "rayon"]
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["dep:rayon", "std"]
 
+portable-atomic-critical-section = ["portable-atomic/critical-section"]
+
 matrixmultiply-threading = ["matrixmultiply/threading"]
+
+[target.'cfg(not(target_has_atomic = "ptr"))'.dependencies]
+portable-atomic = { version = "1.6.0" }
+portable-atomic-util = { version = "0.2.0", features = [ "alloc" ] }
 
 [profile.bench]
 debug = true

@@ -123,7 +123,12 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
+#[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
+
+#[cfg(not(target_has_atomic = "ptr"))]
+use portable_atomic_util::Arc;
+
 use std::marker::PhantomData;
 
 pub use crate::dimension::dim::*;

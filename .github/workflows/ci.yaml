@@ -42,6 +42,27 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all --check
 
+  nostd-build:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      matrix:
+        include:
+          - rust: stable
+            experimental: false
+            target: thumbv6m-none-eabi
+
+    name: nostd-build/${{ matrix.target }}/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
+      - name: Tests
+        run: |
+          cargo rustc "--target=${{ matrix.target }}" --no-default-features --features portable-atomic-critical-section
+
   tests:
     runs-on: ubuntu-latest
     strategy:

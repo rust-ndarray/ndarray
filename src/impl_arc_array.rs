@@ -7,7 +7,12 @@
 // except according to those terms.
 
 use crate::imp_prelude::*;
+
+#[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
+
+#[cfg(not(target_has_atomic = "ptr"))]
+use portable_atomic_util::Arc;
 
 /// Methods specific to `ArcArray`.
 ///
