@@ -13,7 +13,7 @@ use alloc::vec::Vec;
 use num_traits::Zero;
 use std::ops::{Index, IndexMut};
 
-use crate::{Dim, Dimension, Ix, Ix1, IxD, IxDyn, IxDynImpl};
+use crate::{Dim, Dimension, Ix, Ix1, IxDyn, IxDynImpl};
 
 /// $m: macro callback
 /// $m is called with $arg and then the indices corresponding to the size argument
@@ -88,39 +88,48 @@ impl IntoDimension for Vec<Ix>
 }
 
 impl<const D: usize> IntoDimension for [Ix; D]
-where Dim<[Ix; D]> : Dimension {
+where Dim<[Ix; D]> : Dimension
+{
     type Dim = Dim<[Ix; D]>;
     #[inline(always)]
-    fn into_dimension(self) -> Self::Dim {
+    fn into_dimension(self) -> Self::Dim
+    {
         Dim::new(self)
     }
 }
 
 impl<const D: usize> Index<usize> for Dim<[Ix; D]>
-where Dim<[Ix; D]>: Dimension {
+where Dim<[Ix; D]>: Dimension
+{
     type Output = usize;
     #[inline(always)]
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: usize) -> &Self::Output
+    {
         &self.ix()[index]
     }
 }
 
 impl<const D: usize> IndexMut<usize> for Dim<[Ix; D]>
-where Dim<[Ix; D]>: Dimension {
+where Dim<[Ix; D]>: Dimension
+{
     #[inline(always)]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output
+    {
         &mut self.ixm()[index]
     }
 }
 
 impl<const D: usize> Zero for Dim<[Ix; D]>
-where Dim<[Ix; D]>: Dimension {
+where Dim<[Ix; D]>: Dimension
+{
     #[inline]
-    fn zero() -> Self {
-        IxD::repeating(0)
+    fn zero() -> Self
+    {
+        Self::repeating(0)
     }
 
-    fn is_zero(&self) -> bool {
+    fn is_zero(&self) -> bool
+    {
         self.slice().iter().all(|x| *x == 0)
     }
 }
