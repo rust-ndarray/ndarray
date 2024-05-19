@@ -8,6 +8,7 @@
 
 //! The data (inner representation) traits for ndarray
 
+#[allow(unused_imports)]
 use rawpointer::PointerExt;
 
 use alloc::sync::Arc;
