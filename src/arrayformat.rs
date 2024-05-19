@@ -51,9 +51,9 @@ impl FormatOptions
     fn set_no_limit(mut self, no_limit: bool) -> Self
     {
         if no_limit {
-            self.axis_collapse_limit = std::usize::MAX;
-            self.axis_collapse_limit_next_last = std::usize::MAX;
-            self.axis_collapse_limit_last = std::usize::MAX;
+            self.axis_collapse_limit = usize::MAX;
+            self.axis_collapse_limit_next_last = usize::MAX;
+            self.axis_collapse_limit_last = usize::MAX;
         }
         self
     }
