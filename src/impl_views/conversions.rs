@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use alloc::slice;
+#[allow(unused_imports)]
 use rawpointer::PointerExt;
 use std::mem::MaybeUninit;
 

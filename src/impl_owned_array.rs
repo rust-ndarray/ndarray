@@ -3,6 +3,7 @@ use alloc::vec::Vec;
 use std::mem;
 use std::mem::MaybeUninit;
 
+#[allow(unused_imports)]
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
