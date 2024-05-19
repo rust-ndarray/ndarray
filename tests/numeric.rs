@@ -39,26 +39,35 @@ fn test_mean_with_array_of_floats()
 }
 
 #[test]
-fn sum_mean()
+fn sum_mean_prod()
 {
     let a: Array2<f64> = arr2(&[[1., 2.], [3., 4.]]);
     assert_eq!(a.sum_axis(Axis(0)), arr1(&[4., 6.]));
     assert_eq!(a.sum_axis(Axis(1)), arr1(&[3., 7.]));
+    assert_eq!(a.product_axis(Axis(0)), arr1(&[3., 8.]));
+    assert_eq!(a.product_axis(Axis(1)), arr1(&[2., 12.]));
     assert_eq!(a.mean_axis(Axis(0)), Some(arr1(&[2., 3.])));
     assert_eq!(a.mean_axis(Axis(1)), Some(arr1(&[1.5, 3.5])));
     assert_eq!(a.sum_axis(Axis(1)).sum_axis(Axis(0)), arr0(10.));
+    assert_eq!(a.product_axis(Axis(1)).product_axis(Axis(0)), arr0(24.));
     assert_eq!(a.view().mean_axis(Axis(1)).unwrap(), aview1(&[1.5, 3.5]));
     assert_eq!(a.sum(), 10.);
 }
 
 #[test]
-fn sum_mean_empty()
+fn sum_mean_prod_empty()
 {
     assert_eq!(Array3::<f32>::ones((2, 0, 3)).sum(), 0.);
+    assert_eq!(Array3::<f32>::ones((2, 0, 3)).product(), 1.);
     assert_eq!(Array1::<f32>::ones(0).sum_axis(Axis(0)), arr0(0.));
+    assert_eq!(Array1::<f32>::ones(0).product_axis(Axis(0)), arr0(1.));
     assert_eq!(
         Array3::<f32>::ones((2, 0, 3)).sum_axis(Axis(1)),
         Array::zeros((2, 3)),
+    );
+    assert_eq!(
+        Array3::<f32>::ones((2, 0, 3)).product_axis(Axis(1)),
+        Array::ones((2, 3)),
     );
     let a = Array1::<f32>::ones(0).mean_axis(Axis(0));
     assert_eq!(a, None);
