@@ -105,8 +105,8 @@ How to use with cargo
     [dependencies]
     ndarray = "0.15.0"
 
-How to enable blas integration
------------------------------
+How to enable BLAS integration
+------------------------------
 
 Blas integration is an optional add-on. Without BLAS, ndarray uses the
 ``matrixmultiply`` crate for matrix multiplication for ``f64`` and ``f32``
