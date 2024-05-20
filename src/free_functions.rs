@@ -275,8 +275,8 @@ macro_rules! impl_from_nested_vec {
                 let dim = $ix_type(xs.len(), $($n),+);
                 let ptr = xs.as_mut_ptr();
                 let cap = xs.capacity();
-                let expand_len = 
-                    dimension::size_of_shape_checked(&dim).expect("Product of non-zero axis lengths must not overflow isize.");
+                let expand_len = dimension::size_of_shape_checked(&dim)
+                    .expect("Product of non-zero axis lengths must not overflow isize.");
                 forget(xs);
                 unsafe {
                     let v = if size_of::<A>() == 0 {
