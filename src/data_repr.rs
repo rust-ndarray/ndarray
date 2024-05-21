@@ -8,6 +8,7 @@ use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
 
+#[allow(unused_imports)]
 use rawpointer::PointerExt;
 
 /// Array's representation.

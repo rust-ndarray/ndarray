@@ -386,7 +386,7 @@ where Slice: AsMut<[A]>
         let xs = slice.as_mut();
         if mem::size_of::<A>() == 0 {
             assert!(
-                xs.len() <= ::std::isize::MAX as usize,
+                xs.len() <= isize::MAX as usize,
                 "Slice length must fit in `isize`.",
             );
         }

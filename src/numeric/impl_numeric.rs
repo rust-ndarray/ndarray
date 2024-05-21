@@ -8,6 +8,7 @@
 
 #[cfg(feature = "std")]
 use num_traits::Float;
+use num_traits::One;
 use num_traits::{FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul};
 
@@ -248,6 +249,43 @@ where
             let mut res = Array::zeros(self.raw_dim().remove_axis(axis));
             for subview in self.axis_iter(axis) {
                 res = res + &subview;
+            }
+            res
+        }
+    }
+
+    /// Return product along `axis`.
+    ///
+    /// The product of an empty array is 1.
+    ///
+    /// ```
+    /// use ndarray::{aview0, aview1, arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
+    ///
+    /// assert!(
+    ///     a.product_axis(Axis(0)) == aview1(&[4., 10., 18.]) &&
+    ///     a.product_axis(Axis(1)) == aview1(&[6., 120.]) &&
+    ///
+    ///     a.product_axis(Axis(0)).product_axis(Axis(0)) == aview0(&720.)
+    /// );
+    /// ```
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
+    pub fn product_axis(&self, axis: Axis) -> Array<A, D::Smaller>
+    where
+        A: Clone + One + Mul<Output = A>,
+        D: RemoveAxis,
+    {
+        let min_stride_axis = self.dim.min_stride_axis(&self.strides);
+        if axis == min_stride_axis {
+            crate::Zip::from(self.lanes(axis)).map_collect(|lane| lane.product())
+        } else {
+            let mut res = Array::ones(self.raw_dim().remove_axis(axis));
+            for subview in self.axis_iter(axis) {
+                res = res * &subview;
             }
             res
         }

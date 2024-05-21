@@ -34,6 +34,7 @@ use crate::iterators::TrustedIterator;
 use crate::StrideShape;
 #[cfg(feature = "std")]
 use crate::{geomspace, linspace, logspace};
+#[allow(unused_imports)]
 use rawpointer::PointerExt;
 
 /// # Constructor Methods for Owned Arrays

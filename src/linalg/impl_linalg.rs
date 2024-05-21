@@ -296,7 +296,7 @@ where
 fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> !
 {
     match m.checked_mul(n) {
-        Some(len) if len <= ::std::isize::MAX as usize => {}
+        Some(len) if len <= isize::MAX as usize => {}
         _ => panic!("ndarray: shape {} × {} overflows isize", m, n),
     }
     panic!(

@@ -26,7 +26,6 @@ pub use self::remove_axis::RemoveAxis;
 pub(crate) use self::axes::axes_of;
 pub(crate) use self::reshape::reshape_dim;
 
-use std::isize;
 use std::mem;
 
 #[macro_use]
@@ -94,7 +93,7 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
         .filter(|&&d| d != 0)
         .try_fold(1usize, |acc, &d| acc.checked_mul(d))
         .ok_or_else(|| from_kind(ErrorKind::Overflow))?;
-    if size_nonzero > ::std::isize::MAX as usize {
+    if size_nonzero > isize::MAX as usize {
         Err(from_kind(ErrorKind::Overflow))
     } else {
         Ok(dim.size())
