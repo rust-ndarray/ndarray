@@ -9,10 +9,10 @@
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use std::mem::{forget, size_of};
-use std::ptr::NonNull;
 #[allow(unused_imports)]
 use std::compile_error;
+use std::mem::{forget, size_of};
+use std::ptr::NonNull;
 
 use crate::imp_prelude::*;
 use crate::{dimension, ArcArray1, ArcArray2};
@@ -28,11 +28,11 @@ use crate::{dimension, ArcArray1, ArcArray2};
 ///
 /// let a3 = array![[[1, 2], [3, 4]],
 ///                 [[5, 6], [7, 8]]];
-/// 
+///
 /// let a4 = array![[[[1, 2, 3, 4]]]];
-/// 
+///
 /// let a5 = array![[[[[1, 2, 3, 4, 5]]]]];
-/// 
+///
 /// let a6 = array![[[[[[1, 2, 3, 4, 5, 6]]]]]];
 ///
 /// assert_eq!(a1.shape(), &[4]);
@@ -47,12 +47,12 @@ use crate::{dimension, ArcArray1, ArcArray2};
 /// elements are moved into the resulting `Array`.
 ///
 /// Use `array![...].into_shared()` to create an `ArcArray`.
-/// 
+///
 /// Attempts to crate 7D+ arrays with this macro will lead to
 /// a compiler error, since the difference between a 7D array
 /// of i32 and a 6D array of `[i32; 3]` is ambiguous. Higher-dim
 /// arrays can be created with [`ArrayD`].
-/// 
+///
 /// ```compile_fail
 /// use ndarray::array;
 /// let a7 = array![[[[[[[1, 2, 3]]]]]]];
