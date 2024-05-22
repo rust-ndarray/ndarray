@@ -111,7 +111,7 @@ where
 mod tests
 {
     use crate::{array, dimension, Array0, Array1, Array2, Array3, ShapeBuilder};
-    use std::vec;
+    use alloc::vec;
 
     #[test]
     fn test_keep_order()
