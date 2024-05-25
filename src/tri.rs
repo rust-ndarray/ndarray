@@ -100,8 +100,6 @@ where
                 Zip::indexed(self.rows())
                     .and(res.rows_mut())
                     .for_each(|i, src, mut dst| {
-                        // This ncols must go inside the loop to avoid panic on 1D arrays.
-                        // Statistically-neglible difference in performance vs defining ncols at top.
                         let row_num = i.into_dimension().last_elem();
                         let upper = min(row_num as isize + k, ncols) + 1;
                         dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
