@@ -36,7 +36,10 @@ where
     /// ```
     pub fn triu(&self, k: isize) -> Array<A, D>
     {
-        match self.ndim() > 1 && is_layout_f(&self.dim, &self.strides) {
+        if self.ndim() <= 1 {
+            return self.to_owned();
+        }
+        match is_layout_f(&self.dim, &self.strides) {
             true => {
                 let n = self.ndim();
                 let mut x = self.view();
@@ -78,7 +81,10 @@ where
     /// ```
     pub fn tril(&self, k: isize) -> Array<A, D>
     {
-        match self.ndim() > 1 && is_layout_f(&self.dim, &self.strides) {
+        if self.ndim() <= 1 {
+            return self.to_owned();
+        }
+        match is_layout_f(&self.dim, &self.strides) {
             true => {
                 let n = self.ndim();
                 let mut x = self.view();
@@ -90,12 +96,12 @@ where
             }
             false => {
                 let mut res = Array::zeros(self.raw_dim());
+                let ncols = self.len_of(Axis(self.ndim() - 1)) as isize;
                 Zip::indexed(self.rows())
                     .and(res.rows_mut())
                     .for_each(|i, src, mut dst| {
                         // This ncols must go inside the loop to avoid panic on 1D arrays.
                         // Statistically-neglible difference in performance vs defining ncols at top.
-                        let ncols = src.len_of(Axis(src.ndim() - 1)) as isize;
                         let row_num = i.into_dimension().last_elem();
                         let upper = min(row_num as isize + k, ncols) + 1;
                         dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
