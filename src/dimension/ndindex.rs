@@ -113,6 +113,22 @@ unsafe impl NdIndex<Ix5> for (Ix, Ix, Ix, Ix, Ix)
     }
 }
 
+unsafe impl NdIndex<Ix6> for (Ix, Ix, Ix, Ix, Ix, Ix)
+{
+    #[inline]
+    fn index_checked(&self, dim: &Ix6, strides: &Ix6) -> Option<isize>
+    {
+        dim.stride_offset_checked(strides, &self.into_dimension())
+    }
+    #[inline]
+    fn index_unchecked(&self, strides: &Ix6) -> isize
+    {
+        zip(strides.ix(), self.into_dimension().ix())
+            .map(|(&s, &i)| stride_offset(i, s))
+            .sum()
+    }
+}
+
 unsafe impl NdIndex<Ix1> for Ix
 {
     #[inline]
