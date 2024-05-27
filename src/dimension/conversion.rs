@@ -87,6 +87,53 @@ impl IntoDimension for Vec<Ix>
     }
 }
 
+impl<const D: usize> IntoDimension for [Ix; D]
+where Dim<[Ix; D]> : Dimension
+{
+    type Dim = Dim<[Ix; D]>;
+    #[inline(always)]
+    fn into_dimension(self) -> Self::Dim
+    {
+        Dim::new(self)
+    }
+}
+
+impl<const D: usize> Index<usize> for Dim<[Ix; D]>
+where Dim<[Ix; D]>: Dimension
+{
+    type Output = usize;
+    #[inline(always)]
+    fn index(&self, index: usize) -> &Self::Output
+    {
+        &self.ix()[index]
+    }
+}
+
+impl<const D: usize> IndexMut<usize> for Dim<[Ix; D]>
+where Dim<[Ix; D]>: Dimension
+{
+    #[inline(always)]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output
+    {
+        &mut self.ixm()[index]
+    }
+}
+
+impl<const D: usize> Zero for Dim<[Ix; D]>
+where Dim<[Ix; D]>: Dimension
+{
+    #[inline]
+    fn zero() -> Self
+    {
+        Self::repeating(0)
+    }
+
+    fn is_zero(&self) -> bool
+    {
+        self.slice().iter().all(|x| *x == 0)
+    }
+}
+
 pub trait Convert
 {
     type To;
@@ -117,12 +164,6 @@ macro_rules! array_expr {
     );
 }
 
-macro_rules! array_zero {
-    ([] $($index:tt)*) => (
-        [$(sub!($index 0), )*]
-    );
-}
-
 macro_rules! tuple_to_array {
     ([] $($n:tt)*) => {
         $(
@@ -134,44 +175,11 @@ macro_rules! tuple_to_array {
             }
         }
 
-        impl IntoDimension for [Ix; $n] {
-            type Dim = Dim<[Ix; $n]>;
-            #[inline(always)]
-            fn into_dimension(self) -> Self::Dim {
-                Dim::new(self)
-            }
-        }
-
         impl IntoDimension for index!(tuple_type [Ix] $n) {
             type Dim = Dim<[Ix; $n]>;
             #[inline(always)]
             fn into_dimension(self) -> Self::Dim {
                 Dim::new(index!(array_expr [self] $n))
-            }
-        }
-
-        impl Index<usize> for Dim<[Ix; $n]> {
-            type Output = usize;
-            #[inline(always)]
-            fn index(&self, index: usize) -> &Self::Output {
-                &self.ix()[index]
-            }
-        }
-
-        impl IndexMut<usize> for Dim<[Ix; $n]> {
-            #[inline(always)]
-            fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut self.ixm()[index]
-            }
-        }
-
-        impl Zero for Dim<[Ix; $n]> {
-            #[inline]
-            fn zero() -> Self {
-                Dim::new(index!(array_zero [] $n))
-            }
-            fn is_zero(&self) -> bool {
-                self.slice().iter().all(|x| *x == 0)
             }
         }
 
