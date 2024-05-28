@@ -97,6 +97,14 @@ your `Cargo.toml`.
 
   - Enable the ``threading`` feature in the matrixmultiply package
 
+- ``portable-atomic``
+
+  - Enables ``portable_atomic`` package for compatability with microcontrollers
+
+- ``critical-section``
+
+  - Whether ``portable_atomic`` should use ``critical-section``
+
 How to use with cargo
 ---------------------
 
