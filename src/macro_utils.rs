@@ -9,7 +9,7 @@ macro_rules! copy_and_clone {
     };
     ($type_:ty) => {
         copy_and_clone!{ [] $type_ }
-    }
+    };
 }
 
 macro_rules! clone_bounds {
@@ -38,7 +38,7 @@ macro_rules! clone_bounds {
 /// debug assertions are enabled).
 #[cfg(debug_assertions)]
 macro_rules! ndassert {
-    ($e:expr, $($t:tt)*) => { assert!($e, $($t)*) }
+    ($e:expr, $($t:tt)*) => { assert!($e, $($t)*) };
 }
 
 #[cfg(not(debug_assertions))]

@@ -1,7 +1,8 @@
 use ndarray::{arr2, arr3, aview1, aview2, concatenate, stack, Array2, Axis, ErrorKind, Ix1};
 
 #[test]
-fn concatenating() {
+fn concatenating()
+{
     let a = arr2(&[[2., 2.], [3., 3.]]);
     let b = ndarray::concatenate(Axis(0), &[a.view(), a.view()]).unwrap();
     assert_eq!(b, arr2(&[[2., 2.], [3., 3.], [2., 2.], [3., 3.]]));
@@ -33,7 +34,8 @@ fn concatenating() {
 }
 
 #[test]
-fn stacking() {
+fn stacking()
+{
     let a = arr2(&[[2., 2.], [3., 3.]]);
     let b = ndarray::stack(Axis(0), &[a.view(), a.view()]).unwrap();
     assert_eq!(b, arr3(&[[[2., 2.], [3., 3.]], [[2., 2.], [3., 3.]]]));

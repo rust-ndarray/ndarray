@@ -8,7 +8,7 @@ publish = false
 test = false
 
 [dependencies]
-ndarray = { path = "../", features = ["serde"] }
+ndarray = { path = "..", features = ["serde"] }
 
 [features]
 default = ["ron"]

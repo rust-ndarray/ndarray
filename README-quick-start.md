@@ -7,7 +7,7 @@ You can use [play.integer32.com](https://play.integer32.com/) to immediately try
 
 ## The Basics
 
-Just create your first 2x3 floating-point ndarray 
+You can create your first 2x3 floating-point ndarray as such: 
 ```rust
 use ndarray::prelude::*;
 
@@ -24,7 +24,7 @@ fn main() {
     println!("{:?}", a);
 }
 ```
-This code will create a simple array and output to stdout:
+This code will create a simple array, then print it to stdout as such:
 ```
 [[1.0, 2.0, 3.0],
  [4.0, 5.0, 6.0]], shape=[2, 3], strides=[3, 1], layout=C (0x1), const ndim=2
@@ -34,8 +34,7 @@ This code will create a simple array and output to stdout:
 
 ### Element type and dimensionality
 
-Now let's create more arrays. How about try make a zero array with dimension of (3, 2, 4)?
-
+Now let's create more arrays. A common operation on matrices is to create a matrix full of 0's of certain dimensions. Let's try to do that with dimensions (3, 2, 4) using the `Array::zeros` function:
 ```rust
 use ndarray::prelude::*;
 use ndarray::Array;
@@ -44,13 +43,13 @@ fn main() {
     println!("{:?}", a);
 }
 ```
-gives
+Unfortunately, this code does not compile.
 ```
 |    let a = Array::zeros((3, 2, 4).f());
 |        -   ^^^^^^^^^^^^ cannot infer type for type parameter `A`
 ```
-Note that the compiler needs to infer the element type and dimensionality from context. In this 
-case the compiler failed to do that. Now we give it the type and let it infer dimensionality
+Indeed, note that the compiler needs to infer the element type and dimensionality from context only. In this 
+case the compiler does not have enough information. To fix the code, we can explicitly give the element type through turbofish syntax, and let it infer the dimensionality type:
 
 ```rust
 use ndarray::prelude::*;
@@ -60,7 +59,7 @@ fn main() {
   println!("{:?}", a);
 }
 ```
-and now it works:
+This code now compiles to what we wanted:
 ```
 [[[0.0, 0.0, 0.0, 0.0],
   [0.0, 0.0, 0.0, 0.0]],
@@ -72,24 +71,11 @@ and now it works:
   [0.0, 0.0, 0.0, 0.0]]], shape=[3, 2, 4], strides=[1, 3, 6], layout=F (0x2), const ndim=3
 ```
 
-We can also specify its dimensionality
+We could also specify its dimensionality explicitly `Array::<f64, Ix3>::zeros(...)`, with`Ix3` standing for 3D array type. Phew! We achieved type safety. If you tried changing the code above to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`, which is not of dimension 3 anymore, Rust's type system would gracefully prevent you from compiling the code.
 
-```rust
-use ndarray::prelude::*;
-use ndarray::{Array, Ix3};
-fn main() {
-  let a = Array::<f64, Ix3>::zeros((3, 2, 4).f());
-  println!("{:?}", a);
-}
-```
-`Ix3` stands for 3D array.
+### Creating arrays with different initial values and/or different types
 
-And now we are type checked. Try change the code above to `Array::<f64, Ix3>::zeros((3, 2, 4, 5).f());`
-and compile, see what happens.
-
-### How about create array of different type and having different initial values?
-
-The [`from_elem`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method can be handy here:
+The [`from_elem`](http://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.from_elem) method allows initializing an array of given dimension to a specific value of any type:
 
 ```rust
 use ndarray::{Array, Ix3};
@@ -99,7 +85,7 @@ fn main() {
 }
 ```
 
-### Some common create helper functions
+### Some common array initializing helper functions
 `linspace` - Create a 1-D array with 11 elements with values 0., …, 5.
 ```rust
 use ndarray::prelude::*;
@@ -114,10 +100,11 @@ The output is:
 [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], shape=[11], strides=[1], layout=C | F (0x3), const ndim=1
 ```
 
-And there are also `range`, `logspace`, `ones`, `eye` and so on you can choose to use.
+Common array initializing methods include [`range`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.range), [`logspace`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.logspace), [`eye`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.eye), [`ones`](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#method.ones)...
 
 ## Basic operations
 
+Basic operations on arrays are all element-wise; you need to use specific methods for operations such as matrix multiplication (see later section).
 ```rust
 use ndarray::prelude::*;
 use ndarray::Array;
@@ -136,15 +123,18 @@ fn main() {
 }
 ```
 
-Try remove all the `&` sign in front of `a` and `b`, does it still compile? Why?
 
-Note that
+Note that (for any binary operator `@`):
 * `&A @ &A` produces a new `Array`
 * `B @ A` consumes `B`, updates it with the result, and returns it
 * `B @ &A` consumes `B`, updates it with the result, and returns it
 * `C @= &A` performs an arithmetic operation in place
 
+Try removing all the `&` sign in front of `a` and `b` in the last example: it will not compile anymore because of those rules.
+
 For more info checkout https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#arithmetic-operations
+
+
 
 Some operations have `_axis` appended to the function name: they generally take in a parameter of type `Axis` as one of their inputs,
 such as `sum_axis`:
@@ -179,8 +169,8 @@ fn main() {
     println!("a shape {:?}", &a.shape());
     println!("b shape {:?}", &b.shape());
     
-    let b = b.into_shape((4,1)).unwrap(); // reshape b to shape [4, 1]
-    println!("b shape {:?}", &b.shape());
+    let b = b.into_shape_with_order((4,1)).unwrap(); // reshape b to shape [4, 1]
+    println!("b shape after reshape {:?}", &b.shape());
     
     println!("{}", a.dot(&b));            // [1, 4] x [4, 1] -> [1, 1] 
     println!("{}", a.t().dot(&b.t()));    // [4, 1] x [1, 4] -> [4, 4]
@@ -237,7 +227,7 @@ The output is:
 
 For more info about iteration see [Loops, Producers, and Iterators](https://docs.rs/ndarray/0.13.0/ndarray/struct.ArrayBase.html#loops-producers-and-iterators)
 
-Let's try a 3D array with elements of type `isize`. This is how you index it: 
+Let's try a iterating over a 3D array with elements of type `isize`. This is how you index it: 
 ```rust
 use ndarray::prelude::*;
 
@@ -250,8 +240,8 @@ fn main() {
                      [110,112,113]]
                 ];
 
-    let a = a.mapv(|a: isize| a.pow(1));  // numpy equivlant of `a ** 1`; 
-                                          // This line does nothing but illustrate mapv with isize type 
+    let a = a.mapv(|a: isize| a.pow(1));  // numpy equivalent of `a ** 1`; 
+                                          // This line does nothing except illustrating mapv with isize type 
     println!("a -> \n{}\n", a);
 
     println!("`a.slice(s![1, .., ..])` -> \n{}\n", a.slice(s![1, .., ..]));
@@ -305,7 +295,7 @@ row: [[100, 101, 102],
 ## Shape Manipulation
 
 ### Changing the shape of an array
-The shape of an array can be changed with `into_shape` method.
+The shape of an array can be changed with the `into_shape_with_order` or `to_shape` method.
 
 ````rust
 use ndarray::prelude::*;
@@ -329,7 +319,7 @@ fn main() {
     let b = Array::from_iter(a.iter());
     println!("b = \n{:?}\n", b);
     
-    let c = b.into_shape([6, 2]).unwrap(); // consume b and generate c with new shape
+    let c = b.into_shape_with_order([6, 2]).unwrap(); // consume b and generate c with new shape
     println!("c = \n{:?}", c);
 }
 ````
@@ -352,39 +342,68 @@ c =
  [4.0, 9.0]], shape=[6, 2], strides=[2, 1], layout=C (0x1), const ndim=2
 ```
 
-### Stacking together different arrays
+### Stacking/concatenating together different arrays
 
-Macro `stack!` is helpful for stacking arrays: 
+The `stack!` and `concatenate!` macros are helpful for stacking/concatenating
+arrays. The `stack!` macro stacks arrays along a new axis, while the
+`concatenate!` macro concatenates arrays along an existing axis:
+
 ```rust
 use ndarray::prelude::*;
-use ndarray::{Array, Axis, stack};
+use ndarray::{concatenate, stack, Axis};
 
 fn main() {
-
     let a = array![
-        [9., 7.],
-        [5., 2.]];
-    
+        [3., 7., 8.],
+        [5., 2., 4.],
+    ];
+
     let b = array![
-        [1., 9.],
-        [5., 1.]];
-        
-    println!("a vstack b = \n{:?}\n", stack![Axis(0), a, b]);
-    
-    println!("a hstack b = \n{:?}\n", stack![Axis(1), a, b]);
+        [1., 9., 0.],
+        [5., 4., 1.],
+    ];
+
+    println!("stack, axis 0:\n{:?}\n", stack![Axis(0), a, b]);
+    println!("stack, axis 1:\n{:?}\n", stack![Axis(1), a, b]);
+    println!("stack, axis 2:\n{:?}\n", stack![Axis(2), a, b]);
+    println!("concatenate, axis 0:\n{:?}\n", concatenate![Axis(0), a, b]);
+    println!("concatenate, axis 1:\n{:?}\n", concatenate![Axis(1), a, b]);
 }
 ```
 The output is:
 ```
-a vstack b = 
-[[9.0, 7.0],
- [5.0, 2.0],
- [1.0, 9.0],
- [5.0, 1.0]], shape=[4, 2], strides=[2, 1], layout=C (0x1), const ndim=2
+stack, axis 0:
+[[[3.0, 7.0, 8.0],
+  [5.0, 2.0, 4.0]],
 
-a hstack b = 
-[[9.0, 7.0, 1.0, 9.0],
- [5.0, 2.0, 5.0, 1.0]], shape=[2, 4], strides=[4, 1], layout=C (0x1), const ndim=2
+ [[1.0, 9.0, 0.0],
+  [5.0, 4.0, 1.0]]], shape=[2, 2, 3], strides=[6, 3, 1], layout=Cc (0x5), const ndim=3
+
+stack, axis 1:
+[[[3.0, 7.0, 8.0],
+  [1.0, 9.0, 0.0]],
+
+ [[5.0, 2.0, 4.0],
+  [5.0, 4.0, 1.0]]], shape=[2, 2, 3], strides=[3, 6, 1], layout=c (0x4), const ndim=3
+
+stack, axis 2:
+[[[3.0, 1.0],
+  [7.0, 9.0],
+  [8.0, 0.0]],
+
+ [[5.0, 5.0],
+  [2.0, 4.0],
+  [4.0, 1.0]]], shape=[2, 3, 2], strides=[1, 2, 6], layout=Ff (0xa), const ndim=3
+
+concatenate, axis 0:
+[[3.0, 7.0, 8.0],
+ [5.0, 2.0, 4.0],
+ [1.0, 9.0, 0.0],
+ [5.0, 4.0, 1.0]], shape=[4, 3], strides=[3, 1], layout=Cc (0x5), const ndim=2
+
+concatenate, axis 1:
+[[3.0, 7.0, 8.0, 1.0, 9.0, 0.0],
+ [5.0, 2.0, 4.0, 5.0, 4.0, 1.0]], shape=[2, 6], strides=[1, 2], layout=Ff (0xa), const ndim=2
 ```
 
 ### Splitting one array into several smaller ones
@@ -432,18 +451,15 @@ s2  =
 
 ## Copies and Views
 ### View, Ref or Shallow Copy
-As in Rust we have owner ship, so we cannot simply 
-update an element of an array while we have a 
-shared view of it. This will help us write more
-robust code.
 
+Rust has ownership, so we cannot simply update an element of an array while we have a shared view of it. This brings guarantees & helps having more robust code.
 ```rust
 use ndarray::prelude::*;
 use ndarray::{Array, Axis};
 
 fn main() {
 
-    let mut a = Array::range(0., 12., 1.).into_shape([3 ,4]).unwrap();
+    let mut a = Array::range(0., 12., 1.).into_shape_with_order([3 ,4]).unwrap();
     println!("a = \n{}\n", a);
     
     {
@@ -503,7 +519,7 @@ use ndarray::Array;
 
 fn main() {
 
-    let mut a = Array::range(0., 4., 1.).into_shape([2 ,2]).unwrap();
+    let mut a = Array::range(0., 4., 1.).into_shape_with_order([2 ,2]).unwrap();
     let b = a.clone();
     
     println!("a = \n{}\n", a);
@@ -537,9 +553,9 @@ b clone of a =
  [2, 3]]
 ```
 
-Noticing that using `clone()` (or cloning) an `Array` type also copies the array's elements. It creates an independently owned array of the same type.
+Notice that using `clone()` (or cloning) an `Array` type also copies the array's elements. It creates an independently owned array of the same type.
 
-Cloning an `ArrayView` does not clone or copy the underlying elements - it just clones the view reference (as it happens in Rust when cloning a `&` reference).
+Cloning an `ArrayView` does not clone or copy the underlying elements - it only clones the view reference (as it happens in Rust when cloning a `&` reference).
 
 ## Broadcasting
 
@@ -571,7 +587,7 @@ fn main() {
 
 See [.broadcast()](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.broadcast) for a more detailed description.
 
-And there is a short example of it:
+And here is a short example of it:
 ```rust
 use ndarray::prelude::*;
 

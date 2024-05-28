@@ -11,7 +11,7 @@ __ https://docs.rs/ndarray/
 
 |build_status|_ |crates|_ |matrix-chat|_ |irc|_
 
-.. |build_status| image:: https://github.com/rust-ndarray/ndarray/workflows/Continuous%20integration/badge.svg?branch=master
+.. |build_status| image:: https://github.com/rust-ndarray/ndarray/actions/workflows/ci.yaml/badge.svg
    :alt: CI build status
 .. _build_status: https://github.com/rust-ndarray/ndarray/actions
 
@@ -65,8 +65,11 @@ your `Cargo.toml`.
   - This crate can be used without the standard library by disabling the
     default `std` feature. To do so, use this in your `Cargo.toml`:
 
-    [dependencies]
-    ndarray = { version = "0.x.y", default-features = false }
+    ::
+      
+      [dependencies]
+      ndarray = { version = "0.x.y", default-features = false }
+    
 
   - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis` and `std_axis`
     methods are only available when `std` is enabled.
@@ -79,6 +82,10 @@ your `Cargo.toml`.
 
   - Enables parallel iterators, parallelized methods and ``par_azip!``.
   - Implies std
+
+- ``approx``
+
+  - Implementations of traits from version 0.5 of the [`approx`] crate.
 
 - ``blas``
 

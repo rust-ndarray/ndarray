@@ -7,7 +7,8 @@ use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IxDyn, RemoveAxis};
 use std::hash::{Hash, Hasher};
 
 #[test]
-fn insert_axis() {
+fn insert_axis()
+{
     assert_eq!(Dim([]).insert_axis(Axis(0)), Dim([1]));
 
     assert_eq!(Dim([3]).insert_axis(Axis(0)), Dim([1, 3]));
@@ -41,7 +42,8 @@ fn insert_axis() {
 }
 
 #[test]
-fn remove_axis() {
+fn remove_axis()
+{
     assert_eq!(Dim([3]).remove_axis(Axis(0)), Dim([]));
     assert_eq!(Dim([1, 2]).remove_axis(Axis(0)), Dim([2]));
     assert_eq!(Dim([4, 5, 6]).remove_axis(Axis(1)), Dim([4, 6]));
@@ -55,14 +57,19 @@ fn remove_axis() {
     let a = ArcArray::<f32, _>::zeros(vec![4, 5, 6]);
     let _b = a
         .index_axis_move(Axis(1), 0)
-        .reshape((4, 6))
-        .reshape(vec![2, 3, 4]);
+        .to_shape((4, 6))
+        .unwrap()
+        .to_shape(vec![2, 3, 4])
+        .unwrap();
 }
 
 #[test]
 #[allow(clippy::eq_op)]
-fn dyn_dimension() {
-    let a = arr2(&[[1., 2.], [3., 4.0]]).into_shape(vec![2, 2]).unwrap();
+fn dyn_dimension()
+{
+    let a = arr2(&[[1., 2.], [3., 4.0]])
+        .into_shape_with_order(vec![2, 2])
+        .unwrap();
     assert_eq!(&a - &a, Array::zeros(vec![2, 2]));
     assert_eq!(a[&[0, 0][..]], 1.);
     assert_eq!(a[[0, 0]], 1.);
@@ -75,7 +82,8 @@ fn dyn_dimension() {
 }
 
 #[test]
-fn dyn_insert() {
+fn dyn_insert()
+{
     let mut v = vec![2, 3, 4, 5];
     let mut dim = Dim(v.clone());
     defmac!(test_insert index => {
@@ -94,7 +102,8 @@ fn dyn_insert() {
 }
 
 #[test]
-fn dyn_remove() {
+fn dyn_remove()
+{
     let mut v = vec![1, 2, 3, 4, 5, 6, 7];
     let mut dim = Dim(v.clone());
     defmac!(test_remove index => {
@@ -113,7 +122,8 @@ fn dyn_remove() {
 }
 
 #[test]
-fn fastest_varying_order() {
+fn fastest_varying_order()
+{
     let strides = Dim([2, 8, 4, 1]);
     let order = strides._fastest_varying_stride_order();
     assert_eq!(order.slice(), &[3, 0, 2, 1]);
@@ -186,7 +196,8 @@ fn min_stride_axis() {
 */
 
 #[test]
-fn max_stride_axis() {
+fn max_stride_axis()
+{
     let a = ArrayF32::zeros(10);
     assert_eq!(a.max_stride_axis(), Axis(0));
 
@@ -213,7 +224,8 @@ fn max_stride_axis() {
 }
 
 #[test]
-fn test_indexing() {
+fn test_indexing()
+{
     let mut x = Dim([1, 2]);
 
     assert_eq!(x[0], 1);
@@ -224,7 +236,8 @@ fn test_indexing() {
 }
 
 #[test]
-fn test_operations() {
+fn test_operations()
+{
     let mut x = Dim([1, 2]);
     let mut y = Dim([1, 1]);
 
@@ -241,8 +254,10 @@ fn test_operations() {
 
 #[test]
 #[allow(clippy::cognitive_complexity)]
-fn test_hash() {
-    fn calc_hash<T: Hash>(value: &T) -> u64 {
+fn test_hash()
+{
+    fn calc_hash<T: Hash>(value: &T) -> u64
+    {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         value.hash(&mut hasher);
         hasher.finish()
@@ -277,8 +292,10 @@ fn test_hash() {
 }
 
 #[test]
-fn test_generic_operations() {
-    fn test_dim<D: Dimension>(d: &D) {
+fn test_generic_operations()
+{
+    fn test_dim<D: Dimension>(d: &D)
+    {
         let mut x = d.clone();
         x[0] += 1;
         assert_eq!(x[0], 3);
@@ -292,8 +309,10 @@ fn test_generic_operations() {
 }
 
 #[test]
-fn test_array_view() {
-    fn test_dim<D: Dimension>(d: &D) {
+fn test_array_view()
+{
+    fn test_dim<D: Dimension>(d: &D)
+    {
         assert_eq!(d.as_array_view().sum(), 7);
         assert_eq!(d.as_array_view().strides(), &[1]);
     }
@@ -306,10 +325,11 @@ fn test_array_view() {
 #[test]
 #[cfg(feature = "std")]
 #[allow(clippy::cognitive_complexity)]
-fn test_all_ndindex() {
+fn test_all_ndindex()
+{
     use ndarray::IntoDimension;
     macro_rules! ndindex {
-    ($($i:expr),*) => {
+        ($($i:expr),*) => {
         for &rev in &[false, true] {
             // rev is for C / F order
             let size = $($i *)* 1;
@@ -331,8 +351,8 @@ fn test_all_ndindex() {
                 assert_eq!(elt, b[dim]);
             }
         }
+    };
     }
-}
     ndindex!(10);
     ndindex!(10, 4);
     ndindex!(10, 4, 3);

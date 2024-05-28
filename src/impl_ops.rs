@@ -72,6 +72,7 @@ where
     E: Dimension,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+    #[track_caller]
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
         self.$mth(&rhs)
@@ -99,6 +100,7 @@ where
     E: Dimension,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+    #[track_caller]
     fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
     {
         if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
@@ -139,6 +141,7 @@ where
     E: Dimension + DimMax<D>,
 {
     type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
+    #[track_caller]
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     where
     {
@@ -178,6 +181,7 @@ where
     E: Dimension,
 {
     type Output = Array<A, <D as DimMax<E>>::Output>;
+    #[track_caller]
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
         let (lhs, rhs) = if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
             let lhs = self.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
@@ -284,22 +288,25 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
     );
 }
 
-mod arithmetic_ops {
+mod arithmetic_ops
+{
     use super::*;
     use crate::imp_prelude::*;
 
-    use num_complex::Complex;
     use std::ops::*;
 
-    fn clone_opf<A: Clone, B: Clone, C>(f: impl Fn(A, B) -> C) -> impl FnMut(&A, &B) -> C {
+    fn clone_opf<A: Clone, B: Clone, C>(f: impl Fn(A, B) -> C) -> impl FnMut(&A, &B) -> C
+    {
         move |x, y| f(x.clone(), y.clone())
     }
 
-    fn clone_iopf<A: Clone, B: Clone>(f: impl Fn(A, B) -> A) -> impl FnMut(&mut A, &B) {
+    fn clone_iopf<A: Clone, B: Clone>(f: impl Fn(A, B) -> A) -> impl FnMut(&mut A, &B)
+    {
         move |x, y| *x = f(x.clone(), y.clone())
     }
 
-    fn clone_iopf_rev<A: Clone, B: Clone>(f: impl Fn(A, B) -> B) -> impl FnMut(&mut B, &A) {
+    fn clone_iopf_rev<A: Clone, B: Clone>(f: impl Fn(A, B) -> B) -> impl FnMut(&mut B, &A)
+    {
         move |x, y| *x = f(y.clone(), x.clone())
     }
 
@@ -375,7 +382,8 @@ mod arithmetic_ops {
     {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
-        fn neg(mut self) -> Self {
+        fn neg(mut self) -> Self
+        {
             self.map_inplace(|elt| {
                 *elt = -elt.clone();
             });
@@ -392,7 +400,8 @@ mod arithmetic_ops {
         type Output = Array<A, D>;
         /// Perform an elementwise negation of reference `self` and return the
         /// result as a new `Array`.
-        fn neg(self) -> Array<A, D> {
+        fn neg(self) -> Array<A, D>
+        {
             self.map(Neg::neg)
         }
     }
@@ -405,7 +414,8 @@ mod arithmetic_ops {
     {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
-        fn not(mut self) -> Self {
+        fn not(mut self) -> Self
+        {
             self.map_inplace(|elt| {
                 *elt = !elt.clone();
             });
@@ -422,13 +432,15 @@ mod arithmetic_ops {
         type Output = Array<A, D>;
         /// Perform an elementwise unary not of reference `self` and return the
         /// result as a new `Array`.
-        fn not(self) -> Array<A, D> {
+        fn not(self) -> Array<A, D>
+        {
             self.map(Not::not)
         }
     }
 }
 
-mod assign_ops {
+mod assign_ops
+{
     use super::*;
     use crate::imp_prelude::*;
 
@@ -448,6 +460,7 @@ mod assign_ops {
                 D: Dimension,
                 E: Dimension,
             {
+                #[track_caller]
                 fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
                     self.zip_mut_with(rhs, |x, y| {
                         x.$method(y.clone());

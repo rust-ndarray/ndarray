@@ -19,10 +19,7 @@
 //!   - Implies std
 //!
 //! ## `approx`
-//!   - Enables implementations of traits from version 0.4 of the [`approx`] crate.
-//!
-//! ## `approx-0_5`
-//!   - Enables implementations of traits from version 0.5 of the [`approx`] crate.
+//!   - Enables implementations of traits of the [`approx`] crate.
 //!
 //! ## `blas`
 //!   - Enable transparent BLAS support for matrix multiplication.

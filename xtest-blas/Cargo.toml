@@ -8,13 +8,13 @@ publish = false
 test = false
 
 [dev-dependencies]
-approx = "0.4"
+approx = "0.5"
 defmac = "0.2"
 num-traits = "0.2"
 num-complex = { version = "0.4", default-features = false }
 
 [dependencies]
-ndarray = { path = "../", features = ["approx", "blas"] }
+ndarray = { path = "..", features = ["approx", "blas"] }
 
 blas-src = { version = "0.8", optional = true }
 

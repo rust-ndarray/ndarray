@@ -33,7 +33,7 @@ use crate::NdIndex;
 /// let data = [0.; 256];
 /// let long_life_ref = {
 ///     // make a 16 × 16 array view
-///     let view = ArrayView::from(&data[..]).into_shape((16, 16)).unwrap();
+///     let view = ArrayView::from(&data[..]).into_shape_with_order((16, 16)).unwrap();
 ///
 ///     // index the view and with `IndexLonger`.
 ///     // Note here that we get a reference with a life that is derived from
@@ -46,7 +46,8 @@ use crate::NdIndex;
 /// assert_eq!(long_life_ref, &0.);
 ///
 /// ```
-pub trait IndexLonger<I> {
+pub trait IndexLonger<I>
+{
     /// The type of the reference to the element that is produced, including
     /// its lifetime.
     type Output;
@@ -62,6 +63,7 @@ pub trait IndexLonger<I> {
     /// [1]: ArrayBase::get
     ///
     /// **Panics** if index is out of bounds.
+    #[track_caller]
     fn index(self, index: I) -> Self::Output;
 
     /// Get a reference of a element through the view.
@@ -77,6 +79,7 @@ pub trait IndexLonger<I> {
     /// [2]: ArrayBase::get_mut
     ///
     /// **Panics** if index is out of bounds.
+    #[track_caller]
     fn get(self, index: I) -> Option<Self::Output>;
 
     /// Get a reference of a element through the view without boundary check
@@ -116,12 +119,15 @@ where
     /// [1]: ArrayBase::get
     ///
     /// **Panics** if index is out of bounds.
-    fn index(self, index: I) -> &'a A {
+    #[track_caller]
+    fn index(self, index: I) -> &'a A
+    {
         debug_bounds_check!(self, index);
         unsafe { &*self.get_ptr(index).unwrap_or_else(|| array_out_of_bounds()) }
     }
 
-    fn get(self, index: I) -> Option<&'a A> {
+    fn get(self, index: I) -> Option<&'a A>
+    {
         unsafe { self.get_ptr(index).map(|ptr| &*ptr) }
     }
 
@@ -136,7 +142,8 @@ where
     /// [1]: ArrayBase::uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    unsafe fn uget(self, index: I) -> &'a A {
+    unsafe fn uget(self, index: I) -> &'a A
+    {
         debug_bounds_check!(self, index);
         &*self.as_ptr().offset(index.index_unchecked(&self.strides))
     }
@@ -161,10 +168,12 @@ where
     /// [1]: ArrayBase::get_mut
     ///
     /// **Panics** if index is out of bounds.
-    fn index(mut self, index: I) -> &'a mut A {
+    #[track_caller]
+    fn index(mut self, index: I) -> &'a mut A
+    {
         debug_bounds_check!(self, index);
         unsafe {
-            match self.get_ptr_mut(index) {
+            match self.get_mut_ptr(index) {
                 Some(ptr) => &mut *ptr,
                 None => array_out_of_bounds(),
             }
@@ -179,10 +188,11 @@ where
     ///
     /// [1]: ArrayBase::get_mut
     ///
-    fn get(mut self, index: I) -> Option<&'a mut A> {
+    fn get(mut self, index: I) -> Option<&'a mut A>
+    {
         debug_bounds_check!(self, index);
         unsafe {
-            match self.get_ptr_mut(index) {
+            match self.get_mut_ptr(index) {
                 Some(ptr) => Some(&mut *ptr),
                 None => None,
             }
@@ -198,7 +208,8 @@ where
     /// [1]: ArrayBase::uget_mut
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
-    unsafe fn uget(mut self, index: I) -> &'a mut A {
+    unsafe fn uget(mut self, index: I) -> &'a mut A
+    {
         debug_bounds_check!(self, index);
         &mut *self
             .as_mut_ptr()

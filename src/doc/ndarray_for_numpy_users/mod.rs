@@ -111,7 +111,7 @@
 //! When slicing in `ndarray`, the axis is first sliced with `start..end`. Then if
 //! `step` is positive, the first index is the front of the slice; if `step` is
 //! negative, the first index is the back of the slice. This means that the
-//! behavior is the same as NumPy except when `step < -1`. See the docs for the
+//! behavior is different from NumPy when `step < 0`. See the docs for the
 //! [`s![]` macro][s!] for more details.
 //!
 //! </td>
@@ -246,8 +246,8 @@
 //!   methods [`.slice_mut()`][.slice_mut()], [`.slice_move()`][.slice_move()], and
 //!   [`.slice_collapse()`][.slice_collapse()].
 //!
-//! * The behavior of slicing is slightly different from NumPy for slices with
-//!   `step < -1`. See the docs for the [`s![]` macro][s!] for more details.
+//! * The behavior of slicing is different from NumPy for slices with
+//!   `step < 0`. See the docs for the [`s![]` macro][s!] for more details.
 //!
 //! NumPy | `ndarray` | Notes
 //! ------|-----------|------
@@ -258,6 +258,7 @@
 //! `a[-5:]` or `a[-5:, :]` | [`a.slice(s![-5.., ..])`][.slice()] or [`a.slice_axis(Axis(0), Slice::from(-5..))`][.slice_axis()] | get the last 5 rows of a 2-D array
 //! `a[:3, 4:9]` | [`a.slice(s![..3, 4..9])`][.slice()] | columns 4, 5, 6, 7, and 8 of the first 3 rows
 //! `a[1:4:2, ::-1]` | [`a.slice(s![1..4;2, ..;-1])`][.slice()] | rows 1 and 3 with the columns in reverse order
+//! `a.take([4, 2])` | `a.select(Axis(0), &[4, 2])` | rows 4 and 2 of the array
 //!
 //! ## Shape and strides
 //!
@@ -531,6 +532,8 @@
 //! ------|-----------|------
 //! `a[:] = 3.` | [`a.fill(3.)`][.fill()] | set all array elements to the same scalar value
 //! `a[:] = b` | [`a.assign(&b)`][.assign()] | copy the data from array `b` into array `a`
+//! `a[:5, 2] = 3.` | [`a.slice_mut(s![..5, 2]).fill(3.)`][.fill()] | set a portion of the array to the same scalar value
+//! `a[:5, 2] = b` | [`a.slice_mut(s![..5, 2]).assign(&b)`][.assign()] | copy the data from array `b` into part of array `a`
 //! `np.concatenate((a,b), axis=1)` | [`concatenate![Axis(1), a, b]`][concatenate!] or [`concatenate(Axis(1), &[a.view(), b.view()])`][concatenate()] | concatenate arrays `a` and `b` along axis 1
 //! `np.stack((a,b), axis=1)` | [`stack![Axis(1), a, b]`][stack!] or [`stack(Axis(1), vec![a.view(), b.view()])`][stack()] | stack arrays `a` and `b` along axis 1
 //! `a[:,np.newaxis]` or `np.expand_dims(a, axis=1)` | [`a.slice(s![.., NewAxis])`][.slice()] or [`a.insert_axis(Axis(1))`][.insert_axis()] | create an view of 1-D array `a`, inserting a new axis 1
@@ -602,7 +605,7 @@
 //!
 //! </td><td>
 //!
-//! `a.mapv(|x| f32::from(x))`
+//! `a.mapv(f32::from)`
 //!
 //! </td><td>
 //!
@@ -616,7 +619,7 @@
 //!
 //! </td><td>
 //!
-//! `a.mapv(|x| i32::from(x))`
+//! `a.mapv(i32::from)`
 //!
 //! </td><td>
 //!

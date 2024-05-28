@@ -9,7 +9,8 @@ const CHUNK_SIZE: usize = 100;
 const N_CHUNKS: usize = (M + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
 #[test]
-fn test_axis_iter() {
+fn test_axis_iter()
+{
     let mut a = Array2::<f64>::zeros((M, N));
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
@@ -22,10 +23,11 @@ fn test_axis_iter() {
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_axis_iter_mut() {
+fn test_axis_iter_mut()
+{
     use approx::assert_abs_diff_eq;
     let mut a = Array::linspace(0., 1.0f64, M * N)
-        .into_shape((M, N))
+        .into_shape_with_order((M, N))
         .unwrap();
     let b = a.mapv(|x| x.exp());
     a.axis_iter_mut(Axis(0))
@@ -36,7 +38,8 @@ fn test_axis_iter_mut() {
 }
 
 #[test]
-fn test_regular_iter() {
+fn test_regular_iter()
+{
     let mut a = Array2::<f64>::zeros((M, N));
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
@@ -47,7 +50,8 @@ fn test_regular_iter() {
 }
 
 #[test]
-fn test_regular_iter_collect() {
+fn test_regular_iter_collect()
+{
     let mut a = Array2::<f64>::zeros((M, N));
     for (i, mut v) in a.axis_iter_mut(Axis(0)).enumerate() {
         v.fill(i as _);
@@ -57,7 +61,8 @@ fn test_regular_iter_collect() {
 }
 
 #[test]
-fn test_axis_chunks_iter() {
+fn test_axis_chunks_iter()
+{
     let mut a = Array2::<f64>::zeros((M, N));
     for (i, mut v) in a.axis_chunks_iter_mut(Axis(0), CHUNK_SIZE).enumerate() {
         v.fill(i as _);
@@ -74,10 +79,11 @@ fn test_axis_chunks_iter() {
 
 #[test]
 #[cfg(feature = "approx")]
-fn test_axis_chunks_iter_mut() {
+fn test_axis_chunks_iter_mut()
+{
     use approx::assert_abs_diff_eq;
     let mut a = Array::linspace(0., 1.0f64, M * N)
-        .into_shape((M, N))
+        .into_shape_with_order((M, N))
         .unwrap();
     let b = a.mapv(|x| x.exp());
     a.axis_chunks_iter_mut(Axis(0), CHUNK_SIZE)

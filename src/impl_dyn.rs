@@ -11,8 +11,7 @@ use crate::imp_prelude::*;
 
 /// # Methods for Dynamic-Dimensional Arrays
 impl<A, S> ArrayBase<S, IxDyn>
-where
-    S: Data<Elem = A>,
+where S: Data<Elem = A>
 {
     /// Insert new array axis of length 1 at `axis`, modifying the shape and
     /// strides in-place.
@@ -29,7 +28,9 @@ where
     /// assert_eq!(a, arr3(&[[[1, 2, 3]], [[4, 5, 6]]]).into_dyn());
     /// assert_eq!(a.shape(), &[2, 1, 3]);
     /// ```
-    pub fn insert_axis_inplace(&mut self, axis: Axis) {
+    #[track_caller]
+    pub fn insert_axis_inplace(&mut self, axis: Axis)
+    {
         assert!(axis.index() <= self.ndim());
         self.dim = self.dim.insert_axis(axis);
         self.strides = self.strides.insert_axis(axis);
@@ -50,7 +51,9 @@ where
     /// assert_eq!(a, arr1(&[2, 5]).into_dyn());
     /// assert_eq!(a.shape(), &[2]);
     /// ```
-    pub fn index_axis_inplace(&mut self, axis: Axis, index: usize) {
+    #[track_caller]
+    pub fn index_axis_inplace(&mut self, axis: Axis, index: usize)
+    {
         self.collapse_axis(axis, index);
         self.dim = self.dim.remove_axis(axis);
         self.strides = self.strides.remove_axis(axis);

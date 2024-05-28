@@ -65,7 +65,7 @@
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
 //!
-//! let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
+//! let a = Array::linspace(0., 63., 64).into_shape_with_order((4, 16)).unwrap();
 //! let mut sums = Vec::new();
 //! a.axis_iter(Axis(0))
 //!  .into_par_iter()
@@ -84,7 +84,7 @@
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
 //!
-//! let a = Array::linspace(0., 63., 64).into_shape((4, 16)).unwrap();
+//! let a = Array::linspace(0., 63., 64).into_shape_with_order((4, 16)).unwrap();
 //! let mut shapes = Vec::new();
 //! a.axis_chunks_iter(Axis(0), 3)
 //!  .into_par_iter()
@@ -118,28 +118,20 @@
 //! ```
 
 #[allow(unused_imports)] // used by rustdoc links
-use crate::{
-    ArrayBase,
-    Array,
-    ArcArray,
-    ArrayView,
-    ArrayViewMut,
-    Zip,
-};
+use crate::iter::{AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut};
 #[allow(unused_imports)] // used by rustdoc links
-use crate::iter::{
-    AxisIter,
-    AxisIterMut,
-    AxisChunksIter,
-    AxisChunksIterMut,
-};
+use crate::{ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, Zip};
 
 /// Into- traits for creating parallelized iterators and/or using [`par_azip!`]
-pub mod prelude {
+pub mod prelude
+{
     #[doc(no_inline)]
     pub use rayon::prelude::{
-        IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator,
-        IntoParallelRefMutIterator, ParallelIterator,
+        IndexedParallelIterator,
+        IntoParallelIterator,
+        IntoParallelRefIterator,
+        IntoParallelRefMutIterator,
+        ParallelIterator,
     };
 
     pub use super::par_azip;

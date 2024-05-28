@@ -13,7 +13,7 @@
 ///
 /// All array axis arguments use this type to make the code easier to write
 /// correctly and easier to understand.
-/// 
+///
 /// For example: in a method like `index_axis(axis, index)` the code becomes
 /// self-explanatory when it's called like `.index_axis(Axis(1), i)`; it's
 /// evident which integer is the axis number and which is the index.
@@ -26,10 +26,12 @@
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Axis(pub usize);
 
-impl Axis {
+impl Axis
+{
     /// Return the index of the axis.
     #[inline(always)]
-    pub fn index(self) -> usize {
+    pub fn index(self) -> usize
+    {
         self.0
     }
 }

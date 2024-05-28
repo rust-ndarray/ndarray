@@ -2,7 +2,8 @@
 use ndarray::prelude::*;
 
 #[cfg(feature = "std")]
-fn main() {
+fn main()
+{
     // This example recreates the following from python/numpy
     // counts -= np.mean(counts, axis=0)
     // counts /= np.std(counts, axis=0)

@@ -1,25 +1,46 @@
-use super::ElementsBase;
+use std::marker::PhantomData;
+
+use super::Baseiter;
 use crate::imp_prelude::*;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::NdProducer;
+use crate::Slice;
 
 /// Window producer and iterable
 ///
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
-pub struct Windows<'a, A, D> {
-    base: ArrayView<'a, A, D>,
+pub struct Windows<'a, A, D>
+{
+    base: RawArrayView<A, D>,
+    life: PhantomData<&'a A>,
     window: D,
     strides: D,
 }
 
-impl<'a, A, D: Dimension> Windows<'a, A, D> {
+impl<'a, A, D: Dimension> Windows<'a, A, D>
+{
     pub(crate) fn new<E>(a: ArrayView<'a, A, D>, window_size: E) -> Self
-    where
-        E: IntoDimension<Dim = D>,
+    where E: IntoDimension<Dim = D>
     {
         let window = window_size.into_dimension();
+        let ndim = window.ndim();
+
+        let mut unit_stride = D::zeros(ndim);
+        unit_stride.slice_mut().fill(1);
+
+        Windows::new_with_stride(a, window, unit_stride)
+    }
+
+    pub(crate) fn new_with_stride<E>(a: ArrayView<'a, A, D>, window_size: E, axis_strides: E) -> Self
+    where E: IntoDimension<Dim = D>
+    {
+        let window = window_size.into_dimension();
+
+        let strides = axis_strides.into_dimension();
+        let window_strides = a.strides.clone();
+
         ndassert!(
             a.ndim() == window.ndim(),
             concat!(
@@ -30,21 +51,36 @@ impl<'a, A, D: Dimension> Windows<'a, A, D> {
             a.ndim(),
             a.shape()
         );
-        let mut size = a.dim;
-        for (sz, &ws) in size.slice_mut().iter_mut().zip(window.slice()) {
-            assert_ne!(ws, 0, "window-size must not be zero!");
-            // cannot use std::cmp::max(0, ..) since arithmetic underflow panics
-            *sz = if *sz < ws { 0 } else { *sz - ws + 1 };
-        }
 
-        let window_strides = a.strides.clone();
+        ndassert!(
+            a.ndim() == strides.ndim(),
+            concat!(
+                "Stride dimension {} does not match array dimension {} ",
+                "(with array of shape {:?})"
+            ),
+            strides.ndim(),
+            a.ndim(),
+            a.shape()
+        );
 
-        unsafe {
-            Windows {
-                base: ArrayView::new(a.ptr, size, a.strides),
-                window,
-                strides: window_strides,
+        let mut base = a;
+        base.slice_each_axis_inplace(|ax_desc| {
+            let len = ax_desc.len;
+            let wsz = window[ax_desc.axis.index()];
+            let stride = strides[ax_desc.axis.index()];
+
+            if len < wsz {
+                Slice::new(0, Some(0), 1)
+            } else {
+                Slice::new(0, Some((len - wsz + 1) as isize), stride as isize)
             }
+        });
+
+        Windows {
+            base: base.into_raw_view(),
+            life: PhantomData,
+            window,
+            strides: window_strides,
         }
     }
 }
@@ -54,6 +90,7 @@ impl_ndproducer! {
     [Clone => 'a, A, D: Clone ]
     Windows {
         base,
+        life,
         window,
         strides,
     }
@@ -75,9 +112,11 @@ where
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = WindowsIter<'a, A, D>;
-    fn into_iter(self) -> Self::IntoIter {
+    fn into_iter(self) -> Self::IntoIter
+    {
         WindowsIter {
-            iter: self.base.into_elements_base(),
+            iter: self.base.into_base_iter(),
+            life: self.life,
             window: self.window,
             strides: self.strides,
         }
@@ -88,8 +127,10 @@ where
 ///
 /// See [`.windows()`](ArrayBase::windows) for more
 /// information.
-pub struct WindowsIter<'a, A, D> {
-    iter: ElementsBase<'a, A, D>,
+pub struct WindowsIter<'a, A, D>
+{
+    iter: Baseiter<A, D>,
+    life: PhantomData<&'a A>,
     window: D,
     strides: D,
 }
@@ -99,19 +140,23 @@ impl_iterator! {
     [Clone => 'a, A, D: Clone]
     WindowsIter {
         iter,
+        life,
         window,
         strides,
     }
     WindowsIter<'a, A, D> {
         type Item = ArrayView<'a, A, D>;
 
-        fn item(&mut self, elt) {
+        fn item(&mut self, ptr) {
             unsafe {
                 ArrayView::new_(
-                    elt,
+                    ptr,
                     self.window.clone(),
                     self.strides.clone())
             }
         }
     }
 }
+
+send_sync_read_only!(Windows);
+send_sync_read_only!(WindowsIter);

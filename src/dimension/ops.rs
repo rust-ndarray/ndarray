@@ -1,7 +1,8 @@
 use crate::imp_prelude::*;
 
 /// Adds the two dimensions at compile time.
-pub trait DimAdd<D: Dimension> {
+pub trait DimAdd<D: Dimension>
+{
     /// The sum of the two dimensions.
     type Output: Dimension;
 }
@@ -27,7 +28,8 @@ macro_rules! impl_dimadd_const_out_dyn {
     };
 }
 
-impl<D: Dimension> DimAdd<D> for Ix0 {
+impl<D: Dimension> DimAdd<D> for Ix0
+{
     type Output = D;
 }
 
@@ -85,6 +87,7 @@ impl_dimadd_const_out_dyn!(6, 5);
 impl_dimadd_const_out_dyn!(6, 6);
 impl_dimadd_const_out_dyn!(6, IxDyn);
 
-impl<D: Dimension> DimAdd<D> for IxDyn {
+impl<D: Dimension> DimAdd<D> for IxDyn
+{
     type Output = IxDyn;
 }
