@@ -1,5 +1,5 @@
 use crate::error::*;
-use crate::{Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
+use crate::{Dimension, IxD, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 
 /// Calculate the common shape for a pair of array shapes, that they can be broadcasted
 /// to. Return an error if the shapes are not compatible.
@@ -48,6 +48,20 @@ impl<D: Dimension> DimMax<D> for D
     type Output = D;
 }
 
+/// Any static type dimension can be broadcast to a dynamic dimension
+impl<const D: usize> DimMax<IxDyn> for IxD<D>
+where IxD<D>: Dimension
+{
+    type Output = IxDyn;
+}
+
+/// Any static type dimension can be broadcast to a dynamic dimension
+impl<const D: usize> DimMax<IxD<D>> for IxDyn
+where IxD<D>: Dimension
+{
+    type Output = IxDyn;
+}
+
 macro_rules! impl_broadcast_distinct_fixed {
     ($smaller:ty, $larger:ty) => {
         impl DimMax<$larger> for $smaller {
@@ -81,13 +95,6 @@ impl_broadcast_distinct_fixed!(Ix3, Ix6);
 impl_broadcast_distinct_fixed!(Ix4, Ix5);
 impl_broadcast_distinct_fixed!(Ix4, Ix6);
 impl_broadcast_distinct_fixed!(Ix5, Ix6);
-impl_broadcast_distinct_fixed!(Ix0, IxDyn);
-impl_broadcast_distinct_fixed!(Ix1, IxDyn);
-impl_broadcast_distinct_fixed!(Ix2, IxDyn);
-impl_broadcast_distinct_fixed!(Ix3, IxDyn);
-impl_broadcast_distinct_fixed!(Ix4, IxDyn);
-impl_broadcast_distinct_fixed!(Ix5, IxDyn);
-impl_broadcast_distinct_fixed!(Ix6, IxDyn);
 
 #[cfg(test)]
 #[cfg(feature = "std")]
