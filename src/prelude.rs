@@ -42,7 +42,7 @@ pub use crate::{
 };
 
 #[doc(no_inline)]
-pub use crate::{Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
+pub use crate::{IxD, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
 
 #[doc(no_inline)]
 pub use crate::{arr0, arr1, arr2, aview0, aview1, aview2, aview_mut1};

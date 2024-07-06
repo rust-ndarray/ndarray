@@ -4,6 +4,13 @@
 use crate::dimension::Dim;
 use crate::{ArcArray, Array, ArrayView, ArrayViewMut, Ix, IxDynImpl};
 
+/// Create a static-dimensional index
+#[allow(non_snake_case)]
+#[inline(always)]
+pub fn IxD<const D: usize>(ix: [Ix; D]) -> IxD<D>
+{
+    Dim::new(ix)
+}
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
@@ -62,23 +69,19 @@ pub fn IxDyn(ix: &[Ix]) -> IxDyn
     Dim(ix)
 }
 
-/// Create a static-dimensional index
-#[allow(non_snake_case)]
-#[inline(always)]
-pub fn IxD<const D: usize>(ix: [Ix; D]) -> IxD<D> {
-    Dim::new(ix)
-}
-
-impl<const D: usize> IxD<D> {
+impl<const D: usize> IxD<D>
+{
     /// Create a static-dimensional index, repeating a single index value
-    #[allow(non_snake_case)]
     #[inline(always)]
     pub fn repeating(i: Ix) -> Self {
         Dim::new([i; D])
     }
 }
 
-
+/// static-dimensional
+///
+/// Static generic to create arrays of any supported dimensionality (up to 6)
+pub type IxD<const D: usize> = Dim<[Ix; D]>;
 /// zero-dimensionial
 pub type Ix0 = Dim<[Ix; 0]>;
 /// one-dimensional
@@ -122,10 +125,6 @@ pub type Ix6 = Dim<[Ix; 6]>;
 /// let arrays = vec![a, b];
 /// ```
 pub type IxDyn = Dim<IxDynImpl>;
-/// static-dimensional
-/// 
-/// Static generic to create arrays of any dimensionality up to 6
-pub type IxD<const D: usize> = Dim<[Ix; D]>;
 
 /// zero-dimensional array
 pub type Array0<A> = Array<A, Ix0>;
