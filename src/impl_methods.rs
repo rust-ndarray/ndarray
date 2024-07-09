@@ -2017,8 +2017,6 @@ where
     /// possible, otherwise they are copied to create a new array.
     ///
     /// If an index ordering is not specified, the default is `RowMajor`.
-    /// The operation will only succeed if the array's memory layout is compatible with
-    /// the index ordering, so that the array elements can be rearranged in place.
     ///
     /// # `.to_shape` vs `.into_shape_clone`
     ///
@@ -2129,6 +2127,69 @@ where
             let v = self.iter().cloned().collect::<Vec<A>>();
             unsafe { ArrayBase::from_shape_vec_unchecked(shape, v) }
         }
+    }
+
+    /// Flatten the array to a one-dimensional array.
+    ///
+    /// The array is returned as a `CowArray`; a view if possible, otherwise an owned array.
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr3};
+    ///
+    /// let array = arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]);
+    /// let flattened = array.flatten();
+    /// assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+    /// ```
+    pub fn flatten(&self) -> CowArray<'_, A, Ix1>
+    where
+        A: Clone,
+        S: Data,
+    {
+        self.flatten_with_order(Order::RowMajor)
+    }
+
+    /// Flatten the array to a one-dimensional array.
+    ///
+    /// `order` specifies the *logical* order in which the array is to be read and reshaped.
+    /// The array is returned as a `CowArray`; a view if possible, otherwise an owned array.
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr2};
+    /// use ndarray::Order;
+    ///
+    /// let array = arr2(&[[1, 2], [3, 4], [5, 6], [7, 8]]);
+    /// let flattened = array.flatten_with_order(Order::RowMajor);
+    /// assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+    /// let flattened = array.flatten_with_order(Order::ColumnMajor);
+    /// assert_eq!(flattened, arr1(&[1, 3, 5, 7, 2, 4, 6, 8]));
+    /// ```
+    pub fn flatten_with_order(&self, order: Order) -> CowArray<'_, A, Ix1>
+    where
+        A: Clone,
+        S: Data,
+    {
+        self.to_shape((self.len(), order)).unwrap()
+    }
+
+    /// Flatten the array to a one-dimensional array, consuming the array.
+    ///
+    /// If possible, no copy is made, and the new array use the same memory as the original array.
+    /// Otherwise, a new array is allocated and the elements are copied.
+    ///
+    /// ```
+    /// use ndarray::{arr1, arr3};
+    ///
+    /// let array = arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]);
+    /// let flattened = array.into_flat();
+    /// assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+    /// ```
+    pub fn into_flat(self) -> ArrayBase<S, Ix1>
+    where
+        A: Clone,
+        S: DataOwned,
+    {
+        let len = self.len();
+        self.into_shape_clone(Ix1(len)).unwrap()
     }
 
     /// Convert any array or array view to a dynamic dimensional array or
@@ -3065,3 +3126,36 @@ unsafe fn unlimited_transmute<A, B>(data: A) -> B
 }
 
 type DimMaxOf<A, B> = <A as DimMax<B>>::Output;
+
+#[cfg(test)]
+mod tests
+{
+    use super::*;
+    use crate::arr3;
+
+    #[test]
+    fn test_flatten()
+    {
+        let array = arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]);
+        let flattened = array.flatten();
+        assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+    }
+
+    #[test]
+    fn test_flatten_with_order()
+    {
+        let array = arr2(&[[1, 2], [3, 4], [5, 6], [7, 8]]);
+        let flattened = array.flatten_with_order(Order::RowMajor);
+        assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+        let flattened = array.flatten_with_order(Order::ColumnMajor);
+        assert_eq!(flattened, arr1(&[1, 3, 5, 7, 2, 4, 6, 8]));
+    }
+
+    #[test]
+    fn test_into_flat()
+    {
+        let array = arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]);
+        let flattened = array.into_flat();
+        assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+    }
+}
