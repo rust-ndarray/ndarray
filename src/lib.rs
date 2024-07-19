@@ -1616,3 +1616,6 @@ pub(crate) fn is_aligned<T>(ptr: *const T) -> bool
 {
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }
+
+// Triangular constructors
+mod tri;
