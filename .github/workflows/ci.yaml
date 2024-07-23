@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - beta
+          - stable
     name: clippy/${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
