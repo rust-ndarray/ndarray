@@ -1,3 +1,81 @@
+Version 0.16.0 (Not yet released)
+=================================
+
+Featured Changes
+----------------
+
+- Better shape: Deprecate reshape, into_shape by [@bluss](https://github.com/bluss) [#1310](https://github.com/rust-ndarray/ndarray/pull/1310)<br>
+  `.into_shape()` **is now deprecated**.
+  Use `.into_shape_with_order()` or `.to_shape()` instead, which don't have `into_shape`'s drawbacks.
+
+New Features and Improvements
+-----------------------------
+
+- Make compatible with thumbv6m-none-eabi by [@BjornTheProgrammer](https://github.com/BjornTheProgrammer) [#1384](https://github.com/rust-ndarray/ndarray/pull/1384)
+- `is_unique` for `ArcArray` by [@daniellga](https://github.com/daniellga) [#1399](https://github.com/rust-ndarray/ndarray/pull/1399)
+- Add `triu` and `tril` methods directly to ArrayBase by [@akern40](https://github.com/akern40) [#1386](https://github.com/rust-ndarray/ndarray/pull/1386)
+- Fix styling of the BLAS integration heading. by [@adamreichold](https://github.com/adamreichold) [#1390](https://github.com/rust-ndarray/ndarray/pull/1390)
+- Implement `product_axis` by [@akern40](https://github.com/akern40) [#1387](https://github.com/rust-ndarray/ndarray/pull/1387)
+- Add reserve method for owned arrays by [@ssande7](https://github.com/ssande7) [#1268](https://github.com/rust-ndarray/ndarray/pull/1268)
+- Use inline on spit_at and smaller methods by [@bluss](https://github.com/bluss) [#1381](https://github.com/rust-ndarray/ndarray/pull/1381)
+- Update to Approx 0.5 by [@bluss](https://github.com/bluss) [#1380](https://github.com/rust-ndarray/ndarray/pull/1380)
+- Add .into_raw_vec_with_offset() and deprecate .into_raw_vec() by [@bluss](https://github.com/bluss) [#1379](https://github.com/rust-ndarray/ndarray/pull/1379)
+- Add additional array -> array view conversions by [@bluss](https://github.com/bluss) [#1130](https://github.com/rust-ndarray/ndarray/pull/1130)
+- implement DoubleEndedIterator for 1d `LanesIter` by [@Muthsera](https://github.com/Muthsera) [#1237](https://github.com/rust-ndarray/ndarray/pull/1237)
+- Add Zip::any by [@nilgoyette](https://github.com/nilgoyette) [#1228](https://github.com/rust-ndarray/ndarray/pull/1228)
+- Make the aview0, aview1, and aview2 free functions be const fns by [@jturner314](https://github.com/jturner314) [#1132](https://github.com/rust-ndarray/ndarray/pull/1132)
+- Add missing safety checks to `From<&[[A; N]]> for ArrayView` and `From<&mut [[A; N]]> for ArrayViewMut` by [@jturner314](https://github.com/jturner314) [#1131](https://github.com/rust-ndarray/ndarray/pull/1131)
+- derived Debug for Iter and IterMut by [@biskwikman](https://github.com/biskwikman) [#1353](https://github.com/rust-ndarray/ndarray/pull/1353)
+- Fix Miri errors for WindowsIter and ExactChunksIter/Mut by [@jturner314](https://github.com/jturner314) [#1142](https://github.com/rust-ndarray/ndarray/pull/1142)
+- Fix Miri failure with -Zmiri-tag-raw-pointers by [@jturner314](https://github.com/jturner314) [#1138](https://github.com/rust-ndarray/ndarray/pull/1138)
+- Track-caller panics by [@xd009642](https://github.com/xd009642) [#975](https://github.com/rust-ndarray/ndarray/pull/975)
+- Add slice_axis_move method by [@jturner314](https://github.com/jturner314) [#1211](https://github.com/rust-ndarray/ndarray/pull/1211)
+- iterators: Re-export IntoIter by [@bluss](https://github.com/bluss) [#1370](https://github.com/rust-ndarray/ndarray/pull/1370)
+- Fix unsafe blocks in `s![]` macro by [@jturner314](https://github.com/jturner314) [#1196](https://github.com/rust-ndarray/ndarray/pull/1196)
+- Fix comparison with NumPy of slicing with negative step by [@venkat0791](https://github.com/venkat0791) [#1319](https://github.com/rust-ndarray/ndarray/pull/1319)
+- Updated Windows `base` Computations to be Safer by [@LazaroHurtado](https://github.com/LazaroHurtado) [#1297](https://github.com/rust-ndarray/ndarray/pull/1297)
+- Update README-quick-start.md by [@fumseckk](https://github.com/fumseckk) [#1246](https://github.com/rust-ndarray/ndarray/pull/1246)
+- Added stride support to `Windows` by [@LazaroHurtado](https://github.com/LazaroHurtado) [#1249](https://github.com/rust-ndarray/ndarray/pull/1249)
+- Added select example to numpy user docs by [@WillAyd](https://github.com/WillAyd) [#1294](https://github.com/rust-ndarray/ndarray/pull/1294)
+- Add both approx features to the readme by [@nilgoyette](https://github.com/nilgoyette) [#1289](https://github.com/rust-ndarray/ndarray/pull/1289)
+- Add NumPy examples combining slicing and assignment by [@jturner314](https://github.com/jturner314) [#1210](https://github.com/rust-ndarray/ndarray/pull/1210)
+- Fix contig check for single element arrays by [@bluss](https://github.com/bluss) [#1362](https://github.com/rust-ndarray/ndarray/pull/1362)
+- Export Linspace and Logspace iterators by [@johann-cm](https://github.com/johann-cm) [#1348](https://github.com/rust-ndarray/ndarray/pull/1348)
+- Use `clone_from()` in two places by [@ChayimFriedman2](https://github.com/ChayimFriedman2) [#1347](https://github.com/rust-ndarray/ndarray/pull/1347)
+- Update README-quick-start.md by [@joelchen](https://github.com/joelchen) [#1344](https://github.com/rust-ndarray/ndarray/pull/1344)
+- Provide element-wise math functions for floats by [@KmolYuan](https://github.com/KmolYuan) [#1042](https://github.com/rust-ndarray/ndarray/pull/1042)
+- Improve example in doc for columns method by [@gkobeaga](https://github.com/gkobeaga) [#1221](https://github.com/rust-ndarray/ndarray/pull/1221)
+- Fix description of stack! in quick start by [@jturner314](https://github.com/jturner314) [#1156](https://github.com/rust-ndarray/ndarray/pull/1156)
+
+Tests, CI and Maintainer tasks
+------------------------------
+
+- Prepare changelog for 0.16.0 by [@bluss](https://github.com/bluss) [#1401](https://github.com/rust-ndarray/ndarray/pull/1401)
+- Organize dependencies with workspace = true (cont.) by [@bluss](https://github.com/bluss) [#1407](https://github.com/rust-ndarray/ndarray/pull/1407)
+- Update to use dep: for features by [@bluss](https://github.com/bluss) [#1406](https://github.com/rust-ndarray/ndarray/pull/1406)
+- Organize the workspace of test crates a bit better by [@bluss](https://github.com/bluss) [#1405](https://github.com/rust-ndarray/ndarray/pull/1405)
+- Add rustfmt commit to ignored revisions for git blame by [@lucascolley](https://github.com/lucascolley) [#1376](https://github.com/rust-ndarray/ndarray/pull/1376)
+- The minimum amount of work required to fix our CI by [@adamreichold](https://github.com/adamreichold) [#1388](https://github.com/rust-ndarray/ndarray/pull/1388)
+- Fixed broke continuous integration badge by [@juhotuho10](https://github.com/juhotuho10) [#1382](https://github.com/rust-ndarray/ndarray/pull/1382)
+- Use mold linker to speed up ci by [@bluss](https://github.com/bluss) [#1378](https://github.com/rust-ndarray/ndarray/pull/1378)
+- Add rustformat config and CI by [@bluss](https://github.com/bluss) [#1375](https://github.com/rust-ndarray/ndarray/pull/1375)
+- Add docs to CI by [@jturner314](https://github.com/jturner314) [#925](https://github.com/rust-ndarray/ndarray/pull/925)
+- Test using cargo-careful by [@bluss](https://github.com/bluss) [#1371](https://github.com/rust-ndarray/ndarray/pull/1371)
+- Further ci updates - numeric tests, and run all tests on PRs by [@bluss](https://github.com/bluss) [#1369](https://github.com/rust-ndarray/ndarray/pull/1369)
+- Setup ci so that most checks run in merge queue only by [@bluss](https://github.com/bluss) [#1368](https://github.com/rust-ndarray/ndarray/pull/1368)
+- Use merge queue by [@bluss](https://github.com/bluss) [#1367](https://github.com/rust-ndarray/ndarray/pull/1367)
+- Try to make the master branch shipshape by [@adamreichold](https://github.com/adamreichold) [#1286](https://github.com/rust-ndarray/ndarray/pull/1286)
+- Update ci - run cross tests only on master by [@bluss](https://github.com/bluss) [#1366](https://github.com/rust-ndarray/ndarray/pull/1366)
+- ndarray_for_numpy_users some example to code not pointed out to clippy by [@higumachan](https://github.com/higumachan) [#1360](https://github.com/rust-ndarray/ndarray/pull/1360)
+- Fix minimum rust version mismatch in lib.rs by [@HoKim98](https://github.com/HoKim98) [#1352](https://github.com/rust-ndarray/ndarray/pull/1352)
+- Fix MSRV build by pinning crossbeam crates. by [@adamreichold](https://github.com/adamreichold) [#1345](https://github.com/rust-ndarray/ndarray/pull/1345)
+- Fix new rustc lints to make the CI pass. by [@adamreichold](https://github.com/adamreichold) [#1337](https://github.com/rust-ndarray/ndarray/pull/1337)
+- Make Clippy happy and fix MSRV build by [@adamreichold](https://github.com/adamreichold) [#1320](https://github.com/rust-ndarray/ndarray/pull/1320)
+- small formatting fix in README.rst by [@podusowski](https://github.com/podusowski) [#1199](https://github.com/rust-ndarray/ndarray/pull/1199)
+- Fix CI failures (mostly linting with clippy) by [@aganders3](https://github.com/aganders3) [#1171](https://github.com/rust-ndarray/ndarray/pull/1171)
+- Remove doc(hidden) attr from items in trait impls by [@jturner314](https://github.com/jturner314) [#1165](https://github.com/rust-ndarray/ndarray/pull/1165)
+
+
 Version 0.15.6 (2022-07-30)
 ===========================
 
