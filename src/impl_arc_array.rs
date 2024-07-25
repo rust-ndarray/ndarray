@@ -17,7 +17,7 @@ where
     D: Dimension,
 {
     /// Returns `true` iff the inner `Arc` is not shared.
-    /// If you want to ensure the Arc is not concurrently cloned, you need to provide a `&mut self` to this function.
+    /// If you want to ensure the `Arc` is not concurrently cloned, you need to provide a `&mut self` to this function.
     pub fn is_unique(&self) -> bool {
         // Only strong pointers are used in this crate.
         Arc::strong_count(&self.data.0) == 1
