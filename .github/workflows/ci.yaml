@@ -9,6 +9,7 @@ env:
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "test docs"
   RUSTFLAGS: "-D warnings"
+  RUST_BACKTRACE: 1
 
 jobs:
   clippy:
@@ -65,7 +66,7 @@ jobs:
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
   cross_test:
-    if: ${{ github.event_name == 'merge_group' }}
+    #if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
