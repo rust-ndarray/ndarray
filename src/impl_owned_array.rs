@@ -513,7 +513,7 @@ where D: Dimension
     /// "growing axis" for the array, i.e. one of these is true:
     ///
     /// - The axis is the longest stride axis, for example the 0th axis in a C-layout or the
-    /// *n-1*th axis in an F-layout array.
+    ///   *n-1*th axis in an F-layout array.
     /// - The axis has length 0 or 1 (It is converted to the new growing axis)
     ///
     /// Ensure appending is efficient by for example starting from an empty array and/or always
@@ -569,7 +569,7 @@ where D: Dimension
     /// "growing axis" for the array, i.e. one of these is true:
     ///
     /// - The axis is the longest stride axis, for example the 0th axis in a C-layout or the
-    /// *n-1*th axis in an F-layout array.
+    ///   *n-1*th axis in an F-layout array.
     /// - The axis has length 0 or 1 (It is converted to the new growing axis)
     ///
     /// Ensure appending is efficient by for example starting from an empty array and/or always
