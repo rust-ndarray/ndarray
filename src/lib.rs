@@ -17,6 +17,7 @@
     clippy::while_let_on_iterator, // is not an error
     clippy::from_iter_instead_of_collect, // using from_iter is good style
     clippy::redundant_closure, // false positives clippy #7812
+    clippy::incompatible_msrv, // false positive PointerExt::offset
 )]
 #![doc(test(attr(deny(warnings))))]
 #![doc(test(attr(allow(unused_variables))))]
@@ -36,7 +37,7 @@
 //!   It is used to implement both the owned arrays and the views; see its docs
 //!   for an overview of all array features.<br>
 //! - The main specific array type is **[`Array`]**, which owns
-//! its elements.
+//!   its elements.
 //!
 //! ## Highlights
 //!
@@ -376,14 +377,14 @@ pub type Ixs = isize;
 ///
 /// - A [`struct@Dim`] value represents a dimensionality or index.
 /// - Trait [`Dimension`] is implemented by all
-/// dimensionalities. It defines many operations for dimensions and indices.
+///   dimensionalities. It defines many operations for dimensions and indices.
 /// - Trait [`IntoDimension`] is used to convert into a
-/// `Dim` value.
+///   `Dim` value.
 /// - Trait [`ShapeBuilder`] is an extension of
-/// `IntoDimension` and is used when constructing an array. A shape describes
-/// not just the extent of each axis but also their strides.
+///   `IntoDimension` and is used when constructing an array. A shape describes
+///   not just the extent of each axis but also their strides.
 /// - Trait [`NdIndex`] is an extension of `Dimension` and is
-/// for values that can be used with indexing syntax.
+///   for values that can be used with indexing syntax.
 ///
 ///
 /// The default memory order of an array is *row major* order (a.k.a “c” order),
@@ -1329,11 +1330,11 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// + [Constructor Methods for Owned Arrays](ArrayBase#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](ArrayBase#methods-for-all-array-types)
 /// + Dimensionality-specific type alises
-/// [`Array1`],
-/// [`Array2`],
-/// [`Array3`], ...,
-/// [`ArrayD`],
-/// and so on.
+///   [`Array1`],
+///   [`Array2`],
+///   [`Array3`], ...,
+///   [`ArrayD`],
+///   and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
 /// An array with copy-on-write behavior.

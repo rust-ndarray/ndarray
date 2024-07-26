@@ -31,11 +31,11 @@ where
 /// Preconditions:
 ///
 /// 1. from_dim and to_dim are valid dimensions (product of all non-zero axes
-/// fits in isize::MAX).
+///    fits in isize::MAX).
 /// 2. from_dim and to_dim are don't have any axes that are zero (that should be handled before
 ///    this function).
 /// 3. `to_strides` should be an all-zeros or all-ones dimension of the right dimensionality
-/// (but it will be overwritten after successful exit of this function).
+///    (but it will be overwritten after successful exit of this function).
 ///
 /// This function returns:
 ///
