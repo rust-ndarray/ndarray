@@ -49,7 +49,7 @@ rawpointer = { version = "0.2" }
 defmac = "0.2"
 quickcheck = { version = "1.0", default-features = false }
 approx = "0.5"
-itertools = { version = "0.10.0", default-features = false, features = ["use_std"] }
+itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
 
 [features]
 default = ["std"]
