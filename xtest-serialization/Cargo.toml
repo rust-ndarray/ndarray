@@ -3,6 +3,7 @@ name = "serialization-tests"
 version = "0.1.0"
 authors = ["bluss"]
 publish = false
+edition = "2018"
 
 [lib]
 test = false

@@ -3,6 +3,7 @@ name = "blas-tests"
 version = "0.1.0"
 authors = ["bluss"]
 publish = false
+edition = "2018"
 
 [lib]
 test = false
@@ -16,7 +17,7 @@ num-complex = { version = "0.4", default-features = false }
 [dependencies]
 ndarray = { path = "..", features = ["approx", "blas"] }
 
-blas-src = { version = "0.8", optional = true }
+blas-src = { version = "0.10", optional = true }
 
 openblas-src = { version = "0.10", optional = true }
 netlib-src = { version = "0.8", optional = true }
