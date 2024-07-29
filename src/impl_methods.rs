@@ -2623,7 +2623,7 @@ where
         let dim = self.raw_dim();
         Zip::from(LanesMut::new(self.view_mut(), Axis(n - 1)))
             .and(Lanes::new(rhs.broadcast_assume(dim), Axis(n - 1)))
-            .for_each(move |s_row, r_row| Zip::from(s_row).and(r_row).for_each(|a, b| f(a, b)));
+            .for_each(move |s_row, r_row| Zip::from(s_row).and(r_row).for_each(&mut f));
     }
 
     fn zip_mut_with_elem<B, F>(&mut self, rhs_elem: &B, mut f: F)

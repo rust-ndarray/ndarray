@@ -823,11 +823,11 @@ where
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    if a.len() > blas_index::max_value() as usize {
+    if a.len() > blas_index::MAX as usize {
         return false;
     }
     let stride = a.strides()[0];
-    if stride == 0 || stride > blas_index::max_value() as isize || stride < blas_index::min_value() as isize {
+    if stride == 0 || stride > blas_index::MAX as isize || stride < blas_index::MIN as isize {
         return false;
     }
     true
@@ -882,12 +882,12 @@ fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool
     if s0 < 1 || s1 < 1 {
         return false;
     }
-    if (s0 > blas_index::max_value() as isize || s0 < blas_index::min_value() as isize)
-        || (s1 > blas_index::max_value() as isize || s1 < blas_index::min_value() as isize)
+    if (s0 > blas_index::MAX as isize || s0 < blas_index::MIN as isize)
+        || (s1 > blas_index::MAX as isize || s1 < blas_index::MIN as isize)
     {
         return false;
     }
-    if m > blas_index::max_value() as usize || n > blas_index::max_value() as usize {
+    if m > blas_index::MAX as usize || n > blas_index::MAX as usize {
         return false;
     }
     true
