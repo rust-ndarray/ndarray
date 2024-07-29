@@ -20,9 +20,14 @@ default-features = false
 [dev-dependencies.serde_json]
 version = "1.0.40"
 
+[dev-dependencies.rmp]
+# Old version to work with Rust 1.64+
+version = "=0.8.10"
+
 [dev-dependencies.rmp-serde]
-version = "0.14.0"
+# Old version to work with Rust 1.64+
+version = "0.14"
 
 [dependencies.ron]
-version = "0.5.1"
+version = "0.8.1"
 optional = true
