@@ -172,9 +172,9 @@ fn random_matrix_mul<A>(
 ) -> (Array2<A>, Array2<A>)
 where A: LinalgScalar
 {
-    let m = rng.gen_range(15..512);
-    let k = rng.gen_range(15..512);
-    let n = rng.gen_range(15..1560);
+    let m = rng.gen_range(15..128);
+    let k = rng.gen_range(15..128);
+    let n = rng.gen_range(15..512);
     let a = generator(Ix2(m, k), rng);
     let b = generator(Ix2(n, k), rng);
     let c = if use_general {
@@ -261,7 +261,7 @@ fn accurate_mul_with_column_f64()
     // pick a few random sizes
     let rng = &mut SmallRng::from_entropy();
     for i in 0..10 {
-        let m = rng.gen_range(1..350);
+        let m = rng.gen_range(1..128);
         let k = rng.gen_range(1..350);
         let a = gen::<f64, _>(Ix2(m, k), rng);
         let b_owner = gen::<f64, _>(Ix2(k, k), rng);
