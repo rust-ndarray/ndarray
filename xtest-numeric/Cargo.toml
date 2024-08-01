@@ -11,7 +11,7 @@ ndarray = { path = "..", features = ["approx"] }
 ndarray-rand = { path = "../ndarray-rand" }
 rand_distr = "0.4"
 
-blas-src = { optional = true, version = "0.8", default-features = false, features = ["openblas"] }
+blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
 openblas-src = { optional = true, version = "0.10", default-features = false, features = ["cblas", "system"] }
 
 [dependencies.rand]

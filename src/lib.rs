@@ -10,13 +10,10 @@
 #![doc(html_logo_url = "https://rust-ndarray.github.io/images/rust-ndarray_logo.svg")]
 #![allow(
     unstable_name_collisions, // our `PointerExt` collides with upcoming inherent methods on `NonNull`
-    clippy::many_single_char_names,
     clippy::deref_addrof,
-    clippy::unreadable_literal,
     clippy::manual_map, // is not an error
     clippy::while_let_on_iterator, // is not an error
     clippy::from_iter_instead_of_collect, // using from_iter is good style
-    clippy::redundant_closure, // false positives clippy #7812
     clippy::incompatible_msrv, // false positive PointerExt::offset
 )]
 #![doc(test(attr(deny(warnings))))]
@@ -72,7 +69,8 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.57 or later**
+//!
+//! - **MSRV: Requires Rust 1.64 or later**
 //!
 //! ## Crate Feature Flags
 //!
