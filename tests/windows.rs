@@ -279,6 +279,22 @@ fn test_axis_windows_3d()
 }
 
 #[test]
+fn tests_axis_windows_3d_zips_with_1d()
+{
+    let a = Array::from_iter(0..27)
+        .into_shape_with_order((3, 3, 3))
+        .unwrap();
+    let mut b = Array::zeros(2);
+
+    Zip::from(b.view_mut())
+        .and(a.axis_windows(Axis(1), 2))
+        .for_each(|b, a| {
+            *b = a.sum();
+        });
+    assert_eq!(b,arr1(&[207, 261]));
+}
+
+#[test]
 fn test_window_neg_stride()
 {
     let array = Array::from_iter(1..10)
