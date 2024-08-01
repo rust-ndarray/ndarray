@@ -7,8 +7,8 @@ edition = "2018"
 
 [dependencies]
 approx = "0.5"
-ndarray = { path = "..", features = ["approx"] }
-ndarray-rand = { path = "../ndarray-rand" }
+ndarray = { workspace = true, features = ["approx"] }
+ndarray-rand = { workspace = true }
 rand_distr = "0.4"
 
 blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
@@ -19,8 +19,8 @@ version = "0.8.0"
 features = ["small_rng"]
 
 [dev-dependencies]
-num-traits = { version = "0.2.14", default-features = false }
-num-complex = { version = "0.4", default-features = false }
+num-traits = { workspace = true }
+num-complex = { workspace = true }
 
 [lib]
 test = false

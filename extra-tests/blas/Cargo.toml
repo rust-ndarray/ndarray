@@ -11,11 +11,11 @@ test = false
 [dev-dependencies]
 approx = "0.5"
 defmac = "0.2"
-num-traits = "0.2"
-num-complex = { version = "0.4", default-features = false }
+num-traits = { workspace = true }
+num-complex = { workspace = true }
 
 [dependencies]
-ndarray = { path = "..", features = ["approx", "blas"] }
+ndarray = { workspace = true, features = ["approx"] }
 
 blas-src = { version = "0.10", optional = true }
 
