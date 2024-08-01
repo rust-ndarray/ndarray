@@ -12,11 +12,13 @@ cargo test --verbose --no-default-features
 cargo test --release --verbose --no-default-features
 cargo build --verbose --features "$FEATURES"
 cargo test --verbose --features "$FEATURES"
-cargo test --manifest-path=ndarray-rand/Cargo.toml --no-default-features --verbose
-cargo test --manifest-path=ndarray-rand/Cargo.toml --features quickcheck --verbose
-cargo test --manifest-path=xtest-serialization/Cargo.toml --verbose
-cargo test --manifest-path=xtest-blas/Cargo.toml --verbose --features openblas-system
+cargo test -p ndarray-rand --no-default-features --verbose
+cargo test -p ndarray-rand --features ndarray-rand/quickcheck --verbose
+
+cargo test -p serialization-tests -v
+cargo test -p blas-tests -v --features blas-tests/openblas-system
+cargo test -p numeric-tests -v
+cargo test -p numeric-tests -v --features numeric-tests/test_blas
+
 cargo test --examples
-cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose
-cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose --features test_blas
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")

@@ -9,7 +9,7 @@ edition = "2018"
 test = false
 
 [dependencies]
-ndarray = { path = "..", features = ["serde"] }
+ndarray = { workspace = true, features = ["serde"] }
 
 [features]
 default = ["ron"]

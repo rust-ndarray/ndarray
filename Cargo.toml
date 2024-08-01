@@ -80,7 +80,18 @@ opt-level = 2
 opt-level = 2
 
 [workspace]
-members = ["ndarray-rand", "xtest-serialization", "xtest-blas", "xtest-numeric"]
+members = [
+    "ndarray-rand",
+    "extra-tests/serialization",
+    "extra-tests/blas",
+    "extra-tests/numeric",
+]
+
+[workspace.dependencies]
+ndarray = { path = "." }
+num-traits = { version = "0.2", default-features = false }
+num-complex = { version = "0.4", default-features = false }
+ndarray-rand = { path = "./ndarray-rand" }
 
 [package.metadata.release]
 no-dev-version = true
