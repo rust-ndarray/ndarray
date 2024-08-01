@@ -1583,8 +1583,6 @@ where
 
 // parallel methods
 #[cfg(feature = "rayon")]
-extern crate rayon_ as rayon;
-#[cfg(feature = "rayon")]
 pub mod parallel;
 
 mod impl_1d;
