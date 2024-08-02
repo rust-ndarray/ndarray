@@ -1119,13 +1119,6 @@ where
         Lanes::new(self.view(), Axis(n - 1))
     }
 
-    #[deprecated(note = "Renamed to .rows()", since = "0.15.0")]
-    pub fn genrows(&self) -> Lanes<'_, A, D::Smaller>
-    where S: Data
-    {
-        self.rows()
-    }
-
     /// Return a producer and iterable that traverses over the *generalized*
     /// rows of the array and yields mutable array views.
     ///
@@ -1138,13 +1131,6 @@ where
             n += 1;
         }
         LanesMut::new(self.view_mut(), Axis(n - 1))
-    }
-
-    #[deprecated(note = "Renamed to .rows_mut()", since = "0.15.0")]
-    pub fn genrows_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
-    where S: DataMut
-    {
-        self.rows_mut()
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
@@ -1180,17 +1166,6 @@ where
     }
 
     /// Return a producer and iterable that traverses over the *generalized*
-    /// columns of the array. For a 2D array these are the regular columns.
-    ///
-    /// Renamed to `.columns()`
-    #[deprecated(note = "Renamed to .columns()", since = "0.15.0")]
-    pub fn gencolumns(&self) -> Lanes<'_, A, D::Smaller>
-    where S: Data
-    {
-        self.columns()
-    }
-
-    /// Return a producer and iterable that traverses over the *generalized*
     /// columns of the array and yields mutable array views.
     ///
     /// Iterator element is `ArrayView1<A>` (1D read-write array view).
@@ -1198,17 +1173,6 @@ where
     where S: DataMut
     {
         LanesMut::new(self.view_mut(), Axis(0))
-    }
-
-    /// Return a producer and iterable that traverses over the *generalized*
-    /// columns of the array and yields mutable array views.
-    ///
-    /// Renamed to `.columns_mut()`
-    #[deprecated(note = "Renamed to .columns_mut()", since = "0.15.0")]
-    pub fn gencolumns_mut(&mut self) -> LanesMut<'_, A, D::Smaller>
-    where S: DataMut
-    {
-        self.columns_mut()
     }
 
     /// Return a producer and iterable that traverses over all 1D lanes
@@ -2940,20 +2904,6 @@ where
         S: Data,
     {
         self.fold((), move |(), elt| f(elt))
-    }
-
-    /// Visit each element in the array by calling `f` by reference
-    /// on each element.
-    ///
-    /// Elements are visited in arbitrary order.
-    #[deprecated(note = "Renamed to .for_each()", since = "0.15.0")]
-    pub fn visit<'a, F>(&'a self, f: F)
-    where
-        F: FnMut(&'a A),
-        A: 'a,
-        S: Data,
-    {
-        self.for_each(f)
     }
 
     /// Fold along an axis.
