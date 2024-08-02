@@ -150,8 +150,7 @@ pub use crate::linalg_traits::LinalgScalar;
 #[cfg(feature = "std")]
 pub use crate::linalg_traits::NdFloat;
 
-#[allow(deprecated)] // stack_new_axis
-pub use crate::stacking::{concatenate, stack, stack_new_axis};
+pub use crate::stacking::{concatenate, stack};
 
 pub use crate::impl_views::IndexLonger;
 pub use crate::math_cell::MathCell;
