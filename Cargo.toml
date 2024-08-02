@@ -80,9 +80,14 @@ portable-atomic-util = { version = "0.2.0", features = [ "alloc" ] }
 [workspace]
 members = [
     "ndarray-rand",
-    "extra-tests/serialization",
-    "extra-tests/blas",
-    "extra-tests/numeric",
+    "crates/*",
+]
+default-members = [
+    ".",
+    "ndarray-rand",
+    "crates/numeric-tests",
+    "crates/serialization-tests",
+    # exclude blas-tests that depends on BLAS install
 ]
 
 [workspace.dependencies]
