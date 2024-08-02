@@ -13,40 +13,6 @@ use crate::dimension;
 use crate::error::{from_kind, ErrorKind, ShapeError};
 use crate::imp_prelude::*;
 
-/// Stack arrays along the new axis.
-///
-/// ***Errors*** if the arrays have mismatching shapes.
-/// ***Errors*** if `arrays` is empty, if `axis` is out of bounds,
-/// if the result is larger than is possible to represent.
-///
-/// ```
-/// extern crate ndarray;
-///
-/// use ndarray::{arr2, arr3, stack, Axis};
-///
-/// # fn main() {
-///
-/// let a = arr2(&[[2., 2.],
-///                [3., 3.]]);
-/// assert!(
-///     stack(Axis(0), &[a.view(), a.view()])
-///     == Ok(arr3(&[[[2., 2.],
-///                   [3., 3.]],
-///                  [[2., 2.],
-///                   [3., 3.]]]))
-/// );
-/// # }
-/// ```
-pub fn stack<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D::Larger>, ShapeError>
-where
-    A: Clone,
-    D: Dimension,
-    D::Larger: RemoveAxis,
-{
-    #[allow(deprecated)]
-    stack_new_axis(axis, arrays)
-}
-
 /// Concatenate arrays along the given axis.
 ///
 /// ***Errors*** if the arrays have mismatching shapes, apart from along `axis`.
@@ -106,7 +72,6 @@ where
     Ok(res)
 }
 
-#[deprecated(note = "Use under the name stack instead.", since = "0.15.0")]
 /// Stack arrays along the new axis.
 ///
 /// ***Errors*** if the arrays have mismatching shapes.
@@ -116,14 +81,14 @@ where
 /// ```
 /// extern crate ndarray;
 ///
-/// use ndarray::{arr2, arr3, stack_new_axis, Axis};
+/// use ndarray::{arr2, arr3, stack, Axis};
 ///
 /// # fn main() {
 ///
 /// let a = arr2(&[[2., 2.],
 ///                [3., 3.]]);
 /// assert!(
-///     stack_new_axis(Axis(0), &[a.view(), a.view()])
+///     stack(Axis(0), &[a.view(), a.view()])
 ///     == Ok(arr3(&[[[2., 2.],
 ///                   [3., 3.]],
 ///                  [[2., 2.],
@@ -131,7 +96,7 @@ where
 /// );
 /// # }
 /// ```
-pub fn stack_new_axis<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D::Larger>, ShapeError>
+pub fn stack<A, D>(axis: Axis, arrays: &[ArrayView<A, D>]) -> Result<Array<A, D::Larger>, ShapeError>
 where
     A: Clone,
     D: Dimension,
@@ -257,38 +222,5 @@ macro_rules! concatenate {
     };
     ($axis:expr, $( $array:expr ),+ ) => {
         $crate::concatenate($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
-    };
-}
-
-/// Stack arrays along the new axis.
-///
-/// Uses the [`stack_new_axis()`] function, calling `ArrayView::from(&a)` on each
-/// argument `a`.
-///
-/// ***Panics*** if the `stack` function would return an error.
-///
-/// ```
-/// extern crate ndarray;
-///
-/// use ndarray::{arr2, arr3, stack_new_axis, Axis};
-///
-/// # fn main() {
-///
-/// let a = arr2(&[[2., 2.],
-///                [3., 3.]]);
-/// assert!(
-///     stack_new_axis![Axis(0), a, a]
-///     == arr3(&[[[2., 2.],
-///                [3., 3.]],
-///               [[2., 2.],
-///                [3., 3.]]])
-/// );
-/// # }
-/// ```
-#[macro_export]
-#[deprecated(note = "Use under the name stack instead.", since = "0.15.0")]
-macro_rules! stack_new_axis {
-    ($axis:expr, $( $array:expr ),+ ) => {
-        $crate::stack_new_axis($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
     };
 }

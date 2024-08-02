@@ -586,15 +586,6 @@ macro_rules! map_impl {
                 });
             }
 
-            /// Apply a function to all elements of the input arrays,
-            /// visiting elements in lock step.
-            #[deprecated(note="Renamed to .for_each()", since="0.15.0")]
-            pub fn apply<F>(self, function: F)
-                where F: FnMut($($p::Item),*)
-            {
-                self.for_each(function)
-            }
-
             /// Apply a fold function to all elements of the input arrays,
             /// visiting elements in lock step.
             ///
@@ -791,15 +782,6 @@ macro_rules! map_impl {
                 }
             }
 
-            /// Map and collect the results into a new array, which has the same size as the
-            /// inputs.
-            ///
-            /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            #[deprecated(note="Renamed to .map_collect()", since="0.15.0")]
-            pub fn apply_collect<R>(self, f: impl FnMut($($p::Item,)* ) -> R) -> Array<R, D> {
-                self.map_collect(f)
-            }
-
             /// Map and assign the results into the producer `into`, which should have the same
             /// size as the other inputs.
             ///
@@ -814,20 +796,6 @@ macro_rules! map_impl {
                         output_.assign_elem(f($($p ),*));
                     });
             }
-
-            /// Map and assign the results into the producer `into`, which should have the same
-            /// size as the other inputs.
-            ///
-            /// The producer should have assignable items as dictated by the `AssignElem` trait,
-            /// for example `&mut R`.
-            #[deprecated(note="Renamed to .map_assign_into()", since="0.15.0")]
-            pub fn apply_assign_into<R, Q>(self, into: Q, f: impl FnMut($($p::Item,)* ) -> R)
-                where Q: IntoNdProducer<Dim=D>,
-                      Q::Item: AssignElem<R>
-            {
-                self.map_assign_into(into, f)
-            }
-
 
             );
 

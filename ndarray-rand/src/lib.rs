@@ -310,32 +310,3 @@ fn get_rng() -> SmallRng
 {
     SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
 }
-
-/// A wrapper type that allows casting f64 distributions to f32
-///
-/// ```
-/// use ndarray::Array;
-/// use ndarray_rand::{RandomExt, F32};
-/// use ndarray_rand::rand_distr::Normal;
-///
-/// # fn main() {
-/// let distribution_f64 = Normal::new(0., 1.).expect("Failed to create normal distribution");
-/// let a = Array::random((2, 5), F32(distribution_f64));
-/// println!("{:8.4}", a);
-/// // Example Output:
-/// // [[ -0.6910,   1.1730,   1.0902,  -0.4092,  -1.7340],
-/// //  [ -0.6810,   0.1678,  -0.9487,   0.3150,   1.2981]]
-/// # }
-#[derive(Copy, Clone, Debug)]
-#[deprecated(since = "0.14.0", note = "Redundant with rand 0.8")]
-pub struct F32<S>(pub S);
-
-#[allow(deprecated)]
-impl<S> Distribution<f32> for F32<S>
-where S: Distribution<f64>
-{
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32
-    {
-        self.0.sample(rng) as f32
-    }
-}

@@ -151,7 +151,7 @@ where D: Dimension
     /// Depending on slicing and strides, the logically first element of the
     /// array can be located at an offset. Because of this, prefer to use
     /// `.into_raw_vec_and_offset()` instead.
-    #[deprecated(note = "Use .into_raw_vec_and_offset() instead")]
+    #[deprecated(note = "Use .into_raw_vec_and_offset() instead", since = "0.16.0")]
     pub fn into_raw_vec(self) -> Vec<A>
     {
         self.into_raw_vec_and_offset().0

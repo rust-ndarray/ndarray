@@ -51,24 +51,6 @@ fn test_arcarray_thread_safe()
 }
 
 #[test]
-#[cfg(feature = "std")]
-#[allow(deprecated)] // uninitialized
-fn test_uninit()
-{
-    unsafe {
-        let mut a = Array::<f32, _>::uninitialized((3, 4).f());
-        assert_eq!(a.dim(), (3, 4));
-        assert_eq!(a.strides(), &[1, 3]);
-        let b = Array::<f32, _>::linspace(0., 25., a.len())
-            .into_shape_with_order(a.dim())
-            .unwrap();
-        a.assign(&b);
-        assert_eq!(&a, &b);
-        assert_eq!(a.t(), b.t());
-    }
-}
-
-#[test]
 fn test_from_fn_c0()
 {
     let a = Array::from_shape_fn((), |i| i);
@@ -247,16 +229,6 @@ fn deny_wraparound_default()
 fn deny_wraparound_from_shape_fn()
 {
     let _five_large = Array::<f32, _>::from_shape_fn((3, 7, 29, 36760123, 823996703), |_| 0.);
-}
-
-#[should_panic]
-#[test]
-#[allow(deprecated)] // uninitialized
-fn deny_wraparound_uninitialized()
-{
-    unsafe {
-        let _five_large = Array::<f32, _>::uninitialized((3, 7, 29, 36760123, 823996703));
-    }
 }
 
 #[should_panic]

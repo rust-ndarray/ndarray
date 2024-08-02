@@ -47,16 +47,6 @@ where
         sum
     }
 
-    /// Return the sum of all elements in the array.
-    ///
-    /// *This method has been renamed to `.sum()`*
-    #[deprecated(note = "renamed to `sum`", since = "0.15.0")]
-    pub fn scalar_sum(&self) -> A
-    where A: Clone + Add<Output = A> + num_traits::Zero
-    {
-        self.sum()
-    }
-
     /// Returns the [arithmetic mean] x̅ of all elements in the array:
     ///
     /// ```text
