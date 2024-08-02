@@ -13,6 +13,7 @@ pub use crate::iterators::{
     AxisChunksIterMut,
     AxisIter,
     AxisIterMut,
+    AxisWindows,
     ExactChunks,
     ExactChunksIter,
     ExactChunksIterMut,
