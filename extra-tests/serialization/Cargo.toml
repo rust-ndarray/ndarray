@@ -11,24 +11,16 @@ test = false
 [dependencies]
 ndarray = { workspace = true, features = ["serde"] }
 
+serde = { version = "1.0.100", default-features = false }
+ron = { version = "0.8.1", optional = true }
+
+[dev-dependencies]
+serde_json = { version = "1.0.40" }
+# Old version to work with Rust 1.64+
+rmp = { version = "=0.8.10" }
+# Old version to work with Rust 1.64+
+rmp-serde = { version = "0.14" }
+
 [features]
 default = ["ron"]
 
-[dev-dependencies.serde]
-version = "1.0.100"
-default-features = false
-
-[dev-dependencies.serde_json]
-version = "1.0.40"
-
-[dev-dependencies.rmp]
-# Old version to work with Rust 1.64+
-version = "=0.8.10"
-
-[dev-dependencies.rmp-serde]
-# Old version to work with Rust 1.64+
-version = "0.14"
-
-[dependencies.ron]
-version = "0.8.1"
-optional = true

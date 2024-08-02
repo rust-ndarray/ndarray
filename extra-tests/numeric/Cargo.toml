@@ -5,25 +5,23 @@ authors = ["bluss"]
 publish = false
 edition = "2018"
 
+[lib]
+test = false
+
 [dependencies]
-approx = "0.5"
 ndarray = { workspace = true, features = ["approx"] }
 ndarray-rand = { workspace = true }
-rand_distr = "0.4"
+
+approx = { workspace = true }
+rand = { workspace = true }
+rand_distr = { workspace = true }
 
 blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
 openblas-src = { optional = true, version = "0.10", default-features = false, features = ["cblas", "system"] }
 
-[dependencies.rand]
-version = "0.8.0"
-features = ["small_rng"]
-
 [dev-dependencies]
 num-traits = { workspace = true }
 num-complex = { workspace = true }
-
-[lib]
-test = false
 
 [features]
 test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
