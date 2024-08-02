@@ -1,4 +1,4 @@
-use crate::{Axis, Dimension, Ix, Ixs};
+use crate::{Axis, Dimension, Ixs};
 
 /// Create a new Axes iterator
 pub(crate) fn axes_of<'a, D>(d: &'a D, strides: &'a D) -> Axes<'a, D>
@@ -58,35 +58,6 @@ pub struct AxisDescription
 }
 
 copy_and_clone!(AxisDescription);
-
-// AxisDescription can't really be empty
-// https://github.com/rust-ndarray/ndarray/pull/642#discussion_r296051702
-#[allow(clippy::len_without_is_empty)]
-impl AxisDescription
-{
-    /// Return axis
-    #[deprecated(note = "Use .axis field instead", since = "0.15.0")]
-    #[inline(always)]
-    pub fn axis(self) -> Axis
-    {
-        self.axis
-    }
-    /// Return length
-    #[deprecated(note = "Use .len field instead", since = "0.15.0")]
-    #[inline(always)]
-    pub fn len(self) -> Ix
-    {
-        self.len
-    }
-    /// Return stride
-    #[deprecated(note = "Use .stride field instead", since = "0.15.0")]
-    #[inline(always)]
-    pub fn stride(self) -> Ixs
-    {
-        self.stride
-    }
-}
-
 copy_and_clone!(['a, D] Axes<'a, D>);
 
 impl<'a, D> Iterator for Axes<'a, D>
