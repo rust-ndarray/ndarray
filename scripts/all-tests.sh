@@ -6,19 +6,24 @@ set -e
 FEATURES=$1
 CHANNEL=$2
 
-cargo build --verbose --no-default-features
-# Testing both dev and release profiles helps find bugs, especially in low level code
-cargo test --verbose --no-default-features
-cargo test --release --verbose --no-default-features
-cargo build --verbose --features "$FEATURES"
-cargo test --verbose --features "$FEATURES"
-cargo test -p ndarray-rand --no-default-features --verbose
-cargo test -p ndarray-rand --features ndarray-rand/quickcheck --verbose
+QC_FEAT=--features=ndarray-rand/quickcheck
 
-cargo test -p serialization-tests -v
+# build check with no features
+cargo build -v --no-default-features
+
+# ndarray with no features
+cargo test -p ndarray -v --no-default-features
+# all with features
+cargo test -v --features "$FEATURES" $QC_FEAT
+# all with features and release (ignore test crates which is already optimized)
+cargo test -v -p ndarray -p ndarray-rand --release --features "$FEATURES" $QC_FEAT --lib --tests
+
+# BLAS tests
 cargo test -p blas-tests -v --features blas-tests/openblas-system
-cargo test -p numeric-tests -v
 cargo test -p numeric-tests -v --features numeric-tests/test_blas
 
+# Examples
 cargo test --examples
+
+# Benchmarks
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")

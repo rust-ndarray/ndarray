@@ -6,7 +6,6 @@ extern crate serde_json;
 
 extern crate rmp_serde;
 
-#[cfg(feature = "ron")]
 extern crate ron;
 
 use ndarray::{arr0, arr1, arr2, s, ArcArray, ArcArray2, ArrayD, IxDyn};
@@ -179,7 +178,6 @@ fn serial_many_dim_serde_msgpack()
 }
 
 #[test]
-#[cfg(feature = "ron")]
 fn serial_many_dim_ron()
 {
     use ron::de::from_str as ron_deserialize;
