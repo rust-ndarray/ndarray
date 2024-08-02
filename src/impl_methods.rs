@@ -1955,7 +1955,7 @@ where
     ///                 [3., 4.]])
     /// );
     /// ```
-    #[deprecated = "Use `.into_shape_with_order()` or `.to_shape()`"]
+    #[deprecated(note = "Use `.into_shape_with_order()` or `.to_shape()`", since = "0.16.0")]
     pub fn into_shape<E>(self, shape: E) -> Result<ArrayBase<S, E::Dim>, ShapeError>
     where E: IntoDimension
     {
@@ -2064,10 +2064,7 @@ where
     /// );
     /// ```
     #[track_caller]
-    #[deprecated(
-        note = "Obsolete, use `to_shape` or `into_shape_with_order` instead.",
-        since = "0.15.2"
-    )]
+    #[deprecated(note = "Use `.into_shape_with_order()` or `.to_shape()`", since = "0.16.0")]
     pub fn reshape<E>(&self, shape: E) -> ArrayBase<S, E::Dim>
     where
         S: DataShared + DataOwned,
