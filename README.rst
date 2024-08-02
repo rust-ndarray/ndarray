@@ -107,7 +107,7 @@ How to use with cargo
 ::
 
     [dependencies]
-    ndarray = "0.15.0"
+    ndarray = "0.16.0"
 
 How to enable BLAS integration
 ------------------------------
@@ -127,8 +127,8 @@ An example configuration using system openblas is shown below. Note that only
 end-user projects (not libraries) should select provider::
 
     [dependencies]
-    ndarray = { version = "0.15.0", features = ["blas"] }
-    blas-src = { version = "0.8", features = ["openblas"] }
+    ndarray = { version = "0.16.0", features = ["blas"] }
+    blas-src = { version = "0.10", features = ["openblas"] }
     openblas-src = { version = "0.10", features = ["cblas", "system"] }
 
 Using system-installed dependencies can save a long time building dependencies.
@@ -149,6 +149,7 @@ there is no tight coupling to the ``blas-src`` version, so version selection is 
 =========== ============ ================ ==============
 ``ndarray`` ``blas-src`` ``openblas-src`` ``netlib-src``
 =========== ============ ================ ==============
+0.16        0.10         0.10             0.8
 0.15        0.8          0.10             0.8
 0.15        0.7          0.9              0.8
 0.14        0.6.1        0.9.0
