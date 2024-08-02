@@ -11,7 +11,12 @@
 #[allow(unused_imports)]
 use rawpointer::PointerExt;
 
+#[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
+
+#[cfg(not(target_has_atomic = "ptr"))]
+use portable_atomic_util::Arc;
+
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use std::mem::MaybeUninit;
