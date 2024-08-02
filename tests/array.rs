@@ -10,6 +10,7 @@ use defmac::defmac;
 use itertools::{zip, Itertools};
 use ndarray::indices;
 use ndarray::prelude::*;
+use ndarray::ErrorKind;
 use ndarray::{arr3, rcarr2};
 use ndarray::{Slice, SliceInfo, SliceInfoElem};
 use num_complex::Complex;
@@ -2058,6 +2059,22 @@ fn test_view_from_shape()
     let a = ArrayView::from_shape((2, 3, 2).strides((6, (-2isize) as usize, 1)), &s).unwrap();
     answer.invert_axis(Axis(1));
     assert_eq!(a, answer);
+}
+
+#[test]
+fn test_view_from_shape_allow_overlap()
+{
+    let data = [0, 1, 2];
+    let view = ArrayView::from_shape((2, 3).strides((0, 1)), &data).unwrap();
+    assert_eq!(view, aview2(&[data; 2]));
+}
+
+#[test]
+fn test_view_mut_from_shape_deny_overlap()
+{
+    let mut data = [0, 1, 2];
+    let result = ArrayViewMut::from_shape((2, 3).strides((0, 1)), &mut data);
+    assert_matches!(result.map_err(|e| e.kind()), Err(ErrorKind::Unsupported));
 }
 
 #[test]

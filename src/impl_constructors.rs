@@ -20,8 +20,8 @@ use num_traits::{One, Zero};
 use std::mem;
 use std::mem::MaybeUninit;
 
-use crate::dimension;
 use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
+use crate::dimension::{self, CanIndexCheckMode};
 use crate::error::{self, ShapeError};
 use crate::extension::nonnull::nonnull_from_vec_data;
 use crate::imp_prelude::*;
@@ -466,7 +466,7 @@ where
     {
         let dim = shape.dim;
         let is_custom = shape.strides.is_custom();
-        dimension::can_index_slice_with_strides(&v, &dim, &shape.strides)?;
+        dimension::can_index_slice_with_strides(&v, &dim, &shape.strides, dimension::CanIndexCheckMode::OwnedMutable)?;
         if !is_custom && dim.size() != v.len() {
             return Err(error::incompatible_shapes(&Ix1(v.len()), &dim));
         }
@@ -510,7 +510,7 @@ where
     unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self
     {
         // debug check for issues that indicates wrong use of this constructor
-        debug_assert!(dimension::can_index_slice(&v, &dim, &strides).is_ok());
+        debug_assert!(dimension::can_index_slice(&v, &dim, &strides, CanIndexCheckMode::OwnedMutable).is_ok());
 
         let ptr = nonnull_from_vec_data(&mut v).add(offset_from_low_addr_ptr_to_logical_ptr(&dim, &strides));
         ArrayBase::from_data_ptr(DataOwned::new(v), ptr).with_strides_dim(strides, dim)
