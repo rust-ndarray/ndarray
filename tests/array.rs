@@ -2282,6 +2282,29 @@ fn test_raw_view_mut_from_shape_ptr_deny_neg_strides()
 }
 
 #[test]
+fn test_raw_view_from_shape_allow_overlap()
+{
+    let data = [0, 1, 2];
+    let view;
+    unsafe {
+        let raw_view = RawArrayView::from_shape_ptr((2, 3).strides((0, 1)), data.as_ptr());
+        view = raw_view.deref_into_view();
+    }
+    assert_eq!(view, aview2(&[data, data]));
+}
+
+#[should_panic(expected = "strides must not allow any element")]
+#[cfg(debug_assertions)]
+#[test]
+fn test_raw_view_mut_from_shape_deny_overlap()
+{
+    let mut data = [0, 1, 2];
+    unsafe {
+        RawArrayViewMut::from_shape_ptr((2, 3).strides((0, 1)), data.as_mut_ptr());
+    }
+}
+
+#[test]
 fn test_default()
 {
     let a = <Array<f32, Ix2> as Default>::default();
