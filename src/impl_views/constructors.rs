@@ -8,8 +8,8 @@
 
 use std::ptr::NonNull;
 
-use crate::dimension;
 use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
+use crate::dimension::{self, CanIndexCheckMode};
 use crate::error::ShapeError;
 use crate::extension::nonnull::nonnull_debug_checked_from_ptr;
 use crate::imp_prelude::*;
@@ -54,7 +54,7 @@ where D: Dimension
     fn from_shape_impl(shape: StrideShape<D>, xs: &'a [A]) -> Result<Self, ShapeError>
     {
         let dim = shape.dim;
-        dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
+        dimension::can_index_slice_with_strides(xs, &dim, &shape.strides, CanIndexCheckMode::ReadOnly)?;
         let strides = shape.strides.strides_for_dim(&dim);
         unsafe {
             Ok(Self::new_(
@@ -157,7 +157,7 @@ where D: Dimension
     fn from_shape_impl(shape: StrideShape<D>, xs: &'a mut [A]) -> Result<Self, ShapeError>
     {
         let dim = shape.dim;
-        dimension::can_index_slice_with_strides(xs, &dim, &shape.strides)?;
+        dimension::can_index_slice_with_strides(xs, &dim, &shape.strides, CanIndexCheckMode::OwnedMutable)?;
         let strides = shape.strides.strides_for_dim(&dim);
         unsafe {
             Ok(Self::new_(

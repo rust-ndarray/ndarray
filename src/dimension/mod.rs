@@ -100,6 +100,21 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
     }
 }
 
+/// Select how aliasing is checked
+///
+/// For owned or mutable data:
+///
+///   The strides must not allow any element to be referenced by two different indices.
+///
+#[derive(Copy, Clone, PartialEq)]
+pub(crate) enum CanIndexCheckMode
+{
+    /// Owned or mutable: No aliasing
+    OwnedMutable,
+    /// Aliasing
+    ReadOnly,
+}
+
 /// Checks whether the given data and dimension meet the invariants of the
 /// `ArrayBase` type, assuming the strides are created using
 /// `dim.default_strides()` or `dim.fortran_strides()`.
@@ -125,12 +140,13 @@ pub fn size_of_shape_checked<D: Dimension>(dim: &D) -> Result<usize, ShapeError>
 /// `A` and in units of bytes between the least address and greatest address
 /// accessible by moving along all axes does not exceed `isize::MAX`.
 pub(crate) fn can_index_slice_with_strides<A, D: Dimension>(
-    data: &[A], dim: &D, strides: &Strides<D>,
+    data: &[A], dim: &D, strides: &Strides<D>, mode: CanIndexCheckMode,
 ) -> Result<(), ShapeError>
 {
     if let Strides::Custom(strides) = strides {
-        can_index_slice(data, dim, strides)
+        can_index_slice(data, dim, strides, mode)
     } else {
+        // contiguous shapes: never aliasing, mode does not matter
         can_index_slice_not_custom(data.len(), dim)
     }
 }
@@ -239,15 +255,19 @@ where D: Dimension
 /// allocation. (In other words, the pointer to the first element of the array
 /// must be computed using `offset_from_low_addr_ptr_to_logical_ptr` so that
 /// negative strides are correctly handled.)
-pub(crate) fn can_index_slice<A, D: Dimension>(data: &[A], dim: &D, strides: &D) -> Result<(), ShapeError>
+///
+/// Note, condition (4) is guaranteed to be checked last
+pub(crate) fn can_index_slice<A, D: Dimension>(
+    data: &[A], dim: &D, strides: &D, mode: CanIndexCheckMode,
+) -> Result<(), ShapeError>
 {
     // Check conditions 1 and 2 and calculate `max_offset`.
     let max_offset = max_abs_offset_check_overflow::<A, _>(dim, strides)?;
-    can_index_slice_impl(max_offset, data.len(), dim, strides)
+    can_index_slice_impl(max_offset, data.len(), dim, strides, mode)
 }
 
 fn can_index_slice_impl<D: Dimension>(
-    max_offset: usize, data_len: usize, dim: &D, strides: &D,
+    max_offset: usize, data_len: usize, dim: &D, strides: &D, mode: CanIndexCheckMode,
 ) -> Result<(), ShapeError>
 {
     // Check condition 3.
@@ -260,7 +280,7 @@ fn can_index_slice_impl<D: Dimension>(
     }
 
     // Check condition 4.
-    if !is_empty && dim_stride_overlap(dim, strides) {
+    if !is_empty && mode != CanIndexCheckMode::ReadOnly && dim_stride_overlap(dim, strides) {
         return Err(from_kind(ErrorKind::Unsupported));
     }
 
@@ -782,6 +802,7 @@ mod test
         slice_min_max,
         slices_intersect,
         solve_linear_diophantine_eq,
+        CanIndexCheckMode,
         IntoDimension,
     };
     use crate::error::{from_kind, ErrorKind};
@@ -796,11 +817,11 @@ mod test
         let v: alloc::vec::Vec<_> = (0..12).collect();
         let dim = (2, 3, 2).into_dimension();
         let strides = (1, 2, 6).into_dimension();
-        assert!(super::can_index_slice(&v, &dim, &strides).is_ok());
+        assert!(super::can_index_slice(&v, &dim, &strides, CanIndexCheckMode::OwnedMutable).is_ok());
 
         let strides = (2, 4, 12).into_dimension();
         assert_eq!(
-            super::can_index_slice(&v, &dim, &strides),
+            super::can_index_slice(&v, &dim, &strides, CanIndexCheckMode::OwnedMutable),
             Err(from_kind(ErrorKind::OutOfBounds))
         );
     }
@@ -848,71 +869,79 @@ mod test
     #[test]
     fn can_index_slice_ix0()
     {
-        can_index_slice::<i32, _>(&[1], &Ix0(), &Ix0()).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix0(), &Ix0()).unwrap_err();
+        can_index_slice::<i32, _>(&[1], &Ix0(), &Ix0(), CanIndexCheckMode::OwnedMutable).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix0(), &Ix0(), CanIndexCheckMode::OwnedMutable).unwrap_err();
     }
 
     #[test]
     fn can_index_slice_ix1()
     {
-        can_index_slice::<i32, _>(&[], &Ix1(0), &Ix1(0)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix1(0), &Ix1(1)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix1(1), &Ix1(0)).unwrap_err();
-        can_index_slice::<i32, _>(&[], &Ix1(1), &Ix1(1)).unwrap_err();
-        can_index_slice::<i32, _>(&[1], &Ix1(1), &Ix1(0)).unwrap();
-        can_index_slice::<i32, _>(&[1], &Ix1(1), &Ix1(2)).unwrap();
-        can_index_slice::<i32, _>(&[1], &Ix1(1), &Ix1(-1isize as usize)).unwrap();
-        can_index_slice::<i32, _>(&[1], &Ix1(2), &Ix1(1)).unwrap_err();
-        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(0)).unwrap_err();
-        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(1)).unwrap();
-        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(-1isize as usize)).unwrap();
+        let mode = CanIndexCheckMode::OwnedMutable;
+        can_index_slice::<i32, _>(&[], &Ix1(0), &Ix1(0), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix1(0), &Ix1(1), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix1(1), &Ix1(0), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[], &Ix1(1), &Ix1(1), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1], &Ix1(1), &Ix1(0), mode).unwrap();
+        can_index_slice::<i32, _>(&[1], &Ix1(1), &Ix1(2), mode).unwrap();
+        can_index_slice::<i32, _>(&[1], &Ix1(1), &Ix1(-1isize as usize), mode).unwrap();
+        can_index_slice::<i32, _>(&[1], &Ix1(2), &Ix1(1), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(0), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(1), mode).unwrap();
+        can_index_slice::<i32, _>(&[1, 2], &Ix1(2), &Ix1(-1isize as usize), mode).unwrap();
     }
 
     #[test]
     fn can_index_slice_ix2()
     {
-        can_index_slice::<i32, _>(&[], &Ix2(0, 0), &Ix2(0, 0)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix2(0, 0), &Ix2(2, 1)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix2(0, 1), &Ix2(0, 0)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix2(0, 1), &Ix2(2, 1)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix2(0, 2), &Ix2(0, 0)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix2(0, 2), &Ix2(2, 1)).unwrap_err();
-        can_index_slice::<i32, _>(&[1], &Ix2(1, 2), &Ix2(5, 1)).unwrap_err();
-        can_index_slice::<i32, _>(&[1, 2], &Ix2(1, 2), &Ix2(5, 1)).unwrap();
-        can_index_slice::<i32, _>(&[1, 2], &Ix2(1, 2), &Ix2(5, 2)).unwrap_err();
-        can_index_slice::<i32, _>(&[1, 2, 3, 4, 5], &Ix2(2, 2), &Ix2(3, 1)).unwrap();
-        can_index_slice::<i32, _>(&[1, 2, 3, 4], &Ix2(2, 2), &Ix2(3, 1)).unwrap_err();
+        let mode = CanIndexCheckMode::OwnedMutable;
+        can_index_slice::<i32, _>(&[], &Ix2(0, 0), &Ix2(0, 0), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix2(0, 0), &Ix2(2, 1), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix2(0, 1), &Ix2(0, 0), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix2(0, 1), &Ix2(2, 1), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix2(0, 2), &Ix2(0, 0), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix2(0, 2), &Ix2(2, 1), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1], &Ix2(1, 2), &Ix2(5, 1), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1, 2], &Ix2(1, 2), &Ix2(5, 1), mode).unwrap();
+        can_index_slice::<i32, _>(&[1, 2], &Ix2(1, 2), &Ix2(5, 2), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1, 2, 3, 4, 5], &Ix2(2, 2), &Ix2(3, 1), mode).unwrap();
+        can_index_slice::<i32, _>(&[1, 2, 3, 4], &Ix2(2, 2), &Ix2(3, 1), mode).unwrap_err();
+
+        // aliasing strides: ok when readonly
+        can_index_slice::<i32, _>(&[0; 4], &Ix2(2, 2), &Ix2(1, 1), CanIndexCheckMode::OwnedMutable).unwrap_err();
+        can_index_slice::<i32, _>(&[0; 4], &Ix2(2, 2), &Ix2(1, 1), CanIndexCheckMode::ReadOnly).unwrap();
     }
 
     #[test]
     fn can_index_slice_ix3()
     {
-        can_index_slice::<i32, _>(&[], &Ix3(0, 0, 1), &Ix3(2, 1, 3)).unwrap();
-        can_index_slice::<i32, _>(&[], &Ix3(1, 1, 1), &Ix3(2, 1, 3)).unwrap_err();
-        can_index_slice::<i32, _>(&[1], &Ix3(1, 1, 1), &Ix3(2, 1, 3)).unwrap();
-        can_index_slice::<i32, _>(&[1; 11], &Ix3(2, 2, 3), &Ix3(6, 3, 1)).unwrap_err();
-        can_index_slice::<i32, _>(&[1; 12], &Ix3(2, 2, 3), &Ix3(6, 3, 1)).unwrap();
+        let mode = CanIndexCheckMode::OwnedMutable;
+        can_index_slice::<i32, _>(&[], &Ix3(0, 0, 1), &Ix3(2, 1, 3), mode).unwrap();
+        can_index_slice::<i32, _>(&[], &Ix3(1, 1, 1), &Ix3(2, 1, 3), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1], &Ix3(1, 1, 1), &Ix3(2, 1, 3), mode).unwrap();
+        can_index_slice::<i32, _>(&[1; 11], &Ix3(2, 2, 3), &Ix3(6, 3, 1), mode).unwrap_err();
+        can_index_slice::<i32, _>(&[1; 12], &Ix3(2, 2, 3), &Ix3(6, 3, 1), mode).unwrap();
     }
 
     #[test]
     fn can_index_slice_zero_size_elem()
     {
-        can_index_slice::<(), _>(&[], &Ix1(0), &Ix1(1)).unwrap();
-        can_index_slice::<(), _>(&[()], &Ix1(1), &Ix1(1)).unwrap();
-        can_index_slice::<(), _>(&[(), ()], &Ix1(2), &Ix1(1)).unwrap();
+        let mode = CanIndexCheckMode::OwnedMutable;
+        can_index_slice::<(), _>(&[], &Ix1(0), &Ix1(1), mode).unwrap();
+        can_index_slice::<(), _>(&[()], &Ix1(1), &Ix1(1), mode).unwrap();
+        can_index_slice::<(), _>(&[(), ()], &Ix1(2), &Ix1(1), mode).unwrap();
 
         // These might seem okay because the element type is zero-sized, but
         // there could be a zero-sized type such that the number of instances
         // in existence are carefully controlled.
-        can_index_slice::<(), _>(&[], &Ix1(1), &Ix1(1)).unwrap_err();
-        can_index_slice::<(), _>(&[()], &Ix1(2), &Ix1(1)).unwrap_err();
+        can_index_slice::<(), _>(&[], &Ix1(1), &Ix1(1), mode).unwrap_err();
+        can_index_slice::<(), _>(&[()], &Ix1(2), &Ix1(1), mode).unwrap_err();
 
-        can_index_slice::<(), _>(&[(), ()], &Ix2(2, 1), &Ix2(1, 0)).unwrap();
-        can_index_slice::<(), _>(&[], &Ix2(0, 2), &Ix2(0, 0)).unwrap();
+        can_index_slice::<(), _>(&[(), ()], &Ix2(2, 1), &Ix2(1, 0), mode).unwrap();
+        can_index_slice::<(), _>(&[], &Ix2(0, 2), &Ix2(0, 0), mode).unwrap();
 
         // This case would be probably be sound, but that's not entirely clear
         // and it's not worth the special case code.
-        can_index_slice::<(), _>(&[], &Ix2(0, 2), &Ix2(2, 1)).unwrap_err();
+        can_index_slice::<(), _>(&[], &Ix2(0, 2), &Ix2(2, 1), mode).unwrap_err();
     }
 
     quickcheck! {
@@ -923,8 +952,8 @@ mod test
                 // Avoid overflow `dim.default_strides()` or `dim.fortran_strides()`.
                 result.is_err()
             } else {
-                result == can_index_slice(&data, &dim, &dim.default_strides()) &&
-                    result == can_index_slice(&data, &dim, &dim.fortran_strides())
+                result == can_index_slice(&data, &dim, &dim.default_strides(), CanIndexCheckMode::OwnedMutable) &&
+                    result == can_index_slice(&data, &dim, &dim.fortran_strides(), CanIndexCheckMode::OwnedMutable)
             }
         }
     }
