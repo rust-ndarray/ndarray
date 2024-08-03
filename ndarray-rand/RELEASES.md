@@ -1,6 +1,11 @@
 Recent Changes
 --------------
 
+- 0.15.0
+
+  - Require ndarray 0.16
+  - Remove deprecated F32 by [@bluss](https://github.com/bluss) [#1409](https://github.com/rust-ndarray/ndarray/pull/1409)
+
 - 0.14.0
 
   - Require ndarray 0.15
