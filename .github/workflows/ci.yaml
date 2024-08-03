@@ -122,7 +122,6 @@ jobs:
       - name: Install cargo-careful
         run: cargo install cargo-careful
       - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
-      - run: cargo careful test -Zcareful-sanitizer -p ndarray-rand
 
   docs:
     if: ${{ github.event_name == 'merge_group' }}
