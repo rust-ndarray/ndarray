@@ -55,7 +55,7 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize
 /// There is overlap if, when iterating through the dimensions in order of
 /// increasing stride, the current stride is less than or equal to the maximum
 /// possible offset along the preceding axes. (Axes of length ≤1 are ignored.)
-pub fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
+pub(crate) fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
 {
     let order = strides._fastest_varying_stride_order();
     let mut sum_prev_offsets = 0;
@@ -255,8 +255,6 @@ where D: Dimension
 /// allocation. (In other words, the pointer to the first element of the array
 /// must be computed using `offset_from_low_addr_ptr_to_logical_ptr` so that
 /// negative strides are correctly handled.)
-///
-/// Note, condition (4) is guaranteed to be checked last
 pub(crate) fn can_index_slice<A, D: Dimension>(
     data: &[A], dim: &D, strides: &D, mode: CanIndexCheckMode,
 ) -> Result<(), ShapeError>

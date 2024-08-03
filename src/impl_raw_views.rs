@@ -294,6 +294,8 @@ where D: Dimension
             if let Strides::Custom(strides) = &shape.strides {
                 dimension::strides_non_negative(strides).unwrap();
                 dimension::max_abs_offset_check_overflow::<A, _>(&dim, strides).unwrap();
+                assert!(!dimension::dim_stride_overlap(&dim, strides),
+                        "The strides must not allow any element to be referenced by two different indices");
             } else {
                 dimension::size_of_shape_checked(&dim).unwrap();
             }
