@@ -141,7 +141,7 @@ jobs:
   conclusion:
     needs:
       - clippy
-      # - format  # should format be required?
+      - format  # should format be required?
       - nostd
       - tests
       - cross_test
