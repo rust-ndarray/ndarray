@@ -42,7 +42,7 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all --check
 
-  nostd-build:
+  nostd:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
@@ -52,7 +52,7 @@ jobs:
             experimental: false
             target: thumbv6m-none-eabi
 
-    name: nostd-build/${{ matrix.target }}/${{ matrix.rust }}
+    name: nostd/${{ matrix.target }}/${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -142,6 +142,7 @@ jobs:
     needs:
       - clippy
       # - format  # should format be required?
+      - nostd
       - tests
       - cross_test
       - cargo-careful
