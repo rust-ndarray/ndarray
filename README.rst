@@ -135,8 +135,8 @@ Using system-installed dependencies can save a long time building dependencies.
 An example configuration using (compiled) netlib is shown below anyway::
 
     [dependencies]
-    ndarray = { version = "0.15.0", features = ["blas"] }
-    blas-src = { version = "0.8.0", default-features = false, features = ["netlib"] }
+    ndarray = { version = "0.16.0", features = ["blas"] }
+    blas-src = { version = "0.10.0", default-features = false, features = ["netlib"] }
 
 When this is done, your program must also link to ``blas_src`` by using it or
 explicitly including it in your code::

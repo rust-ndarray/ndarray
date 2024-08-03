@@ -1,5 +1,5 @@
-Version 0.16.0 (Not yet released)
-=================================
+Version 0.16.0 (2024-08-03)
+===========================
 
 Featured Changes
 ----------------
@@ -11,6 +11,13 @@ Featured Changes
 New Features and Improvements
 -----------------------------
 
+- Check for aliasing in `RawViewMut::from_shape_ptr` with a debug assertion by [@bluss](https://github.com/bluss) [#1413](https://github.com/rust-ndarray/ndarray/pull/1413)
+- Allow aliasing in ArrayView::from_shape by [@bluss](https://github.com/bluss) [#1410](https://github.com/rust-ndarray/ndarray/pull/1410)
+- Remove deprecations from 0.15.x by [@bluss](https://github.com/bluss) [#1409](https://github.com/rust-ndarray/ndarray/pull/1409)
+- Make `CowArray` an owned storage array, require Clone bound for `into_shared` by [@jturner314](https://github.com/jturner314) [#1028](https://github.com/rust-ndarray/ndarray/pull/1028)
+- Change `NdProducer::Dim` of `axis_windows()` to `Ix1` by [@jonasBoss](https://github.com/jonasBoss) [#1305](https://github.com/rust-ndarray/ndarray/pull/1305)
+- Add `squeeze()` to dynamic dimension arrays by [@barakugav](https://github.com/barakugav) [#1396](https://github.com/rust-ndarray/ndarray/pull/1396)
+- Add `flatten`, `flatten_with_order` and `into_flat` to arrays by [@barakugav](https://github.com/barakugav) [#1397](https://github.com/rust-ndarray/ndarray/pull/1397)
 - Make compatible with thumbv6m-none-eabi by [@BjornTheProgrammer](https://github.com/BjornTheProgrammer) [#1384](https://github.com/rust-ndarray/ndarray/pull/1384)
 - `is_unique` for `ArcArray` by [@daniellga](https://github.com/daniellga) [#1399](https://github.com/rust-ndarray/ndarray/pull/1399)
 - Add `triu` and `tril` methods directly to ArrayBase by [@akern40](https://github.com/akern40) [#1386](https://github.com/rust-ndarray/ndarray/pull/1386)
@@ -50,6 +57,7 @@ New Features and Improvements
 Tests, CI and Maintainer tasks
 ------------------------------
 
+- CI: require rustfmt, nostd by [@bluss](https://github.com/bluss) [#1411](https://github.com/rust-ndarray/ndarray/pull/1411)
 - Prepare changelog for 0.16.0 by [@bluss](https://github.com/bluss) [#1401](https://github.com/rust-ndarray/ndarray/pull/1401)
 - Organize dependencies with workspace = true (cont.) by [@bluss](https://github.com/bluss) [#1407](https://github.com/rust-ndarray/ndarray/pull/1407)
 - Update to use dep: for features by [@bluss](https://github.com/bluss) [#1406](https://github.com/rust-ndarray/ndarray/pull/1406)
