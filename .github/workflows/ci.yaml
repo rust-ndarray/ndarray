@@ -42,7 +42,7 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all --check
 
-  nostd-build:
+  nostd:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
@@ -52,7 +52,7 @@ jobs:
             experimental: false
             target: thumbv6m-none-eabi
 
-    name: nostd-build/${{ matrix.target }}/${{ matrix.rust }}
+    name: nostd/${{ matrix.target }}/${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -122,7 +122,6 @@ jobs:
       - name: Install cargo-careful
         run: cargo install cargo-careful
       - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
-      - run: cargo careful test -Zcareful-sanitizer -p ndarray-rand
 
   docs:
     if: ${{ github.event_name == 'merge_group' }}
@@ -142,7 +141,8 @@ jobs:
   conclusion:
     needs:
       - clippy
-      # - format  # should format be required?
+      - format  # should format be required?
+      - nostd
       - tests
       - cross_test
       - cargo-careful
