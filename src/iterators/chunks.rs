@@ -204,7 +204,7 @@ impl_iterator! {
 
         fn item(&mut self, ptr) {
             unsafe {
-                ArrayView::new_(
+                ArrayView::new(
                     ptr,
                     self.chunk.clone(),
                     self.inner_strides.clone())
@@ -226,7 +226,7 @@ impl_iterator! {
 
         fn item(&mut self, ptr) {
             unsafe {
-                ArrayViewMut::new_(
+                ArrayViewMut::new(
                     ptr,
                     self.chunk.clone(),
                     self.inner_strides.clone())

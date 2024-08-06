@@ -61,7 +61,7 @@ impl<A, D: Dimension> Iterator for IntoIter<A, D>
     #[inline]
     fn next(&mut self) -> Option<A>
     {
-        self.inner.next().map(|p| unsafe { p.read() })
+        self.inner.next().map(|p| unsafe { p.as_ptr().read() })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -91,7 +91,7 @@ where D: Dimension
         while let Some(_) = self.next() {}
 
         unsafe {
-            let data_ptr = self.array_data.as_ptr_mut();
+            let data_ptr = self.array_data.as_nonnull_mut();
             let view = RawArrayViewMut::new(self.array_head_ptr, self.inner.dim.clone(), self.inner.strides.clone());
             debug_assert!(self.inner.dim.size() < self.data_len, "data_len {} and dim size {}",
                           self.data_len, self.inner.dim.size());

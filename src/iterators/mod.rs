@@ -38,7 +38,7 @@ use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 
 /// Base for iterators over all axes.
 ///
-/// Iterator element type is `*mut A`.
+/// Iterator element type is `NonNull<A>`.
 #[derive(Debug)]
 pub struct Baseiter<A, D>
 {
@@ -67,10 +67,10 @@ impl<A, D: Dimension> Baseiter<A, D>
 
 impl<A, D: Dimension> Iterator for Baseiter<A, D>
 {
-    type Item = *mut A;
+    type Item = NonNull<A>;
 
     #[inline]
-    fn next(&mut self) -> Option<*mut A>
+    fn next(&mut self) -> Option<Self::Item>
     {
         let index = match self.index {
             None => return None,
@@ -78,7 +78,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
         };
         let offset = D::stride_offset(&index, &self.strides);
         self.index = self.dim.next_for(index);
-        unsafe { Some(self.ptr.offset(offset).as_ptr()) }
+        unsafe { Some(self.ptr.offset(offset)) }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -88,7 +88,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
     }
 
     fn fold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
-    where G: FnMut(Acc, *mut A) -> Acc
+    where G: FnMut(Acc, Self::Item) -> Acc
     {
         let ndim = self.dim.ndim();
         debug_assert_ne!(ndim, 0);
@@ -103,7 +103,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
                 let mut i = 0;
                 let i_end = len - elem_index;
                 while i < i_end {
-                    accum = g(accum, row_ptr.offset(i as isize * stride).as_ptr());
+                    accum = g(accum, row_ptr.offset(i as isize * stride));
                     i += 1;
                 }
             }
@@ -137,7 +137,7 @@ impl<A, D: Dimension> ExactSizeIterator for Baseiter<A, D>
 impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
 {
     #[inline]
-    fn next_back(&mut self) -> Option<*mut A>
+    fn next_back(&mut self) -> Option<Self::Item>
     {
         let index = match self.index {
             None => return None,
@@ -149,10 +149,10 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
             self.index = None;
         }
 
-        unsafe { Some(self.ptr.offset(offset).as_ptr()) }
+        unsafe { Some(self.ptr.offset(offset)) }
     }
 
-    fn nth_back(&mut self, n: usize) -> Option<*mut A>
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item>
     {
         let index = self.index?;
         let len = self.dim[0] - index[0];
@@ -162,7 +162,7 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
             if index == self.dim {
                 self.index = None;
             }
-            unsafe { Some(self.ptr.offset(offset).as_ptr()) }
+            unsafe { Some(self.ptr.offset(offset)) }
         } else {
             self.index = None;
             None
@@ -170,7 +170,7 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
     }
 
     fn rfold<Acc, G>(mut self, init: Acc, mut g: G) -> Acc
-    where G: FnMut(Acc, *mut A) -> Acc
+    where G: FnMut(Acc, Self::Item) -> Acc
     {
         let mut accum = init;
         if let Some(index) = self.index {
@@ -182,8 +182,7 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
                     accum = g(
                         accum,
                         self.ptr
-                            .offset(Ix1::stride_offset(&self.dim, &self.strides))
-                            .as_ptr(),
+                            .offset(Ix1::stride_offset(&self.dim, &self.strides)),
                     );
                 }
             }
@@ -231,7 +230,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D>
     #[inline]
     fn next(&mut self) -> Option<&'a A>
     {
-        self.inner.next().map(|p| unsafe { &*p })
+        self.inner.next().map(|p| unsafe { p.as_ref() })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -242,7 +241,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBase<'a, A, D>
     fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
     where G: FnMut(Acc, Self::Item) -> Acc
     {
-        unsafe { self.inner.fold(init, move |acc, ptr| g(acc, &*ptr)) }
+        unsafe { self.inner.fold(init, move |acc, ptr| g(acc, ptr.as_ref())) }
     }
 }
 
@@ -251,13 +250,13 @@ impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1>
     #[inline]
     fn next_back(&mut self) -> Option<&'a A>
     {
-        self.inner.next_back().map(|p| unsafe { &*p })
+        self.inner.next_back().map(|p| unsafe { p.as_ref() })
     }
 
     fn rfold<Acc, G>(self, init: Acc, mut g: G) -> Acc
     where G: FnMut(Acc, Self::Item) -> Acc
     {
-        unsafe { self.inner.rfold(init, move |acc, ptr| g(acc, &*ptr)) }
+        unsafe { self.inner.rfold(init, move |acc, ptr| g(acc, ptr.as_ref())) }
     }
 }
 
@@ -651,7 +650,7 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D>
     #[inline]
     fn next(&mut self) -> Option<&'a mut A>
     {
-        self.inner.next().map(|p| unsafe { &mut *p })
+        self.inner.next().map(|mut p| unsafe { p.as_mut() })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -662,7 +661,10 @@ impl<'a, A, D: Dimension> Iterator for ElementsBaseMut<'a, A, D>
     fn fold<Acc, G>(self, init: Acc, mut g: G) -> Acc
     where G: FnMut(Acc, Self::Item) -> Acc
     {
-        unsafe { self.inner.fold(init, move |acc, ptr| g(acc, &mut *ptr)) }
+        unsafe {
+            self.inner
+                .fold(init, move |acc, mut ptr| g(acc, ptr.as_mut()))
+        }
     }
 }
 
@@ -671,13 +673,16 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1>
     #[inline]
     fn next_back(&mut self) -> Option<&'a mut A>
     {
-        self.inner.next_back().map(|p| unsafe { &mut *p })
+        self.inner.next_back().map(|mut p| unsafe { p.as_mut() })
     }
 
     fn rfold<Acc, G>(self, init: Acc, mut g: G) -> Acc
     where G: FnMut(Acc, Self::Item) -> Acc
     {
-        unsafe { self.inner.rfold(init, move |acc, ptr| g(acc, &mut *ptr)) }
+        unsafe {
+            self.inner
+                .rfold(init, move |acc, mut ptr| g(acc, ptr.as_mut()))
+        }
     }
 }
 
@@ -753,7 +758,7 @@ where D: Dimension
     {
         self.iter
             .next()
-            .map(|ptr| unsafe { ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
+            .map(|ptr| unsafe { ArrayView::new(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -777,7 +782,7 @@ impl<'a, A> DoubleEndedIterator for LanesIter<'a, A, Ix1>
     {
         self.iter
             .next_back()
-            .map(|ptr| unsafe { ArrayView::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
+            .map(|ptr| unsafe { ArrayView::new(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
     }
 }
 
@@ -805,7 +810,7 @@ where D: Dimension
     {
         self.iter
             .next()
-            .map(|ptr| unsafe { ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
+            .map(|ptr| unsafe { ArrayViewMut::new(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -829,7 +834,7 @@ impl<'a, A> DoubleEndedIterator for LanesIterMut<'a, A, Ix1>
     {
         self.iter
             .next_back()
-            .map(|ptr| unsafe { ArrayViewMut::new_(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
+            .map(|ptr| unsafe { ArrayViewMut::new(ptr, Ix1(self.inner_len), Ix1(self.inner_stride as Ix)) })
     }
 }
 
