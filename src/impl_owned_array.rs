@@ -1,9 +1,10 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::ptr::NonNull;
 use std::mem;
 use std::mem::MaybeUninit;
 
-#[allow(unused_imports)]
+#[allow(unused_imports)] // Needed for Rust 1.64
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
@@ -435,7 +436,7 @@ where D: Dimension
         // "deconstruct" self; the owned repr releases ownership of all elements and we
         // carry on with raw view methods
         let data_len = self.data.len();
-        let data_ptr = self.data.as_nonnull_mut().as_ptr();
+        let data_ptr = self.data.as_nonnull_mut();
 
         unsafe {
             // Safety: self.data releases ownership of the elements. Any panics below this point
@@ -866,8 +867,9 @@ where D: Dimension
 ///
 /// This is an internal function for use by move_into and IntoIter only, safety invariants may need
 /// to be upheld across the calls from those implementations.
-pub(crate) unsafe fn drop_unreachable_raw<A, D>(mut self_: RawArrayViewMut<A, D>, data_ptr: *mut A, data_len: usize)
-where D: Dimension
+pub(crate) unsafe fn drop_unreachable_raw<A, D>(
+    mut self_: RawArrayViewMut<A, D>, data_ptr: NonNull<A>, data_len: usize,
+) where D: Dimension
 {
     let self_len = self_.len();
 
@@ -878,7 +880,7 @@ where D: Dimension
     }
     sort_axes_in_default_order(&mut self_);
     // with uninverted axes this is now the element with lowest address
-    let array_memory_head_ptr = self_.ptr.as_ptr();
+    let array_memory_head_ptr = self_.ptr;
     let data_end_ptr = data_ptr.add(data_len);
     debug_assert!(data_ptr <= array_memory_head_ptr);
     debug_assert!(array_memory_head_ptr <= data_end_ptr);
@@ -907,7 +909,7 @@ where D: Dimension
 
     // iter is a raw pointer iterator traversing the array in memory order now with the
     // sorted axes.
-    let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
+    let mut iter = Baseiter::new(self_.ptr, self_.dim, self_.strides);
     let mut dropped_elements = 0;
 
     let mut last_ptr = data_ptr;
@@ -917,7 +919,7 @@ where D: Dimension
         // should now be dropped. This interval may be empty, then we just skip this loop.
         while last_ptr != elem_ptr {
             debug_assert!(last_ptr < data_end_ptr);
-            std::ptr::drop_in_place(last_ptr);
+            std::ptr::drop_in_place(last_ptr.as_mut());
             last_ptr = last_ptr.add(1);
             dropped_elements += 1;
         }
@@ -926,7 +928,7 @@ where D: Dimension
     }
 
     while last_ptr < data_end_ptr {
-        std::ptr::drop_in_place(last_ptr);
+        std::ptr::drop_in_place(last_ptr.as_mut());
         last_ptr = last_ptr.add(1);
         dropped_elements += 1;
     }

@@ -33,16 +33,15 @@ impl<A, D> IntoIter<A, D>
 where D: Dimension
 {
     /// Create a new by-value iterator that consumes `array`
-    pub(crate) fn new(mut array: Array<A, D>) -> Self
+    pub(crate) fn new(array: Array<A, D>) -> Self
     {
         unsafe {
             let array_head_ptr = array.ptr;
-            let ptr = array.as_mut_ptr();
             let mut array_data = array.data;
             let data_len = array_data.release_all_elements();
             debug_assert!(data_len >= array.dim.size());
             let has_unreachable_elements = array.dim.size() != data_len;
-            let inner = Baseiter::new(ptr, array.dim, array.strides);
+            let inner = Baseiter::new(array_head_ptr, array.dim, array.strides);
 
             IntoIter {
                 array_data,
@@ -62,7 +61,7 @@ impl<A, D: Dimension> Iterator for IntoIter<A, D>
     #[inline]
     fn next(&mut self) -> Option<A>
     {
-        self.inner.next().map(|p| unsafe { p.read() })
+        self.inner.next().map(|p| unsafe { p.as_ptr().read() })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -92,7 +91,7 @@ where D: Dimension
         while let Some(_) = self.next() {}
 
         unsafe {
-            let data_ptr = self.array_data.as_ptr_mut();
+            let data_ptr = self.array_data.as_nonnull_mut();
             let view = RawArrayViewMut::new(self.array_head_ptr, self.inner.dim.clone(), self.inner.strides.clone());
             debug_assert!(self.inner.dim.size() < self.data_len, "data_len {} and dim size {}",
                           self.data_len, self.inner.dim.size());

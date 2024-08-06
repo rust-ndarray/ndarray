@@ -115,7 +115,7 @@ impl_iterator! {
 
         fn item(&mut self, ptr) {
             unsafe {
-                ArrayView::new_(
+                ArrayView::new(
                     ptr,
                     self.window.clone(),
                     self.strides.clone())

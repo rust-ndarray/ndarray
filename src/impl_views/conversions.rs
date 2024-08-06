@@ -199,7 +199,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
     }
 }
 
@@ -209,7 +209,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
     }
 }
 
@@ -220,7 +220,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]
@@ -262,7 +262,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr.as_ptr(), self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
     }
 
     #[inline]
