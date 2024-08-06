@@ -19,6 +19,10 @@ use alloc::vec::Vec;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ptr;
+use std::ptr::NonNull;
+
+#[allow(unused_imports)] // Needed for Rust 1.64
+use rawpointer::PointerExt;
 
 use crate::Ix1;
 
@@ -38,7 +42,7 @@ use std::slice::{self, Iter as SliceIter, IterMut as SliceIterMut};
 #[derive(Debug)]
 pub struct Baseiter<A, D>
 {
-    ptr: *mut A,
+    ptr: NonNull<A>,
     dim: D,
     strides: D,
     index: Option<D>,
@@ -50,7 +54,7 @@ impl<A, D: Dimension> Baseiter<A, D>
     /// to be correct to avoid performing an unsafe pointer offset while
     /// iterating.
     #[inline]
-    pub unsafe fn new(ptr: *mut A, len: D, stride: D) -> Baseiter<A, D>
+    pub unsafe fn new(ptr: NonNull<A>, len: D, stride: D) -> Baseiter<A, D>
     {
         Baseiter {
             ptr,
@@ -74,7 +78,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
         };
         let offset = D::stride_offset(&index, &self.strides);
         self.index = self.dim.next_for(index);
-        unsafe { Some(self.ptr.offset(offset)) }
+        unsafe { Some(self.ptr.offset(offset).as_ptr()) }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>)
@@ -99,7 +103,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
                 let mut i = 0;
                 let i_end = len - elem_index;
                 while i < i_end {
-                    accum = g(accum, row_ptr.offset(i as isize * stride));
+                    accum = g(accum, row_ptr.offset(i as isize * stride).as_ptr());
                     i += 1;
                 }
             }
@@ -140,12 +144,12 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
             Some(ix) => ix,
         };
         self.dim[0] -= 1;
-        let offset = <_>::stride_offset(&self.dim, &self.strides);
+        let offset = Ix1::stride_offset(&self.dim, &self.strides);
         if index == self.dim {
             self.index = None;
         }
 
-        unsafe { Some(self.ptr.offset(offset)) }
+        unsafe { Some(self.ptr.offset(offset).as_ptr()) }
     }
 
     fn nth_back(&mut self, n: usize) -> Option<*mut A>
@@ -154,11 +158,11 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
         let len = self.dim[0] - index[0];
         if n < len {
             self.dim[0] -= n + 1;
-            let offset = <_>::stride_offset(&self.dim, &self.strides);
+            let offset = Ix1::stride_offset(&self.dim, &self.strides);
             if index == self.dim {
                 self.index = None;
             }
-            unsafe { Some(self.ptr.offset(offset)) }
+            unsafe { Some(self.ptr.offset(offset).as_ptr()) }
         } else {
             self.index = None;
             None
@@ -178,7 +182,8 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
                     accum = g(
                         accum,
                         self.ptr
-                            .offset(Ix1::stride_offset(&self.dim, &self.strides)),
+                            .offset(Ix1::stride_offset(&self.dim, &self.strides))
+                            .as_ptr(),
                     );
                 }
             }

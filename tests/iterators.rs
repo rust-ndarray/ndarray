@@ -1,6 +1,4 @@
-#![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
-)]
+#![allow(clippy::deref_addrof, clippy::unreadable_literal)]
 
 use ndarray::prelude::*;
 use ndarray::{arr3, indices, s, Slice, Zip};
@@ -1054,4 +1052,34 @@ impl Drop for DropCount<'_>
         self.my_drops += 1;
         self.drops.set(self.drops.get() + 1);
     }
+}
+
+#[test]
+fn test_impl_iter_compiles()
+{
+    // Requires that the iterators are covariant in the element type
+
+    // base case: std
+    fn slice_iter_non_empty_indices<'s, 'a>(array: &'a Vec<&'s str>) -> impl Iterator<Item = usize> + 'a
+    {
+        array
+            .iter()
+            .enumerate()
+            .filter(|(_index, elem)| !elem.is_empty())
+            .map(|(index, _elem)| index)
+    }
+
+    let _ = slice_iter_non_empty_indices;
+
+    // ndarray case
+    fn array_iter_non_empty_indices<'s, 'a>(array: &'a Array<&'s str, Ix1>) -> impl Iterator<Item = usize> + 'a
+    {
+        array
+            .iter()
+            .enumerate()
+            .filter(|(_index, elem)| !elem.is_empty())
+            .map(|(index, _elem)| index)
+    }
+
+    let _ = array_iter_non_empty_indices;
 }

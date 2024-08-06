@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 use std::mem;
 use std::mem::MaybeUninit;
 
-#[allow(unused_imports)]
+#[allow(unused_imports)] // Needed for Rust 1.64
 use rawpointer::PointerExt;
 
 use crate::imp_prelude::*;
@@ -907,7 +907,7 @@ where D: Dimension
 
     // iter is a raw pointer iterator traversing the array in memory order now with the
     // sorted axes.
-    let mut iter = Baseiter::new(self_.ptr.as_ptr(), self_.dim, self_.strides);
+    let mut iter = Baseiter::new(self_.ptr, self_.dim, self_.strides);
     let mut dropped_elements = 0;
 
     let mut last_ptr = data_ptr;

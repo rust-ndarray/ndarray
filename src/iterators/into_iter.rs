@@ -33,16 +33,15 @@ impl<A, D> IntoIter<A, D>
 where D: Dimension
 {
     /// Create a new by-value iterator that consumes `array`
-    pub(crate) fn new(mut array: Array<A, D>) -> Self
+    pub(crate) fn new(array: Array<A, D>) -> Self
     {
         unsafe {
             let array_head_ptr = array.ptr;
-            let ptr = array.as_mut_ptr();
             let mut array_data = array.data;
             let data_len = array_data.release_all_elements();
             debug_assert!(data_len >= array.dim.size());
             let has_unreachable_elements = array.dim.size() != data_len;
-            let inner = Baseiter::new(ptr, array.dim, array.strides);
+            let inner = Baseiter::new(array_head_ptr, array.dim, array.strides);
 
             IntoIter {
                 array_data,
