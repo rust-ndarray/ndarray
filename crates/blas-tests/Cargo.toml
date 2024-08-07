@@ -11,7 +11,7 @@ doc = false
 doctest = false
 
 [dependencies]
-ndarray = { workspace = true, features = ["approx"] }
+ndarray = { workspace = true, features = ["approx", "blas"] }
 
 blas-src = { version = "0.10", optional = true }
 openblas-src = { version = "0.10", optional = true }
