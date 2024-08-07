@@ -48,6 +48,7 @@ defmac = "0.2"
 quickcheck = { workspace = true }
 approx = { workspace = true, default-features = true }
 itertools = { workspace = true }
+ndarray-gen = { workspace = true }
 
 [features]
 default = ["std"]
@@ -93,7 +94,7 @@ default-members = [
 ]
 
 [workspace.dependencies]
-ndarray = { version = "0.16", path = "." }
+ndarray = { version = "0.16", path = ".", default-features = false }
 ndarray-rand = { path = "ndarray-rand" }
 ndarray-gen = { path = "crates/ndarray-gen" }
 

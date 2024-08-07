@@ -1,3 +1,4 @@
+#![no_std]
 // Copyright 2024 bluss and ndarray developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
