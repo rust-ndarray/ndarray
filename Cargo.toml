@@ -85,6 +85,7 @@ members = [
 default-members = [
     ".",
     "ndarray-rand",
+    "crates/ndarray-gen",
     "crates/numeric-tests",
     "crates/serialization-tests",
     # exclude blas-tests that depends on BLAS install
@@ -93,6 +94,7 @@ default-members = [
 [workspace.dependencies]
 ndarray = { version = "0.16", path = "." }
 ndarray-rand = { path = "ndarray-rand" }
+ndarray-gen = { path = "crates/ndarray-gen" }
 
 num-integer = { version = "0.1.39", default-features = false }
 num-traits = { version = "0.2", default-features = false }
