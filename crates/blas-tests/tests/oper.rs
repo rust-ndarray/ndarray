@@ -9,10 +9,13 @@ use ndarray::prelude::*;
 
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
+use ndarray::Order;
 use ndarray::{Data, Ix, LinalgScalar};
+use ndarray_gen::array_builder::ArrayBuilder;
 
 use approx::assert_relative_eq;
 use defmac::defmac;
+use itertools::iproduct;
 use num_complex::Complex32;
 use num_complex::Complex64;
 
@@ -243,7 +246,14 @@ fn gen_mat_mul()
     let sizes = vec![
         (4, 4, 4),
         (8, 8, 8),
-        (17, 15, 16),
+        (10, 10, 10),
+        (8, 8, 1),
+        (1, 10, 10),
+        (10, 1, 10),
+        (10, 10, 1),
+        (1, 10, 1),
+        (10, 1, 1),
+        (1, 1, 10),
         (4, 17, 3),
         (17, 3, 22),
         (19, 18, 2),
@@ -251,24 +261,41 @@ fn gen_mat_mul()
         (15, 16, 17),
         (67, 63, 62),
     ];
-    // test different strides
-    for &s1 in &[1, 2, -1, -2] {
-        for &s2 in &[1, 2, -1, -2] {
-            for &(m, k, n) in &sizes {
-                let a = range_mat64(m, k);
-                let b = range_mat64(k, n);
-                let mut c = range_mat64(m, n);
+    let strides = &[1, 2, -1, -2];
+    let cf_order = [Order::C, Order::F];
+
+    // test different strides and memory orders
+    for (&s1, &s2) in iproduct!(strides, strides) {
+        for &(m, k, n) in &sizes {
+            for (ord1, ord2, ord3) in iproduct!(cf_order, cf_order, cf_order) {
+                println!("Case s1={}, s2={}, orders={:?}, {:?}, {:?}", s1, s2, ord1, ord2, ord3);
+                let a = ArrayBuilder::new((m, k)).memory_order(ord1).build();
+                let b = ArrayBuilder::new((k, n)).memory_order(ord2).build();
+                let mut c = ArrayBuilder::new((m, n)).memory_order(ord3).build();
+
                 let mut answer = c.clone();
 
                 {
-                    let a = a.slice(s![..;s1, ..;s2]);
-                    let b = b.slice(s![..;s2, ..;s2]);
-                    let mut cv = c.slice_mut(s![..;s1, ..;s2]);
+                    let av;
+                    let bv;
+                    let mut cv;
 
-                    let answer_part = alpha * reference_mat_mul(&a, &b) + beta * &cv;
+                    if s1 != 1 || s2 != 1 {
+                        av = a.slice(s![..;s1, ..;s2]);
+                        bv = b.slice(s![..;s2, ..;s2]);
+                        cv = c.slice_mut(s![..;s1, ..;s2]);
+                    } else {
+                        // different stride cases for slicing versus not sliced (for axes of
+                        // len=1); so test not sliced here.
+                        av = a.view();
+                        bv = b.view();
+                        cv = c.view_mut();
+                    }
+
+                    let answer_part = alpha * reference_mat_mul(&av, &bv) + beta * &cv;
                     answer.slice_mut(s![..;s1, ..;s2]).assign(&answer_part);
 
-                    general_mat_mul(alpha, &a, &b, beta, &mut cv);
+                    general_mat_mul(alpha, &av, &bv, beta, &mut cv);
                 }
                 assert_relative_eq!(c, answer, epsilon = 1e-12, max_relative = 1e-7);
             }

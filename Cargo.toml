@@ -47,7 +47,7 @@ rawpointer = { version = "0.2" }
 defmac = "0.2"
 quickcheck = { workspace = true }
 approx = { workspace = true, default-features = true }
-itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
+itertools = { workspace = true }
 
 [features]
 default = ["std"]
@@ -72,6 +72,7 @@ rayon = ["dep:rayon", "std"]
 matrixmultiply-threading = ["matrixmultiply/threading"]
 
 portable-atomic-critical-section = ["portable-atomic/critical-section"]
+
 
 [target.'cfg(not(target_has_atomic = "ptr"))'.dependencies]
 portable-atomic = { version = "1.6.0" }
@@ -103,6 +104,7 @@ approx = { version = "0.5", default-features = false }
 quickcheck = { version = "1.0", default-features = false }
 rand = { version = "0.8.0", features = ["small_rng"] }
 rand_distr = { version = "0.4.0" }
+itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
 
 [profile.bench]
 debug = true
