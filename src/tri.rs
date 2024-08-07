@@ -10,7 +10,16 @@ use core::cmp::{max, min};
 
 use num_traits::Zero;
 
-use crate::{dimension::is_layout_f, Array, ArrayBase, Axis, Data, Dimension, IntoDimension, Zip};
+use crate::{
+    dimension::{is_layout_c, is_layout_f},
+    Array,
+    ArrayBase,
+    Axis,
+    Data,
+    Dimension,
+    IntoDimension,
+    Zip,
+};
 
 impl<S, A, D> ArrayBase<S, D>
 where
@@ -30,38 +39,44 @@ where
     /// ```
     /// use ndarray::array;
     ///
-    /// let arr = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-    /// let res = arr.triu(0);
-    /// assert_eq!(res, array![[1, 2, 3], [0, 5, 6], [0, 0, 9]]);
+    /// let arr = array![
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ];
+    /// assert_eq!(
+    ///     arr.triu(0),
+    ///     array![
+    ///         [1, 2, 3],
+    ///         [0, 5, 6],
+    ///         [0, 0, 9]
+    ///     ]
+    /// );
     /// ```
     pub fn triu(&self, k: isize) -> Array<A, D>
     {
         if self.ndim() <= 1 {
             return self.to_owned();
         }
-        match is_layout_f(&self.dim, &self.strides) {
-            true => {
-                let n = self.ndim();
-                let mut x = self.view();
-                x.swap_axes(n - 2, n - 1);
-                let mut tril = x.tril(-k);
-                tril.swap_axes(n - 2, n - 1);
+        if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) {
+            let n = self.ndim();
+            let mut x = self.view();
+            x.swap_axes(n - 2, n - 1);
+            let mut tril = x.tril(-k);
+            tril.swap_axes(n - 2, n - 1);
 
-                tril
-            }
-            false => {
-                let mut res = Array::zeros(self.raw_dim());
-                Zip::indexed(self.rows())
-                    .and(res.rows_mut())
-                    .for_each(|i, src, mut dst| {
-                        let row_num = i.into_dimension().last_elem();
-                        let lower = max(row_num as isize + k, 0);
-                        dst.slice_mut(s![lower..]).assign(&src.slice(s![lower..]));
-                    });
-
-                res
-            }
+            return tril;
         }
+        let mut res = Array::zeros(self.raw_dim());
+        Zip::indexed(self.rows())
+            .and(res.rows_mut())
+            .for_each(|i, src, mut dst| {
+                let row_num = i.into_dimension().last_elem();
+                let lower = max(row_num as isize + k, 0);
+                dst.slice_mut(s![lower..]).assign(&src.slice(s![lower..]));
+            });
+
+        res
     }
 
     /// Lower triangular of an array.
@@ -75,39 +90,45 @@ where
     /// ```
     /// use ndarray::array;
     ///
-    /// let arr = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-    /// let res = arr.tril(0);
-    /// assert_eq!(res, array![[1, 0, 0], [4, 5, 0], [7, 8, 9]]);
+    /// let arr = array![
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ];
+    /// assert_eq!(
+    ///     arr.tril(0),
+    ///     array![
+    ///         [1, 0, 0],
+    ///         [4, 5, 0],
+    ///         [7, 8, 9]
+    ///     ]
+    /// );
     /// ```
     pub fn tril(&self, k: isize) -> Array<A, D>
     {
         if self.ndim() <= 1 {
             return self.to_owned();
         }
-        match is_layout_f(&self.dim, &self.strides) {
-            true => {
-                let n = self.ndim();
-                let mut x = self.view();
-                x.swap_axes(n - 2, n - 1);
-                let mut tril = x.triu(-k);
-                tril.swap_axes(n - 2, n - 1);
+        if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) {
+            let n = self.ndim();
+            let mut x = self.view();
+            x.swap_axes(n - 2, n - 1);
+            let mut tril = x.triu(-k);
+            tril.swap_axes(n - 2, n - 1);
 
-                tril
-            }
-            false => {
-                let mut res = Array::zeros(self.raw_dim());
-                let ncols = self.len_of(Axis(self.ndim() - 1)) as isize;
-                Zip::indexed(self.rows())
-                    .and(res.rows_mut())
-                    .for_each(|i, src, mut dst| {
-                        let row_num = i.into_dimension().last_elem();
-                        let upper = min(row_num as isize + k, ncols) + 1;
-                        dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
-                    });
-
-                res
-            }
+            return tril;
         }
+        let mut res = Array::zeros(self.raw_dim());
+        let ncols = self.len_of(Axis(self.ndim() - 1)) as isize;
+        Zip::indexed(self.rows())
+            .and(res.rows_mut())
+            .for_each(|i, src, mut dst| {
+                let row_num = i.into_dimension().last_elem();
+                let upper = min(row_num as isize + k + 1, ncols);
+                dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
+            });
+
+        res
     }
 }
 
@@ -186,6 +207,19 @@ mod tests
         // Lower
         let res = x.tril(0);
         assert_eq!(res, array![[1, 0, 0], [4, 5, 0], [7, 8, 9]]);
+    }
+
+    #[test]
+    fn test_2d_single()
+    {
+        let x = array![[1]];
+
+        assert_eq!(x.triu(0), array![[1]]);
+        assert_eq!(x.tril(0), array![[1]]);
+        assert_eq!(x.triu(1), array![[0]]);
+        assert_eq!(x.tril(1), array![[1]]);
+        assert_eq!(x.triu(-1), array![[1]]);
+        assert_eq!(x.tril(-1), array![[0]]);
     }
 
     #[test]
@@ -285,8 +319,16 @@ mod tests
         let res = x.triu(0);
         assert_eq!(res, array![[1, 2, 3], [0, 5, 6]]);
 
+        let x = array![[1, 2, 3], [4, 5, 6]];
+        let res = x.tril(0);
+        assert_eq!(res, array![[1, 0, 0], [4, 5, 0]]);
+
         let x = array![[1, 2], [3, 4], [5, 6]];
         let res = x.triu(0);
         assert_eq!(res, array![[1, 2], [0, 4], [0, 0]]);
+
+        let x = array![[1, 2], [3, 4], [5, 6]];
+        let res = x.tril(0);
+        assert_eq!(res, array![[1, 0], [3, 4], [5, 6]]);
     }
 }
