@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::cmp::{max, min};
+use core::{cmp::min, isize};
 
 use num_traits::Zero;
 
@@ -58,8 +58,12 @@ where
         if self.ndim() <= 1 {
             return self.to_owned();
         }
-        if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) {
-            let n = self.ndim();
+
+        // Performance optimization for F-order arrays.
+        // C-order array check prevents infinite recursion in edge cases like [[1]].
+        // k-size check prevents underflow when k == isize::MIN
+        let n = self.ndim();
+        if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) && k > isize::MIN {
             let mut x = self.view();
             x.swap_axes(n - 2, n - 1);
             let mut tril = x.tril(-k);
@@ -67,12 +71,16 @@ where
 
             return tril;
         }
+
         let mut res = Array::zeros(self.raw_dim());
         Zip::indexed(self.rows())
             .and(res.rows_mut())
             .for_each(|i, src, mut dst| {
                 let row_num = i.into_dimension().last_elem();
-                let lower = max(row_num as isize + k, 0);
+                let lower = match k >= 0 {
+                    true => row_num.saturating_add(k as usize),        // Avoid overflow
+                    false => row_num.saturating_sub(k.unsigned_abs()), // Avoid underflow, go to 0
+                };
                 dst.slice_mut(s![lower..]).assign(&src.slice(s![lower..]));
             });
 
@@ -109,8 +117,12 @@ where
         if self.ndim() <= 1 {
             return self.to_owned();
         }
-        if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) {
-            let n = self.ndim();
+
+        // Performance optimization for F-order arrays.
+        // C-order array check prevents infinite recursion in edge cases like [[1]].
+        // k-size check prevents underflow when k == isize::MIN
+        let n = self.ndim();
+        if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) && k > isize::MIN {
             let mut x = self.view();
             x.swap_axes(n - 2, n - 1);
             let mut tril = x.triu(-k);
@@ -118,13 +130,18 @@ where
 
             return tril;
         }
+
         let mut res = Array::zeros(self.raw_dim());
-        let ncols = self.len_of(Axis(self.ndim() - 1)) as isize;
+        let ncols = self.len_of(Axis(n - 1));
         Zip::indexed(self.rows())
             .and(res.rows_mut())
             .for_each(|i, src, mut dst| {
                 let row_num = i.into_dimension().last_elem();
-                let upper = min(row_num as isize + k + 1, ncols);
+                let mut upper = match k >= 0 {
+                    true => row_num.saturating_add(k as usize).saturating_add(1), // Avoid overflow
+                    false => row_num.saturating_sub((k + 1).unsigned_abs()),      // Avoid underflow
+                };
+                upper = min(upper, ncols);
                 dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
             });
 
@@ -319,7 +336,6 @@ mod tests
         let res = x.triu(0);
         assert_eq!(res, array![[1, 2, 3], [0, 5, 6]]);
 
-        let x = array![[1, 2, 3], [4, 5, 6]];
         let res = x.tril(0);
         assert_eq!(res, array![[1, 0, 0], [4, 5, 0]]);
 
@@ -327,7 +343,6 @@ mod tests
         let res = x.triu(0);
         assert_eq!(res, array![[1, 2], [0, 4], [0, 0]]);
 
-        let x = array![[1, 2], [3, 4], [5, 6]];
         let res = x.tril(0);
         assert_eq!(res, array![[1, 0], [3, 4], [5, 6]]);
     }
