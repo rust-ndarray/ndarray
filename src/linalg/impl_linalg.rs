@@ -24,13 +24,11 @@ use num_complex::{Complex32 as c32, Complex64 as c64};
 
 #[cfg(feature = "blas")]
 use libc::c_int;
-#[cfg(feature = "blas")]
-use std::mem::swap;
 
 #[cfg(feature = "blas")]
 use cblas_sys as blas_sys;
 #[cfg(feature = "blas")]
-use cblas_sys::{CblasNoTrans, CblasRowMajor, CblasTrans, CBLAS_LAYOUT};
+use cblas_sys::{CblasNoTrans, CblasTrans, CBLAS_LAYOUT};
 
 /// len of vector before we use blas
 #[cfg(feature = "blas")]
@@ -377,8 +375,8 @@ use self::mat_mul_general as mat_mul_impl;
 #[cfg(feature = "blas")]
 fn mat_mul_impl<A>(
     alpha: A,
-    lhs: &ArrayView2<'_, A>,
-    rhs: &ArrayView2<'_, A>,
+    a: &ArrayView2<'_, A>,
+    b: &ArrayView2<'_, A>,
     beta: A,
     c: &mut ArrayViewMut2<'_, A>,
 ) where
@@ -386,7 +384,7 @@ fn mat_mul_impl<A>(
 {
     // size cutoff for using BLAS
     let cut = GEMM_BLAS_CUTOFF;
-    let ((mut m, k), (k2, mut n)) = (lhs.dim(), rhs.dim());
+    let ((m, k), (k2, n)) = (a.dim(), b.dim());
     debug_assert_eq!(k, k2);
     if !(m > cut || n > cut || k > cut)
         || !(same_type::<A, f32>()
@@ -394,76 +392,48 @@ fn mat_mul_impl<A>(
         || same_type::<A, c32>()
         || same_type::<A, c64>())
     {
-        return mat_mul_general(alpha, lhs, rhs, beta, c);
+        return mat_mul_general(alpha, a, b, beta, c);
     }
 
     #[allow(clippy::never_loop)]  // MSRV Rust 1.64 does not have break from block
     'blas_block: loop {
-        let mut a = lhs.view();
-        let mut b = rhs.view();
-        let mut c = c.view_mut();
-
-        let c_layout = get_blas_compatible_layout(&c);
-        let c_layout_is_c = matches!(c_layout, Some(MemoryOrder::C));
-        let c_layout_is_f = matches!(c_layout, Some(MemoryOrder::F));
-
         // Compute A B -> C
-        // we require for BLAS compatibility that:
-        // A, B are contiguous (stride=1) in their fastest dimension.
-        // C is c-contiguous in one dimension (stride=1 in Axis(1))
+        // We require for BLAS compatibility that:
+        // A, B, C are contiguous (stride=1) in their fastest dimension,
+        // but it can be either first or second axis (either rowmajor/"c" or colmajor/"f").
         //
-        // If C is f-contiguous, use transpose equivalency
-        // to translate to the C-contiguous case:
-        // A^t B^t = C^t => B A = C
+        // The "normal case" is CblasRowMajor for cblas.
+        // Select CblasRowMajor, CblasColMajor to fit C's memory order.
+        //
+        // Apply transpose to A, B as needed if they differ from the normal case.
+        // If C is CblasColMajor then transpose both A, B (again!)
 
-        let (a_layout, b_layout) =
-            match (get_blas_compatible_layout(&a), get_blas_compatible_layout(&b)) {
-                (Some(a_layout), Some(b_layout)) if c_layout_is_c => {
-                    // normal case
-                    (a_layout, b_layout)
+        let (a_layout, a_axis, b_layout, b_axis, c_layout) =
+            match (get_blas_compatible_layout(a),
+                   get_blas_compatible_layout(b),
+                   get_blas_compatible_layout(c))
+            {
+                (Some(a_layout), Some(b_layout), Some(c_layout @ MemoryOrder::C)) => {
+                    (a_layout, a_layout.lead_axis(),
+                     b_layout, b_layout.lead_axis(), c_layout)
                 },
-                (Some(a_layout), Some(b_layout)) if c_layout_is_f => {
-                    // Transpose equivalency
-                    // A^t B^t = C^t => B A = C
-                    //
-                    // A^t becomes the new B
-                    // B^t becomes the new A
-                    let a_t = a.reversed_axes();
-                    a = b.reversed_axes();
-                    b = a_t;
-                    c = c.reversed_axes();
-                    // Assign (n, k, m) -> (m, k, n) effectively
-                    swap(&mut m, &mut n);
-
-                    // Continue using the already computed memory layouts
-                    (b_layout.opposite(), a_layout.opposite())
+                (Some(a_layout), Some(b_layout), Some(c_layout @ MemoryOrder::F)) => {
+                    // CblasColMajor is the "other case"
+                    // Mark a, b as having layouts opposite of what they were detected as, which
+                    // ends up with the correct transpose setting w.r.t col major
+                    (a_layout.opposite(), a_layout.lead_axis(),
+                     b_layout.opposite(), b_layout.lead_axis(), c_layout)
                 },
-                _otherwise =>  {
-                    break 'blas_block;
-                }
+                _ => break 'blas_block,
             };
 
-        let a_trans;
-        let b_trans;
-        let lda;  // Stride of a
-        let ldb;  // Stride of b
+        let a_trans = a_layout.to_cblas_transpose();
+        let lda = blas_stride(&a, a_axis);
 
-        if let MemoryOrder::C = a_layout {
-            lda = blas_stride(&a, 0);
-            a_trans = CblasNoTrans;
-        } else {
-            lda = blas_stride(&a, 1);
-            a_trans = CblasTrans;
-        }
+        let b_trans = b_layout.to_cblas_transpose();
+        let ldb = blas_stride(&b, b_axis);
 
-        if let MemoryOrder::C = b_layout {
-            ldb = blas_stride(&b, 0);
-            b_trans = CblasNoTrans;
-        } else {
-            ldb = blas_stride(&b, 1);
-            b_trans = CblasTrans;
-        }
-        let ldc = blas_stride(&c, 0);
+        let ldc = blas_stride(&c, c_layout.lead_axis());
 
         macro_rules! gemm_scalar_cast {
             (f32, $var:ident) => {
@@ -487,7 +457,7 @@ fn mat_mul_impl<A>(
                     // Where Op is notrans/trans/conjtrans
                     unsafe {
                         blas_sys::$gemm(
-                            CblasRowMajor,
+                            c_layout.to_cblas_layout(),
                             a_trans,
                             b_trans,
                             m as blas_index,                 // m, rows of Op(a)
@@ -507,14 +477,15 @@ fn mat_mul_impl<A>(
                 }
             };
         }
+
         gemm!(f32, cblas_sgemm);
         gemm!(f64, cblas_dgemm);
-
         gemm!(c32, cblas_cgemm);
         gemm!(c64, cblas_zgemm);
+
         break 'blas_block;
     }
-    mat_mul_general(alpha, lhs, rhs, beta, c)
+    mat_mul_general(alpha, a, b, beta, c)
 }
 
 /// C ← α A B + β C
@@ -873,11 +844,39 @@ enum MemoryOrder
 #[cfg(feature = "blas")]
 impl MemoryOrder
 {
+    #[inline]
+    /// Axis of leading stride (opposite of contiguous axis)
+    fn lead_axis(self) -> usize
+    {
+        match self {
+            MemoryOrder::C => 0,
+            MemoryOrder::F => 1,
+        }
+    }
+
+    /// Get opposite memory order
+    #[inline]
     fn opposite(self) -> Self
     {
         match self {
             MemoryOrder::C => MemoryOrder::F,
             MemoryOrder::F => MemoryOrder::C,
+        }
+    }
+
+    fn to_cblas_transpose(self) -> cblas_sys::CBLAS_TRANSPOSE
+    {
+        match self {
+            MemoryOrder::C => CblasNoTrans,
+            MemoryOrder::F => CblasTrans,
+        }
+    }
+
+    fn to_cblas_layout(self) -> CBLAS_LAYOUT
+    {
+        match self {
+            MemoryOrder::C => CBLAS_LAYOUT::CblasRowMajor,
+            MemoryOrder::F => CBLAS_LAYOUT::CblasColMajor,
         }
     }
 }

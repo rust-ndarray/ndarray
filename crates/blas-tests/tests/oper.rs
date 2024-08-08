@@ -253,7 +253,7 @@ fn gen_mat_mul()
         for &(m, k, n) in &sizes {
             for (ord1, ord2, ord3) in iproduct!(cf_order, cf_order, cf_order) {
                 println!("Case s1={}, s2={}, orders={:?}, {:?}, {:?}", s1, s2, ord1, ord2, ord3);
-                let a = ArrayBuilder::new((m, k)).memory_order(ord1).build();
+                let a = ArrayBuilder::new((m, k)).memory_order(ord1).build() * 0.5;
                 let b = ArrayBuilder::new((k, n)).memory_order(ord2).build();
                 let mut c = ArrayBuilder::new((m, n)).memory_order(ord3).build();
 
