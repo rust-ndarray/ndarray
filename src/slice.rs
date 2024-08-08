@@ -7,7 +7,10 @@
 // except according to those terms.
 use crate::dimension::slices_intersect;
 use crate::error::{ErrorKind, ShapeError};
+#[cfg(doc)]
+use crate::s;
 use crate::{ArrayViewMut, DimAdd, Dimension, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};
+
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use std::convert::TryFrom;

@@ -41,8 +41,8 @@ pub trait DimMax<Other: Dimension>
 }
 
 /// Dimensions of the same type remain unchanged when co_broadcast.
-/// So you can directly use D as the resulting type.
-/// (Instead of <D as DimMax<D>>::BroadcastOutput)
+/// So you can directly use `D` as the resulting type.
+/// (Instead of `<D as DimMax<D>>::BroadcastOutput`)
 impl<D: Dimension> DimMax<D> for D
 {
     type Output = D;

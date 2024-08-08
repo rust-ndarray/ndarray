@@ -30,3 +30,6 @@
 //!   - Enable the ``threading`` feature in the matrixmultiply package
 //!
 //! [`parallel`]: crate::parallel
+
+#[cfg(doc)]
+use crate::parallel::par_azip;

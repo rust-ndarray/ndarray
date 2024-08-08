@@ -654,7 +654,7 @@
 //! convert `f32` array to `i32` array with ["saturating" conversion][sat_conv]; care needed because it can be a lossy conversion or result in non-finite values! See [the reference for information][as_typecast].
 //!
 //! </td></tr>
-//! <table>
+//! </table>
 //!
 //! [as_conv]: https://doc.rust-lang.org/rust-by-example/types/cast.html
 //! [sat_conv]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html#fixing-unsoundness-in-casts
@@ -677,6 +677,8 @@
 //! [.column()]: ArrayBase::column
 //! [.column_mut()]: ArrayBase::column_mut
 //! [concatenate()]: crate::concatenate()
+//! [concatenate!]: crate::concatenate!
+//! [stack!]: crate::stack!
 //! [::default()]: ArrayBase::default
 //! [.diag()]: ArrayBase::diag
 //! [.dim()]: ArrayBase::dim

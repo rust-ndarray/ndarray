@@ -1,6 +1,9 @@
 on:
   pull_request:
   merge_group:
+  push:
+    branches:
+      - master
 
 name: Continuous integration
 
@@ -86,7 +89,7 @@ jobs:
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
   cross_test:
-    if: ${{ github.event_name == 'merge_group' }}
+    #if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -110,7 +113,7 @@ jobs:
       - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
 
   cargo-careful:
-    if: ${{ github.event_name == 'merge_group' }}
+    #if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     name: cargo-careful
     steps:
@@ -124,19 +127,21 @@ jobs:
       - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
 
   docs:
-    if: ${{ github.event_name == 'merge_group' }}
+    #if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         rust:
           - stable
     name: docs/${{ matrix.rust }}
+    env:
+      RUSTDOCFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - run: cargo doc
+      - run: cargo doc --no-deps --all-features
 
   conclusion:
     needs:
