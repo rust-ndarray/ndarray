@@ -1,0 +1,18 @@
+[package]
+name = "blas-mock-tests"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+[lib]
+test = false
+doc = false
+doctest = false
+
+[dependencies]
+ndarray = { workspace = true, features = ["approx", "blas"] }
+ndarray-gen = { workspace = true }
+cblas-sys = { workspace = true }
+
+[dev-dependencies]
+itertools = { workspace = true }
