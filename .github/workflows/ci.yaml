@@ -134,12 +134,14 @@ jobs:
         rust:
           - stable
     name: docs/${{ matrix.rust }}
+    env:
+      RUSTDOCFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - run: cargo doc
+      - run: cargo doc --no-deps --all-features
 
   conclusion:
     needs:
