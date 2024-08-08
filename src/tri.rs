@@ -12,7 +12,13 @@ use num_traits::Zero;
 
 use crate::{
     dimension::{is_layout_c, is_layout_f},
-    Array, ArrayBase, Axis, Data, Dimension, IntoDimension, Zip,
+    Array,
+    ArrayBase,
+    Axis,
+    Data,
+    Dimension,
+    IntoDimension,
+    Zip,
 };
 
 impl<S, A, D> ArrayBase<S, D>
@@ -47,7 +53,8 @@ where
     ///     ]
     /// );
     /// ```
-    pub fn triu(&self, k: isize) -> Array<A, D> {
+    pub fn triu(&self, k: isize) -> Array<A, D>
+    {
         if self.ndim() <= 1 {
             return self.to_owned();
         }
@@ -107,7 +114,8 @@ where
     ///     ]
     /// );
     /// ```
-    pub fn tril(&self, k: isize) -> Array<A, D> {
+    pub fn tril(&self, k: isize) -> Array<A, D>
+    {
         if self.ndim() <= 1 {
             return self.to_owned();
         }
@@ -144,14 +152,16 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+mod tests
+{
     use core::isize;
 
     use crate::{array, dimension, Array0, Array1, Array2, Array3, ShapeBuilder};
     use alloc::vec;
 
     #[test]
-    fn test_keep_order() {
+    fn test_keep_order()
+    {
         let x = Array2::<f64>::ones((3, 3).f());
         let res = x.triu(0);
         assert!(dimension::is_layout_f(&res.dim, &res.strides));
@@ -161,7 +171,8 @@ mod tests {
     }
 
     #[test]
-    fn test_0d() {
+    fn test_0d()
+    {
         let x = Array0::<f64>::ones(());
         let res = x.triu(0);
         assert_eq!(res, x);
@@ -178,7 +189,8 @@ mod tests {
     }
 
     #[test]
-    fn test_1d() {
+    fn test_1d()
+    {
         let x = array![1, 2, 3];
         let res = x.triu(0);
         assert_eq!(res, x);
@@ -195,7 +207,8 @@ mod tests {
     }
 
     #[test]
-    fn test_2d() {
+    fn test_2d()
+    {
         let x = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
         // Upper
@@ -218,7 +231,8 @@ mod tests {
     }
 
     #[test]
-    fn test_2d_single() {
+    fn test_2d_single()
+    {
         let x = array![[1]];
 
         assert_eq!(x.triu(0), array![[1]]);
@@ -230,7 +244,8 @@ mod tests {
     }
 
     #[test]
-    fn test_3d() {
+    fn test_3d()
+    {
         let x = array![
             [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
             [[10, 11, 12], [13, 14, 15], [16, 17, 18]],
@@ -289,7 +304,8 @@ mod tests {
     }
 
     #[test]
-    fn test_off_axis() {
+    fn test_off_axis()
+    {
         let x = array![
             [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
             [[10, 11, 12], [13, 14, 15], [16, 17, 18]],
@@ -318,7 +334,8 @@ mod tests {
     }
 
     #[test]
-    fn test_odd_shape() {
+    fn test_odd_shape()
+    {
         let x = array![[1, 2, 3], [4, 5, 6]];
         let res = x.triu(0);
         assert_eq!(res, array![[1, 2, 3], [0, 5, 6]]);
@@ -335,7 +352,8 @@ mod tests {
     }
 
     #[test]
-    fn test_odd_k() {
+    fn test_odd_k()
+    {
         let x = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
         let z = Array2::zeros([3, 3]);
         assert_eq!(x.triu(isize::MIN), x);
