@@ -35,7 +35,7 @@ approx = { workspace = true, optional = true }
 rayon = { version = "1.10.0", optional = true }
 
 # Use via the `blas` crate feature
-cblas-sys = { version = "0.1.4", optional = true, default-features = false }
+cblas-sys = { workspace = true, optional = true }
 libc = { version = "0.2.82", optional = true }
 
 matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm"] }
@@ -47,7 +47,8 @@ rawpointer = { version = "0.2" }
 defmac = "0.2"
 quickcheck = { workspace = true }
 approx = { workspace = true, default-features = true }
-itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
+itertools = { workspace = true }
+ndarray-gen = { workspace = true }
 
 [features]
 default = ["std"]
@@ -73,6 +74,7 @@ matrixmultiply-threading = ["matrixmultiply/threading"]
 
 portable-atomic-critical-section = ["portable-atomic/critical-section"]
 
+
 [target.'cfg(not(target_has_atomic = "ptr"))'.dependencies]
 portable-atomic = { version = "1.6.0" }
 portable-atomic-util = { version = "0.2.0", features = [ "alloc" ] }
@@ -85,14 +87,16 @@ members = [
 default-members = [
     ".",
     "ndarray-rand",
+    "crates/ndarray-gen",
     "crates/numeric-tests",
     "crates/serialization-tests",
-    # exclude blas-tests that depends on BLAS install
+    # exclude blas-tests and blas-mock-tests that activate "blas" feature
 ]
 
 [workspace.dependencies]
-ndarray = { version = "0.16", path = "." }
+ndarray = { version = "0.16", path = ".", default-features = false }
 ndarray-rand = { path = "ndarray-rand" }
+ndarray-gen = { path = "crates/ndarray-gen" }
 
 num-integer = { version = "0.1.39", default-features = false }
 num-traits = { version = "0.2", default-features = false }
@@ -101,6 +105,8 @@ approx = { version = "0.5", default-features = false }
 quickcheck = { version = "1.0", default-features = false }
 rand = { version = "0.8.0", features = ["small_rng"] }
 rand_distr = { version = "0.4.0" }
+itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
+cblas-sys = { version = "0.1.4", default-features = false }
 
 [profile.bench]
 debug = true

@@ -9,12 +9,16 @@ use ndarray::prelude::*;
 
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
+use ndarray::Order;
 use ndarray::{Data, Ix, LinalgScalar};
+use ndarray_gen::array_builder::ArrayBuilder;
 
 use approx::assert_relative_eq;
 use defmac::defmac;
+use itertools::iproduct;
 use num_complex::Complex32;
 use num_complex::Complex64;
+use num_traits::Num;
 
 #[test]
 fn mat_vec_product_1d()
@@ -46,46 +50,29 @@ fn mat_vec_product_1d_inverted_axis()
     assert_eq!(a.t().dot(&b), ans);
 }
 
-fn range_mat(m: Ix, n: Ix) -> Array2<f32>
+fn range_mat<A: Num + Copy>(m: Ix, n: Ix) -> Array2<A>
 {
-    Array::linspace(0., (m * n) as f32 - 1., m * n)
-        .into_shape_with_order((m, n))
-        .unwrap()
-}
-
-fn range_mat64(m: Ix, n: Ix) -> Array2<f64>
-{
-    Array::linspace(0., (m * n) as f64 - 1., m * n)
-        .into_shape_with_order((m, n))
-        .unwrap()
+    ArrayBuilder::new((m, n)).build()
 }
 
 fn range_mat_complex(m: Ix, n: Ix) -> Array2<Complex32>
 {
-    Array::linspace(0., (m * n) as f32 - 1., m * n)
-        .into_shape_with_order((m, n))
-        .unwrap()
-        .map(|&f| Complex32::new(f, 0.))
+    ArrayBuilder::new((m, n)).build()
 }
 
 fn range_mat_complex64(m: Ix, n: Ix) -> Array2<Complex64>
 {
-    Array::linspace(0., (m * n) as f64 - 1., m * n)
-        .into_shape_with_order((m, n))
-        .unwrap()
-        .map(|&f| Complex64::new(f, 0.))
+    ArrayBuilder::new((m, n)).build()
 }
 
 fn range1_mat64(m: Ix) -> Array1<f64>
 {
-    Array::linspace(0., m as f64 - 1., m)
+    ArrayBuilder::new(m).build()
 }
 
 fn range_i32(m: Ix, n: Ix) -> Array2<i32>
 {
-    Array::from_iter(0..(m * n) as i32)
-        .into_shape_with_order((m, n))
-        .unwrap()
+    ArrayBuilder::new((m, n)).build()
 }
 
 // simple, slow, correct (hopefully) mat mul
@@ -160,8 +147,8 @@ where
 fn mat_mul_order()
 {
     let (m, n, k) = (50, 50, 50);
-    let a = range_mat(m, n);
-    let b = range_mat(n, k);
+    let a = range_mat::<f32>(m, n);
+    let b = range_mat::<f32>(n, k);
     let mut af = Array::zeros(a.dim().f());
     let mut bf = Array::zeros(b.dim().f());
     af.assign(&a);
@@ -180,7 +167,7 @@ fn mat_mul_order()
 fn mat_mul_broadcast()
 {
     let (m, n, k) = (16, 16, 16);
-    let a = range_mat(m, n);
+    let a = range_mat::<f32>(m, n);
     let x1 = 1.;
     let x = Array::from(vec![x1]);
     let b0 = x.broadcast((n, k)).unwrap();
@@ -200,8 +187,8 @@ fn mat_mul_broadcast()
 fn mat_mul_rev()
 {
     let (m, n, k) = (16, 16, 16);
-    let a = range_mat(m, n);
-    let b = range_mat(n, k);
+    let a = range_mat::<f32>(m, n);
+    let b = range_mat::<f32>(n, k);
     let mut rev = Array::zeros(b.dim());
     let mut rev = rev.slice_mut(s![..;-1, ..]);
     rev.assign(&b);
@@ -230,8 +217,8 @@ fn mat_mut_zero_len()
             }
         }
     });
-    mat_mul_zero_len!(range_mat);
-    mat_mul_zero_len!(range_mat64);
+    mat_mul_zero_len!(range_mat::<f32>);
+    mat_mul_zero_len!(range_mat::<f64>);
     mat_mul_zero_len!(range_i32);
 }
 
@@ -243,7 +230,14 @@ fn gen_mat_mul()
     let sizes = vec![
         (4, 4, 4),
         (8, 8, 8),
-        (17, 15, 16),
+        (10, 10, 10),
+        (8, 8, 1),
+        (1, 10, 10),
+        (10, 1, 10),
+        (10, 10, 1),
+        (1, 10, 1),
+        (10, 1, 1),
+        (1, 1, 10),
         (4, 17, 3),
         (17, 3, 22),
         (19, 18, 2),
@@ -251,24 +245,41 @@ fn gen_mat_mul()
         (15, 16, 17),
         (67, 63, 62),
     ];
-    // test different strides
-    for &s1 in &[1, 2, -1, -2] {
-        for &s2 in &[1, 2, -1, -2] {
-            for &(m, k, n) in &sizes {
-                let a = range_mat64(m, k);
-                let b = range_mat64(k, n);
-                let mut c = range_mat64(m, n);
+    let strides = &[1, 2, -1, -2];
+    let cf_order = [Order::C, Order::F];
+
+    // test different strides and memory orders
+    for (&s1, &s2) in iproduct!(strides, strides) {
+        for &(m, k, n) in &sizes {
+            for (ord1, ord2, ord3) in iproduct!(cf_order, cf_order, cf_order) {
+                println!("Case s1={}, s2={}, orders={:?}, {:?}, {:?}", s1, s2, ord1, ord2, ord3);
+                let a = ArrayBuilder::new((m, k)).memory_order(ord1).build() * 0.5;
+                let b = ArrayBuilder::new((k, n)).memory_order(ord2).build();
+                let mut c = ArrayBuilder::new((m, n)).memory_order(ord3).build();
+
                 let mut answer = c.clone();
 
                 {
-                    let a = a.slice(s![..;s1, ..;s2]);
-                    let b = b.slice(s![..;s2, ..;s2]);
-                    let mut cv = c.slice_mut(s![..;s1, ..;s2]);
+                    let av;
+                    let bv;
+                    let mut cv;
 
-                    let answer_part = alpha * reference_mat_mul(&a, &b) + beta * &cv;
+                    if s1 != 1 || s2 != 1 {
+                        av = a.slice(s![..;s1, ..;s2]);
+                        bv = b.slice(s![..;s2, ..;s2]);
+                        cv = c.slice_mut(s![..;s1, ..;s2]);
+                    } else {
+                        // different stride cases for slicing versus not sliced (for axes of
+                        // len=1); so test not sliced here.
+                        av = a.view();
+                        bv = b.view();
+                        cv = c.view_mut();
+                    }
+
+                    let answer_part = alpha * reference_mat_mul(&av, &bv) + beta * &cv;
                     answer.slice_mut(s![..;s1, ..;s2]).assign(&answer_part);
 
-                    general_mat_mul(alpha, &a, &b, beta, &mut cv);
+                    general_mat_mul(alpha, &av, &bv, beta, &mut cv);
                 }
                 assert_relative_eq!(c, answer, epsilon = 1e-12, max_relative = 1e-7);
             }
@@ -280,11 +291,11 @@ fn gen_mat_mul()
 #[test]
 fn gemm_64_1_f()
 {
-    let a = range_mat64(64, 64).reversed_axes();
+    let a = range_mat::<f64>(64, 64).reversed_axes();
     let (m, n) = a.dim();
     // m x n  times n x 1  == m x 1
-    let x = range_mat64(n, 1);
-    let mut y = range_mat64(m, 1);
+    let x = range_mat::<f64>(n, 1);
+    let mut y = range_mat::<f64>(m, 1);
     let answer = reference_mat_mul(&a, &x) + &y;
     general_mat_mul(1.0, &a, &x, 1.0, &mut y);
     assert_relative_eq!(y, answer, epsilon = 1e-12, max_relative = 1e-7);
@@ -366,11 +377,8 @@ fn gen_mat_vec_mul()
     for &s1 in &[1, 2, -1, -2] {
         for &s2 in &[1, 2, -1, -2] {
             for &(m, k) in &sizes {
-                for &rev in &[false, true] {
-                    let mut a = range_mat64(m, k);
-                    if rev {
-                        a = a.reversed_axes();
-                    }
+                for order in [Order::C, Order::F] {
+                    let a = ArrayBuilder::new((m, k)).memory_order(order).build();
                     let (m, k) = a.dim();
                     let b = range1_mat64(k);
                     let mut c = range1_mat64(m);
@@ -411,11 +419,8 @@ fn vec_mat_mul()
     for &s1 in &[1, 2, -1, -2] {
         for &s2 in &[1, 2, -1, -2] {
             for &(m, n) in &sizes {
-                for &rev in &[false, true] {
-                    let mut b = range_mat64(m, n);
-                    if rev {
-                        b = b.reversed_axes();
-                    }
+                for order in [Order::C, Order::F] {
+                    let b = ArrayBuilder::new((m, n)).memory_order(order).build();
                     let (m, n) = b.dim();
                     let a = range1_mat64(m);
                     let mut c = range1_mat64(n);
