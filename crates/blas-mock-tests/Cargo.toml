@@ -10,9 +10,9 @@ doc = false
 doctest = false
 
 [dependencies]
-ndarray = { workspace = true, features = ["approx", "blas"] }
-ndarray-gen = { workspace = true }
 cblas-sys = { workspace = true }
 
 [dev-dependencies]
+ndarray = { workspace = true, features = ["approx", "blas"] }
+ndarray-gen = { workspace = true }
 itertools = { workspace = true }
