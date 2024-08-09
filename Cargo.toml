@@ -20,6 +20,7 @@ keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 categories = ["data-structures", "science"]
 
 exclude = ["docgen/images/*"]
+resolver = "2"
 
 [lib]
 name = "ndarray"
