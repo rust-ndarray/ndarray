@@ -8,7 +8,7 @@
 # Will produce some duplicates for PRs integrated using rebase,
 # but those will not occur with current merge queue.
 
-git log --first-parent --pretty="format:%H" "$@" | while read commit_sha
+git log --first-parent --pretty="tformat:%H" "$@" | while IFS= read -r commit_sha
 do
     gh api "/repos/:owner/:repo/commits/${commit_sha}/pulls" \
         -q ".[] | \"- \(.title) by [@\(.user.login)](\(.user.html_url)) [#\(.number)](\(.html_url))\""

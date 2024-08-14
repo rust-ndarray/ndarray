@@ -12,6 +12,7 @@ use ndarray::linalg::general_mat_vec_mul;
 use ndarray::Order;
 use ndarray::{Data, Ix, LinalgScalar};
 use ndarray_gen::array_builder::ArrayBuilder;
+use ndarray_gen::array_builder::ElementGenerator;
 
 use approx::assert_relative_eq;
 use defmac::defmac;
@@ -230,7 +231,6 @@ fn gen_mat_mul()
     let sizes = vec![
         (4, 4, 4),
         (8, 8, 8),
-        (10, 10, 10),
         (8, 8, 1),
         (1, 10, 10),
         (10, 1, 10),
@@ -241,19 +241,23 @@ fn gen_mat_mul()
         (4, 17, 3),
         (17, 3, 22),
         (19, 18, 2),
-        (16, 17, 15),
         (15, 16, 17),
-        (67, 63, 62),
+        (67, 50, 62),
     ];
     let strides = &[1, 2, -1, -2];
     let cf_order = [Order::C, Order::F];
+    let generator = [ElementGenerator::Sequential, ElementGenerator::Checkerboard];
 
     // test different strides and memory orders
-    for (&s1, &s2) in iproduct!(strides, strides) {
+    for (&s1, &s2, &gen) in iproduct!(strides, strides, &generator) {
         for &(m, k, n) in &sizes {
             for (ord1, ord2, ord3) in iproduct!(cf_order, cf_order, cf_order) {
-                println!("Case s1={}, s2={}, orders={:?}, {:?}, {:?}", s1, s2, ord1, ord2, ord3);
-                let a = ArrayBuilder::new((m, k)).memory_order(ord1).build() * 0.5;
+                println!("Case s1={}, s2={}, gen={:?}, orders={:?}, {:?}, {:?}", s1, s2, gen, ord1, ord2, ord3);
+                let a = ArrayBuilder::new((m, k))
+                    .memory_order(ord1)
+                    .generator(gen)
+                    .build()
+                    * 0.5;
                 let b = ArrayBuilder::new((k, n)).memory_order(ord2).build();
                 let mut c = ArrayBuilder::new((m, n)).memory_order(ord3).build();
 

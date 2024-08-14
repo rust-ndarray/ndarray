@@ -26,6 +26,7 @@ pub struct ArrayBuilder<D: Dimension>
 pub enum ElementGenerator
 {
     Sequential,
+    Checkerboard,
     Zero,
 }
 
@@ -64,16 +65,14 @@ where D: Dimension
     pub fn build<T>(self) -> Array<T, D>
     where T: Num + Clone
     {
-        let mut current = T::zero();
+        let zero = T::zero();
         let size = self.dim.size();
-        let use_zeros = self.generator == ElementGenerator::Zero;
-        Array::from_iter((0..size).map(|_| {
-            let ret = current.clone();
-            if !use_zeros {
-                current = ret.clone() + T::one();
-            }
-            ret
-        }))
+        (match self.generator {
+            ElementGenerator::Sequential =>
+                Array::from_iter(core::iter::successors(Some(zero), |elt| Some(elt.clone() + T::one())).take(size)),
+            ElementGenerator::Checkerboard => Array::from_iter([T::one(), zero].iter().cycle().take(size).cloned()),
+            ElementGenerator::Zero => Array::zeros(size),
+        })
         .into_shape_with_order((self.dim, self.memory_order))
         .unwrap()
     }
