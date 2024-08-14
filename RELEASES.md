@@ -1,3 +1,12 @@
+Version 0.16.1 (2024-08-14)
+===========================
+
+- Refactor and simplify BLAS gemm call further by [@bluss](https://github.com/bluss) [#1421](https://github.com/rust-ndarray/ndarray/pull/1421)
+- Fix infinite recursion and off-by-one error in triu/tril by [@akern40](https://github.com/akern40) [#1418](https://github.com/rust-ndarray/ndarray/pull/1418)
+- Fix using BLAS for all compatible cases of memory layout by [@bluss](https://github.com/bluss) [#1419](https://github.com/rust-ndarray/ndarray/pull/1419)
+- Use PR check instead of Merge Queue, and check rustdoc by [@bluss](https://github.com/bluss) [#1420](https://github.com/rust-ndarray/ndarray/pull/1420)
+- Make iterators covariant in element type by [@bluss](https://github.com/bluss) [#1417](https://github.com/rust-ndarray/ndarray/pull/1417)
+
 Version 0.16.0 (2024-08-03)
 ===========================
 
