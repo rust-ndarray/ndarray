@@ -428,12 +428,28 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize)
 
 /// This function computes the offset from the lowest address element to the
 /// logically first element.
-pub fn offset_from_low_addr_ptr_to_logical_ptr<D: Dimension>(dim: &D, strides: &D) -> usize
+pub(crate) fn offset_from_low_addr_ptr_to_logical_ptr<D: Dimension>(dim: &D, strides: &D) -> usize
 {
     let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (&d, &s)| {
         let s = s as isize;
         if s < 0 && d > 1 {
             _offset - s * (d as isize - 1)
+        } else {
+            _offset
+        }
+    });
+    debug_assert!(offset >= 0);
+    offset as usize
+}
+
+/// This function computes the offset from the logically first element to the highest address
+/// element.
+pub(crate) fn offset_from_logical_ptr_to_high_addr_ptr<D: Dimension>(dim: &D, strides: &D) -> usize
+{
+    let offset = izip!(dim.slice(), strides.slice()).fold(0, |_offset, (&d, &s)| {
+        let s = s as isize;
+        if s > 0 && d > 1 {
+            _offset + s * (d as isize - 1)
         } else {
             _offset
         }
