@@ -468,7 +468,8 @@ where
     /// Return a sliced view of the array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
+    /// See also [`s!`], [`SliceArg`], [`SliceInfo`](crate::SliceInfo),
+    /// [`.slice_mut()`]: #method.slice_mut and [`.slice_move()`]: #method.slice_move.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
@@ -484,7 +485,8 @@ where
     /// Return a sliced read-write view of the array.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
+    /// See also [`s!`], [`SliceArg`], [`SliceInfo`](crate::SliceInfo),
+    /// [`.slice()`]: #method.slice and [`.slice_move()`]: #method.slice_move.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
@@ -532,7 +534,8 @@ where
     /// Slice the array, possibly changing the number of dimensions.
     ///
     /// See [*Slicing*](#slicing) for full documentation.
-    /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
+    /// See also [`s!`], [`SliceArg`], [`SliceInfo`](crate::SliceInfo),
+    /// [`.slice()`]: #method.slice and [`.slice_mut()`]: #method.slice_mut.
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `info` does not match the number of array axes.)
