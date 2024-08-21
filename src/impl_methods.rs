@@ -406,6 +406,7 @@ where
         if self.is_empty() {
             None
         } else {
+            self.ensure_unique();
             let mut index = self.raw_dim();
             for ax in 0..index.ndim() {
                 index[ax] -= 1;
@@ -3081,6 +3082,7 @@ mod tests
 {
     use super::*;
     use crate::arr3;
+    use defmac::defmac;
 
     #[test]
     fn test_flatten()
@@ -3106,5 +3108,46 @@ mod tests
         let array = arr3(&[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]);
         let flattened = array.into_flat();
         assert_eq!(flattened, arr1(&[1, 2, 3, 4, 5, 6, 7, 8]));
+    }
+
+    #[test]
+    fn test_first_last()
+    {
+        let first = 2;
+        let last = 3;
+
+        defmac!(assert_first mut array => {
+            assert_eq!(array.first().copied(), Some(first));
+            assert_eq!(array.first_mut().copied(), Some(first));
+        });
+        defmac!(assert_last mut array => {
+            assert_eq!(array.last().copied(), Some(last));
+            assert_eq!(array.last_mut().copied(), Some(last));
+        });
+
+        let base = Array::from_vec(vec![first, last]);
+        let a = base.clone();
+        assert_first!(a);
+
+        let a = base.clone();
+        assert_last!(a);
+
+        let a = CowArray::from(base.view());
+        assert_first!(a);
+        let a = CowArray::from(base.view());
+        assert_last!(a);
+
+        let a = CowArray::from(base.clone());
+        assert_first!(a);
+        let a = CowArray::from(base.clone());
+        assert_last!(a);
+
+        let a = ArcArray::from(base.clone());
+        let _a2 = a.clone();
+        assert_last!(a);
+
+        let a = ArcArray::from(base.clone());
+        let _a2 = a.clone();
+        assert_first!(a);
     }
 }
