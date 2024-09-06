@@ -79,7 +79,7 @@ where D: Dimension
 
     /// Return a vector of the elements in the array, in the way they are
     /// stored internally, and the index in the vector corresponding to the
-    /// logically first element of the array (or 0 if the array is empty).
+    /// logically first element of the array (or None if the array is empty).
     ///
     /// If the array is in standard memory layout, the logical element order
     /// of the array (`.iter()` order) and of the returned vector will be the same.
