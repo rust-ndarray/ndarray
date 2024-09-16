@@ -1030,7 +1030,7 @@ where
     }
 
     /// Along `axis`, select arbitrary subviews corresponding to `indices`
-    /// and and copy them into a new array.
+    /// and copy them into a new array.
     ///
     /// **Panics** if `axis` or an element of `indices` is out of bounds.
     ///
