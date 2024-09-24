@@ -9,10 +9,11 @@
 #[cfg(feature = "std")]
 use num_traits::Float;
 use num_traits::{self, FromPrimitive, Zero};
-use std::ops::{Add, Div, Mul};
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
+use crate::Slice;
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
@@ -50,7 +51,7 @@ where
     /// Return the sum of all elements in the array.
     ///
     /// *This method has been renamed to `.sum()`*
-    #[deprecated(note="renamed to `sum`", since="0.15.0")]
+    #[deprecated(note = "renamed to `sum`", since = "0.15.0")]
     pub fn scalar_sum(&self) -> A
     where
         A: Clone + Add<Output = A> + num_traits::Zero,
@@ -410,5 +411,46 @@ where
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
+    }
+
+    /// Calculates the (forward) finite differences of order `n`, along the `axis`.
+    /// For the 1D-case, `n==1`, this means: `diff[i] == arr[i+1] - arr[i]`
+    ///
+    /// For `n>=2`, the process is iterated:
+    /// ```
+    /// use ndarray::{array, Axis};
+    /// let arr = array![1.0, 2.0, 5.0];
+    /// assert_eq!(arr.diff(2, Axis(0)), arr.diff(1, Axis(0)).diff(1, Axis(0)))
+    /// ```
+    /// **Panics** if `axis` is out of bounds
+    ///
+    /// **Panics** if `n` is too big / the array is to short:
+    /// ```should_panic
+    /// use ndarray::{array, Axis};
+    /// array![1.0, 2.0, 3.0].diff(10, Axis(0));
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn diff(&self, n: usize, axis: Axis) -> Array<A, D>
+    where
+        A: Sub<A, Output = A> + Zero + Clone,
+    {
+        assert!(
+            axis.0 < self.ndim(),
+            "The array has only ndim {}, but `axis` {:?} is given.",
+            self.ndim(),
+            axis
+        );
+        assert!((n as usize) < self.shape()[axis.0] ,
+            "The array must have length at least `n+1`=={} in the direction of `axis`. It has length {}", n+1, self.shape()[axis.0]);
+
+        let mut inp = Array::zeros(self.raw_dim());
+        let mut out = self.to_owned();
+        for _ in 0..n {
+            std::mem::swap(&mut inp, &mut out);
+            let head = inp.slice_axis(axis, Slice::from(..-1));
+            let tail = inp.slice_axis(axis, Slice::from(1..));
+            out = &tail - &head;
+        }
+        out
     }
 }
