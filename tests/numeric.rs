@@ -307,3 +307,71 @@ fn std_axis_empty_axis() {
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
 }
+
+#[test]
+#[cfg(feature = "std")]
+fn diff_1d_order1() {
+    let data = array![1.0, 2.0, 4.0, 7.0];
+    let expected = array![1.0, 2.0, 3.0];
+    assert_eq!(data.diff(1, Axis(0)), expected);
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn diff_1d_order2() {
+    let data = array![1.0, 2.0, 4.0, 7.0];
+    assert_eq!(
+        data.diff(2, Axis(0)),
+        data.diff(1, Axis(0)).diff(1, Axis(0))
+    );
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn diff_1d_order3() {
+    let data = array![1.0, 2.0, 4.0, 7.0];
+    assert_eq!(
+        data.diff(3, Axis(0)),
+        data.diff(1, Axis(0)).diff(1, Axis(0)).diff(1, Axis(0))
+    );
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn diff_2d_order1_ax0() {
+    let data = array![
+        [1.0, 2.0, 4.0, 7.0],
+        [1.0, 3.0, 6.0, 6.0],
+        [1.5, 3.5, 5.5, 5.5]
+    ];
+    let expected = array![[0.0, 1.0, 2.0, -1.0], [0.5, 0.5, -0.5, -0.5]];
+    assert_eq!(data.diff(1, Axis(0)), expected);
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn diff_2d_order1_ax1() {
+    let data = array![
+        [1.0, 2.0, 4.0, 7.0],
+        [1.0, 3.0, 6.0, 6.0],
+        [1.5, 3.5, 5.5, 5.5]
+    ];
+    let expected = array![[1.0, 2.0, 3.0], [2.0, 3.0, 0.0], [2.0, 2.0, 0.0]];
+    assert_eq!(data.diff(1, Axis(1)), expected);
+}
+
+#[test]
+#[should_panic]
+#[cfg(feature = "std")]
+fn diff_panic_n_too_big() {
+    let data = array![1.0, 2.0, 4.0, 7.0];
+    data.diff(10, Axis(0));
+}
+
+#[test]
+#[should_panic]
+#[cfg(feature = "std")]
+fn diff_panic_axis_out_of_bounds() {
+    let data = array![1, 2, 4, 7];
+    data.diff(1, Axis(2));
+}
