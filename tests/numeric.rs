@@ -339,7 +339,8 @@ fn std_axis_empty_axis()
 
 #[test]
 #[cfg(feature = "std")]
-fn diff_1d_order1() {
+fn diff_1d_order1()
+{
     let data = array![1.0, 2.0, 4.0, 7.0];
     let expected = array![1.0, 2.0, 3.0];
     assert_eq!(data.diff(1, Axis(0)), expected);
@@ -347,7 +348,8 @@ fn diff_1d_order1() {
 
 #[test]
 #[cfg(feature = "std")]
-fn diff_1d_order2() {
+fn diff_1d_order2()
+{
     let data = array![1.0, 2.0, 4.0, 7.0];
     assert_eq!(
         data.diff(2, Axis(0)),
@@ -357,7 +359,8 @@ fn diff_1d_order2() {
 
 #[test]
 #[cfg(feature = "std")]
-fn diff_1d_order3() {
+fn diff_1d_order3()
+{
     let data = array![1.0, 2.0, 4.0, 7.0];
     assert_eq!(
         data.diff(3, Axis(0)),
@@ -367,7 +370,8 @@ fn diff_1d_order3() {
 
 #[test]
 #[cfg(feature = "std")]
-fn diff_2d_order1_ax0() {
+fn diff_2d_order1_ax0()
+{
     let data = array![
         [1.0, 2.0, 4.0, 7.0],
         [1.0, 3.0, 6.0, 6.0],
@@ -379,7 +383,8 @@ fn diff_2d_order1_ax0() {
 
 #[test]
 #[cfg(feature = "std")]
-fn diff_2d_order1_ax1() {
+fn diff_2d_order1_ax1()
+{
     let data = array![
         [1.0, 2.0, 4.0, 7.0],
         [1.0, 3.0, 6.0, 6.0],
@@ -392,7 +397,8 @@ fn diff_2d_order1_ax1() {
 #[test]
 #[should_panic]
 #[cfg(feature = "std")]
-fn diff_panic_n_too_big() {
+fn diff_panic_n_too_big()
+{
     let data = array![1.0, 2.0, 4.0, 7.0];
     data.diff(10, Axis(0));
 }
@@ -400,7 +406,8 @@ fn diff_panic_n_too_big() {
 #[test]
 #[should_panic]
 #[cfg(feature = "std")]
-fn diff_panic_axis_out_of_bounds() {
+fn diff_panic_axis_out_of_bounds()
+{
     let data = array![1, 2, 4, 7];
     data.diff(1, Axis(2));
 }
