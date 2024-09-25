@@ -470,9 +470,17 @@ where
         let mut out = self.to_owned();
         for _ in 0..n {
             std::mem::swap(&mut inp, &mut out);
+
             let head = inp.slice_axis(axis, Slice::from(..-1));
             let tail = inp.slice_axis(axis, Slice::from(1..));
-            out = &tail - &head;
+
+            // shrink the size of out by one in the direcrion of `axis`
+            out.slice_axis_inplace(axis, Slice::from(..-1));
+
+            azip!((o in &mut out, h in head, t in tail) *o = t.clone() - h.clone());
+
+            // inp takes the role of out in the next iteration, so it's shape needs to change as well
+            inp.slice_axis_inplace(axis, Slice::from(..-1));
         }
         out
     }
