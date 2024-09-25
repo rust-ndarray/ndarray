@@ -467,7 +467,7 @@ where
     {
         assert!(axis.0 < self.ndim(), "The array has only ndim {}, but `axis` {:?} is given.", self.ndim(), axis);
         assert!(
-            (n as usize) < self.shape()[axis.0],
+            n < self.shape()[axis.0],
             "The array must have length at least `n+1`=={} in the direction of `axis`. It has length {}",
             n + 1,
             self.shape()[axis.0]
