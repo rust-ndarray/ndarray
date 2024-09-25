@@ -458,6 +458,9 @@ where
     pub fn diff(&self, n: usize, axis: Axis) -> Array<A, D>
     where A: Sub<A, Output = A> + Zero + Clone
     {
+        if n == 0 {
+            return self.to_owned();
+        }
         assert!(axis.0 < self.ndim(), "The array has only ndim {}, but `axis` {:?} is given.", self.ndim(), axis);
         assert!(
             n < self.shape()[axis.0],
@@ -466,22 +469,28 @@ where
             self.shape()[axis.0]
         );
 
-        let mut inp = Array::zeros(self.raw_dim());
-        let mut out = self.to_owned();
+        let mut inp = self.to_owned();
+        let mut out = Array::zeros({
+            let mut inp_dim = self.raw_dim();
+            // inp_dim[axis.0] >= 1 as per the 2nd assertion.
+            inp_dim[axis.0] -= 1;
+            inp_dim
+        });
         for _ in 0..n {
-            std::mem::swap(&mut inp, &mut out);
-
             let head = inp.slice_axis(axis, Slice::from(..-1));
             let tail = inp.slice_axis(axis, Slice::from(1..));
 
-            // shrink the size of out by one in the direcrion of `axis`
-            out.slice_axis_inplace(axis, Slice::from(..-1));
-
             azip!((o in &mut out, h in head, t in tail) *o = t.clone() - h.clone());
 
-            // inp takes the role of out in the next iteration, so it's shape needs to change as well
-            inp.slice_axis_inplace(axis, Slice::from(..-1));
+            // feed the output as the input to the next iteration
+            std::mem::swap(&mut inp, &mut out);
+
+            // adjust the new output array width along `axis`.
+            // Current situation: width of `inp`: k, `out`: k+1
+            // needed width:               `inp`: k, `out`: k-1
+            // slice is possible, since k >= 1.
+            out.slice_axis_inplace(axis, Slice::from(..-2));
         }
-        out
+        inp
     }
 }
