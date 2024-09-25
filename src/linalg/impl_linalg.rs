@@ -14,24 +14,21 @@ use crate::numeric_util;
 
 use crate::{LinalgScalar, Zip};
 
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use std::any::TypeId;
 use std::mem::MaybeUninit;
-use alloc::vec::Vec;
 
 use num_complex::Complex;
 use num_complex::{Complex32 as c32, Complex64 as c64};
 
 #[cfg(feature = "blas")]
 use libc::c_int;
-#[cfg(feature = "blas")]
-use std::cmp;
-#[cfg(feature = "blas")]
-use std::mem::swap;
 
 #[cfg(feature = "blas")]
 use cblas_sys as blas_sys;
 #[cfg(feature = "blas")]
-use cblas_sys::{CblasNoTrans, CblasRowMajor, CblasTrans, CBLAS_LAYOUT};
+use cblas_sys::{CblasNoTrans, CblasTrans, CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 
 /// len of vector before we use blas
 #[cfg(feature = "blas")]
@@ -44,8 +41,7 @@ const GEMM_BLAS_CUTOFF: usize = 7;
 type blas_index = c_int; // blas index type
 
 impl<A, S> ArrayBase<S, Ix1>
-where
-    S: Data<Elem = A>,
+where S: Data<Elem = A>
 {
     /// Perform dot product or matrix multiplication of arrays `self` and `rhs`.
     ///
@@ -64,9 +60,9 @@ where
     /// **Panics** if the array shapes are incompatible.<br>
     /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
     /// layout allows.
+    #[track_caller]
     pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
-    where
-        Self: Dot<Rhs>,
+    where Self: Dot<Rhs>
     {
         Dot::dot(self, rhs)
     }
@@ -145,11 +141,8 @@ where
 /// which agrees with our pointer for non-negative strides, but
 /// is at the opposite end for negative strides.
 #[cfg(feature = "blas")]
-unsafe fn blas_1d_params<A>(
-    ptr: *const A,
-    len: usize,
-    stride: isize,
-) -> (*const A, blas_index, blas_index) {
+unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const A, blas_index, blas_index)
+{
     // [x x x x]
     //        ^--ptr
     //        stride = -1
@@ -166,7 +159,8 @@ unsafe fn blas_1d_params<A>(
 ///
 /// For two-dimensional arrays, the dot method computes the matrix
 /// multiplication.
-pub trait Dot<Rhs> {
+pub trait Dot<Rhs>
+{
     /// The result of the operation.
     ///
     /// For two-dimensional arrays: a rectangular array.
@@ -190,7 +184,9 @@ where
     /// **Panics** if the arrays are not of the same length.<br>
     /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
     /// layout allows.
-    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> A {
+    #[track_caller]
+    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> A
+    {
         self.dot_impl(rhs)
     }
 }
@@ -212,14 +208,15 @@ where
     /// Return a result array with shape *N*.
     ///
     /// **Panics** if shapes are incompatible.
-    fn dot(&self, rhs: &ArrayBase<S2, Ix2>) -> Array<A, Ix1> {
+    #[track_caller]
+    fn dot(&self, rhs: &ArrayBase<S2, Ix2>) -> Array<A, Ix1>
+    {
         rhs.t().dot(self)
     }
 }
 
 impl<A, S> ArrayBase<S, Ix2>
-where
-    S: Data<Elem = A>,
+where S: Data<Elem = A>
 {
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
@@ -250,9 +247,9 @@ where
     ///                         [2., 3.]])
     /// );
     /// ```
+    #[track_caller]
     pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
-    where
-        Self: Dot<Rhs>,
+    where Self: Dot<Rhs>
     {
         Dot::dot(self, rhs)
     }
@@ -265,7 +262,8 @@ where
     A: LinalgScalar,
 {
     type Output = Array2<A>;
-    fn dot(&self, b: &ArrayBase<S2, Ix2>) -> Array2<A> {
+    fn dot(&self, b: &ArrayBase<S2, Ix2>) -> Array2<A>
+    {
         let a = self.view();
         let b = b.view();
         let ((m, k), (k2, n)) = (a.dim(), b.dim());
@@ -291,9 +289,10 @@ where
 /// Assumes that `m` and `n` are ≤ `isize::MAX`.
 #[cold]
 #[inline(never)]
-fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> ! {
+fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> !
+{
     match m.checked_mul(n) {
-        Some(len) if len <= ::std::isize::MAX as usize => {}
+        Some(len) if len <= isize::MAX as usize => {}
         _ => panic!("ndarray: shape {} × {} overflows isize", m, n),
     }
     panic!(
@@ -304,7 +303,8 @@ fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> ! {
 
 #[cold]
 #[inline(never)]
-fn general_dot_shape_error(m: usize, k: usize, k2: usize, n: usize, c1: usize, c2: usize) -> ! {
+fn general_dot_shape_error(m: usize, k: usize, k2: usize, n: usize, c1: usize, c2: usize) -> !
+{
     panic!("ndarray: inputs {} × {}, {} × {}, and output {} × {} are not compatible for matrix multiplication",
            m, k, k2, n, c1, c2);
 }
@@ -325,7 +325,9 @@ where
     A: LinalgScalar,
 {
     type Output = Array<A, Ix1>;
-    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1> {
+    #[track_caller]
+    fn dot(&self, rhs: &ArrayBase<S2, Ix1>) -> Array<A, Ix1>
+    {
         let ((m, a), n) = (self.dim(), rhs.dim());
         if a != n {
             dot_shape_error(m, a, n, 1);
@@ -352,6 +354,7 @@ where
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
     /// **Panics** if broadcasting isn’t possible.
+    #[track_caller]
     pub fn scaled_add<S2, E>(&mut self, alpha: A, rhs: &ArrayBase<S2, E>)
     where
         S: DataMut,
@@ -369,132 +372,95 @@ where
 use self::mat_mul_general as mat_mul_impl;
 
 #[cfg(feature = "blas")]
-fn mat_mul_impl<A>(
-    alpha: A,
-    lhs: &ArrayView2<'_, A>,
-    rhs: &ArrayView2<'_, A>,
-    beta: A,
-    c: &mut ArrayViewMut2<'_, A>,
-) where
-    A: LinalgScalar,
+fn mat_mul_impl<A>(alpha: A, a: &ArrayView2<'_, A>, b: &ArrayView2<'_, A>, beta: A, c: &mut ArrayViewMut2<'_, A>)
+where A: LinalgScalar
 {
-    // size cutoff for using BLAS
-    let cut = GEMM_BLAS_CUTOFF;
-    let ((mut m, a), (_, mut n)) = (lhs.dim(), rhs.dim());
-    if !(m > cut || n > cut || a > cut)
-        || !(same_type::<A, f32>()
-        || same_type::<A, f64>()
-        || same_type::<A, c32>()
-        || same_type::<A, c64>())
+    let ((m, k), (k2, n)) = (a.dim(), b.dim());
+    debug_assert_eq!(k, k2);
+    if (m > GEMM_BLAS_CUTOFF || n > GEMM_BLAS_CUTOFF || k > GEMM_BLAS_CUTOFF)
+        && (same_type::<A, f32>() || same_type::<A, f64>() || same_type::<A, c32>() || same_type::<A, c64>())
     {
-        return mat_mul_general(alpha, lhs, rhs, beta, c);
-    }
-    {
-        // Use `c` for c-order and `f` for an f-order matrix
-        // We can handle c * c, f * f generally and
-        // c * f and f * c if the `f` matrix is square.
-        let mut lhs_ = lhs.view();
-        let mut rhs_ = rhs.view();
-        let mut c_ = c.view_mut();
-        let lhs_s0 = lhs_.strides()[0];
-        let rhs_s0 = rhs_.strides()[0];
-        let both_f = lhs_s0 == 1 && rhs_s0 == 1;
-        let mut lhs_trans = CblasNoTrans;
-        let mut rhs_trans = CblasNoTrans;
-        if both_f {
-            // A^t B^t = C^t => B A = C
-            let lhs_t = lhs_.reversed_axes();
-            lhs_ = rhs_.reversed_axes();
-            rhs_ = lhs_t;
-            c_ = c_.reversed_axes();
-            swap(&mut m, &mut n);
-        } else if lhs_s0 == 1 && m == a {
-            lhs_ = lhs_.reversed_axes();
-            lhs_trans = CblasTrans;
-        } else if rhs_s0 == 1 && a == n {
-            rhs_ = rhs_.reversed_axes();
-            rhs_trans = CblasTrans;
-        }
+        // Compute A B -> C
+        // We require for BLAS compatibility that:
+        // A, B, C are contiguous (stride=1) in their fastest dimension,
+        // but they can be either row major/"c" or col major/"f".
+        //
+        // The "normal case" is CblasRowMajor for cblas.
+        // Select CblasRowMajor / CblasColMajor to fit C's memory order.
+        //
+        // Apply transpose to A, B as needed if they differ from the row major case.
+        // If C is CblasColMajor then transpose both A, B (again!)
 
-        macro_rules! gemm_scalar_cast {
-            (f32, $var:ident) => {
-                cast_as(&$var)
-            };
-            (f64, $var:ident) => {
-                cast_as(&$var)
-            };
-            (c32, $var:ident) => {
-                &$var as *const A as *const _
-            };
-            (c64, $var:ident) => {
-                &$var as *const A as *const _
-            };
-        }
+        if let (Some(a_layout), Some(b_layout), Some(c_layout)) =
+            (get_blas_compatible_layout(a), get_blas_compatible_layout(b), get_blas_compatible_layout(c))
+        {
+            let cblas_layout = c_layout.to_cblas_layout();
+            let a_trans = a_layout.to_cblas_transpose_for(cblas_layout);
+            let lda = blas_stride(&a, a_layout);
 
-        macro_rules! gemm {
-            ($ty:tt, $gemm:ident) => {
-                if blas_row_major_2d::<$ty, _>(&lhs_)
-                    && blas_row_major_2d::<$ty, _>(&rhs_)
-                    && blas_row_major_2d::<$ty, _>(&c_)
-                {
-                    let (m, k) = match lhs_trans {
-                        CblasNoTrans => lhs_.dim(),
-                        _ => {
-                            let (rows, cols) = lhs_.dim();
-                            (cols, rows)
+            let b_trans = b_layout.to_cblas_transpose_for(cblas_layout);
+            let ldb = blas_stride(&b, b_layout);
+
+            let ldc = blas_stride(&c, c_layout);
+
+            macro_rules! gemm_scalar_cast {
+                (f32, $var:ident) => {
+                    cast_as(&$var)
+                };
+                (f64, $var:ident) => {
+                    cast_as(&$var)
+                };
+                (c32, $var:ident) => {
+                    &$var as *const A as *const _
+                };
+                (c64, $var:ident) => {
+                    &$var as *const A as *const _
+                };
+            }
+
+            macro_rules! gemm {
+                ($ty:tt, $gemm:ident) => {
+                    if same_type::<A, $ty>() {
+                        // gemm is C ← αA^Op B^Op + βC
+                        // Where Op is notrans/trans/conjtrans
+                        unsafe {
+                            blas_sys::$gemm(
+                                cblas_layout,
+                                a_trans,
+                                b_trans,
+                                m as blas_index,                 // m, rows of Op(a)
+                                n as blas_index,                 // n, cols of Op(b)
+                                k as blas_index,                 // k, cols of Op(a)
+                                gemm_scalar_cast!($ty, alpha),   // alpha
+                                a.ptr.as_ptr() as *const _,      // a
+                                lda,                             // lda
+                                b.ptr.as_ptr() as *const _,      // b
+                                ldb,                             // ldb
+                                gemm_scalar_cast!($ty, beta),    // beta
+                                c.ptr.as_ptr() as *mut _,        // c
+                                ldc,                             // ldc
+                            );
                         }
-                    };
-                    let n = match rhs_trans {
-                        CblasNoTrans => rhs_.raw_dim()[1],
-                        _ => rhs_.raw_dim()[0],
-                    };
-                    // adjust strides, these may [1, 1] for column matrices
-                    let lhs_stride = cmp::max(lhs_.strides()[0] as blas_index, k as blas_index);
-                    let rhs_stride = cmp::max(rhs_.strides()[0] as blas_index, n as blas_index);
-                    let c_stride = cmp::max(c_.strides()[0] as blas_index, n as blas_index);
-                    
-                    // gemm is C ← αA^Op B^Op + βC
-                    // Where Op is notrans/trans/conjtrans
-                    unsafe {
-                        blas_sys::$gemm(
-                            CblasRowMajor,
-                            lhs_trans,
-                            rhs_trans,
-                            m as blas_index,                 // m, rows of Op(a)
-                            n as blas_index,                 // n, cols of Op(b)
-                            k as blas_index,                 // k, cols of Op(a)
-                            gemm_scalar_cast!($ty, alpha),   // alpha
-                            lhs_.ptr.as_ptr() as *const _,   // a
-                            lhs_stride,                      // lda
-                            rhs_.ptr.as_ptr() as *const _,   // b
-                            rhs_stride,                      // ldb
-                            gemm_scalar_cast!($ty, beta),    // beta
-                            c_.ptr.as_ptr() as *mut _,       // c
-                            c_stride,                        // ldc
-                        );
+                        return;
                     }
-                    return;
-                }
-            };
-        }
-        gemm!(f32, cblas_sgemm);
-        gemm!(f64, cblas_dgemm);
+                };
+            }
 
-        gemm!(c32, cblas_cgemm);
-        gemm!(c64, cblas_zgemm);
+            gemm!(f32, cblas_sgemm);
+            gemm!(f64, cblas_dgemm);
+            gemm!(c32, cblas_cgemm);
+            gemm!(c64, cblas_zgemm);
+
+            unreachable!() // we checked above that A is one of f32, f64, c32, c64
+        }
     }
-    mat_mul_general(alpha, lhs, rhs, beta, c)
+    mat_mul_general(alpha, a, b, beta, c)
 }
 
 /// C ← α A B + β C
 fn mat_mul_general<A>(
-    alpha: A,
-    lhs: &ArrayView2<'_, A>,
-    rhs: &ArrayView2<'_, A>,
-    beta: A,
-    c: &mut ArrayViewMut2<'_, A>,
-) where
-    A: LinalgScalar,
+    alpha: A, lhs: &ArrayView2<'_, A>, rhs: &ArrayView2<'_, A>, beta: A, c: &mut ArrayViewMut2<'_, A>,
+) where A: LinalgScalar
 {
     let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
 
@@ -599,11 +565,8 @@ fn mat_mul_general<A>(
         loop {
             unsafe {
                 let elt = c.uget_mut((i, j));
-                *elt = *elt * beta
-                    + alpha
-                        * (0..k).fold(A::zero(), move |s, x| {
-                            s + *lhs.uget((i, x)) * *rhs.uget((x, j))
-                        });
+                *elt =
+                    *elt * beta + alpha * (0..k).fold(A::zero(), move |s, x| s + *lhs.uget((i, x)) * *rhs.uget((x, j)));
             }
             j += 1;
             if j == n {
@@ -628,12 +591,9 @@ fn mat_mul_general<A>(
 /// *Note:* If enabled, uses blas `gemm` for elements of `f32, f64` when memory
 /// layout allows.  The default matrixmultiply backend is otherwise used for
 /// `f32, f64` for all memory layouts.
+#[track_caller]
 pub fn general_mat_mul<A, S1, S2, S3>(
-    alpha: A,
-    a: &ArrayBase<S1, Ix2>,
-    b: &ArrayBase<S2, Ix2>,
-    beta: A,
-    c: &mut ArrayBase<S3, Ix2>,
+    alpha: A, a: &ArrayBase<S1, Ix2>, b: &ArrayBase<S2, Ix2>, beta: A, c: &mut ArrayBase<S3, Ix2>,
 ) where
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
@@ -659,13 +619,10 @@ pub fn general_mat_mul<A, S1, S2, S3>(
 /// ***Panics*** if array shapes are not compatible<br>
 /// *Note:* If enabled, uses blas `gemv` for elements of `f32, f64` when memory
 /// layout allows.
+#[track_caller]
 #[allow(clippy::collapsible_if)]
 pub fn general_mat_vec_mul<A, S1, S2, S3>(
-    alpha: A,
-    a: &ArrayBase<S1, Ix2>,
-    x: &ArrayBase<S2, Ix1>,
-    beta: A,
-    y: &mut ArrayBase<S3, Ix1>,
+    alpha: A, a: &ArrayBase<S1, Ix2>, x: &ArrayBase<S2, Ix1>, beta: A, y: &mut ArrayBase<S3, Ix1>,
 ) where
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
@@ -685,11 +642,7 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
 /// the destination may be uninitialized iff beta is zero.
 #[allow(clippy::collapsible_else_if)]
 unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
-    alpha: A,
-    a: &ArrayBase<S1, Ix2>,
-    x: &ArrayBase<S2, Ix1>,
-    beta: A,
-    y: RawArrayViewMut<A, Ix1>,
+    alpha: A, a: &ArrayBase<S1, Ix2>, x: &ArrayBase<S2, Ix1>, beta: A, y: RawArrayViewMut<A, Ix1>,
 ) where
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
@@ -703,46 +656,43 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
         #[cfg(feature = "blas")]
         macro_rules! gemv {
             ($ty:ty, $gemv:ident) => {
-                if let Some(layout) = blas_layout::<$ty, _>(&a) {
-                    if blas_compat_1d::<$ty, _>(&x) && blas_compat_1d::<$ty, _>(&y) {
-                        // Determine stride between rows or columns. Note that the stride is
-                        // adjusted to at least `k` or `m` to handle the case of a matrix with a
-                        // trivial (length 1) dimension, since the stride for the trivial dimension
-                        // may be arbitrary.
-                        let a_trans = CblasNoTrans;
-                        let a_stride = match layout {
-                            CBLAS_LAYOUT::CblasRowMajor => {
-                                a.strides()[0].max(k as isize) as blas_index
-                            }
-                            CBLAS_LAYOUT::CblasColMajor => {
-                                a.strides()[1].max(m as isize) as blas_index
-                            }
-                        };
+                if same_type::<A, $ty>() {
+                    if let Some(layout) = get_blas_compatible_layout(&a) {
+                        if blas_compat_1d::<$ty, _>(&x) && blas_compat_1d::<$ty, _>(&y) {
+                            // Determine stride between rows or columns. Note that the stride is
+                            // adjusted to at least `k` or `m` to handle the case of a matrix with a
+                            // trivial (length 1) dimension, since the stride for the trivial dimension
+                            // may be arbitrary.
+                            let a_trans = CblasNoTrans;
 
-                        // Low addr in memory pointers required for x, y
-                        let x_offset = offset_from_low_addr_ptr_to_logical_ptr(&x.dim, &x.strides);
-                        let x_ptr = x.ptr.as_ptr().sub(x_offset);
-                        let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.dim, &y.strides);
-                        let y_ptr = y.ptr.as_ptr().sub(y_offset);
+                            let a_stride = blas_stride(&a, layout);
+                            let cblas_layout = layout.to_cblas_layout();
 
-                        let x_stride = x.strides()[0] as blas_index;
-                        let y_stride = y.strides()[0] as blas_index;
+                            // Low addr in memory pointers required for x, y
+                            let x_offset = offset_from_low_addr_ptr_to_logical_ptr(&x.dim, &x.strides);
+                            let x_ptr = x.ptr.as_ptr().sub(x_offset);
+                            let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.dim, &y.strides);
+                            let y_ptr = y.ptr.as_ptr().sub(y_offset);
 
-                        blas_sys::$gemv(
-                            layout,
-                            a_trans,
-                            m as blas_index,            // m, rows of Op(a)
-                            k as blas_index,            // n, cols of Op(a)
-                            cast_as(&alpha),            // alpha
-                            a.ptr.as_ptr() as *const _, // a
-                            a_stride,                   // lda
-                            x_ptr as *const _,          // x
-                            x_stride,
-                            cast_as(&beta),             // beta
-                            y_ptr as *mut _,            // y
-                            y_stride,
-                        );
-                        return;
+                            let x_stride = x.strides()[0] as blas_index;
+                            let y_stride = y.strides()[0] as blas_index;
+
+                            blas_sys::$gemv(
+                                cblas_layout,
+                                a_trans,
+                                m as blas_index,            // m, rows of Op(a)
+                                k as blas_index,            // n, cols of Op(a)
+                                cast_as(&alpha),            // alpha
+                                a.ptr.as_ptr() as *const _, // a
+                                a_stride,                   // lda
+                                x_ptr as *const _,          // x
+                                x_stride,
+                                cast_as(&beta),             // beta
+                                y_ptr as *mut _,            // y
+                                y_stride,
+                            );
+                            return;
+                        }
                     }
                 }
             };
@@ -766,7 +716,6 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
         }
     }
 }
-
 
 /// Kronecker product of 2D matrices.
 ///
@@ -802,14 +751,16 @@ where
 
 #[inline(always)]
 /// Return `true` if `A` and `B` are the same type
-fn same_type<A: 'static, B: 'static>() -> bool {
+fn same_type<A: 'static, B: 'static>() -> bool
+{
     TypeId::of::<A>() == TypeId::of::<B>()
 }
 
 // Read pointer to type `A` as type `B`.
 //
 // **Panics** if `A` and `B` are not the same type
-fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
+fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B
+{
     assert!(same_type::<A, B>(), "expect type {} and {} to match",
             std::any::type_name::<A>(), std::any::type_name::<B>());
     unsafe { ::std::ptr::read(a as *const _ as *const B) }
@@ -817,7 +768,8 @@ fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
 
 /// Return the complex in the form of an array [re, im]
 #[inline]
-fn complex_array<A: 'static + Copy>(z: Complex<A>) -> [A; 2] {
+fn complex_array<A: 'static + Copy>(z: Complex<A>) -> [A; 2]
+{
     [z.re, z.im]
 }
 
@@ -831,25 +783,147 @@ where
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    if a.len() > blas_index::max_value() as usize {
+    if a.len() > blas_index::MAX as usize {
         return false;
     }
     let stride = a.strides()[0];
-    if stride == 0
-        || stride > blas_index::max_value() as isize
-        || stride < blas_index::min_value() as isize
-    {
+    if stride == 0 || stride > blas_index::MAX as isize || stride < blas_index::MIN as isize {
         return false;
     }
     true
 }
 
 #[cfg(feature = "blas")]
-enum MemoryOrder {
+#[derive(Copy, Clone)]
+#[cfg_attr(test, derive(PartialEq, Eq, Debug))]
+enum BlasOrder
+{
     C,
     F,
 }
 
+#[cfg(feature = "blas")]
+impl BlasOrder
+{
+    fn transpose(self) -> Self
+    {
+        match self {
+            Self::C => Self::F,
+            Self::F => Self::C,
+        }
+    }
+
+    #[inline]
+    /// Axis of leading stride (opposite of contiguous axis)
+    fn get_blas_lead_axis(self) -> usize
+    {
+        match self {
+            Self::C => 0,
+            Self::F => 1,
+        }
+    }
+
+    fn to_cblas_layout(self) -> CBLAS_LAYOUT
+    {
+        match self {
+            Self::C => CBLAS_LAYOUT::CblasRowMajor,
+            Self::F => CBLAS_LAYOUT::CblasColMajor,
+        }
+    }
+
+    /// When using cblas_sgemm (etc) with C matrix using `for_layout`,
+    /// how should this `self` matrix be transposed
+    fn to_cblas_transpose_for(self, for_layout: CBLAS_LAYOUT) -> CBLAS_TRANSPOSE
+    {
+        let effective_order = match for_layout {
+            CBLAS_LAYOUT::CblasRowMajor => self,
+            CBLAS_LAYOUT::CblasColMajor => self.transpose(),
+        };
+
+        match effective_order {
+            Self::C => CblasNoTrans,
+            Self::F => CblasTrans,
+        }
+    }
+}
+
+#[cfg(feature = "blas")]
+fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: BlasOrder) -> bool
+{
+    let (m, n) = dim.into_pattern();
+    let s0 = stride[0] as isize;
+    let s1 = stride[1] as isize;
+    let (inner_stride, outer_stride, inner_dim, outer_dim) = match order {
+        BlasOrder::C => (s1, s0, m, n),
+        BlasOrder::F => (s0, s1, n, m),
+    };
+
+    if !(inner_stride == 1 || outer_dim == 1) {
+        return false;
+    }
+
+    if s0 < 1 || s1 < 1 {
+        return false;
+    }
+
+    if (s0 > blas_index::MAX as isize || s0 < blas_index::MIN as isize)
+        || (s1 > blas_index::MAX as isize || s1 < blas_index::MIN as isize)
+    {
+        return false;
+    }
+
+    // leading stride must >= the dimension (no broadcasting/aliasing)
+    if inner_dim > 1 && (outer_stride as usize) < outer_dim {
+        return false;
+    }
+
+    if m > blas_index::MAX as usize || n > blas_index::MAX as usize {
+        return false;
+    }
+
+    true
+}
+
+/// Get BLAS compatible layout if any (C or F, preferring the former)
+#[cfg(feature = "blas")]
+fn get_blas_compatible_layout<S>(a: &ArrayBase<S, Ix2>) -> Option<BlasOrder>
+where S: Data
+{
+    if is_blas_2d(&a.dim, &a.strides, BlasOrder::C) {
+        Some(BlasOrder::C)
+    } else if is_blas_2d(&a.dim, &a.strides, BlasOrder::F) {
+        Some(BlasOrder::F)
+    } else {
+        None
+    }
+}
+
+/// `a` should be blas compatible.
+/// axis: 0 or 1.
+///
+/// Return leading stride (lda, ldb, ldc) of array
+#[cfg(feature = "blas")]
+fn blas_stride<S>(a: &ArrayBase<S, Ix2>, order: BlasOrder) -> blas_index
+where S: Data
+{
+    let axis = order.get_blas_lead_axis();
+    let other_axis = 1 - axis;
+    let len_this = a.shape()[axis];
+    let len_other = a.shape()[other_axis];
+    let stride = a.strides()[axis];
+
+    // if current axis has length == 1, then stride does not matter for ndarray
+    // but for BLAS we need a stride that makes sense, i.e. it's >= the other axis
+
+    // cast: a should already be blas compatible
+    (if len_this <= 1 {
+        Ord::max(stride, len_other as isize)
+    } else {
+        stride
+    }) as blas_index
+}
+
+#[cfg(test)]
 #[cfg(feature = "blas")]
 fn blas_row_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
 where
@@ -860,9 +934,10 @@ where
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    is_blas_2d(&a.dim, &a.strides, MemoryOrder::C)
+    is_blas_2d(&a.dim, &a.strides, BlasOrder::C)
 }
 
+#[cfg(test)]
 #[cfg(feature = "blas")]
 fn blas_column_major_2d<A, S>(a: &ArrayBase<S, Ix2>) -> bool
 where
@@ -873,79 +948,42 @@ where
     if !same_type::<A, S::Elem>() {
         return false;
     }
-    is_blas_2d(&a.dim, &a.strides, MemoryOrder::F)
-}
-
-#[cfg(feature = "blas")]
-fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: MemoryOrder) -> bool {
-    let (m, n) = dim.into_pattern();
-    let s0 = stride[0] as isize;
-    let s1 = stride[1] as isize;
-    let (inner_stride, outer_dim) = match order {
-        MemoryOrder::C => (s1, n),
-        MemoryOrder::F => (s0, m),
-    };
-    if !(inner_stride == 1 || outer_dim == 1) {
-        return false;
-    }
-    if s0 < 1 || s1 < 1 {
-        return false;
-    }
-    if (s0 > blas_index::max_value() as isize || s0 < blas_index::min_value() as isize)
-        || (s1 > blas_index::max_value() as isize || s1 < blas_index::min_value() as isize)
-    {
-        return false;
-    }
-    if m > blas_index::max_value() as usize || n > blas_index::max_value() as usize {
-        return false;
-    }
-    true
-}
-
-#[cfg(feature = "blas")]
-fn blas_layout<A, S>(a: &ArrayBase<S, Ix2>) -> Option<CBLAS_LAYOUT>
-where
-    S: Data,
-    A: 'static,
-    S::Elem: 'static,
-{
-    if blas_row_major_2d::<A, _>(a) {
-        Some(CBLAS_LAYOUT::CblasRowMajor)
-    } else if blas_column_major_2d::<A, _>(a) {
-        Some(CBLAS_LAYOUT::CblasColMajor)
-    } else {
-        None
-    }
+    is_blas_2d(&a.dim, &a.strides, BlasOrder::F)
 }
 
 #[cfg(test)]
 #[cfg(feature = "blas")]
-mod blas_tests {
+mod blas_tests
+{
     use super::*;
 
     #[test]
-    fn blas_row_major_2d_normal_matrix() {
+    fn blas_row_major_2d_normal_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((3, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(!blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
-    fn blas_row_major_2d_row_matrix() {
+    fn blas_row_major_2d_row_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((1, 5));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
-    fn blas_row_major_2d_column_matrix() {
+    fn blas_row_major_2d_column_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((5, 1));
         assert!(blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
     }
 
     #[test]
-    fn blas_row_major_2d_transposed_row_matrix() {
+    fn blas_row_major_2d_transposed_row_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((1, 5));
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
@@ -953,7 +991,8 @@ mod blas_tests {
     }
 
     #[test]
-    fn blas_row_major_2d_transposed_column_matrix() {
+    fn blas_row_major_2d_transposed_column_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((5, 1));
         let m_t = m.t();
         assert!(blas_row_major_2d::<f32, _>(&m_t));
@@ -961,9 +1000,70 @@ mod blas_tests {
     }
 
     #[test]
-    fn blas_column_major_2d_normal_matrix() {
+    fn blas_column_major_2d_normal_matrix()
+    {
         let m: Array2<f32> = Array2::zeros((3, 5).f());
         assert!(!blas_row_major_2d::<f32, _>(&m));
         assert!(blas_column_major_2d::<f32, _>(&m));
+    }
+
+    #[test]
+    fn blas_row_major_2d_skip_rows_ok()
+    {
+        let m: Array2<f32> = Array2::zeros((5, 5));
+        let mv = m.slice(s![..;2, ..]);
+        assert!(blas_row_major_2d::<f32, _>(&mv));
+        assert!(!blas_column_major_2d::<f32, _>(&mv));
+    }
+
+    #[test]
+    fn blas_row_major_2d_skip_columns_fail()
+    {
+        let m: Array2<f32> = Array2::zeros((5, 5));
+        let mv = m.slice(s![.., ..;2]);
+        assert!(!blas_row_major_2d::<f32, _>(&mv));
+        assert!(!blas_column_major_2d::<f32, _>(&mv));
+    }
+
+    #[test]
+    fn blas_col_major_2d_skip_columns_ok()
+    {
+        let m: Array2<f32> = Array2::zeros((5, 5).f());
+        let mv = m.slice(s![.., ..;2]);
+        assert!(blas_column_major_2d::<f32, _>(&mv));
+        assert!(!blas_row_major_2d::<f32, _>(&mv));
+    }
+
+    #[test]
+    fn blas_col_major_2d_skip_rows_fail()
+    {
+        let m: Array2<f32> = Array2::zeros((5, 5).f());
+        let mv = m.slice(s![..;2, ..]);
+        assert!(!blas_column_major_2d::<f32, _>(&mv));
+        assert!(!blas_row_major_2d::<f32, _>(&mv));
+    }
+
+    #[test]
+    fn blas_too_short_stride()
+    {
+        // leading stride must be longer than the other dimension
+        // Example, in a 5 x 5 matrix, the leading stride must be >= 5 for BLAS.
+
+        const N: usize = 5;
+        const MAXSTRIDE: usize = N + 2;
+        let mut data = [0; MAXSTRIDE * N];
+        let mut iter = 0..data.len();
+        data.fill_with(|| iter.next().unwrap());
+
+        for stride in 1..=MAXSTRIDE {
+            let m = ArrayView::from_shape((N, N).strides((stride, 1)), &data).unwrap();
+            eprintln!("{:?}", m);
+
+            if stride < N {
+                assert_eq!(get_blas_compatible_layout(&m), None);
+            } else {
+                assert_eq!(get_blas_compatible_layout(&m), Some(BlasOrder::C));
+            }
+        }
     }
 }

@@ -13,13 +13,14 @@ use crate::iter::AxisChunksIter;
 use crate::iter::AxisChunksIterMut;
 use crate::iter::AxisIter;
 use crate::iter::AxisIterMut;
+use crate::split_at::SplitPreference;
 use crate::Dimension;
 use crate::{ArrayView, ArrayViewMut};
-use crate::split_at::SplitPreference;
 
 /// Parallel iterator wrapper.
 #[derive(Copy, Clone, Debug)]
-pub struct Parallel<I> {
+pub struct Parallel<I>
+{
     iter: I,
     min_len: usize,
 }
@@ -114,7 +115,7 @@ macro_rules! par_iter_wrapper {
         }
     }
 
-    }
+    };
 }
 
 par_iter_wrapper!(AxisIter, [Sync]);
@@ -216,7 +217,7 @@ macro_rules! par_iter_view_wrapper {
         }
     }
 
-    }
+    };
 }
 
 par_iter_view_wrapper!(ArrayView, [Sync]);
@@ -296,7 +297,7 @@ macro_rules! zip_impl {
             }
         }
         )+
-    }
+    };
 }
 
 zip_impl! {
@@ -309,69 +310,71 @@ zip_impl! {
 }
 
 impl<D, Parts> Parallel<Zip<Parts, D>>
-where
-    D: Dimension,
+where D: Dimension
 {
     /// Sets the minimum number of elements desired to process in each job. This will not be
     /// split any smaller than this length, but of course a producer could already be smaller
     /// to begin with.
     ///
     /// ***Panics*** if `min_len` is zero.
-    pub fn with_min_len(self, min_len: usize) -> Self {
+    pub fn with_min_len(self, min_len: usize) -> Self
+    {
         assert_ne!(min_len, 0, "Minimum number of elements must at least be one to avoid splitting off empty tasks.");
 
-        Self {
-            min_len,
-            ..self
-        }
+        Self { min_len, ..self }
     }
 }
 
 /// A parallel iterator (unindexed) that produces the splits of the array
 /// or producer `P`.
-pub(crate) struct ParallelSplits<P> {
+pub(crate) struct ParallelSplits<P>
+{
     pub(crate) iter: P,
     pub(crate) max_splits: usize,
 }
 
 impl<P> ParallelIterator for ParallelSplits<P>
-    where P: SplitPreference + Send,
+where P: SplitPreference + Send
 {
     type Item = P;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where C: UnindexedConsumer<Self::Item>
     {
         bridge_unindexed(self, consumer)
     }
 
-    fn opt_len(&self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize>
+    {
         None
     }
 }
 
 impl<P> UnindexedProducer for ParallelSplits<P>
-    where P: SplitPreference + Send,
+where P: SplitPreference + Send
 {
     type Item = P;
 
-    fn split(self) -> (Self, Option<Self>) {
+    fn split(self) -> (Self, Option<Self>)
+    {
         if self.max_splits == 0 || !self.iter.can_split() {
-            return (self, None)
+            return (self, None);
         }
         let (a, b) = self.iter.split();
-        (ParallelSplits {
-            iter: a,
-            max_splits: self.max_splits - 1,
-        },
-        Some(ParallelSplits {
-            iter: b,
-            max_splits: self.max_splits - 1,
-        }))
+        (
+            ParallelSplits {
+                iter: a,
+                max_splits: self.max_splits - 1,
+            },
+            Some(ParallelSplits {
+                iter: b,
+                max_splits: self.max_splits - 1,
+            }),
+        )
     }
 
     fn fold_with<Fold>(self, folder: Fold) -> Fold
-        where Fold: Folder<Self::Item>,
+    where Fold: Folder<Self::Item>
     {
         folder.consume(self.iter)
     }

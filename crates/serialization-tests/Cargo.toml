@@ -1,0 +1,24 @@
+[package]
+name = "serialization-tests"
+version = "0.1.0"
+authors = ["bluss"]
+publish = false
+edition = "2018"
+
+[lib]
+test = false
+doc = false
+doctest = false
+
+[dependencies]
+ndarray = { workspace = true, features = ["serde"] }
+
+serde = { version = "1.0.100", default-features = false }
+ron = { version = "0.8.1" }
+
+[dev-dependencies]
+serde_json = { version = "1.0.40" }
+# Old version to work with Rust 1.64+
+rmp = { version = "=0.8.10" }
+# Old version to work with Rust 1.64+
+rmp-serde = { version = "0.14" }

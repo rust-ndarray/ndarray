@@ -35,17 +35,19 @@ use crate::rand::seq::index;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
-use ndarray::{ArrayBase, DataOwned, RawData, Data, Dimension};
+use ndarray::{ArrayBase, Data, DataOwned, Dimension, RawData};
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
 /// `rand`, re-exported for convenience and version-compatibility.
-pub mod rand {
+pub mod rand
+{
     pub use rand::*;
 }
 
 /// `rand-distr`, re-exported for convenience and version-compatibility.
-pub mod rand_distr {
+pub mod rand_distr
+{
     pub use rand_distr::*;
 }
 
@@ -217,11 +219,7 @@ where
     /// # }
     /// ```
     fn sample_axis_using<R>(
-        &self,
-        axis: Axis,
-        n_samples: usize,
-        strategy: SamplingStrategy,
-        rng: &mut R,
+        &self, axis: Axis, n_samples: usize, strategy: SamplingStrategy, rng: &mut R,
     ) -> Array<A, D>
     where
         R: Rng + ?Sized,
@@ -263,13 +261,7 @@ where
         self.sample_axis_using(axis, n_samples, strategy, &mut get_rng())
     }
 
-    fn sample_axis_using<R>(
-        &self,
-        axis: Axis,
-        n_samples: usize,
-        strategy: SamplingStrategy,
-        rng: &mut R,
-    ) -> Array<A, D>
+    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy, rng: &mut R) -> Array<A, D>
     where
         R: Rng + ?Sized,
         A: Copy,
@@ -281,9 +273,7 @@ where
                 let distribution = Uniform::from(0..self.len_of(axis));
                 (0..n_samples).map(|_| distribution.sample(rng)).collect()
             }
-            SamplingStrategy::WithoutReplacement => {
-                index::sample(rng, self.len_of(axis), n_samples).into_vec()
-            }
+            SamplingStrategy::WithoutReplacement => index::sample(rng, self.len_of(axis), n_samples).into_vec(),
         };
         self.select(axis, &indices)
     }
@@ -296,15 +286,18 @@ where
 /// [`sample_axis`]: RandomExt::sample_axis
 /// [`sample_axis_using`]: RandomExt::sample_axis_using
 #[derive(Debug, Clone)]
-pub enum SamplingStrategy {
+pub enum SamplingStrategy
+{
     WithReplacement,
     WithoutReplacement,
 }
 
 // `Arbitrary` enables `quickcheck` to generate random `SamplingStrategy` values for testing.
 #[cfg(feature = "quickcheck")]
-impl Arbitrary for SamplingStrategy {
-    fn arbitrary(g: &mut Gen) -> Self {
+impl Arbitrary for SamplingStrategy
+{
+    fn arbitrary(g: &mut Gen) -> Self
+    {
         if bool::arbitrary(g) {
             SamplingStrategy::WithReplacement
         } else {
@@ -313,35 +306,7 @@ impl Arbitrary for SamplingStrategy {
     }
 }
 
-fn get_rng() -> SmallRng {
-    SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
-}
-
-/// A wrapper type that allows casting f64 distributions to f32
-///
-/// ```
-/// use ndarray::Array;
-/// use ndarray_rand::{RandomExt, F32};
-/// use ndarray_rand::rand_distr::Normal;
-///
-/// # fn main() {
-/// let distribution_f64 = Normal::new(0., 1.).expect("Failed to create normal distribution");
-/// let a = Array::random((2, 5), F32(distribution_f64));
-/// println!("{:8.4}", a);
-/// // Example Output:
-/// // [[ -0.6910,   1.1730,   1.0902,  -0.4092,  -1.7340],
-/// //  [ -0.6810,   0.1678,  -0.9487,   0.3150,   1.2981]]
-/// # }
-#[derive(Copy, Clone, Debug)]
-#[deprecated(since="0.14.0", note="Redundant with rand 0.8")]
-pub struct F32<S>(pub S);
-
-#[allow(deprecated)]
-impl<S> Distribution<f32> for F32<S>
-where
-    S: Distribution<f64>,
+fn get_rng() -> SmallRng
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
-        self.0.sample(rng) as f32
-    }
+    SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
 }

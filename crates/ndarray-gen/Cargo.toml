@@ -1,0 +1,9 @@
+[package]
+name = "ndarray-gen"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+ndarray = { workspace = true, default-features = false }
+num-traits = { workspace = true }

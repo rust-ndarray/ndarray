@@ -137,7 +137,8 @@ where
 
     /// Square (two powers) of each element.
     #[must_use = "method returns a new array and does not mutate the original value"]
-    pub fn pow2(&self) -> Array<A, D> {
+    pub fn pow2(&self) -> Array<A, D>
+    {
         self.mapv(|v: A| v * v)
     }
 }
@@ -161,7 +162,8 @@ where
     /// # Panics
     ///
     /// Panics if `!(min <= max)`.
-    pub fn clamp(&self, min: A, max: A) -> Array<A, D> {
+    pub fn clamp(&self, min: A, max: A) -> Array<A, D>
+    {
         assert!(min <= max, "min must be less than or equal to max");
         self.mapv(|a| num_traits::clamp(a, min.clone(), max.clone()))
     }

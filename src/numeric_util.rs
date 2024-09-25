@@ -20,16 +20,8 @@ where
     // eightfold unrolled so that floating point can be vectorized
     // (even with strict floating point accuracy semantics)
     let mut acc = init();
-    let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7) = (
-        init(),
-        init(),
-        init(),
-        init(),
-        init(),
-        init(),
-        init(),
-        init(),
-    );
+    let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7) =
+        (init(), init(), init(), init(), init(), init(), init(), init());
     while xs.len() >= 8 {
         p0 = f(p0, xs[0].clone());
         p1 = f(p1, xs[1].clone());
@@ -62,8 +54,7 @@ where
 ///
 /// `xs` and `ys` must be the same length
 pub fn unrolled_dot<A>(xs: &[A], ys: &[A]) -> A
-where
-    A: LinalgScalar,
+where A: LinalgScalar
 {
     debug_assert_eq!(xs.len(), ys.len());
     // eightfold unrolled so that floating point can be vectorized
@@ -72,16 +63,8 @@ where
     let mut xs = &xs[..len];
     let mut ys = &ys[..len];
     let mut sum = A::zero();
-    let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7) = (
-        A::zero(),
-        A::zero(),
-        A::zero(),
-        A::zero(),
-        A::zero(),
-        A::zero(),
-        A::zero(),
-        A::zero(),
-    );
+    let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7) =
+        (A::zero(), A::zero(), A::zero(), A::zero(), A::zero(), A::zero(), A::zero(), A::zero());
     while xs.len() >= 8 {
         p0 = p0 + xs[0] * ys[0];
         p1 = p1 + xs[1] * ys[1];
@@ -113,8 +96,7 @@ where
 ///
 /// `xs` and `ys` must be the same length
 pub fn unrolled_eq<A, B>(xs: &[A], ys: &[B]) -> bool
-where
-    A: PartialEq<B>,
+where A: PartialEq<B>
 {
     debug_assert_eq!(xs.len(), ys.len());
     // eightfold unrolled for performance (this is not done by llvm automatically)

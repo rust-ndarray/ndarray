@@ -1,0 +1,164 @@
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - master
+
+name: Continuous integration
+
+env:
+  CARGO_TERM_COLOR: always
+  HOST: x86_64-unknown-linux-gnu
+  FEATURES: "test docs"
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+    name: clippy/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --features docs
+
+  format:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - nightly
+    name: format/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt
+      - run: cargo fmt --all --check
+
+  nostd:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      matrix:
+        include:
+          - rust: stable
+            experimental: false
+            target: thumbv6m-none-eabi
+
+    name: nostd/${{ matrix.target }}/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
+      - name: Tests
+        run: |
+          cargo rustc "--target=${{ matrix.target }}" --no-default-features --features portable-atomic-critical-section
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+          - 1.64.0  # MSRV
+
+    name: tests/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: rui314/setup-mold@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
+
+  cross_test:
+    #if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rust: stable
+            target: s390x-unknown-linux-gnu
+          - rust: stable
+            target: i686-unknown-linux-gnu
+
+    name: cross_test/${{ matrix.target }}/${{ matrix.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
+      - uses: rui314/setup-mold@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cross
+        run: cargo install cross
+      - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
+
+  cargo-careful:
+    #if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    name: cargo-careful
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-careful
+        run: cargo install cargo-careful
+      - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
+
+  docs:
+    #if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+    name: docs/${{ matrix.rust }}
+    env:
+      RUSTDOCFLAGS: "-Dwarnings"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo doc --no-deps --all-features
+
+  conclusion:
+    needs:
+      - clippy
+      - format  # should format be required?
+      - nostd
+      - tests
+      - cross_test
+      - cargo-careful
+      - docs
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Result
+        run: |
+          jq -C <<< "${needs}"
+          # Check if all needs were successful or skipped.
+          "$(jq -r 'all(.result as $result | (["success", "skipped"] | contains([$result])))' <<< "${needs}")"
+        env:
+          needs: ${{ toJson(needs) }}

@@ -7,50 +7,58 @@ use crate::{ArcArray, Array, ArrayView, ArrayViewMut, Ix, IxDynImpl};
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix0() -> Ix0 {
+pub const fn Ix0() -> Ix0
+{
     Dim::new([])
 }
 /// Create a one-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix1(i0: Ix) -> Ix1 {
+pub const fn Ix1(i0: Ix) -> Ix1
+{
     Dim::new([i0])
 }
 /// Create a two-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix2(i0: Ix, i1: Ix) -> Ix2 {
+pub const fn Ix2(i0: Ix, i1: Ix) -> Ix2
+{
     Dim::new([i0, i1])
 }
 /// Create a three-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3 {
+pub const fn Ix3(i0: Ix, i1: Ix, i2: Ix) -> Ix3
+{
     Dim::new([i0, i1, i2])
 }
 /// Create a four-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4 {
+pub const fn Ix4(i0: Ix, i1: Ix, i2: Ix, i3: Ix) -> Ix4
+{
     Dim::new([i0, i1, i2, i3])
 }
 /// Create a five-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix5(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix) -> Ix5 {
+pub const fn Ix5(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix) -> Ix5
+{
     Dim::new([i0, i1, i2, i3, i4])
 }
 /// Create a six-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn Ix6(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix, i5: Ix) -> Ix6 {
+pub const fn Ix6(i0: Ix, i1: Ix, i2: Ix, i3: Ix, i4: Ix, i5: Ix) -> Ix6
+{
     Dim::new([i0, i1, i2, i3, i4, i5])
 }
 
 /// Create a dynamic-dimensional index
 #[allow(non_snake_case)]
 #[inline(always)]
-pub fn IxDyn(ix: &[Ix]) -> IxDyn {
+pub fn IxDyn(ix: &[Ix]) -> IxDyn
+{
     Dim(ix)
 }
 

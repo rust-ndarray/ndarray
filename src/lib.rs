@@ -10,13 +10,11 @@
 #![doc(html_logo_url = "https://rust-ndarray.github.io/images/rust-ndarray_logo.svg")]
 #![allow(
     unstable_name_collisions, // our `PointerExt` collides with upcoming inherent methods on `NonNull`
-    clippy::many_single_char_names,
     clippy::deref_addrof,
-    clippy::unreadable_literal,
     clippy::manual_map, // is not an error
     clippy::while_let_on_iterator, // is not an error
     clippy::from_iter_instead_of_collect, // using from_iter is good style
-    clippy::redundant_closure, // false positives clippy #7812
+    clippy::incompatible_msrv, // false positive PointerExt::offset
 )]
 #![doc(test(attr(deny(warnings))))]
 #![doc(test(attr(allow(unused_variables))))]
@@ -36,7 +34,7 @@
 //!   It is used to implement both the owned arrays and the views; see its docs
 //!   for an overview of all array features.<br>
 //! - The main specific array type is **[`Array`]**, which owns
-//! its elements.
+//!   its elements.
 //!
 //! ## Highlights
 //!
@@ -71,7 +69,8 @@
 //!     needs matching memory layout to be efficient (with some exceptions).
 //!   + Efficient floating point matrix multiplication even for very large
 //!     matrices; can optionally use BLAS to improve it further.
-//! - **Requires Rust 1.49 or later**
+//!
+//! - **MSRV: Requires Rust 1.64 or later**
 //!
 //! ## Crate Feature Flags
 //!
@@ -81,8 +80,7 @@
 //! - `std`: Rust standard library-using functionality (enabled by default)
 //! - `serde`: serialization support for serde 1.x
 //! - `rayon`: Parallel iterators, parallelized methods, the [`parallel`] module and [`par_azip!`].
-//! - `approx` Implementations of traits from version 0.4 of the [`approx`] crate.
-//! - `approx-0_5`: Implementations of traits from version 0.5 of the [`approx`] crate.
+//! - `approx` Implementations of traits from the [`approx`] crate.
 //! - `blas`: transparent BLAS support for matrix multiplication, needs configuration.
 //! - `matrixmultiply-threading`: Use threading from `matrixmultiply`.
 //!
@@ -112,13 +110,12 @@
 //! For conversion between `ndarray`, [`nalgebra`](https://crates.io/crates/nalgebra) and
 //! [`image`](https://crates.io/crates/image) check out [`nshare`](https://crates.io/crates/nshare).
 
-
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+#[cfg(feature = "std")]
+extern crate std;
 
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
@@ -126,8 +123,13 @@ extern crate cblas_sys;
 #[cfg(feature = "docs")]
 pub mod doc;
 
-use std::marker::PhantomData;
+#[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
+
+#[cfg(not(target_has_atomic = "ptr"))]
+use portable_atomic_util::Arc;
+
+use std::marker::PhantomData;
 
 pub use crate::dimension::dim::*;
 pub use crate::dimension::{Axis, AxisDescription, Dimension, IntoDimension, RemoveAxis};
@@ -138,24 +140,21 @@ pub use crate::dimension::NdIndex;
 pub use crate::error::{ErrorKind, ShapeError};
 pub use crate::indexes::{indices, indices_of};
 pub use crate::order::Order;
-pub use crate::slice::{
-    MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceInfoElem, SliceNextDim,
-};
+pub use crate::slice::{MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceInfoElem, SliceNextDim};
 
 use crate::iterators::Baseiter;
 use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 
 pub use crate::arraytraits::AsArray;
+pub use crate::linalg_traits::LinalgScalar;
 #[cfg(feature = "std")]
 pub use crate::linalg_traits::NdFloat;
-pub use crate::linalg_traits::LinalgScalar;
 
-#[allow(deprecated)] // stack_new_axis
-pub use crate::stacking::{concatenate, stack, stack_new_axis};
+pub use crate::stacking::{concatenate, stack};
 
-pub use crate::math_cell::MathCell;
 pub use crate::impl_views::IndexLonger;
-pub use crate::shape_builder::{Shape, ShapeBuilder, ShapeArg, StrideShape};
+pub use crate::math_cell::MathCell;
+pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 
 #[macro_use]
 mod macro_utils;
@@ -175,10 +174,7 @@ mod data_traits;
 
 pub use crate::aliases::*;
 
-pub use crate::data_traits::{
-    Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut,
-    RawDataSubst,
-};
+pub use crate::data_traits::{Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut, RawDataSubst};
 
 mod free_functions;
 pub use crate::free_functions::*;
@@ -192,7 +188,11 @@ mod iterators;
 mod layout;
 mod linalg_traits;
 mod linspace;
+#[cfg(feature = "std")]
+pub use crate::linspace::{linspace, range, Linspace};
 mod logspace;
+#[cfg(feature = "std")]
+pub use crate::logspace::{logspace, Logspace};
 mod math_cell;
 mod numeric_util;
 mod order;
@@ -213,13 +213,24 @@ pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
-mod imp_prelude {
+mod imp_prelude
+{
     pub use crate::dimension::DimensionExt;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
     pub use crate::{
-        CowRepr, Data, DataMut, DataOwned, DataShared, Ix, Ixs, RawData, RawDataMut, RawViewRepr,
-        RemoveAxis, ViewRepr,
+        CowRepr,
+        Data,
+        DataMut,
+        DataOwned,
+        DataShared,
+        Ix,
+        Ixs,
+        RawData,
+        RawDataMut,
+        RawViewRepr,
+        RemoveAxis,
+        ViewRepr,
     };
 }
 
@@ -368,14 +379,14 @@ pub type Ixs = isize;
 ///
 /// - A [`struct@Dim`] value represents a dimensionality or index.
 /// - Trait [`Dimension`] is implemented by all
-/// dimensionalities. It defines many operations for dimensions and indices.
+///   dimensionalities. It defines many operations for dimensions and indices.
 /// - Trait [`IntoDimension`] is used to convert into a
-/// `Dim` value.
+///   `Dim` value.
 /// - Trait [`ShapeBuilder`] is an extension of
-/// `IntoDimension` and is used when constructing an array. A shape describes
-/// not just the extent of each axis but also their strides.
+///   `IntoDimension` and is used when constructing an array. A shape describes
+///   not just the extent of each axis but also their strides.
 /// - Trait [`NdIndex`] is an extension of `Dimension` and is
-/// for values that can be used with indexing syntax.
+///   for values that can be used with indexing syntax.
 ///
 ///
 /// The default memory order of an array is *row major* order (a.k.a “c” order),
@@ -1267,8 +1278,7 @@ pub type Ixs = isize;
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
 pub struct ArrayBase<S, D>
-where
-    S: RawData,
+where S: RawData
 {
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
@@ -1322,11 +1332,11 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// + [Constructor Methods for Owned Arrays](ArrayBase#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](ArrayBase#methods-for-all-array-types)
 /// + Dimensionality-specific type alises
-/// [`Array1`],
-/// [`Array2`],
-/// [`Array3`], ...,
-/// [`ArrayD`],
-/// and so on.
+///   [`Array1`],
+///   [`Array2`],
+///   [`Array3`], ...,
+///   [`ArrayD`],
+///   and so on.
 pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 
 /// An array with copy-on-write behavior.
@@ -1428,8 +1438,10 @@ pub use data_repr::OwnedRepr;
 #[derive(Debug)]
 pub struct OwnedArcRepr<A>(Arc<OwnedRepr<A>>);
 
-impl<A> Clone for OwnedArcRepr<A> {
-    fn clone(&self) -> Self {
+impl<A> Clone for OwnedArcRepr<A>
+{
+    fn clone(&self) -> Self
+    {
         OwnedArcRepr(self.0.clone())
     }
 }
@@ -1440,13 +1452,16 @@ impl<A> Clone for OwnedArcRepr<A> {
 /// [`RawArrayView`] / [`RawArrayViewMut`] for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the mutability and element type.
-pub struct RawViewRepr<A> {
+pub struct RawViewRepr<A>
+{
     ptr: PhantomData<A>,
 }
 
-impl<A> RawViewRepr<A> {
+impl<A> RawViewRepr<A>
+{
     #[inline(always)]
-    fn new() -> Self {
+    const fn new() -> Self
+    {
         RawViewRepr { ptr: PhantomData }
     }
 }
@@ -1457,13 +1472,16 @@ impl<A> RawViewRepr<A> {
 /// [`ArrayView`] / [`ArrayViewMut`] for the array type!*
 #[derive(Copy, Clone)]
 // This is just a marker type, to carry the lifetime parameter.
-pub struct ViewRepr<A> {
+pub struct ViewRepr<A>
+{
     life: PhantomData<A>,
 }
 
-impl<A> ViewRepr<A> {
+impl<A> ViewRepr<A>
+{
     #[inline(always)]
-    fn new() -> Self {
+    const fn new() -> Self
+    {
         ViewRepr { life: PhantomData }
     }
 }
@@ -1472,16 +1490,19 @@ impl<A> ViewRepr<A> {
 ///
 /// *Don't use this type directly—use the type alias
 /// [`CowArray`] for the array type!*
-pub enum CowRepr<'a, A> {
+pub enum CowRepr<'a, A>
+{
     /// Borrowed data.
     View(ViewRepr<&'a A>),
     /// Owned data.
     Owned(OwnedRepr<A>),
 }
 
-impl<'a, A> CowRepr<'a, A> {
+impl<'a, A> CowRepr<'a, A>
+{
     /// Returns `true` iff the data is the `View` variant.
-    pub fn is_view(&self) -> bool {
+    pub fn is_view(&self) -> bool
+    {
         match self {
             CowRepr::View(_) => true,
             CowRepr::Owned(_) => false,
@@ -1489,7 +1510,8 @@ impl<'a, A> CowRepr<'a, A> {
     }
 
     /// Returns `true` iff the data is the `Owned` variant.
-    pub fn is_owned(&self) -> bool {
+    pub fn is_owned(&self) -> bool
+    {
         match self {
             CowRepr::View(_) => false,
             CowRepr::Owned(_) => true,
@@ -1517,8 +1539,7 @@ where
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
-    where
-        E: Dimension,
+    where E: Dimension
     {
         #[cold]
         #[inline(never)]
@@ -1544,8 +1565,7 @@ where
     // (Checked in debug assertions).
     #[inline]
     fn broadcast_assume<E>(&self, dim: E) -> ArrayView<'_, A, E>
-    where
-        E: Dimension,
+    where E: Dimension
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
@@ -1555,24 +1575,17 @@ where
         unsafe { ArrayView::new(ptr, dim, strides) }
     }
 
-    fn raw_strides(&self) -> D {
-        self.strides.clone()
-    }
-
     /// Remove array axis `axis` and return the result.
-    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller> {
+    fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
+    {
         let d = self.dim.try_remove_axis(axis);
         let s = self.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
-        unsafe {
-            self.with_strides_dim(s, d)
-        }
+        unsafe { self.with_strides_dim(s, d) }
     }
 }
 
 // parallel methods
-#[cfg(feature = "rayon")]
-extern crate rayon_ as rayon;
 #[cfg(feature = "rayon")]
 pub mod parallel;
 
@@ -1587,7 +1600,7 @@ pub mod linalg;
 mod impl_ops;
 pub use crate::impl_ops::ScalarOperand;
 
-#[cfg(any(feature = "approx", feature = "approx-0_5"))]
+#[cfg(feature = "approx")]
 mod array_approx;
 
 // Array view methods
@@ -1599,7 +1612,14 @@ mod impl_raw_views;
 // Copy-on-write array methods
 mod impl_cow;
 
+// Arc array methods
+mod impl_arc_array;
+
 /// Returns `true` if the pointer is aligned.
-pub(crate) fn is_aligned<T>(ptr: *const T) -> bool {
+pub(crate) fn is_aligned<T>(ptr: *const T) -> bool
+{
     (ptr as usize) % ::std::mem::align_of::<T>() == 0
 }
+
+// Triangular constructors
+mod tri;

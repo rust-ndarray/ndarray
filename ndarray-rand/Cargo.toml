@@ -1,6 +1,6 @@
 [package]
 name = "ndarray-rand"
-version = "0.14.0"
+version = "0.15.0"
 edition = "2018"
 authors = ["bluss"]
 license = "MIT OR Apache-2.0"
@@ -14,17 +14,15 @@ description = "Constructors for randomized arrays. `rand` integration for `ndarr
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 [dependencies]
-ndarray = { version = "0.15", path = ".." }
-rand_distr = "0.4.0"
-quickcheck = { version = "1.0", default-features = false, optional = true }
+ndarray = { workspace = true }
 
-[dependencies.rand]
-version = "0.8.0"
-features = ["small_rng"]
+rand = { workspace = true }
+rand_distr = { workspace = true }
+quickcheck = { workspace = true, optional = true }
 
 [dev-dependencies]
 rand_isaac = "0.3.0"
-quickcheck = { version = "1.0", default-features = false }
+quickcheck = { workspace = true }
 
 [package.metadata.release]
 no-dev-version = true

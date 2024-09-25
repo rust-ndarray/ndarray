@@ -6,36 +6,26 @@ set -e
 FEATURES=$1
 CHANNEL=$2
 
-if [ "$CHANNEL" = "1.51.0" ]; then
-    cargo update --package openblas-src --precise 0.10.5
-    cargo update --package openblas-build --precise 0.10.5
-    cargo update --package once_cell --precise 1.14.0
-    cargo update --package byteorder --precise 1.4.3
-    cargo update --package rayon --precise 1.5.3
-    cargo update --package rayon-core --precise 1.9.3
-    cargo update --package crossbeam-channel --precise 0.5.8
-    cargo update --package crossbeam-deque --precise 0.8.3
-    cargo update --package crossbeam-epoch --precise 0.9.15
-    cargo update --package crossbeam-utils --precise 0.8.16
-    cargo update --package rmp --precise 0.8.11
-    cargo update --package serde_json --precise 1.0.99
-    cargo update --package serde --precise 1.0.156
-    cargo update --package thiserror --precise 1.0.39
-    cargo update --package quote --precise 1.0.30
-    cargo update --package proc-macro2 --precise 1.0.65
-fi
+QC_FEAT=--features=ndarray-rand/quickcheck
 
-cargo build --verbose --no-default-features
-# Testing both dev and release profiles helps find bugs, especially in low level code
-cargo test --verbose --no-default-features
-cargo test --release --verbose --no-default-features
-cargo build --verbose --features "$FEATURES"
-cargo test --verbose --features "$FEATURES"
-cargo test --manifest-path=ndarray-rand/Cargo.toml --no-default-features --verbose
-cargo test --manifest-path=ndarray-rand/Cargo.toml --features quickcheck --verbose
-cargo test --manifest-path=xtest-serialization/Cargo.toml --verbose
-cargo test --manifest-path=xtest-blas/Cargo.toml --verbose --features openblas-system
+# build check with no features
+cargo build -v --no-default-features
+
+# ndarray with no features
+cargo test -p ndarray -v --no-default-features
+# all with features
+cargo test -v --features "$FEATURES" $QC_FEAT
+# all with features and release (ignore test crates which is already optimized)
+cargo test -v -p ndarray -p ndarray-rand --release --features "$FEATURES" $QC_FEAT --lib --tests
+
+# BLAS tests
+cargo test -p ndarray --lib -v --features blas
+cargo test -p blas-mock-tests -v
+cargo test -p blas-tests -v --features blas-tests/openblas-system
+cargo test -p numeric-tests -v --features numeric-tests/test_blas
+
+# Examples
 cargo test --examples
-cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose
-cargo test --manifest-path=xtest-numeric/Cargo.toml --verbose --features test_blas
+
+# Benchmarks
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")

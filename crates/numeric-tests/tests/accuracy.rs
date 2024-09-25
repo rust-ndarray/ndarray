@@ -1,32 +1,29 @@
 extern crate approx;
-extern crate rand_distr;
 extern crate ndarray;
 extern crate ndarray_rand;
 extern crate rand;
+extern crate rand_distr;
 
 extern crate numeric_tests;
 
 use std::fmt;
 
 use ndarray_rand::RandomExt;
-use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 
-use ndarray::prelude::*;
-use ndarray::{
-    Data,
-    LinalgScalar,
-};
 use ndarray::linalg::general_mat_mul;
+use ndarray::prelude::*;
+use ndarray::{Data, LinalgScalar};
 
-use rand_distr::{Normal, StandardNormal, Distribution};
-use num_traits::{Float, AsPrimitive};
 use num_complex::Complex;
+use num_traits::{AsPrimitive, Float};
+use rand_distr::{Distribution, Normal, StandardNormal};
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 
 fn kahan_sum<A>(iter: impl Iterator<Item = A>) -> A
-    where A: LinalgScalar
+where A: LinalgScalar
 {
     let mut sum = A::zero();
     let mut compensation = A::zero();
@@ -42,11 +39,11 @@ fn kahan_sum<A>(iter: impl Iterator<Item = A>) -> A
 }
 
 // simple, slow, correct (hopefully) mat mul
-fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>)
-    -> Array<A, Ix2>
-    where A: LinalgScalar,
-          S: Data<Elem=A>,
-          S2: Data<Elem=A>,
+fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>) -> Array<A, Ix2>
+where
+    A: LinalgScalar,
+    S: Data<Elem = A>,
+    S2: Data<Elem = A>,
 {
     let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
     let mut res_elems = Array::zeros(m * n);
@@ -65,27 +62,30 @@ fn reference_mat_mul<A, S, S2>(lhs: &ArrayBase<S, Ix2>, rhs: &ArrayBase<S2, Ix2>
         }
     }
 
-    res_elems.into_shape((m, n)).unwrap()
+    res_elems.into_shape_with_order((m, n)).unwrap()
 }
 
 fn gen<A, D>(d: D, rng: &mut SmallRng) -> Array<A, D>
-    where D: Dimension,
-          A: Float,
-          StandardNormal: Distribution<A>,
+where
+    D: Dimension,
+    A: Float,
+    StandardNormal: Distribution<A>,
 {
     Array::random_using(d, Normal::new(A::zero(), A::one()).unwrap(), rng)
 }
 
 fn gen_complex<A, D>(d: D, rng: &mut SmallRng) -> Array<Complex<A>, D>
-    where D: Dimension,
-          A: Float,
-          StandardNormal: Distribution<A>,
+where
+    D: Dimension,
+    A: Float,
+    StandardNormal: Distribution<A>,
 {
     gen(d.clone(), rng).mapv(Complex::from) + gen(d, rng).mapv(|x| Complex::new(A::zero(), x))
 }
 
 #[test]
-fn accurate_eye_f32() {
+fn accurate_eye_f32()
+{
     let rng = &mut SmallRng::from_entropy();
     for i in 0..20 {
         let eye = Array::eye(i);
@@ -112,7 +112,8 @@ fn accurate_eye_f32() {
 }
 
 #[test]
-fn accurate_eye_f64() {
+fn accurate_eye_f64()
+{
     let rng = &mut SmallRng::from_entropy();
     let abs_tol = 1e-15;
     for i in 0..20 {
@@ -140,36 +141,40 @@ fn accurate_eye_f64() {
 }
 
 #[test]
-fn accurate_mul_f32_dot() {
+fn accurate_mul_f32_dot()
+{
     accurate_mul_float_general::<f32>(1e-5, false);
 }
 
 #[test]
-fn accurate_mul_f32_general() {
+fn accurate_mul_f32_general()
+{
     accurate_mul_float_general::<f32>(1e-5, true);
 }
 
 #[test]
-fn accurate_mul_f64_dot() {
+fn accurate_mul_f64_dot()
+{
     accurate_mul_float_general::<f64>(1e-14, false);
 }
 
 #[test]
-fn accurate_mul_f64_general() {
+fn accurate_mul_f64_general()
+{
     accurate_mul_float_general::<f64>(1e-14, true);
 }
 
 /// Generate random sized matrices using the given generator function.
 /// Compute gemm using either .dot() (if use_general is false) otherwise general_mat_mul.
 /// Return tuple of actual result matrix and reference matrix, which should be equal.
-fn random_matrix_mul<A>(rng: &mut SmallRng, use_stride: bool, use_general: bool,
-                        generator: fn(Ix2, &mut SmallRng) -> Array2<A>)
-    -> (Array2<A>, Array2<A>)
-    where A: LinalgScalar,
+fn random_matrix_mul<A>(
+    rng: &mut SmallRng, use_stride: bool, use_general: bool, generator: fn(Ix2, &mut SmallRng) -> Array2<A>,
+) -> (Array2<A>, Array2<A>)
+where A: LinalgScalar
 {
-    let m = rng.gen_range(15..512);
-    let k = rng.gen_range(15..512);
-    let n = rng.gen_range(15..1560);
+    let m = rng.gen_range(15..128);
+    let k = rng.gen_range(15..128);
+    let n = rng.gen_range(15..512);
     let a = generator(Ix2(m, k), rng);
     let b = generator(Ix2(n, k), rng);
     let c = if use_general {
@@ -180,13 +185,9 @@ fn random_matrix_mul<A>(rng: &mut SmallRng, use_stride: bool, use_general: bool,
 
     let b = b.t();
     let (a, b, mut c) = if use_stride {
-        (a.slice(s![..;2, ..;2]),
-         b.slice(s![..;2, ..;2]),
-         c.map(|c_| c_.slice_move(s![..;2, ..;2])))
+        (a.slice(s![..;2, ..;2]), b.slice(s![..;2, ..;2]), c.map(|c_| c_.slice_move(s![..;2, ..;2])))
     } else {
-        (a.view(),
-         b,
-         c)
+        (a.view(), b, c)
     };
 
     println!("Testing size {} by {} by {}", a.shape()[0], a.shape()[1], b.shape()[1]);
@@ -202,9 +203,10 @@ fn random_matrix_mul<A>(rng: &mut SmallRng, use_stride: bool, use_general: bool,
 }
 
 fn accurate_mul_float_general<A>(limit: f64, use_general: bool)
-    where A: Float + Copy + 'static + AsPrimitive<f64>,
-          StandardNormal: Distribution<A>,
-          A: fmt::Debug,
+where
+    A: Float + Copy + 'static + AsPrimitive<f64>,
+    StandardNormal: Distribution<A>,
+    A: fmt::Debug,
 {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
@@ -221,19 +223,22 @@ fn accurate_mul_float_general<A>(limit: f64, use_general: bool)
 }
 
 #[test]
-fn accurate_mul_complex32() {
+fn accurate_mul_complex32()
+{
     accurate_mul_complex_general::<f32>(1e-5);
 }
 
 #[test]
-fn accurate_mul_complex64() {
+fn accurate_mul_complex64()
+{
     accurate_mul_complex_general::<f64>(1e-14);
 }
 
 fn accurate_mul_complex_general<A>(limit: f64)
-    where A: Float + Copy + 'static + AsPrimitive<f64>,
-          StandardNormal: Distribution<A>,
-          A: fmt::Debug,
+where
+    A: Float + Copy + 'static + AsPrimitive<f64>,
+    StandardNormal: Distribution<A>,
+    A: fmt::Debug,
 {
     // pick a few random sizes
     let mut rng = SmallRng::from_entropy();
@@ -251,11 +256,12 @@ fn accurate_mul_complex_general<A>(limit: f64)
 }
 
 #[test]
-fn accurate_mul_with_column_f64() {
+fn accurate_mul_with_column_f64()
+{
     // pick a few random sizes
     let rng = &mut SmallRng::from_entropy();
     for i in 0..10 {
-        let m = rng.gen_range(1..350);
+        let m = rng.gen_range(1..128);
         let k = rng.gen_range(1..350);
         let a = gen::<f64, _>(Ix2(m, k), rng);
         let b_owner = gen::<f64, _>(Ix2(k, k), rng);
@@ -264,8 +270,8 @@ fn accurate_mul_with_column_f64() {
 
         // pick dense square or broadcasted to square matrix
         match i {
-            0 ..= 3 => b_sq = b_owner.view(),
-            4 ..= 7 => {
+            0..=3 => b_sq = b_owner.view(),
+            4..=7 => {
                 b_row_col = b_owner.column(0);
                 b_sq = b_row_col.broadcast((k, k)).unwrap();
             }

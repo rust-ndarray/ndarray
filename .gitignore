@@ -1,2 +1,6 @@
+# Rust items
 Cargo.lock
 target/
+
+# Editor settings
+.vscode

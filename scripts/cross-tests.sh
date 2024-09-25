@@ -7,8 +7,8 @@ FEATURES=$1
 CHANNEL=$2
 TARGET=$3
 
-cross build -v --features="$FEATURES" --target=$TARGET
-cross test -v --no-fail-fast --features="$FEATURES" --target=$TARGET
-cross test -v --no-fail-fast --target=$TARGET --manifest-path=ndarray-rand/Cargo.toml --features quickcheck
-cross test -v --no-fail-fast --target=$TARGET --manifest-path=xtest-serialization/Cargo.toml --verbose
-cross test -v --no-fail-fast --target=$TARGET --manifest-path=xtest-numeric/Cargo.toml
+QC_FEAT=--features=ndarray-rand/quickcheck
+
+cross build -v --features="$FEATURES" $QC_FEAT --target=$TARGET
+cross test -v --no-fail-fast --features="$FEATURES" $QC_FEAT --target=$TARGET
+cross test -v -p blas-mock-tests

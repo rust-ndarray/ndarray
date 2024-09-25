@@ -12,20 +12,24 @@ use std::fmt;
 
 /// An error related to array shape or layout.
 #[derive(Clone)]
-pub struct ShapeError {
+pub struct ShapeError
+{
     // we want to be able to change this representation later
     repr: ErrorKind,
 }
 
-impl ShapeError {
+impl ShapeError
+{
     /// Return the `ErrorKind` of this error.
     #[inline]
-    pub fn kind(&self) -> ErrorKind {
+    pub fn kind(&self) -> ErrorKind
+    {
         self.repr
     }
 
     /// Create a new `ShapeError`
-    pub fn from_kind(error: ErrorKind) -> Self {
+    pub fn from_kind(error: ErrorKind) -> Self
+    {
         from_kind(error)
     }
 }
@@ -36,7 +40,8 @@ impl ShapeError {
 /// is not guaranteed.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug)]
-pub enum ErrorKind {
+pub enum ErrorKind
+{
     /// incompatible shape
     IncompatibleShape = 1,
     /// incompatible memory layout
@@ -52,20 +57,25 @@ pub enum ErrorKind {
 }
 
 #[inline(always)]
-pub fn from_kind(k: ErrorKind) -> ShapeError {
+pub fn from_kind(k: ErrorKind) -> ShapeError
+{
     ShapeError { repr: k }
 }
 
-impl PartialEq for ErrorKind {
+impl PartialEq for ErrorKind
+{
     #[inline(always)]
-    fn eq(&self, rhs: &Self) -> bool {
+    fn eq(&self, rhs: &Self) -> bool
+    {
         *self as u8 == *rhs as u8
     }
 }
 
-impl PartialEq for ShapeError {
+impl PartialEq for ShapeError
+{
     #[inline(always)]
-    fn eq(&self, rhs: &Self) -> bool {
+    fn eq(&self, rhs: &Self) -> bool
+    {
         self.repr == rhs.repr
     }
 }
@@ -73,8 +83,10 @@ impl PartialEq for ShapeError {
 #[cfg(feature = "std")]
 impl Error for ShapeError {}
 
-impl fmt::Display for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl fmt::Display for ShapeError
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         let description = match self.kind() {
             ErrorKind::IncompatibleShape => "incompatible shapes",
             ErrorKind::IncompatibleLayout => "incompatible memory layout",
@@ -87,8 +99,10 @@ impl fmt::Display for ShapeError {
     }
 }
 
-impl fmt::Debug for ShapeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl fmt::Debug for ShapeError
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         write!(f, "{}", self)
     }
 }

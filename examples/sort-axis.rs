@@ -12,13 +12,16 @@ use std::ptr::copy_nonoverlapping;
 
 // Type invariant: Each index appears exactly once
 #[derive(Clone, Debug)]
-pub struct Permutation {
+pub struct Permutation
+{
     indices: Vec<usize>,
 }
 
-impl Permutation {
+impl Permutation
+{
     /// Checks if the permutation is correct
-    pub fn from_indices(v: Vec<usize>) -> Result<Self, ()> {
+    pub fn from_indices(v: Vec<usize>) -> Result<Self, ()>
+    {
         let perm = Permutation { indices: v };
         if perm.correct() {
             Ok(perm)
@@ -27,34 +30,35 @@ impl Permutation {
         }
     }
 
-    fn correct(&self) -> bool {
+    fn correct(&self) -> bool
+    {
         let axis_len = self.indices.len();
         let mut seen = vec![false; axis_len];
         for &i in &self.indices {
             match seen.get_mut(i) {
                 None => return false,
-                Some(s) => {
+                Some(s) =>
                     if *s {
                         return false;
                     } else {
                         *s = true;
-                    }
-                }
+                    },
             }
         }
         true
     }
 }
 
-pub trait SortArray {
+pub trait SortArray
+{
     /// ***Panics*** if `axis` is out of bounds.
     fn identity(&self, axis: Axis) -> Permutation;
     fn sort_axis_by<F>(&self, axis: Axis, less_than: F) -> Permutation
-    where
-        F: FnMut(usize, usize) -> bool;
+    where F: FnMut(usize, usize) -> bool;
 }
 
-pub trait PermuteArray {
+pub trait PermuteArray
+{
     type Elem;
     type Dim;
     fn permute_axis(self, axis: Axis, perm: &Permutation) -> Array<Self::Elem, Self::Dim>
@@ -68,15 +72,15 @@ where
     S: Data<Elem = A>,
     D: Dimension,
 {
-    fn identity(&self, axis: Axis) -> Permutation {
+    fn identity(&self, axis: Axis) -> Permutation
+    {
         Permutation {
             indices: (0..self.len_of(axis)).collect(),
         }
     }
 
     fn sort_axis_by<F>(&self, axis: Axis, mut less_than: F) -> Permutation
-    where
-        F: FnMut(usize, usize) -> bool,
+    where F: FnMut(usize, usize) -> bool
     {
         let mut perm = self.identity(axis);
         perm.indices.sort_by(move |&a, &b| {
@@ -93,15 +97,13 @@ where
 }
 
 impl<A, D> PermuteArray for Array<A, D>
-where
-    D: Dimension,
+where D: Dimension
 {
     type Elem = A;
     type Dim = D;
 
     fn permute_axis(self, axis: Axis, perm: &Permutation) -> Array<A, D>
-    where
-        D: RemoveAxis,
+    where D: RemoveAxis
     {
         let axis_len = self.len_of(axis);
         let axis_stride = self.stride_of(axis);
@@ -155,7 +157,7 @@ where
                 });
             debug_assert_eq!(result.len(), moved_elements);
             // forget the old elements but not the allocation
-            let mut old_storage = self.into_raw_vec();
+            let mut old_storage = self.into_raw_vec_and_offset().0;
             old_storage.set_len(0);
 
             // transfer ownership of the elements into the result
@@ -165,8 +167,11 @@ where
 }
 
 #[cfg(feature = "std")]
-fn main() {
-    let a = Array::linspace(0., 63., 64).into_shape((8, 8)).unwrap();
+fn main()
+{
+    let a = Array::linspace(0., 63., 64)
+        .into_shape_with_order((8, 8))
+        .unwrap();
     let strings = a.map(|x| x.to_string());
 
     let perm = a.sort_axis_by(Axis(1), |i, j| a[[i, 0]] > a[[j, 0]]);
@@ -183,10 +188,12 @@ fn main() {
 fn main() {}
 
 #[cfg(test)]
-mod tests {
+mod tests
+{
     use super::*;
     #[test]
-    fn test_permute_axis() {
+    fn test_permute_axis()
+    {
         let a = array![
             [107998.96, 1.],
             [107999.08, 2.],

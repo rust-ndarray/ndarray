@@ -34,15 +34,17 @@ where
     Ok(out)
 }
 
-pub trait DimMax<Other: Dimension> {
+pub trait DimMax<Other: Dimension>
+{
     /// The resulting dimension type after broadcasting.
     type Output: Dimension;
 }
 
 /// Dimensions of the same type remain unchanged when co_broadcast.
-/// So you can directly use D as the resulting type.
-/// (Instead of <D as DimMax<D>>::BroadcastOutput)
-impl<D: Dimension> DimMax<D> for D {
+/// So you can directly use `D` as the resulting type.
+/// (Instead of `<D as DimMax<D>>::BroadcastOutput`)
+impl<D: Dimension> DimMax<D> for D
+{
     type Output = D;
 }
 
@@ -87,20 +89,18 @@ impl_broadcast_distinct_fixed!(Ix4, IxDyn);
 impl_broadcast_distinct_fixed!(Ix5, IxDyn);
 impl_broadcast_distinct_fixed!(Ix6, IxDyn);
 
-
 #[cfg(test)]
 #[cfg(feature = "std")]
-mod tests {
+mod tests
+{
     use super::co_broadcast;
-    use crate::{Dimension, Dim, DimMax, ShapeError, Ix0, IxDynImpl, ErrorKind};
+    use crate::{Dim, DimMax, Dimension, ErrorKind, Ix0, IxDynImpl, ShapeError};
 
     #[test]
-    fn test_broadcast_shape() {
-        fn test_co<D1, D2>(
-            d1: &D1,
-            d2: &D2,
-            r: Result<<D1 as DimMax<D2>>::Output, ShapeError>,
-        ) where
+    fn test_broadcast_shape()
+    {
+        fn test_co<D1, D2>(d1: &D1, d2: &D2, r: Result<<D1 as DimMax<D2>>::Output, ShapeError>)
+        where
             D1: Dimension + DimMax<D2>,
             D2: Dimension,
         {
@@ -108,36 +108,16 @@ mod tests {
             assert_eq!(d, r);
         }
         test_co(&Dim([2, 3]), &Dim([4, 1, 3]), Ok(Dim([4, 2, 3])));
-        test_co(
-            &Dim([1, 2, 2]),
-            &Dim([1, 3, 4]),
-            Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-        );
+        test_co(&Dim([1, 2, 2]), &Dim([1, 3, 4]), Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
         test_co(&Dim([3, 4, 5]), &Ix0(), Ok(Dim([3, 4, 5])));
         let v = vec![1, 2, 3, 4, 5, 6, 7];
-        test_co(
-            &Dim(vec![1, 1, 3, 1, 5, 1, 7]),
-            &Dim([2, 1, 4, 1, 6, 1]),
-            Ok(Dim(IxDynImpl::from(v.as_slice()))),
-        );
+        test_co(&Dim(vec![1, 1, 3, 1, 5, 1, 7]), &Dim([2, 1, 4, 1, 6, 1]), Ok(Dim(IxDynImpl::from(v.as_slice()))));
         let d = Dim([1, 2, 1, 3]);
         test_co(&d, &d, Ok(d));
-        test_co(
-            &Dim([2, 1, 2]).into_dyn(),
-            &Dim(0),
-            Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-        );
-        test_co(
-            &Dim([2, 1, 1]),
-            &Dim([0, 0, 1, 3, 4]),
-            Ok(Dim([0, 0, 2, 3, 4])),
-        );
+        test_co(&Dim([2, 1, 2]).into_dyn(), &Dim(0), Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
+        test_co(&Dim([2, 1, 1]), &Dim([0, 0, 1, 3, 4]), Ok(Dim([0, 0, 2, 3, 4])));
         test_co(&Dim([0]), &Dim([0, 0, 0]), Ok(Dim([0, 0, 0])));
         test_co(&Dim(1), &Dim([1, 0, 0]), Ok(Dim([1, 0, 0])));
-        test_co(
-            &Dim([1, 3, 0, 1, 1]),
-            &Dim([1, 2, 3, 1]),
-            Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)),
-        );
+        test_co(&Dim([1, 3, 0, 1, 1]), &Dim([1, 2, 3, 1]), Err(ShapeError::from_kind(ErrorKind::IncompatibleShape)));
     }
 }

@@ -1,9 +1,9 @@
-use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
 use crate::AssignElem;
+use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
 
-use crate::parallel::prelude::*;
-use crate::parallel::par::ParallelSplits;
 use super::send_producer::SendProducer;
+use crate::parallel::par::ParallelSplits;
+use crate::parallel::prelude::*;
 
 use crate::partial::Partial;
 
@@ -22,8 +22,7 @@ where
     ///
     /// Elements are visited in arbitrary order.
     pub fn par_map_inplace<F>(&mut self, f: F)
-    where
-        F: Fn(&mut A) + Sync + Send,
+    where F: Fn(&mut A) + Sync + Send
     {
         self.view_mut().into_par_iter().for_each(f)
     }
@@ -66,19 +65,6 @@ macro_rules! zip_impl {
             ///
             /// Requires crate feature `rayon`.
             pub fn par_for_each<F>(self, function: F)
-                where F: Fn($($p::Item),*) + Sync + Send
-            {
-                self.into_par_iter().for_each(move |($($p,)*)| function($($p),*))
-            }
-
-            /// The `par_apply` method for `Zip`.
-            ///
-            /// This is a shorthand for using `.into_par_iter().for_each()` on
-            /// `Zip`.
-            ///
-            /// Requires crate feature `rayon`.
-            #[deprecated(note="Renamed to .par_for_each()", since="0.15.0")]
-            pub fn par_apply<F>(self, function: F)
                 where F: Fn($($p::Item),*) + Sync + Send
             {
                 self.into_par_iter().for_each(move |($($p,)*)| function($($p),*))
@@ -135,18 +121,6 @@ macro_rules! zip_impl {
                 }
             }
 
-            /// Map and collect the results into a new array, which has the same size as the
-            /// inputs.
-            ///
-            /// If all inputs are c- or f-order respectively, that is preserved in the output.
-            #[deprecated(note="Renamed to .par_map_collect()", since="0.15.0")]
-            pub fn par_apply_collect<R>(self, f: impl Fn($($p::Item,)* ) -> R + Sync + Send)
-                -> Array<R, D>
-                where R: Send
-            {
-                self.par_map_collect(f)
-            }
-
             /// Map and assign the results into the producer `into`, which should have the same
             /// size as the other inputs.
             ///
@@ -161,20 +135,6 @@ macro_rules! zip_impl {
                     .par_for_each(move |$($p, )* output_| {
                         output_.assign_elem(f($($p ),*));
                     });
-            }
-
-            /// Apply and assign the results into the producer `into`, which should have the same
-            /// size as the other inputs.
-            ///
-            /// The producer should have assignable items as dictated by the `AssignElem` trait,
-            /// for example `&mut R`.
-            #[deprecated(note="Renamed to .par_map_assign_into()", since="0.15.0")]
-            pub fn par_apply_assign_into<R, Q>(self, into: Q, f: impl Fn($($p::Item,)* ) -> R + Sync + Send)
-                where Q: IntoNdProducer<Dim=D>,
-                      Q::Item: AssignElem<R> + Send,
-                      Q::Output: Send,
-            {
-                self.par_map_assign_into(into, f)
             }
 
             /// Parallel version of `fold`.
@@ -230,7 +190,7 @@ macro_rules! zip_impl {
             );
         }
         )+
-    }
+    };
 }
 
 zip_impl! {

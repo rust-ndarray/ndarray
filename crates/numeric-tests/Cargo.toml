@@ -1,0 +1,29 @@
+[package]
+name = "numeric-tests"
+version = "0.1.0"
+authors = ["bluss"]
+publish = false
+edition = "2018"
+
+[lib]
+test = false
+doc = false
+doctest = false
+
+[dependencies]
+ndarray = { workspace = true, features = ["approx"] }
+ndarray-rand = { workspace = true }
+
+approx = { workspace = true }
+rand = { workspace = true }
+rand_distr = { workspace = true }
+
+blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
+openblas-src = { optional = true, version = "0.10", default-features = false, features = ["cblas", "system"] }
+
+[dev-dependencies]
+num-traits = { workspace = true }
+num-complex = { workspace = true }
+
+[features]
+test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
