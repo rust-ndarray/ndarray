@@ -460,7 +460,6 @@ where
     /// use ndarray::{array, Axis};
     /// array![1.0, 2.0, 3.0].diff(10, Axis(0));
     /// ```
-    #[cfg(feature = "std")]
     pub fn diff(&self, n: usize, axis: Axis) -> Array<A, D>
     where
         A: Sub<A, Output = A> + Zero + Clone,
