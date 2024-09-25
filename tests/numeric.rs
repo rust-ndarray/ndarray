@@ -338,7 +338,6 @@ fn std_axis_empty_axis()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn diff_1d_order1()
 {
     let data = array![1.0, 2.0, 4.0, 7.0];
@@ -347,7 +346,6 @@ fn diff_1d_order1()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn diff_1d_order2()
 {
     let data = array![1.0, 2.0, 4.0, 7.0];
@@ -358,7 +356,6 @@ fn diff_1d_order2()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn diff_1d_order3()
 {
     let data = array![1.0, 2.0, 4.0, 7.0];
@@ -369,7 +366,6 @@ fn diff_1d_order3()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn diff_2d_order1_ax0()
 {
     let data = array![
@@ -382,7 +378,6 @@ fn diff_2d_order1_ax0()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn diff_2d_order1_ax1()
 {
     let data = array![
@@ -396,7 +391,6 @@ fn diff_2d_order1_ax1()
 
 #[test]
 #[should_panic]
-#[cfg(feature = "std")]
 fn diff_panic_n_too_big()
 {
     let data = array![1.0, 2.0, 4.0, 7.0];
@@ -405,7 +399,6 @@ fn diff_panic_n_too_big()
 
 #[test]
 #[should_panic]
-#[cfg(feature = "std")]
 fn diff_panic_axis_out_of_bounds()
 {
     let data = array![1, 2, 4, 7];
