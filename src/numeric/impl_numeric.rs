@@ -10,10 +10,11 @@
 use num_traits::Float;
 use num_traits::One;
 use num_traits::{FromPrimitive, Zero};
-use std::ops::{Add, Div, Mul};
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
+use crate::Slice;
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
@@ -436,5 +437,60 @@ where
         D: RemoveAxis,
     {
         self.var_axis(axis, ddof).mapv_into(|x| x.sqrt())
+    }
+
+    /// Calculates the (forward) finite differences of order `n`, along the `axis`.
+    /// For the 1D-case, `n==1`, this means: `diff[i] == arr[i+1] - arr[i]`
+    ///
+    /// For `n>=2`, the process is iterated:
+    /// ```
+    /// use ndarray::{array, Axis};
+    /// let arr = array![1.0, 2.0, 5.0];
+    /// assert_eq!(arr.diff(2, Axis(0)), arr.diff(1, Axis(0)).diff(1, Axis(0)))
+    /// ```
+    /// **Panics** if `axis` is out of bounds
+    ///
+    /// **Panics** if `n` is too big / the array is to short:
+    /// ```should_panic
+    /// use ndarray::{array, Axis};
+    /// array![1.0, 2.0, 3.0].diff(10, Axis(0));
+    /// ```
+    pub fn diff(&self, n: usize, axis: Axis) -> Array<A, D>
+    where A: Sub<A, Output = A> + Zero + Clone
+    {
+        if n == 0 {
+            return self.to_owned();
+        }
+        assert!(axis.0 < self.ndim(), "The array has only ndim {}, but `axis` {:?} is given.", self.ndim(), axis);
+        assert!(
+            n < self.shape()[axis.0],
+            "The array must have length at least `n+1`=={} in the direction of `axis`. It has length {}",
+            n + 1,
+            self.shape()[axis.0]
+        );
+
+        let mut inp = self.to_owned();
+        let mut out = Array::zeros({
+            let mut inp_dim = self.raw_dim();
+            // inp_dim[axis.0] >= 1 as per the 2nd assertion.
+            inp_dim[axis.0] -= 1;
+            inp_dim
+        });
+        for _ in 0..n {
+            let head = inp.slice_axis(axis, Slice::from(..-1));
+            let tail = inp.slice_axis(axis, Slice::from(1..));
+
+            azip!((o in &mut out, h in head, t in tail) *o = t.clone() - h.clone());
+
+            // feed the output as the input to the next iteration
+            std::mem::swap(&mut inp, &mut out);
+
+            // adjust the new output array width along `axis`.
+            // Current situation: width of `inp`: k, `out`: k+1
+            // needed width:               `inp`: k, `out`: k-1
+            // slice is possible, since k >= 1.
+            out.slice_axis_inplace(axis, Slice::from(..-2));
+        }
+        inp
     }
 }
