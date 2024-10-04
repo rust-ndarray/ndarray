@@ -39,9 +39,9 @@ where D: Dimension
             let array_head_ptr = array.ptr;
             let mut array_data = array.data;
             let data_len = array_data.release_all_elements();
-            debug_assert!(data_len >= array.dim.size());
-            let has_unreachable_elements = array.dim.size() != data_len;
-            let inner = Baseiter::new(array_head_ptr, array.dim, array.strides);
+            debug_assert!(data_len >= array.aref.dim.size());
+            let has_unreachable_elements = array.aref.dim.size() != data_len;
+            let inner = Baseiter::new(array_head_ptr, array.aref.dim, array.aref.strides);
 
             IntoIter {
                 array_data,

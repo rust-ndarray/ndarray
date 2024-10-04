@@ -298,9 +298,9 @@ fn test_append_2d()
     let zeros = ArrayView::from(&[0.; 8])
         .into_shape_with_order((2, 4))
         .unwrap();
-    a.append(Axis(0), ones).unwrap();
-    a.append(Axis(0), zeros).unwrap();
-    a.append(Axis(0), ones).unwrap();
+    a.append(Axis(0), ones.clone()).unwrap();
+    a.append(Axis(0), zeros.clone()).unwrap();
+    a.append(Axis(0), ones.clone()).unwrap();
     println!("{:?}", a);
     assert_eq!(a.shape(), &[8, 4]);
     for (i, row) in a.rows().into_iter().enumerate() {
@@ -312,7 +312,7 @@ fn test_append_2d()
     a = a.reversed_axes();
     let ones = ones.reversed_axes();
     let zeros = zeros.reversed_axes();
-    a.append(Axis(1), ones).unwrap();
+    a.append(Axis(1), ones.clone()).unwrap();
     a.append(Axis(1), zeros).unwrap();
     a.append(Axis(1), ones).unwrap();
     println!("{:?}", a);
@@ -447,7 +447,7 @@ fn zero_dimensional_ok()
     let one = aview0(&1);
     let two = aview0(&2);
     a.push(Axis(0), two).unwrap();
-    a.push(Axis(0), one).unwrap();
+    a.push(Axis(0), one.clone()).unwrap();
     a.push(Axis(0), one).unwrap();
     assert_eq!(a, array![2, 1, 1]);
 }

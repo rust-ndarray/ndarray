@@ -59,10 +59,10 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D>
             a.shape()
         );
         for i in 0..a.ndim() {
-            a.dim[i] /= chunk[i];
+            a.aref.dim[i] /= chunk[i];
         }
         let inner_strides = a.strides.clone();
-        a.strides *= &chunk;
+        a.aref.strides *= &chunk;
 
         ExactChunks {
             base: a,
