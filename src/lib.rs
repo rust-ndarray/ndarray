@@ -1280,6 +1280,9 @@ pub type Ixs = isize;
 // implementation since `ArrayBase` doesn't implement `Drop` and `&mut
 // ArrayBase` is `!UnwindSafe`, but the implementation must not call
 // methods/functions on the array while it violates the constraints.
+// Critically, this includes calling `DerefMut`; as a result, methods/functions
+// that temporarily violate these must not rely on the `DerefMut` implementation
+// for access to the underlying `ptr`, `strides`, or `dim`.
 //
 // Users of the `ndarray` crate cannot rely on these constraints because they
 // may change in the future.
@@ -1295,7 +1298,44 @@ where S: RawData<Elem = A>
     aref: RefBase<S::Elem, D, S::Referent>,
 }
 
-/// An array reference type
+/// A reference to an *n*-dimensional array.
+/// 
+/// `RefBase`'s relationship to [`ArrayBase`] is akin to the relationship
+/// between `[T]` and `Vec<T>`: it can only be obtained by reference, and
+/// represents a subset of an existing array (possibly the entire array).
+/// 
+/// There are two variants of this type, [`RawRef`] and [`ArrRef`]; raw
+/// references are obtained from raw views, and `ArrRef`s are obtained
+/// from all other array types. See those types for more information.
+/// 
+/// ## Writing Functions
+/// Generally speaking, functions that operate on arrays should accept
+/// this type over an `ArrayBase`. The following conventions must be
+/// followed:
+/// - Functions that need to safely read an array's data should accept
+/// `&ArrRef`
+/// ```rust
+/// fn read<A, D>(arr: &ArrRef<A, D>)
+/// ```
+/// - Functions that need to safely write to an array's data should
+/// accept `&mut ArrRef`
+/// ```rust
+/// fn write<A, D>(arr: &mut ArrRef<A, D>)
+/// ```
+/// - Functions that only need to read an array's shape and strides
+/// (or that want to unsafely read data) should accept `&RefBase`
+/// with a bound of [`RawReferent`]:
+/// ```rust
+/// fn read_layout<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
+/// unsafe fn read_unchecked<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
+/// ```
+/// - Functions that want to write to an array's shape and strides
+/// (or that want to unsafely write to its data) should accept
+/// `&mut RefBase` with the same bound:
+/// ```rust
+/// fn write_layout<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
+/// unsafe fn write_unchecked<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
+/// ```
 pub struct RefBase<A, D, R>
 where R: RawReferent
 {
@@ -1310,7 +1350,10 @@ where R: RawReferent
     phantom: PhantomData<R>,
 }
 
+/// An reference to an array whose data may be unaligned or unsafe to read.
 pub type RawRef<A, D> = RefBase<A, D, Raw>;
+
+/// A reference to an array whose data can be read safely.
 pub type ArrRef<A, D> = RefBase<A, D, Safe>;
 
 /// An array where the data has shared ownership and is copy on write.
