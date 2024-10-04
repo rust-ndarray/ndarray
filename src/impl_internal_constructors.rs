@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use core::marker::PhantomData;
 use std::ptr::NonNull;
 
 use crate::imp_prelude::*;
@@ -27,9 +28,12 @@ where S: RawData<Elem = A>
     {
         let array = ArrayBase {
             data,
-            ptr,
-            dim: Ix1(0),
-            strides: Ix1(1),
+            aref: RefBase {
+                ptr,
+                dim: Ix1(0),
+                strides: Ix1(1),
+                phantom: PhantomData::<S::Referent>,
+            }
         };
         debug_assert!(array.pointer_is_inbounds());
         array
@@ -58,9 +62,12 @@ where
         debug_assert_eq!(strides.ndim(), dim.ndim());
         ArrayBase {
             data: self.data,
-            ptr: self.ptr,
-            dim,
-            strides,
+            aref: RefBase {
+                ptr: self.aref.ptr,
+                dim,
+                strides,
+                phantom: self.aref.phantom,
+            }
         }
     }
 }

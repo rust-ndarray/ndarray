@@ -532,7 +532,7 @@ where D: Dimension
     /// let mut a = Array::zeros((0, 4));
     /// let ones  = ArrayView::from(&[1.; 4]);
     /// let zeros = ArrayView::from(&[0.; 4]);
-    /// a.push(Axis(0), ones).unwrap();
+    /// a.push(Axis(0), ones.clone()).unwrap();
     /// a.push(Axis(0), zeros).unwrap();
     /// a.push(Axis(0), ones).unwrap();
     ///
@@ -588,7 +588,7 @@ where D: Dimension
     /// let mut a = Array::zeros((0, 4));
     /// let ones  = ArrayView::from(&[1.; 8]).into_shape_with_order((2, 4)).unwrap();
     /// let zeros = ArrayView::from(&[0.; 8]).into_shape_with_order((2, 4)).unwrap();
-    /// a.append(Axis(0), ones).unwrap();
+    /// a.append(Axis(0), ones.clone()).unwrap();
     /// a.append(Axis(0), zeros).unwrap();
     /// a.append(Axis(0), ones).unwrap();
     ///
@@ -746,7 +746,7 @@ where D: Dimension
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), tail_view.strides());
+                              tail_view.shape(), ArrayBase::strides(&tail_view));
             }
 
             // Keep track of currently filled length of `self.data` and update it
@@ -849,7 +849,7 @@ where D: Dimension
                 0
             };
             debug_assert!(data_to_array_offset >= 0);
-            self.ptr = self
+            self.aref.ptr = self
                 .data
                 .reserve(len_to_append)
                 .offset(data_to_array_offset);
@@ -909,7 +909,7 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
 
     // iter is a raw pointer iterator traversing the array in memory order now with the
     // sorted axes.
-    let mut iter = Baseiter::new(self_.ptr, self_.dim, self_.strides);
+    let mut iter = Baseiter::new(self_.ptr, self_.aref.dim, self_.aref.strides);
     let mut dropped_elements = 0;
 
     let mut last_ptr = data_ptr;
@@ -948,7 +948,7 @@ where
     if a.ndim() <= 1 {
         return;
     }
-    sort_axes1_impl(&mut a.dim, &mut a.strides);
+    sort_axes1_impl(&mut a.aref.dim, &mut a.aref.strides);
 }
 
 fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
@@ -988,7 +988,7 @@ where
     if a.ndim() <= 1 {
         return;
     }
-    sort_axes2_impl(&mut a.dim, &mut a.strides, &mut b.dim, &mut b.strides);
+    sort_axes2_impl(&mut a.aref.dim, &mut a.aref.strides, &mut b.aref.dim, &mut b.aref.strides);
 }
 
 fn sort_axes2_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)

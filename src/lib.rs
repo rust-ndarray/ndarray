@@ -126,6 +126,7 @@ pub mod doc;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
+use arrayref::{Raw, RawReferent, Safe};
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
@@ -160,6 +161,7 @@ pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 mod macro_utils;
 #[macro_use]
 mod private;
+mod arrayref;
 mod aliases;
 #[macro_use]
 mod itertools;
@@ -216,6 +218,7 @@ pub use crate::layout::Layout;
 mod imp_prelude
 {
     pub use crate::dimension::DimensionExt;
+    pub use crate::RefBase;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
     pub use crate::{
@@ -1283,14 +1286,27 @@ where S: RawData
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
+    /// Array reference type
+    aref: RefBase<S::Elem, D, S::Referent>,
+}
+
+/// An array reference type
+pub struct RefBase<A, D, R>
+where R: RawReferent
+{
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<S::Elem>,
+    ptr: std::ptr::NonNull<A>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
     strides: D,
+    /// The referent safety marker
+    phantom: PhantomData<R>,
 }
+
+pub type RawRef<A, D> = RefBase<A, D, Raw>;
+pub type ArrRef<A, D> = RefBase<A, D, Safe>;
 
 /// An array where the data has shared ownership and is copy on write.
 ///

@@ -23,7 +23,7 @@ use std::mem::MaybeUninit;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
-use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, Raw, RawReferent, RawViewRepr, Safe, ViewRepr};
 
 /// Array representation trait.
 ///
@@ -39,6 +39,9 @@ pub unsafe trait RawData: Sized
 {
     /// The array element type.
     type Elem;
+
+    /// The safety of the reference type
+    type Referent: RawReferent;
 
     #[doc(hidden)]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool;
@@ -171,6 +174,7 @@ pub unsafe trait DataMut: Data + RawDataMut
 unsafe impl<A> RawData for RawViewRepr<*const A>
 {
     type Elem = A;
+    type Referent = Raw;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -192,6 +196,7 @@ unsafe impl<A> RawDataClone for RawViewRepr<*const A>
 unsafe impl<A> RawData for RawViewRepr<*mut A>
 {
     type Elem = A;
+    type Referent = Raw;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -230,6 +235,7 @@ unsafe impl<A> RawDataClone for RawViewRepr<*mut A>
 unsafe impl<A> RawData for OwnedArcRepr<A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
     {
@@ -260,13 +266,13 @@ where A: Clone
         let rcvec = &mut self_.data.0;
         let a_size = mem::size_of::<A>() as isize;
         let our_off = if a_size != 0 {
-            (self_.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
+            (self_.aref.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
         } else {
             0
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.ptr = rvec.as_nonnull_mut().offset(our_off);
+            self_.aref.ptr = rvec.as_nonnull_mut().offset(our_off);
         }
     }
 
@@ -286,7 +292,7 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         Self::ensure_unique(&mut self_);
         let data = Arc::try_unwrap(self_.data.0).ok().unwrap();
         // safe because data is equivalent
-        unsafe { ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim) }
+        unsafe { ArrayBase::from_data_ptr(data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim) }
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
@@ -295,13 +301,13 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         match Arc::try_unwrap(self_.data.0) {
             Ok(owned_data) => unsafe {
                 // Safe because the data is equivalent.
-                Ok(ArrayBase::from_data_ptr(owned_data, self_.ptr).with_strides_dim(self_.strides, self_.dim))
+                Ok(ArrayBase::from_data_ptr(owned_data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim))
             },
             Err(arc_data) => unsafe {
                 // Safe because the data is equivalent; we're just
                 // reconstructing `self_`.
-                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.ptr)
-                    .with_strides_dim(self_.strides, self_.dim))
+                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.aref.ptr)
+                    .with_strides_dim(self_.aref.strides, self_.aref.dim))
             },
         }
     }
@@ -331,6 +337,7 @@ unsafe impl<A> RawDataClone for OwnedArcRepr<A>
 unsafe impl<A> RawData for OwnedRepr<A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
     {
@@ -410,6 +417,7 @@ where A: Clone
 unsafe impl<'a, A> RawData for ViewRepr<&'a A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -448,6 +456,7 @@ unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A>
 unsafe impl<'a, A> RawData for ViewRepr<&'a mut A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -574,6 +583,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A>
 unsafe impl<'a, A> RawData for CowRepr<'a, A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     #[inline]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool
@@ -600,9 +610,9 @@ where A: Clone
             CowRepr::View(_) => {
                 let owned = array.to_owned();
                 array.data = CowRepr::Owned(owned.data);
-                array.ptr = owned.ptr;
-                array.dim = owned.dim;
-                array.strides = owned.strides;
+                array.aref.ptr = owned.aref.ptr;
+                array.aref.dim = owned.aref.dim;
+                array.aref.strides = owned.aref.strides;
             }
             CowRepr::Owned(_) => {}
         }
@@ -663,7 +673,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             CowRepr::View(_) => self_.to_owned(),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
-                ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim)
+                ArrayBase::from_data_ptr(data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim)
             },
         }
     }
@@ -675,7 +685,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             CowRepr::View(_) => Err(self_),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
-                Ok(ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim))
+                Ok(ArrayBase::from_data_ptr(data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim))
             },
         }
     }
