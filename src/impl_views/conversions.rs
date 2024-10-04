@@ -29,7 +29,7 @@ where D: Dimension
     pub fn reborrow<'b>(self) -> ArrayView<'b, A, D>
     where 'a: 'b
     {
-        unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { ArrayView::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
@@ -66,7 +66,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D>
     {
-        unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayView::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 }
 
@@ -199,7 +199,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 }
 
@@ -209,7 +209,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 }
 
@@ -220,7 +220,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 
     #[inline]
@@ -250,19 +250,19 @@ where D: Dimension
     // Convert into a read-only view
     pub(crate) fn into_view(self) -> ArrayView<'a, A, D>
     {
-        unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { ArrayView::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 
     /// Converts to a mutable raw array view.
     pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D>
     {
-        unsafe { RawArrayViewMut::new(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayViewMut::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.ptr, self.aref.dim, self.aref.strides) }
     }
 
     #[inline]

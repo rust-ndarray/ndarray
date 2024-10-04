@@ -1446,7 +1446,7 @@ fn views()
     assert_eq!(a, b);
     assert_eq!(a.shape(), b.shape());
     assert_eq!(a.clone() + a.clone(), &b + &b);
-    assert_eq!(a.clone() + b, &b + &b);
+    assert_eq!(a.clone() + b.clone(), &b + &b);
     a.clone()[(0, 0)] = 99;
     assert_eq!(b[(0, 0)], 1);
 
@@ -1773,7 +1773,7 @@ fn arithmetic_broadcast()
         arr3(&[[[11, 15], [20, 24]], [[10, 14], [19, 23]]])
     );
     assert_eq!(
-        &a + b.into_owned() + c,
+        &a + b.clone().into_owned() + c.clone(),
         arr3(&[[[15, 19], [32, 36]], [[14, 18], [31, 35]]])
     );
 
@@ -2154,7 +2154,7 @@ fn test_contiguous_neg_strides()
     assert_eq!(b, arr3(&[[[11, 7, 3], [9, 5, 1]], [[10, 6, 2], [8, 4, 0]]]));
     assert!(b.as_slice_memory_order().is_some());
 
-    let mut c = b.reversed_axes();
+    let mut c = b.clone().reversed_axes();
     assert_eq!(
         c,
         arr3(&[[[11, 10], [9, 8]], [[7, 6], [5, 4]], [[3, 2], [1, 0]]])
@@ -2165,11 +2165,11 @@ fn test_contiguous_neg_strides()
     assert_eq!(c, arr3(&[[[11, 10, 9, 8]], [[7, 6, 5, 4]], [[3, 2, 1, 0]]]));
     assert!(c.as_slice_memory_order().is_some());
 
-    let d = b.remove_axis(Axis(1));
+    let d = b.clone().remove_axis(Axis(1));
     assert_eq!(d, arr2(&[[11, 7, 3], [10, 6, 2]]));
     assert!(d.as_slice_memory_order().is_none());
 
-    let e = b.remove_axis(Axis(2));
+    let e = b.clone().remove_axis(Axis(2));
     assert_eq!(e, arr2(&[[11, 9], [10, 8]]));
     assert!(e.as_slice_memory_order().is_some());
 

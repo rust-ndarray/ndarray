@@ -33,7 +33,7 @@ where D: Dimension
     fn from(view: ArrayView<'a, A, D>) -> CowArray<'a, A, D>
     {
         // safe because equivalent data
-        unsafe { ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr).with_strides_dim(view.strides, view.dim) }
+        unsafe { ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr).with_strides_dim(view.aref.strides, view.aref.dim) }
     }
 }
 
@@ -44,7 +44,7 @@ where D: Dimension
     {
         // safe because equivalent data
         unsafe {
-            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.ptr).with_strides_dim(array.strides, array.dim)
+            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.aref.ptr).with_strides_dim(array.aref.strides, array.aref.dim)
         }
     }
 }
