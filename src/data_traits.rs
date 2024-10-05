@@ -23,7 +23,20 @@ use std::mem::MaybeUninit;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
-use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, Raw, RawReferent, RawViewRepr, Safe, ViewRepr};
+use crate::{
+    ArcArray,
+    Array,
+    ArrayBase,
+    CowRepr,
+    Dimension,
+    OwnedArcRepr,
+    OwnedRepr,
+    Raw,
+    RawReferent,
+    RawViewRepr,
+    Safe,
+    ViewRepr,
+};
 
 /// Array representation trait.
 ///
@@ -301,7 +314,8 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         match Arc::try_unwrap(self_.data.0) {
             Ok(owned_data) => unsafe {
                 // Safe because the data is equivalent.
-                Ok(ArrayBase::from_data_ptr(owned_data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim))
+                Ok(ArrayBase::from_data_ptr(owned_data, self_.aref.ptr)
+                    .with_strides_dim(self_.aref.strides, self_.aref.dim))
             },
             Err(arc_data) => unsafe {
                 // Safe because the data is equivalent; we're just

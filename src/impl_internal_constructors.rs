@@ -33,7 +33,7 @@ where S: RawData<Elem = A>
                 dim: Ix1(0),
                 strides: Ix1(1),
                 phantom: PhantomData::<S::Referent>,
-            }
+            },
         };
         debug_assert!(array.pointer_is_inbounds());
         array
@@ -67,7 +67,7 @@ where
                 dim,
                 strides,
                 phantom: self.aref.phantom,
-            }
+            },
         }
     }
 }
