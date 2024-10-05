@@ -126,7 +126,8 @@ pub mod doc;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
-use arrayref::{Raw, RawReferent, Safe};
+use arrayref::{Raw, Safe};
+pub use arrayref::RawReferent;
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
@@ -218,9 +219,9 @@ pub use crate::layout::Layout;
 mod imp_prelude
 {
     pub use crate::dimension::DimensionExt;
-    pub use crate::RefBase;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
+    pub use crate::RefBase;
     pub use crate::{
         CowRepr,
         Data,
@@ -1294,41 +1295,53 @@ where S: RawData
 }
 
 /// A reference to an *n*-dimensional array.
-/// 
+///
 /// `RefBase`'s relationship to [`ArrayBase`] is akin to the relationship
 /// between `[T]` and `Vec<T>`: it can only be obtained by reference, and
 /// represents a subset of an existing array (possibly the entire array).
-/// 
+///
 /// There are two variants of this type, [`RawRef`] and [`ArrRef`]; raw
 /// references are obtained from raw views, and `ArrRef`s are obtained
 /// from all other array types. See those types for more information.
-/// 
+///
 /// ## Writing Functions
 /// Generally speaking, functions that operate on arrays should accept
 /// this type over an `ArrayBase`. The following conventions must be
 /// followed:
-/// - Functions that need to safely read an array's data should accept
-/// `&ArrRef`
+/// - Functions that need to safely read an array's data should accept `&ArrRef`
 /// ```rust
-/// fn read<A, D>(arr: &ArrRef<A, D>)
+/// use ndarray::ArrRef;
+/// 
+/// #[allow(dead_code)]
+/// fn read<A, D>(arr: &ArrRef<A, D>) {}
 /// ```
-/// - Functions that need to safely write to an array's data should
-/// accept `&mut ArrRef`
+/// - Functions that need to safely write to an array's data should accept `&mut ArrRef`
 /// ```rust
-/// fn write<A, D>(arr: &mut ArrRef<A, D>)
+/// use ndarray::ArrRef;
+/// 
+/// #[allow(dead_code)]
+/// fn write<A, D>(arr: &mut ArrRef<A, D>) {}
 /// ```
 /// - Functions that only need to read an array's shape and strides
-/// (or that want to unsafely read data) should accept `&RefBase`
-/// with a bound of [`RawReferent`]:
+///     (or that want to unsafely read data) should accept `&RefBase`
+///     with a bound of [`RawReferent`]:
 /// ```rust
+/// use ndarray::{RefBase, RawReferent};
+/// 
+/// #[allow(dead_code)]
 /// fn read_layout<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
+/// #[allow(dead_code)]
 /// unsafe fn read_unchecked<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
 /// ```
 /// - Functions that want to write to an array's shape and strides
-/// (or that want to unsafely write to its data) should accept
-/// `&mut RefBase` with the same bound:
+///     (or that want to unsafely write to its data) should accept
+///     `&mut RefBase` with the same bound:
 /// ```rust
+/// use ndarray::{RefBase, RawReferent};
+/// 
+/// #[allow(dead_code)]
 /// fn write_layout<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
+/// #[allow(dead_code)]
 /// unsafe fn write_unchecked<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
 /// ```
 pub struct RefBase<A, D, R>
@@ -1607,11 +1620,7 @@ where
             D: Dimension,
             E: Dimension,
         {
-            panic!(
-                "ndarray: could not broadcast array from shape: {:?} to: {:?}",
-                from.slice(),
-                to.slice()
-            )
+            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}", from.slice(), to.slice())
         }
 
         match self.broadcast(dim.clone()) {

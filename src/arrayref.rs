@@ -19,34 +19,39 @@ pub struct Safe;
 /// A trait for array references that adhere to the basic constraints of `ndarray`.
 ///
 /// Cannot be implemented outside of `ndarray`.
-pub trait RawReferent {
+pub trait RawReferent
+{
     private_decl! {}
 }
 
 /// A trait for array references that point to data that is safe to read.
 ///
 /// Cannot be implemented outside of `ndarray`.
-pub trait Referent {
+pub trait Referent
+{
     private_decl! {}
 }
 
-impl RawReferent for Raw {
+impl RawReferent for Raw
+{
     private_impl! {}
 }
-impl RawReferent for Safe {
+impl RawReferent for Safe
+{
     private_impl! {}
 }
-impl Referent for Safe {
+impl Referent for Safe
+{
     private_impl! {}
 }
 
 impl<S, D> Deref for ArrayBase<S, D>
-where
-    S: RawData,
+where S: RawData
 {
     type Target = RefBase<S::Elem, D, S::Referent>;
 
-    fn deref(&self) -> &Self::Target {
+    fn deref(&self) -> &Self::Target
+    {
         &self.aref
     }
 }
@@ -56,7 +61,8 @@ where
     S: RawDataMut,
     D: Dimension,
 {
-    fn deref_mut(&mut self) -> &mut Self::Target {
+    fn deref_mut(&mut self) -> &mut Self::Target
+    {
         self.try_ensure_unique();
         &mut self.aref
     }

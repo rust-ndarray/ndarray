@@ -356,7 +356,12 @@ where D: Dimension
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         let (left, right) = self.into_raw_view().split_at(axis, index);
-        unsafe { (Self::new(left.ptr, left.aref.dim, left.aref.strides), Self::new(right.ptr, right.aref.dim, right.aref.strides)) }
+        unsafe {
+            (
+                Self::new(left.ptr, left.aref.dim, left.aref.strides),
+                Self::new(right.ptr, right.aref.dim, right.aref.strides),
+            )
+        }
     }
 
     /// Cast the raw pointer of the raw array view to a different type
