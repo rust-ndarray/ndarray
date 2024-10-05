@@ -1311,14 +1311,14 @@ where S: RawData
 /// - Functions that need to safely read an array's data should accept `&ArrRef`
 /// ```rust
 /// use ndarray::ArrRef;
-/// 
+///
 /// #[allow(dead_code)]
 /// fn read<A, D>(arr: &ArrRef<A, D>) {}
 /// ```
 /// - Functions that need to safely write to an array's data should accept `&mut ArrRef`
 /// ```rust
 /// use ndarray::ArrRef;
-/// 
+///
 /// #[allow(dead_code)]
 /// fn write<A, D>(arr: &mut ArrRef<A, D>) {}
 /// ```
@@ -1327,7 +1327,7 @@ where S: RawData
 ///     with a bound of [`RawReferent`]:
 /// ```rust
 /// use ndarray::{RefBase, RawReferent};
-/// 
+///
 /// #[allow(dead_code)]
 /// fn read_layout<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
 /// #[allow(dead_code)]
@@ -1338,7 +1338,7 @@ where S: RawData
 ///     `&mut RefBase` with the same bound:
 /// ```rust
 /// use ndarray::{RefBase, RawReferent};
-/// 
+///
 /// #[allow(dead_code)]
 /// fn write_layout<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
 /// #[allow(dead_code)]
