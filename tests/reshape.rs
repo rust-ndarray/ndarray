@@ -264,7 +264,9 @@ fn into_shape_with_order()
     // 1D -> F -> F
     let data = [1, 2, 3, 4, 5, 6, 7, 8];
     let v = aview1(&data);
-    let u = v.clone().into_shape_with_order(((3, 3), Order::ColumnMajor));
+    let u = v
+        .clone()
+        .into_shape_with_order(((3, 3), Order::ColumnMajor));
     assert!(u.is_err());
 
     let u = v.into_shape_with_order(((2, 2, 2), Order::ColumnMajor));

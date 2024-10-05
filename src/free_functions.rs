@@ -113,7 +113,7 @@ pub const fn aview0<A>(x: &A) -> ArrayView0<'_, A>
             dim: Ix0(),
             strides: Ix0(),
             phantom: PhantomData::<<ViewRepr<&'_ A> as RawData>::Referent>,
-        }
+        },
     }
 }
 
@@ -154,7 +154,7 @@ pub const fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A>
             dim: Ix1(xs.len()),
             strides: Ix1(1),
             phantom: PhantomData::<<ViewRepr<&'_ A> as RawData>::Referent>,
-        }
+        },
     }
 }
 
@@ -211,8 +211,8 @@ pub const fn aview2<A, const N: usize>(xs: &[[A; N]]) -> ArrayView2<'_, A>
             ptr,
             dim,
             strides,
-            phantom: PhantomData::<<ViewRepr<&'_ A> as RawData>::Referent>
-        }
+            phantom: PhantomData::<<ViewRepr<&'_ A> as RawData>::Referent>,
+        },
     }
 }
 

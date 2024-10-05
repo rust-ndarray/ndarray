@@ -22,8 +22,8 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
                     ptr,
                     dim: self.dim.clone(),
                     strides: self.strides.clone(),
-                    phantom: self.phantom
-                }
+                    phantom: self.phantom,
+                },
             }
         }
     }

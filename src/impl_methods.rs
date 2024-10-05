@@ -666,8 +666,11 @@ where
     #[track_caller]
     pub fn slice_axis_inplace(&mut self, axis: Axis, indices: Slice)
     {
-        let offset =
-            do_slice(&mut self.aref.dim.slice_mut()[axis.index()], &mut self.aref.strides.slice_mut()[axis.index()], indices);
+        let offset = do_slice(
+            &mut self.aref.dim.slice_mut()[axis.index()],
+            &mut self.aref.strides.slice_mut()[axis.index()],
+            indices,
+        );
         unsafe {
             self.aref.ptr = self.aref.ptr.offset(offset);
         }
@@ -2169,7 +2172,8 @@ where
     {
         // safe because new dims equivalent
         unsafe {
-            ArrayBase::from_data_ptr(self.data, self.aref.ptr).with_strides_dim(self.aref.strides.into_dyn(), self.aref.dim.into_dyn())
+            ArrayBase::from_data_ptr(self.data, self.aref.ptr)
+                .with_strides_dim(self.aref.strides.into_dyn(), self.aref.dim.into_dyn())
         }
     }
 
