@@ -128,8 +128,8 @@ pub mod doc;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
-use arrayref::{Raw, Safe};
 pub use arrayref::RawReferent;
+use arrayref::{Raw, Safe};
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
