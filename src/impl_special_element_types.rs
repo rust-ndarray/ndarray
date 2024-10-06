@@ -35,13 +35,9 @@ where
     {
         let ArrayBase {
             data,
-            aref:
-                RefBase {
-                    ptr,
-                    dim,
-                    strides,
-                    phantom: _,
-                },
+            ptr,
+            dim,
+            strides,
         } = self;
 
         // "transmute" from storage of MaybeUninit<A> to storage of A

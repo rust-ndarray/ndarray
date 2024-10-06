@@ -1360,7 +1360,7 @@ pub struct RefBase<A, D, R>
 where R: RawReferent
 {
     /// A non-null pointer into the buffer held by `data`; may point anywhere
-    /// in its range. If `S: Data`, this pointer must be aligned.
+    /// in its range. If `S: Referent`, this pointer must be aligned.
     ptr: std::ptr::NonNull<A>,
     /// The lengths of the axes.
     dim: D,
