@@ -41,4 +41,4 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
     }
 }
 
-// impl<S: RawDataClone + Copy, D: Copy> Copy for ArrayBase<S, D> {}
+impl<S: RawDataClone + Copy, D: Copy> Copy for ArrayBase<S, D> {}
