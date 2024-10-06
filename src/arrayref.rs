@@ -52,7 +52,16 @@ where S: RawData
 
     fn deref(&self) -> &Self::Target
     {
-        &self.aref
+        // SAFETY: The pointer will hold all the guarantees of `as_ref`:
+        // - The pointer is aligned because neither type use repr(align)
+        // - It is "dereferencable" because it just points to self
+        // - For the same reason, it is initialized
+        unsafe {
+            (self as *const Self)
+                .cast::<RefBase<S::Elem, D, S::Referent>>()
+                .as_ref()
+        }
+        .expect("Pointer to self will always be non-null")
     }
 }
 
@@ -64,6 +73,15 @@ where
     fn deref_mut(&mut self) -> &mut Self::Target
     {
         self.try_ensure_unique();
-        &mut self.aref
+        // SAFETY: The pointer will hold all the guarantees of `as_ref`:
+        // - The pointer is aligned because neither type use repr(align)
+        // - It is "dereferencable" because it just points to self
+        // - For the same reason, it is initialized
+        unsafe {
+            (self as *mut Self)
+                .cast::<RefBase<S::Elem, D, S::Referent>>()
+                .as_mut()
+        }
+        .expect("Pointer to self will always be non-null")
     }
 }
