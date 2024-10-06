@@ -4,3 +4,4 @@ target/
 
 # Editor settings
 .vscode
+.idea
