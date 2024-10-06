@@ -776,7 +776,7 @@ fn bench_row_iter(bench: &mut test::Bencher)
     let a = Array::<f32, _>::zeros((1024, 1024));
     let it = a.row(17);
     bench.iter(|| {
-        for elt in it.clone() {
+        for elt in it {
             black_box(elt);
         }
     })
@@ -788,7 +788,7 @@ fn bench_col_iter(bench: &mut test::Bencher)
     let a = Array::<f32, _>::zeros((1024, 1024));
     let it = a.column(17);
     bench.iter(|| {
-        for elt in it.clone() {
+        for elt in it {
             black_box(elt);
         }
     })
@@ -861,7 +861,7 @@ fn create_iter_4d(bench: &mut test::Bencher)
     a.swap_axes(2, 1);
     let v = black_box(a.view());
 
-    bench.iter(|| v.clone().into_iter());
+    bench.iter(|| v.into_iter());
 }
 
 #[bench]
@@ -1023,7 +1023,7 @@ fn into_dimensionality_ix1_ok(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros(Ix1(10));
     let a = a.view();
-    bench.iter(|| a.clone().into_dimensionality::<Ix1>());
+    bench.iter(|| a.into_dimensionality::<Ix1>());
 }
 
 #[bench]
@@ -1031,7 +1031,7 @@ fn into_dimensionality_ix3_ok(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros(Ix3(10, 10, 10));
     let a = a.view();
-    bench.iter(|| a.clone().into_dimensionality::<Ix3>());
+    bench.iter(|| a.into_dimensionality::<Ix3>());
 }
 
 #[bench]
@@ -1039,7 +1039,7 @@ fn into_dimensionality_ix3_err(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros(Ix3(10, 10, 10));
     let a = a.view();
-    bench.iter(|| a.clone().into_dimensionality::<Ix2>());
+    bench.iter(|| a.into_dimensionality::<Ix2>());
 }
 
 #[bench]
@@ -1063,7 +1063,7 @@ fn into_dyn_ix3(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros(Ix3(10, 10, 10));
     let a = a.view();
-    bench.iter(|| a.clone().into_dyn());
+    bench.iter(|| a.into_dyn());
 }
 
 #[bench]
@@ -1071,7 +1071,7 @@ fn into_dyn_ix5(bench: &mut test::Bencher)
 {
     let a = Array::<f32, _>::zeros(Ix5(2, 2, 2, 2, 2));
     let a = a.view();
-    bench.iter(|| a.clone().into_dyn());
+    bench.iter(|| a.into_dyn());
 }
 
 #[bench]

@@ -150,7 +150,7 @@ where
     /// ```
     pub fn shape(&self) -> &[usize]
     {
-        self.aref.dim.slice()
+        self.dim.slice()
     }
 
     /// Return the strides of the array as a slice.
@@ -666,13 +666,10 @@ where
     #[track_caller]
     pub fn slice_axis_inplace(&mut self, axis: Axis, indices: Slice)
     {
-        let offset = do_slice(
-            &mut self.aref.dim.slice_mut()[axis.index()],
-            &mut self.aref.strides.slice_mut()[axis.index()],
-            indices,
-        );
+        let offset =
+            do_slice(&mut self.dim.slice_mut()[axis.index()], &mut self.strides.slice_mut()[axis.index()], indices);
         unsafe {
-            self.aref.ptr = self.aref.ptr.offset(offset);
+            self.ptr = self.ptr.offset(offset);
         }
         debug_assert!(self.pointer_is_inbounds());
     }
@@ -1027,8 +1024,8 @@ where
     #[track_caller]
     pub fn collapse_axis(&mut self, axis: Axis, index: usize)
     {
-        let offset = dimension::do_collapse_axis(&mut self.aref.dim, &self.aref.strides, axis.index(), index);
-        self.aref.ptr = unsafe { self.aref.ptr.offset(offset) };
+        let offset = dimension::do_collapse_axis(&mut self.dim, &self.strides, axis.index(), index);
+        self.ptr = unsafe { self.ptr.offset(offset) };
         debug_assert!(self.pointer_is_inbounds());
     }
 
@@ -1641,7 +1638,7 @@ where
     #[inline(always)]
     pub fn as_ptr(&self) -> *const A
     {
-        self.aref.ptr.as_ptr() as *const A
+        self.ptr.as_ptr() as *const A
     }
 
     /// Return a mutable pointer to the first element in the array.
@@ -2172,8 +2169,7 @@ where
     {
         // safe because new dims equivalent
         unsafe {
-            ArrayBase::from_data_ptr(self.data, self.aref.ptr)
-                .with_strides_dim(self.aref.strides.into_dyn(), self.aref.dim.into_dyn())
+            ArrayBase::from_data_ptr(self.data, self.ptr).with_strides_dim(self.strides.into_dyn(), self.dim.into_dyn())
         }
     }
 
@@ -2199,9 +2195,9 @@ where
         unsafe {
             if D::NDIM == D2::NDIM {
                 // safe because D == D2
-                let dim = unlimited_transmute::<D, D2>(self.aref.dim);
-                let strides = unlimited_transmute::<D, D2>(self.aref.strides);
-                return Ok(ArrayBase::from_data_ptr(self.data, self.aref.ptr).with_strides_dim(strides, dim));
+                let dim = unlimited_transmute::<D, D2>(self.dim);
+                let strides = unlimited_transmute::<D, D2>(self.strides);
+                return Ok(ArrayBase::from_data_ptr(self.data, self.ptr).with_strides_dim(strides, dim));
             } else if D::NDIM.is_none() || D2::NDIM.is_none() {
                 // one is dynamic dim
                 // safe because dim, strides are equivalent under a different type
@@ -2366,8 +2362,8 @@ where
     #[track_caller]
     pub fn swap_axes(&mut self, ax: usize, bx: usize)
     {
-        self.aref.dim.slice_mut().swap(ax, bx);
-        self.aref.strides.slice_mut().swap(ax, bx);
+        self.dim.slice_mut().swap(ax, bx);
+        self.strides.slice_mut().swap(ax, bx);
     }
 
     /// Permute the axes.
@@ -2426,8 +2422,8 @@ where
     /// while retaining the same data.
     pub fn reversed_axes(mut self) -> ArrayBase<S, D>
     {
-        self.aref.dim.slice_mut().reverse();
-        self.aref.strides.slice_mut().reverse();
+        self.dim.slice_mut().reverse();
+        self.strides.slice_mut().reverse();
         self
     }
 
@@ -2445,7 +2441,7 @@ where
     /// Return an iterator over the length and stride of each axis.
     pub fn axes(&self) -> Axes<'_, D>
     {
-        axes_of(&self.aref.dim, &self.aref.strides)
+        axes_of(&self.dim, &self.strides)
     }
 
     /*
@@ -2472,9 +2468,9 @@ where
             let s = self.strides.axis(axis) as Ixs;
             let m = self.dim.axis(axis);
             if m != 0 {
-                self.aref.ptr = self.aref.ptr.offset(stride_offset(m - 1, s as Ix));
+                self.ptr = self.ptr.offset(stride_offset(m - 1, s as Ix));
             }
-            self.aref.strides.set_axis(axis, (-s) as Ix);
+            self.strides.set_axis(axis, (-s) as Ix);
         }
     }
 
@@ -2516,7 +2512,7 @@ where
     #[track_caller]
     pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool
     {
-        merge_axes(&mut self.aref.dim, &mut self.aref.strides, take, into)
+        merge_axes(&mut self.dim, &mut self.strides, take, into)
     }
 
     /// Insert new array axis at `axis` and return the result.
@@ -2703,7 +2699,7 @@ where
             slc.iter().fold(init, f)
         } else {
             let mut v = self.view();
-            move_min_stride_axis_to_last(&mut v.aref.dim, &mut v.aref.strides);
+            move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
             v.into_elements_base().fold(init, f)
         }
     }
@@ -2862,7 +2858,7 @@ where
             Ok(slc) => slc.iter_mut().for_each(f),
             Err(arr) => {
                 let mut v = arr.view_mut();
-                move_min_stride_axis_to_last(&mut v.aref.dim, &mut v.aref.strides);
+                move_min_stride_axis_to_last(&mut v.dim, &mut v.strides);
                 v.into_elements_base().for_each(f);
             }
         }
