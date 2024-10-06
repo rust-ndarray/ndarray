@@ -221,7 +221,6 @@ mod imp_prelude
     pub use crate::dimension::DimensionExt;
     pub use crate::prelude::*;
     pub use crate::ArcArray;
-    pub use crate::RefBase;
     pub use crate::{
         CowRepr,
         Data,
