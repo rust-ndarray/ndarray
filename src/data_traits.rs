@@ -23,7 +23,20 @@ use std::mem::MaybeUninit;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
-use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{
+    ArcArray,
+    Array,
+    ArrayBase,
+    CowRepr,
+    Dimension,
+    OwnedArcRepr,
+    OwnedRepr,
+    Raw,
+    RawReferent,
+    RawViewRepr,
+    Safe,
+    ViewRepr,
+};
 
 /// Array representation trait.
 ///
@@ -39,6 +52,9 @@ pub unsafe trait RawData: Sized
 {
     /// The array element type.
     type Elem;
+
+    /// The safety of the reference type
+    type Referent: RawReferent;
 
     #[doc(hidden)]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool;
@@ -171,6 +187,7 @@ pub unsafe trait DataMut: Data + RawDataMut
 unsafe impl<A> RawData for RawViewRepr<*const A>
 {
     type Elem = A;
+    type Referent = Raw;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -192,6 +209,7 @@ unsafe impl<A> RawDataClone for RawViewRepr<*const A>
 unsafe impl<A> RawData for RawViewRepr<*mut A>
 {
     type Elem = A;
+    type Referent = Raw;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -230,6 +248,7 @@ unsafe impl<A> RawDataClone for RawViewRepr<*mut A>
 unsafe impl<A> RawData for OwnedArcRepr<A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
     {
@@ -331,6 +350,7 @@ unsafe impl<A> RawDataClone for OwnedArcRepr<A>
 unsafe impl<A> RawData for OwnedRepr<A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     fn _is_pointer_inbounds(&self, self_ptr: *const Self::Elem) -> bool
     {
@@ -410,6 +430,7 @@ where A: Clone
 unsafe impl<'a, A> RawData for ViewRepr<&'a A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -448,6 +469,7 @@ unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A>
 unsafe impl<'a, A> RawData for ViewRepr<&'a mut A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     #[inline(always)]
     fn _is_pointer_inbounds(&self, _ptr: *const Self::Elem) -> bool
@@ -574,6 +596,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A>
 unsafe impl<'a, A> RawData for CowRepr<'a, A>
 {
     type Elem = A;
+    type Referent = Safe;
 
     #[inline]
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool

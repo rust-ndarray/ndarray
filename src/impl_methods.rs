@@ -1549,7 +1549,7 @@ where
     /// This is equivalent to `.ensure_unique()` if `S: DataMut`.
     ///
     /// This method is mostly only useful with unsafe code.
-    fn try_ensure_unique(&mut self)
+    pub(crate) fn try_ensure_unique(&mut self)
     where S: RawDataMut
     {
         debug_assert!(self.pointer_is_inbounds());

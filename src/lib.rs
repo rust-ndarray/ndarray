@@ -126,6 +126,8 @@ pub mod doc;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
+pub use arrayref::RawReferent;
+use arrayref::{Raw, Safe};
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
@@ -160,6 +162,7 @@ pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 mod macro_utils;
 #[macro_use]
 mod private;
+mod arrayref;
 mod aliases;
 #[macro_use]
 mod itertools;
@@ -1272,17 +1275,18 @@ pub type Ixs = isize;
 // implementation since `ArrayBase` doesn't implement `Drop` and `&mut
 // ArrayBase` is `!UnwindSafe`, but the implementation must not call
 // methods/functions on the array while it violates the constraints.
+// Critically, this includes calling `DerefMut`; as a result, methods/functions
+// that temporarily violate these must not rely on the `DerefMut` implementation
+// for access to the underlying `ptr`, `strides`, or `dim`.
 //
 // Users of the `ndarray` crate cannot rely on these constraints because they
 // may change in the future.
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
+#[repr(C)]
 pub struct ArrayBase<S, D>
 where S: RawData
 {
-    /// Data buffer / ownership information. (If owned, contains the data
-    /// buffer; if borrowed, contains the lifetime and mutability.)
-    data: S,
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
     ptr: std::ptr::NonNull<S::Elem>,
@@ -1290,7 +1294,81 @@ where S: RawData
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
     strides: D,
+    /// Data buffer / ownership information. (If owned, contains the data
+    /// buffer; if borrowed, contains the lifetime and mutability.)
+    data: S,
 }
+
+/// A reference to an *n*-dimensional array.
+///
+/// `RefBase`'s relationship to [`ArrayBase`] is akin to the relationship
+/// between `[T]` and `Vec<T>`: it can only be obtained by reference, and
+/// represents a subset of an existing array (possibly the entire array).
+///
+/// There are two variants of this type, [`RawRef`] and [`ArrRef`]; raw
+/// references are obtained from raw views, and `ArrRef`s are obtained
+/// from all other array types. See those types for more information.
+///
+/// ## Writing Functions
+/// Generally speaking, functions that operate on arrays should accept
+/// this type over an `ArrayBase`. The following conventions must be
+/// followed:
+/// - Functions that need to safely read an array's data should accept `&ArrRef`
+/// ```rust
+/// use ndarray::ArrRef;
+///
+/// #[allow(dead_code)]
+/// fn read<A, D>(arr: &ArrRef<A, D>) {}
+/// ```
+/// - Functions that need to safely write to an array's data should accept `&mut ArrRef`
+/// ```rust
+/// use ndarray::ArrRef;
+///
+/// #[allow(dead_code)]
+/// fn write<A, D>(arr: &mut ArrRef<A, D>) {}
+/// ```
+/// - Functions that only need to read an array's shape and strides
+///     (or that want to unsafely read data) should accept `&RefBase`
+///     with a bound of [`RawReferent`]:
+/// ```rust
+/// use ndarray::{RefBase, RawReferent};
+///
+/// #[allow(dead_code)]
+/// fn read_layout<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
+/// #[allow(dead_code)]
+/// unsafe fn read_unchecked<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
+/// ```
+/// - Functions that want to write to an array's shape and strides
+///     (or that want to unsafely write to its data) should accept
+///     `&mut RefBase` with the same bound:
+/// ```rust
+/// use ndarray::{RefBase, RawReferent};
+///
+/// #[allow(dead_code)]
+/// fn write_layout<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
+/// #[allow(dead_code)]
+/// unsafe fn write_unchecked<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
+/// ```
+#[repr(C)]
+pub struct RefBase<A, D, R>
+where R: RawReferent
+{
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Referent`, this pointer must be aligned.
+    ptr: std::ptr::NonNull<A>,
+    /// The lengths of the axes.
+    dim: D,
+    /// The element count stride per axis. To be parsed as `isize`.
+    strides: D,
+    /// The referent safety marker
+    phantom: PhantomData<R>,
+}
+
+/// An reference to an array whose data may be unaligned or unsafe to read.
+pub type RawRef<A, D> = RefBase<A, D, Raw>;
+
+/// A reference to an array whose data can be read safely.
+pub type ArrRef<A, D> = RefBase<A, D, Safe>;
 
 /// An array where the data has shared ownership and is copy on write.
 ///
@@ -1548,11 +1626,7 @@ where
             D: Dimension,
             E: Dimension,
         {
-            panic!(
-                "ndarray: could not broadcast array from shape: {:?} to: {:?}",
-                from.slice(),
-                to.slice()
-            )
+            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}", from.slice(), to.slice())
         }
 
         match self.broadcast(dim.clone()) {
