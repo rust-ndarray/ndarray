@@ -18,12 +18,9 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
             let (data, ptr) = self.data.clone_with_ptr(self.ptr);
             ArrayBase {
                 data,
-                aref: RefBase {
-                    ptr,
-                    dim: self.dim.clone(),
-                    strides: self.strides.clone(),
-                    phantom: self.phantom,
-                },
+                ptr,
+                dim: self.dim.clone(),
+                strides: self.strides.clone(),
             }
         }
     }
@@ -34,9 +31,9 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
     fn clone_from(&mut self, other: &Self)
     {
         unsafe {
-            self.aref.ptr = self.data.clone_from_with_ptr(&other.data, other.ptr);
-            self.aref.dim.clone_from(&other.dim);
-            self.aref.strides.clone_from(&other.strides);
+            self.ptr = self.data.clone_from_with_ptr(&other.data, other.ptr);
+            self.dim.clone_from(&other.dim);
+            self.strides.clone_from(&other.strides);
         }
     }
 }

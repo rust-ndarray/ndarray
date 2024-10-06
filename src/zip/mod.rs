@@ -97,7 +97,7 @@ where
     {
         #[allow(clippy::needless_borrow)]
         let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
-        unsafe { ArrayView::new(res.ptr, res.aref.dim, res.aref.strides) }
+        unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
     }
     private_impl! {}
 }

@@ -279,13 +279,13 @@ where A: Clone
         let rcvec = &mut self_.data.0;
         let a_size = mem::size_of::<A>() as isize;
         let our_off = if a_size != 0 {
-            (self_.aref.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
+            (self_.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
         } else {
             0
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.aref.ptr = rvec.as_nonnull_mut().offset(our_off);
+            self_.ptr = rvec.as_nonnull_mut().offset(our_off);
         }
     }
 
@@ -305,7 +305,7 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         Self::ensure_unique(&mut self_);
         let data = Arc::try_unwrap(self_.data.0).ok().unwrap();
         // safe because data is equivalent
-        unsafe { ArrayBase::from_data_ptr(data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim) }
+        unsafe { ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim) }
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
@@ -314,14 +314,13 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         match Arc::try_unwrap(self_.data.0) {
             Ok(owned_data) => unsafe {
                 // Safe because the data is equivalent.
-                Ok(ArrayBase::from_data_ptr(owned_data, self_.aref.ptr)
-                    .with_strides_dim(self_.aref.strides, self_.aref.dim))
+                Ok(ArrayBase::from_data_ptr(owned_data, self_.ptr).with_strides_dim(self_.strides, self_.dim))
             },
             Err(arc_data) => unsafe {
                 // Safe because the data is equivalent; we're just
                 // reconstructing `self_`.
-                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.aref.ptr)
-                    .with_strides_dim(self_.aref.strides, self_.aref.dim))
+                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.ptr)
+                    .with_strides_dim(self_.strides, self_.dim))
             },
         }
     }
@@ -624,9 +623,9 @@ where A: Clone
             CowRepr::View(_) => {
                 let owned = array.to_owned();
                 array.data = CowRepr::Owned(owned.data);
-                array.aref.ptr = owned.aref.ptr;
-                array.aref.dim = owned.aref.dim;
-                array.aref.strides = owned.aref.strides;
+                array.ptr = owned.ptr;
+                array.dim = owned.dim;
+                array.strides = owned.strides;
             }
             CowRepr::Owned(_) => {}
         }
@@ -687,7 +686,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             CowRepr::View(_) => self_.to_owned(),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
-                ArrayBase::from_data_ptr(data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim)
+                ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim)
             },
         }
     }
@@ -699,7 +698,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             CowRepr::View(_) => Err(self_),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
-                Ok(ArrayBase::from_data_ptr(data, self_.aref.ptr).with_strides_dim(self_.aref.strides, self_.aref.dim))
+                Ok(ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim))
             },
         }
     }
