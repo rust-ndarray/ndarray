@@ -9,6 +9,7 @@
 use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
+use crate::LayoutRef;
 use crate::RawDataSubst;
 
 /// Methods specific to arrays with `MaybeUninit` elements.
@@ -35,9 +36,7 @@ where
     {
         let ArrayBase {
             data,
-            ptr,
-            dim,
-            strides,
+            layout: LayoutRef { ptr, dim, strides },
         } = self;
 
         // "transmute" from storage of MaybeUninit<A> to storage of A

@@ -1,6 +1,7 @@
 use crate::imp_prelude::*;
 use crate::Layout;
 use crate::NdIndex;
+use crate::RefBase;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
@@ -239,7 +240,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        self.raw_dim()
+        RefBase::raw_dim(&self)
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -269,7 +270,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        self.stride_of(axis)
+        RefBase::stride_of(&self, axis)
     }
 
     #[inline(always)]
@@ -295,7 +296,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        self.raw_dim()
+        RefBase::raw_dim(&self)
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -325,7 +326,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        self.stride_of(axis)
+        RefBase::stride_of(&self, axis)
     }
 
     #[inline(always)]
@@ -351,7 +352,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        self.raw_dim()
+        RefBase::raw_dim(&self)
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -381,7 +382,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        self.stride_of(axis)
+        RefBase::stride_of(&self, axis)
     }
 
     #[inline(always)]
@@ -407,7 +408,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        self.raw_dim()
+        RefBase::raw_dim(&self)
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -437,7 +438,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        self.stride_of(axis)
+        RefBase::stride_of(&self, axis)
     }
 
     #[inline(always)]
