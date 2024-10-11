@@ -2,7 +2,7 @@
 
 use core::ops::{Deref, DerefMut};
 
-use crate::{ArrayBase, Dimension, RawData, RawDataMut, RefBase};
+use crate::{ArrayBase, Dimension, LayoutRef, RawData, RawDataMut, RefBase};
 
 /// Unit struct to mark a reference as raw
 ///
@@ -27,7 +27,7 @@ pub trait RawReferent
 /// A trait for array references that point to data that is safe to read.
 ///
 /// Cannot be implemented outside of `ndarray`.
-pub trait Referent
+pub trait Referent: RawReferent
 {
     private_decl! {}
 }
@@ -48,7 +48,7 @@ impl Referent for Safe
 impl<S, D> Deref for ArrayBase<S, D>
 where S: RawData
 {
-    type Target = RefBase<S::Elem, D, S::Referent>;
+    type Target = RefBase<S::Elem, D, S::RefType>;
 
     fn deref(&self) -> &Self::Target
     {
@@ -57,8 +57,8 @@ where S: RawData
         // - It is "dereferencable" because it just points to self
         // - For the same reason, it is initialized
         unsafe {
-            (self as *const Self)
-                .cast::<RefBase<S::Elem, D, S::Referent>>()
+            (&self.layout as *const LayoutRef<S::Elem, D>)
+                .cast::<RefBase<S::Elem, D, S::RefType>>()
                 .as_ref()
         }
         .expect("Pointer to self will always be non-null")
@@ -78,8 +78,8 @@ where
         // - It is "dereferencable" because it just points to self
         // - For the same reason, it is initialized
         unsafe {
-            (self as *mut Self)
-                .cast::<RefBase<S::Elem, D, S::Referent>>()
+            (&mut self.layout as *mut LayoutRef<S::Elem, D>)
+                .cast::<RefBase<S::Elem, D, S::RefType>>()
                 .as_mut()
         }
         .expect("Pointer to self will always be non-null")

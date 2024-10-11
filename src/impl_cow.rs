@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::imp_prelude::*;
+use crate::{arrayref::Referent, imp_prelude::*};
 
 /// Methods specific to `CowArray`.
 ///
@@ -33,7 +33,10 @@ where D: Dimension
     fn from(view: ArrayView<'a, A, D>) -> CowArray<'a, A, D>
     {
         // safe because equivalent data
-        unsafe { ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr).with_strides_dim(view.strides, view.dim) }
+        unsafe {
+            ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr)
+                .with_strides_dim(view.layout.strides, view.layout.dim)
+        }
     }
 }
 
@@ -44,7 +47,8 @@ where D: Dimension
     {
         // safe because equivalent data
         unsafe {
-            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.ptr).with_strides_dim(array.strides, array.dim)
+            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.layout.ptr)
+                .with_strides_dim(array.layout.strides, array.layout.dim)
         }
     }
 }
@@ -73,6 +77,7 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for CowArray<'a, A, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
+    S::RefType: Referent,
 {
     /// Create a read-only clone-on-write view of the array.
     fn from(array: &'a ArrayBase<S, D>) -> Self

@@ -746,7 +746,7 @@ where D: Dimension
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), ArrayBase::strides(&tail_view));
+                              tail_view.shape(), (&**tail_view).strides());
             }
 
             // Keep track of currently filled length of `self.data` and update it
@@ -909,7 +909,7 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
 
     // iter is a raw pointer iterator traversing the array in memory order now with the
     // sorted axes.
-    let mut iter = Baseiter::new(self_.ptr, self_.dim, self_.strides);
+    let mut iter = Baseiter::new(self_.layout.ptr, self_.layout.dim, self_.layout.strides);
     let mut dropped_elements = 0;
 
     let mut last_ptr = data_ptr;
@@ -948,7 +948,7 @@ where
     if a.ndim() <= 1 {
         return;
     }
-    sort_axes1_impl(&mut a.dim, &mut a.strides);
+    sort_axes1_impl(&mut a.layout.dim, &mut a.layout.strides);
 }
 
 fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
@@ -988,7 +988,7 @@ where
     if a.ndim() <= 1 {
         return;
     }
-    sort_axes2_impl(&mut a.dim, &mut a.strides, &mut b.dim, &mut b.strides);
+    sort_axes2_impl(&mut a.layout.dim, &mut a.layout.strides, &mut b.layout.dim, &mut b.layout.strides);
 }
 
 fn sort_axes2_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)

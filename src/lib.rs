@@ -127,7 +127,7 @@ pub mod doc;
 use alloc::sync::Arc;
 
 pub use arrayref::RawReferent;
-use arrayref::{Raw, Safe};
+use arrayref::{Raw, Referent, Safe};
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
@@ -163,6 +163,7 @@ mod macro_utils;
 #[macro_use]
 mod private;
 mod arrayref;
+mod layoutref;
 mod aliases;
 #[macro_use]
 mod itertools;
@@ -1283,20 +1284,39 @@ pub type Ixs = isize;
 // may change in the future.
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
-#[repr(C)]
 pub struct ArrayBase<S, D>
 where S: RawData
 {
-    /// A non-null pointer into the buffer held by `data`; may point anywhere
-    /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<S::Elem>,
+    /// Data buffer / ownership information. (If owned, contains the data
+    /// buffer; if borrowed, contains the lifetime and mutability.)
+    data: S,
+    /// The dimension, strides, and pointer to inside of `data`
+    layout: LayoutRef<S::Elem, D>,
+}
+
+/// A reference to the layout of an *n*-dimensional array.
+//
+// # Safety for Implementors
+//
+// Despite carrying around a `ptr`, maintainers of `LayoutRef`
+// must *guarantee* that the pointer is *never* dereferenced.
+// No read access can be used when handling a `LayoutRef`, and
+// the `ptr` can *never* be exposed to the user.
+//
+// The reason the pointer is included here is because some methods
+// which alter the layout / shape / strides of an array must also
+// alter the offset of the pointer. This is allowed, as it does not
+// cause a pointer deref.
+#[derive(Debug)]
+struct LayoutRef<A, D>
+{
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
     strides: D,
-    /// Data buffer / ownership information. (If owned, contains the data
-    /// buffer; if borrowed, contains the lifetime and mutability.)
-    data: S,
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Data`, this pointer must be aligned.
+    ptr: std::ptr::NonNull<A>,
 }
 
 /// A reference to an *n*-dimensional array.
@@ -1349,17 +1369,11 @@ where S: RawData
 /// #[allow(dead_code)]
 /// unsafe fn write_unchecked<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
 /// ```
-#[repr(C)]
+#[repr(transparent)]
 pub struct RefBase<A, D, R>
-where R: RawReferent
 {
-    /// A non-null pointer into the buffer held by `data`; may point anywhere
-    /// in its range. If `S: Referent`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<A>,
-    /// The lengths of the axes.
-    dim: D,
-    /// The element count stride per axis. To be parsed as `isize`.
-    strides: D,
+    /// The parts of the array
+    layout: LayoutRef<A, D>,
     /// The referent safety marker
     phantom: PhantomData<R>,
 }
@@ -1606,14 +1620,12 @@ mod impl_internal_constructors;
 mod impl_constructors;
 
 mod impl_methods;
+mod alias_slicing;
 mod impl_owned_array;
 mod impl_special_element_types;
 
 /// Private Methods
-impl<A, S, D> ArrayBase<S, D>
-where
-    S: Data<Elem = A>,
-    D: Dimension,
+impl<A, D: Dimension, R: Referent> RefBase<A, D, R>
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
@@ -1631,7 +1643,7 @@ where
 
         match self.broadcast(dim.clone()) {
             Some(it) => it,
-            None => broadcast_panic(&self.dim, &dim),
+            None => broadcast_panic(&self.layout.dim, &dim),
         }
     }
 
@@ -1643,17 +1655,26 @@ where
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
-        let ptr = self.ptr;
+        let ptr = self.layout.ptr;
         let mut strides = dim.clone();
-        strides.slice_mut().copy_from_slice(self.strides.slice());
+        strides
+            .slice_mut()
+            .copy_from_slice(self.layout.strides.slice());
         unsafe { ArrayView::new(ptr, dim, strides) }
     }
+}
 
+impl<A, S, D> ArrayBase<S, D>
+where
+    S: Data<Elem = A>,
+    D: Dimension,
+    <S as RawData>::RefType: Referent,
+{
     /// Remove array axis `axis` and return the result.
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     {
-        let d = self.dim.try_remove_axis(axis);
-        let s = self.strides.try_remove_axis(axis);
+        let d = self.layout.dim.try_remove_axis(axis);
+        let s = self.layout.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
         unsafe { self.with_strides_dim(s, d) }
     }
