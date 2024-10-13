@@ -18,7 +18,18 @@
 //! ```
 
 #[doc(no_inline)]
-pub use crate::{ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, CowArray, RawArrayView, RawArrayViewMut};
+pub use crate::{
+    ArcArray,
+    Array,
+    ArrayBase,
+    ArrayRef,
+    ArrayView,
+    ArrayViewMut,
+    CowArray,
+    RawArrayView,
+    RawArrayViewMut,
+    RawRef,
+};
 
 #[doc(no_inline)]
 pub use crate::{Axis, Dim, Dimension};
