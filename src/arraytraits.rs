@@ -16,7 +16,6 @@ use std::mem::size_of;
 use std::ops::{Index, IndexMut};
 use std::{iter::FromIterator, slice};
 
-use crate::arrayref::Referent;
 use crate::imp_prelude::*;
 use crate::Arc;
 
@@ -39,14 +38,12 @@ pub(crate) fn array_out_of_bounds() -> !
 }
 
 #[inline(always)]
-pub fn debug_bounds_check<T, A, D, I>(_a: &T, _index: &I)
+pub fn debug_bounds_check<A, D, I>(_a: &LayoutRef<A, D>, _index: &I)
 where
     D: Dimension,
     I: NdIndex<D>,
-    T: AsRef<LayoutRef<A, D>>,
 {
-    let _layout = _a.as_ref();
-    debug_bounds_check!(_layout, *_index);
+    debug_bounds_check!(_a, *_index);
 }
 
 /// Access the element at **index**.
@@ -104,8 +101,6 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = B>,
     D: Dimension,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
     {
@@ -139,8 +134,6 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = B>,
     D: Dimension,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     fn eq(&self, rhs: &&ArrayBase<S2, D>) -> bool
     {
@@ -157,8 +150,6 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = B>,
     D: Dimension,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
     {
@@ -171,7 +162,6 @@ where
     D: Dimension,
     S: Data,
     S::Elem: Eq,
-    S::RefType: Referent,
 {
 }
 
@@ -230,7 +220,6 @@ impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
 where
     D: Dimension,
     S: Data,
-    S::RefType: Referent,
 {
     type Item = &'a S::Elem;
     type IntoIter = Iter<'a, S::Elem, D>;
@@ -245,7 +234,6 @@ impl<'a, S, D> IntoIterator for &'a mut ArrayBase<S, D>
 where
     D: Dimension,
     S: DataMut,
-    S::RefType: Referent,
 {
     type Item = &'a mut S::Elem;
     type IntoIter = IterMut<'a, S::Elem, D>;
@@ -285,7 +273,6 @@ where
     D: Dimension,
     S: Data,
     S::Elem: hash::Hash,
-    S::RefType: Referent,
 {
     // Note: elements are hashed in the logical order
     fn hash<H: hash::Hasher>(&self, state: &mut H)
@@ -384,7 +371,6 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for ArrayView<'a, A, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
-    S::RefType: Referent,
 {
     /// Create a read-only array view of the array.
     fn from(array: &'a ArrayBase<S, D>) -> Self
@@ -463,7 +449,6 @@ impl<'a, A, S, D> From<&'a mut ArrayBase<S, D>> for ArrayViewMut<'a, A, D>
 where
     S: DataMut<Elem = A>,
     D: Dimension,
-    S::RefType: Referent,
 {
     /// Create a read-write array view of the array.
     fn from(array: &'a mut ArrayBase<S, D>) -> Self

@@ -1,8 +1,7 @@
-use crate::arrayref::Referent;
 use crate::imp_prelude::*;
+use crate::ArrayRef;
 use crate::Layout;
 use crate::NdIndex;
-use crate::RefBase;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
@@ -132,7 +131,6 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
 where
     D: Dimension,
     S: Data<Elem = A>,
-    S::RefType: Referent,
 {
     type Item = &'a A;
     type Dim = D;
@@ -149,7 +147,6 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
 where
     D: Dimension,
     S: DataMut<Elem = A>,
-    S::RefType: Referent,
 {
     type Item = &'a mut A;
     type Dim = D;
@@ -162,7 +159,7 @@ where
 
 /// An array reference is an n-dimensional producer of element references
 /// (like ArrayView).
-impl<'a, A: 'a, D, R: Referent> IntoNdProducer for &'a RefBase<A, D, R>
+impl<'a, A: 'a, D> IntoNdProducer for &'a ArrayRef<A, D>
 where D: Dimension
 {
     type Item = &'a A;
@@ -176,7 +173,7 @@ where D: Dimension
 
 /// A mutable array reference is an n-dimensional producer of mutable element
 /// references (like ArrayViewMut).
-impl<'a, A: 'a, D, R: Referent> IntoNdProducer for &'a mut RefBase<A, D, R>
+impl<'a, A: 'a, D> IntoNdProducer for &'a mut ArrayRef<A, D>
 where D: Dimension
 {
     type Item = &'a mut A;
@@ -383,22 +380,22 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        (***self).raw_dim()
+        AsRef::as_ref(self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
-        self.dim.equal(dim)
+        self.layout.dim.equal(dim)
     }
 
     fn as_ptr(&self) -> *const A
     {
-        (**self).as_ptr() as _
+        AsRef::as_ref(self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
     {
-        self.layout_impl()
+        AsRef::as_ref(self).layout_impl()
     }
 
     unsafe fn as_ref(&self, ptr: *const A) -> *const A
@@ -408,12 +405,15 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *const A
     {
-        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+        self.layout
+            .ptr
+            .as_ptr()
+            .offset(i.index_unchecked(&self.layout.strides))
     }
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        (**self).stride_of(axis)
+        AsRef::as_ref(self).stride_of(axis)
     }
 
     #[inline(always)]
@@ -439,22 +439,22 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        (***self).raw_dim()
+        AsRef::as_ref(self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
-        self.dim.equal(dim)
+        self.layout.dim.equal(dim)
     }
 
     fn as_ptr(&self) -> *mut A
     {
-        (**self).as_ptr() as _
+        AsRef::as_ref(self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
     {
-        self.layout_impl()
+        AsRef::as_ref(self).layout_impl()
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> *mut A
@@ -464,12 +464,15 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
     {
-        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+        self.layout
+            .ptr
+            .as_ptr()
+            .offset(i.index_unchecked(&self.layout.strides))
     }
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        (***self).stride_of(axis)
+        AsRef::as_ref(self).stride_of(axis)
     }
 
     #[inline(always)]

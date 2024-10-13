@@ -7,7 +7,7 @@
 // except according to those terms.
 
 //! Methods for two-dimensional arrays.
-use crate::{arrayref::Referent, imp_prelude::*};
+use crate::imp_prelude::*;
 
 /// # Methods For 2-D Arrays
 impl<A, S> ArrayBase<S, Ix2>
@@ -24,9 +24,7 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
-    where
-        S: Data,
-        S::RefType: Referent,
+    where S: Data
     {
         self.index_axis(Axis(0), index)
     }
@@ -43,9 +41,7 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where
-        S: DataMut,
-        S::RefType: Referent,
+    where S: DataMut
     {
         self.index_axis_mut(Axis(0), index)
     }
@@ -69,7 +65,7 @@ where S: RawData<Elem = A>
     /// ```
     pub fn nrows(&self) -> usize
     {
-        self.len_of(Axis(0))
+        self.as_ref().len_of(Axis(0))
     }
 
     /// Return an array view of column `index`.
@@ -83,9 +79,7 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
-    where
-        S: Data,
-        S::RefType: Referent,
+    where S: Data
     {
         self.index_axis(Axis(1), index)
     }
@@ -102,9 +96,7 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where
-        S: DataMut,
-        S::RefType: Referent,
+    where S: DataMut
     {
         self.index_axis_mut(Axis(1), index)
     }
@@ -128,7 +120,7 @@ where S: RawData<Elem = A>
     /// ```
     pub fn ncols(&self) -> usize
     {
-        self.len_of(Axis(1))
+        self.as_ref().len_of(Axis(1))
     }
 
     /// Return true if the array is square, false otherwise.
@@ -148,7 +140,7 @@ where S: RawData<Elem = A>
     /// ```
     pub fn is_square(&self) -> bool
     {
-        let (m, n) = self.dim();
+        let (m, n) = self.as_ref().dim();
         m == n
     }
 }

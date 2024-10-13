@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::{arrayref::Referent, imp_prelude::*};
+use crate::imp_prelude::*;
 
 /// Methods specific to `CowArray`.
 ///
@@ -77,7 +77,6 @@ impl<'a, A, S, D> From<&'a ArrayBase<S, D>> for CowArray<'a, A, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
-    S::RefType: Referent,
 {
     /// Create a read-only clone-on-write view of the array.
     fn from(array: &'a ArrayBase<S, D>) -> Self

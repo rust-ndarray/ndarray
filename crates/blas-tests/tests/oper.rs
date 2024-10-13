@@ -10,7 +10,6 @@ use ndarray::prelude::*;
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::general_mat_vec_mul;
 use ndarray::Order;
-use ndarray::Referent;
 use ndarray::{Data, Ix, LinalgScalar};
 use ndarray_gen::array_builder::ArrayBuilder;
 use ndarray_gen::array_builder::ElementGenerator;
@@ -83,8 +82,6 @@ where
     A: LinalgScalar,
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
     assert!(m.checked_mul(n).is_some());
@@ -115,8 +112,6 @@ where
     A: LinalgScalar,
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     let ((m, _), k) = (lhs.dim(), rhs.dim());
     reference_mat_mul(
@@ -135,8 +130,6 @@ where
     A: LinalgScalar,
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     let (m, (_, n)) = (lhs.dim(), rhs.dim());
     reference_mat_mul(

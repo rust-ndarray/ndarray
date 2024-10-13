@@ -11,7 +11,6 @@ use core::cmp::min;
 use num_traits::Zero;
 
 use crate::{
-    arrayref::Referent,
     dimension::{is_layout_c, is_layout_f},
     Array,
     ArrayBase,
@@ -26,7 +25,6 @@ where
     S: Data<Elem = A>,
     D: Dimension,
     A: Clone + Zero,
-    S::RefType: Referent,
 {
     /// Upper triangular of an array.
     ///

@@ -7,7 +7,6 @@
 // except according to those terms.
 
 use crate::dimension::DimMax;
-use crate::Referent;
 use crate::Zip;
 use num_complex::Complex;
 
@@ -71,9 +70,6 @@ where
     S2: Data<Elem=B>,
     D: Dimension + DimMax<E>,
     E: Dimension,
-    S::RefType: Referent,
-    S2::RefType: Referent,
-    <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     #[track_caller]
@@ -102,9 +98,6 @@ where
     S2: Data<Elem=B>,
     D: Dimension + DimMax<E>,
     E: Dimension,
-    S::RefType: Referent,
-    S2::RefType: Referent,
-    <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     #[track_caller]
@@ -146,9 +139,6 @@ where
     S2: DataOwned<Elem=B> + DataMut,
     D: Dimension,
     E: Dimension + DimMax<D>,
-    S::RefType: Referent,
-    S2::RefType: Referent,
-    <<S2 as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
 {
     type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
     #[track_caller]
@@ -189,8 +179,6 @@ where
     S2: Data<Elem=B>,
     D: Dimension + DimMax<E>,
     E: Dimension,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     type Output = Array<A, <D as DimMax<E>>::Output>;
     #[track_caller]
@@ -217,7 +205,6 @@ impl<A, S, D, B> $trt<B> for ArrayBase<S, D>
           S: DataOwned<Elem=A> + DataMut,
           D: Dimension,
           B: ScalarOperand,
-          S::RefType: Referent,
 {
     type Output = ArrayBase<S, D>;
     fn $mth(mut self, x: B) -> ArrayBase<S, D> {
@@ -237,7 +224,6 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
           S: Data<Elem=A>,
           D: Dimension,
           B: ScalarOperand,
-          S::RefType: Referent,
 {
     type Output = Array<A, D>;
     fn $mth(self, x: B) -> Self::Output {
@@ -268,7 +254,6 @@ macro_rules! impl_scalar_lhs_op {
 impl<S, D> $trt<ArrayBase<S, D>> for $scalar
     where S: DataOwned<Elem=$scalar> + DataMut,
           D: Dimension,
-          S::RefType: Referent,
 {
     type Output = ArrayBase<S, D>;
     fn $mth(self, rhs: ArrayBase<S, D>) -> ArrayBase<S, D> {
@@ -290,7 +275,6 @@ impl<S, D> $trt<ArrayBase<S, D>> for $scalar
 impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
     where S: Data<Elem=$scalar>,
           D: Dimension,
-          S::RefType: Referent,
 {
     type Output = Array<$scalar, D>;
     fn $mth(self, rhs: &ArrayBase<S, D>) -> Self::Output {
@@ -395,7 +379,6 @@ mod arithmetic_ops
         A: Clone + Neg<Output = A>,
         S: DataOwned<Elem = A> + DataMut,
         D: Dimension,
-        S::RefType: Referent,
     {
         type Output = Self;
         /// Perform an elementwise negation of `self` and return the result.
@@ -413,7 +396,6 @@ mod arithmetic_ops
         &'a A: 'a + Neg<Output = A>,
         S: Data<Elem = A>,
         D: Dimension,
-        S::RefType: Referent,
     {
         type Output = Array<A, D>;
         /// Perform an elementwise negation of reference `self` and return the
@@ -429,7 +411,6 @@ mod arithmetic_ops
         A: Clone + Not<Output = A>,
         S: DataOwned<Elem = A> + DataMut,
         D: Dimension,
-        S::RefType: Referent,
     {
         type Output = Self;
         /// Perform an elementwise unary not of `self` and return the result.
@@ -447,7 +428,6 @@ mod arithmetic_ops
         &'a A: 'a + Not<Output = A>,
         S: Data<Elem = A>,
         D: Dimension,
-        S::RefType: Referent,
     {
         type Output = Array<A, D>;
         /// Perform an elementwise unary not of reference `self` and return the
@@ -479,8 +459,6 @@ mod assign_ops
                 S2: Data<Elem = A>,
                 D: Dimension,
                 E: Dimension,
-                S::RefType: Referent,
-                S2::RefType: Referent,
             {
                 #[track_caller]
                 fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
@@ -496,7 +474,6 @@ mod assign_ops
                 A: ScalarOperand + $trt<A>,
                 S: DataMut<Elem = A>,
                 D: Dimension,
-                S::RefType: Referent,
             {
                 fn $method(&mut self, rhs: A) {
                     self.map_inplace(move |elt| {

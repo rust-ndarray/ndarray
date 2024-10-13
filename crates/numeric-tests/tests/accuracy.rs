@@ -13,7 +13,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use ndarray::linalg::general_mat_mul;
-use ndarray::{prelude::*, Referent};
+use ndarray::prelude::*;
 use ndarray::{Data, LinalgScalar};
 
 use num_complex::Complex;
@@ -44,8 +44,6 @@ where
     A: LinalgScalar,
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
-    S::RefType: Referent,
-    S2::RefType: Referent,
 {
     let ((m, k), (_, n)) = (lhs.dim(), rhs.dim());
     let mut res_elems = Array::zeros(m * n);

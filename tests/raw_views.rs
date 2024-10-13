@@ -39,8 +39,8 @@ fn raw_view_cast_zst()
 
     let a = Array::<(), _>::default((250, 250));
     let b: RawArrayView<Zst, _> = a.raw_view().cast::<Zst>();
-    assert_eq!(a.shape(), b.shape());
-    assert_eq!(a.as_ptr() as *const u8, b.as_ptr() as *const u8);
+    assert_eq!(a.shape(), b.as_ref().shape());
+    assert_eq!(a.as_ptr() as *const u8, b.as_ref().as_ptr() as *const u8);
 }
 
 #[test]

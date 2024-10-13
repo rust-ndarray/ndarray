@@ -743,11 +743,11 @@ where D: Dimension
             let tail_ptr = self.data.as_end_nonnull();
             let mut tail_view = RawArrayViewMut::new(tail_ptr, array_dim, tail_strides);
 
-            if tail_view.ndim() > 1 {
+            if tail_view.as_ref().ndim() > 1 {
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), LayoutRef::strides(&tail_view));
+                              tail_view.as_ref().shape(), LayoutRef::strides(&tail_view.as_ref()));
             }
 
             // Keep track of currently filled length of `self.data` and update it
@@ -872,16 +872,16 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
     mut self_: RawArrayViewMut<A, D>, data_ptr: NonNull<A>, data_len: usize,
 ) where D: Dimension
 {
-    let self_len = self_.len();
+    let self_len = self_.as_ref().len();
 
-    for i in 0..self_.ndim() {
-        if self_.stride_of(Axis(i)) < 0 {
+    for i in 0..self_.as_ref().ndim() {
+        if self_.as_ref().stride_of(Axis(i)) < 0 {
             self_.invert_axis(Axis(i));
         }
     }
     sort_axes_in_default_order(&mut self_);
     // with uninverted axes this is now the element with lowest address
-    let array_memory_head_ptr = self_.ptr;
+    let array_memory_head_ptr = self_.layout.ptr;
     let data_end_ptr = data_ptr.add(data_len);
     debug_assert!(data_ptr <= array_memory_head_ptr);
     debug_assert!(array_memory_head_ptr <= data_end_ptr);
@@ -898,12 +898,12 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
     // As an optimization, the innermost axis is removed if it has stride 1, because
     // we then have a long stretch of contiguous elements we can skip as one.
     let inner_lane_len;
-    if self_.ndim() > 1 && self_.strides.last_elem() == 1 {
-        self_.dim.slice_mut().rotate_right(1);
-        self_.strides.slice_mut().rotate_right(1);
-        inner_lane_len = self_.dim[0];
-        self_.dim[0] = 1;
-        self_.strides[0] = 1;
+    if self_.as_ref().ndim() > 1 && self_.layout.strides.last_elem() == 1 {
+        self_.layout.dim.slice_mut().rotate_right(1);
+        self_.layout.strides.slice_mut().rotate_right(1);
+        inner_lane_len = self_.layout.dim[0];
+        self_.layout.dim[0] = 1;
+        self_.layout.strides[0] = 1;
     } else {
         inner_lane_len = 1;
     }
@@ -946,7 +946,7 @@ where
     S: RawData,
     D: Dimension,
 {
-    if a.ndim() <= 1 {
+    if a.as_ref().ndim() <= 1 {
         return;
     }
     sort_axes1_impl(&mut a.layout.dim, &mut a.layout.strides);
@@ -986,7 +986,7 @@ where
     S2: RawData,
     D: Dimension,
 {
-    if a.ndim() <= 1 {
+    if a.as_ref().ndim() <= 1 {
         return;
     }
     sort_axes2_impl(&mut a.layout.dim, &mut a.layout.strides, &mut b.layout.dim, &mut b.layout.strides);

@@ -103,14 +103,13 @@ fn indexed()
 #[cfg(feature = "std")]
 fn as_slice()
 {
-    use ndarray::{Data, Referent};
+    use ndarray::Data;
 
     fn assert_slice_correct<A, S, D>(v: &ArrayBase<S, D>)
     where
         S: Data<Elem = A>,
         D: Dimension,
         A: PartialEq + std::fmt::Debug,
-        S::RefType: Referent,
     {
         let slc = v.as_slice();
         assert!(slc.is_some());

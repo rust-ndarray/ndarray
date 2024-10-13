@@ -128,8 +128,6 @@ pub mod doc;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
-use arrayref::{Raw, Safe};
-pub use arrayref::{RawReferent, Referent};
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
@@ -165,8 +163,7 @@ pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 mod macro_utils;
 #[macro_use]
 mod private;
-mod arrayref;
-mod layoutref;
+mod impl_ref_types;
 mod aliases;
 #[macro_use]
 mod itertools;
@@ -541,7 +538,7 @@ pub type Ixs = isize;
 /// [`.multi_slice_move()`]: ArrayViewMut#method.multi_slice_move
 ///
 /// ```
-/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, NewAxis, Slice, Referent};
+/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, NewAxis, Slice};
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -609,7 +606,6 @@ pub type Ixs = isize;
 ///     S: DataMut,
 ///     S::Elem: Clone,
 ///     D: Dimension,
-///     S::RefType: Referent,
 /// {
 ///     arr.slice_each_axis_mut(|ax| Slice::from(0..ax.len / 2)).fill(x);
 /// }
@@ -1325,70 +1321,10 @@ pub struct LayoutRef<A, D>
     strides: D,
 }
 
-/// A reference to an *n*-dimensional array.
-///
-/// `RefBase`'s relationship to [`ArrayBase`] is akin to the relationship
-/// between `[T]` and `Vec<T>`: it can only be obtained by reference, and
-/// represents a subset of an existing array (possibly the entire array).
-///
-/// There are two variants of this type, [`RawRef`] and [`ArrRef`]; raw
-/// references are obtained from raw views, and `ArrRef`s are obtained
-/// from all other array types. See those types for more information.
-///
-/// ## Writing Functions
-/// Generally speaking, functions that operate on arrays should accept
-/// this type over an `ArrayBase`. The following conventions must be
-/// followed:
-/// - Functions that need to safely read an array's data should accept `&ArrRef`
-/// ```rust
-/// use ndarray::ArrRef;
-///
-/// #[allow(dead_code)]
-/// fn read<A, D>(arr: &ArrRef<A, D>) {}
-/// ```
-/// - Functions that need to safely write to an array's data should accept `&mut ArrRef`
-/// ```rust
-/// use ndarray::ArrRef;
-///
-/// #[allow(dead_code)]
-/// fn write<A, D>(arr: &mut ArrRef<A, D>) {}
-/// ```
-/// - Functions that only need to read an array's shape and strides
-///     (or that want to unsafely read data) should accept `&RefBase`
-///     with a bound of [`RawReferent`]:
-/// ```rust
-/// use ndarray::{RefBase, RawReferent};
-///
-/// #[allow(dead_code)]
-/// fn read_layout<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
-/// #[allow(dead_code)]
-/// unsafe fn read_unchecked<A, D, R: RawReferent>(arr: &RefBase<A, D, R>) {}
-/// ```
-/// - Functions that want to write to an array's shape and strides
-///     (or that want to unsafely write to its data) should accept
-///     `&mut RefBase` with the same bound:
-/// ```rust
-/// use ndarray::{RefBase, RawReferent};
-///
-/// #[allow(dead_code)]
-/// fn write_layout<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
-/// #[allow(dead_code)]
-/// unsafe fn write_unchecked<A, D, R: RawReferent>(arr: &mut RefBase<A, D, R>) {}
-/// ```
 #[repr(transparent)]
-pub struct RefBase<A, D, R>
-{
-    /// The parts of the array
-    layout: LayoutRef<A, D>,
-    /// The referent safety marker
-    phantom: PhantomData<R>,
-}
+pub struct ArrayRef<A, D>(LayoutRef<A, D>);
 
-/// An reference to an array whose data may be unaligned or unsafe to read.
-pub type RawRef<A, D> = RefBase<A, D, Raw>;
-
-/// A reference to an array whose data can be read safely.
-pub type ArrRef<A, D> = RefBase<A, D, Safe>;
+pub struct RawRef<A, D>(LayoutRef<A, D>);
 
 /// An array where the data has shared ownership and is copy on write.
 ///
@@ -1631,7 +1567,7 @@ mod impl_owned_array;
 mod impl_special_element_types;
 
 /// Private Methods
-impl<A, D: Dimension, R: Referent> RefBase<A, D, R>
+impl<A, D: Dimension> ArrayRef<A, D>
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
@@ -1649,7 +1585,7 @@ impl<A, D: Dimension, R: Referent> RefBase<A, D, R>
 
         match self.broadcast(dim.clone()) {
             Some(it) => it,
-            None => broadcast_panic(&self.layout.dim, &dim),
+            None => broadcast_panic(&self.dim, &dim),
         }
     }
 
@@ -1661,11 +1597,9 @@ impl<A, D: Dimension, R: Referent> RefBase<A, D, R>
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
-        let ptr = self.layout.ptr;
+        let ptr = self.ptr;
         let mut strides = dim.clone();
-        strides
-            .slice_mut()
-            .copy_from_slice(self.layout.strides.slice());
+        strides.slice_mut().copy_from_slice(self.strides.slice());
         unsafe { ArrayView::new(ptr, dim, strides) }
     }
 }
@@ -1674,7 +1608,6 @@ impl<A, S, D> ArrayBase<S, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
-    <S as RawData>::RefType: Referent,
 {
     /// Remove array axis `axis` and return the result.
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
