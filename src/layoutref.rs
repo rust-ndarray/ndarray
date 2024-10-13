@@ -30,7 +30,7 @@ where S: RawData
         // - It is "dereferencable" because it just points to self
         // - For the same reason, it is initialized
         unsafe {
-            (self as *const Self)
+            (&self.layout as *const LayoutRef<S::Elem, D>)
                 .cast::<LayoutRef<S::Elem, D>>()
                 .as_ref()
         }
@@ -47,8 +47,12 @@ where S: RawData
         // - The pointer is aligned because neither type use repr(align)
         // - It is "dereferencable" because it just points to self
         // - For the same reason, it is initialized
-        unsafe { (self as *mut Self).cast::<LayoutRef<S::Elem, D>>().as_mut() }
-            .expect("Pointer to self will always be non-null")
+        unsafe {
+            (&mut self.layout as *mut LayoutRef<S::Elem, D>)
+                .cast::<LayoutRef<S::Elem, D>>()
+                .as_mut()
+        }
+        .expect("Pointer to self will always be non-null")
     }
 }
 
@@ -120,7 +124,7 @@ impl<A, D: Clone> Clone for LayoutRef<A, D>
         Self {
             dim: self.dim.clone(),
             strides: self.strides.clone(),
-            ptr: self.ptr.clone(),
+            ptr: self.ptr,
         }
     }
 }

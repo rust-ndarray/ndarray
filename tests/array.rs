@@ -2482,7 +2482,7 @@ fn array_macros()
 mod as_standard_layout_tests
 {
     use super::*;
-    use ndarray::Data;
+    use ndarray::{Data, Referent};
     use std::fmt::Debug;
 
     fn test_as_standard_layout_for<S, D>(orig: ArrayBase<S, D>)
@@ -2490,6 +2490,7 @@ mod as_standard_layout_tests
         S: Data,
         S::Elem: Clone + Debug + PartialEq,
         D: Dimension,
+        S::RefType: Referent,
     {
         let orig_is_standard = orig.is_standard_layout();
         let out = orig.as_standard_layout();

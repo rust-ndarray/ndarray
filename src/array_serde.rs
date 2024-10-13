@@ -15,6 +15,7 @@ use alloc::vec::Vec;
 use std::fmt;
 use std::marker::PhantomData;
 
+use crate::arrayref::Referent;
 use crate::imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
@@ -83,6 +84,7 @@ where
     A: Serialize,
     D: Dimension + Serialize,
     S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn serialize<Se>(&self, serializer: Se) -> Result<Se::Ok, Se::Error>
     where Se: Serializer

@@ -1,3 +1,4 @@
+use crate::arrayref::Referent;
 use crate::imp_prelude::*;
 use crate::Layout;
 use crate::NdIndex;
@@ -131,6 +132,7 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a ArrayBase<S, D>
 where
     D: Dimension,
     S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     type Item = &'a A;
     type Dim = D;
@@ -147,6 +149,35 @@ impl<'a, A: 'a, S, D> IntoNdProducer for &'a mut ArrayBase<S, D>
 where
     D: Dimension,
     S: DataMut<Elem = A>,
+    S::RefType: Referent,
+{
+    type Item = &'a mut A;
+    type Dim = D;
+    type Output = ArrayViewMut<'a, A, D>;
+    fn into_producer(self) -> Self::Output
+    {
+        self.view_mut()
+    }
+}
+
+/// An array reference is an n-dimensional producer of element references
+/// (like ArrayView).
+impl<'a, A: 'a, D, R: Referent> IntoNdProducer for &'a RefBase<A, D, R>
+where D: Dimension
+{
+    type Item = &'a A;
+    type Dim = D;
+    type Output = ArrayView<'a, A, D>;
+    fn into_producer(self) -> Self::Output
+    {
+        self.view()
+    }
+}
+
+/// A mutable array reference is an n-dimensional producer of mutable element
+/// references (like ArrayViewMut).
+impl<'a, A: 'a, D, R: Referent> IntoNdProducer for &'a mut RefBase<A, D, R>
+where D: Dimension
 {
     type Item = &'a mut A;
     type Dim = D;
@@ -240,7 +271,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        RefBase::raw_dim(&self)
+        (***self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -250,7 +281,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn as_ptr(&self) -> *mut A
     {
-        self.as_ptr() as _
+        (**self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
@@ -270,7 +301,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        RefBase::stride_of(&self, axis)
+        (**self).stride_of(axis)
     }
 
     #[inline(always)]
@@ -296,7 +327,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        RefBase::raw_dim(&self)
+        (***self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -306,7 +337,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn as_ptr(&self) -> *mut A
     {
-        self.as_ptr() as _
+        (**self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
@@ -326,7 +357,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        RefBase::stride_of(&self, axis)
+        (**self).stride_of(axis)
     }
 
     #[inline(always)]
@@ -352,7 +383,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        RefBase::raw_dim(&self)
+        (***self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -362,7 +393,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn as_ptr(&self) -> *const A
     {
-        self.as_ptr()
+        (**self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
@@ -382,7 +413,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        RefBase::stride_of(&self, axis)
+        (**self).stride_of(axis)
     }
 
     #[inline(always)]
@@ -408,7 +439,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        RefBase::raw_dim(&self)
+        (***self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -418,7 +449,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn as_ptr(&self) -> *mut A
     {
-        self.as_ptr() as _
+        (**self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
@@ -438,7 +469,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        RefBase::stride_of(&self, axis)
+        (***self).stride_of(axis)
     }
 
     #[inline(always)]

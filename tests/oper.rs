@@ -7,6 +7,7 @@ use ndarray::linalg::kron;
 use ndarray::prelude::*;
 #[cfg(feature = "approx")]
 use ndarray::Order;
+use ndarray::Referent;
 use ndarray::{rcarr1, rcarr2};
 use ndarray::{Data, LinalgScalar};
 use ndarray::{Ix, Ixs};
@@ -297,6 +298,8 @@ where
     A: LinalgScalar,
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
+    S::RefType: Referent,
+    S2::RefType: Referent,
 {
     let ((m, k), (k2, n)) = (lhs.dim(), rhs.dim());
     assert!(m.checked_mul(n).is_some());
@@ -696,6 +699,8 @@ fn gen_mat_vec_mul()
         A: LinalgScalar,
         S: Data<Elem = A>,
         S2: Data<Elem = A>,
+        S::RefType: Referent,
+        S2::RefType: Referent,
     {
         let ((m, _), k) = (lhs.dim(), rhs.dim());
         reference_mat_mul(
@@ -762,6 +767,8 @@ fn vec_mat_mul()
         A: LinalgScalar,
         S: Data<Elem = A>,
         S2: Data<Elem = A>,
+        S::RefType: Referent,
+        S2::RefType: Referent,
     {
         let (m, (_, n)) = (lhs.dim(), rhs.dim());
         reference_mat_mul(

@@ -1,6 +1,6 @@
 mod layoutfmt;
 
-// Layout it a bitset used for internal layout description of
+// Layout is a bitset used for internal layout description of
 // arrays, producers and sets of producers.
 // The type is public but users don't interact with it.
 #[doc(hidden)]

@@ -12,6 +12,7 @@ use num_traits::One;
 use num_traits::{FromPrimitive, Zero};
 use std::ops::{Add, Div, Mul, Sub};
 
+use crate::arrayref::Referent;
 use crate::imp_prelude::*;
 use crate::numeric_util;
 use crate::Slice;
@@ -21,6 +22,7 @@ impl<A, S, D> ArrayBase<S, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
+    S::RefType: Referent,
 {
     /// Return the sum of all elements in the array.
     ///

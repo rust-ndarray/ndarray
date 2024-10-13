@@ -128,8 +128,8 @@ pub mod doc;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
-pub use arrayref::RawReferent;
-use arrayref::{Raw, Referent, Safe};
+use arrayref::{Raw, Safe};
+pub use arrayref::{RawReferent, Referent};
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
@@ -541,7 +541,7 @@ pub type Ixs = isize;
 /// [`.multi_slice_move()`]: ArrayViewMut#method.multi_slice_move
 ///
 /// ```
-/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, NewAxis, Slice};
+/// use ndarray::{arr2, arr3, s, ArrayBase, DataMut, Dimension, NewAxis, Slice, Referent};
 ///
 /// // 2 submatrices of 2 rows with 3 elements per row, means a shape of `[2, 2, 3]`.
 ///
@@ -609,6 +609,7 @@ pub type Ixs = isize;
 ///     S: DataMut,
 ///     S::Elem: Clone,
 ///     D: Dimension,
+///     S::RefType: Referent,
 /// {
 ///     arr.slice_each_axis_mut(|ax| Slice::from(0..ax.len / 2)).fill(x);
 /// }
@@ -1313,15 +1314,15 @@ where S: RawData<Elem = A>
 // alter the offset of the pointer. This is allowed, as it does not
 // cause a pointer deref.
 #[derive(Debug)]
-struct LayoutRef<A, D>
+pub struct LayoutRef<A, D>
 {
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Data`, this pointer must be aligned.
+    ptr: std::ptr::NonNull<A>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
     strides: D,
-    /// A non-null pointer into the buffer held by `data`; may point anywhere
-    /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<A>,
 }
 
 /// A reference to an *n*-dimensional array.

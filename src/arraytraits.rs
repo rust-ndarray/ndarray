@@ -45,8 +45,8 @@ where
     I: NdIndex<D>,
     T: AsRef<LayoutRef<A, D>>,
 {
-    let layout = _a.as_ref();
-    debug_bounds_check!(layout, *_index);
+    let _layout = _a.as_ref();
+    debug_bounds_check!(_layout, *_index);
 }
 
 /// Access the element at **index**.

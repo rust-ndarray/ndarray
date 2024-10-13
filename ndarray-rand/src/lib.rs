@@ -34,7 +34,7 @@ use crate::rand::rngs::SmallRng;
 use crate::rand::seq::index;
 use crate::rand::{rng, Rng, SeedableRng};
 
-use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
+use ndarray::{Array, Axis, Referent, RemoveAxis, ShapeBuilder};
 use ndarray::{ArrayBase, Data, DataOwned, Dimension, RawData};
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
@@ -169,6 +169,7 @@ where
     where
         A: Copy,
         S: Data<Elem = A>,
+        S::RefType: Referent,
         D: RemoveAxis;
 
     /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
@@ -226,6 +227,7 @@ where
         R: Rng + ?Sized,
         A: Copy,
         S: Data<Elem = A>,
+        S::RefType: Referent,
         D: RemoveAxis;
 }
 
@@ -257,6 +259,7 @@ where
     where
         A: Copy,
         S: Data<Elem = A>,
+        S::RefType: Referent,
         D: RemoveAxis,
     {
         self.sample_axis_using(axis, n_samples, strategy, &mut get_rng())
@@ -267,6 +270,7 @@ where
         R: Rng + ?Sized,
         A: Copy,
         S: Data<Elem = A>,
+        S::RefType: Referent,
         D: RemoveAxis,
     {
         let indices: Vec<_> = match strategy {

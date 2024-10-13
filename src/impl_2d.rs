@@ -7,7 +7,7 @@
 // except according to those terms.
 
 //! Methods for two-dimensional arrays.
-use crate::imp_prelude::*;
+use crate::{arrayref::Referent, imp_prelude::*};
 
 /// # Methods For 2-D Arrays
 impl<A, S> ArrayBase<S, Ix2>
@@ -24,7 +24,9 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data
+    where
+        S: Data,
+        S::RefType: Referent,
     {
         self.index_axis(Axis(0), index)
     }
@@ -41,7 +43,9 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut
+    where
+        S: DataMut,
+        S::RefType: Referent,
     {
         self.index_axis_mut(Axis(0), index)
     }
@@ -79,7 +83,9 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data
+    where
+        S: Data,
+        S::RefType: Referent,
     {
         self.index_axis(Axis(1), index)
     }
@@ -96,7 +102,9 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut
+    where
+        S: DataMut,
+        S::RefType: Referent,
     {
         self.index_axis_mut(Axis(1), index)
     }

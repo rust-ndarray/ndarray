@@ -13,6 +13,7 @@ use crate::dimension;
 use crate::error::{ErrorKind, ShapeError};
 use crate::iterators::Baseiter;
 use crate::low_level_util::AbortIfPanic;
+use crate::LayoutRef;
 use crate::OwnedRepr;
 use crate::Zip;
 
@@ -746,7 +747,7 @@ where D: Dimension
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), (&**tail_view).strides());
+                              tail_view.shape(), LayoutRef::strides(&tail_view));
             }
 
             // Keep track of currently filled length of `self.data` and update it
@@ -849,7 +850,7 @@ where D: Dimension
                 0
             };
             debug_assert!(data_to_array_offset >= 0);
-            self.ptr = self
+            self.layout.ptr = self
                 .data
                 .reserve(len_to_append)
                 .offset(data_to_array_offset);
