@@ -20,7 +20,6 @@ use num_traits::{One, Zero};
 use std::mem;
 use std::mem::MaybeUninit;
 
-use crate::arrayref::Referent;
 use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
 use crate::dimension::{self, CanIndexCheckMode};
 use crate::error::{self, ShapeError};
@@ -189,9 +188,7 @@ where S: DataOwned<Elem = A>
 
 /// ## Constructor methods for two-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix2>
-where
-    S: DataOwned<Elem = A>,
-    S::RefType: Referent,
+where S: DataOwned<Elem = A>
 {
     /// Create an identity matrix of size `n` (square 2D array).
     ///
@@ -224,7 +221,6 @@ where
         A: Clone + Zero,
         S: DataMut,
         S2: Data<Elem = A>,
-        S2::RefType: Referent,
     {
         let n = diag.len();
         let mut arr = Self::zeros((n, n));
@@ -621,7 +617,6 @@ where
     where
         Sh: ShapeBuilder<Dim = D>,
         F: FnOnce(ArrayViewMut<MaybeUninit<A>, D>),
-        <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
     {
         let mut array = Self::uninit(shape);
         // Safe because: the array is unshared here

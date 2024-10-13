@@ -19,7 +19,6 @@ use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
 use crate::LayoutRef;
-use crate::Referent;
 
 use crate::dimension;
 use crate::indexes::{indices, Indices};
@@ -764,7 +763,6 @@ macro_rules! map_impl {
                 -> ArrayBase<S, D>
                 where
                     S: DataOwned<Elem = R>,
-                    <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
             {
                 // safe because: all elements are written before the array is completed
 

@@ -1,13 +1,12 @@
 #[cfg(feature = "approx")]
 mod approx_methods
 {
-    use crate::{arrayref::Referent, imp_prelude::*};
+    use crate::imp_prelude::*;
 
     impl<A, S, D> ArrayBase<S, D>
     where
         S: Data<Elem = A>,
         D: Dimension,
-        S::RefType: Referent,
     {
         /// A test for equality that uses the elementwise absolute difference to compute the
         /// approximate equality of two arrays.
@@ -18,7 +17,6 @@ mod approx_methods
             A: ::approx::AbsDiffEq<S2::Elem>,
             A::Epsilon: Clone,
             S2: Data,
-            S2::RefType: Referent,
         {
             <Self as ::approx::AbsDiffEq<_>>::abs_diff_eq(self, other, epsilon)
         }
@@ -32,7 +30,6 @@ mod approx_methods
             A: ::approx::RelativeEq<S2::Elem>,
             A::Epsilon: Clone,
             S2: Data,
-            S2::RefType: Referent,
         {
             <Self as ::approx::RelativeEq<_>>::relative_eq(self, other, epsilon, max_relative)
         }
@@ -44,7 +41,6 @@ macro_rules! impl_approx_traits {
         mod $approx {
             use crate::imp_prelude::*;
             use crate::Zip;
-            use crate::Referent;
             use $approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
             #[doc = $doc]
@@ -55,8 +51,6 @@ macro_rules! impl_approx_traits {
                 S: Data<Elem = A>,
                 S2: Data<Elem = B>,
                 D: Dimension,
-                S::RefType: Referent,
-                S2::RefType: Referent,
             {
                 type Epsilon = A::Epsilon;
 
@@ -83,8 +77,6 @@ macro_rules! impl_approx_traits {
                 S: Data<Elem = A>,
                 S2: Data<Elem = B>,
                 D: Dimension,
-                S::RefType: Referent,
-                S2::RefType: Referent,
             {
                 fn default_max_relative() -> A::Epsilon {
                     A::default_max_relative()
@@ -114,8 +106,6 @@ macro_rules! impl_approx_traits {
                 S: Data<Elem = A>,
                 S2: Data<Elem = B>,
                 D: Dimension,
-                S::RefType: Referent,
-                S2::RefType: Referent,
             {
                 fn default_max_ulps() -> u32 {
                     A::default_max_ulps()

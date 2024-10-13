@@ -1,4 +1,4 @@
-use crate::{iter::Axes, ArrayBase, Axis, AxisDescription, Dimension, RawData, Slice, SliceArg};
+use crate::{iter::Axes, ArrayBase, Axis, AxisDescription, Dimension, LayoutRef, RawData, Slice, SliceArg};
 
 impl<S: RawData, D: Dimension> ArrayBase<S, D>
 {
@@ -95,7 +95,7 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     /// preferring axes with len > 1.
     pub fn max_stride_axis(&self) -> Axis
     {
-        self.as_ref().max_stride_axis()
+        LayoutRef::max_stride_axis(&self.as_ref())
     }
 
     /// Reverse the stride of `axis`.
@@ -173,6 +173,6 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     /// Return the strides of the array as a slice.
     pub fn strides(&self) -> &[isize]
     {
-        (**self).strides()
+        self.as_ref().strides()
     }
 }

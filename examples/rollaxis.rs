@@ -1,12 +1,10 @@
 use ndarray::prelude::*;
 use ndarray::Data;
-use ndarray::Referent;
 
 pub fn roll_axis<A, S, D>(mut a: ArrayBase<S, D>, to: Axis, from: Axis) -> ArrayBase<S, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
-    S::RefType: Referent,
 {
     let i = to.index();
     let mut j = from.index();
