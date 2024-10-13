@@ -6,6 +6,7 @@ fn takes_base_raw<S: RawData, D>(arr: &ArrayBase<S, D>)
     takes_layout(arr.as_ref());
 }
 
+#[allow(dead_code)]
 fn takes_base<S: Data, D>(arr: &ArrayBase<S, D>)
 {
     takes_base_raw(arr);
@@ -14,11 +15,18 @@ fn takes_base<S: Data, D>(arr: &ArrayBase<S, D>)
     takes_layout(arr);
 }
 
-fn takes_arrref<A, D>(arr: &ArrayRef<A, D>) {}
+fn takes_arrref<A, D>(_arr: &ArrayRef<A, D>)
+{
+    takes_rawref(_arr);
+    takes_layout(_arr);
+}
 
-fn takes_rawref<A, D>(arr: &RawRef<A, D>) {}
+fn takes_rawref<A, D>(_arr: &RawRef<A, D>)
+{
+    takes_layout(_arr);
+}
 
-fn takes_layout<A, D>(arr: &LayoutRef<A, D>) {}
+fn takes_layout<A, D>(_arr: &LayoutRef<A, D>) {}
 
 #[test]
 fn tester()

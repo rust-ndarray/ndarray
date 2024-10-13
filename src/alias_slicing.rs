@@ -95,7 +95,7 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     /// preferring axes with len > 1.
     pub fn max_stride_axis(&self) -> Axis
     {
-        LayoutRef::max_stride_axis(&self.as_ref())
+        LayoutRef::max_stride_axis(self.as_ref())
     }
 
     /// Reverse the stride of `axis`.
