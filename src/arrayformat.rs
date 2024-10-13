@@ -6,7 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use super::{ArrayBase, ArrayView, Axis, Data, Dimension, NdProducer};
-use crate::aliases::{Ix1, IxDyn};
+use crate::{
+    aliases::{Ix1, IxDyn},
+    arrayref::Referent,
+};
 use alloc::format;
 use std::fmt;
 
@@ -119,6 +122,7 @@ where
     F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result + Clone,
     D: Dimension,
     S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     // Cast into a dynamically dimensioned view
     // This is required to be able to use `index_axis` for the recursive case
@@ -173,7 +177,9 @@ where
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::Display, S, D: Dimension> fmt::Display for ArrayBase<S, D>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -187,7 +193,9 @@ where S: Data<Elem = A>
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -215,7 +223,9 @@ where S: Data<Elem = A>
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::LowerExp, S, D: Dimension> fmt::LowerExp for ArrayBase<S, D>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -229,7 +239,9 @@ where S: Data<Elem = A>
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::UpperExp, S, D: Dimension> fmt::UpperExp for ArrayBase<S, D>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -242,7 +254,9 @@ where S: Data<Elem = A>
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -256,7 +270,9 @@ where S: Data<Elem = A>
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {

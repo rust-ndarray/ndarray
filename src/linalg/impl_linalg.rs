@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::arrayref::Referent;
 use crate::imp_prelude::*;
 
 #[cfg(feature = "blas")]
@@ -41,7 +42,9 @@ const GEMM_BLAS_CUTOFF: usize = 7;
 type blas_index = c_int; // blas index type
 
 impl<A, S> ArrayBase<S, Ix1>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     /// Perform dot product or matrix multiplication of arrays `self` and `rhs`.
     ///
@@ -71,6 +74,7 @@ where S: Data<Elem = A>
     where
         S2: Data<Elem = A>,
         A: LinalgScalar,
+        S2::RefType: Referent,
     {
         debug_assert_eq!(self.len(), rhs.len());
         assert!(self.len() == rhs.len());
@@ -93,6 +97,7 @@ where S: Data<Elem = A>
     where
         S2: Data<Elem = A>,
         A: LinalgScalar,
+        S2::RefType: Referent,
     {
         self.dot_generic(rhs)
     }
@@ -102,6 +107,7 @@ where S: Data<Elem = A>
     where
         S2: Data<Elem = A>,
         A: LinalgScalar,
+        S2::RefType: Referent,
     {
         // Use only if the vector is large enough to be worth it
         if self.len() >= DOT_BLAS_CUTOFF {
@@ -173,6 +179,8 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
+    S::RefType: Referent,
+    S2::RefType: Referent,
 {
     type Output = A;
 
@@ -196,6 +204,8 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
+    S::RefType: Referent,
+    S2::RefType: Referent,
 {
     type Output = Array<A, Ix1>;
 
@@ -216,7 +226,9 @@ where
 }
 
 impl<A, S> ArrayBase<S, Ix2>
-where S: Data<Elem = A>
+where
+    S: Data<Elem = A>,
+    S::RefType: Referent,
 {
     /// Perform matrix multiplication of rectangular arrays `self` and `rhs`.
     ///
@@ -260,6 +272,8 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
+    S::RefType: Referent,
+    S2::RefType: Referent,
 {
     type Output = Array2<A>;
     fn dot(&self, b: &ArrayBase<S2, Ix2>) -> Array2<A>
@@ -323,6 +337,8 @@ where
     S: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
+    S::RefType: Referent,
+    S2::RefType: Referent,
 {
     type Output = Array<A, Ix1>;
     #[track_caller]
@@ -346,6 +362,7 @@ impl<A, S, D> ArrayBase<S, D>
 where
     S: Data<Elem = A>,
     D: Dimension,
+    S::RefType: Referent,
 {
     /// Perform the operation `self += alpha * rhs` efficiently, where
     /// `alpha` is a scalar and `rhs` is another array. This operation is
@@ -361,6 +378,8 @@ where
         S2: Data<Elem = A>,
         A: LinalgScalar,
         E: Dimension,
+        S::RefType: Referent,
+        S2::RefType: Referent,
     {
         self.zip_mut_with(rhs, move |y, &x| *y = *y + (alpha * x));
     }
@@ -599,6 +618,9 @@ pub fn general_mat_mul<A, S1, S2, S3>(
     S2: Data<Elem = A>,
     S3: DataMut<Elem = A>,
     A: LinalgScalar,
+    S1::RefType: Referent,
+    S2::RefType: Referent,
+    S3::RefType: Referent,
 {
     let ((m, k), (k2, n)) = (a.dim(), b.dim());
     let (m2, n2) = c.dim();
@@ -628,6 +650,9 @@ pub fn general_mat_vec_mul<A, S1, S2, S3>(
     S2: Data<Elem = A>,
     S3: DataMut<Elem = A>,
     A: LinalgScalar,
+    S1::RefType: Referent,
+    S2::RefType: Referent,
+    S3::RefType: Referent,
 {
     unsafe { general_mat_vec_mul_impl(alpha, a, x, beta, y.raw_view_mut()) }
 }
@@ -647,6 +672,8 @@ unsafe fn general_mat_vec_mul_impl<A, S1, S2>(
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
+    S1::RefType: Referent,
+    S2::RefType: Referent,
 {
     let ((m, k), k2) = (a.dim(), x.dim());
     let m2 = y.dim();
@@ -726,6 +753,8 @@ where
     S1: Data<Elem = A>,
     S2: Data<Elem = A>,
     A: LinalgScalar,
+    S1::RefType: Referent,
+    S2::RefType: Referent,
 {
     let dimar = a.shape()[0];
     let dimac = a.shape()[1];

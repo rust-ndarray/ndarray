@@ -147,7 +147,7 @@ pub unsafe trait Data: RawData
         Self::RefType: Referent,
     {
         // clone to shared
-        (*self_).to_owned().into_shared()
+        self_.to_owned().into_shared()
     }
 }
 
@@ -454,7 +454,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A>
         Self::Elem: Clone,
         D: Dimension,
     {
-        (*self_).to_owned()
+        self_.to_owned()
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
@@ -689,7 +689,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
         D: Dimension,
     {
         match self_.data {
-            CowRepr::View(_) => (*self_).to_owned(),
+            CowRepr::View(_) => self_.to_owned(),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
                 ArrayBase::from_data_ptr(data, self_.layout.ptr)

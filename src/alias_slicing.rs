@@ -107,6 +107,28 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
         self.as_mut().invert_axis(axis);
     }
 
+    /// Swap axes `ax` and `bx`.
+    ///
+    /// This does not move any data, it just adjusts the array’s dimensions
+    /// and strides.
+    ///
+    /// **Panics** if the axes are out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let mut a = arr2(&[[1., 2., 3.]]);
+    /// a.swap_axes(0, 1);
+    /// assert!(
+    ///     a == arr2(&[[1.], [2.], [3.]])
+    /// );
+    /// ```
+    #[track_caller]
+    pub fn swap_axes(&mut self, ax: usize, bx: usize)
+    {
+        self.as_mut().swap_axes(ax, bx);
+    }
+
     /// If possible, merge in the axis `take` to `into`.
     ///
     /// Returns `true` iff the axes are now merged.
@@ -146,5 +168,11 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool
     {
         self.as_mut().merge_axes(take, into)
+    }
+
+    /// Return the strides of the array as a slice.
+    pub fn strides(&self) -> &[isize]
+    {
+        (**self).strides()
     }
 }

@@ -3,7 +3,7 @@
 #[cfg(feature = "std")]
 use num_traits::Float;
 
-use crate::imp_prelude::*;
+use crate::{arrayref::Referent, imp_prelude::*};
 
 #[cfg(feature = "std")]
 macro_rules! boolean_ops {
@@ -59,6 +59,7 @@ where
     A: 'static + Float,
     S: Data<Elem = A>,
     D: Dimension,
+    S::RefType: Referent,
 {
     boolean_ops! {
         /// If the number is `NaN` (not a number), then `true` is returned for each element.
@@ -148,6 +149,7 @@ where
     A: 'static + PartialOrd + Clone,
     S: Data<Elem = A>,
     D: Dimension,
+    S::RefType: Referent,
 {
     /// Limit the values for each element, similar to NumPy's `clip` function.
     ///

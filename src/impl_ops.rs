@@ -73,6 +73,7 @@ where
     E: Dimension,
     S::RefType: Referent,
     S2::RefType: Referent,
+    <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     #[track_caller]
@@ -103,6 +104,7 @@ where
     E: Dimension,
     S::RefType: Referent,
     S2::RefType: Referent,
+    <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
     #[track_caller]
@@ -146,6 +148,7 @@ where
     E: Dimension + DimMax<D>,
     S::RefType: Referent,
     S2::RefType: Referent,
+    <<S2 as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
 {
     type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
     #[track_caller]

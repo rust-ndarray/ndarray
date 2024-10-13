@@ -18,6 +18,8 @@ use crate::partial::Partial;
 use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
+use crate::LayoutRef;
+use crate::Referent;
 
 use crate::dimension;
 use crate::indexes::{indices, Indices};
@@ -76,10 +78,8 @@ fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout
     }
 }
 
-impl<S, D> ArrayBase<S, D>
-where
-    S: RawData,
-    D: Dimension,
+impl<A, D> LayoutRef<A, D>
+where D: Dimension
 {
     pub(crate) fn layout_impl(&self) -> Layout
     {
@@ -96,8 +96,8 @@ where
     fn broadcast_unwrap(self, shape: E) -> Self::Output
     {
         #[allow(clippy::needless_borrow)]
-        let res: ArrayView<'_, A, E::Dim> = (&self).broadcast_unwrap(shape.into_dimension());
-        unsafe { ArrayView::new(res.ptr, res.dim, res.strides) }
+        let res: ArrayView<'_, A, E::Dim> = (*self).broadcast_unwrap(shape.into_dimension());
+        unsafe { ArrayView::new(res.layout.ptr, res.layout.dim, res.layout.strides) }
     }
     private_impl! {}
 }
@@ -762,7 +762,9 @@ macro_rules! map_impl {
 
             pub(crate) fn map_collect_owned<S, R>(self, f: impl FnMut($($p::Item,)* ) -> R)
                 -> ArrayBase<S, D>
-                where S: DataOwned<Elem = R>
+                where
+                    S: DataOwned<Elem = R>,
+                    <<S as DataOwned>::MaybeUninit as RawData>::RefType: Referent,
             {
                 // safe because: all elements are written before the array is completed
 

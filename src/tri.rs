@@ -11,6 +11,7 @@ use core::cmp::min;
 use num_traits::Zero;
 
 use crate::{
+    arrayref::Referent,
     dimension::{is_layout_c, is_layout_f},
     Array,
     ArrayBase,
@@ -25,6 +26,7 @@ where
     S: Data<Elem = A>,
     D: Dimension,
     A: Clone + Zero,
+    S::RefType: Referent,
 {
     /// Upper triangular of an array.
     ///
@@ -83,7 +85,9 @@ where
                     false => row_num.saturating_sub(k.unsigned_abs()), // Avoid underflow, go to 0
                 };
                 lower = min(lower, ncols);
-                dst.slice_mut(s![lower..]).assign(&src.slice(s![lower..]));
+                (*dst)
+                    .slice_mut(s![lower..])
+                    .assign(&(*src).slice(s![lower..]));
             });
 
         res
@@ -127,10 +131,10 @@ where
         if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) && k > isize::MIN {
             let mut x = self.view();
             x.swap_axes(n - 2, n - 1);
-            let mut tril = x.triu(-k);
-            tril.swap_axes(n - 2, n - 1);
+            let mut triu = x.triu(-k);
+            triu.swap_axes(n - 2, n - 1);
 
-            return tril;
+            return triu;
         }
 
         let mut res = Array::zeros(self.raw_dim());
@@ -147,7 +151,9 @@ where
                     false => row_num.saturating_sub((k + 1).unsigned_abs()),      // Avoid underflow
                 };
                 upper = min(upper, ncols);
-                dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
+                (*dst)
+                    .slice_mut(s![..upper])
+                    .assign(&(*src).slice(s![..upper]));
             });
 
         res
