@@ -49,15 +49,15 @@ where
 /// Access the element at **index**.
 ///
 /// **Panics** if index is out of bounds.
-impl<S, D, I> Index<I> for ArrayBase<S, D>
+impl<A, D, I> Index<I> for ArrayRef<A, D>
 where
     D: Dimension,
     I: NdIndex<D>,
-    S: Data,
 {
-    type Output = S::Elem;
+    type Output = A;
+
     #[inline]
-    fn index(&self, index: I) -> &S::Elem
+    fn index(&self, index: I) -> &Self::Output
     {
         debug_bounds_check!(self, index);
         unsafe {
@@ -73,14 +73,13 @@ where
 /// Access the element at **index** mutably.
 ///
 /// **Panics** if index is out of bounds.
-impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
+impl<A, D, I> IndexMut<I> for ArrayRef<A, D>
 where
     D: Dimension,
     I: NdIndex<D>,
-    S: DataMut,
 {
     #[inline]
-    fn index_mut(&mut self, index: I) -> &mut S::Elem
+    fn index_mut(&mut self, index: I) -> &mut A
     {
         debug_bounds_check!(self, index);
         unsafe {
@@ -93,16 +92,48 @@ where
     }
 }
 
+/// Access the element at **index**.
+///
+/// **Panics** if index is out of bounds.
+impl<S, D, I> Index<I> for ArrayBase<S, D>
+where
+    D: Dimension,
+    I: NdIndex<D>,
+    S: Data,
+{
+    type Output = S::Elem;
+
+    #[inline]
+    fn index(&self, index: I) -> &S::Elem
+    {
+        Index::index(&**self, index)
+    }
+}
+
+/// Access the element at **index** mutably.
+///
+/// **Panics** if index is out of bounds.
+impl<S, D, I> IndexMut<I> for ArrayBase<S, D>
+where
+    D: Dimension,
+    I: NdIndex<D>,
+    S: DataMut,
+{
+    #[inline]
+    fn index_mut(&mut self, index: I) -> &mut S::Elem
+    {
+        IndexMut::index_mut(&mut (**self), index)
+    }
+}
+
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
-impl<A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
+impl<A, B, D> PartialEq<ArrayRef<B, D>> for ArrayRef<A, D>
 where
     A: PartialEq<B>,
-    S: Data<Elem = A>,
-    S2: Data<Elem = B>,
     D: Dimension,
 {
-    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
+    fn eq(&self, rhs: &ArrayRef<B, D>) -> bool
     {
         if self.shape() != rhs.shape() {
             return false;
@@ -122,6 +153,56 @@ where
                 }
             })
             .into_inner()
+    }
+}
+
+/// Return `true` if the array shapes and all elements of `self` and
+/// `rhs` are equal. Return `false` otherwise.
+#[allow(clippy::unconditional_recursion)] // false positive
+impl<'a, A, B, D> PartialEq<&'a ArrayRef<B, D>> for ArrayRef<A, D>
+where
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, rhs: &&ArrayRef<B, D>) -> bool
+    {
+        *self == **rhs
+    }
+}
+
+/// Return `true` if the array shapes and all elements of `self` and
+/// `rhs` are equal. Return `false` otherwise.
+#[allow(clippy::unconditional_recursion)] // false positive
+impl<'a, A, B, D> PartialEq<ArrayRef<B, D>> for &'a ArrayRef<A, D>
+where
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, rhs: &ArrayRef<B, D>) -> bool
+    {
+        **self == *rhs
+    }
+}
+
+impl<A, D> Eq for ArrayRef<A, D>
+where
+    D: Dimension,
+    A: Eq,
+{
+}
+
+/// Return `true` if the array shapes and all elements of `self` and
+/// `rhs` are equal. Return `false` otherwise.
+impl<A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for ArrayBase<S, D>
+where
+    A: PartialEq<B>,
+    S: Data<Elem = A>,
+    S2: Data<Elem = B>,
+    D: Dimension,
+{
+    fn eq(&self, rhs: &ArrayBase<S2, D>) -> bool
+    {
+        PartialEq::eq(&**self, &**rhs)
     }
 }
 
@@ -216,6 +297,32 @@ where S: DataOwned<Elem = A>
     }
 }
 
+impl<'a, A, D> IntoIterator for &'a ArrayRef<A, D>
+where D: Dimension
+{
+    type Item = &'a A;
+
+    type IntoIter = Iter<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        self.iter()
+    }
+}
+
+impl<'a, A, D> IntoIterator for &'a mut ArrayRef<A, D>
+where D: Dimension
+{
+    type Item = &'a mut A;
+
+    type IntoIter = IterMut<'a, A, D>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        self.iter_mut()
+    }
+}
+
 impl<'a, S, D> IntoIterator for &'a ArrayBase<S, D>
 where
     D: Dimension,
@@ -268,11 +375,10 @@ where D: Dimension
     }
 }
 
-impl<S, D> hash::Hash for ArrayBase<S, D>
+impl<A, D> hash::Hash for ArrayRef<A, D>
 where
     D: Dimension,
-    S: Data,
-    S::Elem: hash::Hash,
+    A: hash::Hash,
 {
     // Note: elements are hashed in the logical order
     fn hash<H: hash::Hasher>(&self, state: &mut H)
@@ -291,6 +397,19 @@ where
                 }
             }
         }
+    }
+}
+
+impl<S, D> hash::Hash for ArrayBase<S, D>
+where
+    D: Dimension,
+    S: Data,
+    S::Elem: hash::Hash,
+{
+    // Note: elements are hashed in the logical order
+    fn hash<H: hash::Hasher>(&self, state: &mut H)
+    {
+        (&**self).hash(state)
     }
 }
 

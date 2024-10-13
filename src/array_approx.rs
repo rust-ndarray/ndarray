@@ -3,20 +3,16 @@ mod approx_methods
 {
     use crate::imp_prelude::*;
 
-    impl<A, S, D> ArrayBase<S, D>
-    where
-        S: Data<Elem = A>,
-        D: Dimension,
+    impl<A, D: Dimension> ArrayRef<A, D>
     {
         /// A test for equality that uses the elementwise absolute difference to compute the
         /// approximate equality of two arrays.
         ///
         /// **Requires crate feature `"approx"`**
-        pub fn abs_diff_eq<S2>(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon) -> bool
+        pub fn abs_diff_eq<B>(&self, other: &ArrayRef<B, D>, epsilon: A::Epsilon) -> bool
         where
-            A: ::approx::AbsDiffEq<S2::Elem>,
+            A: ::approx::AbsDiffEq<B>,
             A::Epsilon: Clone,
-            S2: Data,
         {
             <Self as ::approx::AbsDiffEq<_>>::abs_diff_eq(self, other, epsilon)
         }
@@ -25,11 +21,10 @@ mod approx_methods
         /// apart; and the absolute difference otherwise.
         ///
         /// **Requires crate feature `"approx"`**
-        pub fn relative_eq<S2>(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon, max_relative: A::Epsilon) -> bool
+        pub fn relative_eq<B>(&self, other: &ArrayRef<B, D>, epsilon: A::Epsilon, max_relative: A::Epsilon) -> bool
         where
-            A: ::approx::RelativeEq<S2::Elem>,
+            A: ::approx::RelativeEq<B>,
             A::Epsilon: Clone,
-            S2: Data,
         {
             <Self as ::approx::RelativeEq<_>>::relative_eq(self, other, epsilon, max_relative)
         }
@@ -42,6 +37,30 @@ macro_rules! impl_approx_traits {
             use crate::imp_prelude::*;
             use crate::Zip;
             use $approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
+            #[doc = $doc]
+            impl<A, B, D> AbsDiffEq<ArrayRef<B, D>> for ArrayRef<A, D>
+            where
+                A: AbsDiffEq<B>,
+                A::Epsilon: Clone,
+                D: Dimension,
+            {
+                type Epsilon = A::Epsilon;
+
+                fn default_epsilon() -> A::Epsilon {
+                    A::default_epsilon()
+                }
+
+                fn abs_diff_eq(&self, other: &ArrayRef<B, D>, epsilon: A::Epsilon) -> bool {
+                    if self.shape() != other.shape() {
+                        return false;
+                    }
+
+                    Zip::from(self)
+                        .and(other)
+                        .all(move |a, b| A::abs_diff_eq(a, b, epsilon.clone()))
+                }
+            }
 
             #[doc = $doc]
             impl<A, B, S, S2, D> AbsDiffEq<ArrayBase<S2, D>> for ArrayBase<S, D>
@@ -59,13 +78,34 @@ macro_rules! impl_approx_traits {
                 }
 
                 fn abs_diff_eq(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon) -> bool {
+                    (&**self).abs_diff_eq(other, epsilon)
+                }
+            }
+
+            #[doc = $doc]
+            impl<A, B, D> RelativeEq<ArrayRef<B, D>> for ArrayRef<A, D>
+            where
+                A: RelativeEq<B>,
+                A::Epsilon: Clone,
+                D: Dimension,
+            {
+                fn default_max_relative() -> A::Epsilon {
+                    A::default_max_relative()
+                }
+
+                fn relative_eq(
+                    &self,
+                    other: &ArrayRef<B, D>,
+                    epsilon: A::Epsilon,
+                    max_relative: A::Epsilon,
+                ) -> bool {
                     if self.shape() != other.shape() {
                         return false;
                     }
 
-                    Zip::from(self)
-                        .and(other)
-                        .all(move |a, b| A::abs_diff_eq(a, b, epsilon.clone()))
+                    Zip::from(self).and(other).all(move |a, b| {
+                        A::relative_eq(a, b, epsilon.clone(), max_relative.clone())
+                    })
                 }
             }
 
@@ -88,13 +128,34 @@ macro_rules! impl_approx_traits {
                     epsilon: A::Epsilon,
                     max_relative: A::Epsilon,
                 ) -> bool {
+                    (&**self).relative_eq(other, epsilon, max_relative)
+                }
+            }
+
+            #[doc = $doc]
+            impl<A, B, D> UlpsEq<ArrayRef<B, D>> for ArrayRef<A, D>
+            where
+                A: UlpsEq<B>,
+                A::Epsilon: Clone,
+                D: Dimension,
+            {
+                fn default_max_ulps() -> u32 {
+                    A::default_max_ulps()
+                }
+
+                fn ulps_eq(
+                    &self,
+                    other: &ArrayRef<B, D>,
+                    epsilon: A::Epsilon,
+                    max_ulps: u32,
+                ) -> bool {
                     if self.shape() != other.shape() {
                         return false;
                     }
 
-                    Zip::from(self).and(other).all(move |a, b| {
-                        A::relative_eq(a, b, epsilon.clone(), max_relative.clone())
-                    })
+                    Zip::from(self)
+                        .and(other)
+                        .all(move |a, b| A::ulps_eq(a, b, epsilon.clone(), max_ulps))
                 }
             }
 
@@ -117,13 +178,7 @@ macro_rules! impl_approx_traits {
                     epsilon: A::Epsilon,
                     max_ulps: u32,
                 ) -> bool {
-                    if self.shape() != other.shape() {
-                        return false;
-                    }
-
-                    Zip::from(self)
-                        .and(other)
-                        .all(move |a, b| A::ulps_eq(a, b, epsilon.clone(), max_ulps))
+                    (&**self).ulps_eq(other, epsilon, max_ulps)
                 }
             }
 
