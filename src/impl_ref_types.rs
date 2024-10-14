@@ -185,7 +185,7 @@ impl<A, D> AsRef<RawRef<A, D>> for ArrayRef<A, D>
 {
     fn as_ref(&self) -> &RawRef<A, D>
     {
-        &**self
+        self
     }
 }
 
@@ -194,7 +194,7 @@ impl<A, D> AsMut<RawRef<A, D>> for ArrayRef<A, D>
 {
     fn as_mut(&mut self) -> &mut RawRef<A, D>
     {
-        &mut **self
+        self
     }
 }
 
@@ -203,7 +203,7 @@ impl<A, D> AsRef<LayoutRef<A, D>> for ArrayRef<A, D>
 {
     fn as_ref(&self) -> &LayoutRef<A, D>
     {
-        &***self
+        self
     }
 }
 
@@ -212,7 +212,7 @@ impl<A, D> AsMut<LayoutRef<A, D>> for ArrayRef<A, D>
 {
     fn as_mut(&mut self) -> &mut LayoutRef<A, D>
     {
-        &mut ***self
+        self
     }
 }
 
@@ -221,7 +221,7 @@ impl<A, D> AsRef<LayoutRef<A, D>> for RawRef<A, D>
 {
     fn as_ref(&self) -> &LayoutRef<A, D>
     {
-        &**self
+        self
     }
 }
 
@@ -230,7 +230,7 @@ impl<A, D> AsMut<LayoutRef<A, D>> for RawRef<A, D>
 {
     fn as_mut(&mut self) -> &mut LayoutRef<A, D>
     {
-        &mut **self
+        self
     }
 }
 
@@ -314,7 +314,7 @@ where S: Data
 {
     fn borrow(&self) -> &ArrayRef<S::Elem, D>
     {
-        &**self
+        self
     }
 }
 
@@ -325,7 +325,7 @@ where
 {
     fn borrow_mut(&mut self) -> &mut ArrayRef<S::Elem, D>
     {
-        &mut **self
+        self
     }
 }
 
