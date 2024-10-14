@@ -26,6 +26,7 @@ pub use crate::{
     ArrayView,
     ArrayViewMut,
     CowArray,
+    LayoutRef,
     RawArrayView,
     RawArrayViewMut,
     RawRef,

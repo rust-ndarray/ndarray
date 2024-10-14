@@ -409,7 +409,7 @@ where
     // Note: elements are hashed in the logical order
     fn hash<H: hash::Hasher>(&self, state: &mut H)
     {
-        (&**self).hash(state)
+        (**self).hash(state)
     }
 }
 

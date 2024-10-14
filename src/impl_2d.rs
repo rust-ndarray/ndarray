@@ -10,8 +10,7 @@
 use crate::imp_prelude::*;
 
 /// # Methods For 2-D Arrays
-impl<A, S> ArrayBase<S, Ix2>
-where S: RawData<Elem = A>
+impl<A> ArrayRef<A, Ix2>
 {
     /// Return an array view of row `index`.
     ///
@@ -24,7 +23,6 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data
     {
         self.index_axis(Axis(0), index)
     }
@@ -41,11 +39,13 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut
     {
         self.index_axis_mut(Axis(0), index)
     }
+}
 
+impl<A> LayoutRef<A, Ix2>
+{
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
     ///
     /// ```
@@ -67,7 +67,10 @@ where S: RawData<Elem = A>
     {
         self.as_ref().len_of(Axis(0))
     }
+}
 
+impl<A> ArrayRef<A, Ix2>
+{
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -79,7 +82,6 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data
     {
         self.index_axis(Axis(1), index)
     }
@@ -96,11 +98,13 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut
     {
         self.index_axis_mut(Axis(1), index)
     }
+}
 
+impl<A> LayoutRef<A, Ix2>
+{
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
     ///
     /// ```

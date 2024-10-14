@@ -72,6 +72,7 @@ where
     E: Dimension,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+
     #[track_caller]
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     {
@@ -100,8 +101,37 @@ where
     E: Dimension,
 {
     type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+
     #[track_caller]
     fn $mth(self, rhs: &ArrayBase<S2, E>) -> Self::Output
+    {
+        self.$mth(&**rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between `self` and reference `rhs`,
+/// and return the result.
+///
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S, D, E> $trt<&'a ArrayRef<B, E>> for ArrayBase<S, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    S: DataOwned<Elem=A> + DataMut,
+    D: Dimension + DimMax<E>,
+    E: Dimension,
+{
+    type Output = ArrayBase<S, <D as DimMax<E>>::Output>;
+
+    #[track_caller]
+    fn $mth(self, rhs: &ArrayRef<B, E>) -> Self::Output
     {
         if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
             let mut out = self.into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
@@ -141,6 +171,36 @@ where
     E: Dimension + DimMax<D>,
 {
     type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
+
+    #[track_caller]
+    fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
+    where
+    {
+        (&**self).$mth(rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between reference `self` and `rhs`,
+/// and return the result.
+///
+/// `rhs` must be an `Array` or `ArcArray`.
+///
+/// If their shapes disagree, `self` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, S2, D, E> $trt<ArrayBase<S2, E>> for &'a ArrayRef<A, D>
+where
+    A: Clone + $trt<B, Output=B>,
+    B: Clone,
+    S2: DataOwned<Elem=B> + DataMut,
+    D: Dimension,
+    E: Dimension + DimMax<D>,
+{
+    type Output = ArrayBase<S2, <E as DimMax<D>>::Output>;
+
     #[track_caller]
     fn $mth(self, rhs: ArrayBase<S2, E>) -> Self::Output
     where
@@ -181,8 +241,33 @@ where
     E: Dimension,
 {
     type Output = Array<A, <D as DimMax<E>>::Output>;
+
     #[track_caller]
     fn $mth(self, rhs: &'a ArrayBase<S2, E>) -> Self::Output {
+        (&**self).$mth(&**rhs)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between references `self` and `rhs`,
+/// and return the result as a new `Array`.
+///
+/// If their shapes disagree, `self` and `rhs` is broadcast to their broadcast shape,
+/// cloning the data if needed.
+///
+/// **Panics** if broadcasting isn’t possible.
+impl<'a, A, B, D, E> $trt<&'a ArrayRef<B, E>> for &'a ArrayRef<A, D>
+where
+    A: Clone + $trt<B, Output=A>,
+    B: Clone,
+    D: Dimension + DimMax<E>,
+    E: Dimension,
+{
+    type Output = Array<A, <D as DimMax<E>>::Output>;
+
+    #[track_caller]
+    fn $mth(self, rhs: &'a ArrayRef<B, E>) -> Self::Output {
         let (lhs, rhs) = if self.ndim() == rhs.ndim() && self.shape() == rhs.shape() {
             let lhs = self.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
             let rhs = rhs.view().into_dimensionality::<<D as DimMax<E>>::Output>().unwrap();
@@ -226,6 +311,23 @@ impl<'a, A, S, D, B> $trt<B> for &'a ArrayBase<S, D>
           B: ScalarOperand,
 {
     type Output = Array<A, D>;
+
+    fn $mth(self, x: B) -> Self::Output {
+        (&**self).$mth(x)
+    }
+}
+
+/// Perform elementwise
+#[doc=$doc]
+/// between the reference `self` and the scalar `x`,
+/// and return the result as a new `Array`.
+impl<'a, A, D, B> $trt<B> for &'a ArrayRef<A, D>
+    where A: Clone + $trt<B, Output=A>,
+          D: Dimension,
+          B: ScalarOperand,
+{
+    type Output = Array<A, D>;
+
     fn $mth(self, x: B) -> Self::Output {
         self.map(move |elt| elt.clone() $operator x.clone())
     }
@@ -277,7 +379,21 @@ impl<'a, S, D> $trt<&'a ArrayBase<S, D>> for $scalar
           D: Dimension,
 {
     type Output = Array<$scalar, D>;
+
     fn $mth(self, rhs: &ArrayBase<S, D>) -> Self::Output {
+        self.$mth(&**rhs)
+    }
+}
+
+// Perform elementwise
+// between the scalar `self` and array `rhs`,
+// and return the result as a new `Array`.
+impl<'a, D> $trt<&'a ArrayRef<$scalar, D>> for $scalar
+    where D: Dimension
+{
+    type Output = Array<$scalar, D>;
+
+    fn $mth(self, rhs: &ArrayRef<$scalar, D>) -> Self::Output {
         if_commutative!($commutative {
             rhs.$mth(self)
         } or {
@@ -381,6 +497,7 @@ mod arithmetic_ops
         D: Dimension,
     {
         type Output = Self;
+
         /// Perform an elementwise negation of `self` and return the result.
         fn neg(mut self) -> Self
         {
@@ -398,6 +515,22 @@ mod arithmetic_ops
         D: Dimension,
     {
         type Output = Array<A, D>;
+
+        /// Perform an elementwise negation of reference `self` and return the
+        /// result as a new `Array`.
+        fn neg(self) -> Array<A, D>
+        {
+            (&**self).neg()
+        }
+    }
+
+    impl<'a, A, D> Neg for &'a ArrayRef<A, D>
+    where
+        &'a A: 'a + Neg<Output = A>,
+        D: Dimension,
+    {
+        type Output = Array<A, D>;
+
         /// Perform an elementwise negation of reference `self` and return the
         /// result as a new `Array`.
         fn neg(self) -> Array<A, D>
@@ -413,6 +546,7 @@ mod arithmetic_ops
         D: Dimension,
     {
         type Output = Self;
+
         /// Perform an elementwise unary not of `self` and return the result.
         fn not(mut self) -> Self
         {
@@ -430,6 +564,22 @@ mod arithmetic_ops
         D: Dimension,
     {
         type Output = Array<A, D>;
+
+        /// Perform an elementwise unary not of reference `self` and return the
+        /// result as a new `Array`.
+        fn not(self) -> Array<A, D>
+        {
+            (&**self).not()
+        }
+    }
+
+    impl<'a, A, D> Not for &'a ArrayRef<A, D>
+    where
+        &'a A: 'a + Not<Output = A>,
+        D: Dimension,
+    {
+        type Output = Array<A, D>;
+
         /// Perform an elementwise unary not of reference `self` and return the
         /// result as a new `Array`.
         fn not(self) -> Array<A, D>
@@ -462,6 +612,22 @@ mod assign_ops
             {
                 #[track_caller]
                 fn $method(&mut self, rhs: &ArrayBase<S2, E>) {
+                    (**self).$method(&**rhs)
+                }
+            }
+
+            #[doc=$doc]
+            /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
+            ///
+            /// **Panics** if broadcasting isn’t possible.
+            impl<'a, A, D, E> $trt<&'a ArrayRef<A, E>> for ArrayRef<A, D>
+            where
+                A: Clone + $trt<A>,
+                D: Dimension,
+                E: Dimension,
+            {
+                #[track_caller]
+                fn $method(&mut self, rhs: &ArrayRef<A, E>) {
                     self.zip_mut_with(rhs, |x, y| {
                         x.$method(y.clone());
                     });
@@ -473,6 +639,17 @@ mod assign_ops
             where
                 A: ScalarOperand + $trt<A>,
                 S: DataMut<Elem = A>,
+                D: Dimension,
+            {
+                fn $method(&mut self, rhs: A) {
+                    (**self).$method(rhs)
+                }
+            }
+
+            #[doc=$doc]
+            impl<A, D> $trt<A> for ArrayRef<A, D>
+            where
+                A: ScalarOperand + $trt<A>,
                 D: Dimension,
             {
                 fn $method(&mut self, rhs: A) {
