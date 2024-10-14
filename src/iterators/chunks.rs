@@ -49,16 +49,16 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D>
         let mut a = a.into_raw_view();
         let chunk = chunk.into_dimension();
         ndassert!(
-            AsRef::as_ref(&a).ndim() == chunk.ndim(),
+            a.ndim() == chunk.ndim(),
             concat!(
                 "Chunk dimension {} does not match array dimension {} ",
                 "(with array of shape {:?})"
             ),
             chunk.ndim(),
-            AsRef::as_ref(&a).ndim(),
-            AsRef::as_ref(&a).shape()
+            a.ndim(),
+            a.shape()
         );
-        for i in 0..AsRef::as_ref(&a).ndim() {
+        for i in 0..a.ndim() {
             a.layout.dim[i] /= chunk[i];
         }
         let inner_strides = a.layout.strides.clone();
@@ -148,16 +148,16 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D>
         let mut a = a.into_raw_view_mut();
         let chunk = chunk.into_dimension();
         ndassert!(
-            AsRef::as_ref(&a).ndim() == chunk.ndim(),
+            a.ndim() == chunk.ndim(),
             concat!(
                 "Chunk dimension {} does not match array dimension {} ",
                 "(with array of shape {:?})"
             ),
             chunk.ndim(),
-            AsRef::as_ref(&a).ndim(),
-            AsRef::as_ref(&a).shape()
+            a.ndim(),
+            a.shape()
         );
-        for i in 0..AsRef::as_ref(&a).ndim() {
+        for i in 0..a.ndim() {
             a.layout.dim[i] /= chunk[i];
         }
         let inner_strides = a.layout.strides.clone();

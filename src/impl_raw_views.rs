@@ -112,9 +112,9 @@ where D: Dimension
     #[inline]
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
-        assert!(index <= self.as_ref().len_of(axis));
+        assert!(index <= self.len_of(axis));
         let left_ptr = self.layout.ptr.as_ptr();
-        let right_ptr = if index == self.as_ref().len_of(axis) {
+        let right_ptr = if index == self.len_of(axis) {
             self.layout.ptr.as_ptr()
         } else {
             let offset = stride_offset(index, self.layout.strides.axis(axis));
@@ -186,7 +186,7 @@ where D: Dimension
         }
 
         let ptr_re: *mut T = self.layout.ptr.as_ptr().cast();
-        let ptr_im: *mut T = if self.as_ref().is_empty() {
+        let ptr_im: *mut T = if self.is_empty() {
             // In the empty case, we can just reuse the existing pointer since
             // it won't be dereferenced anyway. It is not safe to offset by
             // one, since the allocation may be empty.

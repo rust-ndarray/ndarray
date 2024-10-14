@@ -380,7 +380,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        AsRef::as_ref(self).raw_dim()
+        self.raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -390,12 +390,12 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn as_ptr(&self) -> *const A
     {
-        AsRef::as_ref(self).as_ptr() as _
+        self.as_ptr() as _
     }
 
     fn layout(&self) -> Layout
     {
-        AsRef::as_ref(self).layout_impl()
+        AsRef::<LayoutRef<_, _>>::as_ref(self).layout_impl()
     }
 
     unsafe fn as_ref(&self, ptr: *const A) -> *const A
@@ -413,7 +413,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        AsRef::as_ref(self).stride_of(axis)
+        self.stride_of(axis)
     }
 
     #[inline(always)]
@@ -439,7 +439,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        AsRef::as_ref(self).raw_dim()
+        self.raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -449,12 +449,12 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn as_ptr(&self) -> *mut A
     {
-        AsRef::as_ref(self).as_ptr() as _
+        self.as_ptr() as _
     }
 
     fn layout(&self) -> Layout
     {
-        AsRef::as_ref(self).layout_impl()
+        AsRef::<LayoutRef<_, _>>::as_ref(self).layout_impl()
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> *mut A
@@ -472,7 +472,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        AsRef::as_ref(self).stride_of(axis)
+        self.stride_of(axis)
     }
 
     #[inline(always)]

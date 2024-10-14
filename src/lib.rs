@@ -1557,7 +1557,7 @@ mod impl_internal_constructors;
 mod impl_constructors;
 
 mod impl_methods;
-mod alias_slicing;
+mod alias_asref;
 mod impl_owned_array;
 mod impl_special_element_types;
 
