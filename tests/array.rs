@@ -2819,3 +2819,11 @@ fn test_split_complex_invert_axis()
     assert_eq!(cmplx.re, a.mapv(|z| z.re));
     assert_eq!(cmplx.im, a.mapv(|z| z.im));
 }
+
+#[test]
+fn test_slice_assing()
+{
+    let mut a = array![0, 1, 2, 3, 4];
+    *a.slice_mut(s![1..3]) += 1;
+    assert_eq!(a, array![0, 2, 3, 3, 4]);
+}
