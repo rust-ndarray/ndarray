@@ -15,14 +15,11 @@ use crate::imp_prelude::*;
 use crate::low_level_util::AbortIfPanic;
 
 /// # Methods For 1-D Arrays
-impl<A, S> ArrayBase<S, Ix1>
-where S: RawData<Elem = A>
+impl<A> ArrayRef<A, Ix1>
 {
     /// Return an vector with the elements of the one-dimensional array.
     pub fn to_vec(&self) -> Vec<A>
-    where
-        A: Clone,
-        S: Data,
+    where A: Clone
     {
         if let Some(slc) = self.as_slice() {
             slc.to_vec()
@@ -34,7 +31,6 @@ where S: RawData<Elem = A>
     /// Rotate the elements of the array by 1 element towards the front;
     /// the former first element becomes the last.
     pub(crate) fn rotate1_front(&mut self)
-    where S: DataMut
     {
         // use swapping to keep all elements initialized (as required by owned storage)
         let mut lane_iter = self.iter_mut();

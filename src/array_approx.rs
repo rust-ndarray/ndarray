@@ -75,7 +75,7 @@ macro_rules! impl_approx_traits {
                 }
 
                 fn abs_diff_eq(&self, other: &ArrayBase<S2, D>, epsilon: A::Epsilon) -> bool {
-                    (&**self).abs_diff_eq(other, epsilon)
+                    (**self).abs_diff_eq(other, epsilon)
                 }
             }
 
@@ -125,7 +125,7 @@ macro_rules! impl_approx_traits {
                     epsilon: A::Epsilon,
                     max_relative: A::Epsilon,
                 ) -> bool {
-                    (&**self).relative_eq(other, epsilon, max_relative)
+                    (**self).relative_eq(other, epsilon, max_relative)
                 }
             }
 
@@ -175,7 +175,7 @@ macro_rules! impl_approx_traits {
                     epsilon: A::Epsilon,
                     max_ulps: u32,
                 ) -> bool {
-                    (&**self).ulps_eq(other, epsilon, max_ulps)
+                    (**self).ulps_eq(other, epsilon, max_ulps)
                 }
             }
 

@@ -8,9 +8,8 @@ use crate::parallel::prelude::*;
 use crate::partial::Partial;
 
 /// # Parallel methods
-impl<A, S, D> ArrayBase<S, D>
+impl<A, D> ArrayRef<A, D>
 where
-    S: DataMut<Elem = A>,
     D: Dimension,
     A: Send + Sync,
 {

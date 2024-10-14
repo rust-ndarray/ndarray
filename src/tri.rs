@@ -13,16 +13,14 @@ use num_traits::Zero;
 use crate::{
     dimension::{is_layout_c, is_layout_f},
     Array,
-    ArrayBase,
+    ArrayRef,
     Axis,
-    Data,
     Dimension,
     Zip,
 };
 
-impl<S, A, D> ArrayBase<S, D>
+impl<A, D> ArrayRef<A, D>
 where
-    S: Data<Elem = A>,
     D: Dimension,
     A: Clone + Zero,
 {

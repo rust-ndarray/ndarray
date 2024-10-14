@@ -10,8 +10,7 @@
 use crate::imp_prelude::*;
 
 /// # Methods for Dynamic-Dimensional Arrays
-impl<A, S> ArrayBase<S, IxDyn>
-where S: Data<Elem = A>
+impl<A> LayoutRef<A, IxDyn>
 {
     /// Insert new array axis of length 1 at `axis`, modifying the shape and
     /// strides in-place.
@@ -32,8 +31,8 @@ where S: Data<Elem = A>
     pub fn insert_axis_inplace(&mut self, axis: Axis)
     {
         assert!(axis.index() <= self.ndim());
-        self.layout.dim = self.layout.dim.insert_axis(axis);
-        self.layout.strides = self.layout.strides.insert_axis(axis);
+        self.dim = self.dim.insert_axis(axis);
+        self.strides = self.strides.insert_axis(axis);
     }
 
     /// Collapses the array to `index` along the axis and removes the axis,
@@ -55,10 +54,14 @@ where S: Data<Elem = A>
     pub fn index_axis_inplace(&mut self, axis: Axis, index: usize)
     {
         self.collapse_axis(axis, index);
-        self.layout.dim = self.layout.dim.remove_axis(axis);
-        self.layout.strides = self.layout.strides.remove_axis(axis);
+        self.dim = self.dim.remove_axis(axis);
+        self.strides = self.strides.remove_axis(axis);
     }
+}
 
+impl<A, S> ArrayBase<S, IxDyn>
+where S: Data<Elem = A>
+{
     /// Remove axes of length 1 and return the modified array.
     ///
     /// If the array has more the one dimension, the result array will always
