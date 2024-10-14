@@ -21,17 +21,20 @@
 //! To mitigate these problems, `ndarray` also provides `AsRef` and `AsMut` implementations as follows:
 //!     1. `ArrayBase` implements `AsRef` to `RawRef` and `LayoutRef` when `S: RawData`
 //!     2. `ArrayBase` implements `AsMut` to `RawRef` when `S: RawDataMut`
-//!     3. `ArrayBase` implements `AsMut` to `LayoutRef` unconditionally
-//!     4. `ArrayRef` implements `AsMut` to `RawRef` and `LayoutRef` unconditionally
-//!     5. `RawRef` implements `AsMut` to `LayoutRef`
-//!     6. `RawRef` and `LayoutRef` implement `AsMut` to themselves
+//!     3. `ArrayBase` implements `AsRef` and `AsMut` to `LayoutRef` unconditionally
+//!     4. `ArrayRef` implements `AsRef` and `AsMut` to `RawRef` and `LayoutRef` unconditionally
+//!     5. `RawRef` implements `AsRef` and `AsMut` to `LayoutRef`
+//!     6. `RawRef` and `LayoutRef` implement `AsRef` and `AsMut` to themselves
 //!
 //! This allows users to write a single method or trait implementation that takes `T: AsRef<RawRef<A, D>>`
 //! or `T: AsRef<LayoutRef<A, D>>` and have that functionality work on any of the relevant array types.
 
-use core::ops::{Deref, DerefMut};
+use core::{
+    borrow::{Borrow, BorrowMut},
+    ops::{Deref, DerefMut},
+};
 
-use crate::{ArrayBase, ArrayRef, Data, DataMut, Dimension, LayoutRef, RawData, RawDataMut, RawRef};
+use crate::{Array, ArrayBase, ArrayRef, Data, DataMut, Dimension, LayoutRef, RawData, RawDataMut, RawRef};
 
 // D1: &ArrayBase -> &ArrayRef when data is safe to read
 impl<S, D> Deref for ArrayBase<S, D>
@@ -286,3 +289,59 @@ impl<A, D: Clone> Clone for LayoutRef<A, D>
 }
 
 impl<A, D: Clone + Copy> Copy for LayoutRef<A, D> {}
+
+impl<S, D> Borrow<RawRef<S::Elem, D>> for ArrayBase<S, D>
+where S: RawData
+{
+    fn borrow(&self) -> &RawRef<S::Elem, D>
+    {
+        self.as_ref()
+    }
+}
+
+impl<S, D> BorrowMut<RawRef<S::Elem, D>> for ArrayBase<S, D>
+where S: RawDataMut
+{
+    fn borrow_mut(&mut self) -> &mut RawRef<S::Elem, D>
+    {
+        self.as_mut()
+    }
+}
+
+impl<S, D> Borrow<ArrayRef<S::Elem, D>> for ArrayBase<S, D>
+where S: Data
+{
+    fn borrow(&self) -> &ArrayRef<S::Elem, D>
+    {
+        &**self
+    }
+}
+
+impl<S, D> BorrowMut<ArrayRef<S::Elem, D>> for ArrayBase<S, D>
+where
+    S: DataMut,
+    D: Dimension,
+{
+    fn borrow_mut(&mut self) -> &mut ArrayRef<S::Elem, D>
+    {
+        &mut **self
+    }
+}
+
+impl<A, D> ToOwned for ArrayRef<A, D>
+where
+    A: Clone,
+    D: Dimension,
+{
+    type Owned = Array<A, D>;
+
+    fn to_owned(&self) -> Self::Owned
+    {
+        self.to_owned()
+    }
+
+    fn clone_into(&self, target: &mut Array<A, D>)
+    {
+        target.zip_mut_with(self, |tgt, src| tgt.clone_from(src));
+    }
+}
