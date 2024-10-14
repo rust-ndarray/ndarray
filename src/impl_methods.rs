@@ -578,7 +578,7 @@ where
     {
         assert_eq!(
             info.in_ndim(),
-            self.as_ref().ndim(),
+            self.ndim(),
             "The input dimension of `info` must match the array to be sliced.",
         );
         let out_ndim = info.out_ndim();
@@ -599,7 +599,7 @@ where
             }
             SliceInfoElem::Index(index) => {
                 // Collapse the axis in-place to update the `ptr`.
-                let i_usize = abs_index(self.as_ref().len_of(Axis(old_axis)), index);
+                let i_usize = abs_index(self.len_of(Axis(old_axis)), index);
                 self.collapse_axis(Axis(old_axis), i_usize);
                 // Skip copying the axis since it should be removed. Note that
                 // removing this axis is safe because `.collapse_axis()` panics
@@ -614,7 +614,7 @@ where
                 new_axis += 1;
             }
         });
-        debug_assert_eq!(old_axis, self.as_ref().ndim());
+        debug_assert_eq!(old_axis, self.ndim());
         debug_assert_eq!(new_axis, out_ndim);
 
         // safe because new dimension, strides allow access to a subset of old data
@@ -1568,7 +1568,7 @@ where
     {
         /* empty shape has len 1 */
         let len = self.layout.dim.slice().iter().cloned().min().unwrap_or(1);
-        let stride = LayoutRef::strides(self.as_ref()).iter().sum();
+        let stride = self.strides().iter().sum();
         (len, stride)
     }
 
@@ -2039,12 +2039,7 @@ where
             match order {
                 Order::RowMajor if self.is_standard_layout() =>
                     Ok(self.with_strides_dim(shape.default_strides(), shape)),
-                Order::ColumnMajor
-                    if self
-                        .as_ref()
-                        .raw_view()
-                        .reversed_axes()
-                        .is_standard_layout() =>
+                Order::ColumnMajor if self.raw_view().reversed_axes().is_standard_layout() =>
                     Ok(self.with_strides_dim(shape.fortran_strides(), shape)),
                 _otherwise => Err(error::from_kind(error::ErrorKind::IncompatibleLayout)),
             }
@@ -2087,13 +2082,7 @@ where
             // safe because arrays are contiguous and len is unchanged
             if self.is_standard_layout() {
                 Ok(self.with_strides_dim(shape.default_strides(), shape))
-            } else if self.as_ref().ndim() > 1
-                && self
-                    .as_ref()
-                    .raw_view()
-                    .reversed_axes()
-                    .is_standard_layout()
-            {
+            } else if self.ndim() > 1 && self.raw_view().reversed_axes().is_standard_layout() {
                 Ok(self.with_strides_dim(shape.fortran_strides(), shape))
             } else {
                 Err(error::from_kind(error::ErrorKind::IncompatibleLayout))
@@ -2527,7 +2516,7 @@ where
     {
         let axes = axes.into_dimension();
         // Ensure that each axis is used exactly once.
-        let mut usage_counts = D::zeros(self.as_ref().ndim());
+        let mut usage_counts = D::zeros(self.ndim());
         for axis in axes.slice() {
             usage_counts[*axis] += 1;
         }
@@ -2536,7 +2525,7 @@ where
         }
         // Determine the new shape and strides.
         let mut new_dim = usage_counts; // reuse to avoid an allocation
-        let mut new_strides = D::zeros(self.as_ref().ndim());
+        let mut new_strides = D::zeros(self.ndim());
         {
             let dim = self.layout.dim.slice();
             let strides = self.layout.strides.slice();
@@ -2683,7 +2672,7 @@ where
     #[track_caller]
     pub fn insert_axis(self, axis: Axis) -> ArrayBase<S, D::Larger>
     {
-        assert!(axis.index() <= self.as_ref().ndim());
+        assert!(axis.index() <= self.ndim());
         // safe because a new axis of length one does not affect memory layout
         unsafe {
             let strides = self.layout.strides.insert_axis(axis);
@@ -2707,7 +2696,7 @@ where
 
     pub(crate) fn pointer_is_inbounds(&self) -> bool
     {
-        self.data._is_pointer_inbounds(self.as_ref().as_ptr())
+        self.data._is_pointer_inbounds(self.as_ptr())
     }
 }
 
@@ -3169,7 +3158,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
             return;
         }
         let mut curr = self.raw_view_mut(); // mut borrow of the array here
-        let mut prev = curr.as_ref().raw_view(); // derive further raw views from the same borrow
+        let mut prev = curr.raw_view(); // derive further raw views from the same borrow
         prev.slice_axis_inplace(axis, Slice::from(..-1));
         curr.slice_axis_inplace(axis, Slice::from(1..));
         // This implementation relies on `Zip` iterating along `axis` in order.

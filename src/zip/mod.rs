@@ -18,7 +18,6 @@ use crate::partial::Partial;
 use crate::AssignElem;
 use crate::IntoDimension;
 use crate::Layout;
-use crate::LayoutRef;
 
 use crate::dimension;
 use crate::indexes::{indices, Indices};

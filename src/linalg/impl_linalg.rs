@@ -671,7 +671,7 @@ unsafe fn general_mat_vec_mul_impl<A>(
 ) where A: LinalgScalar
 {
     let ((m, k), k2) = (a.dim(), x.dim());
-    let m2 = y.as_ref().dim();
+    let m2 = y.dim();
     if k != k2 || m != m2 {
         general_dot_shape_error(m, k, k2, 1, m2, 1);
     } else {
@@ -793,7 +793,7 @@ fn complex_array<A: 'static + Copy>(z: Complex<A>) -> [A; 2]
 }
 
 #[cfg(feature = "blas")]
-fn blas_compat_1d<A, B>(a: &LayoutRef<B, Ix1>) -> bool
+fn blas_compat_1d<A, B>(a: &RawRef<B, Ix1>) -> bool
 where
     A: 'static,
     B: 'static,

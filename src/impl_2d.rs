@@ -65,7 +65,7 @@ impl<A> LayoutRef<A, Ix2>
     /// ```
     pub fn nrows(&self) -> usize
     {
-        self.as_ref().len_of(Axis(0))
+        self.len_of(Axis(0))
     }
 }
 
@@ -124,7 +124,7 @@ impl<A> LayoutRef<A, Ix2>
     /// ```
     pub fn ncols(&self) -> usize
     {
-        self.as_ref().len_of(Axis(1))
+        self.len_of(Axis(1))
     }
 
     /// Return true if the array is square, false otherwise.
@@ -144,7 +144,7 @@ impl<A> LayoutRef<A, Ix2>
     /// ```
     pub fn is_square(&self) -> bool
     {
-        let (m, n) = self.as_ref().dim();
+        let (m, n) = self.dim();
         m == n
     }
 }

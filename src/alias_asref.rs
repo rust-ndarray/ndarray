@@ -1,4 +1,16 @@
-use crate::{iter::Axes, ArrayBase, Axis, AxisDescription, Dimension, LayoutRef, RawData, Slice, SliceArg};
+use crate::{
+    iter::Axes,
+    ArrayBase,
+    Axis,
+    AxisDescription,
+    Dimension,
+    LayoutRef,
+    RawArrayView,
+    RawData,
+    RawRef,
+    Slice,
+    SliceArg,
+};
 
 impl<S: RawData, D: Dimension> ArrayBase<S, D>
 {
@@ -69,19 +81,19 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     /// contiguous in memory, it has custom strides, etc.
     pub fn is_standard_layout(&self) -> bool
     {
-        self.as_ref().is_standard_layout()
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).is_standard_layout()
     }
 
     /// Return true if the array is known to be contiguous.
     pub(crate) fn is_contiguous(&self) -> bool
     {
-        self.as_ref().is_contiguous()
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).is_contiguous()
     }
 
     /// Return an iterator over the length and stride of each axis.
     pub fn axes(&self) -> Axes<'_, D>
     {
-        self.as_ref().axes()
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).axes()
     }
 
     /*
@@ -170,9 +182,129 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
         self.as_mut().merge_axes(take, into)
     }
 
+    /// Return a raw view of the array.
+    #[inline]
+    pub fn raw_view(&self) -> RawArrayView<S::Elem, D>
+    {
+        <Self as AsRef<RawRef<_, _>>>::as_ref(self).raw_view()
+    }
+
+    /// Return a pointer to the first element in the array.
+    ///
+    /// Raw access to array elements needs to follow the strided indexing
+    /// scheme: an element at multi-index *I* in an array with strides *S* is
+    /// located at offset
+    ///
+    /// *Σ<sub>0 ≤ k < d</sub> I<sub>k</sub> × S<sub>k</sub>*
+    ///
+    /// where *d* is `self.ndim()`.
+    #[inline(always)]
+    pub fn as_ptr(&self) -> *const S::Elem
+    {
+        <Self as AsRef<RawRef<_, _>>>::as_ref(self).as_ptr()
+    }
+
+    /// Return the total number of elements in the array.
+    pub fn len(&self) -> usize
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).len()
+    }
+
+    /// Return the length of `axis`.
+    ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    #[track_caller]
+    pub fn len_of(&self, axis: Axis) -> usize
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).len_of(axis)
+    }
+
+    /// Return whether the array has any elements
+    pub fn is_empty(&self) -> bool
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).is_empty()
+    }
+
+    /// Return the number of dimensions (axes) in the array
+    pub fn ndim(&self) -> usize
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).ndim()
+    }
+
+    /// Return the shape of the array in its “pattern” form,
+    /// an integer in the one-dimensional case, tuple in the n-dimensional cases
+    /// and so on.
+    pub fn dim(&self) -> D::Pattern
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).dim()
+    }
+
+    /// Return the shape of the array as it's stored in the array.
+    ///
+    /// This is primarily useful for passing to other `ArrayBase`
+    /// functions, such as when creating another array of the same
+    /// shape and dimensionality.
+    ///
+    /// ```
+    /// use ndarray::Array;
+    ///
+    /// let a = Array::from_elem((2, 3), 5.);
+    ///
+    /// // Create an array of zeros that's the same shape and dimensionality as `a`.
+    /// let b = Array::<f64, _>::zeros(a.raw_dim());
+    /// ```
+    pub fn raw_dim(&self) -> D
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).raw_dim()
+    }
+
+    /// Return the shape of the array as a slice.
+    ///
+    /// Note that you probably don't want to use this to create an array of the
+    /// same shape as another array because creating an array with e.g.
+    /// [`Array::zeros()`](ArrayBase::zeros) using a shape of type `&[usize]`
+    /// results in a dynamic-dimensional array. If you want to create an array
+    /// that has the same shape and dimensionality as another array, use
+    /// [`.raw_dim()`](ArrayBase::raw_dim) instead:
+    ///
+    /// ```rust
+    /// use ndarray::{Array, Array2};
+    ///
+    /// let a = Array2::<i32>::zeros((3, 4));
+    /// let shape = a.shape();
+    /// assert_eq!(shape, &[3, 4]);
+    ///
+    /// // Since `a.shape()` returned `&[usize]`, we get an `ArrayD` instance:
+    /// let b = Array::zeros(shape);
+    /// assert_eq!(a.clone().into_dyn(), b);
+    ///
+    /// // To get the same dimension type, use `.raw_dim()` instead:
+    /// let c = Array::zeros(a.raw_dim());
+    /// assert_eq!(a, c);
+    /// ```
+    pub fn shape(&self) -> &[usize]
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).shape()
+    }
+
     /// Return the strides of the array as a slice.
     pub fn strides(&self) -> &[isize]
     {
-        self.as_ref().strides()
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).strides()
+    }
+
+    /// Return the stride of `axis`.
+    ///
+    /// The axis should be in the range `Axis(` 0 .. *n* `)` where *n* is the
+    /// number of dimensions (axes) of the array.
+    ///
+    /// ***Panics*** if the axis is out of bounds.
+    #[track_caller]
+    pub fn stride_of(&self, axis: Axis) -> isize
+    {
+        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).stride_of(axis)
     }
 }
