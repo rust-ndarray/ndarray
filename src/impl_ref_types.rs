@@ -29,6 +29,7 @@
 //! This allows users to write a single method or trait implementation that takes `T: AsRef<RawRef<A, D>>`
 //! or `T: AsRef<LayoutRef<A, D>>` and have that functionality work on any of the relevant array types.
 
+use alloc::borrow::ToOwned;
 use core::{
     borrow::{Borrow, BorrowMut},
     ops::{Deref, DerefMut},
