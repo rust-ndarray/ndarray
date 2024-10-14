@@ -1,5 +1,5 @@
 use crate::AssignElem;
-use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
+use crate::{Array, ArrayRef, Dimension, IntoNdProducer, NdProducer, Zip};
 
 use super::send_producer::SendProducer;
 use crate::parallel::par::ParallelSplits;
