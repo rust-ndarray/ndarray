@@ -1410,6 +1410,7 @@ pub struct LayoutRef<A, D>
 #[repr(transparent)]
 pub struct ArrayRef<A, D>(LayoutRef<A, D>);
 
+#[repr(transparent)]
 pub struct RawRef<A, D>(LayoutRef<A, D>);
 
 /// An array where the data has shared ownership and is copy on write.
