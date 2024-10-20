@@ -1297,6 +1297,92 @@ where S: RawData<Elem = A>
 }
 
 /// A reference to the layout of an *n*-dimensional array.
+///
+/// This type can be used to read and write to the layout of an array;
+/// that is to say, its shape and strides. It does not provide any read
+/// or write access to the array's underlying data. It is generic on two
+/// types: `D`, its dimensionality, and `A`, the element type of its data.
+///
+/// ## Example
+/// Say we wanted to write a function that provides the aspect ratio
+/// of any 2D array: the ratio of its width (number of columns) to its
+/// height (number of rows). We would write that as follows:
+/// ```rust
+/// use ndarray::{LayoutRef2, array};
+///
+/// fn aspect_ratio<T, A>(layout: &T) -> (usize, usize)
+/// where T: AsRef<LayoutRef2<A>>
+/// {
+///     let layout = layout.as_ref();
+///     (layout.ncols(), layout.nrows())
+/// }
+///
+/// let arr = array![[1, 2], [3, 4]];
+/// assert_eq!(aspect_ratio(&arr), (2, 2));
+/// ```
+/// Similarly, new traits that provide functions that only depend on
+/// or alter the layout of an array should do so via a blanket
+/// implementation. Lets write a trait that both provides the aspect ratio
+/// and lets users cut down arrays to a desired aspect ratio.
+/// For simplicity, we'll panic if the user provides an aspect ratio
+/// where either element is larger than the array's size.
+/// ```rust
+/// use ndarray::{LayoutRef2, array, s};
+///
+/// trait Ratioable<A> {
+///     fn aspect_ratio(&self) -> (usize, usize)
+///     where Self: AsRef<LayoutRef2<A>>;
+///
+///     fn cut_to_ratio(&mut self, ratio: (usize, usize))
+///     where Self: AsMut<LayoutRef2<A>>;
+/// }
+///
+/// impl<T, A> Ratioable<A> for T
+/// where T: AsRef<LayoutRef2<A>> + AsMut<LayoutRef2<A>>
+/// {
+///     fn aspect_ratio(&self) -> (usize, usize)
+///     {
+///         let layout = self.as_ref();
+///         (layout.ncols(), layout.nrows())
+///     }
+///
+///     fn cut_to_ratio(&mut self, ratio: (usize, usize))
+///     {
+///         let layout = self.as_mut();
+///         layout.slice_collapse(s![..ratio.1, ..ratio.0]);
+///     }
+/// }
+///
+/// let mut arr = array![[1, 2, 3], [4, 5, 6]];
+/// assert_eq!(arr.aspect_ratio(), (3, 2));
+/// arr.cut_to_ratio((2, 2));
+/// assert_eq!(arr, array![[1, 2], [4, 5]]);
+/// ```
+/// Continue reading for why we use `AsRef` instead of taking `&LayoutRef` directly.
+///
+/// ## Writing Functions
+/// Writing functions that accept `LayoutRef` is not as simple as taking
+/// a `&LayoutRef` argument, as the above examples show. This is because
+/// `LayoutRef` can be obtained either cheaply or expensively, depending
+/// on the method used. `LayoutRef` can be obtained from all kinds of arrays
+/// -- [owned](Array), [shared](ArcArray), [viewed](ArrayView), [referenced](ArrayRef),
+/// and [raw referenced](RawRef) -- via `.as_ref()`. Critically, this way of
+/// obtaining a `LayoutRef` is cheap, as it does not guarantee that the
+/// underlying data is uniquely held.
+///
+/// However, `LayoutRef`s can be obtained a second way: they sit at the bottom
+/// of a "deref chain" going from shared arrays, through `ArrayRef`, through
+/// `RawRef`, and finally to `LayoutRef`. As a result, `LayoutRef`s can also
+/// be obtained via auto-dereferencing. When requesting a mutable reference --
+/// `&mut LayoutRef` -- the `deref_mut` to `ArrayRef` triggers a (possibly
+/// expensive) guarantee that the data is uniquely held (see [`ArrayRef`]
+/// for more information).
+///
+/// To help users avoid this error cost, functions that operate on `LayoutRef`s
+/// should take their parameters as a generic type `T: AsRef<LayoutRef<A, D>>`,
+/// as the above examples show. This aids the caller in two ways: they can pass
+/// their arrays by reference (`&arr`) instead of explicitly calling `as_ref`,
+/// and they will avoid paying a performance penalty for mutating the shape.
 //
 // # Safety for Implementors
 //
