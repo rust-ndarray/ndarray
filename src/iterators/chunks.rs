@@ -27,7 +27,7 @@ impl_ndproducer! {
 
 /// Exact chunks producer and iterable.
 ///
-/// See [`.exact_chunks()`](ArrayBase::exact_chunks) for more
+/// See [`.exact_chunks()`](crate::ArrayRef::exact_chunks) for more
 /// information.
 //#[derive(Debug)]
 pub struct ExactChunks<'a, A, D>
@@ -93,7 +93,7 @@ where
 
 /// Exact chunks iterator.
 ///
-/// See [`.exact_chunks()`](ArrayBase::exact_chunks) for more
+/// See [`.exact_chunks()`](crate::ArrayRef::exact_chunks) for more
 /// information.
 pub struct ExactChunksIter<'a, A, D>
 {
@@ -126,7 +126,7 @@ impl_ndproducer! {
 
 /// Exact chunks producer and iterable.
 ///
-/// See [`.exact_chunks_mut()`](ArrayBase::exact_chunks_mut)
+/// See [`.exact_chunks_mut()`](crate::ArrayRef::exact_chunks_mut)
 /// for more information.
 //#[derive(Debug)]
 pub struct ExactChunksMut<'a, A, D>
@@ -237,7 +237,7 @@ impl_iterator! {
 
 /// Exact chunks iterator.
 ///
-/// See [`.exact_chunks_mut()`](ArrayBase::exact_chunks_mut)
+/// See [`.exact_chunks_mut()`](crate::ArrayRef::exact_chunks_mut)
 /// for more information.
 pub struct ExactChunksIterMut<'a, A, D>
 {

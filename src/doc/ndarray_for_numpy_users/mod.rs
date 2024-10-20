@@ -322,7 +322,7 @@
 //!
 //! </td><td>
 //!
-//! [`mat1.dot(&mat2)`][matrix-* dot]
+//! [`mat1.dot(&mat2)`][dot-2-2]
 //!
 //! </td><td>
 //!
@@ -336,7 +336,7 @@
 //!
 //! </td><td>
 //!
-//! [`mat.dot(&vec)`][matrix-* dot]
+//! [`mat.dot(&vec)`][dot-2-1]
 //!
 //! </td><td>
 //!
@@ -350,7 +350,7 @@
 //!
 //! </td><td>
 //!
-//! [`vec.dot(&mat)`][vec-* dot]
+//! [`vec.dot(&mat)`][dot-1-2]
 //!
 //! </td><td>
 //!
@@ -364,7 +364,7 @@
 //!
 //! </td><td>
 //!
-//! [`vec1.dot(&vec2)`][vec-* dot]
+//! [`vec1.dot(&vec2)`][dot-1-1]
 //!
 //! </td><td>
 //!
@@ -670,22 +670,22 @@
 //! `a[:,4]` | [`a.column(4)`][.column()] or [`a.column_mut(4)`][.column_mut()] | view (or mutable view) of column 4 in a 2-D array
 //! `a.shape[0] == a.shape[1]` | [`a.is_square()`][.is_square()] | check if the array is square
 //!
-//! [.abs_diff_eq()]: ArrayBase#impl-AbsDiffEq<ArrayBase<S2%2C%20D>>
-//! [.assign()]: ArrayBase::assign
-//! [.axis_iter()]: ArrayBase::axis_iter
-//! [.ncols()]: ArrayBase::ncols
-//! [.column()]: ArrayBase::column
-//! [.column_mut()]: ArrayBase::column_mut
+//! [.abs_diff_eq()]: ArrayRef#impl-AbsDiffEq%3CArrayRef%3CB,+D%3E%3E
+//! [.assign()]: ArrayRef::assign
+//! [.axis_iter()]: ArrayRef::axis_iter
+//! [.ncols()]: LayoutRef::ncols
+//! [.column()]: ArrayRef::column
+//! [.column_mut()]: ArrayRef::column_mut
 //! [concatenate()]: crate::concatenate()
 //! [concatenate!]: crate::concatenate!
 //! [stack!]: crate::stack!
 //! [::default()]: ArrayBase::default
-//! [.diag()]: ArrayBase::diag
-//! [.dim()]: ArrayBase::dim
+//! [.diag()]: ArrayRef::diag
+//! [.dim()]: LayoutRef::dim
 //! [::eye()]: ArrayBase::eye
-//! [.fill()]: ArrayBase::fill
-//! [.fold()]: ArrayBase::fold
-//! [.fold_axis()]: ArrayBase::fold_axis
+//! [.fill()]: ArrayRef::fill
+//! [.fold()]: ArrayRef::fold
+//! [.fold_axis()]: ArrayRef::fold_axis
 //! [::from_elem()]: ArrayBase::from_elem
 //! [::from_iter()]: ArrayBase::from_iter
 //! [::from_diag()]: ArrayBase::from_diag
@@ -694,48 +694,51 @@
 //! [::from_shape_vec_unchecked()]: ArrayBase::from_shape_vec_unchecked
 //! [::from_vec()]: ArrayBase::from_vec
 //! [.index()]: ArrayBase#impl-Index<I>
-//! [.indexed_iter()]: ArrayBase::indexed_iter
+//! [.indexed_iter()]: ArrayRef::indexed_iter
 //! [.insert_axis()]: ArrayBase::insert_axis
-//! [.is_empty()]: ArrayBase::is_empty
-//! [.is_square()]: ArrayBase::is_square
-//! [.iter()]: ArrayBase::iter
-//! [.len()]: ArrayBase::len
-//! [.len_of()]: ArrayBase::len_of
+//! [.is_empty()]: LayoutRef::is_empty
+//! [.is_square()]: LayoutRef::is_square
+//! [.iter()]: ArrayRef::iter
+//! [.len()]: LayoutRef::len
+//! [.len_of()]: LayoutRef::len_of
 //! [::linspace()]: ArrayBase::linspace
 //! [::logspace()]: ArrayBase::logspace
 //! [::geomspace()]: ArrayBase::geomspace
-//! [.map()]: ArrayBase::map
-//! [.map_axis()]: ArrayBase::map_axis
-//! [.map_inplace()]: ArrayBase::map_inplace
-//! [.mapv()]: ArrayBase::mapv
-//! [.mapv_inplace()]: ArrayBase::mapv_inplace
+//! [.map()]: ArrayRef::map
+//! [.map_axis()]: ArrayRef::map_axis
+//! [.map_inplace()]: ArrayRef::map_inplace
+//! [.mapv()]: ArrayRef::mapv
+//! [.mapv_inplace()]: ArrayRef::mapv_inplace
 //! [.mapv_into()]: ArrayBase::mapv_into
-//! [matrix-* dot]: ArrayBase::dot-1
-//! [.mean()]: ArrayBase::mean
-//! [.mean_axis()]: ArrayBase::mean_axis
-//! [.ndim()]: ArrayBase::ndim
+//! [dot-2-2]: ArrayRef#impl-Dot<ArrayRef<A,+Dim<[usize;+2]>>>-for-ArrayRef<A,+Dim<[usize;+2]>>
+//! [dot-1-1]: ArrayRef#impl-Dot<ArrayRef<A,+Dim<[usize;+1]>>>-for-ArrayRef<A,+Dim<[usize;+1]>>
+//! [dot-1-2]: ArrayRef#impl-Dot<ArrayRef<A,+Dim<[usize;+2]>>>-for-ArrayRef<A,+Dim<[usize;+1]>>
+//! [dot-2-1]: ArrayRef#impl-Dot<ArrayRef<A,+Dim<[usize;+1]>>>-for-ArrayRef<A,+Dim<[usize;+2]>>
+//! [.mean()]: ArrayRef::mean
+//! [.mean_axis()]: ArrayRef::mean_axis
+//! [.ndim()]: LayoutRef::ndim
 //! [::ones()]: ArrayBase::ones
-//! [.outer_iter()]: ArrayBase::outer_iter
+//! [.outer_iter()]: ArrayRef::outer_iter
 //! [::range()]: ArrayBase::range
-//! [.raw_dim()]: ArrayBase::raw_dim
+//! [.raw_dim()]: LayoutRef::raw_dim
 //! [.reversed_axes()]: ArrayBase::reversed_axes
-//! [.row()]: ArrayBase::row
-//! [.row_mut()]: ArrayBase::row_mut
-//! [.nrows()]: ArrayBase::nrows
-//! [.sum()]: ArrayBase::sum
-//! [.slice()]: ArrayBase::slice
-//! [.slice_axis()]: ArrayBase::slice_axis
-//! [.slice_collapse()]: ArrayBase::slice_collapse
+//! [.row()]: ArrayRef::row
+//! [.row_mut()]: ArrayRef::row_mut
+//! [.nrows()]: LayoutRef::nrows
+//! [.sum()]: ArrayRef::sum
+//! [.slice()]: ArrayRef::slice
+//! [.slice_axis()]: ArrayRef::slice_axis
+//! [.slice_collapse()]: LayoutRef::slice_collapse
 //! [.slice_move()]: ArrayBase::slice_move
-//! [.slice_mut()]: ArrayBase::slice_mut
-//! [.shape()]: ArrayBase::shape
+//! [.slice_mut()]: ArrayRef::slice_mut
+//! [.shape()]: LayoutRef::shape
 //! [stack()]: crate::stack()
-//! [.strides()]: ArrayBase::strides
-//! [.index_axis()]: ArrayBase::index_axis
-//! [.sum_axis()]: ArrayBase::sum_axis
-//! [.t()]: ArrayBase::t
-//! [vec-* dot]: ArrayBase::dot
-//! [.for_each()]: ArrayBase::for_each
+//! [.strides()]: LayoutRef::strides
+//! [.index_axis()]: ArrayRef::index_axis
+//! [.sum_axis()]: ArrayRef::sum_axis
+//! [.t()]: ArrayRef::t
+//! [vec-* dot]: ArrayRef::dot
+//! [.for_each()]: ArrayRef::for_each
 //! [::zeros()]: ArrayBase::zeros
 //! [`Zip`]: crate::Zip
 

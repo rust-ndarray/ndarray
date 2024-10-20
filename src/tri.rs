@@ -30,7 +30,7 @@ where
     /// For arrays with `ndim` exceeding 2, `triu` will apply to the final two axes.
     /// For 0D and 1D arrays, `triu` will return an unchanged clone.
     ///
-    /// See also [`ArrayBase::tril`]
+    /// See also [`ArrayRef::tril`]
     ///
     /// ```
     /// use ndarray::array;
@@ -95,7 +95,7 @@ where
     /// For arrays with `ndim` exceeding 2, `tril` will apply to the final two axes.
     /// For 0D and 1D arrays, `tril` will return an unchanged clone.
     ///
-    /// See also [`ArrayBase::triu`]
+    /// See also [`ArrayRef::triu`]
     ///
     /// ```
     /// use ndarray::array;
