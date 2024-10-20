@@ -1407,6 +1407,74 @@ pub struct LayoutRef<A, D>
     strides: D,
 }
 
+/// A reference to an *n*-dimensional array whose data is safe to read and write.
+///
+/// This type's relationship to [`ArrayBase`] can be thought of a bit like the
+/// relationship between [`Vec`] and [`std::slice`]: it represents a look into the
+/// array, and is the [`Deref`](std::ops::Deref) target for owned, shared, and viewed
+/// arrays. Most functionality is implemented on `ArrayRef`, and most functions
+/// should take `&ArrayRef` instead of `&ArrayBase`.
+///
+/// ## Relationship to Views
+/// `ArrayRef` and [`ArrayView`] are very similar types: they both represent a
+/// "look" into an array. There is one key difference: views have their own
+/// shape and strides, while `ArrayRef` just points to the shape and strides of
+/// whatever array it came from.
+///
+/// As an example, let's write a function that takes an array, trims it
+/// down to a square in-place, and then returns the sum:
+/// ```rust
+/// use std::cmp;
+/// use std::ops::Add;
+///
+/// use ndarray::{ArrayRef2, array, s};
+/// use num_traits::Zero;
+///
+/// fn square_and_sum<A>(arr: &mut ArrayRef2<A>) -> A
+/// where A: Clone + Add<Output = A> + Zero
+/// {
+///     let side_len = cmp::min(arr.nrows(), arr.ncols());
+///     arr.slice_collapse(s![..side_len, ..side_len]);
+///     arr.sum()
+/// }
+///
+/// let mut arr = array![
+///     [ 1,  2,  3],
+///     [ 4,  5,  6],
+///     [ 7,  8,  9],
+///     [10, 11, 12]
+/// ];
+/// // Take a view of the array, excluding the first column
+/// let mut view = arr.slice_mut(s![.., 1..]);
+/// let sum_view = square_and_sum(&mut view);
+/// assert_eq!(sum_view, 16);
+/// assert_eq!(view.ncols(), 2usize); // The view has changed shape...
+/// assert_eq!(view.nrows(), 2usize);
+/// assert_eq!(arr.ncols(), 3usize); // ... but the original array has not
+/// assert_eq!(arr.nrows(), 4usize);
+///
+/// let sum_all = square_and_sum(&mut arr);
+/// assert_eq!(sum_all, 45);
+/// assert_eq!(arr.ncols(), 3usize); // Now the original array has changed shape
+/// assert_eq!(arr.nrows(), 3usize); // because we passed it directly to the function
+/// ```
+/// Critically, we can call the same function on both the view and the array itself.
+/// We can see that, because the view has its own shape and strides, "squaring" it does
+/// not affect the shape of the original array. Those only change when we pass the array
+/// itself into the function.
+///
+/// Also notice that the output of `slice_mut` is a *view*, not an `ArrayRef`.
+/// This is where the analogy to `Vec`/`slice` breaks down a bit: due to limitations of
+/// the Rust language, `ArrayRef` *cannot* have a different shape / stride from the
+/// array from which it is dereferenced. So slicing still produces an `ArrayView`,
+/// not an `ArrayRef`.
+///
+/// ## Uniqueness
+/// `ndarray` has copy-on-write shared data; see [`ArcArray`], for example.
+/// When a copy-on-write array is passed to a function that takes `ArrayRef` as mutable
+/// (i.e., `&mut ArrayRef`, like above), that array will be un-shared when it is dereferenced
+/// into `ArrayRef`. In other words, having a `&mut ArrayRef` guarantees that the underlying
+/// data is un-shared and safe to write to.
 #[repr(transparent)]
 pub struct ArrayRef<A, D>(LayoutRef<A, D>);
 

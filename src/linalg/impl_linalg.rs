@@ -402,7 +402,7 @@ where D: Dimension
     }
 }
 
-// mat_mul_impl uses ArrayView arguments to send all array kinds into
+// mat_mul_impl uses ArrayRef arguments to send all array kinds into
 // the same instantiated implementation.
 #[cfg(not(feature = "blas"))]
 use self::mat_mul_general as mat_mul_impl;
