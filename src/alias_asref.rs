@@ -31,7 +31,7 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     ///
     /// - if an index is out of bounds
     /// - if a step size is zero
-    /// - if [`SliceInfoElem::NewAxis`] is in `info`, e.g. if [`NewAxis`] was
+    /// - if [`NewAxis`](`crate::SliceInfoElem::NewAxis`) is in `info`, e.g. if `NewAxis` was
     ///   used in the [`s!`] macro
     /// - if `D` is `IxDyn` and `info` does not match the number of array axes
     #[track_caller]

@@ -60,8 +60,8 @@
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
-//!   + The higher order functions like [`.map()`](ArrayBase::map),
-//!     [`.map_inplace()`](ArrayBase::map_inplace), [`.zip_mut_with()`](ArrayBase::zip_mut_with),
+//!   + The higher order functions like [`.map()`](ArrayRef::map),
+//!     [`.map_inplace()`](ArrayRef::map_inplace), [`.zip_mut_with()`](ArrayRef::zip_mut_with),
 //!     [`Zip`] and [`azip!()`](azip) are the most efficient ways
 //!     to perform single traversal and lock step traversal respectively.
 //!   + Performance of an operation depends on the memory layout of the array
@@ -308,7 +308,7 @@ pub type Ixs = isize;
 /// data (shared ownership).
 /// Sharing requires that it uses copy-on-write for mutable operations.
 /// Calling a method for mutating elements on `ArcArray`, for example
-/// [`view_mut()`](Self::view_mut) or [`get_mut()`](Self::get_mut),
+/// [`view_mut()`](ArrayRef::view_mut) or [`get_mut()`](ArrayRef::get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
 ///
 /// ## `CowArray`
@@ -332,9 +332,9 @@ pub type Ixs = isize;
 /// Please see the documentation for the respective array view for an overview
 /// of methods specific to array views: [`ArrayView`], [`ArrayViewMut`].
 ///
-/// A view is created from an array using [`.view()`](ArrayBase::view),
-/// [`.view_mut()`](ArrayBase::view_mut), using
-/// slicing ([`.slice()`](ArrayBase::slice), [`.slice_mut()`](ArrayBase::slice_mut)) or from one of
+/// A view is created from an array using [`.view()`](ArrayRef::view),
+/// [`.view_mut()`](ArrayRef::view_mut), using
+/// slicing ([`.slice()`](ArrayRef::slice), [`.slice_mut()`](ArrayRef::slice_mut)) or from one of
 /// the many iterators that yield array views.
 ///
 /// You can also create an array view from a regular slice of data not
@@ -476,12 +476,12 @@ pub type Ixs = isize;
 /// [`.columns()`][gc], [`.columns_mut()`][gcm],
 /// [`.lanes(axis)`][l], [`.lanes_mut(axis)`][lm].
 ///
-/// [gr]: Self::rows
-/// [grm]: Self::rows_mut
-/// [gc]: Self::columns
-/// [gcm]: Self::columns_mut
-/// [l]: Self::lanes
-/// [lm]: Self::lanes_mut
+/// [gr]: ArrayRef::rows
+/// [grm]: ArrayRef::rows_mut
+/// [gc]: ArrayRef::columns
+/// [gcm]: ArrayRef::columns_mut
+/// [l]: ArrayRef::lanes
+/// [lm]: ArrayRef::lanes_mut
 ///
 /// Yes, for 2D arrays `.rows()` and `.outer_iter()` have about the same
 /// effect:
@@ -507,10 +507,10 @@ pub type Ixs = isize;
 /// [`.slice_collapse()`] panics on `NewAxis` elements and behaves like
 /// [`.collapse_axis()`] by preserving the number of dimensions.
 ///
-/// [`.slice()`]: Self::slice
-/// [`.slice_mut()`]: Self::slice_mut
+/// [`.slice()`]: ArrayRef::slice
+/// [`.slice_mut()`]: ArrayRef::slice_mut
 /// [`.slice_move()`]: Self::slice_move
-/// [`.slice_collapse()`]: Self::slice_collapse
+/// [`.slice_collapse()`]: LayoutRef::slice_collapse
 ///
 /// When slicing arrays with generic dimensionality, creating an instance of
 /// [`SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
@@ -519,17 +519,17 @@ pub type Ixs = isize;
 /// or to create a view and then slice individual axes of the view using
 /// methods such as [`.slice_axis_inplace()`] and [`.collapse_axis()`].
 ///
-/// [`.slice_each_axis()`]: Self::slice_each_axis
-/// [`.slice_each_axis_mut()`]: Self::slice_each_axis_mut
+/// [`.slice_each_axis()`]: ArrayRef::slice_each_axis
+/// [`.slice_each_axis_mut()`]: ArrayRef::slice_each_axis_mut
 /// [`.slice_each_axis_inplace()`]: Self::slice_each_axis_inplace
 /// [`.slice_axis_inplace()`]: Self::slice_axis_inplace
-/// [`.collapse_axis()`]: Self::collapse_axis
+/// [`.collapse_axis()`]: LayoutRef::collapse_axis
 ///
 /// It's possible to take multiple simultaneous *mutable* slices with
 /// [`.multi_slice_mut()`] or (for [`ArrayViewMut`] only)
 /// [`.multi_slice_move()`].
 ///
-/// [`.multi_slice_mut()`]: Self::multi_slice_mut
+/// [`.multi_slice_mut()`]: ArrayRef::multi_slice_mut
 /// [`.multi_slice_move()`]: ArrayViewMut#method.multi_slice_move
 ///
 /// ```
@@ -628,16 +628,16 @@ pub type Ixs = isize;
 /// Methods for selecting an individual subview take two arguments: `axis` and
 /// `index`.
 ///
-/// [`.axis_iter()`]: Self::axis_iter
-/// [`.axis_iter_mut()`]: Self::axis_iter_mut
-/// [`.fold_axis()`]: Self::fold_axis
-/// [`.index_axis()`]: Self::index_axis
-/// [`.index_axis_inplace()`]: Self::index_axis_inplace
-/// [`.index_axis_mut()`]: Self::index_axis_mut
+/// [`.axis_iter()`]: ArrayRef::axis_iter
+/// [`.axis_iter_mut()`]: ArrayRef::axis_iter_mut
+/// [`.fold_axis()`]: ArrayRef::fold_axis
+/// [`.index_axis()`]: ArrayRef::index_axis
+/// [`.index_axis_inplace()`]: LayoutRef::index_axis_inplace
+/// [`.index_axis_mut()`]: ArrayRef::index_axis_mut
 /// [`.index_axis_move()`]: Self::index_axis_move
-/// [`.collapse_axis()`]: Self::collapse_axis
-/// [`.outer_iter()`]: Self::outer_iter
-/// [`.outer_iter_mut()`]: Self::outer_iter_mut
+/// [`.collapse_axis()`]: LayoutRef::collapse_axis
+/// [`.outer_iter()`]: ArrayRef::outer_iter
+/// [`.outer_iter_mut()`]: ArrayRef::outer_iter_mut
 ///
 /// ```
 ///
@@ -743,7 +743,7 @@ pub type Ixs = isize;
 /// Arrays support limited *broadcasting*, where arithmetic operations with
 /// array operands of different sizes can be carried out by repeating the
 /// elements of the smaller dimension array. See
-/// [`.broadcast()`](Self::broadcast) for a more detailed
+/// [`.broadcast()`](ArrayRef::broadcast) for a more detailed
 /// description.
 ///
 /// ```
@@ -1044,9 +1044,9 @@ pub type Ixs = isize;
 /// `&[A]` | `ArrayView<A, D>` | [`::from_shape()`](ArrayView#method.from_shape)
 /// `&mut [A]` | `ArrayViewMut1<A>` | [`::from()`](ArrayViewMut#method.from)
 /// `&mut [A]` | `ArrayViewMut<A, D>` | [`::from_shape()`](ArrayViewMut#method.from_shape)
-/// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](Self::to_vec)
+/// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](ArrayRef::to_vec)
 /// `Array<A, D>` | `Vec<A>` | [`.into_raw_vec()`](Array#method.into_raw_vec)<sup>[1](#into_raw_vec)</sup>
-/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](Self::as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](Self::as_slice_memory_order)<sup>[3](#req_contig)</sup>
+/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](ArrayRef::as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](ArrayRef::as_slice_memory_order)<sup>[3](#req_contig)</sup>
 /// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](Self::as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](Self::as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
 /// `ArrayView<A, D>` | `&[A]` | [`.to_slice()`](ArrayView#method.to_slice)<sup>[2](#req_contig_std)</sup>
 /// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](ArrayViewMut#method.into_slice)<sup>[2](#req_contig_std)</sup>
@@ -1070,9 +1070,9 @@ pub type Ixs = isize;
 /// [.into_owned()]: Self::into_owned
 /// [.into_shared()]: Self::into_shared
 /// [.to_owned()]: Self::to_owned
-/// [.map()]: Self::map
-/// [.view()]: Self::view
-/// [.view_mut()]: Self::view_mut
+/// [.map()]: ArrayRef::map
+/// [.view()]: ArrayRef::view
+/// [.view_mut()]: ArrayRef::view_mut
 ///
 /// ### Conversions from Nested `Vec`s/`Array`s
 ///
@@ -1415,8 +1415,8 @@ pub struct RawRef<A, D>(LayoutRef<A, D>);
 /// It can act as both an owner as the data as well as a shared reference (view
 /// like).
 /// Calling a method for mutating elements on `ArcArray`, for example
-/// [`view_mut()`](ArrayBase::view_mut) or
-/// [`get_mut()`](ArrayBase::get_mut), will break sharing and
+/// [`view_mut()`](ArrayRef::view_mut) or
+/// [`get_mut()`](ArrayRef::get_mut), will break sharing and
 /// require a clone of the data (if it is not uniquely held).
 ///
 /// `ArcArray` uses atomic reference counting like `Arc`, so it is `Send` and

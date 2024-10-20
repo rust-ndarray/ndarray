@@ -253,7 +253,7 @@ where
     /// If the input array is contiguous, then the output array will have the same
     /// memory layout. Otherwise, the layout of the output array is unspecified.
     /// If you need a particular layout, you can allocate a new array with the
-    /// desired memory layout and [`.assign()`](Self::assign) the data.
+    /// desired memory layout and [`.assign()`](ArrayRef::assign) the data.
     /// Alternatively, you can collectan iterator, like this for a result in
     /// standard layout:
     ///
@@ -630,9 +630,9 @@ impl<A, D: Dimension> LayoutRef<A, D>
     /// collapsed, as in [`.collapse_axis()`], rather than removed, as in
     /// [`.slice_move()`] or [`.index_axis_move()`].
     ///
-    /// [`.collapse_axis()`]: Self::collapse_axis
-    /// [`.slice_move()`]: Self::slice_move
-    /// [`.index_axis_move()`]: Self::index_axis_move
+    /// [`.collapse_axis()`]: LayoutRef::collapse_axis
+    /// [`.slice_move()`]: ArrayBase::slice_move
+    /// [`.index_axis_move()`]: ArrayBase::index_axis_move
     ///
     /// See [*Slicing*](#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
@@ -1056,7 +1056,7 @@ where
 {
     /// Collapses the array to `index` along the axis and removes the axis.
     ///
-    /// See [`.index_axis()`](Self::index_axis) and [*Subviews*](#subviews) for full documentation.
+    /// See [`.index_axis()`](ArrayRef::index_axis) and [*Subviews*](#subviews) for full documentation.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     #[track_caller]
@@ -1468,13 +1468,13 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// `window_size`.
     ///
     /// Note that passing a stride of only ones is similar to
-    /// calling [`ArrayBase::windows()`].
+    /// calling [`ArrayRef::windows()`].
     ///
     /// **Panics** if any dimension of `window_size` or `stride` is zero.<br>
     /// (**Panics** if `D` is `IxDyn` and `window_size` or `stride` does not match the
     /// number of array axes.)
     ///
-    /// This is the same illustration found in [`ArrayBase::windows()`],
+    /// This is the same illustration found in [`ArrayRef::windows()`],
     /// 2×2 windows in a 3×4 array, but now with a (1, 2) stride:
     ///
     /// ```text
@@ -2943,7 +2943,7 @@ where
     /// Elements are visited in arbitrary order.
     ///
     /// [`mapv_into`]: ArrayBase::mapv_into
-    /// [`mapv`]: ArrayBase::mapv
+    /// [`mapv`]: ArrayRef::mapv
     pub fn mapv_into_any<B, F>(self, mut f: F) -> Array<B, D>
     where
         S: DataMut,

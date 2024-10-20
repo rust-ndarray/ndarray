@@ -23,7 +23,7 @@ impl_ndproducer! {
     }
 }
 
-/// See [`.lanes()`](ArrayBase::lanes)
+/// See [`.lanes()`](crate::ArrayRef::lanes)
 /// for more information.
 pub struct Lanes<'a, A, D>
 {
@@ -92,7 +92,7 @@ where D: Dimension
     }
 }
 
-/// See [`.lanes_mut()`](ArrayBase::lanes_mut)
+/// See [`.lanes_mut()`](crate::ArrayRef::lanes_mut)
 /// for more information.
 pub struct LanesMut<'a, A, D>
 {

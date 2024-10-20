@@ -430,7 +430,7 @@ unsafe impl SliceArg<IxDyn> for [SliceInfoElem]
 /// `SliceInfo` instance can still be used to slice an array with dimension
 /// `IxDyn` as long as the number of axes matches.
 ///
-/// [`.slice()`]: crate::ArrayBase::slice
+/// [`.slice()`]: crate::ArrayRef::slice
 #[derive(Debug)]
 pub struct SliceInfo<T, Din: Dimension, Dout: Dimension>
 {
@@ -521,7 +521,7 @@ where
     }
 
     /// Returns the number of dimensions of the input array for
-    /// [`.slice()`](crate::ArrayBase::slice).
+    /// [`.slice()`](crate::ArrayRef::slice).
     ///
     /// If `Din` is a fixed-size dimension type, then this is equivalent to
     /// `Din::NDIM.unwrap()`. Otherwise, the value is calculated by iterating
@@ -536,7 +536,7 @@ where
     }
 
     /// Returns the number of dimensions after calling
-    /// [`.slice()`](crate::ArrayBase::slice) (including taking
+    /// [`.slice()`](crate::ArrayRef::slice) (including taking
     /// subviews).
     ///
     /// If `Dout` is a fixed-size dimension type, then this is equivalent to
@@ -755,10 +755,10 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 /// panic. Without the `NewAxis`, i.e. `s![0..4;2, 6, 1..5]`,
 /// [`.slice_collapse()`] would result in an array of shape `[2, 1, 4]`.
 ///
-/// [`.slice()`]: crate::ArrayBase::slice
-/// [`.slice_mut()`]: crate::ArrayBase::slice_mut
+/// [`.slice()`]: crate::ArrayRef::slice
+/// [`.slice_mut()`]: crate::ArrayRef::slice_mut
 /// [`.slice_move()`]: crate::ArrayBase::slice_move
-/// [`.slice_collapse()`]: crate::ArrayBase::slice_collapse
+/// [`.slice_collapse()`]: crate::LayoutRef::slice_collapse
 ///
 /// See also [*Slicing*](crate::ArrayBase#slicing).
 ///

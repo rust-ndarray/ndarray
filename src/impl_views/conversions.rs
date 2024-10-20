@@ -35,7 +35,7 @@ where D: Dimension
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     ///
-    /// Note that while the method is similar to [`ArrayBase::as_slice()`], this method transfers
+    /// Note that while the method is similar to [`ArrayRef::as_slice()`], this method transfers
     /// the view's lifetime to the slice, so it is a bit more powerful.
     pub fn to_slice(&self) -> Option<&'a [A]>
     {
@@ -50,7 +50,7 @@ where D: Dimension
     /// Return `None` otherwise.
     ///
     /// Note that while the method is similar to
-    /// [`ArrayBase::as_slice_memory_order()`], this method transfers the view's
+    /// [`ArrayRef::as_slice_memory_order()`], this method transfers the view's
     /// lifetime to the slice, so it is a bit more powerful.
     pub fn to_slice_memory_order(&self) -> Option<&'a [A]>
     {
