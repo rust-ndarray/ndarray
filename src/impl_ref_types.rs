@@ -45,16 +45,12 @@ where S: Data
 
     fn deref(&self) -> &Self::Target
     {
-        // SAFETY: The pointer will hold all the guarantees of `as_ref`:
-        // - The pointer is aligned because neither type use repr(align)
-        // - It is "dereferencable" because it just points to self
+        // SAFETY:
+        // - The pointer is aligned because neither type uses repr(align)
+        // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
-        unsafe {
-            (&self.layout as *const LayoutRef<S::Elem, D>)
-                .cast::<ArrayRef<S::Elem, D>>()
-                .as_ref()
-        }
-        .expect("References are always non-null")
+        // - The cast is valid because ArrayRef uses #[repr(transparent)]
+        unsafe { &*(&self.layout as *const LayoutRef<S::Elem, D>).cast::<ArrayRef<S::Elem, D>>() }
     }
 }
 
@@ -67,16 +63,12 @@ where
     fn deref_mut(&mut self) -> &mut Self::Target
     {
         self.ensure_unique();
-        // SAFETY: The pointer will hold all the guarantees of `as_ref`:
-        // - The pointer is aligned because neither type use repr(align)
-        // - It is "dereferencable" because it just points to self
+        // SAFETY:
+        // - The pointer is aligned because neither type uses repr(align)
+        // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
-        unsafe {
-            (&mut self.layout as *mut LayoutRef<S::Elem, D>)
-                .cast::<ArrayRef<S::Elem, D>>()
-                .as_mut()
-        }
-        .expect("References are always non-null")
+        // - The cast is valid because ArrayRef uses #[repr(transparent)]
+        unsafe { &mut *(&mut self.layout as *mut LayoutRef<S::Elem, D>).cast::<ArrayRef<S::Elem, D>>() }
     }
 }
 
@@ -87,12 +79,12 @@ impl<A, D> Deref for ArrayRef<A, D>
 
     fn deref(&self) -> &Self::Target
     {
-        unsafe {
-            (self as *const ArrayRef<A, D>)
-                .cast::<RawRef<A, D>>()
-                .as_ref()
-        }
-        .expect("References are always non-null")
+        // SAFETY:
+        // - The pointer is aligned because neither type uses repr(align)
+        // - It is "dereferencable" because it comes from a reference
+        // - For the same reason, it is initialized
+        // - The cast is valid because ArrayRef uses #[repr(transparent)]
+        unsafe { &*(self as *const ArrayRef<A, D>).cast::<RawRef<A, D>>() }
     }
 }
 
@@ -101,12 +93,12 @@ impl<A, D> DerefMut for ArrayRef<A, D>
 {
     fn deref_mut(&mut self) -> &mut Self::Target
     {
-        unsafe {
-            (self as *mut ArrayRef<A, D>)
-                .cast::<RawRef<A, D>>()
-                .as_mut()
-        }
-        .expect("References are always non-null")
+        // SAFETY:
+        // - The pointer is aligned because neither type uses repr(align)
+        // - It is "dereferencable" because it comes from a reference
+        // - For the same reason, it is initialized
+        // - The cast is valid because ArrayRef uses #[repr(transparent)]
+        unsafe { &mut *(self as *mut ArrayRef<A, D>).cast::<RawRef<A, D>>() }
     }
 }
 
@@ -136,12 +128,12 @@ where S: RawData<Elem = A>
 {
     fn as_ref(&self) -> &RawRef<A, D>
     {
-        unsafe {
-            (&self.layout as *const LayoutRef<A, D>)
-                .cast::<RawRef<A, D>>()
-                .as_ref()
-        }
-        .expect("References are always non-null")
+        // SAFETY:
+        // - The pointer is aligned because neither type uses repr(align)
+        // - It is "dereferencable" because it comes from a reference
+        // - For the same reason, it is initialized
+        // - The cast is valid because ArrayRef uses #[repr(transparent)]
+        unsafe { &*(&self.layout as *const LayoutRef<A, D>).cast::<RawRef<A, D>>() }
     }
 }
 
@@ -151,12 +143,12 @@ where S: RawDataMut<Elem = A>
 {
     fn as_mut(&mut self) -> &mut RawRef<A, D>
     {
-        unsafe {
-            (&mut self.layout as *mut LayoutRef<A, D>)
-                .cast::<RawRef<A, D>>()
-                .as_mut()
-        }
-        .expect("References are always non-null")
+        // SAFETY:
+        // - The pointer is aligned because neither type uses repr(align)
+        // - It is "dereferencable" because it comes from a reference
+        // - For the same reason, it is initialized
+        // - The cast is valid because ArrayRef uses #[repr(transparent)]
+        unsafe { &mut *(&mut self.layout as *mut LayoutRef<A, D>).cast::<RawRef<A, D>>() }
     }
 }
 
