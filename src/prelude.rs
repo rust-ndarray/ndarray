@@ -36,6 +36,9 @@ pub use crate::{
 pub use crate::{Axis, Dim, Dimension};
 
 #[doc(no_inline)]
+pub use crate::{ArrayRef0, ArrayRef1, ArrayRef2, ArrayRef3, ArrayRef4, ArrayRef5, ArrayRef6, ArrayRefD};
+
+#[doc(no_inline)]
 pub use crate::{Array0, Array1, Array2, Array3, Array4, Array5, Array6, ArrayD};
 
 #[doc(no_inline)]
