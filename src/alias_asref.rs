@@ -5,13 +5,86 @@ use crate::{
     AxisDescription,
     Dimension,
     LayoutRef,
+    NdIndex,
     RawArrayView,
     RawData,
+    RawDataMut,
     RawRef,
     Slice,
     SliceArg,
 };
 
+/// Functions coming from RawRef
+impl<A, S: RawData<Elem = A>, D: Dimension> ArrayBase<S, D>
+{
+    /// Return a raw pointer to the element at `index`, or return `None`
+    /// if the index is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.], [3., 4.]]);
+    ///
+    /// let v = a.raw_view();
+    /// let p = a.get_ptr((0, 1)).unwrap();
+    ///
+    /// assert_eq!(unsafe { *p }, 2.);
+    /// ```
+    pub fn get_ptr<I>(&self, index: I) -> Option<*const A>
+    where I: NdIndex<D>
+    {
+        <Self as AsRef<RawRef<_, _>>>::as_ref(self).get_ptr(index)
+    }
+
+    /// Return a raw pointer to the element at `index`, or return `None`
+    /// if the index is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let mut a = arr2(&[[1., 2.], [3., 4.]]);
+    ///
+    /// let v = a.raw_view_mut();
+    /// let p = a.get_mut_ptr((0, 1)).unwrap();
+    ///
+    /// unsafe {
+    ///     *p = 5.;
+    /// }
+    ///
+    /// assert_eq!(a.get((0, 1)), Some(&5.));
+    /// ```
+    pub fn get_mut_ptr<I>(&mut self, index: I) -> Option<*mut A>
+    where
+        S: RawDataMut<Elem = A>,
+        I: NdIndex<D>,
+    {
+        <Self as AsMut<RawRef<_, _>>>::as_mut(self).get_mut_ptr(index)
+    }
+
+    /// Return a pointer to the first element in the array.
+    ///
+    /// Raw access to array elements needs to follow the strided indexing
+    /// scheme: an element at multi-index *I* in an array with strides *S* is
+    /// located at offset
+    ///
+    /// *Σ<sub>0 ≤ k < d</sub> I<sub>k</sub> × S<sub>k</sub>*
+    ///
+    /// where *d* is `self.ndim()`.
+    #[inline(always)]
+    pub fn as_ptr(&self) -> *const A
+    {
+        <Self as AsRef<RawRef<_, _>>>::as_ref(self).as_ptr()
+    }
+
+    /// Return a raw view of the array.
+    #[inline]
+    pub fn raw_view(&self) -> RawArrayView<S::Elem, D>
+    {
+        <Self as AsRef<RawRef<_, _>>>::as_ref(self).raw_view()
+    }
+}
+
+/// Functions coming from LayoutRef
 impl<S: RawData, D: Dimension> ArrayBase<S, D>
 {
     /// Slice the array in place without changing the number of dimensions.
@@ -180,28 +253,6 @@ impl<S: RawData, D: Dimension> ArrayBase<S, D>
     pub fn merge_axes(&mut self, take: Axis, into: Axis) -> bool
     {
         self.as_mut().merge_axes(take, into)
-    }
-
-    /// Return a raw view of the array.
-    #[inline]
-    pub fn raw_view(&self) -> RawArrayView<S::Elem, D>
-    {
-        <Self as AsRef<RawRef<_, _>>>::as_ref(self).raw_view()
-    }
-
-    /// Return a pointer to the first element in the array.
-    ///
-    /// Raw access to array elements needs to follow the strided indexing
-    /// scheme: an element at multi-index *I* in an array with strides *S* is
-    /// located at offset
-    ///
-    /// *Σ<sub>0 ≤ k < d</sub> I<sub>k</sub> × S<sub>k</sub>*
-    ///
-    /// where *d* is `self.ndim()`.
-    #[inline(always)]
-    pub fn as_ptr(&self) -> *const S::Elem
-    {
-        <Self as AsRef<RawRef<_, _>>>::as_ref(self).as_ptr()
     }
 
     /// Return the total number of elements in the array.
