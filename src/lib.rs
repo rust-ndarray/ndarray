@@ -31,12 +31,17 @@
 //! dimensions, then an element in the array is accessed by using that many indices.
 //! Each dimension is also called an *axis*.
 //!
+//! To get started, functionality is provided in the following core types:
 //! - **[`ArrayBase`]**:
 //!   The *n*-dimensional array type itself.<br>
 //!   It is used to implement both the owned arrays and the views; see its docs
 //!   for an overview of all array features.<br>
 //! - The main specific array type is **[`Array`]**, which owns
 //!   its elements.
+//! - A reference type, **[`ArrayRef`]**, that contains most of the functionality
+//!   for reading and writing to arrays.
+//! - A reference type, **[`LayoutRef`]**, that contains most of the functionality
+//!   for reading and writing to array layouts: their shape and strides.
 //!
 //! ## Highlights
 //!
@@ -1478,6 +1483,17 @@ pub struct LayoutRef<A, D>
 #[repr(transparent)]
 pub struct ArrayRef<A, D>(LayoutRef<A, D>);
 
+/// A reference to an *n*-dimensional array whose data is not safe to read or write.
+///
+/// This type is similar to [`ArrayRef`] but does not guarantee that its data is safe
+/// to read or write; i.e., the underlying data may come from a shared array or be otherwise
+/// unsafe to dereference. This type should be used sparingly and with extreme caution;
+/// most of its methods either provide pointers or return [`RawArrayView`], both of
+/// which tend to be full of unsafety.
+///
+/// For the few times when this type is appropriate, it has the same `AsRef` semantics
+/// as [`LayoutRef`]; see [its documentation on writing functions](LayoutRef#writing-functions)
+/// for information on how to properly handle functionality on this type.
 #[repr(transparent)]
 pub struct RawRef<A, D>(LayoutRef<A, D>);
 
