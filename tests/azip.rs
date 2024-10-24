@@ -232,7 +232,7 @@ fn test_azip3_slices()
         *a += b / 10.;
         *c = a.sin();
     });
-    let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
+    let res = Array::from_iter(0..32).mapv(|x| f32::sin(x as f32 / 10.));
     assert_abs_diff_eq!(res, ArrayView::from(&c), epsilon = 1e-4);
 }
 

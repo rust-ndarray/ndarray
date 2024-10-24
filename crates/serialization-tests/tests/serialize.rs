@@ -45,13 +45,13 @@ fn serial_many_dim_serde()
 
     {
         // Test a sliced array.
-        let mut a = ArcArray::linspace(0., 31., 32)
+        let mut a = ArcArray::from_iter(0..32)
             .into_shape_with_order((2, 2, 2, 4))
             .unwrap();
         a.slice_collapse(s![..;-1, .., .., ..2]);
         let serial = serde_json::to_string(&a).unwrap();
         println!("Encode {:?} => {:?}", a, serial);
-        let res = serde_json::from_str::<ArcArray<f32, _>>(&serial);
+        let res = serde_json::from_str::<ArcArray<i32, _>>(&serial);
         println!("{:?}", res);
         assert_eq!(a, res.unwrap());
     }
@@ -160,7 +160,7 @@ fn serial_many_dim_serde_msgpack()
 
     {
         // Test a sliced array.
-        let mut a = ArcArray::linspace(0., 31., 32)
+        let mut a = ArcArray::from_iter(0..32)
             .into_shape_with_order((2, 2, 2, 4))
             .unwrap();
         a.slice_collapse(s![..;-1, .., .., ..2]);
@@ -171,7 +171,7 @@ fn serial_many_dim_serde_msgpack()
             .unwrap();
 
         let mut deserializer = rmp_serde::Deserializer::new(&buf[..]);
-        let a_de: ArcArray<f32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
+        let a_de: ArcArray<i32, _> = serde::Deserialize::deserialize(&mut deserializer).unwrap();
 
         assert_eq!(a, a_de);
     }
@@ -215,14 +215,14 @@ fn serial_many_dim_ron()
 
     {
         // Test a sliced array.
-        let mut a = ArcArray::linspace(0., 31., 32)
+        let mut a = ArcArray::from_iter(0..32)
             .into_shape_with_order((2, 2, 2, 4))
             .unwrap();
         a.slice_collapse(s![..;-1, .., .., ..2]);
 
         let a_s = ron_serialize(&a).unwrap();
 
-        let a_de: ArcArray<f32, _> = ron_deserialize(&a_s).unwrap();
+        let a_de: ArcArray<i32, _> = ron_deserialize(&a_s).unwrap();
 
         assert_eq!(a, a_de);
     }
