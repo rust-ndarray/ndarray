@@ -88,6 +88,19 @@ jobs:
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
+  miri:
+    runs-on: ubuntu-latest
+    name: miri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toochain@nightly
+        with:
+          components: miri
+      - uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - run: ./scripts/miri-tests.sh
+
   cross_test:
     #if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
