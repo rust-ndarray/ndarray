@@ -93,7 +93,7 @@ jobs:
     name: miri
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toochain@nightly
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           components: miri
       - uses: Swatinem/rust-cache@v2
@@ -162,6 +162,7 @@ jobs:
       - format  # should format be required?
       - nostd
       - tests
+      - miri
       - cross_test
       - cargo-careful
       - docs
