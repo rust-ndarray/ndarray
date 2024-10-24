@@ -57,6 +57,7 @@ fn oversampling_without_replacement_should_panic()
 }
 
 quickcheck! {
+    #[cfg_attr(miri, ignore)] // Takes an insufferably long time
     fn oversampling_with_replacement_is_fine(m: u8, n: u8) -> TestResult {
         let (m, n) = (m as usize, n as usize);
         let a = Array::random((m, n), Uniform::new(0., 2.));
@@ -84,6 +85,7 @@ quickcheck! {
     }
 }
 
+#[cfg_attr(miri, ignore)]
 #[cfg(feature = "quickcheck")]
 quickcheck! {
     fn sampling_behaves_as_expected(m: u8, n: u8, strategy: SamplingStrategy) -> TestResult {
