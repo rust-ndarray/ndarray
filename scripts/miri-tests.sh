@@ -8,8 +8,7 @@ set -e
 RUSTFLAGS="-Zrandomize-layout"
 
 # General tests
-cargo miri test -v --no-default-features
-cargo miri test -v -p ndarray -p ndarray-rand --lib --tests
+cargo miri test -v --features "$FEATURES"
 
 # BLAS tests
 cargo miri test -p ndarray --lib -v --features blas
