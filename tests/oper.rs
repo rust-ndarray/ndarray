@@ -635,6 +635,7 @@ fn gen_mat_mul()
 
 // Test y = A x where A is f-order
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)]
 #[test]
 fn gemm_64_1_f()
 {
