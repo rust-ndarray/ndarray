@@ -163,6 +163,7 @@ fn std_empty_arr()
 
 #[test]
 #[cfg(feature = "approx")]
+#[cfg(feature = "std")]
 fn var_axis()
 {
     use ndarray::{aview0, aview2};
@@ -222,6 +223,7 @@ fn var_axis()
 
 #[test]
 #[cfg(feature = "approx")]
+#[cfg(feature = "std")]
 fn std_axis()
 {
     use ndarray::aview2;

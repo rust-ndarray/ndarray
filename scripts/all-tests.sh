@@ -13,6 +13,8 @@ cargo build -v --no-default-features
 
 # ndarray with no features
 cargo test -p ndarray -v --no-default-features
+# ndarray with no_std-compatible features
+cargo test -p ndarray -v --no-default-features --features approx
 # all with features
 cargo test -v --features "$FEATURES" $QC_FEAT
 # all with features and release (ignore test crates which is already optimized)
