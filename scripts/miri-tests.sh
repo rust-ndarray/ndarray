@@ -7,6 +7,11 @@ set -e
 # This should catch if we missed that
 RUSTFLAGS="-Zrandomize-layout"
 
+# Miri reports a stacked borrow violation deep within rayon, in a crate called crossbeam-epoch
+# The crate has a PR to fix this: https://github.com/crossbeam-rs/crossbeam/pull/871
+# but using Miri's tree borrow mode may resolve it for now
+MIRIFLAGS="-Zmiri-tree-borrows"
+
 # General tests
 cargo miri test -v --features "$FEATURES"
 
