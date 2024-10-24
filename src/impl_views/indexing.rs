@@ -60,7 +60,7 @@ pub trait IndexLonger<I>
     /// See also [the `get` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::get
+    /// [1]: ArrayRef::get
     ///
     /// **Panics** if index is out of bounds.
     #[track_caller]
@@ -68,15 +68,15 @@ pub trait IndexLonger<I>
 
     /// Get a reference of a element through the view.
     ///
-    /// This method is like `ArrayBase::get` but with a longer lifetime (matching
+    /// This method is like `ArrayRef::get` but with a longer lifetime (matching
     /// the array view); which we can only do for the array view and not in the
     /// `Index` trait.
     ///
     /// See also [the `get` method][1] (and [`get_mut`][2]) which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::get
-    /// [2]: ArrayBase::get_mut
+    /// [1]: ArrayRef::get
+    /// [2]: ArrayRef::get_mut
     ///
     /// **Panics** if index is out of bounds.
     #[track_caller]
@@ -90,7 +90,7 @@ pub trait IndexLonger<I>
     /// See also [the `uget` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::uget
+    /// [1]: ArrayRef::uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     ///
@@ -116,7 +116,7 @@ where
     /// See also [the `get` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::get
+    /// [1]: ArrayRef::get
     ///
     /// **Panics** if index is out of bounds.
     #[track_caller]
@@ -139,7 +139,7 @@ where
     /// See also [the `uget` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::uget
+    /// [1]: ArrayRef::uget
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     unsafe fn uget(self, index: I) -> &'a A
@@ -165,7 +165,7 @@ where
     /// See also [the `get_mut` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::get_mut
+    /// [1]: ArrayRef::get_mut
     ///
     /// **Panics** if index is out of bounds.
     #[track_caller]
@@ -186,7 +186,7 @@ where
     /// See also [the `get_mut` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::get_mut
+    /// [1]: ArrayRef::get_mut
     ///
     fn get(mut self, index: I) -> Option<&'a mut A>
     {
@@ -205,7 +205,7 @@ where
     /// See also [the `uget_mut` method][1] which works for all arrays and array
     /// views.
     ///
-    /// [1]: ArrayBase::uget_mut
+    /// [1]: ArrayRef::uget_mut
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     unsafe fn uget(mut self, index: I) -> &'a mut A

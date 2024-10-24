@@ -7,7 +7,7 @@ use std::ops::{Deref, DerefMut};
 /// A transparent wrapper of [`Cell<T>`](std::cell::Cell) which is identical in every way, except
 /// it will implement arithmetic operators as well.
 ///
-/// The purpose of `MathCell` is to be used from [.cell_view()](crate::ArrayBase::cell_view).
+/// The purpose of `MathCell` is to be used from [.cell_view()](crate::ArrayRef::cell_view).
 /// The `MathCell` derefs to `Cell`, so all the cell's methods are available.
 #[repr(transparent)]
 #[derive(Default)]

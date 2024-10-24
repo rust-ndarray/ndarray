@@ -9,7 +9,7 @@ use crate::Slice;
 
 /// Window producer and iterable
 ///
-/// See [`.windows()`](ArrayBase::windows) for more
+/// See [`.windows()`](crate::ArrayRef::windows) for more
 /// information.
 pub struct Windows<'a, A, D>
 {
@@ -91,7 +91,7 @@ where
 
 /// Window iterator.
 ///
-/// See [`.windows()`](ArrayBase::windows) for more
+/// See [`.windows()`](crate::ArrayRef::windows) for more
 /// information.
 pub struct WindowsIter<'a, A, D>
 {
@@ -129,7 +129,7 @@ send_sync_read_only!(WindowsIter);
 
 /// Window producer and iterable
 ///
-/// See [`.axis_windows()`](ArrayBase::axis_windows) for more
+/// See [`.axis_windows()`](crate::ArrayRef::axis_windows) for more
 /// information.
 pub struct AxisWindows<'a, A, D>
 {

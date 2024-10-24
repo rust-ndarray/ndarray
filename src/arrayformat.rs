@@ -6,7 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use super::{ArrayBase, ArrayView, Axis, Data, Dimension, NdProducer};
-use crate::aliases::{Ix1, IxDyn};
+use crate::{
+    aliases::{Ix1, IxDyn},
+    ArrayRef,
+};
 use alloc::format;
 use std::fmt;
 
@@ -112,13 +115,12 @@ fn format_with_overflow(
     Ok(())
 }
 
-fn format_array<A, S, D, F>(
-    array: &ArrayBase<S, D>, f: &mut fmt::Formatter<'_>, format: F, fmt_opt: &FormatOptions,
+fn format_array<A, D, F>(
+    array: &ArrayRef<A, D>, f: &mut fmt::Formatter<'_>, format: F, fmt_opt: &FormatOptions,
 ) -> fmt::Result
 where
     F: FnMut(&A, &mut fmt::Formatter<'_>) -> fmt::Result + Clone,
     D: Dimension,
-    S: Data<Elem = A>,
 {
     // Cast into a dynamically dimensioned view
     // This is required to be able to use `index_axis` for the recursive case
@@ -177,6 +179,18 @@ where S: Data<Elem = A>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
+        (**self).fmt(f)
+    }
+}
+
+/// Format the array reference using `Display` and apply the formatting parameters
+/// used to each element.
+///
+/// The array is shown in multiline style.
+impl<A: fmt::Display, D: Dimension> fmt::Display for ArrayRef<A, D>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
         format_array(self, f, <_>::fmt, &fmt_opt)
     }
@@ -188,6 +202,18 @@ where S: Data<Elem = A>
 /// The array is shown in multiline style.
 impl<A: fmt::Debug, S, D: Dimension> fmt::Debug for ArrayBase<S, D>
 where S: Data<Elem = A>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        (**self).fmt(f)
+    }
+}
+
+/// Format the array reference using `Debug` and apply the formatting parameters used
+/// to each element.
+///
+/// The array is shown in multiline style.
+impl<A: fmt::Debug, D: Dimension> fmt::Debug for ArrayRef<A, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -219,6 +245,18 @@ where S: Data<Elem = A>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
+        (**self).fmt(f)
+    }
+}
+
+/// Format the array reference using `LowerExp` and apply the formatting parameters used
+/// to each element.
+///
+/// The array is shown in multiline style.
+impl<A: fmt::LowerExp, D: Dimension> fmt::LowerExp for ArrayRef<A, D>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
         format_array(self, f, <_>::fmt, &fmt_opt)
     }
@@ -233,16 +271,41 @@ where S: Data<Elem = A>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
+        (**self).fmt(f)
+    }
+}
+
+/// Format the array using `UpperExp` and apply the formatting parameters used
+/// to each element.
+///
+/// The array is shown in multiline style.
+impl<A: fmt::UpperExp, D: Dimension> fmt::UpperExp for ArrayRef<A, D>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
         let fmt_opt = FormatOptions::default_for_array(self.len(), f.alternate());
         format_array(self, f, <_>::fmt, &fmt_opt)
     }
 }
+
 /// Format the array using `LowerHex` and apply the formatting parameters used
 /// to each element.
 ///
 /// The array is shown in multiline style.
 impl<A: fmt::LowerHex, S, D: Dimension> fmt::LowerHex for ArrayBase<S, D>
 where S: Data<Elem = A>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        (**self).fmt(f)
+    }
+}
+
+/// Format the array using `LowerHex` and apply the formatting parameters used
+/// to each element.
+///
+/// The array is shown in multiline style.
+impl<A: fmt::LowerHex, D: Dimension> fmt::LowerHex for ArrayRef<A, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -257,6 +320,18 @@ where S: Data<Elem = A>
 /// The array is shown in multiline style.
 impl<A: fmt::Binary, S, D: Dimension> fmt::Binary for ArrayBase<S, D>
 where S: Data<Elem = A>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        (**self).fmt(f)
+    }
+}
+
+/// Format the array using `Binary` and apply the formatting parameters used
+/// to each element.
+///
+/// The array is shown in multiline style.
+impl<A: fmt::Binary, D: Dimension> fmt::Binary for ArrayRef<A, D>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {

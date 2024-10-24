@@ -157,7 +157,7 @@ where D: Dimension
     /// [`MultiSliceArg`], [`s!`], [`SliceArg`](crate::SliceArg), and
     /// [`SliceInfo`](crate::SliceInfo).
     ///
-    /// [`.multi_slice_mut()`]: ArrayBase::multi_slice_mut
+    /// [`.multi_slice_mut()`]: ArrayRef::multi_slice_mut
     ///
     /// **Panics** if any of the following occur:
     ///

@@ -1,5 +1,5 @@
 use crate::AssignElem;
-use crate::{Array, ArrayBase, DataMut, Dimension, IntoNdProducer, NdProducer, Zip};
+use crate::{Array, ArrayRef, Dimension, IntoNdProducer, NdProducer, Zip};
 
 use super::send_producer::SendProducer;
 use crate::parallel::par::ParallelSplits;
@@ -10,9 +10,8 @@ use crate::partial::Partial;
 /// # Parallel methods
 ///
 /// These methods require crate feature `rayon`.
-impl<A, S, D> ArrayBase<S, D>
+impl<A, D> ArrayRef<A, D>
 where
-    S: DataMut<Elem = A>,
     D: Dimension,
     A: Send + Sync,
 {
