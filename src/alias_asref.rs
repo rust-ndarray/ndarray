@@ -4,12 +4,10 @@ use crate::{
     Axis,
     AxisDescription,
     Dimension,
-    LayoutRef,
     NdIndex,
     RawArrayView,
     RawData,
     RawDataMut,
-    RawRef,
     Slice,
     SliceArg,
 };

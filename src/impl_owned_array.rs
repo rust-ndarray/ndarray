@@ -13,7 +13,6 @@ use crate::dimension;
 use crate::error::{ErrorKind, ShapeError};
 use crate::iterators::Baseiter;
 use crate::low_level_util::AbortIfPanic;
-use crate::LayoutRef;
 use crate::OwnedRepr;
 use crate::Zip;
 
