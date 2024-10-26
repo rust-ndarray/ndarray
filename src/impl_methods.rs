@@ -3099,7 +3099,13 @@ impl<A, D: Dimension> ArrayRef<A, D>
             Zip::from(self.lanes_mut(axis)).map_collect(mapping)
         }
     }
+}
 
+impl<A, S, D> ArrayBase<S, D>
+where
+    S: DataOwned<Elem = A> + DataMut,
+    D: Dimension,
+{
     /// Remove the `index`th elements along `axis` and shift down elements from higher indexes.
     ///
     /// Note that this "removes" the elements by swapping them around to the end of the axis and
@@ -3112,7 +3118,6 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// ***Panics*** if `axis` is out of bounds<br>
     /// ***Panics*** if not `index < self.len_of(axis)`.
     pub fn remove_index(&mut self, axis: Axis, index: usize)
-    // TODO: Check whether this needed to be DataOwned
     {
         assert!(index < self.len_of(axis), "index {} must be less than length of Axis({})",
                 index, axis.index());
@@ -3122,7 +3127,10 @@ impl<A, D: Dimension> ArrayRef<A, D>
         // then slice the axis in place to cut out the removed final element
         self.slice_axis_inplace(axis, Slice::new(0, Some(-1), 1));
     }
+}
 
+impl<A, D: Dimension> ArrayRef<A, D>
+{
     /// Iterates over pairs of consecutive elements along the axis.
     ///
     /// The first argument to the closure is an element, and the second
