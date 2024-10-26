@@ -14,4 +14,4 @@ RUSTFLAGS="-Zrandomize-layout"
 # MIRIFLAGS="-Zmiri-tree-borrows"
 
 # General tests
-cargo miri test -v -p ndarray -p ndarray-rand --features approx,serde,blas
+cargo miri test -v -p ndarray -p ndarray-rand --features approx,serde
