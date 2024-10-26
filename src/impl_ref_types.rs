@@ -338,3 +338,33 @@ where
         target.zip_mut_with(self, |tgt, src| tgt.clone_from(src));
     }
 }
+
+/// Shortcuts for the various as_ref calls
+impl<A, S, D> ArrayBase<S, D>
+where S: RawData<Elem = A>
+{
+    /// Cheaply convert a reference to the array to an &LayoutRef
+    pub fn as_layout_ref(&self) -> &LayoutRef<A, D>
+    {
+        self.as_ref()
+    }
+
+    /// Cheaply and mutably convert a reference to the array to an &LayoutRef
+    pub fn as_layout_ref_mut(&mut self) -> &mut LayoutRef<A, D>
+    {
+        self.as_mut()
+    }
+
+    /// Cheaply convert a reference to the array to an &RawRef
+    pub fn as_raw_ref(&self) -> &RawRef<A, D>
+    {
+        self.as_ref()
+    }
+
+    /// Cheaply and mutably convert a reference to the array to an &RawRef
+    pub fn as_raw_ref_mut(&mut self) -> &mut RawRef<A, D>
+    where S: RawDataMut<Elem = A>
+    {
+        self.as_mut()
+    }
+}

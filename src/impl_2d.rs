@@ -170,7 +170,7 @@ impl<S: RawData> ArrayBase<S, Ix2>
     /// ```
     pub fn nrows(&self) -> usize
     {
-        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).nrows()
+        self.as_layout_ref().nrows()
     }
 
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
@@ -192,7 +192,7 @@ impl<S: RawData> ArrayBase<S, Ix2>
     /// ```
     pub fn ncols(&self) -> usize
     {
-        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).ncols()
+        self.as_layout_ref().ncols()
     }
 
     /// Return true if the array is square, false otherwise.
@@ -212,6 +212,6 @@ impl<S: RawData> ArrayBase<S, Ix2>
     /// ```
     pub fn is_square(&self) -> bool
     {
-        <Self as AsRef<LayoutRef<_, _>>>::as_ref(self).is_square()
+        self.as_layout_ref().is_square()
     }
 }
