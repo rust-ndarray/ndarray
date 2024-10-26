@@ -747,7 +747,7 @@ where D: Dimension
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), LayoutRef::strides(tail_view.as_ref()));
+                              tail_view.shape(), tail_view.strides());
             }
 
             // Keep track of currently filled length of `self.data` and update it

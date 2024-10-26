@@ -2821,7 +2821,7 @@ fn test_split_complex_invert_axis()
 }
 
 #[test]
-fn test_slice_assing()
+fn test_slice_assign()
 {
     let mut a = array![0, 1, 2, 3, 4];
     *a.slice_mut(s![1..3]) += 1;
