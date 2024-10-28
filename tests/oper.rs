@@ -592,6 +592,7 @@ fn scaled_add_3()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)]
 #[test]
 fn gen_mat_mul()
 {
