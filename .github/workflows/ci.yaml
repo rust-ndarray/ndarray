@@ -100,7 +100,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest
-      - run: RUSTFLAGS="-Zrandomize-layout" cargo miri nextest run --no-fail-fast -p ndarray -p ndarray-rand -F approx,serde
+      - run: RUSTFLAGS="-Zrandomize-layout" cargo miri nextest run --no-fail-fast -p ndarray -p ndarray-rand -F approx,serde -j8
 
   cross_test:
     #if: ${{ github.event_name == 'merge_group' }}
