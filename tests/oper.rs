@@ -592,7 +592,7 @@ fn scaled_add_3()
 }
 
 #[cfg(feature = "approx")]
-#[cfg_attr(miri, ignore)]
+// #[cfg_attr(miri, ignore)]
 #[test]
 fn gen_mat_mul()
 {
@@ -636,7 +636,6 @@ fn gen_mat_mul()
 
 // Test y = A x where A is f-order
 #[cfg(feature = "approx")]
-#[cfg_attr(miri, ignore)]
 #[test]
 fn gemm_64_1_f()
 {
@@ -683,6 +682,7 @@ fn gen_mat_mul_i32()
 
 #[cfg(feature = "approx")]
 #[test]
+#[cfg_attr(miri, ignore)] // Takes too long
 fn gen_mat_vec_mul()
 {
     use approx::assert_relative_eq;
