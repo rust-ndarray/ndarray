@@ -971,6 +971,7 @@ fn test_into_iter_2d()
     assert_eq!(v, [1, 3, 2, 4]);
 }
 
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn test_into_iter_sliced()
 {

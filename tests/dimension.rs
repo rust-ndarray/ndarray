@@ -323,6 +323,7 @@ fn test_array_view()
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[cfg(feature = "std")]
 #[allow(clippy::cognitive_complexity)]
 fn test_all_ndindex()

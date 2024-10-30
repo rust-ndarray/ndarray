@@ -1020,6 +1020,7 @@ mod test
     }
 
     quickcheck! {
+        #[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
         // FIXME: This test is extremely slow, even with i16 values, investigate
         fn arith_seq_intersect_correct(
             first1: i8, len1: i8, step1: i8,

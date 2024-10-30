@@ -216,7 +216,7 @@ fn test_azip2_sum()
 }
 
 #[test]
-#[cfg(feature = "approx")]
+#[cfg(all(feature = "approx", feature = "std"))]
 fn test_azip3_slices()
 {
     use approx::assert_abs_diff_eq;

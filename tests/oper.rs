@@ -502,6 +502,7 @@ fn scaled_add()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn scaled_add_2()
 {
@@ -540,6 +541,7 @@ fn scaled_add_2()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn scaled_add_3()
 {
@@ -592,6 +594,7 @@ fn scaled_add_3()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)]
 #[test]
 fn gen_mat_mul()
 {
@@ -681,6 +684,7 @@ fn gen_mat_mul_i32()
 
 #[cfg(feature = "approx")]
 #[test]
+#[cfg_attr(miri, ignore)] // Takes too long
 fn gen_mat_vec_mul()
 {
     use approx::assert_relative_eq;
@@ -746,6 +750,7 @@ fn gen_mat_vec_mul()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn vec_mat_mul()
 {

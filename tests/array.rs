@@ -2629,6 +2629,7 @@ mod array_cow_tests
         });
     }
 
+    #[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
     #[test]
     fn test_clone_from()
     {
