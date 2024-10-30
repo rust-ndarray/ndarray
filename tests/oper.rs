@@ -502,6 +502,7 @@ fn scaled_add()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn scaled_add_2()
 {
@@ -540,6 +541,7 @@ fn scaled_add_2()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn scaled_add_3()
 {
@@ -748,6 +750,7 @@ fn gen_mat_vec_mul()
 }
 
 #[cfg(feature = "approx")]
+#[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
 #[test]
 fn vec_mat_mul()
 {

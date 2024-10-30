@@ -97,10 +97,7 @@ jobs:
         with:
           components: miri
       - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: nextest
-      - run: RUSTFLAGS="-Zrandomize-layout" cargo miri nextest run --no-fail-fast -p ndarray -p ndarray-rand -F approx,serde -j8
+      - run: ./scripts/miri-tests.sh
 
   cross_test:
     #if: ${{ github.event_name == 'merge_group' }}
