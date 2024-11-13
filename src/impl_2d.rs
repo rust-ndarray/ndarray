@@ -10,8 +10,7 @@
 use crate::imp_prelude::*;
 
 /// # Methods For 2-D Arrays
-impl<A, S> ArrayBase<S, Ix2>
-where S: RawData<Elem = A>
+impl<A> ArrayRef<A, Ix2>
 {
     /// Return an array view of row `index`.
     ///
@@ -24,7 +23,6 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data
     {
         self.index_axis(Axis(0), index)
     }
@@ -41,11 +39,13 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn row_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut
     {
         self.index_axis_mut(Axis(0), index)
     }
+}
 
+impl<A> LayoutRef<A, Ix2>
+{
     /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
     ///
     /// ```
@@ -67,7 +67,10 @@ where S: RawData<Elem = A>
     {
         self.len_of(Axis(0))
     }
+}
 
+impl<A> ArrayRef<A, Ix2>
+{
     /// Return an array view of column `index`.
     ///
     /// **Panics** if `index` is out of bounds.
@@ -79,7 +82,6 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column(&self, index: Ix) -> ArrayView1<'_, A>
-    where S: Data
     {
         self.index_axis(Axis(1), index)
     }
@@ -96,11 +98,13 @@ where S: RawData<Elem = A>
     /// ```
     #[track_caller]
     pub fn column_mut(&mut self, index: Ix) -> ArrayViewMut1<'_, A>
-    where S: DataMut
     {
         self.index_axis_mut(Axis(1), index)
     }
+}
 
+impl<A> LayoutRef<A, Ix2>
+{
     /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
     ///
     /// ```
@@ -142,5 +146,72 @@ where S: RawData<Elem = A>
     {
         let (m, n) = self.dim();
         m == n
+    }
+}
+
+impl<S: RawData> ArrayBase<S, Ix2>
+{
+    /// Return the number of rows (length of `Axis(0)`) in the two-dimensional array.
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    ///
+    /// let array = array![[1., 2.],
+    ///                    [3., 4.],
+    ///                    [5., 6.]];
+    /// assert_eq!(array.nrows(), 3);
+    ///
+    /// // equivalent ways of getting the dimensions
+    /// // get nrows, ncols by using dim:
+    /// let (m, n) = array.dim();
+    /// assert_eq!(m, array.nrows());
+    /// // get length of any particular axis with .len_of()
+    /// assert_eq!(m, array.len_of(Axis(0)));
+    /// ```
+    pub fn nrows(&self) -> usize
+    {
+        self.as_layout_ref().nrows()
+    }
+
+    /// Return the number of columns (length of `Axis(1)`) in the two-dimensional array.
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    ///
+    /// let array = array![[1., 2.],
+    ///                    [3., 4.],
+    ///                    [5., 6.]];
+    /// assert_eq!(array.ncols(), 2);
+    ///
+    /// // equivalent ways of getting the dimensions
+    /// // get nrows, ncols by using dim:
+    /// let (m, n) = array.dim();
+    /// assert_eq!(n, array.ncols());
+    /// // get length of any particular axis with .len_of()
+    /// assert_eq!(n, array.len_of(Axis(1)));
+    /// ```
+    pub fn ncols(&self) -> usize
+    {
+        self.as_layout_ref().ncols()
+    }
+
+    /// Return true if the array is square, false otherwise.
+    ///
+    /// # Examples
+    /// Square:
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2.], [3., 4.]];
+    /// assert!(array.is_square());
+    /// ```
+    /// Not square:
+    /// ```
+    /// use ndarray::array;
+    /// let array = array![[1., 2., 5.], [3., 4., 6.]];
+    /// assert!(!array.is_square());
+    /// ```
+    pub fn is_square(&self) -> bool
+    {
+        self.as_layout_ref().is_square()
     }
 }

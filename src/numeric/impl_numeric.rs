@@ -17,10 +17,8 @@ use crate::numeric_util;
 use crate::Slice;
 
 /// # Numerical Methods for Arrays
-impl<A, S, D> ArrayBase<S, D>
-where
-    S: Data<Elem = A>,
-    D: Dimension,
+impl<A, D> ArrayRef<A, D>
+where D: Dimension
 {
     /// Return the sum of all elements in the array.
     ///

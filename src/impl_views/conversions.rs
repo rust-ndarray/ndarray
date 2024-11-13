@@ -29,13 +29,13 @@ where D: Dimension
     pub fn reborrow<'b>(self) -> ArrayView<'b, A, D>
     where 'a: 'b
     {
-        unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { ArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
     ///
-    /// Note that while the method is similar to [`ArrayBase::as_slice()`], this method transfers
+    /// Note that while the method is similar to [`ArrayRef::as_slice()`], this method transfers
     /// the view's lifetime to the slice, so it is a bit more powerful.
     pub fn to_slice(&self) -> Option<&'a [A]>
     {
@@ -50,7 +50,7 @@ where D: Dimension
     /// Return `None` otherwise.
     ///
     /// Note that while the method is similar to
-    /// [`ArrayBase::as_slice_memory_order()`], this method transfers the view's
+    /// [`ArrayRef::as_slice_memory_order()`], this method transfers the view's
     /// lifetime to the slice, so it is a bit more powerful.
     pub fn to_slice_memory_order(&self) -> Option<&'a [A]>
     {
@@ -66,7 +66,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D>
     {
-        unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 }
 
@@ -199,7 +199,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 }
 
@@ -209,7 +209,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 }
 
@@ -220,7 +220,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 
     #[inline]
@@ -250,19 +250,19 @@ where D: Dimension
     // Convert into a read-only view
     pub(crate) fn into_view(self) -> ArrayView<'a, A, D>
     {
-        unsafe { ArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { ArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 
     /// Converts to a mutable raw array view.
     pub(crate) fn into_raw_view_mut(self) -> RawArrayViewMut<A, D>
     {
-        unsafe { RawArrayViewMut::new(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayViewMut::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 
     #[inline]
     pub(crate) fn into_base_iter(self) -> Baseiter<A, D>
     {
-        unsafe { Baseiter::new(self.ptr, self.dim, self.strides) }
+        unsafe { Baseiter::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 
     #[inline]

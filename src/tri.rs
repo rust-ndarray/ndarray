@@ -13,16 +13,14 @@ use num_traits::Zero;
 use crate::{
     dimension::{is_layout_c, is_layout_f},
     Array,
-    ArrayBase,
+    ArrayRef,
     Axis,
-    Data,
     Dimension,
     Zip,
 };
 
-impl<S, A, D> ArrayBase<S, D>
+impl<A, D> ArrayRef<A, D>
 where
-    S: Data<Elem = A>,
     D: Dimension,
     A: Clone + Zero,
 {
@@ -32,7 +30,7 @@ where
     /// For arrays with `ndim` exceeding 2, `triu` will apply to the final two axes.
     /// For 0D and 1D arrays, `triu` will return an unchanged clone.
     ///
-    /// See also [`ArrayBase::tril`]
+    /// See also [`ArrayRef::tril`]
     ///
     /// ```
     /// use ndarray::array;
@@ -83,7 +81,9 @@ where
                     false => row_num.saturating_sub(k.unsigned_abs()), // Avoid underflow, go to 0
                 };
                 lower = min(lower, ncols);
-                dst.slice_mut(s![lower..]).assign(&src.slice(s![lower..]));
+                (*dst)
+                    .slice_mut(s![lower..])
+                    .assign(&(*src).slice(s![lower..]));
             });
 
         res
@@ -95,7 +95,7 @@ where
     /// For arrays with `ndim` exceeding 2, `tril` will apply to the final two axes.
     /// For 0D and 1D arrays, `tril` will return an unchanged clone.
     ///
-    /// See also [`ArrayBase::triu`]
+    /// See also [`ArrayRef::triu`]
     ///
     /// ```
     /// use ndarray::array;
@@ -127,10 +127,10 @@ where
         if is_layout_f(&self.dim, &self.strides) && !is_layout_c(&self.dim, &self.strides) && k > isize::MIN {
             let mut x = self.view();
             x.swap_axes(n - 2, n - 1);
-            let mut tril = x.triu(-k);
-            tril.swap_axes(n - 2, n - 1);
+            let mut triu = x.triu(-k);
+            triu.swap_axes(n - 2, n - 1);
 
-            return tril;
+            return triu;
         }
 
         let mut res = Array::zeros(self.raw_dim());
@@ -147,7 +147,9 @@ where
                     false => row_num.saturating_sub((k + 1).unsigned_abs()),      // Avoid underflow
                 };
                 upper = min(upper, ncols);
-                dst.slice_mut(s![..upper]).assign(&src.slice(s![..upper]));
+                (*dst)
+                    .slice_mut(s![..upper])
+                    .assign(&(*src).slice(s![..upper]));
             });
 
         res

@@ -10,8 +10,7 @@
 use crate::imp_prelude::*;
 
 /// # Methods for Dynamic-Dimensional Arrays
-impl<A, S> ArrayBase<S, IxDyn>
-where S: Data<Elem = A>
+impl<A> LayoutRef<A, IxDyn>
 {
     /// Insert new array axis of length 1 at `axis`, modifying the shape and
     /// strides in-place.
@@ -58,7 +57,56 @@ where S: Data<Elem = A>
         self.dim = self.dim.remove_axis(axis);
         self.strides = self.strides.remove_axis(axis);
     }
+}
 
+impl<S: RawData> ArrayBase<S, IxDyn>
+{
+    /// Insert new array axis of length 1 at `axis`, modifying the shape and
+    /// strides in-place.
+    ///
+    /// **Panics** if the axis is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{Axis, arr2, arr3};
+    ///
+    /// let mut a = arr2(&[[1, 2, 3], [4, 5, 6]]).into_dyn();
+    /// assert_eq!(a.shape(), &[2, 3]);
+    ///
+    /// a.insert_axis_inplace(Axis(1));
+    /// assert_eq!(a, arr3(&[[[1, 2, 3]], [[4, 5, 6]]]).into_dyn());
+    /// assert_eq!(a.shape(), &[2, 1, 3]);
+    /// ```
+    #[track_caller]
+    pub fn insert_axis_inplace(&mut self, axis: Axis)
+    {
+        self.as_mut().insert_axis_inplace(axis)
+    }
+
+    /// Collapses the array to `index` along the axis and removes the axis,
+    /// modifying the shape and strides in-place.
+    ///
+    /// **Panics** if `axis` or `index` is out of bounds.
+    ///
+    /// ```
+    /// use ndarray::{Axis, arr1, arr2};
+    ///
+    /// let mut a = arr2(&[[1, 2, 3], [4, 5, 6]]).into_dyn();
+    /// assert_eq!(a.shape(), &[2, 3]);
+    ///
+    /// a.index_axis_inplace(Axis(1), 1);
+    /// assert_eq!(a, arr1(&[2, 5]).into_dyn());
+    /// assert_eq!(a.shape(), &[2]);
+    /// ```
+    #[track_caller]
+    pub fn index_axis_inplace(&mut self, axis: Axis, index: usize)
+    {
+        self.as_mut().index_axis_inplace(axis, index)
+    }
+}
+
+impl<A, S> ArrayBase<S, IxDyn>
+where S: Data<Elem = A>
+{
     /// Remove axes of length 1 and return the modified array.
     ///
     /// If the array has more the one dimension, the result array will always

@@ -23,7 +23,7 @@ use std::mem::MaybeUninit;
 use std::mem::{self, size_of};
 use std::ptr::NonNull;
 
-use crate::{ArcArray, Array, ArrayBase, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
+use crate::{ArcArray, Array, ArrayBase, ArrayRef, CowRepr, Dimension, OwnedArcRepr, OwnedRepr, RawViewRepr, ViewRepr};
 
 /// Array representation trait.
 ///
@@ -251,7 +251,7 @@ where A: Clone
         if Arc::get_mut(&mut self_.data.0).is_some() {
             return;
         }
-        if self_.dim.size() <= self_.data.0.len() / 2 {
+        if self_.layout.dim.size() <= self_.data.0.len() / 2 {
             // Clone only the visible elements if the current view is less than
             // half of backing data.
             *self_ = self_.to_owned().into_shared();
@@ -260,13 +260,13 @@ where A: Clone
         let rcvec = &mut self_.data.0;
         let a_size = mem::size_of::<A>() as isize;
         let our_off = if a_size != 0 {
-            (self_.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
+            (self_.layout.ptr.as_ptr() as isize - rcvec.as_ptr() as isize) / a_size
         } else {
             0
         };
         let rvec = Arc::make_mut(rcvec);
         unsafe {
-            self_.ptr = rvec.as_nonnull_mut().offset(our_off);
+            self_.layout.ptr = rvec.as_nonnull_mut().offset(our_off);
         }
     }
 
@@ -286,7 +286,9 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         Self::ensure_unique(&mut self_);
         let data = Arc::try_unwrap(self_.data.0).ok().unwrap();
         // safe because data is equivalent
-        unsafe { ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim) }
+        unsafe {
+            ArrayBase::from_data_ptr(data, self_.layout.ptr).with_strides_dim(self_.layout.strides, self_.layout.dim)
+        }
     }
 
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
@@ -295,13 +297,14 @@ unsafe impl<A> Data for OwnedArcRepr<A>
         match Arc::try_unwrap(self_.data.0) {
             Ok(owned_data) => unsafe {
                 // Safe because the data is equivalent.
-                Ok(ArrayBase::from_data_ptr(owned_data, self_.ptr).with_strides_dim(self_.strides, self_.dim))
+                Ok(ArrayBase::from_data_ptr(owned_data, self_.layout.ptr)
+                    .with_strides_dim(self_.layout.strides, self_.layout.dim))
             },
             Err(arc_data) => unsafe {
                 // Safe because the data is equivalent; we're just
                 // reconstructing `self_`.
-                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.ptr)
-                    .with_strides_dim(self_.strides, self_.dim))
+                Err(ArrayBase::from_data_ptr(OwnedArcRepr(arc_data), self_.layout.ptr)
+                    .with_strides_dim(self_.layout.strides, self_.layout.dim))
             },
         }
     }
@@ -598,11 +601,11 @@ where A: Clone
     {
         match array.data {
             CowRepr::View(_) => {
-                let owned = array.to_owned();
+                let owned = ArrayRef::to_owned(array);
                 array.data = CowRepr::Owned(owned.data);
-                array.ptr = owned.ptr;
-                array.dim = owned.dim;
-                array.strides = owned.strides;
+                array.layout.ptr = owned.layout.ptr;
+                array.layout.dim = owned.layout.dim;
+                array.layout.strides = owned.layout.strides;
             }
             CowRepr::Owned(_) => {}
         }
@@ -663,7 +666,8 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             CowRepr::View(_) => self_.to_owned(),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
-                ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim)
+                ArrayBase::from_data_ptr(data, self_.layout.ptr)
+                    .with_strides_dim(self_.layout.strides, self_.layout.dim)
             },
         }
     }
@@ -675,7 +679,8 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
             CowRepr::View(_) => Err(self_),
             CowRepr::Owned(data) => unsafe {
                 // safe because the data is equivalent so ptr, dims remain valid
-                Ok(ArrayBase::from_data_ptr(data, self_.ptr).with_strides_dim(self_.strides, self_.dim))
+                Ok(ArrayBase::from_data_ptr(data, self_.layout.ptr)
+                    .with_strides_dim(self_.layout.strides, self_.layout.dim))
             },
         }
     }

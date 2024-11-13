@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["bluss"]
 publish = false
 edition = "2018"
+rust-version = "1.67"
 
 [lib]
 test = false

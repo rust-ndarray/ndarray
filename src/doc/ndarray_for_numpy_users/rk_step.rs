@@ -122,7 +122,7 @@
 //!
 //! * Use [`c.mul_add(h, t)`](f64::mul_add) instead of `t + c * h`. This is
 //!   faster and reduces the floating-point error. It might also be beneficial
-//!   to use [`.scaled_add()`] or a combination of
+//!   to use [`.scaled_add()`](crate::ArrayRef::scaled_add) or a combination of
 //!   [`azip!()`] and [`.mul_add()`](f64::mul_add) on the arrays in
 //!   some places, but that's not demonstrated in the example below.
 //!

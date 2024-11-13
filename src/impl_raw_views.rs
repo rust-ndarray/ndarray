@@ -98,10 +98,10 @@ where D: Dimension
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D>
     {
         debug_assert!(
-            is_aligned(self.ptr.as_ptr()),
+            is_aligned(self.layout.ptr.as_ptr()),
             "The pointer must be aligned."
         );
-        ArrayView::new(self.ptr, self.dim, self.strides)
+        ArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides)
     }
 
     /// Split the array view along `axis` and return one array pointer strictly
@@ -113,23 +113,23 @@ where D: Dimension
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         assert!(index <= self.len_of(axis));
-        let left_ptr = self.ptr.as_ptr();
+        let left_ptr = self.layout.ptr.as_ptr();
         let right_ptr = if index == self.len_of(axis) {
-            self.ptr.as_ptr()
+            self.layout.ptr.as_ptr()
         } else {
-            let offset = stride_offset(index, self.strides.axis(axis));
+            let offset = stride_offset(index, self.layout.strides.axis(axis));
             // The `.offset()` is safe due to the guarantees of `RawData`.
-            unsafe { self.ptr.as_ptr().offset(offset) }
+            unsafe { self.layout.ptr.as_ptr().offset(offset) }
         };
 
-        let mut dim_left = self.dim.clone();
+        let mut dim_left = self.layout.dim.clone();
         dim_left.set_axis(axis, index);
-        let left = unsafe { Self::new_(left_ptr, dim_left, self.strides.clone()) };
+        let left = unsafe { Self::new_(left_ptr, dim_left, self.layout.strides.clone()) };
 
-        let mut dim_right = self.dim;
+        let mut dim_right = self.layout.dim;
         let right_len = dim_right.axis(axis) - index;
         dim_right.set_axis(axis, right_len);
-        let right = unsafe { Self::new_(right_ptr, dim_right, self.strides) };
+        let right = unsafe { Self::new_(right_ptr, dim_right, self.layout.strides) };
 
         (left, right)
     }
@@ -152,8 +152,8 @@ where D: Dimension
             mem::size_of::<A>(),
             "size mismatch in raw view cast"
         );
-        let ptr = self.ptr.cast::<B>();
-        unsafe { RawArrayView::new(ptr, self.dim, self.strides) }
+        let ptr = self.layout.ptr.cast::<B>();
+        unsafe { RawArrayView::new(ptr, self.layout.dim, self.layout.strides) }
     }
 }
 
@@ -172,11 +172,11 @@ where D: Dimension
         );
         assert_eq!(mem::align_of::<Complex<T>>(), mem::align_of::<T>());
 
-        let dim = self.dim.clone();
+        let dim = self.layout.dim.clone();
 
         // Double the strides. In the zero-sized element case and for axes of
         // length <= 1, we leave the strides as-is to avoid possible overflow.
-        let mut strides = self.strides.clone();
+        let mut strides = self.layout.strides.clone();
         if mem::size_of::<T>() != 0 {
             for ax in 0..strides.ndim() {
                 if dim[ax] > 1 {
@@ -185,7 +185,7 @@ where D: Dimension
             }
         }
 
-        let ptr_re: *mut T = self.ptr.as_ptr().cast();
+        let ptr_re: *mut T = self.layout.ptr.as_ptr().cast();
         let ptr_im: *mut T = if self.is_empty() {
             // In the empty case, we can just reuse the existing pointer since
             // it won't be dereferenced anyway. It is not safe to offset by
@@ -308,7 +308,7 @@ where D: Dimension
     #[inline]
     pub(crate) fn into_raw_view(self) -> RawArrayView<A, D>
     {
-        unsafe { RawArrayView::new(self.ptr, self.dim, self.strides) }
+        unsafe { RawArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
     }
 
     /// Converts to a read-only view of the array.
@@ -323,10 +323,10 @@ where D: Dimension
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D>
     {
         debug_assert!(
-            is_aligned(self.ptr.as_ptr()),
+            is_aligned(self.layout.ptr.as_ptr()),
             "The pointer must be aligned."
         );
-        ArrayView::new(self.ptr, self.dim, self.strides)
+        ArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides)
     }
 
     /// Converts to a mutable view of the array.
@@ -341,10 +341,10 @@ where D: Dimension
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D>
     {
         debug_assert!(
-            is_aligned(self.ptr.as_ptr()),
+            is_aligned(self.layout.ptr.as_ptr()),
             "The pointer must be aligned."
         );
-        ArrayViewMut::new(self.ptr, self.dim, self.strides)
+        ArrayViewMut::new(self.layout.ptr, self.layout.dim, self.layout.strides)
     }
 
     /// Split the array view along `axis` and return one array pointer strictly
@@ -356,7 +356,12 @@ where D: Dimension
     pub fn split_at(self, axis: Axis, index: Ix) -> (Self, Self)
     {
         let (left, right) = self.into_raw_view().split_at(axis, index);
-        unsafe { (Self::new(left.ptr, left.dim, left.strides), Self::new(right.ptr, right.dim, right.strides)) }
+        unsafe {
+            (
+                Self::new(left.layout.ptr, left.layout.dim, left.layout.strides),
+                Self::new(right.layout.ptr, right.layout.dim, right.layout.strides),
+            )
+        }
     }
 
     /// Cast the raw pointer of the raw array view to a different type
@@ -377,8 +382,8 @@ where D: Dimension
             mem::size_of::<A>(),
             "size mismatch in raw view cast"
         );
-        let ptr = self.ptr.cast::<B>();
-        unsafe { RawArrayViewMut::new(ptr, self.dim, self.strides) }
+        let ptr = self.layout.ptr.cast::<B>();
+        unsafe { RawArrayViewMut::new(ptr, self.layout.dim, self.layout.strides) }
     }
 }
 
@@ -392,8 +397,8 @@ where D: Dimension
         let Complex { re, im } = self.into_raw_view().split_complex();
         unsafe {
             Complex {
-                re: RawArrayViewMut::new(re.ptr, re.dim, re.strides),
-                im: RawArrayViewMut::new(im.ptr, im.dim, im.strides),
+                re: RawArrayViewMut::new(re.layout.ptr, re.layout.dim, re.layout.strides),
+                im: RawArrayViewMut::new(im.layout.ptr, im.layout.dim, im.layout.strides),
             }
         }
     }
