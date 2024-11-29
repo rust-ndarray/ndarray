@@ -89,6 +89,7 @@ jobs:
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
   blas-msrv:
+    runs-on: ubuntu-latest
     name: blas-msrv
     steps:
       - uses: actions/checkout@v4
