@@ -18,12 +18,14 @@ approx = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 
-blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
+blas-src = { optional = true, version = "0.10", default-features = false, features = ["blis", "openblas"] }
 openblas-src = { optional = true, version = "0.10", default-features = false, features = ["cblas", "system"] }
+blis-src = { optional = true, version = "0.2.2", features = ["system"] }
 
 [dev-dependencies]
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 
 [features]
-test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
+test_openblas = ["ndarray/blas", "blas-src", "openblas-src"]
+test_blis = ["ndarray/blas", "blas-src", "blis-src"]

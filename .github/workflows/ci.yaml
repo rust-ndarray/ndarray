@@ -85,7 +85,7 @@ jobs:
       - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
       - name: Install openblas
-        run: sudo apt-get install libopenblas-dev gfortran
+        run: sudo apt-get install libopenblas-dev gfortran libblis-dev
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
   miri:
