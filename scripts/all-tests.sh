@@ -23,11 +23,8 @@ cargo test -v -p ndarray -p ndarray-rand --release --features "$FEATURES" $QC_FE
 # BLAS tests
 cargo test -p ndarray --lib -v --features blas
 cargo test -p blas-mock-tests -v
-if [ "$CHANNEL" = "1.64.0" ]; then
-    cargo +1.67.0 test -p blas-tests -v --features blas-tests/openblas-system
-fi
-if [ "$CHANNEL" = "1.64.0" ]; then
-    cargo +1.67.0 test -p numeric-tests -v --features numeric-tests/test_blas
+if [ "$CHANNEL" != "1.64.0" ]; then
+    ./blas-integ-tests "$FEATURES" $CHANNEL
 fi
 
 # Examples
