@@ -88,8 +88,8 @@ jobs:
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
-  test-blas-msrv:
-    name: tests/blas-msrv
+  blas-msrv:
+    name: blas-msrv
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
