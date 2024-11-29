@@ -27,5 +27,5 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 
 [features]
-test_openblas = ["ndarray/blas", "blas-src", "openblas-src"]
+test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
 test_blis = ["ndarray/blas", "blas-src", "blis-src"]
