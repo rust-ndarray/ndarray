@@ -1,2 +1,2 @@
-#[cfg(any(feature = "test_blas", feature = "test_blis"))]
+#[cfg(feature = "test_blas")]
 extern crate blas_src;
