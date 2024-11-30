@@ -24,7 +24,7 @@ cargo test -v -p ndarray -p ndarray-rand --release --features "$FEATURES" $QC_FE
 cargo test -p ndarray --lib -v --features blas
 cargo test -p blas-mock-tests -v
 if [ "$CHANNEL" != "1.64.0" ]; then
-    ./blas-integ-tests "$FEATURES" $CHANNEL
+    ./blas-integ-tests.sh "$FEATURES" $CHANNEL
 fi
 
 # Examples
