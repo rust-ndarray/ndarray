@@ -8,5 +8,4 @@
 // except according to those terms.
 
 /// Build ndarray arrays for test purposes
-
 pub mod array_builder;

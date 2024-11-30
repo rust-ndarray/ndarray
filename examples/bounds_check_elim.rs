@@ -57,7 +57,7 @@ pub fn test1d_single_mut(a: &mut Array1<f64>, i: usize) -> f64
 #[no_mangle]
 pub fn test1d_len_of(a: &Array1<f64>) -> f64
 {
-    let a = &*a;
+    let a = a;
     let mut sum = 0.;
     for i in 0..a.len_of(Axis(0)) {
         sum += a[i];
