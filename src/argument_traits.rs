@@ -11,7 +11,7 @@ pub trait AssignElem<T>
 }
 
 /// Assignable element, simply `*self = input`.
-impl<'a, T> AssignElem<T> for &'a mut T
+impl<T> AssignElem<T> for &mut T
 {
     fn assign_elem(self, input: T)
     {
@@ -20,7 +20,7 @@ impl<'a, T> AssignElem<T> for &'a mut T
 }
 
 /// Assignable element, simply `self.set(input)`.
-impl<'a, T> AssignElem<T> for &'a Cell<T>
+impl<T> AssignElem<T> for &Cell<T>
 {
     fn assign_elem(self, input: T)
     {
@@ -29,7 +29,7 @@ impl<'a, T> AssignElem<T> for &'a Cell<T>
 }
 
 /// Assignable element, simply `self.set(input)`.
-impl<'a, T> AssignElem<T> for &'a MathCell<T>
+impl<T> AssignElem<T> for &MathCell<T>
 {
     fn assign_elem(self, input: T)
     {
@@ -39,7 +39,7 @@ impl<'a, T> AssignElem<T> for &'a MathCell<T>
 
 /// Assignable element, the item in the MaybeUninit is overwritten (prior value, if any, is not
 /// read or dropped).
-impl<'a, T> AssignElem<T> for &'a mut MaybeUninit<T>
+impl<T> AssignElem<T> for &mut MaybeUninit<T>
 {
     fn assign_elem(self, input: T)
     {

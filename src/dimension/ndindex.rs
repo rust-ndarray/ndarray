@@ -255,7 +255,7 @@ unsafe impl<const N: usize> NdIndex<IxDyn> for [Ix; N]
     }
 }
 
-impl<'a> IntoDimension for &'a [Ix]
+impl IntoDimension for &[Ix]
 {
     type Dim = IxDyn;
     fn into_dimension(self) -> Self::Dim
@@ -264,7 +264,7 @@ impl<'a> IntoDimension for &'a [Ix]
     }
 }
 
-unsafe impl<'a> NdIndex<IxDyn> for &'a IxDyn
+unsafe impl NdIndex<IxDyn> for &IxDyn
 {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize>
     {
@@ -276,7 +276,7 @@ unsafe impl<'a> NdIndex<IxDyn> for &'a IxDyn
     }
 }
 
-unsafe impl<'a> NdIndex<IxDyn> for &'a [Ix]
+unsafe impl NdIndex<IxDyn> for &[Ix]
 {
     fn index_checked(&self, dim: &IxDyn, strides: &IxDyn) -> Option<isize>
     {

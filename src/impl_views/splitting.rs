@@ -11,7 +11,7 @@ use crate::slice::MultiSliceArg;
 use num_complex::Complex;
 
 /// Methods for read-only array views.
-impl<'a, A, D> ArrayView<'a, A, D>
+impl<A, D> ArrayView<'_, A, D>
 where D: Dimension
 {
     /// Split the array view along `axis` and return one view strictly before the

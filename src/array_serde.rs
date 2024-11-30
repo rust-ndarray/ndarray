@@ -98,7 +98,7 @@ where
 // private iterator wrapper
 struct Sequence<'a, A, D>(Iter<'a, A, D>);
 
-impl<'a, A, D> Serialize for Sequence<'a, A, D>
+impl<A, D> Serialize for Sequence<'_, A, D>
 where
     A: Serialize,
     D: Dimension + Serialize,
@@ -162,7 +162,7 @@ impl<'de> Deserialize<'de> for ArrayField
     {
         struct ArrayFieldVisitor;
 
-        impl<'de> Visitor<'de> for ArrayFieldVisitor
+        impl Visitor<'_> for ArrayFieldVisitor
         {
             type Value = ArrayField;
 

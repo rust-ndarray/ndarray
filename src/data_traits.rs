@@ -407,7 +407,7 @@ where A: Clone
     }
 }
 
-unsafe impl<'a, A> RawData for ViewRepr<&'a A>
+unsafe impl<A> RawData for ViewRepr<&A>
 {
     type Elem = A;
 
@@ -420,7 +420,7 @@ unsafe impl<'a, A> RawData for ViewRepr<&'a A>
     private_impl! {}
 }
 
-unsafe impl<'a, A> Data for ViewRepr<&'a A>
+unsafe impl<A> Data for ViewRepr<&A>
 {
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
@@ -437,7 +437,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a A>
     }
 }
 
-unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A>
+unsafe impl<A> RawDataClone for ViewRepr<&A>
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
     {
@@ -445,7 +445,7 @@ unsafe impl<'a, A> RawDataClone for ViewRepr<&'a A>
     }
 }
 
-unsafe impl<'a, A> RawData for ViewRepr<&'a mut A>
+unsafe impl<A> RawData for ViewRepr<&mut A>
 {
     type Elem = A;
 
@@ -458,7 +458,7 @@ unsafe impl<'a, A> RawData for ViewRepr<&'a mut A>
     private_impl! {}
 }
 
-unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A>
+unsafe impl<A> RawDataMut for ViewRepr<&mut A>
 {
     #[inline]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
@@ -475,7 +475,7 @@ unsafe impl<'a, A> RawDataMut for ViewRepr<&'a mut A>
     }
 }
 
-unsafe impl<'a, A> Data for ViewRepr<&'a mut A>
+unsafe impl<A> Data for ViewRepr<&mut A>
 {
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
@@ -492,7 +492,7 @@ unsafe impl<'a, A> Data for ViewRepr<&'a mut A>
     }
 }
 
-unsafe impl<'a, A> DataMut for ViewRepr<&'a mut A> {}
+unsafe impl<A> DataMut for ViewRepr<&mut A> {}
 
 /// Array representation trait.
 ///
@@ -533,7 +533,7 @@ pub unsafe trait DataOwned: Data
 pub unsafe trait DataShared: Clone + Data + RawDataClone {}
 
 unsafe impl<A> DataShared for OwnedArcRepr<A> {}
-unsafe impl<'a, A> DataShared for ViewRepr<&'a A> {}
+unsafe impl<A> DataShared for ViewRepr<&A> {}
 
 unsafe impl<A> DataOwned for OwnedRepr<A>
 {
@@ -571,7 +571,7 @@ unsafe impl<A> DataOwned for OwnedArcRepr<A>
     }
 }
 
-unsafe impl<'a, A> RawData for CowRepr<'a, A>
+unsafe impl<A> RawData for CowRepr<'_, A>
 {
     type Elem = A;
 
@@ -587,7 +587,7 @@ unsafe impl<'a, A> RawData for CowRepr<'a, A>
     private_impl! {}
 }
 
-unsafe impl<'a, A> RawDataMut for CowRepr<'a, A>
+unsafe impl<A> RawDataMut for CowRepr<'_, A>
 where A: Clone
 {
     #[inline]
@@ -615,7 +615,7 @@ where A: Clone
     }
 }
 
-unsafe impl<'a, A> RawDataClone for CowRepr<'a, A>
+unsafe impl<A> RawDataClone for CowRepr<'_, A>
 where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
@@ -681,7 +681,7 @@ unsafe impl<'a, A> Data for CowRepr<'a, A>
     }
 }
 
-unsafe impl<'a, A> DataMut for CowRepr<'a, A> where A: Clone {}
+unsafe impl<A> DataMut for CowRepr<'_, A> where A: Clone {}
 
 unsafe impl<'a, A> DataOwned for CowRepr<'a, A>
 {

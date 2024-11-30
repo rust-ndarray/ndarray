@@ -122,7 +122,7 @@ fn sampling_works(a: &Array2<f64>, strategy: SamplingStrategy, axis: Axis, n_sam
     let samples = a.sample_axis(axis, n_samples, strategy);
     samples
         .axis_iter(axis)
-        .all(|lane| is_subset(&a, &lane, axis))
+        .all(|lane| is_subset(a, &lane, axis))
 }
 
 // Check if, when sliced along `axis`, there is at least one lane in `a` equal to `b`

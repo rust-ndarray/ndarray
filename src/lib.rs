@@ -1498,7 +1498,7 @@ pub enum CowRepr<'a, A>
     Owned(OwnedRepr<A>),
 }
 
-impl<'a, A> CowRepr<'a, A>
+impl<A> CowRepr<'_, A>
 {
     /// Returns `true` iff the data is the `View` variant.
     pub fn is_view(&self) -> bool

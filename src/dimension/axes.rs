@@ -60,7 +60,7 @@ pub struct AxisDescription
 copy_and_clone!(AxisDescription);
 copy_and_clone!(['a, D] Axes<'a, D>);
 
-impl<'a, D> Iterator for Axes<'a, D>
+impl<D> Iterator for Axes<'_, D>
 where D: Dimension
 {
     /// Description of the axis, its length and its stride.
@@ -99,7 +99,7 @@ where D: Dimension
     }
 }
 
-impl<'a, D> DoubleEndedIterator for Axes<'a, D>
+impl<D> DoubleEndedIterator for Axes<'_, D>
 where D: Dimension
 {
     fn next_back(&mut self) -> Option<Self::Item>
