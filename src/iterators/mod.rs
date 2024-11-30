@@ -260,7 +260,7 @@ impl<'a, A> DoubleEndedIterator for ElementsBase<'a, A, Ix1>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for ElementsBase<'a, A, D>
+impl<A, D> ExactSizeIterator for ElementsBase<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -503,7 +503,7 @@ impl<'a, A> DoubleEndedIterator for Iter<'a, A, Ix1>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for Iter<'a, A, D>
+impl<A, D> ExactSizeIterator for Iter<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -534,7 +534,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIter<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for IndexedIter<'a, A, D>
+impl<A, D> ExactSizeIterator for IndexedIter<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -635,7 +635,7 @@ impl<'a, A> DoubleEndedIterator for IterMut<'a, A, Ix1>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for IterMut<'a, A, D>
+impl<A, D> ExactSizeIterator for IterMut<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -686,7 +686,7 @@ impl<'a, A> DoubleEndedIterator for ElementsBaseMut<'a, A, Ix1>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for ElementsBaseMut<'a, A, D>
+impl<A, D> ExactSizeIterator for ElementsBaseMut<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -717,7 +717,7 @@ impl<'a, A, D: Dimension> Iterator for IndexedIterMut<'a, A, D>
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for IndexedIterMut<'a, A, D>
+impl<A, D> ExactSizeIterator for IndexedIterMut<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -767,7 +767,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for LanesIter<'a, A, D>
+impl<A, D> ExactSizeIterator for LanesIter<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -776,7 +776,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A> DoubleEndedIterator for LanesIter<'a, A, Ix1>
+impl<A> DoubleEndedIterator for LanesIter<'_, A, Ix1>
 {
     fn next_back(&mut self) -> Option<Self::Item>
     {
@@ -819,7 +819,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for LanesIterMut<'a, A, D>
+impl<A, D> ExactSizeIterator for LanesIterMut<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -828,7 +828,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A> DoubleEndedIterator for LanesIterMut<'a, A, Ix1>
+impl<A> DoubleEndedIterator for LanesIterMut<'_, A, Ix1>
 {
     fn next_back(&mut self) -> Option<Self::Item>
     {
@@ -1079,7 +1079,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> DoubleEndedIterator for AxisIter<'a, A, D>
+impl<A, D> DoubleEndedIterator for AxisIter<'_, A, D>
 where D: Dimension
 {
     fn next_back(&mut self) -> Option<Self::Item>
@@ -1088,7 +1088,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for AxisIter<'a, A, D>
+impl<A, D> ExactSizeIterator for AxisIter<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -1169,7 +1169,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> DoubleEndedIterator for AxisIterMut<'a, A, D>
+impl<A, D> DoubleEndedIterator for AxisIterMut<'_, A, D>
 where D: Dimension
 {
     fn next_back(&mut self) -> Option<Self::Item>
@@ -1178,7 +1178,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> ExactSizeIterator for AxisIterMut<'a, A, D>
+impl<A, D> ExactSizeIterator for AxisIterMut<'_, A, D>
 where D: Dimension
 {
     fn len(&self) -> usize
@@ -1187,7 +1187,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D>
+impl<A, D: Dimension> NdProducer for AxisIter<'_, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
@@ -1246,7 +1246,7 @@ impl<'a, A, D: Dimension> NdProducer for AxisIter<'a, A, D>
     private_impl! {}
 }
 
-impl<'a, A, D: Dimension> NdProducer for AxisIterMut<'a, A, D>
+impl<A, D: Dimension> NdProducer for AxisIterMut<'_, A, D>
 {
     type Item = <Self as Iterator>::Item;
     type Dim = Ix1;
@@ -1555,12 +1555,12 @@ unsafe impl<F> TrustedIterator for Linspace<F> {}
 unsafe impl<F> TrustedIterator for Geomspace<F> {}
 #[cfg(feature = "std")]
 unsafe impl<F> TrustedIterator for Logspace<F> {}
-unsafe impl<'a, A, D> TrustedIterator for Iter<'a, A, D> {}
-unsafe impl<'a, A, D> TrustedIterator for IterMut<'a, A, D> {}
+unsafe impl<A, D> TrustedIterator for Iter<'_, A, D> {}
+unsafe impl<A, D> TrustedIterator for IterMut<'_, A, D> {}
 unsafe impl<I> TrustedIterator for std::iter::Cloned<I> where I: TrustedIterator {}
 unsafe impl<I, F> TrustedIterator for std::iter::Map<I, F> where I: TrustedIterator {}
-unsafe impl<'a, A> TrustedIterator for slice::Iter<'a, A> {}
-unsafe impl<'a, A> TrustedIterator for slice::IterMut<'a, A> {}
+unsafe impl<A> TrustedIterator for slice::Iter<'_, A> {}
+unsafe impl<A> TrustedIterator for slice::IterMut<'_, A> {}
 unsafe impl TrustedIterator for ::std::ops::Range<usize> {}
 // FIXME: These indices iter are dubious -- size needs to be checked up front.
 unsafe impl<D> TrustedIterator for IndicesIter<D> where D: Dimension {}

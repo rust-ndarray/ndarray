@@ -35,7 +35,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> SplitAt for ArrayViewMut<'a, A, D>
+impl<A, D> SplitAt for ArrayViewMut<'_, A, D>
 where D: Dimension
 {
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self)

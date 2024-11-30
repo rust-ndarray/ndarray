@@ -128,7 +128,7 @@ where
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
 #[allow(clippy::unconditional_recursion)] // false positive
-impl<'a, A, B, S, S2, D> PartialEq<&'a ArrayBase<S2, D>> for ArrayBase<S, D>
+impl<A, B, S, S2, D> PartialEq<&ArrayBase<S2, D>> for ArrayBase<S, D>
 where
     A: PartialEq<B>,
     S: Data<Elem = A>,
@@ -144,7 +144,7 @@ where
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
 #[allow(clippy::unconditional_recursion)] // false positive
-impl<'a, A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for &'a ArrayBase<S, D>
+impl<A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for &ArrayBase<S, D>
 where
     A: PartialEq<B>,
     S: Data<Elem = A>,

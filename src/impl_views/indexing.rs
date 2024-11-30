@@ -100,7 +100,7 @@ pub trait IndexLonger<I>
     unsafe fn uget(self, index: I) -> Self::Output;
 }
 
-impl<'a, 'b, I, A, D> IndexLonger<I> for &'b ArrayView<'a, A, D>
+impl<'a, I, A, D> IndexLonger<I> for &ArrayView<'a, A, D>
 where
     I: NdIndex<D>,
     D: Dimension,

@@ -11,7 +11,7 @@ use crate::imp_prelude::*;
 /// Methods specific to `CowArray`.
 ///
 /// ***See also all methods for [`ArrayBase`]***
-impl<'a, A, D> CowArray<'a, A, D>
+impl<A, D> CowArray<'_, A, D>
 where D: Dimension
 {
     /// Returns `true` iff the array is the view (borrowed) variant.

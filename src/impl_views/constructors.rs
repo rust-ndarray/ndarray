@@ -230,7 +230,7 @@ where D: Dimension
 }
 
 /// Private array view methods
-impl<'a, A, D> ArrayView<'a, A, D>
+impl<A, D> ArrayView<'_, A, D>
 where D: Dimension
 {
     /// Create a new `ArrayView`
@@ -254,7 +254,7 @@ where D: Dimension
     }
 }
 
-impl<'a, A, D> ArrayViewMut<'a, A, D>
+impl<A, D> ArrayViewMut<'_, A, D>
 where D: Dimension
 {
     /// Create a new `ArrayView`
