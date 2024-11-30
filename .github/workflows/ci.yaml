@@ -88,6 +88,20 @@ jobs:
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
 
+  blas-msrv:
+    runs-on: ubuntu-latest
+    name: blas-msrv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.67.0  # BLAS MSRV
+      - uses: rui314/setup-mold@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - run: ./scripts/blas-integ-tests.sh "$FEATURES" 1.67.0
+
   miri:
     runs-on: ubuntu-latest
     name: miri
