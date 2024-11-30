@@ -118,7 +118,7 @@ fn test_zip_collect_drop()
 
     struct Recorddrop<'a>((usize, usize), &'a RefCell<Vec<(usize, usize)>>);
 
-    impl<'a> Drop for Recorddrop<'a>
+    impl Drop for Recorddrop<'_>
     {
         fn drop(&mut self)
         {
@@ -470,9 +470,9 @@ fn test_zip_all()
     let b = Array::<f32, _>::ones(62);
     let mut c = Array::<f32, _>::ones(62);
     c[5] = 0.0;
-    assert_eq!(true, Zip::from(&a).and(&b).all(|&x, &y| x + y == 1.0));
-    assert_eq!(false, Zip::from(&a).and(&b).all(|&x, &y| x == y));
-    assert_eq!(false, Zip::from(&a).and(&c).all(|&x, &y| x + y == 1.0));
+    assert!(Zip::from(&a).and(&b).all(|&x, &y| x + y == 1.0));
+    assert!(!Zip::from(&a).and(&b).all(|&x, &y| x == y));
+    assert!(!Zip::from(&a).and(&c).all(|&x, &y| x + y == 1.0));
 }
 
 #[test]
@@ -480,6 +480,6 @@ fn test_zip_all_empty_array()
 {
     let a = Array::<f32, _>::zeros(0);
     let b = Array::<f32, _>::ones(0);
-    assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| true));
-    assert_eq!(true, Zip::from(&a).and(&b).all(|&_x, &_y| false));
+    assert!(Zip::from(&a).and(&b).all(|&_x, &_y| true));
+    assert!(Zip::from(&a).and(&b).all(|&_x, &_y| false));
 }
