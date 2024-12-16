@@ -3,7 +3,7 @@
 name = "ndarray"
 version = "0.16.1"
 edition = "2018"
-rust-version = "1.67"
+rust-version = "1.64"
 authors = [
   "Ulrik Sverdrup \"bluss\"",
   "Jim Turner"

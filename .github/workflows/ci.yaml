@@ -12,6 +12,8 @@ env:
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "test docs"
   RUSTFLAGS: "-D warnings"
+  MSRV: 1.64.0
+  BLAS_MSRV: 1.76.0
 
 jobs:
   clippy:
@@ -74,7 +76,7 @@ jobs:
           - stable
           - beta
           - nightly
-          - 1.67.0  # MSRV
+          - 1.64.0  # MSRV
 
     name: tests/${{ matrix.rust }}
     steps:
