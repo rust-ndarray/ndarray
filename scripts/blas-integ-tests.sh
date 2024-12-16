@@ -3,7 +3,7 @@
 set -x
 set -e
 
-CHANNEL=$2
+CHANNEL=$1
 
 # BLAS tests
 cargo test -p blas-tests -v --features blas-tests/openblas-system
