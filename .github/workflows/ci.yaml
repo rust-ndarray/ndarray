@@ -95,12 +95,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.71.1  # BLAS MSRV
+          toolchain: 1.76.0  # BLAS MSRV
       - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
-      - run: ./scripts/blas-integ-tests.sh 1.71.1
+      - run: ./scripts/blas-integ-tests.sh 1.76.0
 
   miri:
     runs-on: ubuntu-latest
