@@ -100,7 +100,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
-      - run: ./scripts/blas-integ-tests.sh "$FEATURES" 1.71.1
+      - run: ./scripts/blas-integ-tests.sh 1.71.1
 
   miri:
     runs-on: ubuntu-latest

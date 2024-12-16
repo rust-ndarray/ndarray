@@ -3,7 +3,6 @@
 set -x
 set -e
 
-FEATURES=$1
 CHANNEL=$2
 
 # BLAS tests
