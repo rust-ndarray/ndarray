@@ -9,7 +9,7 @@ CHANNEL=$2
 QC_FEAT=--features=ndarray-rand/quickcheck
 
 # build check with no features
-cargo build -v --no-default-features
+cargo build -p ndarray -p ndarray-rand -v --no-default-features
 
 # ndarray with no features
 cargo test -p ndarray -v --no-default-features
