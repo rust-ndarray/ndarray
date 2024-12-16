@@ -74,7 +74,7 @@ jobs:
           - stable
           - beta
           - nightly
-          - 1.64.0  # MSRV
+          - 1.67.0  # MSRV
 
     name: tests/${{ matrix.rust }}
     steps:
