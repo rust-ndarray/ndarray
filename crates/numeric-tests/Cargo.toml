@@ -20,6 +20,7 @@ rand_distr = { workspace = true }
 
 blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
 openblas-src = { optional = true, version = "=0.10.9", default-features = false, features = ["cblas", "system"] }
+openblas-build = "=0.10.9"
 
 [dev-dependencies]
 num-traits = { workspace = true }

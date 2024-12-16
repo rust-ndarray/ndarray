@@ -18,6 +18,7 @@ blas-src = { version = "0.10", optional = true }
 openblas-src = { version = "=0.10.9", optional = true }
 netlib-src = { version = "0.8", optional = true }
 blis-src = { version = "0.2", features = ["system"], optional = true }
+openblas-build = "=0.10.9"
 
 [dev-dependencies]
 defmac = "0.2"
