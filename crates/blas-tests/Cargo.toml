@@ -15,7 +15,7 @@ ndarray = { workspace = true, features = ["approx", "blas"] }
 ndarray-gen = { workspace = true }
 
 blas-src = { version = "0.10", optional = true }
-openblas-src = { version = "0.10", optional = true }
+openblas-src = { version = ">=0.10.11", optional = true }
 netlib-src = { version = "0.8", optional = true }
 blis-src = { version = "0.2", features = ["system"], optional = true }
 

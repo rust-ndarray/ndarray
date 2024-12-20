@@ -12,6 +12,8 @@ env:
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "test docs"
   RUSTFLAGS: "-D warnings"
+  MSRV: 1.64.0
+  BLAS_MSRV: 1.71.1
 
 jobs:
   clippy:
@@ -95,12 +97,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.67.0  # BLAS MSRV
+          toolchain: 1.71.1  # BLAS MSRV
       - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
-      - run: ./scripts/blas-integ-tests.sh "$FEATURES" 1.67.0
+      - run: cargo tree -p blas-tests -i openblas-src -F blas-tests/openblas-system
+      - run: cargo tree -p blas-tests -i openblas-build -F blas-tests/openblas-system
+      - run: ./scripts/blas-integ-tests.sh $BLAS_MSRV
 
   miri:
     runs-on: ubuntu-latest

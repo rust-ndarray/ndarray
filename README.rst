@@ -161,8 +161,8 @@ BLAS on MSRV
 ------------
 
 Although ``ndarray`` currently maintains an MSRV of 1.64.0, this is separate from the MSRV (either stated or real) of the various BLAS providers.
-As of the time of writing, ``openblas`` currently supports MSRV of 1.67.0.
-So, while ``ndarray`` and ``openblas-src`` are compatible, they can only work together with toolchains 1.67.0 or above.
+As of the time of writing, ``openblas`` currently supports MSRV of 1.71.1.
+So, while ``ndarray`` and ``openblas-src`` are compatible, they can only work together with toolchains 1.71.1 or above.
 
 Recent Changes
 --------------
