@@ -1494,6 +1494,19 @@ where
     pub fn axis_windows(&self, axis: Axis, window_size: usize) -> AxisWindows<'_, A, D>
     where S: Data
     {
+        self.axis_windows_with_stride(axis, window_size, 1)
+    }
+
+    /// Returns a producer which traverses over windows of a given length and
+    /// stride along an axis.
+    ///
+    /// Note that a calling this method with a stride of 1 is equivalent to
+    /// calling [`ArrayBase::axis_windows()`].
+    pub fn axis_windows_with_stride(
+        &self, axis: Axis, window_size: usize, stride_size: usize,
+    ) -> AxisWindows<'_, A, D>
+    where S: Data
+    {
         let axis_index = axis.index();
 
         ndassert!(
@@ -1507,7 +1520,12 @@ where
             self.shape()
         );
 
-        AxisWindows::new(self.view(), axis, window_size)
+        ndassert!(
+            stride_size >0,
+            "Stride size must be greater than zero"
+        );
+
+        AxisWindows::new_with_stride(self.view(), axis, window_size, stride_size)
     }
 
     // Return (length, stride) for diagonal
