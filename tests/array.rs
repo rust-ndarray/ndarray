@@ -1053,8 +1053,12 @@ fn map1()
 fn mapv_into_any_same_type()
 {
     let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
+    let ptr_before = a.get_ptr((0,0)).unwrap();
     let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
-    assert_eq!(a.mapv_into_any(|a| a + 1.), a_plus_one);
+    let b = a.mapv_into_any(|a| a + 1.);
+    let ptr_after = b.get_ptr((0,0)).unwrap();
+    assert_eq!(b, a_plus_one);
+    assert!(ptr_before == ptr_after); // no new memory allocation
 }
 
 #[test]
@@ -1062,7 +1066,173 @@ fn mapv_into_any_diff_types()
 {
     let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]];
     let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
-    assert_eq!(a.mapv_into_any(|a| a.round() as i32 % 2 == 0), a_even);
+    let b = a.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+#[test]
+fn mapv_into_any_arcarray_same_type() {
+    // Uniquely owned variant.
+    let a: ArcArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into_shared();
+    let ptr_before = a.get_ptr((0,0)).unwrap();
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    let b = a.mapv_into_any(|a| a + 1.);
+    let ptr_after = b.get_ptr((0,0)).unwrap();
+    assert_eq!(b, a_plus_one);
+    assert!(ptr_before == ptr_after); // no new memory allocation
+    let _ = b.try_into_owned_nocopy().unwrap(); // b should be uniquely owned
+    // Shared variant.
+    let aa: ArcArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into_shared();
+    let a: ArcArray<f64, _> = aa.clone();
+    let ptr_before = a.get_ptr((0,0)).unwrap();
+    let b = a.mapv_into_any(|a| a + 1.);
+    let ptr_after = b.get_ptr((0,0)).unwrap();
+    assert_eq!(b, a_plus_one);
+    assert!(ptr_before != ptr_after); // requires new memory allocation
+    let _ = b.try_into_owned_nocopy().unwrap(); // b should be uniquely owned
+}
+
+#[test]
+fn mapv_into_any_arcarray_diff_types() {
+    let a: ArcArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into_shared();
+    let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
+    let b = a.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+#[test]
+fn mapv_into_any_cowarray_same_type() {
+    // Owned variant.
+    let a: CowArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into();
+    assert!(a.is_owned());
+    let ptr_before = a.get_ptr((0,0)).unwrap();
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    let b = a.mapv_into_any(|a| a + 1.);
+    let ptr_after = b.get_ptr((0,0)).unwrap();
+    assert!(b.is_owned());
+    assert_eq!(b, a_plus_one);
+    assert!(ptr_before == ptr_after); // no new memory allocation
+    // View variant.
+    let aa = array![[1., 2., 3.], [4., 5., 6.]];
+    let a = CowArray::from(aa.view());
+    let ptr_before = a.get_ptr((0,0)).unwrap();
+    assert!(a.is_view());
+    let b = a.mapv_into_any(|a| a + 1.);
+    let ptr_after = b.get_ptr((0,0)).unwrap();
+    assert!(b.is_owned());
+    assert_eq!(b, a_plus_one);
+    assert!(ptr_before != ptr_after); // requires new memory allocation
+}
+
+#[test]
+fn mapv_into_any_cowarray_diff_types() {
+    // Owned variant.
+    let a: CowArray<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into();
+    let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
+    let b = a.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+    // View variant.
+    let aa = array![[1., 2., 3.], [4., 5., 6.]];
+    let a: CowArray<f64, _> = CowArray::from(aa.view());
+    let b = a.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+#[test]
+fn mapv_into_any_arrayview_same_type() {
+    let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into();
+    let aview = a.view();
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    let b = aview.mapv_into_any(|a| a + 1.);
+    assert_eq!(b, a_plus_one);
+}
+
+#[test]
+fn mapv_into_any_arrayview_diff_types() {
+    let a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into();
+    let aview = a.view();
+    let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
+    let b = aview.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+#[test]
+fn mapv_into_any_arrayviewmut_same_type() {
+    let mut a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into();
+    let aview = a.view_mut();
+    let a_plus_one: Array<f64, _> = array![[2., 3., 4.], [5., 6., 7.]];
+    let b = aview.mapv_into_any(|a| a + 1.);
+    assert_eq!(b, a_plus_one);
+}
+
+#[test]
+fn mapv_into_any_arrayviewmut_diff_types() {
+    let mut a: Array<f64, _> = array![[1., 2., 3.], [4., 5., 6.]].into();
+    let aview = a.view_mut();
+    let a_even: Array<bool, _> = array![[false, true, false], [true, false, true]];
+    let b = aview.mapv_into_any(|a| a.round() as i32 % 2 == 0);
+    assert_eq!(b, a_even);
+}
+
+use num_traits;
+use ndarray::DataMappable;
+use ndarray::Data;
+
+// Test ergonomics on trait bounds of functions calling mapv_into_any().
+// Concrete data representation, generic data type.
+fn mapv_into_any_round<A, D>(arr: Array<A, D>) -> Array<i32, D>
+where
+    A: num_traits::real::Real + num_traits::cast::AsPrimitive<i32>,
+    D: Dimension,
+{
+   arr.mapv_into_any(|a| a.round().as_())
+}
+
+#[test]
+fn test_mapv_into_any_round() {
+   let a: Array<f64, _> = array![1.1, 2.6, 3.0];
+   let a_rounded: Array<i32, _> = array![1, 3, 3];
+   let b = mapv_into_any_round(a);
+   assert_eq!(b, a_rounded);
+}
+
+// Test ergonomics on trait bounds of functions calling mapv_into_any().
+// Generic data representation and type.
+fn mapv_into_any_round_any<'a, A, S, D>(arr: ArrayBase<S, D>) -> ArrayBase<<S as DataMappable<'a>>::Subst<i32>, D>
+where
+    S: Data<Elem = A> + DataMappable<'a>,
+    A: num_traits::real::Real + num_traits::cast::AsPrimitive<i32> + 'a,
+    D: Dimension,
+{
+    arr.mapv_into_any(|a| a.round().as_())
+}
+
+#[test]
+fn test_mapv_into_any_round_any() {
+   let a: Array<f64, _> = array![1.1, 2.6, 3.0];
+   let a_rounded: Array<i32, _> = array![1, 3, 3];
+   let b = mapv_into_any_round_any(a);
+   assert_eq!(b, a_rounded);
+}
+
+// Test ergonomics on trait bounds of functions calling mapv_into_any().
+// Generic data representation and type,
+// followed by generic reduction.
+fn mapv_into_any_round_sum<'a, S, A, D>(arr: ArrayBase<S, D>) -> i32
+where
+    S: ndarray::Data<Elem = A> + DataMappable<'a>,
+    A: num_traits::real::Real + num_traits::cast::AsPrimitive<i32> + 'a,
+    D: Dimension,
+{
+    let output = arr.mapv_into_any(|a| a.round().as_());
+    output.sum()
+}
+
+#[test]
+fn test_mapv_into_any_round_sum() {
+   let a: Array<f32, _> = array![1.1, 2.6, 3.0];
+   let b = mapv_into_any_round_sum(a);
+   assert_eq!(b, 7);
 }
 
 #[test]
