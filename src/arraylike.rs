@@ -6,8 +6,8 @@ use crate::{
     aview_mut1,
     ArrayBase,
     ArrayRef,
+    ArrayView,
     ArrayViewMut,
-    CowArray,
     Data,
     DataMut,
     Dimension,
@@ -51,7 +51,7 @@ pub trait ArrayLike
     type Dim: Dimension;
     type Elem;
 
-    fn as_array(&self) -> CowArray<'_, Self::Elem, Self::Dim>;
+    fn view(&self) -> ArrayView<'_, Self::Elem, Self::Dim>;
 
     fn dim(&self) -> Self::Dim;
 
@@ -60,7 +60,7 @@ pub trait ArrayLike
 
 pub trait ArrayLikeMut: ArrayLike
 {
-    fn as_array_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>;
+    fn view_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>;
 
     fn as_elem_mut(&mut self) -> Option<&mut Self::Elem>;
 }
@@ -71,10 +71,10 @@ where A: ScalarOperand
     type Dim = Ix0;
     type Elem = A;
 
-    fn as_array(&self) -> CowArray<'_, Self::Elem, Self::Dim>
+    fn view(&self) -> ArrayView<'_, Self::Elem, Self::Dim>
     where Self::Elem: Clone
     {
-        aview0(self).into()
+        aview0(self)
     }
 
     fn dim(&self) -> Self::Dim
@@ -91,7 +91,7 @@ where A: ScalarOperand
 impl<A> ArrayLikeMut for A
 where A: ScalarOperand
 {
-    fn as_array_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
+    fn view_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
     {
         // SAFETY: The pointer will be non-null since it's a reference,
         // and the view is tied to the lifetime of the mutable borrow
@@ -110,9 +110,9 @@ where D: Dimension
     type Dim = D;
     type Elem = A;
 
-    fn as_array(&self) -> CowArray<'_, Self::Elem, Self::Dim>
+    fn view(&self) -> ArrayView<'_, Self::Elem, Self::Dim>
     {
-        self.view().into()
+        self.view()
     }
 
     fn dim(&self) -> Self::Dim
@@ -133,7 +133,7 @@ where D: Dimension
 impl<A, D> ArrayLikeMut for ArrayRef<A, D>
 where D: Dimension
 {
-    fn as_array_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
+    fn view_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
     {
         self.view_mut()
     }
@@ -156,9 +156,9 @@ where
     type Dim = D;
     type Elem = S::Elem;
 
-    fn as_array(&self) -> CowArray<'_, Self::Elem, Self::Dim>
+    fn view(&self) -> ArrayView<'_, Self::Elem, Self::Dim>
     {
-        self.into()
+        self.view()
     }
 
     fn dim(&self) -> Self::Dim
@@ -181,7 +181,7 @@ where
     S: DataMut,
     D: Dimension,
 {
-    fn as_array_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
+    fn view_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
     {
         self.view_mut()
     }
@@ -202,9 +202,9 @@ impl<A> ArrayLike for [A]
 
     type Elem = A;
 
-    fn as_array(&self) -> CowArray<'_, Self::Elem, Self::Dim>
+    fn view(&self) -> ArrayView<'_, Self::Elem, Self::Dim>
     {
-        aview1(self).into()
+        aview1(self)
     }
 
     fn dim(&self) -> Self::Dim
@@ -224,7 +224,7 @@ impl<A> ArrayLike for [A]
 
 impl<A> ArrayLikeMut for [A]
 {
-    fn as_array_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
+    fn view_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
     {
         aview_mut1(self)
     }
@@ -245,9 +245,9 @@ impl<A> ArrayLike for Vec<A>
 
     type Elem = A;
 
-    fn as_array(&self) -> CowArray<'_, Self::Elem, Self::Dim>
+    fn view(&self) -> ArrayView<'_, Self::Elem, Self::Dim>
     {
-        (&**self).as_array()
+        (&**self).view()
     }
 
     fn dim(&self) -> Self::Dim
@@ -263,9 +263,9 @@ impl<A> ArrayLike for Vec<A>
 
 impl<A> ArrayLikeMut for Vec<A>
 {
-    fn as_array_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
+    fn view_mut(&mut self) -> ArrayViewMut<'_, Self::Elem, Self::Dim>
     {
-        (&mut **self).as_array_mut()
+        (&mut **self).view_mut()
     }
 
     fn as_elem_mut(&mut self) -> Option<&mut Self::Elem>
@@ -282,16 +282,17 @@ mod tests
 
     use crate::{array, Array, ArrayLike, DimMax};
 
-    fn multiply<T, G>(left: &T, right: &G) -> Array<T::Elem, <T::Dim as DimMax<G::Dim>>::Output>
+    fn multiply<T, G>(left: &T, right: &G) -> Array<T::Elem::Output, <T::Dim as DimMax<G::Dim>>::Output>
     where
         T: ArrayLike,
-        G: ArrayLike<Elem = T::Elem>,
+        G: ArrayLike,
         // Bounds to enable multiplication
-        T::Elem: Clone + Mul<T::Elem, Output = T::Elem>,
+        T::Elem: Clone + Mul<G::Elem>,
+        G::Elem: Clone,
         T::Dim: DimMax<G::Dim>,
     {
-        let left = &*left.as_array();
-        let right = &*right.as_array();
+        let left = &*left.view();
+        let right = &*right.view();
         left * right
     }
 
