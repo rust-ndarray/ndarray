@@ -208,7 +208,7 @@ mod zip;
 
 mod dimension;
 mod arraylike;
-pub use crate::arraylike::ArrayLike;
+pub use crate::arraylike::{ArrayLike, ArrayLikeMut};
 
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 
