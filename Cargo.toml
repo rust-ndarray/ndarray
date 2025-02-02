@@ -121,5 +121,8 @@ opt-level = 2
 no-dev-version = true
 tag-name = "{{version}}"
 
+# Config specific to docs.rs
 [package.metadata.docs.rs]
 features = ["docs"]
+# Define the configuration attribute `docsrs`
+rustdoc-args = ["--cfg", "docsrs"]

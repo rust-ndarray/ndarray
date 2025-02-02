@@ -161,7 +161,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - stable
+          - nightly # This is what docs.rs runs on, and is needed for the feature flags
     name: docs/${{ matrix.rust }}
     env:
       RUSTDOCFLAGS: "-Dwarnings"
