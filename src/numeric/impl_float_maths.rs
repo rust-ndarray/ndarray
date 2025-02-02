@@ -5,6 +5,7 @@ use num_traits::Float;
 
 use crate::imp_prelude::*;
 
+#[cfg(feature = "std")]
 macro_rules! boolean_ops {
     ($(#[$meta1:meta])* fn $func:ident
     $(#[$meta2:meta])* fn $all:ident
@@ -27,6 +28,7 @@ macro_rules! boolean_ops {
     };
 }
 
+#[cfg(feature = "std")]
 macro_rules! unary_ops {
     ($($(#[$meta:meta])* fn $id:ident)+) => {
         $($(#[$meta])*
@@ -37,6 +39,7 @@ macro_rules! unary_ops {
     };
 }
 
+#[cfg(feature = "std")]
 macro_rules! binary_ops {
     ($($(#[$meta:meta])* fn $id:ident($ty:ty))+) => {
         $($(#[$meta])*
