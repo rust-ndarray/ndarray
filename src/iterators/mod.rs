@@ -139,13 +139,9 @@ impl<A> DoubleEndedIterator for Baseiter<A, Ix1>
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item>
     {
-        let index = match self.index {
-            None => return None,
-            Some(ix) => ix,
-        };
         self.dim[0] -= 1;
         let offset = Ix1::stride_offset(&self.dim, &self.strides);
-        if index == self.dim {
+        if self.index? == self.dim {
             self.index = None;
         }
 
