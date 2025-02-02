@@ -10,7 +10,7 @@ name: Continuous integration
 env:
   CARGO_TERM_COLOR: always
   HOST: x86_64-unknown-linux-gnu
-  FEATURES: "test docs"
+  FEATURES: "approx,serde,rayon"
   RUSTFLAGS: "-D warnings"
   MSRV: 1.64.0
   BLAS_MSRV: 1.71.1
@@ -30,7 +30,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --features docs
+      - run: cargo clippy --features approx,serde,rayon
 
   format:
     runs-on: ubuntu-latest
@@ -139,7 +139,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install cross
         run: cargo install cross
-      - run: ./scripts/cross-tests.sh "docs" ${{ matrix.rust }} ${{ matrix.target }}
+      - run: ./scripts/cross-tests.sh "approx,serde,rayon" ${{ matrix.rust }} ${{ matrix.target }}
 
   cargo-careful:
     #if: ${{ github.event_name == 'merge_group' }}
@@ -164,7 +164,7 @@ jobs:
           - nightly # This is what docs.rs runs on, and is needed for the feature flags
     name: docs/${{ matrix.rust }}
     env:
-      RUSTDOCFLAGS: "-Dwarnings"
+      RUSTDOCFLAGS: "-Dwarnings --cfg docsrs"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master

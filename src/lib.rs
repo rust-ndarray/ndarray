@@ -122,7 +122,7 @@ extern crate std;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
 
-#[cfg(feature = "docs")]
+#[cfg(docsrs)]
 pub mod doc;
 
 #[cfg(target_has_atomic = "ptr")]

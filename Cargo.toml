@@ -59,14 +59,6 @@ default = ["std"]
 blas = ["dep:cblas-sys", "dep:libc"]
 
 serde = ["dep:serde"]
-# Old name for the serde feature
-serde-1 = ["dep:serde"]
-
-# These features are used for testing
-test = []
-
-# This feature is used for docs
-docs = ["approx", "serde", "rayon"]
 
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["dep:rayon", "std"]
@@ -123,6 +115,6 @@ tag-name = "{{version}}"
 
 # Config specific to docs.rs
 [package.metadata.docs.rs]
-features = ["docs"]
+features = ["approx", "serde", "rayon"]
 # Define the configuration attribute `docsrs`
 rustdoc-args = ["--cfg", "docsrs"]
