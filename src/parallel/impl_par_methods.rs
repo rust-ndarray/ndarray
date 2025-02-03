@@ -8,8 +8,6 @@ use crate::parallel::prelude::*;
 use crate::partial::Partial;
 
 /// # Parallel methods
-///
-/// These methods require crate feature `rayon`.
 impl<A, S, D> ArrayBase<S, D>
 where
     S: DataMut<Elem = A>,

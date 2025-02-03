@@ -316,6 +316,7 @@ where
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 // Use version number so we can add a packed format later.
 pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 

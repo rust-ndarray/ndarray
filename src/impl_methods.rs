@@ -2299,10 +2299,7 @@ where
         let dim = dim.into_dimension();
 
         // Note: zero strides are safe precisely because we return an read-only view
-        let broadcast_strides = match upcast(&dim, &self.dim, &self.strides) {
-            Some(st) => st,
-            None => return None,
-        };
+        let broadcast_strides = upcast(&dim, &self.dim, &self.strides)?;
         unsafe { Some(ArrayView::new(self.ptr, dim, broadcast_strides)) }
     }
 

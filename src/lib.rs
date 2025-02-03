@@ -20,6 +20,8 @@
 #![doc(test(attr(allow(unused_variables))))]
 #![doc(test(attr(allow(deprecated))))]
 #![cfg_attr(not(feature = "std"), no_std)]
+// Enable the doc_cfg nightly feature for including feature gate flags in the documentation
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
@@ -120,7 +122,7 @@ extern crate std;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
 
-#[cfg(feature = "docs")]
+#[cfg(docsrs)]
 pub mod doc;
 
 #[cfg(target_has_atomic = "ptr")]
@@ -148,6 +150,7 @@ use crate::iterators::{ElementsBase, ElementsBaseMut, Iter, IterMut};
 pub use crate::arraytraits::AsArray;
 pub use crate::linalg_traits::LinalgScalar;
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub use crate::linalg_traits::NdFloat;
 
 pub use crate::stacking::{concatenate, stack};
@@ -189,9 +192,11 @@ mod layout;
 mod linalg_traits;
 mod linspace;
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub use crate::linspace::{linspace, range, Linspace};
 mod logspace;
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub use crate::logspace::{logspace, Logspace};
 mod math_cell;
 mod numeric_util;
@@ -1587,6 +1592,7 @@ where
 
 // parallel methods
 #[cfg(feature = "rayon")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
 pub mod parallel;
 
 mod impl_1d;
