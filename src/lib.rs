@@ -1282,15 +1282,15 @@ pub type Ixs = isize;
 // may change in the future.
 //
 // [`.offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
-pub struct ArrayBase<S, D>
-where S: RawData
+pub struct ArrayBase<S, D, A = <S as RawData>::Elem>
+where S: RawData<Elem = A>
 {
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<S::Elem>,
+    ptr: std::ptr::NonNull<A>,
     /// The lengths of the axes.
     dim: D,
     /// The element count stride per axis. To be parsed as `isize`.
