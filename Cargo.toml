@@ -96,8 +96,8 @@ num-traits = { version = "0.2", default-features = false }
 num-complex = { version = "0.4", default-features = false }
 approx = { version = "0.5", default-features = false }
 quickcheck = { version = "1.0", default-features = false }
-rand = { version = "0.8.0", features = ["small_rng"] }
-rand_distr = { version = "0.4.0" }
+rand = { version = "0.9.0", features = ["small_rng"] }
+rand_distr = { version = "0.5.0" }
 itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
 cblas-sys = { version = "0.1.4", default-features = false }
 

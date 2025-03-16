@@ -13,7 +13,7 @@ use test::Bencher;
 fn uniform_f32(b: &mut Bencher)
 {
     let m = 100;
-    b.iter(|| Array::random((m, m), Uniform::new(-1f32, 1.)));
+    b.iter(|| Array::random((m, m), Uniform::new(-1f32, 1.).unwrap()));
 }
 
 #[bench]

@@ -29,10 +29,10 @@
 //! that the items are not compatible (e.g. that a type doesn't implement a
 //! necessary trait).
 
-use crate::rand::distributions::{Distribution, Uniform};
+use crate::rand::distr::{Distribution, Uniform};
 use crate::rand::rngs::SmallRng;
 use crate::rand::seq::index;
-use crate::rand::{thread_rng, Rng, SeedableRng};
+use crate::rand::{rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
 use ndarray::{ArrayBase, Data, DataOwned, Dimension, RawData};
@@ -71,8 +71,8 @@ where
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution` using the default RNG.
     ///
-    /// ***Panics*** if creation of the RNG fails or if the number of elements
-    /// overflows usize.
+    /// ***Panics*** if creation of the RNG fails, the number of elements
+    /// overflows usize, or the axis has zero length.
     ///
     /// ```
     /// use ndarray::Array;
@@ -95,7 +95,8 @@ where
     /// Create an array with shape `dim` with elements drawn from
     /// `distribution`, using a specific Rng `rng`.
     ///
-    /// ***Panics*** if the number of elements overflows usize.
+    /// ***Panics*** if the number of elements overflows usize
+    /// or the axis has zero length.
     ///
     /// ```
     /// use ndarray::Array;
@@ -270,7 +271,7 @@ where
     {
         let indices: Vec<_> = match strategy {
             SamplingStrategy::WithReplacement => {
-                let distribution = Uniform::from(0..self.len_of(axis));
+                let distribution = Uniform::new(0, self.len_of(axis)).unwrap();
                 (0..n_samples).map(|_| distribution.sample(rng)).collect()
             }
             SamplingStrategy::WithoutReplacement => index::sample(rng, self.len_of(axis), n_samples).into_vec(),
@@ -308,5 +309,5 @@ impl Arbitrary for SamplingStrategy
 
 fn get_rng() -> SmallRng
 {
-    SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
+    SmallRng::from_rng(&mut rng())
 }
