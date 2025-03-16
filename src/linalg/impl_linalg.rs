@@ -1112,10 +1112,6 @@ where
     fn dot(&self, rhs: &ArrayBase<S2, IxDyn>) -> Self::Output {
         match (self.ndim(), rhs.ndim()) {
             (1, 1) => {
-                // Vector-vector dot product
-                if self.len() != rhs.len() {
-                    panic!("Vector lengths must match for dot product");
-                }
                 let a = self.view().into_dimensionality::<Ix1>().unwrap();
                 let b = rhs.view().into_dimensionality::<Ix1>().unwrap();
                 let result = a.dot(&b);
