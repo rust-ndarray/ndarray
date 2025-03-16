@@ -15,9 +15,9 @@ use crate::numeric_util;
 use crate::{LinalgScalar, Zip};
 
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-#[cfg(not(feature = "std"))]
 use alloc::vec;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use std::any::TypeId;
 use std::mem::MaybeUninit;
@@ -1092,9 +1092,8 @@ mod blas_tests
 /// # Examples
 ///
 /// ```
-/// use ndarray::ArrayD;
-/// use alloc::vec;
-
+/// use ndarray::{ArrayD, linalg::Dot};
+///
 /// // Matrix multiplication
 /// let a = ArrayD::from_shape_vec(vec![2, 3], vec![1., 2., 3., 4., 5., 6.]).unwrap();
 /// let b = ArrayD::from_shape_vec(vec![3, 2], vec![1., 2., 3., 4., 5., 6.]).unwrap();
