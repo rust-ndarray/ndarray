@@ -1068,6 +1068,39 @@ mod blas_tests
     }
 }
 
+/// Dot product for dynamic-dimensional arrays (`ArrayD`).
+///
+/// For one-dimensional arrays, computes the vector dot product, which is the sum
+/// of the elementwise products (no conjugation of complex operands).
+/// Both arrays must have the same length.
+///
+/// For two-dimensional arrays, performs matrix multiplication. The array shapes
+/// must be compatible in the following ways:
+/// - If `self` is *M* × *N*, then `rhs` must be *N* × *K* for matrix-matrix multiplication
+/// - If `self` is *M* × *N* and `rhs` is *N*, returns a vector of length *M*
+/// - If `self` is *M* and `rhs` is *M* × *N*, returns a vector of length *N*
+/// - If both arrays are one-dimensional of length *N*, returns a scalar
+///
+/// **Panics** if:
+/// - The arrays have dimensions other than 1 or 2
+/// - The array shapes are incompatible for the operation
+/// - For vector dot product: the vectors have different lengths
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::{ArrayD, Array2, Array1};
+///
+/// // Matrix multiplication
+/// let a = ArrayD::from_shape_vec(vec![2, 3], vec![1., 2., 3., 4., 5., 6.]).unwrap();
+/// let b = ArrayD::from_shape_vec(vec![3, 2], vec![1., 2., 3., 4., 5., 6.]).unwrap();
+/// let c = a.dot(&b);
+///
+/// // Vector dot product
+/// let v1 = ArrayD::from_shape_vec(vec![3], vec![1., 2., 3.]).unwrap();
+/// let v2 = ArrayD::from_shape_vec(vec![3], vec![4., 5., 6.]).unwrap();
+/// let scalar = v1.dot(&v2);
+/// ```
 impl<A, S, S2> Dot<ArrayBase<S2, IxDyn>> for ArrayBase<S, IxDyn>
 where
     S: Data<Elem = A>,
