@@ -1,6 +1,6 @@
 use ndarray::{Array, Array2, ArrayView1, Axis};
 #[cfg(feature = "quickcheck")]
-use ndarray_rand::rand::{distributions::Distribution, thread_rng};
+use ndarray_rand::rand::{distr::Distribution, rng};
 
 use ndarray::ShapeBuilder;
 use ndarray_rand::rand_distr::Uniform;
@@ -13,7 +13,7 @@ fn test_dim()
     let (mm, nn) = (5, 5);
     for m in 0..mm {
         for n in 0..nn {
-            let a = Array::random((m, n), Uniform::new(0., 2.));
+            let a = Array::random((m, n), Uniform::new(0., 2.).unwrap());
             assert_eq!(a.shape(), &[m, n]);
             assert!(a.iter().all(|x| *x < 2.));
             assert!(a.iter().all(|x| *x >= 0.));
@@ -28,7 +28,7 @@ fn test_dim_f()
     let (mm, nn) = (5, 5);
     for m in 0..mm {
         for n in 0..nn {
-            let a = Array::random((m, n).f(), Uniform::new(0., 2.));
+            let a = Array::random((m, n).f(), Uniform::new(0., 2.).unwrap());
             assert_eq!(a.shape(), &[m, n]);
             assert!(a.iter().all(|x| *x < 2.));
             assert!(a.iter().all(|x| *x >= 0.));
@@ -41,7 +41,7 @@ fn test_dim_f()
 fn sample_axis_on_view()
 {
     let m = 5;
-    let a = Array::random((m, 4), Uniform::new(0., 2.));
+    let a = Array::random((m, 4), Uniform::new(0., 2.).unwrap());
     let _samples = a
         .view()
         .sample_axis(Axis(0), m, SamplingStrategy::WithoutReplacement);
@@ -52,7 +52,7 @@ fn sample_axis_on_view()
 fn oversampling_without_replacement_should_panic()
 {
     let m = 5;
-    let a = Array::random((m, 4), Uniform::new(0., 2.));
+    let a = Array::random((m, 4), Uniform::new(0., 2.).unwrap());
     let _samples = a.sample_axis(Axis(0), m + 1, SamplingStrategy::WithoutReplacement);
 }
 
@@ -60,7 +60,7 @@ quickcheck! {
     #[cfg_attr(miri, ignore)] // Takes an insufferably long time
     fn oversampling_with_replacement_is_fine(m: u8, n: u8) -> TestResult {
         let (m, n) = (m as usize, n as usize);
-        let a = Array::random((m, n), Uniform::new(0., 2.));
+        let a = Array::random((m, n), Uniform::new(0., 2.).unwrap());
         // Higher than the length of both axes
         let n_samples = m + n + 1;
 
@@ -90,12 +90,12 @@ quickcheck! {
     #[cfg_attr(miri, ignore)] // This takes *forever* with Miri
     fn sampling_behaves_as_expected(m: u8, n: u8, strategy: SamplingStrategy) -> TestResult {
         let (m, n) = (m as usize, n as usize);
-        let a = Array::random((m, n), Uniform::new(0., 2.));
-        let mut rng = &mut thread_rng();
+        let a = Array::random((m, n), Uniform::new(0., 2.).unwrap());
+        let mut rng = &mut rng();
 
         // We don't want to deal with sampling from 0-length axes in this test
         if m != 0 {
-            let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
+            let n_row_samples = Uniform::new(1, m+1).unwrap().sample(&mut rng);
             if !sampling_works(&a, strategy.clone(), Axis(0), n_row_samples) {
                 return TestResult::failed();
             }
@@ -105,7 +105,7 @@ quickcheck! {
 
         // We don't want to deal with sampling from 0-length axes in this test
         if n != 0 {
-            let n_col_samples = Uniform::from(1..n+1).sample(&mut rng);
+            let n_col_samples = Uniform::new(1, n+1).unwrap().sample(&mut rng);
             if !sampling_works(&a, strategy, Axis(1), n_col_samples) {
                 return TestResult::failed();
             }
@@ -136,7 +136,7 @@ fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool
 fn sampling_without_replacement_from_a_zero_length_axis_should_panic()
 {
     let n = 5;
-    let a = Array::random((0, n), Uniform::new(0., 2.));
+    let a = Array::random((0, n), Uniform::new(0., 2.).unwrap());
     let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithoutReplacement);
 }
 
@@ -145,6 +145,6 @@ fn sampling_without_replacement_from_a_zero_length_axis_should_panic()
 fn sampling_with_replacement_from_a_zero_length_axis_should_panic()
 {
     let n = 5;
-    let a = Array::random((0, n), Uniform::new(0., 2.));
+    let a = Array::random((0, n), Uniform::new(0., 2.).unwrap());
     let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithReplacement);
 }
