@@ -16,6 +16,9 @@ use crate::{LinalgScalar, Zip};
 
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+
 use std::any::TypeId;
 use std::mem::MaybeUninit;
 
