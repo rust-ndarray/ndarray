@@ -1,6 +1,6 @@
 use ndarray::{Array, Array2, ArrayView1, Axis};
 #[cfg(feature = "quickcheck")]
-use ndarray_rand::rand::{distributions::Distribution, thread_rng};
+use ndarray_rand::rand::{distr::Distribution, rng};
 
 use ndarray::ShapeBuilder;
 use ndarray_rand::rand_distr::Uniform;
@@ -90,12 +90,12 @@ quickcheck! {
     #[cfg_attr(miri, ignore)] // This takes *forever* with Miri
     fn sampling_behaves_as_expected(m: u8, n: u8, strategy: SamplingStrategy) -> TestResult {
         let (m, n) = (m as usize, n as usize);
-        let a = Array::random((m, n), Uniform::new(0., 2.));
-        let mut rng = &mut thread_rng();
+        let a = Array::random((m, n), Uniform::new(0., 2.).unwrap());
+        let mut rng = &mut rng();
 
         // We don't want to deal with sampling from 0-length axes in this test
         if m != 0 {
-            let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
+            let n_row_samples = Uniform::new(1, m+1).unwrap().sample(&mut rng);
             if !sampling_works(&a, strategy.clone(), Axis(0), n_row_samples) {
                 return TestResult::failed();
             }
@@ -105,7 +105,7 @@ quickcheck! {
 
         // We don't want to deal with sampling from 0-length axes in this test
         if n != 0 {
-            let n_col_samples = Uniform::from(1..n+1).sample(&mut rng);
+            let n_col_samples = Uniform::new(1, n+1).unwrap().sample(&mut rng);
             if !sampling_works(&a, strategy, Axis(1), n_col_samples) {
                 return TestResult::failed();
             }
