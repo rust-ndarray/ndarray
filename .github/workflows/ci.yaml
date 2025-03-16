@@ -13,7 +13,7 @@ env:
   FEATURES: "approx,serde,rayon"
   RUSTFLAGS: "-D warnings"
   MSRV: 1.64.0
-  BLAS_MSRV: 1.71.0
+  BLAS_MSRV: 1.71.1
 
 jobs:
   pass-msrv:
