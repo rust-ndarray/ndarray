@@ -1,0 +1,66 @@
+name: Check Latest Dependencies
+on:
+  schedule:
+    # Chosen so that it runs right before the international date line experiences the weekend.
+    # Since we're open source, that means globally we should be aware of it right when we have the most
+    # time to fix it.
+    #
+    # Sorry if this ruins your weekend, future maintainer...
+    - cron: '0 12 * * FRI'
+  workflow_dispatch: # For running manually
+
+env:
+  CARGO_TERM_COLOR: always
+  HOST: x86_64-unknown-linux-gnu
+  FEATURES: "approx,serde,rayon"
+  RUSTFLAGS: "-D warnings"
+  MSRV: 1.64.0
+  BLAS_MSRV: 1.71.0
+
+jobs:
+  latest_deps_stable:
+    runs-on: ubuntu-latest
+    name: Check Latest Dependencies on Stable
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Setup Mold Linker
+        uses: rui314/setup-mold@v1
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - name: Ensure latest dependencies
+        run: cargo update
+      - name: Run Tests
+        run: ./scripts/all-tests.sh "$FEATURES" stable
+
+  latest_deps_msrv:
+    runs-on: ubuntu-latest
+    name: Check Latest Dependencies on MSRV (${{ env.MSRV }})
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v4
+      - name: Install Stable Rust for Update
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Setup Mold Linker
+        uses: rui314/setup-mold@v1
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - name: Ensure latest dependencies
+        # The difference is here between this and `latest_deps_stable`
+        run: CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS="fallback" cargo update
+      - name: Install MSRV Rust for Test
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.MSRV }}
+      - name: Run Tests
+        run: ./scripts/all-tests.sh "$FEATURES" $MSRV
