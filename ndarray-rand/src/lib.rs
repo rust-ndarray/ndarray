@@ -80,7 +80,7 @@ where
     /// use ndarray_rand::rand_distr::Uniform;
     ///
     /// # fn main() {
-    /// let a = Array::random((2, 5), Uniform::new(0., 10.));
+    /// let a = Array::random((2, 5), Uniform::new(0., 10.).unwrap());
     /// println!("{:8.4}", a);
     /// // Example Output:
     /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],
@@ -111,7 +111,7 @@ where
     /// let mut rng = Isaac64Rng::seed_from_u64(seed);
     ///
     /// // Generate a random array using `rng`
-    /// let a = Array::random_using((2, 5), Uniform::new(0., 10.), &mut rng);
+    /// let a = Array::random_using((2, 5), Uniform::new(0., 10.).unwrap(), &mut rng);
     /// println!("{:8.4}", a);
     /// // Example Output:
     /// // [[  8.6900,   6.9824,   3.8922,   6.5861,   2.4890],
