@@ -86,7 +86,7 @@ where
 #[test]
 fn accurate_eye_f32()
 {
-    let rng = &mut SmallRng::from_entropy();
+    let rng = &mut SmallRng::from_os_rng();
     for i in 0..20 {
         let eye = Array::eye(i);
         for j in 0..20 {
@@ -99,8 +99,8 @@ fn accurate_eye_f32()
     }
     // pick a few random sizes
     for _ in 0..10 {
-        let i = rng.gen_range(15..512);
-        let j = rng.gen_range(15..512);
+        let i = rng.random_range(15..512);
+        let j = rng.random_range(15..512);
         println!("Testing size {} by {}", i, j);
         let a = gen::<f32, _>(Ix2(i, j), rng);
         let eye = Array::eye(i);
@@ -114,7 +114,7 @@ fn accurate_eye_f32()
 #[test]
 fn accurate_eye_f64()
 {
-    let rng = &mut SmallRng::from_entropy();
+    let rng = &mut SmallRng::from_os_rng();
     let abs_tol = 1e-15;
     for i in 0..20 {
         let eye = Array::eye(i);
@@ -128,8 +128,8 @@ fn accurate_eye_f64()
     }
     // pick a few random sizes
     for _ in 0..10 {
-        let i = rng.gen_range(15..512);
-        let j = rng.gen_range(15..512);
+        let i = rng.random_range(15..512);
+        let j = rng.random_range(15..512);
         println!("Testing size {} by {}", i, j);
         let a = gen::<f64, _>(Ix2(i, j), rng);
         let eye = Array::eye(i);
@@ -172,9 +172,9 @@ fn random_matrix_mul<A>(
 ) -> (Array2<A>, Array2<A>)
 where A: LinalgScalar
 {
-    let m = rng.gen_range(15..128);
-    let k = rng.gen_range(15..128);
-    let n = rng.gen_range(15..512);
+    let m = rng.random_range(15..128);
+    let k = rng.random_range(15..128);
+    let n = rng.random_range(15..512);
     let a = generator(Ix2(m, k), rng);
     let b = generator(Ix2(n, k), rng);
     let c = if use_general {
@@ -209,7 +209,7 @@ where
     A: fmt::Debug,
 {
     // pick a few random sizes
-    let mut rng = SmallRng::from_entropy();
+    let mut rng = SmallRng::from_os_rng();
     for i in 0..20 {
         let (c, reference) = random_matrix_mul(&mut rng, i > 10, use_general, gen::<A, _>);
 
@@ -241,7 +241,7 @@ where
     A: fmt::Debug,
 {
     // pick a few random sizes
-    let mut rng = SmallRng::from_entropy();
+    let mut rng = SmallRng::from_os_rng();
     for i in 0..20 {
         let (c, reference) = random_matrix_mul(&mut rng, i > 10, true, gen_complex::<A, _>);
 
@@ -259,10 +259,10 @@ where
 fn accurate_mul_with_column_f64()
 {
     // pick a few random sizes
-    let rng = &mut SmallRng::from_entropy();
+    let rng = &mut SmallRng::from_os_rng();
     for i in 0..10 {
-        let m = rng.gen_range(1..128);
-        let k = rng.gen_range(1..350);
+        let m = rng.random_range(1..128);
+        let k = rng.random_range(1..350);
         let a = gen::<f64, _>(Ix2(m, k), rng);
         let b_owner = gen::<f64, _>(Ix2(k, k), rng);
         let b_row_col;
