@@ -1091,9 +1091,10 @@ mod blas_tests
 ///
 /// # Examples
 ///
-/// ```no_run
-/// use ndarray::{ArrayD, Array2, Array1};
-///
+/// ```
+/// use ndarray::ArrayD;
+/// use alloc::vec;
+
 /// // Matrix multiplication
 /// let a = ArrayD::from_shape_vec(vec![2, 3], vec![1., 2., 3., 4., 5., 6.]).unwrap();
 /// let b = ArrayD::from_shape_vec(vec![3, 2], vec![1., 2., 3., 4., 5., 6.]).unwrap();
