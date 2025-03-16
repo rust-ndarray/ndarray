@@ -13,15 +13,20 @@ env:
   FEATURES: "approx,serde,rayon"
   RUSTFLAGS: "-D warnings"
   MSRV: 1.64.0
+  BLAS_MSRV: 1.71.0
 
 jobs:
   pass-msrv:
     runs-on: ubuntu-latest
+    name: Pass MSRV values to other jobs
     outputs:
       MSRV: ${{ env.MSRV }}
+      BLAS_MSRV: ${{ env.BLAS_MSRV }}
     steps:
       - name: Pass MSRV
-        run: echo "MSRV=${{ env.MSRV }}" >> $GITHUB_OUTPUT
+        run: |
+          echo "MSRV=${{ env.MSRV }}" >> $GITHUB_OUTPUT
+          echo "BLAS_MSRV=${{ env.BLAS_MSRV }}" >> $GITHUB_OUTPUT
 
   clippy:
     runs-on: ubuntu-latest
@@ -97,6 +102,23 @@ jobs:
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
+    
+  blas-msrv:
+    runs-on: ubuntu-latest
+    name: blas-msrv
+    needs: pass-msrv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ needs.pass-msrv.outputs.BLAS_MSRV }}
+      - uses: rui314/setup-mold@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev gfortran
+      - run: cargo tree -p blas-tests -i openblas-src -F blas-tests/openblas-system
+      - run: cargo tree -p blas-tests -i openblas-build -F blas-tests/openblas-system
+      - run: ./scripts/blas-integ-tests.sh $BLAS_MSRV
 
   miri:
     runs-on: ubuntu-latest

@@ -1,12 +1,13 @@
 name: Check Latest Dependencies
 on:
   schedule:
-    # Chosen so that anyone it runs right before the international date line experiences the weekend.
+    # Chosen so that it runs right before the international date line experiences the weekend.
     # Since we're open source, that means globally we should be aware of it right when we have the most
     # time to fix it.
     #
     # Sorry if this ruins your weekend, future maintainer...
     - cron: '0 12 * * FRI'
+  workflow_dispatch: # For running manually
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,6 +15,7 @@ env:
   FEATURES: "approx,serde,rayon"
   RUSTFLAGS: "-D warnings"
   MSRV: 1.64.0
+  BLAS_MSRV: 1.71.0
 
 jobs:
   latest_deps_stable:
