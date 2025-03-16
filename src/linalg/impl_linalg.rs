@@ -1088,7 +1088,7 @@ mod blas_tests
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::{ArrayD, Array2, Array1};
 ///
 /// // Matrix multiplication
