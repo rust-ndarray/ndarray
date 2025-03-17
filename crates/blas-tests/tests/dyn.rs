@@ -1,8 +1,9 @@
 extern crate blas_src;
-use ndarray::{Array1, Array2, ArrayD, linalg::Dot, Ix1, Ix2};
+use ndarray::{linalg::Dot, Array1, Array2, ArrayD, Ix1, Ix2};
 
 #[test]
-fn test_arrayd_dot_2d() {
+fn test_arrayd_dot_2d()
+{
     let mat1 = ArrayD::from_shape_vec(vec![3, 2], vec![3.0; 6]).unwrap();
     let mat2 = ArrayD::from_shape_vec(vec![2, 3], vec![1.0; 6]).unwrap();
 
@@ -21,7 +22,8 @@ fn test_arrayd_dot_2d() {
 }
 
 #[test]
-fn test_arrayd_dot_1d() {
+fn test_arrayd_dot_1d()
+{
     // Test 1D array dot product
     let vec1 = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
     let vec2 = ArrayD::from_shape_vec(vec![3], vec![4.0, 5.0, 6.0]).unwrap();
@@ -36,7 +38,8 @@ fn test_arrayd_dot_1d() {
 
 #[test]
 #[should_panic(expected = "Dot product for ArrayD is only supported for 1D and 2D arrays")]
-fn test_arrayd_dot_3d() {
+fn test_arrayd_dot_3d()
+{
     // Test that 3D arrays are not supported
     let arr1 = ArrayD::from_shape_vec(vec![2, 2, 2], vec![1.0; 8]).unwrap();
     let arr2 = ArrayD::from_shape_vec(vec![2, 2, 2], vec![1.0; 8]).unwrap();
@@ -46,7 +49,8 @@ fn test_arrayd_dot_3d() {
 
 #[test]
 #[should_panic(expected = "ndarray: inputs 2 × 3 and 4 × 5 are not compatible for matrix multiplication")]
-fn test_arrayd_dot_incompatible_dims() {
+fn test_arrayd_dot_incompatible_dims()
+{
     // Test arrays with incompatible dimensions
     let arr1 = ArrayD::from_shape_vec(vec![2, 3], vec![1.0; 6]).unwrap();
     let arr2 = ArrayD::from_shape_vec(vec![4, 5], vec![1.0; 20]).unwrap();
@@ -55,7 +59,8 @@ fn test_arrayd_dot_incompatible_dims() {
 }
 
 #[test]
-fn test_arrayd_dot_matrix_vector() {
+fn test_arrayd_dot_matrix_vector()
+{
     // Test matrix-vector multiplication
     let mat = ArrayD::from_shape_vec(vec![3, 2], vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
     let vec = ArrayD::from_shape_vec(vec![2], vec![1.0, 2.0]).unwrap();
@@ -72,4 +77,4 @@ fn test_arrayd_dot_matrix_vector() {
     let expected = mat_2d.dot(&vec_1d);
 
     assert_eq!(result.into_dimensionality::<Ix1>().unwrap(), expected);
-} 
+}
