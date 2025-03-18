@@ -168,7 +168,7 @@
 //! # fn main() { let _ = rk_step::<fn(_, ArrayView1<'_, f64>, ArrayViewMut1<'_, f64>)>; }
 //! ```
 //!
-//! [`.scaled_add()`]: crate::ArrayBase::scaled_add
+//! [`.scaled_add()`]: crate::ArrayRef::scaled_add
 //! [`azip!()`]: crate::azip!
 //!
 //! ### SciPy license

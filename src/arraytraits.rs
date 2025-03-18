@@ -158,8 +158,7 @@ where
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
-#[allow(clippy::unconditional_recursion)] // false positive
-impl<'a, A, B, D> PartialEq<&'a ArrayRef<B, D>> for ArrayRef<A, D>
+impl<A, B, D> PartialEq<&ArrayRef<B, D>> for ArrayRef<A, D>
 where
     A: PartialEq<B>,
     D: Dimension,
@@ -172,8 +171,7 @@ where
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
-#[allow(clippy::unconditional_recursion)] // false positive
-impl<'a, A, B, D> PartialEq<ArrayRef<B, D>> for &'a ArrayRef<A, D>
+impl<A, B, D> PartialEq<ArrayRef<B, D>> for &ArrayRef<A, D>
 where
     A: PartialEq<B>,
     D: Dimension,
