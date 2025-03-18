@@ -793,3 +793,77 @@ impl<'a, A: 'a, B: 'a> RawDataSubst<B> for CowRepr<'a, A>
         }
     }
 }
+
+/// Array representation trait for mapping to an owned array with a different element type.
+///
+/// Functions such as [`mapv_into_any`](ArrayBase::mapv_into_any) that alter an array's
+/// underlying element type often want to preserve the storage type (e.g., `ArcArray`)
+/// of the original array. However, because Rust considers `OwnedRepr<A>` and `OwnedRepr<B>`
+/// to be completely different types, a trait must be used to indicate what the mapping is.
+///
+/// This trait will map owning storage types to the element-swapped version of themselves;
+/// view types are mapped to `OwnedRepr`. The following table summarizes the mappings:
+///
+/// | Original Storage Type   | Corresponding Array Type | Mapped Storage Type | Output of `from_owned` |
+/// | ----------------------- | ------------------------ | ------------------- | ---------------------- |
+/// | `OwnedRepr<A>`          | `Array<A, D>`            | `OwnedRepr<B>`      | `Array<B, D>`          |
+/// | `OwnedArcRepr<A>`       | `ArcArray<A, D>`         | `OwnedArcRepr<B>`   | `ArcArray<B, D>`       |
+/// | `CowRepr<'a, A>`        | `CowArray<'a, A, D>`     | `CowRepr<'a, B>`    | `CowArray<'a, B, D>`   |
+/// | `ViewRepr<&'a mut A>`   | `ArrayViewMut<'a, A, D>` | `OwnedRepr<B>`      | `Array<B, D>`          |
+pub trait DataMappable<'a>: RawData
+{
+    /// The element-swapped, owning storage representation
+    type Subst<B: 'a>: Data<Elem = B> + DataOwned;
+
+    /// Cheaply convert an owned [`Array<B, D>`] to a different owning array type, as dictated by `Subst`.
+    ///
+    /// The owning arrays implement `From`, which is the preferred method for changing the underlying storage.
+    /// This method (and trait) should be reserved for dealing with changing the element type.
+    fn from_owned<B, D: Dimension>(self_: Array<B, D>) -> ArrayBase<Self::Subst<B>, D>;
+}
+
+impl<'a, A: 'a> DataMappable<'a> for OwnedRepr<A>
+{
+    type Subst<B: 'a> = OwnedRepr<B>;
+    fn from_owned<B: 'a, D: Dimension>(self_: Array<B,D>) -> ArrayBase<Self::Subst<B>,D>
+    {
+        self_
+    }
+}
+
+impl<'a, A: 'a> DataMappable<'a> for OwnedArcRepr<A>
+{
+    type Subst<B: 'a> = OwnedArcRepr<B>;
+    fn from_owned<B: 'a, D: Dimension>(self_: Array<B,D>) -> ArrayBase<Self::Subst<B>,D>
+    {
+        self_.into()
+    }
+}
+
+
+impl<'a, A: 'a> DataMappable<'a> for CowRepr<'a, A>
+{
+    type Subst<B: 'a> = CowRepr<'a, B>;
+    fn from_owned<B: 'a, D: Dimension>(self_: Array<B,D>) -> ArrayBase<Self::Subst<B>,D>
+    {
+        self_.into()
+    }
+}
+
+impl<'a, A: 'a> DataMappable<'a> for ViewRepr<&'a A>
+{
+    type Subst<B: 'a> = OwnedRepr<B>;
+    fn from_owned<B: 'a, D: Dimension>(self_: Array<B, D>) -> ArrayBase<Self::Subst<B>, D>
+    {
+        self_
+    }
+}
+
+impl<'a, A: 'a> DataMappable<'a> for ViewRepr<&'a mut A>
+{
+    type Subst<B: 'a> = OwnedRepr<B>;
+    fn from_owned<B: 'a, D: Dimension>(self_: Array<B, D>) -> ArrayBase<Self::Subst<B>, D>
+    {
+        self_
+    }
+}
