@@ -1298,7 +1298,7 @@ where S: RawData<Elem = A>
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
     /// The dimension, strides, and pointer to inside of `data`
-    layout: LayoutRef<S::Elem, D>,
+    layout: LayoutRef<A, D>,
 }
 
 /// A reference to the layout of an *n*-dimensional array.
