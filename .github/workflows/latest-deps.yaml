@@ -8,6 +8,9 @@ on:
     # Sorry if this ruins your weekend, future maintainer...
     - cron: '0 12 * * FRI'
   workflow_dispatch: # For running manually
+  pull_request:
+    paths:
+      - '.github/workflows/latest-deps.yaml'
 
 env:
   CARGO_TERM_COLOR: always
