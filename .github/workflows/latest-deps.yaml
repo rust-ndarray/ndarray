@@ -41,7 +41,7 @@ jobs:
 
   latest_deps_msrv:
     runs-on: ubuntu-latest
-    name: Check Latest Dependencies on MSRV (${{ env.MSRV }})
+    name: Check Latest Dependencies on MSRV
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v4
