@@ -4,7 +4,7 @@
 )]
 
 use approx::assert_abs_diff_eq;
-use ndarray::{arr0, arr1, arr2, array, aview1, Array, Array1, Array2, Array3, Axis};
+use ndarray::{arr0, arr1, arr2, arr3, array, aview1, Array, Array1, Array2, Array3, Axis};
 use std::f64;
 
 #[test]
@@ -73,6 +73,96 @@ fn sum_mean_prod_empty()
     assert_eq!(a, None);
     let a = Array3::<f32>::ones((2, 0, 3)).mean_axis(Axis(1));
     assert_eq!(a, None);
+}
+
+#[test]
+fn test_cumprod_1d()
+{
+    let a = array![1, 2, 3, 4];
+    // For 1D arrays, both None and Some(Axis(0)) should work
+    let result_none = a.cumprod(None);
+    let result_axis = a.cumprod(Some(Axis(0)));
+    assert_eq!(result_none, array![1, 2, 6, 24]);
+    assert_eq!(result_axis, array![1, 2, 6, 24]);
+}
+
+#[test]
+fn test_cumprod_2d()
+{
+    let a = array![[1, 2], [3, 4]];
+
+    // For 2D arrays, we must specify an axis
+    let result_axis0 = a.cumprod(Some(Axis(0)));
+    assert_eq!(result_axis0, array![[1, 2], [3, 8]]);
+
+    let result_axis1 = a.cumprod(Some(Axis(1)));
+    assert_eq!(result_axis1, array![[1, 2], [3, 12]]);
+}
+
+#[test]
+fn test_cumprod_3d()
+{
+    let a = array![[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
+
+    // For 3D arrays, we must specify an axis
+    let result_axis0 = a.cumprod(Some(Axis(0)));
+    assert_eq!(result_axis0, array![[[1, 2], [3, 4]], [[5, 12], [21, 32]]]);
+
+    let result_axis1 = a.cumprod(Some(Axis(1)));
+    assert_eq!(result_axis1, array![[[1, 2], [3, 8]], [[5, 6], [35, 48]]]);
+
+    let result_axis2 = a.cumprod(Some(Axis(2)));
+    assert_eq!(result_axis2, array![[[1, 2], [3, 12]], [[5, 30], [7, 56]]]);
+}
+
+#[test]
+fn test_cumprod_empty()
+{
+    // For 1D empty array
+    let a: Array1<i32> = array![];
+    let result = a.cumprod(None);
+    assert_eq!(result, array![]);
+
+    // For 2D empty array, must specify axis
+    let b: Array2<i32> = Array2::zeros((0, 0));
+    let result_axis0 = b.cumprod(Some(Axis(0)));
+    assert_eq!(result_axis0, Array2::zeros((0, 0)));
+    let result_axis1 = b.cumprod(Some(Axis(1)));
+    assert_eq!(result_axis1, Array2::zeros((0, 0)));
+}
+
+#[test]
+fn test_cumprod_1_element()
+{
+    // For 1D array with one element
+    let a = array![5];
+    let result_none = a.cumprod(None);
+    let result_axis = a.cumprod(Some(Axis(0)));
+    assert_eq!(result_none, array![5]);
+    assert_eq!(result_axis, array![5]);
+
+    // For 2D array with one element, must specify axis
+    let b = array![[5]];
+    let result_axis0 = b.cumprod(Some(Axis(0)));
+    let result_axis1 = b.cumprod(Some(Axis(1)));
+    assert_eq!(result_axis0, array![[5]]);
+    assert_eq!(result_axis1, array![[5]]);
+}
+
+#[test]
+#[should_panic(expected = "axis parameter is required for arrays with more than one dimension")]
+fn test_cumprod_nd_none_axis()
+{
+    let a = array![[1, 2], [3, 4]];
+    let _result = a.cumprod(None);
+}
+
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn test_cumprod_axis_out_of_bounds()
+{
+    let a = array![[1, 2], [3, 4]];
+    let _result = a.cumprod(Some(Axis(2)));
 }
 
 #[test]

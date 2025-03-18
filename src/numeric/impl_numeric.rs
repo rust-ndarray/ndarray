@@ -14,6 +14,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
+use crate::ScalarOperand;
 use crate::Slice;
 
 /// # Numerical Methods for Arrays
@@ -97,6 +98,73 @@ where
             }
         }
         sum
+    }
+
+    /// Return the cumulative product of elements along a given axis.
+    ///
+    /// If `axis` is None, the array is flattened before taking the cumulative product.
+    ///
+    /// ```
+    /// use ndarray::{arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
+    ///
+    /// // Cumulative product along rows (axis 0)
+    /// assert_eq!(
+    ///     a.cumprod(Some(Axis(0))),
+    ///     arr2(&[[1., 2., 3.],
+    ///           [4., 10., 18.]])
+    /// );
+    ///
+    /// // Cumulative product along columns (axis 1)
+    /// assert_eq!(
+    ///     a.cumprod(Some(Axis(1))),
+    ///     arr2(&[[1., 2., 6.],
+    ///           [4., 20., 120.]])
+    /// );
+    /// ```
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
+    pub fn cumprod(&self, axis: Option<Axis>) -> Array<A, D>
+    where
+        A: Clone + One + Mul<Output = A> + ScalarOperand,
+        D: Dimension + RemoveAxis,
+    {
+        // First check dimensionality
+        if self.ndim() > 1 && axis.is_none() {
+            panic!("axis parameter is required for arrays with more than one dimension");
+        }
+
+        match axis {
+            None => {
+                // This case now only happens for 1D arrays
+                let mut res = Array::ones(self.raw_dim());
+                let mut acc = A::one();
+
+                for (r, x) in res.iter_mut().zip(self.iter()) {
+                    acc = acc * x.clone();
+                    *r = acc.clone();
+                }
+
+                res
+            }
+            Some(axis) => {
+                let mut res: Array<A, D> = Array::ones(self.raw_dim());
+
+                // Process each lane independently
+                for (mut out_lane, in_lane) in res.lanes_mut(axis).into_iter().zip(self.lanes(axis)) {
+                    let mut acc = A::one();
+                    for (r, x) in out_lane.iter_mut().zip(in_lane.iter()) {
+                        acc = acc * x.clone();
+                        *r = acc.clone();
+                    }
+                }
+
+                res
+            }
+        }
     }
 
     /// Return variance of elements in the array.
