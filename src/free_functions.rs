@@ -46,6 +46,8 @@ use crate::{imp_prelude::*, LayoutRef};
 ///
 /// This macro uses `vec![]`, and has the same ownership semantics;
 /// elements are moved into the resulting `Array`.
+/// If running with `no_std`, this may require that you `use alloc::vec`
+/// before being able to use the `array!` macro.
 ///
 /// Use `array![...].into_shared()` to create an `ArcArray`.
 ///
@@ -655,9 +657,10 @@ pub fn meshgrid<T: Meshgrid>(arrays: T, indexing: MeshIndex) -> T::Output
 #[cfg(test)]
 mod tests
 {
-    use crate::{meshgrid, Axis, MeshIndex};
-
     use super::s;
+    use crate::{meshgrid, Axis, MeshIndex};
+    #[cfg(not(feature = "std"))]
+    use alloc::vec;
 
     #[test]
     fn test_meshgrid2()
