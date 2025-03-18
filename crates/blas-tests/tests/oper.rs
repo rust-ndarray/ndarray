@@ -280,7 +280,7 @@ fn gen_mat_mul()
                         cv = c.view_mut();
                     }
 
-                    let answer_part = alpha * reference_mat_mul(&av, &bv) + beta * &cv;
+                    let answer_part: Array<f64, _> = alpha * reference_mat_mul(&av, &bv) + beta * &cv;
                     answer.slice_mut(s![..;s1, ..;s2]).assign(&answer_part);
 
                     general_mat_mul(alpha, &av, &bv, beta, &mut cv);

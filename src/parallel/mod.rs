@@ -19,8 +19,8 @@
 //!
 //! The following other parallelized methods exist:
 //!
-//! - [`ArrayBase::par_map_inplace()`]
-//! - [`ArrayBase::par_mapv_inplace()`]
+//! - [`ArrayRef::par_map_inplace()`](crate::ArrayRef::par_map_inplace)
+//! - [`ArrayRef::par_mapv_inplace()`](crate::ArrayRef::par_mapv_inplace)
 //! - [`Zip::par_for_each()`] (all arities)
 //! - [`Zip::par_map_collect()`] (all arities)
 //! - [`Zip::par_map_assign_into()`] (all arities)

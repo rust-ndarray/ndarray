@@ -13,7 +13,7 @@ use ndarray::prelude::*;
 /// it corresponds to their order in memory.
 ///
 /// Errors if array has a 0-stride axis
-fn regularize<A, D>(a: &mut Array<A, D>) -> Result<(), &'static str>
+fn regularize<A, D>(a: &mut ArrayRef<A, D>) -> Result<(), &'static str>
 where
     D: Dimension,
     A: ::std::fmt::Debug,

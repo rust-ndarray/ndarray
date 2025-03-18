@@ -2,7 +2,7 @@
 //!
 
 use crate::dimension::Dim;
-use crate::{ArcArray, Array, ArrayView, ArrayViewMut, Ix, IxDynImpl};
+use crate::{ArcArray, Array, ArrayRef, ArrayView, ArrayViewMut, Ix, IxDynImpl, LayoutRef};
 
 /// Create a zero-dimensional index
 #[allow(non_snake_case)]
@@ -122,6 +122,40 @@ pub type Array5<A> = Array<A, Ix5>;
 pub type Array6<A> = Array<A, Ix6>;
 /// dynamic-dimensional array
 pub type ArrayD<A> = Array<A, IxDyn>;
+
+/// zero-dimensional array reference
+pub type ArrayRef0<A> = ArrayRef<A, Ix0>;
+/// one-dimensional array reference
+pub type ArrayRef1<A> = ArrayRef<A, Ix1>;
+/// two-dimensional array reference
+pub type ArrayRef2<A> = ArrayRef<A, Ix2>;
+/// three-dimensional array reference
+pub type ArrayRef3<A> = ArrayRef<A, Ix3>;
+/// four-dimensional array reference
+pub type ArrayRef4<A> = ArrayRef<A, Ix4>;
+/// five-dimensional array reference
+pub type ArrayRef5<A> = ArrayRef<A, Ix5>;
+/// six-dimensional array reference
+pub type ArrayRef6<A> = ArrayRef<A, Ix6>;
+/// dynamic-dimensional array reference
+pub type ArrayRefD<A> = ArrayRef<A, IxDyn>;
+
+/// zero-dimensional layout reference
+pub type LayoutRef0<A> = LayoutRef<A, Ix0>;
+/// one-dimensional layout reference
+pub type LayoutRef1<A> = LayoutRef<A, Ix1>;
+/// two-dimensional layout reference
+pub type LayoutRef2<A> = LayoutRef<A, Ix2>;
+/// three-dimensional layout reference
+pub type LayoutRef3<A> = LayoutRef<A, Ix3>;
+/// four-dimensional layout reference
+pub type LayoutRef4<A> = LayoutRef<A, Ix4>;
+/// five-dimensional layout reference
+pub type LayoutRef5<A> = LayoutRef<A, Ix5>;
+/// six-dimensional layout reference
+pub type LayoutRef6<A> = LayoutRef<A, Ix6>;
+/// dynamic-dimensional layout reference
+pub type LayoutRefD<A> = LayoutRef<A, IxDyn>;
 
 /// zero-dimensional array view
 pub type ArrayView0<'a, A> = ArrayView<'a, A, Ix0>;

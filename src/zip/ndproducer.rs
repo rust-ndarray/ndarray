@@ -1,4 +1,5 @@
 use crate::imp_prelude::*;
+use crate::ArrayRef;
 use crate::Layout;
 use crate::NdIndex;
 #[cfg(not(feature = "std"))]
@@ -156,6 +157,34 @@ where
     }
 }
 
+/// An array reference is an n-dimensional producer of element references
+/// (like ArrayView).
+impl<'a, A: 'a, D> IntoNdProducer for &'a ArrayRef<A, D>
+where D: Dimension
+{
+    type Item = &'a A;
+    type Dim = D;
+    type Output = ArrayView<'a, A, D>;
+    fn into_producer(self) -> Self::Output
+    {
+        self.view()
+    }
+}
+
+/// A mutable array reference is an n-dimensional producer of mutable element
+/// references (like ArrayViewMut).
+impl<'a, A: 'a, D> IntoNdProducer for &'a mut ArrayRef<A, D>
+where D: Dimension
+{
+    type Item = &'a mut A;
+    type Dim = D;
+    type Output = ArrayViewMut<'a, A, D>;
+    fn into_producer(self) -> Self::Output
+    {
+        self.view_mut()
+    }
+}
+
 /// A slice is a one-dimensional producer
 impl<'a, A: 'a> IntoNdProducer for &'a [A]
 {
@@ -239,7 +268,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        self.raw_dim()
+        (***self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -249,7 +278,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn as_ptr(&self) -> *mut A
     {
-        self.as_ptr() as _
+        (**self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
@@ -269,7 +298,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        self.stride_of(axis)
+        (**self).stride_of(axis)
     }
 
     #[inline(always)]
@@ -295,7 +324,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn raw_dim(&self) -> Self::Dim
     {
-        self.raw_dim()
+        (***self).raw_dim()
     }
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
@@ -305,7 +334,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn as_ptr(&self) -> *mut A
     {
-        self.as_ptr() as _
+        (**self).as_ptr() as _
     }
 
     fn layout(&self) -> Layout
@@ -325,7 +354,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn stride_of(&self, axis: Axis) -> isize
     {
-        self.stride_of(axis)
+        (**self).stride_of(axis)
     }
 
     #[inline(always)]
@@ -356,17 +385,17 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
-        self.dim.equal(dim)
+        self.layout.dim.equal(dim)
     }
 
     fn as_ptr(&self) -> *const A
     {
-        self.as_ptr()
+        self.as_ptr() as _
     }
 
     fn layout(&self) -> Layout
     {
-        self.layout_impl()
+        AsRef::<LayoutRef<_, _>>::as_ref(self).layout_impl()
     }
 
     unsafe fn as_ref(&self, ptr: *const A) -> *const A
@@ -376,7 +405,10 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *const A
     {
-        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+        self.layout
+            .ptr
+            .as_ptr()
+            .offset(i.index_unchecked(&self.layout.strides))
     }
 
     fn stride_of(&self, axis: Axis) -> isize
@@ -412,7 +444,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
-        self.dim.equal(dim)
+        self.layout.dim.equal(dim)
     }
 
     fn as_ptr(&self) -> *mut A
@@ -422,7 +454,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     fn layout(&self) -> Layout
     {
-        self.layout_impl()
+        AsRef::<LayoutRef<_, _>>::as_ref(self).layout_impl()
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> *mut A
@@ -432,7 +464,10 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
     {
-        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+        self.layout
+            .ptr
+            .as_ptr()
+            .offset(i.index_unchecked(&self.layout.strides))
     }
 
     fn stride_of(&self, axis: Axis) -> isize
