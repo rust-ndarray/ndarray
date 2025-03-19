@@ -16,6 +16,7 @@ use crate::imp_prelude::*;
 use crate::numeric_util;
 use crate::ScalarOperand;
 use crate::Slice;
+use crate::Zip;
 
 /// # Numerical Methods for Arrays
 impl<A, S, D> ArrayBase<S, D>
@@ -132,36 +133,29 @@ where
         A: Clone + One + Mul<Output = A> + ScalarOperand,
         D: Dimension + RemoveAxis,
     {
-        // First check dimensionality
-        if self.ndim() > 1 && axis.is_none() {
-            panic!("axis parameter is required for arrays with more than one dimension");
-        }
+        let mut res = Array::ones(self.raw_dim());
 
         match axis {
             None => {
-                // This case now only happens for 1D arrays
-                let mut res = Array::ones(self.raw_dim());
+                // For 1D arrays, use simple iteration
                 let mut acc = A::one();
-
-                for (r, x) in res.iter_mut().zip(self.iter()) {
-                    acc = acc * x.clone();
+                Zip::from(&mut res).and(self).for_each(|r, x| {
+                    acc = acc.clone() * x.clone();
                     *r = acc.clone();
-                }
-
+                });
                 res
             }
             Some(axis) => {
-                let mut res: Array<A, D> = Array::ones(self.raw_dim());
+                // For nD arrays, use fold_axis approach
+                // Create accumulator array with one less dimension
+                let mut acc = Array::ones(self.raw_dim().remove_axis(axis));
 
-                // Process each lane independently
-                for (mut out_lane, in_lane) in res.lanes_mut(axis).into_iter().zip(self.lanes(axis)) {
-                    let mut acc = A::one();
-                    for (r, x) in out_lane.iter_mut().zip(in_lane.iter()) {
-                        acc = acc * x.clone();
-                        *r = acc.clone();
-                    }
+                for i in 0..self.len_of(axis) {
+                    // Get view of current slice along axis, and update accumulator element-wise multiplication
+                    let view = self.index_axis(axis, i);
+                    acc = acc * &view;
+                    res.index_axis_mut(axis, i).assign(&acc);
                 }
-
                 res
             }
         }
