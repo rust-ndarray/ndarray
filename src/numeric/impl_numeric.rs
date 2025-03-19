@@ -133,6 +133,11 @@ where
         A: Clone + One + Mul<Output = A> + ScalarOperand,
         D: Dimension + RemoveAxis,
     {
+        // First check dimensionality
+        if self.ndim() > 1 && axis.is_none() {
+            panic!("axis parameter is required for arrays with more than one dimension");
+        }
+
         let mut res = Array::ones(self.raw_dim());
 
         match axis {
