@@ -158,7 +158,7 @@ fn test_cumprod_nd_none_axis()
 }
 
 #[test]
-#[should_panic(expected = "assertion failed: axis < self.ndim()")]
+#[should_panic(expected = "axis is out of bounds for array of dimension")]
 fn test_cumprod_axis_out_of_bounds()
 {
     let a = array![[1, 2], [3, 4]];

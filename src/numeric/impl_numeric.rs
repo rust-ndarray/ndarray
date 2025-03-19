@@ -151,6 +151,11 @@ where
                 res
             }
             Some(axis) => {
+                // Check if axis is valid before any array operations
+                if axis.0 >= self.ndim() {
+                    panic!("axis is out of bounds for array of dimension");
+                }
+
                 // For nD arrays, use fold_axis approach
                 // Create accumulator array with one less dimension
                 let mut acc = Array::ones(self.raw_dim().remove_axis(axis));
