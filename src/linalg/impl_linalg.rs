@@ -1099,16 +1099,12 @@ mod blas_tests
 /// - The arrays have dimensions other than 1 or 2
 /// - The array shapes are incompatible for the operation
 /// - For vector dot product: the vectors have different lengths
-///
-impl<A, S, S2> Dot<ArrayBase<S2, IxDyn>> for ArrayBase<S, IxDyn>
-where
-    S: Data<Elem = A>,
-    S2: Data<Elem = A>,
-    A: LinalgScalar,
+impl<A> Dot<ArrayRef<A, IxDyn>> for ArrayRef<A, IxDyn>
+where A: LinalgScalar
 {
     type Output = Array<A, IxDyn>;
 
-    fn dot(&self, rhs: &ArrayBase<S2, IxDyn>) -> Self::Output
+    fn dot(&self, rhs: &ArrayRef<A, IxDyn>) -> Self::Output
     {
         match (self.ndim(), rhs.ndim()) {
             (1, 1) => {
