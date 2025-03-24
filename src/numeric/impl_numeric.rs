@@ -103,8 +103,6 @@ where
 
     /// Return the cumulative product of elements along a given axis.
     ///
-    /// If `axis` is None, the array is flattened before taking the cumulative product.
-    ///
     /// ```
     /// use ndarray::{arr2, Axis};
     ///
@@ -113,14 +111,14 @@ where
     ///
     /// // Cumulative product along rows (axis 0)
     /// assert_eq!(
-    ///     a.cumprod(Some(Axis(0))),
+    ///     a.cumprod(Axis(0)),
     ///     arr2(&[[1., 2., 3.],
     ///           [4., 10., 18.]])
     /// );
     ///
     /// // Cumulative product along columns (axis 1)
     /// assert_eq!(
-    ///     a.cumprod(Some(Axis(1))),
+    ///     a.cumprod(Axis(1)),
     ///     arr2(&[[1., 2., 6.],
     ///           [4., 20., 120.]])
     /// );
@@ -128,47 +126,28 @@ where
     ///
     /// **Panics** if `axis` is out of bounds.
     #[track_caller]
-    pub fn cumprod(&self, axis: Option<Axis>) -> Array<A, D>
+    pub fn cumprod(&self, axis: Axis) -> Array<A, D>
     where
         A: Clone + One + Mul<Output = A> + ScalarOperand,
         D: Dimension + RemoveAxis,
     {
-        // First check dimensionality
-        if self.ndim() > 1 && axis.is_none() {
-            panic!("axis parameter is required for arrays with more than one dimension");
+        // Check if axis is valid before any array operations
+        if axis.0 >= self.ndim() {
+            panic!("axis is out of bounds for array of dimension");
         }
 
         let mut res = Array::ones(self.raw_dim());
+        let mut acc = Array::ones(self.raw_dim().remove_axis(axis));
 
-        match axis {
-            None => {
-                // For 1D arrays, use simple iteration
-                let mut acc = A::one();
-                Zip::from(&mut res).and(self).for_each(|r, x| {
-                    acc = acc.clone() * x.clone();
-                    *r = acc.clone();
-                });
-                res
-            }
-            Some(axis) => {
-                // Check if axis is valid before any array operations
-                if axis.0 >= self.ndim() {
-                    panic!("axis is out of bounds for array of dimension");
-                }
-
-                // For nD arrays, use fold_axis approach
-                // Create accumulator array with one less dimension
-                let mut acc = Array::ones(self.raw_dim().remove_axis(axis));
-
-                for i in 0..self.len_of(axis) {
-                    // Get view of current slice along axis, and update accumulator element-wise multiplication
-                    let view = self.index_axis(axis, i);
-                    acc = acc * &view;
-                    res.index_axis_mut(axis, i).assign(&acc);
-                }
-                res
-            }
+        // Use fold_axis approach
+        for i in 0..self.len_of(axis) {
+            // Get view of current slice along axis, and update accumulator element-wise multiplication
+            let view = self.index_axis(axis, i);
+            acc = acc * &view;
+            res.index_axis_mut(axis, i).assign(&acc);
         }
+
+        res
     }
 
     /// Return variance of elements in the array.
