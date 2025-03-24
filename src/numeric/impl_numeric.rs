@@ -139,13 +139,12 @@ where
         let mut res = Array::ones(self.raw_dim());
         let mut acc = Array::ones(self.raw_dim().remove_axis(axis));
 
-        // Use fold_axis approach
-        for i in 0..self.len_of(axis) {
-            // Get view of current slice along axis, and update accumulator element-wise multiplication
-            let view = self.index_axis(axis, i);
-            acc = acc * &view;
-            res.index_axis_mut(axis, i).assign(&acc);
-        }
+        Zip::from(self.axis_iter(axis))
+            .and(res.axis_iter_mut(axis))
+            .for_each(|view, mut res| {
+                acc = acc.clone() * &view;
+                res.assign(&acc);
+            });
 
         res
     }
