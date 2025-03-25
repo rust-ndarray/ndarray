@@ -1,5 +1,7 @@
 on:
   pull_request:
+    paths-ignore:
+      - '.github/workflows/latest-deps.yaml'
   merge_group:
   push:
     branches:

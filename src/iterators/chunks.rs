@@ -27,7 +27,7 @@ impl_ndproducer! {
 
 /// Exact chunks producer and iterable.
 ///
-/// See [`.exact_chunks()`](ArrayBase::exact_chunks) for more
+/// See [`.exact_chunks()`](crate::ArrayRef::exact_chunks) for more
 /// information.
 //#[derive(Debug)]
 pub struct ExactChunks<'a, A, D>
@@ -59,10 +59,10 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D>
             a.shape()
         );
         for i in 0..a.ndim() {
-            a.dim[i] /= chunk[i];
+            a.layout.dim[i] /= chunk[i];
         }
-        let inner_strides = a.strides.clone();
-        a.strides *= &chunk;
+        let inner_strides = a.layout.strides.clone();
+        a.layout.strides *= &chunk;
 
         ExactChunks {
             base: a,
@@ -93,7 +93,7 @@ where
 
 /// Exact chunks iterator.
 ///
-/// See [`.exact_chunks()`](ArrayBase::exact_chunks) for more
+/// See [`.exact_chunks()`](crate::ArrayRef::exact_chunks) for more
 /// information.
 pub struct ExactChunksIter<'a, A, D>
 {
@@ -126,7 +126,7 @@ impl_ndproducer! {
 
 /// Exact chunks producer and iterable.
 ///
-/// See [`.exact_chunks_mut()`](ArrayBase::exact_chunks_mut)
+/// See [`.exact_chunks_mut()`](crate::ArrayRef::exact_chunks_mut)
 /// for more information.
 //#[derive(Debug)]
 pub struct ExactChunksMut<'a, A, D>
@@ -158,10 +158,10 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D>
             a.shape()
         );
         for i in 0..a.ndim() {
-            a.dim[i] /= chunk[i];
+            a.layout.dim[i] /= chunk[i];
         }
-        let inner_strides = a.strides.clone();
-        a.strides *= &chunk;
+        let inner_strides = a.layout.strides.clone();
+        a.layout.strides *= &chunk;
 
         ExactChunksMut {
             base: a,
@@ -237,7 +237,7 @@ impl_iterator! {
 
 /// Exact chunks iterator.
 ///
-/// See [`.exact_chunks_mut()`](ArrayBase::exact_chunks_mut)
+/// See [`.exact_chunks_mut()`](crate::ArrayRef::exact_chunks_mut)
 /// for more information.
 pub struct ExactChunksIterMut<'a, A, D>
 {

@@ -210,7 +210,7 @@ where D: Dimension
 /// This is an argument conversion trait that is used to accept an array shape and
 /// (optionally) an ordering argument.
 ///
-/// See for example [`.to_shape()`](crate::ArrayBase::to_shape).
+/// See for example [`.to_shape()`](crate::ArrayRef::to_shape).
 pub trait ShapeArg
 {
     type Dim: Dimension;

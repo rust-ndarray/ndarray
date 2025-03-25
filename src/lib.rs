@@ -31,12 +31,17 @@
 //! dimensions, then an element in the array is accessed by using that many indices.
 //! Each dimension is also called an *axis*.
 //!
+//! To get started, functionality is provided in the following core types:
 //! - **[`ArrayBase`]**:
 //!   The *n*-dimensional array type itself.<br>
 //!   It is used to implement both the owned arrays and the views; see its docs
 //!   for an overview of all array features.<br>
 //! - The main specific array type is **[`Array`]**, which owns
 //!   its elements.
+//! - A reference type, **[`ArrayRef`]**, that contains most of the functionality
+//!   for reading and writing to arrays.
+//! - A reference type, **[`LayoutRef`]**, that contains most of the functionality
+//!   for reading and writing to array layouts: their shape and strides.
 //!
 //! ## Highlights
 //!
@@ -62,8 +67,8 @@
 //! - Performance:
 //!   + Prefer higher order methods and arithmetic operations on arrays first,
 //!     then iteration, and as a last priority using indexed algorithms.
-//!   + The higher order functions like [`.map()`](ArrayBase::map),
-//!     [`.map_inplace()`](ArrayBase::map_inplace), [`.zip_mut_with()`](ArrayBase::zip_mut_with),
+//!   + The higher order functions like [`.map()`](ArrayRef::map),
+//!     [`.map_inplace()`](ArrayRef::map_inplace), [`.zip_mut_with()`](ArrayRef::zip_mut_with),
 //!     [`Zip`] and [`azip!()`](azip) are the most efficient ways
 //!     to perform single traversal and lock step traversal respectively.
 //!   + Performance of an operation depends on the memory layout of the array
@@ -163,6 +168,7 @@ pub use crate::shape_builder::{Shape, ShapeArg, ShapeBuilder, StrideShape};
 mod macro_utils;
 #[macro_use]
 mod private;
+mod impl_ref_types;
 mod aliases;
 #[macro_use]
 mod itertools;
@@ -312,7 +318,7 @@ pub type Ixs = isize;
 /// data (shared ownership).
 /// Sharing requires that it uses copy-on-write for mutable operations.
 /// Calling a method for mutating elements on `ArcArray`, for example
-/// [`view_mut()`](Self::view_mut) or [`get_mut()`](Self::get_mut),
+/// [`view_mut()`](ArrayRef::view_mut) or [`get_mut()`](ArrayRef::get_mut),
 /// will break sharing and require a clone of the data (if it is not uniquely held).
 ///
 /// ## `CowArray`
@@ -336,9 +342,9 @@ pub type Ixs = isize;
 /// Please see the documentation for the respective array view for an overview
 /// of methods specific to array views: [`ArrayView`], [`ArrayViewMut`].
 ///
-/// A view is created from an array using [`.view()`](ArrayBase::view),
-/// [`.view_mut()`](ArrayBase::view_mut), using
-/// slicing ([`.slice()`](ArrayBase::slice), [`.slice_mut()`](ArrayBase::slice_mut)) or from one of
+/// A view is created from an array using [`.view()`](ArrayRef::view),
+/// [`.view_mut()`](ArrayRef::view_mut), using
+/// slicing ([`.slice()`](ArrayRef::slice), [`.slice_mut()`](ArrayRef::slice_mut)) or from one of
 /// the many iterators that yield array views.
 ///
 /// You can also create an array view from a regular slice of data not
@@ -480,12 +486,12 @@ pub type Ixs = isize;
 /// [`.columns()`][gc], [`.columns_mut()`][gcm],
 /// [`.lanes(axis)`][l], [`.lanes_mut(axis)`][lm].
 ///
-/// [gr]: Self::rows
-/// [grm]: Self::rows_mut
-/// [gc]: Self::columns
-/// [gcm]: Self::columns_mut
-/// [l]: Self::lanes
-/// [lm]: Self::lanes_mut
+/// [gr]: ArrayRef::rows
+/// [grm]: ArrayRef::rows_mut
+/// [gc]: ArrayRef::columns
+/// [gcm]: ArrayRef::columns_mut
+/// [l]: ArrayRef::lanes
+/// [lm]: ArrayRef::lanes_mut
 ///
 /// Yes, for 2D arrays `.rows()` and `.outer_iter()` have about the same
 /// effect:
@@ -511,10 +517,10 @@ pub type Ixs = isize;
 /// [`.slice_collapse()`] panics on `NewAxis` elements and behaves like
 /// [`.collapse_axis()`] by preserving the number of dimensions.
 ///
-/// [`.slice()`]: Self::slice
-/// [`.slice_mut()`]: Self::slice_mut
+/// [`.slice()`]: ArrayRef::slice
+/// [`.slice_mut()`]: ArrayRef::slice_mut
 /// [`.slice_move()`]: Self::slice_move
-/// [`.slice_collapse()`]: Self::slice_collapse
+/// [`.slice_collapse()`]: LayoutRef::slice_collapse
 ///
 /// When slicing arrays with generic dimensionality, creating an instance of
 /// [`SliceInfo`] to pass to the multi-axis slicing methods like [`.slice()`]
@@ -523,17 +529,17 @@ pub type Ixs = isize;
 /// or to create a view and then slice individual axes of the view using
 /// methods such as [`.slice_axis_inplace()`] and [`.collapse_axis()`].
 ///
-/// [`.slice_each_axis()`]: Self::slice_each_axis
-/// [`.slice_each_axis_mut()`]: Self::slice_each_axis_mut
+/// [`.slice_each_axis()`]: ArrayRef::slice_each_axis
+/// [`.slice_each_axis_mut()`]: ArrayRef::slice_each_axis_mut
 /// [`.slice_each_axis_inplace()`]: Self::slice_each_axis_inplace
 /// [`.slice_axis_inplace()`]: Self::slice_axis_inplace
-/// [`.collapse_axis()`]: Self::collapse_axis
+/// [`.collapse_axis()`]: LayoutRef::collapse_axis
 ///
 /// It's possible to take multiple simultaneous *mutable* slices with
 /// [`.multi_slice_mut()`] or (for [`ArrayViewMut`] only)
 /// [`.multi_slice_move()`].
 ///
-/// [`.multi_slice_mut()`]: Self::multi_slice_mut
+/// [`.multi_slice_mut()`]: ArrayRef::multi_slice_mut
 /// [`.multi_slice_move()`]: ArrayViewMut#method.multi_slice_move
 ///
 /// ```
@@ -632,16 +638,16 @@ pub type Ixs = isize;
 /// Methods for selecting an individual subview take two arguments: `axis` and
 /// `index`.
 ///
-/// [`.axis_iter()`]: Self::axis_iter
-/// [`.axis_iter_mut()`]: Self::axis_iter_mut
-/// [`.fold_axis()`]: Self::fold_axis
-/// [`.index_axis()`]: Self::index_axis
-/// [`.index_axis_inplace()`]: Self::index_axis_inplace
-/// [`.index_axis_mut()`]: Self::index_axis_mut
+/// [`.axis_iter()`]: ArrayRef::axis_iter
+/// [`.axis_iter_mut()`]: ArrayRef::axis_iter_mut
+/// [`.fold_axis()`]: ArrayRef::fold_axis
+/// [`.index_axis()`]: ArrayRef::index_axis
+/// [`.index_axis_inplace()`]: LayoutRef::index_axis_inplace
+/// [`.index_axis_mut()`]: ArrayRef::index_axis_mut
 /// [`.index_axis_move()`]: Self::index_axis_move
-/// [`.collapse_axis()`]: Self::collapse_axis
-/// [`.outer_iter()`]: Self::outer_iter
-/// [`.outer_iter_mut()`]: Self::outer_iter_mut
+/// [`.collapse_axis()`]: LayoutRef::collapse_axis
+/// [`.outer_iter()`]: ArrayRef::outer_iter
+/// [`.outer_iter_mut()`]: ArrayRef::outer_iter_mut
 ///
 /// ```
 ///
@@ -747,7 +753,7 @@ pub type Ixs = isize;
 /// Arrays support limited *broadcasting*, where arithmetic operations with
 /// array operands of different sizes can be carried out by repeating the
 /// elements of the smaller dimension array. See
-/// [`.broadcast()`](Self::broadcast) for a more detailed
+/// [`.broadcast()`](ArrayRef::broadcast) for a more detailed
 /// description.
 ///
 /// ```
@@ -1048,9 +1054,9 @@ pub type Ixs = isize;
 /// `&[A]` | `ArrayView<A, D>` | [`::from_shape()`](ArrayView#method.from_shape)
 /// `&mut [A]` | `ArrayViewMut1<A>` | [`::from()`](ArrayViewMut#method.from)
 /// `&mut [A]` | `ArrayViewMut<A, D>` | [`::from_shape()`](ArrayViewMut#method.from_shape)
-/// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](Self::to_vec)
+/// `&ArrayBase<S, Ix1>` | `Vec<A>` | [`.to_vec()`](ArrayRef::to_vec)
 /// `Array<A, D>` | `Vec<A>` | [`.into_raw_vec()`](Array#method.into_raw_vec)<sup>[1](#into_raw_vec)</sup>
-/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](Self::as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](Self::as_slice_memory_order)<sup>[3](#req_contig)</sup>
+/// `&ArrayBase<S, D>` | `&[A]` | [`.as_slice()`](ArrayRef::as_slice)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order()`](ArrayRef::as_slice_memory_order)<sup>[3](#req_contig)</sup>
 /// `&mut ArrayBase<S: DataMut, D>` | `&mut [A]` | [`.as_slice_mut()`](Self::as_slice_mut)<sup>[2](#req_contig_std)</sup>, [`.as_slice_memory_order_mut()`](Self::as_slice_memory_order_mut)<sup>[3](#req_contig)</sup>
 /// `ArrayView<A, D>` | `&[A]` | [`.to_slice()`](ArrayView#method.to_slice)<sup>[2](#req_contig_std)</sup>
 /// `ArrayViewMut<A, D>` | `&mut [A]` | [`.into_slice()`](ArrayViewMut#method.into_slice)<sup>[2](#req_contig_std)</sup>
@@ -1074,9 +1080,9 @@ pub type Ixs = isize;
 /// [.into_owned()]: Self::into_owned
 /// [.into_shared()]: Self::into_shared
 /// [.to_owned()]: Self::to_owned
-/// [.map()]: Self::map
-/// [.view()]: Self::view
-/// [.view_mut()]: Self::view_mut
+/// [.map()]: ArrayRef::map
+/// [.view()]: ArrayRef::view
+/// [.view_mut()]: ArrayRef::view_mut
 ///
 /// ### Conversions from Nested `Vec`s/`Array`s
 ///
@@ -1277,6 +1283,9 @@ pub type Ixs = isize;
 // implementation since `ArrayBase` doesn't implement `Drop` and `&mut
 // ArrayBase` is `!UnwindSafe`, but the implementation must not call
 // methods/functions on the array while it violates the constraints.
+// Critically, this includes calling `DerefMut`; as a result, methods/functions
+// that temporarily violate these must not rely on the `DerefMut` implementation
+// for access to the underlying `ptr`, `strides`, or `dim`.
 //
 // Users of the `ndarray` crate cannot rely on these constraints because they
 // may change in the future.
@@ -1288,6 +1297,112 @@ where S: RawData<Elem = A>
     /// Data buffer / ownership information. (If owned, contains the data
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
+    /// The dimension, strides, and pointer to inside of `data`
+    layout: LayoutRef<A, D>,
+}
+
+/// A reference to the layout of an *n*-dimensional array.
+///
+/// This type can be used to read and write to the layout of an array;
+/// that is to say, its shape and strides. It does not provide any read
+/// or write access to the array's underlying data. It is generic on two
+/// types: `D`, its dimensionality, and `A`, the element type of its data.
+///
+/// ## Example
+/// Say we wanted to write a function that provides the aspect ratio
+/// of any 2D array: the ratio of its width (number of columns) to its
+/// height (number of rows). We would write that as follows:
+/// ```rust
+/// use ndarray::{LayoutRef2, array};
+///
+/// fn aspect_ratio<T, A>(layout: &T) -> (usize, usize)
+/// where T: AsRef<LayoutRef2<A>>
+/// {
+///     let layout = layout.as_ref();
+///     (layout.ncols(), layout.nrows())
+/// }
+///
+/// let arr = array![[1, 2], [3, 4]];
+/// assert_eq!(aspect_ratio(&arr), (2, 2));
+/// ```
+/// Similarly, new traits that provide functions that only depend on
+/// or alter the layout of an array should do so via a blanket
+/// implementation. Lets write a trait that both provides the aspect ratio
+/// and lets users cut down arrays to a desired aspect ratio.
+/// For simplicity, we'll panic if the user provides an aspect ratio
+/// where either element is larger than the array's size.
+/// ```rust
+/// use ndarray::{LayoutRef2, array, s};
+///
+/// trait Ratioable<A> {
+///     fn aspect_ratio(&self) -> (usize, usize)
+///     where Self: AsRef<LayoutRef2<A>>;
+///
+///     fn cut_to_ratio(&mut self, ratio: (usize, usize))
+///     where Self: AsMut<LayoutRef2<A>>;
+/// }
+///
+/// impl<T, A> Ratioable<A> for T
+/// where T: AsRef<LayoutRef2<A>> + AsMut<LayoutRef2<A>>
+/// {
+///     fn aspect_ratio(&self) -> (usize, usize)
+///     {
+///         let layout = self.as_ref();
+///         (layout.ncols(), layout.nrows())
+///     }
+///
+///     fn cut_to_ratio(&mut self, ratio: (usize, usize))
+///     {
+///         let layout = self.as_mut();
+///         layout.slice_collapse(s![..ratio.1, ..ratio.0]);
+///     }
+/// }
+///
+/// let mut arr = array![[1, 2, 3], [4, 5, 6]];
+/// assert_eq!(arr.aspect_ratio(), (3, 2));
+/// arr.cut_to_ratio((2, 2));
+/// assert_eq!(arr, array![[1, 2], [4, 5]]);
+/// ```
+/// Continue reading for why we use `AsRef` instead of taking `&LayoutRef` directly.
+///
+/// ## Writing Functions
+/// Writing functions that accept `LayoutRef` is not as simple as taking
+/// a `&LayoutRef` argument, as the above examples show. This is because
+/// `LayoutRef` can be obtained either cheaply or expensively, depending
+/// on the method used. `LayoutRef` can be obtained from all kinds of arrays
+/// -- [owned](Array), [shared](ArcArray), [viewed](ArrayView), [referenced](ArrayRef),
+/// and [raw referenced](RawRef) -- via `.as_ref()`. Critically, this way of
+/// obtaining a `LayoutRef` is cheap, as it does not guarantee that the
+/// underlying data is uniquely held.
+///
+/// However, `LayoutRef`s can be obtained a second way: they sit at the bottom
+/// of a "deref chain" going from shared arrays, through `ArrayRef`, through
+/// `RawRef`, and finally to `LayoutRef`. As a result, `LayoutRef`s can also
+/// be obtained via auto-dereferencing. When requesting a mutable reference --
+/// `&mut LayoutRef` -- the `deref_mut` to `ArrayRef` triggers a (possibly
+/// expensive) guarantee that the data is uniquely held (see [`ArrayRef`]
+/// for more information).
+///
+/// To help users avoid this error cost, functions that operate on `LayoutRef`s
+/// should take their parameters as a generic type `T: AsRef<LayoutRef<A, D>>`,
+/// as the above examples show. This aids the caller in two ways: they can pass
+/// their arrays by reference (`&arr`) instead of explicitly calling `as_ref`,
+/// and they will avoid paying a performance penalty for mutating the shape.
+//
+// # Safety for Implementors
+//
+// Despite carrying around a `ptr`, maintainers of `LayoutRef`
+// must *guarantee* that the pointer is *never* dereferenced.
+// No read access can be used when handling a `LayoutRef`, and
+// the `ptr` can *never* be exposed to the user.
+//
+// The reason the pointer is included here is because some methods
+// which alter the layout / shape / strides of an array must also
+// alter the offset of the pointer. This is allowed, as it does not
+// cause a pointer deref.
+#[derive(Debug)]
+pub struct LayoutRef<A, D>
+{
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
     ptr: std::ptr::NonNull<A>,
@@ -1297,6 +1412,91 @@ where S: RawData<Elem = A>
     strides: D,
 }
 
+/// A reference to an *n*-dimensional array whose data is safe to read and write.
+///
+/// This type's relationship to [`ArrayBase`] can be thought of a bit like the
+/// relationship between [`Vec`] and [`std::slice`]: it represents a look into the
+/// array, and is the [`Deref`](std::ops::Deref) target for owned, shared, and viewed
+/// arrays. Most functionality is implemented on `ArrayRef`, and most functions
+/// should take `&ArrayRef` instead of `&ArrayBase`.
+///
+/// ## Relationship to Views
+/// `ArrayRef` and [`ArrayView`] are very similar types: they both represent a
+/// "look" into an array. There is one key difference: views have their own
+/// shape and strides, while `ArrayRef` just points to the shape and strides of
+/// whatever array it came from.
+///
+/// As an example, let's write a function that takes an array, trims it
+/// down to a square in-place, and then returns the sum:
+/// ```rust
+/// use std::cmp;
+/// use std::ops::Add;
+///
+/// use ndarray::{ArrayRef2, array, s};
+/// use num_traits::Zero;
+///
+/// fn square_and_sum<A>(arr: &mut ArrayRef2<A>) -> A
+/// where A: Clone + Add<Output = A> + Zero
+/// {
+///     let side_len = cmp::min(arr.nrows(), arr.ncols());
+///     arr.slice_collapse(s![..side_len, ..side_len]);
+///     arr.sum()
+/// }
+///
+/// let mut arr = array![
+///     [ 1,  2,  3],
+///     [ 4,  5,  6],
+///     [ 7,  8,  9],
+///     [10, 11, 12]
+/// ];
+/// // Take a view of the array, excluding the first column
+/// let mut view = arr.slice_mut(s![.., 1..]);
+/// let sum_view = square_and_sum(&mut view);
+/// assert_eq!(sum_view, 16);
+/// assert_eq!(view.ncols(), 2usize); // The view has changed shape...
+/// assert_eq!(view.nrows(), 2usize);
+/// assert_eq!(arr.ncols(), 3usize); // ... but the original array has not
+/// assert_eq!(arr.nrows(), 4usize);
+///
+/// let sum_all = square_and_sum(&mut arr);
+/// assert_eq!(sum_all, 45);
+/// assert_eq!(arr.ncols(), 3usize); // Now the original array has changed shape
+/// assert_eq!(arr.nrows(), 3usize); // because we passed it directly to the function
+/// ```
+/// Critically, we can call the same function on both the view and the array itself.
+/// We can see that, because the view has its own shape and strides, "squaring" it does
+/// not affect the shape of the original array. Those only change when we pass the array
+/// itself into the function.
+///
+/// Also notice that the output of `slice_mut` is a *view*, not an `ArrayRef`.
+/// This is where the analogy to `Vec`/`slice` breaks down a bit: due to limitations of
+/// the Rust language, `ArrayRef` *cannot* have a different shape / stride from the
+/// array from which it is dereferenced. So slicing still produces an `ArrayView`,
+/// not an `ArrayRef`.
+///
+/// ## Uniqueness
+/// `ndarray` has copy-on-write shared data; see [`ArcArray`], for example.
+/// When a copy-on-write array is passed to a function that takes `ArrayRef` as mutable
+/// (i.e., `&mut ArrayRef`, like above), that array will be un-shared when it is dereferenced
+/// into `ArrayRef`. In other words, having a `&mut ArrayRef` guarantees that the underlying
+/// data is un-shared and safe to write to.
+#[repr(transparent)]
+pub struct ArrayRef<A, D>(LayoutRef<A, D>);
+
+/// A reference to an *n*-dimensional array whose data is not safe to read or write.
+///
+/// This type is similar to [`ArrayRef`] but does not guarantee that its data is safe
+/// to read or write; i.e., the underlying data may come from a shared array or be otherwise
+/// unsafe to dereference. This type should be used sparingly and with extreme caution;
+/// most of its methods either provide pointers or return [`RawArrayView`], both of
+/// which tend to be full of unsafety.
+///
+/// For the few times when this type is appropriate, it has the same `AsRef` semantics
+/// as [`LayoutRef`]; see [its documentation on writing functions](LayoutRef#writing-functions)
+/// for information on how to properly handle functionality on this type.
+#[repr(transparent)]
+pub struct RawRef<A, D>(LayoutRef<A, D>);
+
 /// An array where the data has shared ownership and is copy on write.
 ///
 /// The `ArcArray<A, D>` is parameterized by `A` for the element type and `D` for
@@ -1305,8 +1505,8 @@ where S: RawData<Elem = A>
 /// It can act as both an owner as the data as well as a shared reference (view
 /// like).
 /// Calling a method for mutating elements on `ArcArray`, for example
-/// [`view_mut()`](ArrayBase::view_mut) or
-/// [`get_mut()`](ArrayBase::get_mut), will break sharing and
+/// [`view_mut()`](ArrayRef::view_mut) or
+/// [`get_mut()`](ArrayRef::get_mut), will break sharing and
 /// require a clone of the data (if it is not uniquely held).
 ///
 /// `ArcArray` uses atomic reference counting like `Arc`, so it is `Send` and
@@ -1533,14 +1733,12 @@ mod impl_internal_constructors;
 mod impl_constructors;
 
 mod impl_methods;
+mod alias_asref;
 mod impl_owned_array;
 mod impl_special_element_types;
 
 /// Private Methods
-impl<A, S, D> ArrayBase<S, D>
-where
-    S: Data<Elem = A>,
-    D: Dimension,
+impl<A, D: Dimension> ArrayRef<A, D>
 {
     #[inline]
     fn broadcast_unwrap<E>(&self, dim: E) -> ArrayView<'_, A, E>
@@ -1553,11 +1751,7 @@ where
             D: Dimension,
             E: Dimension,
         {
-            panic!(
-                "ndarray: could not broadcast array from shape: {:?} to: {:?}",
-                from.slice(),
-                to.slice()
-            )
+            panic!("ndarray: could not broadcast array from shape: {:?} to: {:?}", from.slice(), to.slice())
         }
 
         match self.broadcast(dim.clone()) {
@@ -1579,12 +1773,18 @@ where
         strides.slice_mut().copy_from_slice(self.strides.slice());
         unsafe { ArrayView::new(ptr, dim, strides) }
     }
+}
 
+impl<A, S, D> ArrayBase<S, D>
+where
+    S: Data<Elem = A>,
+    D: Dimension,
+{
     /// Remove array axis `axis` and return the result.
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     {
-        let d = self.dim.try_remove_axis(axis);
-        let s = self.strides.try_remove_axis(axis);
+        let d = self.layout.dim.try_remove_axis(axis);
+        let s = self.layout.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
         unsafe { self.with_strides_dim(s, d) }
     }
