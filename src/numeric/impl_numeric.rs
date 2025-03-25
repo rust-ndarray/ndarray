@@ -137,13 +137,13 @@ where
         }
 
         let mut res = Array::ones(self.raw_dim());
-        let mut acc = Array::ones(self.raw_dim().remove_axis(axis));
+        let mut running_product = Array::ones(self.raw_dim().remove_axis(axis));
 
         Zip::from(self.axis_iter(axis))
             .and(res.axis_iter_mut(axis))
             .for_each(|view, mut res| {
-                acc = acc.clone() * &view;
-                res.assign(&acc);
+                running_product = &running_product * &view;
+                res.assign(&running_product);
             });
 
         res
