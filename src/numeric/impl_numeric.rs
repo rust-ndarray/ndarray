@@ -10,7 +10,7 @@
 use num_traits::Float;
 use num_traits::One;
 use num_traits::{FromPrimitive, Zero};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, MulAssign, Sub};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
@@ -124,7 +124,7 @@ where D: Dimension
     #[track_caller]
     pub fn cumprod(&self, axis: Axis) -> Array<A, D>
     where
-        A: Copy + Clone + Mul<Output = A>,
+        A: Clone + Mul<Output = A> + MulAssign,
         D: Dimension + RemoveAxis,
     {
         if axis.0 >= self.ndim() {
@@ -132,9 +132,7 @@ where D: Dimension
         }
 
         let mut result = self.to_owned();
-        result.accumulate_axis_inplace(axis, |&prev, curr| {
-            *curr = *curr * prev;
-        });
+        result.accumulate_axis_inplace(axis, |prev, curr| *curr *= prev.clone());
         result
     }
 
