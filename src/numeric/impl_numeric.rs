@@ -10,7 +10,7 @@
 use num_traits::Float;
 use num_traits::One;
 use num_traits::{FromPrimitive, Zero};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, MulAssign, Sub};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
@@ -95,6 +95,45 @@ where D: Dimension
             }
         }
         sum
+    }
+
+    /// Return the cumulative product of elements along a given axis.
+    ///
+    /// ```
+    /// use ndarray::{arr2, Axis};
+    ///
+    /// let a = arr2(&[[1., 2., 3.],
+    ///                [4., 5., 6.]]);
+    ///
+    /// // Cumulative product along rows (axis 0)
+    /// assert_eq!(
+    ///     a.cumprod(Axis(0)),
+    ///     arr2(&[[1., 2., 3.],
+    ///           [4., 10., 18.]])
+    /// );
+    ///
+    /// // Cumulative product along columns (axis 1)
+    /// assert_eq!(
+    ///     a.cumprod(Axis(1)),
+    ///     arr2(&[[1., 2., 6.],
+    ///           [4., 20., 120.]])
+    /// );
+    /// ```
+    ///
+    /// **Panics** if `axis` is out of bounds.
+    #[track_caller]
+    pub fn cumprod(&self, axis: Axis) -> Array<A, D>
+    where
+        A: Clone + Mul<Output = A> + MulAssign,
+        D: Dimension + RemoveAxis,
+    {
+        if axis.0 >= self.ndim() {
+            panic!("axis is out of bounds for array of dimension");
+        }
+
+        let mut result = self.to_owned();
+        result.accumulate_axis_inplace(axis, |prev, curr| *curr *= prev.clone());
+        result
     }
 
     /// Return variance of elements in the array.
