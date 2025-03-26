@@ -14,9 +14,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::imp_prelude::*;
 use crate::numeric_util;
-use crate::ScalarOperand;
 use crate::Slice;
-use crate::Zip;
 
 /// # Numerical Methods for Arrays
 impl<A, D> ArrayRef<A, D>
@@ -126,26 +124,18 @@ where D: Dimension
     #[track_caller]
     pub fn cumprod(&self, axis: Axis) -> Array<A, D>
     where
-        A: Clone + One + Mul<Output = A> + ScalarOperand,
+        A: Copy + Clone + Mul<Output = A>,
         D: Dimension + RemoveAxis,
     {
-        // Check if axis is valid before any array operations
         if axis.0 >= self.ndim() {
             panic!("axis is out of bounds for array of dimension");
         }
 
-        let mut res = Array::ones(self.raw_dim());
-        let running_product = Array::ones(self.raw_dim().remove_axis(axis));
-
-        Zip::from(self.axis_iter(axis))
-            .and(res.axis_iter_mut(axis))
-            .fold(running_product, |mut running_product, view, mut res| {
-                running_product = running_product * &view;
-                res.assign(&running_product);
-                running_product
-            });
-
-        res
+        let mut result = self.to_owned();
+        result.accumulate_axis_inplace(axis, |&prev, curr| {
+            *curr = *curr * prev;
+        });
+        result
     }
 
     /// Return variance of elements in the array.
