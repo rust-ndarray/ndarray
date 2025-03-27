@@ -12,6 +12,7 @@ const N: usize = 1024;
 const X: usize = 64;
 const Y: usize = 16;
 
+#[cfg(feature = "std")]
 #[bench]
 fn map_regular(bench: &mut Bencher)
 {
@@ -26,6 +27,7 @@ pub fn double_array(mut a: ArrayViewMut2<'_, f64>)
     a *= 2.0;
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn map_stride_double_f64(bench: &mut Bencher)
 {
@@ -38,6 +40,7 @@ fn map_stride_double_f64(bench: &mut Bencher)
     });
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn map_stride_f64(bench: &mut Bencher)
 {
@@ -48,6 +51,7 @@ fn map_stride_f64(bench: &mut Bencher)
     bench.iter(|| av.map(|&x| 2. * x));
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn map_stride_u32(bench: &mut Bencher)
 {
@@ -59,6 +63,7 @@ fn map_stride_u32(bench: &mut Bencher)
     bench.iter(|| av.map(|&x| 2 * x));
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn fold_axis(bench: &mut Bencher)
 {

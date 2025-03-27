@@ -9,6 +9,7 @@ const N: usize = 1024;
 const X: usize = 64;
 const Y: usize = 16;
 
+#[cfg(feature = "std")]
 #[bench]
 fn clip(bench: &mut Bencher)
 {

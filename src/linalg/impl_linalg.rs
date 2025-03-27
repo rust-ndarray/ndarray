@@ -1071,7 +1071,6 @@ mod blas_tests
 
         for stride in 1..=MAXSTRIDE {
             let m = ArrayView::from_shape((N, N).strides((stride, 1)), &data).unwrap();
-            eprintln!("{:?}", m);
 
             if stride < N {
                 assert_eq!(get_blas_compatible_layout(&m), None);

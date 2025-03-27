@@ -19,6 +19,7 @@ fn zeros_f64(bench: &mut Bencher)
     bench.iter(|| Array::<f64, _>::zeros((128, 128)))
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn map_regular(bench: &mut test::Bencher)
 {
@@ -28,6 +29,7 @@ fn map_regular(bench: &mut test::Bencher)
     bench.iter(|| a.map(|&x| 2. * x));
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn map_stride(bench: &mut test::Bencher)
 {
