@@ -3196,7 +3196,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// # Parameters
     ///
     /// * `kth` - Index to partition by. The k-th element will be in its sorted position.
-    /// * `axis` - Axis along which to partition. Default is the last axis (`Axis(ndim-1)`).
+    /// * `axis` - Axis along which to partition.
     ///
     /// # Returns
     ///
@@ -3246,23 +3246,21 @@ impl<A, D: Dimension> ArrayRef<A, D>
         // For multi-dimensional arrays, partition along the specified axis
         let mut result = self.to_owned();
 
-        // Use Zip to efficiently iterate over the lanes
+        // Process each lane with partitioning
         Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
-            // For each lane, perform the partitioning operation
+            // For each lane, we need a contiguous slice to partition
             if let Some(slice) = lane.as_slice_mut() {
                 // If the lane's memory is contiguous, use select_nth_unstable directly
                 slice.select_nth_unstable(kth);
             } else {
-                // For non-contiguous memory, create a temporary array with contiguous memory
-                let mut temp_arr = Array::from_iter(lane.iter().cloned());
+                // For non-contiguous memory, create a temporary vector
+                let mut values = lane.iter().cloned().collect::<Vec<_>>();
 
-                // Partition the temporary array
-                if let Some(slice) = temp_arr.as_slice_mut() {
-                    slice.select_nth_unstable(kth);
-                }
+                // Partition the vector
+                values.select_nth_unstable(kth);
 
-                // Copy values back to original lane
-                Zip::from(&mut lane).and(&temp_arr).for_each(|dest, src| {
+                // Copy values back to the lane
+                Zip::from(&mut lane).and(&values).for_each(|dest, src| {
                     *dest = src.clone();
                 });
             }
