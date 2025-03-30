@@ -982,6 +982,7 @@ fn dot_extended(bench: &mut test::Bencher)
 
 const MEAN_SUM_N: usize = 127;
 
+#[cfg(feature = "std")]
 fn range_mat(m: Ix, n: Ix) -> Array2<f32>
 {
     assert!(m * n != 0);
@@ -990,6 +991,7 @@ fn range_mat(m: Ix, n: Ix) -> Array2<f32>
         .unwrap()
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn mean_axis0(bench: &mut test::Bencher)
 {
@@ -997,6 +999,7 @@ fn mean_axis0(bench: &mut test::Bencher)
     bench.iter(|| a.mean_axis(Axis(0)));
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn mean_axis1(bench: &mut test::Bencher)
 {
@@ -1004,6 +1007,7 @@ fn mean_axis1(bench: &mut test::Bencher)
     bench.iter(|| a.mean_axis(Axis(1)));
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn sum_axis0(bench: &mut test::Bencher)
 {
@@ -1011,6 +1015,7 @@ fn sum_axis0(bench: &mut test::Bencher)
     bench.iter(|| a.sum_axis(Axis(0)));
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn sum_axis1(bench: &mut test::Bencher)
 {

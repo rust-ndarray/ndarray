@@ -45,6 +45,7 @@ fn iter_sum_2d_transpose(bench: &mut Bencher)
     bench.iter(|| a.iter().sum::<i32>());
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn iter_filter_sum_2d_u32(bench: &mut Bencher)
 {
@@ -55,6 +56,7 @@ fn iter_filter_sum_2d_u32(bench: &mut Bencher)
     bench.iter(|| b.iter().filter(|&&x| x < 75).sum::<u32>());
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn iter_filter_sum_2d_f32(bench: &mut Bencher)
 {
@@ -65,6 +67,7 @@ fn iter_filter_sum_2d_f32(bench: &mut Bencher)
     bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher)
 {
@@ -76,6 +79,7 @@ fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher)
     bench.iter(|| b.iter().filter(|&&x| x < 75).sum::<u32>());
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
 {
@@ -87,6 +91,7 @@ fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
     bench.iter(|| b.iter().filter(|&&x| x < 75.).sum::<f32>());
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn iter_rev_step_by_contiguous(bench: &mut Bencher)
 {
@@ -98,6 +103,7 @@ fn iter_rev_step_by_contiguous(bench: &mut Bencher)
     });
 }
 
+#[cfg(feature = "std")]
 #[bench]
 fn iter_rev_step_by_discontiguous(bench: &mut Bencher)
 {
