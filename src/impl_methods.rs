@@ -3228,33 +3228,34 @@ impl<A, D: Dimension> ArrayRef<A, D>
         }
 
         let mut result = self.to_owned();
-        
+
         // Check if the first lane is contiguous
-        let is_contiguous = result.lanes_mut(axis)
+        let is_contiguous = result
+            .lanes_mut(axis)
             .into_iter()
             .next()
             .map(|lane| lane.is_contiguous())
             .unwrap_or(false);
-        
+
         if is_contiguous {
             Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
                 lane.as_slice_mut().unwrap().select_nth_unstable(kth);
             });
         } else {
             let mut temp_vec = Vec::with_capacity(axis_len);
-            
+
             Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
                 temp_vec.clear();
                 temp_vec.extend(lane.iter().cloned());
-                
+
                 temp_vec.select_nth_unstable(kth);
-                
+
                 Zip::from(&mut lane).and(&temp_vec).for_each(|dest, src| {
                     *dest = src.clone();
                 });
             });
         }
-        
+
         result
     }
 }
@@ -3352,7 +3353,8 @@ mod tests
     }
 
     #[test]
-    fn test_partition_1d() {
+    fn test_partition_1d()
+    {
         // Test partitioning a 1D array
         let array = arr1(&[3, 1, 4, 1, 5, 9, 2, 6]);
         let result = array.partition(3, Axis(0));
@@ -3362,17 +3364,18 @@ mod tests
     }
 
     #[test]
-    fn test_partition_2d() {
+    fn test_partition_2d()
+    {
         // Test partitioning a 2D array along both axes
         let array = arr2(&[[3, 1, 4], [1, 5, 9], [2, 6, 5]]);
-        
+
         // Partition along axis 0 (rows)
         let result0 = array.partition(1, Axis(0));
         // After partitioning along axis 0, each column should have its middle element in the correct position
         assert!(result0[[0, 0]] <= result0[[1, 0]] && result0[[2, 0]] >= result0[[1, 0]]);
         assert!(result0[[0, 1]] <= result0[[1, 1]] && result0[[2, 1]] >= result0[[1, 1]]);
         assert!(result0[[0, 2]] <= result0[[1, 2]] && result0[[2, 2]] >= result0[[1, 2]]);
-        
+
         // Partition along axis 1 (columns)
         let result1 = array.partition(1, Axis(1));
         // After partitioning along axis 1, each row should have its middle element in the correct position
@@ -3382,10 +3385,11 @@ mod tests
     }
 
     #[test]
-    fn test_partition_3d() {
+    fn test_partition_3d()
+    {
         // Test partitioning a 3D array
         let array = arr3(&[[[3, 1], [4, 1]], [[5, 9], [2, 6]]]);
-        
+
         // Partition along axis 0
         let result = array.partition(0, Axis(0));
         // After partitioning, each 2x2 slice should have its first element in the correct position
