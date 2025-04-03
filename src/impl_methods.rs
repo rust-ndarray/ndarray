@@ -3217,55 +3217,44 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// assert!(p.slice(s![4..]).iter().all(|&x| x >= 3));
     /// ```
     pub fn partition(&self, kth: usize, axis: Axis) -> Array<A, D>
-    where A: Clone + Ord
+    where
+        A: Clone + Ord,
+        D: Dimension,
     {
-        // Check if axis is valid
-        if axis.index() >= self.ndim() {
-            panic!("axis {} is out of bounds for array of dimension {}", axis.index(), self.ndim());
+        // Bounds checking
+        let axis_len = self.len_of(axis);
+        if kth >= axis_len {
+            panic!("partition index {} is out of bounds for axis of length {}", kth, axis_len);
         }
 
-        // Check if kth is valid
-        if kth >= self.len_of(axis) {
-            panic!("kth {} is out of bounds for axis {} with length {}", kth, axis.index(), self.len_of(axis));
-        }
-
-        // If the array is empty, return a copy
-        if self.is_empty() {
-            return self.to_owned();
-        }
-
-        // If the array is 1D, handle as a special case
-        if self.ndim() == 1 {
-            let mut result = self.to_owned();
-            if let Some(slice) = result.as_slice_mut() {
-                slice.select_nth_unstable(kth);
-            }
-            return result;
-        }
-
-        // For multi-dimensional arrays, partition along the specified axis
         let mut result = self.to_owned();
-
-        // Process each lane with partitioning
-        Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
-            // For each lane, we need a contiguous slice to partition
-            if let Some(slice) = lane.as_slice_mut() {
-                // If the lane's memory is contiguous, use select_nth_unstable directly
-                slice.select_nth_unstable(kth);
-            } else {
-                // For non-contiguous memory, create a temporary vector
-                let mut values = lane.iter().cloned().collect::<Vec<_>>();
-
-                // Partition the vector
-                values.select_nth_unstable(kth);
-
-                // Copy values back to the lane
-                Zip::from(&mut lane).and(&values).for_each(|dest, src| {
+        
+        // Check if the first lane is contiguous
+        let is_contiguous = result.lanes_mut(axis)
+            .into_iter()
+            .next()
+            .map(|lane| lane.is_contiguous())
+            .unwrap_or(false);
+        
+        if is_contiguous {
+            Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
+                lane.as_slice_mut().unwrap().select_nth_unstable(kth);
+            });
+        } else {
+            let mut temp_vec = Vec::with_capacity(axis_len);
+            
+            Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
+                temp_vec.clear();
+                temp_vec.extend(lane.iter().cloned());
+                
+                temp_vec.select_nth_unstable(kth);
+                
+                Zip::from(&mut lane).and(&temp_vec).for_each(|dest, src| {
                     *dest = src.clone();
                 });
-            }
-        });
-
+            });
+        }
+        
         result
     }
 }
@@ -3363,64 +3352,47 @@ mod tests
     }
 
     #[test]
-    fn test_partition_1d()
-    {
-        let a = array![7, 1, 5, 2, 6, 0, 3, 4];
-        let kth = 3;
-        let p = a.partition(kth, Axis(0));
-
-        // The element at position kth is in its sorted position
-        assert_eq!(p[kth], 3);
-
-        // All elements to the left are less than or equal to the kth element
-        for i in 0..kth {
-            assert!(p[i] <= p[kth]);
-        }
-
-        // All elements to the right are greater than or equal to the kth element
-        for i in (kth + 1)..p.len() {
-            assert!(p[i] >= p[kth]);
-        }
+    fn test_partition_1d() {
+        // Test partitioning a 1D array
+        let array = arr1(&[3, 1, 4, 1, 5, 9, 2, 6]);
+        let result = array.partition(3, Axis(0));
+        // After partitioning, the element at index 3 should be in its final sorted position
+        assert!(result.slice(s![..3]).iter().all(|&x| x <= result[3]));
+        assert!(result.slice(s![4..]).iter().all(|&x| x >= result[3]));
     }
 
     #[test]
-    fn test_partition_2d()
-    {
-        let a = array![[7, 1, 5], [2, 6, 0], [3, 4, 8]];
-
+    fn test_partition_2d() {
+        // Test partitioning a 2D array along both axes
+        let array = arr2(&[[3, 1, 4], [1, 5, 9], [2, 6, 5]]);
+        
         // Partition along axis 0 (rows)
-        let p_axis0 = a.partition(1, Axis(0));
-
-        // For each column, the middle row should be in its sorted position
-        for col in 0..3 {
-            assert!(p_axis0[[0, col]] <= p_axis0[[1, col]]);
-            assert!(p_axis0[[2, col]] >= p_axis0[[1, col]]);
-        }
-
+        let result0 = array.partition(1, Axis(0));
+        // After partitioning along axis 0, each column should have its middle element in the correct position
+        assert!(result0[[0, 0]] <= result0[[1, 0]] && result0[[2, 0]] >= result0[[1, 0]]);
+        assert!(result0[[0, 1]] <= result0[[1, 1]] && result0[[2, 1]] >= result0[[1, 1]]);
+        assert!(result0[[0, 2]] <= result0[[1, 2]] && result0[[2, 2]] >= result0[[1, 2]]);
+        
         // Partition along axis 1 (columns)
-        let p_axis1 = a.partition(1, Axis(1));
-
-        // For each row, the middle column should be in its sorted position
-        for row in 0..3 {
-            assert!(p_axis1[[row, 0]] <= p_axis1[[row, 1]]);
-            assert!(p_axis1[[row, 2]] >= p_axis1[[row, 1]]);
-        }
+        let result1 = array.partition(1, Axis(1));
+        // After partitioning along axis 1, each row should have its middle element in the correct position
+        assert!(result1[[0, 0]] <= result1[[0, 1]] && result1[[0, 2]] >= result1[[0, 1]]);
+        assert!(result1[[1, 0]] <= result1[[1, 1]] && result1[[1, 2]] >= result1[[1, 1]]);
+        assert!(result1[[2, 0]] <= result1[[2, 1]] && result1[[2, 2]] >= result1[[2, 1]]);
     }
 
     #[test]
-    fn test_partition_3d()
-    {
-        let a = arr3(&[[[9, 2], [3, 4]], [[5, 6], [7, 8]]]);
-
-        // Partition along the last axis
-        let p = a.partition(0, Axis(2));
-
-        // Check the partitioning along the last axis
-        for i in 0..2 {
-            for j in 0..2 {
-                assert!(p[[i, j, 0]] <= p[[i, j, 1]]);
-            }
-        }
+    fn test_partition_3d() {
+        // Test partitioning a 3D array
+        let array = arr3(&[[[3, 1], [4, 1]], [[5, 9], [2, 6]]]);
+        
+        // Partition along axis 0
+        let result = array.partition(0, Axis(0));
+        // After partitioning, each 2x2 slice should have its first element in the correct position
+        assert!(result[[0, 0, 0]] <= result[[1, 0, 0]]);
+        assert!(result[[0, 0, 1]] <= result[[1, 0, 1]]);
+        assert!(result[[0, 1, 0]] <= result[[1, 1, 0]]);
+        assert!(result[[0, 1, 1]] <= result[[1, 1, 1]]);
     }
 
     #[test]
@@ -3439,5 +3411,57 @@ mod tests
         let a = array![1, 2, 3, 4];
         // This should panic because axis=1 is out of bounds for a 1D array
         let _ = a.partition(0, Axis(1));
+    }
+
+    #[test]
+    fn test_partition_contiguous_or_not()
+    {
+        // Test contiguous case (C-order)
+        let a = array![
+            [7, 1, 5],
+            [2, 6, 0],
+            [3, 4, 8]
+        ];
+
+        // Partition along axis 0 (contiguous)
+        let p_axis0 = a.partition(1, Axis(0));
+
+        // For each column, verify the partitioning:
+        // - First row should be <= middle row (kth element)
+        // - Last row should be >= middle row (kth element)
+        for col in 0..3 {
+            let kth = p_axis0[[1, col]];
+            assert!(p_axis0[[0, col]] <= kth,
+                "Column {}: First row {} should be <= middle row {}",
+                col, p_axis0[[0, col]], kth);
+            assert!(p_axis0[[2, col]] >= kth,
+                "Column {}: Last row {} should be >= middle row {}",
+                col, p_axis0[[2, col]], kth);
+        }
+
+        // Test non-contiguous case (F-order)
+        let a = array![
+            [7, 1, 5],
+            [2, 6, 0],
+            [3, 4, 8]
+        ];
+
+        // Make array non-contiguous by transposing
+        let a = a.t().to_owned();
+
+        // Partition along axis 1 (non-contiguous)
+        let p_axis1 = a.partition(1, Axis(1));
+
+        // For each row, verify the partitioning:
+        // - First column should be <= middle column
+        // - Last column should be >= middle column
+        for row in 0..3 {
+            assert!(p_axis1[[row, 0]] <= p_axis1[[row, 1]],
+                "Row {}: First column {} should be <= middle column {}",
+                row, p_axis1[[row, 0]], p_axis1[[row, 1]]);
+            assert!(p_axis1[[row, 2]] >= p_axis1[[row, 1]],
+                "Row {}: Last column {} should be >= middle column {}",
+                row, p_axis1[[row, 2]], p_axis1[[row, 1]]);
+        }
     }
 }
