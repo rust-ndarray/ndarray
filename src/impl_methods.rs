@@ -3218,7 +3218,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// ```
     pub fn partition(&self, kth: usize, axis: Axis) -> Array<A, D>
     where
-        A: Clone + Ord,
+        A: Clone + Ord + num_traits::Zero,
         D: Dimension,
     {
         // Bounds checking
@@ -3234,8 +3234,8 @@ impl<A, D: Dimension> ArrayRef<A, D>
             .lanes_mut(axis)
             .into_iter()
             .next()
-            .map(|lane| lane.is_contiguous())
-            .unwrap_or(false);
+            .unwrap()
+            .is_contiguous();
 
         if is_contiguous {
             Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
@@ -3246,7 +3246,11 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
             Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
                 temp_vec.clear();
-                temp_vec.extend(lane.iter().cloned());
+                temp_vec.resize(axis_len, A::zero());
+
+                Zip::from(&mut temp_vec).and(&lane).for_each(|dest, src| {
+                    *dest = src.clone();
+                });
 
                 temp_vec.select_nth_unstable(kth);
 
