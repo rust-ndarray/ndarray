@@ -3242,12 +3242,9 @@ impl<A, D: Dimension> ArrayRef<A, D>
                 lane.as_slice_mut().unwrap().select_nth_unstable(kth);
             });
         } else {
-            let mut temp_vec = Vec::with_capacity(axis_len);
+            let mut temp_vec = vec![A::zero(); axis_len];
 
             Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
-                temp_vec.clear();
-                temp_vec.resize(axis_len, A::zero());
-
                 Zip::from(&mut temp_vec).and(&lane).for_each(|dest, src| {
                     *dest = src.clone();
                 });
