@@ -141,7 +141,7 @@ pub struct AxisWindows<'a, A, D>
 
 impl<'a, A, D: Dimension> AxisWindows<'a, A, D>
 {
-    pub(crate) fn new(a: ArrayView<'a, A, D>, axis: Axis, window_size: usize) -> Self
+    pub(crate) fn new_with_stride(a: ArrayView<'a, A, D>, axis: Axis, window_size: usize, stride_size: usize) -> Self
     {
         let window_strides = a.strides.clone();
         let axis_idx = axis.index();
@@ -150,10 +150,11 @@ impl<'a, A, D: Dimension> AxisWindows<'a, A, D>
         window[axis_idx] = window_size;
 
         let ndim = window.ndim();
-        let mut unit_stride = D::zeros(ndim);
-        unit_stride.slice_mut().fill(1);
+        let mut stride = D::zeros(ndim);
+        stride.slice_mut().fill(1);
+        stride[axis_idx] = stride_size;
 
-        let base = build_base(a, window.clone(), unit_stride);
+        let base = build_base(a, window.clone(), stride);
         AxisWindows {
             base,
             axis_idx,
