@@ -3229,16 +3229,22 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
         let mut result = self.to_owned();
 
+        // Must guarantee that the array isn't empty before checking for contiguity
+        if result.shape().iter().any(|s| *s == 0) {
+            return result;
+        }
+
         // Check if the first lane is contiguous
         let is_contiguous = result
             .lanes_mut(axis)
             .into_iter()
             .next()
+            // This unwrap shouldn't cause panics because the array isn't empty
             .unwrap()
             .is_contiguous();
 
         if is_contiguous {
-            Zip::from(result.lanes_mut(axis)).for_each(|mut lane| {
+            result.lanes_mut(axis).into_iter().for_each(|mut lane| {
                 lane.as_slice_mut().unwrap().select_nth_unstable(kth);
             });
         } else {
