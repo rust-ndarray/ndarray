@@ -3475,4 +3475,24 @@ mod tests
                 row, p_axis1[[row, 2]], p_axis1[[row, 1]]);
         }
     }
+
+    #[test]
+    #[should_panic]
+    fn test_partition_empty()
+    {
+        // Test 1D empty array
+        let empty1d = Array1::<i32>::zeros(0);
+        let result1d = empty1d.partition(0, Axis(0));
+        assert_eq!(result1d.len(), 0);
+
+        // Test 2D empty array
+        let empty2d = Array2::<i32>::zeros((0, 3));
+        let result2d = empty2d.partition(0, Axis(0));
+        assert_eq!(result2d.shape(), &[0, 3]);
+
+        // Test 2D empty array with zero columns
+        let empty2d_cols = Array2::<i32>::zeros((2, 0));
+        let result2d_cols = empty2d_cols.partition(0, Axis(1));
+        assert_eq!(result2d_cols.shape(), &[2, 0]);
+    }
 }
