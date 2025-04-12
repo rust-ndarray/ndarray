@@ -3221,8 +3221,8 @@ impl<A, D: Dimension> ArrayRef<A, D>
         A: Clone + Ord + num_traits::Zero,
         D: Dimension,
     {
-        // check if array is empty
-        if self.is_empty() {
+        // Must check for zero-length dimensions
+        if self.shape().iter().any(|s| *s == 0) {
             panic!("cannot partition an empty array");
         }
 
