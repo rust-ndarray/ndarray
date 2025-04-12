@@ -3221,18 +3221,18 @@ impl<A, D: Dimension> ArrayRef<A, D>
         A: Clone + Ord + num_traits::Zero,
         D: Dimension,
     {
-        // Bounds checking
+        // check if array is empty
+        if self.is_empty() {
+            panic!("cannot partition an empty array");
+        }
+
+        // Bounds checking. goes to panic if kth is out of bounds
         let axis_len = self.len_of(axis);
         if kth >= axis_len {
             panic!("partition index {} is out of bounds for axis of length {}", kth, axis_len);
         }
 
         let mut result = self.to_owned();
-
-        // Must guarantee that the array isn't empty before checking for contiguity
-        if result.shape().iter().any(|s| *s == 0) {
-            return result;
-        }
 
         // Check if the first lane is contiguous
         let is_contiguous = result
@@ -3477,7 +3477,7 @@ mod tests
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic = "cannot partition an empty array"]
     fn test_partition_empty()
     {
         // Test 1D empty array
