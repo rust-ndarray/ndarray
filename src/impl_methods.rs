@@ -2596,11 +2596,11 @@ where
         for count in usage_counts.slice() {
             assert_eq!(*count, 1, "each axis must be listed exactly once");
         }
-        
+
         // Create temporary arrays for the new dimensions and strides
         let mut new_dim = D::zeros(self.ndim());
         let mut new_strides = D::zeros(self.ndim());
-        
+
         {
             let dim = self.layout.dim.slice();
             let strides = self.layout.strides.slice();
@@ -2609,10 +2609,13 @@ where
                 new_strides[new_axis] = strides[axis];
             }
         }
-        
+
         // Update the dimensions and strides in place
         self.layout.dim.slice_mut().copy_from_slice(new_dim.slice());
-        self.layout.strides.slice_mut().copy_from_slice(new_strides.slice());
+        self.layout
+            .strides
+            .slice_mut()
+            .copy_from_slice(new_strides.slice());
     }
 }
 
