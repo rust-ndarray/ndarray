@@ -2548,6 +2548,72 @@ where
         self.layout.strides.slice_mut().reverse();
         self
     }
+
+    /// Reverse the axes of the array in-place.
+    ///
+    /// This does not move any data, it just adjusts the array's dimensions
+    /// and strides.
+    pub fn reverse_axes(&mut self)
+    {
+        self.layout.dim.slice_mut().reverse();
+        self.layout.strides.slice_mut().reverse();
+    }
+
+    /// Permute the axes in-place.
+    ///
+    /// This does not move any data, it just adjusts the array's dimensions
+    /// and strides.
+    ///
+    /// *i* in the *j*-th place in the axes sequence means `self`'s *i*-th axis
+    /// becomes `self`'s *j*-th axis
+    ///
+    /// **Panics** if any of the axes are out of bounds, if an axis is missing,
+    /// or if an axis is repeated more than once.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ndarray::{arr2, Array3};
+    ///
+    /// let mut a = arr2(&[[0, 1], [2, 3]]);
+    /// a.permute_axes([1, 0]);
+    /// assert_eq!(a, arr2(&[[0, 2], [1, 3]]));
+    ///
+    /// let mut b = Array3::<u8>::zeros((1, 2, 3));
+    /// b.permute_axes([1, 0, 2]);
+    /// assert_eq!(b.shape(), &[2, 1, 3]);
+    /// ```
+    #[track_caller]
+    pub fn permute_axes<T>(&mut self, axes: T)
+    where T: IntoDimension<Dim = D>
+    {
+        let axes = axes.into_dimension();
+        // Ensure that each axis is used exactly once.
+        let mut usage_counts = D::zeros(self.ndim());
+        for axis in axes.slice() {
+            usage_counts[*axis] += 1;
+        }
+        for count in usage_counts.slice() {
+            assert_eq!(*count, 1, "each axis must be listed exactly once");
+        }
+        
+        // Create temporary arrays for the new dimensions and strides
+        let mut new_dim = D::zeros(self.ndim());
+        let mut new_strides = D::zeros(self.ndim());
+        
+        {
+            let dim = self.layout.dim.slice();
+            let strides = self.layout.strides.slice();
+            for (new_axis, &axis) in axes.slice().iter().enumerate() {
+                new_dim[new_axis] = dim[axis];
+                new_strides[new_axis] = strides[axis];
+            }
+        }
+        
+        // Update the dimensions and strides in place
+        self.layout.dim.slice_mut().copy_from_slice(new_dim.slice());
+        self.layout.strides.slice_mut().copy_from_slice(new_strides.slice());
+    }
 }
 
 impl<A, D: Dimension> ArrayRef<A, D>
