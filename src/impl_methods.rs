@@ -3221,9 +3221,11 @@ impl<A, D: Dimension> ArrayRef<A, D>
         A: Clone + Ord + num_traits::Zero,
         D: Dimension,
     {
-        // Must check for zero-length dimensions
+        let mut result = self.to_owned();
+
+        // Return early if the array has zero-length dimensions
         if self.shape().iter().any(|s| *s == 0) {
-            panic!("cannot partition an empty array");
+            return result;
         }
 
         // Bounds checking. goes to panic if kth is out of bounds
@@ -3231,8 +3233,6 @@ impl<A, D: Dimension> ArrayRef<A, D>
         if kth >= axis_len {
             panic!("partition index {} is out of bounds for axis of length {}", kth, axis_len);
         }
-
-        let mut result = self.to_owned();
 
         // Check if the first lane is contiguous
         let is_contiguous = result
@@ -3477,13 +3477,16 @@ mod tests
     }
 
     #[test]
-    #[should_panic = "cannot partition an empty array"]
     fn test_partition_empty()
     {
         // Test 1D empty array
         let empty1d = Array1::<i32>::zeros(0);
         let result1d = empty1d.partition(0, Axis(0));
         assert_eq!(result1d.len(), 0);
+
+        // Test 1D empty array with kth out of bounds
+        let result1d_out_of_bounds = empty1d.partition(1, Axis(0));
+        assert_eq!(result1d_out_of_bounds.len(), 0);
 
         // Test 2D empty array
         let empty2d = Array2::<i32>::zeros((0, 3));
@@ -3494,5 +3497,31 @@ mod tests
         let empty2d_cols = Array2::<i32>::zeros((2, 0));
         let result2d_cols = empty2d_cols.partition(0, Axis(1));
         assert_eq!(result2d_cols.shape(), &[2, 0]);
+
+        // Test 3D empty array
+        let empty3d = Array3::<i32>::zeros((0, 2, 3));
+        let result3d = empty3d.partition(0, Axis(0));
+        assert_eq!(result3d.shape(), &[0, 2, 3]);
+
+        // Test 3D empty array with zero in middle dimension
+        let empty3d_mid = Array3::<i32>::zeros((2, 0, 3));
+        let result3d_mid = empty3d_mid.partition(0, Axis(1));
+        assert_eq!(result3d_mid.shape(), &[2, 0, 3]);
+
+        // Test 4D empty array
+        let empty4d = Array4::<i32>::zeros((0, 2, 3, 4));
+        let result4d = empty4d.partition(0, Axis(0));
+        assert_eq!(result4d.shape(), &[0, 2, 3, 4]);
+
+        // Test empty array with non-zero dimensions in other axes
+        let empty_mixed = Array2::<i32>::zeros((0, 5));
+        let result_mixed = empty_mixed.partition(0, Axis(0));
+        assert_eq!(result_mixed.shape(), &[0, 5]);
+
+        // Test empty array with negative strides
+        let mut arr = Array2::<i32>::zeros((3, 3));
+        let empty_slice = arr.slice(s![0..0, ..]);
+        let result_slice = empty_slice.partition(0, Axis(0));
+        assert_eq!(result_slice.shape(), &[0, 3]);
     }
 }
