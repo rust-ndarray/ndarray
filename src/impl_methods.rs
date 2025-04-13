@@ -3519,7 +3519,7 @@ mod tests
         assert_eq!(result_mixed.shape(), &[0, 5]);
 
         // Test empty array with negative strides
-        let mut arr = Array2::<i32>::zeros((3, 3));
+        let arr = Array2::<i32>::zeros((3, 3));
         let empty_slice = arr.slice(s![0..0, ..]);
         let result_slice = empty_slice.partition(0, Axis(0));
         assert_eq!(result_slice.shape(), &[0, 3]);
