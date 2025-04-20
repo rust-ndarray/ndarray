@@ -2538,27 +2538,6 @@ where
         unsafe { self.with_strides_dim(new_strides, new_dim) }
     }
 
-    /// Transpose the array by reversing axes.
-    ///
-    /// Transposition reverses the order of the axes (dimensions and strides)
-    /// while retaining the same data.
-    pub fn reversed_axes(mut self) -> ArrayBase<S, D>
-    {
-        self.layout.dim.slice_mut().reverse();
-        self.layout.strides.slice_mut().reverse();
-        self
-    }
-
-    /// Reverse the axes of the array in-place.
-    ///
-    /// This does not move any data, it just adjusts the array's dimensions
-    /// and strides.
-    pub fn reverse_axes(&mut self)
-    {
-        self.layout.dim.slice_mut().reverse();
-        self.layout.strides.slice_mut().reverse();
-    }
-
     /// Permute the axes in-place.
     ///
     /// This does not move any data, it just adjusts the array's dimensions
@@ -2568,10 +2547,38 @@ where
     /// becomes `self`'s *j*-th axis
     ///
     /// **Panics** if any of the axes are out of bounds, if an axis is missing,
-    /// or if an axis is repeated more than once.
+    /// or if an axis is repeated more than once.    
     ///
-    /// # Examples
+    /// # About the Cycle Detection
     ///
+    /// The cycle detection is done using a bitmask to track visited positions.
+    ///
+    /// For example, axes from [0,1,2] to [2, 0, 1]
+    /// For axis values [1, 0, 2]:
+    /// 1 << 1;  // 0b0001 << 1 = 0b0010 (decimal 2)
+    /// 1 << 0; // 0b0001 << 0 = 0b0001 (decimal 1)
+    /// 1 << 2; // 0b0001 << 2 = 0b0100 (decimal 4)
+    /// 
+    /// Each axis gets its own unique bit position in the bitmask:
+    /// - Axis 0: bit 0 (rightmost)
+    /// - Axis 1: bit 1
+    /// - Axis 2: bit 2
+    ///
+    /// The check `(visited & (1 << axis)) != 0` works as follows:
+    /// ```no_run
+    /// let mut visited = 0;  // 0b0000
+    /// // Check axis 1
+    /// if (visited & (1 << 1)) != 0 {  // 0b0000 & 0b0010 = 0b0000
+    ///     // Not visited yet
+    /// }
+    /// // Mark axis 1 as visited
+    /// visited |= (1 << axis) | (1 << new_axis);    /// // Check axis 1 again
+    /// if (visited & (1 << 1)) != 0 {  // 0b0010 & 0b0010 = 0b0010
+    ///     // Already visited!
+    /// }
+    /// ```
+    ///
+    /// # Example
     /// ```rust
     /// use ndarray::{arr2, Array3};
     ///
@@ -2597,25 +2604,46 @@ where
             assert_eq!(*count, 1, "each axis must be listed exactly once");
         }
 
-        // Create temporary arrays for the new dimensions and strides
-        let mut new_dim = D::zeros(self.ndim());
-        let mut new_strides = D::zeros(self.ndim());
+        let dim = self.layout.dim.slice_mut();
+        let strides = self.layout.strides.slice_mut();
+        let axes = axes.slice();
 
-        {
-            let dim = self.layout.dim.slice();
-            let strides = self.layout.strides.slice();
-            for (new_axis, &axis) in axes.slice().iter().enumerate() {
-                new_dim[new_axis] = dim[axis];
-                new_strides[new_axis] = strides[axis];
+        let mut visited = 0usize;
+        for (new_axis, &axis) in axes.iter().enumerate() {
+            if (visited & (1 << axis)) != 0 {
+                continue;
             }
-        }
 
-        // Update the dimensions and strides in place
-        self.layout.dim.slice_mut().copy_from_slice(new_dim.slice());
-        self.layout
-            .strides
-            .slice_mut()
-            .copy_from_slice(new_strides.slice());
+            let temp = dim[axis];
+            dim[axis] = dim[new_axis];
+            dim[new_axis] = temp;
+
+            let temp = strides[axis];
+            strides[axis] = strides[new_axis];
+            strides[new_axis] = temp;
+            visited |= (1 << axis) | (1 << new_axis);
+        }
+    }
+
+    /// Transpose the array by reversing axes.
+    ///
+    /// Transposition reverses the order of the axes (dimensions and strides)
+    /// while retaining the same data.
+    pub fn reversed_axes(mut self) -> ArrayBase<S, D>
+    {
+        self.layout.dim.slice_mut().reverse();
+        self.layout.strides.slice_mut().reverse();
+        self
+    }
+
+    /// Reverse the axes of the array in-place.
+    ///
+    /// This does not move any data, it just adjusts the array's dimensions
+    /// and strides.
+    pub fn reverse_axes(&mut self)
+    {
+        self.layout.dim.slice_mut().reverse();
+        self.layout.strides.slice_mut().reverse();
     }
 }
 
