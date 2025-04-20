@@ -2558,7 +2558,7 @@ where
     /// 1 << 1;  // 0b0001 << 1 = 0b0010 (decimal 2)
     /// 1 << 0; // 0b0001 << 0 = 0b0001 (decimal 1)
     /// 1 << 2; // 0b0001 << 2 = 0b0100 (decimal 4)
-    /// 
+    ///
     /// Each axis gets its own unique bit position in the bitmask:
     /// - Axis 0: bit 0 (rightmost)
     /// - Axis 1: bit 1
