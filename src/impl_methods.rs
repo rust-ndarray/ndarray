@@ -2553,11 +2553,11 @@ where
     ///
     /// The cycle detection is done using a bitmask to track visited positions.
     ///
-    /// For example, axes from [0,1,2] to [2, 0, 1]
-    /// For axis values [1, 0, 2]:
-    /// 1 << 1;  // 0b0001 << 1 = 0b0010 (decimal 2)
-    /// 1 << 0; // 0b0001 << 0 = 0b0001 (decimal 1)
-    /// 1 << 2; // 0b0001 << 2 = 0b0100 (decimal 4)
+    /// For example, axes from \[0,1,2\] to \[2, 0, 1\]
+    /// For axis values \[1, 0, 2\]:
+    /// 1 << 1  // 0b0001 << 1 = 0b0010 (decimal 2)
+    /// 1 << 0  // 0b0001 << 0 = 0b0001 (decimal 1)
+    /// 1 << 2  // 0b0001 << 2 = 0b0100 (decimal 4)
     ///
     /// Each axis gets its own unique bit position in the bitmask:
     /// - Axis 0: bit 0 (rightmost)
@@ -2567,13 +2567,15 @@ where
     /// The check `(visited & (1 << axis)) != 0` works as follows:
     /// ```no_run
     /// let mut visited = 0;  // 0b0000
+    /// let axis = 1;
+    /// let new_axis = 0;
     /// // Check axis 1
-    /// if (visited & (1 << 1)) != 0 {  // 0b0000 & 0b0010 = 0b0000
+    /// if (visited & (1 << axis)) != 0 {  // 0b0000 & 0b0010 = 0b0000
     ///     // Not visited yet
     /// }
     /// // Mark axis 1 as visited
-    /// visited |= (1 << axis) | (1 << new_axis);    /// // Check axis 1 again
-    /// if (visited & (1 << 1)) != 0 {  // 0b0010 & 0b0010 = 0b0010
+    /// visited |= (1 << axis) | (1 << new_axis);    // 0b0000 | 0b0010 | 0b0001 = 0b0011
+    /// if (visited & (1 << 1)) != 0 {  // 0b0011 & 0b0010 = 0b0010
     ///     // Already visited!
     /// }
     /// ```
@@ -2614,13 +2616,9 @@ where
                 continue;
             }
 
-            let temp = dim[axis];
-            dim[axis] = dim[new_axis];
-            dim[new_axis] = temp;
+            dim.swap(axis, new_axis);
+            strides.swap(axis, new_axis);
 
-            let temp = strides[axis];
-            strides[axis] = strides[new_axis];
-            strides[new_axis] = temp;
             visited |= (1 << axis) | (1 << new_axis);
         }
     }
