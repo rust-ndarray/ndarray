@@ -103,12 +103,16 @@ where
         fn exp
         /// `2^x` of each element.
         fn exp2
+        /// `e^x - 1` of each element.
+        fn exp_m1
         /// Natural logarithm of each element.
         fn ln
         /// Base 2 logarithm of each element.
         fn log2
         /// Base 10 logarithm of each element.
         fn log10
+        /// `ln(1 + x)` of each element.
+        fn ln_1p
         /// Cubic root of each element.
         fn cbrt
         /// Sine of each element (in radians).
@@ -117,6 +121,24 @@ where
         fn cos
         /// Tangent of each element (in radians).
         fn tan
+        /// Arcsine of each element (return in radians).
+        fn asin
+        /// Arccosine of each element (return in radians).
+        fn acos
+        /// Arctangent of each element (return in radians).
+        fn atan
+        /// Hyperbolic sine of each element.
+        fn sinh
+        /// Hyperbolic cosine of each element.
+        fn cosh
+        /// Hyperbolic tangent of each element.
+        fn tanh
+        /// Inverse hyperbolic sine of each element.
+        fn asinh
+        /// Inverse hyperbolic cosine of each element.
+        fn acosh
+        /// Inverse hyperbolic tangent of each element.
+        fn atanh
         /// Converts radians to degrees for each element.
         fn to_degrees
         /// Converts degrees to radians for each element.
@@ -133,6 +155,8 @@ where
         fn log(A)
         /// The positive difference between given number and each element.
         fn abs_sub(A)
+        /// Length of the hypotenuse of a right-angle triangle of each element
+        fn hypot(A)
     }
 
     /// Square (two powers) of each element.
