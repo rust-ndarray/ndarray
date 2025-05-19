@@ -208,7 +208,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// memory layout. Otherwise, the layout of the output array is unspecified.
     /// If you need a particular layout, you can allocate a new array with the
     /// desired memory layout and [`.assign()`](Self::assign) the data.
-    /// Alternatively, you can collectan iterator, like this for a result in
+    /// Alternatively, you can collect an iterator, like this for a result in
     /// standard layout:
     ///
     /// ```
