@@ -150,7 +150,7 @@ pub use crate::order::Order;
 pub use crate::slice::{MultiSliceArg, NewAxis, Slice, SliceArg, SliceInfo, SliceInfoElem, SliceNextDim};
 
 use crate::iterators::Baseiter;
-use crate::iterators::{ElementsBase, ElementsBaseMut, Iter};
+use crate::iterators::{ElementsBase, ElementsBaseMut};
 
 pub use crate::arraytraits::AsArray;
 pub use crate::linalg_traits::LinalgScalar;
