@@ -463,7 +463,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     pub fn iter(&self) -> Iter<'_, A, D>
     {
         // debug_assert!(self.pointer_is_inbounds());
-        self.view().into_iter_()
+        self.view().into_iter()
     }
 
     /// Return an iterator of mutable references to the elements of the array.

@@ -213,7 +213,7 @@ where D: Dimension
     }
 }
 
-/// Private array view methods
+/// Methods for iterating over array views
 impl<'a, A, D> ArrayView<'a, A, D>
 where D: Dimension
 {
@@ -229,14 +229,10 @@ where D: Dimension
         ElementsBase::new(self)
     }
 
-    pub(crate) fn into_iter_(self) -> Iter<'a, A, D>
-    {
-        Iter::new(self)
-    }
-
-    /// Return an outer iterator for this view.
-    #[doc(hidden)] // not official
-    #[deprecated(note = "This method will be replaced.")]
+    /// Return an outer iterator for this view, but with the lifetime
+    /// of the view's data.
+    ///
+    /// See [ArrayRef::outer_iter] for details.
     pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
     where D: RemoveAxis
     {
