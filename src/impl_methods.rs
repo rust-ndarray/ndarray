@@ -1524,7 +1524,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// stride along an axis.
     ///
     /// Note that a calling this method with a stride of 1 is equivalent to
-    /// calling [`ArrayBase::axis_windows()`].
+    /// calling [`ArrayRef::axis_windows()`].
     pub fn axis_windows_with_stride(&self, axis: Axis, window_size: usize, stride_size: usize)
         -> AxisWindows<'_, A, D>
     {
