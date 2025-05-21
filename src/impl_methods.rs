@@ -3179,13 +3179,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
             Zip::from(self.lanes_mut(axis)).map_collect(mapping)
         }
     }
-}
 
-impl<A, S, D> ArrayBase<S, D>
-where
-    S: DataOwned<Elem = A> + DataMut,
-    D: Dimension,
-{
     /// Remove the `index`th elements along `axis` and shift down elements from higher indexes.
     ///
     /// Note that this "removes" the elements by swapping them around to the end of the axis and
