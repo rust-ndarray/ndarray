@@ -2338,7 +2338,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// The implementation creates a view with strides set to zero for the
     /// axes that are to be repeated.
     ///
-    /// The broadcasting documentation for Numpy has more information.
+    /// The broadcasting documentation for NumPy has more information.
     ///
     /// ```
     /// use ndarray::{aview1, aview2};
@@ -2690,7 +2690,7 @@ where
 
 impl<A, D: Dimension> ArrayRef<A, D>
 {
-    /// Perform an elementwise assigment to `self` from `rhs`.
+    /// Perform an elementwise assignment to `self` from `rhs`.
     ///
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
@@ -2702,7 +2702,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         self.zip_mut_with(rhs, |x, y| x.clone_from(y));
     }
 
-    /// Perform an elementwise assigment of values cloned from `self` into array or producer `to`.
+    /// Perform an elementwise assignment of values cloned from `self` into array or producer `to`.
     ///
     /// The destination `to` can be another array or a producer of assignable elements.
     /// [`AssignElem`] determines how elements are assigned.
@@ -2718,7 +2718,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         Zip::from(self).map_assign_into(to, A::clone);
     }
 
-    /// Perform an elementwise assigment to `self` from element `x`.
+    /// Perform an elementwise assignment to `self` from element `x`.
     pub fn fill(&mut self, x: A)
     where A: Clone
     {
@@ -3212,7 +3212,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         let mut result = self.to_owned();
 
         // Return early if the array has zero-length dimensions
-        if self.shape().iter().any(|s| *s == 0) {
+        if result.shape().contains(&0) {
             return result;
         }
 
