@@ -13,7 +13,7 @@ use std::mem::MaybeUninit;
 
 use crate::imp_prelude::*;
 
-use crate::{Baseiter, ElementsBase, ElementsBaseMut, Iter, IterMut};
+use crate::{Baseiter, ElementsBase, ElementsBaseMut};
 
 use crate::dimension::offset_from_low_addr_ptr_to_logical_ptr;
 use crate::iter::{self, AxisIter, AxisIterMut};
