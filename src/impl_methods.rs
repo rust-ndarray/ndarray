@@ -474,7 +474,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// Iterator element type is `&mut A`.
     pub fn iter_mut(&mut self) -> IterMut<'_, A, D>
     {
-        self.view_mut().into_iter_()
+        self.view_mut().into_iter()
     }
 
     /// Return an iterator of indexes and references to the elements of the array.
@@ -1290,7 +1290,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     pub fn outer_iter_mut(&mut self) -> AxisIterMut<'_, A, D::Smaller>
     where D: RemoveAxis
     {
-        self.view_mut().into_outer_iter()
+        self.view_mut().into_outer_iter_mut()
     }
 
     /// Return an iterator that traverses over `axis`

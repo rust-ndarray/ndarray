@@ -213,7 +213,7 @@ where D: Dimension
     }
 }
 
-/// Methods for iterating over array views
+/// Methods for iterating over array views.
 impl<'a, A, D> ArrayView<'a, A, D>
 where D: Dimension
 {
@@ -229,17 +229,47 @@ where D: Dimension
         ElementsBase::new(self)
     }
 
-    /// Return an outer iterator for this view, but with the lifetime
-    /// of the view's data.
+    /// Convert into an outer iterator for this view.
     ///
-    /// See [ArrayRef::outer_iter] for details.
+    /// Unlike [ArrayRef::outer_iter], this methods preserves the lifetime of the data,
+    /// not the view itself.
     pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
     where D: RemoveAxis
     {
         AxisIter::new(self, Axis(0))
     }
+
+    /// Convert into an indexed iterator.
+    ///
+    /// Unlike [ArrayRef::indexed_iter], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_indexed_iter(self) -> iter::IndexedIter<'a, A, D>
+    {
+        iter::IndexedIter::new(self.into_elements_base())
+    }
+
+    /// Convert into an iterator over an `axis`.
+    ///
+    /// Unlike [ArrayRef::axis_iter], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_axis_iter(self, axis: Axis) -> iter::AxisIter<'a, A, D::Smaller>
+    where D: RemoveAxis
+    {
+        AxisIter::new(self, axis)
+    }
+
+    /// Convert into an iterator over an `axis` by chunks.
+    ///
+    /// Unlike [`ArrayRef::axis_chunks_iter`], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_axis_chunks_iter(self, axis: Axis, chunk_size: usize) -> iter::AxisChunksIter<'a, A, D>
+    where D: RemoveAxis
+    {
+        iter::AxisChunksIter::new(self, axis, chunk_size)
+    }
 }
 
+/// Methods for iterating over mutable array views.
 impl<'a, A, D> ArrayViewMut<'a, A, D>
 where D: Dimension
 {
@@ -290,17 +320,81 @@ where D: Dimension
         }
     }
 
-    pub(crate) fn into_iter_(self) -> IterMut<'a, A, D>
+    /// Convert into an outer iterator for this view.
+    ///
+    /// Unlike [ArrayRef::outer_iter], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_outer_iter(self) -> iter::AxisIter<'a, A, D::Smaller>
+    where D: RemoveAxis
     {
-        IterMut::new(self)
+        AxisIter::new(self.into_view(), Axis(0))
     }
 
-    /// Return an outer iterator for this view.
-    #[doc(hidden)] // not official
-    #[deprecated(note = "This method will be replaced.")]
-    pub fn into_outer_iter(self) -> iter::AxisIterMut<'a, A, D::Smaller>
+    /// Convert into an indexed iterator.
+    ///
+    /// Unlike [ArrayRef::indexed_iter], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_indexed_iter(self) -> iter::IndexedIter<'a, A, D>
+    {
+        iter::IndexedIter::new(self.into_view().into_elements_base())
+    }
+
+    /// Convert into an iterator over an `axis`.
+    ///
+    /// Unlike [ArrayRef::axis_iter], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_axis_iter(self, axis: Axis) -> iter::AxisIter<'a, A, D::Smaller>
+    where D: RemoveAxis
+    {
+        AxisIter::new(self.into_view(), axis)
+    }
+
+    /// Convert into an iterator over an `axis` by chunks.
+    ///
+    /// Unlike [`ArrayRef::axis_chunks_iter`], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_axis_chunks_iter(self, axis: Axis, chunk_size: usize) -> iter::AxisChunksIter<'a, A, D>
+    where D: RemoveAxis
+    {
+        iter::AxisChunksIter::new(self.into_view(), axis, chunk_size)
+    }
+
+    /// Convert into an outer iterator for this view.
+    ///
+    /// Unlike [ArrayRef::outer_iter_mut], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_outer_iter_mut(self) -> iter::AxisIterMut<'a, A, D::Smaller>
     where D: RemoveAxis
     {
         AxisIterMut::new(self, Axis(0))
+    }
+
+    /// Convert into an indexed iterator.
+    ///
+    /// Unlike [ArrayRef::indexed_iter_mut], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_indexed_iter_mut(self) -> iter::IndexedIterMut<'a, A, D>
+    {
+        iter::IndexedIterMut::new(self.into_elements_base())
+    }
+
+    /// Convert into an iterator over an `axis`.
+    ///
+    /// Unlike [ArrayRef::axis_iter_mut], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_axis_iter_mut(self, axis: Axis) -> iter::AxisIterMut<'a, A, D::Smaller>
+    where D: RemoveAxis
+    {
+        AxisIterMut::new(self, axis)
+    }
+
+    /// Convert into an iterator over an `axis` by chunks.
+    ///
+    /// Unlike [`ArrayRef::axis_chunks_iter_mut`], this methods preserves the lifetime of the data,
+    /// not the view itself.
+    pub fn into_axis_chunks_iter_mut(self, axis: Axis, chunk_size: usize) -> iter::AxisChunksIterMut<'a, A, D>
+    where D: RemoveAxis
+    {
+        iter::AxisChunksIterMut::new(self, axis, chunk_size)
     }
 }
