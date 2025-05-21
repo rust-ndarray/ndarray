@@ -1525,9 +1525,8 @@ impl<A, D: Dimension> ArrayRef<A, D>
     ///
     /// Note that a calling this method with a stride of 1 is equivalent to
     /// calling [`ArrayBase::axis_windows()`].
-    pub fn axis_windows_with_stride(
-        &self, axis: Axis, window_size: usize, stride_size: usize,
-    ) -> AxisWindows<'_, A, D>
+    pub fn axis_windows_with_stride(&self, axis: Axis, window_size: usize, stride_size: usize)
+        -> AxisWindows<'_, A, D>
     {
         let axis_index = axis.index();
 
