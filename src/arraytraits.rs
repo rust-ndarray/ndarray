@@ -357,7 +357,7 @@ where D: Dimension
 
     fn into_iter(self) -> Self::IntoIter
     {
-        self.into_iter_()
+        Iter::new(self)
     }
 }
 
@@ -369,7 +369,7 @@ where D: Dimension
 
     fn into_iter(self) -> Self::IntoIter
     {
-        self.into_iter_()
+        IterMut::new(self)
     }
 }
 
