@@ -1528,7 +1528,6 @@ impl<A, D: Dimension> ArrayRef<A, D>
     pub fn axis_windows_with_stride(
         &self, axis: Axis, window_size: usize, stride_size: usize,
     ) -> AxisWindows<'_, A, D>
-    where S: Data
     {
         let axis_index = axis.index();
 
