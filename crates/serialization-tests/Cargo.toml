@@ -19,6 +19,6 @@ ron = { version = "0.8.1" }
 [dev-dependencies]
 serde_json = { version = "1.0.40" }
 # Old version to work with Rust 1.64+
-rmp = { version = "=0.8.10" }
+rmp = { version = "0.8.10" }
 # Old version to work with Rust 1.64+
-rmp-serde = { version = "0.14" }
+rmp-serde = { version = "1.3" }
