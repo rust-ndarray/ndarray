@@ -160,7 +160,7 @@ unsafe impl NdIndex<IxDyn> for Ix
 }
 
 macro_rules! ndindex_with_array {
-    ($([$n:expr_2021, $ix_n:ident $($index:tt)*])+) => {
+    ($([$n:expr, $ix_n:ident $($index:tt)*])+) => {
         $(
         // implement NdIndex<Ix2> for [Ix; 2] and so on
         unsafe impl NdIndex<$ix_n> for [Ix; $n] {

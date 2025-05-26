@@ -8,13 +8,13 @@ use itertools::enumerate;
 use std::cell::Cell;
 
 macro_rules! assert_panics {
-    ($body:expr_2021) => {
+    ($body:expr) => {
         if let Ok(v) = ::std::panic::catch_unwind(|| $body) {
             panic!("assertion failed: should_panic; \
             non-panicking result: {:?}", v);
         }
     };
-    ($body:expr_2021, $($arg:tt)*) => {
+    ($body:expr, $($arg:tt)*) => {
         if let Ok(_) = ::std::panic::catch_unwind(|| $body) {
             panic!($($arg)*);
         }
@@ -1073,7 +1073,9 @@ fn test_impl_iter_compiles()
     let _ = slice_iter_non_empty_indices;
 
     // ndarray case
-    fn array_iter_non_empty_indices<'s, 'a>(array: &'a Array<&'s str, Ix1>) -> impl Iterator<Item = usize> + 'a + use<'a>
+    fn array_iter_non_empty_indices<'s, 'a>(
+        array: &'a Array<&'s str, Ix1>,
+    ) -> impl Iterator<Item = usize> + 'a + use<'a>
     {
         array
             .iter()

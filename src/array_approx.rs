@@ -29,7 +29,7 @@ mod approx_methods
 }
 
 macro_rules! impl_approx_traits {
-    ($approx:ident, $doc:expr_2021) => {
+    ($approx:ident, $doc:expr) => {
         mod $approx {
             use crate::imp_prelude::*;
             use crate::Zip;

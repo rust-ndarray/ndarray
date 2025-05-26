@@ -263,13 +263,13 @@ fn test_hash()
         hasher.finish()
     }
     macro_rules! test_hash_eq {
-        ($arr:expr_2021) => {
+        ($arr:expr) => {
             assert_eq!(calc_hash(&Dim($arr)), calc_hash(&Dim($arr)));
             assert_eq!(calc_hash(&Dim($arr)), calc_hash(&IxDyn(&$arr)));
         };
     }
     macro_rules! test_hash_ne {
-        ($arr1:expr_2021, $arr2:expr_2021) => {
+        ($arr1:expr, $arr2:expr) => {
             assert_ne!(calc_hash(&Dim($arr1)), calc_hash(&Dim($arr2)));
             assert_ne!(calc_hash(&Dim($arr1)), calc_hash(&IxDyn(&$arr2)));
             assert_ne!(calc_hash(&IxDyn(&$arr1)), calc_hash(&Dim($arr2)));
@@ -330,7 +330,7 @@ fn test_all_ndindex()
 {
     use ndarray::IntoDimension;
     macro_rules! ndindex {
-        ($($i:expr_2021),*) => {
+        ($($i:expr),*) => {
         for &rev in &[false, true] {
             // rev is for C / F order
             let size = $($i *)* 1;

@@ -587,7 +587,7 @@ where
 }
 
 macro_rules! impl_tryfrom_array_for_sliceinfo {
-    ($len:expr_2021) => {
+    ($len:expr) => {
         impl<Din, Dout> TryFrom<[SliceInfoElem; $len]>
             for SliceInfo<[SliceInfoElem; $len], Din, Dout>
         where
@@ -809,7 +809,7 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 #[macro_export]
 macro_rules! s(
     // convert a..b;c into @convert(a..b, c), final item
-    (@parse $in_dim:expr_2021, $out_dim:expr_2021, [$($stack:tt)*] $r:expr_2021;$s:expr_2021) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr) => {
         match $r {
             r => {
                 let in_dim = $crate::SliceNextDim::next_in_dim(&r, $in_dim);
@@ -823,7 +823,7 @@ macro_rules! s(
         }
     };
     // convert a..b into @convert(a..b), final item
-    (@parse $in_dim:expr_2021, $out_dim:expr_2021, [$($stack:tt)*] $r:expr_2021) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr) => {
         match $r {
             r => {
                 let in_dim = $crate::SliceNextDim::next_in_dim(&r, $in_dim);
@@ -837,15 +837,15 @@ macro_rules! s(
         }
     };
     // convert a..b;c into @convert(a..b, c), final item, trailing comma
-    (@parse $in_dim:expr_2021, $out_dim:expr_2021, [$($stack:tt)*] $r:expr_2021;$s:expr_2021 ,) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr ,) => {
         $crate::s![@parse $in_dim, $out_dim, [$($stack)*] $r;$s]
     };
     // convert a..b into @convert(a..b), final item, trailing comma
-    (@parse $in_dim:expr_2021, $out_dim:expr_2021, [$($stack:tt)*] $r:expr_2021 ,) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr ,) => {
         $crate::s![@parse $in_dim, $out_dim, [$($stack)*] $r]
     };
     // convert a..b;c into @convert(a..b, c)
-    (@parse $in_dim:expr_2021, $out_dim:expr_2021, [$($stack:tt)*] $r:expr_2021;$s:expr_2021, $($t:tt)*) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr;$s:expr, $($t:tt)*) => {
         match $r {
             r => {
                 $crate::s![@parse
@@ -858,7 +858,7 @@ macro_rules! s(
         }
     };
     // convert a..b into @convert(a..b)
-    (@parse $in_dim:expr_2021, $out_dim:expr_2021, [$($stack:tt)*] $r:expr_2021, $($t:tt)*) => {
+    (@parse $in_dim:expr, $out_dim:expr, [$($stack:tt)*] $r:expr, $($t:tt)*) => {
         match $r {
             r => {
                 $crate::s![@parse
@@ -881,11 +881,11 @@ macro_rules! s(
     // Catch-all clause for syntax errors
     (@parse $($t:tt)*) => { compile_error!("Invalid syntax in s![] call.") };
     // convert range/index/new-axis into SliceInfoElem
-    (@convert $r:expr_2021) => {
+    (@convert $r:expr) => {
         <$crate::SliceInfoElem as ::core::convert::From<_>>::from($r)
     };
     // convert range/index/new-axis and step into SliceInfoElem
-    (@convert $r:expr_2021, $s:expr_2021) => {
+    (@convert $r:expr, $s:expr) => {
         <$crate::SliceInfoElem as ::core::convert::From<_>>::from(
             <$crate::Slice as ::core::convert::From<_>>::from($r).step_by($s as isize)
         )
@@ -989,10 +989,10 @@ macro_rules! impl_multislice_tuple {
             private_impl! {}
         }
     };
-    (@intersects_self $shape:expr_2021, ($head:expr_2021,)) => {
+    (@intersects_self $shape:expr, ($head:expr,)) => {
         false
     };
-    (@intersects_self $shape:expr_2021, ($head:expr_2021, $($tail:expr_2021,)*)) => {
+    (@intersects_self $shape:expr, ($head:expr, $($tail:expr,)*)) => {
         $(slices_intersect($shape, $head, $tail)) ||*
             || impl_multislice_tuple!(@intersects_self $shape, ($($tail,)*))
     };

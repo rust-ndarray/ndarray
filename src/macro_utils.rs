@@ -38,7 +38,7 @@ macro_rules! clone_bounds {
 /// debug assertions are enabled).
 #[cfg(debug_assertions)]
 macro_rules! ndassert {
-    ($e:expr_2021, $($t:tt)*) => { assert!($e, $($t)*) };
+    ($e:expr, $($t:tt)*) => { assert!($e, $($t)*) };
 }
 
 #[cfg(not(debug_assertions))]
@@ -60,7 +60,7 @@ macro_rules! expand_if {
 // Macro to insert more informative out of bounds message in debug builds
 #[cfg(debug_assertions)]
 macro_rules! debug_bounds_check {
-    ($self_:ident, $index:expr_2021) => {
+    ($self_:ident, $index:expr) => {
         if $index.index_checked(&$self_.dim, &$self_.strides).is_none() {
             panic!(
                 "ndarray: index {:?} is out of bounds for array of shape {:?}",
