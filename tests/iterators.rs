@@ -1073,7 +1073,9 @@ fn test_impl_iter_compiles()
     let _ = slice_iter_non_empty_indices;
 
     // ndarray case
-    fn array_iter_non_empty_indices<'s, 'a>(array: &'a Array<&'s str, Ix1>) -> impl Iterator<Item = usize> + use<'a>
+    fn array_iter_non_empty_indices<'s, 'a>(
+        array: &'a Array<&'s str, Ix1>,
+    ) -> impl Iterator<Item = usize> + 'a + use<'a>
     {
         array
             .iter()

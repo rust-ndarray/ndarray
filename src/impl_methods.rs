@@ -895,13 +895,11 @@ impl<A, D: Dimension> ArrayRef<A, D>
     #[inline]
     pub unsafe fn uget<I>(&self, index: I) -> &A
     where I: NdIndex<D>
-    {
-        unsafe {
-            arraytraits::debug_bounds_check(self, &index);
-            let off = index.index_unchecked(&self.strides);
-            &*self.ptr.as_ptr().offset(off)
-        }
-    }
+    { unsafe {
+        arraytraits::debug_bounds_check(self, &index);
+        let off = index.index_unchecked(&self.strides);
+        &*self.ptr.as_ptr().offset(off)
+    }}
 
     /// Perform *unchecked* array indexing.
     ///
@@ -920,14 +918,12 @@ impl<A, D: Dimension> ArrayRef<A, D>
     #[inline]
     pub unsafe fn uget_mut<I>(&mut self, index: I) -> &mut A
     where I: NdIndex<D>
-    {
-        unsafe {
-            // debug_assert!(self.data.is_unique());
-            arraytraits::debug_bounds_check(self, &index);
-            let off = index.index_unchecked(&self.strides);
-            &mut *self.ptr.as_ptr().offset(off)
-        }
-    }
+    { unsafe {
+        // debug_assert!(self.data.is_unique());
+        arraytraits::debug_bounds_check(self, &index);
+        let off = index.index_unchecked(&self.strides);
+        &mut *self.ptr.as_ptr().offset(off)
+    }}
 
     /// Swap elements at indices `index1` and `index2`.
     ///
@@ -968,16 +964,14 @@ impl<A, D: Dimension> ArrayRef<A, D>
     ///    for `Array` and `ArrayViewMut`, but not for `ArcArray` or `CowArray`.)
     pub unsafe fn uswap<I>(&mut self, index1: I, index2: I)
     where I: NdIndex<D>
-    {
-        unsafe {
-            // debug_assert!(self.data.is_unique());
-            arraytraits::debug_bounds_check(self, &index1);
-            arraytraits::debug_bounds_check(self, &index2);
-            let off1 = index1.index_unchecked(&self.strides);
-            let off2 = index2.index_unchecked(&self.strides);
-            std::ptr::swap(self.ptr.as_ptr().offset(off1), self.ptr.as_ptr().offset(off2));
-        }
-    }
+    { unsafe {
+        // debug_assert!(self.data.is_unique());
+        arraytraits::debug_bounds_check(self, &index1);
+        arraytraits::debug_bounds_check(self, &index2);
+        let off1 = index1.index_unchecked(&self.strides);
+        let off2 = index2.index_unchecked(&self.strides);
+        std::ptr::swap(self.ptr.as_ptr().offset(off1), self.ptr.as_ptr().offset(off2));
+    }}
 
     // `get` for zero-dimensional arrays
     // panics if dimension is not zero. otherwise an element is always present.
@@ -1766,9 +1760,9 @@ where
     #[inline]
     pub(crate) unsafe fn raw_view_mut_unchecked(&mut self) -> RawArrayViewMut<A, D>
     where S: DataOwned
-    {
-        unsafe { RawArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone()) }
-    }
+    { unsafe {
+        RawArrayViewMut::new(self.ptr, self.dim.clone(), self.strides.clone())
+    }}
 
     /// Return the array’s data as a slice, if it is contiguous and in standard order.
     /// Return `None` otherwise.
@@ -2448,21 +2442,21 @@ impl<A, D: Dimension> ArrayRef<A, D>
             self.view()
                 .into_dimensionality::<<D as DimMax<E>>::Output>()
                 .unwrap()
-        } else if let Some(view1) = self.broadcast(shape.clone()) {
+        } else { match self.broadcast(shape.clone()) { Some(view1) => {
             view1
-        } else {
+        } _ => {
             return Err(from_kind(ErrorKind::IncompatibleShape));
-        };
+        }}};
         let view2 = if shape.slice() == other.dim.slice() {
             other
                 .view()
                 .into_dimensionality::<<D as DimMax<E>>::Output>()
                 .unwrap()
-        } else if let Some(view2) = other.broadcast(shape.clone()) {
+        } else { match other.broadcast(shape) { Some(view2) => {
             view2
-        } else {
+        } _ => {
             return Err(from_kind(ErrorKind::IncompatibleShape));
-        };
+        }}};
         Ok((view1, view2))
     }
 }
@@ -3356,14 +3350,12 @@ impl<A, D: Dimension> ArrayRef<A, D>
 #[track_caller]
 #[inline]
 unsafe fn unlimited_transmute<A, B>(data: A) -> B
-{
-    unsafe {
-        // safe when sizes are equal and caller guarantees that representations are equal
-        assert_eq!(size_of::<A>(), size_of::<B>());
-        let old_data = ManuallyDrop::new(data);
-        (&*old_data as *const A as *const B).read()
-    }
-}
+{ unsafe {
+    // safe when sizes are equal and caller guarantees that representations are equal
+    assert_eq!(size_of::<A>(), size_of::<B>());
+    let old_data = ManuallyDrop::new(data);
+    (&*old_data as *const A as *const B).read()
+}}
 
 type DimMaxOf<A, B> = <A as DimMax<B>>::Output;
 

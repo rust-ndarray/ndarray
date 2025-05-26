@@ -237,7 +237,10 @@ where
             }
         };
 
-        ArrayBase::from_shape_vec(dim, data).map_err(|_| de::Error::custom("data and dimension must match in size"))
+        match ArrayBase::from_shape_vec(dim, data) {
+            Ok(array) => Ok(array),
+            _ => Err(de::Error::custom("data and dimension must match in size")),
+        }
     }
 
     fn visit_map<V>(self, mut visitor: V) -> Result<ArrayBase<S, Di>, V::Error>
