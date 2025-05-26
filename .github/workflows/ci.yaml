@@ -118,8 +118,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
-      - run: cargo tree -p blas-tests -i openblas-src -F blas-tests/openblas-system
-      - run: cargo tree -p blas-tests -i openblas-build -F blas-tests/openblas-system
       - run: ./scripts/blas-integ-tests.sh $BLAS_MSRV
 
   miri:
@@ -169,7 +167,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install cargo-careful
         run: cargo install cargo-careful
-      - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
+      - run: cargo careful nextest run -Zcareful-sanitizer --features="$FEATURES"
 
   docs:
     #if: ${{ github.event_name == 'merge_group' }}

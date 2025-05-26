@@ -12,23 +12,23 @@ QC_FEAT=--features=ndarray-rand/quickcheck
 cargo build -v --no-default-features
 
 # ndarray with no features
-cargo test -p ndarray -v --no-default-features
+cargo nextest run -p ndarray -v --no-default-features
 # ndarray with no_std-compatible features
-cargo test -p ndarray -v --no-default-features --features approx
+cargo nextest run -p ndarray -v --no-default-features --features approx
 # all with features
-cargo test -v --features "$FEATURES" $QC_FEAT
+cargo nextest run -v --features "$FEATURES" $QC_FEAT
 # all with features and release (ignore test crates which is already optimized)
-cargo test -v -p ndarray -p ndarray-rand --release --features "$FEATURES" $QC_FEAT --lib --tests
+cargo nextest run -v -p ndarray -p ndarray-rand --release --features "$FEATURES" $QC_FEAT --lib --tests
 
 # BLAS tests
-cargo test -p ndarray --lib -v --features blas
-cargo test -p blas-mock-tests -v
+cargo nextest run -p ndarray --lib -v --features blas
+cargo nextest run -p blas-mock-tests -v
 if [[ -z "${MSRV}" ]] && [ "$CHANNEL" != "$MSRV" ]; then
     ./scripts/blas-integ-tests.sh "$FEATURES" $CHANNEL
 fi
 
 # Examples
-cargo test --examples
+cargo nextest run --examples
 
 # Benchmarks
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")

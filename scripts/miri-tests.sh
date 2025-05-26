@@ -15,4 +15,4 @@ RUSTFLAGS="-Zrandomize-layout"
 
 # General tests
 # Note that we exclude blas feature because Miri can't do cblas_gemm
-cargo miri test -v -p ndarray -p ndarray-rand --features approx,serde
+cargo miri nextest run -v -p ndarray -p ndarray-rand --features approx,serde
