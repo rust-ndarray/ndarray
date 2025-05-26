@@ -16,7 +16,7 @@ pub(crate) fn nonnull_from_vec_data<T>(v: &mut Vec<T>) -> NonNull<T>
 /// but treat this as an unconditional conversion.
 #[inline]
 pub(crate) unsafe fn nonnull_debug_checked_from_ptr<T>(ptr: *mut T) -> NonNull<T>
-{ unsafe {
+{
     debug_assert!(!ptr.is_null());
     NonNull::new_unchecked(ptr)
-}}
+}

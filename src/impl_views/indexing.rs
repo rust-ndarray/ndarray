@@ -143,10 +143,10 @@ where
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     unsafe fn uget(self, index: I) -> &'a A
-    { unsafe {
+    {
         debug_bounds_check!(self, index);
         &*self.as_ptr().offset(index.index_unchecked(&self.strides))
-    }}
+    }
 }
 
 impl<'a, I, A, D> IndexLonger<I> for ArrayViewMut<'a, A, D>
@@ -209,10 +209,10 @@ where
     ///
     /// **Note:** only unchecked for non-debug builds of ndarray.
     unsafe fn uget(mut self, index: I) -> &'a mut A
-    { unsafe {
+    {
         debug_bounds_check!(self, index);
         &mut *self
             .as_mut_ptr()
             .offset(index.index_unchecked(&self.strides))
-    }}
+    }
 }

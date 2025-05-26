@@ -89,11 +89,11 @@ pub unsafe trait RawDataClone: RawData
 
     #[doc(hidden)]
     unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
-    { unsafe {
+    {
         let (data, ptr) = other.clone_with_ptr(ptr);
         *self = data;
         ptr
-    }}
+    }
 }
 
 /// Array representation trait.
@@ -388,7 +388,7 @@ unsafe impl<A> RawDataClone for OwnedRepr<A>
 where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    { unsafe {
+    {
         let mut u = self.clone();
         let mut new_ptr = u.as_nonnull_mut();
         if size_of::<A>() != 0 {
@@ -396,10 +396,10 @@ where A: Clone
             new_ptr = new_ptr.offset(our_off);
         }
         (u, new_ptr)
-    }}
+    }
 
     unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
-    { unsafe {
+    {
         let our_off = if size_of::<A>() != 0 {
             (ptr.as_ptr() as isize - other.as_ptr() as isize) / mem::size_of::<A>() as isize
         } else {
@@ -407,7 +407,7 @@ where A: Clone
         };
         self.clone_from(other);
         self.as_nonnull_mut().offset(our_off)
-    }}
+    }
 }
 
 unsafe impl<A> RawData for ViewRepr<&A>
@@ -622,7 +622,7 @@ unsafe impl<A> RawDataClone for CowRepr<'_, A>
 where A: Clone
 {
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>)
-    { unsafe {
+    {
         match self {
             CowRepr::View(view) => {
                 let (new_view, ptr) = view.clone_with_ptr(ptr);
@@ -633,10 +633,10 @@ where A: Clone
                 (CowRepr::Owned(new_data), ptr)
             }
         }
-    }}
+    }
 
     unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
-    { unsafe {
+    {
         match (&mut *self, other) {
             (CowRepr::View(self_), CowRepr::View(other)) => self_.clone_from_with_ptr(other, ptr),
             (CowRepr::Owned(self_), CowRepr::Owned(other)) => self_.clone_from_with_ptr(other, ptr),
@@ -651,7 +651,7 @@ where A: Clone
                 ptr
             }
         }
-    }}
+    }
 }
 
 unsafe impl<'a, A> Data for CowRepr<'a, A>
@@ -731,9 +731,9 @@ impl<A, B> RawDataSubst<B> for OwnedRepr<A>
     type Output = OwnedRepr<B>;
 
     unsafe fn data_subst(self) -> Self::Output
-    { unsafe {
+    {
         self.data_subst()
-    }}
+    }
 }
 
 impl<A, B> RawDataSubst<B> for OwnedArcRepr<A>
@@ -741,9 +741,9 @@ impl<A, B> RawDataSubst<B> for OwnedArcRepr<A>
     type Output = OwnedArcRepr<B>;
 
     unsafe fn data_subst(self) -> Self::Output
-    { unsafe {
+    {
         OwnedArcRepr(Arc::from_raw(Arc::into_raw(self.0) as *const OwnedRepr<B>))
-    }}
+    }
 }
 
 impl<A, B> RawDataSubst<B> for RawViewRepr<*const A>
@@ -791,10 +791,10 @@ impl<'a, A: 'a, B: 'a> RawDataSubst<B> for CowRepr<'a, A>
     type Output = CowRepr<'a, B>;
 
     unsafe fn data_subst(self) -> Self::Output
-    { unsafe {
+    {
         match self {
             CowRepr::View(view) => CowRepr::View(view.data_subst()),
             CowRepr::Owned(owned) => CowRepr::Owned(owned.data_subst()),
         }
-    }}
+    }
 }

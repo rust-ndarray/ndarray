@@ -317,7 +317,7 @@ mod tests
     fn test_indices_iter_c_fold()
     {
         macro_rules! run_test {
-            ($dim:expr_2021) => {
+            ($dim:expr) => {
                 for num_consume in 0..3 {
                     let mut it = indices($dim).into_iter();
                     for _ in 0..num_consume {

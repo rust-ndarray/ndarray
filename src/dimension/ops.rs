@@ -8,7 +8,7 @@ pub trait DimAdd<D: Dimension>
 }
 
 macro_rules! impl_dimadd_const_out_const {
-    ($lhs:expr_2021, $rhs:expr_2021) => {
+    ($lhs:expr, $rhs:expr) => {
         impl DimAdd<Dim<[usize; $rhs]>> for Dim<[usize; $lhs]> {
             type Output = Dim<[usize; $lhs + $rhs]>;
         }
@@ -16,12 +16,12 @@ macro_rules! impl_dimadd_const_out_const {
 }
 
 macro_rules! impl_dimadd_const_out_dyn {
-    ($lhs:expr_2021, IxDyn) => {
+    ($lhs:expr, IxDyn) => {
         impl DimAdd<IxDyn> for Dim<[usize; $lhs]> {
             type Output = IxDyn;
         }
     };
-    ($lhs:expr_2021, $rhs:expr_2021) => {
+    ($lhs:expr, $rhs:expr) => {
         impl DimAdd<Dim<[usize; $rhs]>> for Dim<[usize; $lhs]> {
             type Output = IxDyn;
         }

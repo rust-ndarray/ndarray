@@ -192,16 +192,16 @@ impl<'a, A, D: Dimension> NdProducer for AxisWindows<'a, A, D>
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item
-    { unsafe {
+    {
         ArrayView::new_(ptr, self.window.clone(), self.strides.clone())
-    }}
+    }
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
-    { unsafe {
+    {
         let mut d = D::zeros(self.base.ndim());
         d[self.axis_idx] = i[0];
         self.base.uget_ptr(&d)
-    }}
+    }
 
     fn stride_of(&self, axis: Axis) -> isize
     {

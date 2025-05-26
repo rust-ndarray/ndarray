@@ -181,7 +181,7 @@ where D: Dimension
     /// original array that we borrow from in an inconsistent state. This is not allowed
     /// when using the resulting array view.
     pub(crate) unsafe fn into_maybe_uninit(self) -> ArrayViewMut<'a, MaybeUninit<A>, D>
-    { unsafe {
+    {
         // Safe because: A and MaybeUninit<A> have the same representation;
         // and we can go from initialized to (maybe) not unconditionally in terms of
         // representation. However, the user must be careful to not write uninit elements
@@ -189,7 +189,7 @@ where D: Dimension
         self.into_raw_view_mut()
             .cast::<MaybeUninit<A>>()
             .deref_into_view_mut()
-    }}
+    }
 }
 
 /// Private raw array view methods

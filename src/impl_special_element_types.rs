@@ -33,7 +33,7 @@ where
     /// array's storage; it is for example possible to slice these in place, but that must
     /// only be done after all elements have been initialized.
     pub unsafe fn assume_init(self) -> ArrayBase<<S as RawDataSubst<A>>::Output, D>
-    { unsafe {
+    {
         let ArrayBase {
             data,
             layout: LayoutRef { ptr, dim, strides },
@@ -43,5 +43,5 @@ where
         let data = S::data_subst(data);
         let ptr = ptr.cast::<A>();
         ArrayBase::from_data_ptr(data, ptr).with_strides_dim(strides, dim)
-    }}
+    }
 }

@@ -177,10 +177,10 @@ where
 /// ```
 #[macro_export]
 macro_rules! stack {
-    ($axis:expr_2021, $( $array:expr_2021 ),+ ,) => {
+    ($axis:expr, $( $array:expr ),+ ,) => {
         $crate::stack!($axis, $($array),+)
     };
-    ($axis:expr_2021, $( $array:expr_2021 ),+ ) => {
+    ($axis:expr, $( $array:expr ),+ ) => {
         $crate::stack($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
     };
 }
@@ -217,10 +217,10 @@ macro_rules! stack {
 /// ```
 #[macro_export]
 macro_rules! concatenate {
-    ($axis:expr_2021, $( $array:expr_2021 ),+ ,) => {
+    ($axis:expr, $( $array:expr ),+ ,) => {
         $crate::concatenate!($axis, $($array),+)
     };
-    ($axis:expr_2021, $( $array:expr_2021 ),+ ) => {
+    ($axis:expr, $( $array:expr ),+ ) => {
         $crate::concatenate($axis, &[ $($crate::ArrayView::from(&$array) ),* ]).unwrap()
     };
 }

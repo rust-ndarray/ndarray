@@ -795,7 +795,7 @@ fn bench_col_iter(bench: &mut test::Bencher)
 }
 
 macro_rules! mat_mul {
-    ($modname:ident, $ty:ident, $(($name:ident, $m:expr_2021, $n:expr_2021, $k:expr_2021))+) => {
+    ($modname:ident, $ty:ident, $(($name:ident, $m:expr, $n:expr, $k:expr))+) => {
         mod $modname {
             use test::{black_box, Bencher};
             use ndarray::Array;
