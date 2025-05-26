@@ -17,15 +17,15 @@ where D: Dimension
     /// meet all of the invariants of the `ArrayBase` type.
     #[inline]
     pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self
-    {
+    { unsafe {
         RawArrayView::from_data_ptr(RawViewRepr::new(), ptr).with_strides_dim(strides, dim)
-    }
+    }}
 
     #[inline]
     unsafe fn new_(ptr: *const A, dim: D, strides: D) -> Self
-    {
+    { unsafe {
         Self::new(nonnull_debug_checked_from_ptr(ptr as *mut A), dim, strides)
-    }
+    }}
 
     /// Create an `RawArrayView<A, D>` from shape information and a raw pointer
     /// to the elements.
@@ -70,7 +70,7 @@ where D: Dimension
     #[inline]
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *const A) -> Self
     where Sh: Into<StrideShape<D>>
-    {
+    { unsafe {
         let shape = shape.into();
         let dim = shape.dim;
         if cfg!(debug_assertions) {
@@ -84,7 +84,7 @@ where D: Dimension
         }
         let strides = shape.strides.strides_for_dim(&dim);
         RawArrayView::new_(ptr, dim, strides)
-    }
+    }}
 
     /// Converts to a read-only view of the array.
     ///
@@ -96,13 +96,13 @@ where D: Dimension
     /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D>
-    {
+    { unsafe {
         debug_assert!(
             is_aligned(self.layout.ptr.as_ptr()),
             "The pointer must be aligned."
         );
         ArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides)
-    }
+    }}
 
     /// Split the array view along `axis` and return one array pointer strictly
     /// before the split and one array pointer after the split.
@@ -233,15 +233,15 @@ where D: Dimension
     /// meet all of the invariants of the `ArrayBase` type.
     #[inline]
     pub(crate) unsafe fn new(ptr: NonNull<A>, dim: D, strides: D) -> Self
-    {
+    { unsafe {
         RawArrayViewMut::from_data_ptr(RawViewRepr::new(), ptr).with_strides_dim(strides, dim)
-    }
+    }}
 
     #[inline]
     unsafe fn new_(ptr: *mut A, dim: D, strides: D) -> Self
-    {
+    { unsafe {
         Self::new(nonnull_debug_checked_from_ptr(ptr), dim, strides)
-    }
+    }}
 
     /// Create an `RawArrayViewMut<A, D>` from shape information and a raw
     /// pointer to the elements.
@@ -286,7 +286,7 @@ where D: Dimension
     #[inline]
     pub unsafe fn from_shape_ptr<Sh>(shape: Sh, ptr: *mut A) -> Self
     where Sh: Into<StrideShape<D>>
-    {
+    { unsafe {
         let shape = shape.into();
         let dim = shape.dim;
         if cfg!(debug_assertions) {
@@ -302,7 +302,7 @@ where D: Dimension
         }
         let strides = shape.strides.strides_for_dim(&dim);
         RawArrayViewMut::new_(ptr, dim, strides)
-    }
+    }}
 
     /// Converts to a non-mutable `RawArrayView`.
     #[inline]
@@ -321,13 +321,13 @@ where D: Dimension
     /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view<'a>(self) -> ArrayView<'a, A, D>
-    {
+    { unsafe {
         debug_assert!(
             is_aligned(self.layout.ptr.as_ptr()),
             "The pointer must be aligned."
         );
         ArrayView::new(self.layout.ptr, self.layout.dim, self.layout.strides)
-    }
+    }}
 
     /// Converts to a mutable view of the array.
     ///
@@ -339,13 +339,13 @@ where D: Dimension
     /// correct lifetime.
     #[inline]
     pub unsafe fn deref_into_view_mut<'a>(self) -> ArrayViewMut<'a, A, D>
-    {
+    { unsafe {
         debug_assert!(
             is_aligned(self.layout.ptr.as_ptr()),
             "The pointer must be aligned."
         );
         ArrayViewMut::new(self.layout.ptr, self.layout.dim, self.layout.strides)
-    }
+    }}
 
     /// Split the array view along `axis` and return one array pointer strictly
     /// before the split and one array pointer after the split.

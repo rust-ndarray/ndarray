@@ -27,7 +27,7 @@ pub use self::ndproducer::{IntoNdProducer, NdProducer, Offset};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
-    ($e:expr) => {
+    ($e:expr_2021) => {
         match $e {
             FoldWhile::Continue(x) => x,
             x => return x,
@@ -347,13 +347,15 @@ where D: Dimension
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple,
     {
-        let mut i = 0;
-        while i < len {
-            let p = ptr.stride_offset(strides, i);
-            acc = fold_while!(function(acc, self.parts.as_ref(p)));
-            i += 1;
+        unsafe {
+            let mut i = 0;
+            while i < len {
+                let p = ptr.stride_offset(strides, i);
+                acc = fold_while!(function(acc, self.parts.as_ref(p)));
+                i += 1;
+            }
+            FoldWhile::Continue(acc)
         }
-        FoldWhile::Continue(acc)
     }
 
     fn for_each_core_strided<F, Acc>(&mut self, acc: Acc, function: F) -> FoldWhile<Acc>
@@ -477,7 +479,7 @@ impl<T> OffsetTuple for *mut T
     type Args = isize;
     unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self
     {
-        self.offset(index as isize * stride)
+        unsafe { self.offset(index as isize * stride) }
     }
 }
 
@@ -487,11 +489,11 @@ macro_rules! offset_impl {
         #[allow(non_snake_case)]
         impl<$($param: Offset),*> OffsetTuple for ($($param, )*) {
             type Args = ($($param::Stride,)*);
-            unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self {
+            unsafe fn stride_offset(self, stride: Self::Args, index: usize) -> Self { unsafe {
                 let ($($param, )*) = self;
                 let ($($q, )*) = stride;
                 ($(Offset::stride_offset($param, $q, index),)*)
-            }
+            }}
         }
         )+
     };
@@ -530,16 +532,16 @@ macro_rules! zipt_impl {
                 let ($(ref $p,)*) = *self;
                 ($($p.as_ptr(), )*)
             }
-            unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item {
+            unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item { unsafe {
                 let ($(ref $q ,)*) = *self;
                 let ($($p,)*) = ptr;
                 ($($q.as_ref($p),)*)
-            }
+            }}
 
-            unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr {
+            unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr { unsafe {
                 let ($(ref $p,)*) = *self;
                 ($($p.uget_ptr(i), )*)
-            }
+            }}
 
             fn split_at(self, axis: Axis, index: Ix) -> (Self, Self) {
                 let ($($p,)*) = self;
@@ -834,7 +836,7 @@ macro_rules! map_impl {
                 /// before the array the raw view points to realizes its ownership.
                 pub(crate) unsafe fn collect_with_partial<F>(self, mut f: F) -> Partial<R>
                     where F: FnMut($($p::Item,)* ) -> R
-                {
+                { unsafe {
                     // Get the last producer; and make a Partial that aliases its data pointer
                     let (.., ref output) = &self.parts;
 
@@ -863,7 +865,7 @@ macro_rules! map_impl {
                     });
 
                     partial
-                }
+                }}
             }
         );
 

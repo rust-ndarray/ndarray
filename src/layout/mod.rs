@@ -93,7 +93,7 @@ mod tests
     type M0 = Array0<f32>;
 
     macro_rules! assert_layouts {
-        ($mat:expr, $($layout:ident),*) => {{
+        ($mat:expr_2021, $($layout:ident),*) => {{
             let layout = $mat.view().layout();
             $(
             assert!(layout.is(Layout::$layout),
@@ -105,7 +105,7 @@ mod tests
     }
 
     macro_rules! assert_not_layouts {
-        ($mat:expr, $($layout:ident),*) => {{
+        ($mat:expr_2021, $($layout:ident),*) => {{
             let layout = $mat.view().layout();
             $(
             assert!(!layout.is(Layout::$layout),

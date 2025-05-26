@@ -169,17 +169,17 @@ macro_rules! impl_scalar_op {
 }
 
 macro_rules! add {
-    ($x:expr, $y:expr) => {
+    ($x:expr_2021, $y:expr_2021) => {
         $x += $y;
     };
 }
 macro_rules! sub {
-    ($x:expr, $y:expr) => {
+    ($x:expr_2021, $y:expr_2021) => {
         $x -= $y;
     };
 }
 macro_rules! mul {
-    ($x:expr, $y:expr) => {
+    ($x:expr_2021, $y:expr_2021) => {
         $x *= $y;
     };
 }

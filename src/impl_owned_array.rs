@@ -870,7 +870,7 @@ where D: Dimension
 pub(crate) unsafe fn drop_unreachable_raw<A, D>(
     mut self_: RawArrayViewMut<A, D>, data_ptr: NonNull<A>, data_len: usize,
 ) where D: Dimension
-{
+{ unsafe {
     let self_len = self_.len();
 
     for i in 0..self_.ndim() {
@@ -935,7 +935,7 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
 
     assert_eq!(data_len, dropped_elements + self_len,
                "Internal error: inconsistency in move_into");
-}
+}}
 
 /// Sort axes to standard order, i.e Axis(0) has biggest stride and Axis(n - 1) least stride
 ///

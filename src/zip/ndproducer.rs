@@ -109,9 +109,9 @@ impl<T> Offset for *const T
 {
     type Stride = isize;
     unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self
-    {
+    { unsafe {
         self.offset(s * (index as isize))
-    }
+    }}
     private_impl! {}
 }
 
@@ -119,9 +119,9 @@ impl<T> Offset for *mut T
 {
     type Stride = isize;
     unsafe fn stride_offset(self, s: Self::Stride, index: usize) -> Self
-    {
+    { unsafe {
         self.offset(s * (index as isize))
-    }
+    }}
     private_impl! {}
 }
 
@@ -287,14 +287,14 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item
-    {
+    { unsafe {
         &*ptr
-    }
+    }}
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
-    {
+    { unsafe {
         self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
-    }
+    }}
 
     fn stride_of(&self, axis: Axis) -> isize
     {
@@ -343,14 +343,14 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
     }
 
     unsafe fn as_ref(&self, ptr: *mut A) -> Self::Item
-    {
+    { unsafe {
         &mut *ptr
-    }
+    }}
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
-    {
+    { unsafe {
         self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
-    }
+    }}
 
     fn stride_of(&self, axis: Axis) -> isize
     {
@@ -404,12 +404,12 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
     }
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *const A
-    {
+    { unsafe {
         self.layout
             .ptr
             .as_ptr()
             .offset(i.index_unchecked(&self.layout.strides))
-    }
+    }}
 
     fn stride_of(&self, axis: Axis) -> isize
     {
@@ -463,12 +463,12 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
     }
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
-    {
+    { unsafe {
         self.layout
             .ptr
             .as_ptr()
             .offset(i.index_unchecked(&self.layout.strides))
-    }
+    }}
 
     fn stride_of(&self, axis: Axis) -> isize
     {

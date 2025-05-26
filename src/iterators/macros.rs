@@ -53,7 +53,7 @@ macro_rules! impl_ndproducer {
         )*
 
         unsafe fn item(&$self_:ident, $ptr:pat) {
-            $refexpr:expr
+            $refexpr:expr_2021
         }
     }) => {
 impl<$($typarm)*> NdProducer for $fulltype {
@@ -79,13 +79,13 @@ impl<$($typarm)*> NdProducer for $fulltype {
         self.$base.contiguous_stride()
     }
 
-    unsafe fn as_ref(&$self_, $ptr: *mut A) -> Self::Item {
+    unsafe fn as_ref(&$self_, $ptr: *mut A) -> Self::Item { unsafe {
         $refexpr
-    }
+    }}
 
-    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A {
+    unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A { unsafe {
         self.$base.uget_ptr(i) as *mut _
-    }
+    }}
 
     fn stride_of(&self, axis: Axis) -> isize {
         self.$base.stride_of(axis)
@@ -140,7 +140,7 @@ macro_rules! impl_iterator {
         type Item = $ity:ty;
 
         fn item(&mut $self_:ident, $elt:pat) {
-            $refexpr:expr
+            $refexpr:expr_2021
         }
     }) => {
          expand_if!(@nonempty [$($cloneparm)*]

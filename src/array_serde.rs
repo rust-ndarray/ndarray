@@ -237,10 +237,9 @@ where
             }
         };
 
-        if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
-            Ok(array)
-        } else {
-            Err(de::Error::custom("data and dimension must match in size"))
+        match ArrayBase::from_shape_vec(dim, data) {
+            Ok(array) => Ok(array),
+            _ => Err(de::Error::custom("data and dimension must match in size")),
         }
     }
 
@@ -282,10 +281,6 @@ where
             None => return Err(de::Error::missing_field("dim")),
         };
 
-        if let Ok(array) = ArrayBase::from_shape_vec(dim, data) {
-            Ok(array)
-        } else {
-            Err(de::Error::custom("data and dimension must match in size"))
-        }
+        ArrayBase::from_shape_vec(dim, data).map_err(|_| de::Error::custom("data and dimension must match in size"))
     }
 }

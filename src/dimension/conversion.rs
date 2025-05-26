@@ -106,13 +106,13 @@ macro_rules! tuple_type {
 }
 
 macro_rules! tuple_expr {
-    ([$self_:expr] $($index:tt)*) => (
+    ([$self_:expr_2021] $($index:tt)*) => (
         ( $($self_[$index], )* )
     );
 }
 
 macro_rules! array_expr {
-    ([$self_:expr] $($index:tt)*) => (
+    ([$self_:expr_2021] $($index:tt)*) => (
         [$($self_ . $index, )*]
     );
 }

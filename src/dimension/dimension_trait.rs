@@ -402,7 +402,7 @@ pub trait Dimension:
 // Dimension impls
 
 macro_rules! impl_insert_axis_array(
-    ($n:expr) => (
+    ($n:expr_2021) => (
         #[inline]
         fn insert_axis(&self, axis: Axis) -> Self::Larger {
             debug_assert!(axis.index() <= $n);
@@ -878,7 +878,7 @@ impl Dimension for Dim<[Ix; 3]>
         let mut stride = *self;
         let mut order = Ix3(0, 1, 2);
         macro_rules! swap {
-            ($stride:expr, $order:expr, $x:expr, $y:expr) => {
+            ($stride:expr_2021, $order:expr_2021, $x:expr_2021, $y:expr_2021) => {
                 if ($stride[$x] as isize).abs() > ($stride[$y] as isize).abs() {
                     $stride.swap($x, $y);
                     $order.ixm().swap($x, $y);
@@ -904,7 +904,7 @@ impl Dimension for Dim<[Ix; 3]>
 }
 
 macro_rules! large_dim {
-    ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
+    ($n:expr_2021, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
             const NDIM: Option<usize> = Some($n);
             type Pattern = $pattern;

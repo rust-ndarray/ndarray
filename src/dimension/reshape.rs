@@ -151,13 +151,13 @@ fn test_reshape()
     use crate::Dim;
 
     macro_rules! test_reshape {
-        (fail $order:ident from $from:expr, $stride:expr, to $to:expr) => {
+        (fail $order:ident from $from:expr_2021, $stride:expr_2021, to $to:expr_2021) => {
             let res = reshape_dim(&Dim($from), &Dim($stride), &Dim($to), Order::$order);
             println!("Reshape {:?} {:?} to {:?}, order {:?}\n  => {:?}",
                      $from, $stride, $to, Order::$order, res);
             let _res = res.expect_err("Expected failed reshape");
         };
-        (ok $order:ident from $from:expr, $stride:expr, to $to:expr, $to_stride:expr) => {{
+        (ok $order:ident from $from:expr_2021, $stride:expr_2021, to $to:expr_2021, $to_stride:expr_2021) => {{
             let res = reshape_dim(&Dim($from), &Dim($stride), &Dim($to), Order::$order);
             println!("Reshape {:?} {:?} to {:?}, order {:?}\n  => {:?}",
                      $from, $stride, $to, Order::$order, res);

@@ -669,7 +669,7 @@ where A: LinalgScalar
 unsafe fn general_mat_vec_mul_impl<A>(
     alpha: A, a: &ArrayRef2<A>, x: &ArrayRef1<A>, beta: A, y: RawArrayViewMut<A, Ix1>,
 ) where A: LinalgScalar
-{
+{ unsafe {
     let ((m, k), k2) = (a.dim(), x.dim());
     let m2 = y.dim();
     if k != k2 || m != m2 {
@@ -737,7 +737,7 @@ unsafe fn general_mat_vec_mul_impl<A>(
             });
         }
     }
-}
+}}
 
 /// Kronecker product of 2D matrices.
 ///

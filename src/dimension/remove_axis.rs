@@ -43,7 +43,7 @@ impl RemoveAxis for Dim<[Ix; 2]>
 }
 
 macro_rules! impl_remove_axis_array(
-    ($($n:expr),*) => (
+    ($($n:expr_2021),*) => (
     $(
         impl RemoveAxis for Dim<[Ix; $n]>
         {
