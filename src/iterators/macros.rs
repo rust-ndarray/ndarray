@@ -53,7 +53,7 @@ macro_rules! impl_ndproducer {
         )*
 
         unsafe fn item(&$self_:ident, $ptr:pat) {
-            $refexpr:expr
+            $refexpr:expr_2021
         }
     }) => {
 impl<$($typarm)*> NdProducer for $fulltype {
@@ -140,7 +140,7 @@ macro_rules! impl_iterator {
         type Item = $ity:ty;
 
         fn item(&mut $self_:ident, $elt:pat) {
-            $refexpr:expr
+            $refexpr:expr_2021
         }
     }) => {
          expand_if!(@nonempty [$($cloneparm)*]

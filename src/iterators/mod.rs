@@ -267,7 +267,7 @@ where D: Dimension
 }
 
 macro_rules! either {
-    ($value:expr, $inner:pat => $result:expr) => {
+    ($value:expr_2021, $inner:pat => $result:expr_2021) => {
         match $value {
             ElementsRepr::Slice($inner) => $result,
             ElementsRepr::Counted($inner) => $result,
@@ -276,7 +276,7 @@ macro_rules! either {
 }
 
 macro_rules! either_mut {
-    ($value:expr, $inner:ident => $result:expr) => {
+    ($value:expr_2021, $inner:ident => $result:expr_2021) => {
         match $value {
             ElementsRepr::Slice(ref mut $inner) => $result,
             ElementsRepr::Counted(ref mut $inner) => $result,
@@ -888,18 +888,16 @@ impl<A, D: Dimension> AxisIterCore<A, D>
 
     #[inline]
     unsafe fn offset(&self, index: usize) -> *mut A
-    {
-        unsafe {
-            debug_assert!(
+    { unsafe {
+        debug_assert!(
             index < self.end,
             "index={}, end={}, stride={}",
             index,
             self.end,
             self.stride
         );
-            self.ptr.offset(index as isize * self.stride)
-        }
-    }
+        self.ptr.offset(index as isize * self.stride)
+    }}
 
     /// Splits the iterator at `index`, yielding two disjoint iterators.
     ///
@@ -1223,14 +1221,14 @@ impl<A, D: Dimension> NdProducer for AxisIter<'_, A, D>
     }
 
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item
-    {
-        unsafe { ArrayView::new_(ptr, self.iter.inner_dim.clone(), self.iter.inner_strides.clone()) }
-    }
+    { unsafe {
+        ArrayView::new_(ptr, self.iter.inner_dim.clone(), self.iter.inner_strides.clone())
+    }}
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr
-    {
-        unsafe { self.iter.offset(self.iter.index + i[0]) }
-    }
+    { unsafe {
+        self.iter.offset(self.iter.index + i[0])
+    }}
 
     fn stride_of(&self, _axis: Axis) -> isize
     {
@@ -1282,14 +1280,14 @@ impl<A, D: Dimension> NdProducer for AxisIterMut<'_, A, D>
     }
 
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item
-    {
-        unsafe { ArrayViewMut::new_(ptr, self.iter.inner_dim.clone(), self.iter.inner_strides.clone()) }
-    }
+    { unsafe {
+        ArrayViewMut::new_(ptr, self.iter.inner_dim.clone(), self.iter.inner_strides.clone())
+    }}
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr
-    {
-        unsafe { self.iter.offset(self.iter.index + i[0]) }
-    }
+    { unsafe {
+        self.iter.offset(self.iter.index + i[0])
+    }}
 
     fn stride_of(&self, _axis: Axis) -> isize
     {

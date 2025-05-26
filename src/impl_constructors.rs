@@ -271,7 +271,7 @@ macro_rules! size_of_shape_checked_unwrap {
 
 #[cfg(debug_assertions)]
 macro_rules! size_of_shape_checked_unwrap {
-    ($dim:expr) => {
+    ($dim:expr_2021) => {
         match dimension::size_of_shape_checked($dim) {
             Ok(sz) => sz,
             Err(_) => panic!(
@@ -504,25 +504,21 @@ where
     ///    indices.
     pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
     where Sh: Into<StrideShape<D>>
-    {
-        unsafe {
-            let shape = shape.into();
-            let dim = shape.dim;
-            let strides = shape.strides.strides_for_dim(&dim);
-            Self::from_vec_dim_stride_unchecked(dim, strides, v)
-        }
-    }
+    { unsafe {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides.strides_for_dim(&dim);
+        Self::from_vec_dim_stride_unchecked(dim, strides, v)
+    }}
 
     unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self
-    {
-        unsafe {
-            // debug check for issues that indicates wrong use of this constructor
-            debug_assert!(dimension::can_index_slice(&v, &dim, &strides, CanIndexCheckMode::OwnedMutable).is_ok());
+    { unsafe {
+        // debug check for issues that indicates wrong use of this constructor
+        debug_assert!(dimension::can_index_slice(&v, &dim, &strides, CanIndexCheckMode::OwnedMutable).is_ok());
 
-            let ptr = nonnull_from_vec_data(&mut v).add(offset_from_low_addr_ptr_to_logical_ptr(&dim, &strides));
-            ArrayBase::from_data_ptr(DataOwned::new(v), ptr).with_strides_dim(strides, dim)
-        }
-    }
+        let ptr = nonnull_from_vec_data(&mut v).add(offset_from_low_addr_ptr_to_logical_ptr(&dim, &strides));
+        ArrayBase::from_data_ptr(DataOwned::new(v), ptr).with_strides_dim(strides, dim)
+    }}
 
     /// Creates an array from an iterator, mapped by `map` and interpret it according to the
     /// provided shape and strides.
@@ -535,15 +531,13 @@ where
         Sh: Into<StrideShape<D>>,
         I: TrustedIterator + ExactSizeIterator,
         F: FnMut(I::Item) -> A,
-    {
-        unsafe {
-            let shape = shape.into();
-            let dim = shape.dim;
-            let strides = shape.strides.strides_for_dim(&dim);
-            let v = to_vec_mapped(iter, map);
-            Self::from_vec_dim_stride_unchecked(dim, strides, v)
-        }
-    }
+    { unsafe {
+        let shape = shape.into();
+        let dim = shape.dim;
+        let strides = shape.strides.strides_for_dim(&dim);
+        let v = to_vec_mapped(iter, map);
+        Self::from_vec_dim_stride_unchecked(dim, strides, v)
+    }}
 
     /// Create an array with uninitialized elements, shape `shape`.
     ///

@@ -27,7 +27,7 @@ pub use self::ndproducer::{IntoNdProducer, NdProducer, Offset};
 
 /// Return if the expression is a break value.
 macro_rules! fold_while {
-    ($e:expr) => {
+    ($e:expr_2021) => {
         match $e {
             FoldWhile::Continue(x) => x,
             x => return x,

@@ -17,13 +17,13 @@ use num_complex::Complex;
 use std::convert::TryFrom;
 
 macro_rules! assert_panics {
-    ($body:expr) => {
+    ($body:expr_2021) => {
         if let Ok(v) = ::std::panic::catch_unwind(|| $body) {
             panic!("assertion failed: should_panic; \
             non-panicking result: {:?}", v);
         }
     };
-    ($body:expr, $($arg:tt)*) => {
+    ($body:expr_2021, $($arg:tt)*) => {
         if let Ok(_) = ::std::panic::catch_unwind(|| $body) {
             panic!($($arg)*);
         }
@@ -412,7 +412,7 @@ fn test_slice_collapse_with_newaxis()
 fn test_multislice()
 {
     macro_rules! do_test {
-        ($arr:expr, $($s:expr),*) => {
+        ($arr:expr_2021, $($s:expr_2021),*) => {
             {
                 let arr = $arr;
                 let copy = arr.clone();
@@ -784,7 +784,7 @@ fn diag()
 fn merge_axes()
 {
     macro_rules! assert_merged {
-        ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
+        ($arr:expr_2021, $slice:expr_2021, $take:expr_2021, $into:expr_2021) => {
             let mut v = $arr.slice($slice);
             let merged_len = v.len_of(Axis($take)) * v.len_of(Axis($into));
             assert!(v.merge_axes(Axis($take), Axis($into)));
@@ -793,7 +793,7 @@ fn merge_axes()
         };
     }
     macro_rules! assert_not_merged {
-        ($arr:expr, $slice:expr, $take:expr, $into:expr) => {
+        ($arr:expr_2021, $slice:expr_2021, $take:expr_2021, $into:expr_2021) => {
             let mut v = $arr.slice($slice);
             let old_dim = v.raw_dim();
             let old_strides = v.strides().to_owned();
@@ -1298,7 +1298,7 @@ fn owned_array_discontiguous_drop()
 }
 
 macro_rules! assert_matches {
-    ($value:expr, $pat:pat) => {
+    ($value:expr_2021, $pat:pat) => {
         match $value {
             $pat => {}
             ref err => panic!(

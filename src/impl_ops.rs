@@ -51,7 +51,7 @@ impl ScalarOperand for Complex<f32> {}
 impl ScalarOperand for Complex<f64> {}
 
 macro_rules! impl_binary_op(
-    ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr) => (
+    ($trt:ident, $operator:tt, $mth:ident, $iop:tt, $doc:expr_2021) => (
 /// Perform elementwise
 #[doc=$doc]
 /// between `self` and `rhs`,
@@ -337,10 +337,10 @@ impl<'a, A, D, B> $trt<B> for &'a ArrayRef<A, D>
 
 // Pick the expression $a for commutative and $b for ordered binop
 macro_rules! if_commutative {
-    (Commute { $a:expr } or { $b:expr }) => {
+    (Commute { $a:expr_2021 } or { $b:expr_2021 }) => {
         $a
     };
-    (Ordered { $a:expr } or { $b:expr }) => {
+    (Ordered { $a:expr_2021 } or { $b:expr_2021 }) => {
         $b
     };
 }
@@ -348,7 +348,7 @@ macro_rules! if_commutative {
 macro_rules! impl_scalar_lhs_op {
     // $commutative flag. Reuse the self + scalar impl if we can.
     // We can do this safely since these are the primitive numeric types
-    ($scalar:ty, $commutative:ident, $operator:tt, $trt:ident, $mth:ident, $doc:expr) => (
+    ($scalar:ty, $commutative:ident, $operator:tt, $trt:ident, $mth:ident, $doc:expr_2021) => (
 // these have no doc -- they are not visible in rustdoc
 // Perform elementwise
 // between the scalar `self` and array `rhs`,
@@ -595,7 +595,7 @@ mod assign_ops
     use crate::imp_prelude::*;
 
     macro_rules! impl_assign_op {
-        ($trt:ident, $method:ident, $doc:expr) => {
+        ($trt:ident, $method:ident, $doc:expr_2021) => {
             use std::ops::$trt;
 
             #[doc=$doc]
