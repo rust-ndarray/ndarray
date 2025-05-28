@@ -2,10 +2,10 @@
 
 #[cfg(feature = "std")]
 use num_traits::Float;
+#[cfg(feature = "std")]
 use std::borrow::Borrow;
 
 use crate::imp_prelude::*;
-use crate::IntoNdProducer;
 
 #[cfg(feature = "std")]
 macro_rules! boolean_ops {
@@ -58,7 +58,7 @@ macro_rules! binary_ops_array {
         $($(#[$meta])*
         #[must_use = "method returns a new array and does not mutate the original value"]
         pub fn $fn_name<P>(&self, rhs: P) -> Array<A, D>
-        where P: IntoNdProducer<Dim = D, Item: Borrow<$ty>> {
+        where P: $crate::IntoNdProducer<Dim = D, Item: Borrow<$ty>> {
             $crate::Zip::from(self).and(rhs).map_collect(|a, b| A::$fn_use(*a, *b.borrow()))
         })+
     };
