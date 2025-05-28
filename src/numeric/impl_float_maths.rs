@@ -58,7 +58,7 @@ macro_rules! binary_ops_array {
         $($(#[$meta])*
         #[must_use = "method returns a new array and does not mutate the original value"]
         pub fn $fn_name<P>(&self, rhs: P) -> Array<A, D>
-        where P: $crate::IntoNdProducer<Dim = D, Item: Borrow<$ty>> {
+        where P: $crate::IntoNdProducer<Dim = D>, <P as $crate::IntoNdProducer>::Item: Borrow<$ty> {
             $crate::Zip::from(self).and(rhs).map_collect(|a, b| A::$fn_use(*a, *b.borrow()))
         })+
     };
