@@ -269,7 +269,7 @@ fn can_index_slice_impl<D: Dimension>(
 ) -> Result<(), ShapeError>
 {
     // Check condition 3.
-    let is_empty = dim.slice().iter().any(|&d| d == 0);
+    let is_empty = dim.slice().contains(&0);
     if is_empty && max_offset > data_len {
         return Err(from_kind(ErrorKind::OutOfBounds));
     }

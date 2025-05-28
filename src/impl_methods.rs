@@ -208,7 +208,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// memory layout. Otherwise, the layout of the output array is unspecified.
     /// If you need a particular layout, you can allocate a new array with the
     /// desired memory layout and [`.assign()`](Self::assign) the data.
-    /// Alternatively, you can collectan iterator, like this for a result in
+    /// Alternatively, you can collect an iterator, like this for a result in
     /// standard layout:
     ///
     /// ```
@@ -463,7 +463,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     pub fn iter(&self) -> Iter<'_, A, D>
     {
         // debug_assert!(self.pointer_is_inbounds());
-        self.view().into_iter_()
+        self.view().into_iter()
     }
 
     /// Return an iterator of mutable references to the elements of the array.
@@ -474,7 +474,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// Iterator element type is `&mut A`.
     pub fn iter_mut(&mut self) -> IterMut<'_, A, D>
     {
-        self.view_mut().into_iter_()
+        self.view_mut().into_iter()
     }
 
     /// Return an iterator of indexes and references to the elements of the array.
@@ -1290,7 +1290,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     pub fn outer_iter_mut(&mut self) -> AxisIterMut<'_, A, D::Smaller>
     where D: RemoveAxis
     {
-        self.view_mut().into_outer_iter()
+        self.view_mut().into_outer_iter_mut()
     }
 
     /// Return an iterator that traverses over `axis`
@@ -1517,6 +1517,17 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// ```
     pub fn axis_windows(&self, axis: Axis, window_size: usize) -> AxisWindows<'_, A, D>
     {
+        self.axis_windows_with_stride(axis, window_size, 1)
+    }
+
+    /// Returns a producer which traverses over windows of a given length and
+    /// stride along an axis.
+    ///
+    /// Note that a calling this method with a stride of 1 is equivalent to
+    /// calling [`ArrayRef::axis_windows()`].
+    pub fn axis_windows_with_stride(&self, axis: Axis, window_size: usize, stride_size: usize)
+        -> AxisWindows<'_, A, D>
+    {
         let axis_index = axis.index();
 
         ndassert!(
@@ -1527,7 +1538,12 @@ impl<A, D: Dimension> ArrayRef<A, D>
             self.shape()
         );
 
-        AxisWindows::new(self.view(), axis, window_size)
+        ndassert!(
+            stride_size >0,
+            "Stride size must be greater than zero"
+        );
+
+        AxisWindows::new_with_stride(self.view(), axis, window_size, stride_size)
     }
 
     /// Return a view of the diagonal elements of the array.
@@ -2338,7 +2354,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// The implementation creates a view with strides set to zero for the
     /// axes that are to be repeated.
     ///
-    /// The broadcasting documentation for Numpy has more information.
+    /// The broadcasting documentation for NumPy has more information.
     ///
     /// ```
     /// use ndarray::{aview1, aview2};
@@ -2526,6 +2542,72 @@ where
         unsafe { self.with_strides_dim(new_strides, new_dim) }
     }
 
+    /// Permute the axes in-place.
+    ///
+    /// This does not move any data, it just adjusts the array's dimensions
+    /// and strides.
+    ///
+    /// *i* in the *j*-th place in the axes sequence means `self`'s *i*-th axis
+    /// becomes `self`'s *j*-th axis
+    ///
+    /// **Panics** if any of the axes are out of bounds, if an axis is missing,
+    /// or if an axis is repeated more than once.    
+    ///
+    /// # Example
+    /// ```rust
+    /// use ndarray::{arr2, Array3};
+    ///
+    /// let mut a = arr2(&[[0, 1], [2, 3]]);
+    /// a.permute_axes([1, 0]);
+    /// assert_eq!(a, arr2(&[[0, 2], [1, 3]]));
+    ///
+    /// let mut b = Array3::<u8>::zeros((1, 2, 3));
+    /// b.permute_axes([1, 0, 2]);
+    /// assert_eq!(b.shape(), &[2, 1, 3]);
+    /// ```
+    #[track_caller]
+    pub fn permute_axes<T>(&mut self, axes: T)
+    where T: IntoDimension<Dim = D>
+    {
+        let axes = axes.into_dimension();
+        // Ensure that each axis is used exactly once.
+        let mut usage_counts = D::zeros(self.ndim());
+        for axis in axes.slice() {
+            usage_counts[*axis] += 1;
+        }
+        for count in usage_counts.slice() {
+            assert_eq!(*count, 1, "each axis must be listed exactly once");
+        }
+
+        let dim = self.layout.dim.slice_mut();
+        let strides = self.layout.strides.slice_mut();
+        let axes = axes.slice();
+
+        // The cycle detection is done using a bitmask to track visited positions.
+        // For example, axes from [0,1,2] to [2, 0, 1]
+        // For axis values [1, 0, 2]:
+        // 1 << 1  // 0b0001 << 1 = 0b0010 (decimal 2)
+        // 1 << 0  // 0b0001 << 0 = 0b0001 (decimal 1)
+        // 1 << 2  // 0b0001 << 2 = 0b0100 (decimal 4)
+        //
+        // Each axis gets its own unique bit position in the bitmask:
+        // - Axis 0: bit 0 (rightmost)
+        // - Axis 1: bit 1
+        // - Axis 2: bit 2
+        //
+        let mut visited = 0usize;
+        for (new_axis, &axis) in axes.iter().enumerate() {
+            if (visited & (1 << axis)) != 0 {
+                continue;
+            }
+
+            dim.swap(axis, new_axis);
+            strides.swap(axis, new_axis);
+
+            visited |= (1 << axis) | (1 << new_axis);
+        }
+    }
+
     /// Transpose the array by reversing axes.
     ///
     /// Transposition reverses the order of the axes (dimensions and strides)
@@ -2535,6 +2617,16 @@ where
         self.layout.dim.slice_mut().reverse();
         self.layout.strides.slice_mut().reverse();
         self
+    }
+
+    /// Reverse the axes of the array in-place.
+    ///
+    /// This does not move any data, it just adjusts the array's dimensions
+    /// and strides.
+    pub fn reverse_axes(&mut self)
+    {
+        self.layout.dim.slice_mut().reverse();
+        self.layout.strides.slice_mut().reverse();
     }
 }
 
@@ -2690,7 +2782,7 @@ where
 
 impl<A, D: Dimension> ArrayRef<A, D>
 {
-    /// Perform an elementwise assigment to `self` from `rhs`.
+    /// Perform an elementwise assignment to `self` from `rhs`.
     ///
     /// If their shapes disagree, `rhs` is broadcast to the shape of `self`.
     ///
@@ -2702,7 +2794,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         self.zip_mut_with(rhs, |x, y| x.clone_from(y));
     }
 
-    /// Perform an elementwise assigment of values cloned from `self` into array or producer `to`.
+    /// Perform an elementwise assignment of values cloned from `self` into array or producer `to`.
     ///
     /// The destination `to` can be another array or a producer of assignable elements.
     /// [`AssignElem`] determines how elements are assigned.
@@ -2718,7 +2810,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         Zip::from(self).map_assign_into(to, A::clone);
     }
 
-    /// Perform an elementwise assigment to `self` from element `x`.
+    /// Perform an elementwise assignment to `self` from element `x`.
     pub fn fill(&mut self, x: A)
     where A: Clone
     {
@@ -3087,13 +3179,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
             Zip::from(self.lanes_mut(axis)).map_collect(mapping)
         }
     }
-}
 
-impl<A, S, D> ArrayBase<S, D>
-where
-    S: DataOwned<Elem = A> + DataMut,
-    D: Dimension,
-{
     /// Remove the `index`th elements along `axis` and shift down elements from higher indexes.
     ///
     /// Note that this "removes" the elements by swapping them around to the end of the axis and
@@ -3212,7 +3298,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         let mut result = self.to_owned();
 
         // Return early if the array has zero-length dimensions
-        if self.shape().iter().any(|s| *s == 0) {
+        if result.shape().contains(&0) {
             return result;
         }
 

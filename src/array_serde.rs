@@ -18,7 +18,7 @@ use std::marker::PhantomData;
 use crate::imp_prelude::*;
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
-use super::Iter;
+use crate::iterators::Iter;
 use crate::IntoDimension;
 
 /// Verifies that the version of the deserialized array matches the current

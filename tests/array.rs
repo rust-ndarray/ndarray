@@ -2828,3 +2828,81 @@ fn test_slice_assign()
     *a.slice_mut(s![1..3]) += 1;
     assert_eq!(a, array![0, 2, 3, 3, 4]);
 }
+
+#[test]
+fn reverse_axes()
+{
+    let mut a = arr2(&[[1, 2], [3, 4]]);
+    a.reverse_axes();
+    assert_eq!(a, arr2(&[[1, 3], [2, 4]]));
+
+    let mut a = arr2(&[[1, 2, 3], [4, 5, 6]]);
+    a.reverse_axes();
+    assert_eq!(a, arr2(&[[1, 4], [2, 5], [3, 6]]));
+
+    let mut a = Array::from_iter(0..24)
+        .into_shape_with_order((2, 3, 4))
+        .unwrap();
+    let original = a.clone();
+    a.reverse_axes();
+    for ((i0, i1, i2), elem) in original.indexed_iter() {
+        assert_eq!(*elem, a[(i2, i1, i0)]);
+    }
+}
+
+#[test]
+fn permute_axes()
+{
+    let mut a = arr2(&[[1, 2], [3, 4]]);
+    a.permute_axes([1, 0]);
+    assert_eq!(a, arr2(&[[1, 3], [2, 4]]));
+
+    let mut a = Array::from_iter(0..24)
+        .into_shape_with_order((2, 3, 4))
+        .unwrap();
+    let original = a.clone();
+    a.permute_axes([2, 1, 0]);
+    for ((i0, i1, i2), elem) in original.indexed_iter() {
+        assert_eq!(*elem, a[(i2, i1, i0)]);
+    }
+
+    let mut a = Array::from_iter(0..120)
+        .into_shape_with_order((2, 3, 4, 5))
+        .unwrap();
+    let original = a.clone();
+    a.permute_axes([1, 0, 3, 2]);
+    for ((i0, i1, i2, i3), elem) in original.indexed_iter() {
+        assert_eq!(*elem, a[(i1, i0, i3, i2)]);
+    }
+}
+
+#[should_panic]
+#[test]
+fn permute_axes_repeated_axis()
+{
+    let mut a = Array::from_iter(0..24)
+        .into_shape_with_order((2, 3, 4))
+        .unwrap();
+    a.permute_axes([1, 0, 1]);
+}
+
+#[should_panic]
+#[test]
+fn permute_axes_missing_axis()
+{
+    let mut a = Array::from_iter(0..24)
+        .into_shape_with_order((2, 3, 4))
+        .unwrap()
+        .into_dyn();
+    a.permute_axes(&[2, 0][..]);
+}
+
+#[should_panic]
+#[test]
+fn permute_axes_oob()
+{
+    let mut a = Array::from_iter(0..24)
+        .into_shape_with_order((2, 3, 4))
+        .unwrap();
+    a.permute_axes([1, 0, 3]);
+}
