@@ -175,7 +175,9 @@ where
         fn atan2(A)
     }
     binary_ops_array! {
-        /// Integer power of each element.
+        /// Integer power of each element
+        ///
+        /// This function is generally faster than using float power.
         fn powi(i32) as powi_all
         /// Float power of each element.
         fn powf(A) as powf_all
