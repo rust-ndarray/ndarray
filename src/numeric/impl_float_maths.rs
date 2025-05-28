@@ -2,8 +2,10 @@
 
 #[cfg(feature = "std")]
 use num_traits::Float;
+use std::borrow::Borrow;
 
 use crate::imp_prelude::*;
+use crate::IntoNdProducer;
 
 #[cfg(feature = "std")]
 macro_rules! boolean_ops {
@@ -46,6 +48,18 @@ macro_rules! binary_ops {
         #[must_use = "method returns a new array and does not mutate the original value"]
         pub fn $id(&self, rhs: $ty) -> Array<A, D> {
             self.mapv(|v| A::$id(v, rhs))
+        })+
+    };
+}
+
+#[cfg(feature = "std")]
+macro_rules! binary_ops_array {
+    ($($(#[$meta:meta])* fn $fn_use:ident($ty:ty) as $fn_name:ident)+) => {
+        $($(#[$meta])*
+        #[must_use = "method returns a new array and does not mutate the original value"]
+        pub fn $fn_name<P>(&self, rhs: P) -> Array<A, D>
+        where P: IntoNdProducer<Dim = D, Item: Borrow<$ty>> {
+            $crate::Zip::from(self).and(rhs).map_collect(|a, b| A::$fn_use(*a, *b.borrow()))
         })+
     };
 }
@@ -157,6 +171,22 @@ where
         fn abs_sub(A)
         /// Length of the hypotenuse of a right-angle triangle of each element
         fn hypot(A)
+        /// Four quadrant arctangent of each element in radians.
+        fn atan2(A)
+    }
+    binary_ops_array! {
+        /// Integer power of each element.
+        fn powi(i32) as powi_all
+        /// Float power of each element.
+        fn powf(A) as powf_all
+        /// Logarithm of each element with respect to an arbitrary base.
+        fn log(A) as log_all
+        /// The positive difference between given number and each element.
+        fn abs_sub(A) as abs_sub_all
+        /// Length of the hypotenuse of a right-angle triangle of each element
+        fn hypot(A) as hypot_all
+        /// Four quadrant arctangent of each element in radians.
+        fn atan2(A) as atan2_all
     }
 
     /// Square (two powers) of each element.
