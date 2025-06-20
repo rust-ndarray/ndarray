@@ -175,6 +175,8 @@ mod itertools;
 mod argument_traits;
 #[cfg(feature = "serde")]
 mod array_serde;
+#[cfg(feature = "bincode")]
+mod array_bincode;
 mod arrayformat;
 mod arraytraits;
 pub use crate::argument_traits::AssignElem;
