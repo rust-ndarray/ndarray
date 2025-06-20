@@ -432,8 +432,8 @@ where
 {
 }
 
-#[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+#[cfg(any(feature = "serde", feature = "bincode"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "serde", feature = "bincode"))))]
 // Use version number so we can add a packed format later.
 pub const ARRAY_FORMAT_VERSION: u8 = 1u8;
 
