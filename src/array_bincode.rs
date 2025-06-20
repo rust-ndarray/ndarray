@@ -12,24 +12,12 @@ use bincode::{
     BorrowDecode, Decode, Encode,
 };
 
-use alloc::format;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::{imp_prelude::*, IxDynImpl, ShapeError};
 
 use super::arraytraits::ARRAY_FORMAT_VERSION;
-
-/// Verifies that the version of the deserialized array matches the current
-/// `ARRAY_FORMAT_VERSION`.
-pub fn verify_version(v: u8) -> Result<(), DecodeError> {
-    if v != ARRAY_FORMAT_VERSION {
-        let err_msg = format!("unknown array version: {}", v);
-        Err(DecodeError::OtherString(err_msg))
-    } else {
-        Ok(())
-    }
-}
 
 /// **Requires crate feature `"bincode"`**
 impl<I> Encode for Dim<I>
