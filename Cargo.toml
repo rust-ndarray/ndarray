@@ -4,7 +4,10 @@ name = "ndarray"
 version = "0.16.1"
 edition = "2021"
 rust-version = "1.64"
-authors = ["Ulrik Sverdrup \"bluss\"", "Jim Turner"]
+authors = [
+  "Ulrik Sverdrup \"bluss\"",
+  "Jim Turner"
+]
 license = "MIT OR Apache-2.0"
 readme = "README-crates.io.md"
 
@@ -36,19 +39,10 @@ rayon = { version = "1.10.0", optional = true }
 cblas-sys = { workspace = true, optional = true }
 libc = { version = "0.2.82", optional = true }
 
-matrixmultiply = { version = "0.3.2", default-features = false, features = [
-    "cgemm",
-] }
+matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm"] }
 
-serde = { version = "1.0", optional = true, default-features = false, features = [
-    "alloc",
-] }
+serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
-
-bincode = { version = "2.0", optional = true, default-features = false, features = [
-    "alloc",
-    "derive",
-] }
 
 [dev-dependencies]
 defmac = "0.2"
@@ -66,8 +60,6 @@ blas = ["dep:cblas-sys", "dep:libc"]
 
 serde = ["dep:serde"]
 
-bincode = ["dep:bincode"]
-
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["dep:rayon", "std"]
 
@@ -78,10 +70,13 @@ portable-atomic-critical-section = ["portable-atomic/critical-section"]
 
 [target.'cfg(not(target_has_atomic = "ptr"))'.dependencies]
 portable-atomic = { version = "1.6.0" }
-portable-atomic-util = { version = "0.2.0", features = ["alloc"] }
+portable-atomic-util = { version = "0.2.0", features = [ "alloc" ] }
 
 [workspace]
-members = ["ndarray-rand", "crates/*"]
+members = [
+    "ndarray-rand",
+    "crates/*",
+]
 default-members = [
     ".",
     "ndarray-rand",
@@ -103,9 +98,7 @@ approx = { version = "0.5", default-features = false }
 quickcheck = { version = "1.0", default-features = false }
 rand = { version = "0.9.0", features = ["small_rng"] }
 rand_distr = { version = "0.5.0" }
-itertools = { version = "0.13.0", default-features = false, features = [
-    "use_std",
-] }
+itertools = { version = "0.13.0", default-features = false, features = ["use_std"] }
 cblas-sys = { version = "0.1.4", default-features = false }
 
 [profile.bench]
