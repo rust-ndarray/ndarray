@@ -35,7 +35,7 @@ where
     I: Decode<Context>,
 {
     fn decode<D: Decoder<Context = Context>>(decoder: &mut D) -> Result<Self, DecodeError> {
-        Ok(Dim::new(Decode::decode(decoder)?))
+        Decode::decode(decoder).map(Dim::new)
     }
 }
 
@@ -45,7 +45,7 @@ where
     I: BorrowDecode<'de, Context>,
 {
     fn borrow_decode<D: BorrowDecoder<'de, Context = Context>>(decoder: &mut D) -> Result<Self, DecodeError> {
-        Ok(Dim::new(BorrowDecode::borrow_decode(decoder)?))
+        BorrowDecode::borrow_decode(decoder).map(Dim::new)
     }
 }
 
@@ -54,10 +54,8 @@ impl Encode for IxDyn {
     fn encode<E: bincode::enc::Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
         let ix: &IxDynImpl = self.ix();
         Encode::encode(&ix.len(), encoder)?;
-        for ix in ix.into_iter() {
-            Encode::encode(ix, encoder)?;
-        }
-        Ok(())
+        ix.into_iter()
+            .try_for_each(|ix| Encode::encode(ix, encoder))
     }
 }
 
@@ -65,10 +63,10 @@ impl Encode for IxDyn {
 impl<Context> Decode<Context> for IxDynImpl {
     fn decode<D: Decoder<Context = Context>>(decoder: &mut D) -> Result<Self, DecodeError> {
         let len: usize = Decode::decode(decoder)?;
-        let vals = (0..len)
+        (0..len)
             .map(|_| Decode::decode(decoder))
-            .collect::<Result<Vec<_>, DecodeError>>()?;
-        Ok(IxDynImpl::from(vals))
+            .collect::<Result<Vec<_>, DecodeError>>()
+            .map(IxDynImpl::from)
     }
 }
 
@@ -76,10 +74,10 @@ impl<Context> Decode<Context> for IxDynImpl {
 impl<'de, Context> bincode::BorrowDecode<'de, Context> for IxDynImpl {
     fn borrow_decode<D: BorrowDecoder<'de, Context = Context>>(decoder: &mut D) -> Result<Self, DecodeError> {
         let len: usize = BorrowDecode::borrow_decode(decoder)?;
-        let vals = (0..len)
+        (0..len)
             .map(|_| BorrowDecode::borrow_decode(decoder))
-            .collect::<Result<Vec<_>, DecodeError>>()?;
-        Ok(IxDynImpl::from(vals))
+            .collect::<Result<Vec<_>, DecodeError>>()
+            .map(IxDynImpl::from)
     }
 }
 
@@ -95,10 +93,8 @@ where
         Encode::encode(&self.raw_dim(), encoder)?;
         let iter = self.iter();
         Encode::encode(&iter.len(), encoder)?;
-        for elt in iter.clone() {
-            Encode::encode(elt, encoder)?;
-        }
-        Ok(())
+        iter.into_iter()
+            .try_for_each(|elt| Encode::encode(elt, encoder))
     }
 }
 
@@ -116,7 +112,7 @@ where
             .ok_or(DecodeError::Other("ARRAY_FORMAT_VERSION not match!"))?;
         let dim: D = Decode::decode(decoder)?;
         let data_len: usize = Decode::decode(decoder)?;
-        let data = (0..data_len)
+        let data: Vec<_> = (0..data_len)
             .map(|_| Decode::decode(decoder))
             .collect::<Result<Vec<_>, DecodeError>>()?;
         let expected_size = dim.size();
