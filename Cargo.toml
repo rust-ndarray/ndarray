@@ -62,6 +62,8 @@ blas = ["dep:cblas-sys", "dep:libc"]
 
 serde = ["dep:serde"]
 
+bincode = ["dep:bincode"]
+
 std = ["num-traits/std", "matrixmultiply/std"]
 rayon = ["dep:rayon", "std"]
 
