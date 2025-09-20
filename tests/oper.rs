@@ -1,7 +1,6 @@
 #![allow(
     clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
 )]
-#![cfg(feature = "std")]
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::kron;
 use ndarray::prelude::*;
@@ -133,7 +132,7 @@ where
 #[test]
 fn dot_product()
 {
-    let a = Array::range(0., 69., 1.);
+    let a = Array::from_iter((0..69).map(|x| x as f32));
     let b = &a * 2. - 7.;
     let dot = 197846.;
     assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
@@ -172,7 +171,7 @@ fn dot_product()
 #[test]
 fn dot_product_0()
 {
-    let a = Array::range(0., 69., 1.);
+    let a = Array::from_iter((0..69).map(|x| x as f32));
     let x = 1.5;
     let b = aview0(&x);
     let b = b.broadcast(a.dim()).unwrap();
@@ -194,7 +193,7 @@ fn dot_product_0()
 fn dot_product_neg_stride()
 {
     // test that we can dot with negative stride
-    let a = Array::range(0., 69., 1.);
+    let a = Array::from_iter((0..69).map(|x| x as f32));
     let b = &a * 2. - 7.;
     for stride in -10..0 {
         // both negative
@@ -213,7 +212,7 @@ fn dot_product_neg_stride()
 #[test]
 fn fold_and_sum()
 {
-    let a = Array::linspace(0., 127., 128)
+    let a = Array::from_iter((0..128).map(|x| x as f32))
         .into_shape_with_order((8, 16))
         .unwrap();
     assert_abs_diff_eq!(a.fold(0., |acc, &x| acc + x), a.sum(), epsilon = 1e-5);
@@ -255,7 +254,8 @@ fn fold_and_sum()
 #[test]
 fn product()
 {
-    let a = Array::linspace(0.5, 2., 128)
+    let step = (2. - 0.5) / 127.;
+    let a = Array::from_iter((0..128).map(|i| 0.5 + step * (i as f64)))
         .into_shape_with_order((8, 16))
         .unwrap();
     assert_abs_diff_eq!(a.fold(1., |acc, &x| acc * x), a.product(), epsilon = 1e-5);

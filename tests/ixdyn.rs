@@ -163,12 +163,11 @@ fn test_0_add_broad()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn test_into_dimension()
 {
     use ndarray::{Ix0, Ix1, Ix2, IxDyn};
 
-    let a = Array::linspace(0., 41., 6 * 7)
+    let a = Array::from_iter(0..42)
         .into_shape_with_order((6, 7))
         .unwrap();
     let a2 = a.clone().into_shape_with_order(IxDyn(&[6, 7])).unwrap();

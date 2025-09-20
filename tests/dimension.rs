@@ -324,7 +324,6 @@ fn test_array_view()
 
 #[test]
 #[cfg_attr(miri, ignore)] // Very slow on CI/CD machines
-#[cfg(feature = "std")]
 #[allow(clippy::cognitive_complexity)]
 fn test_all_ndindex()
 {
@@ -334,7 +333,7 @@ fn test_all_ndindex()
         for &rev in &[false, true] {
             // rev is for C / F order
             let size = $($i *)* 1;
-            let mut a = Array::linspace(0., (size - 1) as f64, size);
+            let mut a = Array::from_iter(0..size);
             if rev {
                 a = a.reversed_axes();
             }

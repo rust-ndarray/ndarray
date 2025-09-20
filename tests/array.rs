@@ -68,17 +68,16 @@ fn arrayviewmut_shrink_lifetime<'a, 'b: 'a>(view: ArrayViewMut1<'b, f64>) -> Arr
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn test_mat_mul()
 {
     // smoke test, a big matrix multiplication of uneven size
     let (n, m) = (45, 33);
-    let a = ArcArray::linspace(0., ((n * m) - 1) as f32, n as usize * m as usize)
+    let a = Array::from_iter(0..(n * m))
         .into_shape_with_order((n, m))
         .unwrap();
-    let b = ArcArray::eye(m);
+    let b = Array::eye(m);
     assert_eq!(a.dot(&b), a);
-    let c = ArcArray::eye(n);
+    let c = Array::eye(n);
     assert_eq!(c.dot(&a), a);
 }
 
@@ -692,21 +691,20 @@ fn test_cow_shrink()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn test_sub()
 {
-    let mat = ArcArray::linspace(0., 15., 16)
+    let mat = Array::from_iter(0..16)
         .into_shape_with_order((2, 4, 2))
         .unwrap();
     let s1 = mat.index_axis(Axis(0), 0);
     let s2 = mat.index_axis(Axis(0), 1);
     assert_eq!(s1.shape(), &[4, 2]);
     assert_eq!(s2.shape(), &[4, 2]);
-    let n = ArcArray::linspace(8., 15., 8)
+    let n = Array::from_iter(8..16)
         .into_shape_with_order((4, 2))
         .unwrap();
     assert_eq!(n, s2);
-    let m = ArcArray::from(vec![2., 3., 10., 11.])
+    let m = Array::from(vec![2, 3, 10, 11])
         .into_shape_with_order((2, 2))
         .unwrap();
     assert_eq!(m, mat.index_axis(Axis(1), 1));
@@ -714,10 +712,9 @@ fn test_sub()
 
 #[should_panic]
 #[test]
-#[cfg(feature = "std")]
 fn test_sub_oob_1()
 {
-    let mat = ArcArray::linspace(0., 15., 16)
+    let mat = Array::from_iter(0..16)
         .into_shape_with_order((2, 4, 2))
         .unwrap();
     mat.index_axis(Axis(0), 2);
@@ -1845,7 +1842,6 @@ fn scalar_ops()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn split_at()
 {
     let mut a = arr2(&[[1., 2.], [3., 4.]]);
@@ -1864,7 +1860,7 @@ fn split_at()
     }
     assert_eq!(a, arr2(&[[1., 5.], [8., 4.]]));
 
-    let b = ArcArray::linspace(0., 59., 60)
+    let b = ArcArray::from_iter(0..60)
         .into_shape_with_order((3, 4, 5))
         .unwrap();
 
@@ -1874,9 +1870,9 @@ fn split_at()
     assert_eq!(
         left,
         arr3(&[
-            [[0., 1.], [5., 6.], [10., 11.], [15., 16.]],
-            [[20., 21.], [25., 26.], [30., 31.], [35., 36.]],
-            [[40., 41.], [45., 46.], [50., 51.], [55., 56.]]
+            [[0, 1], [5, 6], [10, 11], [15, 16]],
+            [[20, 21], [25, 26], [30, 31], [35, 36]],
+            [[40, 41], [45, 46], [50, 51], [55, 56]]
         ])
     );
 
