@@ -101,6 +101,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
       - run: ./scripts/all-tests.sh "$FEATURES" ${{ matrix.rust }}
@@ -116,10 +117,9 @@ jobs:
           toolchain: ${{ needs.pass-msrv.outputs.BLAS_MSRV }}
       - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
-      - run: cargo tree -p blas-tests -i openblas-src -F blas-tests/openblas-system
-      - run: cargo tree -p blas-tests -i openblas-build -F blas-tests/openblas-system
       - run: ./scripts/blas-integ-tests.sh $BLAS_MSRV
 
   miri:
@@ -131,6 +131,7 @@ jobs:
         with:
           components: miri
       - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest
       - run: ./scripts/miri-tests.sh
 
   cross_test:
@@ -167,9 +168,10 @@ jobs:
         with:
           toolchain: nightly
       - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest
       - name: Install cargo-careful
         run: cargo install cargo-careful
-      - run: cargo careful test -Zcareful-sanitizer --features="$FEATURES"
+      - run: cargo careful nextest run -Zcareful-sanitizer --features="$FEATURES"
 
   docs:
     #if: ${{ github.event_name == 'merge_group' }}
