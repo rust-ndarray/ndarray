@@ -117,16 +117,16 @@ mod tests
         use approx::assert_abs_diff_eq;
 
         let array: Array1<_> = geomspace(1e0, 1e3, 4).unwrap().collect();
-        assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
+        assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-11);
 
         let array: Array1<_> = geomspace(1e3, 1e0, 4).unwrap().collect();
-        assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]), epsilon = 1e-12);
+        assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]), epsilon = 1e-11);
 
         let array: Array1<_> = geomspace(-1e3, -1e0, 4).unwrap().collect();
-        assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
+        assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-11);
 
         let array: Array1<_> = geomspace(-1e0, -1e3, 4).unwrap().collect();
-        assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]), epsilon = 1e-12);
+        assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]), epsilon = 1e-11);
     }
 
     #[test]

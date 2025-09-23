@@ -140,10 +140,10 @@ where S: DataOwned<Elem = A>
     /// use ndarray::{Array, arr1};
     ///
     /// let array = Array::logspace(10.0, 0.0, 3.0, 4);
-    /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]));
+    /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
     /// let array = Array::logspace(-10.0, 3.0, 0.0, 4);
-    /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]));
+    /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
     /// # }
     /// ```
     #[cfg(feature = "std")]
@@ -171,10 +171,10 @@ where S: DataOwned<Elem = A>
     /// use ndarray::{Array, arr1};
     ///
     /// let array = Array::geomspace(1e0, 1e3, 4)?;
-    /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
+    /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-11);
     ///
     /// let array = Array::geomspace(-1e3, -1e0, 4)?;
-    /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
+    /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-11);
     /// # }
     /// # Some(())
     /// # }

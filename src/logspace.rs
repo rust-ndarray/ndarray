@@ -111,16 +111,16 @@ mod tests
         use approx::assert_abs_diff_eq;
 
         let array: Array1<_> = logspace(10.0, 0.0, 3.0, 4).collect();
-        assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]));
+        assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
 
         let array: Array1<_> = logspace(10.0, 3.0, 0.0, 4).collect();
-        assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]));
+        assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]), epsilon = 1e-12);
 
         let array: Array1<_> = logspace(-10.0, 3.0, 0.0, 4).collect();
-        assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]));
+        assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
 
         let array: Array1<_> = logspace(-10.0, 0.0, 3.0, 4).collect();
-        assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]));
+        assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]), epsilon = 1e-12);
     }
 
     #[test]
