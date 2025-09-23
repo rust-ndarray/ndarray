@@ -1435,7 +1435,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// The windows are all distinct overlapping views of size `window_size`
     /// that fit into the array's shape.
     ///
-    /// This is essentially equivalent to [`.windows_with_stride()`] with unit stride.
+    /// This is essentially equivalent to [`ArrayRef::windows_with_stride()`] with unit stride.
     #[track_caller]
     pub fn windows<E>(&self, window_size: E) -> Windows<'_, A, D>
     where E: IntoDimension<Dim = D>
@@ -2170,7 +2170,7 @@ where
     /// **Panics** if shapes are incompatible.
     ///
     /// *This method is obsolete, because it is inflexible in how logical order
-    /// of the array is handled. See [`.to_shape()`].*
+    /// of the array is handled. See [`ArrayRef::to_shape()`].*
     ///
     /// ```
     /// use ndarray::{rcarr1, rcarr2};
