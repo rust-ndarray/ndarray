@@ -34,6 +34,13 @@ where
     Ok(out)
 }
 
+/// A trait to specify when one dimension is strictly larger than another.
+///
+/// Broadcasting two arrays together frequently requires typing the resultant
+/// array has having a dimensionality equal to the maximum of the two input arrays.
+/// This trait is what determines that typing.
+///
+/// For example, `Ix1: DimMax<Ix0>`, but not vice-versa.
 pub trait DimMax<Other: Dimension>
 {
     /// The resulting dimension type after broadcasting.

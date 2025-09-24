@@ -164,6 +164,9 @@ pub trait Dot<Rhs>
     /// For two-dimensional arrays: a rectangular array.
     type Output;
 
+    /// Compute the dot product of two arrays.
+    ///
+    /// **Panics** if the arrays' shapes are not compatible.
     fn dot(&self, rhs: &Rhs) -> Self::Output;
 }
 

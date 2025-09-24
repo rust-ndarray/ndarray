@@ -96,12 +96,22 @@ impl<D> Strides<D>
 /// `Array::from_shape_vec`.
 pub trait ShapeBuilder
 {
+    /// The type that captures the built shape's dimensionality.
     type Dim: Dimension;
+
+    /// The type that captures the built shape's stride pattern.
     type Strides;
 
+    /// Turn into a contiguous-element [`Shape`].
     fn into_shape_with_order(self) -> Shape<Self::Dim>;
+
+    /// Convert into a Fortran-order (a.k.a., column-order) [`Shape`].
     fn f(self) -> Shape<Self::Dim>;
+
+    /// Set the order of the shape to either Fortran or non-Fortran.
     fn set_f(self, is_f: bool) -> Shape<Self::Dim>;
+
+    /// Set the strides of the shape.
     fn strides(self, strides: Self::Strides) -> StrideShape<Self::Dim>;
 }
 
@@ -213,7 +223,10 @@ where D: Dimension
 /// See for example [`.to_shape()`](crate::ArrayRef::to_shape).
 pub trait ShapeArg
 {
+    /// The type that captures the shape's dimensionality.
     type Dim: Dimension;
+
+    /// Convert the argument into a shape and an [`Order`].
     fn into_shape_and_order(self) -> (Self::Dim, Option<Order>);
 }
 

@@ -16,6 +16,7 @@ pub trait IntoNdProducer
     type Item;
     /// Dimension type of the producer
     type Dim: Dimension;
+    /// The concrete type of the producer
     type Output: NdProducer<Dim = Self::Dim, Item = Self::Item>;
     /// Convert the value into an `NdProducer`.
     fn into_producer(self) -> Self::Output;

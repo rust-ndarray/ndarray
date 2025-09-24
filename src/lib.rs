@@ -22,6 +22,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 // Enable the doc_cfg nightly feature for including feature gate flags in the documentation
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(missing_docs)]
 
 //! The `ndarray` crate provides an *n*-dimensional container for general elements
 //! and for numerics.
