@@ -22,15 +22,14 @@ macro_rules! assert_panics {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn double_ended()
 {
-    let a = ArcArray::linspace(0., 7., 8);
+    let a = Array::from_iter(0..8);
     let mut it = a.iter().cloned();
-    assert_eq!(it.next(), Some(0.));
-    assert_eq!(it.next_back(), Some(7.));
-    assert_eq!(it.next(), Some(1.));
-    assert_eq!(it.rev().last(), Some(2.));
+    assert_eq!(it.next(), Some(0));
+    assert_eq!(it.next_back(), Some(7));
+    assert_eq!(it.next(), Some(1));
+    assert_eq!(it.rev().last(), Some(2));
     assert_equal(aview1(&[1, 2, 3]), &[1, 2, 3]);
     assert_equal(aview1(&[1, 2, 3]).into_iter().rev(), [1, 2, 3].iter().rev());
 }
@@ -82,7 +81,7 @@ fn iter_size_hint()
 #[cfg(feature = "std")]
 fn indexed()
 {
-    let a = ArcArray::linspace(0., 7., 8);
+    let a = Array::from_iter(0..8);
     for (i, elt) in a.indexed_iter() {
         assert_eq!(i, *elt as usize);
     }
@@ -100,7 +99,6 @@ fn indexed()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn as_slice()
 {
     use ndarray::Data;
@@ -118,7 +116,7 @@ fn as_slice()
         assert_equal(v.iter(), slc);
     }
 
-    let a = ArcArray::linspace(0., 7., 8);
+    let a = Array::from_iter(0..8);
     let a = a.into_shape_with_order((2, 4, 1)).unwrap();
 
     assert_slice_correct(&a);
@@ -546,7 +544,6 @@ fn axis_iter_mut_zip_partially_consumed_discontiguous()
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn axis_chunks_iter_corner_cases()
 {
     // examples provided by @bluss in PR #65
@@ -554,7 +551,7 @@ fn axis_chunks_iter_corner_cases()
     // and enable checking if no pointer offsetting is out of bounds. However
     // checking the absence of of out of bounds offsetting cannot (?) be
     // done automatically, so one has to launch this test in a debugger.
-    let a = ArcArray::<f32, _>::linspace(0., 7., 8)
+    let a = Array::from_iter(0..8)
         .into_shape_with_order((8, 1))
         .unwrap();
     let it = a.axis_chunks_iter(Axis(0), 4);
@@ -564,9 +561,9 @@ fn axis_chunks_iter_corner_cases()
     assert_equal(it, vec![a.view()]);
     let it = a.axis_chunks_iter(Axis(0), 3);
     assert_equal(it, vec![
-            array![[7.], [6.], [5.]],
-            array![[4.], [3.], [2.]],
-            array![[1.], [0.]],
+            array![[7], [6], [5]],
+            array![[4], [3], [2]],
+            array![[1], [0]],
         ]);
 
     let b = ArcArray::<f32, _>::zeros((8, 2));
