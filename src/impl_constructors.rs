@@ -337,6 +337,20 @@ where
 
     /// Create an array with zeros, shape `shape`.
     ///
+    /// The element type is inferred; to control it, you can either specify
+    /// type of the returned array or use turbofish syntax in the function call:
+    /// ```
+    /// use ndarray::{Array1, Array2};
+    ///
+    /// // Specify f32
+    /// let arr_f32: Array1<f32> = Array1::zeros(3);
+    /// assert_eq!(arr_f32, [0_f32, 0, 0]);
+    ///
+    /// // Specify i64
+    /// let arr_i64 = Array2::<i64>::zeros((2, 2));
+    /// assert_eq!(arr_i64, [[0_i64, 0], [0, 0]]);
+    /// ```
+    ///
     /// **Panics** if the product of non-zero axis lengths overflows `isize`.
     pub fn zeros<Sh>(shape: Sh) -> Self
     where
