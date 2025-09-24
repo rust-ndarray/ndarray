@@ -42,7 +42,10 @@ macro_rules! index_item {
 /// Argument conversion a dimension.
 pub trait IntoDimension
 {
+    /// The concrete type of the resultant dimension.
     type Dim: Dimension;
+
+    /// Convert into a type that implements [`Dimension`].
     fn into_dimension(self) -> Self::Dim;
 }
 

@@ -14,6 +14,7 @@ use crate::{Axis, Dim, Dimension, Ix, Ix0, Ix1};
 /// removing one axis from *Self* gives smaller dimension *Smaller*.
 pub trait RemoveAxis: Dimension
 {
+    /// Remove the specified axis from a dimension.
     fn remove_axis(&self, axis: Axis) -> Self::Smaller;
 }
 
