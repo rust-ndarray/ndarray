@@ -4,6 +4,7 @@ use alloc::borrow::ToOwned;
 use alloc::slice;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::ops::Range;
 use std::mem;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
@@ -28,6 +29,9 @@ pub struct OwnedRepr<A>
     capacity: usize,
 }
 
+// OwnedRepr is a wrapper for a uniquely held allocation. Currently it is allocated by using a Vec
+// (from/to raw parts) which gives the benefit that it can always be converted to/from a Vec
+// cheaply.
 impl<A> OwnedRepr<A>
 {
     pub(crate) fn from(v: Vec<A>) -> Self
@@ -52,6 +56,14 @@ impl<A> OwnedRepr<A>
     pub(crate) fn len(&self) -> usize
     {
         self.len
+    }
+
+    #[cfg(test)]
+    /// Note: Capacity comes from OwnedRepr (Vec)'s allocation strategy and cannot be absolutely
+    /// guaranteed.
+    pub(crate) fn capacity(&self) -> usize
+    {
+        self.capacity
     }
 
     pub(crate) fn as_ptr(&self) -> *const A
@@ -80,6 +92,26 @@ impl<A> OwnedRepr<A>
     {
         self.modify_as_vec(|mut v| {
             v.reserve(additional);
+            v
+        });
+        self.as_nonnull_mut()
+    }
+
+    /// Truncate "at front and back", preserve only elements inside the range,
+    /// then call Vec::shrink_to_fit.
+    /// Moving elements will invalidate existing pointers.
+    ///
+    /// Return the new lowest address pointer of the allocation.
+    #[must_use = "must use new pointer to update existing pointers"]
+    pub(crate) fn preserve_range_and_shrink(&mut self, span: Range<usize>) -> NonNull<A>
+    {
+        self.modify_as_vec(|mut v| {
+            v.truncate(span.end);
+            if span.start > 0 {
+                v.drain(..span.start);
+            }
+            // Vec::shrink_to_fit is allowed to reallocate and invalidate pointers
+            v.shrink_to_fit();
             v
         });
         self.as_nonnull_mut()
