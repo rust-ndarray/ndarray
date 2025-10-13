@@ -35,6 +35,8 @@ jobs:
         uses: rui314/setup-mold@v1
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
       - name: Ensure latest dependencies
@@ -56,6 +58,8 @@ jobs:
         uses: rui314/setup-mold@v1
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
       - name: Install openblas
         run: sudo apt-get install libopenblas-dev gfortran
       - name: Ensure latest dependencies
