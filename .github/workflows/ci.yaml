@@ -200,7 +200,6 @@ jobs:
       - cross_test
       - cargo-careful
       - docs
-    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Result
