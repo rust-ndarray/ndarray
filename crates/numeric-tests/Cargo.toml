@@ -27,3 +27,7 @@ num-complex = { workspace = true }
 
 [features]
 test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
+
+# Config for cargo-release
+[package.metadata.release]
+release = false

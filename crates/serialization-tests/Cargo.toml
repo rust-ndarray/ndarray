@@ -23,3 +23,7 @@ serde_json = { version = "1.0.40" }
 rmp = { version = ">=0.8.11,<0.8.14" }
 # Old version to work with Rust 1.64+
 rmp-serde = { version = ">=1.1.1" }
+
+# Config for cargo-release
+[package.metadata.release]
+release = false
