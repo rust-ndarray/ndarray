@@ -1,4 +1,4 @@
-Version 0.17.0 (2025-10-13)
+Version 0.17.0 (2025-10-14)
 ===========================
 Version 0.17.0 introduces a new **array reference type** — the preferred way to write functions and extension traits in `ndarray`.  
 This release is fully backwards-compatible but represents a major usability improvement.  
