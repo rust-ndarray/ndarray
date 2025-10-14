@@ -1,3 +1,125 @@
+Version 0.17.0 (2025-10-13)
+===========================
+Version 0.17.0 introduces a new **array reference type** — the preferred way to write functions and extension traits in `ndarray`.  
+This release is fully backwards-compatible but represents a major usability improvement.  
+The first section of this changelog explains the change in detail.
+
+It also includes numerous new methods, math functions, and internal improvements — all credited below.
+
+A New Way to Write Functions
+-------------
+
+### TL;DR
+`ndarray` 0.17.0 adds new reference types for writing functions and traits that work seamlessly with owned arrays and views.
+
+When writing functions that accept array arguments:
+- **Use `&ArrayRef<A, D>`** to read elements from any array.  
+- **Use `&mut ArrayRef<A, D>`** to modify elements.  
+- **Use `&T where T: AsRef<LayoutRef<A, D>>`** to inspect shape/stride only.  
+- **Use `&mut T where T: AsMut<LayoutRef<A, D>>`** to modify shape/stride only.  
+
+All existing function signatures continue to work; these new types are fully opt-in.
+
+### Background
+ndarray has multiple ways to write functions that take arrays (a problem captured well in issue [#1059](https://github.com/rust-ndarray/ndarray/issues/1059)).
+For example:
+```rust
+fn sum(a: ArrayView1<f64>) -> f64;
+fn sum(a: &ArrayView1<f64>) -> f64;
+fn sum(a: &Array1<f64>) -> f64;
+```
+All of these work, but having several equivalent forms causes confusion.
+The most general solution, writing generically over storage types:
+```rust
+fn sum<S>(a: &ArrayBase<S, Ix1>) -> f64
+where S: Data<Elem = f64>;
+```
+is powerful but verbose and often hard to read.
+Version 0.17.0 introduces a new, simpler pattern that expresses the same flexibility more clearly.
+
+### Solution
+Three new reference types make it easier to write functions that accept any kind of array while clearly expressing what kind of access (data or layout) they need.
+
+#### Reading / Writing Elements: `ArrayRef<A, D>`
+`ArrayRef` is the `Deref` target of `ArrayBase`.
+It behaves like `&[T]` for `Vec<T>`, giving access to elements and layout.
+Mutability is expressed through the reference itself (`&` vs `&mut`), not through a trait bound or the type itself.
+It is used as follows:
+```rust
+fn sum(a: &ArrayRef1<f64>) -> f64;
+fn cumsum_mut(a: &mut ArrayRef1<f64>);
+```
+(ArrayRef1 is available from the prelude.)
+
+#### Reading / Writing Shape: `LayoutRef<A, D>`
+LayoutRef lets functions view or modify shape/stride information without touching data.
+This replaces verbose signatures like:
+```rust
+fn alter_view<S>(a: &mut ArrayBase<S, Ix1>)
+where S: Data<Elem = f64>;
+```
+Use AsRef / AsMut for best compatibility:
+```rust
+fn alter_shape<T>(a: &mut T)
+where T: AsMut<LayoutRef<f64>>;
+```
+(Accepting a `LayoutRef` directly can cause unnecessary copies; see [#1440](https://github.com/rust-ndarray/ndarray/pull/1440).)
+
+#### Reading / Writing Unsafe Elements: `RawRef<A, D>`
+`RawRef` augments `RawArrayView` and `RawArrayViewMut` for power users needing unsafe element access (e.g. uninitialized buffers).
+Like `LayoutRef`, it is best used via `AsRef` / `AsMut`.
+
+Added
+-----
+- A new "array reference" type by [@akern40](https://github.com/akern40) [#1440](https://github.com/rust-ndarray/ndarray/pull/1440)
+- A `diff` method for calculating the difference between elements by [@johann-cm](https://github.com/johann-cm) [#1437](https://github.com/rust-ndarray/ndarray/pull/1437)
+- A `partition` method for partially sorting an array by [@NewBornRustacean](https://github.com/NewBornRustacean) [#1498](https://github.com/rust-ndarray/ndarray/pull/1498)
+- A `meshgrid` method for building regular grids of values by [@akern40](https://github.com/akern40) [#1477](https://github.com/rust-ndarray/ndarray/pull/1477)
+- A `cumprod` method for cumulative products by [@NewBornRustacean](https://github.com/NewBornRustacean) [#1491](https://github.com/rust-ndarray/ndarray/pull/1491)
+- More element-wise math functions for floats by [@Waterdragen](https://github.com/Waterdragen) [#1507](https://github.com/rust-ndarray/ndarray/pull/1507)
+  - Additions include `exp_m1`, `ln_1p`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`, and `hypot`
+- Dot product support for dynamic arrays by [@NewBornRustacean](https://github.com/NewBornRustacean) [#1483](https://github.com/rust-ndarray/ndarray/pull/1483) and [@akern40](https://github.com/akern40) [#1494](https://github.com/rust-ndarray/ndarray/pull/1494)
+- An `axis_windows_with_stride` method for strided windows by [@goertzenator](https://github.com/goertzenator) [#1460](https://github.com/rust-ndarray/ndarray/pull/1460)
+- In-place methods for permuting (`permute_axes`) and reversing (`reverse_axes`) axes by [@NewBornRustacean](https://github.com/NewBornRustacean) [#1505](https://github.com/rust-ndarray/ndarray/pull/1505)
+- Adds `into_*_iter` functions as lifetime-preserving versions of into-iterator functionality by [@akern40](https://github.com/akern40) [#1510](https://github.com/rust-ndarray/ndarray/pull/1510)
+
+Changed
+-------
+- `remove_index` can now be called on views, in addition to owned arrays by [@akern40](https://github.com/akern40)
+
+Removed
+-------
+- Removed the `serde-1`, `test`, and `docs` feature flags; by [@akern40](https://github.com/akern40) [#1479](https://github.com/rust-ndarray/ndarray/pull/1479)
+  - Use `approx,serde,rayon` instead of `docs`.
+  - Use `serde` instead of `serde-1`
+
+
+Fixed
+-----
+- `last_mut()` now guarantees that the underlying data is uniquely held by [@bluss](https://github.com/bluss) [#1429](https://github.com/rust-ndarray/ndarray/pull/1429)
+- `ArrayView` is now covariant over lifetime by [@akern40](https://github.com/akern40) [#1480](https://github.com/rust-ndarray/ndarray/pull/1480), so that the following code now compiles
+```rust
+fn fn_cov<'a>(x: ArrayView1<'static, f64>) -> ArrayView1<'a, f64> {
+    x
+}
+```
+
+Documentation
+-----
+- Filled missing documentation and adds warn(missing_docs) by [@akern40](https://github.com/akern40)
+- Fixed a typo in the documentation of `select` by [@Drazhar](https://github.com/Drazhar)
+- Fixed a typo in the documentation of `into_raw_vec_and_offset` by [@benliepert](https://github.com/benliepert)
+- Documented `Array::zeros` with how to control the return type by [@akern40](https://github.com/akern40)
+
+Other
+-----
+- Expanded the gitignore file for IDEs by [@XXMA16](https://github.com/XXMA16) and [@akern40](https://github.com/akern40)
+- Stabilized the MSRV to 1.64 by [@akern40](https://github.com/akern40)
+- Switched to nextest for testing by [@akern40](https://github.com/akern40)
+- Added Miri to CI by [@akern40](https://github.com/akern40)
+- Smoothed out tests that can be run with `no_std` by [@akern40](https://github.com/akern40)
+- Updated to Edition 2021 by [@akern40](https://github.com/akern40)
+
 Version 0.16.1 (2024-08-14)
 ===========================
 
