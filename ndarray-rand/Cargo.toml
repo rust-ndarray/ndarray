@@ -25,6 +25,5 @@ rand_isaac = "0.4.0"
 quickcheck = { workspace = true }
 
 [package.metadata.release]
-no-dev-version = true
 tag-name = "ndarray-rand-{{version}}"
 

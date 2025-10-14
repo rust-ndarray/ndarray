@@ -16,3 +16,7 @@ cblas-sys = { workspace = true }
 ndarray = { workspace = true, features = ["approx", "blas"] }
 ndarray-gen = { workspace = true }
 itertools = { workspace = true }
+
+# Config for cargo-release
+[package.metadata.release]
+release = false

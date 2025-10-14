@@ -109,8 +109,8 @@ opt-level = 2
 [profile.test.package.blas-tests]
 opt-level = 2
 
+# Config for cargo-release
 [package.metadata.release]
-no-dev-version = true
 tag-name = "{{version}}"
 
 # Config specific to docs.rs
