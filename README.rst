@@ -78,6 +78,10 @@ your `Cargo.toml`.
 
   - Enables serialization support for serde 1.x
 
+- ``bincode``
+
+  - Enables bincode store support for bincode 2.x
+
 - ``rayon``
 
   - Enables parallel iterators, parallelized methods and ``par_azip!``.
