@@ -169,10 +169,10 @@ mod tests
     {
         let x = Array2::<f64>::ones((3, 3).f());
         let res = x.triu(0);
-        assert!(dimension::is_layout_f(&res.dim, &res.strides));
+        assert!(dimension::is_layout_f(&res.parts.dim, &res.parts.strides));
 
         let res = x.tril(0);
-        assert!(dimension::is_layout_f(&res.dim, &res.strides));
+        assert!(dimension::is_layout_f(&res.parts.dim, &res.parts.strides));
     }
 
     #[test]

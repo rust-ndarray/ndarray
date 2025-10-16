@@ -65,7 +65,7 @@ impl<A> ArrayRef<A, Ix1>
     /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
     /// layout allows.
     #[track_caller]
-    pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
+    pub fn dot<Rhs: ?Sized>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
     where Self: Dot<Rhs>
     {
         Dot::dot(self, rhs)
@@ -157,7 +157,7 @@ unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const
 ///
 /// For two-dimensional arrays, the dot method computes the matrix
 /// multiplication.
-pub trait Dot<Rhs>
+pub trait Dot<Rhs: ?Sized>
 {
     /// The result of the operation.
     ///
@@ -295,7 +295,7 @@ impl<A> ArrayRef<A, Ix2>
     /// );
     /// ```
     #[track_caller]
-    pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
+    pub fn dot<Rhs: ?Sized>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
     where Self: Dot<Rhs>
     {
         Dot::dot(self, rhs)
@@ -696,8 +696,8 @@ unsafe fn general_mat_vec_mul_impl<A>(
                             // Low addr in memory pointers required for x, y
                             let x_offset = offset_from_low_addr_ptr_to_logical_ptr(&x.dim, &x.strides);
                             let x_ptr = x.ptr.as_ptr().sub(x_offset);
-                            let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.layout.dim, &y.layout.strides);
-                            let y_ptr = y.layout.ptr.as_ptr().sub(y_offset);
+                            let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.parts.dim, &y.parts.strides);
+                            let y_ptr = y.parts.ptr.as_ptr().sub(y_offset);
 
                             let x_stride = x.strides()[0] as blas_index;
                             let y_stride = y.strides()[0] as blas_index;

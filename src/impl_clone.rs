@@ -7,7 +7,8 @@
 // except according to those terms.
 
 use crate::imp_prelude::*;
-use crate::LayoutRef;
+use crate::ArrayParts;
+use crate::ArrayPartsSized;
 use crate::RawDataClone;
 
 impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
@@ -16,14 +17,10 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
     {
         // safe because `clone_with_ptr` promises to provide equivalent data and ptr
         unsafe {
-            let (data, ptr) = self.data.clone_with_ptr(self.layout.ptr);
+            let (data, ptr) = self.data.clone_with_ptr(self.parts.ptr);
             ArrayBase {
                 data,
-                layout: LayoutRef {
-                    ptr,
-                    dim: self.layout.dim.clone(),
-                    strides: self.layout.strides.clone(),
-                },
+                parts: ArrayPartsSized::new(ptr, self.parts.dim.clone(), self.parts.strides.clone()),
             }
         }
     }
@@ -34,9 +31,9 @@ impl<S: RawDataClone, D: Clone> Clone for ArrayBase<S, D>
     fn clone_from(&mut self, other: &Self)
     {
         unsafe {
-            self.layout.ptr = self.data.clone_from_with_ptr(&other.data, other.layout.ptr);
-            self.layout.dim.clone_from(&other.layout.dim);
-            self.layout.strides.clone_from(&other.layout.strides);
+            self.parts.ptr = self.data.clone_from_with_ptr(&other.data, other.parts.ptr);
+            self.parts.dim.clone_from(&other.parts.dim);
+            self.parts.strides.clone_from(&other.parts.strides);
         }
     }
 }

@@ -59,10 +59,10 @@ impl<'a, A, D: Dimension> ExactChunks<'a, A, D>
             a.shape()
         );
         for i in 0..a.ndim() {
-            a.layout.dim[i] /= chunk[i];
+            a.parts.dim[i] /= chunk[i];
         }
-        let inner_strides = a.layout.strides.clone();
-        a.layout.strides *= &chunk;
+        let inner_strides = a.parts.strides.clone();
+        a.parts.strides *= &chunk;
 
         ExactChunks {
             base: a,
@@ -158,10 +158,10 @@ impl<'a, A, D: Dimension> ExactChunksMut<'a, A, D>
             a.shape()
         );
         for i in 0..a.ndim() {
-            a.layout.dim[i] /= chunk[i];
+            a.parts.dim[i] /= chunk[i];
         }
-        let inner_strides = a.layout.strides.clone();
-        a.layout.strides *= &chunk;
+        let inner_strides = a.parts.strides.clone();
+        a.parts.strides *= &chunk;
 
         ExactChunksMut {
             base: a,

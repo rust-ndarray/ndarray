@@ -19,7 +19,7 @@ use std::{iter::FromIterator, slice};
 use crate::imp_prelude::*;
 use crate::Arc;
 
-use crate::LayoutRef;
+use crate::AsLayoutRef;
 use crate::{
     dimension,
     iter::{Iter, IterMut},
@@ -38,12 +38,14 @@ pub(crate) fn array_out_of_bounds() -> !
 }
 
 #[inline(always)]
-pub fn debug_bounds_check<A, D, I>(_a: &LayoutRef<A, D>, _index: &I)
+pub fn debug_bounds_check<A, D, I, T>(_a: &T, _index: &I)
 where
     D: Dimension,
     I: NdIndex<D>,
+    T: AsLayoutRef<A, D> + ?Sized,
 {
-    debug_bounds_check!(_a, *_index);
+    let layout_ref = _a.as_ref();
+    debug_bounds_check!(layout_ref, *_index);
 }
 
 /// Access the element at **index**.
@@ -581,7 +583,7 @@ where D: Dimension
     {
         let data = OwnedArcRepr(Arc::new(arr.data));
         // safe because: equivalent unmoved data, ptr and dims remain valid
-        unsafe { ArrayBase::from_data_ptr(data, arr.layout.ptr).with_strides_dim(arr.layout.strides, arr.layout.dim) }
+        unsafe { ArrayBase::from_data_ptr(data, arr.parts.ptr).with_strides_dim(arr.parts.strides, arr.parts.dim) }
     }
 }
 
