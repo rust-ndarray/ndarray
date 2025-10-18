@@ -39,6 +39,7 @@ use crate::{
     Array,
     ArrayBase,
     ArrayPartsSized,
+    ArrayPartsUnsized,
     ArrayRef,
     Data,
     DataMut,
@@ -62,8 +63,8 @@ where S: Data
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        let parts: &LayoutRef<S::Elem, D> = &self.parts;
-        let ptr = (parts as *const LayoutRef<S::Elem, D>) as *const ArrayRef<S::Elem, D>;
+        let parts: &ArrayPartsUnsized<S::Elem, D> = &self.parts;
+        let ptr = (parts as *const ArrayPartsUnsized<S::Elem, D>) as *const ArrayRef<S::Elem, D>;
         unsafe { &*ptr }
     }
 }
@@ -82,8 +83,8 @@ where
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        let parts: &mut LayoutRef<S::Elem, D> = &mut self.parts;
-        let ptr = (parts as *mut LayoutRef<S::Elem, D>) as *mut ArrayRef<S::Elem, D>;
+        let parts: &mut ArrayPartsUnsized<S::Elem, D> = &mut self.parts;
+        let ptr = (parts as *mut ArrayPartsUnsized<S::Elem, D>) as *mut ArrayRef<S::Elem, D>;
         unsafe { &mut *ptr }
     }
 }
@@ -149,8 +150,8 @@ where S: RawData<Elem = A>
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        let parts: &LayoutRef<S::Elem, D> = &self.parts;
-        let ptr = (parts as *const LayoutRef<S::Elem, D>) as *const RawRef<S::Elem, D>;
+        let parts: &ArrayPartsUnsized<S::Elem, D> = &self.parts;
+        let ptr = (parts as *const ArrayPartsUnsized<S::Elem, D>) as *const RawRef<S::Elem, D>;
         unsafe { &*ptr }
     }
 }
@@ -166,8 +167,8 @@ where S: RawDataMut<Elem = A>
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        let parts: &mut LayoutRef<S::Elem, D> = &mut self.parts;
-        let ptr = (parts as *mut LayoutRef<S::Elem, D>) as *mut RawRef<S::Elem, D>;
+        let parts: &mut ArrayPartsUnsized<S::Elem, D> = &mut self.parts;
+        let ptr = (parts as *mut ArrayPartsUnsized<S::Elem, D>) as *mut RawRef<S::Elem, D>;
         unsafe { &mut *ptr }
     }
 }
@@ -178,8 +179,8 @@ where S: RawData<Elem = A>
 {
     fn as_ref(&self) -> &LayoutRef<A, D>
     {
-        let parts: &LayoutRef<S::Elem, D> = &self.parts;
-        let ptr = (parts as *const LayoutRef<S::Elem, D>) as *const LayoutRef<S::Elem, D>;
+        let parts: &ArrayPartsUnsized<S::Elem, D> = &self.parts;
+        let ptr = (parts as *const ArrayPartsUnsized<S::Elem, D>) as *const LayoutRef<S::Elem, D>;
         unsafe { &*ptr }
     }
 }
@@ -190,8 +191,8 @@ where S: RawData<Elem = A>
 {
     fn as_mut(&mut self) -> &mut LayoutRef<A, D>
     {
-        let parts: &mut LayoutRef<S::Elem, D> = &mut self.parts;
-        let ptr = (parts as *mut LayoutRef<S::Elem, D>) as *mut LayoutRef<S::Elem, D>;
+        let parts: &mut ArrayPartsUnsized<S::Elem, D> = &mut self.parts;
+        let ptr = (parts as *mut ArrayPartsUnsized<S::Elem, D>) as *mut LayoutRef<S::Elem, D>;
         unsafe { &mut *ptr }
     }
 }

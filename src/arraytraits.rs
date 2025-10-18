@@ -45,7 +45,7 @@ where
     T: AsLayoutRef<A, D> + ?Sized,
 {
     let layout_ref = _a.as_ref();
-    debug_bounds_check!(layout_ref, *_index);
+    debug_bounds_check_ref!(layout_ref, *_index);
 }
 
 /// Access the element at **index**.
@@ -61,11 +61,11 @@ where
     #[inline]
     fn index(&self, index: I) -> &Self::Output
     {
-        debug_bounds_check!(self, index);
+        debug_bounds_check_ref!(self, index);
         unsafe {
-            &*self.ptr.as_ptr().offset(
+            &*self._ptr().as_ptr().offset(
                 index
-                    .index_checked(&self.dim, &self.strides)
+                    .index_checked(&self._dim(), &self._strides())
                     .unwrap_or_else(|| array_out_of_bounds()),
             )
         }
@@ -83,11 +83,11 @@ where
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut A
     {
-        debug_bounds_check!(self, index);
+        debug_bounds_check_ref!(self, index);
         unsafe {
             &mut *self.as_mut_ptr().offset(
                 index
-                    .index_checked(&self.dim, &self.strides)
+                    .index_checked(&self._dim(), &self._strides())
                     .unwrap_or_else(|| array_out_of_bounds()),
             )
         }

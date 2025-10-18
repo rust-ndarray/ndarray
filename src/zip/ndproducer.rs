@@ -274,7 +274,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
-        self.dim.equal(dim)
+        self._dim().equal(dim)
     }
 
     fn as_ptr(&self) -> *mut A
@@ -294,7 +294,9 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
     {
-        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+        self._ptr()
+            .as_ptr()
+            .offset(i.index_unchecked(&self._strides()))
     }
 
     fn stride_of(&self, axis: Axis) -> isize
@@ -330,7 +332,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
-        self.dim.equal(dim)
+        self._dim().equal(dim)
     }
 
     fn as_ptr(&self) -> *mut A
@@ -350,7 +352,9 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
 
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> *mut A
     {
-        self.ptr.as_ptr().offset(i.index_unchecked(&self.strides))
+        self._ptr()
+            .as_ptr()
+            .offset(i.index_unchecked(self._strides()))
     }
 
     fn stride_of(&self, axis: Axis) -> isize

@@ -31,8 +31,8 @@ impl<A> LayoutRef<A, IxDyn>
     pub fn insert_axis_inplace(&mut self, axis: Axis)
     {
         assert!(axis.index() <= self.ndim());
-        self.dim = self.dim.insert_axis(axis);
-        self.strides = self.strides.insert_axis(axis);
+        self.0.dim = self._dim().insert_axis(axis);
+        self.0.strides = self._strides().insert_axis(axis);
     }
 
     /// Collapses the array to `index` along the axis and removes the axis,
@@ -54,8 +54,8 @@ impl<A> LayoutRef<A, IxDyn>
     pub fn index_axis_inplace(&mut self, axis: Axis, index: usize)
     {
         self.collapse_axis(axis, index);
-        self.dim = self.dim.remove_axis(axis);
-        self.strides = self.strides.remove_axis(axis);
+        self.0.dim = self._dim().remove_axis(axis);
+        self.0.strides = self._strides().remove_axis(axis);
     }
 }
 

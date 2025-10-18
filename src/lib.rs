@@ -1305,8 +1305,13 @@ where S: RawData<Elem = A>
     parts: ArrayPartsSized<A, D>,
 }
 
+/// A possibly-unsized container for array parts.
+///
+/// This type only exists to enable holding the array parts in a single
+/// type, which needs to be sized inside of `ArrayBase` and unsized inside
+/// of the reference types.
 #[derive(Debug)]
-pub struct ArrayParts<A, D, T: ?Sized>
+struct ArrayParts<A, D, T: ?Sized>
 {
     /// A non-null pointer into the buffer held by `data`; may point anywhere
     /// in its range. If `S: Data`, this pointer must be aligned.
@@ -1319,6 +1324,7 @@ pub struct ArrayParts<A, D, T: ?Sized>
 }
 
 type ArrayPartsSized<A, D> = ArrayParts<A, D, [usize; 0]>;
+type ArrayPartsUnsized<A, D> = ArrayParts<A, D, [usize]>;
 
 impl<A, D> ArrayPartsSized<A, D>
 {
@@ -1432,7 +1438,28 @@ impl<A, D> ArrayPartsSized<A, D>
 // which alter the layout / shape / strides of an array must also
 // alter the offset of the pointer. This is allowed, as it does not
 // cause a pointer deref.
-pub type LayoutRef<A, D> = ArrayParts<A, D, [usize]>;
+pub struct LayoutRef<A, D>(ArrayParts<A, D, [usize]>);
+
+impl<A, D> LayoutRef<A, D>
+{
+    /// Get a reference to the data pointer.
+    fn _ptr(&self) -> &NonNull<A>
+    {
+        &self.0.ptr
+    }
+
+    /// Get a reference to the array's dimension.
+    fn _dim(&self) -> &D
+    {
+        &self.0.dim
+    }
+
+    /// Get a reference to the array's strides.
+    fn _strides(&self) -> &D
+    {
+        &self.0.strides
+    }
+}
 
 /// A reference to an *n*-dimensional array whose data is safe to read and write.
 ///
@@ -1778,7 +1805,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
         match self.broadcast(dim.clone()) {
             Some(it) => it,
-            None => broadcast_panic(&self.dim, &dim),
+            None => broadcast_panic(self._dim(), &dim),
         }
     }
 
@@ -1790,10 +1817,10 @@ impl<A, D: Dimension> ArrayRef<A, D>
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
-        let ptr = self.ptr;
+        let ptr = self._ptr();
         let mut strides = dim.clone();
-        strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe { ArrayView::new(ptr, dim, strides) }
+        strides.slice_mut().copy_from_slice(self._strides().slice());
+        unsafe { ArrayView::new(*ptr, dim, strides) }
     }
 }
 

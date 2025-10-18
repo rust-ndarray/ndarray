@@ -7,7 +7,6 @@
 // except according to those terms.
 
 use crate::imp_prelude::*;
-use crate::ArrayParts;
 use crate::ArrayPartsSized;
 use crate::RawDataClone;
 

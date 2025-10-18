@@ -81,7 +81,7 @@ where D: Dimension
 {
     pub(crate) fn layout_impl(&self) -> Layout
     {
-        array_layout(&self.dim, &self.strides)
+        array_layout(self._dim(), self._strides())
     }
 }
 
