@@ -45,7 +45,7 @@ impl<A> Array<A, Ix0>
             // (This is necessary because the element in the array might not be
             // the first element in the `Vec`, such as if the array was created
             // by `array![1, 2, 3, 4].slice_move(s![2])`.)
-            let first = self.ptr.as_ptr() as usize;
+            let first = self.parts.ptr.as_ptr() as usize;
             let base = self.data.as_ptr() as usize;
             let index = (first - base) / size;
             debug_assert_eq!((first - base) % size, 0);
@@ -69,7 +69,7 @@ where D: Dimension
             return None;
         }
         if std::mem::size_of::<A>() == 0 {
-            Some(dimension::offset_from_low_addr_ptr_to_logical_ptr(&self.dim, &self.strides))
+            Some(dimension::offset_from_low_addr_ptr_to_logical_ptr(&self.parts.dim, &self.parts.strides))
         } else {
             let offset = unsafe { self.as_ptr().offset_from(self.data.as_ptr()) };
             debug_assert!(offset >= 0);
@@ -476,8 +476,8 @@ where D: Dimension
         } else {
             dim.slice_mut()[..=growing_axis.index()].rotate_right(1);
             new_array = Self::uninit(dim);
-            new_array.dim.slice_mut()[..=growing_axis.index()].rotate_left(1);
-            new_array.strides.slice_mut()[..=growing_axis.index()].rotate_left(1);
+            new_array.parts.dim.slice_mut()[..=growing_axis.index()].rotate_left(1);
+            new_array.parts.strides.slice_mut()[..=growing_axis.index()].rotate_left(1);
         }
 
         // self -> old_self.
@@ -631,7 +631,7 @@ where D: Dimension
             // either the dimension increment is zero, or there is an existing
             // zero in another axis in self.
             debug_assert_eq!(self.len(), new_len);
-            self.dim = res_dim;
+            self.parts.dim = res_dim;
             return Ok(());
         }
 
@@ -701,11 +701,11 @@ where D: Dimension
                     }
                 }
             });
-            let mut strides = self.strides.clone();
+            let mut strides = self.parts.strides.clone();
             strides[axis.index()] = new_stride as usize;
             strides
         } else {
-            self.strides.clone()
+            self.parts.strides.clone()
         };
 
         // grow backing storage and update head ptr
@@ -746,7 +746,7 @@ where D: Dimension
                 sort_axes_in_default_order_tandem(&mut tail_view, &mut array);
                 debug_assert!(tail_view.is_standard_layout(),
                               "not std layout dim: {:?}, strides: {:?}",
-                              tail_view.shape(), tail_view.strides());
+                              tail_view.shape(), RawArrayViewMut::strides(&tail_view));
             }
 
             // Keep track of currently filled length of `self.data` and update it
@@ -785,8 +785,8 @@ where D: Dimension
             drop(data_length_guard);
 
             // update array dimension
-            self.strides = strides;
-            self.dim = res_dim;
+            self.parts.strides = strides;
+            self.parts.dim = res_dim;
         }
         // multiple assertions after pointer & dimension update
         debug_assert_eq!(self.data.len(), self.len());
@@ -849,7 +849,7 @@ where D: Dimension
                 0
             };
             debug_assert!(data_to_array_offset >= 0);
-            self.layout.ptr = self
+            self.parts.ptr = self
                 .data
                 .reserve(len_to_append)
                 .offset(data_to_array_offset);
@@ -880,7 +880,7 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
     }
     sort_axes_in_default_order(&mut self_);
     // with uninverted axes this is now the element with lowest address
-    let array_memory_head_ptr = self_.layout.ptr;
+    let array_memory_head_ptr = self_.parts.ptr;
     let data_end_ptr = data_ptr.add(data_len);
     debug_assert!(data_ptr <= array_memory_head_ptr);
     debug_assert!(array_memory_head_ptr <= data_end_ptr);
@@ -897,19 +897,19 @@ pub(crate) unsafe fn drop_unreachable_raw<A, D>(
     // As an optimization, the innermost axis is removed if it has stride 1, because
     // we then have a long stretch of contiguous elements we can skip as one.
     let inner_lane_len;
-    if self_.ndim() > 1 && self_.layout.strides.last_elem() == 1 {
-        self_.layout.dim.slice_mut().rotate_right(1);
-        self_.layout.strides.slice_mut().rotate_right(1);
-        inner_lane_len = self_.layout.dim[0];
-        self_.layout.dim[0] = 1;
-        self_.layout.strides[0] = 1;
+    if self_.ndim() > 1 && self_.parts.strides.last_elem() == 1 {
+        self_.parts.dim.slice_mut().rotate_right(1);
+        self_.parts.strides.slice_mut().rotate_right(1);
+        inner_lane_len = self_.parts.dim[0];
+        self_.parts.dim[0] = 1;
+        self_.parts.strides[0] = 1;
     } else {
         inner_lane_len = 1;
     }
 
     // iter is a raw pointer iterator traversing the array in memory order now with the
     // sorted axes.
-    let mut iter = Baseiter::new(self_.layout.ptr, self_.layout.dim, self_.layout.strides);
+    let mut iter = Baseiter::new(self_.parts.ptr, self_.parts.dim, self_.parts.strides);
     let mut dropped_elements = 0;
 
     let mut last_ptr = data_ptr;
@@ -948,7 +948,7 @@ where
     if a.ndim() <= 1 {
         return;
     }
-    sort_axes1_impl(&mut a.layout.dim, &mut a.layout.strides);
+    sort_axes1_impl(&mut a.parts.dim, &mut a.parts.strides);
 }
 
 fn sort_axes1_impl<D>(adim: &mut D, astrides: &mut D)
@@ -988,7 +988,7 @@ where
     if a.ndim() <= 1 {
         return;
     }
-    sort_axes2_impl(&mut a.layout.dim, &mut a.layout.strides, &mut b.layout.dim, &mut b.layout.strides);
+    sort_axes2_impl(&mut a.parts.dim, &mut a.parts.strides, &mut b.parts.dim, &mut b.parts.strides);
 }
 
 fn sort_axes2_impl<D>(adim: &mut D, astrides: &mut D, bdim: &mut D, bstrides: &mut D)

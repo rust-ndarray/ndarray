@@ -11,7 +11,21 @@
 //!
 //! Below, we illustrate how to write functions and traits for most variants of these types.
 
-use ndarray::{ArrayBase, ArrayRef, Data, DataMut, Dimension, LayoutRef, RawData, RawDataMut, RawRef};
+use ndarray::{
+    ArrayBase,
+    ArrayRef,
+    AsLayoutRef,
+    AsMutLayoutRef,
+    AsMutRawRef,
+    AsRawRef,
+    Data,
+    DataMut,
+    Dimension,
+    LayoutRef,
+    RawData,
+    RawDataMut,
+    RawRef,
+};
 
 /// Take an array with the most basic requirements.
 ///
@@ -139,19 +153,19 @@ fn takes_rawref_mut<A, D>(arr: &mut RawRef<A, D>)
 /// Immutable, take a generic that implements `AsRef` to `RawRef`
 #[allow(dead_code)]
 fn takes_rawref_asref<T, A, D>(_arr: &T)
-where T: AsRef<RawRef<A, D>>
+where T: AsRawRef<A, D> + ?Sized
 {
     takes_layout(_arr.as_ref());
-    takes_layout_asref(_arr.as_ref());
+    takes_layout_asref(_arr);
 }
 
 /// Mutable, take a generic that implements `AsMut` to `RawRef`
 #[allow(dead_code)]
 fn takes_rawref_asmut<T, A, D>(_arr: &mut T)
-where T: AsMut<RawRef<A, D>>
+where T: AsMutRawRef<A, D> + ?Sized
 {
     takes_layout_mut(_arr.as_mut());
-    takes_layout_asmut(_arr.as_mut());
+    takes_layout_asmut(_arr);
 }
 
 /// Finally, there's `LayoutRef`: this type provides read and write access to an array's *structure*, but not its *data*.
@@ -169,10 +183,16 @@ fn takes_layout_mut<A, D>(_arr: &mut LayoutRef<A, D>) {}
 
 /// Immutable, take a generic that implements `AsRef` to `LayoutRef`
 #[allow(dead_code)]
-fn takes_layout_asref<T: AsRef<LayoutRef<A, D>>, A, D>(_arr: &T) {}
+fn takes_layout_asref<T, A, D>(_arr: &T)
+where T: AsLayoutRef<A, D> + ?Sized
+{
+}
 
 /// Mutable, take a generic that implements `AsMut` to `LayoutRef`
 #[allow(dead_code)]
-fn takes_layout_asmut<T: AsMut<LayoutRef<A, D>>, A, D>(_arr: &mut T) {}
+fn takes_layout_asmut<T, A, D>(_arr: &mut T)
+where T: AsMutLayoutRef<A, D> + ?Sized
+{
+}
 
 fn main() {}

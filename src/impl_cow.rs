@@ -34,8 +34,8 @@ where D: Dimension
     {
         // safe because equivalent data
         unsafe {
-            ArrayBase::from_data_ptr(CowRepr::View(view.data), view.ptr)
-                .with_strides_dim(view.layout.strides, view.layout.dim)
+            ArrayBase::from_data_ptr(CowRepr::View(view.data), view.parts.ptr)
+                .with_strides_dim(view.parts.strides, view.parts.dim)
         }
     }
 }
@@ -47,8 +47,8 @@ where D: Dimension
     {
         // safe because equivalent data
         unsafe {
-            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.layout.ptr)
-                .with_strides_dim(array.layout.strides, array.layout.dim)
+            ArrayBase::from_data_ptr(CowRepr::Owned(array.data), array.parts.ptr)
+                .with_strides_dim(array.parts.strides, array.parts.dim)
         }
     }
 }
