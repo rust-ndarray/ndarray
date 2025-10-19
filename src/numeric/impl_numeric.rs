@@ -272,7 +272,7 @@ where D: Dimension
         A: Clone + Zero + Add<Output = A>,
         D: RemoveAxis,
     {
-        let min_stride_axis = self.dim.min_stride_axis(&self.strides);
+        let min_stride_axis = self._dim().min_stride_axis(self._strides());
         if axis == min_stride_axis {
             crate::Zip::from(self.lanes(axis)).map_collect(|lane| lane.sum())
         } else {
@@ -309,7 +309,7 @@ where D: Dimension
         A: Clone + One + Mul<Output = A>,
         D: RemoveAxis,
     {
-        let min_stride_axis = self.dim.min_stride_axis(&self.strides);
+        let min_stride_axis = self._dim().min_stride_axis(self._strides());
         if axis == min_stride_axis {
             crate::Zip::from(self.lanes(axis)).map_collect(|lane| lane.product())
         } else {
@@ -414,8 +414,8 @@ where D: Dimension
              the axis",
         );
         let dof = n - ddof;
-        let mut mean = Array::<A, _>::zeros(self.dim.remove_axis(axis));
-        let mut sum_sq = Array::<A, _>::zeros(self.dim.remove_axis(axis));
+        let mut mean = Array::<A, _>::zeros(self._dim().remove_axis(axis));
+        let mut sum_sq = Array::<A, _>::zeros(self._dim().remove_axis(axis));
         for (i, subview) in self.axis_iter(axis).enumerate() {
             let count = A::from_usize(i + 1).expect("Converting index to `A` must not fail.");
             azip!((mean in &mut mean, sum_sq in &mut sum_sq, &x in &subview) {

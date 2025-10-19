@@ -225,7 +225,7 @@ where D: Dimension
     pub fn reborrow<'b>(self) -> ArrayViewMut<'b, A, D>
     where 'a: 'b
     {
-        unsafe { ArrayViewMut::new(self.layout.ptr, self.layout.dim, self.layout.strides) }
+        unsafe { ArrayViewMut::new(self.parts.ptr, self.parts.dim, self.parts.strides) }
     }
 }
 

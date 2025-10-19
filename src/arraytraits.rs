@@ -19,7 +19,6 @@ use std::{iter::FromIterator, slice};
 use crate::imp_prelude::*;
 use crate::Arc;
 
-use crate::LayoutRef;
 use crate::{
     dimension,
     iter::{Iter, IterMut},
@@ -38,12 +37,14 @@ pub(crate) fn array_out_of_bounds() -> !
 }
 
 #[inline(always)]
-pub fn debug_bounds_check<A, D, I>(_a: &LayoutRef<A, D>, _index: &I)
+pub fn debug_bounds_check<A, D, I, T>(_a: &T, _index: &I)
 where
     D: Dimension,
     I: NdIndex<D>,
+    T: AsRef<LayoutRef<A, D>> + ?Sized,
 {
-    debug_bounds_check!(_a, *_index);
+    let _layout_ref = _a.as_ref();
+    debug_bounds_check_ref!(_layout_ref, *_index);
 }
 
 /// Access the element at **index**.
@@ -59,11 +60,11 @@ where
     #[inline]
     fn index(&self, index: I) -> &Self::Output
     {
-        debug_bounds_check!(self, index);
+        debug_bounds_check_ref!(self, index);
         unsafe {
-            &*self.ptr.as_ptr().offset(
+            &*self._ptr().as_ptr().offset(
                 index
-                    .index_checked(&self.dim, &self.strides)
+                    .index_checked(self._dim(), self._strides())
                     .unwrap_or_else(|| array_out_of_bounds()),
             )
         }
@@ -81,11 +82,11 @@ where
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut A
     {
-        debug_bounds_check!(self, index);
+        debug_bounds_check_ref!(self, index);
         unsafe {
             &mut *self.as_mut_ptr().offset(
                 index
-                    .index_checked(&self.dim, &self.strides)
+                    .index_checked(self._dim(), self._strides())
                     .unwrap_or_else(|| array_out_of_bounds()),
             )
         }
@@ -581,7 +582,7 @@ where D: Dimension
     {
         let data = OwnedArcRepr(Arc::new(arr.data));
         // safe because: equivalent unmoved data, ptr and dims remain valid
-        unsafe { ArrayBase::from_data_ptr(data, arr.layout.ptr).with_strides_dim(arr.layout.strides, arr.layout.dim) }
+        unsafe { ArrayBase::from_data_ptr(data, arr.parts.ptr).with_strides_dim(arr.parts.strides, arr.parts.dim) }
     }
 }
 

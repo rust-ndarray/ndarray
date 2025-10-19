@@ -35,7 +35,20 @@ use core::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{Array, ArrayBase, ArrayRef, Data, DataMut, Dimension, LayoutRef, RawData, RawDataMut, RawRef};
+use crate::{
+    Array,
+    ArrayBase,
+    ArrayPartsSized,
+    ArrayPartsUnsized,
+    ArrayRef,
+    Data,
+    DataMut,
+    Dimension,
+    LayoutRef,
+    RawData,
+    RawDataMut,
+    RawRef,
+};
 
 // D1: &ArrayBase -> &ArrayRef when data is safe to read
 impl<S, D> Deref for ArrayBase<S, D>
@@ -50,7 +63,9 @@ where S: Data
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        unsafe { &*(&self.layout as *const LayoutRef<S::Elem, D>).cast::<ArrayRef<S::Elem, D>>() }
+        let parts: &ArrayPartsUnsized<S::Elem, D> = &self.parts;
+        let ptr = (parts as *const ArrayPartsUnsized<S::Elem, D>) as *const ArrayRef<S::Elem, D>;
+        unsafe { &*ptr }
     }
 }
 
@@ -68,7 +83,9 @@ where
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        unsafe { &mut *(&mut self.layout as *mut LayoutRef<S::Elem, D>).cast::<ArrayRef<S::Elem, D>>() }
+        let parts: &mut ArrayPartsUnsized<S::Elem, D> = &mut self.parts;
+        let ptr = (parts as *mut ArrayPartsUnsized<S::Elem, D>) as *mut ArrayRef<S::Elem, D>;
+        unsafe { &mut *ptr }
     }
 }
 
@@ -84,7 +101,7 @@ impl<A, D> Deref for ArrayRef<A, D>
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        unsafe { &*(self as *const ArrayRef<A, D>).cast::<RawRef<A, D>>() }
+        unsafe { &*((self as *const ArrayRef<A, D>) as *const RawRef<A, D>) }
     }
 }
 
@@ -98,7 +115,7 @@ impl<A, D> DerefMut for ArrayRef<A, D>
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        unsafe { &mut *(self as *mut ArrayRef<A, D>).cast::<RawRef<A, D>>() }
+        unsafe { &mut *((self as *mut ArrayRef<A, D>) as *mut RawRef<A, D>) }
     }
 }
 
@@ -133,7 +150,9 @@ where S: RawData<Elem = A>
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        unsafe { &*(&self.layout as *const LayoutRef<A, D>).cast::<RawRef<A, D>>() }
+        let parts: &ArrayPartsUnsized<S::Elem, D> = &self.parts;
+        let ptr = (parts as *const ArrayPartsUnsized<S::Elem, D>) as *const RawRef<S::Elem, D>;
+        unsafe { &*ptr }
     }
 }
 
@@ -148,7 +167,9 @@ where S: RawDataMut<Elem = A>
         // - It is "dereferencable" because it comes from a reference
         // - For the same reason, it is initialized
         // - The cast is valid because ArrayRef uses #[repr(transparent)]
-        unsafe { &mut *(&mut self.layout as *mut LayoutRef<A, D>).cast::<RawRef<A, D>>() }
+        let parts: &mut ArrayPartsUnsized<S::Elem, D> = &mut self.parts;
+        let ptr = (parts as *mut ArrayPartsUnsized<S::Elem, D>) as *mut RawRef<S::Elem, D>;
+        unsafe { &mut *ptr }
     }
 }
 
@@ -158,7 +179,9 @@ where S: RawData<Elem = A>
 {
     fn as_ref(&self) -> &LayoutRef<A, D>
     {
-        &self.layout
+        let parts: &ArrayPartsUnsized<S::Elem, D> = &self.parts;
+        let ptr = (parts as *const ArrayPartsUnsized<S::Elem, D>) as *const LayoutRef<S::Elem, D>;
+        unsafe { &*ptr }
     }
 }
 
@@ -168,7 +191,9 @@ where S: RawData<Elem = A>
 {
     fn as_mut(&mut self) -> &mut LayoutRef<A, D>
     {
-        &mut self.layout
+        let parts: &mut ArrayPartsUnsized<S::Elem, D> = &mut self.parts;
+        let ptr = (parts as *mut ArrayPartsUnsized<S::Elem, D>) as *mut LayoutRef<S::Elem, D>;
+        unsafe { &mut *ptr }
     }
 }
 
@@ -269,7 +294,7 @@ impl<A, D> AsMut<LayoutRef<A, D>> for LayoutRef<A, D>
 /// impossible to read the data behind the pointer from a LayoutRef (this
 /// is a safety invariant that *must* be maintained), and therefore we can
 /// Clone and Copy as desired.
-impl<A, D: Clone> Clone for LayoutRef<A, D>
+impl<A, D: Clone> Clone for ArrayPartsSized<A, D>
 {
     fn clone(&self) -> Self
     {
@@ -277,11 +302,12 @@ impl<A, D: Clone> Clone for LayoutRef<A, D>
             dim: self.dim.clone(),
             strides: self.strides.clone(),
             ptr: self.ptr,
+            _dst_control: [0; 0],
         }
     }
 }
 
-impl<A, D: Clone + Copy> Copy for LayoutRef<A, D> {}
+impl<A, D: Clone + Copy> Copy for ArrayPartsSized<A, D> {}
 
 impl<S, D> Borrow<RawRef<S::Elem, D>> for ArrayBase<S, D>
 where S: RawData
@@ -368,3 +394,17 @@ where S: RawData<Elem = A>
         self.as_mut()
     }
 }
+
+/// Tests that a mem::swap can't compile by putting it into a doctest
+///
+/// ```compile_fail
+/// let mut x = Array1::from_vec(vec![0, 1, 2]);
+/// {
+///     let mut y = Array1::from_vec(vec![4, 5, 6]);
+///     let x_ref = x.as_layout_ref_mut();
+///     let y_ref = y.as_layout_ref_mut();
+///     core::mem::swap(x_ref, y_ref);
+/// }
+/// ```
+#[allow(dead_code)]
+fn test_no_swap_via_doctests() {}

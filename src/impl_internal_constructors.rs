@@ -8,7 +8,7 @@
 
 use std::ptr::NonNull;
 
-use crate::{imp_prelude::*, LayoutRef};
+use crate::{imp_prelude::*, ArrayPartsSized};
 
 // internal "builder-like" methods
 impl<A, S> ArrayBase<S, Ix1>
@@ -27,11 +27,7 @@ where S: RawData<Elem = A>
     {
         let array = ArrayBase {
             data,
-            layout: LayoutRef {
-                ptr,
-                dim: Ix1(0),
-                strides: Ix1(1),
-            },
+            parts: ArrayPartsSized::new(ptr, Ix1(0), Ix1(1)),
         };
         debug_assert!(array.pointer_is_inbounds());
         array
@@ -60,11 +56,7 @@ where
         debug_assert_eq!(strides.ndim(), dim.ndim());
         ArrayBase {
             data: self.data,
-            layout: LayoutRef {
-                ptr: self.layout.ptr,
-                dim,
-                strides,
-            },
+            parts: ArrayPartsSized::new(self.parts.ptr, dim, strides),
         }
     }
 }

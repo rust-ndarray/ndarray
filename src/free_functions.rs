@@ -16,7 +16,7 @@ use std::mem::{forget, size_of};
 use std::ptr::NonNull;
 
 use crate::{dimension, ArcArray1, ArcArray2};
-use crate::{imp_prelude::*, LayoutRef};
+use crate::{imp_prelude::*, ArrayPartsSized};
 
 /// Create an **[`Array`]** with one, two, three, four, five, or six dimensions.
 ///
@@ -109,12 +109,12 @@ pub const fn aview0<A>(x: &A) -> ArrayView0<'_, A>
 {
     ArrayBase {
         data: ViewRepr::new(),
-        layout: LayoutRef {
+        parts: ArrayPartsSized::new(
             // Safe because references are always non-null.
-            ptr: unsafe { NonNull::new_unchecked(x as *const A as *mut A) },
-            dim: Ix0(),
-            strides: Ix0(),
-        },
+            unsafe { NonNull::new_unchecked(x as *const A as *mut A) },
+            Ix0(),
+            Ix0(),
+        ),
     }
 }
 
@@ -149,12 +149,12 @@ pub const fn aview1<A>(xs: &[A]) -> ArrayView1<'_, A>
     }
     ArrayBase {
         data: ViewRepr::new(),
-        layout: LayoutRef {
+        parts: ArrayPartsSized::new(
             // Safe because references are always non-null.
-            ptr: unsafe { NonNull::new_unchecked(xs.as_ptr() as *mut A) },
-            dim: Ix1(xs.len()),
-            strides: Ix1(1),
-        },
+            unsafe { NonNull::new_unchecked(xs.as_ptr() as *mut A) },
+            Ix1(xs.len()),
+            Ix1(1),
+        ),
     }
 }
 
@@ -207,7 +207,7 @@ pub const fn aview2<A, const N: usize>(xs: &[[A; N]]) -> ArrayView2<'_, A>
     };
     ArrayBase {
         data: ViewRepr::new(),
-        layout: LayoutRef { ptr, dim, strides },
+        parts: ArrayPartsSized::new(ptr, dim, strides),
     }
 }
 
