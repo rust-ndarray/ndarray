@@ -19,7 +19,6 @@ use std::{iter::FromIterator, slice};
 use crate::imp_prelude::*;
 use crate::Arc;
 
-use crate::AsLayoutRef;
 use crate::{
     dimension,
     iter::{Iter, IterMut},
@@ -42,7 +41,7 @@ pub fn debug_bounds_check<A, D, I, T>(_a: &T, _index: &I)
 where
     D: Dimension,
     I: NdIndex<D>,
-    T: AsLayoutRef<A, D> + ?Sized,
+    T: AsRef<LayoutRef<A, D>> + ?Sized,
 {
     let layout_ref = _a.as_ref();
     debug_bounds_check_ref!(layout_ref, *_index);

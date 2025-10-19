@@ -172,7 +172,6 @@ mod macro_utils;
 #[macro_use]
 mod private;
 mod impl_ref_types;
-pub use impl_ref_types::*;
 mod aliases;
 #[macro_use]
 mod itertools;

@@ -395,21 +395,6 @@ where S: RawData<Elem = A>
     }
 }
 
-macro_rules! blanket_ref_alias {
-    ($alias_name:ident, $alias_name_mut:ident, $target:ty) => {
-        pub trait $alias_name<A, D>: AsRef<$target> {}
-
-        impl<T: ?Sized, A, D> $alias_name<A, D> for T where T: AsRef<$target> {}
-
-        pub trait $alias_name_mut<A, D>: AsMut<$target> {}
-
-        impl<T: ?Sized, A, D> $alias_name_mut<A, D> for T where T: AsMut<$target> {}
-    };
-}
-
-blanket_ref_alias!(AsLayoutRef, AsMutLayoutRef, LayoutRef<A, D>);
-blanket_ref_alias!(AsRawRef, AsMutRawRef, LayoutRef<A, D>);
-
 /// Tests that a mem::swap can't compile by putting it into a doctest
 ///
 /// ```compile_fail

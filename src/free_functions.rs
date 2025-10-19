@@ -15,7 +15,7 @@ use std::compile_error;
 use std::mem::{forget, size_of};
 use std::ptr::NonNull;
 
-use crate::{dimension, ArcArray1, ArcArray2, ArrayParts};
+use crate::{dimension, ArcArray1, ArcArray2};
 use crate::{imp_prelude::*, ArrayPartsSized};
 
 /// Create an **[`Array`]** with one, two, three, four, five, or six dimensions.
