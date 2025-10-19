@@ -1437,7 +1437,8 @@ impl<A, D> ArrayPartsSized<A, D>
 // which alter the layout / shape / strides of an array must also
 // alter the offset of the pointer. This is allowed, as it does not
 // cause a pointer deref.
-pub struct LayoutRef<A, D>(ArrayParts<A, D, [usize]>);
+#[repr(transparent)]
+pub struct LayoutRef<A, D>(ArrayPartsUnsized<A, D>);
 
 impl<A, D> LayoutRef<A, D>
 {
