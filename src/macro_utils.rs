@@ -76,6 +76,7 @@ macro_rules! debug_bounds_check {
     ($self_:ident, $index:expr) => {};
 }
 
+#[cfg(debug_assertions)]
 macro_rules! debug_bounds_check_ref {
     ($self_:ident, $index:expr) => {
         if $index.index_checked(&$self_._dim(), &$self_._strides()).is_none() {
