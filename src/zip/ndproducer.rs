@@ -296,7 +296,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
     {
         self._ptr()
             .as_ptr()
-            .offset(i.index_unchecked(&self._strides()))
+            .offset(i.index_unchecked(self._strides()))
     }
 
     fn stride_of(&self, axis: Axis) -> isize

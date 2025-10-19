@@ -2441,7 +2441,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
         D: Dimension + DimMax<E>,
         E: Dimension,
     {
-        let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(self._dim(), &other._dim())?;
+        let shape = co_broadcast::<D, E, <D as DimMax<E>>::Output>(self._dim(), other._dim())?;
         let view1 = if shape.slice() == self._dim().slice() {
             self.view()
                 .into_dimensionality::<<D as DimMax<E>>::Output>()

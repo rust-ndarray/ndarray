@@ -64,7 +64,7 @@ where
         unsafe {
             &*self._ptr().as_ptr().offset(
                 index
-                    .index_checked(&self._dim(), &self._strides())
+                    .index_checked(self._dim(), self._strides())
                     .unwrap_or_else(|| array_out_of_bounds()),
             )
         }
@@ -86,7 +86,7 @@ where
         unsafe {
             &mut *self.as_mut_ptr().offset(
                 index
-                    .index_checked(&self._dim(), &self._strides())
+                    .index_checked(self._dim(), self._strides())
                     .unwrap_or_else(|| array_out_of_bounds()),
             )
         }

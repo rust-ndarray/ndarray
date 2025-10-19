@@ -309,7 +309,7 @@ where D: Dimension
         A: Clone + One + Mul<Output = A>,
         D: RemoveAxis,
     {
-        let min_stride_axis = self._dim().min_stride_axis(&self._strides());
+        let min_stride_axis = self._dim().min_stride_axis(self._strides());
         if axis == min_stride_axis {
             crate::Zip::from(self.lanes(axis)).map_collect(|lane| lane.product())
         } else {
