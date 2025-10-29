@@ -65,7 +65,7 @@ impl<A> ArrayRef<A, Ix1>
     /// *Note:* If enabled, uses blas `dot` for elements of `f32, f64` when memory
     /// layout allows.
     #[track_caller]
-    pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
+    pub fn dot<Rhs: ?Sized>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
     where Self: Dot<Rhs>
     {
         Dot::dot(self, rhs)
@@ -110,9 +110,9 @@ impl<A> ArrayRef<A, Ix1>
                     if blas_compat_1d::<$ty, _>(self) && blas_compat_1d::<$ty, _>(rhs) {
                         unsafe {
                             let (lhs_ptr, n, incx) =
-                                blas_1d_params(self.ptr.as_ptr(), self.len(), self.strides()[0]);
+                                blas_1d_params(self._ptr().as_ptr(), self.len(), self.strides()[0]);
                             let (rhs_ptr, _, incy) =
-                                blas_1d_params(rhs.ptr.as_ptr(), rhs.len(), rhs.strides()[0]);
+                                blas_1d_params(rhs._ptr().as_ptr(), rhs.len(), rhs.strides()[0]);
                             let ret = blas_sys::$func(
                                 n,
                                 lhs_ptr as *const $ty,
@@ -157,7 +157,7 @@ unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const
 ///
 /// For two-dimensional arrays, the dot method computes the matrix
 /// multiplication.
-pub trait Dot<Rhs>
+pub trait Dot<Rhs: ?Sized>
 {
     /// The result of the operation.
     ///
@@ -295,7 +295,7 @@ impl<A> ArrayRef<A, Ix2>
     /// );
     /// ```
     #[track_caller]
-    pub fn dot<Rhs>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
+    pub fn dot<Rhs: ?Sized>(&self, rhs: &Rhs) -> <Self as Dot<Rhs>>::Output
     where Self: Dot<Rhs>
     {
         Dot::dot(self, rhs)
@@ -471,12 +471,12 @@ where A: LinalgScalar
                                 n as blas_index,                 // n, cols of Op(b)
                                 k as blas_index,                 // k, cols of Op(a)
                                 gemm_scalar_cast!($ty, alpha),   // alpha
-                                a.ptr.as_ptr() as *const _,      // a
+                                a._ptr().as_ptr() as *const _,      // a
                                 lda,                             // lda
-                                b.ptr.as_ptr() as *const _,      // b
+                                b._ptr().as_ptr() as *const _,      // b
                                 ldb,                             // ldb
                                 gemm_scalar_cast!($ty, beta),    // beta
-                                c.ptr.as_ptr() as *mut _,        // c
+                                c._ptr().as_ptr() as *mut _,        // c
                                 ldc,                             // ldc
                             );
                         }
@@ -694,10 +694,10 @@ unsafe fn general_mat_vec_mul_impl<A>(
                             let cblas_layout = layout.to_cblas_layout();
 
                             // Low addr in memory pointers required for x, y
-                            let x_offset = offset_from_low_addr_ptr_to_logical_ptr(&x.dim, &x.strides);
-                            let x_ptr = x.ptr.as_ptr().sub(x_offset);
-                            let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.layout.dim, &y.layout.strides);
-                            let y_ptr = y.layout.ptr.as_ptr().sub(y_offset);
+                            let x_offset = offset_from_low_addr_ptr_to_logical_ptr(x._dim(), x._strides());
+                            let x_ptr = x._ptr().as_ptr().sub(x_offset);
+                            let y_offset = offset_from_low_addr_ptr_to_logical_ptr(&y.parts.dim, &y.parts.strides);
+                            let y_ptr = y.parts.ptr.as_ptr().sub(y_offset);
 
                             let x_stride = x.strides()[0] as blas_index;
                             let y_stride = y.strides()[0] as blas_index;
@@ -708,7 +708,7 @@ unsafe fn general_mat_vec_mul_impl<A>(
                                 m as blas_index,            // m, rows of Op(a)
                                 k as blas_index,            // n, cols of Op(a)
                                 cast_as(&alpha),            // alpha
-                                a.ptr.as_ptr() as *const _, // a
+                                a._ptr().as_ptr() as *const _, // a
                                 a_stride,                   // lda
                                 x_ptr as *const _,          // x
                                 x_stride,
@@ -909,9 +909,9 @@ fn is_blas_2d(dim: &Ix2, stride: &Ix2, order: BlasOrder) -> bool
 #[cfg(feature = "blas")]
 fn get_blas_compatible_layout<A>(a: &ArrayRef<A, Ix2>) -> Option<BlasOrder>
 {
-    if is_blas_2d(&a.dim, &a.strides, BlasOrder::C) {
+    if is_blas_2d(a._dim(), a._strides(), BlasOrder::C) {
         Some(BlasOrder::C)
-    } else if is_blas_2d(&a.dim, &a.strides, BlasOrder::F) {
+    } else if is_blas_2d(a._dim(), a._strides(), BlasOrder::F) {
         Some(BlasOrder::F)
     } else {
         None
@@ -952,7 +952,7 @@ where
     if !same_type::<A, B>() {
         return false;
     }
-    is_blas_2d(&a.dim, &a.strides, BlasOrder::C)
+    is_blas_2d(a._dim(), a._strides(), BlasOrder::C)
 }
 
 #[cfg(test)]
@@ -965,7 +965,7 @@ where
     if !same_type::<A, B>() {
         return false;
     }
-    is_blas_2d(&a.dim, &a.strides, BlasOrder::F)
+    is_blas_2d(a._dim(), a._strides(), BlasOrder::F)
 }
 
 #[cfg(test)]

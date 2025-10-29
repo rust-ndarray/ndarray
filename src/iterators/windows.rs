@@ -39,7 +39,7 @@ impl<'a, A, D: Dimension> Windows<'a, A, D>
         let window = window_size.into_dimension();
 
         let strides = axis_strides.into_dimension();
-        let window_strides = a.strides.clone();
+        let window_strides = a.parts.strides.clone();
 
         let base = build_base(a, window.clone(), strides);
         Windows {
@@ -143,7 +143,7 @@ impl<'a, A, D: Dimension> AxisWindows<'a, A, D>
 {
     pub(crate) fn new_with_stride(a: ArrayView<'a, A, D>, axis: Axis, window_size: usize, stride_size: usize) -> Self
     {
-        let window_strides = a.strides.clone();
+        let window_strides = a.parts.strides.clone();
         let axis_idx = axis.index();
 
         let mut window = a.raw_dim();

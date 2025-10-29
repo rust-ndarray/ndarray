@@ -131,12 +131,14 @@ extern crate cblas_sys;
 #[cfg(docsrs)]
 pub mod doc;
 
+use alloc::fmt::Debug;
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 
 #[cfg(not(target_has_atomic = "ptr"))]
 use portable_atomic_util::Arc;
 
+use core::ptr::NonNull;
 use std::marker::PhantomData;
 
 pub use crate::dimension::dim::*;
@@ -1299,7 +1301,41 @@ where S: RawData<Elem = A>
     /// buffer; if borrowed, contains the lifetime and mutability.)
     data: S,
     /// The dimension, strides, and pointer to inside of `data`
-    layout: LayoutRef<A, D>,
+    parts: ArrayPartsSized<A, D>,
+}
+
+/// A possibly-unsized container for array parts.
+///
+/// This type only exists to enable holding the array parts in a single
+/// type, which needs to be sized inside of `ArrayBase` and unsized inside
+/// of the reference types.
+#[derive(Debug)]
+struct ArrayParts<A, D, T: ?Sized>
+{
+    /// A non-null pointer into the buffer held by `data`; may point anywhere
+    /// in its range. If `S: Data`, this pointer must be aligned.
+    ptr: NonNull<A>,
+    /// The lengths of the axes.
+    dim: D,
+    /// The element count stride per axis. To be parsed as `isize`.
+    strides: D,
+    _dst_control: T,
+}
+
+type ArrayPartsSized<A, D> = ArrayParts<A, D, [usize; 0]>;
+type ArrayPartsUnsized<A, D> = ArrayParts<A, D, [usize]>;
+
+impl<A, D> ArrayPartsSized<A, D>
+{
+    const fn new(ptr: NonNull<A>, dim: D, strides: D) -> ArrayPartsSized<A, D>
+    {
+        Self {
+            ptr,
+            dim,
+            strides,
+            _dst_control: [],
+        }
+    }
 }
 
 /// A reference to the layout of an *n*-dimensional array.
@@ -1401,16 +1437,28 @@ where S: RawData<Elem = A>
 // which alter the layout / shape / strides of an array must also
 // alter the offset of the pointer. This is allowed, as it does not
 // cause a pointer deref.
-#[derive(Debug)]
-pub struct LayoutRef<A, D>
+#[repr(transparent)]
+pub struct LayoutRef<A, D>(ArrayPartsUnsized<A, D>);
+
+impl<A, D> LayoutRef<A, D>
 {
-    /// A non-null pointer into the buffer held by `data`; may point anywhere
-    /// in its range. If `S: Data`, this pointer must be aligned.
-    ptr: std::ptr::NonNull<A>,
-    /// The lengths of the axes.
-    dim: D,
-    /// The element count stride per axis. To be parsed as `isize`.
-    strides: D,
+    /// Get a reference to the data pointer.
+    fn _ptr(&self) -> &NonNull<A>
+    {
+        &self.0.ptr
+    }
+
+    /// Get a reference to the array's dimension.
+    fn _dim(&self) -> &D
+    {
+        &self.0.dim
+    }
+
+    /// Get a reference to the array's strides.
+    fn _strides(&self) -> &D
+    {
+        &self.0.strides
+    }
 }
 
 /// A reference to an *n*-dimensional array whose data is safe to read and write.
@@ -1757,7 +1805,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
         match self.broadcast(dim.clone()) {
             Some(it) => it,
-            None => broadcast_panic(&self.dim, &dim),
+            None => broadcast_panic(self._dim(), &dim),
         }
     }
 
@@ -1769,10 +1817,10 @@ impl<A, D: Dimension> ArrayRef<A, D>
     {
         let dim = dim.into_dimension();
         debug_assert_eq!(self.shape(), dim.slice());
-        let ptr = self.ptr;
+        let ptr = self._ptr();
         let mut strides = dim.clone();
-        strides.slice_mut().copy_from_slice(self.strides.slice());
-        unsafe { ArrayView::new(ptr, dim, strides) }
+        strides.slice_mut().copy_from_slice(self._strides().slice());
+        unsafe { ArrayView::new(*ptr, dim, strides) }
     }
 }
 
@@ -1784,8 +1832,8 @@ where
     /// Remove array axis `axis` and return the result.
     fn try_remove_axis(self, axis: Axis) -> ArrayBase<S, D::Smaller>
     {
-        let d = self.layout.dim.try_remove_axis(axis);
-        let s = self.layout.strides.try_remove_axis(axis);
+        let d = self.parts.dim.try_remove_axis(axis);
+        let s = self.parts.strides.try_remove_axis(axis);
         // safe because new dimension, strides allow access to a subset of old data
         unsafe { self.with_strides_dim(s, d) }
     }

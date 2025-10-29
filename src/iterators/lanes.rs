@@ -46,8 +46,8 @@ impl<'a, A, D: Dimension> Lanes<'a, A, D>
             v.try_remove_axis(Axis(0))
         } else {
             let i = axis.index();
-            len = v.dim[i];
-            stride = v.strides[i] as isize;
+            len = v.parts.dim[i];
+            stride = v.parts.strides[i] as isize;
             v.try_remove_axis(axis)
         };
         Lanes {
@@ -115,8 +115,8 @@ impl<'a, A, D: Dimension> LanesMut<'a, A, D>
             v.try_remove_axis(Axis(0))
         } else {
             let i = axis.index();
-            len = v.dim[i];
-            stride = v.strides[i] as isize;
+            len = v.parts.dim[i];
+            stride = v.parts.strides[i] as isize;
             v.try_remove_axis(axis)
         };
         LanesMut {

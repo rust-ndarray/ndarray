@@ -880,9 +880,9 @@ impl<A, D: Dimension> AxisIterCore<A, D>
             index: 0,
             end: v.len_of(axis),
             stride: v.stride_of(axis),
-            inner_dim: v.dim.remove_axis(axis),
-            inner_strides: v.strides.remove_axis(axis),
-            ptr: v.ptr.as_ptr(),
+            inner_dim: v.parts.dim.remove_axis(axis),
+            inner_strides: v.parts.strides.remove_axis(axis),
+            ptr: v.parts.ptr.as_ptr(),
         }
     }
 
@@ -1366,10 +1366,10 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<'_, A, D>, axis: Axis, size: u
     };
 
     let axis = axis.index();
-    let mut inner_dim = v.dim.clone();
+    let mut inner_dim = v.parts.dim.clone();
     inner_dim[axis] = size;
 
-    let mut partial_chunk_dim = v.layout.dim;
+    let mut partial_chunk_dim = v.parts.dim;
     partial_chunk_dim[axis] = chunk_remainder;
     let partial_chunk_index = n_whole_chunks;
 
@@ -1378,8 +1378,8 @@ fn chunk_iter_parts<A, D: Dimension>(v: ArrayView<'_, A, D>, axis: Axis, size: u
         end: iter_len,
         stride,
         inner_dim,
-        inner_strides: v.layout.strides,
-        ptr: v.layout.ptr.as_ptr(),
+        inner_strides: v.parts.strides,
+        ptr: v.parts.ptr.as_ptr(),
     };
 
     (iter, partial_chunk_index, partial_chunk_dim)

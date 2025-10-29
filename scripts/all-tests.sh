@@ -30,5 +30,8 @@ fi
 # Examples
 cargo nextest run --examples
 
+# Doc tests
+cargo test --doc
+
 # Benchmarks
 ([ "$CHANNEL" != "nightly" ] || cargo bench --no-run --verbose --features "$FEATURES")
