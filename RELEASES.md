@@ -1,4 +1,32 @@
-Version 0.17.0 (2025-10-14)
+Version 0.17.1 (2025-11-02)
+===========================
+Version 0.17.1 provides a patch to fix the originally-unsound implementation of the new array reference types.
+
+The reference types are now all unsized.
+Practically speaking, this has one major implication: writing functions and traits that accept `RawRef` and `LayoutRef` will now need a `+ ?Sized` bound to work ergonomically with `ArrayRef`.
+For example, the release notes for 0.17.0 said
+> #### Reading / Writing Shape: `LayoutRef<A, D>`
+> LayoutRef lets functions view or modify shape/stride information without touching data.
+> This replaces verbose signatures like:
+> ```rust
+> fn alter_view<S>(a: &mut ArrayBase<S, Ix1>)
+> where S: Data<Elem = f64>;
+> ```
+> Use AsRef / AsMut for best compatibility:
+> ```rust
+> fn alter_shape<T>(a: &mut T)
+> where T: AsMut<LayoutRef<f64>>;
+> ```
+However, these functions now need an additional bound to allow for callers to pass in `&ArrayRef` types:
+```rust
+fn alter_shape<T>(a: &mut T)
+where T: AsMut<LayoutRef<f64>> + ?Sized; // Added bound here
+```
+
+A huge thank you to Sarah Quiñones ([@sarah-quinones](https://github.com/sarah-quinones)) for catching the original unsound bug and helping to fix it.
+She does truly excellent work with [`faer-rs`](https://codeberg.org/sarah-quinones/faer); check it out!
+
+Version 0.17.0 (2025-10-14) [YANKED]
 ===========================
 Version 0.17.0 introduces a new **array reference type** — the preferred way to write functions and extension traits in `ndarray`.  
 This release is fully backwards-compatible but represents a major usability improvement.  
