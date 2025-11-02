@@ -93,7 +93,7 @@ impl<T> Drop for Partial<T>
     {
         if !self.ptr.is_null() {
             unsafe {
-                ptr::drop_in_place(alloc::slice::from_raw_parts_mut(self.ptr, self.len));
+                ptr::drop_in_place(core::ptr::slice_from_raw_parts_mut(self.ptr, self.len));
             }
         }
     }
