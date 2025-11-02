@@ -1353,7 +1353,7 @@ impl<A, D> ArrayPartsSized<A, D>
 /// use ndarray::{LayoutRef2, array};
 ///
 /// fn aspect_ratio<T, A>(layout: &T) -> (usize, usize)
-/// where T: AsRef<LayoutRef2<A>>
+/// where T: AsRef<LayoutRef2<A>> + ?Sized
 /// {
 ///     let layout = layout.as_ref();
 ///     (layout.ncols(), layout.nrows())
@@ -1373,14 +1373,14 @@ impl<A, D> ArrayPartsSized<A, D>
 ///
 /// trait Ratioable<A> {
 ///     fn aspect_ratio(&self) -> (usize, usize)
-///     where Self: AsRef<LayoutRef2<A>>;
+///     where Self: AsRef<LayoutRef2<A>> + ?Sized;
 ///
 ///     fn cut_to_ratio(&mut self, ratio: (usize, usize))
-///     where Self: AsMut<LayoutRef2<A>>;
+///     where Self: AsMut<LayoutRef2<A>> + ?Sized;
 /// }
 ///
 /// impl<T, A> Ratioable<A> for T
-/// where T: AsRef<LayoutRef2<A>> + AsMut<LayoutRef2<A>>
+/// where T: AsRef<LayoutRef2<A>> + AsMut<LayoutRef2<A>> + ?Sized
 /// {
 ///     fn aspect_ratio(&self) -> (usize, usize)
 ///     {
