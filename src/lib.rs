@@ -1373,10 +1373,10 @@ impl<A, D> ArrayPartsSized<A, D>
 ///
 /// trait Ratioable<A> {
 ///     fn aspect_ratio(&self) -> (usize, usize)
-///     where Self: AsRef<LayoutRef2<A>> + ?Sized;
+///     where Self: AsRef<LayoutRef2<A>>;
 ///
 ///     fn cut_to_ratio(&mut self, ratio: (usize, usize))
-///     where Self: AsMut<LayoutRef2<A>> + ?Sized;
+///     where Self: AsMut<LayoutRef2<A>>;
 /// }
 ///
 /// impl<T, A> Ratioable<A> for T
