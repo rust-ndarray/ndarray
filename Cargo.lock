@@ -457,7 +457,7 @@ dependencies = [
 
 [[package]]
 name = "ndarray"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "approx",
  "cblas-sys",
