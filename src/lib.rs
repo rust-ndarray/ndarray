@@ -1353,7 +1353,7 @@ impl<A, D> ArrayPartsSized<A, D>
 /// use ndarray::{LayoutRef2, array};
 ///
 /// fn aspect_ratio<T, A>(layout: &T) -> (usize, usize)
-/// where T: AsRef<LayoutRef2<A>>
+/// where T: AsRef<LayoutRef2<A>> + ?Sized
 /// {
 ///     let layout = layout.as_ref();
 ///     (layout.ncols(), layout.nrows())
@@ -1380,7 +1380,7 @@ impl<A, D> ArrayPartsSized<A, D>
 /// }
 ///
 /// impl<T, A> Ratioable<A> for T
-/// where T: AsRef<LayoutRef2<A>> + AsMut<LayoutRef2<A>>
+/// where T: AsRef<LayoutRef2<A>> + AsMut<LayoutRef2<A>> + ?Sized
 /// {
 ///     fn aspect_ratio(&self) -> (usize, usize)
 ///     {
@@ -1420,7 +1420,7 @@ impl<A, D> ArrayPartsSized<A, D>
 /// expensive) guarantee that the data is uniquely held (see [`ArrayRef`]
 /// for more information).
 ///
-/// To help users avoid this error cost, functions that operate on `LayoutRef`s
+/// To help users avoid this cost, functions that operate on `LayoutRef`s
 /// should take their parameters as a generic type `T: AsRef<LayoutRef<A, D>>`,
 /// as the above examples show. This aids the caller in two ways: they can pass
 /// their arrays by reference (`&arr`) instead of explicitly calling `as_ref`,
