@@ -53,13 +53,10 @@ pub mod rand_distr
     pub use rand_distr::*;
 }
 
-/// Constructors for n-dimensional arrays with random elements.
-///
-/// This trait extends ndarray’s `ArrayBase` and can not be implemented
-/// for other types.
+/// Extension trait for constructing n-dimensional arrays with random elements.
 ///
 /// The default RNG is a fast automatically seeded rng (currently
-/// [`rand::rngs::SmallRng`], seeded from [`rand::thread_rng`]).
+/// [`rand::rngs::SmallRng`], seeded from [`rand::rng`]).
 ///
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
@@ -148,13 +145,10 @@ where
         D: RemoveAxis;
 }
 
-/// Constructors for sampling from [`ArrayRef`] with random elements.
+/// Extension trait for sampling from [`ArrayRef`] with random elements.
 ///
-/// This trait extends ndarray’s `ArrayRef` and can not be implemented
-/// for other types.
-///
-/// The default RNG is a fast automatically seeded rng (currently
-/// [`rand::rngs::SmallRng`], seeded from [`rand::thread_rng`]).
+/// The default RNG is a fast, automatically seeded rng (currently
+/// [`rand::rngs::SmallRng`], seeded from [`rand::rng`]).
 ///
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
