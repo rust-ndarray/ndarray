@@ -1,6 +1,12 @@
 Recent Changes
 --------------
 
+- 0.16.0
+
+  - Require ndarray 0.17.1
+  - Bump `rand` to 0.9.0 and `rand_distr` to 0.5.0
+  - Add an additional extension trait, `RandomRefExt`, to allow sampling from `ndarray::ArrayRef` instances
+
 - 0.15.0
 
   - Require ndarray 0.16
