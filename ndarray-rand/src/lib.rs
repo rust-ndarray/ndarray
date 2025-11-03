@@ -159,7 +159,7 @@ where
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
 /// documentation for information. You can select a different RNG with
-/// [`.random_using()`](Self::random_using).
+/// [`.sample_axis_using()`](RandomRefExt::sample_axis_using).
 pub trait RandomRefExt<A, D>
 where D: Dimension
 {
