@@ -64,7 +64,7 @@ pub mod rand_distr
 /// Note that `SmallRng` is cheap to initialize and fast, but it may generate
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
 /// documentation for information. You can select a different RNG with
-/// [`.random_using()`](Self::random_using).
+/// [`.random_using()`](RandomExt::random_using).
 pub trait RandomExt<S, A, D>
 where
     S: RawData<Elem = A>,
@@ -306,7 +306,7 @@ where
         S: Data<Elem = A>,
         D: RemoveAxis,
     {
-        (&**self).sample_axis_using(axis, n_samples, strategy, rng)
+        (**self).sample_axis_using(axis, n_samples, strategy, rng)
     }
 }
 
