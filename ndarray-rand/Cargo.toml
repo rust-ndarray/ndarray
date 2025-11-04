@@ -1,6 +1,6 @@
 [package]
 name = "ndarray-rand"
-version = "0.15.0"
+version = "0.16.0"
 edition = "2018"
 authors = ["bluss"]
 license = "MIT OR Apache-2.0"
