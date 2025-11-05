@@ -2,8 +2,85 @@
 
 #[cfg(feature = "std")]
 use num_traits::Float;
+#[cfg(feature = "std")]
+use num_traits::FloatConst;
+#[cfg(feature = "std")]
+use num_complex::Complex;
 
 use crate::imp_prelude::*;
+
+/// Trait for values with a meaningful complex argument (phase).
+/// This `*_64` version standardises the *output* to `f64`.
+#[cfg(feature = "std")]
+pub trait HasAngle64 {
+    /// Return the phase angle (argument) in radians in the range (-π, π].
+    fn to_angle64(&self) -> f64;
+}
+
+#[cfg(feature = "std")]
+impl HasAngle64 for f64 {
+    #[inline]
+    fn to_angle64(&self) -> f64 {
+        (0.0f64).atan2(*self)
+    }
+}
+
+#[cfg(feature = "std")]
+impl HasAngle64 for f32 {
+    #[inline]
+    fn to_angle64(&self) -> f64 {
+        // Promote to f64
+        (0.0f64).atan2(*self as f64)
+    }
+}
+
+#[cfg(feature = "std")]
+impl HasAngle64 for Complex<f64> {
+    #[inline]
+    fn to_angle64(&self) -> f64 {
+        self.im.atan2(self.re)
+    }
+}
+
+#[cfg(feature = "std")]
+impl HasAngle64 for Complex<f32> {
+    #[inline]
+    fn to_angle64(&self) -> f64 {
+        (self.im as f64).atan2(self.re as f64)
+    }
+}
+
+/// Optional: precision-preserving variant (returns `F`), if you want
+/// an API that keeps `f32` outputs for `f32` inputs.
+///
+/// - Works for `f32`/`f64` and `Complex<f32>`/`Complex<f64>`.
+#[cfg(feature = "std")]
+pub trait HasAngle<F: Float + FloatConst> {
+    /// Return the phase angle (argument) in the same precision as the input type.
+    fn to_angle(&self) -> F;
+}
+
+#[cfg(feature = "std")]
+impl<F> HasAngle<F> for F
+where
+    F: Float + FloatConst,
+{
+    #[inline]
+    fn to_angle(&self) -> F {
+        F::zero().atan2(*self)
+    }
+}
+
+#[cfg(feature = "std")]
+impl<F> HasAngle<F> for Complex<F>
+where
+    F: Float + FloatConst,
+{
+    #[inline]
+    fn to_angle(&self) -> F {
+        self.im.atan2(self.re)
+    }
+}
 
 #[cfg(feature = "std")]
 macro_rules! boolean_ops {
@@ -167,6 +244,112 @@ where
     }
 }
 
+/// # Angle calculation methods for arrays
+///
+/// Methods for calculating phase angles of complex values in arrays.
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<A, D> ArrayRef<A, D>
+where
+    A: HasAngle64,
+    D: Dimension,
+{
+    /// Return the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of complex values in the array.
+    ///
+    /// This function always returns `f64` values, regardless of input precision.
+    /// The angles are returned in the range (-π, π].
+    ///
+    /// # Arguments
+    ///
+    /// * `deg` - If `true`, convert radians to degrees; if `false`, return radians.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use num_complex::Complex;
+    /// use std::f64::consts::PI;
+    ///
+    /// // Real numbers
+    /// let real_arr = array![1.0, -1.0, 0.0];
+    /// let angles_rad = real_arr.angle(false);
+    /// let angles_deg = real_arr.angle(true);
+    /// assert!((angles_rad[0] - 0.0).abs() < 1e-10);
+    /// assert!((angles_rad[1] - PI).abs() < 1e-10);
+    /// assert!((angles_deg[1] - 180.0).abs() < 1e-10);
+    ///
+    /// // Complex numbers
+    /// let complex_arr = array![
+    ///     Complex::new(1.0, 0.0),
+    ///     Complex::new(0.0, 1.0),
+    ///     Complex::new(1.0, 1.0),
+    /// ];
+    /// let angles = complex_arr.angle(false);
+    /// assert!((angles[0] - 0.0).abs() < 1e-10);
+    /// assert!((angles[1] - PI/2.0).abs() < 1e-10);
+    /// assert!((angles[2] - PI/4.0).abs() < 1e-10);
+    /// ```
+    #[must_use = "method returns a new array and does not mutate the original value"]
+    pub fn angle(&self, deg: bool) -> Array<f64, D>
+    {
+        let mut result = self.map(|x| x.to_angle64());
+        if deg {
+            result.mapv_inplace(|a| a * 180.0f64 / std::f64::consts::PI);
+        }
+        result
+    }
+}
+
+/// # Precision-preserving angle calculation methods
+///
+/// Methods for calculating phase angles that preserve input precision.
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<A, D> ArrayRef<A, D>
+where
+    D: Dimension,
+{
+    /// Return the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of values, preserving input precision.
+    ///
+    /// This method preserves the precision of the input:
+    /// - `f32` and `Complex<f32>` inputs produce `f32` outputs
+    /// - `f64` and `Complex<f64>` inputs produce `f64` outputs
+    ///
+    /// # Arguments
+    ///
+    /// * `deg` - If `true`, convert radians to degrees; if `false`, return radians.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use num_complex::Complex;
+    ///
+    /// // f32 precision preserved for complex numbers
+    /// let complex_f32 = array![Complex::new(1.0f32, 1.0f32)];
+    /// let angles_f32 = complex_f32.angle_preserve(false);
+    /// // angles_f32 has type Array<f32, _>
+    ///
+    /// // f64 precision preserved for complex numbers
+    /// let complex_f64 = array![Complex::new(1.0f64, 1.0f64)];
+    /// let angles_f64 = complex_f64.angle_preserve(false);
+    /// // angles_f64 has type Array<f64, _>
+    /// ```
+    #[must_use = "method returns a new array and does not mutate the original value"]
+    pub fn angle_preserve<F>(&self, deg: bool) -> Array<F, D>
+    where
+        A: HasAngle<F>,
+        F: Float + FloatConst,
+    {
+        let mut result = self.map(|x| x.to_angle());
+        if deg {
+            let factor = F::from(180.0).unwrap() / F::PI();
+            result.mapv_inplace(|a| a * factor);
+        }
+        result
+    }
+}
+
 impl<A, D> ArrayRef<A, D>
 where
     A: 'static + PartialOrd + Clone,
@@ -190,4 +373,151 @@ where
         assert!(min <= max, "min must be less than or equal to max");
         self.mapv(|a| num_traits::clamp(a, min.clone(), max.clone()))
     }
+}
+
+/// Calculate the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of complex values in an array.
+/// 
+/// 
+/// Always returns `f64`, regardless of input precision.
+///
+/// # Arguments
+///
+/// * `z` - Array of real or complex values (f32/f64, `Complex<f32>`/`Complex<f64>`).
+/// * `deg` - If `true`, convert radians to degrees.
+///
+/// # Returns
+///
+/// An `Array<f64, D>` with the same shape as `z` containing the phase angles.
+/// Angles are in the range (-π, π] for radians, or (-180, 180] for degrees.
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use num_complex::Complex;
+/// use std::f64::consts::PI;
+///
+/// // Real numbers
+/// let real_vals = array![1.0, -1.0, 0.0];
+/// let angles_rad = ndarray::angle(&real_vals, false);
+/// let angles_deg = ndarray::angle(&real_vals, true);
+/// assert!((angles_rad[0] - 0.0).abs() < 1e-10);
+/// assert!((angles_rad[1] - PI).abs() < 1e-10);
+/// assert!((angles_deg[1] - 180.0).abs() < 1e-10);
+///
+/// // Complex numbers
+/// let complex_vals = array![
+///     Complex::new(1.0, 0.0),
+///     Complex::new(0.0, 1.0),
+///     Complex::new(1.0, 1.0),
+/// ];
+/// let angles = ndarray::angle(&complex_vals, false);
+/// assert!((angles[0] - 0.0).abs() < 1e-10);
+/// assert!((angles[1] - PI/2.0).abs() < 1e-10);
+/// assert!((angles[2] - PI/4.0).abs() < 1e-10);
+/// ```
+///
+/// # Zero handling
+///
+/// The function follows NumPy's convention for handling zeros:
+/// - `+0 + 0i` → `+0`
+/// - `-0 + 0i` → `+π`
+/// - `+0 - 0i` → `-0`
+/// - `-0 - 0i` → `-π`
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+pub fn angle<T, S, D>(z: &ArrayBase<S, D>, deg: bool) -> Array<f64, D>
+where
+    T: HasAngle64,
+    S: Data<Elem = T>,
+    D: Dimension,
+{
+    let mut result = z.map(|x| x.to_angle64());
+    if deg {
+        result.mapv_inplace(|a| a * 180.0f64 / std::f64::consts::PI);
+    }
+    result
+}
+
+/// Scalar convenience function for angle calculation.
+///
+/// Calculate the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of a single complex value.
+///
+/// # Arguments
+///
+/// * `z` - A real or complex value (f32/f64, `Complex<f32>`/`Complex<f64>`).
+/// * `deg` - If `true`, convert radians to degrees.
+///
+/// # Returns
+///
+/// The phase angle as `f64` in radians or degrees.
+///
+/// # Examples
+///
+/// ```
+/// use num_complex::Complex;
+/// use std::f64::consts::PI;
+///
+/// assert!((ndarray::angle_scalar(Complex::new(1.0, 1.0), false) - PI/4.0).abs() < 1e-10);
+/// assert!((ndarray::angle_scalar(1.0f32, true) - 0.0).abs() < 1e-10);
+/// assert!((ndarray::angle_scalar(-1.0, true) - 180.0).abs() < 1e-10);
+/// ```
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+pub fn angle_scalar<T: HasAngle64>(z: T, deg: bool) -> f64
+{
+    let mut a = z.to_angle64();
+    if deg {
+        a *= 180.0f64 / std::f64::consts::PI;
+    }
+    a
+}
+
+/// Precision-preserving angle calculation function.
+///
+/// Calculate the phase angle of complex values while preserving input precision.
+/// Unlike [`angle`], this function returns the same precision as the input:
+/// - `f32` and `Complex<f32>` inputs produce `f32` outputs
+/// - `f64` and `Complex<f64>` inputs produce `f64` outputs
+///
+/// # Arguments
+///
+/// * `z` - Array of real or complex values.
+/// * `deg` - If `true`, convert radians to degrees.
+///
+/// # Returns
+///
+/// An `Array<F, D>` with the same shape as `z` and precision matching the input.
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use num_complex::Complex;
+///
+/// // f32 precision preserved for complex numbers
+/// let z32 = array![Complex::new(0.0f32, 1.0)];
+/// let out32 = ndarray::angle_preserve(&z32, false);
+/// // out32 has type Array<f32, _>
+///
+/// // f64 precision preserved for complex numbers
+/// let z64 = array![Complex::new(0.0f64, -1.0)];
+/// let out64 = ndarray::angle_preserve(&z64, false);
+/// // out64 has type Array<f64, _>
+/// ```
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+pub fn angle_preserve<A, F, S, D>(z: &ArrayBase<S, D>, deg: bool) -> Array<F, D>
+where
+    A: HasAngle<F>,
+    F: Float + FloatConst,
+    S: Data<Elem = A>,
+    D: Dimension,
+{
+    let mut result = z.map(|x| x.to_angle());
+    if deg {
+        let factor = F::from(180.0).unwrap() / F::PI();
+        result.mapv_inplace(|a| a * factor);
+    }
+    result
 }
