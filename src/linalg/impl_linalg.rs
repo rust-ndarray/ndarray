@@ -1173,14 +1173,14 @@ where A: LinalgScalar
 /// - Axis indices can be negative, in which case they are interpreted
 ///   relative to the end of the tensor (e.g., `-1` refers to the last axis).  
 /// - The number and dimensionality of contracted axes determine the rank of
-///   the result of [`tensordot`].
+///   the result of [tensordot].
 /// - `AxisSpec` exists to disambiguate and formalise axis specifications,
-///   avoiding confusion with [`ndarray::Axis`] and ['ndarray::iter::Axes'].
+///   avoiding confusion with [crate::Axis] and [crate::iter::Axes].
 ///
 /// # See also
 ///
-/// [`tensordot`] — Performs the generalized tensor contraction described by this specification.
-/// [`ndarray::Axis`] — Represents a single axis index within an array.
+/// [tensordot] — Performs the generalized tensor contraction described by this specification.
+/// [`Axis`] — Represents a single axis index within an array.
 #[derive(Clone, Debug)]
 pub enum AxisSpec
 {
