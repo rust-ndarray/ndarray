@@ -12,5 +12,6 @@ pub use self::impl_linalg::general_mat_mul;
 pub use self::impl_linalg::general_mat_vec_mul;
 pub use self::impl_linalg::kron;
 pub use self::impl_linalg::Dot;
+pub use self::impl_linalg::{tensordot, AxisSpec, Tensordot};
 
 mod impl_linalg;
