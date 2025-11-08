@@ -1,40 +1,39 @@
 // Element-wise methods for ndarray
 
 #[cfg(feature = "std")]
-use num_traits::{Float, FloatConst, NumCast};
-#[cfg(feature = "std")]
 use num_complex::Complex;
+#[cfg(feature = "std")]
+use num_traits::Float;
 
 use crate::imp_prelude::*;
 
-/// Optional: precision-preserving variant (returns `F`), if you want
-/// an API that keeps `f32` outputs for `f32` inputs.
-///
-/// - Works for `f32`/`f64` and `Complex<f32>`/`Complex<f64>`.
+/// Trait for types that can generalize the phase angle (argument)
+/// calculation for both real floats and complex numbers.
 #[cfg(feature = "std")]
-pub trait HasAngle<F: Float + FloatConst> {
-    /// Return the phase angle (argument) in the same precision as the input type.
+pub trait HasAngle<F: Float>
+{
+    /// Return the phase angle (argument) of the value
     fn to_angle(&self) -> F;
 }
 
 #[cfg(feature = "std")]
 impl<F> HasAngle<F> for F
-where
-    F: Float + FloatConst,
+where F: Float
 {
     #[inline]
-    fn to_angle(&self) -> F {
+    fn to_angle(&self) -> F
+    {
         F::zero().atan2(*self)
     }
 }
 
 #[cfg(feature = "std")]
 impl<F> HasAngle<F> for Complex<F>
-where
-    F: Float + FloatConst,
+where F: Float
 {
     #[inline]
-    fn to_angle(&self) -> F {
+    fn to_angle(&self) -> F
+    {
         self.im.atan2(self.re)
     }
 }
@@ -207,17 +206,13 @@ where
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<A, D> ArrayRef<A, D>
-where
-    D: Dimension,
+where D: Dimension
 {
     /// Return the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of complex values in the array.
     ///
-    /// This function always returns `f64` values, regardless of input precision.
-    /// The angles are returned in the range (-π, π].
-    ///
-    /// # Arguments
-    ///
-    /// * `deg` - If `true`, convert radians to degrees; if `false`, return radians.
+    /// This function always returns the same float type as was provided to it. Leaving the exact precision left to the user.
+    /// The angles are returned in ``radians`` and in the range ``(-π, π]``.
+    /// To get the angles in degrees, use the `to_degrees()` method on the resulting array.
     ///
     /// # Examples
     ///
@@ -228,8 +223,8 @@ where
     ///
     /// // Real numbers
     /// let real_arr = array![1.0f64, -1.0, 0.0];
-    /// let angles_rad = real_arr.angle(false);
-    /// let angles_deg = real_arr.angle(true);
+    /// let angles_rad = real_arr.angle();
+    /// let angles_deg = real_arr.angle().to_degrees();
     /// assert!((angles_rad[0] - 0.0).abs() < 1e-10);
     /// assert!((angles_rad[1] - PI).abs() < 1e-10);
     /// assert!((angles_deg[1] - 180.0).abs() < 1e-10);
@@ -246,65 +241,10 @@ where
     /// assert!((angles[2] - PI/4.0).abs() < 1e-10);
     /// ```
     #[must_use = "method returns a new array and does not mutate the original value"]
-    pub fn angle<F: Float+ FloatConst>(&self, deg: bool) -> Array<F, D>
-    where
-        A: HasAngle<F>,
+    pub fn angle<F: Float>(&self) -> Array<F, D>
+    where A: HasAngle<F> + Clone
     {
-        let mut result = self.map(|x| x.to_angle());
-        if deg {
-            result.mapv_inplace(|a| a *  F::from(180.0).unwrap() / F::PI());
-        }
-        result
-    }
-}
-
-/// # Precision-preserving angle calculation methods
-///
-/// Methods for calculating phase angles that preserve input precision.
-#[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<A, D> ArrayRef<A, D>
-where
-    D: Dimension,
-{
-    /// Return the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of values, preserving input precision.
-    ///
-    /// This method preserves the precision of the input:
-    /// - `f32` and `Complex<f32>` inputs produce `f32` outputs
-    /// - `f64` and `Complex<f64>` inputs produce `f64` outputs
-    ///
-    /// # Arguments
-    ///
-    /// * `deg` - If `true`, convert radians to degrees; if `false`, return radians.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ndarray::array;
-    /// use num_complex::Complex;
-    ///
-    /// // f32 precision preserved for complex numbers
-    /// let complex_f32 = array![Complex::new(1.0f32, 1.0f32)];
-    /// let angles_f32 = complex_f32.angle_preserve(false);
-    /// // angles_f32 has type Array<f32, _>
-    ///
-    /// // f64 precision preserved for complex numbers
-    /// let complex_f64 = array![Complex::new(1.0f64, 1.0f64)];
-    /// let angles_f64 = complex_f64.angle_preserve(false);
-    /// // angles_f64 has type Array<f64, _>
-    /// ```
-    #[must_use = "method returns a new array and does not mutate the original value"]
-    pub fn angle_preserve<F>(&self, deg: bool) -> Array<F, D>
-    where
-        A: HasAngle<F>,
-        F: Float + FloatConst,
-    {
-        let mut result = self.map(|x| x.to_angle());
-        if deg {
-            let factor = F::from(180.0).unwrap() / F::PI();
-            result.mapv_inplace(|a| a * factor);
-        }
-        result
+        self.mapv(|f| A::to_angle(&f))
     }
 }
 
@@ -340,7 +280,6 @@ where
 /// # Arguments
 ///
 /// * `z` - A real or complex value (f32/f64, `Complex<f32>`/`Complex<f64>`).
-/// * `deg` - If `true`, convert radians to degrees.
 ///
 /// # Returns
 ///
@@ -352,37 +291,26 @@ where
 /// use num_complex::Complex;
 /// use std::f64::consts::PI;
 ///
-/// assert!((ndarray::angle_scalar(Complex::new(1.0f64, 1.0), false) - PI/4.0).abs() < 1e-10);
-/// assert!((ndarray::angle_scalar(1.0f32, true) - 0.0).abs() < 1e-10);
-/// assert!((ndarray::angle_scalar(-1.0f32, true) - 180.0).abs() < 1e-10);
+/// assert!((ndarray::angle_scalar(Complex::new(1.0f64, 1.0)) - PI/4.0).abs() < 1e-10);
+/// assert!((ndarray::angle_scalar(1.0f32) - 0.0).abs() < 1e-10);
+/// assert!((ndarray::angle_scalar(-1.0f32) - 180.0).abs() < 1e-10);
 /// ```
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-pub fn angle_scalar<F: Float + FloatConst, T: HasAngle<F>>(z: T, deg: bool) -> F
+pub fn angle_scalar<F: Float, T: HasAngle<F>>(z: T) -> F
 {
-    let mut a = z.to_angle();
-    if deg {
-
-        a = a * <F as NumCast>::from(180.0).expect("180.0 is a valid f32 and f64 -- this should not fail") / F::PI();
-    }
-    a
+    z.to_angle()
 }
 
-/// Precision-preserving angle calculation function.
-///
-/// Calculate the phase angle of complex values while preserving input precision.
-/// Unlike [`angle`], this function returns the same precision as the input:
-/// - `f32` and `Complex<f32>` inputs produce `f32` outputs
-/// - `f64` and `Complex<f64>` inputs produce `f64` outputs
+/// Calculate the phase angle of complex values.
 ///
 /// # Arguments
 ///
 /// * `z` - Array of real or complex values.
-/// * `deg` - If `true`, convert radians to degrees.
 ///
 /// # Returns
 ///
-/// An `Array<F, D>` with the same shape as `z` and precision matching the input.
+/// An `Array<F, D>` with the same shape as `z`.
 ///
 /// # Examples
 ///
@@ -390,229 +318,220 @@ pub fn angle_scalar<F: Float + FloatConst, T: HasAngle<F>>(z: T, deg: bool) -> F
 /// use ndarray::array;
 /// use num_complex::Complex;
 ///
-/// // f32 precision preserved for complex numbers
+/// // f32 precision for complex numbers
 /// let z32 = array![Complex::new(0.0f32, 1.0)];
-/// let out32 = ndarray::angle(&z32, false);
+/// let out32 = ndarray::angle(&z32);
 /// // out32 has type Array<f32, _>
 ///
-/// // f64 precision preserved for complex numbers
+/// // f64 precision for complex numbers
 /// let z64 = array![Complex::new(0.0f64, -1.0)];
-/// let out64 = ndarray::angle(&z64, false);
+/// let out64 = ndarray::angle(&z64);
 /// // out64 has type Array<f64, _>
 /// ```
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-pub fn angle<A, F, S, D>(z: &ArrayBase<S, D>, deg: bool) -> Array<F, D>
+pub fn angle<A, F, S, D>(z: &ArrayBase<S, D>) -> Array<F, D>
 where
     A: HasAngle<F>,
-    F: Float + FloatConst,
+    F: Float,
     S: Data<Elem = A>,
     D: Dimension,
 {
-    let mut result = z.map(|x| x.to_angle());
-    if deg {
-        let factor = F::from(180.0).unwrap() / F::PI();
-        result.mapv_inplace(|a| a * factor);
-    }
-    result
+    z.map(HasAngle::to_angle)
 }
 
 #[cfg(all(test, feature = "std"))]
-mod angle_tests {
+mod angle_tests
+{
     use super::*;
     use crate::Array;
     use num_complex::Complex;
     use std::f64::consts::PI;
 
-    #[test]
-    fn test_real_numbers_radians() {
-        let arr = Array::from_vec(vec![1.0f64, -1.0, 0.0]);
-        let angles = arr.angle(false);
-
-        assert!((angles[0] - 0.0).abs() < 1e-10, "angle(1.0) should be 0");
-        assert!((angles[1] - PI).abs() < 1e-10, "angle(-1.0) should be π");
-        assert!(angles[2].abs() < 1e-10, "angle(0.0) should be 0");
+    /// Helper macro for floating-point comparison
+    macro_rules! assert_approx_eq {
+        ($a:expr, $b:expr, $tol:expr $(, $msg:expr)?) => {{
+            let (a, b) = ($a, $b);
+            assert!(
+                (a - b).abs() < $tol,
+                concat!(
+                    "assertion failed: |left - right| >= tol\n",
+                    " left: {left:?}\n right: {right:?}\n tol: {tol:?}\n",
+                    $($msg,)?
+                ),
+                left = a,
+                right = b,
+                tol = $tol
+            );
+        }};
     }
 
     #[test]
-    fn test_real_numbers_degrees() {
+    fn test_real_numbers_radians()
+    {
         let arr = Array::from_vec(vec![1.0f64, -1.0, 0.0]);
-        let angles = arr.angle(true);
+        let angles = arr.angle();
 
-        assert!((angles[0] - 0.0).abs() < 1e-10, "angle(1.0) should be 0°");
-        assert!((angles[1] - 180.0).abs() < 1e-10, "angle(-1.0) should be 180°");
-        assert!(angles[2].abs() < 1e-10, "angle(0.0) should be 0°");
+        assert_approx_eq!(angles[0], 0.0, 1e-10, "angle(1.0) should be 0");
+        assert_approx_eq!(angles[1], PI, 1e-10, "angle(-1.0) should be π");
+        assert_approx_eq!(angles[2], 0.0, 1e-10, "angle(0.0) should be 0");
     }
 
     #[test]
-    fn test_complex_numbers_radians() {
+    fn test_real_numbers_degrees()
+    {
+        let arr = Array::from_vec(vec![1.0f64, -1.0, 0.0]);
+        let angles_deg = arr.angle().to_degrees();
+
+        assert_approx_eq!(angles_deg[0], 0.0, 1e-10, "angle(1.0) should be 0°");
+        assert_approx_eq!(angles_deg[1], 180.0, 1e-10, "angle(-1.0) should be 180°");
+        assert_approx_eq!(angles_deg[2], 0.0, 1e-10, "angle(0.0) should be 0°");
+    }
+
+    #[test]
+    fn test_complex_numbers_radians()
+    {
         let arr = Array::from_vec(vec![
-            Complex::new(1.0f64, 0.0),     // 0
-            Complex::new(0.0, 1.0),        // π/2
-            Complex::new(-1.0, 0.0),       // π
-            Complex::new(0.0, -1.0),       // -π/2
-            Complex::new(1.0, 1.0),        // π/4
-            Complex::new(-1.0, -1.0),      // -3π/4
+            Complex::new(1.0, 0.0),    // 0
+            Complex::new(0.0, 1.0),    // π/2
+            Complex::new(-1.0, 0.0),   // π
+            Complex::new(0.0, -1.0),   // -π/2
+            Complex::new(1.0, 1.0),    // π/4
+            Complex::new(-1.0, -1.0),  // -3π/4
         ]);
-        let angles = arr.angle(false);
+        let a = arr.angle();
 
-        assert!((angles[0] - 0.0).abs() < 1e-10, "angle(1+0i) should be 0");
-        assert!((angles[1] - PI/2.0).abs() < 1e-10, "angle(0+1i) should be π/2");
-        assert!((angles[2] - PI).abs() < 1e-10, "angle(-1+0i) should be π");
-        assert!((angles[3] - (-PI/2.0)).abs() < 1e-10, "angle(0-1i) should be -π/2");
-        assert!((angles[4] - PI/4.0).abs() < 1e-10, "angle(1+1i) should be π/4");
-        assert!((angles[5] - (-3.0*PI/4.0)).abs() < 1e-10, "angle(-1-1i) should be -3π/4");
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], PI / 2.0, 1e-10);
+        assert_approx_eq!(a[2], PI, 1e-10);
+        assert_approx_eq!(a[3], -PI / 2.0, 1e-10);
+        assert_approx_eq!(a[4], PI / 4.0, 1e-10);
+        assert_approx_eq!(a[5], -3.0 * PI / 4.0, 1e-10);
     }
 
     #[test]
-    fn test_complex_numbers_degrees() {
+    fn test_complex_numbers_degrees()
+    {
         let arr = Array::from_vec(vec![
-            Complex::new(1.0f64, 0.0),
+            Complex::new(1.0, 0.0),
             Complex::new(0.0, 1.0),
             Complex::new(-1.0, 0.0),
             Complex::new(1.0, 1.0),
         ]);
-        let angles = arr.angle(true);
+        let a = arr.angle().to_degrees();
 
-        assert!((angles[0] - 0.0).abs() < 1e-10, "angle(1+0i) should be 0°");
-        assert!((angles[1] - 90.0).abs() < 1e-10, "angle(0+1i) should be 90°");
-        assert!((angles[2] - 180.0).abs() < 1e-10, "angle(-1+0i) should be 180°");
-        assert!((angles[3] - 45.0).abs() < 1e-10, "angle(1+1i) should be 45°");
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], 90.0, 1e-10);
+        assert_approx_eq!(a[2], 180.0, 1e-10);
+        assert_approx_eq!(a[3], 45.0, 1e-10);
     }
 
     #[test]
-    fn test_signed_zeros() {
+    fn test_signed_zeros()
+    {
         let arr = Array::from_vec(vec![
-            Complex::new(0.0f64, 0.0),      // +0 + 0i → +0
-            Complex::new(-0.0, 0.0),        // -0 + 0i → +π
-            Complex::new(0.0, -0.0),        // +0 - 0i → -0
-            Complex::new(-0.0, -0.0),       // -0 - 0i → -π
+            Complex::new(0.0, 0.0),
+            Complex::new(-0.0, 0.0),
+            Complex::new(0.0, -0.0),
+            Complex::new(-0.0, -0.0),
         ]);
-        let angles = arr.angle(false);
+        let a = arr.angle();
 
-        assert!(angles[0] >= 0.0 && angles[0].abs() < 1e-10, "+0+0i should give +0");
-        assert!((angles[1] - PI).abs() < 1e-10, "-0+0i should give +π");
-        assert!(angles[2] <= 0.0 && angles[2].abs() < 1e-10, "+0-0i should give -0");
-        assert!((angles[3] - (-PI)).abs() < 1e-10, "-0-0i should give -π");
+        assert!(a[0] >= 0.0 && a[0].abs() < 1e-10);
+        assert_approx_eq!(a[1], PI, 1e-10);
+        assert!(a[2] <= 0.0 && a[2].abs() < 1e-10);
+        assert_approx_eq!(a[3], -PI, 1e-10);
     }
 
     #[test]
-    fn test_angle_preserve_f32() {
+    fn test_angle_scalar_f64()
+    {
+        assert_approx_eq!(angle_scalar(Complex::new(1.0, 1.0)), PI / 4.0, 1e-10);
+        assert_approx_eq!(angle_scalar(1.0f64), 0.0, 1e-10);
+        assert_approx_eq!(angle_scalar(-1.0f64), PI, 1e-10);
+    }
+
+    #[test]
+    fn test_angle_scalar_f32()
+    {
+        use std::f32::consts::FRAC_PI_4;
+        assert_approx_eq!(angle_scalar(Complex::new(1.0f32, 1.0)), FRAC_PI_4, 1e-6);
+        assert_approx_eq!(angle_scalar(1.0f32), 0.0, 1e-6);
+        assert_approx_eq!(angle_scalar(-1.0f32), std::f32::consts::PI, 1e-6);
+    }
+
+    #[test]
+    fn test_angle_function()
+    {
         let arr = Array::from_vec(vec![
-            Complex::new(1.0f32, 1.0),
-            Complex::new(-1.0, 0.0),
-        ]);
-        let angles = arr.angle_preserve(false);
-
-        assert!((angles[0] - std::f32::consts::FRAC_PI_4).abs() < 1e-6);
-        assert!((angles[1] - std::f32::consts::PI).abs() < 1e-6);
-    }
-
-    #[test]
-    fn test_angle_preserve_f64() {
-        let arr = Array::from_vec(vec![
-            Complex::new(1.0f64, 1.0),
-            Complex::new(-1.0, 0.0),
-        ]);
-        let angles = arr.angle_preserve(false);
-
-        assert!((angles[0] - PI/4.0).abs() < 1e-10);
-        assert!((angles[1] - PI).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_angle_scalar_f64() {
-        assert!((angle_scalar(Complex::new(1.0f64, 1.0), false) - PI/4.0).abs() < 1e-10);
-        assert!((angle_scalar(1.0f64, false) - 0.0).abs() < 1e-10);
-        assert!((angle_scalar(-1.0f64, false) - PI).abs() < 1e-10);
-        assert!((angle_scalar(-1.0f64, true) - 180.0).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_angle_scalar_f32() {
-        assert!((angle_scalar(Complex::new(1.0f32, 1.0), false) - std::f32::consts::FRAC_PI_4).abs() < 1e-6);
-        assert!((angle_scalar(1.0f32, true) - 0.0).abs() < 1e-6);
-        assert!((angle_scalar(-1.0f32, true) - 180.0).abs() < 1e-6);
-    }
-
-    #[test]
-    fn test_angle_function() {
-        let arr = Array::from_vec(vec![
-            Complex::new(1.0f64, 0.0),
+            Complex::new(1.0, 0.0),
             Complex::new(0.0, 1.0),
             Complex::new(-1.0, 1.0),
         ]);
-        let angles = angle(&arr, false);
+        let a = angle(&arr);
 
-        assert!((angles[0] - 0.0).abs() < 1e-10);
-        assert!((angles[1] - PI/2.0).abs() < 1e-10);
-        assert!((angles[2] - 3.0*PI/4.0).abs() < 1e-10);
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], PI / 2.0, 1e-10);
+        assert_approx_eq!(a[2], 3.0 * PI / 4.0, 1e-10);
     }
 
     #[test]
-    fn test_angle_function_degrees() {
+    fn test_angle_function_degrees()
+    {
         let arr = Array::from_vec(vec![
             Complex::new(1.0f32, 1.0),
-            Complex::new(-1.0, 0.0),
+            Complex::new(-1.0f32, 0.0),
         ]);
-        let angles = angle(&arr, true);
+        let a = angle(&arr);
 
-        assert!((angles[0] - 45.0).abs() < 1e-6);
-        assert!((angles[1] - 180.0).abs() < 1e-6);
+        assert_approx_eq!(a[0], 45.0f32.to_radians(), 1e-6);
+        assert_approx_eq!(a[1], 180.0f32.to_radians(), 1e-6);
     }
 
     #[test]
-    fn test_edge_cases() {
+    fn test_edge_cases()
+    {
         let arr = Array::from_vec(vec![
             Complex::new(f64::INFINITY, 0.0),
             Complex::new(0.0, f64::INFINITY),
             Complex::new(f64::NEG_INFINITY, 0.0),
             Complex::new(0.0, f64::NEG_INFINITY),
         ]);
-        let angles = arr.angle(false);
+        let a = arr.angle();
 
-        assert!((angles[0] - 0.0).abs() < 1e-10, "angle(∞+0i) should be 0");
-        assert!((angles[1] - PI/2.0).abs() < 1e-10, "angle(0+∞i) should be π/2");
-        assert!((angles[2] - PI).abs() < 1e-10, "angle(-∞+0i) should be π");
-        assert!((angles[3] - (-PI/2.0)).abs() < 1e-10, "angle(0-∞i) should be -π/2");
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], PI / 2.0, 1e-10);
+        assert_approx_eq!(a[2], PI, 1e-10);
+        assert_approx_eq!(a[3], -PI / 2.0, 1e-10);
     }
 
     #[test]
-    fn test_mixed_precision() {
-        // Test that f32 and f64 can be mixed in the same operation
+    fn test_mixed_precision()
+    {
         let arr_f32 = Array::from_vec(vec![1.0f32, -1.0f32]);
-        let angles_f32 = arr_f32.angle(false);
-
         let arr_f64 = Array::from_vec(vec![1.0f64, -1.0f64]);
-        let angles_f64 = arr_f64.angle(false);
+        let a32 = arr_f32.angle();
+        let a64 = arr_f64.angle();
 
-        // Results should be equivalent within floating point precision
-        assert!((angles_f32[0] as f64 - angles_f64[0]).abs() < 1e-6);
-        assert!((angles_f32[1] as f64 - angles_f64[1]).abs() < 1e-6);
+        assert_approx_eq!(a32[0] as f64, a64[0], 1e-6);
+        assert_approx_eq!(a32[1] as f64, a64[1], 1e-6);
     }
 
     #[test]
-    fn test_range_validation() {
-        // Generate points on the unit circle and verify angle range
+    fn test_range_validation()
+    {
         let n = 16;
-        let mut complex_arr = Vec::new();
+        let complex_arr: Vec<_> = (0..n)
+            .map(|i| {
+                let theta = 2.0 * PI * (i as f64) / (n as f64);
+                Complex::new(theta.cos(), theta.sin())
+            })
+            .collect();
 
-        for i in 0..n {
-            let theta = 2.0 * PI * (i as f64) / (n as f64);
-            if theta <= PI {
-                complex_arr.push(Complex::new(theta.cos(), theta.sin()));
-            } else {
-                // For angles > π, we expect negative result in range (-π, 0]
-                complex_arr.push(Complex::new(theta.cos(), theta.sin()));
-            }
-        }
+        let a = Array::from_vec(complex_arr).angle();
 
-        let arr = Array::from_vec(complex_arr);
-        let angles = arr.angle(false);
-
-        // All angles should be in range (-π, π]
-        for &angle in angles.iter() {
-            assert!(angle > -PI && angle <= PI, "Angle {} is outside range (-π, π]", angle);
+        for &x in &a {
+            assert!(x > -PI && x <= PI, "Angle {} outside (-π, π]", x);
         }
     }
 }
