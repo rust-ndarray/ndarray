@@ -1866,6 +1866,7 @@ mod impl_raw_views;
 
 // Copy-on-write array methods
 mod impl_cow;
+pub mod ma;
 
 // Arc array methods
 mod impl_arc_array;
