@@ -176,7 +176,7 @@ impl<A> Array<A, Ix2>
     /// along the "growing axis". However, if the memory layout needs adjusting, the array must
     /// reallocate and move memory.
     ///
-    /// The operation leaves the existing data in place and is most efficent if one of these is
+    /// The operation leaves the existing data in place and is most efficient if one of these is
     /// true:
     ///
     /// - The axis being appended to is the longest stride axis, i.e the array is in row major
@@ -221,7 +221,7 @@ impl<A> Array<A, Ix2>
     /// along the "growing axis". However, if the memory layout needs adjusting, the array must
     /// reallocate and move memory.
     ///
-    /// The operation leaves the existing data in place and is most efficent if one of these is
+    /// The operation leaves the existing data in place and is most efficient if one of these is
     /// true:
     ///
     /// - The axis being appended to is the longest stride axis, i.e the array is in column major
@@ -510,7 +510,7 @@ where D: Dimension
     /// along the "growing axis". However, if the memory layout needs adjusting, the array must
     /// reallocate and move memory.
     ///
-    /// The operation leaves the existing data in place and is most efficent if `axis` is a
+    /// The operation leaves the existing data in place and is most efficient if `axis` is a
     /// "growing axis" for the array, i.e. one of these is true:
     ///
     /// - The axis is the longest stride axis, for example the 0th axis in a C-layout or the
@@ -566,7 +566,7 @@ where D: Dimension
     /// along the "growing axis". However, if the memory layout needs adjusting, the array must
     /// reallocate and move memory.
     ///
-    /// The operation leaves the existing data in place and is most efficent if `axis` is a
+    /// The operation leaves the existing data in place and is most efficient if `axis` is a
     /// "growing axis" for the array, i.e. one of these is true:
     ///
     /// - The axis is the longest stride axis, for example the 0th axis in a C-layout or the
