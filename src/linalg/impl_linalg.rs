@@ -1252,14 +1252,14 @@ pub trait Tensordot<Rhs: ?Sized>
     /// - The computed product of reshaped dimensions does not equal the
     ///   array’s total element count (which would indicate internal logic error).
     #[track_caller]
-    fn tensordot(&self, rhs: &Rhs, axes: AxisSpec) -> Self::Output;
+    fn tensordot(&self, rhs: &Rhs, axes: &AxisSpec) -> Self::Output;
 }
 
 /// Perform a tensor contraction along specified axes.
 ///
 /// See [`Tensordot::tensordot`] for more details.
 #[track_caller]
-pub fn tensordot<T, Sa, Sb, Da, Db>(a: &ArrayBase<Sa, Da>, b: &ArrayBase<Sb, Db>, axes: AxisSpec) -> ArrayD<T>
+pub fn tensordot<T, Sa, Sb, Da, Db>(a: &ArrayBase<Sa, Da>, b: &ArrayBase<Sb, Db>, axes: &AxisSpec) -> ArrayD<T>
 where
     T: LinalgScalar,
     Sa: Data<Elem = T>,
@@ -1272,7 +1272,11 @@ where
 
 /// Performs the full contraction given resolved axis specification.
 #[track_caller]
-fn tensordot_impl<T, Sa, Sb, Da, Db>(a: &ArrayBase<Sa, Da>, b: &ArrayBase<Sb, Db>, axes: AxisSpec) -> ArrayD<T>
+fn tensordot_impl<T, Sa, Sb, Da, Db>(
+    a: &ArrayBase<Sa, Da>,
+    b: &ArrayBase<Sb, Db>,
+    axes: &AxisSpec,
+) -> ArrayD<T>
 where
     T: LinalgScalar,
     Sa: Data<Elem = T>,
@@ -1283,10 +1287,14 @@ where
     let nda = a.ndim() as isize;
     let ndb = b.ndim() as isize;
 
-    // Resolve axes
-    let (mut axes_a, mut axes_b): (Vec<isize>, Vec<isize>) = match axes {
-        AxisSpec::Num(n) => {
-            let n = n as isize;
+    // Precompute shapes for reuse
+    let ashape = a.shape();
+    let bshape = b.shape();
+
+    // Resolve and normalise contracted axes (into owned Vecs, no cloning of input)
+    let (axes_a, axes_b): (Vec<isize>, Vec<isize>) = match axes {
+        AxisSpec::Num(n_raw) => {
+            let n = *n_raw as isize;
             assert!(
                 n <= nda && n <= ndb,
                 "tensordot: cannot contract over {} axes; a.ndim()={}, b.ndim()={}",
@@ -1294,7 +1302,17 @@ where
                 nda,
                 ndb
             );
-            ((nda - n)..nda).zip(0..n).map(|(ia, ib)| (ia, ib)).unzip()
+
+            let mut axes_a = Vec::with_capacity(n as usize);
+            let mut axes_b = Vec::with_capacity(n as usize);
+
+            // last n axes of a, first n axes of b
+            for i in 0..n {
+                axes_a.push(nda - n + i);
+                axes_b.push(i);
+            }
+
+            (axes_a, axes_b)
         }
         AxisSpec::Pair(aa, bb) => {
             assert_eq!(
@@ -1304,23 +1322,27 @@ where
                 aa.len(),
                 bb.len()
             );
-            (aa, bb)
+
+            let mut axes_a = Vec::with_capacity(aa.len());
+            let mut axes_b = Vec::with_capacity(bb.len());
+
+            // Normalise negatives for a
+            for &ax in aa {
+                let ax_norm = if ax < 0 { ax + nda } else { ax };
+                axes_a.push(ax_norm);
+            }
+
+            // Normalise negatives for b
+            for &ax in bb {
+                let ax_norm = if ax < 0 { ax + ndb } else { ax };
+                axes_b.push(ax_norm);
+            }
+
+            (axes_a, axes_b)
         }
     };
 
-    // Normalise negative indices
-    for ax in &mut axes_a {
-        if *ax < 0 {
-            *ax += nda;
-        }
-    }
-    for ax in &mut axes_b {
-        if *ax < 0 {
-            *ax += ndb;
-        }
-    }
-
-    // Validate
+    // Validate bounds
     for &ax in &axes_a {
         assert!(
             (0..nda).contains(&ax),
@@ -1338,10 +1360,10 @@ where
         );
     }
 
-    // Shape checks
+    // Shape checks on contracted axes
     for (ia, ib) in axes_a.iter().zip(&axes_b) {
-        let da = a.shape()[*ia as usize];
-        let db = b.shape()[*ib as usize];
+        let da = ashape[*ia as usize];
+        let db = bshape[*ib as usize];
         assert_eq!(
             da, db,
             "tensordot: shape mismatch along contraction axis: a[{}]={} vs b[{}]={}",
@@ -1349,25 +1371,72 @@ where
         );
     }
 
-    // Determine non-contracted axes
-    let notin_a: Vec<usize> = (0..nda as usize)
-        .filter(|k| !axes_a.iter().any(|&ax| ax as usize == *k))
-        .collect();
-    let notin_b: Vec<usize> = (0..ndb as usize)
-        .filter(|k| !axes_b.iter().any(|&ax| ax as usize == *k))
-        .collect();
+    // Membership maps for contracted axes (O(ndim) setup, O(1) lookup)
+    let mut is_contracted_a = vec![false; nda as usize];
+    let mut is_contracted_b = vec![false; ndb as usize];
 
-    // Reorder axes
-    let mut newaxes_a = notin_a.clone();
-    newaxes_a.extend(axes_a.iter().map(|&x| x as usize));
-    let mut newaxes_b = axes_b.iter().map(|&x| x as usize).collect::<Vec<_>>();
-    newaxes_b.extend(notin_b.iter().copied());
+    for &ax in &axes_a {
+        is_contracted_a[ax as usize] = true;
+    }
+    for &ax in &axes_b {
+        is_contracted_b[ax as usize] = true;
+    }
 
-    // Matrix shapes
-    let m = notin_a.iter().fold(1, |p, &ax| p * a.shape()[ax]);
-    let k = axes_a.iter().fold(1, |p, &ax| p * a.shape()[ax as usize]);
-    let n = notin_b.iter().fold(1, |p, &ax| p * b.shape()[ax]);
+    let contracted_a = axes_a.len();
+    let contracted_b = axes_b.len();
+    debug_assert_eq!(contracted_a, contracted_b);
+    let free_a = nda as usize - contracted_a;
+    let free_b = ndb as usize - contracted_b;
 
+    // Permutation axes for a: [non-contracted..., contracted...]
+    let mut newaxes_a = Vec::with_capacity(nda as usize);
+    for i in 0..nda as usize {
+        if !is_contracted_a[i] {
+            newaxes_a.push(i);
+        }
+    }
+    for &ax in &axes_a {
+        newaxes_a.push(ax as usize);
+    }
+
+    // non-contracted axes for b (indices)
+    let mut notin_b = Vec::with_capacity(free_b);
+    for i in 0..ndb as usize {
+        if !is_contracted_b[i] {
+            notin_b.push(i);
+        }
+    }
+
+    // Permutation axes for b: [contracted..., non-contracted...]
+    let mut newaxes_b = Vec::with_capacity(ndb as usize);
+    for &ax in &axes_b {
+        newaxes_b.push(ax as usize);
+    }
+    newaxes_b.extend(&notin_b);
+
+    // Output shape: a(non-contracted) ⧺ b(non-contracted)
+    let mut out_shape = Vec::with_capacity(free_a + free_b);
+    for i in 0..nda as usize {
+        if !is_contracted_a[i] {
+            out_shape.push(ashape[i]);
+        }
+    }
+    for &ax in &notin_b {
+        out_shape.push(bshape[ax]);
+    }
+
+    // Matrix dims
+    let m = newaxes_a[..free_a]
+        .iter()
+        .fold(1, |p, &ax| p * ashape[ax]);
+    let k = axes_a
+        .iter()
+        .fold(1, |p, &ax| p * ashape[ax as usize]);
+    let n = notin_b
+        .iter()
+        .fold(1, |p, &ax| p * bshape[ax]);
+
+    // Permute + standard layout (keep temporaries named to satisfy lifetimes)
     let a_dyn = a.view().into_dimensionality::<IxDyn>().unwrap();
     let b_dyn = b.view().into_dimensionality::<IxDyn>().unwrap();
 
@@ -1377,6 +1446,7 @@ where
     let b_perm = b_dyn.permuted_axes(IxDyn(&newaxes_b));
     let b_std = b_perm.as_standard_layout();
 
+    // Reshape to 2D, multiply, and reshape back
     let a2 = a_std
         .into_shape_with_order(Ix2(m, k))
         .expect("reshaping a to 2D");
@@ -1385,9 +1455,6 @@ where
         .expect("reshaping b to 2D");
 
     let c2 = a2.dot(&b2);
-
-    let mut out_shape: Vec<usize> = notin_a.iter().map(|&ax| a.shape()[ax]).collect();
-    out_shape.extend(notin_b.iter().map(|&ax| b.shape()[ax]));
 
     c2.into_shape_with_order(IxDyn(&out_shape)).unwrap()
 }
@@ -1404,7 +1471,7 @@ where
     type Output = ArrayD<A>;
 
     #[track_caller]
-    fn tensordot(&self, rhs: &ArrayBase<S2, D2>, axes: AxisSpec) -> Self::Output
+    fn tensordot(&self, rhs: &ArrayBase<S2, D2>, axes: &AxisSpec) -> Self::Output
     {
         tensordot_impl::<A, S, S2, D1, D2>(self, rhs, axes)
     }
@@ -1421,7 +1488,7 @@ where
     type Output = ArrayD<A>;
 
     #[track_caller]
-    fn tensordot(&self, rhs: &ArrayRef<A, D2>, axes: AxisSpec) -> Self::Output
+    fn tensordot(&self, rhs: &ArrayRef<A, D2>, axes: &AxisSpec) -> Self::Output
     {
         let rhs_view: ArrayBase<ViewRepr<&A>, D2> = rhs.view();
         tensordot_impl::<A, S, ViewRepr<&A>, D1, D2>(self, &rhs_view, axes)
@@ -1439,7 +1506,7 @@ where
     type Output = ArrayD<A>;
 
     #[track_caller]
-    fn tensordot(&self, rhs: &ArrayBase<S, D2>, axes: AxisSpec) -> Self::Output
+    fn tensordot(&self, rhs: &ArrayBase<S, D2>, axes: &AxisSpec) -> Self::Output
     {
         let self_view: ArrayBase<ViewRepr<&A>, D1> = self.view();
         tensordot_impl::<A, ViewRepr<&A>, S, D1, D2>(&self_view, rhs, axes)
@@ -1459,7 +1526,7 @@ mod tensordot_tests
         let a = ArrayD::from_shape_vec(IxDyn(&[3, 4, 5]), (0..60).collect::<Vec<_>>()).unwrap();
         let b = ArrayD::from_shape_vec(IxDyn(&[4, 3, 2]), (0..24).collect::<Vec<_>>()).unwrap();
 
-        let c: ArrayD<i32> = tensordot(&a, &b, AxisSpec::Pair(vec![1, 0], vec![0, 1]));
+        let c: ArrayD<i32> = tensordot(&a, &b, &AxisSpec::Pair(vec![1, 0], vec![0, 1]));
 
         // Expected shape: [5, 2]
         assert_eq!(
@@ -1494,7 +1561,7 @@ mod tensordot_tests
         let b = ArrayD::from_shape_vec(IxDyn(&[2, 2]), vec![10, 20, 30, 40]).unwrap();
 
         // Contract over 2 axes
-        let c: ArrayD<i32> = tensordot(&a, &b, AxisSpec::Num(2));
+        let c: ArrayD<i32> = tensordot(&a, &b, &AxisSpec::Num(2));
 
         assert_eq!(
             c.shape(),
