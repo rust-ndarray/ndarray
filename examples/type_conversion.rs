@@ -11,7 +11,7 @@ fn main()
 {
     // Converting an array from one datatype to another is implemented with the
     // `ArrayBase::mapv()` function. We pass a closure that is applied to each
-    // element independently. This allows for more control and flexiblity in
+    // element independently. This allows for more control and flexibility in
     // converting types.
     //
     // Below, we illustrate four different approaches for the actual conversion

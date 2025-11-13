@@ -1585,7 +1585,7 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 ///
 /// + [Constructor Methods for Owned Arrays](ArrayBase#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](ArrayBase#methods-for-all-array-types)
-/// + Dimensionality-specific type alises
+/// + Dimensionality-specific type aliases
 ///   [`Array1`],
 ///   [`Array2`],
 ///   [`Array3`], ...,

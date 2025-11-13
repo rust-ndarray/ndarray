@@ -16,7 +16,7 @@
 //! Because raw views do not meet `S: Data`, they cannot dereference to `ArrayRef`; furthermore,
 //! technical limitations of Rust's compiler means that `ArrayBase` cannot have multiple `Deref` implementations.
 //! In addition, shared-data arrays do not want to go down the `Deref` path to get to methods on `RawRef`
-//! or `LayoutRef`, since that would unecessarily ensure their uniqueness.
+//! or `LayoutRef`, since that would unnecessarily ensure their uniqueness.
 //!
 //! To mitigate these problems, `ndarray` also provides `AsRef` and `AsMut` implementations as follows:
 //!     1. `ArrayBase` implements `AsRef` to `RawRef` and `LayoutRef` when `S: RawData`
