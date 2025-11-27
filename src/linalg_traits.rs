@@ -61,6 +61,14 @@ pub trait NdFloat:
 {
 }
 
+#[cfg(all(feature = "std", feature = "half"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl NdFloat for half::f16 {}
+
+#[cfg(all(feature = "std", feature = "half"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl NdFloat for half::bf16 {}
+
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl NdFloat for f32 {}
