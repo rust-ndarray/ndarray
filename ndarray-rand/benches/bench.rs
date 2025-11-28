@@ -17,6 +17,22 @@ fn uniform_f32(b: &mut Bencher)
 }
 
 #[bench]
+#[cfg(feature = "half")]
+fn norm_f16(b: &mut Bencher)
+{
+    let m = 100;
+    b.iter(|| Array::random((m, m), Normal::new(half::f16::ZERO, half::f16::ONE).unwrap()));
+}
+
+#[bench]
+#[cfg(feature = "half")]
+fn norm_bf16(b: &mut Bencher)
+{
+    let m = 100;
+    b.iter(|| Array::random((m, m), Normal::new(half::bf16::ZERO, half::bf16::ONE).unwrap()));
+}
+
+#[bench]
 fn norm_f32(b: &mut Bencher)
 {
     let m = 100;

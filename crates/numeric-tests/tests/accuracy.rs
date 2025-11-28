@@ -141,6 +141,20 @@ fn accurate_eye_f64()
 }
 
 #[test]
+#[cfg(feature = "half")]
+fn accurate_mul_f16_dot()
+{
+    accurate_mul_float_general::<half::f16>(1e-2, false);
+}
+
+#[test]
+#[cfg(feature = "half")]
+fn accurate_mul_bf16_dot()
+{
+    accurate_mul_float_general::<half::bf16>(1e-1, false);
+}
+
+#[test]
 fn accurate_mul_f32_dot()
 {
     accurate_mul_float_general::<f32>(1e-5, false);
@@ -220,6 +234,20 @@ where
         assert!((max_diff / max_elt).as_() < limit,
                 "Expected relative norm diff < {:e}, found {:?} / {:?}", limit, max_diff, max_elt);
     }
+}
+
+#[test]
+#[cfg(feature = "half")]
+fn accurate_mul_complex16()
+{
+    accurate_mul_complex_general::<half::f16>(1e-2);
+}
+
+#[test]
+#[cfg(feature = "half")]
+fn accurate_mul_complexb16()
+{
+    accurate_mul_complex_general::<half::bf16>(1e-1);
 }
 
 #[test]
