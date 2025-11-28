@@ -60,9 +60,9 @@ default = ["std"]
 # See README for more instructions
 blas = ["dep:cblas-sys", "dep:libc"]
 
-serde = ["dep:serde"]
+serde = ["dep:serde", "half?/serde"]
 
-std = ["num-traits/std", "matrixmultiply/std"]
+std = ["num-traits/std", "matrixmultiply/std", "half?/std"]
 rayon = ["dep:rayon", "std"]
 
 matrixmultiply-threading = ["matrixmultiply/threading"]
@@ -119,6 +119,6 @@ tag-name = "{{version}}"
 
 # Config specific to docs.rs
 [package.metadata.docs.rs]
-features = ["approx", "serde", "rayon"]
+features = ["approx", "serde", "rayon", "half"]
 # Define the configuration attribute `docsrs`
 rustdoc-args = ["--cfg", "docsrs"]
