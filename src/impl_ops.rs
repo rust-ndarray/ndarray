@@ -477,7 +477,8 @@ mod arithmetic_ops
     impl_scalar_lhs_op!(bool, Commute, ^, BitXor, bitxor, "bit xor");
 
     #[cfg(feature = "half")]
-    mod ops_f16 {
+    mod ops_f16
+    {
         use super::*;
         impl_scalar_lhs_op!(half::f16, Commute, +, Add, add, "addition");
         impl_scalar_lhs_op!(half::f16, Ordered, -, Sub, sub, "subtraction");
@@ -487,7 +488,8 @@ mod arithmetic_ops
     }
 
     #[cfg(feature = "half")]
-    mod ops_bf16 {
+    mod ops_bf16
+    {
         use super::*;
         impl_scalar_lhs_op!(half::bf16, Commute, +, Add, add, "addition");
         impl_scalar_lhs_op!(half::bf16, Ordered, -, Sub, sub, "subtraction");
@@ -509,7 +511,8 @@ mod arithmetic_ops
     impl_scalar_lhs_op!(f64, Ordered, %, Rem, rem, "remainder");
 
     #[cfg(feature = "half")]
-    mod ops_complex_f16 {
+    mod ops_complex_f16
+    {
         use super::*;
         impl_scalar_lhs_op!(Complex<half::f16>, Commute, +, Add, add, "addition");
         impl_scalar_lhs_op!(Complex<half::f16>, Ordered, -, Sub, sub, "subtraction");
@@ -518,7 +521,8 @@ mod arithmetic_ops
     }
 
     #[cfg(feature = "half")]
-    mod ops_complex_bf16 {
+    mod ops_complex_bf16
+    {
         use super::*;
         impl_scalar_lhs_op!(Complex<half::bf16>, Commute, +, Add, add, "addition");
         impl_scalar_lhs_op!(Complex<half::bf16>, Ordered, -, Sub, sub, "subtraction");
