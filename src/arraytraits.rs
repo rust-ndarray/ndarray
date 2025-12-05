@@ -433,6 +433,12 @@ where
 {
 }
 
+unsafe impl<A,D> Sync for ArrayRef<A,D>
+where
+    A: Sync,
+{
+}
+
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 // Use version number so we can add a packed format later.

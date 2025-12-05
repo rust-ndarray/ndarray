@@ -1322,8 +1322,6 @@ struct ArrayParts<A, D, T: ?Sized>
     _dst_control: T,
 }
 
-unsafe impl<A, D, T: ?Sized> Sync for ArrayParts<A, D, T> where A: Sync {}
-
 type ArrayPartsSized<A, D> = ArrayParts<A, D, [usize; 0]>;
 type ArrayPartsUnsized<A, D> = ArrayParts<A, D, [usize]>;
 
