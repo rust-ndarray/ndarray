@@ -19,7 +19,14 @@ description = "An n-dimensional array for general elements and for numerics. Lig
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 categories = ["data-structures", "science"]
 
-exclude = ["docgen/images/*"]
+include = [
+    "/src/**/*.rs",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+    "RELEASES.md",
+    "README.rst",
+    "README-quick-start.md"
+]
 resolver = "2"
 
 [lib]
