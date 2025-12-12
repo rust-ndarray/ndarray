@@ -483,3 +483,22 @@ fn test_zip_all_empty_array()
     assert!(Zip::from(&a).and(&b).all(|&_x, &_y| true));
     assert!(Zip::from(&a).and(&b).all(|&_x, &_y| false));
 }
+
+#[test]
+fn test_azip9()
+{
+    let mut a = Array::<i32, _>::zeros(62);
+    let b = Array::from_shape_fn(a.dim(), |j| j as i32);
+    let c = Array::from_shape_fn(a.dim(), |j| (j * 2) as i32);
+    let d = Array::from_shape_fn(a.dim(), |j| (j * 4) as i32);
+    let e = Array::from_shape_fn(a.dim(), |j| (j * 8) as i32);
+    let f = Array::from_shape_fn(a.dim(), |j| (j * 16) as i32);
+    let g = Array::from_shape_fn(a.dim(), |j| (j * 32) as i32);
+    let h = Array::from_shape_fn(a.dim(), |j| (j * 64) as i32);
+    let i = Array::from_shape_fn(a.dim(), |j| (j * 128) as i32);
+    azip!((a in &mut a, &b in &b, &c in &c, &d in &d, &e in &e, &f in &f, &g in &g, &h in &h, &i in &i){
+        *a = b + c + d + e + f + g + h + i;
+    });
+    let x = Array::from_shape_fn(a.dim(), |j| (j * 255) as i32);
+    assert_equal(cloned(&a), x);
+}
