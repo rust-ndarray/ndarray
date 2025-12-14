@@ -207,7 +207,6 @@ where
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
-#[allow(clippy::unconditional_recursion)] // false positive
 impl<A, B, S, S2, D> PartialEq<&ArrayBase<S2, D>> for ArrayBase<S, D>
 where
     A: PartialEq<B>,
@@ -223,7 +222,6 @@ where
 
 /// Return `true` if the array shapes and all elements of `self` and
 /// `rhs` are equal. Return `false` otherwise.
-#[allow(clippy::unconditional_recursion)] // false positive
 impl<A, B, S, S2, D> PartialEq<ArrayBase<S2, D>> for &ArrayBase<S, D>
 where
     A: PartialEq<B>,
@@ -236,13 +234,84 @@ where
         **self == *rhs
     }
 }
-
 impl<S, D> Eq for ArrayBase<S, D>
 where
     D: Dimension,
     S: Data,
     S::Elem: Eq,
 {
+}
+
+impl<A, B, S, D> PartialEq<ArrayRef<B, D>> for ArrayBase<S, D>
+where
+    S: Data<Elem = A>,
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, other: &ArrayRef<B, D>) -> bool
+    {
+        **self == other
+    }
+}
+
+impl<A, B, S, D> PartialEq<&ArrayRef<B, D>> for ArrayBase<S, D>
+where
+    S: Data<Elem = A>,
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, other: &&ArrayRef<B, D>) -> bool
+    {
+        **self == *other
+    }
+}
+
+impl<A, B, S, D> PartialEq<ArrayRef<B, D>> for &ArrayBase<S, D>
+where
+    S: Data<Elem = A>,
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, other: &ArrayRef<B, D>) -> bool
+    {
+        **self == other
+    }
+}
+
+impl<A, B, S, D> PartialEq<ArrayBase<S, D>> for ArrayRef<A, D>
+where
+    S: Data<Elem = B>,
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, other: &ArrayBase<S, D>) -> bool
+    {
+        self == **other
+    }
+}
+
+impl<A, B, S, D> PartialEq<&ArrayBase<S, D>> for ArrayRef<A, D>
+where
+    S: Data<Elem = B>,
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, other: &&ArrayBase<S, D>) -> bool
+    {
+        self == ***other
+    }
+}
+
+impl<A, B, S, D> PartialEq<ArrayBase<S, D>> for &ArrayRef<A, D>
+where
+    S: Data<Elem = B>,
+    A: PartialEq<B>,
+    D: Dimension,
+{
+    fn eq(&self, other: &ArrayBase<S, D>) -> bool
+    {
+        *self == **other
+    }
 }
 
 impl<A, S> From<Box<[A]>> for ArrayBase<S, Ix1>
@@ -641,5 +710,38 @@ where
     fn default() -> Self
     {
         ArrayBase::default(D::default())
+    }
+}
+
+#[cfg(test)]
+mod tests
+{
+    use crate::array;
+
+    #[test]
+    fn test_eq_traits()
+    {
+        let a = array![1, 2, 3];
+        let a_ref = &*a;
+        let b = array![1, 2, 3];
+        let b_ref = &*b;
+
+        assert_eq!(a, b);
+        assert_eq!(a, &b);
+        assert_eq!(&a, b);
+        assert_eq!(&a, &b);
+
+        assert_eq!(a_ref, b_ref);
+        assert_eq!(&a_ref, b_ref);
+        assert_eq!(a_ref, &b_ref);
+        assert_eq!(&a_ref, &b_ref);
+
+        assert_eq!(a_ref, b);
+        assert_eq!(a_ref, &b);
+        assert_eq!(&a_ref, &b);
+
+        assert_eq!(a, b_ref);
+        assert_eq!(&a, b_ref);
+        assert_eq!(&a, &b_ref);
     }
 }
