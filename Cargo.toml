@@ -18,7 +18,16 @@ description = "An n-dimensional array for general elements and for numerics. Lig
 
 keywords = ["array", "data-structure", "multidimensional", "matrix", "blas"]
 categories = ["data-structures", "science"]
-
+include = [
+    "README-crates.io.md", 
+    "README-quick-start.md", 
+    "README.rst", 
+    "RELEASES.md", 
+    "LICENSE-MIT", 
+    "LICENSE-APACHE", 
+    "Cargo.toml", 
+    "src/**/*.rs",
+]
 exclude = ["docgen/images/*"]
 resolver = "2"
 
