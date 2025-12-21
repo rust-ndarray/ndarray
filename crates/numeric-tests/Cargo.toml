@@ -21,12 +21,15 @@ rand_distr = { workspace = true }
 blas-src = { optional = true, version = "0.10", default-features = false, features = ["openblas"] }
 openblas-src = { optional = true, version = ">=0.10.11", default-features = false, features = ["cblas", "system"] }
 
+half = { optional = true, version = "2.7.1", default-features = false, features = ["num-traits", "rand_distr"] }
+
 [dev-dependencies]
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 
 [features]
 test_blas = ["ndarray/blas", "blas-src", "openblas-src"]
+half = ["dep:half", "ndarray/half"]
 
 # Config for cargo-release
 [package.metadata.release]

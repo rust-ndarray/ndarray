@@ -481,6 +481,10 @@ fn mat_mut_zero_len()
             }
         }
     });
+    #[cfg(feature = "half")]
+    mat_mul_zero_len!(range_mat::<half::f16>);
+    #[cfg(feature = "half")]
+    mat_mul_zero_len!(range_mat::<half::bf16>);
     mat_mul_zero_len!(range_mat::<f32>);
     mat_mul_zero_len!(range_mat::<f64>);
     mat_mul_zero_len!(range_i32);
