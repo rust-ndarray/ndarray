@@ -195,3 +195,11 @@ pub type ArrayViewMutD<'a, A> = ArrayViewMut<'a, A, IxDyn>;
 pub type ArcArray1<A> = ArcArray<A, Ix1>;
 /// two-dimensional shared ownership array
 pub type ArcArray2<A> = ArcArray<A, Ix2>;
+/// three-dimensional shared ownership array
+pub type ArcArray3<A> = ArcArray<A, Ix3>;
+/// four-dimensional shared ownership array
+pub type ArcArray4<A> = ArcArray<A, Ix4>;
+/// five-dimensional shared ownership array
+pub type ArcArray5<A> = ArcArray<A, Ix5>;
+/// six-dimensional shared ownership array
+pub type ArcArray6<A> = ArcArray<A, Ix6>;
