@@ -204,4 +204,4 @@ pub type ArcArray5<A> = ArcArray<A, Ix5>;
 /// six-dimensional shared ownership array
 pub type ArcArray6<A> = ArcArray<A, Ix6>;
 /// dynamic-dimensional shared ownership array
-pub type ArcArray6<A> = ArcArray<A, IxDyn>;
+pub type ArcArrayD<A> = ArcArray<A, IxDyn>;
