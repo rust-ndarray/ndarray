@@ -426,6 +426,7 @@ impl Dimension for Dim<[Ix; 0]>
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
+    #[cfg(feature = "unstable")]
     type Dimality = D0;
     // empty product is 1 -> size is 1
     #[inline]
