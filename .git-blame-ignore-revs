@@ -1,2 +1,15 @@
 # rustfmt codebase (gh-1375)
 d07f5f33800e5240e7edb02bdbc4815ab30ef37e
+
+# rustfmt codebase (gh-635)
+eb82c93f0147df38e061597221ece3627f119a60
+
+# cargo fix --edition-idioms (gh-666)
+483200bccfb903a31a3befbb737d4a907862f8dc
+
+# clippy linting fixes (gh-1171)
+c66d408d44eff0e35de2719d3a6d9a9dad95dce1
+d9cf511e494c32507608a399257a72aaa89e8873
+
+# lifetime elisions and clippy complaints (gh-1458)
+9c703ac8a7f86dce8b0b5949731b2bf364230851
