@@ -81,7 +81,6 @@ impl PartialEq for ShapeError
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl Error for ShapeError {}
 
 impl fmt::Display for ShapeError

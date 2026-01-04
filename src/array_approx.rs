@@ -1,5 +1,4 @@
 #[cfg(feature = "approx")]
-#[cfg_attr(docsrs, doc(cfg(feature = "approx")))]
 mod approx_methods
 {
     use crate::imp_prelude::*;
@@ -244,5 +243,4 @@ macro_rules! impl_approx_traits {
 }
 
 #[cfg(feature = "approx")]
-#[cfg_attr(docsrs, doc(cfg(feature = "approx")))]
 impl_approx_traits!(approx, "**Requires crate feature `\"approx\"`.**");
