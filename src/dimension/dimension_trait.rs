@@ -17,6 +17,8 @@ use super::conversion::Convert;
 use super::ops::DimAdd;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
+#[cfg(feature = "unstable")]
+use crate::layout::dimensionality::*;
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
@@ -75,6 +77,10 @@ pub trait Dimension:
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
+
+    /// The dimensionality of the type, under the new, unstable API.
+    #[cfg(feature = "unstable")]
+    type Dimality: Dimensionality;
 
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
@@ -420,6 +426,7 @@ impl Dimension for Dim<[Ix; 0]>
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
+    type Dimality = D0;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize
@@ -470,6 +477,8 @@ impl Dimension for Dim<[Ix; 1]>
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
+    #[cfg(feature = "unstable")]
+    type Dimality = D1;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -603,6 +612,8 @@ impl Dimension for Dim<[Ix; 2]>
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
+    #[cfg(feature = "unstable")]
+    type Dimality = D2;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -778,6 +789,8 @@ impl Dimension for Dim<[Ix; 3]>
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
+    #[cfg(feature = "unstable")]
+    type Dimality = D3;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -904,12 +917,14 @@ impl Dimension for Dim<[Ix; 3]>
 }
 
 macro_rules! large_dim {
-    ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
+    ($n:expr, $name:ident, $pattern:ty, $larger:ty, $dimality:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
             const NDIM: Option<usize> = Some($n);
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
+            #[cfg(feature = "unstable")]
+            type Dimality = $dimality;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -935,13 +950,13 @@ macro_rules! large_dim {
     );
 }
 
-large_dim!(4, Ix4, (Ix, Ix, Ix, Ix), Ix5, {
+large_dim!(4, Ix4, (Ix, Ix, Ix, Ix), Ix5, D4, {
     impl_insert_axis_array!(4);
 });
-large_dim!(5, Ix5, (Ix, Ix, Ix, Ix, Ix), Ix6, {
+large_dim!(5, Ix5, (Ix, Ix, Ix, Ix, Ix), Ix6, D5, {
     impl_insert_axis_array!(5);
 });
-large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
+large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, D6, {
     fn insert_axis(&self, axis: Axis) -> Self::Larger {
         debug_assert!(axis.index() <= self.ndim());
         let mut out = Vec::with_capacity(self.ndim() + 1);
@@ -960,6 +975,8 @@ impl Dimension for IxDyn
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
+    #[cfg(feature = "unstable")]
+    type Dimality = DDyn;
     #[inline]
     fn ndim(&self) -> usize
     {
