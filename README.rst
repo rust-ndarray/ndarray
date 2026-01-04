@@ -104,6 +104,9 @@ your `Cargo.toml`.
 - ``half``
 
   - Enable support for the ``half::f16`` and ``half::bf16`` types.
+    Currently those types are expected to be much slower than ``f32``.
+    Some benchmarks show ``half::f16`` and ``half::bf16`` being around
+    100-350x and 100x slower than ``f32``, respectively.
 
 
 How to use with cargo
