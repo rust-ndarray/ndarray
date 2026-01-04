@@ -177,7 +177,6 @@ where D: Dimension
     /// ```
     #[track_caller]
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn var(&self, ddof: A) -> A
     where A: Float + FromPrimitive
     {
@@ -243,7 +242,6 @@ where D: Dimension
     /// ```
     #[track_caller]
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn std(&self, ddof: A) -> A
     where A: Float + FromPrimitive
     {
@@ -400,7 +398,6 @@ where D: Dimension
     /// ```
     #[track_caller]
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn var_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,
@@ -471,7 +468,6 @@ where D: Dimension
     /// ```
     #[track_caller]
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn std_axis(&self, axis: Axis, ddof: A) -> Array<A, D::Smaller>
     where
         A: Float + FromPrimitive,

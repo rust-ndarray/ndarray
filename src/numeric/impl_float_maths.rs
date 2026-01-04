@@ -54,7 +54,6 @@ macro_rules! binary_ops {
 ///
 /// Element-wise math functions for any array type that contains float number.
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<A, D> ArrayRef<A, D>
 where
     A: 'static + Float,

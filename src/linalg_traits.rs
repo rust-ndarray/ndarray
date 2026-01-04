@@ -42,7 +42,6 @@ impl<T> LinalgScalar for T where T: 'static + Copy + Zero + One + Add<Output = T
 ///
 /// **Requires default crate feature `"std"`**
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub trait NdFloat:
     Float
     + AddAssign
@@ -62,8 +61,6 @@ pub trait NdFloat:
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl NdFloat for f32 {}
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl NdFloat for f64 {}

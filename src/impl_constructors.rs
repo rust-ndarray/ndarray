@@ -99,7 +99,6 @@ where S: DataOwned<Elem = A>
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn linspace(start: A, end: A, n: usize) -> Self
     where A: Float
     {
@@ -118,7 +117,6 @@ where S: DataOwned<Elem = A>
     /// assert!(array == arr1(&[0., 1., 2., 3., 4.]))
     /// ```
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn range(start: A, end: A, step: A) -> Self
     where A: Float
     {
@@ -147,7 +145,6 @@ where S: DataOwned<Elem = A>
     /// # }
     /// ```
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
     where A: Float
     {
@@ -182,7 +179,6 @@ where S: DataOwned<Elem = A>
     /// # example().unwrap();
     /// ```
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
     where A: Float
     {
