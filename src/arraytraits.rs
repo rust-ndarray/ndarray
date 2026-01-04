@@ -717,6 +717,7 @@ where
 mod tests
 {
     use crate::array;
+    use alloc::vec;
 
     #[test]
     fn test_eq_traits()
