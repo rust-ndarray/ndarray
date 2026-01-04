@@ -10,6 +10,7 @@ pub struct LayoutBitset(u32);
 
 #[deprecated(since = "0.18.0", note = "Layout has been renamed to LayoutBitset")]
 #[allow(dead_code)]
+/// Memory layout description, deprecated. See [`LayoutBitset`] instead.
 pub type Layout = LayoutBitset;
 
 impl LayoutBitset
