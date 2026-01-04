@@ -1191,9 +1191,9 @@ impl<A, D: Dimension> NdProducer for AxisIter<'_, A, D>
     type Ptr = *mut A;
     type Stride = isize;
 
-    fn layout(&self) -> crate::Layout
+    fn layout(&self) -> crate::LayoutBitset
     {
-        crate::Layout::one_dimensional()
+        crate::LayoutBitset::one_dimensional()
     }
 
     fn raw_dim(&self) -> Self::Dim
@@ -1250,9 +1250,9 @@ impl<A, D: Dimension> NdProducer for AxisIterMut<'_, A, D>
     type Ptr = *mut A;
     type Stride = isize;
 
-    fn layout(&self) -> crate::Layout
+    fn layout(&self) -> crate::LayoutBitset
     {
-        crate::Layout::one_dimensional()
+        crate::LayoutBitset::one_dimensional()
     }
 
     fn raw_dim(&self) -> Self::Dim

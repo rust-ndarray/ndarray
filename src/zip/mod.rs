@@ -17,7 +17,7 @@ use crate::imp_prelude::*;
 use crate::partial::Partial;
 use crate::AssignElem;
 use crate::IntoDimension;
-use crate::Layout;
+use crate::LayoutBitset;
 
 use crate::dimension;
 use crate::indexes::{indices, Indices};
@@ -51,35 +51,35 @@ where E: IntoDimension
 }
 
 /// Compute `Layout` hints for array shape dim, strides
-fn array_layout<D: Dimension>(dim: &D, strides: &D) -> Layout
+fn array_layout<D: Dimension>(dim: &D, strides: &D) -> LayoutBitset
 {
     let n = dim.ndim();
     if dimension::is_layout_c(dim, strides) {
         // effectively one-dimensional => C and F layout compatible
         if n <= 1 || dim.slice().iter().filter(|&&len| len > 1).count() <= 1 {
-            Layout::one_dimensional()
+            LayoutBitset::one_dimensional()
         } else {
-            Layout::c()
+            LayoutBitset::c()
         }
     } else if n > 1 && dimension::is_layout_f(dim, strides) {
-        Layout::f()
+        LayoutBitset::f()
     } else if n > 1 {
         if dim[0] > 1 && strides[0] == 1 {
-            Layout::fpref()
+            LayoutBitset::fpref()
         } else if dim[n - 1] > 1 && strides[n - 1] == 1 {
-            Layout::cpref()
+            LayoutBitset::cpref()
         } else {
-            Layout::none()
+            LayoutBitset::none()
         }
     } else {
-        Layout::none()
+        LayoutBitset::none()
     }
 }
 
 impl<A, D> LayoutRef<A, D>
 where D: Dimension
 {
-    pub(crate) fn layout_impl(&self) -> Layout
+    pub(crate) fn layout_impl(&self) -> LayoutBitset
     {
         array_layout(self._dim(), self._strides())
     }
@@ -194,7 +194,7 @@ pub struct Zip<Parts, D>
 {
     parts: Parts,
     dimension: D,
-    layout: Layout,
+    layout: LayoutBitset,
     /// The sum of the layout tendencies of the parts;
     /// positive for c- and negative for f-layout preference.
     layout_tendency: i32,
@@ -277,7 +277,7 @@ where D: Dimension
 
     fn prefer_f(&self) -> bool
     {
-        !self.layout.is(Layout::CORDER) && (self.layout.is(Layout::FORDER) || self.layout_tendency < 0)
+        !self.layout.is(LayoutBitset::CORDER) && (self.layout.is(LayoutBitset::FORDER) || self.layout_tendency < 0)
     }
 
     /// Return an *approximation* to the max stride axis; if
@@ -313,7 +313,7 @@ where D: Dimension
     {
         if self.dimension.ndim() == 0 {
             function(acc, unsafe { self.parts.as_ref(self.parts.as_ptr()) })
-        } else if self.layout.is(Layout::CORDER | Layout::FORDER) {
+        } else if self.layout.is(LayoutBitset::CORDER | LayoutBitset::FORDER) {
             self.for_each_core_contiguous(acc, function)
         } else {
             self.for_each_core_strided(acc, function)
@@ -325,7 +325,7 @@ where D: Dimension
         F: FnMut(Acc, P::Item) -> FoldWhile<Acc>,
         P: ZippableTuple<Dim = D>,
     {
-        debug_assert!(self.layout.is(Layout::CORDER | Layout::FORDER));
+        debug_assert!(self.layout.is(LayoutBitset::CORDER | LayoutBitset::FORDER));
         let size = self.dimension.size();
         let ptrs = self.parts.as_ptr();
         let inner_strides = self.parts.contiguous_stride();
@@ -442,7 +442,7 @@ where
     #[inline]
     pub(crate) fn debug_assert_c_order(self) -> Self
     {
-        debug_assert!(self.layout.is(Layout::CORDER) || self.layout_tendency >= 0 ||
+        debug_assert!(self.layout.is(LayoutBitset::CORDER) || self.layout_tendency >= 0 ||
                       self.dimension.slice().iter().filter(|&&d| d > 1).count() <= 1,
                       "Assertion failed: traversal is not c-order or 1D for \
                       layout {:?}, tendency {}, dimension {:?}",
@@ -841,7 +841,7 @@ macro_rules! map_impl {
                     // debug assert that the output is contiguous in the memory layout we need
                     if cfg!(debug_assertions) {
                         let out_layout = output.layout();
-                        assert!(out_layout.is(Layout::CORDER | Layout::FORDER));
+                        assert!(out_layout.is(LayoutBitset::CORDER | LayoutBitset::FORDER));
                         assert!(
                             (self.layout_tendency <= 0 && out_layout.tendency() <= 0) ||
                             (self.layout_tendency >= 0 && out_layout.tendency() >= 0),

@@ -10,7 +10,7 @@ use crate::dimension::IntoDimension;
 use crate::split_at::SplitAt;
 use crate::zip::Offset;
 use crate::Axis;
-use crate::Layout;
+use crate::LayoutBitset;
 use crate::NdProducer;
 use crate::{ArrayBase, Data};
 
@@ -193,12 +193,12 @@ impl<D: Dimension + Copy> NdProducer for Indices<D>
         IndexPtr { index: self.start }
     }
 
-    fn layout(&self) -> Layout
+    fn layout(&self) -> LayoutBitset
     {
         if self.dim.ndim() <= 1 {
-            Layout::one_dimensional()
+            LayoutBitset::one_dimensional()
         } else {
-            Layout::none()
+            LayoutBitset::none()
         }
     }
 

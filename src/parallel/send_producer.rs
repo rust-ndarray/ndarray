@@ -1,5 +1,5 @@
 use crate::imp_prelude::*;
-use crate::{Layout, NdProducer};
+use crate::{LayoutBitset, NdProducer};
 use std::ops::{Deref, DerefMut};
 
 /// An NdProducer that is unconditionally `Send`.
@@ -66,7 +66,7 @@ where P: NdProducer
     }
 
     #[inline(always)]
-    fn layout(&self) -> Layout
+    fn layout(&self) -> LayoutBitset
     {
         self.inner.layout()
     }
