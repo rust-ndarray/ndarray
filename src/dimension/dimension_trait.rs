@@ -80,7 +80,7 @@ pub trait Dimension:
 
     /// The dimensionality of the type, under the new, unstable API.
     #[cfg(feature = "unstable")]
-    type Dimality: Dimensionality;
+    type Rank: Dimensionality;
 
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
@@ -427,7 +427,7 @@ impl Dimension for Dim<[Ix; 0]>
     type Smaller = Self;
     type Larger = Ix1;
     #[cfg(feature = "unstable")]
-    type Dimality = D0;
+    type Rank = D0;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize
@@ -479,7 +479,7 @@ impl Dimension for Dim<[Ix; 1]>
     type Smaller = Ix0;
     type Larger = Ix2;
     #[cfg(feature = "unstable")]
-    type Dimality = D1;
+    type Rank = D1;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -614,7 +614,7 @@ impl Dimension for Dim<[Ix; 2]>
     type Smaller = Ix1;
     type Larger = Ix3;
     #[cfg(feature = "unstable")]
-    type Dimality = D2;
+    type Rank = D2;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -791,7 +791,7 @@ impl Dimension for Dim<[Ix; 3]>
     type Smaller = Ix2;
     type Larger = Ix4;
     #[cfg(feature = "unstable")]
-    type Dimality = D3;
+    type Rank = D3;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -918,14 +918,14 @@ impl Dimension for Dim<[Ix; 3]>
 }
 
 macro_rules! large_dim {
-    ($n:expr, $name:ident, $pattern:ty, $larger:ty, $dimality:ty, { $($insert_axis:tt)* }) => (
+    ($n:expr, $name:ident, $pattern:ty, $larger:ty, { $($insert_axis:tt)* }) => (
         impl Dimension for Dim<[Ix; $n]> {
             const NDIM: Option<usize> = Some($n);
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
             #[cfg(feature = "unstable")]
-            type Dimality = $dimality;
+            type Rank = NDim<$n>;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -951,13 +951,13 @@ macro_rules! large_dim {
     );
 }
 
-large_dim!(4, Ix4, (Ix, Ix, Ix, Ix), Ix5, D4, {
+large_dim!(4, Ix4, (Ix, Ix, Ix, Ix), Ix5, {
     impl_insert_axis_array!(4);
 });
-large_dim!(5, Ix5, (Ix, Ix, Ix, Ix, Ix), Ix6, D5, {
+large_dim!(5, Ix5, (Ix, Ix, Ix, Ix, Ix), Ix6, {
     impl_insert_axis_array!(5);
 });
-large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, D6, {
+large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
     fn insert_axis(&self, axis: Axis) -> Self::Larger {
         debug_assert!(axis.index() <= self.ndim());
         let mut out = Vec::with_capacity(self.ndim() + 1);
@@ -977,7 +977,7 @@ impl Dimension for IxDyn
     type Smaller = Self;
     type Larger = Self;
     #[cfg(feature = "unstable")]
-    type Dimality = DDyn;
+    type Rank = DDyn;
     #[inline]
     fn ndim(&self) -> usize
     {
