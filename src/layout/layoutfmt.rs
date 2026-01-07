@@ -6,13 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::LayoutBitset;
+use super::Layout;
 
 const LAYOUT_NAMES: &[&str] = &["C", "F", "c", "f"];
 
 use std::fmt;
 
-impl fmt::Debug for LayoutBitset
+impl fmt::Debug for Layout
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {

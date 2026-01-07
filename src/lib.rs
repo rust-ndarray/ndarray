@@ -222,8 +222,7 @@ mod dimension;
 
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
 
-#[allow(deprecated)]
-pub use crate::layout::{Layout, LayoutBitset};
+pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
 mod imp_prelude

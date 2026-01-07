@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::Baseiter;
 use crate::imp_prelude::*;
 use crate::IntoDimension;
-use crate::LayoutBitset;
+use crate::Layout;
 use crate::NdProducer;
 use crate::Slice;
 
@@ -176,7 +176,7 @@ impl<'a, A, D: Dimension> NdProducer for AxisWindows<'a, A, D>
         Ix1(self.base.raw_dim()[self.axis_idx])
     }
 
-    fn layout(&self) -> LayoutBitset
+    fn layout(&self) -> Layout
     {
         self.base.layout()
     }

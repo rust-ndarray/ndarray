@@ -1,6 +1,6 @@
 use crate::imp_prelude::*;
 use crate::ArrayRef;
-use crate::LayoutBitset;
+use crate::Layout;
 use crate::NdIndex;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
@@ -74,7 +74,7 @@ pub trait NdProducer
     type Stride: Copy;
 
     #[doc(hidden)]
-    fn layout(&self) -> LayoutBitset;
+    fn layout(&self) -> Layout;
     /// Return the shape of the producer.
     fn raw_dim(&self) -> Self::Dim;
     #[doc(hidden)]
@@ -282,7 +282,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayView<'a, A, D>
         (**self).as_ptr() as _
     }
 
-    fn layout(&self) -> LayoutBitset
+    fn layout(&self) -> Layout
     {
         self.layout_impl()
     }
@@ -340,7 +340,7 @@ impl<'a, A, D: Dimension> NdProducer for ArrayViewMut<'a, A, D>
         (**self).as_ptr() as _
     }
 
-    fn layout(&self) -> LayoutBitset
+    fn layout(&self) -> Layout
     {
         self.layout_impl()
     }
@@ -398,7 +398,7 @@ impl<A, D: Dimension> NdProducer for RawArrayView<A, D>
         self.as_ptr() as _
     }
 
-    fn layout(&self) -> LayoutBitset
+    fn layout(&self) -> Layout
     {
         AsRef::<LayoutRef<_, _>>::as_ref(self).layout_impl()
     }
@@ -457,7 +457,7 @@ impl<A, D: Dimension> NdProducer for RawArrayViewMut<A, D>
         self.as_ptr() as _
     }
 
-    fn layout(&self) -> LayoutBitset
+    fn layout(&self) -> Layout
     {
         AsRef::<LayoutRef<_, _>>::as_ref(self).layout_impl()
     }
