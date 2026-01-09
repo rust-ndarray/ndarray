@@ -1,6 +1,4 @@
-#![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, 
-)]
+#![allow(clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal)]
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::kron;
 use ndarray::prelude::*;

@@ -1,7 +1,5 @@
 #![crate_type = "lib"]
-#![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal,
-)]
+#![allow(clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal)]
 
 // Test cases for bounds check elimination
 

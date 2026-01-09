@@ -1,7 +1,5 @@
 #![feature(test)]
-#![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal,
-)]
+#![allow(clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal)]
 extern crate test;
 use test::Bencher;
 

@@ -1,6 +1,5 @@
 #![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, 
-    clippy::float_cmp
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::float_cmp
 )]
 
 use approx::assert_abs_diff_eq;
