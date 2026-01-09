@@ -1,5 +1,5 @@
 #![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names,
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, 
     clippy::float_cmp
 )]
 
@@ -176,7 +176,7 @@ fn var_too_large_ddof()
 fn var_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.var(::std::f64::NAN);
+    let v = a.var(std::f64::NAN);
     assert!(v.is_nan());
 }
 
@@ -219,7 +219,7 @@ fn std_too_large_ddof()
 fn std_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.std(::std::f64::NAN);
+    let v = a.std(f64::NAN);
     assert!(v.is_nan());
 }
 
@@ -344,7 +344,7 @@ fn std_axis()
     );
     assert_abs_diff_eq!(
         b.std_axis(Axis(1), 0.),
-        aview1(&[47140.214021552769]),
+        aview1(&[47_140.214_021_552_77]),
         epsilon = 1e-6,
     );
 
@@ -375,7 +375,7 @@ fn var_axis_too_large_ddof()
 fn var_axis_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.var_axis(Axis(1), ::std::f64::NAN);
+    let v = a.var_axis(Axis(1), f64::NAN);
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
 }

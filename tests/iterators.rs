@@ -29,7 +29,7 @@ fn double_ended()
     assert_eq!(it.next(), Some(0));
     assert_eq!(it.next_back(), Some(7));
     assert_eq!(it.next(), Some(1));
-    assert_eq!(it.rev().last(), Some(2));
+    assert_eq!(it.rev().next_back(), Some(2));
     assert_equal(aview1(&[1, 2, 3]), &[1, 2, 3]);
     assert_equal(aview1(&[1, 2, 3]).into_iter().rev(), [1, 2, 3].iter().rev());
 }
@@ -1058,7 +1058,7 @@ fn test_impl_iter_compiles()
     // Requires that the iterators are covariant in the element type
 
     // base case: std
-    fn slice_iter_non_empty_indices<'s, 'a>(array: &'a Vec<&'s str>) -> impl Iterator<Item = usize> + 'a
+    fn slice_iter_non_empty_indices<'a>(array: &'a Vec<&str>) -> impl Iterator<Item = usize> + 'a
     {
         array
             .iter()
@@ -1070,7 +1070,7 @@ fn test_impl_iter_compiles()
     let _ = slice_iter_non_empty_indices;
 
     // ndarray case
-    fn array_iter_non_empty_indices<'s, 'a>(array: &'a Array<&'s str, Ix1>) -> impl Iterator<Item = usize> + 'a
+    fn array_iter_non_empty_indices<'a>(array: &'a Array<&str, Ix1>) -> impl Iterator<Item = usize> + 'a
     {
         array
             .iter()

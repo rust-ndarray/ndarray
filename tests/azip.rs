@@ -1,5 +1,5 @@
 #![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names,
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, 
     clippy::float_cmp
 )]
 
@@ -138,17 +138,11 @@ fn test_zip_collect_drop()
     {
         fn a_is_f(self) -> bool
         {
-            match self {
-                Config::CC | Config::CF => false,
-                _ => true,
-            }
+            !matches!(self, Config::CC | Config::CF)
         }
         fn b_is_f(self) -> bool
         {
-            match self {
-                Config::CC => false,
-                _ => true,
-            }
+            !matches!(self, Config::CC)
         }
     }
 

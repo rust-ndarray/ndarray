@@ -1,6 +1,6 @@
 #![feature(test)]
 #![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, 
 )]
 
 extern crate test;
@@ -416,7 +416,7 @@ fn iter_axis_chunks_5_iter_sum(bench: &mut Bencher)
 
 pub fn zip_mut_with(data: &Array3<f32>, out: &mut Array3<f32>)
 {
-    out.zip_mut_with(&data, |o, &i| {
+    out.zip_mut_with(data, |o, &i| {
         *o = i;
     });
 }

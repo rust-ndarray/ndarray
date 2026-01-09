@@ -1,6 +1,6 @@
 #![feature(test)]
 #![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, 
 )]
 extern crate test;
 use test::black_box;

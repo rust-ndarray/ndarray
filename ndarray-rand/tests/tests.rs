@@ -128,7 +128,7 @@ fn sampling_works(a: &Array2<f64>, strategy: SamplingStrategy, axis: Axis, n_sam
 // Check if, when sliced along `axis`, there is at least one lane in `a` equal to `b`
 fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool
 {
-    a.axis_iter(axis).any(|lane| &lane == b)
+    a.axis_iter(axis).any(|lane| lane == b)
 }
 
 #[test]

@@ -34,7 +34,7 @@ fn main()
     // can be guaranteed to be lossless at compile time. This is the safest
     // approach.
     let a_u8: Array<u8, _> = array![[1, 2, 3], [4, 5, 6]];
-    let a_f32 = a_u8.mapv(|element| f32::from(element));
+    let a_f32 = a_u8.mapv(f32::from);
     assert_abs_diff_eq!(a_f32, array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
 
     // Fallible, lossless conversion with `TryFrom`
