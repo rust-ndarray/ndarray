@@ -197,7 +197,7 @@ mod extension;
 mod geomspace;
 mod indexes;
 mod iterators;
-mod layout;
+pub mod layout;
 mod linalg_traits;
 mod linspace;
 #[cfg(feature = "std")]

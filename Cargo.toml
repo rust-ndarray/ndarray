@@ -74,6 +74,8 @@ matrixmultiply-threading = ["matrixmultiply/threading"]
 
 portable-atomic-critical-section = ["portable-atomic/critical-section"]
 
+unstable = []
+
 
 [target.'cfg(not(target_has_atomic = "ptr"))'.dependencies]
 portable-atomic = { version = "1.6.0" }

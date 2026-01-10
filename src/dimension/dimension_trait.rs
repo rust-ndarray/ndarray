@@ -17,6 +17,8 @@ use super::conversion::Convert;
 use super::ops::DimAdd;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
+#[cfg(feature = "unstable")]
+use crate::layout::dimensionality::*;
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
@@ -75,6 +77,10 @@ pub trait Dimension:
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
+
+    /// The dimensionality of the type, under the new, unstable API.
+    #[cfg(feature = "unstable")]
+    type Rank: Dimensionality;
 
     /// Returns the number of dimensions (number of axes).
     fn ndim(&self) -> usize;
@@ -420,6 +426,8 @@ impl Dimension for Dim<[Ix; 0]>
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
+    #[cfg(feature = "unstable")]
+    type Rank = D0;
     // empty product is 1 -> size is 1
     #[inline]
     fn ndim(&self) -> usize
@@ -470,6 +478,8 @@ impl Dimension for Dim<[Ix; 1]>
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
+    #[cfg(feature = "unstable")]
+    type Rank = D1;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -603,6 +613,8 @@ impl Dimension for Dim<[Ix; 2]>
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
+    #[cfg(feature = "unstable")]
+    type Rank = D2;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -778,6 +790,8 @@ impl Dimension for Dim<[Ix; 3]>
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
+    #[cfg(feature = "unstable")]
+    type Rank = D3;
     #[inline]
     fn ndim(&self) -> usize
     {
@@ -910,6 +924,8 @@ macro_rules! large_dim {
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
+            #[cfg(feature = "unstable")]
+            type Rank = NDim<$n>;
             #[inline]
             fn ndim(&self) -> usize { $n }
             #[inline]
@@ -960,6 +976,8 @@ impl Dimension for IxDyn
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
+    #[cfg(feature = "unstable")]
+    type Rank = DDyn;
     #[inline]
     fn ndim(&self) -> usize
     {
