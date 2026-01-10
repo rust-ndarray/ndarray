@@ -1,3 +1,23 @@
+Version 0.17.2 (2026-01-10)
+===========================
+Version 0.17.2 is mainly a patch fix to bugs related to the new `ArrayRef` implementation.
+
+In addition, `ndarray` has reduced its packaging footprint to ease supply chain reviews (and shrink the binary size!).
+A special thanks to @SwishSwushPow and @weiznich for bringing this to our attention and making the necessary changes.
+
+Added
+-----
+- Add type aliases for higher-dimensional ArcArrays by [@varchasgopalaswamy](https://github.com/varchasgopalaswamy) [#1561](https://github.com/rust-ndarray/ndarray/pull/1561)
+
+Fixed
+-----
+- Add PartialEq implementations between ArrayRef and ArrayBase by [@akern40](https://github.com/akern40) [#1557](https://github.com/rust-ndarray/ndarray/pull/1557)
+- Implement Sync for ArrayParts by [@gaumut](https://github.com/gaumut) [#1552](https://github.com/rust-ndarray/ndarray/pull/1552)
+
+Documentation
+-------------
+- fix some typos in comments by [@tinyfoolish](https://github.com/tinyfoolish) [#1547](https://github.com/rust-ndarray/ndarray/pull/1547)
+
 Version 0.17.1 (2025-11-02)
 ===========================
 Version 0.17.1 provides a patch to fix the originally-unsound implementation of the new array reference types.
