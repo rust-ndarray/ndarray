@@ -435,12 +435,12 @@ where A: LinalgScalar
         {
             let cblas_layout = c_layout.to_cblas_layout();
             let a_trans = a_layout.to_cblas_transpose_for(cblas_layout);
-            let lda = blas_stride(&a, a_layout);
+            let lda = blas_stride(a, a_layout);
 
             let b_trans = b_layout.to_cblas_transpose_for(cblas_layout);
-            let ldb = blas_stride(&b, b_layout);
+            let ldb = blas_stride(b, b_layout);
 
-            let ldc = blas_stride(&c, c_layout);
+            let ldc = blas_stride(c, c_layout);
 
             macro_rules! gemm_scalar_cast {
                 (f32, $var:ident) => {

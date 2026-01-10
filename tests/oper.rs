@@ -1,6 +1,4 @@
-#![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
-)]
+#![allow(clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal)]
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::kron;
 use ndarray::prelude::*;
@@ -148,18 +146,16 @@ fn dot_product()
         assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
     }
 
-    let a = a.map(|f| *f as f32);
-    let b = b.map(|f| *f as f32);
     assert_abs_diff_eq!(a.dot(&b), dot as f32, epsilon = 1e-5);
 
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(a1, b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(a2, b2), epsilon = 1e-5);
     }
 
     let a = a.map(|f| *f as i32);
@@ -175,17 +171,17 @@ fn dot_product_0()
     let x = 1.5;
     let b = aview0(&x);
     let b = b.broadcast(a.dim()).unwrap();
-    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
+    assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, b), epsilon = 1e-5);
 
     // test different alignments
     let max = 8 as Ixs;
     for i in 1..max {
         let a1 = a.slice(s![i..]);
         let b1 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(&a1, &b1), epsilon = 1e-5);
+        assert_abs_diff_eq!(a1.dot(&b1), reference_dot(a1, b1), epsilon = 1e-5);
         let a2 = a.slice(s![..-i]);
         let b2 = b.slice(s![i..]);
-        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
+        assert_abs_diff_eq!(a2.dot(&b2), reference_dot(a2, b2), epsilon = 1e-5);
     }
 }
 
@@ -199,13 +195,13 @@ fn dot_product_neg_stride()
         // both negative
         let a = a.slice(s![..;stride]);
         let b = b.slice(s![..;stride]);
-        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
+        assert_abs_diff_eq!(a.dot(&b), reference_dot(a, b), epsilon = 1e-5);
     }
     for stride in -10..0 {
         // mixed
         let a = a.slice(s![..;-stride]);
         let b = b.slice(s![..;stride]);
-        assert_abs_diff_eq!(a.dot(&b), reference_dot(&a, &b), epsilon = 1e-5);
+        assert_abs_diff_eq!(a.dot(&b), reference_dot(a, b), epsilon = 1e-5);
     }
 }
 
@@ -598,8 +594,10 @@ fn scaled_add_3()
 #[test]
 fn gen_mat_mul()
 {
+    use core::f64;
+
     let alpha = -2.3;
-    let beta = 3.14;
+    let beta = f64::consts::PI;
     let sizes = vec![
         (4, 4, 4),
         (8, 8, 8),
@@ -687,6 +685,8 @@ fn gen_mat_mul_i32()
 #[cfg_attr(miri, ignore)] // Takes too long
 fn gen_mat_vec_mul()
 {
+    use core::f64;
+
     use approx::assert_relative_eq;
     use ndarray::linalg::general_mat_vec_mul;
 
@@ -709,7 +709,7 @@ fn gen_mat_vec_mul()
     }
 
     let alpha = -2.3;
-    let beta = 3.14;
+    let beta = f64::consts::PI;
     let sizes = vec![
         (4, 4),
         (8, 8),

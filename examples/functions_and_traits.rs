@@ -74,8 +74,8 @@ fn takes_base<S: Data, D>(arr: &ArrayBase<S, D>)
 
     // We can also pass it to functions that accept `RawRef` and `LayoutRef`
     // in the usual two ways:
-    takes_rawref(&arr);
-    takes_layout(&arr);
+    takes_rawref(arr);
+    takes_layout(arr);
     //
     takes_rawref_asref(&arr);
     takes_layout_asref(&arr);

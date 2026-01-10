@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 #![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names,
-    clippy::float_cmp
+    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::float_cmp
 )]
 
 use approx::assert_relative_eq;
@@ -1006,7 +1005,7 @@ fn iter_size_hint()
 fn zero_axes()
 {
     let mut a = arr1::<f32>(&[]);
-    for _ in a.iter() {
+    if let Some(_) = a.iter().next() {
         panic!();
     }
     a.map(|_| panic!());
@@ -1112,12 +1111,12 @@ fn as_slice_memory_order_mut_contiguous_cowarray()
 #[test]
 fn to_slice_memory_order()
 {
-    for shape in vec![[2, 0, 3, 5], [2, 1, 3, 5], [2, 4, 3, 5]] {
+    for shape in [[2, 0, 3, 5], [2, 1, 3, 5], [2, 4, 3, 5]] {
         let data: Vec<usize> = (0..shape.iter().product()).collect();
         let mut orig = Array1::from(data.clone())
             .into_shape_with_order(shape)
             .unwrap();
-        for perm in vec![[0, 1, 2, 3], [0, 2, 1, 3], [2, 0, 1, 3]] {
+        for perm in [[0, 1, 2, 3], [0, 2, 1, 3], [2, 0, 1, 3]] {
             let mut a = orig.view_mut().permuted_axes(perm);
             assert_eq!(a.as_slice_memory_order().unwrap(), &data);
             assert_eq!(a.as_slice_memory_order_mut().unwrap(), &data);
@@ -2173,7 +2172,7 @@ fn test_contiguous_neg_strides()
     assert_eq!(f, arr3(&[[[11], [9]], [[10], [8]]]));
     assert!(f.as_slice_memory_order().is_some());
 
-    let mut g = b.clone();
+    let mut g = b;
     g.collapse_axis(Axis(1), 0);
     assert_eq!(g, arr3(&[[[11, 7, 3]], [[10, 6, 2]]]));
     assert!(g.as_slice_memory_order().is_none());
@@ -2568,7 +2567,7 @@ mod array_cow_tests
 
     fn run_with_various_layouts(mut f: impl FnMut(Array2<i32>))
     {
-        for all in vec![
+        for all in [
             Array2::from_shape_vec((7, 8), (0..7 * 8).collect()).unwrap(),
             Array2::from_shape_vec((7, 8).f(), (0..7 * 8).collect()).unwrap(),
         ] {

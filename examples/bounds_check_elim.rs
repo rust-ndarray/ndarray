@@ -1,7 +1,5 @@
 #![crate_type = "lib"]
-#![allow(
-    clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal, clippy::many_single_char_names
-)]
+#![allow(clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal)]
 
 // Test cases for bounds check elimination
 
@@ -57,7 +55,6 @@ pub fn test1d_single_mut(a: &mut Array1<f64>, i: usize) -> f64
 #[no_mangle]
 pub fn test1d_len_of(a: &Array1<f64>) -> f64
 {
-    let a = a;
     let mut sum = 0.;
     for i in 0..a.len_of(Axis(0)) {
         sum += a[i];
