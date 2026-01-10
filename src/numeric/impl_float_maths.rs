@@ -1,7 +1,6 @@
 // Element-wise methods for ndarray
 
-#[cfg(feature = "std")]
-use num_complex::Complex;
+use num_complex::{Complex32, Complex64};
 #[cfg(feature = "std")]
 use num_traits::Float;
 
@@ -9,30 +8,54 @@ use crate::imp_prelude::*;
 
 /// Trait for types that can generalize the phase angle (argument)
 /// calculation for both real floats and complex numbers.
-#[cfg(feature = "std")]
-pub trait HasAngle<F: Float>
+pub trait HasAngle
 {
+    /// The type of the associated angle.
+    type Angle;
+
     /// Return the phase angle (argument) of the value
-    fn to_angle(&self) -> F;
+    fn to_angle(&self) -> Self::Angle;
 }
 
-#[cfg(feature = "std")]
-impl<F> HasAngle<F> for F
-where F: Float
+impl HasAngle for f32
 {
+    type Angle = Self;
+
     #[inline]
-    fn to_angle(&self) -> F
+    fn to_angle(&self) -> Self
     {
-        F::zero().atan2(*self)
+        0f32.atan2(*self)
     }
 }
 
-#[cfg(feature = "std")]
-impl<F> HasAngle<F> for Complex<F>
-where F: Float
+impl HasAngle for f64
 {
+    type Angle = Self;
+
     #[inline]
-    fn to_angle(&self) -> F
+    fn to_angle(&self) -> Self
+    {
+        0f64.atan2(*self)
+    }
+}
+
+impl HasAngle for Complex32
+{
+    type Angle = f32;
+
+    #[inline]
+    fn to_angle(&self) -> Self::Angle
+    {
+        self.im.atan2(self.re)
+    }
+}
+
+impl HasAngle for Complex64
+{
+    type Angle = f64;
+
+    #[inline]
+    fn to_angle(&self) -> Self::Angle
     {
         self.im.atan2(self.re)
     }
@@ -203,10 +226,10 @@ where
 /// # Angle calculation methods for arrays
 ///
 /// Methods for calculating phase angles of complex values in arrays.
-#[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<A, D> ArrayRef<A, D>
-where D: Dimension
+where
+    D: Dimension,
+    A: HasAngle,
 {
     /// Return the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of complex values in the array.
     ///
@@ -241,10 +264,9 @@ where D: Dimension
     /// assert!((angles[2] - PI/4.0).abs() < 1e-10);
     /// ```
     #[must_use = "method returns a new array and does not mutate the original value"]
-    pub fn angle<F: Float>(&self) -> Array<F, D>
-    where A: HasAngle<F> + Clone
+    pub fn angle(&self) -> Array<A::Angle, D>
     {
-        self.mapv(|f| A::to_angle(&f))
+        self.map(A::to_angle)
     }
 }
 
@@ -273,77 +295,9 @@ where
     }
 }
 
-/// Scalar convenience function for angle calculation.
-///
-/// Calculate the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of a single complex value.
-///
-/// # Arguments
-///
-/// * `z` - A real or complex value (f32/f64, `Complex<f32>`/`Complex<f64>`).
-///
-/// # Returns
-///
-/// The phase angle as `f64` in radians or degrees.
-///
-/// # Examples
-///
-/// ```
-/// use num_complex::Complex;
-/// use std::f64::consts::PI;
-///
-/// assert!((ndarray::angle_scalar(Complex::new(1.0f64, 1.0)) - PI/4.0).abs() < 1e-10);
-/// assert!((ndarray::angle_scalar(1.0f32) - 0.0).abs() < 1e-10);
-/// assert!((ndarray::angle_scalar(-1.0f32) - 180.0).abs() < 1e-10);
-/// ```
-#[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-pub fn angle_scalar<F: Float, T: HasAngle<F>>(z: T) -> F
-{
-    z.to_angle()
-}
-
-/// Calculate the phase angle of complex values.
-///
-/// # Arguments
-///
-/// * `z` - Array of real or complex values.
-///
-/// # Returns
-///
-/// An `Array<F, D>` with the same shape as `z`.
-///
-/// # Examples
-///
-/// ```
-/// use ndarray::array;
-/// use num_complex::Complex;
-///
-/// // f32 precision for complex numbers
-/// let z32 = array![Complex::new(0.0f32, 1.0)];
-/// let out32 = ndarray::angle(&z32);
-/// // out32 has type Array<f32, _>
-///
-/// // f64 precision for complex numbers
-/// let z64 = array![Complex::new(0.0f64, -1.0)];
-/// let out64 = ndarray::angle(&z64);
-/// // out64 has type Array<f64, _>
-/// ```
-#[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-pub fn angle<A, F, S, D>(z: &ArrayBase<S, D>) -> Array<F, D>
-where
-    A: HasAngle<F>,
-    F: Float,
-    S: Data<Elem = A>,
-    D: Dimension,
-{
-    z.map(HasAngle::to_angle)
-}
-
 #[cfg(all(test, feature = "std"))]
 mod angle_tests
 {
-    use super::*;
     use crate::Array;
     use num_complex::Complex;
     use std::f64::consts::PI;
@@ -392,7 +346,7 @@ mod angle_tests
     fn test_complex_numbers_radians()
     {
         let arr = Array::from_vec(vec![
-            Complex::new(1.0, 0.0),    // 0
+            Complex::new(1.0f64, 0.0),    // 0
             Complex::new(0.0, 1.0),    // π/2
             Complex::new(-1.0, 0.0),   // π
             Complex::new(0.0, -1.0),   // -π/2
@@ -413,7 +367,7 @@ mod angle_tests
     fn test_complex_numbers_degrees()
     {
         let arr = Array::from_vec(vec![
-            Complex::new(1.0, 0.0),
+            Complex::new(1.0f64, 0.0),
             Complex::new(0.0, 1.0),
             Complex::new(-1.0, 0.0),
             Complex::new(1.0, 1.0),
@@ -430,7 +384,7 @@ mod angle_tests
     fn test_signed_zeros()
     {
         let arr = Array::from_vec(vec![
-            Complex::new(0.0, 0.0),
+            Complex::new(0.0f64, 0.0),
             Complex::new(-0.0, 0.0),
             Complex::new(0.0, -0.0),
             Complex::new(-0.0, -0.0),
@@ -441,51 +395,6 @@ mod angle_tests
         assert_approx_eq!(a[1], PI, 1e-10);
         assert!(a[2] <= 0.0 && a[2].abs() < 1e-10);
         assert_approx_eq!(a[3], -PI, 1e-10);
-    }
-
-    #[test]
-    fn test_angle_scalar_f64()
-    {
-        assert_approx_eq!(angle_scalar(Complex::new(1.0, 1.0)), PI / 4.0, 1e-10);
-        assert_approx_eq!(angle_scalar(1.0f64), 0.0, 1e-10);
-        assert_approx_eq!(angle_scalar(-1.0f64), PI, 1e-10);
-    }
-
-    #[test]
-    fn test_angle_scalar_f32()
-    {
-        use std::f32::consts::FRAC_PI_4;
-        assert_approx_eq!(angle_scalar(Complex::new(1.0f32, 1.0)), FRAC_PI_4, 1e-6);
-        assert_approx_eq!(angle_scalar(1.0f32), 0.0, 1e-6);
-        assert_approx_eq!(angle_scalar(-1.0f32), std::f32::consts::PI, 1e-6);
-    }
-
-    #[test]
-    fn test_angle_function()
-    {
-        let arr = Array::from_vec(vec![
-            Complex::new(1.0, 0.0),
-            Complex::new(0.0, 1.0),
-            Complex::new(-1.0, 1.0),
-        ]);
-        let a = angle(&arr);
-
-        assert_approx_eq!(a[0], 0.0, 1e-10);
-        assert_approx_eq!(a[1], PI / 2.0, 1e-10);
-        assert_approx_eq!(a[2], 3.0 * PI / 4.0, 1e-10);
-    }
-
-    #[test]
-    fn test_angle_function_degrees()
-    {
-        let arr = Array::from_vec(vec![
-            Complex::new(1.0f32, 1.0),
-            Complex::new(-1.0f32, 0.0),
-        ]);
-        let a = angle(&arr);
-
-        assert_approx_eq!(a[0], 45.0f32.to_radians(), 1e-6);
-        assert_approx_eq!(a[1], 180.0f32.to_radians(), 1e-6);
     }
 
     #[test]

@@ -1849,8 +1849,7 @@ mod impl_2d;
 mod impl_dyn;
 
 mod numeric;
-#[cfg(feature = "std")]
-pub use crate::numeric::{angle, angle_scalar, HasAngle};
+pub use crate::numeric::HasAngle;
 
 pub mod linalg;
 
