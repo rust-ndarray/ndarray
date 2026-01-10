@@ -153,6 +153,7 @@ def_d_aliases!(
 /// Implement addition for a given dimensionality.
 macro_rules! impl_add {
     ($left:literal, ($($right:literal),*), ddyn: ($($rightd:literal),*)) => {
+        // $left + $right still gets you a compile-time dimension
         $(
             impl DAdd<NDim<$right>> for NDim<$left>
             {
@@ -160,6 +161,7 @@ macro_rules! impl_add {
             }
         )*
 
+        // $left + $rightd gets you a dynamic dimensionality
         $(
             impl DAdd<NDim<$rightd>> for NDim<$left>
             {
