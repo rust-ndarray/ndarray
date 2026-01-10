@@ -17,8 +17,8 @@ use super::conversion::Convert;
 use super::ops::DimAdd;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
-#[cfg(feature = "unstable")]
 use crate::layout::dimensionality::*;
+use crate::layout::ranked::Ranked;
 use crate::IntoDimension;
 use crate::RemoveAxis;
 use crate::{ArrayView1, ArrayViewMut1};
@@ -61,6 +61,7 @@ pub trait Dimension:
     + DimAdd<Ix0, Output = Self>
     + DimAdd<Ix1, Output = <Self as Dimension>::Larger>
     + DimAdd<IxDyn, Output = IxDyn>
+    + Ranked
 {
     /// For fixed-size dimension representations (e.g. `Ix2`), this should be
     /// `Some(ndim)`, and for variable-size dimension representations (e.g.
@@ -78,12 +79,11 @@ pub trait Dimension:
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
 
-    /// The dimensionality of the type, under the new, unstable API.
-    #[cfg(feature = "unstable")]
-    type Rank: Dimensionality;
-
     /// Returns the number of dimensions (number of axes).
-    fn ndim(&self) -> usize;
+    fn ndim(&self) -> usize
+    {
+        self.rank()
+    }
 
     /// Convert the dimension into a pattern matching friendly value.
     fn into_pattern(self) -> Self::Pattern;
@@ -420,20 +420,25 @@ macro_rules! impl_insert_axis_array(
     );
 );
 
+impl<const N: usize> Ranked for Dim<[Ix; N]>
+where NDim<N>: Dimensionality // Limit us to < 12, since Rank must impl Dimensionality
+{
+    type Rank = NDim<N>;
+
+    #[inline]
+    fn rank(&self) -> usize
+    {
+        N
+    }
+}
+
 impl Dimension for Dim<[Ix; 0]>
 {
     const NDIM: Option<usize> = Some(0);
     type Pattern = ();
     type Smaller = Self;
     type Larger = Ix1;
-    #[cfg(feature = "unstable")]
-    type Rank = D0;
     // empty product is 1 -> size is 1
-    #[inline]
-    fn ndim(&self) -> usize
-    {
-        0
-    }
     #[inline]
     fn slice(&self) -> &[Ix]
     {
@@ -478,13 +483,6 @@ impl Dimension for Dim<[Ix; 1]>
     type Pattern = Ix;
     type Smaller = Ix0;
     type Larger = Ix2;
-    #[cfg(feature = "unstable")]
-    type Rank = D1;
-    #[inline]
-    fn ndim(&self) -> usize
-    {
-        1
-    }
     #[inline]
     fn slice(&self) -> &[Ix]
     {
@@ -613,13 +611,6 @@ impl Dimension for Dim<[Ix; 2]>
     type Pattern = (Ix, Ix);
     type Smaller = Ix1;
     type Larger = Ix3;
-    #[cfg(feature = "unstable")]
-    type Rank = D2;
-    #[inline]
-    fn ndim(&self) -> usize
-    {
-        2
-    }
     #[inline]
     fn into_pattern(self) -> Self::Pattern
     {
@@ -790,13 +781,6 @@ impl Dimension for Dim<[Ix; 3]>
     type Pattern = (Ix, Ix, Ix);
     type Smaller = Ix2;
     type Larger = Ix4;
-    #[cfg(feature = "unstable")]
-    type Rank = D3;
-    #[inline]
-    fn ndim(&self) -> usize
-    {
-        3
-    }
     #[inline]
     fn into_pattern(self) -> Self::Pattern
     {
@@ -924,10 +908,6 @@ macro_rules! large_dim {
             type Pattern = $pattern;
             type Smaller = Dim<[Ix; $n - 1]>;
             type Larger = $larger;
-            #[cfg(feature = "unstable")]
-            type Rank = NDim<$n>;
-            #[inline]
-            fn ndim(&self) -> usize { $n }
             #[inline]
             fn into_pattern(self) -> Self::Pattern {
                 self.ix().convert()
@@ -968,6 +948,17 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
     }
 });
 
+impl Ranked for IxDyn
+{
+    type Rank = DDyn;
+
+    #[inline]
+    fn rank(&self) -> usize
+    {
+        self.ix().len()
+    }
+}
+
 /// IxDyn is a "dynamic" index, pretty hard to use when indexing,
 /// and memory wasteful, but it allows an arbitrary and dynamic number of axes.
 impl Dimension for IxDyn
@@ -976,13 +967,6 @@ impl Dimension for IxDyn
     type Pattern = Self;
     type Smaller = Self;
     type Larger = Self;
-    #[cfg(feature = "unstable")]
-    type Rank = DDyn;
-    #[inline]
-    fn ndim(&self) -> usize
-    {
-        self.ix().len()
-    }
     #[inline]
     fn slice(&self) -> &[Ix]
     {
