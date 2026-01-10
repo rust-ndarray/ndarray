@@ -265,7 +265,7 @@ where
     ///     Complex::new(0.0, 1.0),
     ///     Complex::new(1.0, 1.0),
     /// ];
-    /// let angles = complex_arr.angle(false);
+    /// let angles = complex_arr.angle();
     /// assert!((angles[0] - 0.0).abs() < 1e-10);
     /// assert!((angles[1] - PI/2.0).abs() < 1e-10);
     /// assert!((angles[2] - PI/4.0).abs() < 1e-10);
