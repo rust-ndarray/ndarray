@@ -36,6 +36,10 @@ Highlights
   elements from the end of the axis.
 - Views and subviews of arrays; iterators that yield subviews.
 
+Installation
+------------
+From a shell in your project folder, run `cargo add ndarray` to add the latest version.
+
 Status and Lookout
 ------------------
 
@@ -85,7 +89,7 @@ your `Cargo.toml`.
 
 - ``approx``
 
-  - Implementations of traits from version 0.5 of the [`approx`] crate.
+  - Implementations of traits the [`approx`] crate.
 
 - ``blas``
 
@@ -100,14 +104,6 @@ your `Cargo.toml`.
 - ``portable-atomic-critical-section``
 
   - Whether ``portable-atomic`` should use ``critical-section``
-
-How to use with cargo
----------------------
-
-::
-
-    [dependencies]
-    ndarray = "0.16.0"
 
 How to enable BLAS integration
 ------------------------------
@@ -127,7 +123,7 @@ An example configuration using system openblas is shown below. Note that only
 end-user projects (not libraries) should select provider::
 
     [dependencies]
-    ndarray = { version = "0.16.0", features = ["blas"] }
+    ndarray = { version = "0.x.y", features = ["blas"] }
     blas-src = { version = "0.10", features = ["openblas"] }
     openblas-src = { version = "0.10", features = ["cblas", "system"] }
 
@@ -135,7 +131,7 @@ Using system-installed dependencies can save a long time building dependencies.
 An example configuration using (compiled) netlib is shown below anyway::
 
     [dependencies]
-    ndarray = { version = "0.16.0", features = ["blas"] }
+    ndarray = { version = "0.x.y", features = ["blas"] }
     blas-src = { version = "0.10.0", default-features = false, features = ["netlib"] }
 
 When this is done, your program must also link to ``blas_src`` by using it or
