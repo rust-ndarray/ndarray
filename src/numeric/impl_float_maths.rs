@@ -1,5 +1,6 @@
 // Element-wise methods for ndarray
 
+#[cfg(feature = "std")]
 use num_complex::{Complex32, Complex64};
 #[cfg(feature = "std")]
 use num_traits::Float;
@@ -8,6 +9,7 @@ use crate::imp_prelude::*;
 
 /// Trait for types that can generalize the phase angle (argument)
 /// calculation for both real floats and complex numbers.
+#[cfg(feature = "std")]
 pub trait HasAngle
 {
     /// The type of the associated angle.
@@ -17,6 +19,7 @@ pub trait HasAngle
     fn to_angle(&self) -> Self::Angle;
 }
 
+#[cfg(feature = "std")]
 impl HasAngle for f32
 {
     type Angle = Self;
@@ -28,6 +31,7 @@ impl HasAngle for f32
     }
 }
 
+#[cfg(feature = "std")]
 impl HasAngle for f64
 {
     type Angle = Self;
@@ -39,6 +43,7 @@ impl HasAngle for f64
     }
 }
 
+#[cfg(feature = "std")]
 impl HasAngle for Complex32
 {
     type Angle = f32;
@@ -50,6 +55,7 @@ impl HasAngle for Complex32
     }
 }
 
+#[cfg(feature = "std")]
 impl HasAngle for Complex64
 {
     type Angle = f64;
@@ -226,6 +232,7 @@ where
 /// # Angle calculation methods for arrays
 ///
 /// Methods for calculating phase angles of complex values in arrays.
+#[cfg(feature = "std")]
 impl<A, D> ArrayRef<A, D>
 where
     D: Dimension,
