@@ -67,7 +67,7 @@ impl<$($typarm)*> NdProducer for $fulltype {
         self.$base.raw_dim()
     }
 
-    fn layout(&self) -> LayoutBitset {
+    fn layout(&self) -> Layout {
         self.$base.layout()
     }
 

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::LanesIter;
 use super::LanesIterMut;
 use crate::imp_prelude::*;
-use crate::{LayoutBitset, NdProducer};
+use crate::{Layout, NdProducer};
 
 impl_ndproducer! {
     ['a, A, D: Dimension]

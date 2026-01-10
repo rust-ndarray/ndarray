@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::imp_prelude::*;
 use crate::Baseiter;
 use crate::IntoDimension;
-use crate::{LayoutBitset, NdProducer};
+use crate::{Layout, NdProducer};
 
 impl_ndproducer! {
     ['a, A, D: Dimension]
