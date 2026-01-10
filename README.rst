@@ -101,6 +101,14 @@ your `Cargo.toml`.
 
   - Whether ``portable-atomic`` should use ``critical-section``
 
+- ``half``
+
+  - Enable support for the ``half::f16`` and ``half::bf16`` types.
+    Currently those types are expected to be much slower than ``f32``.
+    Some benchmarks show ``half::f16`` and ``half::bf16`` being around
+    100-350x and 100x slower than ``f32``, respectively.
+
+
 How to use with cargo
 ---------------------
 
@@ -179,4 +187,3 @@ http://www.apache.org/licenses/LICENSE-2.0 or the MIT license
 http://opensource.org/licenses/MIT, at your
 option. This file may not be copied, modified, or distributed
 except according to those terms.
-

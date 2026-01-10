@@ -28,10 +28,14 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 quickcheck = { workspace = true, optional = true }
 
+half = { optional = true, version = "2.7.1", default-features = false, features = ["num-traits"] }
+
 [dev-dependencies]
 rand_isaac = "0.4.0"
 quickcheck = { workspace = true }
 
+[features]
+half = ["dep:half", "ndarray/half"]
+
 [package.metadata.release]
 tag-name = "ndarray-rand-{{version}}"
-

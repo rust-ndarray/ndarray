@@ -793,7 +793,7 @@ fn bench_col_iter(bench: &mut test::Bencher)
 }
 
 macro_rules! mat_mul {
-    ($modname:ident, $ty:ident, $(($name:ident, $m:expr, $n:expr, $k:expr))+) => {
+    ($modname:ident, $ty:ty, $(($name:ident, $m:expr, $n:expr, $k:expr))+) => {
         mod $modname {
             use test::{black_box, Bencher};
             use ndarray::Array;
@@ -810,6 +810,36 @@ macro_rules! mat_mul {
             )+
         }
     };
+}
+
+#[cfg(feature = "half")]
+mat_mul! {mat_mul_f16, half::f16,
+    (m004, 4, 4, 4)
+    (m007, 7, 7, 7)
+    (m008, 8, 8, 8)
+    (m012, 12, 12, 12)
+    (m016, 16, 16, 16)
+    (m032, 32, 32, 32)
+    (m064, 64, 64, 64)
+    (m127, 127, 127, 127) // ~128x slower than f32
+    (mix16x4, 32, 4, 32)
+    (mix32x2, 32, 2, 32)
+    // (mix10000, 128, 10000, 128) // too slow
+}
+
+#[cfg(feature = "half")]
+mat_mul! {mat_mul_bf16, half::bf16,
+    (m004, 4, 4, 4)
+    (m007, 7, 7, 7)
+    (m008, 8, 8, 8)
+    (m012, 12, 12, 12)
+    (m016, 16, 16, 16)
+    (m032, 32, 32, 32)
+    (m064, 64, 64, 64)
+    (m127, 127, 127, 127) // 84x slower than f32
+    (mix16x4, 32, 4, 32)
+    (mix32x2, 32, 2, 32)
+    // (mix10000, 128, 10000, 128) // too slow
 }
 
 mat_mul! {mat_mul_f32, f32,

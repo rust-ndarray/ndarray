@@ -51,6 +51,8 @@ matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm
 serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
 
+half = {version = "2.7.1", default-features = false, features = ["num-traits"], optional = true}
+
 [dev-dependencies]
 defmac = "0.2"
 quickcheck = { workspace = true }
@@ -65,14 +67,16 @@ default = ["std"]
 # See README for more instructions
 blas = ["dep:cblas-sys", "dep:libc"]
 
-serde = ["dep:serde"]
+serde = ["dep:serde", "half?/serde"]
 
-std = ["num-traits/std", "matrixmultiply/std"]
+std = ["num-traits/std", "matrixmultiply/std", "half?/std"]
 rayon = ["dep:rayon", "std"]
 
 matrixmultiply-threading = ["matrixmultiply/threading"]
 
 portable-atomic-critical-section = ["portable-atomic/critical-section"]
+
+half = ["dep:half"]
 
 
 [target.'cfg(not(target_has_atomic = "ptr"))'.dependencies]
@@ -122,6 +126,6 @@ tag-name = "{{version}}"
 
 # Config specific to docs.rs
 [package.metadata.docs.rs]
-features = ["approx", "serde", "rayon"]
+features = ["approx", "serde", "rayon", "half"]
 # Define the configuration attribute `docsrs`
 rustdoc-args = ["--cfg", "docsrs"]
