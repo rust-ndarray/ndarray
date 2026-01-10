@@ -146,8 +146,6 @@ fn dot_product()
         assert_abs_diff_eq!(a2.dot(&b2), reference_dot(&a2, &b2), epsilon = 1e-5);
     }
 
-    let a = a.map(|f| *f);
-    let b = b.map(|f| *f);
     assert_abs_diff_eq!(a.dot(&b), dot as f32, epsilon = 1e-5);
 
     let max = 8 as Ixs;
