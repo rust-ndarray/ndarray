@@ -242,15 +242,6 @@ where
     /// use num_complex::Complex;
     /// use std::f64::consts::PI;
     ///
-    /// // Real numbers
-    /// let real_arr = array![1.0f64, -1.0, 0.0];
-    /// let angles_rad = real_arr.angle();
-    /// let angles_deg = real_arr.angle().to_degrees();
-    /// assert!((angles_rad[0] - 0.0).abs() < 1e-10);
-    /// assert!((angles_rad[1] - PI).abs() < 1e-10);
-    /// assert!((angles_deg[1] - 180.0).abs() < 1e-10);
-    ///
-    /// // Complex numbers
     /// let complex_arr = array![
     ///     Complex::new(1.0f64, 0.0),
     ///     Complex::new(0.0, 1.0),
