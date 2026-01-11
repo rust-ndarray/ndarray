@@ -5,7 +5,15 @@
 //! array, whether known statically (via [`Dimensionality`]) or only at runtime. Blanket
 //! implementations are provided for common pointer and container types.
 
-use crate::layout::dimensionality::{Dimensionality, D1};
+use crate::{
+    layout::dimensionality::{Dimensionality, D1},
+    ArrayBase,
+    ArrayParts,
+    ArrayRef,
+    LayoutRef,
+    RawData,
+    RawRef,
+};
 
 /// A trait to unify type- and runtime-level number of dimensions.
 ///
@@ -120,5 +128,62 @@ impl<T, const N: usize> Ranked for [T; N]
     fn rank(&self) -> usize
     {
         1
+    }
+}
+
+impl<A, D, T: ?Sized> Ranked for ArrayParts<A, D, T>
+where D: Ranked
+{
+    type Rank = D::Rank;
+
+    fn rank(&self) -> usize
+    {
+        self.dim.rank()
+    }
+}
+
+impl<S, D> Ranked for ArrayBase<S, D>
+where
+    S: RawData,
+    D: Ranked,
+{
+    type Rank = D::Rank;
+
+    fn rank(&self) -> usize
+    {
+        self.parts.rank()
+    }
+}
+
+impl<A, D> Ranked for LayoutRef<A, D>
+where D: Ranked
+{
+    type Rank = D::Rank;
+
+    fn rank(&self) -> usize
+    {
+        self.0.rank()
+    }
+}
+
+impl<A, D> Ranked for ArrayRef<A, D>
+where D: Ranked
+{
+    type Rank = D::Rank;
+
+    fn rank(&self) -> usize
+    {
+        self.0.rank()
+    }
+}
+
+impl<A, D> Ranked for RawRef<A, D>
+where D: Ranked
+{
+    type Rank = D::Rank;
+
+    fn rank(&self) -> usize
+    {
+        self.0.rank()
     }
 }
