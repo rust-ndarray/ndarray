@@ -475,3 +475,40 @@ fn diff_panic_axis_out_of_bounds()
     let data = array![1, 2, 4, 7];
     data.diff(1, Axis(2));
 }
+
+#[test]
+#[cfg(feature = "std")]
+fn test_boolean_op_is_nan()
+{
+    let data = array![1.0, 2.0, 4.0, 7.0, f64::NAN];
+    let expected = array![false, false, false, false, true];
+    assert_eq!(data.is_nan(), expected);
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn test_unary_op_round()
+{
+    let data = array![0.0, 0.1, 0.5, 0.9, 1.0, 1.5];
+    let expected = array![0.0, 0.0, 1.0, 1.0, 1.0, 2.0];
+    assert_eq!(data.round(), expected);
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn test_binary_op_powi()
+{
+    let data = array![1.0, 2.0, 4.0, 7.0];
+    let expected = array![1.0, 8.0, 64.0, 343.0];
+    assert_eq!(data.powi(3), expected);
+}
+
+#[test]
+#[cfg(feature = "std")]
+fn test_binary_op_hypot_all()
+{
+    let a = array![[3.0, 5.0], [8.0, 7.0]];
+    let b = array![[4.0, 12.0], [15.0, 24.0]];
+    let expected = array![[5.0, 13.0], [17.0, 25.0]];
+    assert_eq!(a.hypot_all(&b), expected);
+}
