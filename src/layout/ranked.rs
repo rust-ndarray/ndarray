@@ -5,6 +5,9 @@
 //! array, whether known statically (via [`Dimensionality`]) or only at runtime. Blanket
 //! implementations are provided for common pointer and container types.
 
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+
 use crate::{
     layout::dimensionality::{Dimensionality, D1},
     ArrayBase,
