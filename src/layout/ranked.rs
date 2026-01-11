@@ -29,7 +29,7 @@ use crate::{
 ///
 /// [DDyn]: crate::layout::dimensionality::DDyn
 /// [Rank]: Ranked::Rank
-/// [ndim]: Ranked::ndim
+/// [ndim]: Ranked::rank
 /// [N]: Dimensionality::N
 pub trait Ranked
 {
@@ -46,7 +46,11 @@ mod blanket_impls
 {
     use super::*;
     use alloc::rc::Rc;
+
+    #[cfg(target_has_atomic = "ptr")]
     use alloc::sync::Arc;
+    #[cfg(not(target_has_atomic = "ptr"))]
+    use portable_atomic_util::Arc;
 
     impl<T> Ranked for &T
     where T: Ranked
