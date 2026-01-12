@@ -1,7 +1,7 @@
 #![cfg(feature = "rayon")]
 
 #[cfg(feature = "approx")]
-use itertools::enumerate;
+use itertools::{enumerate, assert_equal, cloned};
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
