@@ -1,7 +1,7 @@
 #![cfg(feature = "rayon")]
 
 #[cfg(feature = "approx")]
-use itertools::enumerate;
+use itertools::{assert_equal, cloned, enumerate};
 use ndarray::parallel::prelude::*;
 use ndarray::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -70,4 +70,23 @@ fn test_indices_1()
         assert_eq!(elt, i);
     });
     assert_eq!(count.load(Ordering::SeqCst), a1.len());
+}
+
+#[test]
+fn test_par_azip9()
+{
+    let mut a = Array::<i32, _>::zeros(62);
+    let b = Array::from_shape_fn(a.dim(), |j| j as i32);
+    let c = Array::from_shape_fn(a.dim(), |j| (j * 2) as i32);
+    let d = Array::from_shape_fn(a.dim(), |j| (j * 4) as i32);
+    let e = Array::from_shape_fn(a.dim(), |j| (j * 8) as i32);
+    let f = Array::from_shape_fn(a.dim(), |j| (j * 16) as i32);
+    let g = Array::from_shape_fn(a.dim(), |j| (j * 32) as i32);
+    let h = Array::from_shape_fn(a.dim(), |j| (j * 64) as i32);
+    let i = Array::from_shape_fn(a.dim(), |j| (j * 128) as i32);
+    par_azip!((a in &mut a, &b in &b, &c in &c, &d in &d, &e in &e, &f in &f, &g in &g, &h in &h, &i in &i){
+        *a = b + c + d + e + f + g + h + i;
+    });
+    let x = Array::from_shape_fn(a.dim(), |j| (j * 255) as i32);
+    assert_equal(cloned(&a), x);
 }

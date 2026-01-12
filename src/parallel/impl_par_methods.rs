@@ -196,5 +196,8 @@ zip_impl! {
     [true P1 P2 P3],
     [true P1 P2 P3 P4],
     [true P1 P2 P3 P4 P5],
-    [false P1 P2 P3 P4 P5 P6],
+    [true P1 P2 P3 P4 P5 P6],
+    [true P1 P2 P3 P4 P5 P6 P7],
+    [true P1 P2 P3 P4 P5 P6 P7 P8],
+    [false P1 P2 P3 P4 P5 P6 P7 P8 P9],
 }
