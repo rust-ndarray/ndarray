@@ -180,6 +180,7 @@ where
     /// # Example
     /// ```
     /// use ndarray::*;
+    /// use num_complex::Complex;
     ///
     /// let arr = array![1.0, -1.0, 0.0];
     /// let complex = arr.to_complex_re();
@@ -202,6 +203,7 @@ where
     /// # Example
     /// ```
     /// use ndarray::*;
+    /// use num_complex::Complex;
     ///
     /// let arr = array![1.0, -1.0, 0.0];
     /// let complex = arr.to_complex_re();
