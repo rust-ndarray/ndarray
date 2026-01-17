@@ -968,6 +968,63 @@ where
     is_blas_2d(a._dim(), a._strides(), BlasOrder::F)
 }
 
+/// Dot product for dynamic-dimensional arrays (`ArrayD`).
+///
+/// For one-dimensional arrays, computes the vector dot product, which is the sum
+/// of the elementwise products (no conjugation of complex operands).
+/// Both arrays must have the same length.
+///
+/// For two-dimensional arrays, performs matrix multiplication. The array shapes
+/// must be compatible in the following ways:
+/// - If `self` is *M* × *N*, then `rhs` must be *N* × *K* for matrix-matrix multiplication
+/// - If `self` is *M* × *N* and `rhs` is *N*, returns a vector of length *M*
+/// - If `self` is *M* and `rhs` is *M* × *N*, returns a vector of length *N*
+/// - If both arrays are one-dimensional of length *N*, returns a scalar
+///
+/// **Panics** if:
+/// - The arrays have dimensions other than 1 or 2
+/// - The array shapes are incompatible for the operation
+/// - For vector dot product: the vectors have different lengths
+impl<A> Dot<ArrayRef<A, IxDyn>> for ArrayRef<A, IxDyn>
+where A: LinalgScalar
+{
+    type Output = Array<A, IxDyn>;
+
+    fn dot(&self, rhs: &ArrayRef<A, IxDyn>) -> Self::Output
+    {
+        match (self.ndim(), rhs.ndim()) {
+            (1, 1) => {
+                let a = self.view().into_dimensionality::<Ix1>().unwrap();
+                let b = rhs.view().into_dimensionality::<Ix1>().unwrap();
+                let result = a.dot(&b);
+                ArrayD::from_elem(vec![], result)
+            }
+            (2, 2) => {
+                // Matrix-matrix multiplication
+                let a = self.view().into_dimensionality::<Ix2>().unwrap();
+                let b = rhs.view().into_dimensionality::<Ix2>().unwrap();
+                let result = a.dot(&b);
+                result.into_dimensionality::<IxDyn>().unwrap()
+            }
+            (2, 1) => {
+                // Matrix-vector multiplication
+                let a = self.view().into_dimensionality::<Ix2>().unwrap();
+                let b = rhs.view().into_dimensionality::<Ix1>().unwrap();
+                let result = a.dot(&b);
+                result.into_dimensionality::<IxDyn>().unwrap()
+            }
+            (1, 2) => {
+                // Vector-matrix multiplication
+                let a = self.view().into_dimensionality::<Ix1>().unwrap();
+                let b = rhs.view().into_dimensionality::<Ix2>().unwrap();
+                let result = a.dot(&b);
+                result.into_dimensionality::<IxDyn>().unwrap()
+            }
+            _ => panic!("Dot product for ArrayD is only supported for 1D and 2D arrays"),
+        }
+    }
+}
+
 #[cfg(test)]
 #[cfg(feature = "blas")]
 mod blas_tests
@@ -1080,63 +1137,6 @@ mod blas_tests
             } else {
                 assert_eq!(get_blas_compatible_layout(&m), Some(BlasOrder::C));
             }
-        }
-    }
-}
-
-/// Dot product for dynamic-dimensional arrays (`ArrayD`).
-///
-/// For one-dimensional arrays, computes the vector dot product, which is the sum
-/// of the elementwise products (no conjugation of complex operands).
-/// Both arrays must have the same length.
-///
-/// For two-dimensional arrays, performs matrix multiplication. The array shapes
-/// must be compatible in the following ways:
-/// - If `self` is *M* × *N*, then `rhs` must be *N* × *K* for matrix-matrix multiplication
-/// - If `self` is *M* × *N* and `rhs` is *N*, returns a vector of length *M*
-/// - If `self` is *M* and `rhs` is *M* × *N*, returns a vector of length *N*
-/// - If both arrays are one-dimensional of length *N*, returns a scalar
-///
-/// **Panics** if:
-/// - The arrays have dimensions other than 1 or 2
-/// - The array shapes are incompatible for the operation
-/// - For vector dot product: the vectors have different lengths
-impl<A> Dot<ArrayRef<A, IxDyn>> for ArrayRef<A, IxDyn>
-where A: LinalgScalar
-{
-    type Output = Array<A, IxDyn>;
-
-    fn dot(&self, rhs: &ArrayRef<A, IxDyn>) -> Self::Output
-    {
-        match (self.ndim(), rhs.ndim()) {
-            (1, 1) => {
-                let a = self.view().into_dimensionality::<Ix1>().unwrap();
-                let b = rhs.view().into_dimensionality::<Ix1>().unwrap();
-                let result = a.dot(&b);
-                ArrayD::from_elem(vec![], result)
-            }
-            (2, 2) => {
-                // Matrix-matrix multiplication
-                let a = self.view().into_dimensionality::<Ix2>().unwrap();
-                let b = rhs.view().into_dimensionality::<Ix2>().unwrap();
-                let result = a.dot(&b);
-                result.into_dimensionality::<IxDyn>().unwrap()
-            }
-            (2, 1) => {
-                // Matrix-vector multiplication
-                let a = self.view().into_dimensionality::<Ix2>().unwrap();
-                let b = rhs.view().into_dimensionality::<Ix1>().unwrap();
-                let result = a.dot(&b);
-                result.into_dimensionality::<IxDyn>().unwrap()
-            }
-            (1, 2) => {
-                // Vector-matrix multiplication
-                let a = self.view().into_dimensionality::<Ix1>().unwrap();
-                let b = rhs.view().into_dimensionality::<Ix2>().unwrap();
-                let result = a.dot(&b);
-                result.into_dimensionality::<IxDyn>().unwrap()
-            }
-            _ => panic!("Dot product for ArrayD is only supported for 1D and 2D arrays"),
         }
     }
 }

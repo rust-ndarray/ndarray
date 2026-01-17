@@ -84,11 +84,18 @@
 //! ## Crate Feature Flags
 //!
 //! The following crate feature flags are available. They are configured in your
-//! `Cargo.toml`. See [`doc::crate_feature_flags`] for more information.
+//! `Cargo.toml`. See [`crate::doc::crate_feature_flags`] for more information.
 //!
 //! - `std`: Rust standard library-using functionality (enabled by default)
 //! - `serde`: serialization support for serde 1.x
-//! - `rayon`: Parallel iterators, parallelized methods, the [`parallel`] module and [`par_azip!`].
+#![cfg_attr(
+    not(feature = "rayon"),
+    doc = "//! - `rayon`: Parallel iterators, parallelized methods, and the `par_azip!` macro."
+)]
+#![cfg_attr(
+    feature = "rayon",
+    doc = "//! - `rayon`: Parallel iterators, parallelized methods, the [`parallel`] module and [`par_azip!`]."
+)]
 //! - `approx` Implementations of traits from the [`approx`] crate.
 //! - `blas`: transparent BLAS support for matrix multiplication, needs configuration.
 //! - `matrixmultiply-threading`: Use threading from `matrixmultiply`.
@@ -129,7 +136,7 @@ extern crate std;
 #[cfg(feature = "blas")]
 extern crate cblas_sys;
 
-#[cfg(docsrs)]
+#[cfg(any(doc, docsrs))]
 pub mod doc;
 
 use alloc::fmt::Debug;

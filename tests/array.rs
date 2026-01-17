@@ -4,6 +4,7 @@
 )]
 
 use approx::assert_relative_eq;
+use core::panic;
 use defmac::defmac;
 #[allow(deprecated)]
 use itertools::{zip, Itertools};
@@ -1005,7 +1006,7 @@ fn iter_size_hint()
 fn zero_axes()
 {
     let mut a = arr1::<f32>(&[]);
-    if let Some(_) = a.iter().next() {
+    if a.iter().next().is_some() {
         panic!();
     }
     a.map(|_| panic!());
@@ -2080,7 +2081,7 @@ fn test_contiguous()
     assert!(c.as_slice_memory_order().is_some());
     let v = c.slice(s![.., 0..1, ..]);
     assert!(!v.is_standard_layout());
-    assert!(!v.as_slice_memory_order().is_some());
+    assert!(v.as_slice_memory_order().is_none());
 
     let v = c.slice(s![1..2, .., ..]);
     assert!(v.is_standard_layout());

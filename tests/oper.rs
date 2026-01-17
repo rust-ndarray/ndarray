@@ -19,20 +19,20 @@ fn test_oper(op: &str, a: &[f32], b: &[f32], c: &[f32])
     let aa = CowArray::from(arr1(a));
     let bb = CowArray::from(arr1(b));
     let cc = CowArray::from(arr1(c));
-    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (2, 2);
     let aa = aa.to_shape(dim).unwrap();
     let bb = bb.to_shape(dim).unwrap();
     let cc = cc.to_shape(dim).unwrap();
-    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
     let dim = (1, 2, 1, 2);
     let aa = aa.to_shape(dim).unwrap();
     let bb = bb.to_shape(dim).unwrap();
     let cc = cc.to_shape(dim).unwrap();
-    test_oper_arr::<f32, _>(op, aa.clone(), bb.clone(), cc.clone());
+    test_oper_arr(op, aa.clone(), bb.clone(), cc.clone());
 }
 
-fn test_oper_arr<A, D>(op: &str, mut aa: CowArray<f32, D>, bb: CowArray<f32, D>, cc: CowArray<f32, D>)
+fn test_oper_arr<D>(op: &str, mut aa: CowArray<f32, D>, bb: CowArray<f32, D>, cc: CowArray<f32, D>)
 where D: Dimension
 {
     match op {

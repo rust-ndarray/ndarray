@@ -14,9 +14,14 @@
 //! ## `serde`
 //!   - Enables serialization support for serde 1.x
 //!
-//! ## `rayon`
-//!   - Enables parallel iterators, parallelized methods, the [`parallel`] module and [`par_azip!`].
-//!   - Implies std
+#![cfg_attr(
+    not(feature = "rayon"),
+    doc = "//! ## `rayon`\n//!   - Enables parallel iterators, parallelized methods, and the `par_azip!` macro.\n//!   - Implies std\n"
+)]
+#![cfg_attr(
+    feature = "rayon",
+    doc = "//! ## `rayon`\n//!   - Enables parallel iterators, parallelized methods, the [`crate::parallel`] module and [`crate::parallel::par_azip`].\n//!   - Implies std\n"
+)]
 //!
 //! ## `approx`
 //!   - Enables implementations of traits of the [`approx`] crate.
@@ -28,8 +33,3 @@
 //!
 //! ## `matrixmultiply-threading`
 //!   - Enable the ``threading`` feature in the matrixmultiply package
-//!
-//! [`parallel`]: crate::parallel
-
-#[cfg(doc)]
-use crate::parallel::par_azip;
