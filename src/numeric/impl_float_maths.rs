@@ -206,7 +206,7 @@ where
     /// use num_complex::Complex;
     ///
     /// let arr = array![1.0, -1.0, 0.0];
-    /// let complex = arr.to_complex_re();
+    /// let complex = arr.to_complex_im();
     ///
     /// assert_eq!(complex[0], Complex::new(0.0, 1.0));
     /// assert_eq!(complex[1], Complex::new(0.0, -1.0));
