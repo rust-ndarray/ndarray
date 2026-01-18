@@ -1,7 +1,9 @@
 // Element-wise methods for ndarray
 
 #[cfg(feature = "std")]
-use num_traits::Float;
+use num_complex::Complex;
+#[cfg(feature = "std")]
+use num_traits::{Float, Zero};
 
 use crate::imp_prelude::*;
 
@@ -166,6 +168,98 @@ where
     }
 }
 
+#[cfg(feature = "std")]
+impl<A, D> ArrayRef<A, D>
+where
+    D: Dimension,
+    A: Clone + Zero,
+{
+    /// Map the array into the real part of a complex array; the imaginary part is 0.
+    ///
+    /// # Example
+    /// ```
+    /// use ndarray::*;
+    /// use num_complex::Complex;
+    ///
+    /// let arr = array![1.0, -1.0, 0.0];
+    /// let complex = arr.to_complex_re();
+    ///
+    /// assert_eq!(complex[0], Complex::new(1.0, 0.0));
+    /// assert_eq!(complex[1], Complex::new(-1.0, 0.0));
+    /// assert_eq!(complex[2], Complex::new(0.0, 0.0));
+    /// ```
+    ///
+    /// # See Also
+    /// [ArrayRef::to_complex_im]
+    #[must_use = "method returns a new array and does not mutate the original value"]
+    pub fn to_complex_re(&self) -> Array<Complex<A>, D>
+    {
+        self.mapv(|v| Complex::new(v, A::zero()))
+    }
+
+    /// Map the array into the imaginary part of a complex array; the real part is 0.
+    ///
+    /// # Example
+    /// ```
+    /// use ndarray::*;
+    /// use num_complex::Complex;
+    ///
+    /// let arr = array![1.0, -1.0, 0.0];
+    /// let complex = arr.to_complex_im();
+    ///
+    /// assert_eq!(complex[0], Complex::new(0.0, 1.0));
+    /// assert_eq!(complex[1], Complex::new(0.0, -1.0));
+    /// assert_eq!(complex[2], Complex::new(0.0, 0.0));
+    /// ```
+    ///
+    /// # See Also
+    /// [ArrayRef::to_complex_re]
+    #[must_use = "method returns a new array and does not mutate the original value"]
+    pub fn to_complex_im(&self) -> Array<Complex<A>, D>
+    {
+        self.mapv(|v| Complex::new(A::zero(), v))
+    }
+}
+
+/// # Angle calculation methods for arrays
+///
+/// Methods for calculating phase angles of complex values in arrays.
+#[cfg(feature = "std")]
+impl<A, D> ArrayRef<Complex<A>, D>
+where
+    D: Dimension,
+    A: Float,
+{
+    /// Return the [phase angle (argument)](https://en.wikipedia.org/wiki/Argument_(complex_analysis)) of complex values in the array.
+    ///
+    /// This function always returns the same float type as was provided to it. Leaving the exact precision left to the user.
+    /// The angles are returned in ``radians`` and in the range ``(-π, π]``.
+    /// To get the angles in degrees, use the [`to_degrees()`][ArrayRef::to_degrees] method on the resulting array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use num_complex::Complex;
+    /// use std::f64::consts::PI;
+    ///
+    /// let complex_arr = array![
+    ///     Complex::new(1.0f64, 0.0),
+    ///     Complex::new(0.0, 1.0),
+    ///     Complex::new(1.0, 1.0),
+    /// ];
+    /// let angles = complex_arr.angle();
+    /// assert!((angles[0] - 0.0).abs() < 1e-10);
+    /// assert!((angles[1] - PI/2.0).abs() < 1e-10);
+    /// assert!((angles[2] - PI/4.0).abs() < 1e-10);
+    /// ```
+    #[must_use = "method returns a new array and does not mutate the original value"]
+    pub fn angle(&self) -> Array<A, D>
+    {
+        self.mapv(|v| v.im.atan2(v.re))
+    }
+}
+
 impl<A, D> ArrayRef<A, D>
 where
     A: 'static + PartialOrd + Clone,
@@ -188,5 +282,121 @@ where
     {
         assert!(min <= max, "min must be less than or equal to max");
         self.mapv(|a| num_traits::clamp(a, min.clone(), max.clone()))
+    }
+}
+
+#[cfg(all(test, feature = "std"))]
+mod angle_tests
+{
+    use crate::Array;
+    use num_complex::Complex;
+    use std::f64::consts::PI;
+
+    /// Helper macro for floating-point comparison
+    macro_rules! assert_approx_eq {
+        ($a:expr, $b:expr, $tol:expr $(, $msg:expr)?) => {{
+            let (a, b) = ($a, $b);
+            assert!(
+                (a - b).abs() < $tol,
+                concat!(
+                    "assertion failed: |left - right| >= tol\n",
+                    " left: {left:?}\n right: {right:?}\n tol: {tol:?}\n",
+                    $($msg,)?
+                ),
+                left = a,
+                right = b,
+                tol = $tol
+            );
+        }};
+    }
+
+    #[test]
+    fn test_complex_numbers_radians()
+    {
+        let arr = Array::from_vec(vec![
+            Complex::new(1.0f64, 0.0),    // 0
+            Complex::new(0.0, 1.0),    // π/2
+            Complex::new(-1.0, 0.0),   // π
+            Complex::new(0.0, -1.0),   // -π/2
+            Complex::new(1.0, 1.0),    // π/4
+            Complex::new(-1.0, -1.0),  // -3π/4
+        ]);
+        let a = arr.angle();
+
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], PI / 2.0, 1e-10);
+        assert_approx_eq!(a[2], PI, 1e-10);
+        assert_approx_eq!(a[3], -PI / 2.0, 1e-10);
+        assert_approx_eq!(a[4], PI / 4.0, 1e-10);
+        assert_approx_eq!(a[5], -3.0 * PI / 4.0, 1e-10);
+    }
+
+    #[test]
+    fn test_complex_numbers_degrees()
+    {
+        let arr = Array::from_vec(vec![
+            Complex::new(1.0f64, 0.0),
+            Complex::new(0.0, 1.0),
+            Complex::new(-1.0, 0.0),
+            Complex::new(1.0, 1.0),
+        ]);
+        let a = arr.angle().to_degrees();
+
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], 90.0, 1e-10);
+        assert_approx_eq!(a[2], 180.0, 1e-10);
+        assert_approx_eq!(a[3], 45.0, 1e-10);
+    }
+
+    #[test]
+    fn test_signed_zeros()
+    {
+        let arr = Array::from_vec(vec![
+            Complex::new(0.0f64, 0.0),
+            Complex::new(-0.0, 0.0),
+            Complex::new(0.0, -0.0),
+            Complex::new(-0.0, -0.0),
+        ]);
+        let a = arr.angle();
+
+        assert!(a[0] >= 0.0 && a[0].abs() < 1e-10);
+        assert_approx_eq!(a[1], PI, 1e-10);
+        assert!(a[2] <= 0.0 && a[2].abs() < 1e-10);
+        assert_approx_eq!(a[3], -PI, 1e-10);
+    }
+
+    #[test]
+    fn test_edge_cases()
+    {
+        let arr = Array::from_vec(vec![
+            Complex::new(f64::INFINITY, 0.0),
+            Complex::new(0.0, f64::INFINITY),
+            Complex::new(f64::NEG_INFINITY, 0.0),
+            Complex::new(0.0, f64::NEG_INFINITY),
+        ]);
+        let a = arr.angle();
+
+        assert_approx_eq!(a[0], 0.0, 1e-10);
+        assert_approx_eq!(a[1], PI / 2.0, 1e-10);
+        assert_approx_eq!(a[2], PI, 1e-10);
+        assert_approx_eq!(a[3], -PI / 2.0, 1e-10);
+    }
+
+    #[test]
+    fn test_range_validation()
+    {
+        let n = 16;
+        let complex_arr: Vec<_> = (0..n)
+            .map(|i| {
+                let theta = 2.0 * PI * (i as f64) / (n as f64);
+                Complex::new(theta.cos(), theta.sin())
+            })
+            .collect();
+
+        let a = Array::from_vec(complex_arr).angle();
+
+        for &x in &a {
+            assert!(x > -PI && x <= PI, "Angle {} outside (-π, π]", x);
+        }
     }
 }
