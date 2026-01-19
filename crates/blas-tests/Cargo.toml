@@ -39,3 +39,4 @@ accelerate = ["blas-src", "blas-src/accelerate"]
 # Config for cargo-release
 [package.metadata.release]
 release = false
+

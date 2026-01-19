@@ -14,11 +14,11 @@ description = "Constructors for randomized arrays. `rand` integration for `ndarr
 keywords = ["multidimensional", "matrix", "rand", "ndarray"]
 
 include = [
-  "/src/**/*.rs",
-  "LICENSE-MIT",
-  "LICENSE-APACHE",
-  "RELEASES.md",
-  "README.rst",
+    "/src/**/*.rs",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+    "RELEASES.md",
+    "README.rst"
 ]
 
 [dependencies]
@@ -34,3 +34,4 @@ quickcheck = { workspace = true }
 
 [package.metadata.release]
 tag-name = "ndarray-rand-{{version}}"
+
