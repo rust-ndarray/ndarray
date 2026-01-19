@@ -37,7 +37,6 @@ impl<T> Partial<T>
     }
 
     #[cfg(feature = "rayon")]
-    #[allow(dead_code)]
     pub(crate) fn stub() -> Self
     {
         Self {
@@ -47,7 +46,6 @@ impl<T> Partial<T>
     }
 
     #[cfg(feature = "rayon")]
-    #[allow(dead_code)]
     pub(crate) fn is_stub(&self) -> bool
     {
         self.ptr.is_null()
@@ -62,7 +60,6 @@ impl<T> Partial<T>
     }
 
     #[cfg(feature = "rayon")]
-    #[allow(dead_code)]
     /// Merge if they are in order (left to right) and contiguous.
     /// Skips merge if T does not need drop.
     pub(crate) fn try_merge(mut left: Self, right: Self) -> Self
