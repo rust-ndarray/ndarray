@@ -20,10 +20,14 @@ pub struct Permutation
 impl Permutation
 {
     /// Checks if the permutation is correct
-    pub fn from_indices(v: Vec<usize>) -> Option<Self>
+    pub fn from_indices(v: Vec<usize>) -> Result<Self, ()>
     {
         let perm = Permutation { indices: v };
-        perm.correct().then_some(perm)
+        if perm.correct() {
+            Ok(perm)
+        } else {
+            Err(())
+        }
     }
 
     fn correct(&self) -> bool
