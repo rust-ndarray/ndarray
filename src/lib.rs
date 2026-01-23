@@ -186,6 +186,7 @@ mod data_traits;
 
 pub use crate::aliases::*;
 
+#[doc(hidden)]
 pub use crate::data_traits::{Data, DataMut, DataOwned, DataShared, RawData, RawDataClone, RawDataMut, RawDataSubst};
 
 mod free_functions;
@@ -221,7 +222,7 @@ mod zip;
 mod dimension;
 
 pub use crate::zip::{FoldWhile, IntoNdProducer, NdProducer, Zip};
-
+#[doc(hidden)]
 pub use crate::layout::Layout;
 
 /// Implementation's prelude. Common types used everywhere.
