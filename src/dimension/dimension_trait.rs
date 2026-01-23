@@ -178,7 +178,7 @@ pub trait Dimension:
     /// **Panics** if `Self` has a fixed size that is not `ndim`.
     fn zeros(ndim: usize) -> Self;
 
-    /// Returns the first valid index in the dimension, or `None` if any axis has length 0.
+    /// Returns the first valid index in the dimension
     #[inline]
     fn first_index(&self) -> Option<Self>
     {
