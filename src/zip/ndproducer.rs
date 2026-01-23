@@ -66,33 +66,30 @@ pub trait NdProducer
     // current element. It doesn't have to be a pointer (see Indices).
     // Its main function is that it can be incremented with a particular
     // stride (= along a particular axis)
-    #[doc(hidden)]
     /// Pointer or stand-in for pointer
     type Ptr: Offset<Stride = Self::Stride>;
-    #[doc(hidden)]
     /// Pointer stride
     type Stride: Copy;
-
-    #[doc(hidden)]
+    /// Returns the memory layout of this data representation.
     fn layout(&self) -> Layout;
     /// Return the shape of the producer.
     fn raw_dim(&self) -> Self::Dim;
-    #[doc(hidden)]
+    /// Returns `true` if this producer's dimension matches the given dimension.
     fn equal_dim(&self, dim: &Self::Dim) -> bool
     {
         self.raw_dim() == *dim
     }
-    #[doc(hidden)]
+    /// Returns a pointer to the first element of the data.
     fn as_ptr(&self) -> Self::Ptr;
-    #[doc(hidden)]
+    /// Dereferences the pointer to get a reference to the element.
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item;
-    #[doc(hidden)]
+    /// Returns a pointer to the element at the given index without bounds checking.
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
-    #[doc(hidden)]
+    /// Returns the stride (offset between elements) along the specified axis.
     fn stride_of(&self, axis: Axis) -> <Self::Ptr as Offset>::Stride;
-    #[doc(hidden)]
+    /// Returns the stride of the fastest-varying (most contiguous) dimension.
     fn contiguous_stride(&self) -> Self::Stride;
-    #[doc(hidden)]
+    /// Splits each component of this producer tuple along the specified axis at the given index.
     fn split_at(self, axis: Axis, index: usize) -> (Self, Self)
     where Self: Sized;
 

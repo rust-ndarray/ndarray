@@ -484,7 +484,6 @@ where
     /// The caller must ensure that `in_dim` and `out_dim` are consistent with
     /// `indices` and that `indices.as_ref()` always returns the same value
     /// when called multiple times.
-    #[doc(hidden)]
     pub unsafe fn new_unchecked(
         indices: T, in_dim: PhantomData<Din>, out_dim: PhantomData<Dout>,
     ) -> SliceInfo<T, Din, Dout>
@@ -671,7 +670,6 @@ where
 }
 
 /// Trait for determining dimensionality of input and output for [`s!`] macro.
-#[doc(hidden)]
 pub trait SliceNextDim
 {
     /// Number of dimensions that this slicing argument consumes in the input array.
