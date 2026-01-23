@@ -81,9 +81,20 @@ pub trait NdProducer
     }
     /// Returns a pointer to the first element of the data.
     fn as_ptr(&self) -> Self::Ptr;
-    /// Dereferences the pointer to get a reference to the element.
+    /// Dereferences the pointer to get a mutable reference to the element.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer obtained from this producer and must point
+    /// to an initialized element within the data's bounds. Additionally, there
+    /// must be no other references (mutable or immutable) to this element.
     unsafe fn as_ref(&self, ptr: Self::Ptr) -> Self::Item;
-    /// Returns a pointer to the element at the given index without bounds checking.
+    /// Dereferences the pointer to get a mutable reference to the element.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be a valid, aligned pointer obtained from this producer, pointing
+    /// to an initialized element within the data's bounds with exclusive access.
     unsafe fn uget_ptr(&self, i: &Self::Dim) -> Self::Ptr;
     /// Returns the stride (offset between elements) along the specified axis.
     fn stride_of(&self, axis: Axis) -> <Self::Ptr as Offset>::Stride;

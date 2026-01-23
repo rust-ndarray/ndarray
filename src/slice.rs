@@ -676,13 +676,13 @@ pub trait SliceNextDim
     type InDim: Dimension;
     /// Number of dimensions that this slicing argument produces in the output array.
     type OutDim: Dimension;
-
+    #[allow(missing_docs)]
     fn next_in_dim<D>(&self, _: PhantomData<D>) -> PhantomData<<D as DimAdd<Self::InDim>>::Output>
     where D: Dimension + DimAdd<Self::InDim>
     {
         PhantomData
     }
-
+    #[allow(missing_docs)]
     fn next_out_dim<D>(&self, _: PhantomData<D>) -> PhantomData<<D as DimAdd<Self::OutDim>>::Output>
     where D: Dimension + DimAdd<Self::OutDim>
     {
