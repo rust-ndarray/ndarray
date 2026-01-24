@@ -70,10 +70,10 @@ your `Cargo.toml`.
     default `std` feature. To do so, use this in your `Cargo.toml`:
 
     ::
-      
+
       [dependencies]
       ndarray = { version = "0.x.y", default-features = false }
-    
+
 
   - The `geomspace` `linspace` `logspace` `range` `std` `var` `var_axis` and `std_axis`
     methods are only available when `std` is enabled.
@@ -89,7 +89,7 @@ your `Cargo.toml`.
 
 - ``approx``
 
-  - Implementations of traits the [`approx`] crate.
+  - Implementations of traits from the [`approx`] crate.
 
 - ``blas``
 
