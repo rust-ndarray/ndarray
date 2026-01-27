@@ -90,6 +90,32 @@ where F: Float
     }
 }
 
+/// Return an iterator of evenly spaced floats.
+///
+/// The `Linspace` has `n` elements from `a` to `b` (exclusive).
+///
+/// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
+/// [`f32`] or [`f64`].
+///
+/// **Panics** if converting `n` to type `F` fails.
+#[inline]
+pub fn linspace_exclusive<F>(a: F, b: F, n: usize) -> Linspace<F>
+where F: Float
+{
+    let step = if n > 1 {
+        let num_steps = F::from(n).expect("Converting number of steps to `A` must not fail.");
+        (b - a) / num_steps
+    } else {
+        F::zero()
+    };
+    Linspace {
+        start: a,
+        step,
+        index: 0,
+        len: n,
+    }
+}
+
 /// Return an iterator of floats from `a` to `b` (exclusive),
 /// incrementing by `step`.
 ///
