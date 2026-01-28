@@ -424,6 +424,7 @@ where D: Dimension
     }
 
     #[cfg(feature = "rayon")]
+    #[allow(dead_code)]
     pub(crate) fn uninitialized_for_current_layout<T>(&self) -> Array<MaybeUninit<T>, D>
     {
         let is_f = self.prefer_f();

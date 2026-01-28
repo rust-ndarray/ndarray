@@ -195,7 +195,7 @@ fn inner_iter_corner_cases()
     assert_equal(a0.rows(), vec![aview1(&[0])]);
 
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
-    assert_equal(a2.rows(), vec![aview1(&[]); 0]);
+    assert_equal(a2.rows(), Vec::<ArrayView1<'_, i32>>::new());
 
     let a2 = ArcArray::<i32, _>::zeros((3, 0));
     assert_equal(a2.rows(), vec![aview1(&[]); 3]);
@@ -359,11 +359,13 @@ fn axis_iter_zip_partially_consumed_discontiguous()
     }
 }
 
+use ndarray::ArrayView1;
+
 #[test]
 fn outer_iter_corner_cases()
 {
     let a2 = ArcArray::<i32, _>::zeros((0, 3));
-    assert_equal(a2.outer_iter(), vec![aview1(&[]); 0]);
+    assert_equal(a2.outer_iter(), Vec::<ArrayView1<'_, i32>>::new());
 
     let a2 = ArcArray::<i32, _>::zeros((3, 0));
     assert_equal(a2.outer_iter(), vec![aview1(&[]); 3]);

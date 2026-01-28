@@ -175,7 +175,7 @@ fn var_too_large_ddof()
 fn var_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.var(std::f64::NAN);
+    let v = a.var(f64::NAN);
     assert!(v.is_nan());
 }
 
