@@ -201,7 +201,7 @@ mod layout;
 mod linalg_traits;
 mod linspace;
 #[cfg(feature = "std")]
-pub use crate::linspace::{linspace, linspace_exclusive, range, Linspace};
+pub use crate::linspace::{linspace, range, Linspace};
 mod logspace;
 #[cfg(feature = "std")]
 pub use crate::logspace::{logspace, Logspace};

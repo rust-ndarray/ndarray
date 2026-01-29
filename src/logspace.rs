@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![cfg(feature = "std")]
+
+use std::ops::{Bound, RangeBounds};
 use num_traits::Float;
 
 /// An iterator of a sequence of logarithmically spaced number.
@@ -79,15 +81,27 @@ impl<F> ExactSizeIterator for Logspace<F> where Logspace<F>: Iterator {}
 ///
 /// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
-pub fn logspace<F>(base: F, a: F, b: F, n: usize) -> Logspace<F>
-where F: Float
+pub fn logspace<R, F>(base: F, range: R, n: usize) -> Logspace<F>
+where 
+    R: RangeBounds<F>,
+    F: Float,
 {
-    let step = if n > 1 {
-        let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
+    let (a, b, num_steps) = match (range.start_bound(), range.end_bound()) {
+        (Bound::Included(a), Bound::Included(b)) => {
+            (*a, *b, F::from(n - 1).expect("Converting number of steps to `A` must not fail."))
+        }
+        (Bound::Included(a), Bound::Excluded(b)) => {
+            (*a, *b, F::from(n).expect("Converting number of steps to `A` must not fail."))
+        }
+        _ => panic!("Only a..b and a..=b ranges are supported."),
+    };
+
+    let step = if num_steps > F::zero() {
         (b - a) / num_steps
     } else {
         F::zero()
     };
+
     Logspace {
         sign: base.signum(),
         base: base.abs(),
@@ -110,23 +124,23 @@ mod tests
         use crate::{arr1, Array1};
         use approx::assert_abs_diff_eq;
 
-        let array: Array1<_> = logspace(10.0, 0.0, 3.0, 4).collect();
+        let array: Array1<_> = logspace(10.0, 0.0..=3.0, 4).collect();
         assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
 
-        let array: Array1<_> = logspace(10.0, 3.0, 0.0, 4).collect();
+        let array: Array1<_> = logspace(10.0, 3.0..=0.0, 4).collect();
         assert_abs_diff_eq!(array, arr1(&[1e3, 1e2, 1e1, 1e0]), epsilon = 1e-12);
 
-        let array: Array1<_> = logspace(-10.0, 3.0, 0.0, 4).collect();
+        let array: Array1<_> = logspace(-10.0, 3.0..=0.0, 4).collect();
         assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
 
-        let array: Array1<_> = logspace(-10.0, 0.0, 3.0, 4).collect();
+        let array: Array1<_> = logspace(-10.0, 0.0..=3.0, 4).collect();
         assert_abs_diff_eq!(array, arr1(&[-1e0, -1e1, -1e2, -1e3]), epsilon = 1e-12);
     }
 
     #[test]
     fn iter_forward()
     {
-        let mut iter = logspace(10.0f64, 0.0, 3.0, 4);
+        let mut iter = logspace(10.0f64, 0.0..=3.0, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
 
@@ -142,7 +156,7 @@ mod tests
     #[test]
     fn iter_backward()
     {
-        let mut iter = logspace(10.0f64, 0.0, 3.0, 4);
+        let mut iter = logspace(10.0f64, 0.0..=3.0, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
 
