@@ -39,8 +39,10 @@ pub unsafe trait RawData: Sized
 {
     /// The array element type.
     type Elem;
-
-    #[doc(hidden)]
+    /// Returns whether `self_ptr` points within this data's memory bounds.
+    ///
+    /// Valid range includes all element positions plus one-past-the-end.
+    /// Used for internal bounds checking in unsafe operations.
     fn _is_pointer_inbounds(&self, ptr: *const Self::Elem) -> bool;
 
     private_decl! {}
@@ -61,7 +63,6 @@ pub unsafe trait RawDataMut: RawData
     ///
     /// Additionally, if `Self` provides safe mutable access to array elements,
     /// then this method **must** panic or ensure that the data is unique.
-    #[doc(hidden)]
     fn try_ensure_unique<D>(_: &mut ArrayBase<Self, D>)
     where
         Self: Sized,
@@ -71,7 +72,6 @@ pub unsafe trait RawDataMut: RawData
     ///
     /// If `Self` provides safe mutable access to array elements, then it
     /// **must** return `Some(_)`.
-    #[doc(hidden)]
     fn try_is_unique(&mut self) -> Option<bool>;
 }
 
@@ -83,11 +83,10 @@ pub unsafe trait RawDataMut: RawData
 #[allow(clippy::missing_safety_doc)] // not implementable downstream
 pub unsafe trait RawDataClone: RawData
 {
-    #[doc(hidden)]
     /// Unsafe because, `ptr` must point inside the current storage.
     unsafe fn clone_with_ptr(&self, ptr: NonNull<Self::Elem>) -> (Self, NonNull<Self::Elem>);
-
-    #[doc(hidden)]
+    /// Clones data from `other` into `self`, adjusting the pointer accordingly. `ptr` must point 
+    /// inside `other`'s storage.
     unsafe fn clone_from_with_ptr(&mut self, other: &Self, ptr: NonNull<Self::Elem>) -> NonNull<Self::Elem>
     {
         let (data, ptr) = other.clone_with_ptr(ptr);
@@ -105,7 +104,6 @@ pub unsafe trait RawDataClone: RawData
 pub unsafe trait Data: RawData
 {
     /// Converts the array to a uniquely owned array, cloning elements if necessary.
-    #[doc(hidden)]
     #[allow(clippy::wrong_self_convention)]
     fn into_owned<D>(self_: ArrayBase<Self, D>) -> Array<Self::Elem, D>
     where
@@ -114,13 +112,11 @@ pub unsafe trait Data: RawData
 
     /// Converts the array into `Array<A, D>` if this is possible without
     /// cloning the array elements. Otherwise, returns `self_` unchanged.
-    #[doc(hidden)]
     fn try_into_owned_nocopy<D>(self_: ArrayBase<Self, D>) -> Result<Array<Self::Elem, D>, ArrayBase<Self, D>>
     where D: Dimension;
 
     /// Return a shared ownership (copy on write) array based on the existing one,
     /// cloning elements if necessary.
-    #[doc(hidden)]
     #[allow(clippy::wrong_self_convention)]
     fn to_shared<D>(self_: &ArrayBase<Self, D>) -> ArcArray<Self::Elem, D>
     where
@@ -148,7 +144,6 @@ pub unsafe trait Data: RawData
 pub unsafe trait DataMut: Data + RawDataMut
 {
     /// Ensures that the array has unique access to its data.
-    #[doc(hidden)]
     #[inline]
     fn ensure_unique<D>(self_: &mut ArrayBase<Self, D>)
     where
@@ -159,7 +154,6 @@ pub unsafe trait DataMut: Data + RawDataMut
     }
 
     /// Returns whether the array has unique access to its data.
-    #[doc(hidden)]
     #[inline]
     #[allow(clippy::wrong_self_convention)] // mut needed for Arc types
     fn is_unique(&mut self) -> bool
@@ -514,12 +508,11 @@ pub unsafe trait DataOwned: Data
 {
     /// Corresponding owned data with MaybeUninit elements
     type MaybeUninit: DataOwned<Elem = MaybeUninit<Self::Elem>> + RawDataSubst<Self::Elem, Output = Self>;
-    #[doc(hidden)]
+    /// Creates an owned representation from the given elements.
     fn new(elements: Vec<Self::Elem>) -> Self;
 
     /// Converts the data representation to a shared (copy on write)
     /// representation, cloning the array elements if necessary.
-    #[doc(hidden)]
     #[allow(clippy::wrong_self_convention)]
     fn into_shared<D>(self_: ArrayBase<Self, D>) -> ArcArray<Self::Elem, D>
     where

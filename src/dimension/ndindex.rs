@@ -19,9 +19,10 @@ use crate::{Dim, Dimension, IntoDimension, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6
 #[allow(clippy::missing_safety_doc)] // TODO: Add doc
 pub unsafe trait NdIndex<E>: Debug
 {
-    #[doc(hidden)]
+    /// Computes the linear index for this position
     fn index_checked(&self, dim: &E, strides: &E) -> Option<isize>;
-    #[doc(hidden)]
+
+    /// Computes the linear index for this position without bounds checking.
     fn index_unchecked(&self, strides: &E) -> isize;
 }
 
