@@ -34,7 +34,7 @@ pub trait Ranked
 {
     /// The compile-time rank of the type; can be [`DynRank`][DynRank] if unknown.
     ///
-    /// [DynRank]: crate::layout::dimensionality::DynRank
+    /// [DynRank]: crate::layout::rank::DynRank
     type NDim: Rank;
 
     /// The runtime number of dimensions of the type.
