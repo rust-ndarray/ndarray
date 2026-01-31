@@ -27,10 +27,9 @@ use crate::{
 /// 1. An associated type, [`NDim`][NDim], with type-level dimensionality
 /// 2. A function, [`ndim`][ndim], that can give the dimensionality at runtime.
 ///
-/// [DynRank]: crate::layout::dimensionality::DynRank
+/// [DynRank]: crate::layout::rank::DynRank
 /// [NDim]: Ranked::NDim
 /// [ndim]: Ranked::ndim
-/// [N]: Dimensionality::N
 pub trait Ranked
 {
     /// The compile-time rank of the type; can be [`DynRank`][DynRank] if unknown.
