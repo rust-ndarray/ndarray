@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::{Axis, Dim, Dimension, Ix, Ix0, Ix1};
+use crate::{layout::ranked::Ranked, Axis, Dim, Dimension, Ix, Ix0, Ix1};
 
 /// Array shape with a next smaller dimension.
 ///

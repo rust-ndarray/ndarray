@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::zip;
+use crate::layout::ranked::Ranked;
 use crate::{Dim, Dimension, IntoDimension, Ix, Ix0, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn, IxDynImpl};
 
 /// Tuple or fixed size arrays that can be used to index an array.

@@ -9,7 +9,7 @@
 //! flexible and expressive layout representations.
 
 mod bitset;
-pub mod dimensionality;
+pub mod rank;
 pub mod ranked;
 
 #[allow(deprecated)]

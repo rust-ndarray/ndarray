@@ -17,7 +17,7 @@ use super::conversion::Convert;
 use super::ops::DimAdd;
 use super::{stride_offset, stride_offset_checked};
 use crate::itertools::{enumerate, zip};
-use crate::layout::dimensionality::*;
+use crate::layout::rank::*;
 use crate::layout::ranked::Ranked;
 use crate::IntoDimension;
 use crate::RemoveAxis;
@@ -78,12 +78,6 @@ pub trait Dimension:
     type Smaller: Dimension;
     /// Next larger dimension
     type Larger: Dimension + RemoveAxis;
-
-    /// Returns the number of dimensions (number of axes).
-    fn ndim(&self) -> usize
-    {
-        self.rank()
-    }
 
     /// Convert the dimension into a pattern matching friendly value.
     fn into_pattern(self) -> Self::Pattern;
@@ -421,12 +415,12 @@ macro_rules! impl_insert_axis_array(
 );
 
 impl<const N: usize> Ranked for Dim<[Ix; N]>
-where NDim<N>: Dimensionality // Limit us to < 12, since Rank must impl Dimensionality
+where ConstRank<N>: Rank // Limit us to < 12, since Rank must impl Dimensionality
 {
-    type Rank = NDim<N>;
+    type NDim = ConstRank<N>;
 
     #[inline]
-    fn rank(&self) -> usize
+    fn ndim(&self) -> usize
     {
         N
     }
@@ -950,10 +944,10 @@ large_dim!(6, Ix6, (Ix, Ix, Ix, Ix, Ix, Ix), IxDyn, {
 
 impl Ranked for IxDyn
 {
-    type Rank = DDyn;
+    type NDim = DynRank;
 
     #[inline]
-    fn rank(&self) -> usize
+    fn ndim(&self) -> usize
     {
         self.ix().len()
     }
