@@ -74,9 +74,7 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 /// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
 /// [`f32`] or [`f64`].
 ///
-/// ## Panics
-/// - If called with a range type other than `a..b` or `a..=b`.
-/// - If converting `n` to type `F` fails.
+/// **Panics** if converting `n` to type `F` fails.
 #[inline]
 pub fn linspace<R, F>(range: R, n: usize) -> Linspace<F>
 where
