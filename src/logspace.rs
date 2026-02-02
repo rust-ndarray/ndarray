@@ -14,7 +14,8 @@ use num_traits::Float;
 /// An iterator of a sequence of logarithmically spaced number.
 ///
 /// Iterator element type is `F`.
-pub struct Logspace<F> {
+pub struct Logspace<F>
+{
     sign: F,
     base: F,
     start: F,
@@ -24,13 +25,13 @@ pub struct Logspace<F> {
 }
 
 impl<F> Iterator for Logspace<F>
-where
-    F: Float,
+where F: Float
 {
     type Item = F;
 
     #[inline]
-    fn next(&mut self) -> Option<F> {
+    fn next(&mut self) -> Option<F>
+    {
         if self.index >= self.len {
             None
         } else {
@@ -43,18 +44,19 @@ where
     }
 
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
+    fn size_hint(&self) -> (usize, Option<usize>)
+    {
         let n = self.len - self.index;
         (n, Some(n))
     }
 }
 
 impl<F> DoubleEndedIterator for Logspace<F>
-where
-    F: Float,
+where F: Float
 {
     #[inline]
-    fn next_back(&mut self) -> Option<F> {
+    fn next_back(&mut self) -> Option<F>
+    {
         if self.index >= self.len {
             None
         } else {
@@ -107,12 +109,14 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+mod tests
+{
     use super::logspace;
 
     #[test]
     #[cfg(feature = "approx")]
-    fn valid() {
+    fn valid()
+    {
         use crate::{arr1, Array1};
         use approx::assert_abs_diff_eq;
 
@@ -130,7 +134,8 @@ mod tests {
     }
 
     #[test]
-    fn iter_forward() {
+    fn iter_forward()
+    {
         let mut iter = logspace(10.0f64, 0.0..=3.0, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
@@ -145,7 +150,8 @@ mod tests {
     }
 
     #[test]
-    fn iter_backward() {
+    fn iter_backward()
+    {
         let mut iter = logspace(10.0f64, 0.0..=3.0, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
