@@ -7,15 +7,14 @@
 // except according to those terms.
 #![cfg(feature = "std")]
 
-use std::ops::{Bound, RangeBounds};
+use crate::finite_bounds::{Bound, FiniteBounds};
 
 use num_traits::Float;
 
 /// An iterator of a sequence of evenly spaced floats.
 ///
 /// Iterator element type is `F`.
-pub struct Linspace<F>
-{
+pub struct Linspace<F> {
     start: F,
     step: F,
     index: usize,
@@ -23,13 +22,13 @@ pub struct Linspace<F>
 }
 
 impl<F> Iterator for Linspace<F>
-where F: Float
+where
+    F: Float,
 {
     type Item = F;
 
     #[inline]
-    fn next(&mut self) -> Option<F>
-    {
+    fn next(&mut self) -> Option<F> {
         if self.index >= self.len {
             None
         } else {
@@ -41,19 +40,18 @@ where F: Float
     }
 
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>)
-    {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         let n = self.len - self.index;
         (n, Some(n))
     }
 }
 
 impl<F> DoubleEndedIterator for Linspace<F>
-where F: Float
+where
+    F: Float,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<F>
-    {
+    fn next_back(&mut self) -> Option<F> {
         if self.index >= self.len {
             None
         } else {
@@ -80,15 +78,12 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 #[inline]
 pub fn linspace<R, F>(range: R, n: usize) -> Linspace<F>
 where
-    R: RangeBounds<F>,
+    R: FiniteBounds<F>,
     F: Float,
 {
     let (a, b, num_steps) = match (range.start_bound(), range.end_bound()) {
-        (Bound::Included(a), Bound::Included(b)) =>
-            (*a, *b, F::from(n - 1).expect("Converting number of steps to `A` must not fail.")),
-        (Bound::Included(a), Bound::Excluded(b)) =>
-            (*a, *b, F::from(n).expect("Converting number of steps to `A` must not fail.")),
-        _ => panic!("Only a..b and a..=b ranges are supported."),
+        (a, Bound::Included(b)) => (a, b, F::from(n - 1).expect("Converting number of steps to `A` must not fail.")),
+        (a, Bound::Excluded(b)) => (a, b, F::from(n).expect("Converting number of steps to `A` must not fail.")),
     };
 
     let step = if num_steps > F::zero() {
@@ -116,7 +111,8 @@ where
 /// **Panics** if converting `((b - a) / step).ceil()` to type `F` fails.
 #[inline]
 pub fn range<F>(a: F, b: F, step: F) -> Linspace<F>
-where F: Float
+where
+    F: Float,
 {
     let len = b - a;
     let steps = F::ceil(len / step);

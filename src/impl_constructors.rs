@@ -98,7 +98,7 @@ where S: DataOwned<Elem = A>
     #[cfg(feature = "std")]
     pub fn linspace<R>(range: R, n: usize) -> Self
     where
-        R: std::ops::RangeBounds<A>,
+        R: crate::finite_bounds::FiniteBounds<A>,
         A: Float,
     {
         Self::from(to_vec(linspace::linspace(range, n)))
@@ -146,7 +146,7 @@ where S: DataOwned<Elem = A>
     #[cfg(feature = "std")]
     pub fn logspace<R>(base: A, range: R, n: usize) -> Self
     where
-        R: std::ops::RangeBounds<A>,
+        R: crate::finite_bounds::FiniteBounds<A>,
         A: Float,
     {
         Self::from(to_vec(logspace::logspace(base, range, n)))

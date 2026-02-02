@@ -7,14 +7,14 @@
 // except according to those terms.
 #![cfg(feature = "std")]
 
+use crate::finite_bounds::{Bound, FiniteBounds};
+
 use num_traits::Float;
-use std::ops::{Bound, RangeBounds};
 
 /// An iterator of a sequence of logarithmically spaced number.
 ///
 /// Iterator element type is `F`.
-pub struct Logspace<F>
-{
+pub struct Logspace<F> {
     sign: F,
     base: F,
     start: F,
@@ -24,13 +24,13 @@ pub struct Logspace<F>
 }
 
 impl<F> Iterator for Logspace<F>
-where F: Float
+where
+    F: Float,
 {
     type Item = F;
 
     #[inline]
-    fn next(&mut self) -> Option<F>
-    {
+    fn next(&mut self) -> Option<F> {
         if self.index >= self.len {
             None
         } else {
@@ -43,19 +43,18 @@ where F: Float
     }
 
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>)
-    {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         let n = self.len - self.index;
         (n, Some(n))
     }
 }
 
 impl<F> DoubleEndedIterator for Logspace<F>
-where F: Float
+where
+    F: Float,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<F>
-    {
+    fn next_back(&mut self) -> Option<F> {
         if self.index >= self.len {
             None
         } else {
@@ -83,15 +82,12 @@ impl<F> ExactSizeIterator for Logspace<F> where Logspace<F>: Iterator {}
 #[inline]
 pub fn logspace<R, F>(base: F, range: R, n: usize) -> Logspace<F>
 where
-    R: RangeBounds<F>,
+    R: FiniteBounds<F>,
     F: Float,
 {
     let (a, b, num_steps) = match (range.start_bound(), range.end_bound()) {
-        (Bound::Included(a), Bound::Included(b)) =>
-            (*a, *b, F::from(n - 1).expect("Converting number of steps to `A` must not fail.")),
-        (Bound::Included(a), Bound::Excluded(b)) =>
-            (*a, *b, F::from(n).expect("Converting number of steps to `A` must not fail.")),
-        _ => panic!("Only a..b and a..=b ranges are supported."),
+        (a, Bound::Included(b)) => (a, b, F::from(n - 1).expect("Converting number of steps to `A` must not fail.")),
+        (a, Bound::Excluded(b)) => (a, b, F::from(n).expect("Converting number of steps to `A` must not fail.")),
     };
 
     let step = if num_steps > F::zero() {
@@ -111,14 +107,12 @@ where
 }
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::logspace;
 
     #[test]
     #[cfg(feature = "approx")]
-    fn valid()
-    {
+    fn valid() {
         use crate::{arr1, Array1};
         use approx::assert_abs_diff_eq;
 
@@ -136,8 +130,7 @@ mod tests
     }
 
     #[test]
-    fn iter_forward()
-    {
+    fn iter_forward() {
         let mut iter = logspace(10.0f64, 0.0..=3.0, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));
@@ -152,8 +145,7 @@ mod tests
     }
 
     #[test]
-    fn iter_backward()
-    {
+    fn iter_backward() {
         let mut iter = logspace(10.0f64, 0.0..=3.0, 4);
 
         assert!(iter.size_hint() == (4, Some(4)));

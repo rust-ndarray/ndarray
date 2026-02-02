@@ -199,6 +199,8 @@ mod indexes;
 mod iterators;
 mod layout;
 mod linalg_traits;
+#[cfg(feature = "std")]
+mod finite_bounds;
 mod linspace;
 #[cfg(feature = "std")]
 pub use crate::linspace::{linspace, range, Linspace};
