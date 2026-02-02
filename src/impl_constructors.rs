@@ -44,8 +44,7 @@ use rawpointer::PointerExt;
 ///
 /// ## Constructor methods for one-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix1>
-where
-    S: DataOwned<Elem = A>,
+where S: DataOwned<Elem = A>
 {
     /// Create a one-dimensional array from a vector (no copying needed).
     ///
@@ -56,7 +55,8 @@ where
     ///
     /// let array = Array::from_vec(vec![1., 2., 3., 4.]);
     /// ```
-    pub fn from_vec(v: Vec<A>) -> Self {
+    pub fn from_vec(v: Vec<A>) -> Self
+    {
         if mem::size_of::<A>() == 0 {
             assert!(v.len() <= isize::MAX as usize, "Length must fit in `isize`.",);
         }
@@ -73,7 +73,8 @@ where
     /// let array = Array::from_iter(0..10);
     /// ```
     #[allow(clippy::should_implement_trait)]
-    pub fn from_iter<I: IntoIterator<Item = A>>(iterable: I) -> Self {
+    pub fn from_iter<I: IntoIterator<Item = A>>(iterable: I) -> Self
+    {
         Self::from_vec(iterable.into_iter().collect())
     }
 
@@ -116,8 +117,7 @@ where
     /// ```
     #[cfg(feature = "std")]
     pub fn range(start: A, end: A, step: A) -> Self
-    where
-        A: Float,
+    where A: Float
     {
         Self::from(to_vec(linspace::range(start, end, step)))
     }
@@ -181,8 +181,7 @@ where
     /// ```
     #[cfg(feature = "std")]
     pub fn geomspace(start: A, end: A, n: usize) -> Option<Self>
-    where
-        A: Float,
+    where A: Float
     {
         Some(Self::from(to_vec(geomspace::geomspace(start, end, n)?)))
     }
@@ -190,8 +189,7 @@ where
 
 /// ## Constructor methods for two-dimensional arrays.
 impl<S, A> ArrayBase<S, Ix2>
-where
-    S: DataOwned<Elem = A>,
+where S: DataOwned<Elem = A>
 {
     /// Create an identity matrix of size `n` (square 2D array).
     ///
@@ -473,14 +471,14 @@ where
     /// );
     /// ```
     pub fn from_shape_vec<Sh>(shape: Sh, v: Vec<A>) -> Result<Self, ShapeError>
-    where
-        Sh: Into<StrideShape<D>>,
+    where Sh: Into<StrideShape<D>>
     {
         // eliminate the type parameter Sh as soon as possible
         Self::from_shape_vec_impl(shape.into(), v)
     }
 
-    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError> {
+    fn from_shape_vec_impl(shape: StrideShape<D>, v: Vec<A>) -> Result<Self, ShapeError>
+    {
         let dim = shape.dim;
         let is_custom = shape.strides.is_custom();
         dimension::can_index_slice_with_strides(&v, &dim, &shape.strides, dimension::CanIndexCheckMode::OwnedMutable)?;
@@ -516,8 +514,7 @@ where
     /// 5. The strides must not allow any element to be referenced by two different
     ///    indices.
     pub unsafe fn from_shape_vec_unchecked<Sh>(shape: Sh, v: Vec<A>) -> Self
-    where
-        Sh: Into<StrideShape<D>>,
+    where Sh: Into<StrideShape<D>>
     {
         let shape = shape.into();
         let dim = shape.dim;
@@ -525,7 +522,8 @@ where
         Self::from_vec_dim_stride_unchecked(dim, strides, v)
     }
 
-    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self {
+    unsafe fn from_vec_dim_stride_unchecked(dim: D, strides: D, mut v: Vec<A>) -> Self
+    {
         // debug check for issues that indicates wrong use of this constructor
         debug_assert!(dimension::can_index_slice(&v, &dim, &strides, CanIndexCheckMode::OwnedMutable).is_ok());
 
@@ -598,8 +596,7 @@ where
     /// # let _ = shift_by_two;
     /// ```
     pub fn uninit<Sh>(shape: Sh) -> ArrayBase<S::MaybeUninit, D>
-    where
-        Sh: ShapeBuilder<Dim = D>,
+    where Sh: ShapeBuilder<Dim = D>
     {
         unsafe {
             let shape = shape.into_shape_with_order();

@@ -7,8 +7,8 @@
 // except according to those terms.
 #![cfg(feature = "std")]
 
-use std::ops::{Bound, RangeBounds};
 use num_traits::Float;
+use std::ops::{Bound, RangeBounds};
 
 /// An iterator of a sequence of logarithmically spaced number.
 ///
@@ -82,17 +82,15 @@ impl<F> ExactSizeIterator for Logspace<F> where Logspace<F>: Iterator {}
 /// **Panics** if converting `n - 1` to type `F` fails.
 #[inline]
 pub fn logspace<R, F>(base: F, range: R, n: usize) -> Logspace<F>
-where 
+where
     R: RangeBounds<F>,
     F: Float,
 {
     let (a, b, num_steps) = match (range.start_bound(), range.end_bound()) {
-        (Bound::Included(a), Bound::Included(b)) => {
-            (*a, *b, F::from(n - 1).expect("Converting number of steps to `A` must not fail."))
-        }
-        (Bound::Included(a), Bound::Excluded(b)) => {
-            (*a, *b, F::from(n).expect("Converting number of steps to `A` must not fail."))
-        }
+        (Bound::Included(a), Bound::Included(b)) =>
+            (*a, *b, F::from(n - 1).expect("Converting number of steps to `A` must not fail.")),
+        (Bound::Included(a), Bound::Excluded(b)) =>
+            (*a, *b, F::from(n).expect("Converting number of steps to `A` must not fail.")),
         _ => panic!("Only a..b and a..=b ranges are supported."),
     };
 
