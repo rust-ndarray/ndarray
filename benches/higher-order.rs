@@ -14,7 +14,7 @@ const Y: usize = 16;
 #[bench]
 fn map_regular(bench: &mut Bencher)
 {
-    let a = Array::linspace(0.0..127.0, N)
+    let a = Array::linspace(0.0..=127.0, N)
         .into_shape_with_order((X, Y))
         .unwrap();
     bench.iter(|| a.map(|&x| 2. * x));
@@ -29,7 +29,7 @@ pub fn double_array(mut a: ArrayViewMut2<'_, f64>)
 #[bench]
 fn map_stride_double_f64(bench: &mut Bencher)
 {
-    let mut a = Array::linspace(0.0..127.0, N * 2)
+    let mut a = Array::linspace(0.0..=127.0, N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
     let mut av = a.slice_mut(s![.., ..;2]);
@@ -42,7 +42,7 @@ fn map_stride_double_f64(bench: &mut Bencher)
 #[bench]
 fn map_stride_f64(bench: &mut Bencher)
 {
-    let a = Array::linspace(0.0..127.0, N * 2)
+    let a = Array::linspace(0.0..=127.0, N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
     let av = a.slice(s![.., ..;2]);
@@ -53,7 +53,7 @@ fn map_stride_f64(bench: &mut Bencher)
 #[bench]
 fn map_stride_u32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0.0..127.0, N * 2)
+    let a = Array::linspace(0.0..=127.0, N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
     let b = a.mapv(|x| x as u32);
@@ -65,7 +65,7 @@ fn map_stride_u32(bench: &mut Bencher)
 #[bench]
 fn fold_axis(bench: &mut Bencher)
 {
-    let a = Array::linspace(0.0..127.0, N * 2)
+    let a = Array::linspace(0.0..=127.0, N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
     bench.iter(|| a.fold_axis(Axis(0), 0., |&acc, &elt| acc + elt));

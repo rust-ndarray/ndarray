@@ -169,7 +169,7 @@ where D: Dimension
 #[cfg(feature = "std")]
 fn main()
 {
-    let a = Array::linspace(0.0..63.0, 64)
+    let a = Array::linspace(0.0..=63.0, 64)
         .into_shape_with_order((8, 8))
         .unwrap();
     let strings = a.map(|x| x.to_string());

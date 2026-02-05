@@ -13,7 +13,7 @@ const Y: usize = 16;
 #[bench]
 fn clip(bench: &mut Bencher)
 {
-    let mut a = Array::linspace(0.0..127.0, N * 2)
+    let mut a = Array::linspace(0.0..=127.0, N * 2)
         .into_shape_with_order([X, Y * 2])
         .unwrap();
     let min = 2.;
