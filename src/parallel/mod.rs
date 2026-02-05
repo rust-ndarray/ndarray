@@ -65,7 +65,7 @@
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
 //!
-//! let a = Array::linspace(0., 63., 64).into_shape_with_order((4, 16)).unwrap();
+//! let a = Array::linspace(0.0..63.0, 64).into_shape_with_order((4, 16)).unwrap();
 //! let mut sums = Vec::new();
 //! a.axis_iter(Axis(0))
 //!  .into_par_iter()
@@ -84,7 +84,7 @@
 //! use ndarray::Axis;
 //! use ndarray::parallel::prelude::*;
 //!
-//! let a = Array::linspace(0., 63., 64).into_shape_with_order((4, 16)).unwrap();
+//! let a = Array::linspace(0.0..63.0, 64).into_shape_with_order((4, 16)).unwrap();
 //! let mut shapes = Vec::new();
 //! a.axis_chunks_iter(Axis(0), 3)
 //!  .into_par_iter()

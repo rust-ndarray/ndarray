@@ -92,7 +92,7 @@ where S: DataOwned<Elem = A>
     /// ```rust
     /// use ndarray::{Array, arr1};
     ///
-    /// let array = Array::linspace(0., 1., 5);
+    /// let array = Array::linspace(0.0..=1.0, 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
     #[cfg(feature = "std")]
@@ -136,10 +136,10 @@ where S: DataOwned<Elem = A>
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::{Array, arr1};
     ///
-    /// let array = Array::logspace(10.0, 0.0, 3.0, 4);
+    /// let array = Array::logspace(10.0, 0.0..=3.0, 4);
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
-    /// let array = Array::logspace(-10.0, 3.0, 0.0, 4);
+    /// let array = Array::logspace(-10.0, 3.0..=0.0, 4);
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
     /// # }
     /// ```
