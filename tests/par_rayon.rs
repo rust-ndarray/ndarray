@@ -26,7 +26,7 @@ fn test_axis_iter()
 fn test_axis_iter_mut()
 {
     use approx::assert_abs_diff_eq;
-    let mut a = Array::linspace(0., 1.0f64, M * N)
+    let mut a = Array::linspace(0.0..=1.0f64, M * N)
         .into_shape_with_order((M, N))
         .unwrap();
     let b = a.mapv(|x| x.exp());
@@ -82,7 +82,7 @@ fn test_axis_chunks_iter()
 fn test_axis_chunks_iter_mut()
 {
     use approx::assert_abs_diff_eq;
-    let mut a = Array::linspace(0., 1.0f64, M * N)
+    let mut a = Array::linspace(0.0..=1.0f64, M * N)
         .into_shape_with_order((M, N))
         .unwrap();
     let b = a.mapv(|x| x.exp());

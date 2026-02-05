@@ -21,7 +21,7 @@ fn zeros_f64(bench: &mut Bencher)
 #[bench]
 fn map_regular(bench: &mut test::Bencher)
 {
-    let a = Array::linspace(0., 127., 128)
+    let a = Array::linspace(0.0..=127.0, 128)
         .into_shape_with_order((8, 16))
         .unwrap();
     bench.iter(|| a.map(|&x| 2. * x));
@@ -31,7 +31,7 @@ fn map_regular(bench: &mut test::Bencher)
 #[bench]
 fn map_stride(bench: &mut test::Bencher)
 {
-    let a = Array::linspace(0., 127., 256)
+    let a = Array::linspace(0.0..=127.0, 256)
         .into_shape_with_order((8, 32))
         .unwrap();
     let av = a.slice(s![.., ..;2]);

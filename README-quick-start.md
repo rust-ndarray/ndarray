@@ -91,7 +91,7 @@ fn main() {
 use ndarray::prelude::*;
 use ndarray::{Array, Ix3};
 fn main() {
-  let a = Array::<f64, _>::linspace(0., 5., 11);
+  let a = Array::<f64, _>::linspace(0.0..=5.0, 11);
   println!("{:?}", a);
 }
 ```

@@ -47,7 +47,7 @@ fn iter_sum_2d_transpose(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_u32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256)
+    let a = Array::linspace(0.0..=1.0, 256)
         .into_shape_with_order((16, 16))
         .unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
@@ -58,7 +58,7 @@ fn iter_filter_sum_2d_u32(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_f32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256)
+    let a = Array::linspace(0.0..=1.0, 256)
         .into_shape_with_order((16, 16))
         .unwrap();
     let b = a * 100.;
@@ -69,7 +69,7 @@ fn iter_filter_sum_2d_f32(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256)
+    let a = Array::linspace(0.0..=1.0, 256)
         .into_shape_with_order((16, 16))
         .unwrap();
     let b = a.mapv(|x| (x * 100.) as u32);
@@ -81,7 +81,7 @@ fn iter_filter_sum_2d_stride_u32(bench: &mut Bencher)
 #[bench]
 fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 256)
+    let a = Array::linspace(0.0..=1.0, 256)
         .into_shape_with_order((16, 16))
         .unwrap();
     let b = a * 100.;
@@ -93,7 +93,7 @@ fn iter_filter_sum_2d_stride_f32(bench: &mut Bencher)
 #[bench]
 fn iter_rev_step_by_contiguous(bench: &mut Bencher)
 {
-    let a = Array::linspace(0., 1., 512);
+    let a = Array::linspace(0.0..=1.0, 512);
     bench.iter(|| {
         a.iter().rev().step_by(2).for_each(|x| {
             black_box(x);
@@ -105,7 +105,7 @@ fn iter_rev_step_by_contiguous(bench: &mut Bencher)
 #[bench]
 fn iter_rev_step_by_discontiguous(bench: &mut Bencher)
 {
-    let mut a = Array::linspace(0., 1., 1024);
+    let mut a = Array::linspace(0.0..=1.0, 1024);
     a.slice_axis_inplace(Axis(0), Slice::new(0, None, 2));
     bench.iter(|| {
         a.iter().rev().step_by(2).for_each(|x| {

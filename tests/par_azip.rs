@@ -41,7 +41,7 @@ fn test_par_azip3()
         *a += b / 10.;
         *c = a.sin();
     });
-    let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
+    let res = Array::linspace(0.0..=3.1, 32).mapv_into(f32::sin);
     assert_abs_diff_eq!(res, ArrayView::from(&c), epsilon = 1e-4);
 }
 

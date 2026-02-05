@@ -6,6 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![cfg(feature = "std")]
+
+use crate::finite_bounds::{Bound, FiniteBounds};
+
 use num_traits::Float;
 
 /// An iterator of a sequence of evenly spaced floats.
@@ -71,17 +74,24 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 /// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
 /// [`f32`] or [`f64`].
 ///
-/// **Panics** if converting `n - 1` to type `F` fails.
+/// **Panics** if converting `n` to type `F` fails.
 #[inline]
-pub fn linspace<F>(a: F, b: F, n: usize) -> Linspace<F>
-where F: Float
+pub fn linspace<R, F>(range: R, n: usize) -> Linspace<F>
+where
+    R: FiniteBounds<F>,
+    F: Float,
 {
-    let step = if n > 1 {
-        let num_steps = F::from(n - 1).expect("Converting number of steps to `A` must not fail.");
+    let (a, b, num_steps) = match (range.start_bound(), range.end_bound()) {
+        (a, Bound::Included(b)) => (a, b, F::from(n - 1).expect("Converting number of steps to `A` must not fail.")),
+        (a, Bound::Excluded(b)) => (a, b, F::from(n).expect("Converting number of steps to `A` must not fail.")),
+    };
+
+    let step = if num_steps > F::zero() {
         (b - a) / num_steps
     } else {
         F::zero()
     };
+
     Linspace {
         start: a,
         step,

@@ -58,10 +58,7 @@ where S: DataOwned<Elem = A>
     pub fn from_vec(v: Vec<A>) -> Self
     {
         if mem::size_of::<A>() == 0 {
-            assert!(
-                v.len() <= isize::MAX as usize,
-                "Length must fit in `isize`.",
-            );
+            assert!(v.len() <= isize::MAX as usize, "Length must fit in `isize`.",);
         }
         unsafe { Self::from_shape_vec_unchecked(v.len() as Ix, v) }
     }
@@ -95,14 +92,16 @@ where S: DataOwned<Elem = A>
     /// ```rust
     /// use ndarray::{Array, arr1};
     ///
-    /// let array = Array::linspace(0., 1., 5);
+    /// let array = Array::linspace(0.0..=1.0, 5);
     /// assert!(array == arr1(&[0.0, 0.25, 0.5, 0.75, 1.0]))
     /// ```
     #[cfg(feature = "std")]
-    pub fn linspace(start: A, end: A, n: usize) -> Self
-    where A: Float
+    pub fn linspace<R>(range: R, n: usize) -> Self
+    where
+        R: crate::finite_bounds::FiniteBounds<A>,
+        A: Float,
     {
-        Self::from(to_vec(linspace::linspace(start, end, n)))
+        Self::from(to_vec(linspace::linspace(range, n)))
     }
 
     /// Create a one-dimensional array with elements from `start` to `end`
@@ -137,18 +136,20 @@ where S: DataOwned<Elem = A>
     /// use approx::assert_abs_diff_eq;
     /// use ndarray::{Array, arr1};
     ///
-    /// let array = Array::logspace(10.0, 0.0, 3.0, 4);
+    /// let array = Array::logspace(10.0, 0.0..=3.0, 4);
     /// assert_abs_diff_eq!(array, arr1(&[1e0, 1e1, 1e2, 1e3]), epsilon = 1e-12);
     ///
-    /// let array = Array::logspace(-10.0, 3.0, 0.0, 4);
+    /// let array = Array::logspace(-10.0, 3.0..=0.0, 4);
     /// assert_abs_diff_eq!(array, arr1(&[-1e3, -1e2, -1e1, -1e0]), epsilon = 1e-12);
     /// # }
     /// ```
     #[cfg(feature = "std")]
-    pub fn logspace(base: A, start: A, end: A, n: usize) -> Self
-    where A: Float
+    pub fn logspace<R>(base: A, range: R, n: usize) -> Self
+    where
+        R: crate::finite_bounds::FiniteBounds<A>,
+        A: Float,
     {
-        Self::from(to_vec(logspace::logspace(base, start, end, n)))
+        Self::from(to_vec(logspace::logspace(base, range, n)))
     }
 
     /// Create a one-dimensional array with `n` geometrically spaced elements
