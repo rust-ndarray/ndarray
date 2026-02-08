@@ -3,7 +3,6 @@ mod layoutfmt;
 // Layout is a bitset used for internal layout description of
 // arrays, producers and sets of producers.
 // The type is public but users don't interact with it.
-#[doc(hidden)]
 /// Memory layout description
 #[derive(Copy, Clone)]
 pub struct Layout(u32);
