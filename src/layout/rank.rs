@@ -1,8 +1,8 @@
 //! Type-level representations of array dimensionality.
 //!
-//! This module defines the [`Dimensionality`] trait and related types used to represent
-//! the number of axes an array has, either at compile time ([`NDim`]) or dynamically
-//! ([`DDyn`]). These types support basic type-level operations such as addition and
+//! This module defines the [`Rank`] trait and related types used to represent
+//! the number of axes an array has, either at compile time ([`ConstRank`]) or dynamically
+//! ([`DynRank`]). These types support basic type-level operations such as addition and
 //! maximum, which are used to model array operations like concatenation and broadcasting.
 
 use core::fmt::Debug;
@@ -15,31 +15,31 @@ use core::fmt::Debug;
 /// statically known and dynamic dimensionalities.
 ///
 /// Compile-time dimensionalities are currently supported for values from 0 to 12, inclusive.
-/// Any dimensionality above 12 must be represented with [`DDyn`], even if it is known at compile time.
+/// Any dimensionality above 12 must be represented with [`DynRank`], even if it is known at compile time.
 ///
 /// The `Smaller` and `Larger` associated types allow users to move to adjacent dimensionalities at the type level.
 ///
 /// ## Dynamic dimensionalities
-/// A type implementing `Dimensionality` does not expose its dimensionality as a runtime value.
-/// In dynamic cases, `DDyn` means that the dimensionality is not known at compile time.
+/// A type implementing `Rank` does not expose its dimensionality as a runtime value.
+/// In dynamic cases, `DynRank` means that the dimensionality is not known at compile time.
 /// The actual number of axes is taken directly from the array’s shape.
-pub trait Dimensionality:
+pub trait Rank:
     Copy
     + Eq
     + Debug
     + Send
     + Sync
-    + DMax<D0, Output = Self>
-    + DMax<Self, Output = Self>
-    + DMax<DDyn, Output = DDyn>
-    + DMax<Self::Smaller, Output = Self>
-    + DMax<Self::Larger, Output = Self::Larger>
-    + DAdd<Self>
-    + DAdd<Self::Smaller>
-    + DAdd<Self::Larger>
-    + DAdd<D0, Output = Self>
-    + DAdd<D1, Output = Self::Larger>
-    + DAdd<DDyn, Output = DDyn>
+    + RMax<R0, Output = Self>
+    + RMax<Self, Output = Self>
+    + RMax<DynRank, Output = DynRank>
+    + RMax<Self::Smaller, Output = Self>
+    + RMax<Self::Larger, Output = Self::Larger>
+    + RAdd<Self>
+    + RAdd<Self::Smaller>
+    + RAdd<Self::Larger>
+    + RAdd<R0, Output = Self>
+    + RAdd<R1, Output = Self::Larger>
+    + RAdd<DynRank, Output = DynRank>
 {
     /// The dimensionality as a constant `usize`, or `None` if it is dynamic.
     const N: Option<usize>;
@@ -47,16 +47,16 @@ pub trait Dimensionality:
     /// The next-smaller possible dimensionality.
     ///
     /// For the smallest possible dimensionality (currently 0-dimensional), there
-    /// is of course no "smaller" dimensionality. Instead, `NDim::<0>::Smaller` just
-    /// refers back to `NDim<0>`; in other words, it uses a "base case" of 0-dimensionality.
-    type Smaller: Dimensionality;
+    /// is of course no "smaller" dimensionality. Instead, `ConstRank::<0>::Smaller` just
+    /// refers back to `ConstRank<0>`; in other words, it uses a "base case" of 0-dimensionality.
+    type Smaller: Rank;
 
     /// The next-larger dimensionality.
     ///
     /// For the largest compile-time dimensionality (currently 12-dimensional), there
-    /// is no "larger" compile-time dimensionality. Instead, `NDim::<12>::Larger` just
-    /// refers to `DDyn`; in other words, it "escapes" to a dynamically-determined dimensionality.
-    type Larger: Dimensionality;
+    /// is no "larger" compile-time dimensionality. Instead, `ConstRank::<12>::Larger` just
+    /// refers to `DynRank`; in other words, it "escapes" to a dynamically-determined dimensionality.
+    type Larger: Rank;
 }
 
 /// Adds two dimensionalities at compile time.
@@ -70,19 +70,19 @@ pub trait Dimensionality:
 ///
 /// ## Example
 /// ```
-/// use ndarray::layout::dimensionality::*;
+/// use ndarray::layout::rank::*;
 /// use core::any::TypeId;
 ///
-/// type Added = <D1 as DAdd<D2>>::Output;
-/// assert_eq!(TypeId::of::<Added>(), TypeId::of::<D3>());
+/// type Added = <R1 as RAdd<R2>>::Output;
+/// assert_eq!(TypeId::of::<Added>(), TypeId::of::<R3>());
 ///
-/// type AddedDyn = <D1 as DAdd<DDyn>>::Output;
-/// assert_eq!(TypeId::of::<AddedDyn>(), TypeId::of::<DDyn>());
+/// type AddedDyn = <R1 as RAdd<DynRank>>::Output;
+/// assert_eq!(TypeId::of::<AddedDyn>(), TypeId::of::<DynRank>());
 /// ```
-pub trait DAdd<D>
+pub trait RAdd<D>
 {
     /// The result of the type-level addition of two dimensionalities.
-    type Output: Dimensionality;
+    type Output: Rank;
 }
 
 /// Takes the maximum of two dimensionalities at compile time.
@@ -96,31 +96,31 @@ pub trait DAdd<D>
 ///
 /// ## Example
 /// ```
-/// use ndarray::layout::dimensionality::*;
+/// use ndarray::layout::rank::*;
 /// use core::any::TypeId;
 ///
-/// type Added = <D1 as DMax<D2>>::Output;
-/// assert_eq!(TypeId::of::<Added>(), TypeId::of::<D2>());
+/// type Added = <R1 as RMax<R2>>::Output;
+/// assert_eq!(TypeId::of::<Added>(), TypeId::of::<R2>());
 ///
-/// type AddedDyn = <D1 as DMax<DDyn>>::Output;
-/// assert_eq!(TypeId::of::<AddedDyn>(), TypeId::of::<DDyn>());
+/// type AddedDyn = <R1 as RMax<DynRank>>::Output;
+/// assert_eq!(TypeId::of::<AddedDyn>(), TypeId::of::<DynRank>());
 /// ```
-pub trait DMax<D>
+pub trait RMax<D>
 {
     /// The result of the type-level maximum of two dimensionalities.
-    type Output: Dimensionality;
+    type Output: Rank;
 }
 
 /// The N-dimensional static dimensionality.
 ///
 /// This type captures dimensionalities that are known at compile-time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct NDim<const N: usize>;
+pub struct ConstRank<const N: usize>;
 
 /// The 0-dimensionality, for "dimensionless" arrays with a single value.
 ///
-/// See [`Dimensionality`] and [`NDim`] for more information.
-pub type D0 = NDim<0>;
+/// See [`Rank`] and [`ConstRank`] for more information.
+pub type R0 = ConstRank<0>;
 
 macro_rules! def_d_aliases {
     ($(($alias:ident, $N:literal)),*) => {
@@ -129,25 +129,25 @@ macro_rules! def_d_aliases {
             #[doc = stringify!($N)]
             /// D.
             /// 
-            /// See [`Dimensionality`] and [`NDim`] for more information.
-            pub type $alias = NDim<$N>;
+            /// See [`Rank`] and [`ConstRank`] for more information.
+            pub type $alias = ConstRank<$N>;
         )+
     };
 }
 
 def_d_aliases!(
-    (D1, 1),
-    (D2, 2),
-    (D3, 3),
-    (D4, 4),
-    (D5, 5),
-    (D6, 6),
-    (D7, 7),
-    (D8, 8),
-    (D9, 9),
-    (D10, 10),
-    (D11, 11),
-    (D12, 12)
+    (R1, 1),
+    (R2, 2),
+    (R3, 3),
+    (R4, 4),
+    (R5, 5),
+    (R6, 6),
+    (R7, 7),
+    (R8, 8),
+    (R9, 9),
+    (R10, 10),
+    (R11, 11),
+    (R12, 12)
 );
 
 /// Implement addition for a given dimensionality.
@@ -155,17 +155,17 @@ macro_rules! impl_add {
     ($left:literal, ($($right:literal),*), ddyn: ($($rightd:literal),*)) => {
         // $left + $right still gets you a compile-time dimension
         $(
-            impl DAdd<NDim<$right>> for NDim<$left>
+            impl RAdd<ConstRank<$right>> for ConstRank<$left>
             {
-                type Output = NDim<{$left + $right}>;
+                type Output = ConstRank<{$left + $right}>;
             }
         )*
 
         // $left + $rightd gets you a dynamic dimensionality
         $(
-            impl DAdd<NDim<$rightd>> for NDim<$left>
+            impl RAdd<ConstRank<$rightd>> for ConstRank<$left>
             {
-                type Output = DDyn;
+                type Output = DynRank;
             }
         )*
     };
@@ -192,29 +192,29 @@ macro_rules! impl_max {
     // Base case, just a target with some lowers
     ($($lower:literal),+, target: $target:literal) => {
         $(
-            impl DMax<NDim<$lower>> for NDim<$target>
+            impl RMax<ConstRank<$lower>> for ConstRank<$target>
             {
-                type Output = NDim<$target>;
+                type Output = ConstRank<$target>;
             }
         )+
     };
     // General case: at least one lower, at least one upper
     ($($lower:literal),+$(,)? target: $target:literal, $first_upper:literal$(, $($upper:literal),+)?) => {
         $(
-            impl DMax<NDim<$lower>> for NDim<$target>
+            impl RMax<ConstRank<$lower>> for ConstRank<$target>
             {
-                type Output = NDim<$target>;
+                type Output = ConstRank<$target>;
             }
         )+
-        impl DMax<NDim<$first_upper>> for NDim<$target>
+        impl RMax<ConstRank<$first_upper>> for ConstRank<$target>
         {
-            type Output = NDim<$first_upper>;
+            type Output = ConstRank<$first_upper>;
         }
         $(
             $(
-                impl DMax<NDim<$upper>> for NDim<$target>
+                impl RMax<ConstRank<$upper>> for ConstRank<$target>
                 {
-                    type Output = NDim<$upper>;
+                    type Output = ConstRank<$upper>;
                 }
             )+
         )?
@@ -222,14 +222,14 @@ macro_rules! impl_max {
     };
     // Helper syntax: zero lowers, target, at least one upper
     (target: $target:literal, $first_upper:literal, $($upper:literal),+) => {
-        impl DMax<NDim<$first_upper>> for NDim<$target>
+        impl RMax<ConstRank<$first_upper>> for ConstRank<$target>
         {
-            type Output = NDim<$first_upper>;
+            type Output = ConstRank<$first_upper>;
         }
         $(
-            impl DMax<NDim<$upper>> for NDim<$target>
+            impl RMax<ConstRank<$upper>> for ConstRank<$target>
             {
-                type Output = NDim<$upper>;
+                type Output = ConstRank<$upper>;
             }
         )+
         impl_max!($target, target: $first_upper, $($upper),+);
@@ -238,8 +238,8 @@ macro_rules! impl_max {
 
 impl_max!(target: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
 
-impl<const N: usize> DMax<NDim<N>> for NDim<N>
-where NDim<N>: Dimensionality
+impl<const N: usize> RMax<ConstRank<N>> for ConstRank<N>
+where ConstRank<N>: Rank
 {
     type Output = Self;
 }
@@ -247,51 +247,51 @@ where NDim<N>: Dimensionality
 macro_rules! impl_dimensionality {
     ($($d:literal),+) => {
         $(
-            impl Dimensionality for NDim<$d>
+            impl Rank for ConstRank<$d>
             {
                 const N: Option<usize> = Some($d);
 
-                type Smaller = NDim<{$d - 1}>;
+                type Smaller = ConstRank<{$d - 1}>;
 
-                type Larger = NDim<{$d + 1}>;
+                type Larger = ConstRank<{$d + 1}>;
             }
         )+
     };
 }
 
-impl Dimensionality for D0
+impl Rank for R0
 {
     const N: Option<usize> = Some(0);
 
     type Smaller = Self;
 
-    type Larger = D1;
+    type Larger = R1;
 }
 
 impl_dimensionality!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
 
-impl Dimensionality for NDim<12>
+impl Rank for ConstRank<12>
 {
     const N: Option<usize> = Some(12);
 
-    type Smaller = D11;
+    type Smaller = R11;
 
-    type Larger = DDyn;
+    type Larger = DynRank;
 }
 
 /// The dynamic dimensionality.
 ///
 /// This type captures dimensionalities that are unknown at compile-time.
-/// See [`Dimensionality`] for more information.
+/// See [`Rank`] for more information.
 ///
 /// This type does not carry any information about runtime dimensionality,
 /// it just indicate that dimensionality is not known at compile-time.
 /// This is done to avoid multiple sources of truth for runtime array
 /// dimensionality.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct DDyn;
+pub struct DynRank;
 
-impl Dimensionality for DDyn
+impl Rank for DynRank
 {
     const N: Option<usize> = None;
 
@@ -300,32 +300,32 @@ impl Dimensionality for DDyn
     type Larger = Self;
 }
 
-impl DAdd<DDyn> for DDyn
+impl RAdd<DynRank> for DynRank
 {
-    type Output = DDyn;
+    type Output = DynRank;
 }
 
-impl<const N: usize> DAdd<NDim<N>> for DDyn
+impl<const N: usize> RAdd<ConstRank<N>> for DynRank
 {
-    type Output = DDyn;
+    type Output = DynRank;
 }
 
-impl<const N: usize> DAdd<DDyn> for NDim<N>
+impl<const N: usize> RAdd<DynRank> for ConstRank<N>
 {
-    type Output = DDyn;
+    type Output = DynRank;
 }
 
-impl DMax<DDyn> for DDyn
+impl RMax<DynRank> for DynRank
 {
-    type Output = DDyn;
+    type Output = DynRank;
 }
 
-impl<const N: usize> DMax<NDim<N>> for DDyn
+impl<const N: usize> RMax<ConstRank<N>> for DynRank
 {
-    type Output = DDyn;
+    type Output = DynRank;
 }
 
-impl<const N: usize> DMax<DDyn> for NDim<N>
+impl<const N: usize> RMax<DynRank> for ConstRank<N>
 {
-    type Output = DDyn;
+    type Output = DynRank;
 }

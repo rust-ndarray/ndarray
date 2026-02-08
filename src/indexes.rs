@@ -7,6 +7,7 @@
 // except according to those terms.
 use super::Dimension;
 use crate::dimension::IntoDimension;
+use crate::layout::ranked::Ranked;
 use crate::split_at::SplitAt;
 use crate::zip::Offset;
 use crate::Axis;

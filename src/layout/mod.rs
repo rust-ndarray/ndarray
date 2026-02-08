@@ -9,8 +9,8 @@
 //! flexible and expressive layout representations.
 
 mod bitset;
-#[cfg(feature = "unstable")]
-pub mod dimensionality;
+pub mod rank;
+pub mod ranked;
 
 #[allow(deprecated)]
 pub use bitset::{Layout, LayoutBitset};
