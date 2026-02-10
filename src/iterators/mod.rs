@@ -74,10 +74,12 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
     {
         let index = match self.index {
             None => return None,
-            Some(ref ix) => ix.clone(),
+            Some(ref mut ix) => ix,
         };
         let offset = D::stride_offset(&index, &self.strides);
-        self.index = self.dim.next_for(index);
+        if !self.dim.next_for_mut(index) {
+            self.index = None;
+        }
         unsafe { Some(self.ptr.offset(offset)) }
     }
 
