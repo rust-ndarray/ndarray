@@ -196,20 +196,9 @@ pub trait Dimension:
     /// Iteration -- Use self as size, and return next index after `index`
     /// or None if there are no more.
     #[inline]
-    fn next_for(&self, index: Self) -> Option<Self>
+    fn next_for(&self, mut index: Self) -> Option<Self>
     {
-        let mut index = index;
-        let mut done = false;
-        for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
-            *ix += 1;
-            if *ix == dim {
-                *ix = 0;
-            } else {
-                done = true;
-                break;
-            }
-        }
-        if done {
+        if self.next_for_mut(&mut index) {
             Some(index)
         } else {
             None
