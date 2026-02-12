@@ -195,26 +195,32 @@ pub trait Dimension:
     #[doc(hidden)]
     /// Iteration -- Use self as size, and return next index after `index`
     /// or None if there are no more.
-    // FIXME: use &Self for index or even &mut?
     #[inline]
-    fn next_for(&self, index: Self) -> Option<Self>
+    fn next_for(&self, mut index: Self) -> Option<Self>
     {
-        let mut index = index;
-        let mut done = false;
+        if self.next_for_mut(&mut index) {
+            Some(index)
+        } else {
+            None
+        }
+    }
+
+    #[doc(hidden)]
+    /// Iteration -- Similar to `next_for`, but addresses the index as mutable reference.
+    #[inline]
+    fn next_for_mut(&self, index: &mut Self) -> bool
+    {
+        let mut end_iteration = true;
         for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
             *ix += 1;
             if *ix == dim {
                 *ix = 0;
             } else {
-                done = true;
+                end_iteration = false;
                 break;
             }
         }
-        if done {
-            Some(index)
-        } else {
-            None
-        }
+        !end_iteration
     }
 
     #[doc(hidden)]

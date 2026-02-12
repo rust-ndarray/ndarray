@@ -71,7 +71,7 @@ impl<T> Partial<T>
         // covers the whole output.
         if left.is_stub() {
             right
-        } else if left.ptr.wrapping_add(left.len) == right.ptr {
+        } else if ptr::eq(left.ptr.wrapping_add(left.len), right.ptr) {
             left.len += right.release_ownership();
             left
         } else {
