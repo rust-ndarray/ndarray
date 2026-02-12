@@ -76,7 +76,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
             None => return None,
             Some(ref mut ix) => ix,
         };
-        let offset = D::stride_offset(&index, &self.strides);
+        let offset = D::stride_offset(index, &self.strides);
         if !self.dim.next_for_mut(index) {
             self.index = None;
         }
