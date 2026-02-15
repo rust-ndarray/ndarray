@@ -18,8 +18,8 @@ mod windows;
 use alloc::vec::Vec;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
+use std::ptr;
 use std::ptr::NonNull;
-use std::{mem, ptr};
 
 #[allow(unused_imports)] // Needed for Rust 1.64
 use rawpointer::PointerExt;
