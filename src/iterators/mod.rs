@@ -18,8 +18,8 @@ mod windows;
 use alloc::vec::Vec;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
-use std::ptr;
 use std::ptr::NonNull;
+use std::{mem, ptr};
 
 #[allow(unused_imports)] // Needed for Rust 1.64
 use rawpointer::PointerExt;
@@ -72,10 +72,7 @@ impl<A, D: Dimension> Iterator for Baseiter<A, D>
     #[inline]
     fn next(&mut self) -> Option<Self::Item>
     {
-        let index = match self.index {
-            None => return None,
-            Some(ref ix) => ix.clone(),
-        };
+        let index = self.index.take()?;
         let offset = D::stride_offset(&index, &self.strides);
         self.index = self.dim.next_for(index);
         unsafe { Some(self.ptr.offset(offset)) }
