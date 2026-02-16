@@ -96,10 +96,10 @@ pub trait Dimension:
             .try_fold(1_usize, |s, &a| s.checked_mul(a))
     }
 
-    #[doc(hidden)]
+    /// Returns the dimension as a slice of axis lengths.
     fn slice(&self) -> &[Ix];
-
-    #[doc(hidden)]
+    
+    /// Returns the dimension as a mutable slice of axis lengths.
     fn slice_mut(&mut self) -> &mut [Ix];
 
     /// Borrow as a read-only array view.
@@ -114,7 +114,7 @@ pub trait Dimension:
         ArrayViewMut1::from(self.slice_mut())
     }
 
-    #[doc(hidden)]
+    /// Returns `true` if the dimensions have equal axis lengths.
     fn equal(&self, rhs: &Self) -> bool
     {
         self.slice() == rhs.slice()
@@ -124,7 +124,6 @@ pub trait Dimension:
     ///
     /// If the array is non-empty, the strides result in contiguous layout; if
     /// the array is empty, the strides are all zeros.
-    #[doc(hidden)]
     fn default_strides(&self) -> Self
     {
         // Compute default array strides
@@ -150,7 +149,6 @@ pub trait Dimension:
     ///
     /// If the array is non-empty, the strides result in contiguous layout; if
     /// the array is empty, the strides are all zeros.
-    #[doc(hidden)]
     fn fortran_strides(&self) -> Self
     {
         // Compute fortran array strides
@@ -180,7 +178,7 @@ pub trait Dimension:
     /// **Panics** if `Self` has a fixed size that is not `ndim`.
     fn zeros(ndim: usize) -> Self;
 
-    #[doc(hidden)]
+    /// Returns the first valid index in the dimension
     #[inline]
     fn first_index(&self) -> Option<Self>
     {
@@ -192,7 +190,6 @@ pub trait Dimension:
         Some(Self::zeros(self.ndim()))
     }
 
-    #[doc(hidden)]
     /// Iteration -- Use self as size, and return next index after `index`
     /// or None if there are no more.
     // FIXME: use &Self for index or even &mut?
@@ -216,7 +213,6 @@ pub trait Dimension:
         }
     }
 
-    #[doc(hidden)]
     /// Iteration -- Use self as size, and create the next index after `index`
     /// Return false if iteration is done
     ///
@@ -244,7 +240,6 @@ pub trait Dimension:
     /// strides are equal.
     ///
     /// Note: Returns `false` if any of the ndims don't match.
-    #[doc(hidden)]
     fn strides_equivalent<D>(&self, strides1: &Self, strides2: &D) -> bool
     where D: Dimension
     {
@@ -255,7 +250,6 @@ pub trait Dimension:
                 .all(|(&d, &s1, &s2)| d <= 1 || s1 as isize == s2 as isize)
     }
 
-    #[doc(hidden)]
     /// Return stride offset for index.
     fn stride_offset(index: &Self, strides: &Self) -> isize
     {
@@ -266,14 +260,13 @@ pub trait Dimension:
         offset
     }
 
-    #[doc(hidden)]
     /// Return stride offset for this dimension and index.
     fn stride_offset_checked(&self, strides: &Self, index: &Self) -> Option<isize>
     {
         stride_offset_checked(self.slice(), strides.slice(), index.slice())
     }
 
-    #[doc(hidden)]
+    /// Returns the size of the last dimension axis, or 0 for scalar (zero-dimensional) arrays.
     fn last_elem(&self) -> usize
     {
         if self.ndim() == 0 {
@@ -282,15 +275,16 @@ pub trait Dimension:
             self.slice()[self.ndim() - 1]
         }
     }
-
-    #[doc(hidden)]
+    /// Sets the length of the last axis to `i`.
     fn set_last_elem(&mut self, i: usize)
     {
         let nd = self.ndim();
         self.slice_mut()[nd - 1] = i;
     }
 
-    #[doc(hidden)]
+    /// Returns `true` if the dimension and strides represent contiguous memory layout.
+    ///
+    /// Handles both standard (C-order) and reversed (negative stride) contiguous layouts.
     fn is_contiguous(dim: &Self, strides: &Self) -> bool
     {
         let defaults = dim.default_strides();
@@ -323,7 +317,6 @@ pub trait Dimension:
     /// (in ascending order).
     ///
     /// Assumes that no stride value appears twice.
-    #[doc(hidden)]
     fn _fastest_varying_stride_order(&self) -> Self
     {
         let mut indices = self.clone();
@@ -339,7 +332,6 @@ pub trait Dimension:
 
     /// Compute the minimum stride axis (absolute value), under the constraint
     /// that the length of the axis is > 1;
-    #[doc(hidden)]
     fn min_stride_axis(&self, strides: &Self) -> Axis
     {
         let n = match self.ndim() {
@@ -355,7 +347,6 @@ pub trait Dimension:
 
     /// Compute the maximum stride axis (absolute value), under the constraint
     /// that the length of the axis is > 1;
-    #[doc(hidden)]
     fn max_stride_axis(&self, strides: &Self) -> Axis
     {
         match self.ndim() {
@@ -375,7 +366,7 @@ pub trait Dimension:
         IxDyn(self.slice())
     }
 
-    #[doc(hidden)]
+    /// Converts from another dimension type, returning `None` if `ndim` differs.
     fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self>
     {
         let mut s = Self::default();
@@ -388,11 +379,11 @@ pub trait Dimension:
             None
         }
     }
-
-    #[doc(hidden)]
+    
+    /// Inserts a new axis of length 1 at the given position, increasing dimensionality.
     fn insert_axis(&self, axis: Axis) -> Self::Larger;
 
-    #[doc(hidden)]
+    /// Removes the specified axis, decreasing dimensionality. Panics if axis is invalid.
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller;
 
     private_decl! {}
