@@ -197,9 +197,8 @@ pub trait Dimension:
     /// or None if there are no more.
     // FIXME: use &Self for index or even &mut?
     #[inline]
-    fn next_for(&self, index: Self) -> Option<Self>
+    fn next_for(&self, mut index: Self) -> Option<Self>
     {
-        let mut index = index;
         let mut done = false;
         for (&dim, ix) in zip(self.slice(), index.slice_mut()).rev() {
             *ix += 1;
