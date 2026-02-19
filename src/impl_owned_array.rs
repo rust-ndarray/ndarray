@@ -859,6 +859,61 @@ where D: Dimension
 
         Ok(())
     }
+
+    /// Shrink Array allocation capacity to be as small as it can be.
+    pub fn shrink_to_fit(&mut self)
+    {
+        // Example:
+        //                        (1)         (2)                 (3)              .- len
+        // Vector:     [ x x x x x V x V x V x V x V x V x V x V x V x x x x x x x ]       .- capacity
+        // Allocation: [ m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m ]
+        //
+        // x: valid data in OwnedRepr but outside current array slicing
+        // V: valid data in OwnedRepr and visible in current array slicing
+        // m: allocated memory
+        // (1): Lowest address element
+        // (2): Logical pointer (Element at index zero; normally (1) == (2) but can be
+        // located anywhere (1) <= (2) <= (3))
+        // (3): Highest address element
+        //
+        // Span: From (1) to (3).
+        //
+        // Algorithm: Compute 1, 2, 3.
+        // Move data so that unused areas before (1) and after (3) are removed from the storage/vector.
+        // Then shrink the vector's allocation to fit the valid elements.
+        //
+        // After:
+        //              (1)         (2)                 (3).- len == capacity
+        // Vector:     [ V x V x V x V x V x V x V x V x V ]
+        // Allocation: [ m m m m m m m m m m m m m m m m m ]
+        //
+
+        if mem::size_of::<A>() == 0 {
+            return;
+        }
+
+        let data_ptr = self.data.as_ptr();
+        let logical_ptr = self.as_ptr();
+        let offset_to_logical = dimension::offset_from_low_addr_ptr_to_logical_ptr(&self.dim, &self.strides);
+        let offset_to_high = dimension::offset_from_logical_ptr_to_high_addr_ptr(&self.dim, &self.strides);
+
+        let span = offset_to_logical + offset_to_high + 1;
+        debug_assert!(span >= self.len());
+
+        // We are in a panic critical section because: Array/OwnedRepr's destructors rely on
+        // dimension, strides, and self.ptr to deallocate correctly.
+        // We could panic here because custom user code is running when removing elements
+        // (destructors running).
+        let guard = AbortIfPanic(&"shrink_to_fit: owned repr not in consistent state");
+        unsafe {
+            let front_slop = logical_ptr.offset_from(data_ptr) as usize - offset_to_logical;
+            let new_low_ptr = self
+                .data
+                .preserve_range_and_shrink(front_slop..(front_slop + span));
+            self.ptr = new_low_ptr.add(offset_to_logical);
+        }
+        guard.defuse();
+    }
 }
 
 /// This drops all "unreachable" elements in `self_` given the data pointer and data length.
@@ -1014,5 +1069,72 @@ where D: Dimension
                 bstrides.slice_mut().swap(axis_i, next_axis);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests
+{
+    use crate::Array;
+    use crate::Array2;
+    use crate::Slice;
+    use core::fmt::Debug;
+    use core::mem::size_of;
+
+    #[test]
+    fn test_shrink_to_fit()
+    {
+        fn assert_shrink_before_after<T>(mut a: Array2<T>, s1: Slice, s2: Slice, new_capacity: usize)
+        where T: Debug + Clone + Eq
+        {
+            let initial_len = a.len();
+            if size_of::<T>() > 0 {
+                assert_eq!(a.data.capacity(), initial_len);
+            }
+            a = a.slice_move(s![s1, s2]);
+            let before_value = a.clone();
+            let before_strides = a.strides().to_vec();
+            #[cfg(feature = "std")]
+            println!("{:?}, {}, {:?}", a, a.len(), a.data);
+            a.shrink_to_fit();
+            #[cfg(feature = "std")]
+            println!("{:?}, {}, {:?}", a, a.len(), a.data);
+
+            assert_eq!(before_value, a);
+            assert_eq!(before_strides, a.strides());
+
+            if size_of::<T>() > 0 {
+                assert!(a.data.capacity() < initial_len);
+                assert!(a.data.capacity() >= a.len());
+            }
+            assert_eq!(a.data.capacity(), new_capacity);
+        }
+
+        let a = Array::from_iter(0..56)
+            .into_shape_with_order((8, 7))
+            .unwrap();
+        assert_shrink_before_after(a, Slice::new(1, Some(-1), 1), Slice::new(0, None, 2), 42);
+
+        let a = Array::from_iter(0..56)
+            .into_shape_with_order((8, 7))
+            .unwrap();
+        assert_shrink_before_after(a, Slice::new(1, Some(-1), -1), Slice::new(0, None, -1), 42);
+
+        let a = Array::from_iter(0..56)
+            .into_shape_with_order((8, 7))
+            .unwrap();
+        assert_shrink_before_after(a, Slice::new(1, Some(3), 1), Slice::new(1, None, -2), 12);
+
+        // empty but still has some allocation to allow offsetting along each stride
+        let a = Array::from_iter(0..56)
+            .into_shape_with_order((8, 7))
+            .unwrap();
+        assert_shrink_before_after(a, Slice::new(1, Some(1), 1), Slice::new(1, None, 1), 6);
+
+        // Test ZST
+        let a = Array::from_iter((0..56).map(|_| ()))
+            .into_shape_with_order((8, 7))
+            .unwrap();
+        assert_shrink_before_after(a, Slice::new(1, Some(3), 1), Slice::new(1, None, -2), usize::MAX);
     }
 }
