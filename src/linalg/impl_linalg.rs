@@ -131,6 +131,21 @@ impl<A> ArrayRef<A, Ix1>
         }
         self.dot_generic(rhs)
     }
+
+    /// Outer product of two 1D arrays.
+    /// 
+    /// The outer product of two vectors a (of dimension M) and b (of dimension N) 
+    /// is defined as an (M*N)-dimensional matrix whose ij-th element is a_i * b_j. 
+    /// This implementation essentially calls `dot` by reshaping the vectors.
+    pub fn outer<S2>(&self, b: &ArrayBase<S2, Ix1>) -> Array<A, Ix2>
+    where
+        S2: Data<Elem = A>,
+        A: LinalgScalar,
+    {
+        let (size_a, size_b) = (self.shape()[0], b.shape()[0]);
+        let b_reshaped = b.view().into_shape((1, size_b)).unwrap();
+        self.view().into_shape((size_a, 1)).unwrap().dot(&b_reshaped)
+    }
 }
 
 /// Return a pointer to the starting element in BLAS's view.
