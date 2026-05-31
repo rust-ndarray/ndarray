@@ -14,6 +14,7 @@ use num_traits::Float;
 /// An iterator of a sequence of evenly spaced floats.
 ///
 /// Iterator element type is `F`.
+#[derive(Clone)]
 pub struct Linspace<F>
 {
     start: F,
