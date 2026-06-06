@@ -10,6 +10,14 @@ use alloc::slice;
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(test)]
+use proptest::prop_assert_eq;
+#[cfg(test)]
+use proptest::proptest;
+#[cfg(test)]
+use proptest::strategy::Just;
+#[cfg(test)]
+use proptest::strategy::Strategy;
 #[allow(unused_imports)]
 use rawpointer::PointerExt;
 use std::mem::{size_of, ManuallyDrop};
@@ -2585,30 +2593,16 @@ where
 
         let dim = self.parts.dim.slice_mut();
         let strides = self.parts.strides.slice_mut();
-        let axes = axes.slice();
 
-        // The cycle detection is done using a bitmask to track visited positions.
-        // For example, axes from [0,1,2] to [2, 0, 1]
-        // For axis values [1, 0, 2]:
-        // 1 << 1  // 0b0001 << 1 = 0b0010 (decimal 2)
-        // 1 << 0  // 0b0001 << 0 = 0b0001 (decimal 1)
-        // 1 << 2  // 0b0001 << 2 = 0b0100 (decimal 4)
-        //
-        // Each axis gets its own unique bit position in the bitmask:
-        // - Axis 0: bit 0 (rightmost)
-        // - Axis 1: bit 1
-        // - Axis 2: bit 2
-        //
-        let mut visited = 0usize;
-        for (new_axis, &axis) in axes.iter().enumerate() {
-            if (visited & (1 << axis)) != 0 {
-                continue;
+        for i in 0..axes.ndim() {
+            let mut index = axes[i];
+            while index < i {
+                index = axes[index];
             }
-
-            dim.swap(axis, new_axis);
-            strides.swap(axis, new_axis);
-
-            visited |= (1 << axis) | (1 << new_axis);
+            if index != i {
+                dim.swap(i, index);
+                strides.swap(i, index);
+            }
         }
     }
 
@@ -3613,5 +3607,24 @@ mod tests
         let empty_slice = arr.slice(s![0..0, ..]);
         let result_slice = empty_slice.partition(0, Axis(0));
         assert_eq!(result_slice.shape(), &[0, 3]);
+    }
+
+    /// Regression test for permute_axes
+    #[test]
+    fn test_permute_axes_regression()
+    {
+        let mut a = Array4::<u8>::zeros((1, 2, 3, 4));
+        a.permute_axes([3, 0, 1, 2]);
+        assert_eq!(a.shape(), &[4, 1, 2, 3]);
+    }
+}
+
+#[cfg(test)]
+proptest! {
+    #[test]
+    fn test_permute_axes_6d(p in Just([0, 1, 2, 3, 4, 5]).prop_shuffle()) {
+        let mut arr: Array6<usize> = Array6::zeros((0, 1, 2, 3, 4, 5));
+        arr.permute_axes(p.clone());
+        prop_assert_eq!(arr.shape(), p);
     }
 }
