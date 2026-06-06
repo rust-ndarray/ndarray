@@ -17,8 +17,7 @@ env:
   HOST: x86_64-unknown-linux-gnu
   FEATURES: "approx,serde,rayon"
   RUSTFLAGS: "-D warnings"
-  MSRV: 1.64.0
-  BLAS_MSRV: 1.71.0
+  MSRV: 1.87.0
 
 jobs:
   latest_deps_stable:
