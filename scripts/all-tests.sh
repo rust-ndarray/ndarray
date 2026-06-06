@@ -8,6 +8,11 @@ CHANNEL=$2
 
 QC_FEAT=--features=ndarray-rand/quickcheck
 
+# Proptest needs 1.85, MSRV is 1.64, so only run proptest tests if MSRV is not set or if we're on a newer channel than MSRV
+if [[ -z "${MSRV}" ]] && [ "$CHANNEL" != "$MSRV" ]; then
+    FEATURES="$FEATURES,proptest"
+fi
+
 # build check with no features
 cargo build -v --no-default-features
 

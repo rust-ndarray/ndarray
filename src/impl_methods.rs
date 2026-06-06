@@ -10,13 +10,13 @@ use alloc::slice;
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(test)]
+#[cfg(all(test, feature = "proptest"))]
 use proptest::prop_assert_eq;
-#[cfg(test)]
+#[cfg(all(test, feature = "proptest"))]
 use proptest::proptest;
-#[cfg(test)]
+#[cfg(all(test, feature = "proptest"))]
 use proptest::strategy::Just;
-#[cfg(test)]
+#[cfg(all(test, feature = "proptest"))]
 use proptest::strategy::Strategy;
 #[allow(unused_imports)]
 use rawpointer::PointerExt;
@@ -3619,7 +3619,8 @@ mod tests
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "proptest"))]
+#[cfg_attr(miri, ignore)]
 proptest! {
     #[test]
     fn test_permute_axes_6d(p in Just([0, 1, 2, 3, 4, 5]).prop_shuffle()) {
