@@ -44,7 +44,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy "${FEATURES}"
+      - run: cargo clippy -F "${FEATURES}"
 
   format:
     runs-on: ubuntu-latest
