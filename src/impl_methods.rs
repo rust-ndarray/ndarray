@@ -10,13 +10,13 @@ use alloc::slice;
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(all(test, feature = "proptest"))]
+#[cfg(test)]
 use proptest::prop_assert_eq;
-#[cfg(all(test, feature = "proptest"))]
+#[cfg(test)]
 use proptest::proptest;
-#[cfg(all(test, feature = "proptest"))]
+#[cfg(test)]
 use proptest::strategy::Just;
-#[cfg(all(test, feature = "proptest"))]
+#[cfg(test)]
 use proptest::strategy::Strategy;
 #[allow(unused_imports)]
 use rawpointer::PointerExt;
@@ -3619,7 +3619,7 @@ mod tests
     }
 }
 
-#[cfg(all(test, feature = "proptest"))]
+#[cfg(test)]
 #[cfg_attr(miri, ignore)]
 proptest! {
     #[test]
