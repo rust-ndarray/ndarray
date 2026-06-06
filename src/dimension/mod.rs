@@ -667,7 +667,7 @@ pub fn slices_intersect<D: Dimension>(dim: &D, indices1: impl SliceArg<D>, indic
                     Some(m) => m,
                     None => return false,
                 };
-                if ind < min || ind > max || (ind - min) % step.unsigned_abs() != 0 {
+                if ind < min || ind > max || !(ind - min).is_multiple_of(step.unsigned_abs()) {
                     return false;
                 }
             }

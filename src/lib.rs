@@ -1879,7 +1879,7 @@ mod impl_arc_array;
 /// Returns `true` if the pointer is aligned.
 pub(crate) fn is_aligned<T>(ptr: *const T) -> bool
 {
-    (ptr as usize) % ::std::mem::align_of::<T>() == 0
+    (ptr as usize).is_multiple_of(::std::mem::align_of::<T>())
 }
 
 // Triangular constructors

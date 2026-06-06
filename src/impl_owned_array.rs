@@ -34,6 +34,7 @@ impl<A> Array<A, Ix0>
     /// let scalar: Foo = array.into_scalar();
     /// assert_eq!(scalar, Foo);
     /// ```
+    #[allow(clippy::manual_checked_ops)]
     pub fn into_scalar(self) -> A
     {
         let size = mem::size_of::<A>();
