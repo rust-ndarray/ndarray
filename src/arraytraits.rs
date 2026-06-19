@@ -647,6 +647,17 @@ where
     }
 }
 
+/// Implementation of `ArrayView::from(ArrayViewMut)`
+impl<'a, A, D> From<ArrayViewMut<'a, A, D>> for ArrayView<'a, A, D>
+where D: Dimension
+{
+    /// Create a read-only array view from a mutable array view.
+    fn from(view: ArrayViewMut<'a, A, D>) -> Self
+    {
+        view.into_view()
+    }
+}
+
 impl<A, D> From<Array<A, D>> for ArcArray<A, D>
 where D: Dimension
 {

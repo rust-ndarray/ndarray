@@ -15,3 +15,44 @@ fn cell_view()
     }
     assert_eq!(a, answer);
 }
+
+#[test]
+fn test_view_conversion()
+{
+    let mut a = Array2::<f32>::zeros((4, 4));
+    let view_mut = a.view_mut();
+    let view = view_mut.into_view();
+    assert_eq!(view.shape(), &[4, 4]);
+
+    let view_mut = a.view_mut();
+    let view: ArrayView2<'_, f32> = view_mut.into();
+    assert_eq!(view.shape(), &[4, 4]);
+}
+
+#[test]
+fn test_view_conversion_lifetime()
+{
+    // Regression test for #1595
+    struct Foo<'a> {
+        data: ArrayViewMut2<'a, f32>,
+    }
+
+    impl<'a> Foo<'a> {
+        fn into_shared(self) -> ArrayView2<'a, f32> {
+            self.data.into_view()
+        }
+
+        fn into_shared_from(self) -> ArrayView2<'a, f32> {
+            self.data.into()
+        }
+    }
+
+    let mut a = Array2::<f32>::zeros((4, 4));
+    let foo = Foo { data: a.view_mut() };
+    let shared = foo.into_shared();
+    assert_eq!(shared.shape(), &[4, 4]);
+
+    let foo = Foo { data: a.view_mut() };
+    let shared = foo.into_shared_from();
+    assert_eq!(shared.shape(), &[4, 4]);
+}
