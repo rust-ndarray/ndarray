@@ -823,6 +823,24 @@ impl<A, D: Dimension> ArrayRef<A, D>
     {
         unsafe { self.get_ptr(index).map(|ptr| &*ptr) }
     }
+
+    /// Return `true` if the index is within the array bounds.
+    ///
+    /// ```
+    /// use ndarray::arr2;
+    ///
+    /// let a = arr2(&[[1., 2.],
+    ///                [3., 4.]]);
+    ///
+    /// assert!(a.contains((0, 1)));
+    /// assert!(!a.contains((2, 0)));
+    /// assert!(!a.contains((0, 2)));
+    /// ```
+    pub fn contains<I>(&self, index: I) -> bool
+    where I: NdIndex<D>
+    {
+        index.index_checked(self._dim(), self._strides()).is_some()
+    }
 }
 
 impl<A, D: Dimension> RawRef<A, D>
