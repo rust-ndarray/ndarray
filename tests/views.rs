@@ -33,16 +33,20 @@ fn test_view_conversion()
 fn test_view_conversion_lifetime()
 {
     // Regression test for #1595
-    struct Foo<'a> {
+    struct Foo<'a>
+    {
         data: ArrayViewMut2<'a, f32>,
     }
 
-    impl<'a> Foo<'a> {
-        fn into_shared(self) -> ArrayView2<'a, f32> {
+    impl<'a> Foo<'a>
+    {
+        fn into_shared(self) -> ArrayView2<'a, f32>
+        {
             self.data.into_view()
         }
 
-        fn into_shared_from(self) -> ArrayView2<'a, f32> {
+        fn into_shared_from(self) -> ArrayView2<'a, f32>
+        {
             self.data.into()
         }
     }
