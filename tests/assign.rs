@@ -232,6 +232,39 @@ fn move_into()
     }
 }
 
+#[test]
+fn shrink_to_fit_slicing()
+{
+    // Count correct number of drops when using shrink_to_fit and discontiguous arrays (with holes).
+    for &use_f_order in &[false, true] {
+        for &invert_axis in &[0b00, 0b01, 0b10, 0b11] {
+            // bitmask for axis to invert
+            let counter = DropCounter::default();
+            {
+                let (m, n) = (5, 4);
+
+                let mut a = Array::from_shape_fn((m, n).set_f(use_f_order), |_idx| counter.element());
+                a.slice_collapse(s![1..-1, ..;2]);
+                if invert_axis & 0b01 != 0 {
+                    a.invert_axis(Axis(0));
+                }
+                if invert_axis & 0b10 != 0 {
+                    a.invert_axis(Axis(1));
+                }
+
+                a.shrink_to_fit();
+
+                let total = m * n;
+                let dropped_1 = if use_f_order { n * 2 - 1 } else { m * 2 - 1 };
+                assert_eq!(counter.created(), total);
+                assert_eq!(counter.dropped(), dropped_1 as usize);
+                drop(a);
+            }
+            counter.assert_drop_count();
+        }
+    }
+}
+
 /// This counter can create elements, and then count and verify
 /// the number of which have actually been dropped again.
 #[derive(Default)]
@@ -241,6 +274,7 @@ struct DropCounter
     dropped: AtomicUsize,
 }
 
+#[derive(Debug)]
 struct Element<'a>(&'a AtomicUsize);
 
 impl DropCounter
