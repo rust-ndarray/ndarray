@@ -2626,6 +2626,63 @@ where
         self.parts.dim.slice_mut().reverse();
         self.parts.strides.slice_mut().reverse();
     }
+
+    /// Rotate the array by 90 degrees, `k` times, in the plane spanned by two axes.
+    ///
+    /// The rotation is performed from the axis `axes.0` towards the axis
+    /// `axes.1`, matching the behavior of NumPy's [`numpy.rot90`]. A positive
+    /// `k` rotates counterclockwise (in the sense of that axis ordering) and a
+    /// negative `k` rotates clockwise; `k` is taken modulo 4, so e.g. `k == -1`
+    /// is equivalent to `k == 3`.
+    ///
+    /// This does not move any data, it just adjusts the array's dimensions and
+    /// strides. Because it consumes `self`, call it on `self.view()` (or
+    /// `self.clone()`) if you want to keep the original array.
+    ///
+    /// **Panics** if the two axes are the same or if either axis is out of
+    /// bounds.
+    ///
+    /// [`numpy.rot90`]: https://numpy.org/doc/stable/reference/generated/numpy.rot90.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{arr2, Array3};
+    ///
+    /// let a = arr2(&[[1, 2, 3], [4, 5, 6]]);
+    /// assert_eq!(a.clone().rot90(1, (0, 1)), arr2(&[[3, 6], [2, 5], [1, 4]]));
+    /// assert_eq!(a.clone().rot90(2, (0, 1)), arr2(&[[6, 5, 4], [3, 2, 1]]));
+    /// assert_eq!(a.clone().rot90(3, (0, 1)), arr2(&[[4, 1], [5, 2], [6, 3]]));
+    /// assert_eq!(a.clone().rot90(4, (0, 1)), a);
+    ///
+    /// // Rotating in a plane of a higher-dimensional array only affects that plane.
+    /// let b = Array3::<u8>::zeros((1, 2, 3));
+    /// assert_eq!(b.rot90(1, (0, 2)).shape(), &[3, 2, 1]);
+    /// ```
+    #[track_caller]
+    pub fn rot90(mut self, k: i32, axes: (usize, usize)) -> ArrayBase<S, D>
+    {
+        let (a0, a1) = axes;
+        assert_ne!(a0, a1, "rot90: axes must be different");
+        assert!(a0 < self.ndim() && a1 < self.ndim(), "rot90: axis out of bounds");
+        match k.rem_euclid(4) {
+            0 => {}
+            1 => {
+                self.swap_axes(a0, a1);
+                self.invert_axis(Axis(a0));
+            }
+            2 => {
+                self.invert_axis(Axis(a0));
+                self.invert_axis(Axis(a1));
+            }
+            3 => {
+                self.swap_axes(a0, a1);
+                self.invert_axis(Axis(a1));
+            }
+            _ => unreachable!(),
+        }
+        self
+    }
 }
 
 impl<A, D: Dimension> ArrayRef<A, D>
