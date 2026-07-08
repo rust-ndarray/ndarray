@@ -1,3 +1,10 @@
+Unreleased
+==========
+
+Added
+-----
+- Add `ArrayBase::rot90` to rotate an array 90 degrees in a plane, equivalent to NumPy's `numpy.rot90` [#866](https://github.com/rust-ndarray/ndarray/issues/866)
+
 Version 0.17.2 (2026-01-10)
 ===========================
 Version 0.17.2 is mainly a patch fix to bugs related to the new `ArrayRef` implementation.
