@@ -46,7 +46,7 @@ rayon = { version = "1.10.0", optional = true }
 cblas-sys = { workspace = true, optional = true }
 libc = { version = "0.2.82", optional = true }
 
-matrixmultiply = { version = "0.3.2", default-features = false, features=["cgemm"] }
+matrixmultiply = { version = "0.3.11", default-features = false, features=["avx512", "cgemm"] }
 
 serde = { version = "1.0", optional = true, default-features = false, features = ["alloc"] }
 rawpointer = { version = "0.2" }
