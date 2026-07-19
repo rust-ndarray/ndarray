@@ -1,6 +1,8 @@
 #![allow(clippy::many_single_char_names, clippy::deref_addrof, clippy::unreadable_literal)]
+#![recursion_limit = "256"]
 use ndarray::linalg::general_mat_mul;
 use ndarray::linalg::kron;
+use ndarray::linalg::Dot;
 use ndarray::prelude::*;
 #[cfg(feature = "approx")]
 use ndarray::Order;
@@ -868,4 +870,175 @@ fn kron_i64()
     let b = arr2(&[[0, 1], [1, 0]]);
     let r = arr2(&[[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]);
     assert_eq!(kron(&a, &b), r);
+}
+
+// Helper for the higher-dimensional dot tests below: performs the same
+// operation as ndarray's nd dot but using only the 2-D path, so we can
+// cross-check the results independently.
+fn reference_nd_dot<A, D>(lhs: &Array<A, D>, rhs: &Array2<A>) -> Array<A, D>
+where
+    A: LinalgScalar + std::fmt::Debug,
+    D: Dimension,
+{
+    let ndim = lhs.ndim();
+    let k = lhs.shape()[ndim - 1];
+    let rows = lhs.len() / k;
+    let n = rhs.shape()[1];
+
+    let lhs_2d = lhs.to_shape((rows, k)).unwrap().into_owned();
+    let res_2d = reference_mat_mul(&lhs_2d, rhs);
+
+    let mut out_dim = D::zeros(ndim);
+    for i in 0..ndim - 1 {
+        out_dim[i] = lhs.shape()[i];
+    }
+    out_dim[ndim - 1] = n;
+
+    res_2d.to_shape(out_dim).unwrap().into_owned()
+}
+
+#[test]
+fn dot_3d_by_2d()
+{
+    let lhs: Array3<f64> = ArrayBuilder::new((3, 4, 5)).build();
+    let rhs: Array2<f64> = ArrayBuilder::new((5, 6)).build();
+
+    let result = lhs.dot(&rhs);
+    let expected = reference_nd_dot(&lhs, &rhs);
+
+    assert_eq!(result.shape(), &[3, 4, 6]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn dot_3d_by_2d_non_contiguous()
+{
+    // Slice with stride 2 to get a non-contiguous layout.
+    let base: Array3<f64> = ArrayBuilder::new((6, 4, 5)).build();
+    let lhs = base.slice(s![..;2, .., ..]).to_owned();
+    let rhs: Array2<f64> = ArrayBuilder::new((5, 7)).build();
+
+    let result = lhs.dot(&rhs);
+    let expected = reference_nd_dot(&lhs, &rhs);
+
+    assert_eq!(result.shape(), &[3, 4, 7]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn dot_3d_by_2d_integer()
+{
+    let lhs: Array3<i32> = ArrayBuilder::new((2, 3, 4)).build();
+    let rhs: Array2<i32> = ArrayBuilder::new((4, 5)).build();
+
+    let result = lhs.dot(&rhs);
+    let expected = reference_nd_dot(&lhs, &rhs);
+
+    assert_eq!(result.shape(), &[2, 3, 5]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+#[should_panic(expected = "are not compatible for nd dot")]
+fn dot_3d_by_2d_shape_mismatch()
+{
+    let lhs: Array3<f64> = Array3::zeros((3, 4, 5));
+    let rhs: Array2<f64> = Array2::zeros((6, 7));
+    let _ = lhs.dot(&rhs);
+}
+
+#[test]
+fn dot_4d_by_2d()
+{
+    let lhs: Array4<f64> = ArrayBuilder::new((2, 3, 4, 5)).build();
+    let rhs: Array2<f64> = ArrayBuilder::new((5, 6)).build();
+
+    let result = lhs.dot(&rhs);
+    let expected = reference_nd_dot(&lhs, &rhs);
+
+    assert_eq!(result.shape(), &[2, 3, 4, 6]);
+    assert_eq!(result, expected);
+}
+
+// The shapes here match the NumPy example from issue #1587.
+#[test]
+fn dot_5d_by_2d()
+{
+    let lhs: Array5<f64> =
+        Array5::from_shape_vec((3, 2, 5, 9, 12), (0..3 * 2 * 5 * 9 * 12).map(|x| x as f64).collect()).unwrap();
+    let rhs: Array2<f64> = Array2::from_shape_vec((12, 13), (0..12 * 13).map(|x| x as f64).collect()).unwrap();
+
+    let result = lhs.dot(&rhs);
+    let expected = reference_nd_dot(&lhs, &rhs);
+
+    assert_eq!(result.shape(), &[3, 2, 5, 9, 13]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn dot_6d_by_2d()
+{
+    let lhs: Array6<f64> =
+        Array6::from_shape_vec((2, 2, 2, 2, 2, 3), (0..2usize.pow(5) * 3).map(|x| x as f64).collect()).unwrap();
+    let rhs: Array2<f64> = Array2::from_shape_vec((3, 4), (0..12).map(|x| x as f64).collect()).unwrap();
+
+    let result = lhs.dot(&rhs);
+    let expected = reference_nd_dot(&lhs, &rhs);
+
+    assert_eq!(result.shape(), &[2, 2, 2, 2, 2, 4]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn dot_dyn_3d_by_2d()
+{
+    let lhs: ArrayD<f64> = ArrayD::from_shape_vec(IxDyn(&[3, 4, 5]), (0..60).map(|x| x as f64).collect()).unwrap();
+    let rhs: Array2<f64> = ArrayBuilder::new((5, 6)).build();
+
+    let result = lhs.dot(&rhs);
+    assert_eq!(result.shape(), &[3, 4, 6]);
+
+    let lhs_fixed: Array3<f64> = lhs.into_dimensionality::<Ix3>().unwrap();
+    let expected = lhs_fixed.dot(&rhs);
+    assert_eq!(result.into_dimensionality::<Ix3>().unwrap(), expected);
+}
+
+#[test]
+fn dot_dyn_5d_by_2d()
+{
+    let lhs: ArrayD<f64> =
+        ArrayD::from_shape_vec(IxDyn(&[3, 2, 5, 9, 12]), (0..3 * 2 * 5 * 9 * 12).map(|x| x as f64).collect()).unwrap();
+    let rhs: Array2<f64> = Array2::from_shape_vec((12, 13), (0..12 * 13).map(|x| x as f64).collect()).unwrap();
+
+    let result = lhs.dot(&rhs);
+    assert_eq!(result.shape(), &[3, 2, 5, 9, 13]);
+
+    let lhs_fixed: Array5<f64> = lhs.into_dimensionality::<Ix5>().unwrap();
+    let expected: Array5<f64> = lhs_fixed.dot(&rhs);
+    assert_eq!(result.into_dimensionality::<Ix5>().unwrap(), expected);
+}
+
+#[test]
+fn dot_dyn_3d_by_2d_non_contiguous()
+{
+    // Slice with stride 2 to get a non-contiguous layout.
+    let base: Array3<f64> = ArrayBuilder::new((6, 4, 5)).build();
+    let lhs = base.slice(s![..;2, .., ..]).into_dyn();
+    let rhs: Array2<f64> = ArrayBuilder::new((5, 7)).build();
+
+    let result = lhs.dot(&rhs);
+    assert_eq!(result.shape(), &[3, 4, 7]);
+
+    let lhs_fixed: ArrayView3<f64> = lhs.into_dimensionality::<Ix3>().unwrap();
+    let expected = lhs_fixed.dot(&rhs);
+    assert_eq!(result.into_dimensionality::<Ix3>().unwrap(), expected);
+}
+
+#[test]
+#[should_panic(expected = "are not compatible for nd dot")]
+fn dot_dyn_shape_mismatch()
+{
+    let lhs: ArrayD<f64> = ArrayD::zeros(IxDyn(&[3, 4, 5]));
+    let rhs: Array2<f64> = Array2::zeros((6, 7));
+    let _ = lhs.dot(&rhs);
 }

@@ -57,10 +57,7 @@ where D: Dimension
     #[inline]
     fn next(&mut self) -> Option<Self::Item>
     {
-        let index = match self.index {
-            None => return None,
-            Some(ref ix) => ix.clone(),
-        };
+        let index = self.index.as_ref()?.clone();
         self.index = self.dim.next_for(index.clone());
         Some(index.into_pattern())
     }
