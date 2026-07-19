@@ -153,7 +153,7 @@ where D: Dimension
     /// consumes `self` and produces views with lifetimes matching that of
     /// `self`.
     ///
-    /// See [*Slicing*](#slicing) for full documentation. See also
+    /// See [*Slicing*](ArrayBase#slicing) for full documentation. See also
     /// [`MultiSliceArg`], [`s!`], [`SliceArg`](crate::SliceArg), and
     /// [`SliceInfo`](crate::SliceInfo).
     ///

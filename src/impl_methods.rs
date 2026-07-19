@@ -513,7 +513,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
     /// Return a sliced view of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
+    /// See [*Slicing*](ArrayBase#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
@@ -527,7 +527,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
     /// Return a sliced read-write view of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
+    /// See [*Slicing*](ArrayBase#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
@@ -541,7 +541,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
     /// Return multiple disjoint, sliced, mutable views of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation. See also
+    /// See [*Slicing*](ArrayBase#slicing) for full documentation. See also
     /// [`MultiSliceArg`], [`s!`], [`SliceArg`], and
     /// [`SliceInfo`](crate::SliceInfo).
     ///
@@ -640,7 +640,7 @@ impl<A, D: Dimension> LayoutRef<A, D>
     /// [`.slice_move()`]: ArrayBase::slice_move
     /// [`.index_axis_move()`]: ArrayBase::index_axis_move
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
+    /// See [*Slicing*](ArrayBase#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** in the following cases:
@@ -995,7 +995,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     /// Returns a view restricted to `index` along the axis, with the axis
     /// removed.
     ///
-    /// See [*Subviews*](#subviews) for full documentation.
+    /// See [*Subviews*](ArrayBase#subviews) for full documentation.
     ///
     /// **Panics** if `axis` or `index` is out of bounds.
     ///
@@ -1315,7 +1315,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
     ///
     /// Iterator element is `ArrayView<A, D::Smaller>` (read-only array view).
     ///
-    /// See [*Subviews*](#subviews) for full documentation.
+    /// See [*Subviews*](ArrayBase#subviews) for full documentation.
     ///
     /// **Panics** if `axis` is out of bounds.
     ///
