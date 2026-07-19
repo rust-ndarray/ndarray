@@ -10,7 +10,7 @@ use std::fmt;
 
 use ndarray_rand::RandomExt;
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 
 use ndarray::linalg::general_mat_mul;
 use ndarray::prelude::*;
@@ -86,7 +86,7 @@ where
 #[test]
 fn accurate_eye_f32()
 {
-    let rng = &mut SmallRng::from_os_rng();
+    let rng = &mut SmallRng::from_rng(&mut rand::rng());
     for i in 0..20 {
         let eye = Array::eye(i);
         for j in 0..20 {
@@ -114,7 +114,7 @@ fn accurate_eye_f32()
 #[test]
 fn accurate_eye_f64()
 {
-    let rng = &mut SmallRng::from_os_rng();
+    let rng = &mut SmallRng::from_rng(&mut rand::rng());
     let abs_tol = 1e-15;
     for i in 0..20 {
         let eye = Array::eye(i);
@@ -209,7 +209,7 @@ where
     A: fmt::Debug,
 {
     // pick a few random sizes
-    let mut rng = SmallRng::from_os_rng();
+    let mut rng = SmallRng::from_rng(&mut rand::rng());
     for i in 0..20 {
         let (c, reference) = random_matrix_mul(&mut rng, i > 10, use_general, gen::<A, _>);
 
@@ -241,7 +241,7 @@ where
     A: fmt::Debug,
 {
     // pick a few random sizes
-    let mut rng = SmallRng::from_os_rng();
+    let mut rng = SmallRng::from_rng(&mut rand::rng());
     for i in 0..20 {
         let (c, reference) = random_matrix_mul(&mut rng, i > 10, true, gen_complex::<A, _>);
 
@@ -259,7 +259,7 @@ where
 fn accurate_mul_with_column_f64()
 {
     // pick a few random sizes
-    let rng = &mut SmallRng::from_os_rng();
+    let rng = &mut SmallRng::from_rng(&mut rand::rng());
     for i in 0..10 {
         let m = rng.random_range(1..128);
         let k = rng.random_range(1..350);

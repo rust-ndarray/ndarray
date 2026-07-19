@@ -12,7 +12,7 @@
 //!
 //! ## Note
 //!
-//! `ndarray-rand` depends on [`rand` 0.9][rand].
+//! `ndarray-rand` depends on [`rand` 0.10][rand].
 //!
 //! [`rand`][rand] and [`rand_distr`][rand_distr]
 //! are re-exported as sub-modules, [`ndarray_rand::rand`](rand)
@@ -20,8 +20,8 @@
 //! You can use these submodules for guaranteed version compatibility or
 //! convenience.
 //!
-//! [rand]: https://docs.rs/rand/0.9
-//! [rand_distr]: https://docs.rs/rand_distr/0.5
+//! [rand]: https://docs.rs/rand/0.10
+//! [rand_distr]: https://docs.rs/rand_distr/0.6
 //!
 //! If you want to use a random number generator or distribution from another crate
 //! with `ndarray-rand`, you need to make sure that the other crate also depends on the

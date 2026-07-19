@@ -306,7 +306,7 @@ use std::iter::FromIterator;
 
 fn main() {
     // Or you may use ndarray_rand crate to generate random arrays
-    // let a = Array::random((2, 5), Uniform::new(0., 10.));
+    // let a = Array::random((2, 5), Uniform::new(0., 10.).unwrap());
     
     let a = array![
         [3., 7., 3., 4.],
