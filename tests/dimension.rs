@@ -2,7 +2,7 @@
 
 use defmac::defmac;
 
-use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, IxDyn, RemoveAxis};
+use ndarray::{arr2, ArcArray, Array, Axis, Dim, Dimension, Ix0, Ix2, IxDyn, RemoveAxis};
 
 use std::hash::{Hash, Hasher};
 
@@ -359,4 +359,22 @@ fn test_all_ndindex()
     ndindex!(10, 4, 3, 2);
     ndindex!(10, 4, 3, 2, 2);
     ndindex!(10, 4, 3, 2, 2, 2);
+}
+
+#[test]
+fn from_slice()
+{
+    assert_eq!(Ix0::from_slice(&[]), Some(Dim([])));
+    assert_eq!(Ix0::from_slice(&[1]), None);
+
+    assert_eq!(Ix2::from_slice(&[2, 3]), Some(Dim([2, 3])));
+    assert_eq!(Ix2::from_slice(&[2]), None);
+    assert_eq!(Ix2::from_slice(&[2, 3, 4]), None);
+
+    assert_eq!(IxDyn::from_slice(&[]), Some(IxDyn(&[])));
+    assert_eq!(IxDyn::from_slice(&[2, 3, 4, 5]), Some(IxDyn(&[2, 3, 4, 5])));
+
+    assert_eq!(Ix2::from_dimension(&IxDyn(&[2, 3])), Some(Dim([2, 3])));
+    assert_eq!(Ix2::from_dimension(&IxDyn(&[2, 3, 4])), None);
+    assert_eq!(IxDyn::from_dimension(&Dim([2, 3])), Some(IxDyn(&[2, 3])));
 }
