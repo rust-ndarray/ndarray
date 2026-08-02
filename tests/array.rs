@@ -2241,6 +2241,14 @@ fn test_view_from_shape_ptr()
     assert_eq!(view, aview2(&[[0, 0, 2], [3, 4, 6]]));
 }
 
+#[test]
+fn test_view_mut_from_shape_ptr_empty_zero_strides()
+{
+    let ptr = std::ptr::dangling_mut::<f64>();
+    let view = unsafe { ArrayViewMut2::from_shape_ptr((2, 0).strides((0, 0)), ptr) };
+    assert_eq!(view.shape(), &[2, 0]);
+}
+
 #[should_panic(expected = "Unsupported")]
 #[cfg(debug_assertions)]
 #[test]

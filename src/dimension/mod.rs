@@ -57,6 +57,10 @@ pub fn stride_offset(n: Ix, stride: Ix) -> isize
 /// possible offset along the preceding axes. (Axes of length ≤1 are ignored.)
 pub(crate) fn dim_stride_overlap<D: Dimension>(dim: &D, strides: &D) -> bool
 {
+    if dim.slice().contains(&0) {
+        return false;
+    }
+
     let order = strides._fastest_varying_stride_order();
     let mut sum_prev_offsets = 0;
     for &index in order.slice() {
