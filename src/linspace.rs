@@ -70,12 +70,29 @@ impl<F> ExactSizeIterator for Linspace<F> where Linspace<F>: Iterator {}
 
 /// Return an iterator of evenly spaced floats.
 ///
-/// The `Linspace` has `n` elements from `a` to `b` (inclusive).
+/// The `Linspace` produces `n` elements over the specified `range`. If the range is exclusive, the iterator will not include the end bound.
 ///
 /// The iterator element type is `F`, where `F` must implement [`Float`], e.g.
 /// [`f32`] or [`f64`].
 ///
-/// **Panics** if converting `n` to type `F` fails.
+/// ## Panics
+/// If converting `n` to type `F` fails.
+///
+/// ## Examples
+///
+/// An exclusive range (0..10)
+/// ```
+/// # use ndarray::linspace;
+/// let a: Vec<_> = linspace(0.0..10.0, 5).collect();
+/// assert_eq!(a, [0.0, 2.0, 4.0, 6.0, 8.0]);
+/// ```
+///
+/// An inclusive range (1..=9)
+/// ```
+/// # use ndarray::linspace;
+/// let a: Vec<_> = linspace(1.0..=9.0, 5).collect();
+/// assert_eq!(a, [1.0, 3.0, 5.0, 7.0, 9.0]);
+/// ```
 #[inline]
 pub fn linspace<R, F>(range: R, n: usize) -> Linspace<F>
 where
