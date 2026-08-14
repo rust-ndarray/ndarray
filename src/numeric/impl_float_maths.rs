@@ -20,12 +20,12 @@ macro_rules! boolean_ops {
         $(#[$meta2])*
         #[must_use = "method returns a new boolean value and does not mutate the original value"]
         pub fn $all(&self) -> bool {
-            $crate::Zip::from(self).all(|&elt| !elt.$func())
+            $crate::Zip::from(self).all(|&elt| elt.$func())
         }
         $(#[$meta3])*
         #[must_use = "method returns a new boolean value and does not mutate the original value"]
         pub fn $any(&self) -> bool {
-            !self.$all()
+            $crate::Zip::from(self).any(|&elt| elt.$func())
         }
     };
 }
