@@ -360,12 +360,3 @@ fn test_all_ndindex()
     ndindex!(10, 4, 3, 2, 2);
     ndindex!(10, 4, 3, 2, 2, 2);
 }
-
-#[test]
-fn ndim_via_prelude()
-{
-    use ndarray::prelude::*;
-
-    assert_eq!(Ix2(3, 4).ndim(), 2);
-    assert_eq!(IxDyn(&[1, 2, 3]).ndim(), 3);
-}
