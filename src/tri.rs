@@ -159,8 +159,6 @@ where
 #[cfg(test)]
 mod tests
 {
-    use core::isize;
-
     use crate::{array, dimension, Array0, Array1, Array2, Array3, ShapeBuilder};
     use alloc::vec;
 

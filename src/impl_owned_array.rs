@@ -1,5 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::num::NonZeroUsize;
 use core::ptr::NonNull;
 use std::mem;
 use std::mem::MaybeUninit;
@@ -36,22 +37,21 @@ impl<A> Array<A, Ix0>
     /// ```
     pub fn into_scalar(self) -> A
     {
-        let size = mem::size_of::<A>();
-        if size == 0 {
+        let size = match NonZeroUsize::new(mem::size_of::<A>()) {
+            Some(size) => size,
             // Any index in the `Vec` is fine since all elements are identical.
-            self.data.into_vec().remove(0)
-        } else {
-            // Find the index in the `Vec` corresponding to `self.ptr`.
-            // (This is necessary because the element in the array might not be
-            // the first element in the `Vec`, such as if the array was created
-            // by `array![1, 2, 3, 4].slice_move(s![2])`.)
-            let first = self.parts.ptr.as_ptr() as usize;
-            let base = self.data.as_ptr() as usize;
-            let index = (first - base) / size;
-            debug_assert_eq!((first - base) % size, 0);
-            // Remove the element at the index and return it.
-            self.data.into_vec().remove(index)
-        }
+            None => return self.data.into_vec().remove(0),
+        };
+        // Find the index in the `Vec` corresponding to `self.ptr`.
+        // (This is necessary because the element in the array might not be
+        // the first element in the `Vec`, such as if the array was created
+        // by `array![1, 2, 3, 4].slice_move(s![2])`.)
+        let first = self.parts.ptr.as_ptr() as usize;
+        let base = self.data.as_ptr() as usize;
+        let index = (first - base) / size;
+        debug_assert_eq!((first - base) % size.get(), 0);
+        // Remove the element at the index and return it.
+        self.data.into_vec().remove(index)
     }
 }
 
