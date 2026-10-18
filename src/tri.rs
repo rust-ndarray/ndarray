@@ -55,11 +55,18 @@ where
             return self.to_owned();
         }
 
-        // Performance optimization for F-order arrays.
-        // C-order array check prevents infinite recursion in edge cases like [[1]].
+        // Performance optimization for 2D F-order arrays: swap axes so the callee
+        // hits the C-contiguous path, then swap back to preserve F-order.
+        // Restricting to ndim == 2 avoids infinite recursion on higher-D views that
+        // remain F-and-not-C after swapping the last two axes (see #1615).
+        // The C-order check still guards the both-C-and-F `[[1]]` edge case.
         // k-size check prevents underflow when k == isize::MIN
         let n = self.ndim();
-        if is_layout_f(self._dim(), self._strides()) && !is_layout_c(self._dim(), self._strides()) && k > isize::MIN {
+        if n == 2
+            && is_layout_f(self._dim(), self._strides())
+            && !is_layout_c(self._dim(), self._strides())
+            && k > isize::MIN
+        {
             let mut x = self.view();
             x.swap_axes(n - 2, n - 1);
             let mut tril = x.tril(-k);
@@ -120,11 +127,18 @@ where
             return self.to_owned();
         }
 
-        // Performance optimization for F-order arrays.
-        // C-order array check prevents infinite recursion in edge cases like [[1]].
+        // Performance optimization for 2D F-order arrays: swap axes so the callee
+        // hits the C-contiguous path, then swap back to preserve F-order.
+        // Restricting to ndim == 2 avoids infinite recursion on higher-D views that
+        // remain F-and-not-C after swapping the last two axes (see #1615).
+        // The C-order check still guards the both-C-and-F `[[1]]` edge case.
         // k-size check prevents underflow when k == isize::MIN
         let n = self.ndim();
-        if is_layout_f(self._dim(), self._strides()) && !is_layout_c(self._dim(), self._strides()) && k > isize::MIN {
+        if n == 2
+            && is_layout_f(self._dim(), self._strides())
+            && !is_layout_c(self._dim(), self._strides())
+            && k > isize::MIN
+        {
             let mut x = self.view();
             x.swap_axes(n - 2, n - 1);
             let mut triu = x.triu(-k);
@@ -159,7 +173,7 @@ where
 #[cfg(test)]
 mod tests
 {
-    use crate::{array, dimension, Array0, Array1, Array2, Array3, ShapeBuilder};
+    use crate::{array, dimension, Array0, Array1, Array2, Array3, Axis, ShapeBuilder};
     use alloc::vec;
 
     #[test]
@@ -363,5 +377,20 @@ mod tests
         assert_eq!(x.tril(isize::MIN), z);
         assert_eq!(x.triu(isize::MAX), z);
         assert_eq!(x.tril(isize::MAX), x);
+    }
+
+    #[test]
+    fn test_f_view_after_insert_axis_does_not_recurse()
+    {
+        // Regression for https://github.com/rust-ndarray/ndarray/issues/1615:
+        // transpose of a C-order (3, 4) array, then insert_axis(Axis(2)), yields a
+        // (4, 3, 1) view that is F-and-not-C both before and after swapping the last
+        // two axes. The F-order shortcut must not recurse into triu/tril.
+        let a: Array2<f64> = Array2::from_shape_fn((3, 4), |(i, j)| (i * 4 + j) as f64);
+        let widened = a.t().insert_axis(Axis(2));
+        let standard = widened.as_standard_layout();
+
+        assert_eq!(widened.triu(0), standard.triu(0));
+        assert_eq!(widened.tril(0), standard.tril(0));
     }
 }
