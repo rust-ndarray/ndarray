@@ -5,6 +5,7 @@
 // `$any` predicate rode on the double negation, so `is_all_nan` returned `true`
 // for an all-finite array. These tests pin the correct behavior for both the
 // NaN and infinite families.
+#![cfg(feature = "std")]
 
 use ndarray::array;
 
