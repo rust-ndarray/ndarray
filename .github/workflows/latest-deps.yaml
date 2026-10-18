@@ -1,12 +1,9 @@
 name: Check Latest Dependencies
 on:
   schedule:
-    # Chosen so that it runs right before the international date line experiences the weekend.
-    # Since we're open source, that means globally we should be aware of it right when we have the most
-    # time to fix it.
-    #
-    # Sorry if this ruins your weekend, future maintainer...
-    - cron: '0 12 * * FRI'
+    # Daily, so that new Rust releases (lints, deprecations) or dependency releases that break
+    # the build are caught before they show up as failures on unrelated PRs.
+    - cron: '0 12 * * *'
   workflow_dispatch: # For running manually
   pull_request:
     paths:
@@ -20,6 +17,24 @@ env:
   MSRV: 1.87.0
 
 jobs:
+  latest_clippy_stable:
+    runs-on: ubuntu-latest
+    name: Check Clippy with Latest Dependencies on Stable
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: Ensure latest dependencies
+        run: cargo update
+      - name: Run Clippy
+        run: cargo clippy -F "$FEATURES"
+
   latest_deps_stable:
     runs-on: ubuntu-latest
     name: Check Latest Dependencies on Stable
