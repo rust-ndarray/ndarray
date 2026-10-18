@@ -1,0 +1,31 @@
+# `ci.yaml` skips PRs that only touch the paths below, which would leave its required
+# `conclusion` check pending forever. This reports `conclusion` for those PRs instead.
+# Keep `paths` in sync with `paths-ignore` in `ci.yaml`.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/latest-deps.yaml'
+
+name: Continuous integration (skipped)
+
+permissions:
+  pull-requests: read
+
+jobs:
+  conclusion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that only CI-ignored files changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IGNORED: |
+            .github/workflows/latest-deps.yaml
+        run: |
+          other=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --jq '.[].filename' \
+            | grep -vxF -f <(printf '%s' "$IGNORED") || true)
+          if [ -n "$other" ]; then
+            echo "This PR also changes files that ci.yaml checks, so its conclusion is the one that counts:"
+            echo "$other"
+            exit 1
+          fi
+          echo "Only files ignored by ci.yaml changed."
