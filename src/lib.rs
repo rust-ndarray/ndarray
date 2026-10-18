@@ -13,7 +13,6 @@
     clippy::deref_addrof,
     clippy::manual_map, // is not an error
     clippy::while_let_on_iterator, // is not an error
-    clippy::from_iter_instead_of_collect, // using from_iter is good style
     clippy::incompatible_msrv, // false positive PointerExt::offset
 )]
 #![doc(test(attr(deny(warnings))))]

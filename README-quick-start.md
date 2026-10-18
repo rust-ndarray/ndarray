@@ -108,7 +108,6 @@ Basic operations on arrays are all element-wise; you need to use specific method
 ```rust
 use ndarray::prelude::*;
 use ndarray::Array;
-use std::f64::INFINITY as inf;
 
 fn main() {
     let a = array![
@@ -119,7 +118,7 @@ fn main() {
     assert_eq!(&a + &b, array![[10., 21., 32., 43.,]]);  // Allocates a new array. Note the explicit `&`.
     assert_eq!(&a - &b, array![[10., 19., 28., 37.,]]);
     assert_eq!(&a * &b, array![[0., 20., 60., 120.,]]);
-    assert_eq!(&a / &b, array![[inf, 20., 15., 13.333333333333334,]]);
+    assert_eq!(&a / &b, array![[f64::INFINITY, 20., 15., 13.333333333333334,]]);
 }
 ```
 
