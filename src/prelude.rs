@@ -36,6 +36,9 @@ pub use crate::{
 pub use crate::{Axis, Dim, Dimension};
 
 #[doc(no_inline)]
+pub use crate::layout::ranked::Ranked;
+
+#[doc(no_inline)]
 pub use crate::{ArrayRef0, ArrayRef1, ArrayRef2, ArrayRef3, ArrayRef4, ArrayRef5, ArrayRef6, ArrayRefD};
 
 #[doc(no_inline)]
