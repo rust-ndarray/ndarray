@@ -375,18 +375,24 @@ pub trait Dimension:
         IxDyn(self.slice())
     }
 
+    /// Creates a dimension of this type from a slice of axis lengths.
+    ///
+    /// Returns `None` if the slice length is incompatible with this
+    /// dimension type's dimensionality
+    fn from_slice(ix: &[Ix]) -> Option<Self>
+    {
+        if Self::NDIM.is_some_and(|n| n != ix.len()) {
+            return None;
+        }
+        let mut s = Self::zeros(ix.len());
+        s.slice_mut().copy_from_slice(ix);
+        Some(s)
+    }
+
     #[doc(hidden)]
     fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self>
     {
-        let mut s = Self::default();
-        if s.ndim() == d.ndim() {
-            for i in 0..d.ndim() {
-                s[i] = d[i];
-            }
-            Some(s)
-        } else {
-            None
-        }
+        Self::from_slice(d.slice())
     }
 
     #[doc(hidden)]
@@ -583,15 +589,6 @@ impl Dimension for Dim<[Ix; 1]>
     fn try_remove_axis(&self, axis: Axis) -> Self::Smaller
     {
         self.remove_axis(axis)
-    }
-
-    fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self>
-    {
-        if 1 == d.ndim() {
-            Some(Ix1(d[0]))
-        } else {
-            None
-        }
     }
     private_impl! {}
 }
@@ -1003,9 +1000,9 @@ impl Dimension for IxDyn
         }
     }
 
-    fn from_dimension<D2: Dimension>(d: &D2) -> Option<Self>
+    fn from_slice(ix: &[Ix]) -> Option<Self>
     {
-        Some(IxDyn(d.slice()))
+        Some(IxDyn(ix))
     }
 
     fn into_dyn(self) -> IxDyn
