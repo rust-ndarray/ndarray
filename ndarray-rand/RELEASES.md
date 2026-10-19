@@ -1,6 +1,10 @@
 Recent Changes
 --------------
 
+- 0.17.0
+
+  - Bump `rand` to 0.10.0 and `rand_distr` to 0.6.0
+
 - 0.16.0
 
   - Require ndarray 0.17.1
