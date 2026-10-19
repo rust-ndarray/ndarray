@@ -850,17 +850,17 @@ mod test
     #[test]
     fn max_abs_offset_check_overflow_examples()
     {
-        let dim = (1, ::std::isize::MAX as usize, 1).into_dimension();
+        let dim = (1, isize::MAX as usize, 1).into_dimension();
         let strides = (1, 1, 1).into_dimension();
         max_abs_offset_check_overflow::<u8, _>(&dim, &strides).unwrap();
-        let dim = (1, ::std::isize::MAX as usize, 2).into_dimension();
+        let dim = (1, isize::MAX as usize, 2).into_dimension();
         let strides = (1, 1, 1).into_dimension();
         max_abs_offset_check_overflow::<u8, _>(&dim, &strides).unwrap_err();
         let dim = (0, 2, 2).into_dimension();
-        let strides = (1, ::std::isize::MAX as usize, 1).into_dimension();
+        let strides = (1, isize::MAX as usize, 1).into_dimension();
         max_abs_offset_check_overflow::<u8, _>(&dim, &strides).unwrap_err();
         let dim = (0, 2, 2).into_dimension();
-        let strides = (1, ::std::isize::MAX as usize / 4, 1).into_dimension();
+        let strides = (1, isize::MAX as usize / 4, 1).into_dimension();
         max_abs_offset_check_overflow::<i32, _>(&dim, &strides).unwrap_err();
     }
 

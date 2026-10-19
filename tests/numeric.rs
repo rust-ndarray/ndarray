@@ -5,7 +5,6 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{arr0, arr1, arr2, array, aview1, Array, Array1, Array2, Array3, Axis};
-use std::f64;
 
 #[test]
 fn test_mean_with_nan_values()
@@ -176,7 +175,7 @@ fn var_too_large_ddof()
 fn var_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.var(::std::f64::NAN);
+    let v = a.var(f64::NAN);
     assert!(v.is_nan());
 }
 
@@ -219,7 +218,7 @@ fn std_too_large_ddof()
 fn std_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.std(::std::f64::NAN);
+    let v = a.std(f64::NAN);
     assert!(v.is_nan());
 }
 
@@ -375,7 +374,7 @@ fn var_axis_too_large_ddof()
 fn var_axis_nan_ddof()
 {
     let a = Array2::<f64>::zeros((2, 3));
-    let v = a.var_axis(Axis(1), ::std::f64::NAN);
+    let v = a.var_axis(Axis(1), f64::NAN);
     assert_eq!(v.shape(), &[2]);
     v.mapv(|x| assert!(x.is_nan()));
 }
