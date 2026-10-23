@@ -78,6 +78,40 @@ fn test_axis_chunks_iter()
 }
 
 #[test]
+fn test_exact_chunks()
+{
+    let a = Array::from_iter(0..100)
+        .into_shape_with_order((10, 10))
+        .unwrap();
+    let s: i32 = a
+        .exact_chunks((2, 5))
+        .into_par_iter()
+        .map(|chunk| chunk.sum())
+        .sum();
+    assert_eq!(s, a.sum());
+}
+
+#[test]
+fn test_exact_chunks_mut()
+{
+    let mut a = Array2::<usize>::zeros((7, 8));
+    a.exact_chunks_mut((2, 3))
+        .into_par_iter()
+        .for_each(|mut chunk| chunk.fill(1));
+
+    let ans = array![
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    assert_eq!(a, ans);
+}
+
+#[test]
 #[cfg(feature = "approx")]
 fn test_axis_chunks_iter_mut()
 {

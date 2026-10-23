@@ -13,9 +13,11 @@ use crate::iter::AxisChunksIter;
 use crate::iter::AxisChunksIterMut;
 use crate::iter::AxisIter;
 use crate::iter::AxisIterMut;
+use crate::iter::ExactChunks;
+use crate::iter::ExactChunksMut;
 use crate::split_at::SplitPreference;
 use crate::Dimension;
-use crate::{ArrayView, ArrayViewMut};
+use crate::{ArrayView, ArrayViewMut, Axis};
 
 /// Parallel iterator wrapper.
 #[derive(Copy, Clone, Debug)]
@@ -224,6 +226,117 @@ par_iter_view_wrapper!(ArrayView, [Sync]);
 par_iter_view_wrapper!(ArrayViewMut, [Sync + Send]);
 
 use crate::{FoldWhile, NdProducer, Zip};
+
+macro_rules! par_ndproducer_wrapper {
+    // thread_bounds are either Sync or Send + Sync
+    ($producer_name:ident, [$($thread_bounds:tt)*]) => {
+    /// Requires crate feature `rayon`.
+    impl<'a, A, D> IntoParallelIterator for $producer_name<'a, A, D>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <Self as NdProducer>::Item;
+        type Iter = Parallel<Self>;
+        fn into_par_iter(self) -> Self::Iter {
+            Parallel {
+                iter: self,
+                min_len: DEFAULT_MIN_LEN,
+            }
+        }
+    }
+
+    impl<'a, A, D> ParallelIterator for Parallel<$producer_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <$producer_name<'a, A, D> as NdProducer>::Item;
+        fn drive_unindexed<C>(self, consumer: C) -> C::Result
+            where C: UnindexedConsumer<Self::Item>
+        {
+            bridge_unindexed(ParallelProducer(self.iter, self.min_len), consumer)
+        }
+
+        fn opt_len(&self) -> Option<usize> {
+            Some(self.iter.raw_dim().size())
+        }
+    }
+
+    impl<'a, A, D> Parallel<$producer_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        /// Sets the minimum number of chunks desired to process in each job. This will not be
+        /// split any smaller than this length, but of course a producer could already be smaller
+        /// to begin with.
+        ///
+        /// ***Panics*** if `min_len` is zero.
+        pub fn with_min_len(self, min_len: usize) -> Self {
+            assert_ne!(min_len, 0, "Minimum number of elements must at least be one to avoid splitting off empty tasks.");
+
+            Self {
+                min_len,
+                ..self
+            }
+        }
+    }
+
+    impl<'a, A, D> UnindexedProducer for ParallelProducer<$producer_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <$producer_name<'a, A, D> as NdProducer>::Item;
+        fn split(self) -> (Self, Option<Self>) {
+            let dim = self.0.raw_dim();
+            if dim.size() <= self.1 {
+                return (self, None)
+            }
+
+            let Some((axis, &len)) = dim
+                .slice()
+                .iter()
+                .enumerate()
+                .max_by_key(|&(_, len)| len)
+            else {
+                return (self, None)
+            };
+            if len <= 1 {
+                return (self, None)
+            }
+
+            let (a, b) = self.0.split_at(Axis(axis), len / 2);
+            (ParallelProducer(a, self.1), Some(ParallelProducer(b, self.1)))
+        }
+
+        fn fold_with<F>(self, folder: F) -> F
+            where F: Folder<Self::Item>,
+        {
+            Zip::from(self.0).fold_while(folder, |mut folder, elt| {
+                folder = folder.consume(elt);
+                if folder.full() {
+                    FoldWhile::Done(folder)
+                } else {
+                    FoldWhile::Continue(folder)
+                }
+            }).into_inner()
+        }
+    }
+
+    impl<'a, A, D> IntoIterator for ParallelProducer<$producer_name<'a, A, D>>
+        where D: Dimension,
+              A: $($thread_bounds)*,
+    {
+        type Item = <$producer_name<'a, A, D> as IntoIterator>::Item;
+        type IntoIter = <$producer_name<'a, A, D> as IntoIterator>::IntoIter;
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.into_iter()
+        }
+    }
+
+    };
+}
+
+par_ndproducer_wrapper!(ExactChunks, [Sync]);
+par_ndproducer_wrapper!(ExactChunksMut, [Send + Sync]);
 
 macro_rules! zip_impl {
     ($([$($p:ident)*],)+) => {

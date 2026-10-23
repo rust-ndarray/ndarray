@@ -15,6 +15,7 @@
 //! - [`ArrayViewMut`] `.into_par_iter()`
 //! - [`AxisIter`], [`AxisIterMut`] `.into_par_iter()`
 //! - [`AxisChunksIter`], [`AxisChunksIterMut`] `.into_par_iter()`
+//! - [`ExactChunks`], [`ExactChunksMut`] `.into_par_iter()`
 //! - [`Zip`] `.into_par_iter()`
 //!
 //! The following other parallelized methods exist:
@@ -94,6 +95,23 @@
 //! assert_eq!(shapes, [vec![3, 16], vec![1, 16]]);
 //! ```
 //!
+//! ## Exact chunks
+//!
+//! Use parallel `.exact_chunks()` to process only complete chunks of an array.
+//!
+//! ```
+//! use ndarray::Array;
+//! use ndarray::parallel::prelude::*;
+//!
+//! let a = Array::linspace(0.0..=63.0, 64).into_shape_with_order((8, 8)).unwrap();
+//! let sum: f64 = a.exact_chunks((2, 4))
+//!     .into_par_iter()
+//!     .map(|chunk| chunk.sum())
+//!     .sum();
+//!
+//! assert_eq!(sum, a.sum());
+//! ```
+//!
 //! ## Zip
 //!
 //! Use zip for lock step function application across several arrays
@@ -118,7 +136,7 @@
 //! ```
 
 #[allow(unused_imports)] // used by rustdoc links
-use crate::iter::{AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut};
+use crate::iter::{AxisChunksIter, AxisChunksIterMut, AxisIter, AxisIterMut, ExactChunks, ExactChunksMut};
 #[allow(unused_imports)] // used by rustdoc links
 use crate::{ArcArray, Array, ArrayBase, ArrayView, ArrayViewMut, Zip};
 
