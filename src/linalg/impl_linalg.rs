@@ -28,7 +28,7 @@ use num_complex::Complex;
 use num_complex::{Complex32 as c32, Complex64 as c64};
 
 #[cfg(feature = "blas")]
-use libc::c_int;
+use core::ffi::c_int;
 
 #[cfg(feature = "blas")]
 use cblas_sys as blas_sys;
