@@ -296,11 +296,11 @@ pub type Ixs = isize;
 /// + [Broadcasting](#broadcasting)
 /// + [Conversions](#conversions)
 /// + [Constructor Methods for Owned Arrays](#constructor-methods-for-owned-arrays)
-/// + [Methods For All Array Types](#methods-for-all-array-types)
-/// + [Methods For 1-D Arrays](#methods-for-1-d-arrays)
-/// + [Methods For 2-D Arrays](#methods-for-2-d-arrays)
-/// + [Methods for Dynamic-Dimensional Arrays](#methods-for-dynamic-dimensional-arrays)
-/// + [Numerical Methods for Arrays](#numerical-methods-for-arrays)
+/// + [Methods For All Array Types](LayoutRef#methods-for-all-array-types)
+/// + [Methods For 1-D Arrays](ArrayRef#methods-for-1-d-arrays)
+/// + [Methods For 2-D Arrays](ArrayRef#methods-for-2-d-arrays)
+/// + [Methods for Dynamic-Dimensional Arrays](LayoutRef#methods-for-dynamic-dimensional-arrays)
+/// + [Numerical Methods for Arrays](ArrayRef#numerical-methods-for-arrays)
 ///
 /// ## `Array`
 ///
@@ -1573,7 +1573,7 @@ pub struct RawRef<A, D>(LayoutRef<A, D>);
 /// See also:
 ///
 /// + [Constructor Methods for Owned Arrays](ArrayBase#constructor-methods-for-owned-arrays)
-/// + [Methods For All Array Types](ArrayBase#methods-for-all-array-types)
+/// + [Methods For All Array Types](LayoutRef#methods-for-all-array-types)
 pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 
 /// An array that owns its data uniquely.
@@ -1590,7 +1590,7 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 /// See also:
 ///
 /// + [Constructor Methods for Owned Arrays](ArrayBase#constructor-methods-for-owned-arrays)
-/// + [Methods For All Array Types](ArrayBase#methods-for-all-array-types)
+/// + [Methods For All Array Types](LayoutRef#methods-for-all-array-types)
 /// + Dimensionality-specific type aliases
 ///   [`Array1`],
 ///   [`Array2`],
