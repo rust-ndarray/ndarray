@@ -948,6 +948,41 @@ fn permuted_axes_oob()
 }
 
 #[test]
+fn test_rot90()
+{
+    let a = arr2(&[[1, 2, 3], [4, 5, 6]]);
+    assert_eq!(a.clone().rot90(1, (0, 1)), arr2(&[[3, 6], [2, 5], [1, 4]]));
+    assert_eq!(a.clone().rot90(2, (0, 1)), arr2(&[[6, 5, 4], [3, 2, 1]]));
+    assert_eq!(a.clone().rot90(3, (0, 1)), arr2(&[[4, 1], [5, 2], [6, 3]]));
+    assert_eq!(a.clone().rot90(4, (0, 1)), a);
+    assert_eq!(a.clone().rot90(0, (0, 1)), a);
+    // negative k rotates clockwise (k == -1 is the same as k == 3)
+    assert_eq!(a.clone().rot90(-1, (0, 1)), a.clone().rot90(3, (0, 1)));
+    // rotating in the reversed axis plane goes the opposite direction
+    assert_eq!(a.clone().rot90(1, (1, 0)), a.clone().rot90(3, (0, 1)));
+
+    // N-dimensional: rotation only affects the chosen plane
+    let b = Array3::<u8>::zeros((1, 2, 3));
+    assert_eq!(b.rot90(1, (0, 2)).shape(), &[3, 2, 1]);
+}
+
+#[test]
+#[should_panic]
+fn test_rot90_same_axis()
+{
+    let a = arr2(&[[1, 2], [3, 4]]);
+    a.rot90(1, (0, 0));
+}
+
+#[test]
+#[should_panic]
+fn test_rot90_oob()
+{
+    let a = arr2(&[[1, 2], [3, 4]]);
+    a.rot90(1, (0, 2));
+}
+
+#[test]
 fn standard_layout()
 {
     let mut a = arr2(&[[1., 2.], [3., 4.0]]);
