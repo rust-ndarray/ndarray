@@ -3310,16 +3310,18 @@ impl<A, D: Dimension> ArrayRef<A, D>
             panic!("Partition index {} is out of bounds for axis {} of length {}", kth, axis.0, axis_len);
         }
 
-        // Check if the first lane is contiguous
-        let is_contiguous = result
+        // Check if the first lane can be borrowed as a slice. A lane with a
+        // negative stride (e.g. along an inverted axis) is contiguous but can't.
+        let is_slice = result
             .lanes_mut(axis)
             .into_iter()
             .next()
             // This unwrap shouldn't cause panics because the array isn't empty
             .unwrap()
-            .is_contiguous();
+            .as_slice_mut()
+            .is_some();
 
-        if is_contiguous {
+        if is_slice {
             result.lanes_mut(axis).into_iter().for_each(|mut lane| {
                 lane.as_slice_mut().unwrap().select_nth_unstable(kth);
             });
@@ -3558,6 +3560,28 @@ mod tests
                 p_axis1[[row, 1]]
             );
         }
+    }
+
+    #[test]
+    fn test_partition_negative_stride()
+    {
+        // Lanes along an inverted axis are contiguous, but their stride is negative
+        let mut a = array![[7, 1, 5, 3], [2, 6, 0, 4]];
+        a.invert_axis(Axis(1));
+        let p = a.partition(1, Axis(1));
+        assert_eq!(p[[0, 1]], 3);
+        assert_eq!(p[[1, 1]], 2);
+        for lane in p.rows() {
+            assert!(lane[0] <= lane[1]);
+            assert!(lane.slice(s![2..]).iter().all(|&x| x >= lane[1]));
+        }
+
+        // Same for a reversed view
+        let a = arr1(&[3, 1, 4, 1, 5, 9, 2, 6]);
+        let p = a.slice(s![..;-1]).partition(3, Axis(0));
+        assert_eq!(p[3], 3);
+        assert!(p.slice(s![..3]).iter().all(|&x| x <= p[3]));
+        assert!(p.slice(s![4..]).iter().all(|&x| x >= p[3]));
     }
 
     #[test]
