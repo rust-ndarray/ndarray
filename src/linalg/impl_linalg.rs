@@ -157,6 +157,22 @@ unsafe fn blas_1d_params<A>(ptr: *const A, len: usize, stride: isize) -> (*const
 ///
 /// For two-dimensional arrays, the dot method computes the matrix
 /// multiplication.
+///
+/// For higher-dimensional arrays (3-D through 6-D, and dynamic-dimensional),
+/// `Dot<Ix2>` contracts the last axis of the left-hand side with the first
+/// axis of the right-hand side, following NumPy semantics.  For example, if
+/// `self` has shape *I* × *J* × *K* and `rhs` has shape *K* × *N*, the
+/// result has shape *I* × *J* × *N*.
+///
+/// ```
+/// use ndarray::{Array3, Array2};
+/// use ndarray::linalg::Dot;
+///
+/// let a = Array3::<f64>::zeros((3, 4, 5));
+/// let b = Array2::<f64>::zeros((5, 6));
+/// let c = a.dot(&b);
+/// assert_eq!(c.shape(), &[3, 4, 6]);
+/// ```
 pub trait Dot<Rhs: ?Sized>
 {
     /// The result of the operation.
@@ -221,6 +237,112 @@ impl_dots!(Ix1, Ix1);
 impl_dots!(Ix1, Ix2);
 impl_dots!(Ix2, Ix1);
 impl_dots!(Ix2, Ix2);
+
+/// Compute the dot product of an N-dimensional LHS array with a 2-D RHS matrix.
+///
+/// Contracts the last axis of `lhs` with the first axis of `rhs`.
+/// If `lhs` has shape *d₀ × d₁ × … × dₙ₋₁ × K* and `rhs` has shape
+/// *K × N*, the result has shape *d₀ × d₁ × … × dₙ₋₁ × N*.
+///
+/// Two paths are used internally:
+/// - **C-contiguous LHS**: the leading axes are flattened into a single
+///   2-D view (zero-copy) and delegated to the optimised 2-D `dot`.
+/// - **Non-contiguous LHS**: a result array is pre-allocated and filled
+///   in-place via recursive `general_mat_mul` calls (no intermediate copies).
+#[track_caller]
+fn nd_dot<A: LinalgScalar>(lhs: &ArrayRef<A, IxDyn>, rhs: &ArrayRef<A, Ix2>) -> Array<A, IxDyn>
+{
+    let ndim = lhs.ndim();
+    let k = lhs.shape()[ndim - 1];
+    let k2 = rhs.shape()[0];
+    let n = rhs.shape()[1];
+    if k != k2 {
+        panic!(
+            "shapes {:?} and {:?} are not compatible for nd dot \
+             (last axis of lhs must equal first axis of rhs)",
+            lhs.shape(),
+            rhs.shape()
+        );
+    }
+
+    let mut out_shape = lhs.shape().to_vec();
+    *out_shape.last_mut().unwrap() = n;
+
+    if lhs.is_standard_layout() {
+        // C-contiguous: to_shape returns a *view* (no copy of LHS data).
+        let rows = lhs.len() / k;
+        // unwrap: rows * k == lhs.len() by construction, so reshape always succeeds.
+        let lhs_2d = lhs.to_shape((rows, k)).unwrap();
+        let result_2d = lhs_2d.dot(rhs);
+        // unwrap: result_2d is a fresh C-contiguous owned array of the correct size.
+        result_2d.into_shape_with_order(IxDyn(&out_shape)).unwrap()
+    } else {
+        // Non-contiguous: pre-allocate and fill in-place to avoid whole-array copying.
+        let mut out = Array::zeros(IxDyn(&out_shape));
+        nd_dot_non_contiguous(&lhs.view(), &rhs.view(), &mut out.view_mut());
+        out
+    }
+}
+
+/// Recursive helper: writes the N-D × 2-D product directly into `out`
+/// using `general_mat_mul` at the 2-D base case.
+fn nd_dot_non_contiguous<A>(lhs: &ArrayRef<A, IxDyn>, rhs: &ArrayRef<A, Ix2>, out: &mut ArrayRef<A, IxDyn>)
+where A: LinalgScalar
+{
+    let ndim = lhs.ndim();
+    if ndim == 2 {
+        // unwrap: converting a 2-D ArrayView/ArrayViewMut to Ix2 always succeeds.
+        let lhs_2d = lhs.view().into_dimensionality::<Ix2>().unwrap();
+        let mut out_2d = out.view_mut().into_dimensionality::<Ix2>().unwrap();
+        general_mat_mul(A::one(), &lhs_2d, rhs, A::zero(), &mut out_2d);
+    } else {
+        Zip::from(lhs.view().axis_iter(Axis(0)))
+            .and(out.view_mut().axis_iter_mut(Axis(0)))
+            .for_each(|lhs_slice, mut out_slice| {
+                nd_dot_non_contiguous(&lhs_slice, rhs, &mut out_slice);
+            });
+    }
+}
+
+macro_rules! impl_dot_nd_ix2 {
+    ($dim:ty) => {
+        impl<A> Dot<ArrayRef<A, Ix2>> for ArrayRef<A, $dim>
+        where A: LinalgScalar
+        {
+            type Output = Array<A, $dim>;
+
+            #[track_caller]
+            fn dot(&self, rhs: &ArrayRef<A, Ix2>) -> Array<A, $dim>
+            {
+                let result_dyn = nd_dot(&self.view().into_dyn(), rhs);
+                // unwrap: nd_dot preserves the number of dimensions.
+                result_dyn.into_dimensionality::<$dim>().unwrap()
+            }
+        }
+
+        impl_dots!($dim, Ix2);
+    };
+}
+
+impl_dot_nd_ix2!(Ix3);
+impl_dot_nd_ix2!(Ix4);
+impl_dot_nd_ix2!(Ix5);
+impl_dot_nd_ix2!(Ix6);
+
+impl<A> Dot<ArrayRef<A, Ix2>> for ArrayRef<A, IxDyn>
+where A: LinalgScalar
+{
+    type Output = Array<A, IxDyn>;
+
+    #[track_caller]
+    fn dot(&self, rhs: &ArrayRef<A, Ix2>) -> Array<A, IxDyn>
+    {
+        nd_dot(&self.view().into_dyn(), rhs)
+    }
+}
+
+impl_dots!(IxDyn, Ix2);
+impl_dots!(IxDyn, IxDyn);
 
 impl<A> Dot<ArrayRef<A, Ix1>> for ArrayRef<A, Ix1>
 where A: LinalgScalar

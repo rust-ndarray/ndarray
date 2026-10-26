@@ -6,6 +6,7 @@ extern crate test;
 
 use std::mem::MaybeUninit;
 
+use ndarray::linalg::Dot;
 use ndarray::{arr0, arr1, arr2, azip, s};
 use ndarray::{Array, Array1, Array2, Axis, Ix, Zip};
 use ndarray::{Array3, Array4, ShapeBuilder};
@@ -906,6 +907,23 @@ fn equality_f32_mixorder(bench: &mut test::Bencher)
     let a = Array::<f32, _>::zeros((64, 64));
     let b = Array::<f32, _>::zeros((64, 64).f());
     bench.iter(|| a == b);
+}
+
+#[bench]
+fn dot_3d_f64_contiguous(bench: &mut test::Bencher)
+{
+    let a: Array3<f64> = Array::zeros((32, 32, 32));
+    let b: Array2<f64> = Array::zeros((32, 32));
+    bench.iter(|| a.dot(&b));
+}
+
+#[bench]
+fn dot_3d_f64_non_contiguous(bench: &mut test::Bencher)
+{
+    let a_base: Array3<f64> = Array::zeros((64, 32, 32));
+    let a = a_base.slice(s![..;2, .., ..]).to_owned();
+    let b: Array2<f64> = Array::zeros((32, 32));
+    bench.iter(|| a.dot(&b));
 }
 
 #[bench]
