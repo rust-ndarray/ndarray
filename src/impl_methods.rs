@@ -513,7 +513,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
     /// Return a sliced view of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
+    /// See [*Slicing*](crate::ArrayBase#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
@@ -527,7 +527,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
     /// Return a sliced read-write view of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation.
+    /// See [*Slicing*](crate::ArrayBase#slicing) for full documentation.
     /// See also [`s!`], [`SliceArg`], and [`SliceInfo`](crate::SliceInfo).
     ///
     /// **Panics** if an index is out of bounds or step size is zero.<br>
@@ -541,7 +541,7 @@ impl<A, D: Dimension> ArrayRef<A, D>
 
     /// Return multiple disjoint, sliced, mutable views of the array.
     ///
-    /// See [*Slicing*](#slicing) for full documentation. See also
+    /// See [*Slicing*](crate::ArrayBase#slicing) for full documentation. See also
     /// [`MultiSliceArg`], [`s!`], [`SliceArg`], and
     /// [`SliceInfo`](crate::SliceInfo).
     ///
