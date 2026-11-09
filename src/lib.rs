@@ -278,6 +278,31 @@ pub type Ixs = isize;
 /// The `ArrayBase<S, D>` is parameterized by `S` for the data container and
 /// `D` for the dimensionality.
 ///
+/// A third parameter, `A`, names the element type and defaults to `S::Elem`,
+/// so it can usually be left out. The exception is a struct of your own with
+/// an `ArrayBase` field: the compiler cannot see through the projection
+/// `S::Elem` when computing the struct's variance, so leaving `A` defaulted
+/// makes the struct invariant over `S` and any lifetimes in it. Spell out `A`
+/// to keep the field covariant (the type aliases below already do this):
+///
+/// ```
+/// use ndarray::{ArrayBase, Ix1, RawData, ViewRepr};
+///
+/// struct Wrapper<A, S: RawData<Elem = A>>
+/// {
+///     data: ArrayBase<S, Ix1, A>,
+/// }
+///
+/// // Compiles only because `Wrapper` is covariant over `S`.
+/// fn shorten<'a: 'b, 'b>(w: Wrapper<f64, ViewRepr<&'a f64>>) -> Wrapper<f64, ViewRepr<&'b f64>>
+/// {
+///     w
+/// }
+/// #
+/// # let a = ndarray::arr1(&[1., 2.]);
+/// # assert_eq!(shorten(Wrapper { data: a.view() }).data[1], 2.);
+/// ```
+///
 /// Type aliases [`Array`], [`ArcArray`], [`CowArray`], [`ArrayView`], and
 /// [`ArrayViewMut`] refer to `ArrayBase` with different types for the data
 /// container: arrays with different kinds of ownership or different kinds of array views.
@@ -1574,7 +1599,7 @@ pub struct RawRef<A, D>(LayoutRef<A, D>);
 ///
 /// + [Constructor Methods for Owned Arrays](ArrayBase#constructor-methods-for-owned-arrays)
 /// + [Methods For All Array Types](ArrayBase#methods-for-all-array-types)
-pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
+pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D, A>;
 
 /// An array that owns its data uniquely.
 ///
@@ -1597,7 +1622,7 @@ pub type ArcArray<A, D> = ArrayBase<OwnedArcRepr<A>, D>;
 ///   [`Array3`], ...,
 ///   [`ArrayD`],
 ///   and so on.
-pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
+pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D, A>;
 
 /// An array with copy-on-write behavior.
 ///
@@ -1615,7 +1640,7 @@ pub type Array<A, D> = ArrayBase<OwnedRepr<A>, D>;
 /// See also [`ArcArray`], which also provides
 /// copy-on-write behavior but has a reference-counted pointer to the data
 /// instead of either a view or a uniquely owned copy.
-pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
+pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D, A>;
 
 /// A read-only array view.
 ///
@@ -1628,7 +1653,7 @@ pub type CowArray<'a, A, D> = ArrayBase<CowRepr<'a, A>, D>;
 /// Array views have all the methods of an array (see [`ArrayBase`]).
 ///
 /// See also [`ArrayViewMut`].
-pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
+pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D, A>;
 
 /// A read-write array view.
 ///
@@ -1641,7 +1666,7 @@ pub type ArrayView<'a, A, D> = ArrayBase<ViewRepr<&'a A>, D>;
 /// Array views have all the methods of an array (see [`ArrayBase`]).
 ///
 /// See also [`ArrayView`].
-pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
+pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D, A>;
 
 /// A read-only array view without a lifetime.
 ///
@@ -1664,7 +1689,7 @@ pub type ArrayViewMut<'a, A, D> = ArrayBase<ViewRepr<&'a mut A>, D>;
 ///
 /// You can't use this type with an arbitrary raw pointer; see
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
-pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
+pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D, A>;
 
 /// A mutable array view without a lifetime.
 ///
@@ -1687,7 +1712,7 @@ pub type RawArrayView<A, D> = ArrayBase<RawViewRepr<*const A>, D>;
 ///
 /// You can't use this type with an arbitrary raw pointer; see
 /// [`from_shape_ptr`](#method.from_shape_ptr) for details.
-pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D>;
+pub type RawArrayViewMut<A, D> = ArrayBase<RawViewRepr<*mut A>, D, A>;
 
 pub use data_repr::OwnedRepr;
 
