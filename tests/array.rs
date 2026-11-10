@@ -511,6 +511,47 @@ fn slice_axis_oob()
     let _vi = a.slice_axis(Axis(0), Slice::new(0, Some(10), 1));
 }
 
+#[should_panic(expected = "Slice begin 10 is past end of axis 1 of length 4")]
+#[test]
+fn slice_oob_begin_message_names_axis()
+{
+    let a = Array::<i32, _>::zeros((3, 4, 5));
+    let _vi = a.slice(s![.., 10.., ..]);
+}
+
+#[should_panic(expected = "Slice end 9 is past end of axis 2 of length 5")]
+#[test]
+fn slice_oob_end_message_names_axis()
+{
+    let a = Array::<i32, _>::zeros((3, 4, 5));
+    let _vi = a.slice(s![.., 1.., ..9]);
+}
+
+#[should_panic(expected = "Slice end 9 is past end of axis 1 of length 4")]
+#[test]
+fn slice_oob_message_names_input_axis_with_newaxis()
+{
+    // The reported axis is the axis of the input array, not counting `NewAxis`.
+    let a = Array::<i32, _>::zeros((3, 4));
+    let _vi = a.slice(s![NewAxis, .., ..9]);
+}
+
+#[should_panic(expected = "Slice stride must not be zero (axis 1)")]
+#[test]
+fn slice_zero_step_message_names_axis()
+{
+    let a = Array::<i32, _>::zeros((3, 4));
+    let _vi = a.slice_axis(Axis(1), Slice { start: 0, end: None, step: 0 });
+}
+
+#[should_panic(expected = "Slice end 9 is past end of axis 1 of length 4")]
+#[test]
+fn multi_slice_oob_message_names_axis()
+{
+    let mut a = Array::<i32, _>::zeros((3, 4));
+    let _views = a.multi_slice_mut((s![.., ..9], s![.., ..1]));
+}
+
 #[should_panic]
 #[test]
 fn slice_wrong_dim()
