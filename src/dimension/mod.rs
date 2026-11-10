@@ -402,11 +402,14 @@ pub fn abs_index(len: Ix, index: Ixs) -> Ix
 
 /// Determines nonnegative start and end indices, and performs sanity checks.
 ///
+/// `axis` is the index of the axis being sliced; it is only used in panic
+/// messages.
+///
 /// The return value is (start, end, step).
 ///
 /// **Panics** if stride is 0 or if any index is out of bounds.
 #[track_caller]
-fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize)
+fn to_abs_slice(axis: usize, axis_len: usize, slice: Slice) -> (usize, usize, isize)
 {
     let Slice { start, end, step } = slice;
     let start = abs_index(axis_len, start);
@@ -416,17 +419,19 @@ fn to_abs_slice(axis_len: usize, slice: Slice) -> (usize, usize, isize)
     }
     ndassert!(
         start <= axis_len,
-        "Slice begin {} is past end of axis of length {}",
+        "Slice begin {} is past end of axis {} of length {}",
         start,
+        axis,
         axis_len,
     );
     ndassert!(
         end <= axis_len,
-        "Slice end {} is past end of axis of length {}",
+        "Slice end {} is past end of axis {} of length {}",
         end,
+        axis,
         axis_len,
     );
-    ndassert!(step != 0, "Slice stride must not be zero");
+    ndassert!(step != 0, "Slice stride must not be zero (axis {})", axis);
     (start, end, step)
 }
 
@@ -448,11 +453,14 @@ pub fn offset_from_low_addr_ptr_to_logical_ptr<D: Dimension>(dim: &D, strides: &
 
 /// Modify dimension, stride and return data pointer offset
 ///
+/// `axis` is the index of the axis being sliced; it is only used in panic
+/// messages.
+///
 /// **Panics** if stride is 0 or if any index is out of bounds.
 #[track_caller]
-pub fn do_slice(dim: &mut usize, stride: &mut usize, slice: Slice) -> isize
+pub fn do_slice(axis: usize, dim: &mut usize, stride: &mut usize, slice: Slice) -> isize
 {
-    let (start, end, step) = to_abs_slice(*dim, slice);
+    let (start, end, step) = to_abs_slice(axis, *dim, slice);
 
     let m = end - start;
     let s = (*stride) as isize;
@@ -617,9 +625,9 @@ fn arith_seq_intersect((min1, max1, step1): (isize, isize, isize), (min2, max2, 
 /// Returns the minimum and maximum values of the indices (inclusive).
 ///
 /// If the slice is empty, then returns `None`, otherwise returns `Some((min, max))`.
-fn slice_min_max(axis_len: usize, slice: Slice) -> Option<(usize, usize)>
+fn slice_min_max(axis: usize, axis_len: usize, slice: Slice) -> Option<(usize, usize)>
 {
-    let (start, end, step) = to_abs_slice(axis_len, slice);
+    let (start, end, step) = to_abs_slice(axis, axis_len, slice);
     if start == end {
         None
     } else if step > 0 {
@@ -633,7 +641,8 @@ fn slice_min_max(axis_len: usize, slice: Slice) -> Option<(usize, usize)>
 pub fn slices_intersect<D: Dimension>(dim: &D, indices1: impl SliceArg<D>, indices2: impl SliceArg<D>) -> bool
 {
     debug_assert_eq!(indices1.in_ndim(), indices2.in_ndim());
-    for (&axis_len, &si1, &si2) in izip!(
+    for (axis, &axis_len, &si1, &si2) in izip!(
+        0..,
         dim.slice(),
         indices1.as_ref().iter().filter(|si| !si.is_new_axis()),
         indices2.as_ref().iter().filter(|si| !si.is_new_axis()),
@@ -652,11 +661,11 @@ pub fn slices_intersect<D: Dimension>(dim: &D, indices1: impl SliceArg<D>, indic
                     step: step2,
                 },
             ) => {
-                let (min1, max1) = match slice_min_max(axis_len, Slice::new(start1, end1, step1)) {
+                let (min1, max1) = match slice_min_max(axis, axis_len, Slice::new(start1, end1, step1)) {
                     Some(m) => m,
                     None => return false,
                 };
-                let (min2, max2) = match slice_min_max(axis_len, Slice::new(start2, end2, step2)) {
+                let (min2, max2) = match slice_min_max(axis, axis_len, Slice::new(start2, end2, step2)) {
                     Some(m) => m,
                     None => return false,
                 };
@@ -667,7 +676,7 @@ pub fn slices_intersect<D: Dimension>(dim: &D, indices1: impl SliceArg<D>, indic
             (SliceInfoElem::Slice { start, end, step }, SliceInfoElem::Index(ind))
             | (SliceInfoElem::Index(ind), SliceInfoElem::Slice { start, end, step }) => {
                 let ind = abs_index(axis_len, ind);
-                let (min, max) = match slice_min_max(axis_len, Slice::new(start, end, step)) {
+                let (min, max) = match slice_min_max(axis, axis_len, Slice::new(start, end, step)) {
                     Some(m) => m,
                     None => return false,
                 };
@@ -1071,51 +1080,51 @@ mod test
     #[test]
     fn slice_min_max_empty()
     {
-        assert_eq!(slice_min_max(0, Slice::new(0, None, 3)), None);
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(1), 3)), None);
-        assert_eq!(slice_min_max(10, Slice::new(-1, Some(-1), 3)), None);
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(1), -3)), None);
-        assert_eq!(slice_min_max(10, Slice::new(-1, Some(-1), -3)), None);
+        assert_eq!(slice_min_max(0, 0, Slice::new(0, None, 3)), None);
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(1), 3)), None);
+        assert_eq!(slice_min_max(0, 10, Slice::new(-1, Some(-1), 3)), None);
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(1), -3)), None);
+        assert_eq!(slice_min_max(0, 10, Slice::new(-1, Some(-1), -3)), None);
     }
 
     #[test]
     fn slice_min_max_pos_step()
     {
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(8), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(9), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-9, Some(8), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-9, Some(9), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(-2), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(-1), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-9, Some(-2), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-9, Some(-1), 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(1, None, 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-9, None, 3)), Some((1, 7)));
-        assert_eq!(slice_min_max(11, Slice::new(1, None, 3)), Some((1, 10)));
-        assert_eq!(slice_min_max(11, Slice::new(-10, None, 3)), Some((1, 10)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(8), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(9), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-9, Some(8), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-9, Some(9), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(-2), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(-1), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-9, Some(-2), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-9, Some(-1), 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, None, 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-9, None, 3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 11, Slice::new(1, None, 3)), Some((1, 10)));
+        assert_eq!(slice_min_max(0, 11, Slice::new(-10, None, 3)), Some((1, 10)));
     }
 
     #[test]
     fn slice_min_max_neg_step()
     {
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(8), -3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(2, Some(8), -3)), Some((4, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-9, Some(8), -3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(-8, Some(8), -3)), Some((4, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(1, Some(-2), -3)), Some((1, 7)));
-        assert_eq!(slice_min_max(10, Slice::new(2, Some(-2), -3)), Some((4, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(8), -3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(2, Some(8), -3)), Some((4, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-9, Some(8), -3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(-8, Some(8), -3)), Some((4, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(1, Some(-2), -3)), Some((1, 7)));
+        assert_eq!(slice_min_max(0, 10, Slice::new(2, Some(-2), -3)), Some((4, 7)));
         assert_eq!(
-            slice_min_max(10, Slice::new(-9, Some(-2), -3)),
+            slice_min_max(0, 10, Slice::new(-9, Some(-2), -3)),
             Some((1, 7))
         );
         assert_eq!(
-            slice_min_max(10, Slice::new(-8, Some(-2), -3)),
+            slice_min_max(0, 10, Slice::new(-8, Some(-2), -3)),
             Some((4, 7))
         );
-        assert_eq!(slice_min_max(9, Slice::new(2, None, -3)), Some((2, 8)));
-        assert_eq!(slice_min_max(9, Slice::new(-7, None, -3)), Some((2, 8)));
-        assert_eq!(slice_min_max(9, Slice::new(3, None, -3)), Some((5, 8)));
-        assert_eq!(slice_min_max(9, Slice::new(-6, None, -3)), Some((5, 8)));
+        assert_eq!(slice_min_max(0, 9, Slice::new(2, None, -3)), Some((2, 8)));
+        assert_eq!(slice_min_max(0, 9, Slice::new(-7, None, -3)), Some((2, 8)));
+        assert_eq!(slice_min_max(0, 9, Slice::new(3, None, -3)), Some((5, 8)));
+        assert_eq!(slice_min_max(0, 9, Slice::new(-6, None, -3)), Some((5, 8)));
     }
 
     #[test]

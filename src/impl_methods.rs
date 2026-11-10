@@ -711,8 +711,12 @@ impl<A, D: Dimension> LayoutRef<A, D>
     pub fn slice_axis_inplace(&mut self, axis: Axis, indices: Slice)
     {
         let parts = &mut self.0;
-        let offset =
-            do_slice(&mut parts.dim.slice_mut()[axis.index()], &mut parts.strides.slice_mut()[axis.index()], indices);
+        let offset = do_slice(
+            axis.index(),
+            &mut parts.dim.slice_mut()[axis.index()],
+            &mut parts.strides.slice_mut()[axis.index()],
+            indices,
+        );
         unsafe {
             self.0.ptr = self._ptr().offset(offset);
         }
