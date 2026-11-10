@@ -672,6 +672,13 @@ where
 
 /// Trait for determining dimensionality of input and output for [`s!`] macro.
 #[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` cannot be used as an argument to the `s![]` macro",
+    label = "not an index, range, `Slice`, or `NewAxis`",
+    note = "each comma-separated argument to `s![]` must be an index (`isize`, `usize` or `i32`), a range \
+            such as `1..3` or `..`, a `Slice`, or `NewAxis`, optionally followed by `;step`",
+    note = "do not wrap the arguments in brackets or parentheses: write `s![1..3, ..]`, not `s![[1..3, ..]]`"
+)]
 pub trait SliceNextDim
 {
     /// Number of dimensions that this slicing argument consumes in the input array.
@@ -745,6 +752,17 @@ impl_slicenextdim!((), NewAxis, Ix0, Ix1);
 /// `i32`. *range* must be of type `Range<I>`, `RangeTo<I>`, `RangeFrom<I>`, or
 /// `RangeFull` where `I` is `isize`, `usize`, or `i32`. *step* must be a type
 /// that can be converted to `isize` with the `as` keyword.
+///
+/// The square brackets belong to the macro invocation, so the elements are
+/// written directly inside them, not wrapped in an array or tuple:
+/// `s![[1..3, ..]]` does not compile, so write `s![1..3, ..]` instead.
+///
+/// ```compile_fail,E0277
+/// use ndarray::{s, Array2};
+///
+/// let a = Array2::<f64>::zeros((4, 4));
+/// let _ = a.slice(s![[1..3, 0..2]]);
+/// ```
 ///
 /// For example, `s![0..4;2, 6, 1..5, NewAxis]` is a slice of the first axis
 /// for 0..4 with step size 2, a subview of the second axis at index 6, a slice
